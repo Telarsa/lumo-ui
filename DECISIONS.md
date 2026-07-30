@@ -181,3 +181,83 @@ Sources for the claims above:
 - [chakra-ui/ark](https://github.com/chakra-ui/ark) — "Works in React, Vue, Solid, and Svelte"
 - [Ark UI issues](https://github.com/chakra-ui/ark/issues) — no open Preact request
 - [Preact discussion #4559](https://github.com/preactjs/preact/discussions/4559) — community using Ark UI with Preact
+
+---
+
+## SPIKE RESULTS — run 30 July 2026, on a throwaway branch in Tessalor
+
+A real `@zag-js/combobox` island, built through Astro, measured against
+Tessalor's own gates. Combobox on purpose: it is the heaviest component and the
+only one that positions a floating panel, so it is the worst case for both
+questions.
+
+### 1. CSP — conditional pass, and the condition is severe
+
+**With SSR (`client:load`): FAILS.**
+
+```
+Content Security Policy violations in 1 place(s):
+  /zag-spike
+    <div data-scope="combobox" data-part="positioner"
+         style="position:absolute;isolation:isolate;width:var(--reference-width);po…
+```
+
+Zag's positioner emits an inline `style` attribute into the server-rendered
+HTML. A browser under this policy blocks it, the panel loses its positioning,
+and the component is visually broken.
+
+**With `client:only="preact"`: PASSES.** All 78 pages clean, and zero console
+errors at runtime through open, filter, arrow-key and select.
+
+The reason is a genuine distinction rather than a loophole: CSP `style-src`
+restricts `style` *attributes* and `<style>` *elements*. It does not restrict
+CSSOM — `el.style.setProperty(...)`, which is what Preact does when it applies a
+style prop on the client. So the violation exists only in the SSR output.
+
+**The cost of that workaround is the thing to weigh.** `client:only` means the
+component is absent from the HTML: not crawlable, not present at first paint,
+and it pops in after hydration. For a tool's primary control on a page whose
+entire SEO argument is server-rendered content, that is a real regression, not a
+technicality.
+
+### 2. Budget — the number that decides it
+
+| Route | JS on arrival | Budget |
+| --- | --- | --- |
+| **`/zag-spike`** — one combobox, nothing else | **42.7 KB** | 20.0 KB — **OVER** |
+| `/money/compound-interest` — full calculator, decimal.js, chart, table | 39.3 KB | 50.0 KB |
+| `/documents/word-counter` | 27.8 KB | 50.0 KB |
+
+**A single Zag combobox costs more than an entire compound-interest calculator.**
+
+### 3. Hydration — clean pass
+
+No second Preact instance, no `Cannot read properties of undefined (reading
+'__H')`, no console errors. The component genuinely works: typing `mort`,
+ArrowDown, Enter selected "Mortgage repayment".
+
+### What this means
+
+**For Tessalor: do not adopt Zag for form controls.** Either it is SSR'd and
+breaks the CSP, or it is `client:only` and gives up server rendering — and
+either way one combobox costs more than a whole calculator against a budget
+whose whole purpose is that speed is the differentiator.
+
+**For Lumo UI: the constraints are Tessalor's, not the world's.** Most projects
+carry `'unsafe-inline'` for styles and have no 20 KB budget. Zag is still the
+right engine for a general-purpose library.
+
+But it changes the pitch. "Headless components for Preact" is fine; "headless
+components for people who chose Preact because it is 4 KB" is not honest if the
+first component costs 40 KB.
+
+### What to test next, before committing to the architecture
+
+1. **Cost per component.** Combobox was the worst case. Dialog, tabs, toggle,
+   accordion carry no positioning engine and should be far cheaper. If a
+   dialog is 6 KB the library is viable and the combobox is the outlier.
+2. **How much of the 42.7 KB is `preact/compat`.** Still unmeasured, and it is
+   the one number that would apply to *every* component.
+3. **Whether Zag's SSR style output can be suppressed.** If the positioner can
+   be told not to emit inline styles server-side, the CSP problem disappears and
+   Tessalor's objection halves.
