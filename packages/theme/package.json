@@ -1,0 +1,11 @@
+{
+  "name": "@lumo-ui/theme",
+  "version": "0.0.0",
+  "description": "The token contract and a generator that emits it as CSS custom properties.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./reset.css": "./src/reset.css"
+  }
+}

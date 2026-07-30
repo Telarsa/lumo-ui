@@ -1,0 +1,14 @@
+{
+  "name": "@lumo-ui/core",
+  "version": "0.0.0",
+  "description": "Headless, accessible UI primitives for Preact. No styles, no dependencies, state on data attributes.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./select": "./src/select.tsx"
+  },
+  "peerDependencies": {
+    "preact": ">=10"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "name": "@lumo-ui/ui",
+  "version": "0.0.0",
+  "description": "Styled components built on @lumo-ui/core. Copy them in and own the code.",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@lumo-ui/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "preact": ">=10"
+  }
+}
