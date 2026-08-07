@@ -1,0 +1,49 @@
+lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  packages/blocks:
+    dependencies:
+      '@lumo-ui/ui':
+        specifier: workspace:*
+        version: link:../ui
+      preact:
+        specifier: '>=10'
+        version: 10.29.8
+
+  packages/core:
+    dependencies:
+      preact:
+        specifier: '>=10'
+        version: 10.29.8
+
+  packages/theme: {}
+
+  packages/ui:
+    dependencies:
+      '@lumo-ui/core':
+        specifier: workspace:*
+        version: link:../core
+      preact:
+        specifier: '>=10'
+        version: 10.29.8
+
+packages:
+
+  preact@10.29.8:
+    resolution: {integrity: sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q==}
+    peerDependencies:
+      preact-render-to-string: '>=5'
+    peerDependenciesMeta:
+      preact-render-to-string:
+        optional: true
+
+snapshots:
+
+  preact@10.29.8: {}
