@@ -1,0 +1,25 @@
+# Calls the shared pipeline in telarsa-handbook. Steps this repository does not
+# have a script for are switched off below rather than failing.
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: Telarsa/telarsa-handbook/.github/workflows/node-ci.yml@main
+    with:
+      lint: false
+      typecheck: true
+      test: true
+      build: true

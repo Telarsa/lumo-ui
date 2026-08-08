@@ -1,3 +1,13 @@
+# Supply chain. These live here, not in .npmrc: pnpm 11 does not read pnpm
+# settings from .npmrc, so the same keys there are silently inert.
+#
+# Refuse any package published in the last 24 hours - the window in which most
+# compromised releases are caught and unpublished. pnpm 11 applies a default
+# cooldown even when this key is absent, and quietly writes a
+# minimumReleaseAgeExclude entry to unblock the install rather than failing.
+# Stating it explicitly is what makes the policy visible.
+minimumReleaseAge: 1440
+
 packages:
   - 'packages/*'
   - 'apps/*'
