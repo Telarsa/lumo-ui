@@ -1,0 +1,31 @@
+/*
+ * Lumo UI — brand tokens.
+ *
+ * These are the library's OWN identity: its site, its docs, its mark. They are
+ * not the theme a consumer gets. A component library that ships an opinion
+ * about colour is the thing this library exists to argue against — consumers
+ * define their own custom properties and the components read them.
+ */
+
+:root {
+  /* The lit corner. Lumo means light, and the mark's rounded corner is the
+     only coloured part of it. */
+  --lumo-brand: #7fa828;
+
+  /* #7fa828 measures 2.79:1 on white — fine for a mark, not for text. This is
+     the text-safe darkening, at 4.72:1. */
+  --lumo-brand-text: #5c7a1c;
+
+  --lumo-ink: #101114;
+  --lumo-paper: #f2efe8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* On ink the mark's body inverts, and the lime no longer needs darkening —
+       #7fa828 is 6.79:1 against #0d1117. */
+    --lumo-brand-text: #7fa828;
+    --lumo-ink: #f2efe8;
+    --lumo-paper: #101114;
+  }
+}
