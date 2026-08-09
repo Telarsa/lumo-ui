@@ -1,0 +1,108 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "lumo",
+  "homepage": "https://lumo-ui.com",
+  "items": [
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "THE COMPONENT SHAPE. Every Lumo component follows this file's structure, and",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/button.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "form",
+      "type": "registry:ui",
+      "title": "Form",
+      "description": "The field chrome every form control in Lumo is built from: the wrapper, the",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/form.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "link",
+      "type": "registry:ui",
+      "title": "Link",
+      "description": "A navigational link.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/link.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/link.tsx"
+        }
+      ]
+    },
+    {
+      "name": "text-area",
+      "type": "registry:ui",
+      "title": "Text Area",
+      "description": "The multi-line box.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/text-area.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/text-area.tsx"
+        }
+      ]
+    },
+    {
+      "name": "text-field",
+      "type": "registry:ui",
+      "title": "Text Field",
+      "description": "The input box. Shared by TextField, SearchField and NumberField, which differ",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/text-field.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/text-field.tsx"
+        }
+      ]
+    }
+  ]
+}

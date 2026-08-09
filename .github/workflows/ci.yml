@@ -34,7 +34,7 @@ permissions:
   contents: read
 
 jobs:
-  ci:
+  verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -54,20 +54,12 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      # The whole point of sitting 1: the red/green loop exists before there is
-      # anything to be red about. `verify` chains every gate Lumo has, and gains
-      # one entry per gate as they are built. It passes on an empty workspace,
-      # which is what makes it safe to add the first component against.
-      - name: Verify
-        run: pnpm run verify
-
       # Runtime truth, checked on the RUNNER rather than on a laptop.
       #
       # If the runner's Node ships small-ICU, `Intl` has no Persian calendar and
       # no arabext numbering system - and every Jalali claim Lumo makes is a lie
       # that no unit test would catch, because the unit tests run here too.
-      # This is a five-line job that invalidates the entire product if it fails,
-      # so it runs before any component exists to depend on it.
+      # This runs FIRST: everything downstream is meaningless if it fails.
       - name: Intl / ICU capability
         run: |
           node --input-type=module -e '
@@ -84,3 +76,38 @@ jobs:
             if (!/[۰-۹]/.test(money)) fail("fa-IR NumberFormat produced no Persian digits");
             if (!money.includes("٫")) fail("fa-IR decimal separator is not U+066B");
           '
+
+      # Rule 0. Fires in the editor too, but this is the enforcement point.
+      - name: Types
+        run: pnpm run gate:types
+
+      # The mechanical form of the styling decision. Without it, "we use
+      # Tailwind" is a comment.
+      - name: No CSS Modules
+        run: pnpm run gate:no-css-modules
+
+      # Unit + self-test tiers. The gate's own poison fixtures live here: a rule
+      # that stops detecting turns this red.
+      - name: Tests
+        run: pnpm run gate:test
+
+      # The registry must be derivable and non-empty. A drifted manifest ships a
+      # component nobody can install.
+      - name: Registry
+        run: |
+          node scripts/build-registry.mjs
+          git diff --exit-code registry.json
+
+      # The real one: build the site and grade the bytes it serves. Everything
+      # above this line is a proxy; this is the artifact a user receives.
+      - name: Build and gate
+        run: pnpm run gate:html
+
+      # Keeps the built site available for inspection when the gate fails, which
+      # is exactly when you want to look at the HTML.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: site-output
+          path: apps/website/out
+          retention-days: 3

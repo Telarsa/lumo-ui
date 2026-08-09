@@ -1,63 +1,113 @@
 # Lumo UI
 
-Two packages and a site.
+A component library for products that ship in Persian.
 
-| | What it is |
+Right-to-left is the easy half. Lumo exists for the other half: the calendar is
+Jalali, the digits are ۱۴۰۵, and the accessible name is Persian too — in the
+served bytes, before any JavaScript runs.
+
+Private to Telarsa. See `DECISIONS.md §0.2`.
+
+---
+
+## What this is
+
+| | |
 | --- | --- |
-| **`@lumo-ui/core`** | Headless primitives for Preact. No styles, no dependencies. State is exposed as `data-*` attributes and you style it with CSS |
-| **`@lumo-ui/ui`** | Styled components built on the core, in the shadcn tradition: you copy them into your project and own the code, rather than installing a black box |
-| **`apps/site`** | Documentation and the landing page |
+| Behaviour | [React Aria Components](https://react-spectrum.adobe.com/react-aria/) — rented, not rebuilt |
+| Styling | Tailwind v4, CSS-first, no config file |
+| Distribution | copy-in components, packaged invariants |
+| Locales | `fa-IR`, `en-US` — complete or the build fails |
 
-## Why it exists
+**The split that matters.** Components are *copied* because they are meant to be
+edited. Tokens, the locale contract and the gate are *packages* because an edit
+to them is a bug, not a customisation.
 
-Preact has no mature headless UI library. React has Base UI, Radix and Ariakit;
-Solid has Kobalte; Svelte has Bits UI and Melt. Preact has essentially nothing,
-which means every Preact application either hand-rolls its primitives, ships
-`preact/compat` to borrow React's, or gives up and uses the platform controls.
+## Packages
 
-The compat route is worse than it sounds: Base UI under `preact/compat`
-**crashes during server rendering** — `Cannot read properties of null (reading
-'useContext')` — and installing it pulls real `react` and `react-dom` as peers.
-It is React with an alias, at React's price.
-
-## The styling contract
-
-No classes, no style props, no theme object. Components expose state as data
-attributes:
-
-```css
-[data-lumo-trigger][data-state="open"] { border-color: var(--ring); }
-[data-lumo-option][data-highlighted]   { background: var(--muted); }
-[data-lumo-option][data-selected]      { font-weight: 550; }
-[data-lumo-option][data-disabled]      { opacity: 0.5; }
+```
+packages/core     the invariants — LumoNode, direction(), formatters, strings
+packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
+packages/ui       the components
+packages/gate     lumo-gate — grades built HTML, no browser required
+packages/config   the lint policy, zero plugin dependencies
+apps/website      the showcase, and the first thing the gate runs against
 ```
 
-That is the direction Base UI, Ark and Bits UI have all converged on, and the
-reason is worth stating plainly: **a library that emits utility classes forces
-every consumer onto the same toolchain and the same major version of it.** A
-library that emits `data-state="open"` forces nothing. It works with Tailwind,
-with plain stylesheets, with cascade layers, with a `<style>` block.
+## Getting started
 
-It also puts styling back where the cascade can reach it. A `classes` prop
-threaded through six sub-components — the Radix-era pattern — moves styling
-decisions into JavaScript, where specificity, layers and media queries cannot
-help you.
+```bash
+pnpm install
+pnpm verify      # types → no-CSS-Modules → tests → build → gate
+pnpm dev         # the showcase site
+```
 
-## The platform wins where it is better
+`pnpm verify` is the whole contract. If it is green, the thing is shippable.
 
-`Select` renders a **native `<select>` on a coarse pointer**. The reason to
-replace a select is that the desktop OS popup looks foreign inside a designed
-interface. On a phone that inverts: iOS gives a wheel picker, Android a
-full-screen list, and neither is reproducible in a div. So the custom listbox is
-a desktop affordance and touch keeps the platform control.
+## The rules, and why they are types and tests rather than documentation
 
-Which means the library is never the *worse* choice: where a custom listbox is
-weakest — touch, mobile screen readers — it does not run.
+A 52-component prototype preceded this one. It was written in four days under
+full attention by someone who had written the RTL rules down first. It shipped:
+`<html lang="en">` on all 55 Persian pages; 77 of 77 calendar day cells in Latin
+digits, two lines below a 25-line comment explaining that exact failure; 33
+controls with no accessible name.
 
-## Status
+Every one of those defects **rendered correctly, type-checked, and looked right
+in review**. So:
 
-Early. `Select` is implemented against the full WAI-ARIA listbox pattern:
-`aria-activedescendant` rather than roving focus, type-ahead, Home/End, Escape
-closing without committing, disabled options skipped rather than landed on.
+**1. `LumoNode`, not `ReactNode`.**
+`<Cell>{day.day}</Cell>` is a compile error. A bare number renders Latin digits.
 
-MIT.
+**2. Every announced string is a required prop.**
+The library ships no user-facing English, not even as a default. Measured: React
+Aria leaks 8 English strings on a Persian page, 5 of them reachable by prop —
+those 5 are typed in `packages/core/src/strings.ts`.
+
+**3. There is no `dir` prop.**
+Direction is derived from the locale via `Intl.Locale.getTextInfo()`. A wrong
+direction is unrepresentable rather than discouraged.
+
+**4. Logical utilities only.**
+`ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`. Physical utilities are banned by lint.
+One `ml-2` in a shared component breaks Persian in every project that copied it.
+
+**5. No CSS Modules.**
+Styling lives in Tailwind utilities inside `cva()`, so `shadcn migrate rtl` and
+`shadcn add --diff` can both see it. Enforced by a `find` in CI.
+
+**6. Every rule has a poison fixture.**
+A rule that has never been seen to fail is not a rule. This caught a real one:
+`namedControls` originally swallowed an exception and reported green forever.
+
+## What the gate checks
+
+`lumo-gate` parses the built HTML — the bytes a crawler, a JS-disabled reader
+and the first paint receive. No browser, so it runs anywhere.
+
+- `<html lang>` and `dir` match the route's locale
+- no Latin digits in visible text on Persian routes
+- **a minimum count of Persian digits** — because "zero Latin digits" passes
+  trivially on a page that renders no data
+- no Latin-script `aria-label` / `aria-roledescription` / `aria-valuetext`
+- every interactive control has an accessible name
+- no dangling `aria-labelledby` / `aria-controls`
+
+It refuses to report success on an empty directory, and it **throws** on a route
+whose locale it cannot derive rather than skipping it. An ungraded page is an
+unprotected page.
+
+## Escape hatches
+
+Genuinely-Latin content — order IDs, model numbers, code — is marked, not
+excused:
+
+```tsx
+<span data-lumo-latn dir="ltr">KH-4825</span>
+```
+
+## Where to look next
+
+- `DECISIONS.md` — what was chosen, with the evidence, including superseded
+  decisions kept struck through
+- `ROADMAP.md` — the road to 1.0
+- `packages/core/src/strings.ts` — the measurement that shaped the i18n design
