@@ -41,7 +41,8 @@ const EXTERNAL = new Set([
 
 const items = [];
 for (const { dir, type, target } of SOURCES) {
-  const files = (await readdir(dir).catch(() => [])).filter(
+  const all = await readdir(dir).catch(() => []);
+  const files = all.filter(
     (f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx") && !f.endsWith(".type-test.tsx"),
   );
   for (const file of files.sort()) {
@@ -75,7 +76,20 @@ for (const { dir, type, target } of SOURCES) {
     author: "Telarsa",
     ...(dependencies.length ? { dependencies: [...new Set(dependencies)].sort() } : {}),
     ...(registryDependencies.length ? { registryDependencies } : {}),
-    files: [{ path: `${relative(ROOT, dir)}/${file}`, type, target: `${target}/${file}` }],
+    // Companion modules travel WITH the component.
+    //
+    // `button.variants.ts` exists because a cva() exported from a "use client"
+    // module cannot be called by a server component. It is not a component in
+    // its own right, so it gets no registry item — but a consumer who copies
+    // button.tsx without it receives a broken import. The smoke test found this
+    // by compiling the copied files in a bare project, which is precisely the
+    // failure a workspace cannot see.
+    files: [
+      { path: `${relative(ROOT, dir)}/${file}`, type, target: `${target}/${file}` },
+      ...all
+        .filter((f) => f === `${name}.variants.ts`)
+        .map((f) => ({ path: `${relative(ROOT, dir)}/${f}`, type, target: `${target}/${f}` })),
+    ],
   });
   }
 }

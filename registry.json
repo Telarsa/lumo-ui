@@ -94,6 +94,11 @@
           "path": "packages/ui/src/button.tsx",
           "type": "registry:ui",
           "target": "components/ui/button.tsx"
+        },
+        {
+          "path": "packages/ui/src/button.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/button.variants.ts"
         }
       ]
     },
