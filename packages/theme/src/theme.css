@@ -1,0 +1,60 @@
+/*
+ * The Tailwind v4 bridge.
+ *
+ * `@theme inline` maps Lumo's semantic tokens onto Tailwind's utility
+ * namespaces, so `bg-surface` resolves to `--lumo-sys-surface`. `inline` matters:
+ * it emits `var(--lumo-sys-*)` rather than the resolved value, so a runtime
+ * theme switch or a brand override still works.
+ *
+ * Import order in a consuming app is fixed and not interchangeable:
+ *     @import "tailwindcss";
+ *     @import "@lumo-ui/theme/tokens.css";
+ *     @import "@lumo-ui/theme/theme.css";
+ */
+@theme inline {
+  --color-bg: var(--lumo-sys-bg);
+  --color-bg-subtle: var(--lumo-sys-bg-subtle);
+  --color-surface: var(--lumo-sys-surface);
+  --color-surface-hover: var(--lumo-sys-surface-hover);
+  --color-surface-sunken: var(--lumo-sys-surface-sunken);
+
+  --color-fg: var(--lumo-sys-fg);
+  --color-fg-muted: var(--lumo-sys-fg-muted);
+  --color-fg-subtle: var(--lumo-sys-fg-subtle);
+  --color-fg-on-accent: var(--lumo-sys-fg-on-accent);
+
+  --color-border: var(--lumo-sys-border);
+  --color-border-control: var(--lumo-sys-border-control);
+  --color-border-strong: var(--lumo-sys-border-strong);
+
+  --color-accent: var(--lumo-sys-accent);
+  --color-accent-hover: var(--lumo-sys-accent-hover);
+  --color-accent-fg: var(--lumo-sys-accent-fg);
+  --color-accent-mark: var(--lumo-sys-accent-mark);
+
+  --color-positive: var(--lumo-sys-positive);
+  --color-critical: var(--lumo-sys-critical);
+  --color-caution: var(--lumo-sys-caution);
+
+  --radius-sm: var(--lumo-sys-radius-sm);
+  --radius-md: var(--lumo-sys-radius-md);
+  --radius-lg: var(--lumo-sys-radius-lg);
+
+  --spacing-control-sm: var(--lumo-ref-control-sm);
+  --spacing-control-md: var(--lumo-ref-control-md);
+  --spacing-control-lg: var(--lumo-ref-control-lg);
+}
+
+/*
+ * One focus treatment for the whole system, defined once.
+ *
+ * `:focus-visible` rather than `:focus` means it appears for keyboards and not
+ * for mice — the platform now does the modality detection that React Aria ships
+ * 421 lines to compute.
+ */
+@layer lumo.components {
+  :where([data-lumo]):focus-visible {
+    outline: var(--lumo-sys-focus-width) solid var(--lumo-sys-focus);
+    outline-offset: var(--lumo-sys-focus-offset);
+  }
+}

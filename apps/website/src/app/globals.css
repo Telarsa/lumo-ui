@@ -1,0 +1,22 @@
+@import "tailwindcss";
+@import "@lumo-ui/theme/tokens.css";
+@import "@lumo-ui/theme/theme.css";
+@import "tw-animate-css";
+
+/*
+ * Order is not interchangeable. Tailwind first so `@theme inline` in theme.css
+ * has a theme to extend; tokens before theme so the custom properties exist
+ * when the bridge references them.
+ *
+ * `@source` tells Tailwind v4 where to scan for classes. The workspace package
+ * must be listed explicitly — its classes live outside this app's tree and
+ * would otherwise be dropped from the build, silently producing an unstyled
+ * site rather than an error.
+ */
+@source "../../../../packages/ui/src/**/*.tsx";
+
+body {
+  background: var(--lumo-sys-bg);
+  color: var(--lumo-sys-fg);
+  font-family: var(--lumo-sys-font-sans, ui-sans-serif, system-ui, sans-serif);
+}

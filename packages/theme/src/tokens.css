@@ -1,0 +1,197 @@
+/*
+ * Lumo UI — the token contract.
+ *
+ * Three tiers, with distinct prefixes so the boundary between them is
+ * regex-enforceable rather than a convention:
+ *
+ *   --lumo-ref-*   primitives. Private. Ramps, hues, the raw scale.
+ *   --lumo-sys-*   the semantic API. This is what components are allowed to read.
+ *   --lumo-cmp-*   per-component override surface, so an app can restyle one
+ *                  instance without editing the copied component file.
+ *
+ * A brand turns knobs at the `ref` tier only — hue, chroma, radius, density.
+ * Lightness stays owned by the ramp, which is why re-hueing cannot break
+ * contrast: the L values that were measured against the ground do not move.
+ *
+ * Tailwind v4 reads these through `@theme inline` (see theme.css), so a utility
+ * like `bg-surface` resolves to `--lumo-sys-surface` with no config file.
+ */
+
+@layer lumo.reset, lumo.ref, lumo.sys, lumo.brand, lumo.script, lumo.components, lumo.overrides;
+
+@layer lumo.ref {
+  :root {
+    /* ---- brand knobs. A brand file overrides ONLY these. ---------------- */
+    --lumo-ref-hue-brand: 96;
+    --lumo-ref-chroma-brand: 0.13;
+    --lumo-ref-hue-neutral: 96;
+    --lumo-ref-chroma-neutral: 0.004;
+    --lumo-ref-radius-scale: 1;
+    --lumo-ref-density: 1;
+
+    /* ---- neutral ramp. Lightness is fixed; hue/chroma come from above. --- */
+    --lumo-ref-neutral-50:  oklch(0.977 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-100: oklch(0.955 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-200: oklch(0.906 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-300: oklch(0.845 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-400: oklch(0.702 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-500: oklch(0.577 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-600: oklch(0.468 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-700: oklch(0.383 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-800: oklch(0.285 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-900: oklch(0.215 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-950: oklch(0.155 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+
+    /* ---- brand ramp ----------------------------------------------------- */
+    --lumo-ref-brand-400: oklch(0.760 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+    --lumo-ref-brand-500: oklch(0.680 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+    --lumo-ref-brand-600: oklch(0.560 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+    --lumo-ref-brand-700: oklch(0.470 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+
+    /* ---- status. Semantic, deliberately NOT derived from the brand hue. -- */
+    --lumo-ref-positive: oklch(0.520 0.130 155);
+    --lumo-ref-positive-dark: oklch(0.700 0.150 155);
+    --lumo-ref-critical: oklch(0.520 0.180 28);
+    --lumo-ref-critical-dark: oklch(0.700 0.170 28);
+    --lumo-ref-caution: oklch(0.560 0.120 75);
+    --lumo-ref-caution-dark: oklch(0.780 0.140 75);
+
+    /* ---- spacing, scaled by density ------------------------------------- */
+    --lumo-ref-space-1: calc(0.25rem * var(--lumo-ref-density));
+    --lumo-ref-space-2: calc(0.5rem  * var(--lumo-ref-density));
+    --lumo-ref-space-3: calc(0.75rem * var(--lumo-ref-density));
+    --lumo-ref-space-4: calc(1rem    * var(--lumo-ref-density));
+    --lumo-ref-space-6: calc(1.5rem  * var(--lumo-ref-density));
+    --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
+
+    --lumo-ref-radius-sm: calc(0.25rem * var(--lumo-ref-radius-scale));
+    --lumo-ref-radius-md: calc(0.5rem  * var(--lumo-ref-radius-scale));
+    --lumo-ref-radius-lg: calc(0.75rem * var(--lumo-ref-radius-scale));
+
+    /* ---- control height. The 44px floor is Khroos's stated touch target. - */
+    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
+    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
+    --lumo-ref-control-lg: calc(2.75rem  * var(--lumo-ref-density));
+  }
+}
+
+@layer lumo.sys {
+  :root {
+    --lumo-sys-bg: var(--lumo-ref-neutral-50);
+    --lumo-sys-bg-subtle: var(--lumo-ref-neutral-100);
+    --lumo-sys-surface: #ffffff;
+    --lumo-sys-surface-hover: var(--lumo-ref-neutral-100);
+    --lumo-sys-surface-sunken: var(--lumo-ref-neutral-100);
+
+    --lumo-sys-fg: var(--lumo-ref-neutral-950);
+    --lumo-sys-fg-muted: var(--lumo-ref-neutral-600);
+    --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
+    --lumo-sys-fg-on-accent: #ffffff;
+
+    /* Two border tokens, not one. WCAG 1.4.11 requires 3:1 for the boundary of
+       a form control, while a decorative rule has no such requirement — and
+       collapsing them forces every hairline to be darker than it should be. */
+    --lumo-sys-border: var(--lumo-ref-neutral-200);
+    --lumo-sys-border-control: var(--lumo-ref-neutral-400);
+    --lumo-sys-border-strong: var(--lumo-ref-neutral-300);
+
+    --lumo-sys-accent: var(--lumo-ref-brand-700);
+    --lumo-sys-accent-hover: var(--lumo-ref-brand-600);
+    --lumo-sys-accent-fg: #ffffff;
+    /* The mark colour. Never used for text on light — see the contrast test. */
+    --lumo-sys-accent-mark: var(--lumo-ref-brand-500);
+
+    --lumo-sys-positive: var(--lumo-ref-positive);
+    --lumo-sys-critical: var(--lumo-ref-critical);
+    --lumo-sys-caution: var(--lumo-ref-caution);
+
+    --lumo-sys-focus: var(--lumo-ref-brand-600);
+    --lumo-sys-focus-width: 2px;
+    --lumo-sys-focus-offset: 2px;
+
+    --lumo-sys-radius-sm: var(--lumo-ref-radius-sm);
+    --lumo-sys-radius-md: var(--lumo-ref-radius-md);
+    --lumo-sys-radius-lg: var(--lumo-ref-radius-lg);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --lumo-sys-bg: var(--lumo-ref-neutral-950);
+      --lumo-sys-bg-subtle: var(--lumo-ref-neutral-900);
+      --lumo-sys-surface: var(--lumo-ref-neutral-900);
+      --lumo-sys-surface-hover: var(--lumo-ref-neutral-800);
+      --lumo-sys-surface-sunken: var(--lumo-ref-neutral-950);
+
+      --lumo-sys-fg: var(--lumo-ref-neutral-50);
+      --lumo-sys-fg-muted: var(--lumo-ref-neutral-400);
+      --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
+      --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-950);
+
+      --lumo-sys-border: var(--lumo-ref-neutral-800);
+      --lumo-sys-border-control: var(--lumo-ref-neutral-600);
+      --lumo-sys-border-strong: var(--lumo-ref-neutral-700);
+
+      --lumo-sys-accent: var(--lumo-ref-brand-400);
+      --lumo-sys-accent-hover: var(--lumo-ref-brand-500);
+      --lumo-sys-accent-fg: var(--lumo-ref-neutral-950);
+
+      --lumo-sys-positive: var(--lumo-ref-positive-dark);
+      --lumo-sys-critical: var(--lumo-ref-critical-dark);
+      --lumo-sys-caution: var(--lumo-ref-caution-dark);
+      --lumo-sys-focus: var(--lumo-ref-brand-400);
+    }
+  }
+
+  [data-theme="dark"] {
+    --lumo-sys-bg: var(--lumo-ref-neutral-950);
+    --lumo-sys-bg-subtle: var(--lumo-ref-neutral-900);
+    --lumo-sys-surface: var(--lumo-ref-neutral-900);
+    --lumo-sys-surface-hover: var(--lumo-ref-neutral-800);
+    --lumo-sys-surface-sunken: var(--lumo-ref-neutral-950);
+    --lumo-sys-fg: var(--lumo-ref-neutral-50);
+    --lumo-sys-fg-muted: var(--lumo-ref-neutral-400);
+    --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
+    --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-950);
+    --lumo-sys-border: var(--lumo-ref-neutral-800);
+    --lumo-sys-border-control: var(--lumo-ref-neutral-600);
+    --lumo-sys-border-strong: var(--lumo-ref-neutral-700);
+    --lumo-sys-accent: var(--lumo-ref-brand-400);
+    --lumo-sys-accent-hover: var(--lumo-ref-brand-500);
+    --lumo-sys-accent-fg: var(--lumo-ref-neutral-950);
+    --lumo-sys-positive: var(--lumo-ref-positive-dark);
+    --lumo-sys-critical: var(--lumo-ref-critical-dark);
+    --lumo-sys-caution: var(--lumo-ref-caution-dark);
+    --lumo-sys-focus: var(--lumo-ref-brand-400);
+  }
+}
+
+/*
+ * Persian typography.
+ *
+ * Scoped to `:lang(fa)`, NOT `[dir="rtl"]`. The distinction is load-bearing:
+ * Persian text inside an English page is still Persian, and a `[dir=rtl]` rule
+ * misses it entirely — leaving tracking applied, which severs the joins between
+ * Arabic-script letters. A prototype got this wrong.
+ *
+ * `letter-spacing: normal` rather than `0` so a cascading negative tracking from
+ * a global heading rule is genuinely reset rather than merely zeroed.
+ */
+@layer lumo.script {
+  :root:lang(fa),
+  [lang="fa"],
+  [lang^="fa-"] {
+    --lumo-sys-font-sans: var(--lumo-font-persian, "Vazirmatn Variable", "Vazirmatn"), system-ui, sans-serif;
+    letter-spacing: normal;
+    line-height: 1.75;
+    /* A synthesised bold or italic destroys Arabic-script letterforms. */
+    font-synthesis: none;
+    font-variant-numeric: normal;
+  }
+
+  /* Persian headings need less leading than Persian prose, but still more than
+     Latin headings would take. */
+  :is(h1, h2, h3, h4, h5, h6):lang(fa) {
+    line-height: 1.4;
+    letter-spacing: normal;
+  }
+}

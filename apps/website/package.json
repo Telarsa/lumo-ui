@@ -1,0 +1,30 @@
+{
+  "name": "@lumo-ui/website",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "typecheck": "tsc --noEmit",
+    "gate": "node --experimental-strip-types ../../packages/gate/src/cli.ts out"
+  },
+  "dependencies": {
+    "@lumo-ui/core": "workspace:*",
+    "@lumo-ui/theme": "workspace:*",
+    "@lumo-ui/ui": "workspace:*",
+    "next": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "lucide-react": "catalog:"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "catalog:",
+    "tailwindcss": "catalog:",
+    "tw-animate-css": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

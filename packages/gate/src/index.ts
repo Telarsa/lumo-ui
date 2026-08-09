@@ -13,13 +13,43 @@ const KNOWN: Record<string, "rtl" | "ltr"> = { "fa-IR": "rtl", "en-US": "ltr" };
  * Silently skipping unknown routes is how a gate ends up grading three pages out
  * of fifty-five and reporting green.
  */
-export function localeForPath(path: string): { locale: string; direction: "rtl" | "ltr" } {
-  const seg = path.replace(/^\.?\//, "").split("/")[0] ?? "";
-  const match = Object.keys(KNOWN).find((l) => l === seg || l.split("-")[0] === seg);
+export function localeForPath(
+  path: string,
+  /**
+   * Documents that legitimately sit above the locale segment — a static export's
+   * root `404.html` and its entry stub. They are served for paths that matched
+   * no route, so they cannot know the visitor's locale.
+   *
+   * They are NOT skipped. They are graded as the primary locale, because a 404
+   * is user-facing text and the one route nobody tests is exactly where an
+   * English document slips through. The allowance is a narrow, named list rather
+   * than a wildcard for that reason.
+   */
+  rootLocale: string = "fa-IR",
+): { locale: string; direction: "rtl" | "ltr" } {
+  const clean = path.replace(/^\.?\//, "");
+  // Both emitted forms: `trailingSlash: true` turns 404.html into 404/index.html.
+  const ROOT_DOCS = new Set([
+    "404.html", "404/index.html",
+    "500.html", "500/index.html",
+    "index.html",
+    // Next's internal name for the root not-found route under app router.
+    "_not-found/index.html", "_not-found.html",
+  ]);
+  if (ROOT_DOCS.has(clean)) {
+    return { locale: rootLocale, direction: KNOWN[rootLocale]! };
+  }
+  // The locale may be any segment, not only the first: preview routes are
+  // /view/<locale>/<slug>/. Scanning rather than assuming a position means a new
+  // route shape does not silently become ungraded.
+  const segments = clean.split("/");
+  const match = segments
+    .map((seg) => Object.keys(KNOWN).find((l) => l === seg || l.split("-")[0] === seg))
+    .find(Boolean);
   if (!match) {
     throw new Error(
-      `Cannot derive a locale from route ${JSON.stringify(path)}. Every page must live ` +
-        `under a locale segment (${Object.keys(KNOWN).join(", ")}) so the gate can grade it. ` +
+      `Cannot derive a locale from route ${JSON.stringify(path)}. Every page must carry ` +
+        `a locale segment (${Object.keys(KNOWN).join(", ")}) so the gate can grade it. ` +
         `An ungraded page is an unprotected page.`,
     );
   }

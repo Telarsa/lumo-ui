@@ -8,14 +8,14 @@
   },
   "scripts": {
     "dev": "pnpm --filter @lumo-ui/website dev",
-    "build": "pnpm -r build",
-    "verify": "pnpm run gate:types && pnpm run gate:no-css-modules && pnpm run gate:test",
+    "build": "pnpm -r --if-present run build",
+    "verify": "pnpm run gate:types && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
     "gate:no-css-modules": "node scripts/no-css-modules.mjs",
     "typecheck": "pnpm run gate:types",
     "test": "pnpm -r --if-present test",
     "gate:test": "pnpm -r --if-present run test",
-    "gate:html": "node --experimental-strip-types packages/gate/src/cli.ts"
+    "gate:html": "pnpm --filter @lumo-ui/website build && node --experimental-strip-types packages/gate/src/cli.ts apps/website/out"
   },
   "devDependencies": {
     "@types/node": "catalog:",

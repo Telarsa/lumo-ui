@@ -1,11 +1,19 @@
 {
   "name": "@lumo-ui/theme",
   "version": "0.0.0",
-  "description": "The token contract and a generator that emits it as CSS custom properties.",
+  "description": "Lumo's token contract: three tiers of CSS custom properties, a Tailwind v4 bridge, and the Persian typography rules.",
   "license": "MIT",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts",
-    "./reset.css": "./src/reset.css"
+    "./tokens.css": "./src/tokens.css",
+    "./theme.css": "./src/theme.css",
+    "./brand.css": "./src/brand.css"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "vitest": "catalog:",
+    "typescript": "catalog:"
   }
 }

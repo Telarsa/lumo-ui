@@ -8,3 +8,8 @@ dist/
 !.env.example
 coverage/
 .astro/
+
+# Build output
+out/
+.next/
+*.tsbuildinfo
