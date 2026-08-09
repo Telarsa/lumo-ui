@@ -215,7 +215,24 @@ export const namedControls: Rule = {
   run: (doc) => {
     const v: Violation[] = [];
     for (const el of Array.from(doc.document.querySelectorAll(INTERACTIVE))) {
-      if (el.hasAttribute("aria-hidden") || el.hasAttribute("hidden")) continue;
+      /*
+       * `aria-hidden` and `hidden` are INHERITED: they remove the whole subtree
+       * from the accessibility tree, so a control inside one is never announced
+       * at all and "has no accessible name" is not a defect that can reach a
+       * reader. Checking only the element itself was an incomplete spelling of
+       * the skip this rule already performs, and it fired on real markup:
+       * React Aria's Select renders a hidden `<select>` for browser autofill
+       * inside `<div aria-hidden="true" data-a11y-ignore="aria-hidden-focus">`
+       * (verified in react-aria 3.51.0, private/select/HiddenSelect.js — the
+       * attribute is on the container, and the `<label>` RAC wraps it in is
+       * deliberately empty). No prop reaches it, so an ancestor check is the
+       * only correct spelling.
+       *
+       * `[aria-hidden="true"]` and not `[aria-hidden]`: `aria-hidden="false"`
+       * means the element IS exposed, and skipping on the bare attribute let a
+       * genuinely unnamed control through.
+       */
+      if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
       // Deliberately NOT wrapped in try/catch. If name computation breaks, the
       // gate must crash loudly rather than quietly stop checking.
       const name = computeAccessibleName(el as unknown as HTMLElement, COMPUTED_STYLE_SHIM);

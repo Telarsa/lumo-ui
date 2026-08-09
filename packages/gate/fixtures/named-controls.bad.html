@@ -1,4 +1,13 @@
 <!doctype html>
 <html lang="fa-IR" dir="rtl">
-  <body><button></button><a href="#"></a></body>
+  <body>
+    <button></button>
+    <a href="#"></a>
+    <!-- Not a violation: aria-hidden on an ancestor removes the whole subtree
+         from the accessibility tree. This mirrors React Aria's hidden native
+         <select>, and the rule must not flag it. -->
+    <div aria-hidden="true">
+      <select tabindex="-1"><option>الف</option></select>
+    </div>
+  </body>
 </html>

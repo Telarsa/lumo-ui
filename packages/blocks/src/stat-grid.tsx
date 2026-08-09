@@ -102,9 +102,12 @@ export function StatGrid({ strings, items, locale, cols = "auto", className }: S
        */}
       <Grid cols={cols} gap="md">
         {items.map((item) => {
-          const hasDelta = item.delta !== undefined;
-          const isUp = hasDelta && item.delta !== undefined && item.delta > 0;
-          const isDown = hasDelta && item.delta !== undefined && item.delta < 0;
+          // Read once into a local so the narrowing survives into the JSX
+          // below — `item.delta` is a property access and TypeScript re-widens
+          // it across the callback boundary.
+          const delta = item.delta;
+          const isUp = delta !== undefined && delta > 0;
+          const isDown = delta !== undefined && delta < 0;
 
           return (
             <Card key={item.id} variant="outlined">
@@ -132,7 +135,7 @@ export function StatGrid({ strings, items, locale, cols = "auto", className }: S
                   {formatNumber(item.value, locale, item.format)}
                 </p>
 
-                {item.delta !== undefined ? (
+                {delta !== undefined ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge
                       tone={isUp ? "positive" : isDown ? "critical" : "neutral"}
@@ -149,7 +152,7 @@ export function StatGrid({ strings, items, locale, cols = "auto", className }: S
                           {isUp ? strings.increase : strings.decrease}
                         </span>
                       ) : null}
-                      {formatNumber(item.delta, locale, DELTA_FORMAT)}
+                      {formatNumber(delta, locale, DELTA_FORMAT)}
                     </Badge>
                     {item.deltaCaption !== undefined ? (
                       <span className="text-xs text-fg-subtle">{item.deltaCaption}</span>
