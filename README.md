@@ -28,11 +28,15 @@ to them is a bug, not a customisation.
 ```
 packages/core     the invariants — LumoNode, direction(), formatters, strings
 packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
-packages/ui       the components
+packages/ui       35 components
+packages/blocks   19 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
 apps/website      the showcase, and the first thing the gate runs against
 ```
+
+**Current state.** 35 components, 19 blocks, 54 registry items, 242 tests,
+150 documents graded at 0 violations. See `ROADMAP.md` for what is still open.
 
 ## Getting started
 
@@ -79,7 +83,22 @@ Styling lives in Tailwind utilities inside `cva()`, so `shadcn migrate rtl` and
 A rule that has never been seen to fail is not a rule. This caught a real one:
 `namedControls` originally swallowed an exception and reported green forever.
 
-## What the gate checks
+## The gates, in the order `verify` runs them
+
+| gate | what it proves |
+| --- | --- |
+| `gate:types` | `LumoNode`, the closed `Locale` union, and every required string prop |
+| `gate:no-css-modules` | the styling decision is real, not a comment |
+| `gate:test` | 242 tests, including each gate's own poison fixtures |
+| `gate:registry` | the manifest is derivable from the code, not hand-kept |
+| `gate:smoke` | every item compiles as a **consumer** receives it, outside the workspace |
+| `gate:html` | the bytes actually served are correct |
+
+Each proves something the one before it cannot. The smoke test in particular
+found a real distribution bug — a companion module missing from a registry item
+— that is structurally invisible from inside the workspace.
+
+## What the HTML gate checks
 
 `lumo-gate` parses the built HTML — the bytes a crawler, a JS-disabled reader
 and the first paint receive. No browser, so it runs anywhere.
