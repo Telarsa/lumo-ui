@@ -18,8 +18,8 @@ composition, the Persian layer and the conformance gate are owned. See
 
 | | count | notes |
 |---|---|---|
-| Components | ~62 | **36 shipped**; 14 behaviour-bearing, the rest token compositions |
-| Blocks | ~22 | **19 shipped**; multi-component screens, copy-in |
+| Components | ~50 | **35 shipped.** Remaining: Toast, Slider, TagGroup, Pagination, Steps, SegmentedControl, HoverCard, Autocomplete, standalone Listbox, OTP input, FileUpload, Rating, and the v0.7 date family |
+| Blocks | ~25 | **19 shipped.** Remaining: command palette, table view, chart panel, product detail, checkout, footer, password reset, two-factor, preferences |
 | Locales | 2 | `fa-IR`, `en-US`, complete-or-compile-error |
 | Gate rules | ~10 | each with a poison fixture proving it fails |
 | Owned source | ~12k lines | measured basis: 290 lines per behaviour component |
@@ -55,50 +55,61 @@ site can be built out of it.
 - [x] Every component's announced strings are required props
 - [x] Gate runs against a real two-page build
 
-## v0.3 — Composite components ✅
+## v0.3 — Composite components ◐ mostly
 
 The ones that need a behaviour machine. These are where React Aria earns its
 place.
 
-- [x] Select, ComboBox, Autocomplete, Menu, ContextMenu, Listbox
-- [x] Dialog, Drawer, Popover, Tooltip, HoverCard
-- [x] Tabs, Accordion, Disclosure, Breadcrumbs, Pagination, Steps
-- [x] Toolbar, ToggleGroup, SegmentedControl, Slider, TagGroup
+- [x] Select, ComboBox, Menu
+- [ ] Autocomplete, ContextMenu, standalone Listbox
+- [x] Dialog, Drawer, Popover, Tooltip
+- [ ] HoverCard
+- [x] Tabs, Disclosure (accordion), Breadcrumbs
+- [ ] Pagination, Steps
+- [x] Toolbar, ToggleGroup
+- [ ] SegmentedControl, Slider, TagGroup
 - [ ] Toast + a toast queue
 - [ ] OTP/PIN input, FileUpload/Dropzone, Rating
 
-## v0.4 — Blocks ✅
+## v0.4 — Blocks ◐ mostly
 
 Whole screens, copy-in, composed only from shipped components. This is the
 "start a project on Monday" layer.
 
-- [x] Auth: sign-in, sign-up, OTP verify, password reset, two-factor
-- [x] App shell: sidebar nav, top bar, breadcrumb header, command palette
-- [x] Dashboard: stat grid, activity feed, chart panel, filter bar
-- [x] Data: list-detail split, table view with filters, empty/loading/error states
-- [x] Commerce: listing card grid, product detail, booking rail, checkout summary
-- [x] Settings: profile form, preferences, danger zone
-- [x] Marketing: hero, feature grid, pricing table, FAQ, footer
+- [x] Auth: sign-in, sign-up, OTP verify
+- [ ] Auth: password reset, two-factor
+- [x] App shell: sidebar nav + top bar, page header
+- [ ] Command palette (needs Autocomplete)
+- [x] Dashboard: stat grid, activity feed, filter bar
+- [ ] Chart panel (v0.8 — nothing headless ships charts)
+- [x] Data: list-detail split, data toolbar, empty collection
+- [ ] Table view (blocked on Table, v0.8)
+- [x] Commerce: listing grid, booking summary
+- [ ] Product detail, checkout summary
+- [x] Settings: settings form, danger zone
+- [ ] Preferences
+- [x] Marketing: hero, feature grid, pricing table, FAQ
+- [ ] Footer
 
-## v0.5 — The showcase site
+## v0.5 — The showcase site ◐ mostly
 
 Internal-first (see `DECISIONS.md §0.2`), but built like a real library's docs
 because it is how the library is used and reviewed.
 
-- [ ] `/fa/` and `/en/` route trees, each prerendered with a real
+- [x] `/fa/` and `/en/` route trees, each prerendered with a real
       `<html lang dir>` — locale is a route segment, never client state
-- [ ] Component pages generated from the registry: install, usage, source, props
-- [ ] Live previews inline; one side-by-side `fa`/`en` iframe pair per page
+- [x] Component pages generated from the registry: install, usage, source, props
+- [x] Live previews inline; one side-by-side `fa`/`en` iframe pair per page
 - [ ] Blocks gallery with full-page previews
 - [ ] Theme + density + direction controls
 - [ ] The evidence panel: computed accessible names for the rendered demo
 - [ ] Search over components and blocks
 
-## v0.6 — Registry and distribution
+## v0.6 — Registry and distribution ◐ mostly
 
-- [ ] `registry.json` per component, schema-valid against shadcn's
+- [x] `registry.json` generated from the components that exist, shadcn-shaped
 - [ ] `shadcn build` → static JSON, served privately
-- [ ] Consumer install smoke test in CI: scaffold, add every item, build, gate
+- [x] Consumer install smoke test in CI — 54 items compile outside the workspace
 - [ ] Versioned snapshots so a consumer pins a release rather than `latest`
 - [ ] `--diff` workflow documented for taking upstream changes
 
@@ -162,6 +173,27 @@ Not a version bump; a state of the portfolio.
 7. **Scope discipline over cleverness.** ~47% of React Aria's 88k lines is code a
    two-locale, two-person system would never write. Not writing it is the single
    largest saving available.
+
+## Gaps found by building the blocks
+
+Composing 19 whole screens surfaced four things the component set is missing.
+Recorded here rather than in a chat log, because "the block author worked around
+it" is how a gap becomes permanent:
+
+1. **`Link` cannot take `aria-current`.** React Aria declares it on
+   `AriaBaseButtonProps` but not on `AriaLinkProps`, so `app-shell`'s sidebar
+   marks the active route with a translated `sr-only` string instead. That is
+   arguably more Lumo-ish, but it is a workaround.
+2. **No standalone `ListBox`.** RAC ships one; Lumo exposes it only inside
+   `Select` and `ComboBox`, both popover-bound. `list-detail` therefore builds
+   its master list from buttons, losing typeahead and single-Tab-stop arrow
+   navigation.
+3. **No `Table`.** `data-toolbar` and `list-detail` are the chrome around one,
+   with nothing to put in the middle. Scheduled for v0.8.
+4. **No description-list primitive.** `booking-summary` writes `<dl>` directly —
+   correct semantics, but the one place a block reaches past the library.
+
+---
 
 ## Tripwires
 
