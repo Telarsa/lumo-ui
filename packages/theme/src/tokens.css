@@ -34,7 +34,13 @@
     --lumo-ref-neutral-100: oklch(0.955 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-200: oklch(0.906 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-300: oklch(0.845 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-400: oklch(0.702 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    /* 0.640, not 0.702. At 0.702 a control border measured 2.48:1 against the
+       page and failed WCAG 1.4.11's 3:1 for a form-control boundary — caught by
+       tokens.test.ts, which computes the ratio from these very values rather
+       than from a note in a design file. 0.640 gives 3.15:1 on light and 5.81:1
+       on dark, clearing both grounds without darkening decorative hairlines,
+       which is what --lumo-sys-border is for. */
+    --lumo-ref-neutral-400: oklch(0.640 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-500: oklch(0.577 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-600: oklch(0.468 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-700: oklch(0.383 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));

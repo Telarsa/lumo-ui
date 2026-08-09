@@ -97,10 +97,12 @@ export function EmptyCollection({
                   // algorithm already knows the reading direction.
                   <li key={hint.id} className="flex items-start gap-2">
                     {/*
-                     * A dot, not a numeral. `aria-hidden` because the `<ol>`
-                     * already conveys order to a screen reader, and a bullet
-                     * read aloud is noise. `•` is direction-neutral: it has no
-                     * Bidi_Mirrored pair to get wrong, unlike `›`.
+                     * A drawn dot rather than a bullet CHARACTER. A glyph would
+                     * be a string literal this package ships, and a round span
+                     * is the one shape with no mirroring question at all —
+                     * unlike `›`, which is only safe because Unicode gives it a
+                     * Bidi_Mirrored pair. `aria-hidden` because the `<ol>`
+                     * already conveys order and a bullet read aloud is noise.
                      */}
                     <span aria-hidden="true" className="mbs-1.5 size-1.5 shrink-0 rounded-full bg-fg-subtle" />
                     <span className="min-w-0">{hint.text}</span>

@@ -138,16 +138,13 @@ importers:
       '@lumo-ui/ui':
         specifier: workspace:*
         version: link:../ui
-      class-variance-authority:
-        specifier: 'catalog:'
-        version: 0.7.1
-      react-aria-components:
-        specifier: 'catalog:'
-        version: 1.20.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
     devDependencies:
       '@testing-library/react':
         specifier: 'catalog:'
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -218,6 +215,9 @@ importers:
 
   packages/theme:
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

@@ -13,11 +13,10 @@
   "peerDependencies": { "react": ">=19", "react-dom": ">=19" },
   "dependencies": {
     "@lumo-ui/core": "workspace:*",
-    "@lumo-ui/ui": "workspace:*",
-    "react-aria-components": "catalog:",
-    "class-variance-authority": "catalog:"
+    "@lumo-ui/ui": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",

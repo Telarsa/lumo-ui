@@ -318,6 +318,23 @@
       ]
     },
     {
+      "name": "num",
+      "type": "registry:ui",
+      "title": "Num",
+      "description": "Renders a number in the reader's own numbering system.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/num.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/num.tsx"
+        }
+      ]
+    },
+    {
       "name": "number-field",
       "type": "registry:ui",
       "title": "Number Field",
@@ -680,6 +697,348 @@
           "path": "packages/ui/src/tooltip.tsx",
           "type": "registry:ui",
           "target": "components/ui/tooltip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "activity-feed",
+      "type": "registry:block",
+      "title": "Activity Feed",
+      "description": "A reverse-chronological list of what happened: who did what, and when.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/activity-feed.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/activity-feed.tsx"
+        }
+      ]
+    },
+    {
+      "name": "app-shell",
+      "type": "registry:block",
+      "title": "App Shell",
+      "description": "The signed-in frame: a sidebar on the reading edge, a top bar, and the route.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/app-shell.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/app-shell.tsx"
+        }
+      ]
+    },
+    {
+      "name": "booking-summary",
+      "type": "registry:block",
+      "title": "Booking Summary",
+      "description": "The panel beside a checkout: what is being booked, when, what it costs.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/booking-summary.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/booking-summary.tsx"
+        }
+      ]
+    },
+    {
+      "name": "danger-zone",
+      "type": "registry:block",
+      "title": "Danger Zone",
+      "description": "The irreversible action, behind a confirmation the reader has to type.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/danger-zone.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/danger-zone.tsx"
+        }
+      ]
+    },
+    {
+      "name": "data-toolbar",
+      "type": "registry:block",
+      "title": "Data Toolbar",
+      "description": "The control strip above a table or a card grid: search, sort, view switch,",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/data-toolbar.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/data-toolbar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "empty-collection",
+      "type": "registry:block",
+      "title": "Empty Collection",
+      "description": "\"There is nothing here yet\", with the first steps spelled out.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/empty-collection.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/empty-collection.tsx"
+        }
+      ]
+    },
+    {
+      "name": "faq",
+      "type": "registry:block",
+      "title": "Faq",
+      "description": "Questions and answers, collapsed.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/faq.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/faq.tsx"
+        }
+      ]
+    },
+    {
+      "name": "feature-grid",
+      "type": "registry:block",
+      "title": "Feature Grid",
+      "description": "The \"what it does\" section: a grid of short, self-contained claims.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/feature-grid.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/feature-grid.tsx"
+        }
+      ]
+    },
+    {
+      "name": "filter-bar",
+      "type": "registry:block",
+      "title": "Filter Bar",
+      "description": "Search, a row of dropdown filters, and the chips showing what is currently on.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/filter-bar.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/filter-bar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "hero",
+      "type": "registry:block",
+      "title": "Hero",
+      "description": "The top of a marketing page: a claim, a sentence, and two calls to action.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/hero.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/hero.tsx"
+        }
+      ]
+    },
+    {
+      "name": "list-detail",
+      "type": "registry:block",
+      "title": "List Detail",
+      "description": "The two-pane pattern: a list on the reading edge, the selected record beside it.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/list-detail.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/list-detail.tsx"
+        }
+      ]
+    },
+    {
+      "name": "listing-grid",
+      "type": "registry:block",
+      "title": "Listing Grid",
+      "description": "A grid of purchasable things: a product catalogue, a provider directory, a",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/listing-grid.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/listing-grid.tsx"
+        }
+      ]
+    },
+    {
+      "name": "otp-verify",
+      "type": "registry:block",
+      "title": "Otp Verify",
+      "description": "One-time-code entry: the SMS step every Iranian sign-in flow ends with.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/otp-verify.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/otp-verify.tsx"
+        }
+      ]
+    },
+    {
+      "name": "page-header",
+      "type": "registry:block",
+      "title": "Page Header",
+      "description": "The band at the top of a route: trail, title, one-line summary, actions.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/page-header.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/page-header.tsx"
+        }
+      ]
+    },
+    {
+      "name": "pricing-table",
+      "type": "registry:block",
+      "title": "Pricing Table",
+      "description": "The plan comparison: name, price, what is in, one call to action each.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/pricing-table.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/pricing-table.tsx"
+        }
+      ]
+    },
+    {
+      "name": "settings-form",
+      "type": "registry:block",
+      "title": "Settings Form",
+      "description": "A titled settings panel: fields in, save and cancel out, one status line.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/settings-form.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/settings-form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sign-in",
+      "type": "registry:block",
+      "title": "Sign In",
+      "description": "════════════════════════════════════════════════════════════════════════════",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/sign-in.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/sign-in.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sign-up",
+      "type": "registry:block",
+      "title": "Sign Up",
+      "description": "Account creation.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/sign-up.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/sign-up.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stat-grid",
+      "type": "registry:block",
+      "title": "Stat Grid",
+      "description": "The row of headline figures at the top of a dashboard.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/stat-grid.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/stat-grid.tsx"
         }
       ]
     }

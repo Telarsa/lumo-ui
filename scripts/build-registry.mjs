@@ -21,10 +21,13 @@
  */
 
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const SRC = join(ROOT, "packages/ui/src");
+const SOURCES = [
+  { dir: join(ROOT, "packages/ui/src"), type: "registry:ui", target: "components/ui" },
+  { dir: join(ROOT, "packages/blocks/src"), type: "registry:block", target: "components/blocks" },
+];
 
 /** Packages a consumer must install; everything else is workspace-internal. */
 const EXTERNAL = new Set([
@@ -36,14 +39,14 @@ const EXTERNAL = new Set([
   "tailwind-merge",
 ]);
 
-const files = (await readdir(SRC)).filter(
-  (f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx") && !f.endsWith(".type-test.tsx"),
-);
-
 const items = [];
-for (const file of files.sort()) {
+for (const { dir, type, target } of SOURCES) {
+  const files = (await readdir(dir).catch(() => [])).filter(
+    (f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx") && !f.endsWith(".type-test.tsx"),
+  );
+  for (const file of files.sort()) {
   const name = file.replace(/\.tsx$/, "");
-  const source = await readFile(join(SRC, file), "utf8");
+  const source = await readFile(join(dir, file), "utf8");
 
   const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)]
     .map((m) => m[1])
@@ -60,17 +63,21 @@ for (const file of files.sort()) {
   // @lumo-ui/core is a package, not a copy-in item: it holds the invariants a
   // consumer must NOT diverge from. See DECISIONS.md on the package/copy-in line.
   if (imports.includes("@lumo-ui/core")) dependencies.push("@lumo-ui/core");
+  // A block composes shipped components rather than reimplementing primitives,
+  // so it depends on the library as a package.
+  if (imports.includes("@lumo-ui/ui")) dependencies.push("@lumo-ui/ui");
 
   items.push({
     name,
-    type: "registry:ui",
+    type,
     title: name.replace(/(^|-)(\w)/g, (_, d, c) => (d ? " " : "") + c.toUpperCase()).trim(),
     description: (source.match(/^\s*\*\s+(.+)$/m)?.[1] ?? "").slice(0, 200),
     author: "Telarsa",
     ...(dependencies.length ? { dependencies: [...new Set(dependencies)].sort() } : {}),
     ...(registryDependencies.length ? { registryDependencies } : {}),
-    files: [{ path: `packages/ui/src/${file}`, type: "registry:ui", target: `components/ui/${file}` }],
+    files: [{ path: `${relative(ROOT, dir)}/${file}`, type, target: `${target}/${file}` }],
   });
+  }
 }
 
 const registry = {

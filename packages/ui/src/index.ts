@@ -259,3 +259,6 @@ export {
   toggleButtonVariants,
 } from "./toggle-group.tsx";
 export type { ToggleButtonGroupProps, ToggleButtonProps } from "./toggle-group.tsx";
+
+export { Num, DateText } from "./num.tsx";
+export type { NumProps, DateTextProps } from "./num.tsx";
