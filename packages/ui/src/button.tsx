@@ -1,8 +1,13 @@
 "use client";
 
-import { cva, type VariantProps } from "class-variance-authority";
 import { Button as AriaButton, type ButtonProps as AriaButtonProps } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
+// The cva definition lives in a module with no "use client" so SERVER components
+// can call it — see button.variants.ts. Re-exported here for convenience.
+import { buttonVariants, type ButtonVariantProps } from "./button.variants.ts";
+
+export { buttonVariants };
+export type { ButtonVariantProps };
 
 /**
  * THE COMPONENT SHAPE. Every Lumo component follows this file's structure, and
@@ -23,43 +28,10 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  *     `data-focus-visible`, `data-disabled`), styled with Tailwind's `data-`
  *     variants. No `useState` mirrors what the DOM already says.
  */
-export const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md font-medium " +
-    "whitespace-nowrap transition-colors cursor-pointer select-none " +
-    "data-disabled:pointer-events-none data-disabled:opacity-50 " +
-    "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4",
-  {
-    variants: {
-      variant: {
-        solid: "bg-accent text-accent-fg data-hovered:bg-accent-hover data-pressed:bg-accent-hover",
-        outline:
-          "border border-border-control bg-surface text-fg data-hovered:bg-surface-hover data-pressed:bg-surface-hover",
-        ghost: "text-fg data-hovered:bg-surface-hover data-pressed:bg-surface-hover",
-        // `text-bg`, not `text-white`. The status tokens swap lightness between
-        // themes — --lumo-sys-critical is L 0.520 on light and L 0.700 on dark —
-        // so white text passes on the light fill and fails on the dark one. That
-        // is a contrast bug visible in exactly one theme, which is the kind
-        // nobody catches in review. `--color-bg` swaps with the fill and stays
-        // legible against both.
-        critical: "bg-critical text-bg data-hovered:opacity-90 data-pressed:opacity-90",
-      },
-      size: {
-        // Padding is logical so it mirrors; height comes from the density-scaled
-        // control tokens rather than a hardcoded rem.
-        sm: "h-control-sm px-3 text-sm",
-        md: "h-control-md px-4 text-sm",
-        // lg meets the 44px touch-target floor Khroos specifies.
-        lg: "h-control-lg px-6 text-base",
-        icon: "h-control-md w-control-md p-0",
-      },
-    },
-    defaultVariants: { variant: "solid", size: "md" },
-  },
-);
 
 export interface ButtonProps
   extends Omit<AriaButtonProps, "children" | "className">,
-    VariantProps<typeof buttonVariants> {
+    ButtonVariantProps {
   children?: LumoNode;
   className?: string | undefined;
 }

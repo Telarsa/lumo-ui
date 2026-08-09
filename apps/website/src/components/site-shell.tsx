@@ -38,6 +38,9 @@ export function SiteShell({
             <Link href={`/${lang}/components/`} className="hover:text-fg">
               {t.components}
             </Link>
+            <Link href={`/${lang}/blocks/`} className="hover:text-fg">
+              {t.blocks}
+            </Link>
           </nav>
           <div className="ms-auto flex items-center gap-3 text-sm">
             {/* A real link, not a toggle — see the file header. */}

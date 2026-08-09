@@ -1,4 +1,4 @@
-export { Button, IconButton, buttonVariants } from "./button.tsx";
+export { Button, IconButton } from "./button.tsx";
 export type { ButtonProps, IconButtonProps } from "./button.tsx";
 
 export {
@@ -262,3 +262,6 @@ export type { ToggleButtonGroupProps, ToggleButtonProps } from "./toggle-group.t
 
 export { Num, DateText } from "./num.tsx";
 export type { NumProps, DateTextProps } from "./num.tsx";
+
+export { buttonVariants } from "./button.variants.ts";
+export type { ButtonVariantProps } from "./button.variants.ts";

@@ -83,3 +83,58 @@ describe("coverage — no user-facing English in the library", () => {
     expect(found, `${file} hardcodes user-facing English`).toEqual([]);
   });
 });
+
+describe("coverage — no server module calls a cva that lives on the client", () => {
+  /**
+   * A `cva()` exported from a `"use client"` module is a client reference in the
+   * RSC graph, and a server component that CALLS it fails at build time:
+   *
+   *   Attempted to call buttonVariants() from the server but buttonVariants is
+   *   on the client.
+   *
+   * That is not hypothetical — it broke the whole `/fa-IR/blocks` route.
+   * `hero.tsx` and `pricing-table.tsx` are server-rendered on purpose, so their
+   * marketing copy lands in the first byte, and they styled their links with
+   * `buttonVariants()`.
+   *
+   * The rule checks the DEPENDENCY, not the mere existence of a client-side
+   * cva: a variant only needs its own directive-free module if something on the
+   * server actually reaches for it. Flagging all twenty would be twenty files of
+   * churn for a problem one of them had, and a rule that cries wolf gets
+   * suppressed.
+   */
+  const isClient = (file: string) =>
+    readFileSync(`${SRC}/${file}`, "utf8").trimStart().startsWith('"use client"');
+
+  /** Variant names exported from each client module. */
+  const clientVariants = new Map<string, string>();
+  for (const file of componentFiles.filter(isClient)) {
+    const source = readFileSync(`${SRC}/${file}`, "utf8");
+    for (const m of source.matchAll(/export const (\w+) = cva\(/g)) {
+      clientVariants.set(m[1]!, file);
+    }
+  }
+
+  const serverFiles = componentFiles.filter((f) => !isClient(f));
+
+  it("there are both server and client modules to compare", () => {
+    expect(serverFiles.length).toBeGreaterThan(0);
+    expect(clientVariants.size).toBeGreaterThan(0);
+  });
+
+  it.each(serverFiles.map((f) => [f] as const))(
+    "%s does not import a variant defined on the client",
+    (file) => {
+      const source = readFileSync(`${SRC}/${file}`, "utf8");
+      const offenders: string[] = [];
+      for (const [name, owner] of clientVariants) {
+        if (new RegExp(`\\b${name}\\b`).test(source)) offenders.push(`${name} (from ${owner})`);
+      }
+      expect(
+        offenders,
+        `${file} renders on the server but uses ${offenders.join(", ")}. Move that cva ` +
+          `definition into a *.variants.ts module with no "use client" and re-export it.`,
+      ).toEqual([]);
+    },
+  );
+});

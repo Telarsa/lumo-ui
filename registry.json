@@ -84,8 +84,10 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
         "react-aria-components"
+      ],
+      "registryDependencies": [
+        "button.variants.ts"
       ],
       "files": [
         {
