@@ -36,33 +36,105 @@ available here"* — resolves the other way. It is available here now.
 
 ### What this decision costs, stated plainly
 
-React Aria ships 34 locales and **Persian is not one of them**. That is a real
-deficit and it is why `packages/core` owns a complete `fa-IR` dictionary — 23
-namespaces, 147 keys, 37 of them function-valued — with a parity test against
-the *installed* `en-US` bundle. See §0.1.
+React Aria ships 34 locales and **Persian is not one of them**. Measured, that
+costs far less than it sounds: sweeping 25 components under
+`fa-IR-u-ca-persian-nu-arabext` produced **8 genuine English strings**, and the
+expensive half — `۱۴۰۵ مرداد ۱۸, یکشنبه`, Persian numerals, RTL keyboard
+semantics — comes out correct with zero configuration. See §0.1.
 
 Zag's bus factor concern in §1 was understated, not wrong: one maintainer
 accounts for **84.5%** of Ark's and ~86–88% of Zag's human commits over twelve
 months. React Aria is Adobe-funded. Neither is a guarantee.
 
-### 0.1 One locale per document, complete or the build fails
+### 0.1 Strings are props, not a dictionary — and the reason is SSR
 
-Lumo does **not** delete English. It ships every supported locale complete, and
-constructs the dictionary from the **active locale only**:
+**Amended 9 August 2026 after measuring.** This section previously specified a
+complete 147-key `fa-IR` dictionary injected via `LocalizedStringProvider`. That
+does not work for server-rendered pages, and the reason is structural rather
+than a configuration mistake:
 
-```ts
-new LocalizedStringDictionary({ [locale]: dicts[locale] }, locale)
-```
+`LocalizedStringProvider` **renders no children**. It is not a context provider —
+it emits a `<script>` that sets `window[Symbol.for('react-aria.i18n.strings')]`.
+The dictionary is therefore a *client* payload and reaches nothing during
+`renderToStaticMarkup`. Verified: a dictionary with all 147 keys stamped with a
+sentinel produced **zero** sentinel hits across ComboBox, Select, Menu, Table,
+Tree, GridList, NumberField and TagGroup. Khroos's provider mini-sites must be
+SEO-indexed, so "correct after hydration" is not correct.
 
-A `/fa/` document carries only Persian; an `/en/` document carries only English.
-Neither can fall back to the other because the other is not present — so a
-missing string **throws** instead of silently rendering the wrong language.
-Verified throw paths: *"Strings for package X were not included by
-LocalizedStringProvider"* and *"Could not find intl message ${key} in fa-IR
-locale"*.
+A second reason to avoid the dictionary: function-valued entries are serialised
+with `toString()`, so any closure over module scope emits broken JavaScript into
+the page.
 
-This generalises to any number of languages. Adding Arabic or Turkish is one
-more complete dictionary, not a redesign.
+**So Lumo passes strings as props**, typed in `packages/core/src/strings.ts`,
+where a missing key is a compile error. Of the 8 measured leaks, **5 are
+prop-reachable and are covered**. The remaining 3 are `CalendarCell`'s
+`"Today, <date>"` and `DateSegment`'s `aria-valuetext="Empty"` — both compose
+internally and ignore the props, verified by passing them and observing no
+change. Both belong to Calendar/DateField, which milestone M9 places
+post-launch, and both are announced on interaction rather than read from the
+first byte, so the client dictionary is the right tool for them later.
+
+Correcting an earlier claim: NumberField's `aria-roledescription="Number field"`
+**is** reachable — it sits on the `<input>`, not on `<Group>`. Passing it to
+`Group` emits both values and the English one survives as a duplicate attribute.
+**There is no unreachable English in any V1 component.**
+
+The principle the dictionary version was reaching for still holds and is
+implemented in the type: every declared locale must be complete, there is no
+partial type and no fallback, because a fallback is what puts an English word in
+a Persian sentence.
+
+---
+
+## 0.2 Lumo is private-first; publishing is a later decision
+
+**Decided 9 August 2026.** Lumo UI is consumed inside the Telarsa organisation.
+It is not published to npm and `lumo-ui.com` does not serve a public registry in
+the near term.
+
+Three consequences, and the third is the useful one:
+
+- **No public showcase site is in scope.** The docs/demo site designed earlier
+  was scoped as the public face *and* the registry host. Private-first removes
+  the marketing half entirely; what survives is an internal preview surface,
+  built only when a second consumer needs it.
+- **Distribution is a private GitHub artifact**, not a CDN. Packages travel as
+  git dependencies pinned to a tag; components travel as copy-in from a path or
+  a private registry URL. No npm publish, no OIDC provenance, no scope to claim.
+- **Nothing here can rot in public.** A published promise is what a two-person
+  team cannot maintain — HeadlessUI's Vue target sat a full major and 23 months
+  behind React's while carrying 5.46M downloads a month. Staying private means
+  Lumo owes no one an upgrade path but Telarsa.
+
+Publishing remains available later. Every artifact is built to be publishable —
+schema-valid registry items, no private paths in the emitted JSON — so this is a
+door left open, not a bridge burned.
+
+---
+
+## 0.3 GitHub Teams: the gate can be REQUIRED, not merely available
+
+**Decided 9 August 2026.** The organisation is on the Teams plan, so branch
+protection and required status checks work on private repositories.
+
+This closes the largest hole in the enforcement design. The previous plan
+assumed detect-not-prevent: a consumer repository could delete
+`.github/workflows/lumo.yml` and every gate would silently evaporate, leaving a
+conformance system that only worked where someone remembered to keep it. That is
+the same failure class as a comment explaining a bug two lines above the bug.
+
+With Teams:
+
+- `lumo-gate` runs as a **required status check** on `main` and `develop` in
+  every consuming repository. A red gate blocks the merge rather than emailing
+  someone about it.
+- An organisation ruleset applies the requirement centrally, so a new repository
+  inherits it instead of opting in.
+- Deleting the workflow no longer bypasses the check — a required check that
+  never reports blocks the merge.
+
+The gate is therefore designed to *prevent*, not to *report*, and the
+"accept detect-only" fallback recorded earlier is withdrawn.
 
 ---
 

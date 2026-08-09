@@ -14,7 +14,8 @@
     "gate:no-css-modules": "node scripts/no-css-modules.mjs",
     "typecheck": "pnpm run gate:types",
     "test": "pnpm -r --if-present test",
-    "gate:test": "pnpm -r --if-present run test"
+    "gate:test": "pnpm -r --if-present run test",
+    "gate:html": "node --experimental-strip-types packages/gate/src/cli.ts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
