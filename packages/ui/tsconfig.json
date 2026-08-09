@@ -1,5 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "types": [], "allowImportingTsExtensions": true },
-  "include": ["src/**/*"]
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "src/**/*"
+  ]
 }

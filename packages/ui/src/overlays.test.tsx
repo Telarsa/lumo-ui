@@ -153,7 +153,7 @@ describe("server-rendered markup carries no English", () => {
 });
 
 describe("open-state English, counted rather than assumed", () => {
-  it("a modal dialog announces no English, dismissable or not", () => {
+  it("a plain modal dialog is clean; isDismissable on the OVERLAY adds one 'Dismiss'", () => {
     render(
       <DialogTrigger defaultOpen>
         <Button>باز</Button>

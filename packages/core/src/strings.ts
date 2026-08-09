@@ -29,10 +29,38 @@ import type { Locale } from "./types";
  * `let A=(...a) => SENTINEL + String(val(...a))`, referencing identifiers that
  * do not exist in the browser.
  *
- * ── SCOPE, from a sweep of 25 components ────────────────────────────────────
- * Rendering all 25 under `fa-IR-u-ca-persian-nu-arabext` produced 8 genuine
- * English strings. Five are prop-reachable and are covered here. Three are not,
- * and both affected components are milestone M9 (post-launch, provider tier):
+ * ── SCOPE, and a correction to how it was measured ──────────────────────────
+ *
+ * The first sweep rendered 25 components in their DEFAULT state and found 8
+ * English strings. That method was wrong in a way worth recording, because it
+ * is the same shape as the defects this file exists to prevent: **a closed
+ * overlay renders `null`**, so Popover, Menu, Select's list and ComboBox's
+ * listbox contributed nothing to the sweep, and their leaks were scored as
+ * absent rather than as unmeasured.
+ *
+ * Re-measured with overlays forced open, three more leaks appeared. Two are
+ * verified here by rendering, not by report:
+ *
+ *   Breadcrumbs  `<ol aria-label="Breadcrumbs">` when no label is given —
+ *                `useBreadcrumbs` does `ariaLabel || strings.format(...)`.
+ *   Select       `"Select an item"` as VISIBLE placeholder text. Worse than an
+ *                ARIA leak: a sighted Persian user reads it.
+ *   ComboBox     a second `aria-label="Suggestions"` on the ListBox, alongside
+ *                the already-known "Show suggestions".
+ *
+ * One reported leak did NOT reproduce and is recorded as refuted: an open
+ * Popover was said to carry two `aria-label="Dismiss"`. Server-rendered output
+ * contains none. `DismissButton` does emit that string via `useLabels`, but the
+ * components layer only mounts it in some compositions and not during SSR. It
+ * may still appear after hydration, which the HTML gate cannot see — so it
+ * belongs to the hydrated test tier, not here.
+ *
+ * The lesson for anyone extending this file: **force the component into the
+ * state that renders**, and grep the output. A default-state sweep measures
+ * whichever components happen to be visible.
+ *
+ * Still not prop-reachable, and both belong to milestone M9 (post-launch,
+ * provider tier):
  *
  *   Calendar   `aria-label="Today, ۱۴۰۵ مرداد ۱۸, یکشنبه"`  ← CalendarCell
  *   Calendar   a second internal `aria-label="Next"`          ← composed

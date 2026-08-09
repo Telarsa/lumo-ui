@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 const SRC = import.meta.dirname;
 
 const componentFiles = readdirSync(SRC).filter(
-  (f) => f.endsWith(".tsx") && !f.includes(".test.") && !f.includes(".type-test."),
+  (f: string) => f.endsWith(".tsx") && !f.includes(".test.") && !f.includes(".type-test."),
 );
 
 const barrel = readFileSync(`${SRC}/index.ts`, "utf8");
@@ -29,11 +29,11 @@ describe("coverage — every component is wired", () => {
     expect(componentFiles.length).toBeGreaterThan(20);
   });
 
-  it.each(componentFiles)("%s is exported from the barrel", (file) => {
+  it.each(componentFiles.map((f) => [f] as const))("%s is exported from the barrel", (file) => {
     expect(barrel).toContain(`"./${file}"`);
   });
 
-  it.each(componentFiles)("%s declares \"use client\" or explains why not", (file) => {
+  it.each(componentFiles.map((f) => [f] as const))("%s declares \"use client\" or explains why not", (file) => {
     const source = readFileSync(`${SRC}/${file}`, "utf8");
     const isClient = source.trimStart().startsWith('"use client"');
     if (isClient) return;
@@ -61,7 +61,7 @@ describe("coverage — no user-facing English in the library", () => {
    * no user-facing English at all — a consumer passes every announced string, or
    * it does not compile.
    */
-  it.each(componentFiles)("%s has no English default for an announced string", (file) => {
+  it.each(componentFiles.map((f) => [f] as const))("%s has no English default for an announced string", (file) => {
     const source = readFileSync(`${SRC}/${file}`, "utf8");
     // Strip comments — they legitimately quote English strings when explaining
     // which React Aria default they replace.
