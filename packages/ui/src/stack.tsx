@@ -1,3 +1,7 @@
+/**
+ * No "use client": these are layout primitives with no interaction, so they
+ * render on the server and cost a consumer no hydration.
+ */
 import type { ElementType, HTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";

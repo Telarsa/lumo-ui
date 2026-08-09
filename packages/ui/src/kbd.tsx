@@ -1,3 +1,7 @@
+/**
+ * No "use client": Kbd is presentational and renders on the server, so a
+ * consumer pays no hydration for it.
+ */
 import { Fragment } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@lumo-ui/core";

@@ -43,6 +43,29 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  * `data-[placement=left]:` in a Tailwind variant refers to where the popover
  * actually ended up on screen, and styling against it is direction-correct by
  * construction. Do not "fix" it to `start`/`end`; there is no such value.
+ *
+ * ── EVERY OPEN POPOVER CARRIES TWO ENGLISH LABELS. MEASURED. ────────────────
+ *
+ * Rendering an open Popover, MenuPopover or SelectPopover in jsdom and reading
+ * every `aria-label` in the document yields exactly `["Dismiss", "Dismiss"]`.
+ * RAC's Popover brackets its children with two `DismissButton`s — one before
+ * the content (skipped when `isNonModal`) and one after (unconditional) — each
+ * a 1×1 visually-hidden `<button>` labelled from `@react-aria/overlays`'s
+ * `dismiss` string. `isNonModal` removes one of the two, never both.
+ *
+ * They are NOT prop-reachable: RAC constructs `DismissButton` internally with
+ * only `{onDismiss}`, and its `useLabels` call has no other input to override.
+ * This is the same class of leak as the CalendarCell and DateSegment strings
+ * recorded in `@lumo-ui/core`'s strings.ts, and the same reasoning applies — a
+ * CLOSED popover renders `null`, so none of it reaches the first byte, and the
+ * string is only ever announced after hydration, which is the one place a
+ * client-side `LocalizedStringProvider` genuinely does work.
+ *
+ * Worth stating because it also explains a gap in that file's sweep: the
+ * measurement rendered components in their DEFAULT state, and every overlay in
+ * this batch is closed by default. "Measured zero" meant "zero in the states we
+ * rendered". overlays.test.tsx pins the open-state counts so a RAC upgrade that
+ * changes them is a failing build rather than a discovery.
  */
 export type LumoPlacement = Exclude<
   AriaPlacement,

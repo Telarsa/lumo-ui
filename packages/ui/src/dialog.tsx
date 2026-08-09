@@ -48,10 +48,27 @@ import { IconButton } from "./button.tsx";
  * on the same frame.
  *
  * ── A MEASURED LEAK YOU CANNOT FIX FROM HERE ────────────────────────────────
- * `<DialogModal isDismissable>` makes RAC render an internal `DismissButton`
- * with `aria-label="Dismiss"` (react-aria/private/overlays/DismissButton.mjs
- * builds it from `useLabels(otherProps, stringFormatter.format('dismiss'))`,
- * where `otherProps` is RAC's own `{onDismiss}` — no prop of ours reaches it).
+ * Counted by rendering each overlay open in jsdom and reading every
+ * `aria-label` in the document — see overlays.test.tsx, which pins these
+ * numbers so a RAC upgrade that changes them fails the build:
+ *
+ *     <DialogModal>                   0 English labels
+ *     <DialogOverlay isDismissable>   1  → aria-label="Dismiss"
+ *     <Drawer>                        0
+ *     any <Popover>                   2  (see popover.tsx)
+ *
+ * Note WHERE `isDismissable` goes. In the composed form RAC reads it off the
+ * ModalOverlay and publishes it through an internal context that the Modal
+ * consumes, so `<DialogOverlay isDismissable>` works and
+ * `<DialogModal isDismissable>` is silently inert — it type-checks, because
+ * both components share `ModalOverlayProps`, and it does nothing. Measured; the
+ * first version of the test asserted against the wrong one and passed for the
+ * wrong reason.
+ *
+ * `isDismissable` makes RAC render an internal `DismissButton`, built in
+ * react-aria/private/overlays/DismissButton.mjs from
+ * `useLabels(otherProps, stringFormatter.format('dismiss'))` where `otherProps`
+ * is RAC's own `{onDismiss}`. No prop of ours reaches it.
  *
  * It is NOT in the served HTML: a closed Modal renders `null`, so the first byte
  * a crawler or a no-JS reader receives contains no English. Like the CalendarCell
@@ -59,6 +76,9 @@ import { IconButton } from "./button.tsx";
  * announced on interaction, which is the one place a client-side
  * `LocalizedStringProvider` genuinely works. Stated here so nobody rediscovers
  * it and "fixes" it by passing a prop that RAC ignores.
+ *
+ * A plain modal dialog is clean. If you need dismiss-on-outside-click AND a
+ * clean tree, that is the trade you are making.
  */
 
 /**
@@ -125,6 +145,14 @@ export function DialogTrigger(props: DialogTriggerProps) {
   return <AriaDialogTrigger {...props} />;
 }
 
+/**
+ * The backdrop, and the element that owns dismissal behaviour.
+ *
+ * `isDismissable` and `isKeyboardDismissDisabled` belong HERE, not on
+ * `DialogModal`. Both components take `ModalOverlayProps`, so the compiler
+ * accepts either — but RAC reads dismissal off the overlay and passes it down
+ * through an internal context, so the same prop on the modal is inert.
+ */
 export interface DialogOverlayProps
   extends Omit<AriaModalOverlayProps, "children" | "className"> {
   children?: LumoNode;

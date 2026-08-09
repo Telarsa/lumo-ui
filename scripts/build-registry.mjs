@@ -45,7 +45,9 @@ for (const file of files.sort()) {
   const name = file.replace(/\.tsx$/, "");
   const source = await readFile(join(SRC, file), "utf8");
 
-  const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)].map((m) => m[1]);
+  const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)]
+    .map((m) => m[1])
+    .filter((i) => i !== undefined);
   const dependencies = [...new Set(imports.filter((i) => EXTERNAL.has(i)))].sort();
   const registryDependencies = [
     ...new Set(
@@ -88,7 +90,7 @@ if (items.length === 0) {
 }
 
 console.log(`  registry: ${items.length} item(s)`);
-for (const i of items) {
-  const deps = [...(i.dependencies ?? []), ...(i.registryDependencies ?? [])];
-  console.log(`    ${i.name.padEnd(18)} ${deps.length ? deps.join(", ") : "no dependencies"}`);
+for (const item of items) {
+  const deps = [...(item.dependencies ?? []), ...(item.registryDependencies ?? [])];
+  console.log(`    ${item.name.padEnd(18)} ${deps.length ? deps.join(", ") : "no dependencies"}`);
 }
