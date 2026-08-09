@@ -35,7 +35,13 @@ export const buttonVariants = cva(
         outline:
           "border border-border-control bg-surface text-fg data-hovered:bg-surface-hover data-pressed:bg-surface-hover",
         ghost: "text-fg data-hovered:bg-surface-hover data-pressed:bg-surface-hover",
-        critical: "bg-critical text-white data-hovered:opacity-90 data-pressed:opacity-90",
+        // `text-bg`, not `text-white`. The status tokens swap lightness between
+        // themes — --lumo-sys-critical is L 0.520 on light and L 0.700 on dark —
+        // so white text passes on the light fill and fails on the dark one. That
+        // is a contrast bug visible in exactly one theme, which is the kind
+        // nobody catches in review. `--color-bg` swaps with the fill and stays
+        // legible against both.
+        critical: "bg-critical text-bg data-hovered:opacity-90 data-pressed:opacity-90",
       },
       size: {
         // Padding is logical so it mirrors; height comes from the density-scaled
