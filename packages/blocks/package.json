@@ -1,0 +1,31 @@
+{
+  "name": "@lumo-ui/blocks",
+  "version": "0.0.0",
+  "description": "Whole screen sections composed from shipped Lumo components. Every user-facing string is a required prop.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": { "react": ">=19", "react-dom": ">=19" },
+  "dependencies": {
+    "@lumo-ui/core": "workspace:*",
+    "@lumo-ui/ui": "workspace:*",
+    "react-aria-components": "catalog:",
+    "class-variance-authority": "catalog:"
+  },
+  "devDependencies": {
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "jsdom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@vitejs/plugin-react": "catalog:"
+  }
+}
