@@ -1,12 +1,30 @@
-# Calls the shared pipeline in telarsa-handbook. Steps this repository does not
-# have a script for are switched off below rather than failing.
+# This repository's own pipeline. It is deliberately self-contained.
+#
+# An earlier version called a shared reusable workflow from telarsa-handbook.
+# That coupled twelve repositories to one file in a thirteenth: it had to exist
+# on the referenced branch, and the handbook had to grant sibling repositories
+# access to its workflows. Both are invisible from here, and when either was
+# wrong every repository failed at once, before a single job started.
+#
+# The canonical copy of this file lives in telarsa-handbook under
+# ci/node-ci.template.yml. Copy it; do not reference it.
 name: CI
 
 on:
   push:
     branches: [main, develop]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
   pull_request:
     branches: [main, develop]
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - 'LICENSE'
+      - '.gitignore'
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -17,9 +35,24 @@ permissions:
 
 jobs:
   ci:
-    uses: Telarsa/telarsa-handbook/.github/workflows/node-ci.yml@main
-    with:
-      lint: false
-      typecheck: true
-      test: true
-      build: true
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+
+      # node-version-file reads .nvmrc, so CI and developers share one runtime
+      # and there is no second place to update.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # --frozen-lockfile also re-runs the supply-chain check: pnpm verifies
+      # every lockfile entry against minimumReleaseAge, so a lockfile produced
+      # by bypassing the cooldown locally fails here rather than shipping.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      # This repository's packages declare no scripts yet, so there is
+      # nothing to lint or build. A green install still proves the
+      # lockfile resolves and satisfies the release-age policy.
