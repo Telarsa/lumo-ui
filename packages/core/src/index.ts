@@ -4,3 +4,5 @@ export { cn } from "./cn";
 export { LumoHtml } from "./html";
 export type { LumoHtmlProps } from "./html";
 export { formatNumber, formatDate, parseNumber } from "./format";
+export { STRINGS, stringsFor, fa, en } from "./strings";
+export type { LumoStrings } from "./strings";
