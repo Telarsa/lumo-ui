@@ -3,13 +3,23 @@
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.3.0",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "pnpm --filter @lumo-ui/website dev",
     "build": "pnpm -r build",
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+
+    "verify": "pnpm run gate:types && pnpm run gate:no-css-modules",
+
+    "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
+    "gate:no-css-modules": "node scripts/no-css-modules.mjs",
+
+    "typecheck": "pnpm run gate:types",
+    "test": "pnpm -r --if-present test"
   },
-  "engines": {
-    "node": ">=24"
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
   }
 }

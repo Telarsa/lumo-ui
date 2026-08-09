@@ -1,13 +1,77 @@
 # Decisions, and the evidence for them
 
-Dated 30 July 2026. Each of these was checked rather than recalled; where a
-thing is unverified it says so.
+Originally dated 30 July 2026, amended 9 August 2026. Each of these was checked
+rather than recalled; where a thing is unverified it says so. Superseded
+decisions are struck through and kept, never deleted — the reasoning that was
+once correct is how you tell a reversal from a drift.
 
 ---
 
-## 1. Build on Zag.js, not on hand-written state machines
+## 0. SUPERSEDES §1 — build on React Aria Components, and Lumo is React-only
 
-**Decided.** `@zag-js/preact` exists, is MIT, and is versioned in lockstep with
+**Decided 9 August 2026.** §1 below chose Zag.js, and its reasoning was sound at
+the time: Zag was the best library that could serve **both** React and Preact,
+and Preact mattered because Tessalor is Astro + Preact. That constraint has been
+removed, not argued away.
+
+**Tessalor is out of scope for Lumo.** It is SEO-bound — 449 `.astro` files
+against 63 `.tsx`, static-first by design — and it keeps its own component
+layer for that reason. It is not a Lumo consumer and will not become one.
+
+With the cross-framework requirement gone, the trade §1 named explicitly —
+*"React Aria is the more rigorous library on accessibility, internationalisation
+and screen-reader testing, and Adobe funds it. It is React-only, so it is not
+available here"* — resolves the other way. It is available here now.
+
+### What decided it, verified 9 August 2026
+
+| Fact | Consequence |
+| --- | --- |
+| `@ark-ui/preact` is **not published**; only `@zag-js/preact@1.43.0` is | Zag's cross-framework story covers machines, not components — you write the component layer once per framework regardless |
+| `@internationalized/date` (already a RAC dependency) exports `PersianCalendar`; `toCalendar(today(), new PersianCalendar())` → **1405/5/18** | No third-party Jalali package. Zag has no equivalent |
+| RAC `Table` emits `role="grid"`, `role="columnheader"`, `aria-colindex` in SSR | A real ARIA data grid. Ark ships none |
+| RAC exports `Virtualizer`, `ListLayout`, `GridLayout`, `TableLayout` | Collection virtualization in-library. Ark ships none |
+| Zag hardcodes `aria-roledescription` in ≥8 machines with **no `IntlTranslations` key** | English that a wrapper structurally cannot reach. Measured: 6 such attributes on a rendered Persian page |
+| RAC defaults `createCalendar` to the real factory; Zag skips calendar conversion silently if omitted | Ark degrades a Persian calendar to Gregorian with no warning |
+
+### What this decision costs, stated plainly
+
+React Aria ships 34 locales and **Persian is not one of them**. That is a real
+deficit and it is why `packages/core` owns a complete `fa-IR` dictionary — 23
+namespaces, 147 keys, 37 of them function-valued — with a parity test against
+the *installed* `en-US` bundle. See §0.1.
+
+Zag's bus factor concern in §1 was understated, not wrong: one maintainer
+accounts for **84.5%** of Ark's and ~86–88% of Zag's human commits over twelve
+months. React Aria is Adobe-funded. Neither is a guarantee.
+
+### 0.1 One locale per document, complete or the build fails
+
+Lumo does **not** delete English. It ships every supported locale complete, and
+constructs the dictionary from the **active locale only**:
+
+```ts
+new LocalizedStringDictionary({ [locale]: dicts[locale] }, locale)
+```
+
+A `/fa/` document carries only Persian; an `/en/` document carries only English.
+Neither can fall back to the other because the other is not present — so a
+missing string **throws** instead of silently rendering the wrong language.
+Verified throw paths: *"Strings for package X were not included by
+LocalizedStringProvider"* and *"Could not find intl message ${key} in fa-IR
+locale"*.
+
+This generalises to any number of languages. Adding Arabic or Turkish is one
+more complete dictionary, not a redesign.
+
+---
+
+## ~~1. Build on Zag.js, not on hand-written state machines~~
+
+**SUPERSEDED by §0 on 9 August 2026.** Kept for its reasoning, which was correct
+given the Preact requirement that no longer applies.
+
+~~**Decided.**~~ `@zag-js/preact` exists, is MIT, and is versioned in lockstep with
 the React, Vue, Solid and Svelte adapters — all `1.43.0`, `@zag-js/core`
 published 29 July 2026. Lockstep versioning is the signal that matters: Preact
 is a maintained target rather than a community port that lags releases.

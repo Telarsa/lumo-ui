@@ -53,6 +53,34 @@ jobs:
       # by bypassing the cooldown locally fails here rather than shipping.
       - name: Install
         run: pnpm install --frozen-lockfile
-      # This repository's packages declare no scripts yet, so there is
-      # nothing to lint or build. A green install still proves the
-      # lockfile resolves and satisfies the release-age policy.
+
+      # The whole point of sitting 1: the red/green loop exists before there is
+      # anything to be red about. `verify` chains every gate Lumo has, and gains
+      # one entry per gate as they are built. It passes on an empty workspace,
+      # which is what makes it safe to add the first component against.
+      - name: Verify
+        run: pnpm run verify
+
+      # Runtime truth, checked on the RUNNER rather than on a laptop.
+      #
+      # If the runner's Node ships small-ICU, `Intl` has no Persian calendar and
+      # no arabext numbering system - and every Jalali claim Lumo makes is a lie
+      # that no unit test would catch, because the unit tests run here too.
+      # This is a five-line job that invalidates the entire product if it fails,
+      # so it runs before any component exists to depend on it.
+      - name: Intl / ICU capability
+        run: |
+          node --input-type=module -e '
+            const fail = (m) => { console.error("  FAIL " + m); process.exitCode = 1 };
+            const cal = new Intl.DateTimeFormat("fa-IR").resolvedOptions().calendar;
+            const num = new Intl.DateTimeFormat("fa-IR").resolvedOptions().numberingSystem;
+            const money = new Intl.NumberFormat("fa-IR").format(1234.5);
+            console.log(`  node       ${process.version}`);
+            console.log(`  calendar   ${cal}`);
+            console.log(`  numbering  ${num}`);
+            console.log(`  1234.5     ${money}`);
+            if (cal !== "persian") fail(`fa-IR calendar is "${cal}", expected "persian" - small-ICU build?`);
+            if (num !== "arabext") fail(`fa-IR numberingSystem is "${num}", expected "arabext"`);
+            if (!/[۰-۹]/.test(money)) fail("fa-IR NumberFormat produced no Persian digits");
+            if (!money.includes("٫")) fail("fa-IR decimal separator is not U+066B");
+          '

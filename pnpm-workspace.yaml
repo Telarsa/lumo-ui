@@ -11,3 +11,77 @@ minimumReleaseAge: 1440
 packages:
   - 'packages/*'
   - 'apps/*'
+
+# Every version Lumo depends on is named once, here.
+#
+# EXACT pins, not ranges, for everything that can change rendered output or an
+# accessible name. The reason is the churn model: an upstream change should
+# arrive as a deliberate, reviewed bump that turns the gates red once - never as
+# a silent resolution difference between a laptop and CI. A caret would let the
+# accessibility-tree snapshots drift without a commit to blame.
+#
+# Ranges are used only for build tooling whose output the gates already check.
+catalog:
+  # --- behaviour layer (see DECISIONS.md §0) --------------------------------
+  # Pinned exactly: RAC minors have changed default accessible names before, and
+  # that is precisely what the committed AX snapshots exist to catch.
+  react-aria-components: 1.20.0
+  # Must stay on the version RAC itself resolves, or `Calendar` types come from
+  # two copies of the package and will not assign.
+  '@internationalized/date': 3.12.3
+
+  # --- runtime ---------------------------------------------------------------
+  react: 19.2.8
+  react-dom: 19.2.8
+  '@types/react': 19.2.18
+  '@types/react-dom': 19.2.2
+
+  # --- class composition -----------------------------------------------------
+  # tailwind-merge is pinned exactly: it encodes Tailwind's own conflict groups,
+  # so a minor that mis-merges `ms-2 ms-4` silently produces wrong spacing in RTL.
+  # packages/core/src/cn.test.ts asserts that exact case.
+  clsx: 2.1.1
+  tailwind-merge: 3.6.0
+  class-variance-authority: 0.7.1
+
+  # --- styling ---------------------------------------------------------------
+  tailwindcss: 4.3.3
+  '@tailwindcss/postcss': 4.3.3
+  tw-animate-css: 1.4.0
+
+  # --- icons -----------------------------------------------------------------
+  lucide-react: 1.31.0
+
+  # --- framework -------------------------------------------------------------
+  next: 16.0.4
+  '@fontsource-variable/vazirmatn': 5.3.0
+
+  # --- the gate --------------------------------------------------------------
+  # No browser in CI. linkedom parses the built HTML; dom-accessibility-api
+  # computes accessible names over it.
+  linkedom: 0.18.13
+  dom-accessibility-api: 0.7.1
+
+  # Must track .nvmrc (24), NOT npm latest. Types ahead of the runtime describe
+  # APIs that do not exist at run time, and tsc will happily accept them.
+  '@types/node': 24.13.3
+
+  # --- test / types ----------------------------------------------------------
+  # TypeScript is pinned exactly and must NOT be auto-bumped to 7.x: no released
+  # typescript-eslint accepts it yet.
+  typescript: 6.0.3
+  vitest: ^4.1.10
+  jsdom: ^30.0.0
+  '@testing-library/react': ^17.0.0
+  '@testing-library/user-event': ^15.0.0
+  '@vitejs/plugin-react': ^5.0.0
+
+  # --- lint ------------------------------------------------------------------
+  eslint: ^9.40.0
+  typescript-eslint: ^9.0.0
+  stylelint: ^17.14.1
+
+  # --- distribution ----------------------------------------------------------
+  # The CLI that builds the registry and applies the RTL transform. Pinned so
+  # `shadcn migrate rtl` cannot change its rewrite table under us between runs.
+  shadcn: 4.16.2
