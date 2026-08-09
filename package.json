@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "pnpm --filter @lumo-ui/website dev",
     "build": "pnpm -r --if-present run build",
-    "verify": "pnpm run gate:types && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:html",
+    "verify": "pnpm run gate:types && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:smoke && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
     "gate:no-css-modules": "node scripts/no-css-modules.mjs",
     "typecheck": "pnpm run gate:types",

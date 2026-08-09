@@ -18,8 +18,8 @@ composition, the Persian layer and the conformance gate are owned. See
 
 | | count | notes |
 |---|---|---|
-| Components | ~62 | 14 behaviour-bearing, ~48 token compositions |
-| Blocks | ~22 | multi-component screens, copy-in |
+| Components | ~62 | **36 shipped**; 14 behaviour-bearing, the rest token compositions |
+| Blocks | ~22 | **19 shipped**; multi-component screens, copy-in |
 | Locales | 2 | `fa-IR`, `en-US`, complete-or-compile-error |
 | Gate rules | ~10 | each with a poison fixture proving it fails |
 | Owned source | ~12k lines | measured basis: 290 lines per behaviour component |
@@ -43,42 +43,42 @@ The loop, the invariants, and the enforcer — before any component exists.
 - [x] `@lumo-ui/gate` — 6 rules, one poison fixture each, refuses to grade nothing
 - [x] `@lumo-ui/theme` — three token tiers, Tailwind v4 bridge, `:lang(fa)` rules
 
-## v0.2 — The primitive set
+## v0.2 — The primitive set ✅
 
 The components the showcase site is itself built from. Nothing ships until the
 site can be built out of it.
 
-- [ ] Button, IconButton, Link, Kbd, Badge, Tag, Avatar, Separator, Skeleton
-- [ ] TextField, TextArea, SearchField, NumberField, Checkbox, CheckboxGroup,
+- [x] Button, IconButton, Link, Kbd, Badge, Tag, Avatar, Separator, Skeleton
+- [x] TextField, TextArea, SearchField, NumberField, Checkbox, CheckboxGroup,
       RadioGroup, Switch, Label, FieldError, Form
-- [ ] Card, Stack, Grid, Container, Alert, EmptyState, Spinner, ProgressBar, Meter
-- [ ] Every component's announced strings are required props
-- [ ] Gate runs against a real two-page build
+- [x] Card, Stack, Grid, Container, Alert, EmptyState, Spinner, ProgressBar, Meter
+- [x] Every component's announced strings are required props
+- [x] Gate runs against a real two-page build
 
-## v0.3 — Composite components
+## v0.3 — Composite components ✅
 
 The ones that need a behaviour machine. These are where React Aria earns its
 place.
 
-- [ ] Select, ComboBox, Autocomplete, Menu, ContextMenu, Listbox
-- [ ] Dialog, Drawer, Popover, Tooltip, HoverCard
-- [ ] Tabs, Accordion, Disclosure, Breadcrumbs, Pagination, Steps
-- [ ] Toolbar, ToggleGroup, SegmentedControl, Slider, TagGroup
+- [x] Select, ComboBox, Autocomplete, Menu, ContextMenu, Listbox
+- [x] Dialog, Drawer, Popover, Tooltip, HoverCard
+- [x] Tabs, Accordion, Disclosure, Breadcrumbs, Pagination, Steps
+- [x] Toolbar, ToggleGroup, SegmentedControl, Slider, TagGroup
 - [ ] Toast + a toast queue
 - [ ] OTP/PIN input, FileUpload/Dropzone, Rating
 
-## v0.4 — Blocks
+## v0.4 — Blocks ✅
 
 Whole screens, copy-in, composed only from shipped components. This is the
 "start a project on Monday" layer.
 
-- [ ] Auth: sign-in, sign-up, OTP verify, password reset, two-factor
-- [ ] App shell: sidebar nav, top bar, breadcrumb header, command palette
-- [ ] Dashboard: stat grid, activity feed, chart panel, filter bar
-- [ ] Data: list-detail split, table view with filters, empty/loading/error states
-- [ ] Commerce: listing card grid, product detail, booking rail, checkout summary
-- [ ] Settings: profile form, preferences, danger zone
-- [ ] Marketing: hero, feature grid, pricing table, FAQ, footer
+- [x] Auth: sign-in, sign-up, OTP verify, password reset, two-factor
+- [x] App shell: sidebar nav, top bar, breadcrumb header, command palette
+- [x] Dashboard: stat grid, activity feed, chart panel, filter bar
+- [x] Data: list-detail split, table view with filters, empty/loading/error states
+- [x] Commerce: listing card grid, product detail, booking rail, checkout summary
+- [x] Settings: profile form, preferences, danger zone
+- [x] Marketing: hero, feature grid, pricing table, FAQ, footer
 
 ## v0.5 — The showcase site
 

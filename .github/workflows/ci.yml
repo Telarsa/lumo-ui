@@ -98,6 +98,13 @@ jobs:
           node scripts/build-registry.mjs
           git diff --exit-code registry.json
 
+      # Two minutes standing between us and publishing a registry nobody has
+      # ever installed from. Copies every item into a bare project and compiles
+      # it, so a dependency missing from a registry entry fails here rather than
+      # in a consumer's repository.
+      - name: Consumer smoke test
+        run: pnpm run gate:smoke
+
       # The real one: build the site and grade the bytes it serves. Everything
       # above this line is a proxy; this is the artifact a user receives.
       - name: Build and gate

@@ -17,7 +17,7 @@
  * ever installed from.
  */
 
-import { mkdtemp, readFile, writeFile, mkdir, cp, rm } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile, mkdir, cp, rm, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
@@ -47,6 +47,17 @@ try {
 
   // `@lumo-ui/core` is a real package dependency for a consumer, so it is mapped
   // by path rather than copied — that IS the package/copy-in line under test.
+  // A real consumer has node_modules. Symlinking one is more faithful than
+  // hand-mapping packages through `paths` — it exercises the same resolution a
+  // consumer's bundler performs, so a dependency missing from a registry entry
+  // surfaces as the error they would actually see.
+  //
+  // packages/ui's, not the workspace root's: pnpm keeps the root free of the
+  // runtime dependencies and hoists nothing, so the root has no `react` at all.
+  // The UI package's tree is the closest thing in this repo to what a consumer
+  // installs from the registry's `dependencies`.
+  await symlink(join(ROOT, "packages/ui/node_modules"), join(dir, "node_modules"), "dir");
+
   await writeFile(
     join(dir, "tsconfig.json"),
     JSON.stringify(
@@ -63,13 +74,13 @@ try {
           allowImportingTsExtensions: true,
           exactOptionalPropertyTypes: true,
           noUncheckedIndexedAccess: true,
-          baseUrl: ".",
+          // The two workspace packages a consumer installs rather than copies.
+          // Everything else must resolve from node_modules on its own — that is
+          // precisely what this test is checking.
           paths: {
             "@lumo-ui/core": [join(ROOT, "packages/core/src/index.ts")],
-            "react-aria-components": [join(ROOT, "node_modules/react-aria-components")],
-            "react": [join(ROOT, "node_modules/react")],
+            "@lumo-ui/ui": [join(ROOT, "packages/ui/src/index.ts")],
           },
-          typeRoots: [join(ROOT, "node_modules/@types")],
         },
         include: ["components/**/*"],
       },
