@@ -8,50 +8,167 @@ export function generateStaticParams() {
   return localeParams;
 }
 
+/** Landing copy. Lives here rather than in `locale.ts` because it is this page's. */
+const home = {
+  "fa-IR": {
+    eyebrow: "خصوصی برای تلارسا",
+    getStarted: "شروع کنید",
+    browseBlocks: "بلوک‌ها را ببینید",
+    proofTitle: "این صفحه، ادعایش را ثابت می‌کند",
+    proofBody:
+      "هر عددی که این پایین می‌بینید در همان بایت‌های ارسال‌شده از سرور فارسی است — نه بعد از اجرای جاوااسکریپت. گیت همین را می‌سنجد: اگر یکی از این‌ها به رقم لاتین برگردد، بیلد قرمز می‌شود.",
+    componentsLabel: "کامپوننت",
+    behaviourLabel: "با ماشین رفتار",
+    blocksLabel: "بلوک",
+    reviewedLabel: "آخرین بازبینی",
+    rulesTitle: "قاعده‌هایی که تایپ و تست‌اند، نه مستندات",
+    rules: [
+      {
+        title: "عدد خام کامپایل نمی‌شود",
+        body: "‏children از نوع LumoNode است، پس نوشتن یک عدد داخل JSX خطای تایپ می‌دهد. تقویمی که ۷۷ خانه‌اش رقم لاتین داشت، این‌طور دیگر ساخته نمی‌شود.",
+      },
+      {
+        title: "هر رشته‌ای که خوانده می‌شود، پراپ اجباری است",
+        body: "کتابخانه هیچ انگلیسیِ کاربرپسندی ندارد، حتی به‌عنوان مقدار پیش‌فرض. یک پیش‌فرض، وعده‌ای است که کتابخانه در زبانی که بلد نیست نمی‌تواند نگه دارد.",
+      },
+      {
+        title: "‏dir پراپ ندارد",
+        body: "جهت از خود زبان مشتق می‌شود. جهت اشتباه نه «توصیه‌نشده» که اصلاً قابل نوشتن نیست.",
+      },
+      {
+        title: "هر قاعدهٔ گیت یک نمونهٔ خراب دارد",
+        body: "قاعده‌ای که هرگز ندیده‌ایم شکست بخورد، تزئین است. یکی از همین‌ها استثنا را می‌بلعید و همیشه سبز گزارش می‌داد؛ نمونهٔ خراب در یک دقیقه لو دادش.",
+      },
+    ],
+  },
+  "en-US": {
+    eyebrow: "Private to Telarsa",
+    getStarted: "Get started",
+    browseBlocks: "Browse blocks",
+    proofTitle: "This page proves its own claim",
+    proofBody:
+      "Every figure below is Persian in the bytes the server sent — not after JavaScript runs. The gate grades exactly that: if one of them regressed to Latin digits, the build would go red.",
+    componentsLabel: "Components",
+    behaviourLabel: "With behaviour",
+    blocksLabel: "Blocks",
+    reviewedLabel: "Reviewed",
+    rulesTitle: "Rules that are types and tests, not documentation",
+    rules: [
+      {
+        title: "A raw number does not compile",
+        body: "children is LumoNode, so a bare number inside JSX is a type error. The calendar that shipped 77 Latin day cells cannot be built this way again.",
+      },
+      {
+        title: "Every announced string is a required prop",
+        body: "The library ships no user-facing English, not even as a default. A default is a promise the library cannot keep in a language it does not speak.",
+      },
+      {
+        title: "There is no dir prop",
+        body: "Direction is derived from the locale. A wrong direction is unrepresentable rather than discouraged.",
+      },
+      {
+        title: "Every gate rule has a poison fixture",
+        body: "A rule never seen to fail is decoration. One here swallowed an exception and reported green forever; the fixture caught it within a minute.",
+      },
+    ],
+  },
+} as const;
+
 /**
  * The home page proves the pitch instead of stating it.
  *
- * The numbers and the date below are rendered through `@lumo-ui/core`'s
- * formatters, so on `/fa-IR/` they come out as Persian digits and a Jalali date
- * — in the served HTML, before any JavaScript runs. The gate asserts exactly
- * that: `no-latin-digits` would fail this page if any of them regressed, and
- * `persian-digit-floor` would fail it if the page stopped rendering them at all.
+ * Shaped after `ui.shadcn.com` — eyebrow, headline, sub-headline, a primary and
+ * a secondary call to action — with one deliberate difference. shadcn's hero is
+ * followed by a showcase of what the components look like. Lumo's is followed by
+ * evidence of what they *are*, because "looks right" is precisely the property
+ * the 52-component prototype had while shipping `<html lang="en">` on all 55
+ * Persian pages.
+ *
+ * The numbers and the date render through `@lumo-ui/core`'s formatters, so on
+ * `/fa-IR/` they arrive as Persian digits and a Jalali date in the served HTML,
+ * before any JavaScript runs. That is not decoration either: `no-latin-digits`
+ * fails this page if any of them regress, and `persian-digit-floor` fails it if
+ * the page stops rendering them at all. The claim and its test are the same
+ * bytes.
  */
 export default async function Home({ params }: { params: Promise<{ lang: string }> }) {
   const lang = assertLocale((await params).lang);
   const t = site[lang];
+  const h = home[lang];
   const demos = allDemos();
   const behaviour = demos.filter((d) => d.behaviour).length;
   // A fixed date: a rolling "today" would churn the committed gate fixtures daily.
-  const stamp = new Date("2026-08-09T12:00:00Z");
+  const stamp = new Date("2026-08-10T12:00:00Z");
+
+  const figures: Array<{ value: string; label: string }> = [
+    { value: formatNumber(demos.length, lang), label: h.componentsLabel },
+    { value: formatNumber(behaviour, lang), label: h.behaviourLabel },
+    { value: formatNumber(28, lang), label: h.blocksLabel },
+    {
+      value: formatDate(stamp, lang, { month: "short", day: "numeric" }),
+      label: h.reviewedLabel,
+    },
+  ];
 
   return (
     <SiteShell lang={lang}>
-      <section className="max-w-2xl">
-        <h1 className="text-4xl font-semibold tracking-tight text-fg">{t.tagline}</h1>
-        <p className="mt-4 text-lg text-fg-muted">{t.intro}</p>
+      <section className="max-w-3xl py-8">
+        <p className="text-sm font-medium text-fg-subtle">{h.eyebrow}</p>
+        <h1 className="mt-3 text-balance text-4xl font-semibold tracking-tight text-fg sm:text-5xl">
+          {t.tagline}
+        </h1>
+        <p className="mt-5 max-w-2xl text-pretty text-lg text-fg-muted">{t.intro}</p>
+
+        {/*
+          Two actions, primary first. `h-control-md` is the density token rather
+          than a fixed height, so the compact New York scale applies here as it
+          does to every real control.
+        */}
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link
+            href={`/${lang}/components/`}
+            className="inline-flex h-control-md items-center rounded-md bg-accent px-5 text-sm font-medium text-accent-fg hover:bg-accent-hover"
+          >
+            {h.getStarted}
+          </Link>
+          <Link
+            href={`/${lang}/blocks/`}
+            className="inline-flex h-control-md items-center rounded-md border border-border px-5 text-sm font-medium text-fg hover:bg-surface-hover"
+          >
+            {h.browseBlocks}
+          </Link>
+        </div>
       </section>
 
-      <dl className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
-        {[
-          [formatNumber(demos.length, lang), lang === "fa-IR" ? "کامپوننت" : "Components"],
-          [formatNumber(behaviour, lang), lang === "fa-IR" ? "با ماشین رفتار" : "With behaviour"],
-          [formatNumber(2, lang), lang === "fa-IR" ? "زبان" : "Locales"],
-          [formatDate(stamp, lang, { month: "short", day: "numeric" }), lang === "fa-IR" ? "آخرین بازبینی" : "Reviewed"],
-        ].map(([value, label]) => (
-          <div key={label} className="bg-surface px-4 py-5">
-            <dd className="text-2xl font-semibold tabular-nums text-fg">{value}</dd>
-            <dt className="mt-1 text-xs text-fg-muted">{label}</dt>
-          </div>
-        ))}
-      </dl>
+      <section className="mt-6 border-bs border-border pbs-10">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
+          {h.proofTitle}
+        </h2>
+        <p className="mt-3 max-w-2xl text-sm text-fg-muted">{h.proofBody}</p>
 
-      <Link
-        href={`/${lang}/components/`}
-        className="mt-10 inline-flex h-control-md items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg hover:bg-accent-hover"
-      >
-        {t.components}
-      </Link>
+        <dl className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-4">
+          {figures.map((f) => (
+            <div key={f.label} className="bg-surface px-4 py-5">
+              <dd className="text-2xl font-semibold tabular-nums text-fg">{f.value}</dd>
+              <dt className="mt-1 text-xs text-fg-muted">{f.label}</dt>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      <section className="mt-14">
+        <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
+          {h.rulesTitle}
+        </h2>
+        <ul className="mt-6 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
+          {h.rules.map((rule) => (
+            <li key={rule.title} className="bg-surface px-5 py-5">
+              <h3 className="font-medium text-fg">{rule.title}</h3>
+              <p className="mt-2 text-sm text-fg-muted">{rule.body}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
     </SiteShell>
   );
 }
