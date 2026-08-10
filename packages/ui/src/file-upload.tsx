@@ -4,6 +4,7 @@ import { CloudUpload, Paperclip, X } from "lucide-react";
 import {
   DropZone as AriaDropZone,
   FileTrigger as AriaFileTrigger,
+  Text as AriaText,
   isFileDropItem,
   type DropZoneProps as AriaDropZoneProps,
 } from "react-aria-components";
@@ -189,7 +190,23 @@ export function FileUpload({
         </Button>
       </AriaFileTrigger>
 
-      {children}
+      {/*
+       * `Text`, not a bare `<div>`, and it is rendered even when there is no
+       * hint. `DropZone` mints an id with `useSlotId()` and puts it in the drop
+       * button's `aria-labelledby`; `useSlotId` only clears an unclaimed id in a
+       * layout effect, which never runs on the server. Measured in the
+       * prerendered bytes: `aria-labelledby="<buttonId> react-aria-_R_0_"` with
+       * nothing carrying the second id — a dangling reference that fails
+       * `@lumo-ui/gate`'s `resolved-idrefs`. RAC publishes that id through
+       * `TextContext`, so this element is what claims it. `list-box.tsx` records
+       * the same trap; `toast.tsx` states the rule.
+       *
+       * `elementType="div"`: the hint is prose and a consumer will pass a `<p>`,
+       * which is not valid inside the `<span>` `Text` renders by default.
+       */}
+      <AriaText slot="label" elementType="div" className="text-center">
+        {children}
+      </AriaText>
     </AriaDropZone>
   );
 }

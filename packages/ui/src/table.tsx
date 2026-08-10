@@ -432,36 +432,50 @@ export function ResizableTableContainer({
 /**
  * The drag handle on a column boundary. Goes in `Column`'s `resizer` slot.
  *
- * ═══ SHIPPING THIS ALSO SHIPS ONE ENGLISH STRING NOBODY CAN REACH ═══════════
+ * ═══ THIS ONCE LEAKED ENGLISH BY DESIGN. THE PATCH CLOSED IT ════════════════
  *
  * `useTableColumnResize` puts `aria-valuetext` on the resizer's hidden
- * `<input type="range">`, unconditionally, from its own bundle:
+ * `<input type="range">`, unconditionally, from React Aria's own bundle:
  *
  *     'aria-valuetext': stringFormatter.format('columnSize', {value})
  *     en-US: columnSize: (args) => `${args.value} pixels`
  *
- * Verified by rendering on a `fa-IR` page: the first byte contains
- * `aria-valuetext="75 pixels"`. Verified unreachable: passing `aria-valuetext`
- * to `<ColumnResizer>` changes nothing, because RAC builds the input's props
- * inside the hook and `filterDOMProps(props, {global: true})` — which is what
- * local props go through — does not carry `aria-*` at all.
+ * No prop reaches it. RAC builds the input's props inside the hook, and local
+ * props go through `filterDOMProps(props, {global: true})`, which does not
+ * carry `aria-*` at all — so passing `aria-valuetext` to `<ColumnResizer>`
+ * changes nothing. That was measured, not assumed.
  *
- * That string is BOTH an English word and Latin digits, in an attribute a
- * screen reader speaks. `@lumo-ui/gate`'s `no-latin-aria` rule grades exactly
- * `aria-valuetext`, so **a Persian route that renders a ColumnResizer fails the
- * HTML gate.** That is not a bug in the gate; the gate is right.
+ * ~~So a Persian route that renders a ColumnResizer fails the HTML gate, and
+ * this component may not appear in a `fa-IR` demo.~~ **Superseded.** The string
+ * is unreachable *by prop*, which is not the same as unreachable. It comes from
+ * a bundle, and a bundle is a file:
  *
- * It is shipped anyway, and the precedent is deliberate: `@lumo-ui/core`'s
- * strings.ts already records three unreachable React Aria leaks (CalendarCell,
- * DateSegment) and defers them to the client-dictionary tier in milestone M9
- * rather than withholding the components. This is the same class. What is NOT
- * acceptable is discovering it in production, so:
+ *     patches/react-aria@3.51.0.patch
+ *       + dist/private/intl/table/fa-IR.mjs
+ *       + "columnSize": (args, formatter) =>
+ *             `${formatter.number(args.value)} پیکسل`
  *
- *   - the leak is pinned by a test in `data-display.test.tsx`, which fails when
- *     React Aria changes it in either direction;
- *   - do not put a `ColumnResizer` in a `fa-IR` demo until it is closed.
+ * `formatter.number` is what makes this correct rather than merely translated —
+ * it routes through the `fa-IR-u-nu-arabext` formatter, so the value arrives as
+ * ۱۸۰ and not 180. `LumoProvider` is what selects that bundle; without it React
+ * Aria falls back to `en-US` and the English string returns.
  *
- * Everything else here IS reachable: `label` becomes the resizer's own
+ * Verified by rendering, in the built bytes of both locales:
+ *
+ *     out/view/fa-IR/table/index.html   aria-valuetext="۱۸۰ پیکسل"
+ *     out/view/en-US/table/index.html   aria-valuetext="180 pixels"
+ *
+ * The `fa-IR` table demo therefore ships a real `ResizableTableContainer` and a
+ * real `ColumnResizer`.
+ *
+ * One deliberate asymmetry: `data-display.test.tsx` still pins
+ * `/aria-valuetext="\d+ pixels"/` and is still correct — it renders WITHOUT a
+ * provider, so it measures the unpatched fallback. That test is the alarm for
+ * "someone dropped LumoProvider"; the built HTML above is the alarm for
+ * "someone dropped the patch". Both are needed, and they fail in opposite
+ * directions.
+ *
+ * Everything else here is reachable by prop: `label` becomes the resizer's own
  * `aria-label`, replacing RAC's "Resizer".
  */
 export interface ColumnResizerProps

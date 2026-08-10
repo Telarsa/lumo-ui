@@ -90,6 +90,48 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  * two are meaningless apart. The union below makes that structural: `onRemove`
  * without `removeLabel` is a type error, and `removeLabel` without `onRemove`
  * is unrepresentable.
+ *
+ * ═══ ONE UNREACHABLE DEFECT, PINNED RATHER THAN PAPERED OVER ════════════════
+ *
+ * A server-rendered tag row carries a DANGLING `aria-labelledby`. From
+ * `react-aria/private/gridlist/useGridListItem.mjs`, which `useTag` builds on:
+ *
+ *     let descriptionId = useSlotId();
+ *     ...
+ *     'aria-labelledby': descriptionId && (node['aria-label'] || node.textValue)
+ *       ? `${getRowId(state, node.key)} ${descriptionId}` : undefined,
+ *
+ * `useSlotId` mints an id and only CLEARS an unclaimed one inside a layout
+ * effect — which never runs during `renderToStaticMarkup`. And `useTag` then
+ * throws the matching props away (`let {descriptionProps: _, ...rest} = states`),
+ * so no element can claim it in any composition. Measured on a `fa-IR` render:
+ *
+ *     <div role="row" aria-label="تهران"
+ *          aria-labelledby="…-thr react-aria-_R_eH1_">   ← second id has no element
+ *
+ * `@lumo-ui/gate`'s `resolved-idrefs` rule fails a build over exactly that, and
+ * it is right to by its own terms. After hydration the id is removed and the
+ * dangle count is 0, so this is a FIRST-BYTE defect only — the same tier as the
+ * `aria-describedby` dangles that rule already excludes.
+ *
+ * Verified unreachable, by rendering rather than by report:
+ *
+ *   - passing `aria-labelledby` to `TagItem` changes nothing. RAC's `Tag` builds
+ *     its DOM props with `filterDOMProps(props, {global: true})`, which carries
+ *     no `aria-*` at all, and merges the row's own props after them.
+ *   - dropping `textValue` WOULD take the falsy branch, and is not an option:
+ *     it is the prop that names the row and drives typeahead. See its doc below.
+ *
+ * The four sibling components that had the same `useSlotId` dangle — `ListBox`,
+ * `Autocomplete`, `FileUpload` and `Slider` — are FIXED, because in each of
+ * those RAC publishes the id somewhere a component can claim it (a `Text` slot,
+ * or a `useSlot` branch an `aria-label` takes out). This one has nowhere.
+ *
+ * Consequence, stated so nobody rediscovers it in production: **a `fa-IR` route
+ * that renders a TagGroup fails the HTML gate**, which is why the showcase site
+ * has no tag-group demo yet. `packages/blocks` composes it only inside client
+ * surfaces that are not prerendered. When React Aria closes this, that demo can
+ * be added with no change here.
  */
 
 /**

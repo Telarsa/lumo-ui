@@ -231,9 +231,24 @@ export function Slider({
                * Tailwind translate utility would be overridden by that inline
                * style anyway. Centring is RAC's job precisely because the offset
                * it centres against is direction-dependent.
+               *
+               * `aria-label` is on the THUMB as well as on the slider, and it is
+               * not redundancy — it is a dangling-IDREF fix. `SliderThumb` does
+               * `useSlot(!props['aria-label'] && !props['aria-labelledby'])` to
+               * look for a per-thumb `<Label>`; `useSlot` starts `true` and is
+               * only corrected in a layout effect, which never runs on the
+               * server. Measured in the prerendered bytes:
+               * `aria-labelledby="react-aria-_R_lH1_ react-aria-_R_0_"` on the
+               * hidden range input, where the first id belongs to a `<Label>`
+               * this component never renders — a dangling reference that fails
+               * `@lumo-ui/gate`'s `resolved-idrefs`. Naming the thumb takes that
+               * branch out, and the resulting markup is EXACTLY what RAC settles
+               * on after hydration anyway, so this only makes the first byte
+               * agree with the mounted tree.
                */}
               <AriaSliderThumb
                 data-lumo=""
+                aria-label={label}
                 className={cn(sliderThumbVariants({ size }))}
               />
             </AriaSliderTrack>

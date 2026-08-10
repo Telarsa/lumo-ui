@@ -8,6 +8,7 @@ import {
   Label as AriaLabel,
   ListBox as AriaListBox,
   ListBoxItem as AriaAutocompleteItem,
+  Text as AriaText,
   TextField as AriaTextField,
   useFilter,
   type AutocompleteProps as AriaAutocompleteProps,
@@ -335,6 +336,13 @@ export function AutocompleteListBox<T extends object>(props: AutocompleteListBox
  * gets `''`, never matches any query, and disappears the moment the reader types
  * one character. Nothing throws, nothing logs, and the list simply comes back
  * empty. Pass `textValue` explicitly whenever the children are not plain text.
+ *
+ * The children are wrapped in RAC's `Text` rather than left bare, for the reason
+ * `list-box.tsx` sets out at length: `useOption` mints the option's label id with
+ * `useSlotId()`, and `useSlotId` only clears an unclaimed id in a layout effect —
+ * which never runs on the server. Unclaimed, that id ships as a dangling
+ * `aria-labelledby` in the prerendered bytes and fails `@lumo-ui/gate`'s
+ * `resolved-idrefs`. `Text` is the element RAC publishes the id to.
  */
 export interface AutocompleteItemProps<T extends object = object>
   extends Omit<AriaListBoxItemProps<T>, "children" | "className"> {
@@ -356,7 +364,7 @@ export function AutocompleteItem<T extends object = object>({
       {...optional("textValue", resolvedTextValue)}
       {...props}
     >
-      {children}
+      <AriaText className="min-w-0 flex-1">{children}</AriaText>
     </AriaAutocompleteItem>
   );
 }

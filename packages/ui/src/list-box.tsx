@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import {
   ListBox as AriaListBox,
   ListBoxItem as AriaListBoxItem,
+  Text as AriaText,
   type ListBoxItemProps as AriaListBoxItemProps,
   type ListBoxProps as AriaListBoxProps,
 } from "react-aria-components";
@@ -104,6 +105,22 @@ export function ListBox<T extends object>({ label, className, ...props }: ListBo
  * length in menu.tsx: RAC extracts typeahead text only from a LITERAL string
  * child, and the wrapper the check mark forces destroys it silently — the list
  * still renders, still type-checks, and simply stops responding to typing.
+ *
+ * ── THE WRAPPER IS `Text`, NOT A `<span>`, AND THAT IS A DANGLING IDREF FIX ──
+ *
+ * `useOption` mints a label id with `useSlotId()` and points the option's
+ * `aria-labelledby` at it. `useSlotId` only CLEARS an unclaimed id in a layout
+ * effect — which never runs on the server. Measured in the prerendered bytes of
+ * a standalone ListBox: `aria-labelledby="react-aria-_R_5m_"` on every option,
+ * pointing at an element that does not exist. `@lumo-ui/gate`'s `resolved-idrefs`
+ * rule fails a build over exactly that, and it is right to: an unresolvable name
+ * reference is indistinguishable from a missing name in the first byte.
+ *
+ * RAC publishes that id through `TextContext`'s DEFAULT slot, so the fix is to
+ * make the wrapper the element RAC is looking for. This is the same trap
+ * `toast.tsx` records — "a plain element with a slot attribute claims nothing" —
+ * and the reason it went unnoticed here is that Select's and ComboBox's
+ * listboxes live inside popovers, which render `null` during SSR.
  */
 export interface ListBoxItemProps<T extends object = object>
   extends Omit<AriaListBoxItemProps<T>, "children" | "className"> {
@@ -127,7 +144,7 @@ export function ListBoxItem<T extends object = object>({
     >
       {({ isSelected }) => (
         <>
-          <span className="min-w-0 flex-1">{children}</span>
+          <AriaText className="min-w-0 flex-1">{children}</AriaText>
           {isSelected ? <Check aria-hidden="true" className="ms-auto text-accent" /> : null}
         </>
       )}
