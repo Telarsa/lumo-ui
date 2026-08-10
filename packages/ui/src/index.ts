@@ -54,7 +54,7 @@ export {
 export type { SwitchProps } from "./switch.tsx";
 
 export { Link, linkVariants } from "./link.tsx";
-export type { LinkProps } from "./link.tsx";
+export type { LinkCurrent, LinkProps } from "./link.tsx";
 
 export { Badge, badgeVariants } from "./badge.tsx";
 export type { BadgeProps } from "./badge.tsx";
@@ -262,6 +262,59 @@ export type { ToggleButtonGroupProps, ToggleButtonProps } from "./toggle-group.t
 
 export { Num, DateText } from "./num.tsx";
 export type { NumProps, DateTextProps } from "./num.tsx";
+
+export {
+  Cell,
+  Column,
+  ColumnResizer,
+  ResizableTableContainer,
+  Row,
+  Table,
+  TableBody,
+  TableHeader,
+  TableSelectAllColumn,
+  TableSelectionCell,
+  cellVariants,
+  columnResizerVariants,
+  columnVariants,
+  resizableTableContainerVariants,
+  rowVariants,
+  tableBodyVariants,
+  tableHeaderVariants,
+  tableVariants,
+} from "./table.tsx";
+export type {
+  CellProps,
+  ColumnProps,
+  ColumnResizerProps,
+  ResizableTableContainerProps,
+  RowProps,
+  TableBodyProps,
+  TableHeaderProps,
+  TableProps,
+  TableSelectAllColumnProps,
+  TableSelectionCellProps,
+} from "./table.tsx";
+
+export { ListBox, ListBoxItem, listBoxItemVariants, listBoxVariants } from "./list-box.tsx";
+export type { ListBoxItemProps, ListBoxProps } from "./list-box.tsx";
+
+export {
+  DescriptionDetail,
+  DescriptionGroup,
+  DescriptionList,
+  DescriptionTerm,
+  descriptionDetailVariants,
+  descriptionGroupVariants,
+  descriptionListVariants,
+  descriptionTermVariants,
+} from "./description-list.tsx";
+export type {
+  DescriptionDetailProps,
+  DescriptionGroupProps,
+  DescriptionListProps,
+  DescriptionTermProps,
+} from "./description-list.tsx";
 
 export { buttonVariants } from "./button.variants.ts";
 export type { ButtonVariantProps } from "./button.variants.ts";

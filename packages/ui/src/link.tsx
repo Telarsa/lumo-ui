@@ -30,6 +30,44 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  *     optional. `target` and `rel` are removed from the prop type so there is
  *     no back door: opening a new tab is only reachable through `newTab`, and
  *     `newTab` without `newTabLabel` does not compile.
+ *
+ * ── `isCurrent`: A TYPE GAP, NOT A CAPABILITY GAP ──────────────────────────
+ *
+ * `app-shell.tsx` records that Lumo's `Link` "cannot express `aria-current`",
+ * because React Aria declares that attribute on `AriaBaseButtonProps` and
+ * nowhere on the link side. The first half is right and the conclusion is
+ * wrong, and the difference was settled by rendering rather than by reading
+ * types.
+ *
+ * React Aria 1.20.0's `useLink` writes the attribute through **explicitly**:
+ *
+ *     linkProps: mergeProps(domProps, routerLinkProps, {
+ *       …,
+ *       'aria-disabled': isDisabled || undefined,
+ *       'aria-current': props['aria-current'],
+ *     })
+ *
+ * and RAC's `Link` reads the same prop a second time to derive its own render
+ * state — `isCurrent: !!props['aria-current']` — and stamps `data-current` on
+ * the element. `LinkRenderProps.isCurrent` is a documented render prop with a
+ * documented `[data-current]` selector. The runtime is not merely tolerant of
+ * `aria-current`; it is built around it.
+ *
+ * Only `LinkProps` omits it, and it omits it by accident: the interface extends
+ * `AriaLabelingProps` (label/labelledby/describedby/details) and
+ * `GlobalDOMAttributes` (dir/lang/hidden/inert/translate), and `aria-current`
+ * belongs to neither set.
+ *
+ * Verified by server-rendering `<Link href="/a" aria-current="page">`:
+ *
+ *     <a … href="/a" tabindex="0" aria-current="page" data-current="true">
+ *
+ * So the attribute is real, it is in the first byte, and the gate can see it.
+ * `isCurrent` is the typed spelling of it — a boolean or one of ARIA's
+ * enumerated values, so a caller cannot write `aria-current="pages"`. It is
+ * NOT an announced string and therefore not subject to rule 2: `aria-current`
+ * is a state token that a screen reader speaks in its OWN language, which is
+ * exactly what makes it better than the `sr-only` Persian phrase it replaces.
  */
 export const linkVariants = cva(
   "inline-flex items-center gap-1 rounded-sm underline-offset-4 " +
@@ -60,11 +98,31 @@ export const linkVariants = cva(
   },
 );
 
+/**
+ * The values ARIA defines for `aria-current`.
+ *
+ * `true` means "this one, unspecified kind"; the words name WHAT the reader is
+ * currently on, and a screen reader speaks them in its own language. Closed
+ * union rather than `string`, for the same reason `Locale` is closed: a typo
+ * (`"pages"`) is silently ignored by the browser and leaves the item unmarked.
+ */
+export type LinkCurrent = true | "page" | "step" | "location" | "date" | "time";
+
 interface LinkBaseProps
   extends Omit<AriaLinkProps, "children" | "className" | "target" | "rel">,
     VariantProps<typeof linkVariants> {
   children?: LumoNode;
   className?: string | undefined;
+  /**
+   * Marks this link as the resource the reader is currently on — usually
+   * `"page"` for a navigation item, `"step"` inside a wizard.
+   *
+   * Emits `aria-current` and, through React Aria, `data-current` — so the
+   * active state is styleable with `data-current:` and announced without an
+   * `sr-only` string. See the file header for why this compiles even though
+   * `AriaLinkProps` does not declare the attribute.
+   */
+  isCurrent?: LinkCurrent | false | undefined;
 }
 
 /** The ordinary case: navigation stays in the current tab. */
@@ -98,12 +156,25 @@ export function Link({
   children,
   newTab,
   newTabLabel,
+  isCurrent,
   ...props
 }: LinkProps) {
+  /*
+   * Spread rather than written as a JSX attribute, and the shape is the point:
+   * `AriaLinkProps` does not DECLARE `aria-current`, so `<AriaLink
+   * aria-current={…}>` is a compile error even though `useLink` reads exactly
+   * that key. Building the object separately keeps the one place where Lumo
+   * knows more than React Aria's types visible and commented, instead of
+   * scattering a cast through the call.
+   */
+  const currentProps: { "aria-current"?: LinkCurrent } =
+    isCurrent === undefined || isCurrent === false ? {} : { "aria-current": isCurrent };
+
   return (
     <AriaLink
       data-lumo=""
       className={cn(linkVariants({ variant, size }), className)}
+      {...currentProps}
       // `rel` travels with `target` and is not separately settable. `noopener`
       // closes the reverse-`window.opener` hole; `noreferrer` is included
       // because the two are only jointly honoured by older engines.

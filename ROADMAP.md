@@ -174,6 +174,32 @@ Not a version bump; a state of the portfolio.
    two-locale, two-person system would never write. Not writing it is the single
    largest saving available.
 
+## Vendor before you write
+
+**Probed 10 August 2026 against `ui.shadcn.com/r/styles/aria-vega/`.** shadcn
+publishes an `aria-vega` style — React Aria underneath, the same base Lumo rents —
+so much of what is left already exists upstream and should be adopted rather than
+authored. `scripts/vendor-from-shadcn.mjs` fetches an item; commit the raw emit
+alone, then apply Lumo's changes on top.
+
+| available upstream | must be written here |
+| --- | --- |
+| `table` · `slider` · `pagination` | `toast` · `tag-group` · `steps` |
+| `carousel` · `command` · `calendar` | `segmented-control` · `list-box` |
+| `chart` · `input-otp` | `hover-card` · `autocomplete` · `rating` |
+| | `file-upload` · `date-picker` |
+
+`chart` is worth calling out: the roadmap listed it as the one genuine gap no
+headless library ships, and shadcn has it — 10.5k characters over `recharts`.
+
+**A vendored file is never done on arrival.** Upstream is English-first and
+direction-agnostic, so every one needs a pass for physical utilities, English
+defaults that must become required props, raw numbers in JSX that `LumoNode`
+rejects, and the `cn` import path. Run `shadcn migrate rtl` first; it handles the
+utility rewrites mechanically.
+
+---
+
 ## Gaps found by building the blocks
 
 Composing 19 whole screens surfaced four things the component set is missing.

@@ -27,9 +27,11 @@ registry.json                              generated — run scripts/build-regis
 
 ## Taking a component from shadcn
 
-Do not hand-type something upstream already has.
+**Do not hand-type something upstream already has.** See ROADMAP.md for which of
+the remaining components exist in shadcn's `aria-vega` style — most of them do.
 
 ```bash
+node scripts/vendor-from-shadcn.mjs chart        # or:
 pnpm dlx shadcn@4.16.2 add @shadcn/<name> --base aria
 ```
 
