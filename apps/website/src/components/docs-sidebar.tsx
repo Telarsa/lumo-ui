@@ -27,43 +27,47 @@ export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | 
     { href: `/${lang}/blocks/`, label: t.blocks },
   ];
 
+  // ~28px rows at 13px type: dense enough that all seven tiers scan without a
+  // scroll on a laptop, following the compact New York scale rather than the
+  // roomier default the site chrome uses elsewhere.
+  const row = "block rounded-sm px-2 py-1 text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg";
+  const groupLabel =
+    "flex items-baseline gap-2 px-2 pbe-1.5 text-[0.6875rem] font-medium uppercase tracking-wide text-fg-subtle";
+
   return (
     <nav
       aria-label={lang === "fa-IR" ? "ناوبری مستندات" : "Documentation navigation"}
-      className="text-sm"
+      className="text-[0.8125rem]/5"
     >
-      <ul className="flex flex-col gap-0.5">
-        {sections.map((s) => (
-          <li key={s.href}>
-            <Link
-              href={s.href}
-              className="block rounded-sm px-2 py-1.5 text-fg-muted hover:text-fg"
-            >
-              {s.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <section>
+        <h2 className={groupLabel}>{t.sections}</h2>
+        <ul className="flex flex-col gap-px">
+          {sections.map((s) => (
+            <li key={s.href}>
+              <Link href={s.href} className={row}>
+                {s.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {TIERS.map((tier) => {
         const inTier = demos.filter((d) => d.tier === tier);
         if (!inTier.length) return null;
         return (
-          <section key={tier} className="mt-6">
-            <h2 className="flex items-baseline gap-2 px-2 pbe-2 text-xs font-medium uppercase tracking-wide text-fg-subtle">
+          <section key={tier} className="mt-5">
+            <h2 className={groupLabel}>
               {tierLabel[tier][lang]}
               <span className="tabular-nums">{formatNumber(inTier.length, lang)}</span>
             </h2>
-            <ul className="flex flex-col gap-0.5">
+            <ul className="flex flex-col gap-px">
               {inTier.map((d) => (
                 <li key={d.id}>
                   <Link
                     href={`/${lang}/components/${d.id}/`}
                     aria-current={active === d.id ? "page" : undefined}
-                    className={cn(
-                      "block rounded-sm px-2 py-1.5 text-fg-muted hover:text-fg",
-                      active === d.id && "bg-surface-hover font-medium text-fg",
-                    )}
+                    className={cn(row, active === d.id && "bg-surface-hover font-medium text-fg")}
                   >
                     {d.title[lang]}
                   </Link>

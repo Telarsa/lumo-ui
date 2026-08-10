@@ -28,15 +28,15 @@ to them is a bug, not a customisation.
 ```
 packages/core     the invariants — LumoNode, direction(), formatters, strings
 packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
-packages/ui       52 components
+packages/ui       57 components
 packages/blocks   28 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
 apps/website      the showcase, and the first thing the gate runs against
 ```
 
-**Current state.** 52 components, 28 blocks, 80 registry items, 434 tests,
-326 documents graded at 0 violations. See `ROADMAP.md` for what is still open.
+**Current state.** 57 components, 28 blocks, 85 registry items, 473 tests,
+346 documents graded at 0 violations. See `ROADMAP.md` for what is still open.
 
 ## Getting started
 
@@ -53,10 +53,11 @@ to start. To view the real built output (the bytes the gate graded), run
 `pnpm --filter website build && pnpm --filter website preview` and open
 `http://localhost:4173/fa-IR/`.
 
-If `next dev` logs errors about `/sw.js`: that is a service worker some OTHER
-project once registered on `localhost:3000`, still phoning home. The route now
-404s it. To silence even the 404s, unregister it in DevTools → Application →
-Service Workers.
+If `next dev` once logged errors about `/sw.js`: that was a service worker some
+OTHER project registered on `localhost:3000`, still phoning home.
+`public/sw.js` now serves a self-destructing worker at that path — the browser
+installs it as the update, it unregisters itself and reloads the tab, and after
+one visit there is no worker at all. Nothing to do manually.
 
 ## The rules, and why they are types and tests rather than documentation
 
@@ -108,7 +109,7 @@ A rule that has never been seen to fail is not a rule. This caught a real one:
 | --- | --- |
 | `gate:types` | `LumoNode`, the closed `Locale` union, and every required string prop |
 | `gate:no-css-modules` | the styling decision is real, not a comment |
-| `gate:test` | 434 tests, including each gate's own poison fixtures |
+| `gate:test` | 473 tests, including each gate's own poison fixtures |
 | `gate:registry` | the manifest is derivable from the code, not hand-kept |
 | `gate:smoke` | every item compiles as a **consumer** receives it, outside the workspace |
 | `gate:html` | the bytes actually served are correct |

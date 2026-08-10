@@ -136,9 +136,26 @@ export function InstallTabs({
 
       <TabPanel id="command" className="mt-3">
         <Tabs>
-          <TabList label={t.pmGroup}>
+          {/*
+           * The package-manager switcher is deliberately NOT a third underline
+           * bar. The design review measured three byte-identical TabLists
+           * stacked ~12px apart on the built page — Preview|Code, then
+           * Command|Manual, then this — which flattens the hierarchy into
+           * noise. shadcn renders the PM switch as compact chrome attached to
+           * the code block, and that is what these class overrides do: a small
+           * segmented pill row, subordinate to the underline bar above it.
+           * Same Tabs component, same keyboard behaviour — only the clothes.
+           */}
+          <TabList
+            label={t.pmGroup}
+            className="inline-flex gap-0.5 rounded-md border-be-0 bg-surface-sunken p-0.5"
+          >
             {PMS.map((pm) => (
-              <Tab key={pm} id={pm}>
+              <Tab
+                key={pm}
+                id={pm}
+                className="rounded-sm px-2.5 py-1 font-mono text-xs text-fg-muted after:hidden data-selected:bg-surface data-selected:text-fg data-selected:shadow-xs"
+              >
                 <span dir="ltr" lang="en" data-lumo-latn="">
                   {pm}
                 </span>

@@ -35,6 +35,11 @@ const GROUP_LABEL: Record<Locale, string> = {
  * correcting it after hydration — flashes the wrong icon at every visitor whose
  * system is dark, and a control that lies for 200ms about the state it controls
  * is worse than one that appears 200ms late.
+ *
+ * Visually it is a bare icon triple, no border and no container chrome: the
+ * header owns the frame, and a boxed segmented control inside it read heavier
+ * than the search pill beside it. State still shows — the active option gets
+ * the same `bg-surface-hover` treatment as the sidebar's active row.
  */
 export function ThemeToggle({ lang }: { lang: Locale }) {
   const [theme, setTheme] = useState<Theme>("system");
@@ -61,11 +66,7 @@ export function ThemeToggle({ lang }: { lang: Locale }) {
   ];
 
   return (
-    <div
-      role="group"
-      aria-label={GROUP_LABEL[lang]}
-      className="inline-flex items-center gap-0.5 rounded-md border border-border p-0.5"
-    >
+    <div role="group" aria-label={GROUP_LABEL[lang]} className="inline-flex items-center gap-0.5">
       {options.map(({ value, Icon }) => (
         <button
           key={value}
@@ -76,8 +77,8 @@ export function ThemeToggle({ lang }: { lang: Locale }) {
           aria-pressed={mounted ? theme === value : undefined}
           onClick={() => setTheme(value)}
           className={cn(
-            "grid size-7 place-items-center rounded-sm text-fg-muted transition-colors",
-            "hover:text-fg",
+            "grid size-7 place-items-center rounded-md text-fg-muted transition-colors",
+            "hover:bg-surface-hover hover:text-fg",
             mounted && theme === value && "bg-surface-hover text-fg",
           )}
         >

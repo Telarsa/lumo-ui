@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { Moon, Sun } from "lucide-react";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { direction } from "@lumo-ui/core";
 import { SegmentedControl, SegmentedControlItem } from "@lumo-ui/ui";
@@ -99,22 +100,44 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
   const otherDir = direction(otherLang);
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-surface-sunken px-3 py-2">
-        <div role="group" aria-label={t.directionGroup} className="inline-flex items-center gap-1 text-xs">
+    <div className="flex flex-col gap-2">
+      {/*
+       * Slim chrome, end-aligned above the card — two small segmented groups
+       * rather than a full-width bordered bar. The MECHANISMS are unchanged:
+       * direction is still a real navigation and theme is still scoped client
+       * state (see the file header for both arguments).
+       */}
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        <div
+          role="group"
+          aria-label={t.directionGroup}
+          className="inline-flex w-fit items-center gap-1 rounded-md border border-border bg-surface-sunken p-1"
+        >
+          {/*
+           * "RTL"/"LTR" are technical identifiers, marked as genuinely-Latin
+           * islands exactly like the `lang="…" dir="…"` captions on the frames
+           * below — and they are `aria-hidden`, decoration over the sr-only
+           * per-locale name, so no Latin script is ever announced.
+           */}
           <span
             aria-current="true"
-            className="rounded-sm bg-surface px-2 py-1 font-medium text-fg shadow-sm"
+            className="inline-flex h-6 select-none items-center rounded-sm bg-surface px-2 text-xs font-medium text-fg shadow-sm"
           >
-            {dir === "rtl" ? t.rtl : t.ltr}
+            <span aria-hidden="true" dir="ltr" lang="en" data-lumo-latn="">
+              {dir === "rtl" ? "RTL" : "LTR"}
+            </span>
+            <span className="sr-only">{dir === "rtl" ? t.rtl : t.ltr}</span>
           </span>
           {/* A real navigation — see the file header. */}
           <Link
             href={`/${otherLang}/components/${slug}/#preview`}
             hrefLang={otherLang}
-            className="rounded-sm px-2 py-1 text-fg-muted hover:text-fg"
+            aria-label={otherDir === "rtl" ? t.rtl : t.ltr}
+            className="inline-flex h-6 items-center rounded-sm px-2 text-xs text-fg-muted transition-colors hover:text-fg"
           >
-            {otherDir === "rtl" ? t.rtl : t.ltr}
+            <span aria-hidden="true" dir="ltr" lang="en" data-lumo-latn="">
+              {otherDir === "rtl" ? "RTL" : "LTR"}
+            </span>
           </Link>
         </div>
 
@@ -130,11 +153,22 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
             if (next === "light" || next === "dark") setTheme(next);
           }}
         >
-          <SegmentedControlItem id="light" size="sm">
-            {t.light}
+          {/* Icon-only items: the required per-locale name rides on aria-label. */}
+          <SegmentedControlItem
+            id="light"
+            size="sm"
+            aria-label={t.light}
+            className="h-6 px-2 [&_svg]:size-3.5"
+          >
+            <Sun aria-hidden="true" />
           </SegmentedControlItem>
-          <SegmentedControlItem id="dark" size="sm">
-            {t.dark}
+          <SegmentedControlItem
+            id="dark"
+            size="sm"
+            aria-label={t.dark}
+            className="h-6 px-2 [&_svg]:size-3.5"
+          >
+            <Moon aria-hidden="true" />
           </SegmentedControlItem>
         </SegmentedControl>
       </div>
@@ -163,7 +197,7 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
          * read as exhibits rather than as content that happens to be short.
          * `bg` comes from the token so the dark-theme subtree repaints.
          */
-        className="grid min-h-80 place-items-center rounded-lg border border-border bg-bg p-8 sm:p-10"
+        className="grid min-h-96 place-items-center rounded-lg border border-border bg-bg p-8 sm:p-10"
       >
         <div className="w-full max-w-2xl">{children}</div>
       </div>

@@ -141,11 +141,11 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
         <Button
           variant="outline"
           size="sm"
-          className="h-8 w-44 justify-between gap-2 border-border bg-surface-sunken/60 px-2.5 font-normal text-fg-subtle hover:bg-surface-sunken hover:text-fg-muted sm:w-56"
+          className="h-8 w-40 justify-between gap-2 border-border bg-surface-sunken/60 px-2.5 font-normal text-fg-subtle hover:bg-surface-sunken hover:text-fg-muted sm:w-52"
         >
           <span className="flex min-w-0 items-center gap-2">
             <SearchIcon aria-hidden="true" className="size-3.5 shrink-0" />
-            <span className="truncate text-sm">{copy.triggerLabel[lang]}</span>
+            <span className="truncate text-[0.8125rem]/5">{copy.triggerLabel[lang]}</span>
           </span>
           <Kbd keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="sm" />
         </Button>

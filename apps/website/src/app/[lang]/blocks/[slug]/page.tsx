@@ -1,8 +1,10 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { highlight } from "@/lib/highlight";
 import { LOCALES, direction, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { OnThisPage } from "@/components/on-this-page";
+import { CopyButton } from "@/components/code-block";
 import { assertLocale, site } from "@/lib/locale";
 import { allBlocks, blockById } from "@/lib/blocks";
 
@@ -17,6 +19,54 @@ function sections(lang: Locale) {
     { id: "installation", label: lang === "fa-IR" ? "نصب" : "Installation" },
     { id: "source", label: lang === "fa-IR" ? "کد" : "Source" },
   ];
+}
+
+/**
+ * The header's previous/next pager over `allBlocks()`'s alphabetical order —
+ * the component page's own `Pager`, copied rather than imported for the same
+ * reason `BlockFrame` below copies `DemoFrame`'s shape: a page file must not
+ * export helpers for another route to import, and the sibling page is not this
+ * file's to reach into.
+ *
+ * The glyphs are `‹`/`›`, a Unicode `Bidi_Mirrored` pair (see
+ * `packages/ui/src/pagination.tsx`'s header): under `dir="rtl"` the text
+ * engine redraws each as the other and the flex row reverses, so "previous"
+ * is always toward the reading start with no `rtl:` variant. The glyphs are
+ * `aria-hidden`; the per-locale `aria-label` carrying the neighbour's title is
+ * the name. At either end the missing control is simply not rendered.
+ */
+function Pager({
+  prev,
+  next,
+  navLabel,
+  prevLabel,
+  nextLabel,
+}: {
+  prev: { href: string; title: string } | undefined;
+  next: { href: string; title: string } | undefined;
+  /** Announced name of the `<nav>` landmark. Required, per-locale. */
+  navLabel: string;
+  prevLabel: (title: string) => string;
+  nextLabel: (title: string) => string;
+}) {
+  if (!prev && !next) return null;
+  const itemClass =
+    "inline-flex size-8 items-center justify-center rounded-md border border-border " +
+    "text-sm text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg";
+  return (
+    <nav aria-label={navLabel} className="flex items-center gap-1">
+      {prev && (
+        <Link href={prev.href} aria-label={prevLabel(prev.title)} className={itemClass}>
+          <span aria-hidden="true">‹</span>
+        </Link>
+      )}
+      {next && (
+        <Link href={next.href} aria-label={nextLabel(next.title)} className={itemClass}>
+          <span aria-hidden="true">›</span>
+        </Link>
+      )}
+    </nav>
+  );
 }
 
 /**
@@ -93,13 +143,52 @@ export default async function BlockPage({
   const installHtml = await highlight(install, "bash");
   const sourceHtml = await highlight(block.source, "tsx");
 
+  /* The pager walks the same alphabetical order the blocks index shows. */
+  const blocks = allBlocks();
+  const index = blocks.findIndex((b) => b.id === slug);
+  const prevBlock = index > 0 ? blocks[index - 1] : undefined;
+  const nextBlock = index >= 0 && index < blocks.length - 1 ? blocks[index + 1] : undefined;
+
   return (
     <SiteShell lang={lang} path={`blocks/${slug}/`} wide>
       <div className="grid gap-10 xl:grid-cols-[minmax(0,1fr)_14rem]">
         <article className="min-w-0">
-          <header>
-            <h1 className="text-3xl font-semibold tracking-tight text-fg">{block.title[lang]}</h1>
-            <p className="mt-3 max-w-2xl text-fg-muted">{block.intro[lang]}</p>
+          <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-semibold tracking-tight text-fg">
+                {block.title[lang]}
+              </h1>
+              <p className="mt-2 max-w-2xl text-fg-muted">{block.intro[lang]}</p>
+            </div>
+            {/* The toolbar row, on the end side: copy the install command, then the pager. */}
+            <div className="ms-auto flex shrink-0 items-center gap-2">
+              <CopyButton
+                text={install}
+                label={lang === "fa-IR" ? "کپی دستور نصب" : "Copy install"}
+                copiedLabel={lang === "fa-IR" ? "کپی شد" : "Copied"}
+              />
+              <Pager
+                prev={
+                  prevBlock && {
+                    href: `/${lang}/blocks/${prevBlock.id}/`,
+                    title: prevBlock.title[lang],
+                  }
+                }
+                next={
+                  nextBlock && {
+                    href: `/${lang}/blocks/${nextBlock.id}/`,
+                    title: nextBlock.title[lang],
+                  }
+                }
+                navLabel={lang === "fa-IR" ? "بلوک قبلی و بعدی" : "Previous and next block"}
+                prevLabel={(title) =>
+                  lang === "fa-IR" ? `بلوک قبلی: ${title}` : `Previous block: ${title}`
+                }
+                nextLabel={(title) =>
+                  lang === "fa-IR" ? `بلوک بعدی: ${title}` : `Next block: ${title}`
+                }
+              />
+            </div>
           </header>
 
           <section id="preview" className="mt-8 scroll-mt-24">

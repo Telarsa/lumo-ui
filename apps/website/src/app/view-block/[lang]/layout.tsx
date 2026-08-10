@@ -22,7 +22,14 @@ import "../../globals.css";
  * No `place-items-center` / `p-6` here, unlike the component preview layout.
  * A block IS a page section — `AppShell` sets `min-h-dvh w-full` itself — so
  * centring it inside a padded grid cell would just add a false margin around
- * the one thing this route exists to show full width.
+ * the one thing this route exists to show full width. Worse, padding around a
+ * `min-h-dvh` block guarantees a document scrollbar inside the iframe even
+ * when nothing overflows — the double-scrollbar defect the component preview
+ * layout fixed by trimming ITS padding. The grid still stretches its single
+ * cell, so a short block (a footer, a sign-in card) fills the frame's height
+ * instead of floating over a bare strip of background, and `overflow-x-clip`
+ * keeps wide content scrolling inside its own `overflow-auto` container
+ * rather than as a second, document-level bar.
  */
 // Unknown segments 404 rather than 500 — see the [lang] layout's note on /sw.js.
 export const dynamicParams = false;
@@ -44,7 +51,7 @@ export default async function ViewBlockLayout({
       <head>
         <ThemeScript />
       </head>
-      <body className="min-h-dvh bg-bg text-fg">
+      <body className="grid min-h-dvh overflow-x-clip bg-bg text-fg">
         <LumoProvider locale={lang}>{children}</LumoProvider>
       </body>
     </LumoHtml>

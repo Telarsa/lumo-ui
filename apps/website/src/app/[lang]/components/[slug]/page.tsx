@@ -1,12 +1,14 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LOCALES, type Locale } from "@lumo-ui/core";
+import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { OnThisPage } from "@/components/on-this-page";
 import { DemoFrame } from "@/components/demo-frame";
-import { CodeBlock } from "@/components/code-block";
+import { CodeBlock, CopyButton } from "@/components/code-block";
 import { InstallTabs, type InstallFile } from "@/components/install-tabs";
 import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
 import { highlight } from "@/lib/highlight";
@@ -19,7 +21,13 @@ export function generateStaticParams() {
   return LOCALES.flatMap((lang) => allDemos().map((d) => ({ lang, slug: d.id })));
 }
 
-/** Section headings, in both locales, so the rail and the page cannot disagree. */
+/**
+ * Section headings, in both locales, so the rail and the page cannot disagree.
+ *
+ * There is no "source" entry: the source moved into the Preview | Code tab
+ * pair inside `#preview`, so a rail link to a `#source` fragment would point
+ * at nothing — exactly the drift this function exists to prevent.
+ */
 function sections(lang: Locale) {
   return [
     { id: "preview", label: lang === "fa-IR" ? "پیش‌نمایش" : "Preview" },
@@ -29,8 +37,53 @@ function sections(lang: Locale) {
     },
     { id: "installation", label: lang === "fa-IR" ? "نصب" : "Installation" },
     { id: "directions", label: lang === "fa-IR" ? "هر دو جهت" : "Both directions" },
-    { id: "source", label: lang === "fa-IR" ? "کد" : "Source" },
   ];
+}
+
+/**
+ * The header's previous/next pager, over `allDemos()`'s alphabetical order.
+ *
+ * The glyphs are `‹`/`›` — a Unicode `Bidi_Mirrored` pair, the exact pattern
+ * `packages/ui/src/pagination.tsx`'s header documents: under `dir="rtl"` the
+ * text engine redraws each as the other AND the flex row reverses, so both the
+ * arrowhead and the position flip from normal flow alone. "Previous" is always
+ * toward the reading start. The glyphs are `aria-hidden`; the per-locale
+ * `aria-label` (which carries the neighbour's own title) is the name.
+ *
+ * At either end the missing control is simply not rendered.
+ */
+function Pager({
+  prev,
+  next,
+  navLabel,
+  prevLabel,
+  nextLabel,
+}: {
+  prev: { href: string; title: string } | undefined;
+  next: { href: string; title: string } | undefined;
+  /** Announced name of the `<nav>` landmark. Required, per-locale. */
+  navLabel: string;
+  prevLabel: (title: string) => string;
+  nextLabel: (title: string) => string;
+}) {
+  if (!prev && !next) return null;
+  const itemClass =
+    "inline-flex size-8 items-center justify-center rounded-md border border-border " +
+    "text-sm text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg";
+  return (
+    <nav aria-label={navLabel} className="flex items-center gap-1">
+      {prev && (
+        <Link href={prev.href} aria-label={prevLabel(prev.title)} className={itemClass}>
+          <span aria-hidden="true">‹</span>
+        </Link>
+      )}
+      {next && (
+        <Link href={next.href} aria-label={nextLabel(next.title)} className={itemClass}>
+          <span aria-hidden="true">›</span>
+        </Link>
+      )}
+    </nav>
+  );
 }
 
 /*
@@ -157,6 +210,18 @@ export default async function ComponentPage({
   const depsHtml = deps.length > 0 ? await highlight(depsCommand(deps), "bash") : undefined;
   const sourceHtml = await highlight(demo.source, "tsx");
 
+  /*
+   * The header toolbar's data. The pager walks `allDemos()` — the SAME
+   * alphabetical order the sidebar shows — and "Copy page" carries the install
+   * command plus the component's source, the two things a reader would
+   * otherwise copy one at a time.
+   */
+  const demos = allDemos();
+  const index = demos.findIndex((d) => d.id === slug);
+  const prevDemo = index > 0 ? demos[index - 1] : undefined;
+  const nextDemo = index >= 0 && index < demos.length - 1 ? demos[index + 1] : undefined;
+  const copyPageText = `${CLI_COMMAND.pnpm(item.name)}\n\n${demo.source}`;
+
   return (
     <SiteShell lang={lang} path={`components/${slug}/`} wide>
       {/*
@@ -172,20 +237,83 @@ export default async function ComponentPage({
         </aside>
 
         <article className="min-w-0">
-          <header>
-            <h1 className="text-3xl font-semibold tracking-tight text-fg">{demo.title[lang]}</h1>
-            <p className="mt-3 max-w-2xl text-fg-muted">{demo.intro[lang]}</p>
+          <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-semibold tracking-tight text-fg">
+                {demo.title[lang]}
+              </h1>
+              <p className="mt-2 max-w-2xl text-fg-muted">{demo.intro[lang]}</p>
+            </div>
+            {/* The toolbar row, on the end side: copy the page, then the pager. */}
+            <div className="ms-auto flex shrink-0 items-center gap-2">
+              <CopyButton
+                text={copyPageText}
+                label={lang === "fa-IR" ? "کپی صفحه" : "Copy page"}
+                copiedLabel={lang === "fa-IR" ? "کپی شد" : "Copied"}
+              />
+              <Pager
+                prev={
+                  prevDemo && {
+                    href: `/${lang}/components/${prevDemo.id}/`,
+                    title: prevDemo.title[lang],
+                  }
+                }
+                next={
+                  nextDemo && {
+                    href: `/${lang}/components/${nextDemo.id}/`,
+                    title: nextDemo.title[lang],
+                  }
+                }
+                navLabel={lang === "fa-IR" ? "کامپوننت قبلی و بعدی" : "Previous and next component"}
+                prevLabel={(title) =>
+                  lang === "fa-IR" ? `کامپوننت قبلی: ${title}` : `Previous component: ${title}`
+                }
+                nextLabel={(title) =>
+                  lang === "fa-IR" ? `کامپوننت بعدی: ${title}` : `Next component: ${title}`
+                }
+              />
+            </div>
           </header>
 
           <section id="preview" className="mt-8 scroll-mt-24">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-              {t.preview}
-            </h2>
-            <div className="mt-3">
-              <PreviewToolbar lang={lang} slug={slug}>
-                {demo.render(lang)}
-              </PreviewToolbar>
-            </div>
+            {/*
+             * Preview | Code, the shadcn anatomy: the live demo and its
+             * highlighted source are the same exhibit seen two ways, so they
+             * share one tab pair rather than sitting a page apart. The preview
+             * tab is FIRST — it is the default selection, so the prerendered
+             * HTML contains the demo markup, which `[data-lumo-demo-root]`
+             * (inside PreviewToolbar) and the post-build evidence injector
+             * depend on being in the served bytes.
+             */}
+            <Tabs>
+              <TabList label={lang === "fa-IR" ? "پیش‌نمایش یا کد" : "Preview or code"}>
+                <Tab id="preview">{t.preview}</Tab>
+                <Tab id="code">{t.code}</Tab>
+              </TabList>
+              <TabPanel id="preview" className="mt-4">
+                <PreviewToolbar lang={lang} slug={slug}>
+                  {demo.render(lang)}
+                </PreviewToolbar>
+              </TabPanel>
+              {/*
+               * `shouldForceMount`: without it React Aria mounts ONLY the
+               * selected panel, and the review of the built bytes caught the
+               * consequence — the component source vanished from the served
+               * HTML entirely, on a site whose first claim is "in the served
+               * bytes, before any JavaScript runs". Force-mounted, the panel
+               * is in the DOM (inert while unselected) and a no-JS reader
+               * still gets the source, exactly as the old #source section
+               * served it.
+               */}
+              <TabPanel id="code" shouldForceMount className="mt-4 data-inert:hidden">
+                <CodeBlock
+                  code={demo.source}
+                  html={sourceHtml}
+                  label={lang === "fa-IR" ? "کپی کد کامپوننت" : "Copy the component's source"}
+                  copiedLabel={lang === "fa-IR" ? "کد کامپوننت کپی شد" : "Component source copied"}
+                />
+              </TabPanel>
+            </Tabs>
           </section>
 
           <section id="evidence" className="mt-10 scroll-mt-24">
@@ -237,17 +365,6 @@ export default async function ComponentPage({
             </div>
           </section>
 
-          <section id="source" className="mt-10 scroll-mt-24">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">{t.code}</h2>
-            <div className="mt-3">
-              <CodeBlock
-                code={demo.source}
-                html={sourceHtml}
-                label={lang === "fa-IR" ? "کپی کد کامپوننت" : "Copy the component's source"}
-                copiedLabel={lang === "fa-IR" ? "کد کامپوننت کپی شد" : "Component source copied"}
-              />
-            </div>
-          </section>
         </article>
 
         <OnThisPage lang={lang} items={sections(lang)} />

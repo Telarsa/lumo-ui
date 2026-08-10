@@ -75,7 +75,7 @@ export default async function Gallery({ params }: { params: Promise<{ lang: stri
         <div className="min-w-0">
           <header>
             <h1 className="text-3xl font-semibold tracking-tight text-fg">{t.components}</h1>
-            <p className="mt-3 max-w-2xl text-fg-muted">{copy.intro}</p>
+            <p className="mt-2 max-w-2xl text-fg-muted">{copy.intro}</p>
           </header>
 
           {/*
@@ -96,22 +96,28 @@ export default async function Gallery({ params }: { params: Promise<{ lang: stri
           </nav>
 
           {groups.map((g) => (
-            <section key={g.letter} id={`letter-${g.letter}`} className="mt-10 scroll-mt-24">
+            <section key={g.letter} id={`letter-${g.letter}`} className="mt-8 scroll-mt-24">
               <h2 className="flex items-baseline gap-3 text-sm font-medium uppercase tracking-wide text-fg-muted">
                 {g.letter}
                 <span className="text-xs tabular-nums text-fg-subtle">
                   {formatNumber(g.items.length, lang)}
                 </span>
               </h2>
-              <ul className="mt-4 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+              {/*
+               * The tight grid: name at text-sm, intro demoted to metadata
+               * size, one step of padding less than a content card. An index
+               * row is a signpost, not a reading surface — density is what
+               * lets a letter group be seen whole.
+               */}
+              <ul className="mt-3 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
                 {g.items.map((d) => (
                   <li key={d.id} className="bg-surface">
                     <Link
                       href={`/${lang}/components/${d.id}/`}
-                      className="block h-full px-4 py-4 hover:bg-surface-hover"
+                      className="block h-full px-4 py-3 transition-colors hover:bg-surface-hover"
                     >
-                      <span className="font-medium text-fg">{d.title[lang]}</span>
-                      <span className="mt-1 block line-clamp-2 text-sm text-fg-muted">
+                      <span className="text-sm font-medium text-fg">{d.title[lang]}</span>
+                      <span className="mt-1 block line-clamp-2 text-xs text-fg-muted">
                         {d.intro[lang]}
                       </span>
                     </Link>

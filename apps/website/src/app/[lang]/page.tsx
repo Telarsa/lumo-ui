@@ -115,7 +115,7 @@ function Showcase({ lang, title, body }: { lang: Locale; title: string; body: st
           return (
             <div
               key={id}
-              className={`group relative flex min-h-44 flex-col rounded-lg border border-border bg-surface transition-colors hover:border-border-strong ${
+              className={`group relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface transition-colors hover:border-border-strong ${
                 span === "wide" ? "sm:col-span-2" : ""
               }`}
             >
@@ -133,9 +133,24 @@ function Showcase({ lang, title, body }: { lang: Locale; title: string; body: st
                * its popover inside a link is two interactions fighting over
                * one press. On the landing page the demo is an exhibit; on its
                * own page it is interactive.
+               *
+               * The demo is CENTRED on both axes, deliberately in two layers:
+               * the outer flex centres vertically inside whatever height the
+               * row settled on, and the inner flex centres the exhibit
+               * horizontally. The inner layer matters because demos are not
+               * uniform — Tabs declares `w-full`, Badge is a shrink-wrapped
+               * row, NumberField caps itself at `max-w-xs` — and as plain
+               * block children each of those starts at the inline edge, which
+               * is exactly the top-start hug this layout replaces.
                */}
-              <div className="pointer-events-none flex flex-1 items-center justify-center overflow-hidden p-5">
-                <div className="w-full max-w-64">{demo.render(lang)}</div>
+              <div className="pointer-events-none flex min-h-40 flex-1 items-center justify-center overflow-hidden p-6">
+                <div
+                  className={`flex w-full items-center justify-center ${
+                    span === "wide" ? "max-w-md" : "max-w-64"
+                  }`}
+                >
+                  {demo.render(lang)}
+                </div>
               </div>
             </div>
           );
@@ -183,12 +198,13 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
 
   return (
     <SiteShell lang={lang}>
-      <section className="max-w-3xl py-8">
-        <p className="text-sm font-medium text-fg-subtle">{h.eyebrow}</p>
-        <h1 className="mt-3 text-balance text-4xl font-semibold tracking-tight text-fg sm:text-5xl">
+      <section className="max-w-3xl pbs-12 pbe-8">
+        {/* Same voice as every section label on this page: small caps, wide tracking. */}
+        <p className="text-xs font-medium uppercase tracking-wide text-fg-subtle">{h.eyebrow}</p>
+        <h1 className="mt-4 text-balance text-4xl font-semibold tracking-tight text-fg sm:text-5xl lg:text-6xl">
           {t.tagline}
         </h1>
-        <p className="mt-5 max-w-2xl text-pretty text-lg text-fg-muted">{t.intro}</p>
+        <p className="mt-6 max-w-2xl text-pretty text-lg text-fg-muted">{t.intro}</p>
 
         {/*
           Two actions, primary first. `h-control-md` is the density token rather

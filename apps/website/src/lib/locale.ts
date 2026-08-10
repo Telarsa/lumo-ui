@@ -39,6 +39,8 @@ export const site = {
     blocks: "بلوک‌ها",
     switchTo: "English",
     switchLabel: "تغییر زبان به انگلیسی",
+    github: "مخزن گیت‌هاب لومو",
+    sections: "بخش‌ها",
     theme: "تغییر پوسته",
     intro:
       "کامپوننت‌های دسترس‌پذیر برای محصولاتی که به فارسی عرضه می‌شوند. تقویم جلالی، ارقام فارسی، و نام‌های دسترس‌پذیر فارسی — از همان اولین بایت.",
@@ -54,6 +56,8 @@ export const site = {
     blocks: "Blocks",
     switchTo: "فارسی",
     switchLabel: "Switch language to Persian",
+    github: "Lumo GitHub repository",
+    sections: "Sections",
     theme: "Toggle theme",
     intro:
       "Accessible components for products that ship in Persian. Jalali calendars, Persian numerals, and Persian accessible names — from the first byte.",

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Locale } from "@lumo-ui/core";
+import { cn } from "@lumo-ui/core";
 import { site } from "@/lib/locale";
 import { allBlocks } from "@/lib/blocks";
 import { allDemos } from "@/lib/demos";
@@ -32,6 +33,19 @@ import { ThemeToggle } from "./theme-toggle";
  */
 const searchIndex = buildSearchIndex(allDemos(), allBlocks());
 
+/**
+ * lucide-react 1.x removed its brand icons, so the GitHub mark is inlined —
+ * one path, `fill-currentColor`, decorative. The LINK carries the accessible
+ * name (per locale, from `site`); the drawing never does.
+ */
+function GitHubMark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className={cn("fill-current", className)}>
+      <path d="M12 .5C5.65.5.5 5.66.5 12.02c0 5.09 3.29 9.4 7.86 10.93.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.7 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.7 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11.1 11.1 0 0 1 5.79 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.43-2.7 5.41-5.27 5.69.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.67.8.56A11.52 11.52 0 0 0 23.5 12.02C23.5 5.66 18.35.5 12 .5Z" />
+    </svg>
+  );
+}
+
 export function SiteShell({
   lang,
   children,
@@ -46,6 +60,14 @@ export function SiteShell({
 }) {
   const t = site[lang];
   const other: Locale = lang === "fa-IR" ? "en-US" : "fa-IR";
+  // The path prop already encodes which area of the site this page lives in;
+  // deriving the active link from it keeps the header stateless and honest.
+  const section = path.startsWith("components") ? "components" : path.startsWith("blocks") ? "blocks" : null;
+
+  const navLinks: Array<{ key: "components" | "blocks"; href: string; label: string }> = [
+    { key: "components", href: `/${lang}/components/`, label: t.components },
+    { key: "blocks", href: `/${lang}/blocks/`, label: t.blocks },
+  ];
 
   return (
     <div className="min-h-dvh flex flex-col">
@@ -61,27 +83,45 @@ export function SiteShell({
             />
             {t.title}
           </Link>
-          <nav className="flex items-center gap-5 text-sm font-medium text-fg-muted">
-            <Link href={`/${lang}/components/`} className="transition-colors hover:text-fg">
-              {t.components}
-            </Link>
-            <Link href={`/${lang}/blocks/`} className="transition-colors hover:text-fg">
-              {t.blocks}
-            </Link>
+          <nav className="flex items-center gap-5 text-sm">
+            {navLinks.map((l) => (
+              <Link
+                key={l.key}
+                href={l.href}
+                aria-current={section === l.key ? "page" : undefined}
+                className={cn(
+                  "transition-colors hover:text-fg",
+                  section === l.key ? "font-medium text-fg" : "text-fg-muted",
+                )}
+              >
+                {l.label}
+              </Link>
+            ))}
           </nav>
-          <div className="ms-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-1.5">
             <SiteSearch lang={lang} index={searchIndex} />
-            <span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
-            <ThemeToggle lang={lang} />
-            {/* A real link, not a toggle — see the file header. */}
-            <Link
-              href={`/${other}/${path}`}
-              hrefLang={other}
-              aria-label={t.switchLabel}
-              className="inline-flex h-8 items-center rounded-md px-2.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg"
-            >
-              {t.switchTo}
-            </Link>
+            <div className="flex items-center gap-0.5">
+              {/* Icon-only, so the accessible name is required copy — see locale.ts. */}
+              <a
+                href="https://github.com/Telarsa/lumo-ui"
+                target="_blank"
+                rel="noreferrer"
+                aria-label={t.github}
+                className="grid size-8 place-items-center rounded-md text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg"
+              >
+                <GitHubMark className="size-4" />
+              </a>
+              <ThemeToggle lang={lang} />
+              {/* A real link, not a toggle — see the file header. */}
+              <Link
+                href={`/${other}/${path}`}
+                hrefLang={other}
+                aria-label={t.switchLabel}
+                className="inline-flex h-8 items-center rounded-md px-2 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg"
+              >
+                {t.switchTo}
+              </Link>
+            </div>
           </div>
         </div>
       </header>

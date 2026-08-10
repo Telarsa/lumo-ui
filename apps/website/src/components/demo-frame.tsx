@@ -11,7 +11,10 @@ import { direction } from "@lumo-ui/core";
  *
  * Lazy-loaded and fixed-height on purpose — a ResizeObserver + postMessage
  * handshake would add JavaScript to every component page to save a few pixels
- * of whitespace.
+ * of whitespace. The height is GENEROUS (`h-96`) rather than minimal: the
+ * inner document centres the demo and only scrolls when content genuinely
+ * overflows, so a stingy frame height is what used to produce a document
+ * scrollbar stacked on top of a ListBox's own — two scrollbars for one list.
  */
 export function DemoFrame({
   slug,
@@ -49,7 +52,7 @@ export function DemoFrame({
             : `${title} — ${lang === "fa-IR" ? "Persian" : "English"}`
         }
         loading="lazy"
-        className="block h-72 w-full bg-surface"
+        className="block h-96 w-full bg-surface"
       />
     </figure>
   );

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { cn } from "@lumo-ui/core";
-import { IconButton } from "@lumo-ui/ui";
+import { Button, IconButton } from "@lumo-ui/ui";
 
 /**
  * A code sample with a copy button, used for every command and every source
@@ -117,5 +117,68 @@ export function CodeBlock({ code, html, label, copiedLabel, className }: CodeBlo
         {copied ? copiedLabel : ""}
       </span>
     </div>
+  );
+}
+
+/**
+ * A copy control with a VISIBLE label — the page-header "Copy page" /
+ * "Copy install" affordance — as opposed to `CodeBlock`'s icon-only button
+ * that floats over a `<pre>`.
+ *
+ * Same contract as `CodeBlock`: `label` and `copiedLabel` are REQUIRED in the
+ * page's locale, and the `role="status"` region is what actually announces the
+ * copied state — the visible text swap is for sighted readers, the live region
+ * for everyone else. The visible text and the accessible name are the same
+ * string in both states on purpose: a control whose spoken name differs from
+ * its printed one is unreachable by voice.
+ */
+export interface CopyButtonProps {
+  /** The exact text copied to the clipboard. */
+  text: string;
+  /** Visible text and accessible name before a copy. Required. */
+  label: string;
+  /** Visible text, accessible name and live announcement after a copy. Required. */
+  copiedLabel: string;
+  className?: string | undefined;
+}
+
+export function CopyButton({ text, label, copiedLabel, className }: CopyButtonProps) {
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(timeoutRef.current), []);
+
+  async function onCopy() {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // Same stance as CodeBlock: the platform can refuse the clipboard, and
+      // there is nothing further this control can do about it.
+      return;
+    }
+    setCopied(true);
+    clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <span className={cn("inline-flex", className)}>
+      <Button
+        variant="outline"
+        size="sm"
+        onPress={onCopy}
+        className="h-7 gap-1.5 px-2.5 text-xs [&_svg]:size-3.5"
+      >
+        {copied ? (
+          <Check aria-hidden="true" className="text-positive" />
+        ) : (
+          <Copy aria-hidden="true" />
+        )}
+        {copied ? copiedLabel : label}
+      </Button>
+      <span role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {copied ? copiedLabel : ""}
+      </span>
+    </span>
   );
 }

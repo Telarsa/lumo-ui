@@ -83,3 +83,18 @@ code, pre, kbd, samp {
 [data-theme="dark"] .shiki span {
   color: var(--shiki-dark) !important;
 }
+
+/*
+ * `tracking-wide` is banned from reaching Persian text. Letter-spacing severs
+ * the joins between Arabic-script letters — the exact defect tokens.css
+ * documents — and the theme's :lang(fa) guard covers prose defaults but loses
+ * to a utility applied directly to the element, which is how the fa-IR hero
+ * eyebrow shipped with gapped joins. This wins over the utility (same layer,
+ * later in the sheet, equal-or-higher specificity) for the whole Persian
+ * document, where the site's small-caps label style is carried by size and
+ * colour alone.
+ */
+html[lang="fa-IR"] .tracking-wide,
+html[lang="fa-IR"] .tracking-widest {
+  letter-spacing: normal;
+}
