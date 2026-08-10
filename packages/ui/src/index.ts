@@ -408,3 +408,98 @@ export type {
 
 export { LumoProvider } from "./provider.tsx";
 export type { LumoProviderProps } from "./provider.tsx";
+
+export {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  useCarousel,
+} from "./carousel.tsx";
+export type {
+  CarouselApi,
+  CarouselContentProps,
+  CarouselControlProps,
+  CarouselItemProps,
+  CarouselProps,
+} from "./carousel.tsx";
+
+export {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+  commandCheckVariants,
+  commandEmptyVariants,
+  commandGroupHeadingVariants,
+  commandGroupVariants,
+  commandInputVariants,
+  commandInputWrapperVariants,
+  commandItemVariants,
+  commandListVariants,
+  commandSeparatorVariants,
+  commandShortcutVariants,
+  commandVariants,
+} from "./command.tsx";
+export type {
+  CommandDialogProps,
+  CommandEmptyProps,
+  CommandGroupProps,
+  CommandInputProps,
+  CommandItemProps,
+  CommandListProps,
+  CommandProps,
+  CommandSeparatorProps,
+  CommandShortcutProps,
+} from "./command.tsx";
+
+export {
+  ChartCategoryAxis,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartStyle,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartValueAxis,
+} from "./chart.tsx";
+export type {
+  ChartAxisProps,
+  ChartContainerProps,
+  ChartLegendContentProps,
+  ChartTooltipContentProps,
+  ChartTooltipProps,
+} from "./chart.tsx";
+
+/*
+ * Same rule as `pagination.variants.ts` above. Chart's classes, its theme
+ * stylesheet builder AND its direction arithmetic come from the directive-free
+ * module, never through `chart.tsx`. The chart panel on the roadmap is a SERVER
+ * component — a title, a delta and a legend key around a client island — and
+ * routing `chartMirror` or `chartContainerVariants` through the client component
+ * would make them client references and fail that page's prerender.
+ */
+export {
+  chartColor,
+  chartColorVar,
+  chartContainerVariants,
+  chartLegendItemVariants,
+  chartLegendVariants,
+  chartMirror,
+  chartStyleSheet,
+  chartTickFormatter,
+  chartTooltipIndicatorVariants,
+  chartTooltipVariants,
+} from "./chart.variants.ts";
+export type {
+  ChartConfig,
+  ChartCrossAxisMirror,
+  ChartMainAxisMirror,
+  ChartMirror,
+} from "./chart.variants.ts";

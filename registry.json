@@ -22,6 +22,28 @@
       ]
     },
     {
+      "name": "autocomplete",
+      "type": "registry:ui",
+      "title": "Autocomplete",
+      "description": "A text field bound to a collection it filters. The primitive underneath a",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/autocomplete.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/autocomplete.tsx"
+        }
+      ]
+    },
+    {
       "name": "avatar",
       "type": "registry:ui",
       "title": "Avatar",
@@ -121,6 +143,54 @@
       ]
     },
     {
+      "name": "carousel",
+      "type": "registry:ui",
+      "title": "Carousel",
+      "description": "A slide carousel, over embla.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "embla-carousel-react",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/carousel.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/carousel.tsx"
+        }
+      ]
+    },
+    {
+      "name": "chart",
+      "type": "registry:ui",
+      "title": "Chart",
+      "description": "Charts. The one thing no headless library ships, and the reason this file is",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "recharts"
+      ],
+      "registryDependencies": [
+        "chart.variants.ts"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/chart.tsx"
+        },
+        {
+          "path": "packages/ui/src/chart.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/chart.variants.ts"
+        }
+      ]
+    },
+    {
       "name": "checkbox",
       "type": "registry:ui",
       "title": "Checkbox",
@@ -163,6 +233,29 @@
           "path": "packages/ui/src/combobox.tsx",
           "type": "registry:ui",
           "target": "components/ui/combobox.tsx"
+        }
+      ]
+    },
+    {
+      "name": "command",
+      "type": "registry:ui",
+      "title": "Command",
+      "description": "A command palette — a filtered list of actions, keyboard-first.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "dialog"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/command.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/command.tsx"
         }
       ]
     },
@@ -265,6 +358,35 @@
       ]
     },
     {
+      "name": "file-upload",
+      "type": "registry:ui",
+      "title": "File Upload",
+      "description": "A drop area and a file picker, plus the list of what was chosen.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "button",
+        "file-upload.variants.ts",
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/file-upload.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/file-upload.tsx"
+        },
+        {
+          "path": "packages/ui/src/file-upload.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/file-upload.variants.ts"
+        }
+      ]
+    },
+    {
       "name": "form",
       "type": "registry:ui",
       "title": "Form",
@@ -280,6 +402,28 @@
           "path": "packages/ui/src/form.tsx",
           "type": "registry:ui",
           "target": "components/ui/form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "hover-card",
+      "type": "registry:ui",
+      "title": "Hover Card",
+      "description": "A preview panel that opens when a link is hovered or focused.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/hover-card.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/hover-card.tsx"
         }
       ]
     },
@@ -506,6 +650,29 @@
           "path": "packages/ui/src/radio-group.tsx",
           "type": "registry:ui",
           "target": "components/ui/radio-group.tsx"
+        }
+      ]
+    },
+    {
+      "name": "rating",
+      "type": "registry:ui",
+      "title": "Rating",
+      "description": "A star rating, read-only or interactive.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/rating.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/rating.tsx"
         }
       ]
     },

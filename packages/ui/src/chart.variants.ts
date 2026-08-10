@@ -255,9 +255,21 @@ export function chartTickFormatter(
   };
 }
 
-/** Props for the axis that carries the categories. Spread onto XAxis or YAxis. */
-export interface ChartAxisMirror {
+/**
+ * The axis the scale runs ALONG — X in the default layout, Y when the chart is
+ * `layout="vertical"`. Reversing it mirrors the scale's range, and with it every
+ * bar, line, area and grid line.
+ */
+export interface ChartMainAxisMirror {
   reversed?: boolean;
+}
+
+/**
+ * The axis that sits BESIDE the plot — Y in the default layout. Its tick text
+ * runs alongside the plot rather than under it, which is what makes the
+ * `text-anchor` inversion (header, item 3) visible.
+ */
+export interface ChartCrossAxisMirror {
   orientation?: "left" | "right";
   textAnchor?: "start" | "end";
 }
@@ -265,11 +277,11 @@ export interface ChartAxisMirror {
 export interface ChartMirror {
   /** Derived from the locale via `Intl.Locale.getTextInfo()`. Never passed in. */
   direction: Direction;
-  /** Spread onto the axis that carries the CATEGORIES. */
-  categoryAxis: ChartAxisMirror;
-  /** Spread onto the axis that carries the VALUES. */
-  valueAxis: ChartAxisMirror;
-  /** Spread onto `<ChartTooltip>` / recharts' `<Tooltip>`. */
+  /** Spread onto `<XAxis>` in the default layout, `<YAxis>` when vertical. */
+  mainAxis: ChartMainAxisMirror;
+  /** Spread onto `<YAxis>` in the default layout, `<XAxis>` when vertical. */
+  crossAxis: ChartCrossAxisMirror;
+  /** Spread onto recharts' `<Tooltip>`. */
   tooltip: { reverseDirection: { x: boolean; y: boolean } };
 }
 
@@ -277,38 +289,27 @@ export interface ChartMirror {
  * Everything recharts needs told about direction, derived from the locale.
  *
  * There is no `dir` argument, for rule 4's reason: a wrong direction should be
- * unrepresentable rather than discouraged. `layout` is recharts' own — the
- * default `"horizontal"` means bars stand up and the categories are on the X
- * axis; `"vertical"` means bars lie down and the categories are on the Y axis.
- * It must match the `layout` given to the chart, which is why `ChartCategoryAxis`
- * and `ChartValueAxis` take it as one prop and pass it here.
+ * unrepresentable rather than discouraged.
  *
- * Under LTR every field is either absent or recharts' own default, so spreading
- * this is a no-op in English — the mirrored path and the plain path are the same
- * code, which is the only way the mirrored one stays working.
+ * The fields are named for the GEOMETRY (main/cross) rather than for the data
+ * (category/value), because which one carries the categories depends on the
+ * chart's `layout` while what needs mirroring does not. `ChartCategoryAxis` and
+ * `ChartValueAxis` do that mapping once, in one place.
+ *
+ * Under LTR every field is absent, so spreading this is a no-op in English — the
+ * mirrored path and the plain path are the same code, which is the only way the
+ * mirrored one stays working.
  */
-export function chartMirror(
-  locale: Locale,
-  layout: "horizontal" | "vertical" = "horizontal",
-): ChartMirror {
+export function chartMirror(locale: Locale): ChartMirror {
   const dir = direction(locale);
   const rtl = dir === "rtl";
 
-  // The cross axis — Y when bars stand up, and the one whose tick text sits
-  // beside the plot rather than under it. Under RTL it moves to the trailing
-  // (right) edge AND states its anchor, because recharts' computed anchor
-  // inverts under `direction: rtl`. See the file header, item 3.
-  const crossAxis: ChartAxisMirror = rtl
-    ? { orientation: "right", textAnchor: "end" }
-    : {};
-  // The main axis — the one the scale runs along. `reversed` mirrors the scale
-  // range, and with it every bar, line, area and grid line.
-  const mainAxis: ChartAxisMirror = rtl ? { reversed: true } : {};
-
   return {
     direction: dir,
-    categoryAxis: layout === "horizontal" ? mainAxis : crossAxis,
-    valueAxis: layout === "horizontal" ? crossAxis : mainAxis,
+    mainAxis: rtl ? { reversed: true } : {},
+    // Under RTL the cross axis moves to the trailing (right) edge AND states its
+    // anchor, because recharts' computed anchor inverts under `direction: rtl`.
+    crossAxis: rtl ? { orientation: "right", textAnchor: "end" } : {},
     tooltip: { reverseDirection: { x: rtl, y: false } },
   };
 }

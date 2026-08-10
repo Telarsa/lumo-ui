@@ -205,22 +205,32 @@ alone, then apply Lumo's changes on top.
 `chart` is worth calling out: the roadmap listed it as the one genuine gap no
 headless library ships, and shadcn has it — 10.5k characters over `recharts`.
 
-**Attempted 10 August 2026, and worth recording honestly.** Three were vendored;
-none shipped:
+~~**Attempted 10 August 2026, and worth recording honestly.** Three were vendored;
+none shipped: `chart` quarantined in `packages/ui/vendored/`, `carousel` needing
+a `Button` size Lumo does not define, `command` needing an `input-group` Lumo
+does not have.~~
 
-- **`chart`** — fetched and its imports rewritten, then quarantined in
-  `packages/ui/vendored/` rather than shipped. It has no locale awareness at all,
-  and a chart is the most number-dense component there is: every axis tick and
-  tooltip would render Latin digits on a Persian page. The file and a full
-  adaptation checklist are kept there; `recharts` is deliberately still absent
-  from the catalog.
-- **`carousel`** — needs a `Button` size (`icon-sm`) Lumo does not define.
-- **`command`** — needs an `input-group` component Lumo does not have.
+**Superseded the same day. All three shipped.** The note above was written from a
+working tree caught mid-adaptation and is kept struck through rather than
+deleted, because "we tried and it did not work" is the most expensive kind of
+wrong record: it stops the next attempt before it starts.
 
-The lesson for the next attempt: *vendoring is cheap, adapting is not.* The fetch
-is a minute; the Persian pass, the required-prop pass and the RTL pass are the
-actual work, and a vendored file that skips them is worse than no file because it
-looks finished.
+- **`chart`** — ships. `recharts` 3.8.0, pinned exactly, in the catalog.
+  `ChartContainer` takes a required `locale` and a required `label`; the axis
+  wrappers format every tick through `formatNumber` and mirror the scale under
+  RTL. See `chart.variants.ts`, whose header records what was measured about
+  recharts rather than assumed.
+- **`carousel`** — ships. `icon-sm` was never the obstacle: `IconButton` already
+  takes `size="sm"`. embla's `direction` option is derived from the locale, and
+  the arrow keys mirror with it.
+- **`command`** — ships. `input-group` was not needed: the search row is built the
+  way `search-field.tsx` builds its own, border on the input and the icon
+  absolutely positioned over it.
+
+The lesson still stands, in its correct form: *vendoring is cheap, adapting is
+not.* The fetch is a minute; the Persian pass, the required-prop pass and the RTL
+pass are the actual work. A vendored file that skips them is worse than no file,
+because it looks finished — and quarantining one is not the same as finishing it.
 
 **A vendored file is never done on arrival.** Upstream is English-first and
 direction-agnostic, so every one needs a pass for physical utilities, English
