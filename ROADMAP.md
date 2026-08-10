@@ -18,8 +18,8 @@ composition, the Persian layer and the conformance gate are owned. See
 
 | | count | notes |
 |---|---|---|
-| Components | ~50 | **44 shipped.** Remaining: HoverCard, Autocomplete, OTP input, FileUpload, Rating, Carousel, Chart, Command, and the v0.7 date family — most vendorable, see above |
-| Blocks | ~25 | **19 shipped.** Remaining: command palette, table view, chart panel, product detail, checkout, footer, password reset, two-factor, preferences |
+| Components | ~50 | **52 shipped.** Remaining: ContextMenu, and the v0.7 date family |
+| Blocks | ~25 | **28 shipped — v0.4 is closed.** |
 | Locales | 2 | `fa-IR`, `en-US`, complete-or-compile-error |
 | Gate rules | ~10 | each with a poison fixture proving it fails |
 | Owned source | ~12k lines | measured basis: 290 lines per behaviour component |
@@ -62,35 +62,50 @@ place.
 
 - [x] Select, ComboBox, Menu
 - [x] Standalone Listbox
-- [ ] Autocomplete, ContextMenu
+- [x] Autocomplete
+- [ ] ContextMenu
 - [x] Dialog, Drawer, Popover, Tooltip
-- [ ] HoverCard
+- [x] HoverCard
 - [x] Tabs, Disclosure (accordion), Breadcrumbs
 - [x] Pagination, Steps
 - [x] Toolbar, ToggleGroup
 - [x] SegmentedControl, Slider, TagGroup
 - [x] Toast + a toast queue
-- [ ] OTP/PIN input, FileUpload/Dropzone, Rating
+- [x] OTP/PIN input, FileUpload/Dropzone, Rating
+- [x] Carousel, Chart, Command
 
-## v0.4 — Blocks ◐ mostly
+## v0.4 — Blocks ✅
 
 Whole screens, copy-in, composed only from shipped components. This is the
 "start a project on Monday" layer.
 
 - [x] Auth: sign-in, sign-up, OTP verify
-- [ ] Auth: password reset, two-factor
+- [x] Auth: password reset, two-factor
 - [x] App shell: sidebar nav + top bar, page header
-- [ ] Command palette (needs Autocomplete)
+- [x] Command palette
 - [x] Dashboard: stat grid, activity feed, filter bar
-- [ ] Chart panel (v0.8 — nothing headless ships charts)
+- [x] Chart panel
 - [x] Data: list-detail split, data toolbar, empty collection
-- [ ] Table view (blocked on Table, v0.8)
+- [x] Table view
 - [x] Commerce: listing grid, booking summary
-- [ ] Product detail, checkout summary
+- [x] Product detail, checkout summary
 - [x] Settings: settings form, danger zone
-- [ ] Preferences
+- [x] Preferences
 - [x] Marketing: hero, feature grid, pricing table, FAQ
-- [ ] Footer
+- [x] Footer
+
+**v0.4 is closed.** 28 blocks. Two notes worth carrying forward:
+
+`chart-panel` takes the plot as a `chart: LumoNode` slot and imports no chart
+library. That is what keeps it a server component — recharts is `"use client"`
+and serves nothing, so importing it would turn the title, description and
+summary figures into a client island and make a dashboard's first paint an empty
+box. The panel's summary figures and `ChartContainer`'s `<ChartData>` table are
+what the reader gets before — or without — hydration.
+
+`table-view` is the only block that imports a sibling block (`data-toolbar`)
+rather than composing purely from `@lumo-ui/ui`. One-directional, no cycle, and
+the alternative was duplicating a block that already existed.
 
 ## v0.5 — The showcase site ◐ mostly
 
@@ -144,7 +159,9 @@ post-launch, behind the provider tier.
 - [x] Table with sorting, selection, column resize
 - [ ] Virtualized list and grid
 - [ ] Tree, TreeGrid
-- [ ] Charts (the one genuine gap — no headless library ships them)
+- [x] Charts — the one genuine gap, since no headless library ships them.
+      Closed with recharts plus a server-rendered `<ChartData>` table; seven
+      libraries were measured first and the comparison is above.
 - [ ] Keyboard-accessible drag and drop, or a "Move to…" affordance instead
 
 ## v0.9 — Hardening

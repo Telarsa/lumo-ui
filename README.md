@@ -29,7 +29,7 @@ to them is a bug, not a customisation.
 packages/core     the invariants — LumoNode, direction(), formatters, strings
 packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
 packages/ui       52 components
-packages/blocks   19 whole-screen compositions
+packages/blocks   28 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
 apps/website      the showcase, and the first thing the gate runs against

@@ -30,6 +30,13 @@ export type { PageHeaderCrumb, PageHeaderProps, PageHeaderStrings } from "./page
 export { StatGrid } from "./stat-grid.tsx";
 export type { StatGridProps, StatGridStrings, StatItem } from "./stat-grid.tsx";
 
+export { ChartPanel } from "./chart-panel.tsx";
+export type {
+  ChartPanelProps,
+  ChartPanelStrings,
+  ChartPanelSummaryItem,
+} from "./chart-panel.tsx";
+
 export { ActivityFeed } from "./activity-feed.tsx";
 export type {
   ActivityFeedProps,

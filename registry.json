@@ -1135,6 +1135,24 @@
       ]
     },
     {
+      "name": "chart-panel",
+      "type": "registry:block",
+      "title": "Chart Panel",
+      "description": "A titled card around a chart, with the figures that survive when the chart",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/chart-panel.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/chart-panel.tsx"
+        }
+      ]
+    },
+    {
       "name": "checkout-summary",
       "type": "registry:block",
       "title": "Checkout Summary",
