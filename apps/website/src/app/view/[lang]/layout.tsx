@@ -1,4 +1,5 @@
 import { LumoHtml, type LumoNode } from "@lumo-ui/core";
+import { fontVariables } from "@/fonts";
 import { ThemeScript } from "@/components/theme-toggle";
 import { LumoProvider } from "@lumo-ui/ui";
 import { assertLocale, localeParams } from "@/lib/locale";
@@ -11,6 +12,9 @@ import "../../globals.css";
  * contains a genuinely Persian (or English) document rather than a styled div
  * pretending to be one. The gate grades these routes exactly like any other.
  */
+// Unknown segments 404 rather than 500 — see the [lang] layout's note on /sw.js.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return localeParams;
 }
@@ -24,7 +28,7 @@ export default async function ViewLayout({
 }) {
   const lang = assertLocale((await params).lang);
   return (
-    <LumoHtml lang={lang}>
+    <LumoHtml lang={lang} className={fontVariables}>
       <head>
         <ThemeScript />
       </head>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LumoHtml, type LumoNode } from "@lumo-ui/core";
+import { fontVariables } from "@/fonts";
 import { ThemeScript } from "@/components/theme-toggle";
 import { LumoProvider } from "@lumo-ui/ui";
 import { assertLocale, localeParams, site } from "@/lib/locale";
@@ -16,6 +17,18 @@ import "../globals.css";
 export function generateStaticParams() {
   return localeParams;
 }
+
+/**
+ * Unknown segments 404 instead of rendering.
+ *
+ * Without this, any stray request — most famously `/sw.js`, a service worker
+ * left registered on localhost:3000 by some OTHER project — falls into this
+ * route as `lang="sw.js"`, and `assertLocale` turns it into a 500 on every
+ * request. The throw is right at build time; at request time the honest answer
+ * to an unknown locale is "no such document", which is exactly what refusing to
+ * serve ungraded content means.
+ */
+export const dynamicParams = false;
 
 export async function generateMetadata({
   params,
@@ -35,7 +48,7 @@ export default async function LocaleLayout({
 }) {
   const lang = assertLocale((await params).lang);
   return (
-    <LumoHtml lang={lang}>
+    <LumoHtml lang={lang} className={fontVariables}>
       <head>
         <ThemeScript />
       </head>

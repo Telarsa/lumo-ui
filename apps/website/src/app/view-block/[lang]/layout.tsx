@@ -1,4 +1,5 @@
 import { LumoHtml, type LumoNode } from "@lumo-ui/core";
+import { fontVariables } from "@/fonts";
 import { ThemeScript } from "@/components/theme-toggle";
 import { LumoProvider } from "@lumo-ui/ui";
 import { assertLocale, localeParams } from "@/lib/locale";
@@ -23,6 +24,9 @@ import "../../globals.css";
  * centring it inside a padded grid cell would just add a false margin around
  * the one thing this route exists to show full width.
  */
+// Unknown segments 404 rather than 500 — see the [lang] layout's note on /sw.js.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return localeParams;
 }
@@ -36,7 +40,7 @@ export default async function ViewBlockLayout({
 }) {
   const lang = assertLocale((await params).lang);
   return (
-    <LumoHtml lang={lang}>
+    <LumoHtml lang={lang} className={fontVariables}>
       <head>
         <ThemeScript />
       </head>

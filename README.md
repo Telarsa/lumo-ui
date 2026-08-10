@@ -43,10 +43,20 @@ apps/website      the showcase, and the first thing the gate runs against
 ```bash
 pnpm install
 pnpm verify      # types → no-CSS-Modules → tests → build → gate
-pnpm dev         # the showcase site
+pnpm dev         # the showcase site, live
 ```
 
 `pnpm verify` is the whole contract. If it is green, the thing is shippable.
+
+There is no `pnpm start` — the site is a static export, so there is no server
+to start. To view the real built output (the bytes the gate graded), run
+`pnpm --filter website build && pnpm --filter website preview` and open
+`http://localhost:4173/fa-IR/`.
+
+If `next dev` logs errors about `/sw.js`: that is a service worker some OTHER
+project once registered on `localhost:3000`, still phoning home. The route now
+404s it. To silence even the 404s, unregister it in DevTools → Application →
+Service Workers.
 
 ## The rules, and why they are types and tests rather than documentation
 
