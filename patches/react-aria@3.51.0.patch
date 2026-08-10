@@ -1,0 +1,513 @@
+diff --git a/dist/private/autocomplete/intlStrings.mjs b/dist/private/autocomplete/intlStrings.mjs
+index 3eae312deed1ce0f46114f4b1527b15e316d0884..4e525ecea1d48a4c05353a16490e43e823cac9a1 100644
+--- a/dist/private/autocomplete/intlStrings.mjs
++++ b/dist/private/autocomplete/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_autocomplete from "../intl/autocomplete/fa-IR.mjs";
+ import $3gLSz$intlautocompletearAEmjs from "../intl/autocomplete/ar-AE.mjs";
+ import $3gLSz$intlautocompletebgBGmjs from "../intl/autocomplete/bg-BG.mjs";
+ import $3gLSz$intlautocompletecsCZmjs from "../intl/autocomplete/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $f4ee495ec2e82b79$exports = {};
+ 
+ 
+ $f4ee495ec2e82b79$exports = {
++    "fa-IR": $lumo_faIR_autocomplete,
+     "ar-AE": $3gLSz$intlautocompletearAEmjs,
+     "bg-BG": $3gLSz$intlautocompletebgBGmjs,
+     "cs-CZ": $3gLSz$intlautocompletecsCZmjs,
+diff --git a/dist/private/breadcrumbs/intlStrings.mjs b/dist/private/breadcrumbs/intlStrings.mjs
+index a44b708363cab1c93d35e1d080021dfdfa74a631..30141f1415dd519c4997772abf71a99d2c43b9bc 100644
+--- a/dist/private/breadcrumbs/intlStrings.mjs
++++ b/dist/private/breadcrumbs/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_breadcrumbs from "../intl/breadcrumbs/fa-IR.mjs";
+ import $jTU4t$intlbreadcrumbsarAEmjs from "../intl/breadcrumbs/ar-AE.mjs";
+ import $jTU4t$intlbreadcrumbsbgBGmjs from "../intl/breadcrumbs/bg-BG.mjs";
+ import $jTU4t$intlbreadcrumbscsCZmjs from "../intl/breadcrumbs/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $fd96f54c158931cf$exports = {};
+ 
+ 
+ $fd96f54c158931cf$exports = {
++    "fa-IR": $lumo_faIR_breadcrumbs,
+     "ar-AE": $jTU4t$intlbreadcrumbsarAEmjs,
+     "bg-BG": $jTU4t$intlbreadcrumbsbgBGmjs,
+     "cs-CZ": $jTU4t$intlbreadcrumbscsCZmjs,
+diff --git a/dist/private/calendar/intlStrings.mjs b/dist/private/calendar/intlStrings.mjs
+index 18ec8bfedd26f95ec66c85f5bc1f25287d1cd7f2..dfc7d5e29f3aba221b3fd8aba3e8a59986a24933 100644
+--- a/dist/private/calendar/intlStrings.mjs
++++ b/dist/private/calendar/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_calendar from "../intl/calendar/fa-IR.mjs";
+ import $3T2N1$intlcalendararAEmjs from "../intl/calendar/ar-AE.mjs";
+ import $3T2N1$intlcalendarbgBGmjs from "../intl/calendar/bg-BG.mjs";
+ import $3T2N1$intlcalendarcsCZmjs from "../intl/calendar/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $e05239aa7a8d905d$exports = {};
+ 
+ 
+ $e05239aa7a8d905d$exports = {
++    "fa-IR": $lumo_faIR_calendar,
+     "ar-AE": $3T2N1$intlcalendararAEmjs,
+     "bg-BG": $3T2N1$intlcalendarbgBGmjs,
+     "cs-CZ": $3T2N1$intlcalendarcsCZmjs,
+diff --git a/dist/private/combobox/intlStrings.mjs b/dist/private/combobox/intlStrings.mjs
+index 5fd917ededada1a47f762b40fbe348ce32424a51..693f378f488dbaafbe017e7942b2d020e23416fb 100644
+--- a/dist/private/combobox/intlStrings.mjs
++++ b/dist/private/combobox/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_combobox from "../intl/combobox/fa-IR.mjs";
+ import $kqIQO$intlcomboboxarAEmjs from "../intl/combobox/ar-AE.mjs";
+ import $kqIQO$intlcomboboxbgBGmjs from "../intl/combobox/bg-BG.mjs";
+ import $kqIQO$intlcomboboxcsCZmjs from "../intl/combobox/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $4fbc67f91f577596$exports = {};
+ 
+ 
+ $4fbc67f91f577596$exports = {
++    "fa-IR": $lumo_faIR_combobox,
+     "ar-AE": $kqIQO$intlcomboboxarAEmjs,
+     "bg-BG": $kqIQO$intlcomboboxbgBGmjs,
+     "cs-CZ": $kqIQO$intlcomboboxcsCZmjs,
+diff --git a/dist/private/datepicker/intlStrings.mjs b/dist/private/datepicker/intlStrings.mjs
+index c89d1fc045e9777dc2cb7a37ad4cebb629880ca6..5d3e0bff061a733a21454726a0fd2634a0d2a08b 100644
+--- a/dist/private/datepicker/intlStrings.mjs
++++ b/dist/private/datepicker/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_datepicker from "../intl/datepicker/fa-IR.mjs";
+ import $645EV$intldatepickerarAEmjs from "../intl/datepicker/ar-AE.mjs";
+ import $645EV$intldatepickerbgBGmjs from "../intl/datepicker/bg-BG.mjs";
+ import $645EV$intldatepickercsCZmjs from "../intl/datepicker/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $0014db39426443c5$exports = {};
+ 
+ 
+ $0014db39426443c5$exports = {
++    "fa-IR": $lumo_faIR_datepicker,
+     "ar-AE": $645EV$intldatepickerarAEmjs,
+     "bg-BG": $645EV$intldatepickerbgBGmjs,
+     "cs-CZ": $645EV$intldatepickercsCZmjs,
+diff --git a/dist/private/grid/intlStrings.mjs b/dist/private/grid/intlStrings.mjs
+index a90ff421247f9c4d74b255a7db913909eeb9feaf..7bea93312e5cd28925152d4f28f647046fc3ee7c 100644
+--- a/dist/private/grid/intlStrings.mjs
++++ b/dist/private/grid/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_grid from "../intl/grid/fa-IR.mjs";
+ import $1WZhY$intlgridarAEmjs from "../intl/grid/ar-AE.mjs";
+ import $1WZhY$intlgridbgBGmjs from "../intl/grid/bg-BG.mjs";
+ import $1WZhY$intlgridcsCZmjs from "../intl/grid/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $f0d3402d161c642d$exports = {};
+ 
+ 
+ $f0d3402d161c642d$exports = {
++    "fa-IR": $lumo_faIR_grid,
+     "ar-AE": $1WZhY$intlgridarAEmjs,
+     "bg-BG": $1WZhY$intlgridbgBGmjs,
+     "cs-CZ": $1WZhY$intlgridcsCZmjs,
+diff --git a/dist/private/intl/autocomplete/fa-IR.mjs b/dist/private/intl/autocomplete/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..f6efc781b8247af1e7bdac494ef8d054038f4163
+--- /dev/null
++++ b/dist/private/intl/autocomplete/fa-IR.mjs
+@@ -0,0 +1,7 @@
++var $lumo_fa_autocomplete$exports = {};
++$lumo_fa_autocomplete$exports = {
++    "collectionLabel": `پیشنهادها`
++};
++
++
++export {$lumo_fa_autocomplete$exports as default};
+diff --git a/dist/private/intl/breadcrumbs/fa-IR.mjs b/dist/private/intl/breadcrumbs/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..edabee4a246c819ece84b14da9f6c2eb1b8efb75
+--- /dev/null
++++ b/dist/private/intl/breadcrumbs/fa-IR.mjs
+@@ -0,0 +1,7 @@
++var $lumo_fa_breadcrumbs$exports = {};
++$lumo_fa_breadcrumbs$exports = {
++    "breadcrumbs": `مسیر صفحه`
++};
++
++
++export {$lumo_fa_breadcrumbs$exports as default};
+diff --git a/dist/private/intl/calendar/fa-IR.mjs b/dist/private/intl/calendar/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b36ae002630c926f31936cab58c1f4704feb6e4
+--- /dev/null
++++ b/dist/private/intl/calendar/fa-IR.mjs
+@@ -0,0 +1,18 @@
++var $lumo_fa_calendar$exports = {};
++$lumo_fa_calendar$exports = {
++    "previous": `ماه قبل`,
++    "next": `ماه بعد`,
++    "selectedDateDescription": (args)=>`تاریخ انتخاب‌شده: ${args.date}`,
++    "selectedRangeDescription": (args)=>`بازهٔ انتخاب‌شده: ${args.dateRange}`,
++    "todayDate": (args)=>`امروز، ${args.date}`,
++    "todayDateSelected": (args)=>`امروز، ${args.date}، انتخاب‌شده`,
++    "dateSelected": (args)=>`${args.date}، انتخاب‌شده`,
++    "startRangeSelectionPrompt": `برای شروع انتخاب بازهٔ تاریخ کلیک کنید`,
++    "finishRangeSelectionPrompt": `برای پایان انتخاب بازهٔ تاریخ کلیک کنید`,
++    "minimumDate": `نخستین تاریخ در دسترس`,
++    "maximumDate": `آخرین تاریخ در دسترس`,
++    "dateRange": (args)=>`از ${args.startDate} تا ${args.endDate}`
++};
++
++
++export {$lumo_fa_calendar$exports as default};
+diff --git a/dist/private/intl/combobox/fa-IR.mjs b/dist/private/intl/combobox/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..50fc39bc0dfc6e879e2fe834b0f86508ea28fee7
+--- /dev/null
++++ b/dist/private/intl/combobox/fa-IR.mjs
+@@ -0,0 +1,11 @@
++var $lumo_fa_combobox$exports = {};
++$lumo_fa_combobox$exports = {
++    "focusAnnouncement": (args, formatter)=>`${formatter.select({true: ()=>`ورود به گروه ${args.groupTitle}، شامل ${formatter.plural(args.groupCount, {one: ()=>`${formatter.number(args.groupCount)} گزینه`, other: ()=>`${formatter.number(args.groupCount)} گزینه`})}. `, other: ``}, args.isGroupChange)}${args.optionText}${formatter.select({true: `، انتخاب‌شده`, other: ``}, args.isSelected)}`,
++    "countAnnouncement": (args, formatter)=>`${formatter.plural(args.optionCount, {one: ()=>`${formatter.number(args.optionCount)} گزینه`, other: ()=>`${formatter.number(args.optionCount)} گزینه`})} در دسترس است.`,
++    "selectedAnnouncement": (args)=>`${args.optionText}، انتخاب‌شده`,
++    "buttonLabel": `نمایش پیشنهادها`,
++    "listboxLabel": `پیشنهادها`
++};
++
++
++export {$lumo_fa_combobox$exports as default};
+diff --git a/dist/private/intl/datepicker/fa-IR.mjs b/dist/private/intl/datepicker/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..58f67c0dd24311f7fff0566f09fa22538509c7be
+--- /dev/null
++++ b/dist/private/intl/datepicker/fa-IR.mjs
+@@ -0,0 +1,22 @@
++var $lumo_fa_datepicker$exports = {};
++$lumo_fa_datepicker$exports = {
++    "era": `دوره`,
++    "year": `سال`,
++    "month": `ماه`,
++    "day": `روز`,
++    "hour": `ساعت`,
++    "minute": `دقیقه`,
++    "second": `ثانیه`,
++    "dayPeriod": `قبل‌ازظهر/بعدازظهر`,
++    "calendar": `تقویم`,
++    "startDate": `تاریخ شروع`,
++    "endDate": `تاریخ پایان`,
++    "weekday": `روز هفته`,
++    "timeZoneName": `منطقهٔ زمانی`,
++    "selectedDateDescription": (args)=>`تاریخ انتخاب‌شده: ${args.date}`,
++    "selectedRangeDescription": (args)=>`بازهٔ انتخاب‌شده: از ${args.startDate} تا ${args.endDate}`,
++    "selectedTimeDescription": (args)=>`زمان انتخاب‌شده: ${args.time}`
++};
++
++
++export {$lumo_fa_datepicker$exports as default};
+diff --git a/dist/private/intl/grid/fa-IR.mjs b/dist/private/intl/grid/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..655549422935442746cd93d81a066d7f6d867b6d
+--- /dev/null
++++ b/dist/private/intl/grid/fa-IR.mjs
+@@ -0,0 +1,12 @@
++var $lumo_fa_grid$exports = {};
++$lumo_fa_grid$exports = {
++    "deselectedItem": (args)=>`${args.item} انتخاب نشده است.`,
++    "select": `انتخاب`,
++    "selectedCount": (args, formatter)=>`${formatter.plural(args.count, {"=0": `هیچ موردی انتخاب نشده`, one: ()=>`${formatter.number(args.count)} مورد انتخاب شد`, other: ()=>`${formatter.number(args.count)} مورد انتخاب شد`})}.`,
++    "selectedAll": `همهٔ موردها انتخاب شدند.`,
++    "selectedItem": (args)=>`${args.item} انتخاب شد.`,
++    "longPressToSelect": `برای ورود به حالت انتخاب، لمس طولانی کنید.`
++};
++
++
++export {$lumo_fa_grid$exports as default};
+diff --git a/dist/private/intl/menu/fa-IR.mjs b/dist/private/intl/menu/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..ad5d17050a39589522ffd16d208069a148eab9bf
+--- /dev/null
++++ b/dist/private/intl/menu/fa-IR.mjs
+@@ -0,0 +1,7 @@
++var $lumo_fa_menu$exports = {};
++$lumo_fa_menu$exports = {
++    "longPressMessage": `برای باز کردن منو، لمس طولانی کنید یا Alt + ArrowDown را بزنید`
++};
++
++
++export {$lumo_fa_menu$exports as default};
+diff --git a/dist/private/intl/numberfield/fa-IR.mjs b/dist/private/intl/numberfield/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..cdea13abb16b2b65e7eefd0bce86057b896ec899
+--- /dev/null
++++ b/dist/private/intl/numberfield/fa-IR.mjs
+@@ -0,0 +1,9 @@
++var $lumo_fa_numberfield$exports = {};
++$lumo_fa_numberfield$exports = {
++    "decrease": (args)=>`کاهش ${args.fieldLabel}`,
++    "increase": (args)=>`افزایش ${args.fieldLabel}`,
++    "numberField": `فیلد عددی`
++};
++
++
++export {$lumo_fa_numberfield$exports as default};
+diff --git a/dist/private/intl/overlays/fa-IR.mjs b/dist/private/intl/overlays/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..58f44e818ecad7c4f7487cbcc22685b5f2a6ef06
+--- /dev/null
++++ b/dist/private/intl/overlays/fa-IR.mjs
+@@ -0,0 +1,7 @@
++var $lumo_fa_overlays$exports = {};
++$lumo_fa_overlays$exports = {
++    "dismiss": `بستن`
++};
++
++
++export {$lumo_fa_overlays$exports as default};
+diff --git a/dist/private/intl/previewtrigger/fa-IR.mjs b/dist/private/intl/previewtrigger/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..0d9d9ffb55a655004e9d0fffd0b601274f474964
+--- /dev/null
++++ b/dist/private/intl/previewtrigger/fa-IR.mjs
+@@ -0,0 +1,7 @@
++var $lumo_fa_previewtrigger$exports = {};
++$lumo_fa_previewtrigger$exports = {
++    "longPressMessage": `برای باز کردن پیش‌نمایش، لمس طولانی کنید`
++};
++
++
++export {$lumo_fa_previewtrigger$exports as default};
+diff --git a/dist/private/intl/spinbutton/fa-IR.mjs b/dist/private/intl/spinbutton/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..87b761759c5ced9bf8a73b14df9defa15867e841
+--- /dev/null
++++ b/dist/private/intl/spinbutton/fa-IR.mjs
+@@ -0,0 +1,7 @@
++var $lumo_fa_spinbutton$exports = {};
++$lumo_fa_spinbutton$exports = {
++    "Empty": `خالی`
++};
++
++
++export {$lumo_fa_spinbutton$exports as default};
+diff --git a/dist/private/intl/steplist/fa-IR.mjs b/dist/private/intl/steplist/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..278faa371d93192373fb97a081cbfe51bdd240aa
+--- /dev/null
++++ b/dist/private/intl/steplist/fa-IR.mjs
+@@ -0,0 +1,7 @@
++var $lumo_fa_steplist$exports = {};
++$lumo_fa_steplist$exports = {
++    "steplist": `فهرست مرحله‌ها`
++};
++
++
++export {$lumo_fa_steplist$exports as default};
+diff --git a/dist/private/intl/table/fa-IR.mjs b/dist/private/intl/table/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..f03364d9c2863f1b432ca81a5ae6e3611471b54b
+--- /dev/null
++++ b/dist/private/intl/table/fa-IR.mjs
+@@ -0,0 +1,17 @@
++var $lumo_fa_table$exports = {};
++$lumo_fa_table$exports = {
++    "select": `انتخاب`,
++    "selectAll": `انتخاب همه`,
++    "sortable": `ستون قابل مرتب‌سازی`,
++    "ascending": `صعودی`,
++    "descending": `نزولی`,
++    "ascendingSort": (args)=>`مرتب‌شده بر پایهٔ ستون ${args.columnName} به ترتیب صعودی`,
++    "descendingSort": (args)=>`مرتب‌شده بر پایهٔ ستون ${args.columnName} به ترتیب نزولی`,
++    "columnSize": (args, formatter)=>`${formatter.number(args.value)} پیکسل`,
++    "resizerDescription": `برای شروع تغییر اندازه، اینتر را بزنید`,
++    "expand": `باز کردن`,
++    "collapse": `بستن`
++};
++
++
++export {$lumo_fa_table$exports as default};
+diff --git a/dist/private/intl/tag/fa-IR.mjs b/dist/private/intl/tag/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..e0d7b8bb7379cfc702f6d8456f22e72a24f20dbc
+--- /dev/null
++++ b/dist/private/intl/tag/fa-IR.mjs
+@@ -0,0 +1,8 @@
++var $lumo_fa_tag$exports = {};
++$lumo_fa_tag$exports = {
++    "removeDescription": `برای حذف برچسب، دیلیت را بزنید.`,
++    "removeButtonLabel": `حذف`
++};
++
++
++export {$lumo_fa_tag$exports as default};
+diff --git a/dist/private/intl/toast/fa-IR.mjs b/dist/private/intl/toast/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..65aa421b3e1d745c28d29cc13e02abff6ebe584d
+--- /dev/null
++++ b/dist/private/intl/toast/fa-IR.mjs
+@@ -0,0 +1,8 @@
++var $lumo_fa_toast$exports = {};
++$lumo_fa_toast$exports = {
++    "close": `بستن`,
++    "notifications": (args, formatter)=>`${formatter.plural(args.count, {one: ()=>`${formatter.number(args.count)} اعلان`, other: ()=>`${formatter.number(args.count)} اعلان`})}.`
++};
++
++
++export {$lumo_fa_toast$exports as default};
+diff --git a/dist/private/intl/tree/fa-IR.mjs b/dist/private/intl/tree/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..47d6084fea5d6c1ff4fe3057cb4472123bc72a52
+--- /dev/null
++++ b/dist/private/intl/tree/fa-IR.mjs
+@@ -0,0 +1,8 @@
++var $lumo_fa_tree$exports = {};
++$lumo_fa_tree$exports = {
++    "expand": `باز کردن`,
++    "collapse": `بستن`
++};
++
++
++export {$lumo_fa_tree$exports as default};
+diff --git a/dist/private/menu/intlStrings.mjs b/dist/private/menu/intlStrings.mjs
+index a89e4f8bdd35a65f1feb3a067c4254377c1a8a6f..a2519aea6f4381c54486b269c41ce207c3c48888 100644
+--- a/dist/private/menu/intlStrings.mjs
++++ b/dist/private/menu/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_menu from "../intl/menu/fa-IR.mjs";
+ import $ljvjO$intlmenuarAEmjs from "../intl/menu/ar-AE.mjs";
+ import $ljvjO$intlmenubgBGmjs from "../intl/menu/bg-BG.mjs";
+ import $ljvjO$intlmenucsCZmjs from "../intl/menu/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $bdff4dd8fb5956de$exports = {};
+ 
+ 
+ $bdff4dd8fb5956de$exports = {
++    "fa-IR": $lumo_faIR_menu,
+     "ar-AE": $ljvjO$intlmenuarAEmjs,
+     "bg-BG": $ljvjO$intlmenubgBGmjs,
+     "cs-CZ": $ljvjO$intlmenucsCZmjs,
+diff --git a/dist/private/numberfield/intlStrings.mjs b/dist/private/numberfield/intlStrings.mjs
+index dbf959347b56a05a4ecb5a0769b808991e051aa8..d72dcf77962b11e8ab87c54823cb15b2d588b934 100644
+--- a/dist/private/numberfield/intlStrings.mjs
++++ b/dist/private/numberfield/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_numberfield from "../intl/numberfield/fa-IR.mjs";
+ import $loJkC$intlnumberfieldarAEmjs from "../intl/numberfield/ar-AE.mjs";
+ import $loJkC$intlnumberfieldbgBGmjs from "../intl/numberfield/bg-BG.mjs";
+ import $loJkC$intlnumberfieldcsCZmjs from "../intl/numberfield/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $fda7dc186b468fdb$exports = {};
+ 
+ 
+ $fda7dc186b468fdb$exports = {
++    "fa-IR": $lumo_faIR_numberfield,
+     "ar-AE": $loJkC$intlnumberfieldarAEmjs,
+     "bg-BG": $loJkC$intlnumberfieldbgBGmjs,
+     "cs-CZ": $loJkC$intlnumberfieldcsCZmjs,
+diff --git a/dist/private/overlays/intlStrings.mjs b/dist/private/overlays/intlStrings.mjs
+index e8914a0fa0920ccf1e6b7d6dad244e2752ab6feb..5974b7abbeeeba2a5b9d59bcf7029f41129f05d1 100644
+--- a/dist/private/overlays/intlStrings.mjs
++++ b/dist/private/overlays/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_overlays from "../intl/overlays/fa-IR.mjs";
+ import $9W4zk$intloverlaysarAEmjs from "../intl/overlays/ar-AE.mjs";
+ import $9W4zk$intloverlaysbgBGmjs from "../intl/overlays/bg-BG.mjs";
+ import $9W4zk$intloverlayscsCZmjs from "../intl/overlays/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $8ad4f9eb0c0f6434$exports = {};
+ 
+ 
+ $8ad4f9eb0c0f6434$exports = {
++    "fa-IR": $lumo_faIR_overlays,
+     "ar-AE": $9W4zk$intloverlaysarAEmjs,
+     "bg-BG": $9W4zk$intloverlaysbgBGmjs,
+     "cs-CZ": $9W4zk$intloverlayscsCZmjs,
+diff --git a/dist/private/spinbutton/intlStrings.mjs b/dist/private/spinbutton/intlStrings.mjs
+index e6285418f7cf7e7e6634f309eb645d34451dc4ed..ce461d610186d10c4ad31838f31e28800768cee8 100644
+--- a/dist/private/spinbutton/intlStrings.mjs
++++ b/dist/private/spinbutton/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_spinbutton from "../intl/spinbutton/fa-IR.mjs";
+ import $lhGmr$intlspinbuttonarAEmjs from "../intl/spinbutton/ar-AE.mjs";
+ import $lhGmr$intlspinbuttonbgBGmjs from "../intl/spinbutton/bg-BG.mjs";
+ import $lhGmr$intlspinbuttoncsCZmjs from "../intl/spinbutton/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $6279e3628ec747df$exports = {};
+ 
+ 
+ $6279e3628ec747df$exports = {
++    "fa-IR": $lumo_faIR_spinbutton,
+     "ar-AE": $lhGmr$intlspinbuttonarAEmjs,
+     "bg-BG": $lhGmr$intlspinbuttonbgBGmjs,
+     "cs-CZ": $lhGmr$intlspinbuttoncsCZmjs,
+diff --git a/dist/private/steplist/intlStrings.mjs b/dist/private/steplist/intlStrings.mjs
+index 10d304458a8edbba652f2276e670672c6605dcd0..1ed2d87220bb7dd388d2a02fec437fe1d5499546 100644
+--- a/dist/private/steplist/intlStrings.mjs
++++ b/dist/private/steplist/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_steplist from "../intl/steplist/fa-IR.mjs";
+ import $6Yni3$intlsteplistarAEmjs from "../intl/steplist/ar-AE.mjs";
+ import $6Yni3$intlsteplistbgBGmjs from "../intl/steplist/bg-BG.mjs";
+ import $6Yni3$intlsteplistcsCZmjs from "../intl/steplist/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $fb7debfc83d7dc5e$exports = {};
+ 
+ 
+ $fb7debfc83d7dc5e$exports = {
++    "fa-IR": $lumo_faIR_steplist,
+     "ar-AE": $6Yni3$intlsteplistarAEmjs,
+     "bg-BG": $6Yni3$intlsteplistbgBGmjs,
+     "cs-CZ": $6Yni3$intlsteplistcsCZmjs,
+diff --git a/dist/private/table/intlStrings.mjs b/dist/private/table/intlStrings.mjs
+index 48fef8fadcfc6e85e951732b6b4fbf6e349e248d..c8da0e7aec70601cd6386ecdcd7073672499dd8c 100644
+--- a/dist/private/table/intlStrings.mjs
++++ b/dist/private/table/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_table from "../intl/table/fa-IR.mjs";
+ import $kjgIr$intltablearAEmjs from "../intl/table/ar-AE.mjs";
+ import $kjgIr$intltablebgBGmjs from "../intl/table/bg-BG.mjs";
+ import $kjgIr$intltablecsCZmjs from "../intl/table/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $b0fbbc5fdcc6603a$exports = {};
+ 
+ 
+ $b0fbbc5fdcc6603a$exports = {
++    "fa-IR": $lumo_faIR_table,
+     "ar-AE": $kjgIr$intltablearAEmjs,
+     "bg-BG": $kjgIr$intltablebgBGmjs,
+     "cs-CZ": $kjgIr$intltablecsCZmjs,
+diff --git a/dist/private/tag/intlStrings.mjs b/dist/private/tag/intlStrings.mjs
+index 8f58a21fbca4d142fede811cc08d097ba82a9764..dbbc64c482a3679df5ee02075550ff453fe7a1a6 100644
+--- a/dist/private/tag/intlStrings.mjs
++++ b/dist/private/tag/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_tag from "../intl/tag/fa-IR.mjs";
+ import $c5Csu$intltagarAEmjs from "../intl/tag/ar-AE.mjs";
+ import $c5Csu$intltagbgBGmjs from "../intl/tag/bg-BG.mjs";
+ import $c5Csu$intltagcsCZmjs from "../intl/tag/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $c861dd473ab3d00c$exports = {};
+ 
+ 
+ $c861dd473ab3d00c$exports = {
++    "fa-IR": $lumo_faIR_tag,
+     "ar-AE": $c5Csu$intltagarAEmjs,
+     "bg-BG": $c5Csu$intltagbgBGmjs,
+     "cs-CZ": $c5Csu$intltagcsCZmjs,
+diff --git a/dist/private/toast/intlStrings.mjs b/dist/private/toast/intlStrings.mjs
+index 7bc9870027892433feb88e298e67cac6dec6f2f7..65b95b858bafdf5c72d36b5312336dbadc4fc9a9 100644
+--- a/dist/private/toast/intlStrings.mjs
++++ b/dist/private/toast/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_toast from "../intl/toast/fa-IR.mjs";
+ import $1jmnO$intltoastarAEmjs from "../intl/toast/ar-AE.mjs";
+ import $1jmnO$intltoastbgBGmjs from "../intl/toast/bg-BG.mjs";
+ import $1jmnO$intltoastcsCZmjs from "../intl/toast/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $f3e1a27213f96b5b$exports = {};
+ 
+ 
+ $f3e1a27213f96b5b$exports = {
++    "fa-IR": $lumo_faIR_toast,
+     "ar-AE": $1jmnO$intltoastarAEmjs,
+     "bg-BG": $1jmnO$intltoastbgBGmjs,
+     "cs-CZ": $1jmnO$intltoastcsCZmjs,
+diff --git a/dist/private/tree/intlStrings.mjs b/dist/private/tree/intlStrings.mjs
+index 36c3219c3e5d7998435150a7e87886474c17a6eb..60d86a0e0a0cd2c2b0e5faee2393fc82c8919580 100644
+--- a/dist/private/tree/intlStrings.mjs
++++ b/dist/private/tree/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_tree from "../intl/tree/fa-IR.mjs";
+ import $43CnS$intltreearAEmjs from "../intl/tree/ar-AE.mjs";
+ import $43CnS$intltreebgBGmjs from "../intl/tree/bg-BG.mjs";
+ import $43CnS$intltreecsCZmjs from "../intl/tree/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $36b40d6961d38896$exports = {};
+ 
+ 
+ $36b40d6961d38896$exports = {
++    "fa-IR": $lumo_faIR_tree,
+     "ar-AE": $43CnS$intltreearAEmjs,
+     "bg-BG": $43CnS$intltreebgBGmjs,
+     "cs-CZ": $43CnS$intltreecsCZmjs,

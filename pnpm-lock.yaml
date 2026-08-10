@@ -73,6 +73,9 @@ catalogs:
       specifier: ^4.1.10
       version: 4.1.10
 
+patchedDependencies:
+  react-aria@3.51.0: fa272bfd24e0d4bca6cfaf05dc995316bc83f15ae93a2a9e3930e1a45e139f79
+
 importers:
 
   .:
@@ -2369,11 +2372,11 @@ snapshots:
       '@swc/helpers': 0.5.23
       client-only: 0.0.1
       react: 19.2.8
-      react-aria: 3.51.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-aria: 3.51.0(patch_hash=fa272bfd24e0d4bca6cfaf05dc995316bc83f15ae93a2a9e3930e1a45e139f79)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react-dom: 19.2.8(react@19.2.8)
       react-stately: 3.49.0(react@19.2.8)
 
-  react-aria@3.51.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-aria@3.51.0(patch_hash=fa272bfd24e0d4bca6cfaf05dc995316bc83f15ae93a2a9e3930e1a45e139f79)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@internationalized/date': 3.12.3
       '@internationalized/number': 3.6.7

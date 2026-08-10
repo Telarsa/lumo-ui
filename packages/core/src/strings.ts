@@ -59,8 +59,24 @@ import type { Locale } from "./types";
  * state that renders**, and grep the output. A default-state sweep measures
  * whichever components happen to be visible.
  *
- * Still not prop-reachable, and both belong to milestone M9 (post-launch,
- * provider tier):
+ * ── UPDATE 10 August 2026: the unreachable ones are now reachable ────────────
+ *
+ * The three leaks below were recorded as unreachable and deferred. They are
+ * closed, and not by a prop — by `patches/react-aria@3.51.0.patch`, which adds
+ * `fa-IR` bundles to 15 of react-aria's own intl packages.
+ *
+ * That is where the strings actually live. `LocalizedStringProvider` only emits
+ * a client script and never reaches the server render; patching the source of
+ * truth reaches both. Verified: Calendar, DateField and Breadcrumbs now announce
+ * nothing in English during `renderToStaticMarkup`, with no component change.
+ *
+ * The five prop-based strings below stay props regardless. A prop is a contract
+ * a consumer can see and a compiler can enforce; a patch is a repair we own and
+ * must re-apply on every upgrade. Props first, patch only for what props cannot
+ * reach. See `packages/ui/src/patch.test.tsx` — it fails if the patch still
+ * applies but stops working, which is the quieter failure `pnpm patch` misses.
+ *
+ * Formerly unreachable, now closed by the patch:
  *
  *   Calendar   `aria-label="Today, ۱۴۰۵ مرداد ۱۸, یکشنبه"`  ← CalendarCell
  *   Calendar   a second internal `aria-label="Next"`          ← composed

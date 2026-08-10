@@ -243,8 +243,6 @@ it" is how a gap becomes permanent:
 Decided now, while thinking clearly, rather than in eighteen months under sunk
 cost:
 
-- **Khroos has not shipped a user-facing surface six months after v0.3.** Stop
-  library work, take components as they are, ship the product.
 - **The gate cannot run from where the team is.** Redesign it around what runs
   offline, or admit the fast tier is all there is.
 - **A component needs more than ~400 lines of wrapper.** That means the rental is
