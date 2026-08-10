@@ -187,6 +187,38 @@ Not a version bump; a state of the portfolio.
    two-locale, two-person system would never write. Not writing it is the single
    largest saving available.
 
+
+### The chart library should probably change — visx server-renders
+
+**Measured 10 August 2026.** recharts renders nothing on the server, which makes
+the gate blind to the most number-dense component in the library. That is not a
+property of charts; it is a property of recharts.
+
+`visx` (Airbnb) is D3 primitives expressed as plain React elements — no
+measurement pass, no effects, no `ResponsiveContainer`. Through
+`renderToStaticMarkup`:
+
+```
+recharts   148 bytes, a wrapper div, no <svg> at all
+visx       real <svg>, 3 <rect>, and axis ticks as TEXT in the served bytes
+```
+
+The ticks came out `۰ ۵۰ ۱۰۰ ۱۵۰ …` — Persian numerals, **zero ASCII digits** —
+because a `tickFormat` running through `Intl` executes on the server like any
+other function. So `no-latin-digits` and `persian-digit-floor` grade a visx chart
+exactly as they grade any other page, where recharts is invisible to all three
+rules.
+
+**The trade.** visx is scales, shapes and axes with no `<BarChart>`, so Lumo would
+own the composition rather than configure someone else's. More code — but code
+the gate can see, and it removes the `chartMirror()` workarounds that exist only
+because recharts computes `text-anchor` and tooltip placement as if the world
+were LTR.
+
+**Not acted on.** `chart.tsx` works and its RTL findings are pinned by tests.
+Recorded so the next person does not re-derive it, and so the choice rests on
+evidence rather than on which library is better known.
+
 ## Vendor before you write
 
 **Probed 10 August 2026 against `ui.shadcn.com/r/styles/aria-vega/`.** shadcn
