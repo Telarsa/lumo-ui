@@ -7,6 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "gate": "node --experimental-strip-types ../../packages/gate/src/cli.ts out"
   },
   "dependencies": {
@@ -27,6 +28,10 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "jsdom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@vitejs/plugin-react": "catalog:"
   }
 }
