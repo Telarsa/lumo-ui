@@ -32,6 +32,14 @@ import { IconButton } from "@lumo-ui/ui";
 export interface CodeBlockProps {
   /** The exact text copied to the clipboard. Also what is rendered. */
   code: string;
+  /**
+   * Shiki output for the same `code`, produced at build time by the SERVER
+   * caller via `lib/highlight.ts` — this client component must not import the
+   * highlighter itself, or megabytes of tokenizer land in the bundle. When
+   * absent, the code renders plain; the clipboard always receives `code`, so
+   * highlighting can never change what a paste produces.
+   */
+  html?: string | undefined;
   /** The copy button's accessible name before it is pressed. Required. */
   label: string;
   /** Announced via the live region, and taken on as the button's own accessible
@@ -40,7 +48,7 @@ export interface CodeBlockProps {
   className?: string | undefined;
 }
 
-export function CodeBlock({ code, label, copiedLabel, className }: CodeBlockProps) {
+export function CodeBlock({ code, html, label, copiedLabel, className }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -66,15 +74,31 @@ export function CodeBlock({ code, label, copiedLabel, className }: CodeBlockProp
        * Shell commands and source code are Latin by nature — CONTRIBUTING.md's
        * escape hatch, applied exactly as the rest of the site already does it.
        */}
-      <pre
-        dir="ltr"
-        lang="en"
-        data-lumo-latn=""
-        className="max-h-[32rem] overflow-auto rounded-lg border border-border bg-surface-sunken p-4 pe-12 text-start text-xs leading-relaxed"
-      >
-        <code>{code}</code>
-      </pre>
-      <div className="absolute end-2 top-2">
+      {html ? (
+        /*
+         * Shiki's output is a complete `<pre class="shiki">…`, so the wrapper
+         * div carries the chrome and the inner pre is restyled by the
+         * `[&_pre]` utilities — restating shiki's own background would fight
+         * the dual-theme variables globals.css flips.
+         */
+        <div
+          dir="ltr"
+          lang="en"
+          data-lumo-latn=""
+          className="max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken text-start text-xs leading-relaxed [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4 [&_pre]:pe-12"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      ) : (
+        <pre
+          dir="ltr"
+          lang="en"
+          data-lumo-latn=""
+          className="max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken p-4 pe-12 text-start text-xs leading-relaxed"
+        >
+          <code>{code}</code>
+        </pre>
+      )}
+      <div className="absolute inset-e-2 top-2">
         <IconButton
           label={copied ? copiedLabel : label}
           variant="ghost"

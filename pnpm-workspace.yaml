@@ -77,6 +77,10 @@ catalog:
   # releases exist (3.10.1); adopting one is a deliberate bump plus a re-vendor,
   # not a range.
   recharts: 3.8.0
+  # Build-time only: server components highlight during the static export, so
+  # none of this reaches a client bundle. 4.4.3 was six hours old at adoption —
+  # inside the 24h cooldown — so this pins one release behind, per the rule.
+  shiki: 4.4.2
 
   # --- carousel --------------------------------------------------------------
   # 9.0.0-rc02 is a prerelease; 8.6.0 is the newest stable. Exact, because embla

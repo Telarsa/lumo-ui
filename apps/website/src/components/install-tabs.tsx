@@ -32,6 +32,8 @@ export interface InstallFile {
    *  verbatim from the registry item's own `files[].target`. */
   target: string;
   code: string;
+  /** Build-time shiki output for `code`. See `commandHtml` on the props. */
+  html?: string | undefined;
 }
 
 export interface InstallTabsProps {
@@ -46,18 +48,14 @@ export interface InstallTabsProps {
   /** The file(s) to copy: the component itself, and its companion
    *  `*.variants.ts` when the registry lists one. */
   files: InstallFile[];
+  /** Shiki output per command/file, produced by the SERVER page via
+   *  `lib/highlight.ts` — this client module must not import the highlighter
+   *  (see code-block.tsx's `html` prop for the whole argument). */
+  commandHtml?: Partial<Record<PM, string>> | undefined;
+  depsHtml?: string | undefined;
 }
 
-type PM = "pnpm" | "npm" | "yarn" | "bun";
-const PMS: readonly PM[] = ["pnpm", "npm", "yarn", "bun"];
-
-/** Real command syntax per manager. pnpm is first — Lumo is pnpm-first. */
-const CLI_COMMAND: Record<PM, (name: string) => string> = {
-  pnpm: (name) => `pnpm dlx shadcn@latest add @lumo/${name}`,
-  npm: (name) => `npm exec shadcn@latest add @lumo/${name}`,
-  yarn: (name) => `yarn dlx shadcn@latest add @lumo/${name}`,
-  bun: (name) => `bunx --bun shadcn@latest add @lumo/${name}`,
-};
+import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
 
 const COPY: Record<
   Locale,
@@ -119,6 +117,8 @@ const COPY: Record<
 };
 
 export function InstallTabs({
+  commandHtml,
+  depsHtml,
   locale,
   registryName,
   dependencies,
@@ -149,6 +149,7 @@ export function InstallTabs({
             <TabPanel key={pm} id={pm} className="mt-3">
               <CodeBlock
                 code={CLI_COMMAND[pm](registryName)}
+                html={commandHtml?.[pm]}
                 label={t.copyCommand}
                 copiedLabel={t.copyCommandDone}
               />
@@ -163,7 +164,8 @@ export function InstallTabs({
           <div className="mt-2">
             {dependencies.length > 0 ? (
               <CodeBlock
-                code={`pnpm add ${dependencies.join(" ")}`}
+                code={depsCommand(dependencies)}
+                html={depsHtml}
                 label={t.copyDeps}
                 copiedLabel={t.copyDepsDone}
               />
@@ -211,6 +213,7 @@ export function InstallTabs({
                 </p>
                 <CodeBlock
                   code={file.code}
+                  html={file.html}
                   label={i === 0 ? t.copyMain : t.copyCompanion}
                   copiedLabel={i === 0 ? t.copyMainDone : t.copyCompanionDone}
                 />

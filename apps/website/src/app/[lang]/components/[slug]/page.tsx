@@ -8,6 +8,8 @@ import { OnThisPage } from "@/components/on-this-page";
 import { DemoFrame } from "@/components/demo-frame";
 import { CodeBlock } from "@/components/code-block";
 import { InstallTabs, type InstallFile } from "@/components/install-tabs";
+import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
+import { highlight } from "@/lib/highlight";
 import { PreviewToolbar } from "@/components/preview-toolbar";
 import { EvidencePanel } from "@/components/evidence-panel";
 import { assertLocale, site } from "@/lib/locale";
@@ -135,10 +137,25 @@ export default async function ComponentPage({
   const registryComponents = (item.registryDependencies ?? []).filter(
     (d) => d !== item.name && uiNames.has(d),
   );
-  const installFiles: InstallFile[] = item.files.map((f) => ({
-    target: f.target,
-    code: readFileSync(join(REPO_ROOT, f.path), "utf8"),
-  }));
+  /*
+   * Every code surface on the page is highlighted HERE, in the server pass,
+   * because both consumers of the output are "use client" modules that must
+   * not import the tokenizer. Sequential awaits, deliberately: the highlighter
+   * is one shared instance and the export builds ~100 of these pages — a
+   * Promise.all per page just interleaves the same single-threaded work.
+   */
+  const installFiles: InstallFile[] = [];
+  for (const f of item.files) {
+    const code = readFileSync(join(REPO_ROOT, f.path), "utf8");
+    installFiles.push({ target: f.target, code, html: await highlight(code, "tsx") });
+  }
+  const commandHtml: Partial<Record<PM, string>> = {};
+  for (const pm of PMS) {
+    commandHtml[pm] = await highlight(CLI_COMMAND[pm](item.name), "bash");
+  }
+  const deps = item.dependencies ?? [];
+  const depsHtml = deps.length > 0 ? await highlight(depsCommand(deps), "bash") : undefined;
+  const sourceHtml = await highlight(demo.source, "tsx");
 
   return (
     <SiteShell lang={lang} path={`components/${slug}/`} wide>
@@ -198,6 +215,8 @@ export default async function ComponentPage({
                 dependencies={item.dependencies ?? []}
                 registryComponents={registryComponents}
                 files={installFiles}
+                commandHtml={commandHtml}
+                depsHtml={depsHtml}
               />
             </div>
           </section>
@@ -223,6 +242,7 @@ export default async function ComponentPage({
             <div className="mt-3">
               <CodeBlock
                 code={demo.source}
+                html={sourceHtml}
                 label={lang === "fa-IR" ? "کپی کد کامپوننت" : "Copy the component's source"}
                 copiedLabel={lang === "fa-IR" ? "کد کامپوننت کپی شد" : "Component source copied"}
               />

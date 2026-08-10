@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { highlight } from "@/lib/highlight";
 import { LOCALES, direction, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { OnThisPage } from "@/components/on-this-page";
@@ -71,7 +72,7 @@ function BlockFrame({
             : `${title} — ${lang === "fa-IR" ? "Persian" : "English"}`
         }
         loading="lazy"
-        className="block h-56 w-full bg-surface"
+        className="block h-128 w-full bg-surface"
       />
     </figure>
   );
@@ -89,6 +90,8 @@ export default async function BlockPage({
 
   const t = site[lang];
   const install = `npx shadcn@latest add @lumo/${slug}`;
+  const installHtml = await highlight(install, "bash");
+  const sourceHtml = await highlight(block.source, "tsx");
 
   return (
     <SiteShell lang={lang} path={`blocks/${slug}/`} wide>
@@ -119,26 +122,24 @@ export default async function BlockPage({
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
               {lang === "fa-IR" ? "نصب" : "Installation"}
             </h2>
-            <pre
+            <div
               dir="ltr"
               lang="en"
               data-lumo-latn=""
-              className="mt-3 overflow-x-auto rounded-lg border border-border bg-surface-sunken p-4 text-start text-xs"
-            >
-              <code>{install}</code>
-            </pre>
+              className="mt-3 overflow-x-auto rounded-lg border border-border bg-surface-sunken text-start text-xs [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4"
+              dangerouslySetInnerHTML={{ __html: installHtml }}
+            />
           </section>
 
           <section id="source" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">{t.code}</h2>
-            <pre
+            <div
               dir="ltr"
               lang="en"
               data-lumo-latn=""
-              className="mt-3 max-h-[32rem] overflow-auto rounded-lg border border-border bg-surface-sunken p-4 text-start text-xs leading-relaxed"
-            >
-              <code>{block.source}</code>
-            </pre>
+              className="mt-3 max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken text-start text-xs leading-relaxed [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4"
+              dangerouslySetInnerHTML={{ __html: sourceHtml }}
+            />
           </section>
         </article>
 
