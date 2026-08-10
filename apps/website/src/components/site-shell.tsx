@@ -1,6 +1,10 @@
 import Link from "next/link";
 import type { Locale } from "@lumo-ui/core";
 import { site } from "@/lib/locale";
+import { allBlocks } from "@/lib/blocks";
+import { allDemos } from "@/lib/demos";
+import { buildSearchIndex } from "@/lib/search-index";
+import { SiteSearch } from "./site-search";
 import { ThemeToggle } from "./theme-toggle";
 
 /**
@@ -11,7 +15,18 @@ import { ThemeToggle } from "./theme-toggle";
  * `lang` on the document unchanged, which is the exact defect this library
  * exists to prevent. Crossing locales is a document navigation because the two
  * locales are two documents.
+ *
+ * `searchIndex` is built ONCE, at module scope rather than inside `SiteShell`.
+ * `allDemos()`/`allBlocks()` each read source files off disk (see their own
+ * headers); computing it inside the component body would re-run both on every
+ * one of the ~200 pages this shell wraps, once per page, during the static
+ * export. Module scope means Node's own module cache does that work once per
+ * build instead — every `<SiteShell>` render in the same process reuses the
+ * same array. See `search-index.ts` for why the builder itself takes these
+ * two arrays as plain arguments rather than reading the registries itself.
  */
+const searchIndex = buildSearchIndex(allDemos(), allBlocks());
+
 export function SiteShell({
   lang,
   children,
@@ -47,6 +62,7 @@ export function SiteShell({
             </Link>
           </nav>
           <div className="ms-auto flex items-center gap-3 text-sm">
+            <SiteSearch lang={lang} index={searchIndex} />
             <ThemeToggle lang={lang} />
             {/* A real link, not a toggle — see the file header. */}
             <Link
