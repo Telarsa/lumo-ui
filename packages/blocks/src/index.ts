@@ -105,3 +105,64 @@ export type {
 
 export { Faq } from "./faq.tsx";
 export type { FaqItem, FaqProps, FaqStrings } from "./faq.tsx";
+
+export { RequestPasswordReset, SetNewPassword } from "./password-reset.tsx";
+export type {
+  RequestPasswordResetProps,
+  RequestPasswordResetStatus,
+  RequestPasswordResetStrings,
+  SetNewPasswordProps,
+  SetNewPasswordStrings,
+} from "./password-reset.tsx";
+
+export { TwoFactor } from "./two-factor.tsx";
+export type { TwoFactorMode, TwoFactorProps, TwoFactorStrings } from "./two-factor.tsx";
+
+export { CommandPalette } from "./command-palette.tsx";
+export type {
+  CommandPaletteGroup,
+  CommandPaletteItem,
+  CommandPaletteProps,
+  CommandPaletteStrings,
+} from "./command-palette.tsx";
+
+export { TableView } from "./table-view.tsx";
+export type {
+  TableViewColumn,
+  TableViewPagination,
+  TableViewProps,
+  TableViewStrings,
+} from "./table-view.tsx";
+
+export { ProductDetail } from "./product-detail.tsx";
+export type {
+  ProductDetailProps,
+  ProductDetailStrings,
+  ProductImage,
+  ProductSpec,
+  ProductStockState,
+  ProductVariantGroup,
+  ProductVariantOption,
+} from "./product-detail.tsx";
+
+export { CheckoutSummary } from "./checkout-summary.tsx";
+export type {
+  CheckoutCharge,
+  CheckoutItem,
+  CheckoutSummaryProps,
+  CheckoutSummaryStrings,
+} from "./checkout-summary.tsx";
+
+export { Preferences } from "./preferences.tsx";
+export type {
+  PreferenceControl,
+  PreferenceGroup,
+  PreferenceItem,
+  PreferenceRadioOption,
+  PreferenceSelectOption,
+  PreferencesProps,
+  PreferencesStrings,
+} from "./preferences.tsx";
+
+export { Footer } from "./footer.tsx";
+export type { FooterLink, FooterLinkGroup, FooterProps, FooterStrings } from "./footer.tsx";

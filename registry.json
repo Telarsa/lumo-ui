@@ -1135,6 +1135,42 @@
       ]
     },
     {
+      "name": "checkout-summary",
+      "type": "registry:block",
+      "title": "Checkout Summary",
+      "description": "The panel beside a checkout FORM: what is in the cart, what it costs, one",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/checkout-summary.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/checkout-summary.tsx"
+        }
+      ]
+    },
+    {
+      "name": "command-palette",
+      "type": "registry:block",
+      "title": "Command Palette",
+      "description": "A trigger plus the assembled dialog: search box, grouped actions, an empty",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/command-palette.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/command-palette.tsx"
+        }
+      ]
+    },
+    {
       "name": "danger-zone",
       "type": "registry:block",
       "title": "Danger Zone",
@@ -1243,6 +1279,24 @@
       ]
     },
     {
+      "name": "footer",
+      "type": "registry:block",
+      "title": "Footer",
+      "description": "The band at the bottom of every page: brand, grouped navigation, legal",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/footer.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/footer.tsx"
+        }
+      ]
+    },
+    {
       "name": "hero",
       "type": "registry:block",
       "title": "Hero",
@@ -1333,6 +1387,42 @@
       ]
     },
     {
+      "name": "password-reset",
+      "type": "registry:block",
+      "title": "Password Reset",
+      "description": "The two screens either side of \"forgot your password\": request a link, then",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/password-reset.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/password-reset.tsx"
+        }
+      ]
+    },
+    {
+      "name": "preferences",
+      "type": "registry:block",
+      "title": "Preferences",
+      "description": "A settings screen built from structured, instantly-committing controls:",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/preferences.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/preferences.tsx"
+        }
+      ]
+    },
+    {
       "name": "pricing-table",
       "type": "registry:block",
       "title": "Pricing Table",
@@ -1347,6 +1437,24 @@
           "path": "packages/blocks/src/pricing-table.tsx",
           "type": "registry:block",
           "target": "components/blocks/pricing-table.tsx"
+        }
+      ]
+    },
+    {
+      "name": "product-detail",
+      "type": "registry:block",
+      "title": "Product Detail",
+      "description": "A single product page: gallery, price, stock, variants, quantity, specs.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/product-detail.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/product-detail.tsx"
         }
       ]
     },
@@ -1419,6 +1527,45 @@
           "path": "packages/blocks/src/stat-grid.tsx",
           "type": "registry:block",
           "target": "components/blocks/stat-grid.tsx"
+        }
+      ]
+    },
+    {
+      "name": "table-view",
+      "type": "registry:block",
+      "title": "Table View",
+      "description": "A full data screen: `DataToolbar` above a real ARIA grid, with an empty",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "registryDependencies": [
+        "data-toolbar"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/table-view.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/table-view.tsx"
+        }
+      ]
+    },
+    {
+      "name": "two-factor",
+      "type": "registry:block",
+      "title": "Two Factor",
+      "description": "The authenticator-app challenge: a TOTP code, or a printed recovery code.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@lumo-ui/ui"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/two-factor.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/two-factor.tsx"
         }
       ]
     }
