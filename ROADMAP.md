@@ -107,37 +107,59 @@ what the reader gets before — or without — hydration.
 rather than composing purely from `@lumo-ui/ui`. One-directional, no cycle, and
 the alternative was duplicating a block that already existed.
 
-## v0.5 — The showcase site ◐ mostly
+## v0.5 — The showcase site ✅ (density control deferred)
 
 Internal-first (see `DECISIONS.md §0.2`), but built like a real library's docs
 because it is how the library is used and reviewed.
 
-**The full docs redesign is deliberately LAST.** Target shape is
-`ui.shadcn.com` — left sidebar with sections above an alphabetical component
-list, a centre column with title, description, live preview card, then
-Installation with Command/Manual tabs, and a right-hand "On This Page" rail. Lumo
-should exceed it on the axis it can: every preview shown in **both directions**,
-and the evidence panel showing what a screen reader actually announces, which no
-component-library site publishes.
-
-It is last on purpose. The site is generated from the registry, so building it
-before the components exist means building it twice — and a docs site is exactly
-the artifact that rots when its subject keeps moving underneath it.
+The docs redesign was deliberately last — the site is generated from the
+registry, so building it before the components existed would have meant building
+it twice. Both gates it waited on (all components, all blocks) closed 10 Aug
+2026, and the redesign landed the same day. Target shape was `ui.shadcn.com`;
+the two axes Lumo exceeds it on are real: every preview shown in **both
+directions**, and the evidence panel publishing what a screen reader actually
+announces.
 
 - [x] `/fa/` and `/en/` route trees, each prerendered with a real
       `<html lang dir>` — locale is a route segment, never client state
 - [x] Component pages generated from the registry: install, usage, source, props
 - [x] Live previews inline; one side-by-side `fa`/`en` iframe pair per page
-- [ ] Blocks gallery with full-page previews
-- [ ] Theme + density + direction controls
-- [ ] The evidence panel: computed accessible names for the rendered demo
-- [ ] Search over components and blocks
+- [x] Installation as Command/Manual tabs, per package manager, derived from
+      `registry.json` at build time — with copy buttons whose labels are
+      required props and whose copied state is a `role="status"` announcement
+- [x] Blocks gallery: all 28 blocks, each with its own page and a chrome-free
+      full-page preview at `/view-block/<lang>/<slug>/` under `LumoProvider`
+- [x] Theme + direction controls on the preview. Direction is a NAVIGATION to
+      the mirrored route, never a CSS flip — a flip would leave `<html lang>`
+      disagreeing with the geometry, the exact defect the library exists to
+      prevent. `preview-toolbar.tsx`'s header carries the argument.
+- [ ] Density control on the preview — deferred; the token (`--lumo-density`)
+      exists, the toolbar does not expose it yet
+- [x] The evidence panel: computed accessible names for the rendered demo.
+      Computed POST-BUILD from the same bytes the gate grades
+      (`apps/website/scripts/inject-evidence.mjs`), because Next cannot
+      `renderToStaticMarkup` a `"use client"` tree from a server component —
+      measured, not assumed: it throws `Attempted to call RadioGroup() from
+      the server`. The injector is `&&`-chained into `build` and NOT wrapped
+      in try/catch, so a broken computation fails the build rather than
+      shipping an empty panel; re-running it on already-injected output exits
+      1, verified. 102 panels filled.
+- [x] Search over components and blocks: ⌘K palette on Lumo's own
+      `Command`/`CommandDialog`, with a Persian normaliser (ZWNJ, Arabic→
+      Persian codepoint folding ك→ک ي→ی, diacritics, three digit systems) —
+      each rule with a test that fails without it
+- [x] The A–Z index sorted by `Intl.Collator` under `FORMAT_LOCALE` — sorting
+      Persian by UTF-16 code unit looks plausible and is wrong
+
+The alphabetical list lives on `/components/`; the sidebar stays grouped by
+tier. Two navigations on two axes — by kind and by name — rather than shadcn's
+single flat list serving both.
 
 ## v0.6 — Registry and distribution ◐ mostly
 
 - [x] `registry.json` generated from the components that exist, shadcn-shaped
 - [ ] `shadcn build` → static JSON, served privately
-- [x] Consumer install smoke test in CI — 54 items compile outside the workspace
+- [x] Consumer install smoke test in CI — 80 items compile outside the workspace
 - [ ] Versioned snapshots so a consumer pins a release rather than `latest`
 - [ ] `--diff` workflow documented for taking upstream changes
 
