@@ -406,6 +406,32 @@
       ]
     },
     {
+      "name": "pagination",
+      "type": "registry:ui",
+      "title": "Pagination",
+      "description": "A page selector.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "pagination.variants.ts"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/pagination.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/pagination.tsx"
+        },
+        {
+          "path": "packages/ui/src/pagination.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/pagination.variants.ts"
+        }
+      ]
+    },
+    {
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
@@ -486,6 +512,25 @@
           "path": "packages/ui/src/search-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/search-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "segmented-control",
+      "type": "registry:ui",
+      "title": "Segmented Control",
+      "description": "Two to four mutually exclusive options, shown all at once.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/segmented-control.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/segmented-control.tsx"
         }
       ]
     },
@@ -605,6 +650,24 @@
       ]
     },
     {
+      "name": "steps",
+      "type": "registry:ui",
+      "title": "Steps",
+      "description": "A stepper: where you are in a sequence you have to finish.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/steps.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/steps.tsx"
+        }
+      ]
+    },
+    {
       "name": "switch",
       "type": "registry:ui",
       "title": "Switch",
@@ -666,6 +729,25 @@
           "path": "packages/ui/src/tabs.tsx",
           "type": "registry:ui",
           "target": "components/ui/tabs.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tag-group",
+      "type": "registry:ui",
+      "title": "Tag Group",
+      "description": "A keyboard-navigable list of filters, keywords or selected values.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/tag-group.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tag-group.tsx"
         }
       ]
     },

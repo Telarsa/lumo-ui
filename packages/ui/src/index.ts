@@ -316,5 +316,92 @@ export type {
   DescriptionTermProps,
 } from "./description-list.tsx";
 
+export {
+  Toast,
+  ToastRegion,
+  createToastQueue,
+  toastRegionVariants,
+  toastVariants,
+} from "./toast.tsx";
+export type {
+  LumoToastContent,
+  LumoToastQueue,
+  ToastProps,
+  ToastRegionProps,
+  ToastTone,
+  ToastVariantProps,
+} from "./toast.tsx";
+
+export {
+  Slider,
+  sliderFillVariants,
+  sliderThumbVariants,
+  sliderTrackVariants,
+  sliderVariants,
+} from "./slider.tsx";
+export type { SliderProps, SliderVariantProps } from "./slider.tsx";
+
+export {
+  TagGroup,
+  TagItem,
+  TagList,
+  tagGroupVariants,
+  tagItemVariants,
+  tagListVariants,
+  tagRemoveVariants,
+} from "./tag-group.tsx";
+export type {
+  TagGroupProps,
+  TagItemProps,
+  TagItemVariantProps,
+  TagListProps,
+} from "./tag-group.tsx";
+
+export { Pagination } from "./pagination.tsx";
+export type { PaginationProps } from "./pagination.tsx";
+
+export {
+  Steps,
+  stepConnectorVariants,
+  stepMarkerVariants,
+  stepTitleVariants,
+  stepVariants,
+  stepsListVariants,
+  stepsVariants,
+} from "./steps.tsx";
+export type { StepItem, StepStatus, StepsProps } from "./steps.tsx";
+
+export {
+  SegmentedControl,
+  SegmentedControlItem,
+  segmentedControlItemVariants,
+  segmentedControlVariants,
+} from "./segmented-control.tsx";
+export type {
+  SegmentedControlItemProps,
+  SegmentedControlProps,
+  SegmentedControlVariantProps,
+} from "./segmented-control.tsx";
+
 export { buttonVariants } from "./button.variants.ts";
 export type { ButtonVariantProps } from "./button.variants.ts";
+
+/*
+ * Pagination's classes and its page-window arithmetic come from the
+ * directive-free module, NOT through `pagination.tsx`. Re-exporting them from
+ * the client component would turn them back into client references in the RSC
+ * graph — which is the exact failure `button.variants.ts` documents, and the
+ * reason `packages/blocks/src/listing-grid.tsx` can render a server-side pager
+ * of real `<a href>` links with these classes at all.
+ */
+export {
+  paginationGapVariants,
+  paginationItemVariants,
+  paginationListVariants,
+  paginationRange,
+  paginationVariants,
+} from "./pagination.variants.ts";
+export type {
+  PaginationItemVariantProps,
+  PaginationSlot,
+} from "./pagination.variants.ts";

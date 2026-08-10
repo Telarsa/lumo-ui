@@ -133,7 +133,7 @@ export type SliderVariantProps = VariantProps<typeof sliderTrackVariants>;
 export interface SliderProps
   extends Omit<
       AriaSliderProps<number>,
-      "children" | "className" | "aria-label" | "orientation"
+      "children" | "className" | "aria-label" | "orientation" | "formatOptions"
     >,
     SliderVariantProps {
   /**
