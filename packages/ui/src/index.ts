@@ -75,7 +75,7 @@ export {
   switchTrackVariants,
   switchVariants,
 } from "./switch.tsx";
-export type { SwitchProps } from "./switch.tsx";
+export type { SwitchProps, SwitchVariantProps } from "./switch.tsx";
 
 export { Link, linkVariants } from "./link.tsx";
 export type { LinkCurrent, LinkProps } from "./link.tsx";
@@ -614,3 +614,188 @@ export type {
   ChartMainAxisMirror,
   ChartMirror,
 } from "./chart.variants.ts";
+
+export {
+  Attachment,
+  AttachmentContent,
+  AttachmentGroup,
+  AttachmentMedia,
+  AttachmentMeta,
+  AttachmentName,
+  AttachmentProgress,
+  AttachmentRemove,
+  attachmentGroupVariants,
+  attachmentMediaVariants,
+  attachmentMetaVariants,
+  attachmentVariants,
+} from "./attachment.tsx";
+export type {
+  AttachmentMediaProps,
+  AttachmentMetaProps,
+  AttachmentNameProps,
+  AttachmentProgressProps,
+  AttachmentProps,
+  AttachmentRemoveProps,
+  AttachmentSectionProps,
+  AttachmentState,
+} from "./attachment.tsx";
+
+export {
+  Bubble,
+  BubbleCollapse,
+  BubbleGroup,
+  BubbleReactions,
+  bubbleGroupVariants,
+  bubbleReactionsVariants,
+  bubbleVariants,
+} from "./bubble.tsx";
+export type {
+  BubbleCollapseProps,
+  BubbleGroupProps,
+  BubbleGrouping,
+  BubbleProps,
+  BubbleReactionsProps,
+  BubbleVariant,
+} from "./bubble.tsx";
+
+export {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemGroup,
+  ItemHeader,
+  ItemMedia,
+  ItemSeparator,
+  ItemTitle,
+} from "./item.tsx";
+export type {
+  ItemButtonProps,
+  ItemDescriptionProps,
+  ItemLinkProps,
+  ItemMediaProps,
+  ItemProps,
+  ItemSectionProps,
+  ItemSeparatorProps,
+  ItemStaticProps,
+} from "./item.tsx";
+
+/*
+ * Same rule as `pagination.variants.ts` above: item's cva definitions export
+ * from the directive-free module directly — re-exporting them through the
+ * "use client" component would turn them back into client references.
+ */
+export {
+  itemActionsVariants,
+  itemContentVariants,
+  itemDescriptionVariants,
+  itemFooterVariants,
+  itemGroupVariants,
+  itemHeaderVariants,
+  itemMediaVariants,
+  itemTitleVariants,
+  itemVariants,
+} from "./item.variants.ts";
+export type { ItemMediaVariantProps, ItemVariantProps } from "./item.variants.ts";
+
+export { Marker, MarkerIcon, markerVariants } from "./marker.tsx";
+export type { MarkerIconProps, MarkerProps } from "./marker.tsx";
+
+export { Menubar, MenubarButton, menubarButtonVariants, menubarVariants } from "./menubar.tsx";
+export type { MenubarButtonProps, MenubarProps } from "./menubar.tsx";
+
+export {
+  Message,
+  MessageAvatar,
+  MessageBody,
+  MessageGroup,
+  MessageHeader,
+  MessageTime,
+  messageBodyVariants,
+  messageGroupVariants,
+  messageVariants,
+} from "./message.tsx";
+export type {
+  MessageProps,
+  MessageSectionProps,
+  MessageTimeProps,
+  MessageVariant,
+} from "./message.tsx";
+
+export {
+  NativeSelect,
+  NativeSelectOptGroup,
+  NativeSelectOption,
+  nativeSelectVariants,
+} from "./native-select.tsx";
+export type {
+  NativeSelectOptGroupProps,
+  NativeSelectOptionProps,
+  NativeSelectProps,
+} from "./native-select.tsx";
+
+export {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuPanel,
+  NavigationMenuTrigger,
+  navigationMenuChevronVariants,
+  navigationMenuLinkVariants,
+  navigationMenuPanelVariants,
+  navigationMenuTriggerVariants,
+  navigationMenuVariants,
+} from "./navigation-menu.tsx";
+export type {
+  NavigationMenuItemProps,
+  NavigationMenuLinkProps,
+  NavigationMenuPanelProps,
+  NavigationMenuProps,
+  NavigationMenuTriggerProps,
+} from "./navigation-menu.tsx";
+
+export {
+  Resizable,
+  resizableHandleVariants,
+  resizablePanelVariants,
+  resizableVariants,
+} from "./resizable.tsx";
+export type { ResizableProps } from "./resizable.tsx";
+
+export { ScrollArea, scrollAreaVariants } from "./scroll-area.tsx";
+export type { ScrollAreaProps } from "./scroll-area.tsx";
+
+export {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+  SidebarItem,
+  SidebarTrigger,
+} from "./sidebar.tsx";
+/*
+ * The variants come from the DIRECTIVE-FREE module, never through sidebar.tsx:
+ * a re-export routed through a "use client" module is a client reference for
+ * every importer, however server-safe its definition file is — the same latent
+ * break buttonVariants once shipped for real, caught here by review.
+ */
+export {
+  sidebarBadgeVariants,
+  sidebarContentVariants,
+  sidebarFooterVariants,
+  sidebarGroupLabelVariants,
+  sidebarGroupVariants,
+  sidebarHeaderVariants,
+  sidebarItemLabelVariants,
+  sidebarItemVariants,
+  sidebarVariants,
+} from "./sidebar.variants.ts";
+export type {
+  SidebarGroupProps,
+  SidebarItemProps,
+  SidebarProps,
+  SidebarSectionProps,
+  SidebarTriggerProps,
+} from "./sidebar.tsx";

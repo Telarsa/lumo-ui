@@ -15,10 +15,17 @@ import { highlight } from "@/lib/highlight";
 import { PreviewToolbar } from "@/components/preview-toolbar";
 import { EvidencePanel } from "@/components/evidence-panel";
 import { assertLocale, site } from "@/lib/locale";
-import { allDemos, demoById } from "@/lib/demos";
+import { allCatalog, catalogById } from "@/lib/catalog";
+import { loadExamplesFor, type LoadedComponentExamples } from "@/lib/examples-loader";
+import { ExampleCard } from "@/components/example-card";
+import { CompositionTree, PartsTable } from "@/components/composition-tree";
 
-export function generateStaticParams() {
-  return LOCALES.flatMap((lang) => allDemos().map((d) => ({ lang, slug: d.id })));
+export async function generateStaticParams() {
+  // The CATALOG, not (await allCatalog()): round 3 shipped eleven components whose only
+  // registration was an examples file, and this line — then reading demos.tsx
+  // alone — quietly built no page for any of them. See lib/catalog.ts.
+  const entries = await allCatalog();
+  return LOCALES.flatMap((lang) => entries.map((d) => ({ lang, slug: d.id })));
 }
 
 /**
@@ -27,21 +34,41 @@ export function generateStaticParams() {
  * There is no "source" entry: the source moved into the Preview | Code tab
  * pair inside `#preview`, so a rail link to a `#source` fragment would point
  * at nothing — exactly the drift this function exists to prevent.
+ *
+ * The list is DYNAMIC over the component's loaded examples file (see
+ * `lib/examples-loader.ts`): each example contributes an `example-<id>`
+ * section between Preview and Evidence, and the composition / parts-reference
+ * sections appear only when the file declares them. The page body below maps
+ * over the SAME loaded object in the same order, which is what keeps the rail
+ * and the page structurally unable to disagree — the invariant this function
+ * has always existed to hold.
  */
-function sections(lang: Locale) {
-  return [
-    { id: "preview", label: lang === "fa-IR" ? "پیش‌نمایش" : "Preview" },
+function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
+  const list = [{ id: "preview", label: lang === "fa-IR" ? "پیش‌نمایش" : "Preview" }];
+  if (loaded !== undefined) {
+    for (const example of loaded.examples) {
+      list.push({ id: `example-${example.id}`, label: example.title[lang] });
+    }
+    if (loaded.composition !== undefined) {
+      list.push({ id: "composition", label: lang === "fa-IR" ? "ترکیب اجزا" : "Composition" });
+    }
+    if (loaded.parts !== undefined && loaded.parts.length > 0) {
+      list.push({ id: "api", label: lang === "fa-IR" ? "مرجع اجزا" : "API reference" });
+    }
+  }
+  list.push(
     {
       id: "evidence",
       label: lang === "fa-IR" ? "شواهد دسترس‌پذیری" : "Accessibility evidence",
     },
     { id: "installation", label: lang === "fa-IR" ? "نصب" : "Installation" },
     { id: "directions", label: lang === "fa-IR" ? "هر دو جهت" : "Both directions" },
-  ];
+  );
+  return list;
 }
 
 /**
- * The header's previous/next pager, over `allDemos()`'s alphabetical order.
+ * The header's previous/next pager, over `(await allCatalog())`'s alphabetical order.
  *
  * The glyphs are `‹`/`›` — a Unicode `Bidi_Mirrored` pair, the exact pattern
  * `packages/ui/src/pagination.tsx`'s header documents: under `dir="rtl"` the
@@ -174,7 +201,7 @@ export default async function ComponentPage({
 }) {
   const { lang: raw, slug } = await params;
   const lang = assertLocale(raw);
-  const demo = demoById(slug);
+  const demo = await catalogById(slug);
   if (!demo) notFound();
 
   const t = site[lang];
@@ -219,12 +246,39 @@ export default async function ComponentPage({
   const sourceHtml = await highlight(demo.source, "tsx");
 
   /*
-   * The header toolbar's data. The pager walks `allDemos()` — the SAME
+   * The component's worked examples, when an examples file exists — discovery
+   * is by existence (see lib/examples-loader.ts), and demos.tsx remains the
+   * whole page for components without one. The loader has already sliced and
+   * validated every example's source; highlighting happens here in the same
+   * sequential server pass as everything else above, for the same
+   * single-highlighter reason.
+   */
+  const loaded = await loadExamplesFor(slug);
+  const exampleCards: Array<{
+    example: LoadedComponentExamples["examples"][number];
+    html: string;
+  }> = [];
+  if (loaded !== undefined) {
+    for (const example of loaded.examples) {
+      exampleCards.push({ example, html: await highlight(example.source, "tsx") });
+    }
+  }
+  const compositionHtml =
+    loaded?.composition !== undefined ? await highlight(loaded.composition, "tsx") : undefined;
+  const exampleStrings = {
+    view: lang === "fa-IR" ? "نمایش کد" : "View code",
+    hide: lang === "fa-IR" ? "پنهان کردن کد" : "Hide code",
+    copy: lang === "fa-IR" ? "کپی کد نمونه" : "Copy the example code",
+    copied: lang === "fa-IR" ? "کد نمونه کپی شد" : "Example code copied",
+  };
+
+  /*
+   * The header toolbar's data. The pager walks `(await allCatalog())` — the SAME
    * alphabetical order the sidebar shows — and "Copy page" carries the install
    * command plus the component's source, the two things a reader would
    * otherwise copy one at a time.
    */
-  const demos = allDemos();
+  const demos = (await allCatalog());
   const index = demos.findIndex((d) => d.id === slug);
   const prevDemo = index > 0 ? demos[index - 1] : undefined;
   const nextDemo = index >= 0 && index < demos.length - 1 ? demos[index + 1] : undefined;
@@ -334,6 +388,71 @@ export default async function ComponentPage({
             </Tabs>
           </section>
 
+          {/*
+           * The worked examples, between Preview and Evidence — each one a
+           * titled, anchored section the rail lists, in the same order, from
+           * the same loaded object (see `sections()` above). The cards carry
+           * no [data-lumo-demo-root]: that marker stays unique to the preview
+           * stage the evidence injector reads.
+           */}
+          {exampleCards.map(({ example, html }) => (
+            <ExampleCard
+              key={example.id}
+              id={`example-${example.id}`}
+              title={example.title[lang]}
+              description={example.description?.[lang]}
+              code={example.source}
+              html={html}
+              viewLabel={exampleStrings.view}
+              hideLabel={exampleStrings.hide}
+              copyLabel={exampleStrings.copy}
+              copiedLabel={exampleStrings.copied}
+            >
+              <div className="flex w-full flex-col items-center">{example.render(lang)}</div>
+            </ExampleCard>
+          ))}
+
+          {loaded !== undefined &&
+          loaded.composition !== undefined &&
+          compositionHtml !== undefined ? (
+            <section id="composition" className="mt-10 scroll-mt-24">
+              <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
+                {lang === "fa-IR" ? "ترکیب اجزا" : "Composition"}
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-fg-muted">
+                {lang === "fa-IR"
+                  ? "درخت اجزا، آمادهٔ کپی — هر تگ آن هنگام ساخت با خروجی‌های واقعی کتابخانه تطبیق داده شده است."
+                  : "The parts tree, ready to copy — every tag in it is checked against the library's real exports at build time."}
+              </p>
+              <div className="mt-3">
+                <CompositionTree
+                  composition={loaded.composition}
+                  html={compositionHtml}
+                  copyLabel={lang === "fa-IR" ? "کپی درخت اجزا" : "Copy the composition tree"}
+                  copiedLabel={lang === "fa-IR" ? "درخت اجزا کپی شد" : "Composition tree copied"}
+                  parts={loaded.moduleParts}
+                  partsLabel={lang === "fa-IR" ? "اجزای صادرشده" : "Exported parts"}
+                />
+              </div>
+            </section>
+          ) : null}
+
+          {loaded !== undefined && loaded.parts !== undefined && loaded.parts.length > 0 ? (
+            <section id="api" className="mt-10 scroll-mt-24">
+              <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
+                {lang === "fa-IR" ? "مرجع اجزا" : "API reference"}
+              </h2>
+              <div className="mt-3">
+                <PartsTable
+                  parts={loaded.parts}
+                  locale={lang}
+                  partHeader={lang === "fa-IR" ? "جزء" : "Part"}
+                  descriptionHeader={lang === "fa-IR" ? "شرح" : "Description"}
+                />
+              </div>
+            </section>
+          ) : null}
+
           <section id="evidence" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
               {lang === "fa-IR" ? "شواهد دسترس‌پذیری" : "Accessibility evidence"}
@@ -403,7 +522,7 @@ export default async function ComponentPage({
 
         </article>
 
-        <OnThisPage lang={lang} items={sections(lang)} />
+        <OnThisPage lang={lang} items={sections(lang, loaded)} />
       </div>
     </SiteShell>
   );

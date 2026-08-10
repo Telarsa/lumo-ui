@@ -14,7 +14,6 @@
         "react-aria-components"
       ],
       "registryDependencies": [
-        "alert-dialog.variants.ts",
         "button",
         "dialog"
       ],
@@ -64,6 +63,29 @@
           "path": "packages/ui/src/aspect-ratio.tsx",
           "type": "registry:ui",
           "target": "components/ui/aspect-ratio.tsx"
+        }
+      ]
+    },
+    {
+      "name": "attachment",
+      "type": "registry:ui",
+      "title": "Attachment",
+      "description": "A named file in a conversation: the chip in a composer before sending, the",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "button",
+        "file-upload",
+        "progress"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/attachment.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/attachment.tsx"
         }
       ]
     },
@@ -145,6 +167,27 @@
       ]
     },
     {
+      "name": "bubble",
+      "type": "registry:ui",
+      "title": "Bubble",
+      "description": "A conversational message bubble.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "disclosure"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/bubble.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/bubble.tsx"
+        }
+      ]
+    },
+    {
       "name": "button-group",
       "type": "registry:ui",
       "title": "Button Group",
@@ -174,9 +217,6 @@
       "dependencies": [
         "@lumo-ui/core",
         "react-aria-components"
-      ],
-      "registryDependencies": [
-        "button.variants.ts"
       ],
       "files": [
         {
@@ -240,9 +280,6 @@
       "dependencies": [
         "@lumo-ui/core",
         "recharts"
-      ],
-      "registryDependencies": [
-        "chart.variants.ts"
       ],
       "files": [
         {
@@ -458,7 +495,6 @@
       ],
       "registryDependencies": [
         "button",
-        "file-upload.variants.ts",
         "form"
       ],
       "files": [
@@ -528,8 +564,7 @@
       ],
       "registryDependencies": [
         "button",
-        "form",
-        "input-group.variants.ts"
+        "form"
       ],
       "files": [
         {
@@ -541,6 +576,32 @@
           "path": "packages/ui/src/input-group.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/input-group.variants.ts"
+        }
+      ]
+    },
+    {
+      "name": "item",
+      "type": "registry:ui",
+      "title": "Item",
+      "description": "The generic row: media, content, actions. The workhorse under lists of",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "separator"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/item.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/item.tsx"
+        },
+        {
+          "path": "packages/ui/src/item.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/item.variants.ts"
         }
       ]
     },
@@ -605,6 +666,24 @@
       ]
     },
     {
+      "name": "marker",
+      "type": "registry:ui",
+      "title": "Marker",
+      "description": "An inline conversation marker: «دیروز», «سارا به گفتگو پیوست», «پیام‌های",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/marker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/marker.tsx"
+        }
+      ]
+    },
+    {
       "name": "menu",
       "type": "registry:ui",
       "title": "Menu",
@@ -623,6 +702,88 @@
           "path": "packages/ui/src/menu.tsx",
           "type": "registry:ui",
           "target": "components/ui/menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "menubar",
+      "type": "registry:ui",
+      "title": "Menubar",
+      "description": "A horizontal row of menus — File/Edit/View in an app chrome.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "toolbar"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/menubar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/menubar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "message",
+      "type": "registry:ui",
+      "title": "Message",
+      "description": "The composed chat row: avatar slot, bubbles, timestamp.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/message.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/message.tsx"
+        }
+      ]
+    },
+    {
+      "name": "native-select",
+      "type": "registry:ui",
+      "title": "Native Select",
+      "description": "A styled REAL `<select>` — and the reason to reach for it is the platform",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/native-select.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/native-select.tsx"
+        }
+      ]
+    },
+    {
+      "name": "navigation-menu",
+      "type": "registry:ui",
+      "title": "Navigation Menu",
+      "description": "The marketing-site top navigation: a row of links and triggers whose",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "link",
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/navigation-menu.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/navigation-menu.tsx"
         }
       ]
     },
@@ -675,9 +836,6 @@
       "dependencies": [
         "@lumo-ui/core",
         "react-aria-components"
-      ],
-      "registryDependencies": [
-        "pagination.variants.ts"
       ],
       "files": [
         {
@@ -794,6 +952,42 @@
       ]
     },
     {
+      "name": "resizable",
+      "type": "registry:ui",
+      "title": "Resizable",
+      "description": "Two panes and a draggable divider.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/resizable.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/resizable.tsx"
+        }
+      ]
+    },
+    {
+      "name": "scroll-area",
+      "type": "registry:ui",
+      "title": "Scroll Area",
+      "description": "A scroll container with styled scrollbars.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/scroll-area.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/scroll-area.tsx"
+        }
+      ]
+    },
+    {
       "name": "search-field",
       "type": "registry:ui",
       "title": "Search Field",
@@ -875,6 +1069,32 @@
           "path": "packages/ui/src/separator.tsx",
           "type": "registry:ui",
           "target": "components/ui/separator.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sidebar",
+      "type": "registry:ui",
+      "title": "Sidebar",
+      "description": "The app sidebar: a collapsible rail of grouped navigation items.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "button",
+        "link"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/sidebar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/sidebar.tsx"
+        },
+        {
+          "path": "packages/ui/src/sidebar.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/sidebar.variants.ts"
         }
       ]
     },

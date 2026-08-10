@@ -1,6 +1,6 @@
 "use client";
 
-import { cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import {
   SwitchButton as AriaSwitchButton,
   SwitchField as AriaSwitchField,
@@ -20,33 +20,72 @@ import { Description, FieldError, FOCUS_RING } from "./form.tsx";
  * actual first-line centring is done on the track itself with a `1lh` margin —
  * see `switchTrackVariants` — so `items-start` here is just the anchor it
  * offsets from. The `description` row is unaffected either way: it renders
- * OUTSIDE this row (below, indented `ps-13`), so a multi-line description never
- * pulled the track down even before this change.
+ * OUTSIDE this row (below, indented on the inline-start side), so a multi-line
+ * description never pulled the track down even before this change.
+ *
+ * `lg` raises the row's minimum block size to the `control-lg` token — the
+ * 44px touch-target floor Khroos specifies, the same floor button.variants.ts
+ * meets with `h-control-lg`. The track itself stays 24px tall; inflating the
+ * glyph to 44px would make a settings list unreadable, so the FLOOR is met by
+ * the row (the actual hit area — the whole `<label>` is pressable) while the
+ * track keeps its proportions.
  */
 export const switchVariants = cva(
-  "group flex w-fit cursor-pointer items-start gap-2 text-sm text-fg select-none " +
+  "group flex w-fit cursor-pointer items-start gap-2 text-fg select-none " +
     "data-disabled:cursor-not-allowed data-disabled:opacity-50",
+  {
+    variants: {
+      size: {
+        md: "text-sm",
+        lg: "min-h-control-lg text-base",
+      },
+    },
+    defaultVariants: { size: "md" },
+  },
 );
 
 /**
  * The track.
  *
- * `mbs-[calc((1lh-1.5rem)/2)]` centres the 1.5rem track on the label's FIRST
- * line box, exactly: with `items-start` the track's margin box tops the row, so
- * a block-start margin of (line-height − track-height)/2 puts the track's
- * centre at 1lh/2 — the first line's own centre. `1lh` resolves against the
- * row's computed line-height, so the same declaration is right under Latin
- * leading and under the taller `:lang(fa)` leading, with no per-locale constant
- * to drift. A fixed `items-center` was measurably wrong for wrapped labels
- * (track centred between lines); a fixed margin would be wrong in one script.
+ * The block-start margin — calc((1lh − track height)/2) — centres the track on
+ * the label's FIRST line box, exactly: with `items-start` the track's margin
+ * box tops the row, so a block-start margin of (line-height − track-height)/2
+ * puts the track's centre at half a line-height — the first line's own centre.
+ * `1lh` resolves against the row's computed line-height, so the same
+ * declaration is right under Latin leading and under the taller `:lang(fa)`
+ * leading, with no per-locale constant to drift. A fixed `items-center` was
+ * measurably wrong for wrapped labels (track centred between lines); a fixed
+ * margin would be wrong in one script. Each size restates the calc with its
+ * own track height, because the subtrahend is the one number that changes.
+ *
+ * ── THE SCALE, AND WHY IT IS 18px WHERE SHADCN SAYS 18.4 ────────────────────
+ *
+ * `md` follows shadcn's current switch — their track is 1.15rem tall and 2rem
+ * wide with a proportional thumb, visibly smaller and cleaner than the 24×44
+ * track this file used to ship as its only size. But 1.15rem is 18.4px, and
+ * 18.4 breaks the border-aware inset arithmetic below: no whole-pixel inset
+ * centres a whole-pixel thumb in a 16.4px padding box. Lumo rounds the track
+ * to 18×32 so every inset in this file is an integer. The 0.4px is not a
+ * visible difference; a fractional inset that rounds differently per zoom
+ * level is.
  */
 export const switchTrackVariants = cva(
-  "relative h-6 w-11 shrink-0 rounded-full bg-surface-sunken " +
-    "mbs-[calc((1lh-1.5rem)/2)] " +
+  "relative shrink-0 rounded-full bg-surface-sunken " +
     "border border-border-control transition-colors " +
     "group-data-hovered:border-border-strong " +
     "group-data-selected:border-accent group-data-selected:bg-accent " +
     FOCUS_RING,
+  {
+    variants: {
+      size: {
+        // 18×32 border box.
+        md: "h-4.5 w-8 mbs-[calc((1lh-1.125rem)/2)]",
+        // 24×44 border box — the pre-restyle scale, kept as the touch size.
+        lg: "h-6 w-11 mbs-[calc((1lh-1.5rem)/2)]",
+      },
+    },
+    defaultVariants: { size: "md" },
+  },
 );
 
 /**
@@ -63,27 +102,44 @@ export const switchTrackVariants = cva(
  * and Tailwind spells it `start-*`. It animates (both endpoints are lengths), and
  * the browser resolves which physical edge that is.
  *
- * ── THE DEFECT THIS FILE SHIPPED, MEASURED ──────────────────────────────────
+ * ── THE DEFECT THE FIRST VERSION SHIPPED, AND THE ARITHMETIC THAT FIXED IT ──
  *
- * The first version placed the thumb at `top-0.5 start-0.5`, sliding to
- * `start-5.5`, from the arithmetic "track 2.75rem − 1.25rem thumb − 0.125rem
- * inset = 1.375rem". That arithmetic measured the BORDER box, but absolute
- * insets resolve against the PADDING box, and the track wears a 1px border —
- * its padding box is 22×42px, not 24×44px. So the 20px thumb at `top` 2px
- * filled rows 2..22 of a 22px box: 2px of air above, ZERO below — the thumb sat
- * visibly low ("a bit on the bottom"), and when selected it jammed flush
- * against the end border (22px + 20px = 42px, the whole padding box) while
- * resting 2px off the start. The fix is border-aware: a 1px inset centres a
- * 20px thumb in a 22px box, so `top-0.25 start-0.25`, and the selected inset is
- * 42 − 20 − 1 = 21px = `start-5.25`. Travel is unchanged at 20px; the gaps are
- * now 1px inside the border on every side, in both states, in both scripts.
+ * The first version measured the BORDER box, but absolute insets resolve
+ * against the PADDING box, and the track wears a 1px border — so the thumb sat
+ * visibly low and jammed flush against the end border when selected. The
+ * border-aware rule, now restated per size (border box → padding box → insets):
+ *
+ *   resting inset = (padding-box height − thumb)/2
+ *   selected inset = padding-box width − thumb − resting inset
+ *
+ *   md  18×32 border box → 16×30 padding box, thumb 14px
+ *       resting (16−14)/2 = 1px            → `top-0.25 start-0.25`
+ *       selected 30 − 14 − 1 = 15px        → `start-3.75`
+ *   lg  24×44 border box → 22×42 padding box, thumb 20px
+ *       resting (22−20)/2 = 1px            → `top-0.25 start-0.25`
+ *       selected 42 − 20 − 1 = 21px        → `start-5.25`
+ *
+ * Both sizes rest 1px inside the border on every side, in both states, in both
+ * scripts. If you change any number above, recompute all three lines of its
+ * block — the header's math and the shipped values must not drift apart.
  */
 export const switchThumbVariants = cva(
-  "absolute top-0.25 start-0.25 size-5 rounded-full bg-surface shadow-sm " +
+  "absolute top-0.25 start-0.25 rounded-full bg-surface shadow-sm " +
     "transition-[inset-inline-start] duration-150 ease-out " +
-    "group-data-selected:start-5.25 group-data-selected:bg-accent-fg " +
+    "group-data-selected:bg-accent-fg " +
     "motion-reduce:transition-none",
+  {
+    variants: {
+      size: {
+        md: "size-3.5 group-data-selected:start-3.75",
+        lg: "size-5 group-data-selected:start-5.25",
+      },
+    },
+    defaultVariants: { size: "md" },
+  },
 );
+
+export type SwitchVariantProps = VariantProps<typeof switchVariants>;
 
 /**
  * A switch.
@@ -103,6 +159,11 @@ export const switchThumbVariants = cva(
  */
 export interface SwitchProps extends Omit<AriaSwitchFieldProps, "children" | "className"> {
   children?: LumoNode;
+  /**
+   * `md` is shadcn's current compact scale; `lg` keeps the row at the 44px
+   * touch floor for Khroos's touch surfaces. See the size table on the thumb.
+   */
+  size?: "md" | "lg";
   /** Help text under the switch. */
   description?: LumoNode;
   /** A validation error for this switch. */
@@ -114,27 +175,30 @@ export interface SwitchProps extends Omit<AriaSwitchFieldProps, "children" | "cl
 
 export function Switch({
   children,
+  size = "md",
   description,
   errorMessage,
   className,
   controlClassName,
   ...props
 }: SwitchProps) {
+  // Track width plus the 0.5rem gap, on the inline axis: md 2rem + 0.5rem,
+  // lg 2.75rem + 0.5rem. Keeps the description's start edge on the label's.
+  const indent = size === "lg" ? "ps-13" : "ps-10";
   return (
     <AriaSwitchField
       data-lumo=""
       className={cn("flex flex-col gap-1", className)}
       {...props}
     >
-      <AriaSwitchButton className={cn(switchVariants(), controlClassName)}>
-        <span className={switchTrackVariants()}>
-          <span aria-hidden="true" className={switchThumbVariants()} />
+      <AriaSwitchButton className={cn(switchVariants({ size }), controlClassName)}>
+        <span className={switchTrackVariants({ size })}>
+          <span aria-hidden="true" className={switchThumbVariants({ size })} />
         </span>
         {children}
       </AriaSwitchButton>
-      {/* `ps-13` = the 2.75rem track plus the 0.5rem gap, on the inline axis. */}
-      {description != null ? <Description className="ps-13">{description}</Description> : null}
-      <FieldError className="ps-13">{errorMessage}</FieldError>
+      {description != null ? <Description className={indent}>{description}</Description> : null}
+      <FieldError className={indent}>{errorMessage}</FieldError>
     </AriaSwitchField>
   );
 }

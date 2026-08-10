@@ -269,3 +269,129 @@ export function ChartIsland({
     </ChartContainer>
   );
 }
+
+/* ───────────────────────────────────────────────────────────── attachment ── */
+
+/*
+ * Appended by the round-3 chat batch. Import declarations are hoisted, so
+ * placing these here keeps the append-only contract for this file without
+ * touching the shared header. `useState` and `Locale` are already imported at
+ * the top; re-importing them would be a duplicate-binding error.
+ */
+import {
+  Attachment,
+  AttachmentContent,
+  AttachmentMeta,
+  AttachmentName,
+  AttachmentRemove,
+} from "@lumo-ui/ui";
+
+export interface AttachmentIslandProps {
+  locale: Locale;
+  /**
+   * The verb of the remove phrase: «حذف» → «حذف گزارش فروش مرداد». The noun is
+   * each file's own name, appended on this side of the boundary — the same
+   * word-shape RatingIsland's `ofWord` documents.
+   */
+  removeWord: string;
+  /** Shown once the last attachment is removed, e.g. «همهٔ پیوست‌ها حذف شد.». */
+  emptyText: string;
+  /** Plain data, so it crosses the boundary: display name, bytes, translated kind. */
+  files: readonly { readonly name: string; readonly size: number; readonly kind: string }[];
+}
+
+/**
+ * The one attachment demo that cannot live in a server module: removal needs
+ * `onPress`, and a function cannot cross the server/client boundary. Only
+ * strings and plain data arrive here; every user-visible word is still written
+ * in the examples module, in both locales.
+ */
+export function AttachmentIsland({ locale, removeWord, emptyText, files }: AttachmentIslandProps) {
+  const [remaining, setRemaining] = useState(files);
+
+  if (remaining.length === 0) {
+    return <p className="text-sm text-fg-muted">{emptyText}</p>;
+  }
+
+  return (
+    <div className="flex w-full max-w-md flex-col gap-2">
+      {remaining.map((file) => (
+        <Attachment key={file.name}>
+          <AttachmentContent>
+            <AttachmentName>{file.name}</AttachmentName>
+            <AttachmentMeta locale={locale} size={file.size}>
+              <span>{file.kind}</span>
+            </AttachmentMeta>
+          </AttachmentContent>
+          <AttachmentRemove
+            label={`${removeWord} ${file.name}`}
+            onPress={() => {
+              setRemaining((current) => current.filter((f) => f.name !== file.name));
+            }}
+          />
+        </Attachment>
+      ))}
+    </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────── resizable ── */
+
+/*
+ * Appended by the round-3 navigation batch, same append-only contract as the
+ * attachment block above: the import is hoisted, `Locale` is already imported
+ * at the top.
+ */
+import { Resizable } from "@lumo-ui/ui";
+
+export interface ResizableIslandProps {
+  locale: Locale;
+  /** Announced name of the divider, e.g. «تغییر اندازهٔ ستون‌ها». */
+  label: string;
+  /**
+   * The unit noun of the announced size: «درصد» → «۳۰ درصد». The number is
+   * formatted by resizable.tsx before the closure built here ever sees it —
+   * the same contract as PaginationIsland's `pageWord`.
+   */
+  percentWord: string;
+  /** Visible caption inside the start pane. */
+  startTitle: string;
+  /** Visible caption inside the end pane. */
+  endTitle: string;
+  /** Passed through; `vertical` splits on the block axis. */
+  orientation?: "horizontal" | "vertical";
+}
+
+/**
+ * The one resizable demo that cannot live in a server module: `sizeLabel` is a
+ * REQUIRED function — word order is authored, not assembled (tag-group.tsx
+ * makes the argument once for the library) — and a function cannot cross the
+ * server/client boundary. Only strings arrive here; every user-visible word is
+ * still written in the examples module, in both locales.
+ */
+export function ResizableIsland({
+  locale,
+  label,
+  percentWord,
+  startTitle,
+  endTitle,
+  orientation,
+}: ResizableIslandProps) {
+  const pane = "flex h-full items-center justify-center p-4 text-sm text-fg-muted";
+  return (
+    <Resizable
+      locale={locale}
+      label={label}
+      sizeLabel={(v: string) => `${v} ${percentWord}`}
+      defaultSize={30}
+      {...(orientation === undefined ? {} : { orientation })}
+      className={
+        orientation === "vertical"
+          ? "h-64 w-full max-w-md rounded-lg border border-border"
+          : "h-40 w-full max-w-md rounded-lg border border-border"
+      }
+      startPanel={<div className={pane}>{startTitle}</div>}
+      endPanel={<div className={pane}>{endTitle}</div>}
+    />
+  );
+}

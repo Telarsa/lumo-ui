@@ -17,7 +17,8 @@ import {
 } from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
 import { assertLocale, localeParams, site } from "@/lib/locale";
-import { allDemos, demoById } from "@/lib/demos";
+import { demoById } from "@/lib/demos";
+import { allCatalog } from "@/lib/catalog";
 
 export function generateStaticParams() {
   return localeParams;
@@ -288,7 +289,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   const lang = assertLocale((await params).lang);
   const t = site[lang];
   const h = home[lang];
-  const demos = allDemos();
+  const demos = await allCatalog();
   const behaviour = demos.filter((d) => d.behaviour).length;
   // A fixed date: a rolling "today" would churn the committed gate fixtures daily.
   const stamp = new Date("2026-08-10T12:00:00Z");

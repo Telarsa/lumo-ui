@@ -5,7 +5,7 @@ import { cn, LOCALES } from "@lumo-ui/core";
 import { IconButton, Menu, MenuItem, MenuPopover, MenuTrigger } from "@lumo-ui/ui";
 import { LOCALE_NAMES, site } from "@/lib/locale";
 import { allBlocks } from "@/lib/blocks";
-import { allDemos } from "@/lib/demos";
+import { allCatalog } from "@/lib/catalog";
 import { buildSearchIndex } from "@/lib/search-index";
 import { DOCS_PAGES } from "@/lib/docs-pages";
 import { SiteSearch } from "./site-search";
@@ -36,10 +36,14 @@ import { ThemeToggle } from "./theme-toggle";
  * same array. See `search-index.ts` for why the builder itself takes these
  * two arrays as plain arguments rather than reading the registries itself.
  */
-const searchIndex = buildSearchIndex(
-  allDemos(),
-  allBlocks(),
-  DOCS_PAGES.map((d) => ({ id: d.slug, title: d.label, intro: d.intro })),
+// A promise at module scope (allCatalog is async); resolved once per build
+// process, awaited by the (server) shell per render at cached cost.
+const searchIndexPromise = allCatalog().then((entries) =>
+  buildSearchIndex(
+    entries,
+    allBlocks(),
+    DOCS_PAGES.map((d) => ({ id: d.slug, title: d.label, intro: d.intro })),
+  ),
 );
 
 /**
@@ -55,7 +59,7 @@ function GitHubMark({ className }: { className?: string }) {
   );
 }
 
-export function SiteShell({
+export async function SiteShell({
   lang,
   children,
   path = "",
@@ -116,7 +120,7 @@ export function SiteShell({
             ))}
           </nav>
           <div className="ms-auto flex items-center gap-1.5">
-            <SiteSearch lang={lang} index={searchIndex} />
+            <SiteSearch lang={lang} index={await searchIndexPromise} />
             <div className="flex items-center gap-0.5">
               {/* Icon-only, so the accessible name is required copy — see locale.ts. */}
               <a

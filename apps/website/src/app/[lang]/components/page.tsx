@@ -3,7 +3,7 @@ import { formatNumber, FORMAT_LOCALE, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { assertLocale, localeParams, site } from "@/lib/locale";
-import { allDemos, type Demo } from "@/lib/demos";
+import { allCatalog, type CatalogEntry } from "@/lib/catalog";
 
 export function generateStaticParams() {
   return localeParams;
@@ -51,11 +51,11 @@ export default async function Gallery({ params }: { params: Promise<{ lang: stri
   // FORMAT_LOCALE rather than the bare tag: it carries the `-u-` extensions, so
   // collation matches the numbering and calendar the rest of the page uses.
   const collator = new Intl.Collator(FORMAT_LOCALE[lang]);
-  const demos = [...allDemos()].sort((a, b) => collator.compare(a.title[lang], b.title[lang]));
+  const demos = [...(await allCatalog())].sort((a, b) => collator.compare(a.title[lang], b.title[lang]));
 
   // Group by first character AFTER sorting, so the headings follow the collator
   // rather than fighting it.
-  const groups: Array<{ letter: string; items: Demo[] }> = [];
+  const groups: Array<{ letter: string; items: CatalogEntry[] }> = [];
   for (const demo of demos) {
     const letter = [...demo.title[lang]][0] ?? "";
     const last = groups.at(-1);

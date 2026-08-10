@@ -2,8 +2,10 @@ import Link from "next/link";
 import type { Locale } from "@lumo-ui/core";
 import { cn, formatNumber } from "@lumo-ui/core";
 import { site } from "@/lib/locale";
-import { allDemos, TIERS, tierLabel } from "@/lib/demos";
+import { TIERS } from "@/lib/demos";
+import { allCatalog } from "@/lib/catalog";
 import { DOCS_PAGES } from "@/lib/docs-pages";
+import { newExampleSlugs } from "@/lib/examples-loader";
 import { SidebarScroll } from "./sidebar-scroll";
 
 /**
@@ -24,10 +26,41 @@ import { SidebarScroll } from "./sidebar-scroll";
  * `active` names either a component id ("button") or a docs slug prefixed
  * "docs:" ("docs:theming") — the prefix keeps the two namespaces from ever
  * colliding rather than relying on no component being named "changelog".
+ *
+ * The "new" dot on a component row is driven by the `isNew` flag in that
+ * component's examples file (`lib/examples-loader.ts`) — data the component's
+ * own page already validates, not a second hand-kept list. The dot itself is
+ * `aria-hidden` decoration; the announcement is the sr-only per-locale word
+ * beside it. Reading the flag makes this an async server component, which is
+ * fine everywhere it renders (all three callers are server trees).
  */
-export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | undefined }) {
+
+/**
+ * The sidebar's own, longer names for the tiers. `lib/demos.tsx` keeps the
+ * one-word labels the gallery's density needs; a nav column has the room to
+ * say what a group actually holds, which is what the review asked for. A full
+ * Record over the same union, so a new tier cannot ship without a name here.
+ */
+const GROUP_NAMES: Record<(typeof TIERS)[number], Record<Locale, string>> = {
+  form: { "fa-IR": "کنترل‌های فرم", "en-US": "Form controls" },
+  display: { "fa-IR": "نمایش محتوا", "en-US": "Content display" },
+  overlay: { "fa-IR": "لایه‌ها و پنجره‌ها", "en-US": "Overlays" },
+  navigation: { "fa-IR": "ناوبری", "en-US": "Navigation" },
+  feedback: { "fa-IR": "بازخورد و وضعیت", "en-US": "Feedback and status" },
+  layout: { "fa-IR": "چیدمان صفحه", "en-US": "Page layout" },
+  data: { "fa-IR": "نمایش داده", "en-US": "Data" },
+};
+
+export async function DocsSidebar({
+  lang,
+  active,
+}: {
+  lang: Locale;
+  active?: string | undefined;
+}) {
   const t = site[lang];
-  const demos = allDemos();
+  const demos = await allCatalog();
+  const isNew = await newExampleSlugs();
 
   // The prose pages come from the ONE canonical list — see lib/docs-pages.ts
   // for why four hand-kept copies of it were the discoverability bug.
@@ -41,6 +74,9 @@ export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | 
   // ~28px rows at 13px type: dense enough that all seven tiers scan without a
   // scroll on a laptop, following the compact New York scale rather than the
   // roomier default the site chrome uses elsewhere.
+  // Active uses bg-surface-sunken, hover uses bg-surface-hover — the review
+  // measured them as the SAME token, making the current page indistinguishable
+  // from any hovered sibling. Different tokens, unmistakable state.
   const row = "block rounded-sm px-2 py-1 text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg";
   const groupLabel =
     "flex items-baseline gap-2 px-2 pbe-1.5 text-[0.6875rem] font-medium uppercase tracking-wide text-fg-subtle";
@@ -62,7 +98,7 @@ export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | 
                 aria-current={active === `docs:${d.slug}` ? "page" : undefined}
                 className={cn(
                   row,
-                  active === `docs:${d.slug}` && "bg-surface-hover font-medium text-fg",
+                  active === `docs:${d.slug}` && "bg-surface-sunken font-semibold text-fg",
                 )}
               >
                 {d.label}
@@ -91,7 +127,7 @@ export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | 
         return (
           <section key={tier} className="mt-5">
             <h2 className={groupLabel}>
-              {tierLabel[tier][lang]}
+              {GROUP_NAMES[tier][lang]}
               <span className="tabular-nums">{formatNumber(inTier.length, lang)}</span>
             </h2>
             <ul className="flex flex-col gap-px">
@@ -100,9 +136,23 @@ export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | 
                   <Link
                     href={`/${lang}/components/${d.id}/`}
                     aria-current={active === d.id ? "page" : undefined}
-                    className={cn(row, active === d.id && "bg-surface-hover font-medium text-fg")}
+                    className={cn(
+                      row,
+                      "flex items-center gap-2",
+                      active === d.id && "bg-surface-sunken font-semibold text-fg",
+                    )}
                   >
                     {d.title[lang]}
+                    {isNew.has(d.id) ? (
+                      <>
+                        {/* Decoration; the sr-only word is the announcement. */}
+                        <span
+                          aria-hidden="true"
+                          className="ms-auto size-1.5 shrink-0 rounded-full bg-accent"
+                        />
+                        <span className="sr-only">{lang === "fa-IR" ? "جدید" : "New"}</span>
+                      </>
+                    ) : null}
                   </Link>
                 </li>
               ))}

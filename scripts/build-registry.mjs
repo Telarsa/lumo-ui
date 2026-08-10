@@ -62,7 +62,15 @@ for (const { dir, type, target } of SOURCES) {
     ...new Set(
       imports
         .filter((i) => i.startsWith("./"))
-        .map((i) => i.replace(/^\.\//, "").replace(/\.tsx$/, "")),
+        .map((i) => i.replace(/^\.\//, "").replace(/\.tsx$/, ""))
+        // A companion import names its OWNER: importing `file-upload.variants.ts`
+        // depends on the `file-upload` registry item (which carries the
+        // companion in its files array) — there is no item named
+        // "file-upload.variants.ts", and the review found attachment shipping
+        // exactly that unresolvable dependency.
+        .map((i) => i.replace(/\.variants\.ts$/, ""))
+        // A file's own companion is itself, not a dependency.
+        .filter((i) => i !== name),
     ),
   ].sort();
 

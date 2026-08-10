@@ -28,15 +28,15 @@ to them is a bug, not a customisation.
 ```
 packages/core     the invariants — LumoNode, direction(), formatters, strings
 packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
-packages/ui       57 components
+packages/ui       68 components
 packages/blocks   28 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
 apps/website      the showcase, and the first thing the gate runs against
 ```
 
-**Current state.** 57 components, 28 blocks, 85 registry items, 473 tests,
-346 documents graded at 0 violations. See `ROADMAP.md` for what is still open.
+**Current state.** 68 components, 30 blocks, 99 registry items, 604 tests,
+410 documents graded at 0 violations. See `ROADMAP.md` for what is still open.
 
 ## Getting started
 
@@ -109,7 +109,7 @@ A rule that has never been seen to fail is not a rule. This caught a real one:
 | --- | --- |
 | `gate:types` | `LumoNode`, the closed `Locale` union, and every required string prop |
 | `gate:no-css-modules` | the styling decision is real, not a comment |
-| `gate:test` | 473 tests, including each gate's own poison fixtures |
+| `gate:test` | 604 tests, including each gate's own poison fixtures |
 | `gate:registry` | the manifest is derivable from the code, not hand-kept |
 | `gate:smoke` | every item compiles as a **consumer** receives it, outside the workspace |
 | `gate:html` | the bytes actually served are correct |

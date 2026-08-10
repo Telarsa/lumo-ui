@@ -13,6 +13,7 @@ import {
   MenuSection,
   SearchField,
   Separator,
+  Text,
   composeRenderProps,
   useFilter,
   type AutocompleteProps,
@@ -468,23 +469,77 @@ export function CommandItem<T extends object = object>({
       {...(resolvedTextValue === undefined ? {} : { textValue: resolvedTextValue })}
       {...props}
     >
-      {composeRenderProps(children, (resolved, { isSelected }) => (
-        <>
-          {resolved}
-          {/*
-           * The check exists in the DOM only when the item IS selected — never
-           * as an always-rendered icon that CSS promises to hide. The previous
-           * arrangement (render always, `opacity-0`, reveal on a group data
-           * variant) shipped a tick on every row of a NAVIGATION palette, where
-           * no item is ever selected and the tick answers a question nobody
-           * asked. Presence-by-state cannot have that bug, in any stylesheet,
-           * in dev or in prod.
-           */}
-          {isSelected ? (
-            <CheckIcon aria-hidden="true" className={commandCheckVariants()} />
-          ) : null}
-        </>
-      ))}
+      {composeRenderProps(children, (resolved, { isSelected }) => {
+        /*
+         * ── THE LABEL SLOT MUST BE CONSUMED, OR SSR SHIPS A DANGLING IDREF ──
+         *
+         * `useMenuItem` names the item by `aria-labelledby` pointing at a slot
+         * id from `useSlotId`. Client-side, an unconsumed slot id collapses to
+         * undefined in an effect and the attribute disappears — but effects do
+         * not run on the server, so in the SERVED BYTES every menu item carries
+         * an `aria-labelledby` pointing at an id no element has. Invisible for
+         * as long as menu items only ever appeared inside closed overlays;
+         * measured the moment the inline palette example put five of them in
+         * the prerendered HTML (lumo-gate `resolved-idrefs`, 10 violations).
+         *
+         * The cure is RAC's own mechanism: render the item's text inside
+         * `<Text slot="label">`, which claims the id — the reference resolves
+         * in the first byte and the announced name is exactly the text, not
+         * text-plus-shortcut. String children become the label; element
+         * children (a `<CommandShortcut>`, an icon) stay siblings so the row's
+         * flex layout is untouched. The same partition `deriveTextValue` above
+         * already applies for filtering, and for the same reason: nobody is
+         * announced "چاپ ⌘P" any more than they search for it. A children shape
+         * with no string members at all keeps today's behaviour unchanged.
+         */
+        /*
+         * IN PLACE, not partitioned: the first cut of this hoisted every string
+         * into one leading <Text> and pushed every element after it, so an
+         * `<Icon/> label` row silently became `label <Icon/>` — review-caught.
+         * Now the FIRST contiguous string run is wrapped where it stands and
+         * everything else keeps its position. A later, disjoint string run
+         * stays plain and therefore outside the announced name — the same
+         * deliberate trade the shortcut already makes (nobody is announced
+         * "چاپ ⌘P"), documented here because it is a trade.
+         */
+        const parts = Array.isArray(resolved) ? resolved : [resolved];
+        const out: React.ReactNode[] = [];
+        let labelDone = false;
+        for (let i = 0; i < parts.length; i++) {
+          const part = parts[i];
+          if (typeof part === "string" && !labelDone) {
+            let run = part;
+            while (i + 1 < parts.length && typeof parts[i + 1] === "string") {
+              run += parts[++i] as string;
+            }
+            out.push(
+              <Text key={`label-${i}`} slot="label">
+                {run}
+              </Text>,
+            );
+            labelDone = true;
+          } else {
+            out.push(<React.Fragment key={i}>{part}</React.Fragment>);
+          }
+        }
+        return (
+          <>
+            {labelDone ? out : resolved}
+            {/*
+             * The check exists in the DOM only when the item IS selected — never
+             * as an always-rendered icon that CSS promises to hide. The previous
+             * arrangement (render always, `opacity-0`, reveal on a group data
+             * variant) shipped a tick on every row of a NAVIGATION palette, where
+             * no item is ever selected and the tick answers a question nobody
+             * asked. Presence-by-state cannot have that bug, in any stylesheet,
+             * in dev or in prod.
+             */}
+            {isSelected ? (
+              <CheckIcon aria-hidden="true" className={commandCheckVariants()} />
+            ) : null}
+          </>
+        );
+      })}
     </MenuItem>
   );
 }
