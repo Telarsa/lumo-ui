@@ -205,6 +205,23 @@ alone, then apply Lumo's changes on top.
 `chart` is worth calling out: the roadmap listed it as the one genuine gap no
 headless library ships, and shadcn has it — 10.5k characters over `recharts`.
 
+**Attempted 10 August 2026, and worth recording honestly.** Three were vendored;
+none shipped:
+
+- **`chart`** — fetched and its imports rewritten, then quarantined in
+  `packages/ui/vendored/` rather than shipped. It has no locale awareness at all,
+  and a chart is the most number-dense component there is: every axis tick and
+  tooltip would render Latin digits on a Persian page. The file and a full
+  adaptation checklist are kept there; `recharts` is deliberately still absent
+  from the catalog.
+- **`carousel`** — needs a `Button` size (`icon-sm`) Lumo does not define.
+- **`command`** — needs an `input-group` component Lumo does not have.
+
+The lesson for the next attempt: *vendoring is cheap, adapting is not.* The fetch
+is a minute; the Persian pass, the required-prop pass and the RTL pass are the
+actual work, and a vendored file that skips them is worse than no file because it
+looks finished.
+
 **A vendored file is never done on arrival.** Upstream is English-first and
 direction-agnostic, so every one needs a pass for physical utilities, English
 defaults that must become required props, raw numbers in JSX that `LumoNode`

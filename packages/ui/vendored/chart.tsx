@@ -1,10 +1,41 @@
+/**
+ * VENDORED FROM shadcn `aria-vega`, NOT YET ADAPTED. Deliberately not exported.
+ *
+ * This is the raw upstream emit with only its import paths rewritten. It is kept
+ * here rather than deleted because fetching it again is wasted work, and kept
+ * OUT of `src/` because everything in `src/` is exported, registered and shipped.
+ *
+ * ── Why it cannot ship as-is ────────────────────────────────────────────────
+ *
+ * It has no locale awareness at all: no `formatNumber`, no `locale` prop. A
+ * chart renders numbers constantly — axis ticks, tooltip values, legend
+ * entries — and every one of them would come out in Latin digits on a Persian
+ * page. That is the exact defect this library exists to prevent, and shipping it
+ * would make the library's central claim false on the most number-dense
+ * component it offers.
+ *
+ * ── What adapting it requires ───────────────────────────────────────────────
+ *
+ * 1. A required `locale: Locale` on `ChartContainer`, published through context.
+ * 2. Default `tickFormatter` on axes and `formatter` on the tooltip to route
+ *    through `formatNumber(value, locale)`.
+ * 3. Recharts is direction-naive: axis orientation, tooltip placement and legend
+ *    order all assume LTR. Establish what actually breaks under `dir="rtl"`
+ *    before deciding what to override — measure, do not assume.
+ * 4. The usual vendoring pass: physical utilities, English defaults becoming
+ *    required props, `LumoNode` rejecting raw numbers in JSX.
+ *
+ * `recharts` is NOT yet in the catalog or in package.json. Add it pinned exactly
+ * when this is adapted.
+ */
+
 "use client"
 
 import * as React from "react"
 import * as RechartsPrimitive from "recharts"
 import type { TooltipValueType } from "recharts"
 
-import { cn } from "@/registry/aria-vega/lib/utils"
+import { cn } from "@lumo-ui/core"
 
 // Format: { THEME_NAME: CSS_SELECTOR }
 const THEMES = { light: "", dark: ".dark" } as const

@@ -37,6 +37,11 @@ const EXTERNAL = new Set([
   "lucide-react",
   "clsx",
   "tailwind-merge",
+  // Rendering dependencies, not behaviour ones. A consumer who copies chart.tsx
+  // or carousel.tsx without these gets an unresolved import, and the smoke test
+  // cannot see it: its node_modules symlink already has them.
+  "recharts",
+  "embla-carousel-react",
 ]);
 
 const items = [];

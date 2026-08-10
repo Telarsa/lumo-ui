@@ -16,7 +16,9 @@
     "react-aria-components": "catalog:",
     "@internationalized/date": "catalog:",
     "class-variance-authority": "catalog:",
-    "lucide-react": "catalog:"
+    "lucide-react": "catalog:",
+    "recharts": "catalog:",
+    "embla-carousel-react": "catalog:"
   },
   "devDependencies": {
     "@types/react": "catalog:",
