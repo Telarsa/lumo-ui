@@ -13,10 +13,73 @@
  * would otherwise be dropped from the build, silently producing an unstyled
  * site rather than an error.
  */
-@source "../../../../packages/ui/src/**/*.tsx";
+/*
+ * Directory form, not a glob. Turbopack's dev scanner has been seen dropping
+ * glob-form @source entries that cross a workspace boundary — utilities like
+ * the command list's `max-h-72` compiled in `next build` but vanished under
+ * `next dev`, which is how a palette grew to a thousand pixels only on a dev
+ * machine. A bare directory is the documented idiom and survives both modes.
+ */
+@source "../../../../packages/ui/src";
+@source "../../../../packages/blocks/src";
+
+/*
+ * The fonts. `src/fonts/index.ts` puts three variables on <html>; this block is
+ * where they become the site's faces.
+ *
+ * The theme's own tokens.css already reaches for `--lumo-font-persian` and
+ * falls back to a locally-installed Vazirmatn if no one supplies it — this is
+ * the site supplying it. The English stack is set per-document by `html[lang]`,
+ * never by a component prop: the document's language is the one fact that is
+ * always right, because LumoHtml derives it from the route.
+ *
+ * Vazirmatn stays in the English stack (after Inter) so embedded Persian
+ * glyphs on an English page get the designed face, and Inter is the Latin
+ * fallback inside Persian pages for code and `data-lumo-latn` islands.
+ */
+:root {
+  --lumo-font-persian: var(--font-vazirmatn), "Vazirmatn Variable", "Vazirmatn";
+  --font-sans: var(--font-inter), var(--font-vazirmatn), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jbmono), ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+}
+
+html[lang="fa-IR"] {
+  --font-sans: var(--font-vazirmatn), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
 
 body {
   background: var(--lumo-sys-bg);
   color: var(--lumo-sys-fg);
-  font-family: var(--lumo-sys-font-sans, ui-sans-serif, system-ui, sans-serif);
+  font-family: var(--lumo-sys-font-sans, var(--font-sans));
+  /* Inter at text sizes wants a touch of negative tracking; Vazirmatn resets
+     it to normal in the theme's own :lang(fa) block, which loads after this. */
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html[lang="en-US"] body {
+  font-family: var(--font-sans);
+  letter-spacing: -0.011em;
+}
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono);
+}
+
+/*
+ * Shiki dual themes. Every token carries `color` (the light value) plus
+ * `--shiki-dark`; these rules flip which one wins under the SAME three-state
+ * selectors tokens.css uses, so highlighted code follows the visitor's stored
+ * choice exactly like every other themed surface. `!important` because shiki's
+ * colors are inline styles — nothing weaker can beat them.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shiki,
+  :root:not([data-theme="light"]) .shiki span {
+    color: var(--shiki-dark) !important;
+  }
+}
+[data-theme="dark"] .shiki,
+[data-theme="dark"] .shiki span {
+  color: var(--shiki-dark) !important;
 }
