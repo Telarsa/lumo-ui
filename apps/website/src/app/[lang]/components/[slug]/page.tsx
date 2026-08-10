@@ -1,9 +1,15 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { notFound } from "next/navigation";
 import { LOCALES, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { OnThisPage } from "@/components/on-this-page";
 import { DemoFrame } from "@/components/demo-frame";
+import { CodeBlock } from "@/components/code-block";
+import { InstallTabs, type InstallFile } from "@/components/install-tabs";
+import { PreviewToolbar } from "@/components/preview-toolbar";
+import { EvidencePanel } from "@/components/evidence-panel";
 import { assertLocale, site } from "@/lib/locale";
 import { allDemos, demoById } from "@/lib/demos";
 
@@ -15,10 +21,87 @@ export function generateStaticParams() {
 function sections(lang: Locale) {
   return [
     { id: "preview", label: lang === "fa-IR" ? "پیش‌نمایش" : "Preview" },
+    {
+      id: "evidence",
+      label: lang === "fa-IR" ? "شواهد دسترس‌پذیری" : "Accessibility evidence",
+    },
     { id: "installation", label: lang === "fa-IR" ? "نصب" : "Installation" },
     { id: "directions", label: lang === "fa-IR" ? "هر دو جهت" : "Both directions" },
     { id: "source", label: lang === "fa-IR" ? "کد" : "Source" },
   ];
+}
+
+/*
+ * ── registry.json, READ AT BUILD TIME, NEVER HARDCODED ──────────────────────
+ *
+ * The Installation section (Command/Manual tabs, dependencies, the source to
+ * copy) is entirely derived from the manifest `scripts/build-registry.mjs`
+ * generates from the components that actually exist — the same manifest
+ * `pnpm run gate:registry` checks is still exactly reproducible from source.
+ * Reading it here rather than re-deriving it a second way keeps this page and
+ * the registry unable to disagree.
+ */
+const REPO_ROOT = join(process.cwd(), "..", "..");
+
+interface RegistryFile {
+  path: string;
+  type: string;
+  target: string;
+}
+interface RegistryItem {
+  name: string;
+  type: string;
+  dependencies?: string[];
+  registryDependencies?: string[];
+  files: RegistryFile[];
+}
+interface RegistryData {
+  items: RegistryItem[];
+}
+
+let cachedRegistry: RegistryData | undefined;
+function loadRegistry(): RegistryData {
+  cachedRegistry ??= JSON.parse(
+    readFileSync(join(REPO_ROOT, "registry.json"), "utf8"),
+  ) as RegistryData;
+  return cachedRegistry;
+}
+
+/** The item's own file — as opposed to a companion `*.variants.ts` it also ships. */
+function mainFileOf(item: RegistryItem): RegistryFile | undefined {
+  return item.files.find((f) => f.path.endsWith(`/${item.name}.tsx`));
+}
+
+/**
+ * Matches a component page's slug to the registry item that actually installs
+ * it. Most match by NAME. `icon-button` does not: `IconButton` ships from
+ * `button.tsx` alongside `Button`, and `scripts/build-registry.mjs` derives
+ * one registry item per FILE, not per exported component, so it is registered
+ * once, as "button".
+ *
+ * Rather than hardcoding that one exception, this falls back to a byte
+ * comparison against the demo's own displayed source — which `demos.tsx`
+ * also reads straight from `packages/ui/src` — so a future split is picked up
+ * automatically instead of silently pointing an install command at the wrong
+ * package.
+ */
+function resolveRegistryItem(
+  registry: RegistryData,
+  slug: string,
+  source: string,
+): RegistryItem | undefined {
+  const uiItems = registry.items.filter((i) => i.type === "registry:ui");
+  const exact = uiItems.find((i) => i.name === slug);
+  if (exact) return exact;
+  return uiItems.find((i) => {
+    const main = mainFileOf(i);
+    if (!main) return false;
+    try {
+      return readFileSync(join(REPO_ROOT, main.path), "utf8") === source;
+    } catch {
+      return false;
+    }
+  });
 }
 
 export default async function ComponentPage({
@@ -32,7 +115,30 @@ export default async function ComponentPage({
   if (!demo) notFound();
 
   const t = site[lang];
-  const install = `npx shadcn@latest add @lumo/${slug}`;
+
+  const registry = loadRegistry();
+  const item = resolveRegistryItem(registry, slug, demo.source);
+  if (!item) {
+    // Every shipped demo has a real registry entry — an ungraded install
+    // command is the same class of problem as an ungraded page (see
+    // README.md's "An ungraded page is an unprotected page"), so this refuses
+    // to render a page that cannot show a real one rather than falling back
+    // to a guess.
+    throw new Error(
+      `No registry.json item resolves for component page "${slug}". Every demo ` +
+        `must correspond to a real registry entry.`,
+    );
+  }
+  const uiNames = new Set(
+    registry.items.filter((i) => i.type === "registry:ui").map((i) => i.name),
+  );
+  const registryComponents = (item.registryDependencies ?? []).filter(
+    (d) => d !== item.name && uiNames.has(d),
+  );
+  const installFiles: InstallFile[] = item.files.map((f) => ({
+    target: f.target,
+    code: readFileSync(join(REPO_ROOT, f.path), "utf8"),
+  }));
 
   return (
     <SiteShell lang={lang} path={`components/${slug}/`} wide>
@@ -58,8 +164,26 @@ export default async function ComponentPage({
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
               {t.preview}
             </h2>
-            <div className="mt-3 rounded-lg border border-border bg-surface p-8">
-              {demo.render(lang)}
+            <div className="mt-3">
+              <PreviewToolbar lang={lang} slug={slug}>
+                {demo.render(lang)}
+              </PreviewToolbar>
+            </div>
+          </section>
+
+          <section id="evidence" className="mt-10 scroll-mt-24">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
+              {lang === "fa-IR" ? "شواهد دسترس‌پذیری" : "Accessibility evidence"}
+            </h2>
+            <div className="mt-3">
+              {/*
+                Renders an empty placeholder — the real table is injected by
+                `apps/website/scripts/inject-evidence.mjs` after `next build`,
+                from the demo's actual rendered markup inside PreviewToolbar's
+                `[data-lumo-demo-root]` above. See `evidence-panel.tsx`'s file
+                header for why this cannot be computed here in React.
+              */}
+              <EvidencePanel locale={lang} />
             </div>
           </section>
 
@@ -67,20 +191,15 @@ export default async function ComponentPage({
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
               {lang === "fa-IR" ? "نصب" : "Installation"}
             </h2>
-            {/*
-              The command is Latin by nature — a shell invocation is not prose.
-              `data-lumo-latn` marks it as a sanctioned exception so the gate's
-              Persian-digit and Latin-text rules skip it, rather than the rules
-              being weakened for everyone.
-            */}
-            <pre
-              dir="ltr"
-              lang="en"
-              data-lumo-latn=""
-              className="mt-3 overflow-x-auto rounded-lg border border-border bg-surface-sunken p-4 text-start text-xs"
-            >
-              <code>{install}</code>
-            </pre>
+            <div className="mt-3">
+              <InstallTabs
+                locale={lang}
+                registryName={item.name}
+                dependencies={item.dependencies ?? []}
+                registryComponents={registryComponents}
+                files={installFiles}
+              />
+            </div>
           </section>
 
           <section id="directions" className="mt-10 scroll-mt-24">
@@ -101,14 +220,13 @@ export default async function ComponentPage({
 
           <section id="source" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">{t.code}</h2>
-            <pre
-              dir="ltr"
-              lang="en"
-              data-lumo-latn=""
-              className="mt-3 max-h-[32rem] overflow-auto rounded-lg border border-border bg-surface-sunken p-4 text-start text-xs leading-relaxed"
-            >
-              <code>{demo.source}</code>
-            </pre>
+            <div className="mt-3">
+              <CodeBlock
+                code={demo.source}
+                label={lang === "fa-IR" ? "کپی کد کامپوننت" : "Copy the component's source"}
+                copiedLabel={lang === "fa-IR" ? "کد کامپوننت کپی شد" : "Component source copied"}
+              />
+            </div>
           </section>
         </article>
 

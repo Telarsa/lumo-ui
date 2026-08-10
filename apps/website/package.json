@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node --experimental-strip-types scripts/inject-evidence.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "gate": "node --experimental-strip-types ../../packages/gate/src/cli.ts out"
@@ -19,7 +19,9 @@
     "react-dom": "catalog:",
     "lucide-react": "catalog:",
     "@lumo-ui/blocks": "workspace:*",
-    "recharts": "catalog:"
+    "recharts": "catalog:",
+    "linkedom": "catalog:",
+    "dom-accessibility-api": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",

@@ -108,6 +108,12 @@ importers:
       '@lumo-ui/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      dom-accessibility-api:
+        specifier: 'catalog:'
+        version: 0.7.1
+      linkedom:
+        specifier: 'catalog:'
+        version: 0.18.13
       lucide-react:
         specifier: 'catalog:'
         version: 1.30.0(react@19.2.8)
@@ -127,6 +133,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: 'catalog:'
         version: 4.3.3
+      '@testing-library/react':
+        specifier: 'catalog:'
+        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -136,6 +145,12 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.2.4(@types/react@19.2.18)
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.0.5(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0))
+      jsdom:
+        specifier: 'catalog:'
+        version: 30.0.1
       tailwindcss:
         specifier: 'catalog:'
         version: 4.3.3
@@ -145,6 +160,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0))
 
   packages/blocks:
     dependencies:
