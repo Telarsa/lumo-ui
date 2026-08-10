@@ -49,7 +49,7 @@ export function DemoFrame({
             : `${title} — ${lang === "fa-IR" ? "Persian" : "English"}`
         }
         loading="lazy"
-        className="block h-56 w-full bg-surface"
+        className="block h-72 w-full bg-surface"
       />
     </figure>
   );

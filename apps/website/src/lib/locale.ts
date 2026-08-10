@@ -45,6 +45,7 @@ export const site = {
     preview: "پیش‌نمایش",
     code: "کد",
     props: "ویژگی‌ها",
+    footerNote: "ساخته‌شده با کامپوننت‌های خودش",
   },
   "en-US": {
     title: "Lumo",
@@ -59,5 +60,6 @@ export const site = {
     preview: "Preview",
     code: "Code",
     props: "Props",
+    footerNote: "Built with its own components",
   },
 } as const satisfies Record<Locale, Record<string, string>>;

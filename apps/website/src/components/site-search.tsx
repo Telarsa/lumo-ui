@@ -131,11 +131,23 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
       closeLabel={copy.closeLabel[lang]}
       isOpen={isOpen}
       onOpenChange={setIsOpen}
+      /*
+       * The trigger reads as a search FIELD, not a button — the pill shape
+       * every docs site converged on, because it advertises what will open.
+       * It is still a Button underneath: pressing it opens a dialog, and an
+       * element that behaves as a button must be one.
+       */
       trigger={
-        <Button variant="outline" className="gap-2 text-fg-muted">
-          <SearchIcon aria-hidden="true" className="size-4" />
-          <span>{copy.triggerLabel[lang]}</span>
-          <Kbd keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="sm" className="ms-2" />
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 w-44 justify-between gap-2 border-border bg-surface-sunken/60 px-2.5 font-normal text-fg-subtle hover:bg-surface-sunken hover:text-fg-muted sm:w-56"
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <SearchIcon aria-hidden="true" className="size-3.5 shrink-0" />
+            <span className="truncate text-sm">{copy.triggerLabel[lang]}</span>
+          </span>
+          <Kbd keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="sm" />
         </Button>
       }
     >

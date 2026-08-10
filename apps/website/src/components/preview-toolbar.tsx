@@ -157,9 +157,15 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
       <div
         data-theme={theme === "dark" ? "dark" : undefined}
         data-lumo-demo-root=""
-        className="rounded-lg border border-border bg-surface p-8"
+        /*
+         * The preview is a STAGE, not a paragraph: a generous minimum height
+         * with the demo centred in it, so a lone switch and a full table both
+         * read as exhibits rather than as content that happens to be short.
+         * `bg` comes from the token so the dark-theme subtree repaints.
+         */
+        className="grid min-h-80 place-items-center rounded-lg border border-border bg-bg p-8 sm:p-10"
       >
-        {children}
+        <div className="w-full max-w-2xl">{children}</div>
       </div>
     </div>
   );

@@ -142,8 +142,9 @@ export const commandShortcutVariants = cva(
 );
 
 export const commandCheckVariants = cva(
-  "ms-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden " +
-    "group-data-selected/command-item:opacity-100",
+  // Rendered only when the item is selected (see CommandItem) — no opacity
+  // dance, so no way for a cascade accident to show a tick on every row.
+  "ms-auto group-has-data-[slot=command-shortcut]/command-item:hidden",
 );
 
 export interface CommandProps
@@ -403,10 +404,21 @@ export function CommandItem<T extends object = object>({
       {...(resolvedTextValue === undefined ? {} : { textValue: resolvedTextValue })}
       {...props}
     >
-      {composeRenderProps(children, (resolved) => (
+      {composeRenderProps(children, (resolved, { isSelected }) => (
         <>
           {resolved}
-          <CheckIcon aria-hidden="true" className={commandCheckVariants()} />
+          {/*
+           * The check exists in the DOM only when the item IS selected — never
+           * as an always-rendered icon that CSS promises to hide. The previous
+           * arrangement (render always, `opacity-0`, reveal on a group data
+           * variant) shipped a tick on every row of a NAVIGATION palette, where
+           * no item is ever selected and the tick answers a question nobody
+           * asked. Presence-by-state cannot have that bug, in any stylesheet,
+           * in dev or in prod.
+           */}
+          {isSelected ? (
+            <CheckIcon aria-hidden="true" className={commandCheckVariants()} />
+          ) : null}
         </>
       ))}
     </MenuItem>

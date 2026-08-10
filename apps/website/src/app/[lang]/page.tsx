@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { formatDate, formatNumber } from "@lumo-ui/core";
+import { formatDate, formatNumber, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { assertLocale, localeParams, site } from "@/lib/locale";
-import { allDemos } from "@/lib/demos";
+import { allDemos, demoById } from "@/lib/demos";
 
 export function generateStaticParams() {
   return localeParams;
@@ -14,6 +14,9 @@ const home = {
     eyebrow: "خصوصی برای تلارسا",
     getStarted: "شروع کنید",
     browseBlocks: "بلوک‌ها را ببینید",
+    showcaseTitle: "زنده، نه اسکرین‌شات",
+    showcaseBody:
+      "همین کامپوننت‌ها، همین‌جا رندر شده‌اند — با همان کدی که کپی می‌کنید. روی هر کارت کلیک کنید تا مستندش را ببینید.",
     proofTitle: "این صفحه، ادعایش را ثابت می‌کند",
     proofBody:
       "هر عددی که این پایین می‌بینید در همان بایت‌های ارسال‌شده از سرور فارسی است — نه بعد از اجرای جاوااسکریپت. گیت همین را می‌سنجد: اگر یکی از این‌ها به رقم لاتین برگردد، بیلد قرمز می‌شود.",
@@ -45,6 +48,9 @@ const home = {
     eyebrow: "Private to Telarsa",
     getStarted: "Get started",
     browseBlocks: "Browse blocks",
+    showcaseTitle: "Live, not screenshots",
+    showcaseBody:
+      "These are the components themselves, rendered here with the same code you copy. Click any card to open its page.",
     proofTitle: "This page proves its own claim",
     proofBody:
       "Every figure below is Persian in the bytes the server sent — not after JavaScript runs. The gate grades exactly that: if one of them regressed to Latin digits, the build would go red.",
@@ -73,6 +79,71 @@ const home = {
     ],
   },
 } as const;
+
+/**
+ * The live showcase: a curated grid of REAL demos, rendered by the same
+ * `render(lang)` functions the component pages use. Not screenshots, not
+ * mockups — if one of these breaks, the landing page breaks, which is the
+ * correct incentive. Each card links to its component's page.
+ *
+ * Curated by visual variety rather than importance: a form control, an
+ * overlay trigger, data, feedback, navigation — so thirty seconds of looking
+ * conveys the range. `tabs` and `select` earn the wide slots because they
+ * show the most chrome per pixel.
+ */
+const SHOWCASE: Array<{ id: string; span?: "wide" | undefined }> = [
+  { id: "tabs", span: "wide" },
+  { id: "number-field" },
+  { id: "switch" },
+  { id: "select" },
+  { id: "slider", span: "wide" },
+  { id: "badge" },
+  { id: "rating" },
+  { id: "segmented-control", span: "wide" },
+  { id: "button" },
+];
+
+function Showcase({ lang, title, body }: { lang: Locale; title: string; body: string }) {
+  return (
+    <section className="mt-16">
+      <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">{title}</h2>
+      <p className="mt-3 max-w-2xl text-sm text-fg-muted">{body}</p>
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {SHOWCASE.map(({ id, span }) => {
+          const demo = demoById(id);
+          if (!demo) return null;
+          return (
+            <div
+              key={id}
+              className={`group relative flex min-h-44 flex-col rounded-lg border border-border bg-surface transition-colors hover:border-border-strong ${
+                span === "wide" ? "sm:col-span-2" : ""
+              }`}
+            >
+              <div className="flex items-center justify-between border-be border-border px-4 py-2.5">
+                <Link
+                  href={`/${lang}/components/${id}/`}
+                  className="text-sm font-medium text-fg after:absolute after:inset-0"
+                >
+                  {demo.title[lang]}
+                </Link>
+              </div>
+              {/*
+               * `pointer-events-none` on the demo area: the whole card is one
+               * link (the stretched ::after above), and a live Select opening
+               * its popover inside a link is two interactions fighting over
+               * one press. On the landing page the demo is an exhibit; on its
+               * own page it is interactive.
+               */}
+              <div className="pointer-events-none flex flex-1 items-center justify-center overflow-hidden p-5">
+                <div className="w-full max-w-64">{demo.render(lang)}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 /**
  * The home page proves the pitch instead of stating it.
@@ -140,7 +211,9 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </div>
       </section>
 
-      <section className="mt-6 border-bs border-border pbs-10">
+      <Showcase lang={lang} title={h.showcaseTitle} body={h.showcaseBody} />
+
+      <section className="mt-14 border-bs border-border pbs-10">
         <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
           {h.proofTitle}
         </h2>
