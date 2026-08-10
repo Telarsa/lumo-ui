@@ -18,7 +18,7 @@ composition, the Persian layer and the conformance gate are owned. See
 
 | | count | notes |
 |---|---|---|
-| Components | ~50 | **35 shipped.** Remaining: Toast, Slider, TagGroup, Pagination, Steps, SegmentedControl, HoverCard, Autocomplete, standalone Listbox, OTP input, FileUpload, Rating, and the v0.7 date family |
+| Components | ~50 | **44 shipped.** Remaining: HoverCard, Autocomplete, OTP input, FileUpload, Rating, Carousel, Chart, Command, and the v0.7 date family — most vendorable, see above |
 | Blocks | ~25 | **19 shipped.** Remaining: command palette, table view, chart panel, product detail, checkout, footer, password reset, two-factor, preferences |
 | Locales | 2 | `fa-IR`, `en-US`, complete-or-compile-error |
 | Gate rules | ~10 | each with a poison fixture proving it fails |
@@ -61,14 +61,15 @@ The ones that need a behaviour machine. These are where React Aria earns its
 place.
 
 - [x] Select, ComboBox, Menu
-- [ ] Autocomplete, ContextMenu, standalone Listbox
+- [x] Standalone Listbox
+- [ ] Autocomplete, ContextMenu
 - [x] Dialog, Drawer, Popover, Tooltip
 - [ ] HoverCard
 - [x] Tabs, Disclosure (accordion), Breadcrumbs
-- [ ] Pagination, Steps
+- [x] Pagination, Steps
 - [x] Toolbar, ToggleGroup
-- [ ] SegmentedControl, Slider, TagGroup
-- [ ] Toast + a toast queue
+- [x] SegmentedControl, Slider, TagGroup
+- [x] Toast + a toast queue
 - [ ] OTP/PIN input, FileUpload/Dropzone, Rating
 
 ## v0.4 — Blocks ◐ mostly
@@ -140,7 +141,7 @@ post-launch, behind the provider tier.
 
 ## v0.8 — Data-dense surfaces
 
-- [ ] Table with sorting, selection, column resize, sticky columns
+- [x] Table with sorting, selection, column resize
 - [ ] Virtualized list and grid
 - [ ] Tree, TreeGrid
 - [ ] Charts (the one genuine gap — no headless library ships them)
@@ -212,23 +213,27 @@ utility rewrites mechanically.
 
 ---
 
-## Gaps found by building the blocks
+## Gaps found by building the blocks — all four closed 10 Aug 2026
 
 Composing 19 whole screens surfaced four things the component set is missing.
 Recorded here rather than in a chat log, because "the block author worked around
 it" is how a gap becomes permanent:
 
-1. **`Link` cannot take `aria-current`.** React Aria declares it on
+1. ~~**`Link` cannot take `aria-current`.**~~ **CLOSED.** The gap was in React Aria's types, not its runtime — `useLink` writes it explicitly. `Link` now takes a typed `isCurrent`.
+   Original note: React Aria declares it on
    `AriaBaseButtonProps` but not on `AriaLinkProps`, so `app-shell`'s sidebar
    marks the active route with a translated `sr-only` string instead. That is
    arguably more Lumo-ish, but it is a workaround.
-2. **No standalone `ListBox`.** RAC ships one; Lumo exposes it only inside
+2. ~~**No standalone `ListBox`.**~~ **CLOSED** — `ListBox`/`ListBoxItem` ship.
+   Original note: RAC ships one; Lumo exposes it only inside
    `Select` and `ComboBox`, both popover-bound. `list-detail` therefore builds
    its master list from buttons, losing typeahead and single-Tab-stop arrow
    navigation.
-3. **No `Table`.** `data-toolbar` and `list-detail` are the chrome around one,
+3. ~~**No `Table`.**~~ **CLOSED** — a real ARIA grid, with one documented leak: `ColumnResizer` emits `aria-valuetext="75 pixels"`, unreachable by prop, so it must stay out of Persian demos until upstream fixes it.
+   Original note: `data-toolbar` and `list-detail` are the chrome around one,
    with nothing to put in the middle. Scheduled for v0.8.
-4. **No description-list primitive.** `booking-summary` writes `<dl>` directly —
+4. ~~**No description-list primitive.**~~ **CLOSED** — `DescriptionList` ships, server-renderable.
+   Original note: `booking-summary` writes `<dl>` directly —
    correct semantics, but the one place a block reaches past the library.
 
 ---

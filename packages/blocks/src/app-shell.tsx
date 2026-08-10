@@ -26,11 +26,17 @@ import { Badge, Link, Separator } from "@lumo-ui/ui";
  *
  * ── A MEASURED GAP IN `@lumo-ui/ui`, WORKED AROUND HERE ─────────────────────
  *
- * The current nav item should carry `aria-current="page"`. Lumo's `Link` cannot
+ * The current nav item should carry `aria-current="page"`. Lumo's `Link` could not
  * express it: its props derive from React Aria's `AriaLinkProps`, which extends
  * `AriaLabelingProps` only — `aria-current` is declared on `AriaBaseButtonProps`
  * (so `Button` accepts it) and nowhere on the link side. Rather than cast, this
  * block states "you are here" the way the rest of Lumo states everything else:
+ * UPDATE 10 August 2026: `Link` now takes a typed `isCurrent` prop. The gap was
+ * in React Aria's TYPES, not its runtime — `useLink` writes `aria-current`
+ * explicitly and RAC reads it back for `data-current`; `LinkProps` simply never
+ * declared it. This block should move to `isCurrent`, which lets the screen
+ * reader announce the state in its OWN language rather than reading a phrase we
+ * translated. Until then it still uses
  * a REQUIRED, translated `strings.currentPage` rendered `sr-only` inside the
  * active link. It is a worse fit than the attribute and it is reported as a gap
  * — but it is announced, it is Persian, and it does not lie to the type system.

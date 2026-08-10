@@ -29,7 +29,13 @@ import { Badge, Button, EmptyState, Separator } from "@lumo-ui/ui";
  * `aria-current` (React Aria declares it on `AriaBaseButtonProps`), so the
  * selected row is announced as the current one rather than merely tinted. What
  * is lost is listbox typeahead and single-Tab-stop arrow navigation, which is
- * the cost of not having a standalone `ListBox` export. Reported as a gap.
+ * the cost of using buttons rather than a listbox.
+ *
+ * UPDATE 10 August 2026: `ListBox` and `ListBoxItem` now ship, so this block can
+ * be moved onto them and regain typeahead and single-Tab-stop navigation. Left
+ * as buttons for now because the change alters the keyboard contract of a block
+ * that already works, and that deserves its own commit rather than riding along
+ * with the component that enabled it.
  */
 export interface ListDetailItem {
   /** Stable key, sent back through `onSelect`. Not rendered. */
