@@ -8,7 +8,7 @@
     "build": "next build && node --experimental-strip-types scripts/inject-evidence.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "gate": "node --experimental-strip-types ../../packages/gate/src/cli.ts out",
+    "gate": "node --experimental-strip-types ../../packages/gate/src/cli.ts out gate.floors.json",
     "preview": "python3 -m http.server 4173 -d out"
   },
   "dependencies": {

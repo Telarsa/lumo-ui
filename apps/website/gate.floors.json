@@ -1,0 +1,13 @@
+{
+  "//": "Per-route MINIMUM Persian digit counts for lumo-gate's persian-digit-floor rule. Each floor is ~55% of the count measured on 10 Aug 2026, so a redesign can shrink a page without going red while a page that silently stops rendering its numbers — the defect the rule exists for — cannot pass. Routes chosen because numbers are their point: the landing's proof figures, the number-dense component pages, and the composed dashboard.",
+  "fa-IR/index.html": 8,
+  "fa-IR/components/chart/index.html": 20,
+  "fa-IR/components/num/index.html": 18,
+  "fa-IR/components/table/index.html": 18,
+  "fa-IR/components/slider/index.html": 12,
+  "fa-IR/components/pagination/index.html": 14,
+  "view/fa-IR/chart/index.html": 14,
+  "view/fa-IR/num/index.html": 8,
+  "view-block/fa-IR/dashboard-page/index.html": 60,
+  "view-block/fa-IR/stat-grid/index.html": 8
+}
