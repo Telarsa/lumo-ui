@@ -17,7 +17,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "lucide-react": "catalog:",
-    "@lumo-ui/blocks": "workspace:*"
+    "@lumo-ui/blocks": "workspace:*",
+    "recharts": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "catalog:",

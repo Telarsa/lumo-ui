@@ -4,6 +4,10 @@ import type { Locale, LumoNode } from "@lumo-ui/core";
 import { formatNumber, stringsFor } from "@lumo-ui/core";
 import {
   Alert,
+  Autocomplete,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteListBox,
   Avatar,
   Badge,
   Breadcrumb,
@@ -15,11 +19,32 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  Cell,
   Checkbox,
   CheckboxGroup,
+  Column,
+  ColumnResizer,
   ComboBox,
   ComboBoxItem,
+  Command,
+  CommandDialog,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
   Container,
+  DateText,
+  DescriptionDetail,
+  DescriptionGroup,
+  DescriptionList,
+  DescriptionTerm,
   Dialog,
   DialogHeading,
   DialogModal,
@@ -32,12 +57,16 @@ import {
   Drawer,
   DrawerOverlay,
   EmptyState,
+  FileUpload,
   Form,
   Grid,
+  HoverCard,
   IconButton,
   Kbd,
   Label,
   Link,
+  ListBox,
+  ListBoxItem,
   Menu,
   MenuItem,
   MenuPopover,
@@ -45,25 +74,37 @@ import {
   MenuSeparator,
   MenuTrigger,
   Meter,
+  Num,
   NumberField,
   Popover,
   PopoverTrigger,
   ProgressBar,
   Radio,
   RadioGroup,
+  ResizableTableContainer,
+  Row,
   SearchField,
+  SegmentedControl,
+  SegmentedControlItem,
   Select,
   SelectItem,
   SelectPopover,
   SelectTrigger,
   Separator,
   Skeleton,
+  Slider,
   Spinner,
   Stack,
+  Steps,
   Switch,
   Tab,
   TabList,
   TabPanel,
+  Table,
+  TableBody,
+  TableHeader,
+  TableSelectAllColumn,
+  TableSelectionCell,
   Tabs,
   Tag,
   TextArea,
@@ -75,6 +116,12 @@ import {
   Tooltip,
   TooltipTrigger,
 } from "@lumo-ui/ui";
+import {
+  ChartIsland,
+  PaginationIsland,
+  RatingIsland,
+  ToastIsland,
+} from "@/components/demo-islands";
 
 /**
  * The demo registry — the single source the whole site is generated from.
@@ -101,11 +148,22 @@ import {
  *     the `Menu`'s `onAction` are absent rather than forgotten: a function
  *     cannot cross the server/client boundary.
  *
- * Overlays (dialog, drawer, popover, menu, tooltip, select, combobox) are shown
- * as their TRIGGER. React Aria's `Overlay` returns `null` during SSR, so a
- * `defaultOpen` overlay would contribute nothing to the graded bytes while
+ * Overlays (dialog, drawer, popover, menu, tooltip, select, combobox, command)
+ * are shown as their TRIGGER. React Aria's `Overlay` returns `null` during SSR,
+ * so a `defaultOpen` overlay would contribute nothing to the graded bytes while
  * covering the component page with a modal after hydration. The trigger is the
  * part that is actually in the first byte, so the trigger is what is shown.
+ *
+ * ── THE FOUR THAT CANNOT BE WRITTEN HERE, AND WHY ───────────────────────────
+ *
+ * Rule 3 has a hard edge. Four components REQUIRE something a server module
+ * cannot hand to a client one: a function (`Rating`, `Pagination` — their
+ * label-builders are functions precisely so Persian word order is authored, see
+ * `tag-group.tsx`), a class instance (`Toast`'s queue), or a library that cannot
+ * run during the RSC pass at all (recharts, for `Chart`). Those four live in
+ * `@/components/demo-islands` — a `"use client"` module that takes ONLY strings
+ * and builds the closure on its own side. No copy lives there; every
+ * user-visible string in this site is still written here, in both locales.
  */
 
 const UI_SRC = join(process.cwd(), "..", "..", "packages", "ui", "src");
@@ -382,7 +440,131 @@ const copy = {
   // Tooltip
   removeRow: { "fa-IR": "حذف این ردیف", "en-US": "Remove this row" },
   duplicateRow: { "fa-IR": "رونوشت این ردیف", "en-US": "Duplicate this row" },
+
+  // Table
+  ordersGrid: { "fa-IR": "سفارش‌های اخیر", "en-US": "Recent orders" },
+  selectAllOrders: { "fa-IR": "انتخاب همهٔ سفارش‌ها", "en-US": "Select every order" },
+  selectOrder: { "fa-IR": "انتخاب این سفارش", "en-US": "Select this order" },
+  customer: { "fa-IR": "مشتری", "en-US": "Customer" },
+  amount: { "fa-IR": "مبلغ", "en-US": "Amount" },
+  sortedAscending: { "fa-IR": "مرتب‌شده صعودی", "en-US": "Sorted ascending" },
+  sortedDescending: { "fa-IR": "مرتب‌شده نزولی", "en-US": "Sorted descending" },
+  resizeColumn: { "fa-IR": "تغییر اندازهٔ ستون", "en-US": "Resize the column" },
+  customerOne: { "fa-IR": "سارا محمدی", "en-US": "Sara Mohammadi" },
+  customerTwo: { "fa-IR": "رضا کریمی", "en-US": "Reza Karimi" },
+  customerThree: { "fa-IR": "نگار حسینی", "en-US": "Negar Hosseini" },
+
+  // List box
+  documents: { "fa-IR": "پرونده‌ها", "en-US": "Documents" },
+  contractDoc: { "fa-IR": "قرارداد همکاری", "en-US": "Partnership contract" },
+  invoiceDoc: { "fa-IR": "فاکتور ماهانه", "en-US": "Monthly invoice" },
+  reportDoc: { "fa-IR": "گزارش سالانه", "en-US": "Annual report" },
+
+  // Description list
+  orderNumber: { "fa-IR": "شمارهٔ سفارش", "en-US": "Order number" },
+  placedOn: { "fa-IR": "تاریخ ثبت", "en-US": "Placed on" },
+  payable: { "fa-IR": "مبلغ قابل پرداخت", "en-US": "Amount due" },
+  deliveryAddress: { "fa-IR": "نشانی تحویل", "en-US": "Delivery address" },
+  addressLine: {
+    "fa-IR": "تهران، خیابان ولیعصر، برج آسمان",
+    "en-US": "Aseman Tower, Vali-Asr Street, Tehran",
+  },
+
+  // Toast
+  notifications: { "fa-IR": "اعلان‌ها", "en-US": "Notifications" },
+  raiseSaved: { "fa-IR": "ذخیرهٔ تغییرها", "en-US": "Save the changes" },
+  raiseFailure: { "fa-IR": "تلاش دوباره برای پرداخت", "en-US": "Try the payment again" },
+
+  // Slider
+  budget: { "fa-IR": "بودجه", "en-US": "Budget" },
+  brightness: { "fa-IR": "روشنایی صفحه", "en-US": "Screen brightness" },
+  discountShare: { "fa-IR": "درصد تخفیف", "en-US": "Discount rate" },
+
+  // Pagination
+  resultPages: { "fa-IR": "صفحه‌بندی نتایج", "en-US": "Results pagination" },
+  previousPage: { "fa-IR": "صفحهٔ قبل", "en-US": "Previous page" },
+  nextPage: { "fa-IR": "صفحهٔ بعد", "en-US": "Next page" },
+  pageWord: { "fa-IR": "صفحه", "en-US": "Page" },
+
+  // Steps
+  signupSteps: { "fa-IR": "مراحل ثبت‌نام", "en-US": "Sign-up steps" },
+  stepComplete: { "fa-IR": "تکمیل‌شده", "en-US": "Completed" },
+  stepCurrent: { "fa-IR": "مرحلهٔ فعلی", "en-US": "Current step" },
+  stepUpcoming: { "fa-IR": "انجام‌نشده", "en-US": "Not started" },
+  stepIdentity: { "fa-IR": "احراز هویت", "en-US": "Identity check" },
+  stepPlan: { "fa-IR": "انتخاب طرح", "en-US": "Choose a plan" },
+  stepPlanHelp: { "fa-IR": "ماهانه یا سالانه", "en-US": "Monthly or yearly" },
+  stepPayment: { "fa-IR": "پرداخت", "en-US": "Payment" },
+
+  // Segmented control
+  resultView: { "fa-IR": "نمای نتایج", "en-US": "Results view" },
+
+  // Num / DateText
+  growthShare: { "fa-IR": "سهم رشد امسال", "en-US": "Share of this year's growth" },
+  issuedOn: { "fa-IR": "تاریخ صدور", "en-US": "Issued on" },
+
+  // Hover card
+  maintainedBy: { "fa-IR": "نگهداری‌شده به‌دست", "en-US": "Maintained by" },
+  authorName: { "fa-IR": "کامیاب نظری", "en-US": "Kamyab Nazari" },
+  profilePreview: { "fa-IR": "نمای کوتاه نمایه", "en-US": "Profile preview" },
+  authorBio: {
+    "fa-IR": "روی دسترس‌پذیری و درست‌نویسی راست‌چین کار می‌کند.",
+    "en-US": "Works on accessibility and getting right-to-left right.",
+  },
+
+  // Autocomplete / Command
+  commandSearch: { "fa-IR": "جست‌وجوی فرمان", "en-US": "Search commands" },
+  commandPlaceholder: { "fa-IR": "یک فرمان بنویسید", "en-US": "Type a command" },
+  commandsList: { "fa-IR": "فرمان‌ها", "en-US": "Commands" },
+  newDocument: { "fa-IR": "سند تازه", "en-US": "New document" },
+  openFile: { "fa-IR": "باز کردن پرونده", "en-US": "Open a file" },
+  exportFile: { "fa-IR": "برون‌بری پی‌دی‌اف", "en-US": "Export as PDF" },
+  openPalette: { "fa-IR": "باز کردن پالت فرمان", "en-US": "Open the command palette" },
+  palette: { "fa-IR": "پالت فرمان", "en-US": "Command palette" },
+  paletteHelp: {
+    "fa-IR": "برای اجرای یک فرمان جست‌وجو کنید",
+    "en-US": "Search for a command to run",
+  },
+
+  // Rating
+  yourScore: { "fa-IR": "امتیاز شما", "en-US": "Your rating" },
+  ofWord: { "fa-IR": "از", "en-US": "out of" },
+  starWord: { "fa-IR": "ستاره", "en-US": "stars" },
+
+  // File upload
+  dropFiles: { "fa-IR": "کشیدن و رها کردن پرونده‌ها", "en-US": "Drag and drop files" },
+  chooseFile: { "fa-IR": "انتخاب پرونده", "en-US": "Choose a file" },
+  uploadHint: {
+    "fa-IR": "تصویر یا پی‌دی‌اف، هر پرونده تا ده مگابایت.",
+    "en-US": "Images or PDF, up to ten megabytes each.",
+  },
+
+  // Chart
+  monthlySales: { "fa-IR": "فروش ماهانه", "en-US": "Monthly sales" },
+  salesSeries: { "fa-IR": "فروش", "en-US": "Sales" },
+  quarterTotal: { "fa-IR": "مجموع فصل", "en-US": "Total for the quarter" },
+  monthOne: { "fa-IR": "فروردین", "en-US": "Farvardin" },
+  monthTwo: { "fa-IR": "اردیبهشت", "en-US": "Ordibehesht" },
+  monthThree: { "fa-IR": "خرداد", "en-US": "Khordad" },
+
+  // Carousel
+  featuredOffers: { "fa-IR": "پیشنهادهای ویژه", "en-US": "Featured offers" },
+  carouselRole: { "fa-IR": "چرخ‌فلک", "en-US": "Carousel" },
+  slideRole: { "fa-IR": "اسلاید", "en-US": "Slide" },
+  previousSlide: { "fa-IR": "اسلاید قبلی", "en-US": "Previous slide" },
+  nextSlide: { "fa-IR": "اسلاید بعدی", "en-US": "Next slide" },
+  offerOne: { "fa-IR": "هدفون بی‌سیم", "en-US": "Wireless headphones" },
+  offerTwo: { "fa-IR": "کیف چرم دست‌دوز", "en-US": "Hand-stitched leather bag" },
+  offerThree: { "fa-IR": "ساعت هوشمند", "en-US": "Smart watch" },
 } as const satisfies Record<string, Record<Locale, string>>;
+
+/**
+ * Fixed dates. A `new Date()` here would change the prerendered bytes on every
+ * build, so the gate would be grading a different document each time — and a
+ * Jalali date is exactly the kind of value nobody notices drifting.
+ */
+const ORDER_DATE = new Date("2026-07-28T09:30:00Z");
+const INVOICE_DATE = new Date("2026-06-11T09:30:00Z");
 
 /** A decorative glyph. Always `aria-hidden` — an icon is never a name. */
 function LinkGlyph() {
@@ -1208,6 +1390,536 @@ const DEMOS: Demo[] = [
           </IconButton>
           <Tooltip placement="bottom">{copy.duplicateRow[l]}</Tooltip>
         </TooltipTrigger>
+      </div>
+    ),
+  },
+  {
+    id: "table",
+    title: { "fa-IR": "جدول داده", "en-US": "Table" },
+    intro: {
+      "fa-IR": "یک گرید واقعی: نام گرید، نام هر چک‌باکس و جهت مرتب‌سازی همگی ویژگی اجباری‌اند، و پیکان‌ها با جهت سند حل می‌شوند.",
+      "en-US": "A real ARIA grid. The grid's name, each checkbox's name and the sort direction are all required props, and the arrow keys resolve against the document direction.",
+    },
+    tier: "data",
+    behaviour: true,
+    source: source("table.tsx"),
+    render: (l) => (
+      <ResizableTableContainer className="max-w-xl">
+        <Table
+          label={copy.ordersGrid[l]}
+          selectionMode="multiple"
+          defaultSelectedKeys={["b"]}
+          sortDescriptor={{ column: "city", direction: "ascending" }}
+        >
+          <TableHeader>
+            <TableSelectAllColumn label={copy.selectAllOrders[l]} defaultWidth={48} />
+            {/*
+             * The resizer is here deliberately. React Aria's own
+             * `aria-valuetext` on it used to read "75 pixels" — English words
+             * and Latin digits in a spoken attribute — and `table.tsx` said not
+             * to put one on a Persian route until that closed. It is closed:
+             * `patches/react-aria@3.51.0.patch` adds an `fa-IR` table bundle
+             * whose `columnSize` reads «۷۵ پیکسل», and with `LumoProvider`
+             * mounted that is what the first byte now carries.
+             */}
+            <Column
+              id="name"
+              isRowHeader
+              defaultWidth={180}
+              resizer={<ColumnResizer label={copy.resizeColumn[l]} />}
+            >
+              {copy.customer[l]}
+            </Column>
+            <Column
+              id="city"
+              defaultWidth={120}
+              allowsSorting
+              sortAscendingLabel={copy.sortedAscending[l]}
+              sortDescendingLabel={copy.sortedDescending[l]}
+            >
+              {copy.city[l]}
+            </Column>
+            <Column id="total" defaultWidth={140}>
+              {copy.amount[l]}
+            </Column>
+          </TableHeader>
+          <TableBody>
+            <Row id="a">
+              <TableSelectionCell label={copy.selectOrder[l]} />
+              <Cell>{copy.customerOne[l]}</Cell>
+              <Cell>{copy.isfahan[l]}</Cell>
+              <Cell>{formatNumber(1250000, l)}</Cell>
+            </Row>
+            <Row id="b">
+              <TableSelectionCell label={copy.selectOrder[l]} />
+              <Cell>{copy.customerTwo[l]}</Cell>
+              <Cell>{copy.tabriz[l]}</Cell>
+              <Cell>{formatNumber(890000, l)}</Cell>
+            </Row>
+            <Row id="c">
+              <TableSelectionCell label={copy.selectOrder[l]} />
+              <Cell>{copy.customerThree[l]}</Cell>
+              <Cell>{copy.tehran[l]}</Cell>
+              <Cell>{formatNumber(2340000, l)}</Cell>
+            </Row>
+          </TableBody>
+        </Table>
+      </ResizableTableContainer>
+    ),
+  },
+  {
+    id: "list-box",
+    title: { "fa-IR": "فهرست انتخابی", "en-US": "List box" },
+    intro: {
+      "fa-IR": "فهرستی که خودش انتخاب می‌شود، بدون پاپ‌اور. یک ایست تبی برای کل فهرست و تایپ‌یاب فارسی — چیزی که ردیفی از دکمه‌ها ندارد.",
+      "en-US": "A selectable list with no popover. One tab stop for the whole list and Persian typeahead — neither of which a row of buttons has.",
+    },
+    tier: "data",
+    behaviour: true,
+    source: source("list-box.tsx"),
+    render: (l) => (
+      <ListBox
+        label={copy.documents[l]}
+        selectionMode="single"
+        defaultSelectedKeys={["report"]}
+        className="max-w-xs rounded-md border border-border bg-surface"
+      >
+        <ListBoxItem id="contract">{copy.contractDoc[l]}</ListBoxItem>
+        <ListBoxItem id="invoice">{copy.invoiceDoc[l]}</ListBoxItem>
+        <ListBoxItem id="report">{copy.reportDoc[l]}</ListBoxItem>
+      </ListBox>
+    ),
+  },
+  {
+    id: "description-list",
+    title: { "fa-IR": "فهرست توصیفی", "en-US": "Description list" },
+    intro: {
+      "fa-IR": "جفت‌های نام و مقدار. مقدارها LumoNode هستند، پس عدد خام کامپایل نمی‌شود، و ستون مبلغ با justify-between چیده می‌شود نه با text-right.",
+      "en-US": "Name and value pairs. The values are LumoNode, so a bare number does not compile, and the money column is justify-between rather than text-right.",
+    },
+    tier: "data",
+    behaviour: false,
+    source: source("description-list.tsx"),
+    render: (l) => (
+      <DescriptionList className="w-full max-w-sm">
+        <DescriptionGroup>
+          <DescriptionTerm>{copy.orderNumber[l]}</DescriptionTerm>
+          <DescriptionDetail>
+            {formatNumber(48219, l, { useGrouping: false })}
+          </DescriptionDetail>
+        </DescriptionGroup>
+        <DescriptionGroup>
+          <DescriptionTerm>{copy.placedOn[l]}</DescriptionTerm>
+          <DescriptionDetail>
+            <DateText value={ORDER_DATE} locale={l} dateStyle="long" />
+          </DescriptionDetail>
+        </DescriptionGroup>
+        <DescriptionGroup>
+          <DescriptionTerm>{copy.payable[l]}</DescriptionTerm>
+          <DescriptionDetail>{formatNumber(1250000, l)}</DescriptionDetail>
+        </DescriptionGroup>
+        <DescriptionGroup layout="stack">
+          <DescriptionTerm>{copy.deliveryAddress[l]}</DescriptionTerm>
+          <DescriptionDetail>{copy.addressLine[l]}</DescriptionDetail>
+        </DescriptionGroup>
+      </DescriptionList>
+    ),
+  },
+  {
+    id: "toast",
+    title: { "fa-IR": "اعلان گذرا", "en-US": "Toast" },
+    intro: {
+      "fa-IR": "ناحیهٔ اعلان‌ها dir خودش را روی پورتال می‌نویسد، پس locale اجباری است — بدون آن یک صفحهٔ فارسی اعلان‌هایش را چپ‌چین می‌چیند.",
+      "en-US": "The toast region writes its own dir onto a portal, so locale is required — without it a correct Persian page lays its toasts out left to right.",
+    },
+    tier: "feedback",
+    behaviour: true,
+    source: source("toast.tsx"),
+    render: (l) => (
+      <ToastIsland
+        locale={l}
+        regionLabel={copy.notifications[l]}
+        closeLabel={copy.close[l]}
+        positiveTrigger={copy.raiseSaved[l]}
+        positiveTitle={copy.alertOkTitle[l]}
+        positiveBody={copy.alertOkBody[l]}
+        criticalTrigger={copy.raiseFailure[l]}
+        criticalTitle={copy.alertBadTitle[l]}
+        criticalBody={copy.alertBadBody[l]}
+      />
+    ),
+  },
+  {
+    id: "slider",
+    title: { "fa-IR": "لغزنده", "en-US": "Slider" },
+    intro: {
+      "fa-IR": "یک مقدار از یک بازه. عدد دیده‌شده و aria-valuetext هر دو از locale می‌آیند، و انگشتی از لبهٔ خواندن اندازه‌گیری می‌شود.",
+      "en-US": "One value from a range. The visible number and aria-valuetext both come from locale, and the thumb is measured from the reading edge.",
+    },
+    tier: "form",
+    behaviour: true,
+    source: source("slider.tsx"),
+    render: (l) => (
+      <div className="flex w-full max-w-sm flex-col gap-6">
+        <Slider label={copy.budget[l]} locale={l} defaultValue={40} maxValue={100} />
+        <Slider
+          label={copy.brightness[l]}
+          locale={l}
+          defaultValue={7}
+          maxValue={10}
+          size="sm"
+        />
+        <Slider
+          label={copy.discountShare[l]}
+          locale={l}
+          defaultValue={0.15}
+          maxValue={1}
+          step={0.05}
+          size="lg"
+          formatOptions={{ style: "percent" }}
+        />
+      </div>
+    ),
+  },
+  /*
+   * `tag-group` HAS NO DEMO, AND THE REASON IS MEASURED RATHER THAN FORGOTTEN.
+   *
+   * React Aria's `useGridListItem` — which `useTag` builds on — writes
+   *
+   *     'aria-labelledby': descriptionId && (node['aria-label'] || node.textValue)
+   *       ? `${rowId} ${descriptionId}` : undefined
+   *
+   * where `descriptionId` comes from `useSlotId()`. `useSlotId` only CLEARS an
+   * unclaimed id in a layout effect, which never runs on the server — and
+   * `useTag` then DISCARDS `descriptionProps` (`let {descriptionProps: _,
+   * ...rest} = states`), so nothing can ever claim it. Measured in the
+   * prerendered bytes of a `fa-IR` render:
+   *
+   *     <div role="row" aria-label="تهران"
+   *          aria-labelledby="…-thr react-aria-_R_eH1_">
+   *
+   * with no element carrying the second id. `@lumo-ui/gate`'s `resolved-idrefs`
+   * fails the build over it, correctly by its own terms.
+   *
+   * Verified UNREACHABLE, by rendering rather than by report: passing
+   * `aria-labelledby` to `TagItem` changes nothing, because RAC's `Tag` builds
+   * its DOM props with `filterDOMProps(props, {global: true})`, which carries no
+   * `aria-*` at all, and merges the row's own props after them. `TagItem` also
+   * cannot drop `textValue` to take the falsy branch: that is the prop the whole
+   * component requires so a tag row is named and typeahead works.
+   *
+   * This is the same shape as `table.tsx`'s ColumnResizer note — a leak that is
+   * pinned and stated rather than papered over, with the demo withheld until it
+   * closes. It is closed by claiming the slot in the other four components that
+   * had it (`list-box.tsx`, `autocomplete.tsx`, `file-upload.tsx`,
+   * `slider.tsx`), which is what let those four ship.
+   */
+  {
+    id: "pagination",
+    title: { "fa-IR": "صفحه‌بندی", "en-US": "Pagination" },
+    intro: {
+      "fa-IR": "هرچه اینجا دیده می‌شود عدد است. نام هر دکمه از شمارهٔ از پیش قالب‌بندی‌شده ساخته می‌شود، پس نامی با رقم لاتین اصلاً قابل نوشتن نیست.",
+      "en-US": "Everything visible here is a number. Each button's name is built from the already-formatted page, so a name carrying Latin digits cannot be written at all.",
+    },
+    tier: "navigation",
+    behaviour: true,
+    source: source("pagination.tsx"),
+    render: (l) => (
+      <PaginationIsland
+        locale={l}
+        count={12}
+        label={copy.resultPages[l]}
+        previousLabel={copy.previousPage[l]}
+        nextLabel={copy.nextPage[l]}
+        pageWord={copy.pageWord[l]}
+      />
+    ),
+  },
+  {
+    id: "steps",
+    title: { "fa-IR": "مراحل", "en-US": "Steps" },
+    intro: {
+      "fa-IR": "کجای یک دنباله ایستاده‌اید. شمارهٔ هر مرحله از formatNumber می‌گذرد و وضعیت آن با واژه گفته می‌شود، نه فقط با رنگ.",
+      "en-US": "Where you are in a sequence. Each step number goes through formatNumber, and its state is spoken in words rather than carried by colour alone.",
+    },
+    tier: "navigation",
+    behaviour: false,
+    source: source("steps.tsx"),
+    render: (l) => (
+      <Steps
+        className="max-w-2xl"
+        locale={l}
+        label={copy.signupSteps[l]}
+        current={2}
+        completeLabel={copy.stepComplete[l]}
+        currentLabel={copy.stepCurrent[l]}
+        upcomingLabel={copy.stepUpcoming[l]}
+        items={[
+          { id: "identity", title: copy.stepIdentity[l] },
+          { id: "plan", title: copy.stepPlan[l], description: copy.stepPlanHelp[l] },
+          { id: "payment", title: copy.stepPayment[l] },
+        ]}
+      />
+    ),
+  },
+  {
+    id: "segmented-control",
+    title: { "fa-IR": "کنترل بخش‌بندی‌شده", "en-US": "Segmented control" },
+    intro: {
+      "fa-IR": "چند گزینهٔ ناسازگار، همه هم‌زمان دیده می‌شوند. ری‌اکت‌آریا آن را radiogroup می‌سازد، پس یک ایست تبی و پیکان‌های درست دارد.",
+      "en-US": "A few mutually exclusive options, all visible at once. React Aria makes it a radiogroup, so it is one tab stop with the right arrow keys.",
+    },
+    tier: "form",
+    behaviour: true,
+    source: source("segmented-control.tsx"),
+    render: (l) => (
+      <SegmentedControl label={copy.resultView[l]} defaultSelectedKeys={["grid"]}>
+        <SegmentedControlItem id="list">{copy.listView[l]}</SegmentedControlItem>
+        <SegmentedControlItem id="grid">{copy.gridView[l]}</SegmentedControlItem>
+        <SegmentedControlItem id="board">{copy.boardView[l]}</SegmentedControlItem>
+      </SegmentedControl>
+    ),
+  },
+  {
+    id: "num",
+    title: { "fa-IR": "عدد و تاریخ", "en-US": "Number and date" },
+    intro: {
+      "fa-IR": "راه مجاز نوشتن یک عدد. تاریخ در تقویم خودِ زبان می‌آید — جلالی، نه میلادیِ با ارقام فارسی، که خطایی نامرئی است.",
+      "en-US": "The sanctioned way to render a number. The date arrives in the locale's own calendar — Jalali, not Gregorian wearing Persian numerals.",
+    },
+    tier: "display",
+    behaviour: false,
+    source: source("num.tsx"),
+    render: (l) => (
+      <div className="flex w-full max-w-sm flex-col gap-3 text-sm text-fg-muted">
+        <span className="flex items-baseline justify-between gap-3">
+          {copy.payable[l]}
+          <Num value={1284500} locale={l} className="font-medium text-fg" />
+        </span>
+        <span className="flex items-baseline justify-between gap-3">
+          {copy.growthShare[l]}
+          <Num value={0.184} locale={l} style="percent" className="font-medium text-fg" />
+        </span>
+        <span className="flex items-baseline justify-between gap-3">
+          {copy.issuedOn[l]}
+          <DateText
+            value={INVOICE_DATE}
+            locale={l}
+            dateStyle="long"
+            className="font-medium text-fg"
+          />
+        </span>
+      </div>
+    ),
+  },
+  {
+    id: "hover-card",
+    title: { "fa-IR": "کارت شناور", "en-US": "Hover card" },
+    intro: {
+      "fa-IR": "پیش‌نمایشی که با درنگ نشانگر باز می‌شود. چون پاپ‌اور غیرمودال نقش نمی‌گیرد، نام روی یک عنصر درونی می‌نشیند و اجباری است.",
+      "en-US": "A preview that opens when the pointer rests. A non-modal popover takes no role, so the name lives on an inner element and is required.",
+    },
+    tier: "overlay",
+    behaviour: true,
+    source: source("hover-card.tsx"),
+    render: (l) => (
+      <p className="text-sm text-fg-muted">
+        {copy.maintainedBy[l]}{" "}
+        <HoverCard
+          label={copy.profilePreview[l]}
+          trigger={<Link href={`/${l}/components/`}>{copy.authorName[l]}</Link>}
+        >
+          <span className="font-medium text-fg">{copy.authorName[l]}</span>
+          <span className="text-fg-muted">{copy.authorBio[l]}</span>
+        </HoverCard>
+      </p>
+    ),
+  },
+  {
+    id: "autocomplete",
+    title: { "fa-IR": "تکمیل خودکار", "en-US": "Autocomplete" },
+    intro: {
+      "fa-IR": "ورودی و مجموعه‌ای که فیلتر می‌کند. مقایسه با Intl.Collator انجام می‌شود، پس ک و ك و همچنین ی و ي یکی شمرده می‌شوند.",
+      "en-US": "An input bound to the collection it filters. The comparison is an Intl.Collator, so ک/ك and ی/ي count as the same letter.",
+    },
+    tier: "form",
+    behaviour: true,
+    source: source("autocomplete.tsx"),
+    render: (l) => (
+      <Autocomplete>
+        <div className="flex w-full max-w-xs flex-col gap-2">
+          <AutocompleteInput
+            label={copy.commandSearch[l]}
+            showLabel
+            placeholder={copy.commandPlaceholder[l]}
+          />
+          <AutocompleteListBox
+            label={copy.commandsList[l]}
+            className="rounded-md border border-border bg-surface"
+          >
+            <AutocompleteItem id="new">{copy.newDocument[l]}</AutocompleteItem>
+            <AutocompleteItem id="open">{copy.openFile[l]}</AutocompleteItem>
+            <AutocompleteItem id="export">{copy.exportFile[l]}</AutocompleteItem>
+          </AutocompleteListBox>
+        </div>
+      </Autocomplete>
+    ),
+  },
+  {
+    id: "rating",
+    title: { "fa-IR": "امتیاز", "en-US": "Rating" },
+    intro: {
+      "fa-IR": "ستاره‌ها متن ندارند، پس نام هر ستاره ساخته می‌شود — از عددی که پیش‌تر قالب‌بندی شده، تا «۳ ستاره» شنیده شود و رقم لاتین اصلاً در دسترس نباشد.",
+      "en-US": "A star has no text, so each name is composed — from an already-formatted number, so «۳ ستاره» is what is announced and a Latin digit is never in scope.",
+    },
+    tier: "form",
+    behaviour: true,
+    source: source("rating.tsx"),
+    render: (l) => (
+      <RatingIsland
+        locale={l}
+        value={4.5}
+        ofWord={copy.ofWord[l]}
+        groupLabel={copy.yourScore[l]}
+        starWord={copy.starWord[l]}
+      />
+    ),
+  },
+  {
+    id: "file-upload",
+    title: { "fa-IR": "بارگذاری پرونده", "en-US": "File upload" },
+    intro: {
+      "fa-IR": "ناحیهٔ رها کردن و دکمهٔ انتخاب. نام ناحیه اجباری است، چون پیش‌فرض ری‌اکت‌آریا واژهٔ انگلیسی DropZone است و هیچ وصله‌ای آن را نمی‌پوشاند.",
+      "en-US": "A drop area and a picker. The area's name is required: React Aria's fallback is the English literal DropZone, which no patch covers.",
+    },
+    tier: "form",
+    behaviour: true,
+    source: source("file-upload.tsx"),
+    render: (l) => (
+      <FileUpload
+        className="max-w-md"
+        label={copy.dropFiles[l]}
+        triggerLabel={copy.chooseFile[l]}
+        allowsMultiple
+        acceptedFileTypes={["image/*", "application/pdf"]}
+      >
+        <p className="text-xs text-fg-muted">{copy.uploadHint[l]}</p>
+      </FileUpload>
+    ),
+  },
+  {
+    id: "chart",
+    title: { "fa-IR": "نمودار", "en-US": "Chart" },
+    intro: {
+      "fa-IR": "ریچارتس روی سرور هیچ نمی‌کشد، پس هیچ گیتی نمی‌بیندش. همان اعداد کنارش با Num هم نوشته می‌شوند تا خواننده‌ای بی‌جاوااسکریپت هم آن‌ها را داشته باشد.",
+      "en-US": "recharts draws nothing on the server, so no gate can grade it. The same figures are written beside it, so a reader with no JavaScript still has them.",
+    },
+    tier: "data",
+    behaviour: false,
+    source: source("chart.tsx"),
+    render: (l) => (
+      <div className="flex w-full max-w-lg flex-col gap-3">
+        <ChartIsland
+          locale={l}
+          label={copy.monthlySales[l]}
+          seriesLabel={copy.salesSeries[l]}
+          data={[
+            { month: copy.monthOne[l], sales: 1200000 },
+            { month: copy.monthTwo[l], sales: 2400000 },
+            { month: copy.monthThree[l], sales: 1800000 },
+          ]}
+        />
+        <p className="flex items-baseline justify-between gap-3 text-sm text-fg-muted">
+          {copy.quarterTotal[l]}
+          <span className="font-medium text-fg">{formatNumber(5400000, l)}</span>
+        </p>
+      </div>
+    ),
+  },
+  {
+    id: "carousel",
+    title: { "fa-IR": "چرخ‌فلک", "en-US": "Carousel" },
+    intro: {
+      "fa-IR": "امبلا جهت را از locale می‌گیرد، وگرنه اسلایدها و دکمه‌ها بر سر معنای «بعدی» با هم اختلاف پیدا می‌کنند — خطایی که در عکس دیده نمی‌شود.",
+      "en-US": "embla takes its direction from locale; without it the slides and the buttons disagree about which way next is — a defect a screenshot cannot show.",
+    },
+    tier: "display",
+    behaviour: true,
+    source: source("carousel.tsx"),
+    render: (l) => (
+      <div className="w-full px-14">
+        <Carousel
+          locale={l}
+          label={copy.featuredOffers[l]}
+          roleDescription={copy.carouselRole[l]}
+          slideRoleDescription={copy.slideRole[l]}
+          className="mx-auto w-full max-w-xs"
+        >
+          <CarouselContent>
+            <CarouselItem>
+              <div className="flex h-28 flex-col justify-between rounded-md border border-border bg-surface-sunken p-4">
+                <span className="text-sm font-medium text-fg">{copy.offerOne[l]}</span>
+                <span className="text-sm text-fg-muted">{formatNumber(4200000, l)}</span>
+              </div>
+            </CarouselItem>
+            <CarouselItem>
+              <div className="flex h-28 flex-col justify-between rounded-md border border-border bg-surface-sunken p-4">
+                <span className="text-sm font-medium text-fg">{copy.offerTwo[l]}</span>
+                <span className="text-sm text-fg-muted">{formatNumber(1850000, l)}</span>
+              </div>
+            </CarouselItem>
+            <CarouselItem>
+              <div className="flex h-28 flex-col justify-between rounded-md border border-border bg-surface-sunken p-4">
+                <span className="text-sm font-medium text-fg">{copy.offerThree[l]}</span>
+                <span className="text-sm text-fg-muted">{formatNumber(6900000, l)}</span>
+              </div>
+            </CarouselItem>
+          </CarouselContent>
+          <CarouselPrevious label={copy.previousSlide[l]} />
+          <CarouselNext label={copy.nextSlide[l]} />
+        </Carousel>
+      </div>
+    ),
+  },
+  {
+    id: "command",
+    title: { "fa-IR": "پالت فرمان", "en-US": "Command palette" },
+    intro: {
+      "fa-IR": "فهرست فیلترشوندهٔ کنش‌ها درون یک گفت‌وگو. مثل هر لایهٔ دیگر، آنچه در نخستین بایت هست تنها کلید بازکردن آن است.",
+      "en-US": "A filtered list of actions inside a dialog. Like every other overlay, what exists in the first byte is the control that opens it.",
+    },
+    tier: "overlay",
+    behaviour: true,
+    source: source("command.tsx"),
+    render: (l) => (
+      <div className="flex items-center gap-3">
+        <CommandDialog
+          title={copy.palette[l]}
+          description={copy.paletteHelp[l]}
+          closeLabel={copy.close[l]}
+          trigger={<Button variant="outline">{copy.openPalette[l]}</Button>}
+        >
+          <Command>
+            <CommandInput
+              label={copy.commandSearch[l]}
+              placeholder={copy.commandPlaceholder[l]}
+            />
+            <CommandList>
+              <CommandGroup heading={copy.suggestions[l]}>
+                <CommandItem id="new">
+                  {copy.newDocument[l]}
+                  <CommandShortcut>⌘N</CommandShortcut>
+                </CommandItem>
+                <CommandItem id="open">{copy.openFile[l]}</CommandItem>
+              </CommandGroup>
+              <CommandSeparator />
+              <CommandGroup heading={copy.settings[l]}>
+                <CommandItem id="profile">{copy.profile[l]}</CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </CommandDialog>
+        <Kbd keys={["Ctrl", "K"]} />
       </div>
     ),
   },
