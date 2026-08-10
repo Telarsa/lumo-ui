@@ -96,6 +96,18 @@ Whole screens, copy-in, composed only from shipped components. This is the
 Internal-first (see `DECISIONS.md §0.2`), but built like a real library's docs
 because it is how the library is used and reviewed.
 
+**The full docs redesign is deliberately LAST.** Target shape is
+`ui.shadcn.com` — left sidebar with sections above an alphabetical component
+list, a centre column with title, description, live preview card, then
+Installation with Command/Manual tabs, and a right-hand "On This Page" rail. Lumo
+should exceed it on the axis it can: every preview shown in **both directions**,
+and the evidence panel showing what a screen reader actually announces, which no
+component-library site publishes.
+
+It is last on purpose. The site is generated from the registry, so building it
+before the components exist means building it twice — and a docs site is exactly
+the artifact that rots when its subject keeps moving underneath it.
+
 - [x] `/fa/` and `/en/` route trees, each prerendered with a real
       `<html lang dir>` — locale is a route segment, never client state
 - [x] Component pages generated from the registry: install, usage, source, props
