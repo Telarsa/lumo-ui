@@ -470,6 +470,24 @@
       ]
     },
     {
+      "name": "provider",
+      "type": "registry:ui",
+      "title": "Provider",
+      "description": "Mount this once, high in every Lumo application. It is not optional.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/provider.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/provider.tsx"
+        }
+      ]
+    },
+    {
       "name": "radio-group",
       "type": "registry:ui",
       "title": "Radio Group",

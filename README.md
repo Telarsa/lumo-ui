@@ -28,14 +28,14 @@ to them is a bug, not a customisation.
 ```
 packages/core     the invariants — LumoNode, direction(), formatters, strings
 packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
-packages/ui       35 components
+packages/ui       45 components
 packages/blocks   19 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
 apps/website      the showcase, and the first thing the gate runs against
 ```
 
-**Current state.** 35 components, 19 blocks, 54 registry items, 242 tests,
+**Current state.** 45 components, 19 blocks, 64 registry items, 314 tests,
 150 documents graded at 0 violations. See `ROADMAP.md` for what is still open.
 
 ## Getting started
@@ -67,19 +67,28 @@ The library ships no user-facing English, not even as a default. Measured: React
 Aria leaks 8 English strings on a Persian page, 5 of them reachable by prop —
 those 5 are typed in `packages/core/src/strings.ts`.
 
-**3. There is no `dir` prop.**
+**3. `LumoProvider` is not optional.**
+React Aria resolves its locale from `navigator.language`, falling back to
+`en-US` — and during server rendering there is no `navigator`. Without a provider
+every React Aria component renders `en-US`/`ltr` regardless of `<html lang dir>`.
+Measured: a slider thumb at value 40 sits at `left: 40%` instead of `left: 60%`,
+the mirror image of where it belongs. No gate catches this — it is valid HTML
+with plausible inline styles — which is why it is a component with a required
+prop rather than a line of documentation.
+
+**4. There is no `dir` prop.**
 Direction is derived from the locale via `Intl.Locale.getTextInfo()`. A wrong
 direction is unrepresentable rather than discouraged.
 
-**4. Logical utilities only.**
+**5. Logical utilities only.**
 `ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`. Physical utilities are banned by lint.
 One `ml-2` in a shared component breaks Persian in every project that copied it.
 
-**5. No CSS Modules.**
+**6. No CSS Modules.**
 Styling lives in Tailwind utilities inside `cva()`, so `shadcn migrate rtl` and
 `shadcn add --diff` can both see it. Enforced by a `find` in CI.
 
-**6. Every rule has a poison fixture.**
+**7. Every rule has a poison fixture.**
 A rule that has never been seen to fail is not a rule. This caught a real one:
 `namedControls` originally swallowed an exception and reported green forever.
 

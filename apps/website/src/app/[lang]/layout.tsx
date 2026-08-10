@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { LumoHtml } from "@lumo-ui/core";
+import { LumoHtml, type LumoNode } from "@lumo-ui/core";
 import { ThemeScript } from "@/components/theme-toggle";
+import { LumoProvider } from "@lumo-ui/ui";
 import { assertLocale, localeParams, site } from "@/lib/locale";
 import "../globals.css";
 
@@ -29,7 +30,7 @@ export default async function LocaleLayout({
   children,
   params,
 }: {
-  children: React.ReactNode;
+  children: LumoNode;
   params: Promise<{ lang: string }>;
 }) {
   const lang = assertLocale((await params).lang);
@@ -38,7 +39,9 @@ export default async function LocaleLayout({
       <head>
         <ThemeScript />
       </head>
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">
+        <LumoProvider locale={lang}>{children}</LumoProvider>
+      </body>
     </LumoHtml>
   );
 }

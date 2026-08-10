@@ -405,3 +405,6 @@ export type {
   PaginationItemVariantProps,
   PaginationSlot,
 } from "./pagination.variants.ts";
+
+export { LumoProvider } from "./provider.tsx";
+export type { LumoProviderProps } from "./provider.tsx";
