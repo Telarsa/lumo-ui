@@ -1,4 +1,5 @@
 import { LumoHtml } from "@lumo-ui/core";
+import { ThemeScript } from "@/components/theme-toggle";
 import { assertLocale, localeParams } from "@/lib/locale";
 import "../../globals.css";
 
@@ -23,6 +24,9 @@ export default async function ViewLayout({
   const lang = assertLocale((await params).lang);
   return (
     <LumoHtml lang={lang}>
+      <head>
+        <ThemeScript />
+      </head>
       <body className="grid min-h-dvh place-items-center p-6">{children}</body>
     </LumoHtml>
   );

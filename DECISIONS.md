@@ -138,6 +138,35 @@ The gate is therefore designed to *prevent*, not to *report*, and the
 
 ---
 
+## 0.4 The default theme is achromatic, compact, and honours the system
+
+**Decided 10 August 2026.** Lumo's own default is black, white and grey — chroma
+zero — with New York's proportions: density 0.9, radius scale 0.75.
+
+**Why no colour by default.** A library that ships a hue imposes it on fifteen
+products, and every one of them then fights it. A brand supplies a hue by setting
+exactly two custom properties, `--lumo-ref-hue-brand` and
+`--lumo-ref-chroma-brand`. Because lightness stays owned by the ramp, re-hueing
+cannot break a contrast ratio that was measured against the ground — that is the
+whole point of the three-tier split.
+
+The accent is therefore ink: near-black on light, near-white on dark. A solid
+button reads as weight rather than as colour.
+
+**Three theme states, not two.** Light, dark, and *system* — system being the
+default and the state most visitors are actually in. A binary toggle cannot
+express "follow the OS", and a site that silently overrides that setting ignores
+a preference the reader already stated once.
+
+The tokens were written for all three from the start: bare `:root` carries light,
+`prefers-color-scheme: dark` guarded by `:not([data-theme="light"])` handles the
+unstamped case, and `[data-theme="dark"]` lets an explicit choice win in both
+directions. A blocking inline script applies the stored value before first paint,
+because the alternative is a white flash on every navigation for anyone who chose
+dark.
+
+---
+
 ## ~~1. Build on Zag.js, not on hand-written state machines~~
 
 **SUPERSEDED by §0 on 9 August 2026.** Kept for its reasoning, which was correct

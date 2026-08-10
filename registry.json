@@ -167,6 +167,24 @@
       ]
     },
     {
+      "name": "description-list",
+      "type": "registry:ui",
+      "title": "Description List",
+      "description": "Name/value pairs: `<dl>`, `<dt>`, `<dd>`.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/description-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/description-list.tsx"
+        }
+      ]
+    },
+    {
       "name": "dialog",
       "type": "registry:ui",
       "title": "Dialog",
@@ -299,6 +317,29 @@
           "path": "packages/ui/src/link.tsx",
           "type": "registry:ui",
           "target": "components/ui/link.tsx"
+        }
+      ]
+    },
+    {
+      "name": "list-box",
+      "type": "registry:ui",
+      "title": "List Box",
+      "description": "A standalone selectable list — no popover, no trigger.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/list-box.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/list-box.tsx"
         }
       ]
     },
@@ -509,6 +550,25 @@
       ]
     },
     {
+      "name": "slider",
+      "type": "registry:ui",
+      "title": "Slider",
+      "description": "A single value chosen from a range.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/slider.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/slider.tsx"
+        }
+      ]
+    },
+    {
       "name": "spinner",
       "type": "registry:ui",
       "title": "Spinner",
@@ -563,6 +623,30 @@
           "path": "packages/ui/src/switch.tsx",
           "type": "registry:ui",
           "target": "components/ui/switch.tsx"
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "type": "registry:ui",
+      "title": "Table",
+      "description": "A data grid.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "checkbox",
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/table.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/table.tsx"
         }
       ]
     },
@@ -644,6 +728,28 @@
           "path": "packages/ui/src/text-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/text-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "toast",
+      "type": "registry:ui",
+      "title": "Toast",
+      "description": "Transient notifications.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/toast.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/toast.tsx"
         }
       ]
     },

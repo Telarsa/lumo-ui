@@ -21,13 +21,24 @@
 
 @layer lumo.ref {
   :root {
-    /* ---- brand knobs. A brand file overrides ONLY these. ---------------- */
-    --lumo-ref-hue-brand: 96;
-    --lumo-ref-chroma-brand: 0.13;
-    --lumo-ref-hue-neutral: 96;
-    --lumo-ref-chroma-neutral: 0.004;
-    --lumo-ref-radius-scale: 1;
-    --lumo-ref-density: 1;
+    /* ---- brand knobs. A brand file overrides ONLY these. ----------------
+     *
+     * The default is achromatic on purpose: chroma 0 is true black, white and
+     * grey, and the accent is ink rather than a colour. A library's own default
+     * should not impose a hue on fifteen products — a brand supplies one by
+     * setting these two values and nothing else, and because lightness stays
+     * owned by the ramp below, doing so cannot break a contrast ratio that was
+     * measured against the ground.
+     *
+     * Density 0.9 and radius 0.75 give the compact, tight-cornered feel of
+     * shadcn's New York: controls a step shorter, corners closer to square.
+     */
+    --lumo-ref-hue-brand: 0;
+    --lumo-ref-chroma-brand: 0;
+    --lumo-ref-hue-neutral: 0;
+    --lumo-ref-chroma-neutral: 0;
+    --lumo-ref-radius-scale: 0.75;
+    --lumo-ref-density: 0.9;
 
     /* ---- neutral ramp. Lightness is fixed; hue/chroma come from above. --- */
     --lumo-ref-neutral-50:  oklch(0.977 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
@@ -49,10 +60,13 @@
     --lumo-ref-neutral-950: oklch(0.155 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
 
     /* ---- brand ramp ----------------------------------------------------- */
-    --lumo-ref-brand-400: oklch(0.760 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
-    --lumo-ref-brand-500: oklch(0.680 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
-    --lumo-ref-brand-600: oklch(0.560 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
-    --lumo-ref-brand-700: oklch(0.470 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+    /* Achromatic by default. On light the accent is near-black; on dark it is
+       near-white — the same inversion shadcn's mono theme uses, and the reason a
+       solid button reads as ink rather than as a colour. */
+    --lumo-ref-brand-400: oklch(0.930 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+    --lumo-ref-brand-500: oklch(0.750 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+    --lumo-ref-brand-600: oklch(0.320 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+    --lumo-ref-brand-700: oklch(0.220 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
 
     /* ---- status. Semantic, deliberately NOT derived from the brand hue. -- */
     --lumo-ref-positive: oklch(0.520 0.130 155);
@@ -71,8 +85,8 @@
     --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
 
     --lumo-ref-radius-sm: calc(0.25rem * var(--lumo-ref-radius-scale));
-    --lumo-ref-radius-md: calc(0.5rem  * var(--lumo-ref-radius-scale));
-    --lumo-ref-radius-lg: calc(0.75rem * var(--lumo-ref-radius-scale));
+    --lumo-ref-radius-md: calc(0.375rem * var(--lumo-ref-radius-scale));
+    --lumo-ref-radius-lg: calc(0.5rem  * var(--lumo-ref-radius-scale));
 
     /* ---- control height. The 44px floor is Khroos's stated touch target. - */
     --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
@@ -103,7 +117,7 @@
 
     --lumo-sys-accent: var(--lumo-ref-brand-700);
     --lumo-sys-accent-hover: var(--lumo-ref-brand-600);
-    --lumo-sys-accent-fg: #ffffff;
+    --lumo-sys-accent-fg: var(--lumo-ref-neutral-50);
     /* The mark colour. Never used for text on light — see the contrast test. */
     --lumo-sys-accent-mark: var(--lumo-ref-brand-500);
 

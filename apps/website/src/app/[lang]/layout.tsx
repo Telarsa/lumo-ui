@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { LumoHtml } from "@lumo-ui/core";
+import { ThemeScript } from "@/components/theme-toggle";
 import { assertLocale, localeParams, site } from "@/lib/locale";
 import "../globals.css";
 
@@ -34,6 +35,9 @@ export default async function LocaleLayout({
   const lang = assertLocale((await params).lang);
   return (
     <LumoHtml lang={lang}>
+      <head>
+        <ThemeScript />
+      </head>
       <body className="min-h-dvh antialiased">{children}</body>
     </LumoHtml>
   );

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Locale } from "@lumo-ui/core";
 import { site } from "@/lib/locale";
+import { ThemeToggle } from "./theme-toggle";
 
 /**
  * The site chrome.
@@ -43,6 +44,7 @@ export function SiteShell({
             </Link>
           </nav>
           <div className="ms-auto flex items-center gap-3 text-sm">
+            <ThemeToggle lang={lang} />
             {/* A real link, not a toggle — see the file header. */}
             <Link
               href={`/${other}/${path}`}
