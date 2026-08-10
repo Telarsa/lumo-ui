@@ -294,12 +294,42 @@ it" is how a gap becomes permanent:
    `Select` and `ComboBox`, both popover-bound. `list-detail` therefore builds
    its master list from buttons, losing typeahead and single-Tab-stop arrow
    navigation.
-3. ~~**No `Table`.**~~ **CLOSED** — a real ARIA grid, with one documented leak: `ColumnResizer` emits `aria-valuetext="75 pixels"`, unreachable by prop, so it must stay out of Persian demos until upstream fixes it.
+3. ~~**No `Table`.**~~ **CLOSED** — a real ARIA grid. ~~With one documented leak: `ColumnResizer` emits `aria-valuetext="75 pixels"`, unreachable by prop, so it must stay out of Persian demos.~~ **That leak is now closed too**: the `fa-IR` patch adds `columnSize` via `formatter.number`, and the built bytes carry `aria-valuetext="۱۸۰ پیکسل"`. The Persian demo ships a real resizer.
    Original note: `data-toolbar` and `list-detail` are the chrome around one,
    with nothing to put in the middle. Scheduled for v0.8.
 4. ~~**No description-list primitive.**~~ **CLOSED** — `DescriptionList` ships, server-renderable.
    Original note: `booking-summary` writes `<dl>` directly —
    correct semantics, but the one place a block reaches past the library.
+
+---
+
+## Open upstream defects — pinned, not papered over
+
+Each is measured by rendering, recorded in the component's own header with the
+evidence, and blocked on React Aria rather than on us. None is worked around in
+the gate; the gate is right in every case.
+
+1. **`TagGroup` has no demo.** `useGridListItem` writes
+   `aria-labelledby="${rowId} ${descriptionId}"` whenever a tag carries a
+   `textValue`, where `descriptionId` comes from `useSlotId()` — and `useTag`
+   then **discards `descriptionProps`**, so nothing can ever claim that id. The
+   first byte therefore contains a dangling reference and `resolved-idrefs`
+   fails the build.
+
+   Verified unreachable by rendering, not by reading: passing `aria-labelledby`
+   to `TagItem` changes nothing, because RAC builds DOM props with
+   `filterDOMProps(props, {global: true})`, which carries no `aria-*`, and then
+   merges the row's own props on top. Dropping `textValue` takes the falsy
+   branch but is not an option — it is what names the row and drives typeahead.
+
+   Post-hydration the dangle count is 0, so this is a first-byte-only defect of
+   the same tier as the `aria-describedby` dangles `resolved-idrefs` already
+   excludes. **The demo needs no component change once upstream closes it.**
+
+2. **`CalendarCell` and `DateSegment`** leak English from bundles no prop
+   reaches — see the `strings.ts` header. These are patchable the same way
+   `columnSize` was; that is the M9 job, and it is now a known-good technique
+   rather than an open question.
 
 ---
 
