@@ -53,20 +53,45 @@ export type { ChartConfig, ChartMirror };
  *       </BarChart>
  *     </ChartContainer>
  *
- * ═══ THE GATE CANNOT SEE THIS COMPONENT ═════════════════════════════════════
+ * ═══ THE GATE CANNOT SEE THE PLOT. IT CAN SEE `<ChartData>` ═════════════════
  *
- * Measured: recharts renders 148 bytes on the server — a `<div>` and no `<svg>`.
- * `lumo-gate` grades the served HTML, so it grades nothing here. Every other
- * component in this library has a second line of defence; this one does not.
- * `chart.test.tsx` mounts the chart and reads the real SVG, and that suite is
- * the ONLY thing standing between a Persian dashboard and an axis of Latin
- * digits. Treat a weakened assertion there as a shipped defect.
+ * Measured: recharts renders 127–316 bytes on the server — a `<div>`, no
+ * `<svg>`, no `<text>`. This is NOT the `ResponsiveContainer` measurement gate,
+ * which was the obvious suspect and is innocent: with a fixed `width`/`height`
+ * and no wrapper at all it emits 127 bytes and still no `<svg>`. There is no
+ * configuration of recharts 3.8 that puts a plot in the served bytes.
  *
- * It also means a route whose only numbers are in a chart will fail
- * `persian-digit-floor` — correctly. The floor asks for Persian digits in the
- * served bytes, and a chart serves none. Put the same figures in a `<Num>`
- * beside the chart, which a screen reader and a no-JS reader can both use
- * anyway.
+ * Six alternatives were measured under `renderToStaticMarkup`, then confirmed
+ * in real Chrome with JavaScript disabled. visx, nivo, victory, @mui/x-charts
+ * and echarts all server-render a real `<svg>` with Persian tick text; unovis
+ * does not. Adding a tooltip changes the server output by zero bytes in every
+ * one of them — the "interactivity forces client-only" intuition is a recharts
+ * artefact, not a law. The full comparison is in ROADMAP.md.
+ *
+ * The renderer was kept anyway, because switching it buys less than it looks
+ * like:
+ *
+ *     an SSR'd <svg> puts axis TICKS in the served bytes.
+ *     it does not put the DATA there. bar heights are geometry.
+ *
+ * A no-JS reader and a screen reader both still get nothing meaningful from a
+ * server-rendered plot. So the hole is closed with the thing that actually
+ * carries the figures:
+ *
+ * **`<ChartData>` renders a real `<table>` on the server, and `ChartContainer`
+ * renders it for you — it is not opt-in.** `data` and `categoryKey` are
+ * required props for the same reason `locale` and `label` are: an optional
+ * accessibility affordance is one nobody adds.
+ *
+ * That makes this component gate-visible after all. `no-latin-digits` grades
+ * the table, `persian-digit-floor` counts it, and a chart panel is no longer a
+ * page-shaped blind spot. `rules.ts` reports every text node visible by design
+ * — it has no CSS model — so `sr-only` text is graded exactly like prose, which
+ * is what makes this work rather than a way to hide from the gate.
+ *
+ * `chart.test.tsx` still mounts the chart and reads the real SVG. That suite
+ * grades the plot; the gate now grades the figures. Two lines of defence over
+ * different things, which is the point.
  *
  * ═══ WHY `locale` AND `label` ARE REQUIRED ══════════════════════════════════
  *
@@ -121,6 +146,25 @@ export interface ChartContainerProps
   label: string;
   /** Exactly one recharts chart element. */
   children: React.ReactElement;
+  /**
+   * The same rows the chart plots.
+   *
+   * REQUIRED, and yes — it is passed twice, once here and once to the recharts
+   * element. That redundancy is deliberate: the alternative is an optional prop,
+   * and an optional data table is one nobody adds. recharts serves no bytes, so
+   * this is the ONLY figure a no-JS reader or a screen reader receives.
+   */
+  data: ChartRow[];
+  /** Which column names the row, e.g. `"month"`. Becomes each `<th scope="row">`. */
+  categoryKey: string;
+  /**
+   * The table's `<caption>`, e.g. «داده‌های نمودار فروش ماهانه».
+   *
+   * Distinct from `label`: `label` names the interactive plot, this names the
+   * tabular equivalent. A screen reader meets both, and «نمودار» twice with no
+   * distinction is worse than no caption.
+   */
+  dataCaption: string;
   initialDimension?: { width: number; height: number } | undefined;
   className?: string | undefined;
 }
@@ -132,6 +176,9 @@ export function ChartContainer({
   config,
   locale,
   label,
+  data,
+  categoryKey,
+  dataCaption,
   initialDimension = INITIAL_DIMENSION,
   ...props
 }: ChartContainerProps) {
@@ -157,11 +204,97 @@ export function ChartContainer({
         {...props}
       >
         <ChartStyle id={chartId} config={config} />
+        <ChartData
+          config={config}
+          locale={locale}
+          data={data}
+          categoryKey={categoryKey}
+          caption={dataCaption}
+        />
         <RechartsPrimitive.ResponsiveContainer initialDimension={initialDimension}>
           {named}
         </RechartsPrimitive.ResponsiveContainer>
       </div>
     </ChartContext.Provider>
+  );
+}
+
+/** One plotted row. Values are the series figures; the category is a label. */
+export type ChartRow = Record<string, string | number | null | undefined>;
+
+export interface ChartDataProps {
+  config: ChartConfig;
+  locale: Locale;
+  data: ChartRow[];
+  categoryKey: string;
+  caption: string;
+}
+
+/**
+ * The chart's figures, as a table, in the served bytes.
+ *
+ * `ChartContainer` renders this itself, so most callers never touch it. It is
+ * exported for the case the container cannot cover: a plot composed outside the
+ * container, or a panel showing one table for several charts.
+ *
+ * ── WHY A TABLE AND NOT A LIST OF `<Num>` ───────────────────────────────────
+ *
+ * chart.tsx's header previously said to put the same figures in a `<Num>` beside
+ * the chart. That advice is withdrawn. It was advisory — nothing failed when it
+ * was skipped — and it produced a bag of numbers with no stated relationship.
+ * A `<table>` with `<th scope>` is what lets a screen reader say "فروردین,
+ * فروش, ۱٬۲۰۰" instead of reading twelve unattached figures.
+ *
+ * ── WHY `sr-only` IS NOT HIDING FROM THE GATE ───────────────────────────────
+ *
+ * `rules.ts` has no CSS model and reports every text node visible, skipping only
+ * `aria-hidden`/`hidden` subtrees and `<script>`/`<style>`. So this table is
+ * graded by `no-latin-digits` and counted by `persian-digit-floor` exactly like
+ * prose. A Latin digit in here fails the build. `sr-only` is a decision about
+ * sighted layout, not about grading — and critically it is NOT `aria-hidden`,
+ * which would remove it from both the gate and the screen reader at once.
+ */
+export function ChartData({ config, locale, data, categoryKey, caption }: ChartDataProps) {
+  // The category column is a label, not a series, so it must not become a
+  // numeric column of its own. Anything else in `config` is a plotted series.
+  const series = Object.keys(config).filter((key) => key !== categoryKey);
+
+  // A number reaches the DOM only through `formatNumber`. `LumoNode` cannot
+  // catch these — they arrive as `unknown` from a caller's data array, not as a
+  // JSX child the type system sees — so the check is here, at the one place
+  // every cell passes through.
+  const cell = (value: string | number | null | undefined): string => {
+    if (value === null || value === undefined) return "";
+    return typeof value === "number" ? formatNumber(value, locale) : value;
+  };
+
+  return (
+    <table className="sr-only" data-slot="chart-data">
+      <caption>{caption}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{config[categoryKey]?.label ?? caption}</th>
+          {series.map((key) => (
+            <th key={key} scope="col">
+              {config[key]?.label}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.map((row, index) => (
+          // The category value is the stable identity here; the index is the
+          // fallback for data that repeats one, which is legitimate in a
+          // time series.
+          <tr key={`${String(row[categoryKey] ?? "")}-${index}`}>
+            <th scope="row">{cell(row[categoryKey])}</th>
+            {series.map((key) => (
+              <td key={key}>{cell(row[key])}</td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

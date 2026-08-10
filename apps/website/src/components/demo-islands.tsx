@@ -218,20 +218,40 @@ export interface ChartIslandProps {
   label: string;
   /** The series' legend and tooltip name, e.g. «فروش». */
   seriesLabel: string;
+  /** Names the category column, e.g. «ماه». Heads the table's first column. */
+  categoryLabel: string;
+  /** The data table's caption — the ONLY figures a no-JS reader receives. */
+  dataCaption: string;
   /** Category name and value per bar. Plain data, so it crosses the boundary. */
   data: readonly { readonly month: string; readonly sales: number }[];
 }
 
-export function ChartIsland({ locale, label, seriesLabel, data }: ChartIslandProps) {
+export function ChartIsland({
+  locale,
+  label,
+  seriesLabel,
+  categoryLabel,
+  dataCaption,
+  data,
+}: ChartIslandProps) {
   // `label` is required by `ChartConfig` for the reason chart.variants.ts gives:
   // without it the legend falls back to the dataKey, which is an English
   // identifier on a Persian dashboard.
   const config: ChartConfig = {
+    month: { label: categoryLabel },
     sales: { label: seriesLabel, color: "oklch(0.62 0.16 255)" },
   };
 
   return (
-    <ChartContainer config={config} locale={locale} label={label} className="w-full">
+    <ChartContainer
+      config={config}
+      locale={locale}
+      label={label}
+      data={[...data]}
+      categoryKey="month"
+      dataCaption={dataCaption}
+      className="w-full"
+    >
       <BarChart data={[...data]}>
         <CartesianGrid vertical={false} />
         {/*

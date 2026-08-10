@@ -1,15 +1,22 @@
 /**
- * The only line of defence this component has.
+ * Two lines of defence, over two different things.
  *
- * Every other component in Lumo is graded twice: once here and once by
- * `lumo-gate`, which reads the bytes the server actually sent. A chart is graded
- * ONCE, because recharts sends nothing — measured below, and asserted first so
- * the reason this file is paranoid is the first thing anyone reads.
+ * This file used to open by saying it was the ONLY one, because recharts serves
+ * no bytes and `lumo-gate` grades bytes. That is now half true. The PLOT is
+ * still ungraded by the gate and every geometry assertion below is still the
+ * only thing standing between a Persian dashboard and a mirrored axis.
  *
- * So each assertion here corresponds to a sentence in `chart.variants.ts`'s
- * header that says "measured". If a recharts upgrade changes one of these
- * numbers, the build fails instead of a Persian dashboard quietly growing an
- * axis of Latin digits.
+ * But the FIGURES are graded, because `ChartContainer` renders `<ChartData>` —
+ * a real `<table>` — into the served HTML. The first describe block proves both
+ * halves: no `<svg>`, and the rows present anyway.
+ *
+ * That split matters when reading a failure. A geometry test going red means
+ * recharts changed. A `ChartData` test going red means the served bytes changed,
+ * which the gate will also have caught on the built site.
+ *
+ * Each assertion here corresponds to a sentence in `chart.variants.ts`'s header
+ * that says "measured". If a recharts upgrade changes one of these numbers, the
+ * build fails instead of the dashboard quietly growing an axis of Latin digits.
  */
 
 import { afterEach, describe, expect, it } from "vitest";
@@ -47,7 +54,14 @@ const config = {
 
 function Chart({ locale }: { locale: "fa-IR" | "en-US" }) {
   return (
-    <ChartContainer config={config} locale={locale} label="نمودار فروش ماهانه">
+    <ChartContainer
+      config={config}
+      locale={locale}
+      label="نمودار فروش ماهانه"
+      data={data}
+      categoryKey="month"
+      dataCaption="داده‌های فروش ماهانه"
+    >
       <BarChart data={data} width={400} height={200}>
         <ChartCategoryAxis dataKey="month" />
         <ChartValueAxis />
@@ -70,24 +84,66 @@ function ticks(root: ParentNode) {
   );
 }
 
-describe("chart — the served HTML contains no chart at all", () => {
-  it("recharts renders nothing on the server, so no gate can grade it", () => {
+describe("chart — the plot is not served, but the figures are", () => {
+  it("recharts still renders no plot on the server", () => {
     const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
 
-    // The claim, stated precisely: a wrapper div and no <svg>. If a recharts
-    // release ever starts server-rendering, THIS test fails — and that is a
-    // good failure, because it means `lumo-gate` gains a chart to grade and the
-    // warnings in chart.tsx's header can be deleted.
+    // The claim, stated precisely: no <svg>. If a recharts release ever starts
+    // server-rendering, THIS test fails — and that is a good failure, because
+    // it means the plot itself becomes gradeable.
     expect(html).not.toContain("<svg");
     expect(html).toContain("recharts-wrapper");
-    // Not one datum, not one category name, not one tick. The only thing served
-    // is the colour stylesheet and an empty box.
-    expect(html).not.toContain("فروردین");
-    expect(html).not.toContain("فروش ماهانه"); // the aria-label never lands either
+    // The plot's own accessible name never lands, because the element carrying
+    // it is never emitted.
+    expect(html).not.toContain('aria-label="نمودار فروش ماهانه"');
   });
 
-  it("and therefore serves no Persian digits either — the floor cannot be met by a chart", () => {
+  it("`ChartData` puts the actual rows in the served bytes", () => {
     const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
+
+    // This is what replaced "no gate can see this component". The figures a
+    // reader needs are served as a table whether or not the plot ever paints.
+    expect(html).toContain("<table");
+    expect(html).toContain("<caption>داده‌های فروش ماهانه</caption>");
+    expect(html).toContain("فروردین");
+    expect(html).toContain("اردیبهشت");
+    expect(html).toContain('scope="row"');
+    expect(html).toContain('scope="col"');
+  });
+
+  it("serves Persian digits, so a chart route can meet the floor honestly", () => {
+    const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
+    // ۱٬۲۰۰ and ۲٬۴۰۰ — the values, not the axis ticks. An SSR'd <svg> would
+    // have given ticks; only the table gives the data.
+    expect(html).toContain("۱٬۲۰۰");
+    expect(html).toContain("۲٬۴۰۰");
+    expect(PERSIAN_DIGIT.test(html)).toBe(true);
+  });
+
+  it("serves no Latin digits on a Persian chart — the gate would fail the build", () => {
+    const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
+    // Mirrors `lumo-gate`'s visibleTextNodes walk: attributes legitimately carry
+    // Latin digits (widths, oklch coordinates), and `<style>` is in the rule's
+    // NON_TEXT set — ChartStyle emits colour stops, which are numbers and are
+    // not prose. Strip both before asserting, exactly as the gate does.
+    const text = html
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/g, " ")
+      .replace(/<[^>]*>/g, " ");
+    expect(ASCII_DIGIT.test(text)).toBe(false);
+  });
+
+  it("is not aria-hidden — that would hide it from the gate AND the reader", () => {
+    const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
+    // `sr-only` is a layout decision. `aria-hidden` would be a correctness bug:
+    // rules.ts skips aria-hidden subtrees, so the table would stop being graded
+    // at the same moment it stopped being announced.
+    expect(html).not.toContain("aria-hidden");
+    expect(html).toContain('class="sr-only"');
+  });
+
+  it("formats through the caller's locale, not a fixed one", () => {
+    const html = renderToStaticMarkup(<Chart locale="en-US" />);
+    expect(html).toContain("1,200");
     expect(PERSIAN_DIGIT.test(html)).toBe(false);
   });
 });
@@ -213,7 +269,14 @@ describe("chart — recharts' OWN legend is the thing being replaced, not restyl
      * test goes red and `ChartLegendContent`'s justification can shrink.
      */
     const { container } = render(
-      <ChartContainer config={config} locale="fa-IR" label="نمودار فروش ماهانه">
+      <ChartContainer
+        config={config}
+        locale="fa-IR"
+        label="نمودار فروش ماهانه"
+        data={data}
+        categoryKey="month"
+        dataCaption="داده‌های فروش ماهانه"
+      >
         <BarChart data={data} width={400} height={200}>
           <Legend />
           <Bar dataKey="sales" fill={chartColor("sales")} />

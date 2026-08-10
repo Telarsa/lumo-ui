@@ -524,6 +524,7 @@ export type {
 export {
   ChartCategoryAxis,
   ChartContainer,
+  ChartData,
   ChartLegend,
   ChartLegendContent,
   ChartStyle,
@@ -534,7 +535,9 @@ export {
 export type {
   ChartAxisProps,
   ChartContainerProps,
+  ChartDataProps,
   ChartLegendContentProps,
+  ChartRow,
   ChartTooltipContentProps,
   ChartTooltipProps,
 } from "./chart.tsx";

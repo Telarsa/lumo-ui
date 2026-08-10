@@ -542,6 +542,11 @@ const copy = {
   // Chart
   monthlySales: { "fa-IR": "فروش ماهانه", "en-US": "Monthly sales" },
   salesSeries: { "fa-IR": "فروش", "en-US": "Sales" },
+  monthColumn: { "fa-IR": "ماه", "en-US": "Month" },
+  salesTable: {
+    "fa-IR": "داده‌های نمودار فروش ماهانه",
+    "en-US": "Monthly sales chart data",
+  },
   quarterTotal: { "fa-IR": "مجموع فصل", "en-US": "Total for the quarter" },
   monthOne: { "fa-IR": "فروردین", "en-US": "Farvardin" },
   monthTwo: { "fa-IR": "اردیبهشت", "en-US": "Ordibehesht" },
@@ -1811,8 +1816,8 @@ const DEMOS: Demo[] = [
     id: "chart",
     title: { "fa-IR": "نمودار", "en-US": "Chart" },
     intro: {
-      "fa-IR": "ریچارتس روی سرور هیچ نمی‌کشد، پس هیچ گیتی نمی‌بیندش. همان اعداد کنارش با Num هم نوشته می‌شوند تا خواننده‌ای بی‌جاوااسکریپت هم آن‌ها را داشته باشد.",
-      "en-US": "recharts draws nothing on the server, so no gate can grade it. The same figures are written beside it, so a reader with no JavaScript still has them.",
+      "fa-IR": "ریچارتس روی سرور هیچ نمی‌کشد. پس ChartContainer خودش یک جدول می‌سازد: همان داده‌ها، در بایت‌های ارسالی، با ارقام فارسی. گیت آن جدول را می‌بیند و می‌سنجد. نموداری که روی سرور رسم شود هم فقط خطوط محور را می‌فرستد، نه اعداد را.",
+      "en-US": "recharts draws nothing on the server. So ChartContainer renders a table itself — the same rows, in the served bytes, in Persian digits. The gate grades that table. Even a chart that did server-render would ship axis ticks, not the data.",
     },
     tier: "data",
     behaviour: false,
@@ -1823,6 +1828,8 @@ const DEMOS: Demo[] = [
           locale={l}
           label={copy.monthlySales[l]}
           seriesLabel={copy.salesSeries[l]}
+          categoryLabel={copy.monthColumn[l]}
+          dataCaption={copy.salesTable[l]}
           data={[
             { month: copy.monthOne[l], sales: 1200000 },
             { month: copy.monthTwo[l], sales: 2400000 },
