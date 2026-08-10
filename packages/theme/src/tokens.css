@@ -30,49 +30,68 @@
      * owned by the ramp below, doing so cannot break a contrast ratio that was
      * measured against the ground.
      *
-     * Density 0.9 and radius 0.75 give the compact, tight-cornered feel of
-     * shadcn's New York: controls a step shorter, corners closer to square.
+     * Density 0.9 keeps the compact control heights of shadcn's New York. The
+     * radius ramp carries Nova's values (lg = 0.625rem, Nova's base radius;
+     * md/sm are its -2px/-4px derivations), so the knob's default is 1 and a
+     * brand scales the whole ramp from there.
      */
     --lumo-ref-hue-brand: 0;
     --lumo-ref-chroma-brand: 0;
     --lumo-ref-hue-neutral: 0;
     --lumo-ref-chroma-neutral: 0;
-    --lumo-ref-radius-scale: 0.75;
+    --lumo-ref-radius-scale: 1;
     --lumo-ref-density: 0.9;
 
-    /* ---- neutral ramp. Lightness is fixed; hue/chroma come from above. --- */
-    --lumo-ref-neutral-50:  oklch(0.977 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-100: oklch(0.955 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-200: oklch(0.906 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    /* ---- neutral ramp. Lightness is fixed; hue/chroma come from above. ---
+     *
+     * The lightnesses are Nova's (shadcn), mapped onto this ramp: 0.985 the
+     * near-white (Nova's dark fg / primary-fg — deliberately NOT its pure-white
+     * page, see the sys tier), 0.970 its secondary/muted/accent wash, 0.922 its
+     * hairline border, 0.556 its light muted-foreground, 0.269 its dark
+     * secondary/muted (≈ its 10%-white border composited solid: L 0.2542),
+     * 0.205 its dark card, 0.145 its bg/fg anchor. Steps 300/500/700 have no
+     * Nova counterpart and keep Lumo's values. The 400–600 run is deliberately
+     * compressed: each step is load-bearing (400 the control-border floor, 500
+     * the subtle text, 600 Nova's muted text at 4.53:1 on the 0.985 page —
+     * on the previous 0.977 page it measured 4.43:1 and would have FAILED AA,
+     * which is why the page moved with it). */
+    --lumo-ref-neutral-50:  oklch(0.985 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-100: oklch(0.970 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-200: oklch(0.922 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-300: oklch(0.845 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    /* 0.640, not 0.702. At 0.702 a control border measured 2.48:1 against the
-       page and failed WCAG 1.4.11's 3:1 for a form-control boundary — caught by
-       tokens.test.ts, which computes the ratio from these very values rather
-       than from a note in a design file. 0.640 gives 3.15:1 on light and 5.81:1
-       on dark, clearing both grounds without darkening decorative hairlines,
-       which is what --lumo-sys-border is for. */
+    /* 0.640, not Nova's 0.922-border or 0.708-ring. Nova draws form controls
+       with its hairline: 0.922 measures 1.26:1 on white and 0.708 measures
+       2.48:1 — both fail WCAG 1.4.11's 3:1 for a form-control boundary, a
+       defect Nova ships and this ramp does not import. 0.640 gives 3.22:1 on
+       the light page (3.36:1 on the white surface) and 5.88:1 on dark —
+       measured by tokens.test.ts from these very values — without darkening
+       decorative hairlines, which is what --lumo-sys-border is for. */
     --lumo-ref-neutral-400: oklch(0.640 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-500: oklch(0.577 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-600: oklch(0.468 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-600: oklch(0.556 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-700: oklch(0.383 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-800: oklch(0.285 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-900: oklch(0.215 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-950: oklch(0.155 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-800: oklch(0.269 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-900: oklch(0.205 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-950: oklch(0.145 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
 
     /* ---- brand ramp ----------------------------------------------------- */
     /* Achromatic by default. On light the accent is near-black; on dark it is
        near-white — the same inversion shadcn's mono theme uses, and the reason a
-       solid button reads as ink rather than as a colour. */
-    --lumo-ref-brand-400: oklch(0.930 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+       solid button reads as ink rather than as a colour. 400 and 700 carry
+       Nova's primary values: 0.922 (dark primary) and 0.205 (light primary). */
+    --lumo-ref-brand-400: oklch(0.922 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
     --lumo-ref-brand-500: oklch(0.750 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
     --lumo-ref-brand-600: oklch(0.320 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
-    --lumo-ref-brand-700: oklch(0.220 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
+    --lumo-ref-brand-700: oklch(0.205 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
 
-    /* ---- status. Semantic, deliberately NOT derived from the brand hue. -- */
+    /* ---- status. Semantic, deliberately NOT derived from the brand hue. --
+     * critical carries Nova's destructive pair, measured on its own grounds:
+     * light 4.56:1 on the 0.985 page, dark 6.84:1 on the 0.145 page — both
+     * clear AA as text. positive/caution have no Nova counterpart. */
     --lumo-ref-positive: oklch(0.520 0.130 155);
     --lumo-ref-positive-dark: oklch(0.700 0.150 155);
-    --lumo-ref-critical: oklch(0.520 0.180 28);
-    --lumo-ref-critical-dark: oklch(0.700 0.170 28);
+    --lumo-ref-critical: oklch(0.577 0.245 27.325);
+    --lumo-ref-critical-dark: oklch(0.704 0.191 22.216);
     --lumo-ref-caution: oklch(0.560 0.120 75);
     --lumo-ref-caution-dark: oklch(0.780 0.140 75);
 
@@ -84,9 +103,11 @@
     --lumo-ref-space-6: calc(1.5rem  * var(--lumo-ref-density));
     --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
 
-    --lumo-ref-radius-sm: calc(0.25rem * var(--lumo-ref-radius-scale));
-    --lumo-ref-radius-md: calc(0.375rem * var(--lumo-ref-radius-scale));
-    --lumo-ref-radius-lg: calc(0.5rem  * var(--lumo-ref-radius-scale));
+    /* Nova's radius scale: lg is its 0.625rem base, md/sm its -2px/-4px
+       derivations, expressed in rem so the brand knob scales all three. */
+    --lumo-ref-radius-sm: calc(0.375rem * var(--lumo-ref-radius-scale));
+    --lumo-ref-radius-md: calc(0.5rem   * var(--lumo-ref-radius-scale));
+    --lumo-ref-radius-lg: calc(0.625rem * var(--lumo-ref-radius-scale));
 
     /* ---- control height. The 44px floor is Khroos's stated touch target. - */
     --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
@@ -97,6 +118,11 @@
 
 @layer lumo.sys {
   :root {
+    /* Nova paints page and card the same white and separates them with
+       borders alone; Lumo keeps its elevation ladder, so the page takes
+       Nova's 0.985 near-white and the card stays literal white — which IS
+       Nova's card, oklch(1 0 0). Text ratios in tokens.test.ts are measured
+       against the 0.985 page, the darker of the two grounds. */
     --lumo-sys-bg: var(--lumo-ref-neutral-50);
     --lumo-sys-bg-subtle: var(--lumo-ref-neutral-100);
     --lumo-sys-surface: #ffffff;
@@ -106,7 +132,7 @@
     --lumo-sys-fg: var(--lumo-ref-neutral-950);
     --lumo-sys-fg-muted: var(--lumo-ref-neutral-600);
     --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
-    --lumo-sys-fg-on-accent: #ffffff;
+    --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-50);
 
     /* Two border tokens, not one. WCAG 1.4.11 requires 3:1 for the boundary of
        a form control, while a decorative rule has no such requirement — and
@@ -134,6 +160,15 @@
     --lumo-sys-radius-lg: var(--lumo-ref-radius-lg);
   }
 
+  /* The dark ladder hangs from Nova's two anchors — page 0.145, card 0.205 —
+     with hover one step above the card at 0.269 (Nova's own dark accent) and
+     sunken returning to the page ground. Nova's dark borders are white at
+     10%/15% alpha; the contrast test's math cannot see through alpha, so the
+     decorative border uses the 0.269 step (10% white over 0.145 composites to
+     solid L 0.2542 — measured, not eyeballed). The 15% input composites to
+     L 0.3043 and measures 1.33:1 against the card, failing WCAG 1.4.11's 3:1
+     just as Nova's light input does — so the control border stays on the ramp's
+     measured step: neutral-400 at 5.33:1 on the card, 5.88:1 on the page. */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --lumo-sys-bg: var(--lumo-ref-neutral-950);
@@ -145,15 +180,18 @@
       --lumo-sys-fg: var(--lumo-ref-neutral-50);
       --lumo-sys-fg-muted: var(--lumo-ref-neutral-400);
       --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
-      --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-950);
+      --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-900);
 
       --lumo-sys-border: var(--lumo-ref-neutral-800);
+      /* neutral-600, not 400: the design review measured 400 (L 0.640) reading
+         as chalk outlines — as bright as dark muted TEXT — when 600 already
+         clears WCAG 1.4.11's 3:1 on every dark ground. Quiet AND compliant. */
       --lumo-sys-border-control: var(--lumo-ref-neutral-600);
       --lumo-sys-border-strong: var(--lumo-ref-neutral-700);
 
       --lumo-sys-accent: var(--lumo-ref-brand-400);
       --lumo-sys-accent-hover: var(--lumo-ref-brand-500);
-      --lumo-sys-accent-fg: var(--lumo-ref-neutral-950);
+      --lumo-sys-accent-fg: var(--lumo-ref-neutral-900);
 
       --lumo-sys-positive: var(--lumo-ref-positive-dark);
       --lumo-sys-critical: var(--lumo-ref-critical-dark);
@@ -171,13 +209,14 @@
     --lumo-sys-fg: var(--lumo-ref-neutral-50);
     --lumo-sys-fg-muted: var(--lumo-ref-neutral-400);
     --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
-    --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-950);
+    --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-900);
     --lumo-sys-border: var(--lumo-ref-neutral-800);
+    /* neutral-600 — same reasoning as the media-dark block above. */
     --lumo-sys-border-control: var(--lumo-ref-neutral-600);
     --lumo-sys-border-strong: var(--lumo-ref-neutral-700);
     --lumo-sys-accent: var(--lumo-ref-brand-400);
     --lumo-sys-accent-hover: var(--lumo-ref-brand-500);
-    --lumo-sys-accent-fg: var(--lumo-ref-neutral-950);
+    --lumo-sys-accent-fg: var(--lumo-ref-neutral-900);
     --lumo-sys-positive: var(--lumo-ref-positive-dark);
     --lumo-sys-critical: var(--lumo-ref-critical-dark);
     --lumo-sys-caution: var(--lumo-ref-caution-dark);
