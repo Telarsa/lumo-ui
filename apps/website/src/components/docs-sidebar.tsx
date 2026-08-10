@@ -4,6 +4,7 @@ import { cn, formatNumber } from "@lumo-ui/core";
 import { site } from "@/lib/locale";
 import { allDemos, TIERS, tierLabel } from "@/lib/demos";
 import { DOCS_PAGES } from "@/lib/docs-pages";
+import { SidebarScroll } from "./sidebar-scroll";
 
 /**
  * The docs sidebar: the prose docs first, the section indexes, then the
@@ -46,9 +47,11 @@ export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | 
 
   return (
     <nav
+      data-docs-sidebar=""
       aria-label={lang === "fa-IR" ? "ناوبری مستندات" : "Documentation navigation"}
       className="text-[0.8125rem]/5"
     >
+      <SidebarScroll />
       <section>
         <h2 className={groupLabel}>{lang === "fa-IR" ? "مستندات" : "Docs"}</h2>
         <ul className="flex flex-col gap-px">

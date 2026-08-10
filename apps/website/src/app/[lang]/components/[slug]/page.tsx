@@ -239,7 +239,7 @@ export default async function ComponentPage({
       */}
       <div className="grid gap-10 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_14rem]">
         <aside className="hidden lg:block">
-          <div className="sticky top-24 max-h-[calc(100dvh-8rem)] overflow-y-auto pe-2">
+          <div data-docs-sidebar-scroll="" className="sticky top-24 max-h-[calc(100dvh-8rem)] overflow-y-auto pe-2">
             <DocsSidebar lang={lang} active={slug} />
           </div>
         </aside>

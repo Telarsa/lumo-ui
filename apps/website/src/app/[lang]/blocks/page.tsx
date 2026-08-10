@@ -84,7 +84,7 @@ export default async function Blocks({ params }: { params: Promise<{ lang: strin
                       src={`/view-block/${lang}/${block.id}/`}
                       loading="lazy"
                       tabIndex={-1}
-                      className="absolute top-0 start-0 h-[400%] w-[400%] scale-25 border-0 ltr:origin-top-left rtl:origin-top-right"
+                      className="absolute top-0 inset-s-0 h-[400%] w-[400%] scale-25 border-0 ltr:origin-top-left rtl:origin-top-right"
                     />
                   </span>
                   <span className="flex flex-col gap-1 px-4 py-3">

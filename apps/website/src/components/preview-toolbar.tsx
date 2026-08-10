@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Moon, Sun } from "lucide-react";
 import type { Locale, LumoNode } from "@lumo-ui/core";
@@ -93,7 +93,37 @@ const COPY: Record<
 };
 
 export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
-  const [theme, setTheme] = useState<Theme>("light");
+  /*
+   * `null` until mounted, then the theme the PAGE is actually showing. The
+   * old `useState<Theme>("light")` was measured wrong on a dark-mode macOS:
+   * the control claimed "light" while the stage — which only stamped
+   * `data-theme` for dark — inherited the system-dark page, so the sun
+   * button changed nothing. Now the stage stamps EXPLICITLY in both
+   * directions (tokens.css gained the `[data-theme="light"]` island selector
+   * for exactly this), and the control's initial selection is read from the
+   * document instead of asserted.
+   */
+  const [theme, setTheme] = useState<Theme | null>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const stamped = document.documentElement.getAttribute("data-theme");
+    if (stamped === "dark" || stamped === "light") setTheme(stamped);
+    else
+      setTheme(
+        window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light",
+      );
+  }, []);
+
+  /** Flip the stage with the same one-frame transition kill the header uses. */
+  function setStageTheme(next: Theme) {
+    const stage = stageRef.current;
+    stage?.classList.add("lumo-theme-snap");
+    setTheme(next);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => stage?.classList.remove("lumo-theme-snap"));
+    });
+  }
   const t = COPY[lang];
   const otherLang: Locale = lang === "fa-IR" ? "en-US" : "fa-IR";
   const dir = direction(lang);
@@ -143,14 +173,14 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
 
         <SegmentedControl
           label={t.themeGroup}
-          defaultSelectedKeys={["light"]}
+          selectedKeys={theme === null ? [] : [theme]}
           onSelectionChange={(keys) => {
             // `SegmentedControl` fixes `selectionMode` to `"single"`, which is
             // why its `onSelectionChange` is typed as a plain `Set<Key>` here
             // rather than RAC's broader `Selection` — the `"all"` variant only
             // exists for multiple selection, so there is nothing to guard.
             const next = [...keys][0];
-            if (next === "light" || next === "dark") setTheme(next);
+            if (next === "light" || next === "dark") setStageTheme(next);
           }}
         >
           {/* Icon-only items: the required per-locale name rides on aria-label. */}
@@ -189,7 +219,8 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
        * that could quietly drift apart.
        */}
       <div
-        data-theme={theme === "dark" ? "dark" : undefined}
+        ref={stageRef}
+        data-theme={theme ?? undefined}
         data-lumo-demo-root=""
         /*
          * The preview is a STAGE, not a paragraph: a generous minimum height

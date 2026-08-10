@@ -309,8 +309,17 @@ export function CommandInput({ label, placeholder, className, ...props }: Comman
     >
       {/* Inline, not absolutely positioned — see commandInputWrapperVariants. */}
       <SearchIcon aria-hidden="true" className="size-4 shrink-0 text-fg-subtle" />
+      {/*
+       * Deliberately NO `data-lumo` here — the one control in the system that
+       * opts out of the shared focus ring. `theme.css` draws
+       * `:where([data-lumo]):focus-visible` in the lumo.components layer,
+       * which beats a utility `outline-none` on layer order; with ⌘K being a
+       * keyboard interaction, the ring painted on every open — a boxed halo
+       * over a full-bleed row, the "weird focus" a user screenshotted. A
+       * palette input holds focus for the dialog's whole life; the focus is
+       * not news, and cmdk-style rows are the affordance instead.
+       */}
       <Input
-        data-lumo=""
         data-slot="command-input"
         className={cn(commandInputVariants(), className)}
         {...(placeholder === undefined ? {} : { placeholder })}

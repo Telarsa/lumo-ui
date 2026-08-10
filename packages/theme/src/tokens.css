@@ -117,7 +117,18 @@
 }
 
 @layer lumo.sys {
-  :root {
+  /*
+   * `:root, [data-theme="light"]` — the second selector is what makes a LIGHT
+   * ISLAND inside a dark page expressible. `[data-theme="dark"]` below has
+   * been unscoped from day one so a subtree can go dark (the docs preview
+   * stage does exactly that); the light direction had no counterpart, so a
+   * stage stamped light inside a system-dark document silently inherited
+   * dark — its sun button did nothing, measured on a dark-mode macOS. A
+   * theme system that can scope one direction but not the other is half a
+   * theme system.
+   */
+  :root,
+  [data-theme="light"] {
     /* Nova paints page and card the same white and separates them with
        borders alone; Lumo keeps its elevation ladder, so the page takes
        Nova's 0.985 near-white and the card stays literal white — which IS

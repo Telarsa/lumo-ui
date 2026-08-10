@@ -67,7 +67,7 @@ export default async function Gallery({ params }: { params: Promise<{ lang: stri
     <SiteShell lang={lang} path="components/" wide>
       <div className="grid gap-10 lg:grid-cols-[16rem_minmax(0,1fr)]">
         <aside className="hidden lg:block">
-          <div className="sticky top-24 max-h-[calc(100dvh-8rem)] overflow-y-auto pe-2">
+          <div data-docs-sidebar-scroll="" className="sticky top-24 max-h-[calc(100dvh-8rem)] overflow-y-auto pe-2">
             <DocsSidebar lang={lang} />
           </div>
         </aside>
