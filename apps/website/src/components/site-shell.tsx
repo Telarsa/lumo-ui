@@ -16,10 +16,13 @@ export function SiteShell({
   lang,
   children,
   path = "",
+  wide = false,
 }: {
   lang: Locale;
   children: React.ReactNode;
   path?: string;
+  /** Docs pages need the full three-column width; prose pages do not. */
+  wide?: boolean;
 }) {
   const t = site[lang];
   const other: Locale = lang === "fa-IR" ? "en-US" : "fa-IR";
@@ -58,7 +61,9 @@ export function SiteShell({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">{children}</main>
+      <main className={`mx-auto w-full flex-1 px-6 py-10 ${wide ? "max-w-screen-2xl" : "max-w-6xl"}`}>
+        {children}
+      </main>
 
       <footer className="border-t border-border px-6 py-8 text-sm text-fg-muted">
         <div className="mx-auto max-w-6xl">Telarsa · Lumo UI</div>

@@ -67,6 +67,23 @@ catalog:
   # and bypassing it for convenience is how the policy stops meaning anything.
   lucide-react: 1.30.0
 
+  # --- charts ----------------------------------------------------------------
+  # The one dependency Lumo takes for rendered geometry rather than behaviour.
+  # Pinned exactly to the version shadcn's `chart` item declares, because the
+  # vendored file uses recharts' own types (`TooltipValueType`,
+  # `DefaultTooltipContentProps`, `DefaultLegendContentProps`, and
+  # `ResponsiveContainer`'s `initialDimension`) and a minor that renames one of
+  # them turns a vendored file into a compile error nobody asked for. Newer
+  # releases exist (3.10.1); adopting one is a deliberate bump plus a re-vendor,
+  # not a range.
+  recharts: 3.8.0
+
+  # --- carousel --------------------------------------------------------------
+  # 9.0.0-rc02 is a prerelease; 8.6.0 is the newest stable. Exact, because embla
+  # computes the scroll geometry Lumo then has to mirror under `direction: rtl`,
+  # and `carousel.test.tsx` pins the `direction` option it reads.
+  embla-carousel-react: 8.6.0
+
   # --- framework -------------------------------------------------------------
   next: 16.0.4
   '@fontsource-variable/vazirmatn': 5.3.0
