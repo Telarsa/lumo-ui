@@ -215,9 +215,86 @@ the gate can see, and it removes the `chartMirror()` workarounds that exist only
 because recharts computes `text-anchor` and tooltip placement as if the world
 were LTR.
 
-**Not acted on.** `chart.tsx` works and its RTL findings are pinned by tests.
-Recorded so the next person does not re-derive it, and so the choice rests on
-evidence rather than on which library is better known.
+~~**Not acted on.**~~ **Resolved 10 August 2026 — the renderer stays, the gate
+hole closes another way.** See below.
+
+### The full comparison, and why recharts stayed
+
+Seven libraries, each installed and rendered under `renderToStaticMarkup`, then
+confirmed **in real Chrome with JavaScript disabled** — identical numbers. Ticks
+formatted through `Intl.NumberFormat('fa-IR-u-nu-arabext')`; "ASCII digits" uses
+the gate's own `visibleTextNodes` walk ported over linkedom.
+
+| Library | SSR bytes | `<svg>` | `<text>` | Persian digits | gzip KB | Types | Last publish |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| recharts | 127–316 | ✗ | 0 | 0 | 101.6 | 11 | 2026-07-25 |
+| visx | 5,789 | ✓ | 8 | 13 | **21.8** | 0 finished | 2026-06-11 |
+| `@visx/xychart` | 2,461 | ✓ | **0** | 0 | — | — | — |
+| nivo | 7,226 | ✓ | 16 | 44 | 97.7 | ~14 | **2025-05-23** |
+| victory | 5,249 | ✓ | 7 | 12 | 75.7 | 9 | **2025-01-14** |
+| `@mui/x-charts` | 12,270 | ✓ | 9 | 17 | 139.2 | 8 MIT | 2026-08-06 |
+| echarts | 4,031 | ✓ | 12 | 28 | 168.8 | **15** | 2026-05-19 |
+| unovis | 84 | ✗ | 0 | 0 | 51.8 | ~11 | 2026-06-28 |
+
+**Three findings worth keeping.**
+
+1. **recharts' blindness is structural, not `ResponsiveContainer`'s fault.** The
+   obvious suspect is innocent: fixed `width`/`height`, no wrapper, still 127
+   bytes and no `<svg>`. No configuration of recharts 3.8 serves a plot.
+2. **Interactivity does not cost the SSR win.** Server output is byte-identical
+   with and without a tooltip (visx 5,789 both; nivo 7,226; MUI 12,270), and the
+   static layer survives hydration everywhere it exists. The "tooltips force
+   client-only" intuition is a recharts artefact.
+3. **`@visx/xychart` — visx's batteries-included layer — throws the win away.**
+   Zero text nodes, and it hardcodes `aria-label="XYChart"`, which fails
+   `no-latin-aria` outright. If visx is ever adopted it must be the primitives.
+
+**Why each alternative lost.**
+
+- **`@mui/x-charts` is the best chart library measured and is architecturally
+  disqualified.** The only one getting all four RTL criteria right — category
+  reversal, value axis to the trailing edge, `text-anchor` inversion
+  **automatic**, tooltip on the leading edge — and the only fully Persian
+  tooltip (`فروردین / فروش / ۱٬۲۰۰`). But `@mui/material` and `@mui/system` are
+  **non-optional peers**. A copy-in registry item that forces Material UI on
+  consumers imposes a second design system on *their* projects. Heatmap, funnel,
+  sankey, zoom and brush are Pro at **$299/dev/yr**; candlestick and geo Premium
+  at **$599**.
+- **visx is the right shape and the wrong economics for two people.** Lightest by
+  4.7×, MIT, SSRs perfectly. But it ships **zero finished charts** — Lumo would
+  own bar/line/area/arc geometry, stacking and hit testing for every type.
+  Roughly 300 lines of shared infrastructure plus ~120 per chart type. Its bus
+  factor is less alarming than it looks (a thin React layer over vendored
+  `d3-scale`/`d3-shape`, so a stall means swapping internals, not components).
+- **nivo and victory are out on health** — 443 and 572 days without a release,
+  and both fail the RTL category-reversal and `text-anchor` tests anyway.
+- **echarts has no RTL support at all** (three open issues), and its tooltip
+  emits Latin digits *despite* the axis formatter — it needs a separate
+  `tooltip.valueFormatter` per chart, forever.
+- **victory hardcodes `'Gill Sans','Seravek'` on every `<tspan>`** and MUI's
+  legend hardcodes `"Roboto"` — both override Vazirmatn.
+
+**What actually closed the hole.** Not a renderer swap:
+
+> An SSR'd `<svg>` puts axis **ticks** in the served bytes. It does not put the
+> **data** there. Bar heights are geometry.
+
+So `ChartContainer` renders **`<ChartData>`**, a real server-rendered `<table>`
+built from the same rows the chart plots, with `data`/`categoryKey`/`dataCaption`
+as required props. Measured on the built site: `out/view/fa-IR/chart/index.html`
+has 0 `<svg>` and 1 `<table>` carrying ۱٬۲۰۰٬۰۰۰. That is strictly better
+accessibility than any of the seven delivers, and it is renderer-independent —
+it would still be the right component if visx were adopted tomorrow.
+
+**Revisit visx if** more than ~4 chart types are needed with bespoke RTL
+behaviour, or bundle weight becomes binding on a mobile-first Persian route. Note
+that a swap is only half-contained: the axes, tooltip, legend and data table are
+Lumo's, but consumers import `<BarChart>`/`<Bar>` from recharts directly, so
+their geometry elements would be rewritten.
+
+**Scope not covered:** brush/zoom, crosshair and click-to-drill were not
+exercised per library. For MUI those are Pro-gated, which is decision-relevant
+on its own.
 
 ## Vendor before you write
 
