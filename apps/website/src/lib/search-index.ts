@@ -35,7 +35,7 @@ import type { Locale } from "@lumo-ui/core";
  * all 28 with zero edits here.
  */
 
-export type SearchDocKind = "component" | "block";
+export type SearchDocKind = "component" | "block" | "doc";
 
 /**
  * The minimal shape this module needs from a registry entry. Both `Demo`
@@ -68,7 +68,19 @@ export interface SearchDoc {
 export function buildSearchIndex(
   components: readonly SearchSource[],
   blocks: readonly SearchSource[],
+  docs: readonly SearchSource[] = [],
 ): SearchDoc[] {
+  const docDocs: SearchDoc[] = docs.map((d) => ({
+    id: d.id,
+    kind: "doc",
+    title: d.title,
+    intro: d.intro,
+    tier: undefined,
+    href: {
+      "fa-IR": `/fa-IR/docs/${d.id}/`,
+      "en-US": `/en-US/docs/${d.id}/`,
+    },
+  }));
   const componentDocs: SearchDoc[] = components.map((d) => ({
     id: d.id,
     kind: "component",
@@ -95,7 +107,9 @@ export function buildSearchIndex(
     },
   }));
 
-  return [...componentDocs, ...blockDocs];
+  // Docs first: when everything matches (empty query), the reading-order prose
+  // pages lead, the way shadcn's palette leads with its Getting Started group.
+  return [...docDocs, ...componentDocs, ...blockDocs];
 }
 
 // ═══ normalize() ═════════════════════════════════════════════════════════

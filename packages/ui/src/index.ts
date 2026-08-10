@@ -117,6 +117,22 @@ export type { SeparatorProps } from "./separator.tsx";
 export { Skeleton, skeletonVariants } from "./skeleton.tsx";
 export type { SkeletonProps } from "./skeleton.tsx";
 
+export {
+  SkeletonAvatar,
+  SkeletonCard,
+  SkeletonForm,
+  SkeletonTable,
+  SkeletonText,
+  skeletonAvatarVariants,
+} from "./skeleton-presets.tsx";
+export type {
+  SkeletonAvatarProps,
+  SkeletonCardProps,
+  SkeletonFormProps,
+  SkeletonTableProps,
+  SkeletonTextProps,
+} from "./skeleton-presets.tsx";
+
 export { Spinner, spinnerVariants } from "./spinner.tsx";
 export type { SpinnerProps } from "./spinner.tsx";
 

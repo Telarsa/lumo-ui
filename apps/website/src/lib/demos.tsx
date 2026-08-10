@@ -99,6 +99,11 @@ import {
   SelectTrigger,
   Separator,
   Skeleton,
+  SkeletonAvatar,
+  SkeletonCard,
+  SkeletonForm,
+  SkeletonTable,
+  SkeletonText,
   Slider,
   Spinner,
   Stack,
@@ -1184,20 +1189,34 @@ const DEMOS: Demo[] = [
     id: "skeleton",
     title: { "fa-IR": "اسکلت", "en-US": "Skeleton" },
     intro: {
-      "fa-IR": "جای‌گیرِ محتوایی که هنوز نرسیده. تپش به‌جای درخشش، چون گرادیان و کی‌فریم شکل منطقی ندارند و در راست‌چین وارونه می‌دوند.",
-      "en-US": "A placeholder for content that has not arrived. A pulse rather than a shimmer: gradients and keyframes have no logical form.",
+      "fa-IR": "خانوادهٔ جای‌گیرها: متن، آواتار، فرم، کارت و جدول بر پایهٔ یک اتم. تپش به‌جای درخشش، چون گرادیان و کی‌فریم شکل منطقی ندارند و در راست‌چین وارونه می‌دوند.",
+      "en-US": "The placeholder family: text, avatar, form, card and table presets over one atom. A pulse rather than a shimmer — gradients and keyframes have no logical form.",
     },
     tier: "feedback",
     behaviour: false,
-    source: source("skeleton.tsx"),
+    source: source("skeleton-presets.tsx"),
     render: () => (
-      <div className="flex w-full max-w-sm items-start gap-3">
-        <Skeleton shape="circle" className="size-10" />
-        <div className="flex flex-1 flex-col gap-2">
-          <Skeleton shape="heading" />
-          <Skeleton />
-          <Skeleton className="w-2/3" />
+      <div className="flex w-full max-w-xl flex-col gap-8">
+        {/* The atom, in the classic avatar-beside-text row. */}
+        <div className="flex w-full max-w-sm items-start gap-3">
+          <Skeleton shape="circle" className="size-10" />
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton shape="heading" />
+            <Skeleton />
+            <Skeleton className="w-2/3" />
+          </div>
         </div>
+        {/* The presets: each mirrors the metrics of the component it stands in
+            for, so nothing jumps when the data lands. All are aria-hidden —
+            the loading STATE is announced by the region being replaced. */}
+        <SkeletonAvatar />
+        <SkeletonText />
+        <SkeletonForm fields={2} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <SkeletonCard />
+          <SkeletonCard hasMedia={false} lines={3} />
+        </div>
+        <SkeletonTable rows={3} columns={4} />
       </div>
     ),
   },

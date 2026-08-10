@@ -174,12 +174,15 @@ describe("SiteSearch — Persian search actually works through the real UI", () 
     expect(screen.getByText("نتیجه‌ای پیدا نشد")).toBeTruthy();
   });
 
-  it("updates the translated, Persian-digit result count as the query narrows", async () => {
+  // The visible result count was removed with the cmdk restyle — the list is
+  // its own count. That promotion makes the empty state the ONLY signal that
+  // nothing matched, so it must be a live region a reader hears, not just a
+  // sentence a looker sees.
+  it("announces the empty state as a status, since there is no result count", async () => {
     renderSearch("fa-IR");
     await openPalette();
-    // All three seed docs, formatted with Persian digits.
-    expect(screen.getByText("۳ نتیجه")).toBeTruthy();
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "دکمه" } });
-    expect(screen.getByText("۱ نتیجه")).toBeTruthy();
+    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "xyz-nonsense" } });
+    const status = screen.getByRole("status");
+    expect(status.textContent).toContain("نتیجه‌ای پیدا نشد");
   });
 });

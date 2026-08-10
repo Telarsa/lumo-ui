@@ -43,6 +43,11 @@ export default async function ViewLayout({
        *  - the demo sits in a `w-full max-w-2xl` cell — the same stage width
        *    `preview-toolbar.tsx` gives it — so components lay out at a real
        *    width and their internal scroll areas engage instead of the page's.
+       *    The cell is a column flex with `items-center`: an intrinsic-width
+       *    exhibit (a switch, a button pair) centres on the inline axis
+       *    instead of hugging the start edge of an otherwise empty frame —
+       *    the defect the design review screenshotted — while a `w-full`
+       *    demo still spans the cell.
        *  - modest padding (`p-4`): at the iframe's fixed height, padding is
        *    the first thing that pushes an almost-fitting demo into a document
        *    scrollbar ON TOP of the demo's own — the double-scrollbar defect
@@ -50,7 +55,7 @@ export default async function ViewLayout({
        */}
       <body className="grid min-h-dvh place-items-center overflow-x-clip bg-bg p-4 text-fg sm:p-6">
         <LumoProvider locale={lang}>
-          <div className="w-full max-w-2xl">{children}</div>
+          <div className="flex w-full max-w-2xl flex-col items-center">{children}</div>
         </LumoProvider>
       </body>
     </LumoHtml>

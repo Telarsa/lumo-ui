@@ -5,8 +5,23 @@ import { LOCALES, direction, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { OnThisPage } from "@/components/on-this-page";
 import { CopyButton } from "@/components/code-block";
+import { DirectionCompare } from "@/components/demo-frame";
 import { assertLocale, site } from "@/lib/locale";
 import { allBlocks, blockById } from "@/lib/blocks";
+
+/**
+ * The same always-visible scrollbar treatment `code-block.tsx` applies —
+ * duplicated rather than imported, because that module is `"use client"` and a
+ * bare string cannot cross the client boundary into this server page. Keep the
+ * two in step: `overflow-auto` alone leaves macOS's overlay scrollbar invisible
+ * until mid-scroll, which on a capped-height listing reads as "the rest of the
+ * code does not exist".
+ */
+const SCROLLBAR =
+  "[scrollbar-width:thin] [scrollbar-color:var(--lumo-sys-border-strong)_transparent] " +
+  "[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 " +
+  "[&::-webkit-scrollbar-track]:bg-transparent " +
+  "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border-strong";
 
 export function generateStaticParams() {
   return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang, slug: b.id })));
@@ -197,13 +212,30 @@ export default async function BlockPage({
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-fg-muted">
               {lang === "fa-IR"
-                ? "هر قاب یک سند مستقل با lang و dir واقعی خودش است — نه یک div که وانمود می‌کند. برای دیدن بلوک در یک صفحهٔ کامل، روی «باز کردن تمام‌صفحه» بزنید."
-                : "Each frame is a real document with its own lang and dir — not a div pretending to be one. Open the full page to see the block occupy a whole viewport."}
+                ? "هر قاب یک سند مستقل با lang و dir واقعی خودش است — نه یک div که وانمود می‌کند. برای دیدن بلوک در یک صفحهٔ کامل، روی «باز کردن تمام‌صفحه» بزنید، و برای دیدن هر دو جهت کنار هم، مقایسه را باز کنید."
+                : "Each frame is a real document with its own lang and dir — not a div pretending to be one. Open the full page to see the block occupy a whole viewport, or open the comparison to see both directions side by side."}
             </p>
-            <div className="mt-3 grid gap-4 md:grid-cols-2">
-              {LOCALES.map((l) => (
-                <BlockFrame key={l} slug={slug} lang={l} title={block.title[lang]} pageLang={lang} />
-              ))}
+            {/*
+             * One frame by default — the page's own locale — with the mirrored
+             * document a disclosure away, exactly as the component pages do it.
+             * See `DirectionCompare`'s header in demo-frame.tsx.
+             */}
+            <div className="mt-3">
+              <DirectionCompare
+                primary={
+                  <BlockFrame slug={slug} lang={lang} title={block.title[lang]} pageLang={lang} />
+                }
+                comparison={
+                  <BlockFrame
+                    slug={slug}
+                    lang={lang === "fa-IR" ? "en-US" : "fa-IR"}
+                    title={block.title[lang]}
+                    pageLang={lang}
+                  />
+                }
+                showLabel={lang === "fa-IR" ? "نمایش مقایسهٔ دو جهت" : "Compare both directions"}
+                hideLabel={lang === "fa-IR" ? "بستن مقایسهٔ دو جهت" : "Hide the comparison"}
+              />
             </div>
           </section>
 
@@ -215,7 +247,7 @@ export default async function BlockPage({
               dir="ltr"
               lang="en"
               data-lumo-latn=""
-              className="mt-3 overflow-x-auto rounded-lg border border-border bg-surface-sunken text-start text-xs [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4"
+              className={`mt-3 overflow-x-auto rounded-lg border border-border bg-surface-sunken text-start text-xs [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4 ${SCROLLBAR}`}
               dangerouslySetInnerHTML={{ __html: installHtml }}
             />
           </section>
@@ -226,7 +258,7 @@ export default async function BlockPage({
               dir="ltr"
               lang="en"
               data-lumo-latn=""
-              className="mt-3 max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken text-start text-xs leading-relaxed [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4"
+              className={`mt-3 max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken text-start text-xs leading-relaxed [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4 ${SCROLLBAR}`}
               dangerouslySetInnerHTML={{ __html: sourceHtml }}
             />
           </section>

@@ -21,8 +21,14 @@ export type { SignUpProps, SignUpStrings } from "./sign-up.tsx";
 export { OtpVerify } from "./otp-verify.tsx";
 export type { OtpVerifyProps, OtpVerifyStrings } from "./otp-verify.tsx";
 
+export { AuthPage } from "./auth-page.tsx";
+export type { AuthPageProps, AuthPageStrings } from "./auth-page.tsx";
+
 export { AppShell } from "./app-shell.tsx";
 export type { AppShellNavItem, AppShellProps, AppShellStrings } from "./app-shell.tsx";
+
+export { DashboardPage } from "./dashboard-page.tsx";
+export type { DashboardPageProps, DashboardPageStrings } from "./dashboard-page.tsx";
 
 export { PageHeader } from "./page-header.tsx";
 export type { PageHeaderCrumb, PageHeaderProps, PageHeaderStrings } from "./page-header.tsx";

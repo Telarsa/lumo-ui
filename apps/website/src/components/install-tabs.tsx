@@ -146,15 +146,35 @@ export function InstallTabs({
            * segmented pill row, subordinate to the underline bar above it.
            * Same Tabs component, same keyboard behaviour — only the clothes.
            */}
+          {/*
+           * `data-[orientation=horizontal]:border-b-0`, not a bare `border-be-0`:
+           * tabListVariants draws its hairline as `data-[orientation=horizontal]:
+           * border-b`, and a bare width-0 utility loses to it on specificity —
+           * tailwind-merge only removes the base class when the override carries
+           * the SAME variant. Measured on the built page: the pill row shipped
+           * with the underline bar's hairline still under it.
+           */}
           <TabList
             label={t.pmGroup}
-            className="inline-flex gap-0.5 rounded-md border-be-0 bg-surface-sunken p-0.5"
+            className="inline-flex gap-0.5 rounded-md bg-surface-sunken p-0.5 data-[orientation=horizontal]:border-b-0"
           >
             {PMS.map((pm) => (
+              /*
+               * `mb-0 border-b-0` removes the selected-tab indicator entirely:
+               * tabVariants marks selection with `border-b-2 -mb-px
+               * data-selected:border-accent`, and on a `rounded-sm` pill that
+               * 2px rule renders as a second, rounded underline below the
+               * selected pill — the artefact the review flagged. The indicator
+               * is an underline's clothes; a segmented pill shows selection as
+               * a raised surface (`data-selected:bg-surface` + shadow), so the
+               * border width and the `-mb-px` that compensated for it both go.
+               * (An earlier `after:hidden` here guessed at a pseudo-element
+               * that tabs.tsx never renders — the indicator is a real border.)
+               */
               <Tab
                 key={pm}
                 id={pm}
-                className="rounded-sm px-2.5 py-1 font-mono text-xs text-fg-muted after:hidden data-selected:bg-surface data-selected:text-fg data-selected:shadow-xs"
+                className="mb-0 rounded-sm border-b-0 px-2.5 py-1 font-mono text-xs text-fg-muted data-selected:bg-surface data-selected:text-fg data-selected:shadow-xs"
               >
                 <span dir="ltr" lang="en" data-lumo-latn="">
                   {pm}

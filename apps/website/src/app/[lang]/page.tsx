@@ -1,5 +1,20 @@
 import Link from "next/link";
 import { formatDate, formatNumber, type Locale } from "@lumo-ui/core";
+import {
+  Button,
+  Card,
+  CardBody,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+  Slider,
+  Switch,
+  Tab,
+  TabList,
+  TabPanel,
+  Tabs,
+} from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
 import { assertLocale, localeParams, site } from "@/lib/locale";
 import { allDemos, demoById } from "@/lib/demos";
@@ -16,7 +31,21 @@ const home = {
     browseBlocks: "بلوک‌ها را ببینید",
     showcaseTitle: "زنده، نه اسکرین‌شات",
     showcaseBody:
-      "همین کامپوننت‌ها، همین‌جا رندر شده‌اند — با همان کدی که کپی می‌کنید. روی هر کارت کلیک کنید تا مستندش را ببینید.",
+      "همین کامپوننت‌ها، همین‌جا اجرا می‌شوند — با همان کدی که کپی می‌کنید. با پنل کار کنید؛ نام هر کامپوننت پیوند مستند همان است.",
+    panelTitle: "تنظیمات فضای کاری",
+    panelDescription: "ترجیحات اعلان و نمایش برای تیم شما.",
+    tabsLabel: "بخش‌های تنظیمات",
+    tabNotifications: "اعلان‌ها",
+    tabDisplay: "نمایش",
+    switchDigest: "خلاصهٔ هفتگی با ایمیل",
+    switchDigestHelp: "ابتدای هر هفته ارسال می‌شود.",
+    switchMentions: "اعلان هنگام اشاره به شما",
+    sliderVolume: "بلندی صدای اعلان",
+    switchCompact: "چیدمان فشرده",
+    switchPreview: "پیش‌نمایش زندهٔ پیوندها",
+    cancel: "انصراف",
+    saveChanges: "ذخیرهٔ تغییرات",
+    builtFrom: "ساخته‌شده از",
     proofTitle: "این صفحه، ادعایش را ثابت می‌کند",
     proofBody:
       "هر عددی که این پایین می‌بینید در همان بایت‌های ارسال‌شده از سرور فارسی است — نه بعد از اجرای جاوااسکریپت. گیت همین را می‌سنجد: اگر یکی از این‌ها به رقم لاتین برگردد، بیلد قرمز می‌شود.",
@@ -50,7 +79,21 @@ const home = {
     browseBlocks: "Browse blocks",
     showcaseTitle: "Live, not screenshots",
     showcaseBody:
-      "These are the components themselves, rendered here with the same code you copy. Click any card to open its page.",
+      "These are the components themselves, running right here with the same code you copy. Work the panel; every component name links to its page.",
+    panelTitle: "Workspace settings",
+    panelDescription: "Notification and display preferences for your team.",
+    tabsLabel: "Settings sections",
+    tabNotifications: "Notifications",
+    tabDisplay: "Display",
+    switchDigest: "Weekly email digest",
+    switchDigestHelp: "Sent at the start of each week.",
+    switchMentions: "Notify me when I am mentioned",
+    sliderVolume: "Alert volume",
+    switchCompact: "Compact layout",
+    switchPreview: "Live link previews",
+    cancel: "Cancel",
+    saveChanges: "Save changes",
+    builtFrom: "Built from",
     proofTitle: "This page proves its own claim",
     proofBody:
       "Every figure below is Persian in the bytes the server sent — not after JavaScript runs. The gate grades exactly that: if one of them regressed to Latin digits, the build would go red.",
@@ -81,80 +124,144 @@ const home = {
 } as const;
 
 /**
- * The live showcase: a curated grid of REAL demos, rendered by the same
- * `render(lang)` functions the component pages use. Not screenshots, not
- * mockups — if one of these breaks, the landing page breaks, which is the
- * correct incentive. Each card links to its component's page.
+ * The live showcase: one composed hero exhibit instead of an inventory grid.
  *
- * Curated by visual variety rather than importance: a form control, an
- * overlay trigger, data, feedback, navigation — so thirty seconds of looking
- * conveys the range. `tabs` and `select` earn the wide slots because they
- * show the most chrome per pixel.
+ * Nine equal cards proved the library has many components and showed none of
+ * them at WORK — an inventory, not an interface, and the ragged grid it made
+ * was the visual equivalent of a parts drawer. So: composition over inventory.
+ * The hero is a settings panel assembled the way a real product assembles one
+ * — Tabs, Switch rows and a Slider living together inside one Card, footer
+ * actions included — composed inline from `@lumo-ui/ui` with complete copy in
+ * both locales, fully interactive, standing on the dotted stage docs sites
+ * use for exactly this job. Three small exhibits flank it, rendered by the
+ * same `render(lang)` functions the component pages use.
+ *
+ * Everything is still real: if the panel breaks, the landing page breaks,
+ * which is the correct incentive. The strip under the stage names every
+ * component in the composition and links each name into its docs.
  */
-const SHOWCASE: Array<{ id: string; span?: "wide" | undefined }> = [
-  { id: "tabs", span: "wide" },
-  { id: "number-field" },
-  { id: "switch" },
-  { id: "select" },
-  { id: "slider", span: "wide" },
-  { id: "badge" },
-  { id: "rating" },
-  { id: "segmented-control", span: "wide" },
-  { id: "button" },
-];
+const HERO_PARTS = ["card", "tabs", "switch", "slider", "button"] as const;
+const MINOR_EXHIBITS = ["number-field", "rating", "badge"] as const;
 
-function Showcase({ lang, title, body }: { lang: Locale; title: string; body: string }) {
+function Showcase({ lang }: { lang: Locale }) {
+  const h = home[lang];
   return (
     <section className="mt-16">
-      <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">{title}</h2>
-      <p className="mt-3 max-w-2xl text-sm text-fg-muted">{body}</p>
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {SHOWCASE.map(({ id, span }) => {
-          const demo = demoById(id);
-          if (!demo) return null;
-          return (
+      <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
+        {h.showcaseTitle}
+      </h2>
+      <p className="mt-3 max-w-2xl text-sm text-fg-muted">{h.showcaseBody}</p>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+        {/* ── The stage ──────────────────────────────────────────────────── */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface">
+          <div className="relative flex flex-1 items-center justify-center p-6 sm:p-10">
+            {/*
+             * The dotted backdrop, from tokens: `--lumo-sys-border` is the
+             * dot, so the pattern tracks both themes with no dark-mode
+             * override. Decorative, and behind the panel.
+             */}
             <div
-              key={id}
-              className={`group relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface transition-colors hover:border-border-strong ${
-                span === "wide" ? "sm:col-span-2" : ""
-              }`}
-            >
-              <div className="flex items-center justify-between border-be border-border px-4 py-2.5">
+              aria-hidden="true"
+              className="absolute inset-0 bg-[radial-gradient(var(--lumo-sys-border)_1px,transparent_1px)] bg-size-[1rem_1rem]"
+            />
+            {/*
+             * The composed panel. INTERACTIVE on purpose — unlike the flank
+             * exhibits there is no stretched link over it, so the switches
+             * flip, the tabs switch and the slider slides. The Slider is the
+             * page's live proof again: its output renders «۶۰» through the
+             * same formatter the gate grades.
+             */}
+            <Card variant="elevated" className="relative w-full max-w-xl">
+              <CardHeader>
+                <CardTitle>{h.panelTitle}</CardTitle>
+                <CardDescription>{h.panelDescription}</CardDescription>
+              </CardHeader>
+              <CardBody>
+                <Tabs defaultSelectedKey="notifications">
+                  <TabList label={h.tabsLabel}>
+                    <Tab id="notifications">{h.tabNotifications}</Tab>
+                    <Tab id="display">{h.tabDisplay}</Tab>
+                  </TabList>
+                  <TabPanel id="notifications">
+                    <div className="flex flex-col gap-5">
+                      <Switch defaultSelected description={h.switchDigestHelp}>
+                        {h.switchDigest}
+                      </Switch>
+                      <Switch>{h.switchMentions}</Switch>
+                      <Slider label={h.sliderVolume} locale={lang} defaultValue={60} />
+                    </div>
+                  </TabPanel>
+                  <TabPanel id="display">
+                    <div className="flex flex-col gap-5">
+                      <Switch defaultSelected>{h.switchCompact}</Switch>
+                      <Switch>{h.switchPreview}</Switch>
+                    </div>
+                  </TabPanel>
+                </Tabs>
+              </CardBody>
+              <CardFooter>
+                <Button variant="outline" size="sm">
+                  {h.cancel}
+                </Button>
+                <Button size="sm">{h.saveChanges}</Button>
+              </CardFooter>
+            </Card>
+          </div>
+          {/* Every part of the composition, linked into its docs. */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-bs border-border px-4 py-2.5 text-xs text-fg-muted">
+            <span>{h.builtFrom}</span>
+            {HERO_PARTS.map((id) => {
+              const demo = demoById(id);
+              if (!demo) return null;
+              return (
                 <Link
+                  key={id}
                   href={`/${lang}/components/${id}/`}
-                  className="text-sm font-medium text-fg after:absolute after:inset-0"
+                  className="font-medium underline-offset-4 transition-colors hover:text-fg hover:underline"
                 >
                   {demo.title[lang]}
                 </Link>
-              </div>
-              {/*
-               * `pointer-events-none` on the demo area: the whole card is one
-               * link (the stretched ::after above), and a live Select opening
-               * its popover inside a link is two interactions fighting over
-               * one press. On the landing page the demo is an exhibit; on its
-               * own page it is interactive.
-               *
-               * The demo is CENTRED on both axes, deliberately in two layers:
-               * the outer flex centres vertically inside whatever height the
-               * row settled on, and the inner flex centres the exhibit
-               * horizontally. The inner layer matters because demos are not
-               * uniform — Tabs declares `w-full`, Badge is a shrink-wrapped
-               * row, NumberField caps itself at `max-w-xs` — and as plain
-               * block children each of those starts at the inline edge, which
-               * is exactly the top-start hug this layout replaces.
-               */}
-              <div className="pointer-events-none flex min-h-40 flex-1 items-center justify-center overflow-hidden p-6">
-                <div
-                  className={`flex w-full items-center justify-center ${
-                    span === "wide" ? "max-w-md" : "max-w-64"
-                  }`}
-                >
-                  {demo.render(lang)}
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── The flank: three small exhibits ────────────────────────────── */}
+        <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+          {MINOR_EXHIBITS.map((id) => {
+            const demo = demoById(id);
+            if (!demo) return null;
+            return (
+              <div
+                key={id}
+                className="group relative flex flex-col overflow-hidden rounded-lg border border-border bg-surface transition-colors hover:border-border-strong"
+              >
+                <div className="flex items-center justify-between border-be border-border px-4 py-2">
+                  <Link
+                    href={`/${lang}/components/${id}/`}
+                    className="text-sm font-medium text-fg after:absolute after:inset-0"
+                  >
+                    {demo.title[lang]}
+                  </Link>
+                </div>
+                {/*
+                 * `pointer-events-none`: each flank card is ONE link (the
+                 * stretched ::after above), so its demo is an exhibit — the
+                 * hero panel is where the landing page is interactive. The
+                 * two-layer centring survives from the old grid: the outer
+                 * flex centres vertically, the inner centres non-uniform
+                 * demos horizontally.
+                 */}
+                <div className="pointer-events-none flex min-h-24 flex-1 items-center justify-center overflow-hidden p-4">
+                  <div className="flex w-full max-w-56 items-center justify-center">
+                    {demo.render(lang)}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -227,7 +334,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </div>
       </section>
 
-      <Showcase lang={lang} title={h.showcaseTitle} body={h.showcaseBody} />
+      <Showcase lang={lang} />
 
       <section className="mt-14 border-bs border-border pbs-10">
         <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">

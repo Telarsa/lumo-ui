@@ -30,15 +30,28 @@ export function assertLocale(value: string): Locale {
   return value;
 }
 
+/**
+ * Every locale, named in ITSELF — endonyms, deliberately not translated per
+ * page. A Persian speaker stranded on the English site scans the language menu
+ * for «فارسی», not for "Persian"; an endonym is the one spelling of a
+ * language's name its own readers are guaranteed to recognise. Keyed by the
+ * full `Locale` union, so adding a third locale without naming it here is a
+ * compile error, not a blank menu row.
+ */
+export const LOCALE_NAMES: Record<Locale, string> = {
+  "fa-IR": "فارسی",
+  "en-US": "English",
+};
+
 /** UI copy for the site itself. The site is a Lumo consumer and obeys its rules. */
 export const site = {
   "fa-IR": {
     title: "لومو",
     tagline: "کتابخانهٔ کامپوننت فارسی‌محور",
+    docs: "مستندات",
     components: "کامپوننت‌ها",
     blocks: "بلوک‌ها",
-    switchTo: "English",
-    switchLabel: "تغییر زبان به انگلیسی",
+    language: "تغییر زبان",
     github: "مخزن گیت‌هاب لومو",
     sections: "بخش‌ها",
     theme: "تغییر پوسته",
@@ -52,10 +65,10 @@ export const site = {
   "en-US": {
     title: "Lumo",
     tagline: "A Persian-first component library",
+    docs: "Docs",
     components: "Components",
     blocks: "Blocks",
-    switchTo: "فارسی",
-    switchLabel: "Switch language to Persian",
+    language: "Change language",
     github: "Lumo GitHub repository",
     sections: "Sections",
     theme: "Toggle theme",

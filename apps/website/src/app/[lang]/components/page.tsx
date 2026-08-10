@@ -104,20 +104,28 @@ export default async function Gallery({ params }: { params: Promise<{ lang: stri
                 </span>
               </h2>
               {/*
-               * The tight grid: name at text-sm, intro demoted to metadata
-               * size, one step of padding less than a content card. An index
-               * row is a signpost, not a reading surface — density is what
-               * lets a letter group be seen whole.
+               * A text listing, not a grid of cells. The bordered `gap-px`
+               * grid this replaces backfilled every ragged row with empty
+               * border-coloured cells — a letter with four entries in a
+               * three-column grid shipped two grey holes, and an index page
+               * mints ragged rows by construction. A row of text cannot have
+               * that defect: each component is one line — name, then its
+               * one-sentence intro at muted weight — the way shadcn's docs
+               * index reads. The hover wash is the row's own pill (negative
+               * inline margins keep the text column aligned), so nothing is
+               * drawn where there is no entry.
                */}
-              <ul className="mt-3 grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="mt-2">
                 {g.items.map((d) => (
-                  <li key={d.id} className="bg-surface">
+                  <li key={d.id}>
                     <Link
                       href={`/${lang}/components/${d.id}/`}
-                      className="block h-full px-4 py-3 transition-colors hover:bg-surface-hover"
+                      className="-mx-3 flex flex-col gap-0.5 rounded-md px-3 py-2.5 transition-colors hover:bg-surface-hover sm:flex-row sm:items-baseline sm:gap-3"
                     >
-                      <span className="text-sm font-medium text-fg">{d.title[lang]}</span>
-                      <span className="mt-1 block line-clamp-2 text-xs text-fg-muted">
+                      <span className="shrink-0 text-sm font-medium text-fg">
+                        {d.title[lang]}
+                      </span>
+                      <span className="min-w-0 truncate text-sm text-fg-muted">
                         {d.intro[lang]}
                       </span>
                     </Link>

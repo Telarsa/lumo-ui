@@ -64,18 +64,33 @@ import {
  * none of them is visible; all three would have shipped English into a Persian
  * product and looked fine in review.
  *
- * **`InputGroup` is not part of this library**, so the search row is built the
- * way `search-field.tsx` builds its own: border on the `<input>` itself, icon
- * absolutely positioned over it at `start-3`, `ps-9` reserving the space. That
- * keeps the single `:where([data-lumo]):focus-visible` rule in `theme.css` the
- * only focus rule — a border on a wrapper would draw the ring around the row
- * while focus actually sits on a borderless input inside it.
+ * **The search row is cmdk's**: a borderless full-bleed row with the icon
+ * INLINE as a flex sibling — no border on the `<input>`, the block-end hairline
+ * under the row is the only rule drawn. The previous shape (bordered input,
+ * icon absolutely positioned over it, `relative` on the wrapper) also carried a
+ * real defect, recorded below so it is not rebuilt.
+ *
+ * ── WHY THE ✕ "DID NOT WORK", MEASURED ──────────────────────────────────────
+ * The close button never received a click. `Dialog` renders its ✕ first, as an
+ * absolutely-positioned child; the old input wrapper was `relative` and came
+ * LATER in the DOM. Two positioned boxes with no z-index hit-test in document
+ * order, so the wrapper's box — full row width, its `pe-11` padding gutter
+ * included — sat ON TOP of the ✕. The icon showed through the transparent
+ * wrapper, looked pressable, and every press landed on the wrapper instead.
+ * jsdom has no hit-testing, which is why no unit test ever saw it. The wrapper
+ * is no longer positioned, and the ✕ carries `z-10` for its focused state, so
+ * the overlap is unrepresentable now.
  *
  * **The dialog is Lumo's four-layer one.** Upstream's `<Dialog>` is a single
  * component with `showCloseButton`; Lumo's requires an overlay and a modal
  * around it and ALWAYS renders a named close control — see `dialog.tsx`, which
  * argues that a dialog whose ✕ can be unnamed is a dialog that ships unnamed
- * ✕s. `pe-11` on the search row reserves the trailing gutter it sits in.
+ * ✕s. Here that control is kept but not DRAWN: cmdk palettes show no ✕ (Esc,
+ * backdrop and choosing an item all close it), so the ✕ is `sr-only` until it
+ * is keyboard-focused, at which point it appears in its corner. Screen-reader
+ * and keyboard users keep a named close control; sighted pointer users get
+ * cmdk's chrome-free head. `closeLabel` stays required for exactly that
+ * reason.
  *
  * ── DIRECTION AND FILTERING BOTH COME FROM `LumoProvider` ───────────────────
  *
@@ -96,17 +111,26 @@ import {
  */
 
 export const commandVariants = cva(
-  "flex size-full flex-col overflow-hidden rounded-lg bg-surface p-1 text-fg",
+  // No padding of its own: the input row is full-bleed so its block-end
+  // hairline can span the whole panel, cmdk-style. The list carries the inset.
+  "flex size-full flex-col overflow-hidden rounded-lg bg-surface text-fg",
 );
 
-export const commandInputWrapperVariants = cva("relative flex items-center p-1 pb-0");
+/**
+ * NOT `relative`, load-bearingly — a positioned wrapper here is what swallowed
+ * the dialog ✕'s clicks (see the file header). The icon is a flex sibling, so
+ * nothing in this row needs a positioning context.
+ */
+export const commandInputWrapperVariants = cva(
+  "flex items-center gap-2 border-be border-border px-3",
+);
 
 export const commandInputVariants = cva(
-  "h-control-sm w-full min-w-0 rounded-md border border-border-control bg-surface " +
-    "text-sm text-fg text-start ps-9 pe-3 outline-none transition-colors " +
+  "h-11 w-full min-w-0 bg-transparent " +
+    "text-sm text-fg text-start outline-none " +
     "placeholder:text-fg-subtle " +
     "[&::-webkit-search-cancel-button]:hidden " +
-    "data-disabled:cursor-not-allowed data-disabled:bg-surface-sunken",
+    "data-disabled:cursor-not-allowed data-disabled:opacity-50",
 );
 
 export const commandListVariants = cva(
@@ -184,6 +208,20 @@ export interface CommandDialogProps {
   isOpen?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   onOpenChange?: ((isOpen: boolean) => void) | undefined;
+  /**
+   * Close on backdrop press, the way cmdk palettes do.
+   *
+   * OPT-IN, not the default, matching `dialog.tsx`'s stance on dismissable
+   * overlays. One earlier claim here is corrected: RAC's internal
+   * DismissButton is NOT stuck in English — this repo's own
+   * `patches/react-aria@3.51.0.patch` adds a `fa-IR` overlays bundle
+   * («بستن»), which `LumoProvider` routes to, the same mechanism that
+   * localised the table's `columnSize`. The remaining reason to keep it
+   * opt-in is behavioural, not lingual: a press outside a palette mid-typing
+   * discards the query, and whether that is convenience or data loss is the
+   * caller's call.
+   */
+  isDismissable?: boolean | undefined;
   children: LumoNode;
   className?: string | undefined;
 }
@@ -203,6 +241,7 @@ export function CommandDialog({
   isOpen,
   defaultOpen,
   onOpenChange,
+  isDismissable,
   children,
   className,
 }: CommandDialogProps) {
@@ -213,9 +252,29 @@ export function CommandDialog({
       {...(onOpenChange === undefined ? {} : { onOpenChange })}
     >
       {trigger}
-      <DialogOverlay className="items-start pt-[20vh]">
+      {/* `isDismissable` belongs on the OVERLAY — on the modal it is silently
+          inert. See dialog.tsx. */}
+      <DialogOverlay
+        className="items-start pt-[20vh]"
+        {...(isDismissable === undefined ? {} : { isDismissable })}
+      >
         <DialogModal size="lg" className={cn("overflow-hidden", className)}>
-          <Dialog closeLabel={closeLabel} className="gap-0 p-0">
+          {/*
+           * The ✕ (the Dialog's only direct `data-lumo` child) is sr-only
+           * until keyboard focus reaches it — cmdk shows no ✕, but Lumo does
+           * not ship an unreachable close control. When revealed it keeps its
+           * own `absolute top-3 end-3` placement plus the `z-10` granted
+           * here, which also keeps it above the input row it used to lose
+           * hit-testing to (see the file header).
+           */}
+          <Dialog
+            closeLabel={closeLabel}
+            className={cn(
+              "gap-0 p-0",
+              "[&>button[data-lumo]]:z-10",
+              "[&>button[data-lumo]:not(:focus-visible)]:sr-only",
+            )}
+          >
             <DialogHeading className="sr-only pe-0">{title}</DialogHeading>
             <p className="sr-only">{description}</p>
             {children}
@@ -246,14 +305,10 @@ export function CommandInput({ label, placeholder, className, ...props }: Comman
       autoFocus
       aria-label={label}
       data-slot="command-input-wrapper"
-      // `pe-11` clears the dialog's ✕, which sits at `top-3 end-3` — the
-      // trailing corner in both scripts, so the reserved gutter is logical too.
-      className={cn(commandInputWrapperVariants(), "pe-11")}
+      className={commandInputWrapperVariants()}
     >
-      <SearchIcon
-        aria-hidden="true"
-        className="pointer-events-none absolute start-4 size-4 shrink-0 text-fg-subtle"
-      />
+      {/* Inline, not absolutely positioned — see commandInputWrapperVariants. */}
+      <SearchIcon aria-hidden="true" className="size-4 shrink-0 text-fg-subtle" />
       <Input
         data-lumo=""
         data-slot="command-input"

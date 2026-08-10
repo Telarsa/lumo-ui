@@ -1,14 +1,16 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Locale, LumoNode } from "@lumo-ui/core";
-import { formatNumber } from "@lumo-ui/core";
+import { formatDate, formatNumber } from "@lumo-ui/core";
 import {
   ActivityFeed,
   AppShell,
+  AuthPage,
   BookingSummary,
   ChartPanel,
   CommandPalette,
   DangerZone,
+  DashboardPage,
   EmptyCollection,
   Faq,
   FeatureGrid,
@@ -41,7 +43,17 @@ import {
   type PricingPlan,
   type ProductVariantGroup,
 } from "@lumo-ui/blocks";
-import { Button, TextField } from "@lumo-ui/ui";
+import {
+  Badge,
+  Button,
+  Cell,
+  Column,
+  Row,
+  Table,
+  TableBody,
+  TableHeader,
+  TextField,
+} from "@lumo-ui/ui";
 import { ChartIsland } from "@/components/demo-islands";
 import {
   CheckoutSummaryIsland,
@@ -158,6 +170,49 @@ export interface BlockDemo {
 
 const BLOCKS: BlockDemo[] = [
   /* ══════════════════════════════════════════════════════════════════ auth ══ */
+  {
+    id: "auth-page",
+    category: "auth",
+    title: { "fa-IR": "صفحهٔ ورود کامل", "en-US": "Auth page" },
+    intro: {
+      "fa-IR": "کل مسیر ورود در یک تکه: نشان محصول، کارت ورود و خط پانوشت، وسط‌چین در ارتفاع کامل نما. چیزی که به‌جای یک بخش، یک صفحهٔ کامل جای‌گذاری می‌شود.",
+      "en-US": "The whole sign-in route in one piece: brand mark, the sign-in card, a footnote line, centred in the full viewport. Pasted as an entire page, not as a section.",
+    },
+    source: source("auth-page.tsx"),
+    render: (l) => (
+      <AuthPage
+        forgotHref="#"
+        signUpHref="#"
+        brand={
+          <span className="text-lg font-semibold text-fg">
+            {l === "fa-IR" ? "فروشگاه نوین" : "Novin Shop"}
+          </span>
+        }
+        strings={{
+          signIn: {
+            title: l === "fa-IR" ? "ورود به حساب کاربری" : "Sign in to your account",
+            description:
+              l === "fa-IR"
+                ? "خوش برگشتید! برای ادامه، اطلاعات حساب خود را وارد کنید."
+                : "Welcome back! Enter your account details to continue.",
+            emailLabel: l === "fa-IR" ? "ایمیل" : "Email",
+            emailPlaceholder: l === "fa-IR" ? "نشانی ایمیل شما" : "you@company.com",
+            passwordLabel: l === "fa-IR" ? "رمز عبور" : "Password",
+            passwordPlaceholder: l === "fa-IR" ? "دست‌کم ۸ نویسه" : "At least 8 characters",
+            rememberLabel: l === "fa-IR" ? "مرا به خاطر بسپار" : "Remember me",
+            forgotPassword: l === "fa-IR" ? "رمز عبور را فراموش کرده‌اید؟" : "Forgot password?",
+            submit: l === "fa-IR" ? "ورود به حساب" : "Sign in",
+            signUpPrompt: l === "fa-IR" ? "هنوز حساب کاربری ندارید؟" : "Don't have an account?",
+            signUpAction: l === "fa-IR" ? "رایگان ثبت‌نام کنید" : "Sign up for free",
+          },
+          footnote:
+            l === "fa-IR"
+              ? "ورود شما به معنای پذیرش شرایط استفاده و حریم خصوصی فروشگاه نوین است."
+              : "By signing in you agree to Novin Shop's terms of service and privacy policy.",
+        }}
+      />
+    ),
+  },
   {
     id: "sign-in",
     category: "auth",
@@ -355,6 +410,13 @@ const BLOCKS: BlockDemo[] = [
           badge: formatNumber(12, l),
         },
         { id: "customers", label: l === "fa-IR" ? "مشتریان" : "Customers", href: "#" },
+        {
+          id: "products",
+          label: l === "fa-IR" ? "محصولات" : "Products",
+          href: "#",
+          badge: formatNumber(4, l),
+        },
+        { id: "reports", label: l === "fa-IR" ? "گزارش‌ها" : "Reports", href: "#" },
         { id: "settings", label: l === "fa-IR" ? "تنظیمات" : "Settings", href: "#" },
       ];
       return (
@@ -365,22 +427,70 @@ const BLOCKS: BlockDemo[] = [
             currentPage: l === "fa-IR" ? "صفحهٔ فعلی" : "Current page",
           }}
           nav={nav}
-          brand={<span className="text-sm font-semibold text-fg">{l === "fa-IR" ? "لومو" : "Lumo"}</span>}
+          brand={
+            <span className="text-sm font-semibold text-fg">
+              {l === "fa-IR" ? "فروشگاه نوین" : "Novin Shop"}
+            </span>
+          }
+          topBarStart={
+            <span className="truncate text-sm font-medium text-fg-muted">
+              {l === "fa-IR" ? "فضای کاری تیم فروش" : "Sales team workspace"}
+            </span>
+          }
+          topBarEnd={<Button size="sm">{l === "fa-IR" ? "سفارش تازه" : "New order"}</Button>}
           sidebarFooter={
-            <p className="text-xs text-fg-subtle">
-              {l === "fa-IR" ? "طرح حرفه‌ای" : "Pro plan"}
-            </p>
+            <div className="flex flex-col gap-0.5">
+              <p className="text-sm font-medium text-fg">
+                {l === "fa-IR" ? "سارا محمدی" : "Sara Mohammadi"}
+              </p>
+              <p className="text-xs text-fg-subtle">
+                {l === "fa-IR" ? "طرح حرفه‌ای — تمدید در مهر" : "Pro plan — renews in October"}
+              </p>
+            </div>
           }
         >
-          <div className="flex flex-col gap-2 p-6">
-            <h1 className="text-xl font-semibold text-fg">
-              {l === "fa-IR" ? "داشبورد" : "Dashboard"}
-            </h1>
-            <p className="max-w-prose text-sm text-fg-muted">
-              {l === "fa-IR"
-                ? "محتوای هر مسیر همین‌جا، درون عنصر main، قرار می‌گیرد."
-                : "Every route's content lands right here, inside the main element."}
-            </p>
+          <div className="flex flex-col gap-6 p-6">
+            <div className="flex flex-col gap-2">
+              <h1 className="text-xl font-semibold text-fg">
+                {l === "fa-IR" ? "داشبورد" : "Dashboard"}
+              </h1>
+              <p className="max-w-prose text-sm text-fg-muted">
+                {l === "fa-IR"
+                  ? "محتوای هر مسیر همین‌جا، درون عنصر main، قرار می‌گیرد — سربرگ، شاخص‌ها و هرچه صفحه لازم دارد."
+                  : "Every route's content lands right here, inside the main element — the header, the figures, whatever the page needs."}
+              </p>
+            </div>
+            <StatGrid
+              locale={l}
+              cols="3"
+              className="px-0"
+              strings={{
+                regionLabel: l === "fa-IR" ? "شاخص‌های امروز" : "Today's metrics",
+                increase: l === "fa-IR" ? "افزایش" : "increase",
+                decrease: l === "fa-IR" ? "کاهش" : "decrease",
+              }}
+              items={[
+                {
+                  id: "revenue",
+                  label: l === "fa-IR" ? "درآمد امروز" : "Today's revenue",
+                  value: 18400000,
+                  format: { notation: "compact" },
+                  delta: 0.082,
+                },
+                {
+                  id: "open-orders",
+                  label: l === "fa-IR" ? "سفارش‌های باز" : "Open orders",
+                  value: 34,
+                  delta: -0.05,
+                },
+                {
+                  id: "visitors",
+                  label: l === "fa-IR" ? "بازدید امروز" : "Today's visitors",
+                  value: 2180,
+                  delta: 0.114,
+                },
+              ]}
+            />
           </div>
         </AppShell>
       );
@@ -468,6 +578,192 @@ const BLOCKS: BlockDemo[] = [
   },
 
   /* ═════════════════════════════════════════════════════════════ dashboard ══ */
+  {
+    id: "dashboard-page",
+    category: "dashboard",
+    title: { "fa-IR": "صفحهٔ داشبورد کامل", "en-US": "Dashboard page" },
+    intro: {
+      "fa-IR": "چارچوب برنامه با محتوای واقعی: سربرگ مسیر، شبکهٔ شاخص‌ها، ناحیهٔ جدول و فهرست فعالیت، همه سرِ جای خودشان. ناحیهٔ جدول یک slot است تا مرز کلاینت با caller بماند.",
+      "en-US": "The app shell with real content in it: route header, stat grid, a table region and the activity feed, each in its place. The table region is a slot, so the client boundary stays with the caller.",
+    },
+    source: source("dashboard-page.tsx"),
+    render: (l) => {
+      const currency = { style: "currency", currency: "IRR", maximumFractionDigits: 0 } as const;
+      const orders = [
+        { id: "1042", customer: l === "fa-IR" ? "سارا محمدی" : "Sara Mohammadi", at: ROW_DATE_1, amount: 1250000, status: "paid" },
+        { id: "1041", customer: l === "fa-IR" ? "رضا کریمی" : "Reza Karimi", at: ROW_DATE_2, amount: 640000, status: "pending" },
+        { id: "1040", customer: l === "fa-IR" ? "نگار حسینی" : "Negar Hosseini", at: ROW_DATE_3, amount: 2100000, status: "paid" },
+        { id: "1039", customer: l === "fa-IR" ? "امیر توکلی" : "Amir Tavakoli", at: ROW_DATE_4, amount: 480000, status: "canceled" },
+      ] as const;
+      const statusLabel: Record<(typeof orders)[number]["status"], string> =
+        l === "fa-IR"
+          ? { paid: "پرداخت‌شده", pending: "در انتظار", canceled: "لغوشده" }
+          : { paid: "Paid", pending: "Pending", canceled: "Canceled" };
+      const statusTone = { paid: "positive", pending: "neutral", canceled: "critical" } as const;
+      return (
+        <DashboardPage
+          locale={l}
+          strings={{
+            shell: {
+              navLabel: l === "fa-IR" ? "ناوبری اصلی" : "Main navigation",
+              skipToContent: l === "fa-IR" ? "پرش به محتوای اصلی" : "Skip to main content",
+              currentPage: l === "fa-IR" ? "صفحهٔ فعلی" : "Current page",
+            },
+            header: {
+              title: l === "fa-IR" ? "داشبورد فروش" : "Sales dashboard",
+              description:
+                l === "fa-IR"
+                  ? "نمای کلی امروز فروشگاه: درآمد، سفارش‌ها و فعالیت تیم."
+                  : "Today's overview of the shop: revenue, orders and the team's activity.",
+            },
+            stats: {
+              regionLabel: l === "fa-IR" ? "شاخص‌های کلیدی" : "Key metrics",
+              increase: l === "fa-IR" ? "افزایش" : "increase",
+              decrease: l === "fa-IR" ? "کاهش" : "decrease",
+            },
+            feed: {
+              title: l === "fa-IR" ? "فعالیت اخیر" : "Recent activity",
+              emptyTitle: l === "fa-IR" ? "هنوز فعالیتی ثبت نشده" : "No activity yet",
+            },
+          }}
+          nav={[
+            { id: "dashboard", label: l === "fa-IR" ? "داشبورد" : "Dashboard", href: "#", isCurrent: true },
+            { id: "orders", label: l === "fa-IR" ? "سفارش‌ها" : "Orders", href: "#", badge: formatNumber(8, l) },
+            { id: "customers", label: l === "fa-IR" ? "مشتریان" : "Customers", href: "#" },
+            { id: "products", label: l === "fa-IR" ? "محصولات" : "Products", href: "#" },
+            { id: "settings", label: l === "fa-IR" ? "تنظیمات" : "Settings", href: "#" },
+          ]}
+          brand={
+            <span className="text-sm font-semibold text-fg">
+              {l === "fa-IR" ? "فروشگاه نوین" : "Novin Shop"}
+            </span>
+          }
+          topBarStart={
+            <span className="truncate text-sm font-medium text-fg-muted">
+              {l === "fa-IR" ? "فضای کاری تیم فروش" : "Sales team workspace"}
+            </span>
+          }
+          topBarEnd={
+            <Button variant="ghost" size="sm">
+              {l === "fa-IR" ? "راهنما" : "Help"}
+            </Button>
+          }
+          sidebarFooter={
+            <p className="text-xs text-fg-subtle">
+              {l === "fa-IR" ? "طرح حرفه‌ای — تمدید در مهر" : "Pro plan — renews in October"}
+            </p>
+          }
+          headerActions={
+            <>
+              <Button variant="outline" size="sm">
+                {l === "fa-IR" ? "برون‌بری گزارش" : "Export report"}
+              </Button>
+              <Button size="sm">{l === "fa-IR" ? "سفارش تازه" : "New order"}</Button>
+            </>
+          }
+          stats={[
+            {
+              id: "revenue",
+              label: l === "fa-IR" ? "درآمد امروز" : "Today's revenue",
+              value: 18400000,
+              format: { notation: "compact" },
+              delta: 0.082,
+              deltaCaption: l === "fa-IR" ? "نسبت به دیروز" : "vs yesterday",
+            },
+            {
+              id: "orders",
+              label: l === "fa-IR" ? "سفارش‌های باز" : "Open orders",
+              value: 34,
+              delta: -0.05,
+              deltaCaption: l === "fa-IR" ? "نسبت به هفتهٔ گذشته" : "vs last week",
+            },
+            {
+              id: "customers",
+              label: l === "fa-IR" ? "مشتریان تازه" : "New customers",
+              value: 126,
+              delta: 0.114,
+              deltaCaption: l === "fa-IR" ? "نسبت به ماه گذشته" : "vs last month",
+            },
+            {
+              id: "refunds",
+              label: l === "fa-IR" ? "نرخ بازگشت وجه" : "Refund rate",
+              value: 0.018,
+              format: { style: "percent", maximumFractionDigits: 1 },
+              delta: -0.003,
+            },
+          ]}
+          activity={[
+            {
+              id: "a1",
+              actor: l === "fa-IR" ? "سارا محمدی" : "Sara Mohammadi",
+              initials: l === "fa-IR" ? "س م" : "SM",
+              description: l === "fa-IR" ? "سفارش #۱۰۴۲ را ثبت کرد." : "placed order #1042.",
+              at: T_ORDER_PLACED,
+            },
+            {
+              id: "a2",
+              actor: l === "fa-IR" ? "رضا کریمی" : "Reza Karimi",
+              initials: l === "fa-IR" ? "ر ک" : "RK",
+              description: l === "fa-IR" ? "فاکتور را پرداخت کرد." : "paid the invoice.",
+              at: T_INVOICE_PAID,
+            },
+            {
+              id: "a3",
+              actor: l === "fa-IR" ? "نگار حسینی" : "Negar Hosseini",
+              initials: l === "fa-IR" ? "ن ح" : "NH",
+              description: l === "fa-IR" ? "عضو تازه‌ای به تیم افزود." : "added a new team member.",
+              at: T_MEMBER_ADDED,
+            },
+            {
+              id: "a4",
+              actor: l === "fa-IR" ? "امیر توکلی" : "Amir Tavakoli",
+              initials: l === "fa-IR" ? "ا ت" : "AT",
+              description: l === "fa-IR" ? "سفارش #۱۰۳۹ را لغو کرد." : "canceled order #1039.",
+              at: ROW_DATE_4,
+            },
+          ]}
+          tableRegion={
+            <section className="overflow-hidden rounded-lg border border-border bg-surface">
+              <div className="flex items-center justify-between gap-2 p-4 pbe-3">
+                <h2 className="text-sm font-semibold text-fg">
+                  {l === "fa-IR" ? "آخرین سفارش‌ها" : "Latest orders"}
+                </h2>
+                <Button variant="ghost" size="sm">
+                  {l === "fa-IR" ? "دیدن همه" : "View all"}
+                </Button>
+              </div>
+              <div className="w-full overflow-auto">
+                <Table label={l === "fa-IR" ? "آخرین سفارش‌ها" : "Latest orders"}>
+                  <TableHeader>
+                    <Column id="customer" isRowHeader>
+                      {l === "fa-IR" ? "مشتری" : "Customer"}
+                    </Column>
+                    <Column id="date">{l === "fa-IR" ? "تاریخ ثبت" : "Placed on"}</Column>
+                    <Column id="amount">{l === "fa-IR" ? "مبلغ" : "Amount"}</Column>
+                    <Column id="status">{l === "fa-IR" ? "وضعیت" : "Status"}</Column>
+                  </TableHeader>
+                  <TableBody>
+                    {orders.map((order) => (
+                      <Row key={order.id} id={order.id}>
+                        <Cell>{order.customer}</Cell>
+                        <Cell>{formatDate(order.at, l, { dateStyle: "medium" })}</Cell>
+                        <Cell>{formatNumber(order.amount, l, currency)}</Cell>
+                        <Cell>
+                          <Badge tone={statusTone[order.status]} variant="subtle">
+                            {statusLabel[order.status]}
+                          </Badge>
+                        </Cell>
+                      </Row>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </section>
+          }
+        />
+      );
+    },
+  },
   {
     id: "stat-grid",
     category: "dashboard",

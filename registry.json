@@ -879,6 +879,27 @@
       ]
     },
     {
+      "name": "skeleton-presets",
+      "type": "registry:ui",
+      "title": "Skeleton Presets",
+      "description": "Composed placeholders: the shapes a real screen actually loses while it",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "skeleton"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/skeleton-presets.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/skeleton-presets.tsx"
+        }
+      ]
+    },
+    {
       "name": "skeleton",
       "type": "registry:ui",
       "title": "Skeleton",
@@ -973,7 +994,7 @@
       "name": "switch",
       "type": "registry:ui",
       "title": "Switch",
-      "description": "The thumb, and the one genuinely hard RTL problem in this batch.",
+      "description": "The clickable row.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1234,6 +1255,26 @@
       ]
     },
     {
+      "name": "auth-page",
+      "type": "registry:block",
+      "title": "Auth Page",
+      "description": "The whole sign-in ROUTE: brand mark above, the `SignIn` card centred in the",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "sign-in"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/auth-page.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/auth-page.tsx"
+        }
+      ]
+    },
+    {
       "name": "booking-summary",
       "type": "registry:block",
       "title": "Booking Summary",
@@ -1320,6 +1361,29 @@
           "path": "packages/blocks/src/danger-zone.tsx",
           "type": "registry:block",
           "target": "components/blocks/danger-zone.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dashboard-page",
+      "type": "registry:block",
+      "title": "Dashboard Page",
+      "description": "The signed-in landing screen, assembled: `AppShell` around `PageHeader`,",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "activity-feed",
+        "app-shell",
+        "page-header",
+        "stat-grid"
+      ],
+      "files": [
+        {
+          "path": "packages/blocks/src/dashboard-page.tsx",
+          "type": "registry:block",
+          "target": "components/blocks/dashboard-page.tsx"
         }
       ]
     },

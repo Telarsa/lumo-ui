@@ -48,6 +48,22 @@ export interface CodeBlockProps {
   className?: string | undefined;
 }
 
+/**
+ * A scrollbar the reader can SEE. `overflow-auto` alone leaves macOS's overlay
+ * scrollbar invisible until the reader is already scrolling — on a capped-height
+ * code block that reads as "the rest of the code does not exist", which is
+ * exactly what the review reported. Two mechanisms, because no one engine
+ * honours both: `scrollbar-width`/`scrollbar-color` for Firefox and Chromium,
+ * `::-webkit-scrollbar` for Safari (which supports neither standard property
+ * with a custom colour). The thumb reads the `--lumo-sys-border-strong` token
+ * directly, so it repaints with the theme like every other surface.
+ */
+const SCROLLBAR =
+  "[scrollbar-width:thin] [scrollbar-color:var(--lumo-sys-border-strong)_transparent] " +
+  "[&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 " +
+  "[&::-webkit-scrollbar-track]:bg-transparent " +
+  "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border-strong";
+
 export function CodeBlock({ code, html, label, copiedLabel, className }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -85,7 +101,10 @@ export function CodeBlock({ code, html, label, copiedLabel, className }: CodeBlo
           dir="ltr"
           lang="en"
           data-lumo-latn=""
-          className="max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken text-start text-xs leading-relaxed [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4 [&_pre]:pe-12"
+          className={cn(
+            "max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken text-start text-xs leading-relaxed [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4 [&_pre]:pe-12",
+            SCROLLBAR,
+          )}
           dangerouslySetInnerHTML={{ __html: html }}
         />
       ) : (
@@ -93,7 +112,10 @@ export function CodeBlock({ code, html, label, copiedLabel, className }: CodeBlo
           dir="ltr"
           lang="en"
           data-lumo-latn=""
-          className="max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken p-4 pe-12 text-start text-xs leading-relaxed"
+          className={cn(
+            "max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken p-4 pe-12 text-start text-xs leading-relaxed",
+            SCROLLBAR,
+          )}
         >
           <code>{code}</code>
         </pre>

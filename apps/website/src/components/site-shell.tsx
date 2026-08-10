@@ -1,21 +1,26 @@
 import Link from "next/link";
+import { Check, Languages } from "lucide-react";
 import type { Locale } from "@lumo-ui/core";
-import { cn } from "@lumo-ui/core";
-import { site } from "@/lib/locale";
+import { cn, LOCALES } from "@lumo-ui/core";
+import { IconButton, Menu, MenuItem, MenuPopover, MenuTrigger } from "@lumo-ui/ui";
+import { LOCALE_NAMES, site } from "@/lib/locale";
 import { allBlocks } from "@/lib/blocks";
 import { allDemos } from "@/lib/demos";
 import { buildSearchIndex } from "@/lib/search-index";
+import { DOCS_PAGES } from "@/lib/docs-pages";
 import { SiteSearch } from "./site-search";
 import { ThemeToggle } from "./theme-toggle";
 
 /**
  * The site chrome.
  *
- * The language control is an `<a href>` to the mirrored path, not a toggle.
- * That is the whole honesty argument: a toggle would flip CSS while leaving
- * `lang` on the document unchanged, which is the exact defect this library
- * exists to prevent. Crossing locales is a document navigation because the two
- * locales are two documents.
+ * The language control is a menu of real `<a href>`s to the mirrored path —
+ * one entry per member of `LOCALES`, so a third locale appears here by being
+ * added to the union, not by someone remembering this file. It is never a
+ * toggle. That is the whole honesty argument: a toggle would flip CSS while
+ * leaving `lang` on the document unchanged, which is the exact defect this
+ * library exists to prevent. Crossing locales is a document navigation because
+ * the two locales are two documents.
  *
  * The header is sticky with a blurred backdrop — the shape every serious
  * component-library site converged on, because docs are read scrolled and the
@@ -31,7 +36,11 @@ import { ThemeToggle } from "./theme-toggle";
  * same array. See `search-index.ts` for why the builder itself takes these
  * two arrays as plain arguments rather than reading the registries itself.
  */
-const searchIndex = buildSearchIndex(allDemos(), allBlocks());
+const searchIndex = buildSearchIndex(
+  allDemos(),
+  allBlocks(),
+  DOCS_PAGES.map((d) => ({ id: d.slug, title: d.label, intro: d.intro })),
+);
 
 /**
  * lucide-react 1.x removed its brand icons, so the GitHub mark is inlined —
@@ -59,12 +68,20 @@ export function SiteShell({
   wide?: boolean;
 }) {
   const t = site[lang];
-  const other: Locale = lang === "fa-IR" ? "en-US" : "fa-IR";
   // The path prop already encodes which area of the site this page lives in;
   // deriving the active link from it keeps the header stateless and honest.
-  const section = path.startsWith("components") ? "components" : path.startsWith("blocks") ? "blocks" : null;
+  const section = path.startsWith("docs")
+    ? "docs"
+    : path.startsWith("components")
+      ? "components"
+      : path.startsWith("blocks")
+        ? "blocks"
+        : null;
 
-  const navLinks: Array<{ key: "components" | "blocks"; href: string; label: string }> = [
+  // Docs first — reading order, and the review's finding: a docs section that
+  // no header link reaches is a docs section that does not exist on a phone.
+  const navLinks: Array<{ key: "docs" | "components" | "blocks"; href: string; label: string }> = [
+    { key: "docs", href: `/${lang}/docs/introduction/`, label: t.docs },
     { key: "components", href: `/${lang}/components/`, label: t.components },
     { key: "blocks", href: `/${lang}/blocks/`, label: t.blocks },
   ];
@@ -112,15 +129,45 @@ export function SiteShell({
                 <GitHubMark className="size-4" />
               </a>
               <ThemeToggle lang={lang} />
-              {/* A real link, not a toggle — see the file header. */}
-              <Link
-                href={`/${other}/${path}`}
-                hrefLang={other}
-                aria-label={t.switchLabel}
-                className="inline-flex h-8 items-center rounded-md px-2 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg"
-              >
-                {t.switchTo}
-              </Link>
+              {/*
+               * The language menu. Each entry is a real <a href> to the SAME
+               * `path` in that locale, not a toggle — see the file header;
+               * crossing locales is a navigation. The icon trigger scales to
+               * any number of locales where a "switch to the other one" link
+               * could only ever name two.
+               */}
+              <MenuTrigger>
+                <IconButton
+                  label={t.language}
+                  variant="ghost"
+                  size="sm"
+                  className="text-fg-muted data-hovered:text-fg"
+                >
+                  <Languages aria-hidden="true" className="size-4" />
+                </IconButton>
+                <MenuPopover className="min-w-36">
+                  <Menu>
+                    {LOCALES.map((locale) => (
+                      <MenuItem
+                        key={locale}
+                        id={locale}
+                        href={`/${locale}/${path}`}
+                        hrefLang={locale}
+                        textValue={LOCALE_NAMES[locale]}
+                        className={locale === lang ? "font-medium" : undefined}
+                      >
+                        {LOCALE_NAMES[locale]}
+                        {/* The current locale, marked. Decorative: the mark's
+                            meaning is already carried by the document you are
+                            reading being IN this language. */}
+                        {locale === lang ? (
+                          <Check aria-hidden="true" className="ms-2 inline-block size-4 text-fg-muted" />
+                        ) : null}
+                      </MenuItem>
+                    ))}
+                  </Menu>
+                </MenuPopover>
+              </MenuTrigger>
             </div>
           </div>
         </div>

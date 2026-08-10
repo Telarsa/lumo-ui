@@ -97,6 +97,51 @@ code, pre, kbd, samp {
 }
 
 /*
+ * Theme switching must SNAP, never animate.
+ *
+ * Dozens of surfaces carry `transition-colors` for hover feedback, and every
+ * one of them also fires when the theme flip swaps the token values — the
+ * whole page cross-fades for 150ms, each element on its own clock. shadcn's
+ * sites snap for exactly this reason. The toggle adds this class to <html>
+ * for the flip and removes it after a double requestAnimationFrame (one frame
+ * for the restyled paint, one to be safely past it) — see theme-toggle.tsx.
+ * Hover transitions are untouched the rest of the time.
+ */
+.lumo-theme-snap *,
+.lumo-theme-snap *::before,
+.lumo-theme-snap *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+/*
+ * The theme toggle's two icons. Which one paints is decided HERE, by the same
+ * three-state selectors tokens.css uses (bare :root = light; system dark
+ * guarded by :not([data-theme="light"]); an explicit data-theme wins in both
+ * directions) — not by React state. `ThemeScript` stamps the attribute before
+ * first paint, so the correct icon appears in the very first frame with no
+ * mount gate and no wrong-icon flash. The icon mirrors the CURRENT theme
+ * (sun in light, moon in dark), shadcn's convention.
+ */
+.lumo-theme-icon-moon {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .lumo-theme-icon-sun {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .lumo-theme-icon-moon {
+    display: block;
+  }
+}
+:root[data-theme="dark"] .lumo-theme-icon-sun {
+  display: none;
+}
+:root[data-theme="dark"] .lumo-theme-icon-moon {
+  display: block;
+}
+
+/*
  * `tracking-wide` is banned from reaching Persian text. Letter-spacing severs
  * the joins between Arabic-script letters — the exact defect tokens.css
  * documents — and the theme's :lang(fa) guard covers prose defaults but loses

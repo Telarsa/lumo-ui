@@ -7,7 +7,7 @@ import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { OnThisPage } from "@/components/on-this-page";
-import { DemoFrame } from "@/components/demo-frame";
+import { DemoFrame, DirectionCompare } from "@/components/demo-frame";
 import { CodeBlock, CopyButton } from "@/components/code-block";
 import { InstallTabs, type InstallFile } from "@/components/install-tabs";
 import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
@@ -146,9 +146,16 @@ function resolveRegistryItem(
   source: string,
 ): RegistryItem | undefined {
   const uiItems = registry.items.filter((i) => i.type === "registry:ui");
-  const exact = uiItems.find((i) => i.name === slug);
-  if (exact) return exact;
-  return uiItems.find((i) => {
+  /*
+   * Byte-comparison FIRST, name second. The name-first order shipped a real
+   * wrong install: the "skeleton" demo page shows skeleton-presets.tsx, but
+   * name-matching short-circuited to the bare `skeleton` item, so the page
+   * told the reader to install the one file its own demo was not showing.
+   * What the page DISPLAYS is the ground truth of what it should install —
+   * the name is only the fallback for pages whose displayed source is not a
+   * registry main file at all.
+   */
+  const byContent = uiItems.find((i) => {
     const main = mainFileOf(i);
     if (!main) return false;
     try {
@@ -157,6 +164,7 @@ function resolveRegistryItem(
       return false;
     }
   });
+  return byContent ?? uiItems.find((i) => i.name === slug);
 }
 
 export default async function ComponentPage({
@@ -292,7 +300,17 @@ export default async function ComponentPage({
               </TabList>
               <TabPanel id="preview" className="mt-4">
                 <PreviewToolbar lang={lang} slug={slug}>
-                  {demo.render(lang)}
+                  {/*
+                   * The stage centres its cell vertically, but the cell itself
+                   * is `w-full max-w-2xl` — so an intrinsic-width exhibit (a
+                   * lone switch, a button pair) used to hug the start edge of
+                   * an otherwise empty stage, which is what the design review
+                   * screenshotted. `items-center` on a column flex centres an
+                   * intrinsic exhibit on the inline axis while a `w-full` demo
+                   * still spans the cell — centring without re-introducing a
+                   * width constraint the demo did not ask for.
+                   */}
+                  <div className="flex w-full flex-col items-center">{demo.render(lang)}</div>
                 </PreviewToolbar>
               </TabPanel>
               {/*
@@ -355,13 +373,31 @@ export default async function ComponentPage({
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-fg-muted">
               {lang === "fa-IR"
-                ? "هر قاب یک سند مستقل با ‎lang‎ و ‎dir‎ واقعی خودش است — نه یک div که وانمود می‌کند."
-                : "Each frame is a real document with its own lang and dir — not a div pretending to be one."}
+                ? "هر قاب یک سند مستقل با ‎lang‎ و ‎dir‎ واقعی خودش است — نه یک div که وانمود می‌کند. برای دیدن هر دو جهت کنار هم، مقایسه را باز کنید."
+                : "Each frame is a real document with its own lang and dir — not a div pretending to be one. Open the comparison to see both directions side by side."}
             </p>
-            <div className="mt-3 grid gap-4 md:grid-cols-2">
-              {LOCALES.map((l) => (
-                <DemoFrame key={l} slug={slug} lang={l} title={demo.title[lang]} pageLang={lang} />
-              ))}
+            {/*
+             * One frame by default — the page's own locale — with the mirrored
+             * document a disclosure away. See `DirectionCompare`'s header: the
+             * hidden frame stays in the served bytes, and `loading="lazy"`
+             * keeps it unfetched until revealed.
+             */}
+            <div className="mt-3">
+              <DirectionCompare
+                primary={
+                  <DemoFrame slug={slug} lang={lang} title={demo.title[lang]} pageLang={lang} />
+                }
+                comparison={
+                  <DemoFrame
+                    slug={slug}
+                    lang={lang === "fa-IR" ? "en-US" : "fa-IR"}
+                    title={demo.title[lang]}
+                    pageLang={lang}
+                  />
+                }
+                showLabel={lang === "fa-IR" ? "نمایش مقایسهٔ دو جهت" : "Compare both directions"}
+                hideLabel={lang === "fa-IR" ? "بستن مقایسهٔ دو جهت" : "Hide the comparison"}
+              />
             </div>
           </section>
 

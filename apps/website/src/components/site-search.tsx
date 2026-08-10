@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { SearchIcon } from "lucide-react";
-import { formatNumber, type Locale } from "@lumo-ui/core";
+import type { Locale } from "@lumo-ui/core";
 import {
   Button,
   Command,
@@ -71,13 +71,8 @@ const copy = {
   emptyMessage: { "fa-IR": "نتیجه‌ای پیدا نشد", "en-US": "No results found" },
   componentsHeading: { "fa-IR": "کامپوننت‌ها", "en-US": "Components" },
   blocksHeading: { "fa-IR": "بلوک‌ها", "en-US": "Blocks" },
+  docsHeading: { "fa-IR": "مستندات", "en-US": "Docs" },
 } as const satisfies Record<string, Record<Locale, string>>;
-
-function resultCountLabel(count: number, lang: Locale): string {
-  const n = formatNumber(count, lang);
-  if (lang === "fa-IR") return `${n} نتیجه`;
-  return count === 1 ? `${n} result` : `${n} results`;
-}
 
 export interface SiteSearchProps {
   lang: Locale;
@@ -111,9 +106,14 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
     if (!isOpen) setQuery("");
   }, [isOpen]);
 
+  const docsPages = useMemo(() => index.filter((d) => d.kind === "doc"), [index]);
   const components = useMemo(() => index.filter((d) => d.kind === "component"), [index]);
   const blocks = useMemo(() => index.filter((d) => d.kind === "block"), [index]);
 
+  const visibleDocs = useMemo(
+    () => docsPages.filter((d) => matches(`${d.title[lang]} ${d.intro[lang]}`, query)),
+    [docsPages, query, lang],
+  );
   const visibleComponents = useMemo(
     () => components.filter((d) => matches(`${d.title[lang]} ${d.intro[lang]}`, query)),
     [components, query, lang],
@@ -122,7 +122,6 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
     () => blocks.filter((d) => matches(`${d.title[lang]} ${d.intro[lang]}`, query)),
     [blocks, query, lang],
   );
-  const total = visibleComponents.length + visibleBlocks.length;
 
   return (
     <CommandDialog
@@ -131,6 +130,13 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
       closeLabel={copy.closeLabel[lang]}
       isOpen={isOpen}
       onOpenChange={setIsOpen}
+      // cmdk chrome: no drawn ✕ (see command.tsx), so the backdrop must close
+      // the palette too — Esc and a press outside are the two exits a pointer
+      // user reaches for.
+      isDismissable
+      // The palette reads better one step narrower than the lg dialog it
+      // rides in; `cn` in DialogModal lets this override win.
+      className="max-w-xl"
       /*
        * The trigger reads as a search FIELD, not a button — the pill shape
        * every docs site converged on, because it advertises what will open.
@@ -158,11 +164,37 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
        */}
       <Command inputValue={query} onInputChange={setQuery} filter={() => true}>
         <CommandInput label={copy.inputLabel[lang]} placeholder={copy.inputPlaceholder[lang]} />
-        <p className="px-3 pt-2 text-xs text-fg-subtle">{resultCountLabel(total, lang)}</p>
+        {/*
+         * The result count that used to sit here is gone — a number over a
+         * list restates what the list already shows, and cmdk's head is just
+         * the input. That makes the EMPTY state the only signal for "nothing
+         * matched", so it must be announced, not merely drawn: `role="status"`
+         * is a polite live region, and the message inside it is the caller's
+         * own translated sentence.
+         *
+         * Rows are single-line — the title is the row, cmdk-style. The intro
+         * still participates in MATCHING (it is part of `matches()`' haystack
+         * and `textValue`), it is just no longer drawn in the row.
+         */}
         <CommandList
-          className="mt-1"
-          renderEmptyState={() => <CommandEmpty>{copy.emptyMessage[lang]}</CommandEmpty>}
+          renderEmptyState={() => (
+            <CommandEmpty role="status">{copy.emptyMessage[lang]}</CommandEmpty>
+          )}
         >
+          {visibleDocs.length > 0 ? (
+            <CommandGroup heading={copy.docsHeading[lang]}>
+              {visibleDocs.map((doc) => (
+                <CommandItem
+                  key={doc.id}
+                  id={`doc-${doc.id}`}
+                  href={doc.href[lang]}
+                  textValue={`${doc.title[lang]} ${doc.intro[lang]}`}
+                >
+                  <span className="min-w-0 flex-1 truncate">{doc.title[lang]}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          ) : null}
           {visibleComponents.length > 0 ? (
             <CommandGroup heading={copy.componentsHeading[lang]}>
               {visibleComponents.map((doc) => (
@@ -172,10 +204,7 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
                   href={doc.href[lang]}
                   textValue={`${doc.title[lang]} ${doc.intro[lang]}`}
                 >
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate">{doc.title[lang]}</span>
-                    <span className="truncate text-xs text-fg-subtle">{doc.intro[lang]}</span>
-                  </span>
+                  <span className="min-w-0 flex-1 truncate">{doc.title[lang]}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -189,10 +218,7 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
                   href={doc.href[lang]}
                   textValue={`${doc.title[lang]} ${doc.intro[lang]}`}
                 >
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate">{doc.title[lang]}</span>
-                    <span className="truncate text-xs text-fg-subtle">{doc.intro[lang]}</span>
-                  </span>
+                  <span className="min-w-0 flex-1 truncate">{doc.title[lang]}</span>
                 </CommandItem>
               ))}
             </CommandGroup>

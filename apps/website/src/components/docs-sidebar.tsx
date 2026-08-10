@@ -3,26 +3,36 @@ import type { Locale } from "@lumo-ui/core";
 import { cn, formatNumber } from "@lumo-ui/core";
 import { site } from "@/lib/locale";
 import { allDemos, TIERS, tierLabel } from "@/lib/demos";
+import { DOCS_PAGES } from "@/lib/docs-pages";
 
 /**
- * The docs sidebar: sections above, then the component list.
+ * The docs sidebar: the prose docs first, the section indexes, then the
+ * component list — the same order shadcn's sidebar reads in ("Getting
+ * Started" above the components).
  *
- * Grouped by tier rather than alphabetically. shadcn lists components in one
- * flat A–Z run, which is easy to scan when you already know the name and useless
- * when you do not — "what do I use for a date range" is not an alphabetical
- * question. Tiers answer it, and the counts tell a reader how much of each kind
- * exists before they click.
+ * Components are grouped by tier rather than alphabetically. shadcn lists them
+ * in one flat A–Z run, which is easy to scan when you already know the name and
+ * useless when you do not — "what do I use for a date range" is not an
+ * alphabetical question. Tiers answer it, and the counts tell a reader how much
+ * of each kind exists before they click.
  *
  * `aria-current="page"` marks the active entry, so a screen reader announces the
  * state in its OWN language rather than reading a phrase we translated. That is
  * only possible because `Link` gained `isCurrent` — see DECISIONS.md.
+ *
+ * `active` names either a component id ("button") or a docs slug prefixed
+ * "docs:" ("docs:theming") — the prefix keeps the two namespaces from ever
+ * colliding rather than relying on no component being named "changelog".
  */
 export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | undefined }) {
   const t = site[lang];
   const demos = allDemos();
 
+  // The prose pages come from the ONE canonical list — see lib/docs-pages.ts
+  // for why four hand-kept copies of it were the discoverability bug.
+  const docs = DOCS_PAGES.map((d) => ({ slug: d.slug, label: d.label[lang] }));
+
   const sections: Array<{ href: string; label: string }> = [
-    { href: `/${lang}/`, label: lang === "fa-IR" ? "معرفی" : "Introduction" },
     { href: `/${lang}/components/`, label: t.components },
     { href: `/${lang}/blocks/`, label: t.blocks },
   ];
@@ -40,6 +50,26 @@ export function DocsSidebar({ lang, active }: { lang: Locale; active?: string | 
       className="text-[0.8125rem]/5"
     >
       <section>
+        <h2 className={groupLabel}>{lang === "fa-IR" ? "مستندات" : "Docs"}</h2>
+        <ul className="flex flex-col gap-px">
+          {docs.map((d) => (
+            <li key={d.slug}>
+              <Link
+                href={`/${lang}/docs/${d.slug}/`}
+                aria-current={active === `docs:${d.slug}` ? "page" : undefined}
+                className={cn(
+                  row,
+                  active === `docs:${d.slug}` && "bg-surface-hover font-medium text-fg",
+                )}
+              >
+                {d.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="mt-5">
         <h2 className={groupLabel}>{t.sections}</h2>
         <ul className="flex flex-col gap-px">
           {sections.map((s) => (
