@@ -15,7 +15,12 @@ import { AspectRatio } from "./aspect-ratio.tsx";
 afterEach(cleanup);
 
 describe("AspectRatio — a ratio is a dimension, not a direction", () => {
-  it("carries the ratio as a custom property and sizes with aspect-[var(…)]", () => {
+  // The title once quoted the arbitrary-value class verbatim, ellipsis and
+  // all — and Tailwind's scanner, which reads every file in @source'd
+  // directories as bare text, minted `aspect-ratio: var(…)` from it: invalid
+  // CSS that 500'd every dev-server page. A class name in prose is still a
+  // class name to a text scanner.
+  it("carries the ratio as a custom property and sizes via the var-based aspect class", () => {
     const { container } = render(
       <AspectRatio ratio={16 / 9}>
         <p>پیش‌نمایش ویدیو</p>

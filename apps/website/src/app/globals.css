@@ -22,6 +22,18 @@
  */
 @source "../../../../packages/ui/src";
 @source "../../../../packages/blocks/src";
+/*
+ * Tests are excluded from the scan STRUCTURALLY, not by convention. The
+ * scanner reads every file as bare text — comments, strings, test titles —
+ * and a test title that quoted `aspect-[var(…)]` verbatim (typographic
+ * ellipsis included) minted `aspect-ratio: var(…)`: invalid CSS that 500'd
+ * every dev page. Test files are never rendered, so scanning them can only
+ * ever produce phantom classes; excluding them makes the whole failure class
+ * unrepresentable instead of relying on nobody ever naming a class in prose.
+ */
+@source not "../../../../packages/ui/src/**/*.test.tsx";
+@source not "../../../../packages/blocks/src/**/*.test.ts";
+@source not "../../../../packages/blocks/src/**/*.test.tsx";
 
 /*
  * The fonts. `src/fonts/index.ts` puts three variables on <html>; this block is
