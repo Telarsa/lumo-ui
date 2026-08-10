@@ -410,6 +410,68 @@ export { LumoProvider } from "./provider.tsx";
 export type { LumoProviderProps } from "./provider.tsx";
 
 export {
+  HoverCard,
+  hoverCardContentVariants,
+  hoverCardTriggerVariants,
+  hoverCardVariants,
+} from "./hover-card.tsx";
+export type { HoverCardProps } from "./hover-card.tsx";
+
+export {
+  Autocomplete,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteListBox,
+  autocompleteInputVariants,
+  autocompleteItemVariants,
+  autocompleteLabelVariants,
+  autocompleteListBoxVariants,
+} from "./autocomplete.tsx";
+export type {
+  AutocompleteInputProps,
+  AutocompleteItemProps,
+  AutocompleteListBoxProps,
+  AutocompleteMatch,
+  AutocompleteProps,
+} from "./autocomplete.tsx";
+
+export {
+  Rating,
+  ratingButtonVariants,
+  ratingStarVariants,
+  ratingVariants,
+} from "./rating.tsx";
+export type {
+  InteractiveRatingProps,
+  RatingProps,
+  RatingVariantProps,
+  ReadOnlyRatingProps,
+} from "./rating.tsx";
+
+export { FileUpload, FileUploadItem, FileUploadList } from "./file-upload.tsx";
+export type {
+  FileUploadItemProps,
+  FileUploadListProps,
+  FileUploadProps,
+} from "./file-upload.tsx";
+
+/*
+ * Same rule as `pagination.variants.ts` above, for the same reason: FileUpload's
+ * classes AND `formatFileSize` come from the directive-free module, never
+ * through `file-upload.tsx`. A list of already-uploaded attachments is text and
+ * a formatted number with no interaction — the most server-renderable thing in
+ * a file feature — and routing the formatter through the client component would
+ * make it a client reference and fail that page's prerender.
+ */
+export {
+  dropZoneVariants,
+  fileUploadItemVariants,
+  fileUploadListVariants,
+  fileUploadRemoveVariants,
+  formatFileSize,
+} from "./file-upload.variants.ts";
+
+export {
   Carousel,
   CarouselContent,
   CarouselItem,

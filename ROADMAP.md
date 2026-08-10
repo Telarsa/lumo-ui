@@ -205,8 +205,14 @@ alone, then apply Lumo's changes on top.
 `chart` is worth calling out: the roadmap listed it as the one genuine gap no
 headless library ships, and shadcn has it — 10.5k characters over `recharts`.
 
-~~**Attempted 10 August 2026, and worth recording honestly.** Three were vendored;
-none shipped: `chart` quarantined in `packages/ui/vendored/`, `carousel` needing
+~~**Done 10 August 2026. All three shipped**, and the note below — written while
+one of them was still mid-adaptation — was wrong on both of its blockers:
+`icon-sm` was never needed (`IconButton` already takes `size="sm"`), and
+`input-group` was never needed (the search row follows `search-field.tsx`).
+Kept struck through rather than deleted, because a wrong call recorded is how
+you tell a correction from a drift.
+
+~~Three were vendored; none shipped:~~ `chart` quarantined in `packages/ui/vendored/`, `carousel` needing
 a `Button` size Lumo does not define, `command` needing an `input-group` Lumo
 does not have.~~
 

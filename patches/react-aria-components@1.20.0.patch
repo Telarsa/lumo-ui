@@ -1,0 +1,33 @@
+diff --git a/dist/private/intl/fa-IR.mjs b/dist/private/intl/fa-IR.mjs
+new file mode 100644
+index 0000000000000000000000000000000000000000..4b9517a223c27f19ee636c96288caf8036562208
+--- /dev/null
++++ b/dist/private/intl/fa-IR.mjs
+@@ -0,0 +1,10 @@
++var $lumo_faIR_rac$exports = {};
++$lumo_faIR_rac$exports = {
++    "selectPlaceholder": `یک مورد انتخاب کنید`,
++    "tableResizer": `تغییر اندازهٔ ستون`,
++    "dropzoneLabel": `ناحیهٔ رها کردن فایل`,
++    "colorSwatchPicker": `نمونه‌های رنگ`
++};
++
++
++export {$lumo_faIR_rac$exports as default};
+diff --git a/dist/private/intlStrings.mjs b/dist/private/intlStrings.mjs
+index 18b8f4c23fd04b543c8c10c8c1ebf00c84ec99b3..1da3f88edca1466cdc647790ccfc050beed0b40d 100644
+--- a/dist/private/intlStrings.mjs
++++ b/dist/private/intlStrings.mjs
+@@ -1,3 +1,4 @@
++import $lumo_faIR_rac from "./intl/fa-IR.mjs";
+ import $aQscD$intlarAEmjs from "./intl/ar-AE.mjs";
+ import $aQscD$intlbgBGmjs from "./intl/bg-BG.mjs";
+ import $aQscD$intlcsCZmjs from "./intl/cs-CZ.mjs";
+@@ -69,6 +70,7 @@ var $aa5f63badbfee5df$exports = {};
+ 
+ 
+ $aa5f63badbfee5df$exports = {
++    "fa-IR": $lumo_faIR_rac,
+     "ar-AE": $aQscD$intlarAEmjs,
+     "bg-BG": $aQscD$intlbgBGmjs,
+     "cs-CZ": $aQscD$intlcsCZmjs,

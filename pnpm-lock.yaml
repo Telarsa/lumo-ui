@@ -80,6 +80,7 @@ catalogs:
       version: 4.1.10
 
 patchedDependencies:
+  react-aria-components@1.20.0: 5c3e44613bd0dc3fdce3c25a2b0a8e2ec85f2ebc1b027cdfc19779e24bf534bc
   react-aria@3.51.0: fa272bfd24e0d4bca6cfaf05dc995316bc83f15ae93a2a9e3930e1a45e139f79
 
 importers:
@@ -256,7 +257,7 @@ importers:
         version: 1.30.0(react@19.2.8)
       react-aria-components:
         specifier: 'catalog:'
-        version: 1.20.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 1.20.0(patch_hash=5c3e44613bd0dc3fdce3c25a2b0a8e2ec85f2ebc1b027cdfc19779e24bf534bc)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       recharts:
         specifier: 'catalog:'
         version: 3.8.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react-is@17.0.2)(react@19.2.8)(redux@5.0.1)
@@ -2635,7 +2636,7 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  react-aria-components@1.20.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-aria-components@1.20.0(patch_hash=5c3e44613bd0dc3fdce3c25a2b0a8e2ec85f2ebc1b027cdfc19779e24bf534bc)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@internationalized/date': 3.12.3
       '@internationalized/string': 3.2.10
