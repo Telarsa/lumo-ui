@@ -4,6 +4,8 @@ import type { Locale, LumoNode } from "@lumo-ui/core";
 import { formatNumber, stringsFor } from "@lumo-ui/core";
 import {
   Alert,
+  AlertDialog,
+  AspectRatio,
   Autocomplete,
   AutocompleteInput,
   AutocompleteItem,
@@ -13,6 +15,7 @@ import {
   Breadcrumb,
   Breadcrumbs,
   Button,
+  ButtonGroup,
   Card,
   CardBody,
   CardDescription,
@@ -40,6 +43,8 @@ import {
   CommandSeparator,
   CommandShortcut,
   Container,
+  ContextMenu,
+  ContextMenuTrigger,
   DateText,
   DescriptionDetail,
   DescriptionGroup,
@@ -62,6 +67,8 @@ import {
   Grid,
   HoverCard,
   IconButton,
+  InputGroup,
+  InputGroupButton,
   Kbd,
   Label,
   Link,
@@ -561,6 +568,30 @@ const copy = {
   offerOne: { "fa-IR": "هدفون بی‌سیم", "en-US": "Wireless headphones" },
   offerTwo: { "fa-IR": "کیف چرم دست‌دوز", "en-US": "Hand-stitched leather bag" },
   offerThree: { "fa-IR": "ساعت هوشمند", "en-US": "Smart watch" },
+
+  // Button group
+  docActions: { "fa-IR": "عملیات سند", "en-US": "Document actions" },
+
+  // Aspect ratio
+  videoPreview: { "fa-IR": "پیش‌نمایش ۱۶ به ۹", "en-US": "A 16 by 9 preview" },
+
+  // Alert dialog
+  deleteInvoice: { "fa-IR": "حذف فاکتور", "en-US": "Delete the invoice" },
+  deleteInvoiceBody: {
+    "fa-IR": "فاکتور برای همیشه پاک می‌شود و این کار قابل بازگشت نیست.",
+    "en-US": "The invoice is erased for good; there is no way back.",
+  },
+
+  // Input group
+  pageAddress: { "fa-IR": "نشانی صفحه", "en-US": "Page address" },
+  pageAddressPlaceholder: { "fa-IR": "نشانی را وارد کنید", "en-US": "Enter the address" },
+  copyAddress: { "fa-IR": "رونوشت نشانی", "en-US": "Copy the address" },
+
+  // Context menu
+  rightClickHere: {
+    "fa-IR": "روی این کارت راست‌کلیک کنید",
+    "en-US": "Right-click this card",
+  },
 } as const satisfies Record<string, Record<Locale, string>>;
 
 /**
@@ -1928,6 +1959,123 @@ const DEMOS: Demo[] = [
         </CommandDialog>
         <Kbd keys={["Ctrl", "K"]} />
       </div>
+    ),
+  },
+  {
+    id: "button-group",
+    title: { "fa-IR": "گروه دکمه", "en-US": "Button group" },
+    intro: {
+      "fa-IR": "چند دکمهٔ هم‌خانواده که به یک کنترل می‌پیوندند. درزها با کلاس‌های منطقی صاف می‌شوند و در راست‌چین خودبه‌خود قرینه‌اند؛ ویژگی label اجباری است.",
+      "en-US": "Sibling buttons joined into one control. The seams are squared with logical utilities, so they mirror under RTL on their own; the label prop is required.",
+    },
+    tier: "form",
+    behaviour: false,
+    source: source("button-group.tsx"),
+    render: (l) => (
+      <ButtonGroup label={copy.docActions[l]}>
+        <Button variant="outline">{copy.duplicate[l]}</Button>
+        <Button variant="outline">{copy.rename[l]}</Button>
+        <IconButton label={copy.remove[l]} variant="outline">
+          <span aria-hidden="true">×</span>
+        </IconButton>
+      </ButtonGroup>
+    ),
+  },
+  {
+    id: "aspect-ratio",
+    title: { "fa-IR": "نسبت تصویر", "en-US": "Aspect ratio" },
+    intro: {
+      "fa-IR": "جعبه‌ای با نسبت ثابت پهنا به بلندا. نه رشته‌ای دارد و نه جهتی — نسبت یک اندازه است، نه یک سمت.",
+      "en-US": "A box that keeps its width-to-height ratio. No strings and no direction — a ratio is a dimension, not a side.",
+    },
+    tier: "layout",
+    behaviour: false,
+    source: source("aspect-ratio.tsx"),
+    render: (l) => (
+      <AspectRatio
+        ratio={16 / 9}
+        className="w-full max-w-md overflow-hidden rounded-lg border border-border bg-surface-sunken"
+      >
+        <div className="absolute inset-0 flex items-center justify-center text-sm text-fg-muted">
+          {copy.videoPreview[l]}
+        </div>
+      </AspectRatio>
+    ),
+  },
+  {
+    id: "alert-dialog",
+    title: { "fa-IR": "گفت‌وگوی هشدار", "en-US": "Alert dialog" },
+    intro: {
+      "fa-IR": "گفت‌وگویی که تصمیم می‌خواهد. نقشش alertdialog است، دکمهٔ ✕ ندارد و هر دو فعلِ تأیید و انصراف رشته‌های اجباری‌اند.",
+      "en-US": "A dialog that demands a decision. The role is alertdialog, there is no ✕, and both the confirm and cancel verbs are required strings.",
+    },
+    tier: "overlay",
+    behaviour: true,
+    source: source("alert-dialog.tsx"),
+    render: (l) => (
+      <DialogTrigger>
+        <Button variant="critical">{copy.deleteInvoice[l]}</Button>
+        <DialogOverlay>
+          <DialogModal size="sm">
+            <AlertDialog
+              title={copy.deleteInvoice[l]}
+              confirmLabel={copy.remove[l]}
+              cancelLabel={copy.cancel[l]}
+              tone="critical"
+            >
+              <p className="text-sm text-fg-muted">{copy.deleteInvoiceBody[l]}</p>
+            </AlertDialog>
+          </DialogModal>
+        </DialogOverlay>
+      </DialogTrigger>
+    ),
+  },
+  {
+    id: "input-group",
+    title: { "fa-IR": "ورودی آذین‌دار", "en-US": "Input group" },
+    intro: {
+      "fa-IR": "ورودی متن با آذین‌هایی روی لبه‌های خواندن. جای‌گذاری‌ها منطقی است و دکمهٔ آیکونی داخل آن بدون label کامپایل نمی‌شود.",
+      "en-US": "A text field with adornments on the reading edges. The insets are logical, and an icon-only button inside it does not compile without a label.",
+    },
+    tier: "form",
+    behaviour: true,
+    source: source("input-group.tsx"),
+    render: (l) => (
+      <InputGroup
+        className="w-full max-w-sm"
+        label={copy.pageAddress[l]}
+        placeholder={copy.pageAddressPlaceholder[l]}
+        leading={<LinkGlyph />}
+        trailing={
+          <InputGroupButton label={copy.copyAddress[l]}>
+            <EmptyGlyph />
+          </InputGroupButton>
+        }
+      />
+    ),
+  },
+  {
+    id: "context-menu",
+    title: { "fa-IR": "منوی راست‌کلیک", "en-US": "Context menu" },
+    intro: {
+      "fa-IR": "منوی راست‌کلیک بر پایهٔ همان منوی موجود؛ لنگرش نقطهٔ اشاره‌گر است و از صفحه‌کلید هم باز می‌شود.",
+      "en-US": "A right-click menu built on the existing menu; it anchors at the pointer and opens from the keyboard too.",
+    },
+    tier: "overlay",
+    behaviour: true,
+    source: source("context-menu.tsx"),
+    render: (l) => (
+      <ContextMenuTrigger>
+        <div className="flex w-full max-w-sm select-none items-center justify-center rounded-lg border border-dashed border-border p-8 text-sm text-fg-muted">
+          {copy.rightClickHere[l]}
+        </div>
+        <ContextMenu>
+          <MenuItem id="duplicate">{copy.duplicate[l]}</MenuItem>
+          <MenuItem id="rename">{copy.rename[l]}</MenuItem>
+          <MenuSeparator />
+          <MenuItem id="remove">{copy.remove[l]}</MenuItem>
+        </ContextMenu>
+      </ContextMenuTrigger>
     ),
   },
 ];

@@ -2,6 +2,22 @@ export { Button, IconButton } from "./button.tsx";
 export type { ButtonProps, IconButtonProps } from "./button.tsx";
 
 export {
+  ButtonGroup,
+  ButtonGroupSeparator,
+  ButtonGroupText,
+  buttonGroupTextVariants,
+  buttonGroupVariants,
+} from "./button-group.tsx";
+export type {
+  ButtonGroupProps,
+  ButtonGroupSeparatorProps,
+  ButtonGroupTextProps,
+} from "./button-group.tsx";
+
+export { AspectRatio, aspectRatioVariants } from "./aspect-ratio.tsx";
+export type { AspectRatioProps } from "./aspect-ratio.tsx";
+
+export {
   Description,
   FieldError,
   FOCUS_RING,
@@ -18,6 +34,14 @@ export type { DescriptionProps, FieldErrorProps, FormProps, LabelProps } from ".
 
 export { TextField, inputVariants } from "./text-field.tsx";
 export type { TextFieldProps } from "./text-field.tsx";
+
+export {
+  InputGroup,
+  InputGroupButton,
+  inputGroupAddonVariants,
+  inputGroupInputVariants,
+} from "./input-group.tsx";
+export type { InputGroupButtonProps, InputGroupProps } from "./input-group.tsx";
 
 export { TextArea, textAreaVariants } from "./text-area.tsx";
 export type { TextAreaProps } from "./text-area.tsx";
@@ -135,6 +159,9 @@ export type {
   DialogTriggerProps,
 } from "./dialog.tsx";
 
+export { AlertDialog, alertDialogFooterVariants } from "./alert-dialog.tsx";
+export type { AlertDialogProps, AlertDialogTone } from "./alert-dialog.tsx";
+
 export { Drawer, DrawerOverlay, drawerOverlayVariants, drawerVariants } from "./drawer.tsx";
 export type { DrawerOverlayProps, DrawerProps } from "./drawer.tsx";
 
@@ -168,6 +195,9 @@ export type {
   MenuTriggerProps,
   SubmenuTriggerProps,
 } from "./menu.tsx";
+
+export { ContextMenu, ContextMenuTrigger } from "./context-menu.tsx";
+export type { ContextMenuProps, ContextMenuTriggerProps } from "./context-menu.tsx";
 
 export {
   Select,

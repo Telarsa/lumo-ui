@@ -4,6 +4,34 @@
   "homepage": "https://lumo-ui.com",
   "items": [
     {
+      "name": "alert-dialog",
+      "type": "registry:ui",
+      "title": "Alert Dialog",
+      "description": "A dialog that interrupts with a decision and offers exactly two ways out.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "alert-dialog.variants.ts",
+        "button",
+        "dialog"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/alert-dialog.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/alert-dialog.tsx"
+        },
+        {
+          "path": "packages/ui/src/alert-dialog.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/alert-dialog.variants.ts"
+        }
+      ]
+    },
+    {
       "name": "alert",
       "type": "registry:ui",
       "title": "Alert",
@@ -18,6 +46,24 @@
           "path": "packages/ui/src/alert.tsx",
           "type": "registry:ui",
           "target": "components/ui/alert.tsx"
+        }
+      ]
+    },
+    {
+      "name": "aspect-ratio",
+      "type": "registry:ui",
+      "title": "Aspect Ratio",
+      "description": "A box that keeps a fixed width-to-height ratio while its width flexes.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/aspect-ratio.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/aspect-ratio.tsx"
         }
       ]
     },
@@ -95,6 +141,27 @@
           "path": "packages/ui/src/breadcrumbs.tsx",
           "type": "registry:ui",
           "target": "components/ui/breadcrumbs.tsx"
+        }
+      ]
+    },
+    {
+      "name": "button-group",
+      "type": "registry:ui",
+      "title": "Button Group",
+      "description": "A row of related buttons joined into one visual control.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "separator"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/button-group.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/button-group.tsx"
         }
       ]
     },
@@ -256,6 +323,27 @@
           "path": "packages/ui/src/command.tsx",
           "type": "registry:ui",
           "target": "components/ui/command.tsx"
+        }
+      ]
+    },
+    {
+      "name": "context-menu",
+      "type": "registry:ui",
+      "title": "Context Menu",
+      "description": "A right-click menu, anchored at the pointer.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "menu"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/context-menu.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/context-menu.tsx"
         }
       ]
     },
@@ -424,6 +512,35 @@
           "path": "packages/ui/src/hover-card.tsx",
           "type": "registry:ui",
           "target": "components/ui/hover-card.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input-group",
+      "type": "registry:ui",
+      "title": "Input Group",
+      "description": "A text field with adornments at the reading edges of the box.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "button",
+        "form",
+        "input-group.variants.ts"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/input-group.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input-group.tsx"
+        },
+        {
+          "path": "packages/ui/src/input-group.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/input-group.variants.ts"
         }
       ]
     },
