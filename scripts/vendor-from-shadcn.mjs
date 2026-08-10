@@ -42,7 +42,17 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-const STYLE = "aria-vega"; // React Aria base — the one Lumo rents
+/*
+ * `base-vega` — Base UI underneath, the engine Lumo migrated to (10 Aug 2026,
+ * experiments/COMPARISON.md). Was `aria-vega` while Lumo rented React Aria.
+ *
+ * Measured the day of the switch: 48 of Lumo's 77 components have a base-vega
+ * counterpart (experiments/measurements/base-vega-inventory.json). That is the
+ * cheapest path through the migration by a wide margin — vendor the emit, then
+ * apply the Lumo pass. Hand-writing a component that upstream already ships is
+ * the thing this script exists to stop.
+ */
+const STYLE = process.env.LUMO_STYLE ?? "base-vega";
 const ROOT = new URL("..", import.meta.url).pathname;
 const OUT = join(ROOT, "packages/ui/src");
 
@@ -62,10 +72,13 @@ for (const name of names) {
   if (!res.ok) {
     // A 404 usually means the component exists only under a Radix or Base UI
     // style. Say which, rather than leaving the reader to guess.
-    const base = await fetch(`https://ui.shadcn.com/r/styles/base-vega/${name}.json`);
+    const alt = await fetch(`https://ui.shadcn.com/r/styles/aria-vega/${name}.json`);
     console.error(
       `  ${name}: not in ${STYLE} (${res.status})` +
-        (base.ok ? " — it DOES exist under base-vega, so it is Base UI-shaped and needs porting" : ""),
+        (alt.ok
+          ? " — it exists under aria-vega (React Aria), so it is not a free port: " +
+            "read it for the composition, then build on Base UI primitives"
+          : " — no counterpart in either style; this one is Lumo's to write"),
     );
     failed = true;
     continue;

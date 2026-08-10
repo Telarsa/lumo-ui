@@ -3,6 +3,7 @@
 import { I18nProvider } from "react-aria-components";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { FORMAT_LOCALE } from "@lumo-ui/core";
+import { LumoLocaleContext } from "./locale.ts";
 
 /**
  * Mount this once, high in every Lumo application. It is not optional.
@@ -38,5 +39,19 @@ export interface LumoProviderProps {
 }
 
 export function LumoProvider({ locale, children }: LumoProviderProps) {
-  return <I18nProvider locale={FORMAT_LOCALE[locale]}>{children}</I18nProvider>;
+  /*
+   * TWO providers while two libraries are present.
+   *
+   * `I18nProvider` serves the components still on React Aria. `LumoLocaleContext`
+   * serves the ones rebuilt on Base UI, which cannot see React Aria's context at
+   * all — Base UI ships a direction provider and nothing else. See `locale.ts`.
+   *
+   * They carry the same locale by construction, so the two halves of the library
+   * cannot disagree during the migration.
+   */
+  return (
+    <LumoLocaleContext.Provider value={locale}>
+      <I18nProvider locale={FORMAT_LOCALE[locale]}>{children}</I18nProvider>
+    </LumoLocaleContext.Provider>
+  );
 }

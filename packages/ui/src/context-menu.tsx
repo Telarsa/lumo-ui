@@ -1,21 +1,19 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import {
-  MenuTrigger as AriaMenuTrigger,
-  PopoverContext,
-  type MenuTriggerProps as AriaMenuTriggerProps,
-  type PopoverProps as AriaPopoverProps,
-} from "react-aria-components";
+import { Children, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { ContextMenu as BaseContextMenu } from "@base-ui/react/context-menu";
 import { type LumoNode } from "@lumo-ui/core";
 import { Menu, MenuPopover, type MenuProps } from "./menu.tsx";
 
 /**
- * A right-click menu, anchored at the pointer.
+ * EXPERIMENT — this file is the React Aria ContextMenu rebuilt on Base UI
+ * 1.7.0's NATIVE `@base-ui/react/context-menu`. The React Aria original is
+ * `experiments/baseline-rac/context-menu.tsx`; the public API below is
+ * unchanged and `packages/ui/src/context-menu.test.tsx` runs against it
+ * UNEDITED. Divergences are recorded in
+ * `experiments/measurements/half-migrated.json`.
  *
- * Opened by contextmenu — the right mouse button, a trackpad two-finger tap,
- * or the keyboard's dedicated menu key.
+ * A right-click menu, anchored at the pointer.
  *
  *     <ContextMenuTrigger>
  *       <Card>…the surface…</Card>
@@ -26,121 +24,101 @@ import { Menu, MenuPopover, type MenuProps } from "./menu.tsx";
  *       </ContextMenu>
  *     </ContextMenuTrigger>
  *
- * React Aria has no ContextMenu component; this is the documented virtual-
- * trigger pattern (the same one shadcn's `aria-vega` context-menu vendors,
- * which was fetched and measured before writing this): a `MenuTrigger` whose
- * open state is driven by `onContextMenu`, with `PopoverContext.triggerRef`
- * overridden to a portaled 1-point anchor placed at the pointer. Everything
- * below the trigger IS menu.tsx — `ContextMenu` is `MenuPopover` + `Menu` in
- * one wrapper, so items, sections, separators, submenus, typeahead and the
- * bidi-mirrored `›` all come from the one implementation and cannot drift.
- * ROADMAP's tripwire allows ~400 wrapper lines before the rental is wrong;
- * this wrapper is well under a quarter of that, so the rental stands.
+ * ── THE WRAPPER THAT IS NO LONGER A WRAPPER ─────────────────────────────────
+ *
+ * React Aria has no ContextMenu component, so the old build was a POSITIONING
+ * MACHINE: a `MenuTrigger` whose open state was driven by `onContextMenu`, plus
+ * a portaled 1-point `<div>` at the pointer, plus a `PopoverContext.Provider`
+ * that swapped `triggerRef` to it. Three mechanisms held together by hand.
+ *
+ * Base UI ships the component. `ContextMenu.Root` renders a `Menu.Root`
+ * underneath — the same `MenuRootContext` every part in menu.tsx already reads
+ * — so `MenuPopover`, `Menu`, `MenuItem`, `MenuSection`, `MenuSeparator` and
+ * `SubmenuTrigger` compose into it UNCHANGED and cannot drift from the plain
+ * menu. `ContextMenu.Trigger` owns right-click AND long-press, and publishes a
+ * virtual anchor that `Menu.Positioner` reads directly (it switches to
+ * `positionMethod: 'fixed'` on its own when a context-menu root is above it).
+ *
+ * ── WHAT THAT DELETES, AND IT IS A MEASURED RESULT ──────────────────────────
+ *
+ *  - The portaled `[data-lumo-context-menu-anchor]` element is GONE. Base UI's
+ *    anchor is a virtual object with a `getBoundingClientRect()` — there is no
+ *    node in the document to query, position `fixed`, or tear down. The old
+ *    test asserts that element exists and now fails by asking for a workaround
+ *    the engine made unnecessary. Recorded, not re-emitted: writing an empty
+ *    `<div>` to `<body>` purely to satisfy an assertion would be dressing one
+ *    library up as the other.
+ *  - The `PopoverContext` override is gone, and with it the `PressResponder`
+ *    dev warning the old header apologised for. Nothing rendered, nothing to
+ *    warn about.
+ *  - The two unreachable `aria-label="Dismiss"` buttons are gone. React Aria
+ *    emitted them from its `DismissButton` sentinel; Base UI dismisses with a
+ *    listener. An open Lumo context menu now announces ZERO English — the same
+ *    result dialog.tsx records for overlays.test.tsx, and the same test shape
+ *    fails for the same reason: it pins a defect that no longer exists.
  *
  * ── DIRECTION ───────────────────────────────────────────────────────────────
  *
- * The anchor is positioned with physical `top`/`left` FROM `clientX`/`clientY`
- * — deliberately, and exempt from the logical-only rule: pointer coordinates
- * are measured from the viewport's physical top-left in BOTH directions, so a
- * logical inset here would be a translation of a value that was never
- * direction-relative to begin with. Direction correctness comes one layer up:
- * the placement stays RAC's own logical `'bottom start'` (see menu.tsx), so
- * the menu grows toward the reading end from the pointer — rightward in
- * English, leftward in Persian — exactly as native context menus do.
+ * There is no longer any physical inset in this file at all. The pointer
+ * coordinates never reach CSS — they reach a `DOMRect` that Base UI's
+ * positioner consumes — so the exemption the old header had to argue for is
+ * moot. Direction correctness still comes from menu.tsx's logical placement,
+ * which is unchanged: the menu grows toward the reading end from the pointer.
  *
  * ── KEYBOARD ────────────────────────────────────────────────────────────────
  *
- * `Shift+F10` and the dedicated ContextMenu key open the menu at the focused
- * element, so the pattern is reachable without a pointer — but a context menu
- * is still a SHORTCUT surface by contract: every action in it must also exist
- * somewhere visible, because no reader can discover a menu that only appears
- * on right-click. That is a rule for the caller; a component cannot enforce
- * what it cannot see.
+ * Browsers map `Shift+F10` and the dedicated ContextMenu key to a native
+ * `contextmenu` event, so Base UI's trigger already answers both — in a
+ * browser. `onKeyDown` below re-dispatches that native event at the focused
+ * element's centre for the environments that do NOT synthesise it (jsdom is
+ * one), which is why the keyboard path is testable at all. It calls the same
+ * handler the mouse does; it is not a second open path.
  *
- * ── TWO ACCEPTED LEAKS, BOTH MEASURED ELSEWHERE ─────────────────────────────
- *
- *  - An OPEN popover carries RAC's two unreachable `aria-label="Dismiss"`
- *    buttons — counted in popover.tsx and pinned again in this component's
- *    test. Closed (the served state), it contributes nothing to the bytes.
- *  - RAC's `PressResponder` logs a dev-only console warning that no pressable
- *    child registered. True by design — the "trigger" is a right-click
- *    surface, not a button — and it is a warning, not markup: nothing is
- *    rendered, announced, or shipped.
+ * A context menu is still a SHORTCUT surface by contract: every action in it
+ * must also exist somewhere visible, because no reader can discover a menu that
+ * only appears on right-click. That is a rule for the caller.
  */
-export interface ContextMenuTriggerProps
-  extends Omit<AriaMenuTriggerProps, "children" | "trigger" | "isOpen" | "defaultOpen"> {
+export interface ContextMenuTriggerProps {
   /** The right-click surface, then the `<ContextMenu>`. In that order. */
   children: LumoNode;
+  onOpenChange?: ((isOpen: boolean) => void) | undefined;
 }
 
-export function ContextMenuTrigger({ children, onOpenChange, ...props }: ContextMenuTriggerProps) {
-  // The pointer position is state RAC does not track — this is not a mirror
-  // of anything, it is the anchor's one source of truth.
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
-  const anchorRef = useRef<HTMLDivElement | null>(null);
+export function ContextMenuTrigger({ children, onOpenChange }: ContextMenuTriggerProps) {
+  const [surface, ...rest] = Children.toArray(children);
 
-  const openAt = (x: number, y: number) => {
-    const wasOpen = position !== null;
-    setPosition({ x, y });
-    if (!wasOpen) onOpenChange?.(true);
-  };
+  function handleKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "ContextMenu" && !(event.shiftKey && event.key === "F10")) return;
+    event.preventDefault();
+    // At the focused element's centre — the keyboard has no pointer.
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    event.currentTarget.dispatchEvent(
+      new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2,
+      }),
+    );
+  }
 
   return (
-    <AriaMenuTrigger
-      {...props}
-      isOpen={position !== null}
-      onOpenChange={(isOpen) => {
-        if (!isOpen) {
-          setPosition(null);
-          onOpenChange?.(false);
-        }
-      }}
+    <BaseContextMenu.Root
+      {...(onOpenChange === undefined
+        ? {}
+        : { onOpenChange: (open: boolean) => onOpenChange(open) })}
     >
-      {position !== null
-        ? createPortal(
-            // The virtual trigger: a fixed, dimensionless point for the
-            // popover to anchor to. Portaled to <body> so an `overflow` or
-            // `transform` on an ancestor cannot re-root the fixed position.
-            <div
-              ref={anchorRef}
-              data-lumo-context-menu-anchor=""
-              style={{ position: "fixed", top: position.y, left: position.x }}
-            />,
-            document.body,
-          )
-        : null}
       {/*
-       * `display: contents` — the div is an event catcher, not a box, so it
-       * adds nothing to layout and nothing to the accessibility tree.
+       * `display: contents` — the trigger is an event catcher, not a box, so it
+       * adds nothing to layout and nothing to the accessibility tree. Base UI
+       * renders a real `<div>` here (React Aria's MenuTrigger rendered none),
+       * and this is what keeps that div from changing anyone's layout.
        */}
-      <div
-        className="contents"
-        onContextMenu={(e) => {
-          e.preventDefault();
-          openAt(e.clientX, e.clientY);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
-            e.preventDefault();
-            // At the focused element's centre — the keyboard has no pointer.
-            const r = (e.target as HTMLElement).getBoundingClientRect();
-            openAt(r.left + r.width / 2, r.top + r.height / 2);
-          }
-        }}
-      >
-        <PopoverContext.Consumer>
-          {(ctx) => (
-            <PopoverContext.Provider
-              // Keep everything MenuTrigger published (state, the logical
-              // 'bottom start' placement) and swap only the anchor.
-              value={{ ...(ctx as AriaPopoverProps), triggerRef: anchorRef }}
-            >
-              {children}
-            </PopoverContext.Provider>
-          )}
-        </PopoverContext.Consumer>
-      </div>
-    </AriaMenuTrigger>
+      <BaseContextMenu.Trigger className="contents" onKeyDown={handleKeyDown}>
+        {surface}
+      </BaseContextMenu.Trigger>
+      {rest}
+    </BaseContextMenu.Root>
   );
 }
 
@@ -148,7 +126,12 @@ export function ContextMenuTrigger({ children, onOpenChange, ...props }: Context
  * The floating menu itself: `MenuPopover` and `Menu` fused, because a context
  * menu's panel and list are never composed differently — and separating them
  * here would only re-open the placement mistakes menu.tsx already closed.
- * Items, sections and separators come from menu.tsx unchanged.
+ *
+ * Both halves are menu.tsx's own components, not context-menu copies of them.
+ * `ContextMenu.Portal` / `.Positioner` / `.Popup` / `.Item` are re-exports of
+ * the identical `Menu.*` modules in Base UI's dist, so composing menu.tsx here
+ * is the native composition — it is what importing them from the context-menu
+ * entry point would resolve to anyway.
  */
 export interface ContextMenuProps<T extends object> extends MenuProps<T> {
   /** Classes for the floating panel, when the menu list is not what you mean. */

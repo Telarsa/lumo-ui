@@ -217,6 +217,41 @@ export interface LumoStrings {
      */
     openCalendar: string;
   };
+
+  /**
+   * ═══ ADDED BY THE BASE UI EXPERIMENT ═══════════════════════════════════════
+   *
+   * Every key above names a string React Aria ALREADY produced, in English,
+   * which Lumo overrides. These four are different in kind: nothing produces
+   * them at all once React Aria is gone.
+   *
+   * On React Aria these words come from `@react-aria/datepicker`'s intl bundle
+   * — «سال», «ماه», «روز», «خالی» — reached only because
+   * `patches/react-aria@3.51.0.patch` adds an `fa-IR` file to a package that
+   * ships 33 locales and no Persian. Base UI ships no date primitive, so a
+   * from-scratch segmented field has no bundle to patch and no bundle to fall
+   * back to: the words have to exist HERE or the field announces nothing.
+   *
+   * That is the trade, stated plainly. The patch disappears; four hand-authored
+   * strings per locale appear in its place, and they are the only reason the
+   * served bytes carry `aria-valuetext="خالی"` rather than `aria-valuetext=""`.
+   */
+  dateField: {
+    /** Name and placeholder text of the year segment. */
+    year: string;
+    /** Name and placeholder text of the month segment. */
+    month: string;
+    /** Name and placeholder text of the day segment. */
+    day: string;
+    /**
+     * `aria-valuetext` of a segment with no value yet.
+     *
+     * A spinbutton with no `aria-valuenow` is announced as "blank" by the
+     * platform if nothing overrides it — in the platform's language, not the
+     * page's. This is the override.
+     */
+    empty: string;
+  };
 }
 
 /**
@@ -236,6 +271,9 @@ export const fa: LumoStrings = {
   },
   calendar: { previousMonth: "ماه قبل", nextMonth: "ماه بعد" },
   datePicker: { openCalendar: "باز کردن تقویم" },
+  // The same four words react-aria's patched fa-IR bundle produces, verified by
+  // rendering the React Aria field and reading its output before deleting it.
+  dateField: { year: "سال", month: "ماه", day: "روز", empty: "خالی" },
 };
 
 export const en: LumoStrings = {
@@ -248,6 +286,7 @@ export const en: LumoStrings = {
   },
   calendar: { previousMonth: "Previous month", nextMonth: "Next month" },
   datePicker: { openCalendar: "Open calendar" },
+  dateField: { year: "year", month: "month", day: "day", empty: "Empty" },
 };
 
 /**

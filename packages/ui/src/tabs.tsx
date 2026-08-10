@@ -1,20 +1,20 @@
 "use client";
 
+import { Children, isValidElement } from "react";
 import { cva } from "class-variance-authority";
-import {
-  Tab as AriaTab,
-  TabList as AriaTabList,
-  TabPanel as AriaTabPanel,
-  Tabs as AriaTabs,
-  type TabListProps as AriaTabListProps,
-  type TabPanelProps as AriaTabPanelProps,
-  type TabProps as AriaTabProps,
-  type TabsProps as AriaTabsProps,
+import { Tabs as BaseTabs } from "@base-ui/react/tabs";
+// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
+import type {
+  TabListProps as AriaTabListProps,
+  TabPanelProps as AriaTabPanelProps,
+  TabProps as AriaTabProps,
+  TabsProps as AriaTabsProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
+import { attr } from "./base-ui-adapter.ts";
 
 /**
- * Tabs.
+ * Tabs. **BASE UI ENGINE.**
  *
  *     <Tabs>
  *       <TabList label="بخش‌های حساب">
@@ -24,29 +24,50 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  *       <TabPanel id="profile">…</TabPanel>
  *     </Tabs>
  *
- * ── DIRECTION IS FREE HERE, AND THAT IS WORTH RECORDING ─────────────────────
+ * ── DIRECTION IS STILL FREE, BUT IT COMES FROM A DIFFERENT PLACE ────────────
  *
- * React Aria resolves arrow keys against the document direction, so under
- * `dir="rtl"` ArrowLeft moves to the NEXT tab and ArrowRight to the previous
- * one — which is what a Persian reader expects and what a hand-rolled
- * `onKeyDown` switch never does. Nothing here implements that; it is one of the
- * things RAC gets right for free, and it is the reason Lumo builds on RAC rather
- * than on headless primitives with hand-written key handling.
+ * React Aria resolved arrow keys against the DOCUMENT direction, read through
+ * `useLocale()`. Base UI resolves them against its own `DirectionProvider`,
+ * which defaults to `'ltr'` and knows nothing about the page's locale or its
+ * `dir` attribute. So the behaviour the old header celebrated as free —
+ * ArrowLeft moving to the NEXT tab under RTL — is now conditional on an
+ * application-level provider that nothing in this component can supply and
+ * nothing in the type system demands.
  *
- * What RAC does NOT do is name the tablist, which is why `label` is required.
+ * MEASURED GAP, recorded rather than papered over: a Lumo `<Tabs>` on a Persian
+ * page reverses its arrow keys only if the app mounted
+ * `<DirectionProvider direction="rtl">`. React Aria needed no such thing. This
+ * is the same defect shape the repository's ledger is full of — correct-looking
+ * output, wrong behaviour, nothing red.
  *
- * ── THE SELECTED INDICATOR IS THE ONLY REAL RTL DECISION ────────────────────
+ * ── `id` ON TAB AND TABPANEL IS NOW `value` UNDERNEATH ──────────────────────
+ *
+ * React Aria keyed tabs by `id` (its collection `Key`); Base UI keys them by
+ * `value`. The public prop stays `id` because it may not change, and each
+ * wrapper translates. The one visible consequence is that `id` no longer also
+ * becomes the DOM id — Base UI generates its own and wires `aria-controls` /
+ * `aria-labelledby` from it.
+ *
+ * ── THE SELECTED INDICATOR IS THE ONLY REAL RTL DECISION (unchanged) ────────
  *
  * Horizontal tabs underline on the BLOCK-end edge (`border-b-2`), which is
  * direction-invariant. Vertical tabs mark their INLINE-end edge (`border-e-2`) —
  * the edge facing the panel — so in Persian the rule appears on the tab's left,
- * still against the content. `border-r-2` would put it on the far side of the
- * tab, detached from what it points at.
+ * still against the content.
  *
- * The orientation switch is a descendant selector on the TabList's own
- * `data-orientation`, rather than a prop threaded down to each `<Tab>`. RAC
- * already publishes the attribute; duplicating it as component state would be a
- * second source of truth for something the DOM already says.
+ * The orientation switch is a descendant selector on `data-orientation`, and
+ * that attribute SURVIVES the engine swap: Base UI's generic state-to-attribute
+ * mapping turns `{orientation: 'horizontal'}` into `data-orientation="horizontal"`
+ * on Root, List, Tab and Panel alike. Verified in
+ * internals/getStateAttributesProps.mjs.
+ *
+ * ── TWO STATE SELECTORS WERE DEAD AND ARE NOW REWRITTEN ────────────────────
+ *
+ * The first pass left `data-selected` and `data-hovered` — React Aria's
+ * vocabulary — in place as an experimental control, so a selected Base UI tab
+ * rendered with the muted colour and no accent border. Both are now written to
+ * the measured Base UI vocabulary; see the header on `tabVariants` for which
+ * attribute the selected state actually is and why the obvious guess is wrong.
  */
 
 export const tabsVariants = cva(
@@ -59,15 +80,41 @@ export const tabListVariants = cva(
     "data-[orientation=vertical]:flex-col data-[orientation=vertical]:border-e data-[orientation=vertical]:border-border",
 );
 
+/**
+ * One tab.
+ *
+ * ── THE SELECTED STATE IS NOT SPELLED `data-selected` ──────────────────────
+ *
+ * Base UI's `Tabs.Tab` marks the selected tab `data-active`, not
+ * `data-selected`. A grep of the installed dist finds no `data-selected` in
+ * `tabs/` at all, and the render confirms which of the two candidate
+ * attributes is the right one — `probe2.state-vocabulary.json →
+ * tabs.selected-is-b` shows `data-active` on the tab whose `aria-selected` is
+ * true, while the roving-focus cursor travels separately as
+ * `data-composite-item-active`.
+ *
+ * That distinction is the trap in this component, and it is the same SHAPE of
+ * trap as `toggle.variants.ts` records: two attributes whose names both read as
+ * "this is the current one", where styling the wrong one produces a control
+ * that looks alive and reports the wrong thing. Here the wrong choice would
+ * underline whichever tab the arrow keys had last passed over rather than the
+ * one whose panel is showing — visible only when a keyboard user arrows without
+ * activating, which is precisely the interaction nobody checks by hand.
+ *
+ *     data-hovered  → NONE. CSS `:hover`.
+ *     data-selected → data-active. Same state, and a name React Aria spends on
+ *                     the pressed state of a Button.
+ *     data-disabled → data-disabled. No edit.
+ */
 export const tabVariants = cva(
   "relative cursor-pointer select-none whitespace-nowrap px-4 py-2 text-sm " +
     "text-fg-muted outline-none transition-colors " +
-    "data-hovered:text-fg " +
-    "data-selected:text-fg data-selected:font-medium " +
+    "hover:text-fg " +
+    "data-active:text-fg data-active:font-medium " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     // Horizontal: block-end underline. `-mb-px` pulls it over the TabList's own
     // hairline so the two do not stack into a 3px rule.
-    "border-b-2 border-transparent -mb-px data-selected:border-accent " +
+    "border-b-2 border-transparent -mb-px data-active:border-accent " +
     // Vertical: inline-end rule instead. `-me-px` is the logical counterpart of
     // `-mb-px` and mirrors with the border it is cancelling.
     "[[data-orientation=vertical]_&]:mb-0 [[data-orientation=vertical]_&]:border-b-0 " +
@@ -82,18 +129,138 @@ export interface TabsProps extends Omit<AriaTabsProps, "children" | "className">
   className?: string | undefined;
 }
 
-export function Tabs({ className, ...props }: TabsProps) {
-  return <AriaTabs data-lumo="" className={cn(tabsVariants(), className)} {...props} />;
+/**
+ * The first `<Tab>`'s `id`, found depth-first, or `undefined` if the tabs are
+ * built some way this cannot see (a render function, a runtime-built array of
+ * elements Lumo does not own).
+ *
+ * ── WHY THIS EXISTS: A FIRST-BYTE DEFECT, CAUGHT BY `gate:html` ─────────────
+ *
+ * React Aria selected the FIRST tab when given no `selectedKey` and no
+ * `defaultSelectedKey`; its collection derived that from tab order. Base UI's
+ * `Tabs.Root` also has a default — but it is the NUMBER `0`, an INDEX, and it
+ * only lands on a tab when tabs are identified positionally.
+ *
+ * Lumo's `Tab` maps its `id` onto Base UI's REQUIRED `value`, so every tab in
+ * this library is identified by name. `0` then matches no tab, and the failure
+ * is silent and total: nothing is selected, `aria-selected="false"` on every
+ * tab, and — because a Base UI panel renders nothing until its value is the
+ * selected one — THE SELECTED PANEL'S CONTENT IS ABSENT FROM THE SERVER
+ * RENDER. On the docs site that deleted every component demo from the served
+ * bytes while `next build` still exited 0.
+ *
+ * Deriving the first tab's id here restores React Aria's documented behaviour
+ * at the only layer that knows both the API and the engine. It is set as
+ * `defaultValue`, so it stays a DEFAULT: an explicit `selectedKey` or
+ * `defaultSelectedKey` still wins, and the tabs stay uncontrolled when the
+ * caller did not ask for control.
+ *
+ * ── WHY IT MATCHES ON PROPS AND NOT ON `child.type === Tab` ────────────────
+ *
+ * That identity test was the first attempt and it silently did nothing on the
+ * docs site. When a SERVER component composes `<Tabs><TabList><Tab/>`, every
+ * one of those elements is created in the react-server module layer, so each
+ * `child.type` is a CLIENT REFERENCE object, not this module's `Tab` function
+ * — the two layers are separate module graphs and the references are resolved
+ * per element as React renders it, which is strictly after this code runs. The
+ * identity check therefore passes only when the tabs are composed inside
+ * another client component, which is exactly the split the build showed: the
+ * install tabs selected correctly and the preview tabs did not.
+ *
+ * PROPS survive that boundary, so the search keys on the two the public API
+ * guarantees: `TabList` REQUIRES `label`, and a `Tab` is identified by `id`.
+ */
+function firstTabId(children: LumoNode): string | number | undefined {
+  // Pass 1: the first `id` inside the element that carries `label` — i.e. the
+  // first Tab inside the TabList. Anchoring to the list is what stops a
+  // `<TabPanel id>` written before the list from being mistaken for a tab.
+  const inList = search(children, true);
+  if (inList !== undefined) return inList;
+  // Pass 2: no identifiable list, so take the first component element with an
+  // `id`. Host elements are skipped — a `<div id>` is a DOM id, not a tab key.
+  return search(children, false);
+}
+
+function search(children: LumoNode, requireList: boolean): string | number | undefined {
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    const props = child.props as {
+      id?: string | number | undefined;
+      label?: unknown;
+      children?: LumoNode;
+    };
+    const isHost = typeof child.type === "string";
+
+    if (requireList && props.label !== undefined && props.children !== undefined) {
+      const found = search(props.children, false);
+      if (found !== undefined) return found;
+    }
+    if (!requireList && !isHost && props.id !== undefined) return props.id;
+    if (props.children === undefined) continue;
+    const nested = search(props.children, requireList);
+    if (nested !== undefined) return nested;
+  }
+  return undefined;
+}
+
+export function Tabs({
+  className,
+  // — translated onto Tabs.Root —
+  selectedKey,
+  defaultSelectedKey,
+  onSelectionChange,
+  orientation,
+  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
+  //   isDisabled          Base UI disables per-Tab, not per-Tabs
+  //   keyboardActivation  Base UI's equivalent is `activateOnFocus` on the LIST,
+  //                       not the root, and it is a boolean rather than
+  //                       "automatic" | "manual"
+  //   disabledKeys        no collection layer, so no key set to disable
+  isDisabled: _isDisabled,
+  keyboardActivation: _keyboardActivation,
+  disabledKeys: _disabledKeys,
+  render: _render,
+  slot: _slot,
+  style: _style,
+  ...rest
+}: TabsProps) {
+  // Only consulted when the caller supplied neither key — see `firstTabId`.
+  const derivedDefault =
+    selectedKey !== undefined || defaultSelectedKey !== undefined
+      ? undefined
+      : firstTabId((rest as { children?: LumoNode }).children);
+
+  return (
+    <BaseTabs.Root
+      data-lumo=""
+      className={cn(tabsVariants(), className)}
+      {...attr("value", selectedKey)}
+      {...attr("defaultValue", defaultSelectedKey ?? derivedDefault)}
+      {...attr("orientation", orientation)}
+      {...attr(
+        "onValueChange",
+        onSelectionChange === undefined
+          ? undefined
+          : (value: BaseTabs.Tab.Value) => onSelectionChange(value as never),
+      )}
+      {...rest}
+    />
+  );
 }
 
 /**
  * `label` is REQUIRED.
  *
- * RAC emits no English here — a tablist simply arrives unnamed — but an unnamed
- * `role="tablist"` is announced as bare "tab list" with no indication of what it
- * switches between, and a page with two tab sets becomes unnavigable by voice.
- * Lumo's position is the same one `IconButton` takes: the name is a constructor
- * argument, not something a reviewer is expected to notice missing.
+ * Base UI emits no English here — a tablist simply arrives unnamed, exactly as
+ * React Aria's did — but an unnamed `role="tablist"` is announced as bare "tab
+ * list" with no indication of what it switches between, and a page with two tab
+ * sets becomes unnavigable by voice. Lumo's position is the same one
+ * `IconButton` takes: the name is a constructor argument, not something a
+ * reviewer is expected to notice missing.
+ *
+ * The generic `<T extends object>` survives for API parity, but Base UI's List
+ * has no collection-render form, so the `(item: T) => LumoNode` child shape is
+ * accepted by the type and never invoked. Recorded as a gap.
  */
 export interface TabListProps<T extends object>
   extends Omit<AriaTabListProps<T>, "children" | "className" | "aria-label"> {
@@ -103,12 +270,21 @@ export interface TabListProps<T extends object>
   className?: string | undefined;
 }
 
-export function TabList<T extends object>({ label, className, ...props }: TabListProps<T>) {
+export function TabList<T extends object>({
+  label,
+  className,
+  // — accepted by the API, unreachable in Base UI: no collection layer —
+  items: _items,
+  dependencies: _dependencies,
+  render: _render,
+  style: _style,
+  ...rest
+}: TabListProps<T>) {
   return (
-    <AriaTabList
+    <BaseTabs.List
       aria-label={label}
       className={cn(tabListVariants(), className)}
-      {...props}
+      {...(rest as BaseTabs.List.Props)}
     />
   );
 }
@@ -118,8 +294,54 @@ export interface TabProps extends Omit<AriaTabProps, "children" | "className"> {
   className?: string | undefined;
 }
 
-export function Tab({ className, ...props }: TabProps) {
-  return <AriaTab data-lumo="" className={cn(tabVariants(), className)} {...props} />;
+export function Tab({
+  className,
+  // — translated onto Tabs.Tab —
+  id,
+  isDisabled,
+  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
+  // `href`/`routerOptions` are React Aria's link-tab support: an RAC `Tab` can
+  // render an `<a>` and participate in client-side routing. Base UI's `Tab`
+  // renders a `<button>` and offers no link form, so a tab set used as
+  // navigation has no equivalent here.
+  href: _href,
+  target: _target,
+  rel: _rel,
+  download: _download,
+  ping: _ping,
+  referrerPolicy: _referrerPolicy,
+  routerOptions: _routerOptions,
+  onPress: _onPress,
+  onPressStart: _onPressStart,
+  onPressEnd: _onPressEnd,
+  onPressChange: _onPressChange,
+  onPressUp: _onPressUp,
+  onHoverStart: _onHoverStart,
+  onHoverEnd: _onHoverEnd,
+  onHoverChange: _onHoverChange,
+  onFocusChange: _onFocusChange,
+  render: _render,
+  style: _style,
+  ...rest
+}: TabProps) {
+  /*
+   * MEASURED GAP. Base UI declares `Tab.value` REQUIRED; React Aria's `Tab.id`
+   * was optional, because its collection derived a key from the tab's position
+   * when none was given. Lumo's public API keeps `id` optional, so a `<Tab>`
+   * written without one type-checks here and reaches Base UI with
+   * `value: undefined` — a tab that can never be selected and whose panel can
+   * never be matched. The cast below is what makes that possible, and it is the
+   * only `as unknown as` in this file: without it the compiler would demand the
+   * prop Lumo's API does not.
+   */
+  const tabProps = {
+    "data-lumo": "",
+    className: cn(tabVariants(), className),
+    ...attr("value", id),
+    ...attr("disabled", isDisabled),
+    ...rest,
+  } as unknown as BaseTabs.Tab.Props;
+  return <BaseTabs.Tab {...tabProps} />;
 }
 
 export interface TabPanelProps extends Omit<AriaTabPanelProps, "children" | "className"> {
@@ -127,10 +349,24 @@ export interface TabPanelProps extends Omit<AriaTabPanelProps, "children" | "cla
   className?: string | undefined;
 }
 
-export function TabPanel({ className, ...props }: TabPanelProps) {
-  // `data-lumo` because RAC gives the panel `tabIndex={0}` when it holds no
-  // focusable content, which makes it a real focus stop that needs the ring.
+export function TabPanel({
+  className,
+  // — translated onto Tabs.Panel —
+  id,
+  shouldForceMount,
+  render: _render,
+  style: _style,
+  ...rest
+}: TabPanelProps) {
+  // `data-lumo` because the panel is a focus stop when it holds no focusable
+  // content, so the shared focus ring has to be able to reach it.
   return (
-    <AriaTabPanel data-lumo="" className={cn(tabPanelVariants(), className)} {...props} />
+    <BaseTabs.Panel
+      data-lumo=""
+      className={cn(tabPanelVariants(), className)}
+      {...attr("value", id)}
+      {...attr("keepMounted", shouldForceMount)}
+      {...(rest as BaseTabs.Panel.Props)}
+    />
   );
 }

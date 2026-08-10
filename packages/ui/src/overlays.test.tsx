@@ -181,14 +181,15 @@ describe("open-state English, counted rather than assumed", () => {
         </DialogOverlay>
       </DialogTrigger>,
     );
-    // Unreachable by prop — RAC builds this DismissButton internally. Recorded
-    // in dialog.tsx's header; see popover.tsx for the reasoning.
+    // ENGINE VOCABULARY. This asserted exactly one "Dismiss" — React Aria built
+    // a DismissButton sentinel internally and its English was unreachable by
+    // any prop, so the count was pinned as a known, budgeted leak.
     //
-    // Note the prop is on the OVERLAY. On <DialogModal> it type-checks (both
-    // take ModalOverlayProps) and does nothing, because RAC reads dismissal off
-    // the overlay and passes it down by context. This assertion is also what
-    // pins that: move `isDismissable` one element in and the count goes to 0.
-    expect(englishIn(spokenAttributes())).toEqual(["Dismiss"]);
+    // Base UI dismisses with a listener and renders no sentinel, so the leak is
+    // absent rather than unmeasured. The assertion is kept and TIGHTENED to the
+    // empty set: this is the stronger form of the same rule, and it still fails
+    // loudly if any engine reintroduces an announced English string here.
+    expect(englishIn(spokenAttributes())).toEqual([]);
   });
 
   it("an open drawer is clean", () => {
@@ -207,7 +208,7 @@ describe("open-state English, counted rather than assumed", () => {
     expect(englishIn(spokenAttributes())).toEqual([]);
   });
 
-  it("every open popover carries exactly two unreachable 'Dismiss' labels", () => {
+  it("an open popover announces no English at all", () => {
     render(
       <MenuTrigger defaultOpen>
         <Button>عملیات</Button>
@@ -218,7 +219,10 @@ describe("open-state English, counted rather than assumed", () => {
         </MenuPopover>
       </MenuTrigger>,
     );
-    expect(englishIn(spokenAttributes())).toEqual(["Dismiss", "Dismiss"]);
+    // Was ["Dismiss", "Dismiss"] — the two sentinels React Aria wrapped every
+    // popover in. Same tightening as the dialog case above: Base UI emits
+    // none, so the expected set is empty and the rule is now absolute.
+    expect(englishIn(spokenAttributes())).toEqual([]);
   });
 
   it("MenuItem keeps typeahead text and marks submenus with an aria-hidden mirrored glyph", () => {
@@ -243,7 +247,13 @@ describe("open-state English, counted rather than assumed", () => {
     const items = getAllByRole("menuitem");
     const submenuItem = items[1];
     expect(submenuItem).toBeDefined();
-    expect(submenuItem?.getAttribute("data-has-submenu")).not.toBeNull();
+    // ENGINE VOCABULARY. React Aria stamped `data-has-submenu`, a styling hook
+    // that told a screen reader nothing; the test asserted its presence. Base
+    // UI states the same fact where it actually reaches assistive tech, so the
+    // assertion moves to the ARIA properties — which is the fact worth pinning
+    // either way, and the one a reader depends on.
+    expect(submenuItem?.getAttribute("aria-haspopup")).toBe("menu");
+    expect(submenuItem?.getAttribute("aria-expanded")).toBe("false");
     // The glyph is aria-hidden, so it is not folded into the item's name — which
     // is why it is a real element and not `after:content-['›']`.
     expect(submenuItem?.querySelector("[aria-hidden]")?.textContent).toBe("›");

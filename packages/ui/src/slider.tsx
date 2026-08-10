@@ -1,100 +1,91 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  I18nProvider,
-  Slider as AriaSlider,
-  SliderOutput as AriaSliderOutput,
-  SliderThumb as AriaSliderThumb,
-  SliderTrack as AriaSliderTrack,
-  type SliderProps as AriaSliderProps,
-} from "react-aria-components";
-import { FORMAT_LOCALE, cn, formatNumber, type Locale } from "@lumo-ui/core";
+import { Slider as BaseSlider } from "@base-ui/react/slider";
+import { DirectionProvider } from "@base-ui/react/direction-provider";
+// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
+import type { SliderProps as AriaSliderProps } from "react-aria-components";
+import { FORMAT_LOCALE, cn, direction, formatNumber, type Locale } from "@lumo-ui/core";
+import { attr } from "./base-ui-adapter.ts";
 
 /**
- * A single value chosen from a range.
+ * A single value chosen from a range. **BASE UI ENGINE.**
  *
  *     <Slider label="بودجه" locale={locale} minValue={0} maxValue={100} defaultValue={40} />
  *
- * `"use client"` because `react-aria-components` is client-only.
- *
- * ═══ THE OUTPUT IS A NUMBER, AND THERE ARE TWO OF THEM ══════════════════════
+ * ═══ THE OUTPUT IS A NUMBER, AND THERE ARE STILL TWO OF THEM ════════════════
  *
  * A slider renders its value twice: once as visible text in `<output>`, and once
- * as `aria-valuetext` on the hidden `<input type="range">`. They must agree, and
- * only one of them is reachable by prop. Both were measured against
- * react-aria-components 1.20.0 rather than assumed.
+ * as `aria-valuetext` on the hidden `<input type="range">`. They must agree.
+ * Under React Aria only ONE of them was reachable — `useSliderThumb` put
+ * `'aria-valuetext': state.getThumbValueLabel(index)` as the LAST argument to
+ * `mergeProps`, so a passed `aria-valuetext` type-checked and was discarded, and
+ * the only lever left was an `I18nProvider` feeding RAC's own formatter.
  *
- * **The visible one** is ours. `SliderOutput` with no children renders
- * `state.getThumbValueLabel(0)`, which RAC formats with `useNumberFormatter` —
- * i.e. under `useLocale()`, i.e. under the BROWSER's locale. Measured on a
- * default page: `<output>40</output>`, Latin, on a page whose every other number
- * is Persian. So this component supplies the children itself, through
- * `formatNumber` from `@lumo-ui/core` with the required `locale`.
+ * **Base UI reverses that, and it is the clearest win in this experiment.**
+ * `SliderThumb.mjs:244` reads
  *
- * **`aria-valuetext` is NOT ours, and cannot be made ours.** From
- * `react-aria/private/slider/useSliderThumb.mjs`:
+ *     'aria-valuetext': typeof getAriaValueTextProp === 'function'
+ *       ? getAriaValueTextProp(formatNumber(thumbValue, locale, format), thumbValue, index)
+ *       : ariaValueTextProp ?? getDefaultAriaValueText(sliderValues, index, format, locale)
  *
- *     inputProps: mergeProps(focusableProps, fieldProps, {
- *       ...,
- *       'aria-valuetext': state.getThumbValueLabel(index),
- *       ...
- *     })
+ * — the consumer's value is consulted FIRST. So both numbers can now come from
+ * the same source: `formatNumber` out of `@lumo-ui/core`, once for the visible
+ * `<output>` through `Slider.Value`'s children function, and once for
+ * `aria-valuetext` through the thumb's `getAriaValueText`. They cannot drift,
+ * because they are the same call on the same value.
  *
- * The literal object is the LAST argument to `mergeProps`, so it wins over
- * anything passed in. Measured: `<SliderThumb aria-valuetext="۴۰" />` renders
- * `aria-valuetext="40"`. The prop is accepted by the types and discarded at
- * runtime — the quietest possible failure.
+ * ── AND THERE IS A NEW HOLE UNDERNEATH THAT WIN ─────────────────────────────
  *
- * This is the same defect `progress.tsx` documents, but the escape hatch that
- * fixes it there (`valueLabel`) does not exist here. What is left is the
- * formatter's own input: `useNumberFormatter` reads `useLocale()`, so an
- * `I18nProvider` is the only lever. This component mounts one, from the same
- * required `locale` prop, carrying `FORMAT_LOCALE` so the numbering system
- * matches `formatNumber` exactly.
+ * MEASURED. `getDefaultAriaValueText` returns `undefined` for a single-thumb
+ * slider with no `format`. A Base UI slider left alone therefore emits NO
+ * `aria-valuetext` at all — not English, not Latin digits, nothing. A screen
+ * reader falls back to reading `aria-valuenow`, which is the raw number in the
+ * USER AGENT's digits rather than the page's. That is a quieter defect than
+ * React Aria's Latin `40`: there is no string to grep for and no attribute to
+ * diff. It is closed here by supplying `getAriaValueText` unconditionally.
  *
- * Measured with the provider, server-rendered and hydrated alike:
+ * For a RANGE slider — which Lumo still does not ship, see below — Base UI's
+ * default is worse still: `«۲۰ start range»`, where the digits obey the `locale`
+ * prop and the words around them do not. A half-localised string is the one
+ * shape a non-Persian-reading reviewer cannot catch.
  *
- *     <output …>۴۰</output>          aria-valuetext="۴۰"
+ * ── DIRECTION IS NO LONGER DERIVED FROM THE LOCALE ──────────────────────────
  *
- * and without it, in both states, `40` / `"40"`. `slider.test.tsx` pins the two
- * strings EQUAL rather than merely non-Latin, because the failure that matters
- * is drift between what is seen and what is spoken.
+ * The largest behavioural regression in this file. React Aria's `useSlider`
+ * resolved thumb positions and arrow keys against `useLocale().direction`, so
+ * the single `I18nProvider` this component mounted fixed the geometry as a side
+ * effect — measured then: `left: 40%` without it, `left: 60%` with it.
  *
- * ── THE PROVIDER ALSO FIXES THE GEOMETRY, WHICH WAS NOT THE PLAN ────────────
+ * Base UI reads direction from its own `DirectionProvider` and has no locale
+ * context whatsoever. `locale` and direction are two independent props with two
+ * independent failure modes, and nothing connects them. This component mounts
+ * BOTH, deriving the direction from the same required `locale` via
+ * `direction()`, which is the only way to keep one prop as the single source.
  *
- * `useSlider` resolves thumb positions against `useLocale().direction`, and
- * `useDefaultLocale()` returns a hardcoded `{locale: 'en-US', direction: 'ltr'}`
- * during SSR. Measured: value 40 on a 0–100 slider renders `left: 40%` with no
- * provider and `left: 60%` with a Persian one — the thumb is placed from the
- * correct edge only in the second case. Arrow keys follow the same source, so
- * without the provider ArrowRight also increases the value on a page that reads
- * right-to-left.
+ * A second, subtler consequence: Base UI positions the thumb with
+ * `insetInlineStart`, not with a direction-resolved `left`. That is the better
+ * primitive — the mirroring is the browser's, not a computation — but it means
+ * `thumb.style.left` is the empty string. controls.test.tsx asserts
+ * `expect(thumb?.style.left).toBe("60%")`, which pinned React Aria's arithmetic
+ * rather than the placement itself, so it now fails against a slider whose thumb
+ * is placed correctly. Recorded as DATA in
+ * experiments/measurements/rebuild-overlays.json; the test is not touched.
  *
- * The fill is Lumo's own element and does not depend on that at all: it is
- * positioned with `inset-inline-start` and sized with `inline-size`, so it grows
- * from the reader's leading edge by construction. `left`/`width` would need a
- * mirrored copy and would disagree with RAC's thumb the moment the two
- * direction sources diverged.
+ * ── WHY THERE IS STILL NO RANGE SLIDER HERE ─────────────────────────────────
  *
- * ── WHY THERE IS NO RANGE SLIDER HERE ──────────────────────────────────────
- *
- * RAC's `Slider` is generic over `number | number[]`, and Lumo's is not. A
- * two-thumb slider needs a locale-correct way to join two numbers into one
- * range string — `Intl.NumberFormat.prototype.formatRange`, which produces
- * `۲۰–۶۰` with the right separator and the right bidi behaviour, and which
- * `@lumo-ui/core`'s formatter module does not yet expose. It also needs a
- * distinct accessible name per thumb: RAC labels both thumbs with the slider's
- * own `aria-labelledby`, so a range slider announces the same name twice.
- * Shipping it without those is shipping the defect this file exists to prevent,
- * so it waits for `formatRange` in core. See ROADMAP.md.
+ * Unchanged, and Base UI does not change the argument: a two-thumb slider needs
+ * `Intl.NumberFormat.prototype.formatRange` for a locale-correct joined string,
+ * which `@lumo-ui/core`'s formatter module does not yet expose. Base UI adds a
+ * reason of its own — its default two-thumb `aria-valuetext` is the
+ * half-localised string above.
  */
 
 export const sliderVariants = cva("flex w-full flex-col gap-2");
 
 export const sliderTrackVariants = cva(
-  // RAC sets `position: relative` on the track inline and positions each thumb
-  // absolutely inside it, so the track only has to be a box with a size.
+  // Base UI's `Slider.Control` is the pointer surface and `Slider.Track` the
+  // painted rail; the indicator and thumb position themselves against it.
   "relative w-full rounded-full bg-surface-sunken " +
     "data-disabled:opacity-50",
   {
@@ -139,23 +130,23 @@ export interface SliderProps
   /**
    * Announced name of the slider, e.g. «بودجه».
    *
-   * REQUIRED. RAC emits no English here — the group simply arrives unnamed — but
-   * an unnamed `role="group"` wrapping an unnamed range input is announced as
-   * bare "slider", which is the 33-unnamed-controls defect in another costume.
+   * REQUIRED. Base UI emits no English here either — the group simply arrives
+   * unnamed — but an unnamed `role="group"` wrapping an unnamed range input is
+   * announced as bare "slider", which is the 33-unnamed-controls defect in
+   * another costume.
    */
   label: string;
   /**
    * The locale the value is formatted in.
    *
    * REQUIRED by design, not by convenience — it is the only input to BOTH the
-   * visible output and `aria-valuetext`. See the file header, and `progress.tsx`
-   * for the argument against making this a context with a default.
+   * visible output and `aria-valuetext`, and under Base UI it is also the only
+   * input to the reading DIRECTION, via the `DirectionProvider` below.
    */
   locale: Locale;
   /**
-   * Passed to `Intl.NumberFormat` for the visible output AND to RAC for
-   * `aria-valuetext`, so the two cannot drift. E.g.
-   * `{ style: "currency", currency: "IRR", maximumFractionDigits: 0 }`.
+   * Passed to `Intl.NumberFormat` for the visible output AND for
+   * `aria-valuetext`, so the two cannot drift.
    */
   formatOptions?: Intl.NumberFormatOptions | undefined;
   /** Hide the label/value row and keep only the track. The name stays. */
@@ -170,91 +161,95 @@ export function Slider({
   hideValue = false,
   size,
   className,
-  ...props
+  // — translated onto Slider.Root —
+  minValue,
+  maxValue,
+  isDisabled,
+  onChange,
+  onChangeEnd,
+  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
+  //   isRequired  Base UI's required lives on Field.Root, not Slider.Root
+  render: _render,
+  slot: _slot,
+  style: _style,
+  ...rest
 }: SliderProps) {
   return (
-    // Outside `AriaSlider`, because `useSlider`/`useSliderState` call
-    // `useLocale()` during the slider's own render. `FORMAT_LOCALE` rather than
-    // the bare tag so RAC's internal formatter resolves `-nu-arabext` exactly as
-    // `formatNumber` does; `isRTL()` maximizes the tag before reading
-    // `getTextInfo()`, so the extensions do not disturb the direction it derives.
-    <I18nProvider locale={FORMAT_LOCALE[locale]}>
-      <AriaSlider<number>
-        {...props}
-        aria-label={label}
-        {...(formatOptions !== undefined ? { formatOptions } : {})}
+    // Two providers' worth of work in one wrapper, from one prop. Base UI's
+    // direction context is entirely separate from its per-component `locale`
+    // prop, so a page that sets one and forgets the other renders Persian digits
+    // sliding the wrong way — with nothing red anywhere.
+    <DirectionProvider direction={direction(locale)}>
+      <BaseSlider.Root
+        data-lumo=""
+        locale={FORMAT_LOCALE[locale]}
         className={cn(sliderVariants(), className)}
-      >
-        {({ state }) => (
-          <>
-            {hideValue ? null : (
-              // `justify-between` on a flex row: the name takes the inline
-              // start, the value the inline end, and both swap under RTL with
-              // no override. The value is already a STRING here, which is also
-              // what gets it past `LumoNode`.
-              <div className="flex items-baseline justify-between gap-2 text-sm">
-                <span className="min-w-0 truncate text-fg">{label}</span>
-                <AriaSliderOutput className="shrink-0 text-fg-muted">
-                  {formatNumber(state.getThumbValue(0), locale, formatOptions)}
-                </AriaSliderOutput>
-              </div>
-            )}
-
-            <AriaSliderTrack className={cn(sliderTrackVariants({ size }))}>
-              {/*
-               * The fill. `inset-inline-start: 0` + `inline-size: N%` grows it
-               * from the reader's leading edge — right in Persian, left in
-               * English — with one declaration and no mirrored copy.
-               *
-               * This is the one place a raw number becomes a string in this
-               * file. It is a CSS length inside a `style` object: never a text
-               * node, never an ARIA attribute, so it sits outside both the
-               * `LumoNode` ban and the HTML gate's Latin-digit rule, which
-               * walks visible text nodes only. `progress.tsx` records the same
-               * carve-out for the same reason.
-               */}
-              <div
-                className={cn(sliderFillVariants())}
-                style={{
-                  insetInlineStart: 0,
-                  inlineSize: `${state.getThumbPercent(0) * 100}%`,
-                }}
-              />
-              {/*
-               * `data-lumo` on the thumb: it is the focus stop (RAC puts a
-               * visually-hidden `<input type="range">` inside it), so the single
-               * focus rule in theme.css has to be able to reach it.
-               *
-               * `-translate-x-1/2 -translate-y-1/2` is NOT written here. RAC
-               * emits `transform: translate(-50%, -50%)` inline along with the
-               * `left`/`right` it computes from the resolved direction, and a
-               * Tailwind translate utility would be overridden by that inline
-               * style anyway. Centring is RAC's job precisely because the offset
-               * it centres against is direction-dependent.
-               *
-               * `aria-label` is on the THUMB as well as on the slider, and it is
-               * not redundancy — it is a dangling-IDREF fix. `SliderThumb` does
-               * `useSlot(!props['aria-label'] && !props['aria-labelledby'])` to
-               * look for a per-thumb `<Label>`; `useSlot` starts `true` and is
-               * only corrected in a layout effect, which never runs on the
-               * server. Measured in the prerendered bytes:
-               * `aria-labelledby="react-aria-_R_lH1_ react-aria-_R_0_"` on the
-               * hidden range input, where the first id belongs to a `<Label>`
-               * this component never renders — a dangling reference that fails
-               * `@lumo-ui/gate`'s `resolved-idrefs`. Naming the thumb takes that
-               * branch out, and the resulting markup is EXACTLY what RAC settles
-               * on after hydration anyway, so this only makes the first byte
-               * agree with the mounted tree.
-               */}
-              <AriaSliderThumb
-                data-lumo=""
-                aria-label={label}
-                className={cn(sliderThumbVariants({ size }))}
-              />
-            </AriaSliderTrack>
-          </>
+        {...attr("format", formatOptions)}
+        {...attr("min", minValue)}
+        {...attr("max", maxValue)}
+        {...attr("disabled", isDisabled)}
+        {...attr(
+          "onValueChange",
+          onChange === undefined
+            ? undefined
+            : (value: number | readonly number[]) => onChange(value as never),
         )}
-      </AriaSlider>
-    </I18nProvider>
+        {...attr(
+          "onValueCommitted",
+          onChangeEnd === undefined
+            ? undefined
+            : (value: number | readonly number[]) => onChangeEnd(value as never),
+        )}
+        {...(rest as BaseSlider.Root.Props<number>)}
+      >
+        {hideValue ? null : (
+          // `justify-between` on a flex row: the name takes the inline start,
+          // the value the inline end, and both swap under RTL with no override.
+          <div className="flex items-baseline justify-between gap-2 text-sm">
+            <span className="min-w-0 truncate text-fg">{label}</span>
+            <BaseSlider.Value className="shrink-0 text-fg-muted">
+              {(_formatted, values) => formatNumber(values[0] ?? 0, locale, formatOptions)}
+            </BaseSlider.Value>
+          </div>
+        )}
+
+        <BaseSlider.Control className="relative w-full">
+          <BaseSlider.Track className={cn(sliderTrackVariants({ size }))}>
+            {/*
+             * Base UI's `Indicator` replaces the hand-positioned fill div the
+             * React Aria build carried. It sets `inset-inline-start` and
+             * `inline-size` itself, which is exactly what that div was written
+             * to do — so the one place this file used to turn a raw number into
+             * a CSS length is now the library's job.
+             */}
+            <BaseSlider.Indicator className={cn(sliderFillVariants())} />
+            {/*
+             * `data-lumo` on the thumb: it is the focus stop (Base UI nests a
+             * visually-hidden `<input type="range">` inside it), so the single
+             * focus rule in theme.css has to be able to reach it.
+             *
+             * `aria-label` is on the thumb as well as on the root. Under React
+             * Aria this doubled as a dangling-IDREF fix — `useSlot` started
+             * `true` and emitted an `aria-labelledby` pointing at a `<Label>`
+             * this component never rendered. Base UI has no such branch; the
+             * name is here because the input is the thing a screen reader lands
+             * on and it must be named.
+             *
+             * `getAriaValueText` rather than a literal `aria-valuetext`: the
+             * callback receives the raw value, so the string comes out of
+             * `formatNumber` — byte-identical to the `<output>` above.
+             */}
+            <BaseSlider.Thumb
+              data-lumo=""
+              aria-label={label}
+              getAriaValueText={(_formattedValue, value) =>
+                formatNumber(value, locale, formatOptions)
+              }
+              className={cn(sliderThumbVariants({ size }))}
+            />
+          </BaseSlider.Track>
+        </BaseSlider.Control>
+      </BaseSlider.Root>
+    </DirectionProvider>
   );
 }

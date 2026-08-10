@@ -90,15 +90,34 @@ describe("Slider — the value is a number, twice", () => {
 
   it("places the thumb from the INLINE-END edge on a Persian page", () => {
     render(<Slider label="بودجه" locale="fa-IR" defaultValue={40} />);
-    // RAC computes the offset itself, against `useLocale().direction`. 40% of
-    // an RTL track is 60% from the left — which only happens because slider.tsx
-    // mounts the I18nProvider. Without it this is "40%", i.e. measured from the
-    // wrong edge on every Persian page.
+    // ENGINE VOCABULARY, and the mechanism genuinely changed. React Aria
+    // computed the offset in JS against `useLocale().direction` and wrote a
+    // PHYSICAL `left`, so 40% of an RTL track was asserted as "60%".
+    //
+    // Base UI writes the LOGICAL `inset-inline-start: 40%` and lets CSS resolve
+    // the edge, so the physical property is empty and "60%" can never appear.
+    // Asserting the logical value alone would be too weak — `40%` is what an
+    // LTR track emits too, so a direction-blind slider would pass. The proof of
+    // direction awareness is the inline-axis centring translate, whose sign
+    // flips: `-50%` on an LTR page, `50%` on this one.
     const thumb = document
       .querySelector('input[type="range"]')
       ?.closest<HTMLElement>("[data-lumo]");
-    expect(thumb, "no thumb found — the assertion below would pass vacuously").not.toBeNull();
-    expect(thumb?.style.left).toBe("60%");
+    expect(thumb, "no thumb found — the assertions below would pass vacuously").not.toBeNull();
+    expect(thumb?.style.getPropertyValue("inset-inline-start")).toBe("40%");
+    expect(thumb?.style.left, "a physical inset is the defect this test exists for").toBe("");
+    expect(thumb?.style.translate).toBe("50% -50%");
+  });
+
+  it("mirrors that thumb centring on an en-US page — the flip is real, not constant", () => {
+    // The control for the assertion above. Without this, `50% -50%` could be a
+    // hard-coded value that happens to be right in Persian and wrong in Latin.
+    render(<Slider label="Budget" locale="en-US" defaultValue={40} />);
+    const thumb = document
+      .querySelector('input[type="range"]')
+      ?.closest<HTMLElement>("[data-lumo]");
+    expect(thumb?.style.getPropertyValue("inset-inline-start")).toBe("40%");
+    expect(thumb?.style.translate).toBe("-50% -50%");
   });
 
   it("an en-US Slider is Latin, which is the point of the locale prop", () => {

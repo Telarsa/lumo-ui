@@ -1,13 +1,12 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  SwitchButton as AriaSwitchButton,
-  SwitchField as AriaSwitchField,
-  type SwitchFieldProps as AriaSwitchFieldProps,
-} from "react-aria-components";
+import { Field } from "@base-ui/react/field";
+import { Switch as BaseSwitch } from "@base-ui/react/switch";
+import type { SwitchFieldProps as AriaSwitchFieldProps } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { Description, FieldError, FOCUS_RING } from "./form.tsx";
+import { descriptionVariants, fieldErrorVariants, FOCUS_RING_SELF } from "./form.tsx";
+import { attr, useSsrLabelId } from "./base-ui-adapter.ts";
 
 /**
  * The clickable row.
@@ -68,13 +67,41 @@ export const switchVariants = cva(
  * to 18×32 so every inset in this file is an integer. The 0.4px is not a
  * visible difference; a fractional inset that rounds differently per zoom
  * level is.
+ *
+ * shadcn's `base-vega` switch keeps the 18.4px, so the vendored Base UI version
+ * reproduces the fraction Lumo removed. The size arithmetic below is Lumo's,
+ * unchanged; only the STATE selectors moved, and the header explains why.
+ *
+ * ── THE STATE SELECTORS, AFTER THE ENGINE SWAP ─────────────────────────────
+ *
+ * This element is `Switch.Root` under Base UI, and that single fact rewrites
+ * every state rule on it. Under React Aria the track was decoration and every
+ * state was read from the wrapping `<label>` through `group-*`. Under Base UI
+ * the track IS the control: `role="switch"`, `tabindex="0"`, and it carries its
+ * own state. Measured in `probe.state-vocabulary.json → switch.on` / `.focus` /
+ * `.disabled`.
+ *
+ *     group-data-hovered       → group-hover. The one clean rename in this
+ *                                file: the hover target is still the label, so
+ *                                only the mechanism changes, attribute → CSS.
+ *     group-data-selected      → data-checked, WITHOUT the group prefix. Base
+ *                                UI writes `data-checked` / `data-unchecked` on
+ *                                this element, and writes NOTHING for the ON
+ *                                state on the label. Both halves of the
+ *                                selector change: the name and the subject.
+ *     group-data-focus-visible → focus-visible, WITHOUT the group prefix, for
+ *                                the same reason plus one more: the state does
+ *                                not exist as an attribute anywhere in Base UI.
+ *                                See `FOCUS_RING_SELF` in form.tsx.
+ *     data-disabled            → unchanged; Base UI's Field puts it on the
+ *                                label AND on this element.
  */
 export const switchTrackVariants = cva(
   "relative shrink-0 rounded-full bg-surface-sunken " +
     "border border-border-control transition-colors " +
-    "group-data-hovered:border-border-strong " +
-    "group-data-selected:border-accent group-data-selected:bg-accent " +
-    FOCUS_RING,
+    "group-hover:border-border-strong " +
+    "data-checked:border-accent data-checked:bg-accent " +
+    FOCUS_RING_SELF,
   {
     variants: {
       size: {
@@ -102,6 +129,15 @@ export const switchTrackVariants = cva(
  * and Tailwind spells it `start-*`. It animates (both endpoints are lengths), and
  * the browser resolves which physical edge that is.
  *
+ * This is not a hypothetical about the other library. shadcn's `base-vega`
+ * switch, vendored for this experiment, ships exactly the defect described
+ * above: its checked rule is a horizontal-axis transform utility, keyed off the
+ * size variant and the checked attribute. See
+ * experiments/vendor-base-vega/switch.json for the literal class — it is quoted
+ * THERE and not here, because Tailwind's scanner reads comments and would
+ * otherwise emit that physical utility into Lumo's own stylesheet from a
+ * sentence complaining about it.
+ *
  * ── THE DEFECT THE FIRST VERSION SHIPPED, AND THE ARITHMETIC THAT FIXED IT ──
  *
  * The first version measured the BORDER box, but absolute insets resolve
@@ -122,17 +158,32 @@ export const switchTrackVariants = cva(
  * Both sizes rest 1px inside the border on every side, in both states, in both
  * scripts. If you change any number above, recompute all three lines of its
  * block — the header's math and the shipped values must not drift apart.
+ *
+ * ── THE ONE STATE SELECTOR THE MIGRATION MADE SIMPLER ──────────────────────
+ *
+ * Every rule here was `group-data-selected`, reading the label. Base UI
+ * PROPAGATES the checked state down to `Switch.Thumb`: the thumb element itself
+ * carries `data-checked` / `data-unchecked`, measured in
+ * `probe.state-vocabulary.json → switch.on`, element index 4. So the group hop
+ * disappears and the rules address the element they are on.
+ *
+ * That propagation is not a courtesy to note in passing — it is the difference
+ * between a rename and a restructure. `checkbox.tsx` needed a named group added
+ * to `Checkbox.Root` for exactly this shape of rule, because Base UI does NOT
+ * propagate the state onto arbitrary children, only onto its own declared
+ * parts. Which parts get the state is per-component knowledge that cannot be
+ * derived from a mapping table, and that is the finding.
  */
 export const switchThumbVariants = cva(
   "absolute top-0.25 start-0.25 rounded-full bg-surface shadow-sm " +
     "transition-[inset-inline-start] duration-150 ease-out " +
-    "group-data-selected:bg-accent-fg " +
+    "data-checked:bg-accent-fg " +
     "motion-reduce:transition-none",
   {
     variants: {
       size: {
-        md: "size-3.5 group-data-selected:start-3.75",
-        lg: "size-5 group-data-selected:start-5.25",
+        md: "size-3.5 data-checked:start-3.75",
+        lg: "size-5 data-checked:start-5.25",
       },
     },
     defaultVariants: { size: "md" },
@@ -144,14 +195,43 @@ export type SwitchVariantProps = VariantProps<typeof switchVariants>;
 /**
  * A switch.
  *
+ * ── EXPERIMENT: BASE UI UNDERNEATH, THE SAME PROPS ON TOP ──────────────────
+ *
+ * Branch `experiment/base-ui`. `@base-ui/react/switch` + `@base-ui/react/field`
+ * replace `SwitchField` + `SwitchButton`; `SwitchProps` is still
+ * `Omit<AriaSwitchFieldProps, …>`, so nothing a caller writes changes.
+ * `experiments/baseline-rac/switch.tsx` is the version this replaced.
+ *
+ * ── THE STATE SELECTORS ARE NO LONGER FROZEN ───────────────────────────────
+ *
+ * The first pass of this experiment reused the three cva blocks above
+ * BYTE-IDENTICAL as an experimental control, and the measured result was a
+ * switch that was **correct to a screen reader and frozen on screen**:
+ * `role="switch"` and `aria-checked` flipped, the track never filled, the thumb
+ * never left its resting inset, and no focus ring appeared at all. That was
+ * read at the time as a Base UI accessibility failure. It was not. It was the
+ * control doing its job — Lumo's selectors were React Aria's, and the engine
+ * under them was not.
+ *
+ * The blocks above are now written to Base UI's measured vocabulary, and every
+ * visual state comes back: track fill, thumb travel, hover border, disabled
+ * dimming, and the WCAG 2.4.7 focus ring. The per-selector reasoning is on each
+ * cva block; the mapping table and the count are in
+ * `experiments/measurements/state-vocabulary.json`, and `state-vocabulary.test.tsx`
+ * asserts each state renders the class that styles it.
+ *
+ * The one thing the first pass got right about this component is still true and
+ * still unfixed by any of the above: Lumo has no `switch.test.tsx`, which is
+ * why nothing caught the frozen switch in the first place. The new suite is the
+ * first test coverage this component has ever had.
+ *
  * A switch commits immediately, so unlike a checkbox it is never "pending until
  * submit" — which is why React Aria's flat `Switch` omits `isRequired` and
- * `isInvalid` entirely. `SwitchField` restores them (and adds the description and
- * error slots), so this is built on `SwitchField` + `SwitchButton`; the flat
- * `Switch` is `@deprecated` in React Aria 1.20 anyway.
- *
- * No `data-lumo` focus ring on the root: the focusable element is a clipped
- * `<input>`, so the ring is drawn on the track instead. See `FOCUS_RING`.
+ * `isInvalid` entirely, and why this was built on `SwitchField` + `SwitchButton`.
+ * Base UI splits the same seam differently: `Switch.Root` is the control alone,
+ * and validity, description and error live on `Field.Root` around it. So the
+ * composition here is Field → Label → Switch, which is the same three jobs in a
+ * different arrangement.
  *
  * `children` is the visible label, typed `LumoNode`. As with `Checkbox`, a switch
  * with no visible label must pass `aria-label`, and the `named-controls` gate rule
@@ -180,25 +260,120 @@ export function Switch({
   errorMessage,
   className,
   controlClassName,
-  ...props
+  // — translated onto Switch.Root —
+  isSelected,
+  defaultSelected,
+  onChange,
+  isReadOnly,
+  isRequired,
+  name,
+  value,
+  form,
+  id,
+  inputRef,
+  // — translated onto Field.Root —
+  isDisabled,
+  isInvalid,
+  /**
+   * React Aria's `validate` is `(value: boolean) => string | string[] | true |
+   * null | undefined`; Base UI's is `(value: unknown, formValues) => string |
+   * string[] | null | Promise<…>`. The value is the same boolean and the error
+   * shapes agree, so the only real translation is React Aria's `true` — which
+   * means VALID — becoming `null`. A caller who returns `true` meaning "yes,
+   * there is an error" was already wrong under React Aria.
+   */
+  validate,
+  /**
+   * NOT translatable. React Aria's `validationBehavior` picks between native
+   * constraint validation (which blocks submission and renders the BROWSER's
+   * message in the BROWSER's language — see form.tsx) and `"aria"`, which marks
+   * the field invalid for assistive technology and blocks nothing. Base UI's
+   * nearest prop, `validationMode`, is a different axis entirely: WHEN to
+   * validate (`onSubmit` / `onBlur` / `onChange`), not WHETHER the browser owns
+   * the message. There is no Base UI setting that turns native validation copy
+   * off, so the Persian-page-with-an-English-error defect form.tsx exists to
+   * prevent has no switch to flip here. Recorded as a capability gap.
+   */
+  validationBehavior,
+  // — accepted by the API, unreachable in Base UI —
+  autoFocus,
+  excludeFromTabOrder,
+  onFocusChange,
+  slot,
+  render,
+  style,
+  ...rest
 }: SwitchProps) {
   // Track width plus the 0.5rem gap, on the inline axis: md 2rem + 0.5rem,
   // lg 2.75rem + 0.5rem. Keeps the description's start edge on the label's.
   const indent = size === "lg" ? "ps-13" : "ps-10";
+  const labelId = useSsrLabelId(children, rest);
   return (
-    <AriaSwitchField
+    <Field.Root
       data-lumo=""
       className={cn("flex flex-col gap-1", className)}
-      {...props}
+      disabled={isDisabled ?? false}
+      {...attr("invalid", isInvalid)}
+      {...attr(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const result = validate(fieldValue as boolean);
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
-      <AriaSwitchButton className={cn(switchVariants({ size }), controlClassName)}>
-        <span className={switchTrackVariants({ size })}>
-          <span aria-hidden="true" className={switchThumbVariants({ size })} />
-        </span>
+      {/*
+        `Field.Label` renders the `<label>` the baseline's `SwitchButton`
+        rendered, and Base UI associates it with the control by id rather than
+        by containment. The row still wraps the track, so a click anywhere on
+        the row still toggles.
+
+        That association is HYDRATION-ONLY, which is why `labelId` is threaded
+        through both elements by hand — the control is a `<span role="switch">`
+        and ships unnamed otherwise. See `useSsrLabelId`.
+      */}
+      <Field.Label
+        className={cn(switchVariants({ size }), controlClassName)}
+        {...attr("id", labelId)}
+      >
+        <BaseSwitch.Root
+          className={switchTrackVariants({ size })}
+          {...attr("aria-labelledby", labelId)}
+          {...attr("checked", isSelected)}
+          {...attr("defaultChecked", defaultSelected)}
+          {...attr("onCheckedChange", onChange)}
+          {...attr("readOnly", isReadOnly)}
+          {...attr("required", isRequired)}
+          {...attr("name", name)}
+          {...attr("value", value)}
+          {...attr("form", form)}
+          {...attr("id", id)}
+          {...attr("inputRef", inputRef)}
+          {...attr("style", typeof style === "function" ? undefined : style)}
+          {...(rest as object)}
+        >
+          <BaseSwitch.Thumb aria-hidden="true" className={switchThumbVariants({ size })} />
+        </BaseSwitch.Root>
         {children}
-      </AriaSwitchButton>
-      {description != null ? <Description className={indent}>{description}</Description> : null}
-      <FieldError className={indent}>{errorMessage}</FieldError>
-    </AriaSwitchField>
+      </Field.Label>
+      {description != null ? (
+        <Field.Description className={cn(descriptionVariants(), indent)}>
+          {description}
+        </Field.Description>
+      ) : null}
+      {/*
+        `match` is Base UI's "show this regardless of ValidityState", which is
+        what a caller-supplied `errorMessage` means. Without it the message is
+        shown only when the browser's own validity says so, and a switch is
+        never natively invalid.
+      */}
+      {errorMessage != null ? (
+        <Field.Error match className={cn(fieldErrorVariants(), indent)}>
+          {errorMessage}
+        </Field.Error>
+      ) : null}
+    </Field.Root>
   );
 }

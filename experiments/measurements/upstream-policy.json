@@ -1,0 +1,216 @@
+{
+  "question": "Would React Aria accept fa-IR upstream, retiring Lumo's patches?",
+  "answer": "no",
+  "confidence": "high",
+  "confidence_basis": "Direct, dated, on-the-record statements from three Adobe maintainers (one of them the project lead), plus a complete authorship census of every merged translation PR. Not an inference from silence.",
+  "generated_at": "2026-08-10T00:00:00Z",
+  "method": {
+    "sources": "GitHub REST + GraphQL against adobe/react-spectrum (public, unauthenticated data), npm registry, react-aria.adobe.com docs",
+    "local_evidence": "patches/react-aria@3.51.0.patch, patches/react-aria-components@1.20.0.patch, installed node_modules trees",
+    "upstream_tree_ref": "adobe/react-spectrum main, fetched 2026-08-10, 11538 paths",
+    "note": "Every quote below was pulled from the API verbatim, not from a search-engine summary. Two summaries were checked against the API and one was wrong (it reported issue #8180 as having no comments; it has three, including the decisive one)."
+  },
+
+  "q1_how_intl_files_are_maintained": {
+    "verdict": "vendor_translation_adobe_globalization_team",
+    "community_locale_additions_merged": 0,
+    "evidence": {
+      "authorship_census": "Every merged PR matching 'translations' in adobe/react-spectrum was authored by an Adobe employee. Verified via the GitHub users API on each author's company field.",
+      "authors": [
+        {"login": "rgeraghty", "name": "Richard Geraghty", "company": "Adobe", "role": "COLLABORATOR", "note": "Adobe globalization; authors the recurring 'localize: Translations Update, please integrate' PRs"},
+        {"login": "snowystinger", "name": "Rob Snow", "company": "@adobe", "role": "MEMBER"},
+        {"login": "yihuiliao", "name": "Yihui Liao", "company": "@Adobe", "role": "MEMBER"},
+        {"login": "LFDanLu", "name": "Daniel Lu", "company": "@Adobe", "role": "MEMBER"},
+        {"login": "angmail101", "name": "Alice", "company": "@adobe", "role": "MEMBER"},
+        {"login": "devongovett", "name": "Devon Govett", "company": "Adobe", "role": "MEMBER"}
+      ],
+      "sample_merged_translation_prs": [
+        {"number": 10379, "date": "2026-07-28", "author": "rgeraghty", "title": "chore: translations"},
+        {"number": 10271, "date": "2026-06-27", "author": "rgeraghty", "title": "localize: Translations Update, please integrate"},
+        {"number": 9227, "date": "2025-11-24", "author": "rgeraghty", "title": "chore: Latest translations"},
+        {"number": 5124, "date": "2023-09-25", "author": "rgeraghty", "title": "Translations for react-aria-components", "changed_files": 33, "note": "the entire 34-locale set for a NEW package landed in one vendor drop, not incrementally"}
+      ],
+      "pipeline_signature": "The recurring PR title 'localize: Translations Update, please integrate' is a vendor-pipeline handoff, not a community contribution flow."
+    },
+    "closest_thing_to_a_community_locale_pr": {
+      "number": 10034,
+      "title": "Add sr-Latn placeholder to datepicker for Serbian Latin locale",
+      "author": "nklaasse",
+      "author_association": "CONTRIBUTOR",
+      "merged": true,
+      "merged_at": "2026-05-11T20:03:06Z",
+      "changed_files": 1,
+      "additions": 1,
+      "file": "packages/react-stately/src/datepicker/placeholders.ts",
+      "why_it_is_not_a_counterexample": "This is a one-line date-segment placeholder ({year:'gggg',month:'mm',day:'dd'}) in a hand-maintained TS table, NOT an intl/*.json message bundle. It is the one localization-adjacent thing an outsider has landed, and it proves the boundary rather than crossing it: the TS table is open to contribution, the vendor-generated JSON bundles are not."
+    }
+  },
+
+  "q2_stated_policy": {
+    "policy_exists": true,
+    "location": "GitHub Discussions, not CONTRIBUTING.md",
+    "contributing_md_says_nothing": "CONTRIBUTING.md contains zero mentions of locale, translation, intl, i18n, or language policy. Grep hits are all 'locally'/'localhost'. There is no documented contribution path to reject you; the rejection lives in discussion threads.",
+    "quotes": [
+      {
+        "text": "There is no public process right now. The Adobe Globalization team handles translations for us. What additional locales are you looking for?",
+        "author": "devongovett",
+        "role": "MEMBER",
+        "date": "2025-04-29",
+        "url": "https://github.com/adobe/react-spectrum/discussions/8158",
+        "context": "Answering 'What is the process for adding additional locales? Is there a public localization platform that we can contribute to (like Crowdin)? We are happy to go ahead and make a few PRs to add additional localizations'"
+      },
+      {
+        "text": "I think right now, we'd be a bit reluctant for the reasons you've mentioned. I think we'd like to solve the language pack option instead, we just haven't had the time and resources to take it on yet. But thank you very much for you offer to help contribute/qa/maintain more languages, it's appreciated!",
+        "author": "snowystinger",
+        "role": "MEMBER",
+        "date": "2024-03-19",
+        "url": "https://github.com/adobe/react-spectrum/discussions/5956",
+        "context": "Direct answer to 'if someone contributed with, let's say 30 languages, would you be reluctant?'"
+      },
+      {
+        "text": "Our primary concern with opening it up would be that our string identifiers would need to become API. We'd like to support it, but we haven't found a good way to solve it yet.",
+        "author": "snowystinger",
+        "role": "MEMBER",
+        "date": "2024-03-01",
+        "url": "https://github.com/adobe/react-spectrum/discussions/5956"
+      },
+      {
+        "text": "It's unlikely that we'll be adding it any time soon since it's up to the Adobe Globalization team to do so",
+        "author": "yihuiliao",
+        "role": "MEMBER",
+        "date": "2026-05-05",
+        "url": "https://github.com/adobe/react-spectrum/issues/8180",
+        "context": "MOST RECENT policy statement, 3 months before this investigation. Answers a bump on a locale request that had been open one year."
+      },
+      {
+        "text": "The problem as I stated above is that if we ever add or change a string, it's a breaking change because new overrides would be needed or existing strings might have new arguments to interpolate. It turns the strings into API that must be versioned. If you want to do that kind of build replacement yourself you can, but just know that every time you upgrade you might have unknown breakages.",
+        "author": "devongovett",
+        "role": "MEMBER",
+        "date": "2026-04-24",
+        "url": "https://github.com/adobe/react-spectrum/discussions/8158",
+        "significance": "This is upstream describing Lumo's patch approach exactly, sanctioning it, and naming its cost. The second half is the recurring tax, stated by the project lead."
+      }
+    ],
+    "policy_stability_window": "2024-03-01 through 2026-04-24 — 26 months, three different maintainers, same answer. Not a transient resourcing excuse."
+  },
+
+  "q3_shipped_locales": {
+    "count": 34,
+    "measured_from": "adobe/react-spectrum main tree, packages/react-aria-components/intl/*.json",
+    "docs_claim": "'React Aria includes localized strings for 30+ languages' — react-aria.adobe.com/quality#internationalization",
+    "docs_vs_tree_note": "The docs list ~37 locale tags because en-GB, fr-CA and similar resolve by fallback to a parent's strings without having bundles of their own. Distinct string bundles on disk: 34.",
+    "locales": ["ar-AE","bg-BG","cs-CZ","da-DK","de-DE","el-GR","en-US","es-ES","et-EE","fi-FI","fr-FR","he-IL","hr-HR","hu-HU","it-IT","ja-JP","ko-KR","lt-LT","lv-LV","nb-NO","nl-NL","pl-PL","pt-BR","pt-PT","ro-RO","ru-RU","sk-SK","sl-SI","sr-SP","sv-SE","tr-TR","uk-UA","zh-CN","zh-TW"],
+    "persian_present": false,
+    "rtl_locales_present": ["ar-AE", "he-IL"],
+    "rtl_note": "RTL layout is supported and exercised by ar-AE/he-IL, so Persian's RTL behaviour works. What is missing is only the Persian STRINGS. This is why the defect is silent: layout is right, words are English.",
+    "has_the_list_ever_grown_from_a_community_contribution": false,
+    "list_growth_evidence": {
+      "origin": "The locale set was established by Adobe in 2019 — commit 'RSP-1437, i18n, adding all remaining languages (#101)', 2019-12-13, author Richard Geraghty. 'RSP-####' is an Adobe-internal Jira key.",
+      "since_then": "Every subsequent intl commit updates or re-drops the SAME set. New packages (react-aria-components in 2023, s2 in 2024) received the existing 34 locales wholesale from the vendor pipeline.",
+      "net_new_locales_from_outside_adobe": 0
+    },
+    "open_locale_requests_all_unfulfilled": [
+      {"number": 8180, "locale": "th-TH", "opened": "2025-05-02", "state": "open", "age_days_at_investigation": 465, "offer": "we would be happy to submit a PR with these translations if necessary", "outcome": "declined 2026-05-05 by MEMBER yihuiliao"},
+      {"number": 8205, "locale": "az-Latn-AZ", "opened": "2025-05-08", "state": "open", "offer": "Translations can be provided by me, if needed", "outcome": "no maintainer response"},
+      {"number": 8221, "locale": "km-KH", "opened": "2025-05-12", "state": "open", "outcome": "linked to the other two by MEMBER snowystinger; no action"}
+    ],
+    "pattern": "Three locale requests, all ~15 months old, two carrying explicit unpaid offers to write and maintain the translations. None accepted. The bottleneck is not translator supply."
+  },
+
+  "q4_what_the_lumo_pr_would_be": {
+    "hypothetical": true,
+    "note": "Sized for completeness even though q1-q3 say it would not be merged. If upstream policy ever changes, this is the shape of the work and it is not large.",
+    "new_files": 23,
+    "file_breakdown": {
+      "packages/react-aria/intl/<component>/fa-IR.json": 20,
+      "packages/react-stately/intl/<component>/fa-IR.json": 2,
+      "packages/react-aria-components/intl/fa-IR.json": 1
+    },
+    "total_strings": 147,
+    "strings_by_bundle": {
+      "react-aria/autocomplete": 1, "react-aria/breadcrumbs": 1, "react-aria/calendar": 12,
+      "react-aria/color": 6, "react-aria/combobox": 5, "react-aria/datepicker": 16,
+      "react-aria/dnd": 27, "react-aria/grid": 6, "react-aria/gridlist": 2,
+      "react-aria/menu": 1, "react-aria/numberfield": 3, "react-aria/overlays": 1,
+      "react-aria/previewtrigger": 1, "react-aria/searchfield": 1, "react-aria/spinbutton": 1,
+      "react-aria/steplist": 1, "react-aria/table": 11, "react-aria/tag": 2,
+      "react-aria/toast": 2, "react-aria/tree": 2,
+      "react-stately/color": 37, "react-stately/datepicker": 4,
+      "react-aria-components": 4
+    },
+    "cross_check": "147 independently matches the '147-key fa-IR dictionary' recorded in DECISIONS.md §0.1 from an earlier round. Two different methods, same number.",
+    "needs_native_reviewer": true,
+    "native_reviewer_rationale": "Yes, and not as a formality. These strings carry ZWNJ placement, ezafe, and plural/interpolation forms that a non-reader cannot review; and the surrounding numeral system (nu-arabext, U+06F0-06F9) is nine code points from Arabic's nu-arab and visually distinct to any reader of either. A wrong-but-plausible Persian string is exactly the class of defect this repo's gate exists to catch, and upstream has no Persian-reading reviewer.",
+    "adobe_stated_objection_to_this_pr": "QA, maintenance and docs overhead for a language nobody on the team reads — snowystinger, 2024-03-19. The native-reviewer requirement above is Adobe's objection restated from the other side, and it is legitimate."
+  },
+
+  "q5_what_this_means_for_a_library_that_must_ship_persian": {
+    "plain_statement": "Persian cannot go upstream. The patch tax is permanent for as long as Lumo depends on React Aria's string bundles.",
+    "consequences": [
+      "The 'contribute it upstream and delete the patches' exit does not exist. It is not slow, it is closed.",
+      "The strongest argument against React Aria — recurring patch debt — does NOT dissolve. It stands at full weight.",
+      "Any Lumo consumer resolving these packages must also carry the patch, or install through Lumo's lockfile. A copied component does not carry a pnpm patch with it.",
+      "Adobe's own lead has sanctioned build-time replacement while warning it 'might have unknown breakages' on every upgrade. Lumo is doing the supported-but-unsupported thing, with upstream's explicit blessing and explicit disclaimer."
+    ],
+    "mitigating_facts_recorded_honestly": [
+      "The measured leak surface for shipped V1 components is 8 strings, of which 5 are prop-reachable and already covered by packages/core/src/strings.ts (DECISIONS.md §0.1). The patch is a belt-and-braces layer, not the only defence.",
+      "RTL layout, Persian calendar and Persian numerals all work with zero patching. Only the strings are missing.",
+      "The patch is mechanical: 70 strings across 17 bundles today. It is annoying, not hard."
+    ],
+    "the_watch_item": "A 'language pack' feature has been wanted by maintainers since 2024-03 and blocked on 'string identifiers would need to become API'. If it ever ships, the patch retires without any locale ever being accepted. That is the realistic exit — not a fa-IR PR. It has been two years with no design, so do not plan around it."
+  },
+
+  "second_order_risk": {
+    "assessment": "Moot in this case, but recorded because the brief asked and because it would bite even under a favourable outcome.",
+    "if_a_pr_were_merged_today": "Lumo would still carry the patch until the release containing it, then through every consumer's upgrade to that release. The patch does not retire on merge; it retires on adoption.",
+    "release_cadence": {
+      "package": "react-aria",
+      "stable_releases_since_2025_08_01": 11,
+      "window_days": 340,
+      "mean_gap_days": 34.0,
+      "latest": "3.51.0",
+      "latest_published": "2026-07-31",
+      "implication": "A version-keyed pnpm patch needs regeneration roughly every 5 weeks, ~10-11 times a year, indefinitely."
+    },
+    "regeneration_surface_today": {
+      "react-aria_patch": {"files_touched": 33, "new_fa_IR_bundles": 16, "modified_intlStrings_files": 17, "strings": 66, "added_lines": 248},
+      "rac_patch": {"new_fa_IR_bundles": 1, "modified_intlStrings_files": 1, "strings": 4},
+      "total_strings_patched": 70
+    },
+    "additional_defect_found_during_this_investigation": {
+      "id": "patch-esm-only",
+      "severity": "medium",
+      "finding": "patches/react-aria@3.51.0.patch touches 33 files, ALL .mjs. Zero .cjs. Upstream ships each locale as .cjs/.js/.mjs; the patched fa-IR exists only as .mjs.",
+      "verification": "grep '^+++ b/' on the patch yields 33 paths, all ending .mjs, 0 ending .cjs. Confirmed against the installed tree: every other locale has 6 files (cjs/js/mjs + maps), fa-IR has 1.",
+      "consequence": "Any consumer resolving the CommonJS build — a require() path, a bundler choosing the 'main' condition, a Jest config without ESM — gets the unpatched dictionary and silently renders English. This is the repo's signature failure shape: plausible output, no error.",
+      "note": "Not necessarily a live bug for Lumo's own ESM-only build. Flagged as unverified-for-consumers, and it is a real fragility multiplier on the regeneration tax: every regeneration must remember a rule that nothing enforces.",
+      "suggested_followup": "Out of scope for this question and NOT actioned here (no code changes in this brief). Worth a targeted check of whether any consumer path resolves CJS."
+    },
+    "brittleness_note": "The patch rewrites bundler-generated files with hashed identifiers ($aQscD$intlarAEmjs). Those identifiers are regenerated per build and are not stable across versions, so the patch does not merely need re-applying — its context lines change shape between releases. This is why the tax is regeneration, not rebasing."
+  },
+
+  "unknowns": [
+    {
+      "item": "Whether Adobe would accept fa-IR if Adobe's own globalization team were asked directly through a commercial channel rather than GitHub.",
+      "status": "unknown",
+      "why": "Not determinable from public evidence. Issue #8180's reporter said on 2026-05-06 they would 'contact our Adobe rep and see if we can open a line of communication'; no public outcome has been posted in the three months since. Adobe ships a Thai locale for its own products (adobe.com/th_th) and still has not added th-TH to react-aria, which is weak evidence that even internal demand does not move this quickly."
+    },
+    {
+      "item": "Whether the 'language pack' feature has any internal design or timeline.",
+      "status": "unknown",
+      "why": "Wanted publicly by maintainers since 2024-03-01, restated 2026-04-24 with the same blocker and no design. Two years of stated intent with no artifact. Recorded as unknown, not as planned."
+    }
+  ],
+
+  "citations": [
+    "https://github.com/adobe/react-spectrum/discussions/8158",
+    "https://github.com/adobe/react-spectrum/discussions/5956",
+    "https://github.com/adobe/react-spectrum/issues/8180",
+    "https://github.com/adobe/react-spectrum/issues/8205",
+    "https://github.com/adobe/react-spectrum/issues/8221",
+    "https://github.com/adobe/react-spectrum/pull/10034",
+    "https://github.com/adobe/react-spectrum/pull/5124",
+    "https://react-aria.adobe.com/quality#internationalization",
+    "https://registry.npmjs.org/react-aria"
+  ]
+}

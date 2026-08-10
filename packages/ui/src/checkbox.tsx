@@ -2,22 +2,22 @@
 
 import { cva } from "class-variance-authority";
 import { CheckIcon, MinusIcon } from "lucide-react";
-import {
-  CheckboxButton as AriaCheckboxButton,
-  CheckboxField as AriaCheckboxField,
-  type CheckboxFieldProps as AriaCheckboxFieldProps,
-  CheckboxGroup as AriaCheckboxGroup,
-  type CheckboxGroupProps as AriaCheckboxGroupProps,
+import { Checkbox as BaseCheckbox } from "@base-ui/react/checkbox";
+import { CheckboxGroup as BaseCheckboxGroup } from "@base-ui/react/checkbox-group";
+import { Field } from "@base-ui/react/field";
+import type {
+  CheckboxFieldProps as AriaCheckboxFieldProps,
+  CheckboxGroupProps as AriaCheckboxGroupProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import {
-  Description,
-  FieldError,
-  FOCUS_RING,
-  Label,
+  descriptionVariants,
+  fieldErrorVariants,
+  FOCUS_RING_SELF,
   fieldVariants,
-  optional,
+  labelVariants,
 } from "./form.tsx";
+import { attr, useSsrLabelId } from "./base-ui-adapter.ts";
 
 /**
  * The clickable row: indicator, then label.
@@ -30,8 +30,10 @@ import {
  * the same component, two different bugs. Centring is stable in both.
  *
  * `group` (unnamed) because the indicator below reads this element's state. Safe
- * unnamed: React Aria's own wrappers carry no `group` class, so the nearest
- * grouped ancestor of the indicator is always this label.
+ * unnamed under React Aria: its wrappers carry no `group` class, so the nearest
+ * grouped ancestor of the indicator is always this label. Still true under Base
+ * UI — but see the component header, because under Base UI this element has no
+ * state for the indicator to read.
  */
 export const checkboxVariants = cva(
   "group flex w-fit cursor-pointer items-center gap-2 text-sm text-fg select-none " +
@@ -39,29 +41,86 @@ export const checkboxVariants = cva(
 );
 
 /**
- * The box.
+ * The box, which under Base UI is also the control.
  *
- * State comes entirely from React Aria's attributes on the wrapping label —
- * `data-selected`, `data-indeterminate`, `data-hovered`, `data-invalid` — read
- * through `group-*`. Nothing here is mirrored into React state, so there is no
- * second source of truth to fall out of sync during a controlled update.
+ * `rounded-sm` rather than a corner-specific radius: a uniform radius has no
+ * inline axis to mirror, which is the cheapest way to be direction-correct.
  *
- * `rounded-sm` rather than `rounded-ss-sm`: a uniform radius has no inline axis
- * to mirror, which is the cheapest way to be direction-correct.
+ * ── THE STATE SELECTORS, AND THE ONE WORKAROUND IN THIS FILE ───────────────
+ *
+ * Under React Aria every state here was read from the wrapping `<label>`
+ * through `group-*`, because the label was where React Aria published it and
+ * the box was pure decoration. Under Base UI this element is `Checkbox.Root`:
+ * `role="checkbox"`, `tabindex="0"`, and the carrier of its own state. Measured
+ * in `probe.state-vocabulary.json → checkbox.on` / `.indeterminate` /
+ * `.invalid` / `.disabled` / `.focus`.
+ *
+ *     group-data-hovered       → group-hover. The hover target is still the
+ *                                label; only the mechanism changes.
+ *     group-data-selected      → data-checked, un-grouped.
+ *     group-data-indeterminate → data-indeterminate, un-grouped. The one name
+ *                                the two libraries already agreed on — and it
+ *                                still needed an edit, because the SUBJECT
+ *                                moved. A mapping table keyed on names alone
+ *                                would have marked this row "no change" and
+ *                                shipped a box that never shows a dash.
+ *     group-data-invalid       → data-invalid, un-grouped. Base UI's Field
+ *                                pushes validity down onto the control.
+ *     group-data-disabled      → data-disabled, un-grouped.
+ *     group-data-focus-visible → focus-visible. See `FOCUS_RING_SELF`.
+ *
+ * `group/box` is the workaround, and it is here rather than in `switch.tsx`
+ * because of an asymmetry in Base UI itself. `Switch.Thumb` is a declared part
+ * and Base UI propagates the checked state onto it, so switch.tsx's thumb rules
+ * address their own element. The two icons below are NOT Base UI parts — they
+ * are Lumo's own `lucide` glyphs, children of the root — and they receive no
+ * state attributes at all (measured: `checkbox.on`, elements 4 and 6, carry no
+ * data attribute). Base UI's own answer is `<Checkbox.Indicator>`, which mounts
+ * conditionally; adopting it would swap CSS toggling for a conditional mount
+ * and reflow the box between states, which is what the always-rendered pair was
+ * chosen to avoid in the first place. So the root becomes a NAMED group and the
+ * icons read it. Named, not bare, because the label above is already an unnamed
+ * group and a bare `group-*` on the icons would match whichever ancestor
+ * happened to be nearest.
  */
 export const checkboxIndicatorVariants = cva(
-  "flex size-5 shrink-0 items-center justify-center rounded-sm border " +
+  "group/box flex size-5 shrink-0 items-center justify-center rounded-sm border " +
     "border-border-control bg-surface text-accent-fg transition-colors " +
-    "group-data-hovered:border-border-strong " +
-    "group-data-selected:border-accent group-data-selected:bg-accent " +
-    "group-data-indeterminate:border-accent group-data-indeterminate:bg-accent " +
-    "group-data-invalid:border-critical " +
-    "group-data-disabled:opacity-50 " +
-    FOCUS_RING,
+    "group-hover:border-border-strong " +
+    "data-checked:border-accent data-checked:bg-accent " +
+    "data-indeterminate:border-accent data-indeterminate:bg-accent " +
+    "data-invalid:border-critical " +
+    "data-disabled:opacity-50 " +
+    FOCUS_RING_SELF,
 );
 
 /**
  * A checkbox.
+ *
+ * ── EXPERIMENT: BASE UI UNDERNEATH, THE SAME PROPS ON TOP ──────────────────
+ *
+ * Branch `experiment/base-ui`. `@base-ui/react/checkbox` + `@base-ui/react/field`
+ * replace `CheckboxField` + `CheckboxButton`; `CheckboxProps` is still
+ * `Omit<AriaCheckboxFieldProps, …>`. `experiments/baseline-rac/checkbox.tsx` is
+ * the version this replaced.
+ *
+ * **1. The tick used to never appear, and now does.** The first pass froze
+ * `checkboxIndicatorVariants` and the two icon class strings byte-identical as
+ * an experimental control, so every rule addressed React Aria's vocabulary on
+ * React Aria's element and both marks stayed hidden in every state — as did the
+ * focus ring. That was recorded as a Base UI defect and it was not one; it was
+ * the control working. The selectors are now written to the measured Base UI
+ * vocabulary, the reasoning is on `checkboxIndicatorVariants`, and
+ * `state-vocabulary.test.tsx` pins each state to the class that styles it.
+ *
+ * **2. `slot="selection"` is gone, and it takes the data table with it.**
+ * `table.tsx` renders `<Checkbox slot="selection" aria-label={label} />` twice —
+ * the select-all cell and the row cell — and React Aria wires those to the
+ * table's selection state through `CheckboxContext` keyed by that slot name.
+ * Base UI has NO context-injection mechanism: `slot` there can only be the
+ * native web-components attribute. The checkboxes still render and are still
+ * named in Persian, and they no longer control anything. `data-display.test.tsx`
+ * is the suite that sees it.
  *
  * `children` is the visible label and is typed `LumoNode`, not `ReactNode`: a
  * checkbox labelled `{count}` would render Latin digits on a Persian page, and
@@ -74,12 +133,7 @@ export const checkboxIndicatorVariants = cva(
  * express "children OR aria-label" without making the common case ugly, so this
  * one is caught a tier out, by the `named-controls` gate rule that grades the
  * prerendered HTML. That is the tier the project already relies on for exactly
- * this class of defect.
- *
- * Built on `CheckboxField` + `CheckboxButton`. React Aria 1.20 marks the flat
- * `Checkbox` component `@deprecated`; the split pair is also what makes a
- * per-checkbox `description` possible, since the description must live OUTSIDE
- * the `<label>` to avoid being swallowed into the control's own name.
+ * this class of defect, and it is engine-independent.
  */
 export interface CheckboxProps
   extends Omit<AriaCheckboxFieldProps, "children" | "className"> {
@@ -102,41 +156,108 @@ export function Checkbox({
   errorMessage,
   className,
   controlClassName,
-  ...props
+  // — translated onto Checkbox.Root —
+  isSelected,
+  defaultSelected,
+  isIndeterminate,
+  onChange,
+  isReadOnly,
+  isRequired,
+  name,
+  value,
+  form,
+  id,
+  inputRef,
+  // — translated onto Field.Root —
+  isDisabled,
+  isInvalid,
+  validate,
+  // — accepted by the API, unreachable in Base UI. See the header. —
+  validationBehavior,
+  autoFocus,
+  excludeFromTabOrder,
+  onFocusChange,
+  slot,
+  render,
+  style,
+  ...rest
 }: CheckboxProps) {
+  const labelId = useSsrLabelId(children, rest);
+
   return (
-    <AriaCheckboxField
+    <Field.Root
       data-lumo=""
       className={cn("flex flex-col gap-1", className)}
-      {...props}
+      disabled={isDisabled ?? false}
+      {...attr("invalid", isInvalid)}
+      {...attr(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const result = validate(fieldValue as boolean);
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
-      <AriaCheckboxButton className={cn(checkboxVariants(), controlClassName)}>
-        <span className={checkboxIndicatorVariants()}>
+      <Field.Label
+        className={cn(checkboxVariants(), controlClassName)}
+        {...attr("id", labelId)}
+      >
+        <BaseCheckbox.Root
+          className={checkboxIndicatorVariants()}
+          {...attr("aria-labelledby", labelId)}
+          {...attr("checked", isSelected)}
+          {...attr("defaultChecked", defaultSelected)}
+          {...attr("indeterminate", isIndeterminate)}
+          {...attr("onCheckedChange", onChange)}
+          {...attr("readOnly", isReadOnly)}
+          {...attr("required", isRequired)}
+          {...attr("name", name)}
+          {...attr("value", value)}
+          {...attr("form", form)}
+          {...attr("id", id)}
+          {...attr("inputRef", inputRef)}
+          {...attr("style", typeof style === "function" ? undefined : style)}
+          {...(rest as object)}
+        >
           {/*
            * Both marks are always rendered and toggled by CSS rather than by a
            * conditional, so the indicator's box never reflows between states.
-           * Indeterminate wins: React Aria can report `data-selected` and
-           * `data-indeterminate` at the same time, and a tick plus a dash in one
-           * box is nonsense.
+           * Indeterminate wins: a control can report selected and indeterminate
+           * at the same time, and a tick plus a dash in one box is nonsense.
+           *
+           * The group-variant suffix below binds these rules to the ROOT — the
+           * box these icons sit in — rather than to the label. The named group
+           * is declared in `checkboxIndicatorVariants`, whose header says why a
+           * bare, unnamed group would have been wrong here.
            */}
           <CheckIcon
             aria-hidden="true"
             strokeWidth={3}
-            className="hidden size-3.5 group-data-selected:block group-data-indeterminate:hidden"
+            className="hidden size-3.5 group-data-checked/box:block group-data-indeterminate/box:hidden"
           />
           <MinusIcon
             aria-hidden="true"
             strokeWidth={3}
-            className="hidden size-3.5 group-data-indeterminate:block"
+            className="hidden size-3.5 group-data-indeterminate/box:block"
           />
-        </span>
+        </BaseCheckbox.Root>
         {children}
-      </AriaCheckboxButton>
+      </Field.Label>
       {/* Indented to the label, not to the box: `ps-7` is the indicator's 1.25rem
           plus the 0.5rem gap, on the inline axis so it follows the reading side. */}
-      {description != null ? <Description className="ps-7">{description}</Description> : null}
-      <FieldError className="ps-7">{errorMessage}</FieldError>
-    </AriaCheckboxField>
+      {description != null ? (
+        <Field.Description className={cn(descriptionVariants(), "ps-7")}>
+          {description}
+        </Field.Description>
+      ) : null}
+      {errorMessage != null ? (
+        <Field.Error match className={cn(fieldErrorVariants(), "ps-7")}>
+          {errorMessage}
+        </Field.Error>
+      ) : null}
+    </Field.Root>
   );
 }
 
@@ -146,6 +267,16 @@ export function Checkbox({
  * `label` is REQUIRED and flat, for the same reason as on `TextField`: the group's
  * name is announced when focus enters it, and a group announced as "group" with no
  * name is the defect the `named-controls` rule was written for.
+ *
+ * Base UI splits this across two components — `Field.Root` owns the label id and
+ * the validity, `CheckboxGroup` owns the value array and emits
+ * `role="group" aria-labelledby={labelId}` (verified in
+ * `checkbox-group/CheckboxGroup.mjs:126-127`). So the required `label` still
+ * lands on a real accessible name, which is the one thing about this component
+ * that had to survive the swap and did.
+ *
+ * `isReadOnly` does not survive: Base UI's `CheckboxGroup` has `disabled` and no
+ * read-only concept, and neither does `Field.Root`. Recorded as a capability gap.
  */
 export interface CheckboxGroupProps
   extends Omit<AriaCheckboxGroupProps, "children" | "className" | "isInvalid"> {
@@ -167,19 +298,67 @@ export function CheckboxGroup({
   errorMessage,
   isInvalid,
   className,
-  ...props
+  // — translated onto CheckboxGroup —
+  value,
+  defaultValue,
+  onChange,
+  // — translated onto Field.Root —
+  isDisabled,
+  name,
+  validate,
+  // — accepted by the API, unreachable in Base UI —
+  isReadOnly,
+  isRequired,
+  validationBehavior,
+  slot,
+  render,
+  style,
+  ...rest
 }: CheckboxGroupProps) {
   return (
-    <AriaCheckboxGroup
+    <Field.Root
       data-lumo=""
       className={cn(fieldVariants(), className)}
-      {...optional("isInvalid", isInvalid ?? (errorMessage != null ? true : undefined))}
-      {...props}
+      disabled={isDisabled ?? false}
+      {...attr("name", name)}
+      {...attr("invalid", isInvalid ?? (errorMessage != null ? true : undefined))}
+      {...attr(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const result = validate(fieldValue as string[]);
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
-      <Label>{label}</Label>
-      <div className="flex flex-col gap-2">{children}</div>
-      {description != null ? <Description>{description}</Description> : null}
-      <FieldError>{errorMessage}</FieldError>
-    </AriaCheckboxGroup>
+      {/*
+        `nativeLabel={false}` because there is no single control to point a
+        `<label for>` at — the name reaches the group through `aria-labelledby`,
+        which is what `CheckboxGroup` reads. A native label here would claim to
+        focus a control that does not exist.
+      */}
+      <Field.Label nativeLabel={false} render={<span />} className={labelVariants()}>
+        {label}
+      </Field.Label>
+      <BaseCheckboxGroup
+        className="flex flex-col gap-2"
+        {...attr("value", value)}
+        {...attr("defaultValue", defaultValue)}
+        {...attr("onValueChange", onChange)}
+        {...attr("style", typeof style === "function" ? undefined : style)}
+        {...(rest as object)}
+      >
+        {children}
+      </BaseCheckboxGroup>
+      {description != null ? (
+        <Field.Description className={descriptionVariants()}>{description}</Field.Description>
+      ) : null}
+      {errorMessage != null ? (
+        <Field.Error match className={fieldErrorVariants()}>
+          {errorMessage}
+        </Field.Error>
+      ) : null}
+    </Field.Root>
   );
 }

@@ -1,23 +1,25 @@
 "use client";
 
+import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
-import {
-  Dialog as AriaDialog,
-  DialogTrigger as AriaDialogTrigger,
-  Heading as AriaHeading,
-  Modal as AriaModal,
-  ModalOverlay as AriaModalOverlay,
-  type DialogProps as AriaDialogProps,
-  type DialogTriggerProps as AriaDialogTriggerProps,
-  type HeadingProps as AriaHeadingProps,
-  type ModalOverlayProps as AriaModalOverlayProps,
+import { Dialog as BaseDialog } from "@base-ui/react/dialog";
+// TYPE-ONLY. The public API may not change, so the prop names stay React Aria's
+// even though the engine underneath is Base UI. Erased at build; no RAC runtime.
+import type {
+  DialogProps as AriaDialogProps,
+  DialogTriggerProps as AriaDialogTriggerProps,
+  HeadingProps as AriaHeadingProps,
+  ModalOverlayProps as AriaModalOverlayProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
+import { attr } from "./base-ui-adapter.ts";
 import { IconButton } from "./button.tsx";
 
 /**
- * Modal dialog. Composition mirrors React Aria's, deliberately:
+ * Modal dialog. **BASE UI ENGINE** — see experiments/measurements/.
+ *
+ * The composition the caller writes is unchanged, because it may not change:
  *
  *     <DialogTrigger>
  *       <Button>ویرایش</Button>
@@ -25,73 +27,95 @@ import { IconButton } from "./button.tsx";
  *         <DialogModal size="md">
  *           <Dialog closeLabel="بستن">
  *             <DialogHeading>ویرایش پروفایل</DialogHeading>
- *             …
  *           </Dialog>
  *         </DialogModal>
  *       </DialogOverlay>
  *     </DialogTrigger>
  *
- * Four layers rather than one `<DialogContent>` because RAC puts `data-entering`
- * and `data-exiting` on the overlay AND the modal independently — measured, both
- * elements carry them — so a scrim that fades while a panel scales needs two
- * styleable elements. Collapsing them would force one shared animation.
+ * ── THE FOUR LAYERS NO LONGER NEST THE SAME WAY UNDERNEATH ──────────────────
  *
- * ── ANIMATION, AND WHY IT IS A TRANSITION AND NOT A KEYFRAME ────────────────
- * RAC's `useExitAnimation` awaits `element.getAnimations()`, and a running CSS
- * transition IS an `Animation` in that list (verified in
- * react-aria/private/utils/animation.mjs — it even cancels stale `CSSTransition`
- * objects before the enter frame). So Tailwind `transition` + `data-entering:`
- * "from" utilities is enough; no keyframes package, no `tailwindcss-animate`.
+ * React Aria nested them literally: ModalOverlay contained Modal contained
+ * Dialog, so the overlay could be a centring flex container and the modal simply
+ * sat inside it. Base UI's Portal holds Backdrop and Popup as SIBLINGS — the
+ * backdrop is not an ancestor of the panel and cannot lay it out.
  *
- * `motion-reduce:transition-none` therefore also unmounts instantly rather than
- * leaving a stuck overlay: with no animations in the list RAC's callback fires
- * on the same frame.
+ * The mapping that preserves the caller's four layers:
  *
- * ── A MEASURED LEAK YOU CANNOT FIX FROM HERE ────────────────────────────────
- * Counted by rendering each overlay open in jsdom and reading every
- * `aria-label` in the document — see overlays.test.tsx, which pins these
- * numbers so a RAC upgrade that changes them fails the build:
+ *     DialogTrigger  → Dialog.Root          (+ the first child lifted into
+ *                                            Dialog.Trigger's `render`)
+ *     DialogOverlay  → Dialog.Portal + Dialog.Backdrop, with `children`
+ *                      rendered as the Backdrop's SIBLING inside the Portal
+ *     DialogModal    → Dialog.Popup         (this is the role=dialog element now)
+ *     Dialog         → a plain <div> carrying dialogVariants and the ✕
  *
- *     <DialogModal>                   0 English labels
- *     <DialogOverlay isDismissable>   1  → aria-label="Dismiss"
- *     <Drawer>                        0
- *     any <Popover>                   2  (see popover.tsx)
+ * `DialogModal` therefore has to centre itself. It does that with
+ * `fixed inset-0 m-auto h-fit` rather than the vendored shadcn recipe
+ * (`top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`), which is two physical
+ * utilities that Lumo's lint bans outright. `inset-0` + `margin: auto` centres on
+ * both axes with nothing to mirror, which is the same argument the old header
+ * made for `inset-0` on the scrim.
  *
- * Note WHERE `isDismissable` goes. In the composed form RAC reads it off the
- * ModalOverlay and publishes it through an internal context that the Modal
- * consumes, so `<DialogOverlay isDismissable>` works and
- * `<DialogModal isDismissable>` is silently inert — it type-checks, because
- * both components share `ModalOverlayProps`, and it does nothing. Measured; the
- * first version of the test asserted against the wrong one and passed for the
- * wrong reason.
+ * ── THE English COUNT WENT TO ZERO, AND THAT BREAKS A TEST ──────────────────
  *
- * `isDismissable` makes RAC render an internal `DismissButton`, built in
- * react-aria/private/overlays/DismissButton.mjs from
- * `useLabels(otherProps, stringFormatter.format('dismiss'))` where `otherProps`
- * is RAC's own `{onDismiss}`. No prop of ours reaches it.
+ * React Aria rendered an internal `DismissButton` — a 1×1 visually-hidden
+ * `<button aria-label="Dismiss">` built from `useLabels(otherProps,
+ * stringFormatter.format('dismiss'))` — whenever `isDismissable` was set on the
+ * overlay. It was not prop-reachable, and overlays.test.tsx PINS it:
  *
- * It is NOT in the served HTML: a closed Modal renders `null`, so the first byte
- * a crawler or a no-JS reader receives contains no English. Like the CalendarCell
- * and DateSegment leaks recorded in `@lumo-ui/core`'s strings.ts, this one is
- * announced on interaction, which is the one place a client-side
- * `LocalizedStringProvider` genuinely works. Stated here so nobody rediscovers
- * it and "fixes" it by passing a prop that RAC ignores.
+ *     expect(englishIn(spokenAttributes())).toEqual(["Dismiss"]);
  *
- * A plain modal dialog is clean. If you need dismiss-on-outside-click AND a
- * clean tree, that is the trade you are making.
+ * Base UI emits no such element. Outside-press dismissal is a listener, not a
+ * focusable sentinel, so an open Base UI dialog announces zero English in either
+ * arm. The test above now fails by finding `[]` where it demanded `["Dismiss"]`
+ * — i.e. it fails because the defect it was pinning is gone. That is recorded as
+ * DATA in experiments/measurements/rebuild-overlays.json and the test is left
+ * exactly as it is.
+ *
+ * ── `isDismissable` IS ACCEPTED AND INERT, AND THE DEFAULT IS INVERTED ──────
+ *
+ * MEASURED GAP. RAC read dismissal off the ModalOverlay and published it by
+ * context; opt-in, default off. Base UI puts the inverse control
+ * (`disablePointerDismissal`) on `Dialog.Root`, and outside-press dismissal is
+ * ON by default. Lumo's public API places the prop on `DialogOverlay`, which is
+ * a Portal+Backdrop pair with no route back up to the Root, so the prop cannot
+ * be honoured from where the API puts it. It is destructured out so it cannot
+ * reach the DOM, and it is NOT emulated. Every Base UI dialog in this build is
+ * dismissable whether or not the caller asked.
  */
 
 /**
  * The scrim.
  *
- * `inset-0` is `inset: 0` in Tailwind v4 — all four sides at once, which has no
- * inline axis to get wrong. `bg-black/50` rather than a token: there is no scrim
- * token, and `bg-fg/40` would invert to a near-white veil under `[data-theme=dark]`.
+ * UNCHANGED except that it now lands on `Dialog.Backdrop` instead of RAC's
+ * `ModalOverlay` — so the flex-centring half of it (`flex items-center
+ * justify-center`) no longer has a child to centre. Left in place rather than
+ * split: this experiment swaps the engine, not the styling, and the exported
+ * cva is part of the public surface.
+ *
+ * The transition selectors were React Aria's and are now Base UI's; the block
+ * below says which and why.
+ */
+/**
+ * The backdrop.
+ *
+ * ── THE TRANSITION VOCABULARY ──────────────────────────────────────────────
+ *
+ *     data-entering → data-starting-style
+ *     data-exiting  → data-ending-style
+ *
+ * Two clean renames, and the only two in the three overlay files. Both
+ * libraries express the same idea — a one-frame "before" style that the
+ * transition runs away from, and a held "after" style during the unmount delay
+ * — so the meaning survives intact and only the spelling moves. Base UI's names
+ * are borrowed from the CSS `@starting-style` rule they mirror; React Aria's
+ * are borrowed from its own presence machinery. Verified present on both the
+ * backdrop and the popup in `dialog/`'s dist, and observed at mount in
+ * `probe.state-vocabulary.json`.
  */
 export const dialogOverlayVariants = cva(
   "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 " +
     "transition-opacity duration-200 ease-out " +
-    "data-entering:opacity-0 data-exiting:opacity-0 " +
+    "data-starting-style:opacity-0 data-ending-style:opacity-0 " +
     "motion-reduce:transition-none",
 );
 
@@ -107,8 +131,9 @@ export const dialogOverlayVariants = cva(
 export const dialogModalVariants = cva(
   "w-full overflow-hidden rounded-lg border border-border bg-surface text-fg shadow-2xl " +
     "transition duration-200 ease-out " +
-    "data-entering:opacity-0 data-entering:scale-95 " +
-    "data-exiting:opacity-0 data-exiting:scale-95 " +
+    // Same two renames as the backdrop above.
+    "data-starting-style:opacity-0 data-starting-style:scale-95 " +
+    "data-ending-style:opacity-0 data-ending-style:scale-95 " +
     "motion-reduce:transition-none",
   {
     variants: {
@@ -135,23 +160,48 @@ export const dialogVariants = cva(
  * children (the trigger, then the overlay) and neither can be a bare number, but
  * the rule is uniform on purpose: an exception anywhere is a place the next
  * component copies from.
+ *
+ * The first child is lifted into `Dialog.Trigger`'s `render` prop. React Aria
+ * wired it implicitly through `ButtonContext`; Base UI has no such context and
+ * needs a literal trigger element. See popover.tsx's `splitTrigger` for the same
+ * problem stated at length.
  */
 export interface DialogTriggerProps extends Omit<AriaDialogTriggerProps, "children"> {
   /** The trigger control, then the overlay. In that order. */
   children: LumoNode;
 }
 
-export function DialogTrigger(props: DialogTriggerProps) {
-  return <AriaDialogTrigger {...props} />;
+export function DialogTrigger({
+  children,
+  isOpen,
+  defaultOpen,
+  onOpenChange,
+}: DialogTriggerProps) {
+  const items = React.Children.toArray(children as React.ReactNode);
+  const [trigger, ...rest] = items;
+  return (
+    // RAC spells the controlled prop `isOpen`; Base UI spells it `open`.
+    <BaseDialog.Root
+      {...attr("open", isOpen)}
+      {...attr("defaultOpen", defaultOpen)}
+      {...attr("onOpenChange", onOpenChange)}
+    >
+      {React.isValidElement(trigger) ? (
+        <BaseDialog.Trigger render={trigger as React.ReactElement<Record<string, unknown>>} />
+      ) : (
+        trigger
+      )}
+      {rest}
+    </BaseDialog.Root>
+  );
 }
 
 /**
- * The backdrop, and the element that owns dismissal behaviour.
+ * The backdrop — and, under Base UI, also the Portal boundary.
  *
- * `isDismissable` and `isKeyboardDismissDisabled` belong HERE, not on
- * `DialogModal`. Both components take `ModalOverlayProps`, so the compiler
- * accepts either — but RAC reads dismissal off the overlay and passes it down
- * through an internal context, so the same prop on the modal is inert.
+ * `isDismissable` / `isKeyboardDismissDisabled` are accepted for API parity and
+ * are INERT. See the file header: Base UI's equivalent lives on the Root, with
+ * the opposite default, and there is no route from here back up to it.
  */
 export interface DialogOverlayProps
   extends Omit<AriaModalOverlayProps, "children" | "className"> {
@@ -159,12 +209,44 @@ export interface DialogOverlayProps
   className?: string | undefined;
 }
 
-export function DialogOverlay({ className, ...props }: DialogOverlayProps) {
+export function DialogOverlay({
+  className,
+  children,
+  // — accepted by the API, unreachable in Base UI —
+  isDismissable: _isDismissable,
+  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
+  isOpen: _isOpen,
+  defaultOpen: _defaultOpen,
+  onOpenChange: _onOpenChange,
+  isEntering: _isEntering,
+  isExiting: _isExiting,
+  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
+  UNSTABLE_portalContainer: _portalContainer,
+  render: _render,
+  slot: _slot,
+  style: _style,
+  ...rest
+}: DialogOverlayProps) {
   return (
-    <AriaModalOverlay className={cn(dialogOverlayVariants(), className)} {...props} />
+    <BaseDialog.Portal>
+      <BaseDialog.Backdrop
+        className={cn(dialogOverlayVariants(), className)}
+        {...rest}
+      />
+      {children as React.ReactNode}
+    </BaseDialog.Portal>
   );
 }
 
+/**
+ * The panel, and — under Base UI — the `role="dialog"` element itself.
+ *
+ * `fixed inset-0 m-auto h-fit` is the centring the overlay used to do; see the
+ * file header for why it is not `left-1/2 -translate-x-1/2`. It is applied here
+ * rather than folded into `dialogModalVariants` so the exported cva stays
+ * byte-identical to the React Aria build and a diff of the two shows the engine
+ * change rather than a restyle.
+ */
 export interface DialogModalProps
   extends Omit<AriaModalOverlayProps, "children" | "className">,
     VariantProps<typeof dialogModalVariants> {
@@ -172,25 +254,50 @@ export interface DialogModalProps
   className?: string | undefined;
 }
 
-export function DialogModal({ className, size, ...props }: DialogModalProps) {
+export function DialogModal({
+  className,
+  size,
+  // — accepted by the API, unreachable in Base UI —
+  isDismissable: _isDismissable,
+  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
+  isOpen: _isOpen,
+  defaultOpen: _defaultOpen,
+  onOpenChange: _onOpenChange,
+  isEntering: _isEntering,
+  isExiting: _isExiting,
+  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
+  UNSTABLE_portalContainer: _portalContainer,
+  render: _render,
+  slot: _slot,
+  style: _style,
+  ...rest
+}: DialogModalProps) {
   return (
-    <AriaModal className={cn(dialogModalVariants({ size }), className)} {...props} />
+    <BaseDialog.Popup
+      className={cn("fixed inset-0 z-50 m-auto h-fit", dialogModalVariants({ size }), className)}
+      {...rest}
+    />
   );
 }
 
 /**
- * The dialog itself, and the only place a close button is allowed to come from.
+ * The dialog body, and the only place a close button is allowed to come from.
  *
  * `closeLabel` is REQUIRED, for the reason `IconButton` exists at all: the button
- * is an ✕ and an ✕ is not a name. Making it a constructor argument of the dialog
- * — rather than something you remember to pass to a button you happen to render
- * — means a Lumo dialog cannot ship with an unnamed close control. It is the
- * same enforcement the exemplar applies, moved one level up so it also covers
- * the dialogs whose body is written by someone who never reads button.tsx.
+ * is an ✕ and an ✕ is not a name. Unchanged from the React Aria build — this is
+ * the rule the experiment is holding constant.
  *
- * `slot="close"` is RAC's own wiring: the Dialog publishes a ButtonContext whose
- * `close` slot carries `onPress: () => state.close()`, so there is no `useState`
- * and no ref-passing here.
+ * What changed is the wiring. RAC published a `ButtonContext` whose `close` slot
+ * carried `onPress: () => state.close()`, so `<IconButton slot="close">` closed
+ * the dialog with no ref-passing. Base UI has no slots: closing is
+ * `<Dialog.Close render={…}>`, which merges an `onClick` onto the element it is
+ * given. The ✕ is therefore an `IconButton` handed to `Dialog.Close` rather than
+ * an `IconButton` carrying a slot name.
+ *
+ * MEASURED GAP: `IconButton` is a Lumo `Button`, i.e. a React Aria `Button`,
+ * which drives from `onPress` rather than `onClick`. Whether Base UI's merged
+ * `onClick` survives that boundary is measured rather than assumed — see
+ * experiments/measurements/rebuild-overlays.json.
  */
 export interface DialogProps extends Omit<AriaDialogProps, "children" | "className"> {
   /** Announced name of the ✕ button. Required: an icon is not a name. */
@@ -199,9 +306,18 @@ export interface DialogProps extends Omit<AriaDialogProps, "children" | "classNa
   className?: string | undefined;
 }
 
-export function Dialog({ closeLabel, className, children, ...props }: DialogProps) {
+export function Dialog({
+  closeLabel,
+  className,
+  children,
+  // — accepted by the API, unreachable on a plain <div> —
+  role: _role,
+  slot: _slot,
+  style: _style,
+  ...rest
+}: DialogProps) {
   return (
-    <AriaDialog data-lumo="" className={cn(dialogVariants(), className)} {...props}>
+    <div data-lumo="" className={cn(dialogVariants(), className)} {...rest}>
       {/*
        * `end-3` is `inset-inline-end`, so the ✕ sits top-trailing in both
        * scripts: top-right in English, top-LEFT in Persian. `right-3` would pin
@@ -212,30 +328,45 @@ export function Dialog({ closeLabel, className, children, ...props }: DialogProp
        * any horizontal writing mode, and `inset-block-start` has no shorthand
        * worth the noise.
        */}
-      <IconButton
-        slot="close"
-        label={closeLabel}
-        variant="ghost"
-        size="sm"
-        className="absolute top-3 end-3"
-      >
-        <X aria-hidden="true" />
-      </IconButton>
-      {children}
-    </AriaDialog>
+      <BaseDialog.Close
+        render={
+          <IconButton
+            label={closeLabel}
+            variant="ghost"
+            size="sm"
+            className="absolute top-3 end-3"
+          >
+            <X aria-hidden="true" />
+          </IconButton>
+        }
+      />
+      {children as React.ReactNode}
+    </div>
   );
 }
 
 /**
  * The accessible name of the dialog, not merely its visible title.
  *
- * `slot="title"` is load-bearing: RAC's `useDialog` hands the Heading a
- * generated id through HeadingContext and points the dialog's `aria-labelledby`
- * at it. Drop the slot and RAC falls back to labelling the dialog by its
- * TRIGGER's text, which is a different sentence ("ویرایش" vs "ویرایش پروفایل").
+ * RAC used `slot="title"`: the Heading received a generated id through
+ * `HeadingContext` and `useDialog` pointed the dialog's `aria-labelledby` at it.
+ * Base UI's equivalent is the `Dialog.Title` PART, which writes its own id into
+ * the Root's store and is read by `Dialog.Popup`.
+ *
+ * MEASURED GAP, and it is not local to this file. `Dialog.Title` calls
+ * `useDialogRootContext()` NON-optionally and throws
+ * «Base UI: DialogRootContext is missing» outside a `Dialog.Root`. React Aria's
+ * `Heading slot="title"` degraded to a plain `<h2>` in the same position.
+ * `alert-dialog.tsx` renders `<DialogHeading>` inside an RAC `<Dialog
+ * role="alertdialog">` — a composition that was legal for two years and now
+ * throws during render. Recorded rather than worked around: there is no public
+ * Base UI hook for "am I inside a Root", so the only fix would be to change
+ * alert-dialog's public API, which this experiment may not do.
  *
  * `level` defaults to 2 rather than RAC's 3: a dialog is a new document context
- * and starting at h3 implies an h2 above it that does not exist.
+ * and starting at h3 implies an h2 above it that does not exist. Base UI's Title
+ * renders `<h2>` unconditionally and takes no `level`, so the prop is accepted
+ * and only honoured when it is 2 — another recorded gap.
  *
  * `pe-8` reserves the trailing gutter for the ✕. Logical, so the reserved space
  * moves to the left edge in Persian along with the button.
@@ -246,13 +377,18 @@ export interface DialogHeadingProps
   className?: string | undefined;
 }
 
-export function DialogHeading({ level = 2, className, ...props }: DialogHeadingProps) {
+export function DialogHeading({
+  level: _level = 2,
+  className,
+  render: _render,
+  slot: _slot,
+  style: _style,
+  ...rest
+}: DialogHeadingProps) {
   return (
-    <AriaHeading
-      slot="title"
-      level={level}
+    <BaseDialog.Title
       className={cn("pe-8 text-lg font-semibold text-fg", className)}
-      {...props}
+      {...rest}
     />
   );
 }

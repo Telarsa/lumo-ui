@@ -1,0 +1,33 @@
+{
+  "menu.submenu": {
+    "menuitem_count": 2,
+    "data_has_submenu": null,
+    "aria_haspopup": "menu",
+    "aria_expanded": "false",
+    "mirrored_glyph": "›",
+    "first_item_text": "کپی",
+    "role_of_parent": "none"
+  },
+  "slider.thumb": {
+    "style_left": "",
+    "style_inset_inline_start": "40%",
+    "style_translate": "50% -50%",
+    "aria_valuenow": "40",
+    "aria_valuetext": "۴۰",
+    "aria_label": "بودجه"
+  },
+  "toggle.on_state": {
+    "data_selected": false,
+    "data_pressed": true,
+    "aria_pressed": "true"
+  },
+  "alert_dialog": {
+    "aria_labelledby": null,
+    "aria_label": null,
+    "heading_present": true,
+    "heading_id": "base-ui-_r_l_",
+    "heading_text": "حذف فاکتور",
+    "open_before_cancel": true,
+    "open_after_cancel": true
+  }
+}

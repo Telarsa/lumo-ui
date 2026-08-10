@@ -64,6 +64,46 @@ export const FOCUS_RING =
   "group-data-focus-visible:[outline-offset:var(--lumo-sys-focus-offset)]";
 
 /**
+ * The same ring, for a control that IS its own focusable element.
+ *
+ * ── WHY THE ENGINE SWAP NEEDS A SECOND SPELLING (WCAG 2.4.7) ────────────────
+ *
+ * `FOCUS_RING` above is built on two facts that are both React Aria's, not the
+ * platform's: that the focusable element of a Checkbox/Radio/Switch is a
+ * visually hidden `<input>`, and that the modality-filtered state is published
+ * as an attribute on the wrapping `<label>`. Base UI inverts BOTH:
+ *
+ *     Checkbox.Root / Switch.Root   `tabindex="0"`, `role="checkbox"` /
+ *                                   `role="switch"` — the VISIBLE box is the
+ *                                   focusable element. Measured: probe entry
+ *                                   `checkbox.focus` in
+ *                                   experiments/measurements/probe.state-vocabulary.json.
+ *     the hidden `<input>`          `tabindex="-1"`, `aria-hidden="true"` — it
+ *                                   exists only to carry the form value.
+ *     `data-focus-visible`          does not exist anywhere in the library. A
+ *                                   grep of the installed dist finds zero.
+ *
+ * Base UI does publish `data-focused`, from `Field.Root` — and it is the WRONG
+ * state to hang a ring on. `field/root/FieldRoot.mjs:46` sets it from plain
+ * focus, with no modality filter, so a ring built on it appears on a MOUSE
+ * click. That is the defect `:focus-visible` was standardised to remove, and
+ * theme.css's header already states the project's position on it.
+ *
+ * So the correct Base UI spelling is neither a rename nor the nearest
+ * attribute: it is CSS's own pseudo-class, applied to the element itself
+ * because that element is now the one that takes focus. Same two declarations,
+ * same tokens, same arbitrary-property spelling as theme.css — only the
+ * selector moves.
+ *
+ * `FOCUS_RING` is kept and unchanged: `radio-group.tsx` and `rating.tsx` are
+ * still React Aria and still need the `group-*` form. The two constants are the
+ * shape of the migration itself — a library mid-swap needs both.
+ */
+export const FOCUS_RING_SELF =
+  "focus-visible:[outline:var(--lumo-sys-focus-width)_solid_var(--lumo-sys-focus)] " +
+  "focus-visible:[outline-offset:var(--lumo-sys-focus-offset)]";
+
+/**
  * Spread an attribute only when it has a value.
  *
  * `exactOptionalPropertyTypes` is on, and React Aria declares its props as

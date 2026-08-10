@@ -41,6 +41,11 @@ catalog:
   # Must stay on the version RAC itself resolves, or `Calendar` types come from
   # two copies of the package and will not assign.
   '@internationalized/date': 3.12.3
+  # EXPERIMENT ONLY (branch experiment/base-ui). Present so its dist can be read
+  # and measured; no shipped component imports it. NOTE the package RENAME:
+  # `@base-ui-components/react` is dead at 1.0.0-rc.0 and must not be measured.
+  # 1.7.0 published 2026-08-04, six days before adoption — clears the cooldown.
+  '@base-ui/react': 1.7.0
 
   # --- runtime ---------------------------------------------------------------
   react: 19.2.8

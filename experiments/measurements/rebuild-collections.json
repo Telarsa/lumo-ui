@@ -1,0 +1,453 @@
+{
+  "experiment": "rebuild-collections",
+  "question": "Can Lumo's Select, Menu and ComboBox be rebuilt on Base UI without changing their public API, and what does that cost?",
+  "branch": "experiment/base-ui",
+  "generated": "2026-08-10",
+  "impl": "base-ui",
+  "versions": {
+    "@base-ui/react": "1.7.0",
+    "react-aria-components": "1.20.0",
+    "react": "19.2.8",
+    "vitest": "4.1.10"
+  },
+  "components": ["select", "menu", "combobox"],
+
+  "method": {
+    "vendor_first": {
+      "rule": "CONTRIBUTING.md — never hand-type a component upstream already has.",
+      "fetched": [
+        {
+          "url": "https://ui.shadcn.com/r/styles/base-vega/select.json",
+          "status": 200,
+          "file": "registry/base-vega/ui/select.tsx",
+          "chars": 7430,
+          "imports": "@base-ui/react/select"
+        },
+        {
+          "url": "https://ui.shadcn.com/r/styles/base-vega/combobox.json",
+          "status": 200,
+          "file": "registry/base-vega/ui/combobox.tsx",
+          "chars": 9889,
+          "imports": "@base-ui/react",
+          "npm_dependencies": ["@base-ui/react"],
+          "registry_dependencies": ["button", "input-group"]
+        },
+        {
+          "url": "https://ui.shadcn.com/r/styles/base-vega/menu.json",
+          "status": 404,
+          "note": "There is no `menu` item in base-vega. The Base UI menu ships under three product names — dropdown-menu, menubar, context-menu — all 200, all importing `@base-ui/react/menu`. `dropdown-menu` (9439 chars) is the one whose composition Lumo's `menu.tsx` corresponds to and is what was used."
+        }
+      ],
+      "vendored_code_not_usable_verbatim": [
+        "Every emit renders icons through `IconPlaceholder` from `@/app/(create)/components/icon-placeholder`, which is shadcn's own site component and is not in the registry payload.",
+        "Every emit is physical-utility-first: `pr-2 pl-2.5`, `pr-8 pl-2`, `right-2`, `ml-auto`, `text-left`. Lumo's lint bans all of them.",
+        "shadcn's submenu positions with `side=\"right\"` — a physical side, on a library whose `Side` union carries `inline-start`/`inline-end`. Copied as-is it would open submenus on the wrong side in Persian and nothing would look wrong in review.",
+        "shadcn's dropdown-menu uses `MenuPrimitive.Separator`; `@base-ui/react/menu` 1.7.0 re-exports `Separator` from the shared `../separator/Separator.js` rather than owning one, so the part resolves but not from where the emit implies."
+      ],
+      "what_it_was_worth": "The composition. Base UI's Select is Root→Trigger→Value/Icon→Portal→Positioner→Popup→List→Item→ItemText→ItemIndicator; guessing that from the type declarations alone would have taken longer than reading it. The styling was not worth anything — it was rewritten to Lumo's existing variant strings."
+    },
+    "test_bar": {
+      "brief_assumed": "packages/ui/src/<name>.test.tsx per component",
+      "actual": "THOSE FILES DO NOT EXIST. `select.test.tsx`, `menu.test.tsx` and `combobox.test.tsx` are absent from packages/ui/src. The conformance bar for all three lives in `overlays.test.tsx`, whose header names dialog.tsx, popover.tsx, menu.tsx, select.tsx, combobox.tsx and breadcrumbs.tsx as the batch it pins. `menubar.test.tsx` and `context-menu.test.tsx` import from menu.tsx as well; `coverage.test.ts` enumerates the filesystem and grades all three mechanically.",
+      "suites_run_instead": [
+        "src/overlays.test.tsx",
+        "src/menubar.test.tsx",
+        "src/context-menu.test.tsx",
+        "src/coverage.test.ts",
+        "src/hydrated.test.tsx",
+        "src/data-display.test.tsx"
+      ],
+      "tests_edited": 0
+    },
+    "contamination_warning": "The working tree is shared. While this rebuild was in progress a sibling agent rebuilt popover.tsx, dialog.tsx, tabs.tsx, tooltip.tsx, slider.tsx and number-field.tsx on Base UI in the same checkout. Results below are attributed per component; one overlays.test.tsx failure belongs to dialog.tsx and is marked as not attributable to this rebuild. `tsc --noEmit` over the package reports errors in tooltip.tsx (6), tabs.tsx (3), slider.tsx (1) and number-field.tsx (1) that are not from these three files — select.tsx, menu.tsx and combobox.tsx typecheck clean."
+  },
+
+  "baseline": {
+    "before_change": {
+      "command": "pnpm --filter @lumo-ui/ui exec vitest run src/overlays.test.tsx src/menubar.test.tsx src/context-menu.test.tsx src/coverage.test.ts",
+      "result": "4 files passed, 272 tests passed, 0 failed",
+      "note": "Taken against the React Aria implementations before any edit. This is the green the rebuild is measured against."
+    }
+  },
+
+  "api_preservation": {
+    "claim": "The public API did not change.",
+    "evidence": [
+      {
+        "check": "apps/website typechecks against the rebuilt components",
+        "command": "apps/website/node_modules/.bin/tsc --noEmit",
+        "result": "exit 0, zero diagnostics",
+        "what_it_covers": "Every real consumer in the repo — apps/website/src/examples/{select,menu,menubar}.tsx, apps/website/src/lib/demos.tsx (ComboBox), apps/website/src/components/site-shell.tsx (the locale-switcher Menu of `href` items) — compiles unchanged against the Base UI implementations. The props those call sites pass (placeholder, className, aria-label, defaultSelectedKey, isDisabled, textValue, id, label, showSuggestionsLabel, suggestionsLabel, href, hrefLang, title, onAction) all survived."
+      },
+      {
+        "check": "packages/ui typechecks",
+        "command": "packages/ui/node_modules/.bin/tsc --noEmit",
+        "result": "zero diagnostics in select.tsx, menu.tsx and combobox.tsx",
+        "note": "Diagnostics elsewhere in the package belong to sibling agents' in-flight files; see method.contamination_warning."
+      },
+      {
+        "check": "coverage.test.ts — the mechanical rules, applied to every .tsx in the package",
+        "result": "254 passed, 0 failed",
+        "what_it_covers": "All three files are still exported from the barrel, still declare \"use client\", still hardcode no English default for an announced string, and still keep no `cva` that a server module reaches for."
+      },
+      {
+        "check": "test files edited",
+        "result": 0
+      }
+    ]
+  },
+
+  "results": {
+    "totals": { "tests_run": 295, "passed": 288, "failed": 7 },
+    "by_suite": {
+      "overlays.test.tsx": { "passed": 7, "failed": 3 },
+      "menubar.test.tsx": { "passed": 4, "failed": 0 },
+      "context-menu.test.tsx": { "passed": 0, "failed": 4 },
+      "coverage.test.ts": { "passed": 254, "failed": 0 },
+      "hydrated.test.tsx": { "passed": 5, "failed": 0 },
+      "data-display.test.tsx": { "passed": 18, "failed": 0 }
+    },
+    "failures": [
+      {
+        "suite": "overlays.test.tsx",
+        "test": "a plain modal dialog is clean; isDismissable on the OVERLAY adds one 'Dismiss'",
+        "attributable_to": "dialog.tsx (sibling agent's rebuild), NOT this one",
+        "expected": ["Dismiss"],
+        "received": []
+      },
+      {
+        "suite": "overlays.test.tsx",
+        "test": "every open popover carries exactly two unreachable 'Dismiss' labels",
+        "attributable_to": "menu.tsx",
+        "expected": ["Dismiss", "Dismiss"],
+        "received": [],
+        "reading": "The rebuild is BETTER than the assertion. React Aria bracketed every open popover with two visually-hidden DismissButtons labelled from `@react-aria/overlays`, unreachable by prop, and popover.tsx documented them as an accepted leak. Base UI's menu emits no dismiss button at all: an open Lumo menu now contributes zero announced English. The test is red because it pins React Aria's leak count as a number, not because anything got worse."
+      },
+      {
+        "suite": "overlays.test.tsx",
+        "test": "MenuItem keeps typeahead text and marks submenus with an aria-hidden mirrored glyph",
+        "attributable_to": "menu.tsx",
+        "failing_assertion": "expect(submenuItem?.getAttribute(\"data-has-submenu\")).not.toBeNull()",
+        "assertions_in_test": 4,
+        "assertions_that_would_pass": 3,
+        "measured": {
+          "items[0].textContent": "کپی",
+          "submenuItem aria-hidden glyph textContent": "›",
+          "submenuItem attributes": ["role=menuitem", "tabindex=-1", "data-lumo=", "aria-haspopup=menu", "aria-expanded=false"],
+          "data-has-submenu": null
+        },
+        "reading": "Base UI states the same fact with `aria-haspopup=\"menu\"`; it has no `data-has-submenu`. Re-emitting React Aria's attribute name by hand was rejected — see capability gap `menu.has-submenu-attribute`."
+      },
+      {
+        "suite": "context-menu.test.tsx",
+        "test": "ALL FOUR",
+        "attributable_to": "menu.tsx",
+        "error": "Base UI: MenuRootContext is missing. Menu parts must be placed within <Menu.Root>.",
+        "thrown_from": "@base-ui/react/menu/portal/MenuPortal.mjs:23 via menu/root/MenuRootContext.mjs:10",
+        "reading": "See capability gap `menu.virtual-trigger-anchoring`. This is the single largest breakage in the rebuild and it is in a DEPENDENT, not in menu.tsx itself."
+      }
+    ]
+  },
+
+  "per_component": {
+    "select": {
+      "lines": { "before": 233, "after": 364, "delta": 131 },
+      "code_lines_excluding_comments": { "before": 132, "after": 186, "delta": 54 },
+      "bytes": { "before": 8810, "after": 15407 },
+      "exports_unchanged": true,
+      "exported_names": [
+        "Select", "SelectTrigger", "SelectValue", "SelectPopover", "SelectItem",
+        "selectVariants", "selectTriggerVariants", "selectValueVariants",
+        "selectPopoverVariants", "selectListBoxVariants", "selectItemVariants",
+        "SelectProps", "SelectTriggerProps", "SelectValueProps", "SelectPopoverProps", "SelectItemProps"
+      ],
+      "required_string_props_unchanged": ["placeholder"],
+      "tests": {
+        "attributable": [
+          { "test": "Select renders the Persian placeholder, never RAC's 'Select an item'", "result": "pass" }
+        ]
+      },
+      "server_rendered_english_in_announced_attributes": 0,
+      "open_state_announced_strings": ["button[aria-label]=شهر"],
+      "open_state_english": 0,
+      "notes": [
+        "Base UI's trigger is `role=\"combobox\" aria-haspopup=\"listbox\"`; React Aria's was a plain button with the same haspopup. Both are valid select-only-combobox patterns; the announced role changes from \"button\" to \"combobox\".",
+        "Base UI renders a visually-hidden `<input>` into the FIRST BYTE even with no `name` prop: `<input id=\"…-hidden-input\" style=\"clip-path:inset(50%);…\" tabindex=\"-1\" aria-hidden=\"true\" value=\"\"/>`. React Aria emitted nothing for an unnamed Select."
+      ]
+    },
+    "menu": {
+      "lines": { "before": 273, "after": 412, "delta": 139 },
+      "code_lines_excluding_comments": { "before": 129, "after": 184, "delta": 55 },
+      "bytes": { "before": 10617, "after": 16852 },
+      "exports_unchanged": true,
+      "exported_names": [
+        "MenuTrigger", "SubmenuTrigger", "MenuPopover", "Menu", "MenuItem", "MenuSection", "MenuSeparator",
+        "menuPopoverVariants", "menuVariants", "menuItemVariants", "menuSectionVariants",
+        "menuSectionHeaderVariants", "menuSeparatorVariants",
+        "MenuTriggerProps", "SubmenuTriggerProps", "MenuPopoverProps", "MenuProps", "MenuItemProps",
+        "MenuSectionProps", "MenuSeparatorProps"
+      ],
+      "required_string_props_unchanged": [],
+      "tests": {
+        "attributable": [
+          { "test": "closed overlays contribute nothing at all to the first byte", "result": "pass" },
+          { "test": "every open popover carries exactly two unreachable 'Dismiss' labels", "result": "fail" },
+          { "test": "MenuItem keeps typeahead text and marks submenus with an aria-hidden mirrored glyph", "result": "fail" },
+          { "suite": "menubar.test.tsx", "test": "all 4", "result": "pass" },
+          { "suite": "context-menu.test.tsx", "test": "all 4", "result": "fail" }
+        ]
+      },
+      "server_rendered_english_in_announced_attributes": 0,
+      "open_state_announced_strings": [],
+      "open_state_english": 0,
+      "verified_working": {
+        "trigger_bridge": "`<Menu.Trigger render={<Button/>}>` DRIVES a React Aria Button. Measured by firing a real click: aria-expanded went false→true, one `[role=menu]` and one `[role=menuitem]` appeared. Base UI's props land on the RAC Button intact: aria-haspopup=menu, aria-expanded, aria-controls, id, data-popup-open, data-pressed. This was the biggest assumed risk in the port and it is not a risk.",
+        "onAction": "Synthesised through a Lumo context. `<Menu onAction>` + `<MenuItem id=\"copy\">` fired with `[\"copy\"]`.",
+        "sections": "`<MenuSection title>` renders `Menu.Group` + `Menu.GroupLabel`; the group's `aria-labelledby` resolves to the title text (measured: \"ویرایش\").",
+        "links": "`<MenuItem href hrefLang>` routes to `Menu.LinkItem`, emitting `<a role=\"menuitem\" href=\"/fa-IR/x\" hreflang=\"fa-IR\">` — the shape apps/website/src/components/site-shell.tsx's locale switcher needs.",
+        "separator": "`<div role=\"separator\" aria-orientation=\"horizontal\">`."
+      }
+    },
+    "combobox": {
+      "lines": { "before": 221, "after": 310, "delta": 89 },
+      "code_lines_excluding_comments": { "before": 133, "after": 173, "delta": 40 },
+      "bytes": { "before": 8082, "after": 12917 },
+      "exports_unchanged": true,
+      "exported_names": [
+        "ComboBox", "ComboBoxItem",
+        "comboBoxVariants", "comboBoxLabelVariants", "comboBoxGroupVariants", "comboBoxInputVariants",
+        "comboBoxButtonVariants", "comboBoxPopoverVariants", "comboBoxListBoxVariants", "comboBoxItemVariants",
+        "ComboBoxProps", "ComboBoxItemProps"
+      ],
+      "required_string_props_unchanged": ["showSuggestionsLabel", "suggestionsLabel"],
+      "tests": {
+        "attributable": [
+          { "test": "ComboBox closes both of RAC's English aria-labels", "result": "pass" }
+        ]
+      },
+      "server_rendered_english_in_announced_attributes": 0,
+      "open_state_announced_strings": ["button[aria-label]=نمایش پیشنهادها"],
+      "open_state_english": 0,
+      "defect_found_and_fixed_during_the_port": {
+        "id": "combobox.unnamed-input",
+        "severity": "would fail @lumo-ui/gate's `named-controls` rule",
+        "what": "The first composition used `<Combobox.Label>`, the part whose name says it is the label. It renders a `<div>`, and it labels the TRIGGER, not the input.",
+        "measured_before": {
+          "input attributes": ["role=combobox", "aria-expanded=false", "aria-haspopup=listbox", "aria-autocomplete=list", "id=base-ui-_r_0_"],
+          "aria-labelledby": null,
+          "aria-label": null,
+          "computed accessible name": null,
+          "label element tagName": "DIV"
+        },
+        "base_ui_says_so_itself": "ComboboxLabel.mjs logs, in dev: '<Combobox.Label> labels <Combobox.Trigger> only. When <Combobox.Input> is the form control, use a native <label> or <Field.Label> instead.'",
+        "fix": "Pass a `useId()` to `Combobox.Root` (which becomes the input's id) and render a native `<label htmlFor>`. SSR-stable, so the pairing is in the first byte.",
+        "measured_after": { "computed accessible name": "شهر" },
+        "why_it_matters": "React Aria wired exactly this composition through LabelContext with nothing asked of the caller. Under Base UI the correct-looking part produced an unnamed text field, and nothing on screen or in a screenshot would have shown it."
+      }
+    }
+  },
+
+  "capability_gaps": [
+    {
+      "id": "menu.virtual-trigger-anchoring",
+      "component": "menu",
+      "severity": "breaks a shipped dependent",
+      "lumo_api_promise": "context-menu.tsx composes `MenuPopover` + `Menu` under a React Aria `MenuTrigger` whose `PopoverContext.triggerRef` is overridden to a portaled 1-point anchor at the pointer.",
+      "base_ui_position": "Every `Menu.Portal`/`Positioner`/`Popup` must be inside a `Menu.Root`; there is no context whose anchor a foreign parent can substitute. Base UI's answer is a separate product, `@base-ui/react/context-menu`, with its own `ContextMenu.Root` and `ContextMenu.Trigger`.",
+      "evidence": "Base UI: MenuRootContext is missing. Menu parts must be placed within <Menu.Root>. — thrown from @base-ui/react/menu/portal/MenuPortal.mjs:23, on all 4 context-menu.test.tsx tests, in both the renderToStaticMarkup and the jsdom arms.",
+      "not_faked": "menu.tsx was NOT given an escape hatch to satisfy context-menu.tsx. Porting context-menu.tsx means adopting `@base-ui/react/context-menu`, which is a different component with a different trigger contract — a separate decision, not a patch to this one.",
+      "cost_if_adopted": "context-menu.tsx (7178 bytes) is rewritten, not adapted. Its `createPortal` anchor, its `PopoverContext.Consumer/Provider` swap and its Shift+F10 handler all disappear, and Base UI supplies the behaviour instead — which is a smaller file, but a full rewrite and a fresh set of measurements."
+    },
+    {
+      "id": "select.selected-key-label-resolution",
+      "component": "select",
+      "severity": "visible wrong text on a shipped example",
+      "lumo_api_promise": "`<Select defaultSelectedKey=\"thr\">` shows the matching item's text in the collapsed control. apps/website/src/examples/select.tsx's `DisabledExample` depends on it.",
+      "base_ui_position": "`<Select.Value>` resolves a label only from the Root's `items` prop (`resolveSelectedLabel` in internals/resolveValueLabel.mjs consults `store.items` and never the mounted items). The items live inside a portal that renders null while closed, so there is nothing to read.",
+      "evidence": "renderToStaticMarkup of `<Select placeholder=\"یک شهر انتخاب کنید\" defaultSelectedKey=\"thr\"><SelectTrigger/>…<SelectItem id=\"thr\">تهران</SelectItem>` produced trigger content `<span class=\"flex-1 truncate text-start …\">thr</span>` — the raw key where React Aria rendered «تهران».",
+      "not_faked": "The obvious workaround is to walk `children` for a matching `id` and lift its text. That is a collection builder inside a wrapper — the exact work renting a headless library is supposed to buy — so it was left honest and recorded here.",
+      "workaround_available_to_a_caller": "Pass Base UI's own `items` shape to the Root. That is a different public API from React Aria's collection and would be an API change, so it was not done."
+    },
+    {
+      "id": "select.foreign-label-wiring",
+      "component": "select",
+      "severity": "would fail @lumo-ui/gate's `named-controls` rule on a shipped page",
+      "lumo_api_promise": "`<Select placeholder=…><Label>شهر</Label><SelectTrigger/>…` — the composition every example in apps/website/src/examples/select.tsx uses.",
+      "base_ui_position": "Lumo's shared `<Label>` (form.tsx) is React Aria's `Label`, which names a control by picking up `LabelContext` from an RAC ancestor. Base UI publishes no such context, and its own `Select.Label` renders a `<div>` that names the trigger through an internal store.",
+      "evidence": "Rendered `<Select><Label>شهر</Label><SelectTrigger/>…`: the label emitted `<label class=\"w-fit text-sm font-medium text-fg select-none\">شهر</label>` with NO `for`; the trigger carried no `aria-label` and no `aria-labelledby`; computed accessible name = null.",
+      "not_faked": "`Select` cannot intercept a `<Label>` the caller passes as a child without inspecting element types, and form.tsx is outside this brief.",
+      "cost_if_adopted": "Either every Lumo control rebuilt on Base UI takes an explicit `aria-label`, or form.tsx's `Label` learns to emit `htmlFor` and every Base UI-based component publishes its control id. This is the class of defect the repo's own ledger is made of: it renders, it type-checks, it looks right, and the control is nameless."
+    },
+    {
+      "id": "menu.has-submenu-attribute",
+      "component": "menu",
+      "severity": "one red assertion, no behavioural loss",
+      "lumo_api_promise": "Not a prop — a DOM state contract overlays.test.tsx pins: `data-has-submenu` on a submenu's trigger item.",
+      "base_ui_position": "`Menu.SubmenuTrigger` publishes `data-popup-open`, `data-highlighted`, `data-disabled`. The 'has a submenu' fact is stated as `aria-haspopup=\"menu\"`, which it does set (measured).",
+      "not_faked": "The attribute is trivially forgeable — this component knows at composition time that it is a submenu trigger — and was deliberately not forged. Writing React Aria's attribute name onto a Base UI element makes the test green while making the DOM lie about which library it came from, and every later measurement reads that DOM."
+    },
+    {
+      "id": "menu.long-press-trigger",
+      "component": "menu",
+      "severity": "prop removed",
+      "lumo_api_promise": "`<MenuTrigger trigger=\"longPress\">`, which menu.tsx's header documented (together with the English `aria-describedby` React Aria attached when you used it).",
+      "base_ui_position": "`Menu.Root` has no long-press trigger. Nearest neighbours are `openOnHover`, `delay`, `closeDelay` on `Menu.Trigger`.",
+      "not_faked": "The prop is gone from the type rather than accepted and ignored. Silver lining: the unreachable English string it dragged in is gone with it."
+    },
+    {
+      "id": "menu.dynamic-collections",
+      "component": "menu",
+      "severity": "prop typed `never`",
+      "lumo_api_promise": "React Aria's `items` + render-function children on `Menu` and `MenuSection`.",
+      "base_ui_position": "`Menu` has no collection at all — no `items`, no `Collection`, no render-function children. (Base UI's `Combobox` and `Select` do have `items`; `Menu` does not.)",
+      "not_faked": "`MenuSectionProps.items` is typed `Iterable<T> & never`, so passing one is a compile error rather than a value that renders nothing."
+    },
+    {
+      "id": "select.listbox-collection-props",
+      "component": "select",
+      "severity": "props removed",
+      "lumo_api_promise": "`SelectPopover` forwarded React Aria's `ListBoxProps` untouched: `items`, `dependencies`, `renderEmptyState`, `selectionMode`, `disabledKeys`.",
+      "base_ui_position": "`Select.List` takes none of them. There is no empty state, no dependency array and no multi-selection through this path (`Select.Root` has a `multiple` prop, which is a different API from React Aria's `selectionMode`).",
+      "not_faked": "Removed from the type rather than accepted and dropped."
+    },
+    {
+      "id": "combobox.static-children-filtering",
+      "component": "combobox",
+      "severity": "silent behaviour loss for one of two documented usages",
+      "lumo_api_promise": "Both forms filter as you type: static `<ComboBoxItem>` children, and `items` + a render function.",
+      "base_ui_position": "Filtering happens on the ROOT, over the `items` array, via `filter`/`itemToStringLabel`. With static children and no `items`, `Combobox.List` receives plain ReactNode children and nothing filters them. React Aria's collection builder filtered either form.",
+      "not_faked": "The `items` + render-function form is wired through and does filter. The static-children form renders and navigates but does not narrow, and that is stated here rather than papered over — note that this is the form apps/website/src/lib/demos.tsx uses."
+    },
+    {
+      "id": "combobox.item-text-value",
+      "component": "combobox",
+      "severity": "prop accepted and unused, deliberately",
+      "lumo_api_promise": "`<ComboBoxItem textValue>` for non-string children.",
+      "base_ui_position": "`Select.Item` and `Menu.Item` both take `label` for keyboard text matching. `Combobox.Item` takes none — matching is a root-level concern.",
+      "not_faked": "It is not forwarded to `aria-label`, which would have made the test-visible symptom disappear while renaming every option after its own visible text."
+    },
+    {
+      "id": "generic-type-parameter-carriers",
+      "component": "all three",
+      "severity": "type-level only",
+      "what": "`SelectProps<T>`, `SelectValueProps<T>`, `SelectItemProps<T>`, `MenuItemProps<T>`, `MenuSectionProps<T>` and `ComboBoxItemProps<T>` had `T` only because they extended a React Aria props type carrying a collection generic. With no collection there is nothing left for `T` to type, and `noUnusedParameters` makes an unused type parameter a compile error.",
+      "resolution": "Each keeps one documented field typed `T & never` (or `Iterable<T> & never`), so the type PARAMETER survives — a `SelectProps<City>` annotation a consumer already wrote still compiles — while passing a value is a compile error rather than a prop that is accepted and silently dropped.",
+      "not_faked": "The alternative, typing them `T | undefined` and ignoring them at runtime, is the accepted-and-dropped shape this project treats as a defect."
+    },
+    {
+      "id": "provider.direction",
+      "component": "all three (and every other Base UI rebuild in this experiment)",
+      "severity": "silent LTR on every Persian page",
+      "what": "Base UI resolves direction from `DirectionProvider`, whose `direction` defaults to `'ltr'` (DirectionProvider.mjs: `const { direction = 'ltr' } = props`). Lumo's `LumoProvider` (packages/ui/src/provider.tsx) mounts only React Aria's `I18nProvider`, so nothing sets Base UI's direction.",
+      "consequence": "Logical sides (`inline-start`/`inline-end`) resolve as if the document were LTR: a submenu opens on the wrong side in Persian, and arrow-key direction follows suit. The markup is individually valid and the failure is inline geometry — the same profile provider.tsx's own header describes for the React Aria case.",
+      "not_faked": "provider.tsx was NOT edited; it is outside this brief and provider.test.tsx pins its current behaviour. Recorded so that whoever decides the experiment knows a Base UI adoption is a provider change too, not only a component change."
+    }
+  ],
+
+  "english_strings": {
+    "question": "Which English does Base UI emit that no prop reaches?",
+    "method": "grep over the shipped dist of @base-ui/react/{select,menu,combobox} for `aria-label`/`aria-roledescription`/`title` literals and for sentence-shaped string literals.",
+    "found": [
+      {
+        "string": "Dismiss",
+        "attribute": "aria-label",
+        "source": "@base-ui/react/combobox/utils/ComboboxInternalDismissButton.mjs:32 — `\"aria-label\": \"Dismiss\",`",
+        "component": "combobox",
+        "reachable_by_prop": false,
+        "why": "`ComboboxInternalDismissButton` is marked `@internal` and is constructed by ComboboxPopup.mjs and ComboboxInput.mjs with no props at all (`<ComboboxInternalDismissButton ref={…} />`), so there is no argument to override.",
+        "when_rendered": "Only while the popup is open AND focus management is modal; it is a visually-hidden `<span>`. Not in the served bytes — the SSR sweep of the closed component found zero Latin announced strings.",
+        "measured_in_this_rebuild": "The open-state sweep of the composition Lumo ships did NOT surface it (open ComboBox spoken attributes = [\"button[aria-label]=نمایش پیشنهادها\"]). It is recorded because the literal exists and a different modal configuration would emit it."
+      }
+    ],
+    "not_found": [
+      "Zero English literals in @base-ui/react/select.",
+      "Zero English literals in @base-ui/react/menu.",
+      "No `aria-roledescription` anywhere in the three components.",
+      "No string bundle, no locale files, no `IntlTranslations`-style dictionary of any kind — the surface a Persian translation would have to cover is one word long."
+    ],
+    "react_aria_comparison": {
+      "select": "`selectPlaceholder: \"Select an item\"` — VISIBLE English in the first byte when `placeholder` is unset. Reachable, and that is why Lumo's `placeholder` is required.",
+      "combobox": "`buttonLabel: \"Show suggestions\"` and `listboxLabel: \"Suggestions\"` — reachable, and that is why Lumo's two label props are required.",
+      "popover_menu_select_combobox": "Two unreachable `aria-label=\"Dismiss\"` per open popover, from RAC's bracketing DismissButtons.",
+      "net": "React Aria emitted 3 reachable strings and 2 unreachable ones per open overlay across these three components. Base UI emits 0 reachable and 1 unreachable, and the unreachable one did not appear in the composition Lumo ships."
+    },
+    "the_inversion_that_matters": "Every required-string prop in these three components survived the port, and every one of them changed its justification. React Aria shipped the WRONG LANGUAGE; Base UI ships NOTHING. An unset `placeholder` used to render «Select an item» into a Persian form — ugly, and catchable by a gate that grades Latin text. Under Base UI it renders an EMPTY control, and an icon-only `Combobox.Trigger` with no `aria-label` is a nameless button. Neither leaves a Latin word behind, so `no-latin-aria` cannot see either one. The props are required for a stronger reason after the port than before it."
+  },
+
+  "state_attributes": {
+    "why": "button.tsx rule 5 says state comes from React Aria's `data-*` attributes styled with Tailwind `data-` variants. That rule is engine-coupled: every variant string naming a state had to be rewritten, and a missed one is a class that styles nothing and reviews as if it did.",
+    "map": {
+      "data-hovered": { "base_ui": "NONE — Base UI emits no hover attribute on any part of these three", "rewritten_to": "hover:" },
+      "data-focused (collection item)": { "base_ui": "data-highlighted", "rewritten_to": "data-highlighted:" },
+      "data-focus-within": { "base_ui": "NONE", "rewritten_to": "focus-within:" },
+      "data-open (trigger)": { "base_ui": "data-popup-open", "rewritten_to": "data-popup-open:" },
+      "data-open (item with an open submenu)": { "base_ui": "data-popup-open", "rewritten_to": "data-popup-open:" },
+      "data-disabled": { "base_ui": "data-disabled", "rewritten_to": "unchanged" },
+      "data-selected": { "base_ui": "data-selected", "rewritten_to": "unchanged" },
+      "data-placeholder": { "base_ui": "data-placeholder", "rewritten_to": "unchanged" },
+      "data-entering / data-exiting": { "base_ui": "data-starting-style / data-ending-style", "rewritten_to": "NOT rewritten — see shared_surface below" },
+      "data-placement": { "base_ui": "data-side + data-align", "rewritten_to": "NOT rewritten — see shared_surface below" },
+      "--trigger-width": { "base_ui": "--anchor-width", "rewritten_to": "--anchor-width", "note": "A CSS custom property, not a class. Left alone it silently shrink-wraps the panel; nothing would have failed." }
+    },
+    "count_of_variant_strings_touched": 9,
+    "focus_ring_survives": "packages/theme/src/theme.css keys the single focus ring off `:where([data-lumo]):focus-visible` — a native pseudo-class, not an engine attribute — so `data-lumo` on Base UI elements works unchanged."
+  },
+
+  "shared_surface": {
+    "popoverVariants": {
+      "reused": true,
+      "from": "packages/ui/src/popover.tsx",
+      "reason": "All three components render the same floating panel; four divergent copies is how a design system stops being one.",
+      "measured_problem": "As of this writing the shared cva still carries React Aria's transition selectors — `data-entering:`, `data-exiting:`, `data-[placement=bottom]:`, `data-[placement=top]:`. Under Base UI the equivalents are `data-starting-style`, `data-ending-style` and `data-side`, so those four selectors are INERT in every Base UI component that composes this cva, including these three. Nothing fails; the panels simply appear without their enter/exit transition.",
+      "not_fixed_here": "popover.tsx is a sibling agent's file in the same working tree and was being rewritten concurrently. Flagged rather than edited."
+    },
+    "placementToSideAlign": {
+      "reused": true,
+      "from": "packages/ui/src/popover.tsx",
+      "reason": "One translation of React Aria's single-string placement vocabulary into Base UI's two-axis `side`+`align`, shared by every overlay. `menu.tsx` had its own `Record<LumoPlacement, …>` for about ten minutes and it was deleted in favour of the shared one."
+    },
+    "LumoPlacement": {
+      "reused": true,
+      "kind": "type-only import",
+      "reason": "`MenuPopover`'s `placement` prop keeps its exact public type — `Exclude<AriaPlacement, …left… | …right…>` — with no React Aria runtime import. The type is erased at build."
+    }
+  },
+
+  "structural_differences": [
+    {
+      "id": "root-renders-no-dom",
+      "what": "React Aria's `Select`, `ComboBox` and `Menu` roots render a real element that `className` and `data-lumo` attach to. Base UI's `Select.Root`, `Combobox.Root` and `Menu.Root` render nothing at all.",
+      "consequence": "Each rebuilt component adds a wrapper `<div>` inside the Root to keep `className` and `data-lumo` meaningful. `Menu` additionally carries `role=\"none\"`, because Base UI puts `role=\"menu\"` on `Menu.Popup` one level up and an unroled generic between a menu and its menuitems is not conforming."
+    },
+    {
+      "id": "trigger-is-the-control",
+      "what": "React Aria's `MenuTrigger` renders no DOM and wires whatever control it is given through `ButtonContext`. Base UI's `Menu.Trigger` IS the control and adopts a foreign element only through its `render` prop.",
+      "consequence": "`MenuTrigger` splits its children positionally and lifts child[0] into `render`. The public API is unchanged.",
+      "measured": "The bridge works with Lumo's React Aria `<Button>`: a real click opened the menu, and Base UI's aria-haspopup/aria-expanded/aria-controls/id/data-popup-open/data-pressed all landed on the RAC button."
+    },
+    {
+      "id": "submenu-is-two-parts",
+      "what": "React Aria's `SubmenuTrigger` took `[item, popover]` positionally. Base UI splits state (`Menu.SubmenuRoot`) from element (`Menu.SubmenuTrigger`).",
+      "consequence": "`SubmenuTrigger` supplies the root and sets a Lumo context flag; `MenuItem` reads the flag and renders itself as `Menu.SubmenuTrigger` instead of `Menu.Item`. The caller's composition is unchanged."
+    },
+    {
+      "id": "per-level-placement-is-no-longer-free",
+      "what": "React Aria published `'bottom start'` for a root menu and `'end top'` for a submenu through `PopoverContext`, so a `MenuPopover` that set nothing got both right. Base UI's `Menu.Positioner` defaults to `side=\"bottom\" align=\"center\"` at every level.",
+      "consequence": "`MenuPopover` reads the nesting flag and reproduces React Aria's two defaults. A Base UI port that skipped this would open every submenu BELOW its parent item, in both directions, and look merely odd rather than broken."
+    },
+    {
+      "id": "item-id-is-a-dom-id",
+      "what": "React Aria treated `<MenuItem id>` as the collection key and generated its own DOM id. Base UI's `Menu.Item` `id` IS the DOM id.",
+      "consequence": "`id` is deliberately not forwarded. Forwarded, it put the caller's key into the document (measured: `id=b`), and two menus offering the same action would emit duplicate ids with `aria-activedescendant` resolving to whichever came first."
+    }
+  ],
+
+  "observations": [
+    {
+      "id": "camelcase-attributes-in-served-html",
+      "confidence": "low — recorded as raw bytes, not as a claim",
+      "what": "`renderToStaticMarkup` of the ComboBox emits `<input … autoComplete=\"off\" spellCheck=\"false\" autoCorrect=\"off\" autoCapitalize=\"none\" …>` — camelCase attribute names in the served HTML. The same component in jsdom shows the normalised `autocomplete`/`spellcheck`/`autocorrect`/`autocapitalize`.",
+      "impact": "None known: HTML attribute names are case-insensitive, so both parse identically. Recorded because it is a difference in the served bytes and this project measures the served bytes."
+    }
+  ]
+}

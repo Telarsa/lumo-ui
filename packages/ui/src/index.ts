@@ -21,6 +21,7 @@ export {
   Description,
   FieldError,
   FOCUS_RING,
+  FOCUS_RING_SELF,
   Form,
   Label,
   descriptionVariants,

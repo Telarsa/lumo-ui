@@ -20,6 +20,34 @@ import { cva, type VariantProps } from "class-variance-authority";
  * component re-exports it for convenience, but the definition itself stays
  * callable from anywhere. Styling is data; only the interactive wrapper needs a
  * client.
+ *
+ * ── THE BASE UI STATE VOCABULARY, MEASURED ─────────────────────────────────
+ *
+ * Branch `experiment/base-ui`. This file used React Aria's attribute vocabulary
+ * for every interactive state. Base UI's `Button` publishes exactly ONE state
+ * attribute — `button/ButtonDataAttributes` declares `disabled` and nothing
+ * else — and expects the platform's pseudo-classes for the rest. Measured, not
+ * read off a docs page: `probe.state-vocabulary.json → button.hover` and
+ * `button.pressed` carry no data attribute at all.
+ *
+ *     data-hovered  → NONE. CSS `:hover`.
+ *     data-pressed  → NONE. CSS `:active`, and see the fidelity note below.
+ *     data-disabled → data-disabled. Same name, same meaning, no edit.
+ *
+ * The focus ring needs no edit either, and that is worth stating because it is
+ * the state that must never be silently lost: Base UI's Button renders a real
+ * `<button>`, `button.tsx` puts `data-lumo` on it, and theme.css's
+ * `:where([data-lumo]):focus-visible` has always been a pseudo-class rule. It
+ * was engine-independent before the swap and still is.
+ *
+ * FIDELITY NOTE on `:active`. React Aria's `data-pressed` is a press STATE it
+ * computes: it survives the pointer leaving and returning, and it is set for a
+ * held Space on a keyboard. CSS `:active` is the platform's, and the platform
+ * ends it when the pointer leaves the element. So the mapping is close but not
+ * exact, and the difference is visible in one gesture — press, drag off, drag
+ * back — where React Aria stayed lit and this does not. Recorded in
+ * experiments/measurements/state-vocabulary.json as a partial mapping rather
+ * than smoothed over.
  */
 export const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 rounded-md font-medium " +
@@ -29,17 +57,17 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        solid: "bg-accent text-accent-fg data-hovered:bg-accent-hover data-pressed:bg-accent-hover",
+        solid: "bg-accent text-accent-fg hover:bg-accent-hover active:bg-accent-hover",
         outline:
-          "border border-border-control bg-surface text-fg data-hovered:bg-surface-hover data-pressed:bg-surface-hover",
-        ghost: "text-fg data-hovered:bg-surface-hover data-pressed:bg-surface-hover",
+          "border border-border-control bg-surface text-fg hover:bg-surface-hover active:bg-surface-hover",
+        ghost: "text-fg hover:bg-surface-hover active:bg-surface-hover",
         // `text-bg`, not `text-white`. The status tokens swap lightness between
         // themes — --lumo-sys-critical is L 0.520 on light and L 0.700 on dark —
         // so white text passes on the light fill and fails on the dark one. That
         // is a contrast bug visible in exactly one theme, which is the kind
         // nobody catches in review. `--color-bg` swaps with the fill and stays
         // legible against both.
-        critical: "bg-critical text-bg data-hovered:opacity-90 data-pressed:opacity-90",
+        critical: "bg-critical text-bg hover:opacity-90 active:opacity-90",
       },
       size: {
         // Padding is logical so it mirrors; height comes from the density-scaled

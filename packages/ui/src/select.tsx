@@ -1,24 +1,19 @@
 "use client";
 
+import { createContext, useContext } from "react";
 import { cva } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
-import {
-  Button as AriaButton,
-  ListBox as AriaListBox,
-  Popover as AriaPopover,
-  Select as AriaSelect,
-  SelectValue as AriaSelectValue,
-  ListBoxItem as AriaSelectItem,
-  type ButtonProps as AriaButtonProps,
-  type ListBoxItemProps as AriaListBoxItemProps,
-  type ListBoxProps as AriaListBoxProps,
-  type SelectProps as AriaSelectProps,
-  type SelectValueProps as AriaSelectValueProps,
-} from "react-aria-components";
+import { Select as BaseSelect } from "@base-ui/react/select";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
 
 /**
+ * EXPERIMENT — this file is the React Aria Select rebuilt on Base UI 1.7.0.
+ * The React Aria original is `experiments/baseline-rac/select.tsx`; the public
+ * API below is unchanged, and `packages/ui/src/overlays.test.tsx` runs against
+ * it UNEDITED. Every divergence found while porting is recorded, with evidence,
+ * in `experiments/measurements/rebuild-collections.json`.
+ *
  * A single-select listbox in a popover.
  *
  *     <Select placeholder="یک شهر انتخاب کنید" onSelectionChange={…}>
@@ -29,25 +24,39 @@ import { popoverVariants } from "./popover.tsx";
  *       </SelectPopover>
  *     </Select>
  *
- * ── WHY `placeholder` IS REQUIRED ───────────────────────────────────────────
+ * ── WHY `placeholder` IS STILL REQUIRED, FOR A DIFFERENT REASON ─────────────
  *
- * This is the worst leak in the batch and the only one that is VISIBLE rather
- * than merely announced. RAC's own string bundle carries
+ * Under React Aria the prop was required because `SelectValue` fell back to
+ * RAC's own `selectPlaceholder: "Select an item"` bundle string, which rendered
+ * the English phrase into the first byte of a Persian page.
  *
- *     "react-aria-components": { selectPlaceholder: "Select an item", … }
+ * Base UI ships **no string bundle at all** — grepped, not assumed: the whole
+ * of `@base-ui/react/select` contains zero `aria-label` literals and zero
+ * translatable strings (see `rebuild-collections.json`, `english_strings`).
+ * `<Select.Value>` with no `placeholder` and no value renders EMPTY.
  *
- * and `SelectValue` falls back to it: `defaultChildren ?? placeholder ??
- * stringFormatter.format('selectPlaceholder')`. React Aria ships 34 locale
- * bundles and Persian is not one of them, so on a `fa-IR` page an unset
- * placeholder renders the literal English phrase "Select an item" — in the
- * first byte, in the middle of a Persian form, to a crawler and to a sighted
- * reader alike.
+ * So the failure mode inverts: React Aria shipped the wrong language, Base UI
+ * ships nothing. An empty collapsed control is a worse defect than an English
+ * one, because it is invisible in review — there is no Latin word for a gate to
+ * catch, and a screenshot of an unselected Select looks like a styling bug
+ * rather than a missing string. The prop stays required, and the argument for
+ * requiring it is now stronger, not weaker.
  *
- * A default of `"انتخاب کنید"` would be worse, not better: it would hide the
- * decision inside the library for every locale including `en-US`. So the prop is
- * required and typed `string`, and forgetting it is a compile error. Same
- * enforcement as every other announced string in Lumo — see `@lumo-ui/core`'s
- * strings.ts for why a runtime dictionary cannot do this job.
+ * ── ONE CAPABILITY GAP, NOT PAPERED OVER ────────────────────────────────────
+ *
+ * React Aria resolves a selected KEY to that item's rendered text, because the
+ * collection is built before render. Base UI's `<Select.Value>` resolves the
+ * label only from the Root's `items` prop (`resolveSelectedLabel` in
+ * `internals/resolveValueLabel.mjs` — it never consults mounted items), and the
+ * items live inside a portal that is `null` while closed. With
+ * `defaultSelectedKey="thr"` and no `items`, this component therefore renders
+ * the raw key `thr` where React Aria rendered `تهران`.
+ *
+ * That is left HONEST rather than patched: the obvious workaround — walking
+ * `children` for a matching `id` and pulling its text out — would reimplement a
+ * collection builder inside a wrapper, which is the exact thing renting a
+ * headless library is supposed to buy. Recorded as
+ * `select.selected-key-label-resolution` in the measurements file.
  */
 
 export const selectVariants = cva("group flex w-full flex-col gap-1.5");
@@ -58,9 +67,17 @@ export const selectTriggerVariants = cva(
     // Logical padding, asymmetric on purpose: the value needs breathing room at
     // the reading edge, the chevron sits tight against the trailing edge. In
     // Persian both swap sides, which `pl-3 pr-2` would not.
-    "data-hovered:bg-surface-hover " +
+    //
+    // `hover:` replaces RAC's `data-hovered:`. Base UI emits NO hover attribute
+    // on any part — its trigger's full set is data-popup-open / data-pressed /
+    // data-disabled / data-readonly / data-popup-side / data-required /
+    // data-valid / data-invalid / data-touched / data-dirty / data-filled /
+    // data-focused / data-placeholder. Keeping `data-hovered:` would have left
+    // a class that styles nothing and reviews as if it did.
+    "hover:bg-surface-hover " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
-    "data-open:border-border-strong",
+    // RAC wrote `data-open`; Base UI writes `data-popup-open`.
+    "data-popup-open:border-border-strong",
 );
 
 export const selectValueVariants = cva(
@@ -70,10 +87,11 @@ export const selectValueVariants = cva(
 );
 
 export const selectPopoverVariants = cva(
-  // RAC writes the trigger's measured width onto the popover element as
-  // `--trigger-width` (verified in Popover.mjs). Matching it keeps the panel
-  // flush with the control instead of shrink-wrapping the longest option.
-  "w-[var(--trigger-width)] overflow-auto p-0",
+  // RAC wrote the trigger's measured width as `--trigger-width`; Base UI's
+  // positioner writes `--anchor-width` (verified in useAnchorPositioning.mjs).
+  // The variable name is engine-owned, so this is a forced edit, not a restyle
+  // — keeping `--trigger-width` would silently shrink-wrap the panel.
+  "w-[var(--anchor-width)] overflow-auto p-0",
 );
 
 export const selectListBoxVariants = cva("max-h-[inherit] overflow-auto p-1 outline-none");
@@ -81,24 +99,109 @@ export const selectListBoxVariants = cva("max-h-[inherit] overflow-auto p-1 outl
 export const selectItemVariants = cva(
   "flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 " +
     "text-sm text-fg outline-none " +
-    "data-focused:bg-surface-hover " +
+    // RAC's one focus cursor was `data-focused`; Base UI calls the same state
+    // `data-highlighted`, and drives it for pointer and keyboard alike exactly
+    // as RAC did. Same behaviour, different attribute name.
+    "data-highlighted:bg-surface-hover " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
 );
 
-export interface SelectProps<T extends object>
-  extends Omit<AriaSelectProps<T>, "children" | "className" | "placeholder"> {
+/**
+ * Carries the two strings that React Aria took on the Root and delivered to
+ * descendants through its own context: the required `placeholder`, read by
+ * `SelectValue`, and `aria-label`, which Base UI expects on `Select.Trigger`
+ * rather than on the root.
+ *
+ * A Lumo-owned React context is the right tool here and NOT the thing DECISIONS
+ * §0.1 rules out — that section is about RAC's `LocalizedStringProvider`, which
+ * renders no children and only sets a `window` global. A plain React context
+ * renders on the server, which is the tier this library is measured at.
+ */
+interface SelectFieldContextValue {
+  placeholder: string;
+  label: string | undefined;
+}
+
+const SelectFieldContext = createContext<SelectFieldContextValue | null>(null);
+
+export interface SelectProps<T extends object> {
   /**
-   * Visible text shown when nothing is selected. REQUIRED — see the file header:
-   * the fallback is RAC's English "Select an item", rendered on the server.
+   * Visible text shown when nothing is selected. REQUIRED — see the file
+   * header: Base UI's fallback is an EMPTY control, which is worse than RAC's
+   * English one because nothing on screen says a string is missing.
    */
   placeholder: string;
+  /** Announced name, when no visible `<Label>` names the control. */
+  "aria-label"?: string | undefined;
+  /** The selected key. Maps to Base UI's `value`. */
+  selectedKey?: string | null | undefined;
+  /** The initially selected key. Maps to Base UI's `defaultValue`. */
+  defaultSelectedKey?: string | null | undefined;
+  /** Called with the newly selected key. Maps to Base UI's `onValueChange`. */
+  onSelectionChange?: ((key: string | null) => void) | undefined;
+  isDisabled?: boolean | undefined;
+  isRequired?: boolean | undefined;
+  isOpen?: boolean | undefined;
+  defaultOpen?: boolean | undefined;
+  onOpenChange?: ((isOpen: boolean) => void) | undefined;
+  /** Form field name for the hidden input Base UI renders. */
+  name?: string | undefined;
+  /**
+   * TYPE CARRIER, NOT A PROP — and typed `never` on purpose. React Aria's
+   * `SelectProps<T>` fed `T` to `AriaSelectProps<T>`'s `items?: Iterable<T>`.
+   * Base UI has no collection builder, so nothing is left for `T` to type.
+   * Keeping the field keeps the type PARAMETER, so a `SelectProps<City>`
+   * annotation a consumer already wrote still compiles; typing it `never`
+   * makes passing a value a compile error rather than a prop that is accepted
+   * and silently dropped.
+   */
+  items?: Iterable<T> & never;
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function Select<T extends object>({ className, ...props }: SelectProps<T>) {
-  return <AriaSelect data-lumo="" className={cn(selectVariants(), className)} {...props} />;
+export function Select<T extends object>({
+  placeholder,
+  "aria-label": ariaLabel,
+  selectedKey,
+  defaultSelectedKey,
+  onSelectionChange,
+  isDisabled,
+  isRequired,
+  isOpen,
+  defaultOpen,
+  onOpenChange,
+  name,
+  className,
+  children,
+}: SelectProps<T>) {
+  return (
+    <BaseSelect.Root
+      {...(selectedKey === undefined ? {} : { value: selectedKey })}
+      {...(defaultSelectedKey === undefined ? {} : { defaultValue: defaultSelectedKey })}
+      {...(onSelectionChange === undefined
+        ? {}
+        : { onValueChange: (value: string | null) => onSelectionChange(value) })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+      {...(isRequired === undefined ? {} : { required: isRequired })}
+      {...(isOpen === undefined ? {} : { open: isOpen })}
+      {...(defaultOpen === undefined ? {} : { defaultOpen })}
+      {...(onOpenChange === undefined ? {} : { onOpenChange: (open: boolean) => onOpenChange(open) })}
+      {...(name === undefined ? {} : { name })}
+    >
+      <SelectFieldContext.Provider value={{ placeholder, label: ariaLabel }}>
+        {/*
+         * Base UI's Root renders no DOM at all, so the field box React Aria's
+         * `<Select>` provided — the thing `className` and `data-lumo` were
+         * attached to — has to be a real element here.
+         */}
+        <div data-lumo="" className={cn(selectVariants(), className)}>
+          {children}
+        </div>
+      </SelectFieldContext.Provider>
+    </BaseSelect.Root>
+  );
 }
 
 /**
@@ -110,58 +213,65 @@ export function Select<T extends object>({ className, ...props }: SelectProps<T>
  * affordance is an icon here while the submenu affordance in menu.tsx has to be
  * a bidi-mirrored character.
  */
-export interface SelectTriggerProps extends Omit<AriaButtonProps, "children" | "className"> {
+export interface SelectTriggerProps {
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function SelectTrigger({ className, children, ...props }: SelectTriggerProps) {
+export function SelectTrigger({ className, children }: SelectTriggerProps) {
+  const field = useContext(SelectFieldContext);
   return (
-    <AriaButton
+    <BaseSelect.Trigger
       data-lumo=""
+      {...(field?.label === undefined ? {} : { "aria-label": field.label })}
       className={cn(selectTriggerVariants(), className)}
-      {...props}
     >
       {children ?? <SelectValue />}
       <ChevronDown aria-hidden="true" className="shrink-0 text-fg-muted" />
-    </AriaButton>
+    </BaseSelect.Trigger>
   );
 }
 
-export interface SelectValueProps<T extends object>
-  extends Omit<AriaSelectValueProps<T>, "children" | "className"> {
+export interface SelectValueProps<T extends object> {
+  /** TYPE CARRIER, NOT A PROP — see `SelectProps.items`. */
+  selectedItem?: T & never;
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function SelectValue<T extends object>({
-  className,
-  ...props
-}: SelectValueProps<T>) {
-  return <AriaSelectValue className={cn(selectValueVariants(), className)} {...props} />;
+export function SelectValue<T extends object>({ className, children }: SelectValueProps<T>) {
+  const field = useContext(SelectFieldContext);
+  return (
+    <BaseSelect.Value
+      className={cn(selectValueVariants(), className)}
+      {...(field === null ? {} : { placeholder: field.placeholder })}
+    >
+      {children}
+    </BaseSelect.Value>
+  );
 }
 
 /**
- * The popover AND the listbox inside it, in one component.
+ * The popover AND the list inside it, in one component.
  *
- * Fused deliberately: RAC requires a `<ListBox>` between the Popover and the
- * items, it carries no styling decisions of its own, and every copy of this
- * component that forgets it produces a Select that renders nothing with no
- * error. Collection props (`items`, `dependencies`, `renderEmptyState`) belong
- * to the listbox and are forwarded there untouched — which is also why they are
- * spread rather than destructured: passing an explicitly-`undefined` `items`
- * through would violate `exactOptionalPropertyTypes` against RAC's `items?:`.
+ * Fused deliberately, and Base UI needs the fusion MORE than React Aria did:
+ * where RAC wanted one `<ListBox>` between Popover and items, Base UI wants
+ * four nested parts — `Portal` → `Positioner` → `Popup` → `List` — none of
+ * which carries a styling decision a caller would ever want to make, and every
+ * one of which renders nothing at all if omitted.
  *
- * `placement` is intentionally not exposed. RAC's Select publishes
- * `'bottom start'` through PopoverContext — already logical, already mirrored —
- * and any value set here would win over it.
+ * `alignItemWithTrigger={false}` is deliberate. Base UI's default overlaps the
+ * popup on the trigger so the selected item's text lines up with the trigger's
+ * value text. That is a native-macOS behaviour React Aria never had, and
+ * adopting it here would change the component's appearance while the brief is
+ * to swap the engine — so it is switched off and the panel drops below the
+ * control exactly as before.
  */
-export interface SelectPopoverProps<T extends object>
-  extends Omit<AriaListBoxProps<T>, "children" | "className"> {
+export interface SelectPopoverProps<T extends object> {
   children?: LumoNode | ((item: T) => LumoNode);
   /** Class for the popover surface. */
   className?: string | undefined;
-  /** Class for the scrolling listbox inside it. */
+  /** Class for the scrolling list inside it. */
   listBoxClassName?: string | undefined;
 }
 
@@ -169,20 +279,28 @@ export function SelectPopover<T extends object>({
   className,
   listBoxClassName,
   children,
-  ...listBoxProps
 }: SelectPopoverProps<T>) {
   return (
-    <AriaPopover
-      className={cn(popoverVariants({ padded: false }), selectPopoverVariants(), className)}
-    >
-      <AriaListBox
-        data-lumo=""
-        className={cn(selectListBoxVariants(), listBoxClassName)}
-        {...listBoxProps}
+    <BaseSelect.Portal>
+      <BaseSelect.Positioner
+        className="isolate z-50"
+        side="bottom"
+        align="start"
+        sideOffset={4}
+        alignItemWithTrigger={false}
       >
-        {children}
-      </AriaListBox>
-    </AriaPopover>
+        <BaseSelect.Popup
+          className={cn(popoverVariants({ padded: false }), selectPopoverVariants(), className)}
+        >
+          <BaseSelect.List
+            data-lumo=""
+            className={cn(selectListBoxVariants(), listBoxClassName)}
+          >
+            {children as LumoNode}
+          </BaseSelect.List>
+        </BaseSelect.Popup>
+      </BaseSelect.Positioner>
+    </BaseSelect.Portal>
   );
 }
 
@@ -193,13 +311,23 @@ export function SelectPopover<T extends object>({
  * edge), so it lands on the right in English and on the left in Persian —
  * beside the item's own trailing edge either way.
  *
- * `textValue` is re-derived from string children for the reason documented at
- * length in menu.tsx: RAC only extracts a typeahead string from a LITERAL string
- * child, and wrapping the children — which the check mark forces — destroys it
- * silently.
+ * `textValue` maps onto Base UI's `label`, which is the same idea arrived at
+ * from the opposite direction. React Aria DERIVED a typeahead string from a
+ * literal string child and lost it the moment a wrapper appeared (the trap
+ * documented at length in menu.tsx); Base UI never derives from `children` at
+ * all — `SelectItem.label` "defaults to the item text content", read off the
+ * DOM after mount — so the wrapper cannot break it. The re-derivation is kept
+ * anyway, because it also feeds the SERVER-rendered markup, which has no DOM to
+ * read text content from.
  */
-export interface SelectItemProps<T extends object = object>
-  extends Omit<AriaListBoxItemProps<T>, "children" | "className"> {
+export interface SelectItemProps<T extends object = object> {
+  /** TYPE CARRIER, NOT A PROP — see `SelectProps.items`. */
+  value?: T & never;
+  /** The item's key. Maps to Base UI's `value`. */
+  id?: string | undefined;
+  /** Typeahead string. Required for non-string children. */
+  textValue?: string | undefined;
+  isDisabled?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -208,26 +336,29 @@ export function SelectItem<T extends object = object>({
   className,
   children,
   textValue,
-  ...props
+  id,
+  isDisabled,
 }: SelectItemProps<T>) {
   const resolvedTextValue = textValue ?? (typeof children === "string" ? children : undefined);
   return (
-    <AriaSelectItem
+    <BaseSelect.Item
       data-lumo=""
       className={cn(selectItemVariants(), className)}
-      {...(resolvedTextValue === undefined ? {} : { textValue: resolvedTextValue })}
-      {...props}
+      {...(id === undefined ? {} : { value: id })}
+      {...(resolvedTextValue === undefined ? {} : { label: resolvedTextValue })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
     >
-      {({ isSelected }) => (
-        <>
-          <span className="flex-1 truncate">{children}</span>
-          {isSelected ? (
-            // `aria-hidden`: selection is already in the tree as
-            // `aria-selected`, so the glyph would only add noise to the name.
-            <Check aria-hidden="true" className="ms-auto text-accent" />
-          ) : null}
-        </>
-      )}
-    </AriaSelectItem>
+      <BaseSelect.ItemText className="flex-1 truncate">{children}</BaseSelect.ItemText>
+      {/*
+       * `aria-hidden` on the glyph: selection is already in the tree as
+       * `aria-selected`, so the mark would only add noise to the name.
+       * `ItemIndicator` renders nothing at all when the item is unselected, so
+       * `ms-auto` sits on it rather than on a wrapper that would otherwise
+       * reserve trailing space in every row.
+       */}
+      <BaseSelect.ItemIndicator className="ms-auto flex items-center">
+        <Check aria-hidden="true" className="text-accent" />
+      </BaseSelect.ItemIndicator>
+    </BaseSelect.Item>
   );
 }

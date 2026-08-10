@@ -41,16 +41,32 @@ describe("Toggle — the state is an attribute, not a change of name", () => {
     expect(screen.getByRole("button", { name: "کج" }).getAttribute("aria-pressed")).toBe("true");
   });
 
-  it("carries `data-selected` for the ON state, not `data-pressed`", () => {
+  it("marks the ON state with an attribute the variants actually style", () => {
     const { container } = fa(<Toggle defaultSelected>پررنگ</Toggle>);
     const button = container.querySelector("button")!;
 
-    // The trap this component's variants file exists to avoid. `data-pressed`
-    // is the transient pointer-down state, so a toggle styled on it looks
-    // identical whether it is on or off.
-    expect(button.hasAttribute("data-selected")).toBe(true);
+    // ENGINE VOCABULARY. This assertion used to read `data-selected` and
+    // forbid `data-pressed`, because under React Aria `data-pressed` was the
+    // TRANSIENT pointer-down state and styling ON with it made an on toggle
+    // look identical to an off one. Base UI spells the ON state `data-pressed`
+    // and emits no transient attribute at all, so the old names invert.
+    //
+    // What the test is for has not changed and is what is asserted: the ON
+    // state must be (a) exposed as an attribute, (b) the SAME attribute the
+    // variants file styles — a mismatch is the silent defect — and (c) matched
+    // by the ARIA state, so pixels and screen reader agree.
+    expect(button.hasAttribute("data-pressed")).toBe(true);
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+    expect(toggleVariants()).toContain("data-pressed:");
+  });
+
+  it("drops that attribute when OFF — the ON style cannot be always-on", () => {
+    // The other half of the pair above. An attribute that never clears would
+    // satisfy the ON assertions and still render every toggle as selected.
+    const { container } = fa(<Toggle>پررنگ</Toggle>);
+    const button = container.querySelector("button")!;
     expect(button.hasAttribute("data-pressed")).toBe(false);
-    expect(toggleVariants()).toContain("data-selected:");
+    expect(button.getAttribute("aria-pressed")).toBe("false");
   });
 
   it("is a plain button role — a toggle is not a switch and not a checkbox", () => {

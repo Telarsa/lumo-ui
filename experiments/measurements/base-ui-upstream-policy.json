@@ -1,0 +1,51 @@
+{
+  "question": "Is Base UI's one unreachable English string a permanent defect, or an acknowledged bug on a path to being fixed?",
+  "answer": "acknowledged bug, maintainer-endorsed fix planned, and contributable",
+  "confidence": "high",
+  "confidence_basis": "The upstream issue and a core maintainer's reply, read via the GitHub API on 2026-08-10. Not inference.",
+  "why_this_file_exists": "base-ui-i18n.json measured the STATE of Base UI's strings and correctly called the Dismiss label UNREACHABLE — no prop, no provider, an inline literal on an @internal component. That is true today. It is not the whole question. upstream-policy.json asked the equivalent question of React Aria and found a 26-month structural refusal. Comparing a today-state against a policy-state would have been the comparison's biggest unfairness, so this measures Base UI's POSTURE on the same axis. Surfaced by the user, who pointed at the issue directly.",
+  "issue": {
+    "url": "https://github.com/mui/base-ui/issues/5263",
+    "repo": "mui/base-ui",
+    "number": 5263,
+    "title": "[combobox] Internal dismiss button's aria-label \"Dismiss\" is hardcoded and cannot be localized",
+    "author": "vanwalj",
+    "author_association": "community",
+    "created_at": "2026-07-17T15:18:18Z",
+    "state": "OPEN",
+    "closed_at": null,
+    "labels": ["component: combobox"],
+    "age_days_at_measurement": 24,
+    "maintainer_response_latency_days": 5
+  },
+  "maintainer_response": {
+    "author": "atomiks",
+    "role": "Base UI core maintainer",
+    "at": "2026-07-22T10:44:04Z",
+    "quote": "We were going to solve this with a translations provider (tbd). A prop can work in the meantime, but one concern is that this prop is something people aren't going to configure themselves as it's very hidden/niche/non-obvious.",
+    "reading": "The gap is ACKNOWLEDGED, not defended. Two fixes are named: a prop as an interim, a translations provider as the design. Neither is refused.",
+    "maintainer_mitigation_noted_honestly": "atomiks also observes the dismiss button announces its ROLE in the user's language, so a screen reader user can partly infer the control's purpose from position and role even without the label. He calls this 'far from ideal'. Recorded because it is a real mitigation and omitting it would overstate the defect."
+  },
+  "the_comparison_that_matters": {
+    "react_aria": {
+      "unreachable_by_prop": 3,
+      "fixable_by": "patching intl bundles — possible, because every string has an address (@react-aria/overlays, key 'dismiss')",
+      "upstream_path": "CLOSED. Zero community locale PRs ever merged; translations are an Adobe Globalization vendor pipeline. Same answer from three maintainers over 26 months.",
+      "stated_reason": "opening locales would make internal string identifiers public API, so every string change becomes breaking",
+      "consequence_for_lumo": "17 fa-IR bundles patched, regenerated on EVERY upgrade, permanently. The patch tax has no end date."
+    },
+    "base_ui": {
+      "unreachable_by_prop": 1,
+      "fixable_by": "nothing today — an inline literal on an @internal component with no props and no provider",
+      "upstream_path": "OPEN. Issue acknowledged in 5 days by a core maintainer; a prop is accepted as an interim fix and a translations provider is the stated design direction.",
+      "stated_reason": "no refusal offered; the only hesitation is that a niche prop is easy for consumers to miss",
+      "consequence_for_lumo": "one string on Combobox/Autocomplete is English on a Persian page until the fix lands. A one-line PR adding the prop is contributable, and the maintainer has pre-endorsed that shape."
+    },
+    "net": "The i18n axis inverts once posture is measured alongside state. React Aria is fixable-but-permanently-self-maintained; Base UI is broken-on-one-string-but-on-a-path, with the maintainer having already named the fix. A defect with an accepted fix is a smaller liability than a workaround with no end date."
+  },
+  "what_this_does_not_change": [
+    "Base UI still ships NO i18n layer today: no bundles, no provider, no locale context. The provider is 'tbd', not shipped.",
+    "'tbd' is not a date. If Lumo depends on that provider arriving, that is a bet — the honest mitigation is the interim prop, which Lumo can contribute and does not need to wait for.",
+    "The date family is untouched by this finding. base-vega's calendar is react-day-picker + date-fns, and Jalali there is a separate, larger problem than one aria-label."
+  ]
+}

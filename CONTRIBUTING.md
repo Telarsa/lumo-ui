@@ -31,9 +31,15 @@ registry.json                              generated — run scripts/build-regis
 the remaining components exist in shadcn's `aria-vega` style — most of them do.
 
 ```bash
-node scripts/vendor-from-shadcn.mjs chart        # or:
-pnpm dlx shadcn@4.16.2 add @shadcn/<name> --base aria
+node scripts/vendor-from-shadcn.mjs chart        # defaults to base-vega
+LUMO_STYLE=aria-vega node scripts/vendor-from-shadcn.mjs chart   # the old engine
 ```
+
+**The style is `base-vega`** — Base UI underneath, the engine Lumo runs on since
+10 Aug 2026. Measured that day: **48 of Lumo's 77 components have a base-vega
+counterpart** (`experiments/measurements/base-vega-inventory.json`). Check there
+before writing anything; the 29 that are missing are the only ones that need
+authoring, and six of those are the date family.
 
 Commit the raw emit as **one commit**, then apply Lumo changes as a **second**.
 That keeps the diff reviewable and lets `shadcn add <name> --diff` show what

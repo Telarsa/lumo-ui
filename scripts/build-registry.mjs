@@ -29,6 +29,30 @@ const SOURCES = [
   { dir: join(ROOT, "packages/blocks/src"), type: "registry:block", target: "components/blocks" },
 ];
 
+/*
+ * Modules that are not components but that copied components import. They ride
+ * along in every item that references them — the same argument `*.variants.ts`
+ * makes, generalised: a consumer receives files, and a file that imports a
+ * sibling nobody shipped does not compile.
+ *
+ * The three entries are three different KINDS of cost, and the difference is
+ * worth keeping visible:
+ *
+ *   base-ui-adapter.ts   Translates an API that exists. Base UI has a button;
+ *                        it just spells `onPress` as `onClick`.
+ *   date-field-state.ts  IS the primitive. Base UI ships no date field at all,
+ *                        so the segmented-entry engine React Aria used to
+ *                        supply is now a file in this repo that every date
+ *                        component copies.
+ *   locale.ts            The locale context Base UI has no equivalent for; it
+ *                        models direction and nothing else.
+ */
+const SHARED_COMPANIONS = new Set([
+  "base-ui-adapter.ts",
+  "date-field-state.ts",
+  "locale.ts",
+]);
+
 /** Packages a consumer must install; everything else is workspace-internal. */
 const EXTERNAL = new Set([
   "react-aria-components",
@@ -42,6 +66,7 @@ const EXTERNAL = new Set([
   // cannot see it: its node_modules symlink already has them.
   "recharts",
   "embla-carousel-react",
+  "@base-ui/react",
 ]);
 
 const items = [];
@@ -57,7 +82,26 @@ for (const { dir, type, target } of SOURCES) {
   const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)]
     .map((m) => m[1])
     .filter((i) => i !== undefined);
-  const dependencies = [...new Set(imports.filter((i) => EXTERNAL.has(i)))].sort();
+  /*
+   * Subpath-aware. `EXTERNAL` lists PACKAGE names, but a modern package is often
+   * imported by subpath — `@base-ui/react/select`, not `@base-ui/react`. An
+   * exact-match set silently declared ZERO dependencies for every such import,
+   * so a consumer copying the file received an import for a package nothing told
+   * them to install. Found by the Base UI experiment; the bug is the matcher's,
+   * and it would bite any subpath-exporting dependency.
+   */
+  /** @param {string} spec @returns {string} */
+  const packageOf = (spec) => {
+    const parts = spec.split("/");
+    // `parts[0]` is `string | undefined` under noUncheckedIndexedAccess even
+    // though String.split never returns an empty array; `?? spec` keeps the
+    // fallback truthful (an unsplittable specifier IS its own package name)
+    // rather than asserting the index away.
+    return spec.startsWith("@") ? parts.slice(0, 2).join("/") : (parts[0] ?? spec);
+  };
+  const dependencies = [
+    ...new Set(imports.map(packageOf).filter((i) => EXTERNAL.has(i))),
+  ].sort();
   const registryDependencies = [
     ...new Set(
       imports
@@ -69,6 +113,9 @@ for (const { dir, type, target } of SOURCES) {
         // "file-upload.variants.ts", and the review found attachment shipping
         // exactly that unresolvable dependency.
         .map((i) => i.replace(/\.variants\.ts$/, ""))
+        // A shared companion is carried as a FILE, never named as an item —
+        // there is no registry item called "base-ui-adapter.ts".
+        .filter((i) => !SHARED_COMPANIONS.has(`${i}.ts`) && !SHARED_COMPANIONS.has(i))
         // A file's own companion is itself, not a dependency.
         .filter((i) => i !== name),
     ),
@@ -100,7 +147,14 @@ for (const { dir, type, target } of SOURCES) {
     files: [
       { path: `${relative(ROOT, dir)}/${file}`, type, target: `${target}/${file}` },
       ...all
-        .filter((f) => f === `${name}.variants.ts`)
+        .filter(
+          (f) =>
+            f === `${name}.variants.ts` ||
+            // A shared companion rides only with the items that actually import
+            // it — attaching it to every item would ship 67 consumers a file
+            // they never reference.
+            (SHARED_COMPANIONS.has(f) && imports.some((i) => i === `./${f}`)),
+        )
         .map((f) => ({ path: `${relative(ROOT, dir)}/${f}`, type, target: `${target}/${f}` })),
     ],
   });

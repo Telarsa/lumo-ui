@@ -1,0 +1,181 @@
+{
+  "$schema": "./ledger.schema.md",
+  "$about": [
+    "THE CORRECTING-LINE LEDGER. Requirement 4 of the brief asks for a judgement split —",
+    "how much of each wrapper is STYLING and how much is CORRECTING upstream — and it asks",
+    "for the correcting lines to be identified and listed rather than estimated. This file is",
+    "that list, and it is DATA rather than prose so `measure.mjs` can re-validate it: every",
+    "`text` below must still occur in its file exactly `occurrences` times, or the harness",
+    "aborts. A judgement that silently stops matching the code is worse than no judgement.",
+    "",
+    "Everything NOT listed here is classified mechanically by the harness:",
+    "  styling   — a line inside a `cva(...)` call, or a line carrying `className`/`cn(`",
+    "  imports   — an import statement",
+    "  invariant — a line mentioning `LumoNode` (Lumo's rule 0; it would be written against",
+    "              ANY library, so counting it as 'correcting React Aria' would overstate",
+    "              the upstream cost and understate it for the Base UI comparison)",
+    "  structure — interface/function boilerplate and JSX composition",
+    "",
+    "`kind` vocabulary, chosen so the Base UI phase can compare like with like:",
+    "  required-prop-shim   a prop re-declared REQUIRED because upstream leaves it optional",
+    "                       and falls back to an English string, or to nothing at all",
+    "  aria-fix             an attribute written to overwrite or supply an announced string",
+    "  slot-claim           wiring upstream only performs if the wrapper names the slot",
+    "  ssr-fix              exists because upstream's FIRST BYTE differs from its hydrated",
+    "                       tree — the useSlot/useSlotId class of defect",
+    "  rtl-fix              exists because upstream's own output is direction-blind",
+    "  type-narrowing       a type that makes an upstream-representable wrong value unwritable",
+    "  upstream-workaround  behaviour re-derived because upstream drops or ignores it"
+  ],
+  "components": {
+    "button": {
+      "corrections": [
+        { "text": "export interface IconButtonProps extends Omit<ButtonProps, \"size\" | \"aria-label\"> {", "occurrences": 1, "kind": "required-prop-shim", "why": "Subtracts RAC's optional `aria-label` so the only way to name an icon-only button is the required `label`." },
+        { "text": "label: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "An icon is not a name. RAC's own aria-label is optional; a prototype shipped 33 unnamed controls under that convention." },
+        { "text": "export function IconButton({ label, size = \"md\", className, ...props }: IconButtonProps) {", "occurrences": 1, "kind": "required-prop-shim", "why": "The whole component exists to make the name a constructor argument." },
+        { "text": "aria-label={label}", "occurrences": 1, "kind": "aria-fix", "why": "Applies the required name to the control RAC would otherwise leave unnamed." }
+      ]
+    },
+
+    "switch": { "corrections": [] },
+
+    "checkbox": {
+      "corrections": [
+        { "text": "extends Omit<AriaCheckboxGroupProps, \"children\" | \"className\" | \"isInvalid\"> {", "occurrences": 1, "kind": "type-narrowing", "why": "Removes RAC's `isInvalid` so it can be re-declared with an explicit `| undefined` under exactOptionalPropertyTypes." },
+        { "text": "label: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "A group announced as bare \"group\" is the named-controls defect; RAC does not require the name." },
+        { "text": "isInvalid?: boolean | undefined;", "occurrences": 1, "kind": "type-narrowing", "why": "The re-declaration the Omit above makes room for." },
+        { "text": "{...optional(\"isInvalid\", isInvalid ?? (errorMessage != null ? true : undefined))}", "occurrences": 1, "kind": "upstream-workaround", "why": "An explicit `undefined` is a type error against RAC's `isInvalid?: boolean`, so the prop must be conditionally spread rather than passed." },
+        { "text": "<Label>{label}</Label>", "occurrences": 1, "kind": "required-prop-shim", "why": "Renders the required group name RAC leaves to the caller." }
+      ]
+    },
+
+    "toggle": {
+      "corrections": [
+        { "text": "export interface IconToggleProps extends Omit<ToggleProps, \"aria-label\"> {", "occurrences": 1, "kind": "required-prop-shim", "why": "Same subtraction as IconButton. A nameless toggle announces \"button, pressed\" — information-shaped and empty." },
+        { "text": "label: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "Required name for an icon-only toggle." },
+        { "text": "export function IconToggle({ label, className, variant, size, ...props }: IconToggleProps) {", "occurrences": 1, "kind": "required-prop-shim", "why": "The split component that carries the requirement." },
+        { "text": "aria-label={label}", "occurrences": 1, "kind": "aria-fix", "why": "Applies it." }
+      ]
+    },
+
+    "select": {
+      "corrections": [
+        { "text": "extends Omit<AriaSelectProps<T>, \"children\" | \"className\" | \"placeholder\"> {", "occurrences": 1, "kind": "required-prop-shim", "why": "Subtracts RAC's optional placeholder so it can be re-declared required." },
+        { "text": "placeholder: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "Unset, SelectValue renders RAC's `selectPlaceholder` — VISIBLE English (\"Select an item\") in the first byte of a Persian form." },
+        { "text": "const resolvedTextValue = textValue ?? (typeof children === \"string\" ? children : undefined);", "occurrences": 1, "kind": "upstream-workaround", "why": "RAC derives typeahead text only from a LITERAL string child; the check-mark wrapper destroys it silently." },
+        { "text": "{...(resolvedTextValue === undefined ? {} : { textValue: resolvedTextValue })}", "occurrences": 1, "kind": "upstream-workaround", "why": "Conditional spread because an explicit `undefined` fails against RAC's `textValue?: string`." }
+      ]
+    },
+
+    "menu": {
+      "corrections": [
+        { "text": "placement?: LumoPlacement;", "occurrences": 1, "kind": "type-narrowing", "why": "RAC's `Placement` accepts 'bottom left' as readily as 'bottom start'; only one of them mirrors." },
+        { "text": "const resolvedTextValue = textValue ?? (typeof children === \"string\" ? children : undefined);", "occurrences": 1, "kind": "upstream-workaround", "why": "Typeahead text, re-derived. See select." },
+        { "text": "{...(resolvedTextValue === undefined ? {} : { textValue: resolvedTextValue })}", "occurrences": 1, "kind": "upstream-workaround", "why": "Conditional spread, as select." },
+        { "text": "<span aria-hidden=\"true\" className=\"text-fg-subtle\">", "occurrences": 1, "kind": "rtl-fix", "why": "The submenu arrow is a real element carrying U+203A rather than an SVG chevron, because U+203A is Bidi_Mirrored and an SVG path is not." },
+        { "text": "›", "occurrences": 1, "kind": "rtl-fix", "why": "The mirrored glyph itself." },
+        { "text": "</span>", "occurrences": 1, "kind": "rtl-fix", "why": "Closing the same element." }
+      ]
+    },
+
+    "combobox": {
+      "corrections": [
+        { "text": "showSuggestionsLabel: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "`useComboBox` writes aria-label=\"Show suggestions\" unconditionally on the trigger button." },
+        { "text": "suggestionsLabel: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "And aria-label=\"Suggestions\" unconditionally on the ListBox." },
+        { "text": "showSuggestionsLabel,", "occurrences": 1, "kind": "required-prop-shim", "why": "Destructured off the root because the leaking element is buried inside." },
+        { "text": "suggestionsLabel,", "occurrences": 1, "kind": "required-prop-shim", "why": "Likewise." },
+        { "text": "aria-label={showSuggestionsLabel}", "occurrences": 1, "kind": "aria-fix", "why": "The documented override point; RAC's context props lose to local props." },
+        { "text": "aria-label={suggestionsLabel}", "occurrences": 1, "kind": "aria-fix", "why": "Inert for the NAME when a visible label exists, but still in the markup, where the gate's attribute-level rule fires on it." },
+        { "text": "{...(placeholder === undefined ? {} : { placeholder })}", "occurrences": 1, "kind": "upstream-workaround", "why": "exactOptionalPropertyTypes against RAC's `placeholder?: string`." },
+        { "text": "const resolvedTextValue = textValue ?? (typeof children === \"string\" ? children : undefined);", "occurrences": 1, "kind": "upstream-workaround", "why": "Typeahead text, re-derived. See menu." },
+        { "text": "{...(resolvedTextValue === undefined ? {} : { textValue: resolvedTextValue })}", "occurrences": 1, "kind": "upstream-workaround", "why": "Conditional spread." }
+      ]
+    },
+
+    "dialog": {
+      "corrections": [
+        { "text": "closeLabel: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "Moves IconButton's requirement one level up so a dialog written by someone who never read button.tsx still cannot ship an unnamed ✕." },
+        { "text": "export function Dialog({ closeLabel, className, children, ...props }: DialogProps) {", "occurrences": 1, "kind": "required-prop-shim", "why": "The signature that carries it." },
+        { "text": "slot=\"close\"", "occurrences": 1, "kind": "slot-claim", "why": "RAC's Dialog publishes a ButtonContext whose `close` slot supplies onPress; without the slot the wrapper needs its own state." },
+        { "text": "label={closeLabel}", "occurrences": 1, "kind": "required-prop-shim", "why": "Applies it." },
+        { "text": "slot=\"title\"", "occurrences": 1, "kind": "slot-claim", "why": "Without it RAC labels the dialog by its TRIGGER's text instead of its heading — a different sentence, and no error." }
+      ]
+    },
+
+    "popover": {
+      "corrections": [
+        { "text": "export type LumoPlacement = Exclude<", "occurrences": 1, "kind": "type-narrowing", "why": "The physical spellings render identically on the English page they are written on and pin the panel to the wrong corner on every Persian one." },
+        { "text": "AriaPlacement,", "occurrences": 1, "kind": "type-narrowing", "why": "Derived from RAC's own union rather than retyped, so a RAC release that adds a value stays in sync." },
+        { "text": "`${string}left${string}` | `${string}right${string}`", "occurrences": 1, "kind": "type-narrowing", "why": "The subtraction itself." },
+        { "text": ">;", "occurrences": 1, "kind": "type-narrowing", "why": "Closing the type." },
+        { "text": "extends Omit<AriaPopoverProps, \"children\" | \"className\" | \"placement\">,", "occurrences": 1, "kind": "type-narrowing", "why": "Removes RAC's wider placement so the narrowed one can replace it." },
+        { "text": "placement?: LumoPlacement;", "occurrences": 1, "kind": "type-narrowing", "why": "The replacement." }
+      ]
+    },
+
+    "tooltip": {
+      "corrections": [
+        { "text": "import type { LumoPlacement } from \"./popover.tsx\";", "occurrences": 1, "kind": "type-narrowing", "why": "Imported rather than restated: two hand-filtered copies of the same union drift the first time RAC adds a value." },
+        { "text": "extends Omit<AriaTooltipProps, \"children\" | \"className\" | \"placement\"> {", "occurrences": 1, "kind": "type-narrowing", "why": "Removes the physical spellings." },
+        { "text": "placement?: LumoPlacement;", "occurrences": 1, "kind": "type-narrowing", "why": "The replacement." }
+      ]
+    },
+
+    "tabs": {
+      "corrections": [
+        { "text": "extends Omit<AriaTabListProps<T>, \"children\" | \"className\" | \"aria-label\"> {", "occurrences": 1, "kind": "required-prop-shim", "why": "Subtracts the optional aria-label so `label` is the only way in." },
+        { "text": "label: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "RAC emits no English here — the tablist simply arrives unnamed, announced as bare \"tab list\"." },
+        { "text": "export function TabList<T extends object>({ label, className, ...props }: TabListProps<T>) {", "occurrences": 1, "kind": "required-prop-shim", "why": "The signature that carries it." },
+        { "text": "aria-label={label}", "occurrences": 1, "kind": "aria-fix", "why": "Applies it." }
+      ]
+    },
+
+    "slider": {
+      "corrections": [
+        { "text": "I18nProvider,", "occurrences": 1, "kind": "upstream-workaround", "why": "The component mounts a SECOND provider of its own, because `useSliderState` reads useLocale() during its own render and useDefaultLocale() hardcodes en-US/ltr on the server." },
+        { "text": "import { FORMAT_LOCALE, cn, formatNumber, type Locale } from \"@lumo-ui/core\";", "occurrences": 1, "kind": "upstream-workaround", "why": "`formatNumber` and `FORMAT_LOCALE` exist here only because SliderOutput's default children render Latin digits." },
+        { "text": "\"children\" | \"className\" | \"aria-label\" | \"orientation\" | \"formatOptions\"", "occurrences": 1, "kind": "required-prop-shim", "why": "Subtracts the optional aria-label and the formatOptions RAC would apply to only one of the two value renderings." },
+        { "text": "label: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "An unnamed role=group wrapping an unnamed range input announces as bare \"slider\"." },
+        { "text": "locale: Locale;", "occurrences": 1, "kind": "upstream-workaround", "why": "REQUIRED because it is the only input to BOTH the visible output and aria-valuetext; RAC would take it from navigator." },
+        { "text": "formatOptions?: Intl.NumberFormatOptions | undefined;", "occurrences": 1, "kind": "upstream-workaround", "why": "Re-declared so the same options reach Intl.NumberFormat and RAC, which is what keeps the two renderings from drifting." },
+        { "text": "label,", "occurrences": 1, "kind": "required-prop-shim", "why": "Destructured." },
+        { "text": "locale,", "occurrences": 1, "kind": "upstream-workaround", "why": "Destructured." },
+        { "text": "formatOptions,", "occurrences": 1, "kind": "upstream-workaround", "why": "Destructured." },
+        { "text": "<I18nProvider locale={FORMAT_LOCALE[locale]}>", "occurrences": 1, "kind": "upstream-workaround", "why": "Measured: value 40 renders left:40% without it and left:60% with it. The thumb sits at the mirror image of where it belongs." },
+        { "text": "</I18nProvider>", "occurrences": 1, "kind": "upstream-workaround", "why": "Closing it." },
+        { "text": "aria-label={label}", "occurrences": 2, "kind": "ssr-fix", "why": "Once on the slider (the name RAC does not require) and once on the THUMB — the second is a dangling-IDREF fix: SliderThumb's useSlot starts true and is corrected in a layout effect that never runs on the server, so the prerendered input points at a <Label> that does not exist." },
+        { "text": "{...(formatOptions !== undefined ? { formatOptions } : {})}", "occurrences": 1, "kind": "upstream-workaround", "why": "Conditional spread under exactOptionalPropertyTypes." },
+        { "text": "{formatNumber(state.getThumbValue(0), locale, formatOptions)}", "occurrences": 1, "kind": "upstream-workaround", "why": "SliderOutput's own children would be state.getThumbValueLabel(0), formatted under the browser locale: `<output>40</output>` on a page whose every other number is Persian." },
+        { "text": "insetInlineStart: 0,", "occurrences": 1, "kind": "rtl-fix", "why": "The fill grows from the reader's leading edge by construction; `left`/`width` would need a mirrored copy and would disagree with RAC's thumb the moment the two direction sources diverged." },
+        { "text": "inlineSize: `${state.getThumbPercent(0) * 100}%`,", "occurrences": 1, "kind": "rtl-fix", "why": "The logical counterpart of `width`." }
+      ]
+    },
+
+    "number-field": {
+      "corrections": [
+        { "text": "| \"isInvalid\"", "occurrences": 1, "kind": "type-narrowing", "why": "Removed so it can be re-declared with an explicit `| undefined`." },
+        { "text": "| \"decrementAriaLabel\"", "occurrences": 1, "kind": "required-prop-shim", "why": "Removed so the required Lumo spelling is the only route in." },
+        { "text": "| \"incrementAriaLabel\"", "occurrences": 1, "kind": "required-prop-shim", "why": "Likewise." },
+        { "text": "label: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "An unnamed field is a defect, and RAC interpolates this label into the stepper names." },
+        { "text": "decrementLabel: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "Closes aria-label=\"Decrease <label>\"." },
+        { "text": "incrementLabel: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "Closes aria-label=\"Increase <label>\"." },
+        { "text": "roleDescription: string;", "occurrences": 1, "kind": "required-prop-shim", "why": "Closes aria-roledescription=\"Number field\"." },
+        { "text": "isInvalid?: boolean | undefined;", "occurrences": 1, "kind": "type-narrowing", "why": "The re-declaration." },
+        { "text": "label,", "occurrences": 1, "kind": "required-prop-shim", "why": "Destructured." },
+        { "text": "decrementLabel,", "occurrences": 1, "kind": "required-prop-shim", "why": "Destructured." },
+        { "text": "incrementLabel,", "occurrences": 1, "kind": "required-prop-shim", "why": "Destructured." },
+        { "text": "roleDescription,", "occurrences": 1, "kind": "required-prop-shim", "why": "Destructured." },
+        { "text": "decrementAriaLabel={decrementLabel}", "occurrences": 1, "kind": "aria-fix", "why": "The LOAD-BEARING route: RAC consumes it before composing its own name, which also nulls the aria-labelledby that would otherwise beat an aria-label." },
+        { "text": "incrementAriaLabel={incrementLabel}", "occurrences": 1, "kind": "aria-fix", "why": "Likewise." },
+        { "text": "{...optional(\"isInvalid\", isInvalid ?? (errorMessage != null ? true : undefined))}", "occurrences": 1, "kind": "upstream-workaround", "why": "Conditional spread under exactOptionalPropertyTypes." },
+        { "text": "<Label>{label}</Label>", "occurrences": 1, "kind": "required-prop-shim", "why": "Renders the required name." },
+        { "text": "aria-roledescription={roleDescription}", "occurrences": 1, "kind": "aria-fix", "why": "On the <input>, NOT the <Group>: passing it to Group emits BOTH values and the English one survives as a duplicate attribute." },
+        { "text": "{...optional(\"placeholder\", placeholder)}", "occurrences": 1, "kind": "upstream-workaround", "why": "Conditional spread." },
+        { "text": "slot=\"increment\"", "occurrences": 1, "kind": "slot-claim", "why": "RAC wires the stepper's behaviour through the slot, not through a prop." },
+        { "text": "aria-label={incrementLabel}", "occurrences": 1, "kind": "aria-fix", "why": "The second belt: both read the same prop, so the leak stays closed if a future version stops honouring the root props." },
+        { "text": "slot=\"decrement\"", "occurrences": 1, "kind": "slot-claim", "why": "As increment." },
+        { "text": "aria-label={decrementLabel}", "occurrences": 1, "kind": "aria-fix", "why": "As increment." }
+      ]
+    }
+  }
+}

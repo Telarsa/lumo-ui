@@ -7,9 +7,10 @@
       "name": "alert-dialog",
       "type": "registry:ui",
       "title": "Alert Dialog",
-      "description": "A dialog that interrupts with a decision and offers exactly two ways out.",
+      "description": "EXPERIMENT — the React Aria AlertDialog rebuilt on Base UI 1.7.0. The React",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "react-aria-components"
       ],
@@ -215,6 +216,7 @@
       "description": "THE COMPONENT SHAPE. Every Lumo component follows this file's structure, and",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "react-aria-components"
       ],
@@ -223,6 +225,11 @@
           "path": "packages/ui/src/button.tsx",
           "type": "registry:ui",
           "target": "components/ui/button.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         },
         {
           "path": "packages/ui/src/button.variants.ts",
@@ -328,6 +335,7 @@
       "description": "The clickable row: indicator, then label.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -341,6 +349,11 @@
           "path": "packages/ui/src/checkbox.tsx",
           "type": "registry:ui",
           "target": "components/ui/checkbox.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -348,13 +361,13 @@
       "name": "combobox",
       "type": "registry:ui",
       "title": "Combobox",
-      "description": "A text input that filters a list of options.",
+      "description": "EXPERIMENT — this file is the React Aria ComboBox rebuilt on Base UI 1.7.0.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "popover"
@@ -394,11 +407,11 @@
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",
-      "description": "A right-click menu, anchored at the pointer.",
+      "description": "EXPERIMENT — this file is the React Aria ContextMenu rebuilt on Base UI",
       "author": "Telarsa",
       "dependencies": [
-        "@lumo-ui/core",
-        "react-aria-components"
+        "@base-ui/react",
+        "@lumo-ui/core"
       ],
       "registryDependencies": [
         "menu"
@@ -418,6 +431,8 @@
       "description": "A date typed segment by segment: ۱۴۰۵ / ۵ / ۱۹.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@internationalized/date",
         "@lumo-ui/core",
         "react-aria-components"
       ],
@@ -430,6 +445,21 @@
           "path": "packages/ui/src/date-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-field.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -506,9 +536,10 @@
       "name": "dialog",
       "type": "registry:ui",
       "title": "Dialog",
-      "description": "Modal dialog. Composition mirrors React Aria's, deliberately:",
+      "description": "Modal dialog. **BASE UI ENGINE** — see experiments/measurements/.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -522,6 +553,11 @@
           "path": "packages/ui/src/dialog.tsx",
           "type": "registry:ui",
           "target": "components/ui/dialog.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -787,12 +823,12 @@
       "name": "menu",
       "type": "registry:ui",
       "title": "Menu",
-      "description": "A menu of actions.",
+      "description": "EXPERIMENT — this file is the React Aria Menu rebuilt on Base UI 1.7.0. The",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "popover"
@@ -908,9 +944,10 @@
       "name": "number-field",
       "type": "registry:ui",
       "title": "Number Field",
-      "description": "One stepper button.",
+      "description": "The input.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -924,6 +961,11 @@
           "path": "packages/ui/src/number-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/number-field.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -954,9 +996,10 @@
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
-      "description": "A positioned overlay.",
+      "description": "A positioned overlay. **BASE UI ENGINE** — see experiments/measurements/.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -966,6 +1009,11 @@
           "path": "packages/ui/src/popover.tsx",
           "type": "registry:ui",
           "target": "components/ui/popover.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1003,6 +1051,11 @@
           "path": "packages/ui/src/provider.tsx",
           "type": "registry:ui",
           "target": "components/ui/provider.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -1156,13 +1209,13 @@
       "name": "select",
       "type": "registry:ui",
       "title": "Select",
-      "description": "A single-select listbox in a popover.",
+      "description": "EXPERIMENT — this file is the React Aria Select rebuilt on Base UI 1.7.0.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "popover"
@@ -1263,9 +1316,10 @@
       "name": "slider",
       "type": "registry:ui",
       "title": "Slider",
-      "description": "A single value chosen from a range.",
+      "description": "A single value chosen from a range. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1275,6 +1329,11 @@
           "path": "packages/ui/src/slider.tsx",
           "type": "registry:ui",
           "target": "components/ui/slider.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1339,6 +1398,7 @@
       "description": "The clickable row.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1351,6 +1411,11 @@
           "path": "packages/ui/src/switch.tsx",
           "type": "registry:ui",
           "target": "components/ui/switch.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1382,9 +1447,10 @@
       "name": "tabs",
       "type": "registry:ui",
       "title": "Tabs",
-      "description": "Tabs.",
+      "description": "Tabs. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1394,6 +1460,11 @@
           "path": "packages/ui/src/tabs.tsx",
           "type": "registry:ui",
           "target": "components/ui/tabs.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1549,6 +1620,7 @@
       "description": "ONE two-state button. Bold on / bold off, muted / unmuted, pinned / unpinned.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "react-aria-components"
       ],
@@ -1557,6 +1629,11 @@
           "path": "packages/ui/src/toggle.tsx",
           "type": "registry:ui",
           "target": "components/ui/toggle.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         },
         {
           "path": "packages/ui/src/toggle.variants.ts",
@@ -1588,9 +1665,10 @@
       "name": "tooltip",
       "type": "registry:ui",
       "title": "Tooltip",
-      "description": "A description shown on hover or focus.",
+      "description": "A description shown on hover or focus. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1603,6 +1681,11 @@
           "path": "packages/ui/src/tooltip.tsx",
           "type": "registry:ui",
           "target": "components/ui/tooltip.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },

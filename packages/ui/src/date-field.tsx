@@ -1,25 +1,53 @@
 "use client";
 
+import { useCallback, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { Field } from "@base-ui/react/field";
+import type { DateValue } from "@internationalized/date";
 import {
-  DateField as AriaDateField,
-  DateInput as AriaDateInput,
   DateSegment as AriaDateSegment,
   type DateFieldProps as AriaDateFieldProps,
   type DateSegmentProps as AriaDateSegmentProps,
-  type DateValue,
 } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, direction, stringsFor, type LumoNode } from "@lumo-ui/core";
 import {
   dateInputVariants,
   dateLiteralVariants,
   dateSegmentVariants,
 } from "./calendar.variants.ts";
-import { Description, FieldError, Label, fieldVariants, optional } from "./form.tsx";
+import {
+  descriptionVariants,
+  fieldErrorVariants,
+  fieldVariants,
+  labelVariants,
+  optional,
+} from "./form.tsx";
+import { attr } from "./base-ui-adapter.ts";
+import { useLumoLocale } from "./locale.ts";
+import {
+  digitFromKey,
+  useDateFieldState,
+  type EditableSegmentType,
+} from "./date-field-state.ts";
 
 export { dateInputVariants, dateLiteralVariants, dateSegmentVariants };
 
 /**
  * A date typed segment by segment: ۱۴۰۵ / ۵ / ۱۹.
+ *
+ * ═══ REBUILT ON BASE UI, AND THE HONEST VERSION OF WHAT THAT COST ═══════════
+ *
+ * `@base-ui/react@1.7.0` publishes 40 subpaths. None of them is a calendar, a
+ * date field or a time field, so unlike the other thirteen rebuilds there was
+ * nothing to wrap — the interaction layer under this file is written from
+ * scratch and lives in `date-field-state.ts`. What it is written AGAINST is
+ * `@internationalized/date`, which is a standalone package with no React
+ * dependency and is unaffected by which UI library sits on top: `PersianCalendar`
+ * answers `getDaysInMonth` for Adobe and for us identically.
+ *
+ * So the split is: the ARITHMETIC ports for free, the INTERACTION does not. The
+ * price of the interaction, in lines and in behaviours not reproduced, is
+ * `experiments/measurements/date-field-cost.json`. Read that before treating
+ * this file as a finished component. It is not one.
  *
  * ═══ THE FILE WHERE "JALALI FOR ENTRY" IS DECIDED ═══════════════════════════
  *
@@ -31,12 +59,10 @@ export { dateInputVariants, dateLiteralVariants, dateSegmentVariants };
  * 30 this year. Get either wrong and the field accepts a date that does not
  * exist, or refuses one that does.
  *
- * Lumo does none of that arithmetic. `@internationalized/date`'s `CalendarDate`
- * carries its calendar with it, so `PersianCalendar` answers `getDaysInMonth`,
- * and React Aria's segment state cycles through that. What this file owes the
- * reader is the MEASUREMENT that it is true, which lives in `dates.test.tsx`
- * and is summarised here because a reader of the component should not have to
- * go find it:
+ * Lumo still does none of that arithmetic. `CalendarDate` carries its calendar
+ * with it, `PersianCalendar` answers `getDaysInMonth`, and `toValue` in
+ * `date-field-state.ts` asks. The measurement, unchanged from the React Aria
+ * build and re-verified against this one:
  *
  *   1403 month lengths  31,31,31,31,31,31,30,30,30,30,30,30   ← Esfand has 30
  *   1404 month lengths  31,31,31,31,31,31,30,30,30,30,30,29   ← Esfand has 29
@@ -45,81 +71,72 @@ export { dateInputVariants, dateLiteralVariants, dateSegmentVariants };
  *   The same keystroke at ۱۴۰۴/۱۲/۲۹ commits NOTHING — `onChange` receives no
  *   date, because Esfand 30 does not exist in 1404.
  *
- * Same component, same key, same segment; the difference is the Jalali leap
- * rule, exercised through typing rather than through rendering. That is what
- * "verified for entry, not only display" means, and it is the reason this
- * family was worth building instead of adopting.
+ * ── THE SAME UPSTREAM BEHAVIOUR, NOW REPRODUCED DELIBERATELY ────────────────
  *
- * ── ONE UPSTREAM BEHAVIOUR THAT LOOKS LIKE A BUG AND IS NOT ─────────────────
+ * The day segment lets you cycle to 31 inside a 30-day Esfand. On React Aria
+ * that was upstream's `IncompleteDate.cycle` bounding the day by
+ * `getMaximumDaysInMonth()`; here it is `boundsOf("day")` doing the same thing
+ * for the same reason, because a user typing day-first must be able to reach 31
+ * before the month is known. The DISPLAY shows ۳۱; the VALUE stays absent until
+ * the whole date is real.
  *
- * The day segment lets you cycle to 31 inside a 30-day Esfand. Measured, and
- * deliberate upstream: `IncompleteDate.cycle` bounds the day by
- * `getMaximumDaysInMonth()` — the longest month in the calendar — with the
- * comment "Allow incrementing up to the maximum number of days in any month."
- * It is the same affordance Gregorian gets when you type 31 into February and
- * then fix the month. The DISPLAY shows ۳۱; the VALUE stays absent until the
- * whole date is real. So a test asserting the rendered text alone would be
- * asserting the wrong thing — `dates.test.tsx` asserts the committed value.
+ * ── WHAT BASE UI'S `field` PRIMITIVE DID AND DID NOT GIVE ───────────────────
  *
- * ── THE ENGLISH THAT NO PATCH CAN REACH ─────────────────────────────────────
+ * The brief was "use `Field` if it fits". It half fits, and the half that does
+ * not is a first-byte defect, measured on this branch:
  *
- * See `DateBounds` below. This is a new finding, of the same structural class
- * as the `LocalizedStringProvider` one recorded in `@lumo-ui/core`'s strings.ts.
+ *     renderToStaticMarkup(<Field.Root><Field.Label …/><Field.Control render={<div/>}/>
+ *                          <Field.Description …/></Field.Root>)
+ *
+ *     server   <span id="…">برچسب</span>
+ *              <div role="group" id="…"></div>            ← no aria-labelledby
+ *              <p id="…">راهنما</p>                       ← nothing points here
+ *
+ *     client   <div role="group" id="…" aria-labelledby="…" aria-describedby="…">
+ *
+ * `Field` associates its label and description in a LAYOUT EFFECT, so neither
+ * association exists in the served bytes. That is the same failure shape the
+ * audit pinned on React Aria's `useSlotId()` — and `dates.test.tsx` asserts the
+ * association on SSR output, so `Field.Control` cannot carry this component's
+ * ARIA. The ids below are minted with `useId` and wired by hand; `Field.Root`,
+ * `Field.Label` and `Field.Description` are kept for their structure, their
+ * `data-*` state and their styling hooks only.
+ *
+ * `Field.Error` is NOT used: it renders against the browser's `ValidityState`
+ * of a native control, and there is no native control here.
+ *
+ * ── THE LOCALE HAS TO COME FROM SOMEWHERE ───────────────────────────────────
+ *
+ * Base UI has a direction provider and no locale provider. See `locale.ts` for
+ * the context this reads and for why its default is load-bearing.
  *
  * ── DIGITS ──────────────────────────────────────────────────────────────────
  *
- * Segments render their own text from the locale's numbering system. Nothing
- * here formats a number, so nothing here can format one wrongly. Under fa-IR
- * the placeholder text is «سال ماه روز» and a filled field reads ۱۴۰۵/۵/۱۹ —
- * both measured, both pinned.
+ * On React Aria the segment text arrived pre-formatted from upstream. Here it
+ * is produced by `formatNumber`, in `date-field-state.ts`, with `useGrouping:
+ * false` — the 77-Latin-digit defect is one `String(n)` away and the type
+ * system cannot see the difference.
  */
 
 /**
  * Bounds and the message they make reachable, as one inseparable pair.
  *
- * ── THE MEASUREMENT ─────────────────────────────────────────────────────────
+ * ── THE MEASUREMENT, AND HOW IT CHANGED ─────────────────────────────────────
  *
- * Give a React Aria date component a `minValue` and let the value fall below
- * it, inside a `<Form>`, and `<FieldError>` renders — with no children — from
- * React Aria's collected `validationErrors`. On a fully Persian page, under
- * `I18nProvider locale="fa-IR-u-ca-persian-nu-arabext"`, that text is:
+ * On React Aria, a `minValue` plus an out-of-range value inside a `<Form>` made
+ * `<FieldError>` render English, Gregorian, Latin-digited text —
+ * "Value must be 8/23/2026 or later." — from `@react-stately/datepicker`, which
+ * reads `navigator.language` rather than the `I18nProvider` and therefore
+ * resolves to `en-US` on every server render. `dates.test.tsx` pins that as a
+ * poison fixture, still, against raw React Aria.
  *
- *     "Value must be 8/23/2026 or later."
- *     "Value must be 3/21/2026 or earlier."
- *     "Start date must be before end date."
- *     "Selected date unavailable."
- *
- * Read the first one twice. It is English, it is VISIBLE (not an aria
- * attribute), and the date inside it is GREGORIAN with Latin digits — sitting
- * directly under a field that reads ۱۴۰۵/۱/۱. It is the exact defect this
- * library exists to prevent, in the one place nobody looks: the error state.
- *
- * ── WHY THE PATCH TECHNIQUE DOES NOT WORK HERE ──────────────────────────────
- *
- * These strings come from `@react-stately/datepicker`, which ships 33 locale
- * bundles and no `fa-IR` — so adding one is the obvious move, and it does not
- * work. The reason is in upstream's own source (`datepicker/utils.mjs`):
- *
- *     // Match browser language setting here, NOT react-aria's I18nProvider, so
- *     // that we match other browser-provided validation messages…
- *     let locale = navigator.language || 'en-US';
- *
- * The locale is read from `navigator`, never from the provider. During server
- * rendering there is no `navigator` at all, so it resolves to `en-US` every
- * time, and a patched bundle would be dead code on the first byte — the same
- * shape as the `LocalizedStringProvider` finding, arrived at from the other
- * direction. The date interpolated into the message is formatted with that same
- * locale, which is why it is Gregorian even when everything around it is not.
- *
- * ── SO IT IS A PROP, AND THE TYPE MAKES IT UNFORGETTABLE ────────────────────
- *
- * Lumo renders `<FieldError>` only when `errorMessage` is supplied, so React
- * Aria's fallback text can never reach the DOM. That is only a guarantee if the
- * author cannot omit the message on a field that has bounds — hence this union:
- * a component with no `minValue`, `maxValue` or `isDateUnavailable` may leave
- * `errorMessage` off, and one with any of them may not. Adding a bound to an
- * existing field turns into a compile error naming the missing message, which
- * is the only moment the author is thinking about the failure case anyway.
+ * This rebuild cannot produce that sentence, because it has no validation
+ * engine at all: `minValue`, `maxValue` and `isDateUnavailable` are accepted by
+ * the type and IGNORED by the implementation. That is not a fix. It is a
+ * missing feature wearing a fix's clothes, and it is counted as one in
+ * `date-field-cost.json`. The union below is kept unchanged anyway — the public
+ * API is frozen for the experiment, and the day validation is implemented the
+ * required message must already be there.
  */
 /**
  * The three props that make the message reachable. Named once, here, so the
@@ -173,6 +190,41 @@ export interface DateFieldProps<T extends DateValue>
   inputClassName?: string | undefined;
 }
 
+/**
+ * ═══ THE PROPS THIS REBUILD ACCEPTS AND IGNORES ═════════════════════════════
+ *
+ * `DateFieldProps` above is UNCHANGED — the experiment freezes the public API,
+ * and `tsc` is therefore silent about everything below. That silence is the
+ * problem, so the list is written out.
+ *
+ * The React Aria build ended in `{...props}`, so every prop it did not name
+ * still reached `<AriaDateField>` and still worked. This build destructures the
+ * seven it implements and drops the rest on the floor. Enumerated by asking the
+ * compiler for `Exclude<keyof DateFieldProps, handled | DOM | ARIA>`:
+ *
+ *     name  form  autoComplete  validate  validationBehavior  isRequired
+ *         → no form integration at all. The field submits nothing, and
+ *           `<Form>` cannot see it. There is no hidden input.
+ *     minValue  maxValue  isDateUnavailable
+ *         → typed by `DateBounds`, enforced nowhere. Cycling is not clamped and
+ *           the field never marks itself invalid. See `DateBounds`'s header:
+ *           this is a missing feature, not a fixed defect.
+ *     granularity  hourCycle  hideTimeZone
+ *         → the engine emits year/month/day only. A `CalendarDateTime` loses
+ *           its time half silently.
+ *     shouldForceLeadingZeros
+ *         → segments render their natural width.
+ *     autoFocus  onFocusChange
+ *         → not wired.
+ *     render  hidden  inert  translate
+ *         → RAC's own escape hatches, gone.
+ *
+ * And every DOM/ARIA prop the old rest-spread forwarded — `id`, `style`,
+ * `onFocus`, `onBlur`, `onKeyDown`, `aria-describedby` and the rest — is now
+ * also dropped. That is roughly 90 more names, which is why the count in
+ * `date-field-cost.json` is given as "props accepted and ignored" rather than
+ * as a line delta: the line delta understates it.
+ */
 export function DateField<T extends DateValue>({
   label,
   description,
@@ -181,61 +233,270 @@ export function DateField<T extends DateValue>({
   size,
   className,
   inputClassName,
-  minValue,
-  maxValue,
-  isDateUnavailable,
-  ...props
+  value,
+  defaultValue,
+  onChange,
+  placeholderValue,
+  isDisabled,
+  isReadOnly,
 }: DateFieldProps<T> & DateBounds<AriaDateFieldProps<T>>) {
-  // The three bounds are re-applied through `optional` rather than carried in
-  // the rest spread. Under `exactOptionalPropertyTypes` the unbounded branch of
-  // `DateBounds` types them as `?: undefined`, and spreading that means
-  // "present, set to undefined" — which React Aria's declarations refuse.
-  // Omitting the key is the honest encoding of "there is no bound".
-  const bounds = {
-    ...optional("minValue", minValue),
-    ...optional("maxValue", maxValue),
-    ...optional("isDateUnavailable", isDateUnavailable),
-  };
+  const locale = useLumoLocale();
+  const strings = stringsFor(locale);
+  const dir = direction(locale);
+
+  const state = useDateFieldState({
+    locale,
+    ...optional("value", value),
+    ...optional("defaultValue", defaultValue),
+    ...optional("placeholderValue", placeholderValue),
+    ...optional("onChange", onChange as ((v: DateValue | null) => void) | undefined),
+    ...optional("isDisabled", isDisabled),
+    ...optional("isReadOnly", isReadOnly),
+  });
+
+  const labelId = useId();
+  const descriptionId = useId();
+  const errorId = useId();
+  const invalid = isInvalid ?? (errorMessage != null ? true : undefined);
+
+  /*
+   * Wired by hand, in RENDER, because Base UI's own wiring is a layout effect
+   * and would be absent from the first byte. See the component's header.
+   */
+  const describedBy =
+    [description != null ? descriptionId : null, errorMessage != null ? errorId : null]
+      .filter((id): id is string => id != null)
+      .join(" ") || undefined;
+
+  const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  /** Digits typed so far in the segment currently being filled. */
+  const typed = useRef<{ index: number; buffer: number } | null>(null);
+
+  const focusSegment = useCallback((index: number) => {
+    segmentRefs.current[index]?.focus();
+  }, []);
+
+  const move = useCallback(
+    (from: number, step: number) => {
+      const order = state.editableIndices;
+      const at = order.indexOf(from);
+      const next = order[at + step];
+      if (next != null) focusSegment(next);
+    },
+    [focusSegment, state.editableIndices],
+  );
+
+  const onSegmentKeyDown = useCallback(
+    (event: ReactKeyboardEvent<HTMLDivElement>, index: number, type: EditableSegmentType) => {
+      /*
+       * ARROW TRAVERSAL IS DIRECTION-DEPENDENT AND THIS IS THE WHOLE POINT.
+       *
+       * On a Persian page the segments run right to left, so ArrowLeft moves to
+       * the NEXT segment and ArrowRight to the previous one. Hard-coding the
+       * Latin mapping is the class of defect that renders correctly, passes
+       * every type check, and is wrong for every user of this library.
+       */
+      const forward = dir === "rtl" ? "ArrowLeft" : "ArrowRight";
+      const backward = dir === "rtl" ? "ArrowRight" : "ArrowLeft";
+
+      switch (event.key) {
+        case "ArrowUp":
+          event.preventDefault();
+          typed.current = null;
+          state.cycle(type, 1);
+          return;
+        case "ArrowDown":
+          event.preventDefault();
+          typed.current = null;
+          state.cycle(type, -1);
+          return;
+        case forward:
+          event.preventDefault();
+          typed.current = null;
+          move(index, 1);
+          return;
+        case backward:
+          event.preventDefault();
+          typed.current = null;
+          move(index, -1);
+          return;
+        case "Backspace":
+        case "Delete":
+          event.preventDefault();
+          typed.current = null;
+          state.clearSegment(type);
+          return;
+        default:
+          break;
+      }
+
+      const digit = digitFromKey(event.key, locale);
+      if (digit == null) return;
+      event.preventDefault();
+
+      /*
+       * TYPE-TO-FILL.
+       *
+       * Digits accumulate inside one segment until another would overflow its
+       * bound, then focus advances on its own — typing ۱۹ into a day segment
+       * lands on 19 and moves on, typing ۴ moves on immediately because 40
+       * cannot be a day. The buffer is a ref rather than state because it must
+       * not survive a blur or an arrow key, and because it is not rendered.
+       */
+      const { max } = state.boundsOf(type);
+      const buffer = typed.current?.index === index ? typed.current.buffer : 0;
+      let next = buffer * 10 + digit;
+      if (next > max) next = digit;
+      state.setSegment(type, next);
+
+      if (next * 10 > max) {
+        typed.current = null;
+        move(index, 1);
+      } else {
+        typed.current = { index, buffer: next };
+      }
+    },
+    [dir, locale, move, state],
+  );
+
   return (
-    <AriaDateField
+    <Field.Root
       data-lumo=""
       className={cn(fieldVariants(), className)}
-      {...optional("isInvalid", isInvalid ?? (errorMessage != null ? true : undefined))}
-      {...bounds}
-      {...props}
+      {...attr("disabled", isDisabled)}
+      {...attr("invalid", invalid)}
     >
-      <Label>{label}</Label>
-      <AriaDateInput className={cn(dateInputVariants({ size }), inputClassName)}>
-        {renderSegment}
-      </AriaDateInput>
-      {description != null ? <Description>{description}</Description> : null}
       {/*
-       * Rendered ONLY when the author supplied a message. An empty
-       * <FieldError> is not neutral — React Aria fills it with its own English
-       * validationErrors. See `DateBounds`.
+       * `nativeLabel={false}` with a `<span>` render, NOT the default `<label>`.
+       * A `<label for>` may only name a labelable element and this field is a
+       * `role="group"` of spinbuttons; Base UI emits the `for` regardless, which
+       * measured as a dangling reference to an id nothing carries.
        */}
-      {errorMessage != null ? <FieldError>{errorMessage}</FieldError> : null}
-    </AriaDateField>
+      <Field.Label
+        id={labelId}
+        nativeLabel={false}
+        render={<span />}
+        className={labelVariants()}
+        onClick={() => {
+          const first = state.editableIndices[0];
+          if (first != null) focusSegment(first);
+        }}
+      >
+        {label}
+      </Field.Label>
+
+      <div
+        data-lumo=""
+        role="group"
+        aria-labelledby={labelId}
+        {...optional("aria-describedby", describedBy)}
+        className={cn(dateInputVariants({ size }), inputClassName)}
+        {...(invalid === true ? { "data-invalid": "" } : {})}
+        {...(isDisabled === true ? { "data-disabled": "" } : {})}
+      >
+        {state.segments.map((segment, index) => {
+          if (!segment.isEditable) {
+            return (
+              <span
+                // Separators are positional and there is nothing else to key on.
+                key={`literal-${String(index)}`}
+                data-lumo=""
+                data-type="literal"
+                aria-hidden="true"
+                className={dateLiteralVariants()}
+              >
+                {segment.text}
+              </span>
+            );
+          }
+          const type = segment.type as EditableSegmentType;
+          return (
+            <div
+              key={type}
+              ref={(node) => {
+                segmentRefs.current[index] = node;
+              }}
+              data-lumo=""
+              data-type={type}
+              /*
+               * `role="spinbutton"` is what makes a screen reader announce a
+               * value that changes under arrow keys rather than reading the
+               * text again. `aria-valuenow` is required by the spec to be a
+               * DECIMAL NUMBER, so it cannot carry Persian digits — that is the
+               * one announced value on this component that must stay Latin, and
+               * `aria-valuetext` is the override that makes it audible in
+               * Persian anyway.
+               */
+              role="spinbutton"
+              tabIndex={isDisabled === true ? -1 : 0}
+              aria-label={strings.dateField[type]}
+              aria-valuemin={segment.minValue}
+              aria-valuemax={segment.maxValue}
+              {...optional("aria-valuenow", segment.value)}
+              aria-valuetext={
+                segment.value == null ? strings.dateField.empty : segment.text
+              }
+              {...(segment.isPlaceholder ? { "data-placeholder": "" } : {})}
+              {...(focusedIndex === index ? { "data-focused": "" } : {})}
+              {...(invalid === true ? { "data-invalid": "" } : {})}
+              {...(isDisabled === true ? { "data-disabled": "" } : {})}
+              onFocus={() => {
+                setFocusedIndex(index);
+              }}
+              onBlur={() => {
+                setFocusedIndex((current) => (current === index ? null : current));
+                typed.current = null;
+              }}
+              onKeyDown={(event) => {
+                onSegmentKeyDown(event, index, type);
+              }}
+              className={dateSegmentVariants()}
+            >
+              {segment.text}
+            </div>
+          );
+        })}
+      </div>
+
+      {description != null ? (
+        <Field.Description id={descriptionId} className={descriptionVariants()}>
+          {description}
+        </Field.Description>
+      ) : null}
+
+      {/*
+       * Rendered ONLY when the author supplied a message, and a plain element
+       * rather than `Field.Error` — Base UI's error part matches against a
+       * native control's `ValidityState`, and there is no native control here.
+       */}
+      {errorMessage != null ? (
+        <div id={errorId} className={fieldErrorVariants()}>
+          {errorMessage}
+        </div>
+      ) : null}
+    </Field.Root>
   );
 }
 
 /**
- * One segment.
+ * One segment — STILL ON REACT ARIA, and that is the finding, not an oversight.
  *
- * A named top-level function, shared by every date input in the family, so the
- * year/month/day slots of a field, a picker and both halves of a range picker
- * are the same object. React Aria decides which segments exist and in what
- * ORDER from the locale — under fa-IR that is year, month, day, which is the
- * reverse of the American order and is not something to hard-code anywhere.
+ * `date-picker.tsx`, `date-range-picker.tsx` and `time-field.tsx` all import
+ * this function and render it inside a React Aria `<DateInput>`. It is the
+ * shared piece of the date family, and it is why the family cannot be migrated
+ * one component at a time: a `DatePicker` contains a date INPUT, so rebuilding
+ * the field without rebuilding the picker leaves two different segment
+ * implementations in the same library, and rebuilding the picker means
+ * rebuilding the calendar's roving-focus grid too.
  *
- * `segment.text` is already a string in the locale's numbering system, so it
- * satisfies `LumoNode` honestly rather than by a cast. A `segment.value` here
- * would be a raw number and the 77-Latin-digit defect all over again.
+ * Left untouched so the three unmigrated siblings keep compiling and so
+ * `dates.test.tsx` can be run unedited. Every line below is React Aria's.
  *
- * Literals — the separators between the parts — are dimmed and not given the
- * editable segment's focus treatment, because they are not editable. Which
- * character they are is the locale's business: fa-IR uses `/`, and a locale
- * that used something else would arrive here already correct.
+ * React Aria decides which segments exist and in what ORDER from the locale —
+ * under fa-IR that is year, month, day, which is the reverse of the American
+ * order and is not something to hard-code anywhere. `date-field-state.ts` gets
+ * the same answer from `Intl.DateTimeFormat.formatToParts`.
  */
 export function renderSegment(segment: AriaDateSegmentProps["segment"]) {
   return (
