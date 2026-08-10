@@ -9,5 +9,8 @@
   "view/fa-IR/chart/index.html": 14,
   "view/fa-IR/num/index.html": 8,
   "view-block/fa-IR/dashboard-page/index.html": 60,
-  "view-block/fa-IR/stat-grid/index.html": 8
+  "view-block/fa-IR/stat-grid/index.html": 8,
+  "fa-IR/components/calendar/index.html": 340,
+  "fa-IR/components/range-calendar/index.html": 340,
+  "//dates": "Calendar grids are the densest Persian-digit surface in the library — a month of day cells. Floored at ~55% of the 10 Aug measurement so a layout change can shrink the grid without going red, while a calendar that reverts to Latin day cells (the defect that started this library) cannot pass. The other date routes carry 10-18 digits of chrome rather than data and are deliberately unfloored: a floor on incidental digits breaks on the next copy edit and teaches people to weaken floors."
 }

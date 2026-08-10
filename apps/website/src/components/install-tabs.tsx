@@ -76,6 +76,13 @@ const COPY: Record<
     copyMainDone: string;
     copyCompanion: string;
     copyCompanionDone: string;
+    /**
+     * What goes between two names in a run-on list. Persian uses U+060C, not a
+     * comma — the last string on this page that was still picked with a binary
+     * conditional on `locale`, which would have silently handed a third locale
+     * the Latin comma inside otherwise-correct prose.
+     */
+    listSeparator: string;
   }
 > = {
   "fa-IR": {
@@ -95,6 +102,7 @@ const COPY: Record<
     copyMainDone: "کد اصلی کپی شد",
     copyCompanion: "کپی کد کمکی",
     copyCompanionDone: "کد کمکی کپی شد",
+    listSeparator: "، ",
   },
   "en-US": {
     installMethod: "Install method",
@@ -113,6 +121,7 @@ const COPY: Record<
     copyMainDone: "Main file copied",
     copyCompanion: "Copy the companion file",
     copyCompanionDone: "Companion file copied",
+    listSeparator: ", ",
   },
 };
 
@@ -215,7 +224,7 @@ export function InstallTabs({
               {t.alsoUses}{" "}
               {registryComponents.map((name, i) => (
                 <span key={name}>
-                  {i > 0 && (locale === "fa-IR" ? "، " : ", ")}
+                  {i > 0 && t.listSeparator}
                   {/* The registry name itself is an English identifier
                    * ("form", "popover") even on the Persian route — a proper
                    * noun, not prose, so it is an LTR island like the file

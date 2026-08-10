@@ -5,8 +5,8 @@ import { LOCALES, direction, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { OnThisPage } from "@/components/on-this-page";
 import { CopyButton } from "@/components/code-block";
-import { DirectionCompare } from "@/components/demo-frame";
-import { assertLocale, site } from "@/lib/locale";
+import { DirectionCompare, PreviewFrameThemeSync } from "@/components/demo-frame";
+import { assertLocale, oppositeDirectionLocale, site } from "@/lib/locale";
 import { allBlocks, blockById } from "@/lib/blocks";
 
 /**
@@ -27,12 +27,80 @@ export function generateStaticParams() {
   return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang, slug: b.id })));
 }
 
+/**
+ * The page's own copy, keyed by locale.
+ *
+ * NOT `lang === "fa-IR" ? persian : english`. That ternary compiles with a third
+ * locale in the union and hands it the ENGLISH branch — silently, and invisibly
+ * to the HTML gate, because both branches are Latin script. A
+ * `Record<Locale, …>` turns the same addition into a compile error listing every
+ * string still to translate. See the rule in CONTRIBUTING's "Adding a locale".
+ */
+interface PageCopy {
+  rail: { preview: string; installation: string; source: string };
+  copyInstall: string;
+  copied: string;
+  pagerNav: string;
+  pagerPrev: (title: string) => string;
+  pagerNext: (title: string) => string;
+  previewIntro: string;
+  showCompare: string;
+  hideCompare: string;
+  openFullPage: string;
+  /**
+   * How this page's language names each locale a frame can be in — EXONYMS, and
+   * the reason this is a nested Record rather than one string.
+   *
+   * The frame caption reads "<block> — Persian" on the English page and
+   * "<block> — انگلیسی" on the Persian one, so the answer depends on BOTH the
+   * page's locale and the frame's. It was a ternary nested inside a ternary,
+   * which produces the right answer for exactly two locales and an English word
+   * in a Persian sentence for any third. `LOCALE_NAMES` in lib/locale.ts is the
+   * endonym table and deliberately different: it answers "what does this
+   * language call itself", which is the right question for a language menu and
+   * the wrong one inside a translated caption.
+   */
+  localeName: Record<Locale, string>;
+}
+
+const COPY = {
+  "fa-IR": {
+    rail: { preview: "پیش‌نمایش تمام‌صفحه", installation: "نصب", source: "کد" },
+    copyInstall: "کپی دستور نصب",
+    copied: "کپی شد",
+    pagerNav: "بلوک قبلی و بعدی",
+    pagerPrev: (title: string) => `بلوک قبلی: ${title}`,
+    pagerNext: (title: string) => `بلوک بعدی: ${title}`,
+    previewIntro:
+      "هر قاب یک سند مستقل با lang و dir واقعی خودش است — نه یک div که وانمود می‌کند. برای دیدن بلوک در یک صفحهٔ کامل، روی «باز کردن تمام‌صفحه» بزنید، و برای دیدن هر دو جهت کنار هم، مقایسه را باز کنید.",
+    showCompare: "نمایش مقایسهٔ دو جهت",
+    hideCompare: "بستن مقایسهٔ دو جهت",
+    openFullPage: "باز کردن تمام‌صفحه",
+    localeName: { "fa-IR": "فارسی", "en-US": "انگلیسی" },
+  },
+  "en-US": {
+    rail: { preview: "Full-page preview", installation: "Installation", source: "Source" },
+    copyInstall: "Copy install",
+    copied: "Copied",
+    pagerNav: "Previous and next block",
+    pagerPrev: (title: string) => `Previous block: ${title}`,
+    pagerNext: (title: string) => `Next block: ${title}`,
+    previewIntro:
+      "Each frame is a real document with its own lang and dir — not a div pretending to be one. Open the full page to see the block occupy a whole viewport, or open the comparison to see both directions side by side.",
+    showCompare: "Compare both directions",
+    hideCompare: "Hide the comparison",
+    openFullPage: "open full page",
+    localeName: { "fa-IR": "Persian", "en-US": "English" },
+  },
+} as const satisfies Record<Locale, PageCopy>;
+
 /** Section headings, in both locales, so the rail and the page cannot disagree. */
 function sections(lang: Locale) {
+  const c = COPY[lang];
   return [
-    { id: "preview", label: lang === "fa-IR" ? "پیش‌نمایش تمام‌صفحه" : "Full-page preview" },
-    { id: "installation", label: lang === "fa-IR" ? "نصب" : "Installation" },
-    { id: "source", label: lang === "fa-IR" ? "کد" : "Source" },
+    { id: "preview", label: c.rail.preview },
+    { id: "installation", label: c.rail.installation },
+    { id: "source", label: c.rail.source },
   ];
 }
 
@@ -109,6 +177,7 @@ function BlockFrame({
   title: string;
   pageLang: Locale;
 }) {
+  const c = COPY[pageLang];
   const href = `/view-block/${lang}/${slug}/`;
   return (
     <figure className="m-0 overflow-hidden rounded-lg border border-border">
@@ -120,9 +189,10 @@ function BlockFrame({
       >
         <code>{`lang="${lang}" dir="${direction(lang)}"`}</code>
         <a href={href} className="shrink-0 underline">
-          {pageLang === "fa-IR" ? "باز کردن تمام‌صفحه" : "open full page"}
+          {c.openFullPage}
         </a>
       </figcaption>
+      <PreviewFrameThemeSync />
       <iframe
         src={href}
         /*
@@ -131,11 +201,7 @@ function BlockFrame({
          * for why interpolating the slug directly here would ship English
          * into a Persian page.
          */
-        title={
-          pageLang === "fa-IR"
-            ? `${title} — ${lang === "fa-IR" ? "فارسی" : "انگلیسی"}`
-            : `${title} — ${lang === "fa-IR" ? "Persian" : "English"}`
-        }
+        title={`${title} — ${c.localeName[lang]}`}
         loading="lazy"
         className="block h-128 w-full bg-surface"
       />
@@ -154,6 +220,7 @@ export default async function BlockPage({
   if (!block) notFound();
 
   const t = site[lang];
+  const c = COPY[lang];
   const install = `npx shadcn@latest add @lumo/${slug}`;
   const installHtml = await highlight(install, "bash");
   const sourceHtml = await highlight(block.source, "tsx");
@@ -179,8 +246,8 @@ export default async function BlockPage({
             <div className="ms-auto flex shrink-0 items-center gap-2">
               <CopyButton
                 text={install}
-                label={lang === "fa-IR" ? "کپی دستور نصب" : "Copy install"}
-                copiedLabel={lang === "fa-IR" ? "کپی شد" : "Copied"}
+                label={c.copyInstall}
+                copiedLabel={c.copied}
               />
               <Pager
                 prev={
@@ -195,25 +262,19 @@ export default async function BlockPage({
                     title: nextBlock.title[lang],
                   }
                 }
-                navLabel={lang === "fa-IR" ? "بلوک قبلی و بعدی" : "Previous and next block"}
-                prevLabel={(title) =>
-                  lang === "fa-IR" ? `بلوک قبلی: ${title}` : `Previous block: ${title}`
-                }
-                nextLabel={(title) =>
-                  lang === "fa-IR" ? `بلوک بعدی: ${title}` : `Next block: ${title}`
-                }
+                navLabel={c.pagerNav}
+                prevLabel={c.pagerPrev}
+                nextLabel={c.pagerNext}
               />
             </div>
           </header>
 
           <section id="preview" className="mt-8 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-              {lang === "fa-IR" ? "پیش‌نمایش تمام‌صفحه" : "Full-page preview"}
+              {c.rail.preview}
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-fg-muted">
-              {lang === "fa-IR"
-                ? "هر قاب یک سند مستقل با lang و dir واقعی خودش است — نه یک div که وانمود می‌کند. برای دیدن بلوک در یک صفحهٔ کامل، روی «باز کردن تمام‌صفحه» بزنید، و برای دیدن هر دو جهت کنار هم، مقایسه را باز کنید."
-                : "Each frame is a real document with its own lang and dir — not a div pretending to be one. Open the full page to see the block occupy a whole viewport, or open the comparison to see both directions side by side."}
+              {c.previewIntro}
             </p>
             {/*
              * One frame by default — the page's own locale — with the mirrored
@@ -228,20 +289,20 @@ export default async function BlockPage({
                 comparison={
                   <BlockFrame
                     slug={slug}
-                    lang={lang === "fa-IR" ? "en-US" : "fa-IR"}
+                    lang={oppositeDirectionLocale(lang)}
                     title={block.title[lang]}
                     pageLang={lang}
                   />
                 }
-                showLabel={lang === "fa-IR" ? "نمایش مقایسهٔ دو جهت" : "Compare both directions"}
-                hideLabel={lang === "fa-IR" ? "بستن مقایسهٔ دو جهت" : "Hide the comparison"}
+                showLabel={c.showCompare}
+                hideLabel={c.hideCompare}
               />
             </div>
           </section>
 
           <section id="installation" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-              {lang === "fa-IR" ? "نصب" : "Installation"}
+              {c.rail.installation}
             </h2>
             <div
               dir="ltr"

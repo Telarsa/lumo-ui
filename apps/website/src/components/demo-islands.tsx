@@ -395,3 +395,277 @@ export function ResizableIsland({
     />
   );
 }
+
+/* ────────────────────────────────────────── chart: line, area, donut ── */
+
+/*
+ * Appended by the round-4 misc batch, same append-only contract as the blocks
+ * above: import declarations are hoisted, and `Locale`, `ChartConfig`,
+ * `ChartContainer`, `ChartCategoryAxis`, `ChartValueAxis`, `ChartTooltip`,
+ * `ChartTooltipContent`, `ChartLegend`, `ChartLegendContent` and `chartColor`
+ * are already imported at the top of this file. Only the genuinely new names
+ * are pulled in here.
+ *
+ * All three exist for the SAME reason `ChartIsland` does, and it is worth
+ * restating because it is the one boundary in this repo that is about a library
+ * rather than about a prop: recharts' chart elements call hooks, so building a
+ * `<LineChart>` inside a server module renders it during the RSC pass and
+ * throws. Every user-visible string below still arrives as a prop from the
+ * examples file, in both locales.
+ */
+import { Area, AreaChart, Cell, Line, LineChart, PieChart } from "recharts";
+import { formatNumber } from "@lumo-ui/core";
+import { ChartPie, ChartPieCenter, ChartValueLabelList } from "@lumo-ui/ui";
+
+/**
+ * One plotted row of a two-column series: a category and a figure.
+ *
+ * A `type` rather than an `interface`, and the difference is load-bearing here:
+ * TypeScript gives a type alias an implicit index signature and an interface
+ * none, so only this spelling is assignable to `ChartRow` — the
+ * `Record<string, …>` that `ChartContainer` requires for the data table.
+ */
+export type SeriesRow = {
+  readonly category: string;
+  readonly value: number;
+};
+
+interface SeriesIslandProps {
+  locale: Locale;
+  /** The plot's announced name — recharts makes it a focusable region. */
+  label: string;
+  /** The series' legend and tooltip name, e.g. «بازدید». */
+  seriesLabel: string;
+  /** Names the category column, e.g. «روز». Heads the table's first column. */
+  categoryLabel: string;
+  /** The data table's caption — the only figures a no-JS reader receives. */
+  dataCaption: string;
+  data: readonly SeriesRow[];
+}
+
+/** `label` on every config entry, for chart.variants.ts's reason. */
+function seriesConfig(categoryLabel: string, seriesLabel: string): ChartConfig {
+  return {
+    category: { label: categoryLabel },
+    value: { label: seriesLabel, color: "oklch(0.62 0.16 255)" },
+  };
+}
+
+export function ChartLineIsland({
+  locale,
+  label,
+  seriesLabel,
+  categoryLabel,
+  dataCaption,
+  data,
+}: SeriesIslandProps) {
+  return (
+    <ChartContainer
+      config={seriesConfig(categoryLabel, seriesLabel)}
+      locale={locale}
+      label={label}
+      data={[...data]}
+      categoryKey="category"
+      dataCaption={dataCaption}
+      className="w-full"
+    >
+      <LineChart data={[...data]}>
+        {/*
+         * The Lumo axes do the whole mirror: `reversed` acts on the scale's
+         * RANGE, so the curve and its dots move with the categories and there is
+         * nothing on the `<Line>` itself to remember.
+         */}
+        <ChartCategoryAxis dataKey="category" tickLine={false} axisLine={false} />
+        <ChartValueAxis tickLine={false} axisLine={false} width={56} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+        <Line
+          dataKey="value"
+          type="monotone"
+          stroke={chartColor("value")}
+          strokeWidth={2}
+          dot={false}
+        />
+      </LineChart>
+    </ChartContainer>
+  );
+}
+
+export function ChartAreaIsland({
+  locale,
+  label,
+  seriesLabel,
+  categoryLabel,
+  dataCaption,
+  data,
+}: SeriesIslandProps) {
+  return (
+    <ChartContainer
+      config={seriesConfig(categoryLabel, seriesLabel)}
+      locale={locale}
+      label={label}
+      data={[...data]}
+      categoryKey="category"
+      dataCaption={dataCaption}
+      className="w-full"
+    >
+      <AreaChart data={[...data]}>
+        <ChartCategoryAxis dataKey="category" tickLine={false} axisLine={false} />
+        <ChartValueAxis tickLine={false} axisLine={false} width={56} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Area
+          dataKey="value"
+          type="monotone"
+          stroke={chartColor("value")}
+          fill={chartColor("value")}
+          fillOpacity={0.15}
+          strokeWidth={2}
+        />
+      </AreaChart>
+    </ChartContainer>
+  );
+}
+
+export interface ChartDonutIslandProps extends Omit<SeriesIslandProps, "seriesLabel"> {
+  /** Names the figure column, e.g. «سهم». */
+  seriesLabel: string;
+  /** The line under the centre figure, e.g. «کل بازدیدها». */
+  centerCaption: string;
+}
+
+/**
+ * A donut. The sweep is `CHART_PIE_SWEEP` and does NOT mirror — the argument is
+ * in `chart.variants.ts` and the page states it in prose beside this preview.
+ */
+export function ChartDonutIsland({
+  locale,
+  label,
+  seriesLabel,
+  categoryLabel,
+  dataCaption,
+  centerCaption,
+  data,
+}: ChartDonutIslandProps) {
+  // One hue per slice, walked around the ramp. Not from `config`, because
+  // `ChartData` derives the table's COLUMNS from config's keys — a per-slice
+  // config would grow the table a column per category instead of a row.
+  const slice = [
+    "oklch(0.62 0.16 255)",
+    "oklch(0.70 0.14 190)",
+    "oklch(0.55 0.15 300)",
+    "oklch(0.75 0.13 95)",
+  ] as const;
+  const total = data.reduce((sum, row) => sum + row.value, 0);
+
+  return (
+    <ChartContainer
+      config={seriesConfig(categoryLabel, seriesLabel)}
+      locale={locale}
+      label={label}
+      data={[...data]}
+      categoryKey="category"
+      dataCaption={dataCaption}
+      className="w-full"
+    >
+      <PieChart>
+        <ChartTooltip content={<ChartTooltipContent nameKey="category" />} />
+        <ChartPie
+          data={[...data]}
+          dataKey="value"
+          nameKey="category"
+          innerRadius="55%"
+          outerRadius="80%"
+          paddingAngle={2}
+        >
+          {data.map((row, index) => (
+            <Cell key={row.category} fill={slice[index % slice.length] ?? slice[0]} />
+          ))}
+          {/*
+           * The slice names, drawn on the plot. `ChartValueLabelList` passes an
+           * authored string through untouched and formats a number — the same
+           * formatter the axes use, so a label and a tick can never disagree.
+           */}
+          <ChartValueLabelList dataKey="category" position="outside" />
+          {/*
+           * `value` is a STRING here and the type insists on it: an SVG <text>
+           * is one of the few places a number can reach the DOM without passing
+           * a LumoNode.
+           */}
+          <ChartPieCenter value={formatNumber(total, locale)} caption={centerCaption} />
+        </ChartPie>
+      </PieChart>
+    </ChartContainer>
+  );
+}
+
+/*
+ * Appended by the round-4 integration, same append-only contract as the blocks
+ * above.
+ *
+ * WHY A CALENDAR NEEDS AN ISLAND AT ALL. `isDateUnavailable` is a FUNCTION, and
+ * the examples files are server modules — React refuses to serialise a function
+ * into the RSC payload, so the calendar page's prerender died on it with
+ * «Functions cannot be passed directly to Client Components». It is the first
+ * reason `ChartIsland`'s header lists, applied to a component nobody expected to
+ * need one: a calendar looks like pure markup right up until a rule decides
+ * which days it closes.
+ *
+ * The predicate is therefore OWNED here rather than passed in, and every
+ * user-visible string still arrives as a prop, in both locales, from the
+ * examples file.
+ */
+import { Calendar } from "@lumo-ui/ui";
+
+/**
+ * The Iranian weekend is پنجشنبه and جمعه.
+ *
+ * Written against the absolute weekday of the underlying instant rather than
+ * against a "day of week" index counted from the start of the Persian week —
+ * those two disagree, and a rule written against the wrong one closes the wrong
+ * two days while looking entirely reasonable.
+ *
+ * Typed structurally rather than as `DateValue` on purpose: this package depends
+ * on `@lumo-ui/ui` and not on `@internationalized/date`, so the date type is not
+ * importable here. The one member actually used is declared, which is a smaller
+ * surface than the real type and cannot silently accept less.
+ */
+function isWeekend(date: { toDate: (timeZone: string) => Date }) {
+  const weekday = date.toDate("UTC").getUTCDay();
+  return weekday === 4 || weekday === 5;
+}
+
+export interface CalendarClosedDaysIslandProps {
+  /** Announced name of the calendar. */
+  label: string;
+  /** Name of the previous-month button. */
+  previousMonthLabel: string;
+  /** Name of the next-month button. */
+  nextMonthLabel: string;
+  /** Help text under the grid, naming which days are closed. */
+  description: string;
+  /**
+   * Shown when an unavailable day is chosen. Required here for the reason
+   * `calendar.tsx` states: a constraint without an authored message hands the
+   * reader React Aria's English, Gregorian, Latin-digited sentence.
+   */
+  errorMessage: string;
+}
+
+export function CalendarClosedDaysIsland({
+  label,
+  previousMonthLabel,
+  nextMonthLabel,
+  description,
+  errorMessage,
+}: CalendarClosedDaysIslandProps) {
+  return (
+    <Calendar
+      label={label}
+      previousMonthLabel={previousMonthLabel}
+      nextMonthLabel={nextMonthLabel}
+      description={description}
+      isDateUnavailable={isWeekend}
+      errorMessage={errorMessage}
+    />
+  );
+}

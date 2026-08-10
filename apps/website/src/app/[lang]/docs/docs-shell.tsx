@@ -28,6 +28,46 @@ export interface DocSectionDef {
   label: string;
 }
 
+/**
+ * The scaffold's own chrome copy, keyed by locale.
+ *
+ * The pages this shell wraps state the rule in their headers; the shell obeyed
+ * it for page copy and broke it for its own — five strings picked with a binary
+ * conditional on `lang`. That conditional compiles with a third locale in the
+ * union and hands it the English branch with no error and no warning, and three
+ * of these five are `aria-label`s or pager words that a sighted reviewer skims
+ * past. See the rule in CONTRIBUTING's "Adding a locale".
+ */
+const COPY = {
+  "fa-IR": {
+    pagesNav: "صفحه‌های مستندات",
+    pagerNav: "پیمایش مستندات",
+    previous: "قبلی",
+    next: "بعدی",
+    copyCode: "کپی کد",
+    codeCopied: "کد کپی شد",
+  },
+  "en-US": {
+    pagesNav: "Documentation pages",
+    pagerNav: "Docs pagination",
+    previous: "Previous",
+    next: "Next",
+    copyCode: "Copy code",
+    codeCopied: "Code copied",
+  },
+} as const satisfies Record<
+  Locale,
+  {
+    pagesNav: string;
+    pagerNav: string;
+    previous: string;
+    next: string;
+    /** `CodeBlock`'s two required announced names, supplied once for every page. */
+    copyCode: string;
+    codeCopied: string;
+  }
+>;
+
 export function DocsShell({
   lang,
   slug,
@@ -47,7 +87,7 @@ export function DocsShell({
   const index = DOCS_PAGES.findIndex((d) => d.slug === slug);
   const prev = index > 0 ? DOCS_PAGES[index - 1] : undefined;
   const next = index >= 0 && index < DOCS_PAGES.length - 1 ? DOCS_PAGES[index + 1] : undefined;
-  const fa = lang === "fa-IR";
+  const t = COPY[lang];
 
   return (
     <SiteShell lang={lang} path={`docs/${slug}/`} wide>
@@ -59,7 +99,7 @@ export function DocsShell({
        * hidden exactly where the sidebar appears.
        */}
       <nav
-        aria-label={fa ? "صفحه‌های مستندات" : "Documentation pages"}
+        aria-label={t.pagesNav}
         className="-mx-6 mb-6 overflow-x-auto border-be border-border px-6 pbe-3 lg:hidden"
       >
         <ul className="flex w-max items-center gap-1 text-sm">
@@ -105,7 +145,7 @@ export function DocsShell({
            */}
           {(prev || next) && (
             <nav
-              aria-label={fa ? "پیمایش مستندات" : "Docs pagination"}
+              aria-label={t.pagerNav}
               className="mt-12 flex items-stretch justify-between gap-3 border-bs border-border pbs-6"
             >
               {prev ? (
@@ -115,7 +155,7 @@ export function DocsShell({
                 >
                   <span className="text-xs text-fg-subtle">
                     <span aria-hidden="true">‹ </span>
-                    {fa ? "قبلی" : "Previous"}
+                    {t.previous}
                   </span>
                   <span className="truncate text-sm font-medium text-fg">{prev.label[lang]}</span>
                 </Link>
@@ -128,7 +168,7 @@ export function DocsShell({
                   className="group flex max-w-[45%] flex-col gap-0.5 rounded-md border border-border px-4 py-3 text-end transition-colors hover:bg-surface-hover"
                 >
                   <span className="text-xs text-fg-subtle">
-                    {fa ? "بعدی" : "Next"}
+                    {t.next}
                     <span aria-hidden="true"> ›</span>
                   </span>
                   <span className="truncate text-sm font-medium text-fg">{next.label[lang]}</span>
@@ -202,13 +242,14 @@ export function Snippet({
   code: string;
   html?: string | undefined;
 }) {
+  const t = COPY[lang];
   return (
     <div className="max-w-2xl">
       <CodeBlock
         code={code}
         html={html}
-        label={lang === "fa-IR" ? "کپی کد" : "Copy code"}
-        copiedLabel={lang === "fa-IR" ? "کد کپی شد" : "Code copied"}
+        label={t.copyCode}
+        copiedLabel={t.codeCopied}
       />
     </div>
   );

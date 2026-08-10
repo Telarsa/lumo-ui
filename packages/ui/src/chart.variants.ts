@@ -256,6 +256,96 @@ export function chartTickFormatter(
 }
 
 /**
+ * ═══ THE PIE'S SWEEP DOES NOT MIRROR. THIS IS A DECISION, NOT AN OVERSIGHT ═══
+ *
+ * ROADMAP.md listed the winding direction of a pie under RTL as open. It is
+ * closed here, and the answer is: **clockwise from the block start (12
+ * o'clock), in both directions, always.** `CHART_PIE_SWEEP` is a constant and
+ * takes no locale — deliberately, because a function that accepted a locale and
+ * ignored it would read as a bug waiting to be "fixed".
+ *
+ * The reasoning, because the opposite choice is the intuitive one:
+ *
+ *  1. **A pie's sweep is not layout.** Everything else this file mirrors is a
+ *     position along the INLINE axis — a scale's range, an axis's orientation, a
+ *     tooltip's preferred side. Those mirror because reading order runs along
+ *     that axis, so "first" means "at the start of the line". A pie has no
+ *     inline axis. Its sectors are ordered by ANGLE around a centre, and angle
+ *     has no reading order to agree with.
+ *
+ *  2. **Two mirror-imaged pies of the same data read as different data.** This
+ *     is the decisive one. Mirror a bar chart and every bar keeps its height —
+ *     the quantity survives the flip, only its position moves. Mirror a pie and
+ *     each sector keeps its area but changes its NEIGHBOURS and its side: the
+ *     40% slice that sat to the right of the 25% slice now sits to its left.
+ *     Put a Persian dashboard and its English translation side by side and a
+ *     reader comparing them sees two different pictures of one dataset, with
+ *     nothing in either one saying which is the mirror. That is a worse failure
+ *     than any asymmetry, because it is invisible in each document alone.
+ *
+ *  3. **Clocks do not mirror.** A pie is read as a clock face; Persian, Arabic
+ *     and Hebrew documents all render analogue clocks running clockwise, and
+ *     Persian calendars, gauges and progress rings do the same. Mirroring the
+ *     sweep would make Lumo's pies disagree with every other round thing on a
+ *     Persian page. (Contrast the linear progress bar, which DOES fill from the
+ *     inline start, because that one is a line and lines are read.)
+ *
+ *  4. **What mirrors instead is everything textual around it.** The legend is a
+ *     flex row and follows `direction` for free; the tooltip flips its preferred
+ *     side; `<ChartData>`'s table is a real RTL table. So the Persian reader gets
+ *     the sequence in reading order where sequence is meaningful — in the words —
+ *     and gets the same picture as everyone else where it is not.
+ *
+ * The 12 o'clock start is the other half of the decision and is not free either:
+ * recharts' own default is `startAngle: 0`, i.e. 3 o'clock, sweeping
+ * COUNTER-clockwise (its angles are measured counter-clockwise from the positive
+ * x-axis, so a default `0 → 360` pie runs backwards past 12). Nobody reads a pie
+ * that way in either script. `90 → -270` is the same full turn starting at the
+ * top and running clockwise.
+ */
+export interface ChartPieSweep {
+  /** Degrees, counter-clockwise from 3 o'clock — so 90 is the top. */
+  startAngle: number;
+  /** 360° later, going clockwise. */
+  endAngle: number;
+}
+
+/**
+ * The one winding every Lumo pie and donut uses, in every locale.
+ *
+ * Exported as data rather than hidden inside `ChartPie` so a composition this
+ * file does not cover — a radial bar, a gauge, a half pie — can start from the
+ * same convention instead of re-deciding it.
+ */
+export const CHART_PIE_SWEEP: ChartPieSweep = { startAngle: 90, endAngle: -270 };
+
+/**
+ * A half pie — the gauge shape — on the same convention: it starts at the inline
+ * side that is "up and over" in a clock's sense (9 o'clock) and sweeps clockwise
+ * through 12 to 3. Same argument as the full turn: the sweep is a clock, not a
+ * line, so it does not mirror.
+ */
+export const CHART_PIE_SWEEP_HALF: ChartPieSweep = { startAngle: 180, endAngle: 0 };
+
+/**
+ * The class the pie/donut centre label sits in.
+ *
+ * The centre of a donut is the one place in a chart where Lumo puts real text
+ * inside the plot, so it is the one place a `font-variant-numeric` or a physical
+ * text alignment could sneak into an SVG. `text-anchor` is set by recharts on
+ * the `<text>` itself; this only carries colour and weight.
+ */
+export const chartPieCenterVariants = cva("select-none", {
+  variants: {
+    tone: {
+      value: "fill-fg text-2xl font-semibold",
+      caption: "fill-fg-muted text-xs font-normal",
+    },
+  },
+  defaultVariants: { tone: "value" },
+});
+
+/**
  * The axis the scale runs ALONG — X in the default layout, Y when the chart is
  * `layout="vertical"`. Reversing it mirrors the scale's range, and with it every
  * bar, line, area and grid line.

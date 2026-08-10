@@ -111,13 +111,130 @@ fixture caught it within a minute.
 
 ## Adding a locale
 
-1. Add the tag to `Locale` in `packages/core/src/types.ts`.
+The goal is that adding German or Arabic is **translation work**, not
+engineering. It is close to that now, and the list below is the whole distance.
+
+Steps 1–5 are enforced: a `Record<Locale, …>` somewhere turns a missing entry
+into a compile error. Steps 6–9 are **not**, and each is a place where a new
+locale renders plausible-looking output that is quietly wrong — so they are
+written out rather than left to be rediscovered.
+
+### The library
+
+1. Add the tag to `Locale` in `packages/core/src/types.ts`. Direction is NOT
+   part of this — `direction()` derives it from `Intl`, so there is no table to
+   forget.
 2. Add its complete string set to `STRINGS` in `strings.ts`. `satisfies
    Record<Locale, LumoStrings>` makes a missing key a compile error, and the
    parity tests catch an empty value, a half-translated string, or a function
    that ignores its argument.
-3. Add it to `KNOWN` in `packages/gate/src/index.ts` with its direction.
-4. Add its copy to `site` in `apps/website/src/lib/locale.ts`.
+3. Add its entry to `FORMAT_LOCALE` (`types.ts`). The compiler demands the key;
+   it cannot check the **value**, and the value is a judgement call. Note in
+   particular that Persian and Arabic do not share a numbering system: Persian
+   is `nu-arabext` (U+06F0–U+06F9) and Arabic is `nu-arab` (U+0660–U+0669), nine
+   code points apart and visually distinct to a reader of either. Pick the
+   calendar deliberately too — `ar-SA` wants `ca-islamic-umalqura`, not the
+   Gregorian default. This tag is for FORMATTERS only; `<html lang>` stays a
+   plain language tag, because that is what picks a screen reader's voice.
+
+### The gate
+
+4. Add it to `KNOWN` in `packages/gate/src/index.ts` with its direction **and
+   its numbering system**. These are independent properties and the gate needs
+   both: the digit rules were once written against a literal Persian range, so
+   a flawless Arabic page scored zero native digits and could never meet a
+   floor. Then add a fixture under `packages/gate/fixtures/locales/` — a
+   parametrisation with one instantiation is indistinguishable from a hardwire,
+   and the self-test fails if a non-Latin-numbering locale in `KNOWN` has none.
+5. Add its number-bearing routes to `apps/website/gate.floors.json`, mirroring
+   the `fa-IR` entries. **Nothing enforces this**, and its absence is the
+   vacuous pass the floor rule exists to prevent: with no floor declared, a page
+   in the new locale that renders no numbers at all satisfies "no Latin digits"
+   trivially. The CLI only catches the opposite mistake — a floor naming a route
+   the build stopped producing.
+
+### The site
+
+6. Add its copy to `site` and its endonym to `LOCALE_NAMES`, both in
+   `apps/website/src/lib/locale.ts`. Both are full `Record<Locale, …>`, so both
+   are compile-enforced. The endonym is the name the language uses for ITSELF —
+   a reader stranded on the wrong locale scans the menu for that, not for its
+   English name.
+7. Give it a font stack in `apps/website/src/app/globals.css`. The stacks are
+   keyed by `html[lang]`, and a locale with no rule of its own silently inherits
+   the `:root` default, which leads with the Latin face. That is right for
+   German and wrong for any Arabic-script locale, where it means OS-substituted
+   glyphs on a page that ships a designed face.
+8. **If the locale is Arabic-script, extend the letter-spacing neutralisation in
+   the same file.** It is currently keyed to `html[lang="fa-IR"]` alone. Letter
+   spacing severs the joins between Arabic-script letters — spaced-out text is
+   not a word, it is disconnected letters — so an Arabic page would inherit the
+   defect the Persian rule exists to fix, with nothing on screen that a reviewer
+   who does not read the script would notice.
+9. Extend `normalize()` in `apps/website/src/lib/search-index.ts` if the locale
+   needs folding the current steps do not cover. It already folds ZWNJ, Arabic
+   combining diacritics, the two Arabic/Persian letter pairs, and BOTH digit
+   ranges — so an Arabic locale needs nothing new. German does: `toLowerCase()`
+   leaves an umlaut an umlaut, so a query typed `uber` will not find a title
+   spelled `Über` until ä/ö/ü/ß fold to a/o/u/ss. Add a rule and a
+   failing-without-it case in `search-index.test.ts`, which is the file's
+   convention.
+
+### Site copy is a `Record<Locale>` map, never a binary ternary
+
+This is the rule the whole recipe rests on, and the one that is easiest to
+break by hand:
+
+```tsx
+// no — compiles fine with a third locale, and serves it the ENGLISH branch
+<h2>{lang === "fa-IR" ? "پیش‌نمایش" : "Preview"}</h2>
+
+// yes — adding a locale is now a compile error naming every string still to do
+const COPY = {
+  "fa-IR": { preview: "پیش‌نمایش" },
+  "en-US": { preview: "Preview" },
+} as const satisfies Record<Locale, { preview: string }>;
+<h2>{COPY[lang].preview}</h2>
+```
+
+The ternary is not a style preference. It **type-checks** with three locales,
+it renders, it looks correct in review, and the HTML gate cannot see it either,
+because the branch it wrongly serves is Latin script exactly like the branch it
+should have served — the same shape as every other defect in this repository's
+ledger. A `Record<Locale, …>` moves the failure to compile time and lists the
+work.
+
+Precedent: the site carried **154** of these across sixteen files, densest in the
+prose docs pages; all 154 are now maps. Around a third sat in `aria-label`s and
+screen-reader-only text, where nothing visible would ever have revealed the
+miss. The sweep was verified by rendering every affected page in both locales
+before and after and diffing the markup — byte-identical, so the maps changed
+what a third locale would get and nothing about what the two shipped locales
+get.
+
+Two ternaries in that sweep were **logic**, not copy, and got a different fix:
+`lang === "fa-IR" ? "en-US" : "fa-IR"` picked the locale a side-by-side exhibit
+mirrors against, and silently meant "the other one of our two". It is now
+`oppositeDirectionLocale()` in `lib/locale.ts`, which asks for a locale whose
+`direction()` differs — the question the exhibit was actually asking. When a
+ternary picks classes or logic rather than text, derive it from `direction()`;
+only text belongs in the copy map.
+
+**The sweep is NOT finished, and this is the honest count.** Round 4 converted
+154 occurrences across 16 owned files and proved byte-identical output for both
+locales. It did not touch `apps/website/src/lib/blocks.tsx`, which alone holds
+**402** more — every block's gallery copy — because a sibling agent owned that
+file the same hour. Two more sit in `demo-frame.tsx`. So:
+
+```
+converted   154   docs pages, component/block pages, chrome, install tabs
+remaining   404   blocks.tsx (402) · demo-frame.tsx (2)
+```
+
+Until those are converted, adding a third locale would compile and hand German
+the English half of four hundred block strings. **Anyone adding a locale must
+finish this sweep first** — it is a prerequisite, not a cleanup task, and it is
+listed as such in ROADMAP.md.
 
 There is no partial locale and no fallback. A fallback is what puts an English
 word in a Persian sentence.

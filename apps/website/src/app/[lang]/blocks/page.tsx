@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatNumber } from "@lumo-ui/core";
+import { formatNumber, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { assertLocale, localeParams, site } from "@/lib/locale";
 import { allBlocks, CATEGORIES, categoryLabel } from "@/lib/blocks";
@@ -44,6 +44,22 @@ export function generateStaticParams() {
  * `lib/search-index.ts`), and an id on the card is what makes that fragment
  * land on the right entry instead of on nothing.
  */
+/**
+ * The gallery's one paragraph of prose, keyed by locale.
+ *
+ * Not `lang === "fa-IR" ? persian : english` — that compiles with a third locale
+ * in the union and hands it the English branch silently, which the HTML gate
+ * cannot see because both branches are Latin script. See the rule in
+ * CONTRIBUTING's "Adding a locale". The rest of this page was already correct:
+ * `categoryLabel` and the blocks' own titles are full `Record<Locale, …>` maps.
+ */
+const INTRO = {
+  "fa-IR":
+    "بخش‌های کاملِ صفحه، ساخته‌شده فقط از کامپوننت‌های همین کتابخانه. هر بلوک تمام متن خود را به‌صورت prop می‌گیرد، پس هیچ واژهٔ انگلیسی در آن جا نمی‌ماند. برای دیدن پیش‌نمایش تمام‌صفحه، روی هر بلوک بزنید.",
+  "en-US":
+    "Whole page sections, composed only from this library's components. Every block takes all of its text as props, so no English word can be left inside one. Open a block to see its full-page preview.",
+} as const satisfies Record<Locale, string>;
+
 export default async function Blocks({ params }: { params: Promise<{ lang: string }> }) {
   const lang = assertLocale((await params).lang);
   const blocks = allBlocks();
@@ -52,9 +68,7 @@ export default async function Blocks({ params }: { params: Promise<{ lang: strin
     <SiteShell lang={lang} path="blocks/">
       <h1 className="text-3xl font-semibold tracking-tight text-fg">{site[lang].blocks}</h1>
       <p className="mt-2 max-w-2xl text-fg-muted">
-        {lang === "fa-IR"
-          ? "بخش‌های کاملِ صفحه، ساخته‌شده فقط از کامپوننت‌های همین کتابخانه. هر بلوک تمام متن خود را به‌صورت prop می‌گیرد، پس هیچ واژهٔ انگلیسی در آن جا نمی‌ماند. برای دیدن پیش‌نمایش تمام‌صفحه، روی هر بلوک بزنید."
-          : "Whole page sections, composed only from this library's components. Every block takes all of its text as props, so no English word can be left inside one. Open a block to see its full-page preview."}
+        {INTRO[lang]}
       </p>
 
       {CATEGORIES.map((category) => {

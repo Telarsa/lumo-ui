@@ -1,9 +1,154 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { cn, direction } from "@lumo-ui/core";
 import { Button } from "@lumo-ui/ui";
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THEME SYNC FOR ALREADY-LOADED PREVIEW FRAMES
+ *
+ * The defect, from the review backlog: flip the header's theme toggle and every
+ * `/view/` and `/view-block/` iframe already on the page keeps its old theme
+ * until it is reloaded. The page repaints around a light rectangle.
+ *
+ * Why it happens: `ThemeScript` reads `localStorage` ONCE, before the frame's
+ * first paint. It is a no-flash contract, not a subscription, so a document that
+ * has already booted never hears about a later change.
+ *
+ * ── WHY THE STAMP COMES FROM THE PARENT RATHER THAN A LISTENER INSIDE ───────
+ *
+ * The tidier-sounding fix is a `storage` listener inside the two view layouts:
+ * `storage` fires natively in every OTHER same-origin document when
+ * `localStorage` is written, so the toggle would need no change at all. It is
+ * the right instinct and it is not sufficient here, for three reasons that only
+ * show up once you write it down:
+ *
+ *  1. **`storage` does not fire in the document that wrote it.** The toggle
+ *     lives in the top document, so the top document is exactly the one place
+ *     the event never arrives — irrelevant for the frames, but it means the
+ *     mechanism can never be tested from the page that owns the control.
+ *  2. **Not every theme change touches storage.** `theme-toggle.tsx` writes
+ *     `localStorage` inside a `try`, and says so: "storage may be denied; the
+ *     page-local flip above still happened". Under a denied quota the attribute
+ *     changes and no event is dispatched, so the frames desynchronise silently —
+ *     the failure mode this whole library is organised against.
+ *  3. **The stored value is not the effective one.** With no stored choice the
+ *     page follows `prefers-color-scheme`, and an OS flip mid-session moves the
+ *     page with zero storage writes.
+ *
+ * So the source of truth is the same one `theme-toggle.tsx` reads: the `data-theme`
+ * attribute on `<html>`, plus the media query behind it. A `MutationObserver` on
+ * that attribute catches every path — toggle, OS change, and any future control —
+ * and the frames are same-origin, so writing the attribute into
+ * `frame.contentDocument.documentElement` is a plain DOM write.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+type Resolved = "light" | "dark";
+
+/** Every same-origin preview frame on the page: component AND block previews. */
+const PREVIEW_FRAMES = 'iframe[src^="/view/"], iframe[src^="/view-block/"]';
+
+/**
+ * The theme the PAGE is actually showing — an explicit stamp wins, otherwise
+ * the OS. Deliberately the same three-state resolution `theme-toggle.tsx` and
+ * `preview-toolbar.tsx` use; a fourth spelling of it would be a fourth thing to
+ * keep in step.
+ */
+function effectiveTheme(): Resolved {
+  const stamped = document.documentElement.getAttribute("data-theme");
+  if (stamped === "dark" || stamped === "light") return stamped;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+/**
+ * Stamps one frame's inner document, with the snap.
+ *
+ * Exported for the test: the whole mechanism is one DOM write plus one class,
+ * and a test can hand it a real iframe rather than simulating a theme flip.
+ *
+ * Returns whether it wrote anything, so a caller — and the test — can tell "not
+ * loaded yet" from "already correct".
+ */
+export function syncFrameTheme(frame: HTMLIFrameElement, theme: Resolved): boolean {
+  let doc: Document | null = null;
+  try {
+    // Same-origin by construction (both routes are this site's own). The guard
+    // is for the one case that is not a bug: a frame whose document has been
+    // torn down mid-navigation, where the access throws instead of returning
+    // null.
+    doc = frame.contentDocument;
+  } catch {
+    return false;
+  }
+  const root = doc?.documentElement;
+  if (!root) return false;
+  if (root.getAttribute("data-theme") === theme) return false;
+
+  // The same one-frame transition kill the header and the preview stage use.
+  // Without it the inner document cross-fades every `transition-colors` surface
+  // it owns, on its own clock, inside a 384px box.
+  root.classList.add("lumo-theme-snap");
+  root.setAttribute("data-theme", theme);
+  const view = frame.contentWindow ?? window;
+  view.requestAnimationFrame(() => {
+    view.requestAnimationFrame(() => root.classList.remove("lumo-theme-snap"));
+  });
+  return true;
+}
+
+/**
+ * Keeps every preview frame on the page in step with the page's own theme.
+ *
+ * Mounted by `DemoFrame`, so component pages get it by existing. Exported
+ * because the blocks pages build their `/view-block/` iframes themselves
+ * (`DemoFrame` hardcodes the component route) — one `<PreviewFrameThemeSync />`
+ * anywhere on those pages is the whole integration.
+ *
+ * Two instances on one page is fine and not worth coordinating away: the work
+ * is an idempotent attribute write, and `syncFrameTheme` returns early when the
+ * value already matches.
+ */
+export function PreviewFrameThemeSync() {
+  useEffect(() => {
+    const frames = () => Array.from(document.querySelectorAll<HTMLIFrameElement>(PREVIEW_FRAMES));
+    const syncAll = () => {
+      const theme = effectiveTheme();
+      for (const frame of frames()) syncFrameTheme(frame, theme);
+    };
+
+    // A `loading="lazy"` frame has no document until it is revealed, and a
+    // freshly loaded one has already read localStorage for itself — but not for
+    // an OS-driven or storage-denied state, so it is stamped on arrival too.
+    const onLoad = (event: Event) => {
+      const frame = event.target as HTMLIFrameElement;
+      syncFrameTheme(frame, effectiveTheme());
+    };
+    for (const frame of frames()) frame.addEventListener("load", onLoad);
+
+    // The page's own flip. `theme-toggle.tsx` writes the attribute imperatively
+    // so the snap and the flip land in one frame — which means an attribute
+    // observer sees every change, including ones that never reach storage.
+    const observer = new MutationObserver(syncAll);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    // The "system" case: no attribute changes at all, the OS moves underneath.
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    mq.addEventListener("change", syncAll);
+
+    syncAll();
+    return () => {
+      observer.disconnect();
+      mq.removeEventListener("change", syncAll);
+      for (const frame of frames()) frame.removeEventListener("load", onLoad);
+    };
+  }, []);
+
+  return null;
+}
 
 /**
  * A demo rendered in its own document.
@@ -58,6 +203,13 @@ export function DemoFrame({
         loading="lazy"
         className="block h-96 w-full bg-surface"
       />
+      {/*
+       * Renders nothing. It exists so that flipping the header's theme repaints
+       * the document INSIDE this frame too — see the block at the top of this
+       * file for why the stamp comes from out here rather than from a listener
+       * in the view layout.
+       */}
+      <PreviewFrameThemeSync />
     </figure>
   );
 }

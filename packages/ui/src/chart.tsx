@@ -9,33 +9,40 @@ import { cn, formatNumber, type Locale } from "@lumo-ui/core";
 // the variants and the direction arithmetic. See chart.variants.ts's header,
 // which also records everything that was measured about recharts under RTL.
 import {
+  CHART_PIE_SWEEP,
+  CHART_PIE_SWEEP_HALF,
   chartColor,
   chartColorVar,
   chartContainerVariants,
   chartLegendItemVariants,
   chartLegendVariants,
   chartMirror,
+  chartPieCenterVariants,
   chartStyleSheet,
   chartTickFormatter,
   chartTooltipIndicatorVariants,
   chartTooltipVariants,
   type ChartConfig,
   type ChartMirror,
+  type ChartPieSweep,
 } from "./chart.variants.ts";
 
 export {
+  CHART_PIE_SWEEP,
+  CHART_PIE_SWEEP_HALF,
   chartColor,
   chartColorVar,
   chartContainerVariants,
   chartLegendItemVariants,
   chartLegendVariants,
   chartMirror,
+  chartPieCenterVariants,
   chartStyleSheet,
   chartTickFormatter,
   chartTooltipIndicatorVariants,
   chartTooltipVariants,
 };
-export type { ChartConfig, ChartMirror };
+export type { ChartConfig, ChartMirror, ChartPieSweep };
 
 /**
  * Charts. The one thing no headless library ships, and the reason this file is
@@ -52,6 +59,32 @@ export type { ChartConfig, ChartMirror };
  *         <Bar dataKey="sales" fill={chartColor("sales")} radius={4} />
  *       </BarChart>
  *     </ChartContainer>
+ *
+ * ═══ FOUR SHAPES, ONE CONTAINER ═════════════════════════════════════════════
+ *
+ * `BarChart`, `LineChart`, `AreaChart` and `PieChart` are recharts' own — Lumo
+ * adds no wrapper for them, because a wrapper that only forwards props is a
+ * second name for one thing. What Lumo DOES supply is every part of a chart that
+ * has a direction or a number in it:
+ *
+ *     cartesian (bar/line/area)   ChartCategoryAxis · ChartValueAxis
+ *     any shape                   ChartTooltip · ChartTooltipContent
+ *                                 ChartLegend + ChartLegendContent
+ *                                 ChartValueLabelList
+ *     polar (pie/donut)           ChartPie · ChartPieCenter
+ *     always, and not optional    <ChartData>, rendered by ChartContainer
+ *
+ * Line and area need nothing beyond the axes: `reversed` acts on the SCALE's
+ * range, so the curve, its dots, its gradient and the grid all mirror with the
+ * category axis and there is no second thing to remember. Verified rather than
+ * assumed — `chart.test.tsx` renders a line and an area under `fa-IR` and reads
+ * the first plotted point's x back out.
+ *
+ * The pie is the one that does NOT mirror, and that is a decision with an
+ * argument behind it rather than an omission. It is written out in full in
+ * `chart.variants.ts` above `CHART_PIE_SWEEP`; the one-line version is that two
+ * mirror-imaged pies of the same data read as two different datasets, where two
+ * mirror-imaged bar charts read as one.
  *
  * ═══ THE GATE CANNOT SEE THE PLOT. IT CAN SEE `<ChartData>` ═════════════════
  *
@@ -644,6 +677,156 @@ export function ChartLegendContent({
           );
         })}
     </div>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * VALUE LABELS
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+export type ChartValueLabelListProps = Omit<
+  React.ComponentProps<typeof RechartsPrimitive.LabelList>,
+  "formatter"
+> & {
+  /** Passed to `Intl.NumberFormat`, e.g. `{ style: "percent" }`. */
+  numberFormat?: Intl.NumberFormatOptions | undefined;
+};
+
+/**
+ * The figures drawn ON the plot — the number above a bar, beside a line's dot,
+ * outside a pie sector.
+ *
+ * The same defect as an unformatted axis, in the place it is least likely to be
+ * noticed: recharts builds these `<text>` nodes from the raw datum, so a bare
+ * `<LabelList dataKey="sales" />` prints `1,200` on a Persian page. There is no
+ * `LumoNode` in the way — the value never passes through JSX — and no gate can
+ * see it, because recharts serves no bytes.
+ *
+ * `chartTickFormatter` is reused rather than reimplemented, so a label and the
+ * axis tick beside it can never disagree about a numbering system.
+ */
+export function ChartValueLabelList({ numberFormat, ...props }: ChartValueLabelListProps) {
+  const { locale } = useChart();
+  return (
+    <RechartsPrimitive.LabelList
+      {...props}
+      formatter={chartTickFormatter(locale, numberFormat)}
+    />
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * PIE AND DONUT
+ *
+ * The sweep convention and the whole argument for NOT mirroring it live in
+ * `chart.variants.ts`, above `CHART_PIE_SWEEP`. This is the part that applies it.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface ChartPieProps
+  extends Omit<
+    React.ComponentProps<typeof RechartsPrimitive.Pie>,
+    "startAngle" | "endAngle" | "rootTabIndex" | "label"
+  > {
+  /**
+   * A half turn — the gauge shape — instead of the full one.
+   *
+   * Not a `startAngle`/`endAngle` pair, because those are the two numbers this
+   * component exists to own: see `CHART_PIE_SWEEP` in `chart.variants.ts`.
+   */
+  half?: boolean | undefined;
+}
+
+/**
+ * A pie or, with `innerRadius`, a donut.
+ *
+ *     <ChartPie dataKey="value" nameKey="category" innerRadius={60}>
+ *       <ChartValueLabelList dataKey="value" />
+ *     </ChartPie>
+ *
+ * recharts' own `label` prop is deliberately removed from the type: `label`
+ * means "the announced name" everywhere else in Lumo, and recharts' version
+ * draws unformatted figures on the plot. Sector figures are
+ * `<ChartValueLabelList>`, which formats through the locale.
+ *
+ * ── WHY THIS TURNS OFF A TAB STOP RATHER THAN NAMING ONE ────────────────────
+ *
+ * The first version of this component took a required `label` and forwarded it
+ * as `aria-label`, on the assumption that it would name the sector group that
+ * `defaultPieProps` makes focusable (`rootTabIndex: 0`). Rendered and read, that
+ * was wrong in both halves, and the measurement is worth keeping:
+ *
+ *   - `aria-label` does NOT reach the focusable element. recharts spreads a
+ *     `<Pie>`'s presentation props onto every SECTOR — measured output carried
+ *     the same `aria-label` on both `<path class="recharts-sector">` nodes, two
+ *     elements claiming one name, which is worse than none.
+ *   - The focusable element is `<g class="recharts-pie" tabindex="0">`, built by
+ *     `PieImpl` as `<Layer tabIndex={rootTabIndex} className={layerClass}>` —
+ *     tabIndex and className are the ONLY props it receives. Verified unreachable
+ *     in the sense `strings.ts` uses the word: no prop lands on it.
+ *
+ * So the name cannot be supplied, and an unnamed tab stop is the defect
+ * `button.tsx` exists to prevent. What can be supplied is `rootTabIndex={-1}`,
+ * which removes it from the tab order and leaves exactly one keyboard stop per
+ * chart: the `role="application"` surface `ChartContainer` already names. Nothing
+ * is lost with it — the sector paths are `tabindex="-1"` either way, and the
+ * figures a keyboard or screen-reader user needs are in `<ChartData>`'s table,
+ * which is served whether or not recharts ever paints.
+ */
+export function ChartPie({ half, ...props }: ChartPieProps) {
+  const sweep = half ? CHART_PIE_SWEEP_HALF : CHART_PIE_SWEEP;
+  return <RechartsPrimitive.Pie {...props} {...sweep} rootTabIndex={-1} />;
+}
+
+export interface ChartPieCenterProps {
+  /** The big figure, ALREADY formatted — pass `formatNumber(n, locale)`. */
+  value: string;
+  /** The line under it, e.g. «کل سفارش‌ها». */
+  caption: string;
+  /** Where the donut's hole is, in the chart's own coordinates. */
+  cx?: number | string | undefined;
+  cy?: number | string | undefined;
+}
+
+/**
+ * The figure in a donut's hole.
+ *
+ * `value` is a `string`, not a `number`, and that is the entire point of the
+ * component existing: an SVG `<text>` is one of the few places in this library a
+ * number can reach the DOM without passing a `LumoNode`, so the type refuses the
+ * unformatted case at the call site instead of discovering it in a screenshot.
+ *
+ * Rendered through recharts' `<Label>` so it inherits the pie's own centre
+ * coordinates rather than being positioned by hand.
+ */
+export function ChartPieCenter({ value, caption, cx, cy }: ChartPieCenterProps) {
+  return (
+    <RechartsPrimitive.Label
+      position="center"
+      content={({ viewBox }) => {
+        // recharts hands a polar view box here; the cartesian branch is the
+        // fallback for a caller that placed this somewhere unusual.
+        const box = viewBox as { cx?: number; cy?: number } | undefined;
+        const x = box?.cx ?? cx;
+        const y = box?.cy ?? cy;
+        if (x === undefined || y === undefined) return null;
+        return (
+          <text x={x} y={y} textAnchor="middle" dominantBaseline="middle">
+            <tspan x={x} y={y} className={chartPieCenterVariants({ tone: "value" })}>
+              {value}
+            </tspan>
+            <tspan
+              x={x}
+              // A rem offset rather than a px one, so the caption stays under
+              // the figure when the density knob moves the type scale.
+              dy="1.4rem"
+              className={chartPieCenterVariants({ tone: "caption" })}
+            >
+              {caption}
+            </tspan>
+          </text>
+        );
+      }}
+    />
   );
 }
 

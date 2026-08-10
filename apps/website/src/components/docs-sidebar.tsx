@@ -36,6 +36,21 @@ import { SidebarScroll } from "./sidebar-scroll";
  */
 
 /**
+ * The sidebar's own chrome copy, keyed by locale rather than picked with a
+ * ternary — the same shape `GROUP_NAMES` below already uses, applied to the
+ * three strings that were still selected with a binary conditional on `lang`.
+ *
+ * That conditional compiles with a third locale in the union and hands it the
+ * English branch silently. Two of these three are announced but never drawn (a
+ * nav's `aria-label`, the "new" dot's screen-reader word), so nothing on screen
+ * would reveal the miss. See the rule in CONTRIBUTING's "Adding a locale".
+ */
+const COPY = {
+  "fa-IR": { nav: "ناوبری مستندات", docs: "مستندات", isNew: "جدید" },
+  "en-US": { nav: "Documentation navigation", docs: "Docs", isNew: "New" },
+} as const satisfies Record<Locale, { nav: string; docs: string; isNew: string }>;
+
+/**
  * The sidebar's own, longer names for the tiers. `lib/demos.tsx` keeps the
  * one-word labels the gallery's density needs; a nav column has the room to
  * say what a group actually holds, which is what the review asked for. A full
@@ -59,6 +74,7 @@ export async function DocsSidebar({
   active?: string | undefined;
 }) {
   const t = site[lang];
+  const c = COPY[lang];
   const demos = await allCatalog();
   const isNew = await newExampleSlugs();
 
@@ -82,14 +98,10 @@ export async function DocsSidebar({
     "flex items-baseline gap-2 px-2 pbe-1.5 text-[0.6875rem] font-medium uppercase tracking-wide text-fg-subtle";
 
   return (
-    <nav
-      data-docs-sidebar=""
-      aria-label={lang === "fa-IR" ? "ناوبری مستندات" : "Documentation navigation"}
-      className="text-[0.8125rem]/5"
-    >
+    <nav data-docs-sidebar="" aria-label={c.nav} className="text-[0.8125rem]/5">
       <SidebarScroll />
       <section>
-        <h2 className={groupLabel}>{lang === "fa-IR" ? "مستندات" : "Docs"}</h2>
+        <h2 className={groupLabel}>{c.docs}</h2>
         <ul className="flex flex-col gap-px">
           {docs.map((d) => (
             <li key={d.slug}>
@@ -150,7 +162,7 @@ export async function DocsSidebar({
                           aria-hidden="true"
                           className="ms-auto size-1.5 shrink-0 rounded-full bg-accent"
                         />
-                        <span className="sr-only">{lang === "fa-IR" ? "جدید" : "New"}</span>
+                        <span className="sr-only">{c.isNew}</span>
                       </>
                     ) : null}
                   </Link>

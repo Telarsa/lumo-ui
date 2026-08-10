@@ -14,7 +14,7 @@ import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
 import { highlight } from "@/lib/highlight";
 import { PreviewToolbar } from "@/components/preview-toolbar";
 import { EvidencePanel } from "@/components/evidence-panel";
-import { assertLocale, site } from "@/lib/locale";
+import { assertLocale, oppositeDirectionLocale, site } from "@/lib/locale";
 import { allCatalog, catalogById } from "@/lib/catalog";
 import { loadExamplesFor, type LoadedComponentExamples } from "@/lib/examples-loader";
 import { ExampleCard } from "@/components/example-card";
@@ -27,6 +27,129 @@ export async function generateStaticParams() {
   const entries = await allCatalog();
   return LOCALES.flatMap((lang) => entries.map((d) => ({ lang, slug: d.id })));
 }
+
+/**
+ * The page's own copy, keyed by locale.
+ *
+ * NOT `lang === "fa-IR" ? persian : english`. That ternary compiles with a third
+ * locale in the union and hands it the ENGLISH branch — silently, and invisibly
+ * to the HTML gate, because both branches are Latin script. A
+ * `Record<Locale, …>` turns the same addition into a compile error listing every
+ * string still to translate. This page carried thirty-three of them, eleven
+ * inside `aria-label`s that only a screen-reader user would ever hear. See the
+ * rule in CONTRIBUTING's "Adding a locale".
+ *
+ * `rail` is shared with the section headings deliberately: four of the `<h2>`s
+ * repeated their rail label as a second literal, free to drift from it. One
+ * string each now, which is the same argument `sections()` below already makes
+ * about order.
+ */
+interface PageCopy {
+  rail: {
+    preview: string;
+    composition: string;
+    api: string;
+    evidence: string;
+    installation: string;
+    directions: string;
+  };
+  copyPage: string;
+  copied: string;
+  /** The header pager's landmark name and its two per-neighbour labels. */
+  pagerNav: string;
+  pagerPrev: (title: string) => string;
+  pagerNext: (title: string) => string;
+  previewOrCode: string;
+  copySource: string;
+  sourceCopied: string;
+  /** `ExampleCard`'s four required announced names. */
+  exampleView: string;
+  exampleHide: string;
+  exampleCopy: string;
+  exampleCopied: string;
+  compositionIntro: string;
+  copyComposition: string;
+  compositionCopied: string;
+  exportedParts: string;
+  partHeader: string;
+  descriptionHeader: string;
+  /** The two-direction section: its `<h2>` differs from its short rail label. */
+  directionsHeading: string;
+  directionsIntro: string;
+  showCompare: string;
+  hideCompare: string;
+}
+
+const COPY = {
+  "fa-IR": {
+    rail: {
+      preview: "پیش‌نمایش",
+      composition: "ترکیب اجزا",
+      api: "مرجع اجزا",
+      evidence: "شواهد دسترس‌پذیری",
+      installation: "نصب",
+      directions: "هر دو جهت",
+    },
+    copyPage: "کپی صفحه",
+    copied: "کپی شد",
+    pagerNav: "کامپوننت قبلی و بعدی",
+    pagerPrev: (title: string) => `کامپوننت قبلی: ${title}`,
+    pagerNext: (title: string) => `کامپوننت بعدی: ${title}`,
+    previewOrCode: "پیش‌نمایش یا کد",
+    copySource: "کپی کد کامپوننت",
+    sourceCopied: "کد کامپوننت کپی شد",
+    exampleView: "نمایش کد",
+    exampleHide: "پنهان کردن کد",
+    exampleCopy: "کپی کد نمونه",
+    exampleCopied: "کد نمونه کپی شد",
+    compositionIntro:
+      "درخت اجزا، آمادهٔ کپی — هر تگ آن هنگام ساخت با خروجی‌های واقعی کتابخانه تطبیق داده شده است.",
+    copyComposition: "کپی درخت اجزا",
+    compositionCopied: "درخت اجزا کپی شد",
+    exportedParts: "اجزای صادرشده",
+    partHeader: "جزء",
+    descriptionHeader: "شرح",
+    directionsHeading: "فارسی و انگلیسی، کنار هم",
+    directionsIntro:
+      "هر قاب یک سند مستقل با ‎lang‎ و ‎dir‎ واقعی خودش است — نه یک div که وانمود می‌کند. برای دیدن هر دو جهت کنار هم، مقایسه را باز کنید.",
+    showCompare: "نمایش مقایسهٔ دو جهت",
+    hideCompare: "بستن مقایسهٔ دو جهت",
+  },
+  "en-US": {
+    rail: {
+      preview: "Preview",
+      composition: "Composition",
+      api: "API reference",
+      evidence: "Accessibility evidence",
+      installation: "Installation",
+      directions: "Both directions",
+    },
+    copyPage: "Copy page",
+    copied: "Copied",
+    pagerNav: "Previous and next component",
+    pagerPrev: (title: string) => `Previous component: ${title}`,
+    pagerNext: (title: string) => `Next component: ${title}`,
+    previewOrCode: "Preview or code",
+    copySource: "Copy the component's source",
+    sourceCopied: "Component source copied",
+    exampleView: "View code",
+    exampleHide: "Hide code",
+    exampleCopy: "Copy the example code",
+    exampleCopied: "Example code copied",
+    compositionIntro:
+      "The parts tree, ready to copy — every tag in it is checked against the library's real exports at build time.",
+    copyComposition: "Copy the composition tree",
+    compositionCopied: "Composition tree copied",
+    exportedParts: "Exported parts",
+    partHeader: "Part",
+    descriptionHeader: "Description",
+    directionsHeading: "Persian and English, side by side",
+    directionsIntro:
+      "Each frame is a real document with its own lang and dir — not a div pretending to be one. Open the comparison to see both directions side by side.",
+    showCompare: "Compare both directions",
+    hideCompare: "Hide the comparison",
+  },
+} as const satisfies Record<Locale, PageCopy>;
 
 /**
  * Section headings, in both locales, so the rail and the page cannot disagree.
@@ -44,25 +167,25 @@ export async function generateStaticParams() {
  * has always existed to hold.
  */
 function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
-  const list = [{ id: "preview", label: lang === "fa-IR" ? "پیش‌نمایش" : "Preview" }];
+  const c = COPY[lang];
+  // Annotated, not inferred: COPY is `as const`, so an inferred element type
+  // would narrow to the first entry's literal and reject every later push.
+  const list: Array<{ id: string; label: string }> = [{ id: "preview", label: c.rail.preview }];
   if (loaded !== undefined) {
     for (const example of loaded.examples) {
       list.push({ id: `example-${example.id}`, label: example.title[lang] });
     }
     if (loaded.composition !== undefined) {
-      list.push({ id: "composition", label: lang === "fa-IR" ? "ترکیب اجزا" : "Composition" });
+      list.push({ id: "composition", label: c.rail.composition });
     }
     if (loaded.parts !== undefined && loaded.parts.length > 0) {
-      list.push({ id: "api", label: lang === "fa-IR" ? "مرجع اجزا" : "API reference" });
+      list.push({ id: "api", label: c.rail.api });
     }
   }
   list.push(
-    {
-      id: "evidence",
-      label: lang === "fa-IR" ? "شواهد دسترس‌پذیری" : "Accessibility evidence",
-    },
-    { id: "installation", label: lang === "fa-IR" ? "نصب" : "Installation" },
-    { id: "directions", label: lang === "fa-IR" ? "هر دو جهت" : "Both directions" },
+    { id: "evidence", label: c.rail.evidence },
+    { id: "installation", label: c.rail.installation },
+    { id: "directions", label: c.rail.directions },
   );
   return list;
 }
@@ -205,6 +328,7 @@ export default async function ComponentPage({
   if (!demo) notFound();
 
   const t = site[lang];
+  const c = COPY[lang];
 
   const registry = loadRegistry();
   const item = resolveRegistryItem(registry, slug, demo.source);
@@ -265,12 +389,7 @@ export default async function ComponentPage({
   }
   const compositionHtml =
     loaded?.composition !== undefined ? await highlight(loaded.composition, "tsx") : undefined;
-  const exampleStrings = {
-    view: lang === "fa-IR" ? "نمایش کد" : "View code",
-    hide: lang === "fa-IR" ? "پنهان کردن کد" : "Hide code",
-    copy: lang === "fa-IR" ? "کپی کد نمونه" : "Copy the example code",
-    copied: lang === "fa-IR" ? "کد نمونه کپی شد" : "Example code copied",
-  };
+
 
   /*
    * The header toolbar's data. The pager walks `(await allCatalog())` — the SAME
@@ -310,8 +429,8 @@ export default async function ComponentPage({
             <div className="ms-auto flex shrink-0 items-center gap-2">
               <CopyButton
                 text={copyPageText}
-                label={lang === "fa-IR" ? "کپی صفحه" : "Copy page"}
-                copiedLabel={lang === "fa-IR" ? "کپی شد" : "Copied"}
+                label={c.copyPage}
+                copiedLabel={c.copied}
               />
               <Pager
                 prev={
@@ -326,13 +445,9 @@ export default async function ComponentPage({
                     title: nextDemo.title[lang],
                   }
                 }
-                navLabel={lang === "fa-IR" ? "کامپوننت قبلی و بعدی" : "Previous and next component"}
-                prevLabel={(title) =>
-                  lang === "fa-IR" ? `کامپوننت قبلی: ${title}` : `Previous component: ${title}`
-                }
-                nextLabel={(title) =>
-                  lang === "fa-IR" ? `کامپوننت بعدی: ${title}` : `Next component: ${title}`
-                }
+                navLabel={c.pagerNav}
+                prevLabel={c.pagerPrev}
+                nextLabel={c.pagerNext}
               />
             </div>
           </header>
@@ -348,7 +463,7 @@ export default async function ComponentPage({
              * depend on being in the served bytes.
              */}
             <Tabs>
-              <TabList label={lang === "fa-IR" ? "پیش‌نمایش یا کد" : "Preview or code"}>
+              <TabList label={c.previewOrCode}>
                 <Tab id="preview">{t.preview}</Tab>
                 <Tab id="code">{t.code}</Tab>
               </TabList>
@@ -381,8 +496,8 @@ export default async function ComponentPage({
                 <CodeBlock
                   code={demo.source}
                   html={sourceHtml}
-                  label={lang === "fa-IR" ? "کپی کد کامپوننت" : "Copy the component's source"}
-                  copiedLabel={lang === "fa-IR" ? "کد کامپوننت کپی شد" : "Component source copied"}
+                  label={c.copySource}
+                  copiedLabel={c.sourceCopied}
                 />
               </TabPanel>
             </Tabs>
@@ -403,10 +518,10 @@ export default async function ComponentPage({
               description={example.description?.[lang]}
               code={example.source}
               html={html}
-              viewLabel={exampleStrings.view}
-              hideLabel={exampleStrings.hide}
-              copyLabel={exampleStrings.copy}
-              copiedLabel={exampleStrings.copied}
+              viewLabel={c.exampleView}
+              hideLabel={c.exampleHide}
+              copyLabel={c.exampleCopy}
+              copiedLabel={c.exampleCopied}
             >
               <div className="flex w-full flex-col items-center">{example.render(lang)}</div>
             </ExampleCard>
@@ -417,21 +532,19 @@ export default async function ComponentPage({
           compositionHtml !== undefined ? (
             <section id="composition" className="mt-10 scroll-mt-24">
               <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-                {lang === "fa-IR" ? "ترکیب اجزا" : "Composition"}
+                {c.rail.composition}
               </h2>
               <p className="mt-2 max-w-2xl text-sm text-fg-muted">
-                {lang === "fa-IR"
-                  ? "درخت اجزا، آمادهٔ کپی — هر تگ آن هنگام ساخت با خروجی‌های واقعی کتابخانه تطبیق داده شده است."
-                  : "The parts tree, ready to copy — every tag in it is checked against the library's real exports at build time."}
+                {c.compositionIntro}
               </p>
               <div className="mt-3">
                 <CompositionTree
                   composition={loaded.composition}
                   html={compositionHtml}
-                  copyLabel={lang === "fa-IR" ? "کپی درخت اجزا" : "Copy the composition tree"}
-                  copiedLabel={lang === "fa-IR" ? "درخت اجزا کپی شد" : "Composition tree copied"}
+                  copyLabel={c.copyComposition}
+                  copiedLabel={c.compositionCopied}
                   parts={loaded.moduleParts}
-                  partsLabel={lang === "fa-IR" ? "اجزای صادرشده" : "Exported parts"}
+                  partsLabel={c.exportedParts}
                 />
               </div>
             </section>
@@ -440,14 +553,14 @@ export default async function ComponentPage({
           {loaded !== undefined && loaded.parts !== undefined && loaded.parts.length > 0 ? (
             <section id="api" className="mt-10 scroll-mt-24">
               <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-                {lang === "fa-IR" ? "مرجع اجزا" : "API reference"}
+                {c.rail.api}
               </h2>
               <div className="mt-3">
                 <PartsTable
                   parts={loaded.parts}
                   locale={lang}
-                  partHeader={lang === "fa-IR" ? "جزء" : "Part"}
-                  descriptionHeader={lang === "fa-IR" ? "شرح" : "Description"}
+                  partHeader={c.partHeader}
+                  descriptionHeader={c.descriptionHeader}
                 />
               </div>
             </section>
@@ -455,7 +568,7 @@ export default async function ComponentPage({
 
           <section id="evidence" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-              {lang === "fa-IR" ? "شواهد دسترس‌پذیری" : "Accessibility evidence"}
+              {c.rail.evidence}
             </h2>
             <div className="mt-3">
               {/*
@@ -471,7 +584,7 @@ export default async function ComponentPage({
 
           <section id="installation" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-              {lang === "fa-IR" ? "نصب" : "Installation"}
+              {c.rail.installation}
             </h2>
             <div className="mt-3">
               <InstallTabs
@@ -488,12 +601,10 @@ export default async function ComponentPage({
 
           <section id="directions" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-              {lang === "fa-IR" ? "فارسی و انگلیسی، کنار هم" : "Persian and English, side by side"}
+              {c.directionsHeading}
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-fg-muted">
-              {lang === "fa-IR"
-                ? "هر قاب یک سند مستقل با ‎lang‎ و ‎dir‎ واقعی خودش است — نه یک div که وانمود می‌کند. برای دیدن هر دو جهت کنار هم، مقایسه را باز کنید."
-                : "Each frame is a real document with its own lang and dir — not a div pretending to be one. Open the comparison to see both directions side by side."}
+              {c.directionsIntro}
             </p>
             {/*
              * One frame by default — the page's own locale — with the mirrored
@@ -509,13 +620,13 @@ export default async function ComponentPage({
                 comparison={
                   <DemoFrame
                     slug={slug}
-                    lang={lang === "fa-IR" ? "en-US" : "fa-IR"}
+                    lang={oppositeDirectionLocale(lang)}
                     title={demo.title[lang]}
                     pageLang={lang}
                   />
                 }
-                showLabel={lang === "fa-IR" ? "نمایش مقایسهٔ دو جهت" : "Compare both directions"}
-                hideLabel={lang === "fa-IR" ? "بستن مقایسهٔ دو جهت" : "Hide the comparison"}
+                showLabel={c.showCompare}
+                hideLabel={c.hideCompare}
               />
             </div>
           </section>

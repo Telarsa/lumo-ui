@@ -17,6 +17,60 @@
 
 import { computeAccessibleName } from "dom-accessibility-api";
 
+/**
+ * A locale's NATIVE digit set — the ten code points its readers expect to see.
+ *
+ * This exists because the digit rules were hardwired to Persian. `noLatinDigits`
+ * and the floor both grepped a literal Persian digit range, which is correct for
+ * `fa-IR` and silently wrong for every other locale that does not number in
+ * Latin: an Arabic page numbers in U+0660–U+0669, nine code points below
+ * Persian's U+06F0–U+06F9, so a perfectly correct Arabic page scored ZERO native
+ * digits and a floor on it could never be met. The hardwiring was invisible
+ * because the only RTL locale in the repo was the one it was hardwired to.
+ *
+ * So the digit set is locale DATA now, carried on the `Doc`, and the rules read
+ * it. The rule ids do not change — `no-latin-digits` and `persian-digit-floor`
+ * are referenced by the floors file, by the docs and by CI status checks, and a
+ * renamed id is a rule that silently stops being enforced.
+ */
+export interface DigitSystem {
+  /**
+   * How the digits are named in a violation message. `fa-IR` is "Persian", so
+   * the Persian violation text is byte-identical to what this rule printed when
+   * the range was hardwired — the floors file and its docs quote that wording.
+   */
+  name: string;
+  /** The numbering system, as `Intl` spells it: `arabext`, `arab`, `latn`. */
+  numberingSystem: string;
+  /** This system's ZERO. The ten digits are contiguous from here in Unicode. */
+  zero: string;
+  /** Matches any one of the ten. Global, so `String.match` counts occurrences. */
+  pattern: RegExp;
+}
+
+/**
+ * Builds a digit system from its zero.
+ *
+ * Contiguity is a Unicode invariant for decimal digit sets (each is a
+ * `Nd` block of exactly ten in value order), so deriving nine code points from
+ * one is safe and removes the chance of a hand-typed range being off by one —
+ * which is precisely the defect that made this parametrisation necessary.
+ */
+export function digitSystem(name: string, numberingSystem: string, zero: string): DigitSystem {
+  const start = zero.codePointAt(0);
+  if (start === undefined) {
+    throw new Error(`Digit system ${JSON.stringify(name)} has an empty zero.`);
+  }
+  const nine = String.fromCodePoint(start + 9);
+  return {
+    name,
+    numberingSystem,
+    zero,
+    // Same shape as the literal it replaces: a global character-class range.
+    pattern: new RegExp(`[${zero}-${nine}]`, "gu"),
+  };
+}
+
 export interface Doc {
   /** Route path, used to derive the expected locale. e.g. "fa/admin/index.html" */
   path: string;
@@ -24,6 +78,8 @@ export interface Doc {
   /** The locale this route is expected to serve, derived from its path. */
   locale: string;
   direction: "rtl" | "ltr";
+  /** The digits this locale's readers expect. See `DigitSystem`. */
+  digits: DigitSystem;
 }
 
 export interface Violation {
@@ -46,8 +102,16 @@ export interface Rule {
 }
 
 const ASCII_DIGIT = /[0-9]/;
-const PERSIAN_DIGIT = /[۰-۹]/g;
 const LATIN_WORD = /[A-Za-z]{3,}/;
+
+/**
+ * A locale that numbers in `latn` has nothing for the digit rules to catch —
+ * its readers expect the same code points the rule would flag. This is the one
+ * place that decides it, so both digit rules agree by construction.
+ */
+function numbersInLatin(digits: DigitSystem): boolean {
+  return digits.numberingSystem === "latn";
+}
 
 /** Elements whose text is not user-visible prose. */
 const NON_TEXT = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT"]);
@@ -112,7 +176,15 @@ export const langDir: Rule = {
   },
 };
 
-/** Rule 2 — no Latin digits in visible Persian text. */
+/**
+ * Rule 2 — no Latin digits in the visible text of a natively-numbered locale.
+ *
+ * The skip used to be `direction !== "rtl"`, which was a PROXY for "this locale
+ * numbers in Latin" that happened to be right for the only two locales the repo
+ * had. Direction and numbering system are independent properties, so the rule
+ * now asks the question it means. For `fa-IR` (rtl, arabext) and `en-US` (ltr,
+ * latn) the two spellings select identically — this is a widening, not a change.
+ */
 export const noLatinDigits: Rule = {
   id: "no-latin-digits",
   because:
@@ -120,7 +192,7 @@ export const noLatinDigits: Rule = {
     "Persian page, two lines below a comment explaining that exact failure. " +
     "It is visible to a sighted reader and invisible to an aria-label audit.",
   run: (doc) => {
-    if (doc.direction !== "rtl") return [];
+    if (numbersInLatin(doc.digits)) return [];
     return visibleTextNodes(doc.document)
       .filter((t) => ASCII_DIGIT.test(t.data))
       .map((t) => ({
@@ -133,12 +205,23 @@ export const noLatinDigits: Rule = {
 };
 
 /**
- * Rule 3 — the anti-vacuity pair for rule 2.
+ * Rule 3 — the NATIVE-DIGIT floor, the anti-vacuity pair for rule 2.
  *
- * "Zero Latin digits" passes trivially on a page with no numbers at all. A
- * Persian route that is supposed to show numbers must actually show Persian
- * ones, so each route declares a floor. Without this, rule 2 silently stops
+ * "Zero Latin digits" passes trivially on a page with no numbers at all. A route
+ * that is supposed to show numbers must actually show them in the reader's own
+ * digits, so each route declares a floor. Without this, rule 2 silently stops
  * meaning anything the moment a page stops rendering its data.
+ *
+ * The count is per-locale: a `fa-IR` route is counted in U+06F0–U+06F9 and an
+ * `ar-SA` route in U+0660–U+0669. That distinction is the whole point — the two
+ * ranges do not overlap, so an Arabic page rendered with Persian digits fails
+ * its floor and a Persian page rendered with Arabic-Indic digits fails its own.
+ * A floor that accepted "any Arabic-script digit" would be exactly the vacuous
+ * check this rule's own `because` complains about in a sibling project.
+ *
+ * The id stays `persian-digit-floor`: `apps/website/gate.floors.json`, the docs
+ * and the CI status check all name it, and an id that changes is a rule that
+ * quietly stops being the one anybody wired up.
  */
 export const persianDigitFloor = (floors: Record<string, number>): Rule => ({
   id: "persian-digit-floor",
@@ -150,10 +233,10 @@ export const persianDigitFloor = (floors: Record<string, number>): Rule => ({
     const floor = floors[doc.path];
     if (floor == null) return [];
     const text = visibleTextNodes(doc.document).map((t) => t.data).join("");
-    const found = (text.match(PERSIAN_DIGIT) ?? []).length;
+    const found = (text.match(doc.digits.pattern) ?? []).length;
     return found >= floor
       ? []
-      : [{ rule: "persian-digit-floor", path: doc.path, detail: `expected at least ${floor} Persian digits, found ${found}` }];
+      : [{ rule: "persian-digit-floor", path: doc.path, detail: `expected at least ${floor} ${doc.digits.name} digits, found ${found}` }];
   },
 });
 

@@ -449,6 +449,115 @@ the gate; the gate is right in every case.
 
 ---
 
+## The Base UI head-to-head — planned, pre-registered
+
+Requested 10 Aug 2026, to run on `experiment/base-ui` after the examples-depth
+sweep. **Pre-registered**: the expectations below are written BEFORE any
+measurement, so the report cannot be quietly fitted to whatever the numbers
+turn out to be. If a prediction is wrong, the report says so in those words.
+
+**Scope — corrected 10 Aug 2026, and the correction matters.** The first draft
+of this brief said Base UI has ~38 components and no Table. That counted Base UI
+PROPER and was wrong about what is actually reachable: shadcn publishes a
+`base-vega` style, and much of the gap is already built there. Measured by
+fetching the registry:
+
+```
+base-vega HAS      table · hover-card · combobox · menubar · navigation-menu
+                   resizable · scroll-area · sidebar · chart · command
+                   toggle-group · sonner
+base-vega LACKS    tree · toolbar · tag-group · data-table · date-picker
+```
+
+So the coverage argument against Base UI is much weaker than stated, and the
+vendor-first workflow (`scripts/vendor-from-shadcn.mjs`) already knows how to
+pull from that style.
+
+**But the calendar is a trap, and it is the decisive one.** `base-vega/calendar`
+exists — and its dependencies are `react-day-picker` and `date-fns`. It is not
+Base UI; it is a third-party calendar wrapped in Base UI chrome. `aria-vega/
+calendar` declares **zero npm dependencies**, because React Aria's date layer IS
+`@internationalized/date`, which ships a Persian calendar. Jalali on
+react-day-picker means a date-fns-jalali fork and hand-written month arithmetic;
+Jalali on React Aria is a locale string. **The date family — the most
+Persian-differentiating work in this library — is where React Aria is uniquely
+strong, and no coverage table shows that.**
+
+What the branch does, then, is rebuild the **~12 components both libraries
+have** — Button, Switch, Checkbox,
+Select, Dialog, Popover, Tabs, Tooltip, Menu, Disclosure, Slider, NumberField —
+against the same gate, the same tests and the same Persian copy, so the
+comparison is like-for-like and the numbers are the argument.
+
+### The six questions, and how each is measured
+
+| # | Question | Method | Prediction (pre-registered) |
+| --- | --- | --- | --- |
+| 1 | **First-byte SSR defects** | `renderToStaticMarkup` each component under `fa-IR`, run `resolved-idrefs` over the output | Base UI **wins**. RAC's count is 6 — ListBox, Autocomplete, DropZone, Slider, TagGroup, CommandItem — all one cause: `useSlotId()` clears in a layout effect that never runs on the server. That is a pre-RSC architecture, not bad luck. Base UI is designed post-RSC; predict 0–1. |
+| 2 | **English leaks on a Persian page** | Grep every rendered `aria-*` and text node for `[A-Za-z]{3,}`, then grep the dist for hardcoded literals | **Genuinely uncertain, and the most interesting one.** RAC needed patches to 15 intl packages BECAUSE it has an i18n layer with 34 locales. Base UI may leak nothing (ships no strings) or leak worse (hardcoded English with no bundle to patch). The failure mode to look for: a string that is neither a prop nor a bundle, which is unpatchable rather than merely unpatched. |
+| 3 | **RTL out of the box** | Render each under `dir="rtl"`, diff geometry against the LTR render — the same technique `chart.test.tsx` uses on axis ticks | RAC handles direction well and this is one of its real strengths. Predict **RAC wins or ties**; Base UI is MUI-adjacent and MUI's own RTL historically needs a plugin. |
+| 4 | **Wrapper lines per component** | `wc -l` per component on both branches, minus the shared Lumo layer | Near-tie, ±15%. If Base UI is dramatically smaller it means Lumo was writing correction code, not styling code — which would be the finding. |
+| 5 | **Bundle weight** | Same fixture page, production build, gzipped, react/react-dom subtracted | Base UI **smaller**. Fewer components, no intl bundles. Predict 20–40% lighter on the 12-component subset. |
+| 7 | **Accessibility** — the question that decides it | Run Lumo's EXISTING `fa-IR` behaviour tests, unchanged, against the Base UI build; plus the evidence panel's `computeAccessibleName` pass and the gate's `named-controls` rule over both | **The best-designed measurement here, because it needs no new checklist.** Lumo already owns hundreds of tests asserting roving focus, typeahead under Persian collation, `aria-activedescendant`, Escape, Home/End and announced names. Pointing them at a Base UI build is a conformance suite we already trust. Passing tests = demonstrated parity. Failing tests = a list naming exactly what is missing. Prediction: **React Aria wins**, and this is its strongest claim — it is Adobe's accessibility team's whole reason for existing, whereas Base UI's a11y is good-by-intent rather than good-by-mandate. If Base UI passes Lumo's suite unchanged, that prediction was wrong and the report says so. |
+| 6 | **Does `pnpm verify` pass without patches** | Run it. `patches/` deleted on the branch. | The decisive one. RAC needs 2 patches touching 16 intl bundles to reach green. If Base UI reaches green with zero patches, that is a maintenance argument no other number outweighs — a patch is a merge conflict waiting for every upgrade. |
+
+### Two constraints set by the user, 10 Aug 2026
+
+**ONE library, not two.** The "Base UI for most, React Aria for dates" split
+below is explicitly ruled out: carrying two behaviour dependencies means two
+sets of upstream defects, two upgrade cadences and two mental models. The
+experiment must therefore produce a SINGLE recommendation, and if it
+recommends Base UI it must also say what happens to the date family — which
+today is the one place React Aria is uniquely strong (see the calendar trap
+above).
+
+**The patches are debt, and that is now a scored criterion rather than a
+footnote.** The user's position, and it is well founded: a pnpm patch is keyed
+to an exact version, so `react-aria@3.51.0.patch` regenerates across 16 intl
+bundles on every upgrade — a recurring tax with a merge conflict attached, and
+in effect a private fork of a library that does not want forking. Round 4
+extends these patches again for the calendar and date-segment strings, which
+grows the surface rather than shrinking it.
+
+The honest counter-case, recorded so the decision is made against the real
+alternative: the patches were not a preference. `LocalizedStringProvider`
+renders no children and only sets a `window` global — measured — so it cannot
+reach a server-rendered string, and three of the eight leaks had no prop route.
+React Aria's architecture forces a choice between patching and shipping English
+on Persian pages. That there was no third door is an argument against the
+library, not a defence of it.
+
+**A third door to investigate before deciding:** contribute `fa-IR` upstream.
+The bundles are plain data and Persian is a real locale; an accepted PR turns a
+recurring tax into a one-time contribution and largely dissolves the patch
+argument. Adobe typically routes translation through a vendor, so their policy
+on community locales is unknown and must be FOUND OUT, not assumed. This
+question is a prerequisite of the branch experiment, not a footnote to it.
+
+### The likely verdict, also pre-registered
+
+~~Per-component, not wholesale.~~ **Superseded by the one-library constraint
+above.** The prediction that stands: Base UI wins SSR and weight, React Aria
+wins RTL and accessibility, and the date family is React Aria's strongest and
+possibly decisive ground. Under a single-library rule the report must pick one
+and say what the loss costs — if Base UI, how Jalali gets built without
+`@internationalized/date`; if React Aria, whether the patch tax is survivable
+or upstreamable.
+
+## Locale-readiness — 404 ternaries still to sweep
+
+Round 4 converted 154 binary locale ternaries into `satisfies Record<Locale>`
+maps and parametrized the gate's digit rules per locale, so Arabic's ٠١٢٣
+grades like Persian's ۰۱۲۳. It did NOT finish: `apps/website/src/lib/blocks.tsx`
+holds **402** more and `demo-frame.tsx` two, untouched because a sibling agent
+owned those files that hour.
+
+This is a **prerequisite for German or Arabic**, not a cleanup. A binary ternary
+compiles fine with a third locale and silently serves it the English branch —
+and the gate cannot catch English-on-German, because both are Latin script. Four
+hundred of them are four hundred silent regressions waiting for the day someone
+adds `de-DE` to the union.
+
 ## Tripwires
 
 Decided now, while thinking clearly, rather than in eighteen months under sunk

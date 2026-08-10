@@ -511,3 +511,51 @@ index 36c3219c3e5d7998435150a7e87886474c17a6eb..60d86a0e0a0cd2c2b0e5faee2393fc82
      "ar-AE": $43CnS$intltreearAEmjs,
      "bg-BG": $43CnS$intltreebgBGmjs,
      "cs-CZ": $43CnS$intltreecsCZmjs,
+diff --git a/dist/private/datepicker/useDateSegment.mjs b/dist/private/datepicker/useDateSegment.mjs
+index 99d7a7b..ad434bd 100644
+--- a/dist/private/datepicker/useDateSegment.mjs
++++ b/dist/private/datepicker/useDateSegment.mjs
+@@ -318,6 +318,14 @@ function $d51706f903be7eab$export$1315d136e6f7581(segment, state, ref) {
+     // This is needed because VoiceOver on iOS does not announce groups.
+     let name = segment.type === 'literal' ? '' : displayNames.of(segment.type);
+     let labelProps = (0, $e8ac3c3f5d4bae7f$export$d6875122194c7b44)({
++        // LUMO PATCH. useLabels combines an aria-label and an aria-labelledby by
++        // pointing the element at ITSELF, so the id it returns must be the id the
++        // element renders. Without this argument it mints a second id, which the
++        // `{id: id}` below then overwrites via mergeProps' mergeIds — a reconciliation
++        // that only happens in an effect, so the PRERENDERED segment carries an
++        // aria-labelledby pointing at an id nothing has. Passing the id in makes the
++        // first byte self-consistent. See packages/gate/src/rules.ts resolved-idrefs.
++        id: id,
+         'aria-label': `${name}${ariaLabel ? `, ${ariaLabel}` : ''}${ariaLabelledBy ? ', ' : ''}`,
+         'aria-labelledby': ariaLabelledBy
+     });
+diff --git a/dist/private/tree/useTreeItem.mjs b/dist/private/tree/useTreeItem.mjs
+index 4f6fcb7..d792451 100644
+--- a/dist/private/tree/useTreeItem.mjs
++++ b/dist/private/tree/useTreeItem.mjs
+@@ -43,9 +43,24 @@ function $789f6a50d61c4c65$export$e4bcc4675b2b123a(props, state, ref) {
+         'data-react-aria-prevent-focus': true,
+         ...labelProps
+     };
++    // LUMO PATCH. useGridListItem mints a description id with useSlotId() and points
++    // the row's aria-labelledby at it, but a Tree renders no description element (see
++    // the "TODO: support description in the tree row" in react-aria-components' own
++    // Tree). useSlotId only CLEARS an unclaimed id in a layout effect, which never
++    // runs on the server, so every prerendered row shipped a dangling idref while the
++    // hydrated row has none. Dropping it makes the first byte equal the hydrated DOM.
++    // See packages/gate/src/rules.ts resolved-idrefs.
++    let rowProps = gridListAria.rowProps;
++    if (rowProps['aria-labelledby'] != null) {
++        rowProps = {
++            ...rowProps,
++            'aria-labelledby': undefined
++        };
++    }
+     // TODO: should it return a state specifically for isExpanded? Or is aria attribute sufficient?
+     return {
+         ...gridListAria,
++        rowProps: rowProps,
+         expandButtonProps: expandButtonProps
+     };
+ }

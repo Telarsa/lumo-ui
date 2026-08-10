@@ -70,27 +70,79 @@ import type { Locale } from "./types";
  * truth reaches both. Verified: Calendar, DateField and Breadcrumbs now announce
  * nothing in English during `renderToStaticMarkup`, with no component change.
  *
- * The five prop-based strings below stay props regardless. A prop is a contract
- * a consumer can see and a compiler can enforce; a patch is a repair we own and
+ * The prop-based strings below stay props regardless. A prop is a contract a
+ * consumer can see and a compiler can enforce; a patch is a repair we own and
  * must re-apply on every upgrade. Props first, patch only for what props cannot
  * reach. See `packages/ui/src/patch.test.tsx` — it fails if the patch still
  * applies but stops working, which is the quieter failure `pnpm patch` misses.
  *
- * Formerly unreachable, now closed by the patch:
+ * Formerly unreachable, NOW CLOSED. The earlier text here deferred these to a
+ * future client dictionary; that deferral is obsolete and the sentence has been
+ * removed rather than softened, because a stale "we plan to" is how a closed
+ * defect gets re-opened by someone tidying up:
  *
- *   Calendar   `aria-label="Today, ۱۴۰۵ مرداد ۱۸, یکشنبه"`  ← CalendarCell
- *   Calendar   a second internal `aria-label="Next"`          ← composed
- *   DateField  `aria-valuetext="Empty"` (one per segment)     ← DateSegment
+ *   Calendar   `aria-label="Today, …"` → «امروز، ۱۴۰۵ مرداد ۱۹, دوشنبه»
+ *   Calendar   the composed `aria-label="Next"` → «ماه بعد»
+ *   DateField  `aria-valuetext="Empty"` → «خالی», one per segment
  *
- * Verified unreachable: passing `aria-label` to `CalendarCell` and
- * `aria-valuetext` to `DateSegment` changes nothing — RAC composes its own and
- * ignores the prop. Those are announced on interaction rather than read from
- * the first byte, so the client dictionary is the right tool for them; that
- * path is untested and is deliberately not claimed here.
+ * Still true, and still worth stating: passing `aria-label` to `CalendarCell`
+ * or `aria-valuetext` to `DateSegment` changes nothing — RAC composes its own
+ * and ignores the prop. The patch is what reaches them, and it reaches them on
+ * the server, which the dictionary never could.
  *
- * Note what is NOT in this list: the Persian date itself renders correctly with
- * zero configuration (`۱۴۰۵ مرداد ۱۸, یکشنبه`), as do Persian numerals and the
- * RTL keyboard semantics. Only the English verbs leak.
+ * Evidence, re-measured 10 August 2026 during the date-family build, under
+ * `renderToStaticMarkup` with `I18nProvider locale="fa-IR-u-ca-persian-nu-arabext"`:
+ *
+ *   Calendar · RangeCalendar · DateField · TimeField · DatePicker ·
+ *   DateRangePicker → ZERO Latin-word `aria-label`, `aria-valuetext` or
+ *   `aria-roledescription` values across all six.
+ *
+ *   Key parity, `fa-IR` against `en-US`, in the bundles the family reads:
+ *     calendar    12/12 keys      datepicker  16/16 keys
+ *     spinbutton   1/1  key       (react-aria-components) 4/4 keys
+ *
+ * `packages/ui/src/dates.test.tsx` pins both, so a react-aria bump that adds a
+ * key leaves the parity check red instead of quietly reintroducing English.
+ *
+ * ── A LEAK NO PATCH CAN REACH: `@react-stately/datepicker` VALIDATION ────────
+ *
+ * Found while building the date family, and the most consequential of the lot
+ * because it is VISIBLE text rather than an ARIA attribute. Give a React Aria
+ * date component a `minValue`, let the value fall below it, and an empty
+ * `<FieldError>` renders React Aria's own message. On a fully Persian page:
+ *
+ *     "Value must be 8/23/2026 or later."
+ *     "Value must be 3/21/2026 or earlier."
+ *     "Start date must be before end date."
+ *     "Selected date unavailable."
+ *
+ * English, under a field reading ۱۴۰۵/۱/۱ — and the interpolated date is
+ * GREGORIAN with Latin digits. A Jalali product that is correct everywhere else
+ * tells the user about the one date they got wrong in the wrong calendar.
+ *
+ * The bundle technique does not close it, and the reason is upstream's own
+ * comment in `@react-stately/datepicker`'s `utils.mjs`:
+ *
+ *     // Match browser language setting here, NOT react-aria's I18nProvider, so
+ *     // that we match other browser-provided validation messages…
+ *     let locale = navigator.language || 'en-US';
+ *
+ * The locale comes from `navigator`, never from the provider; during server
+ * rendering there is no `navigator` at all, so it is `en-US` every time and a
+ * patched `fa-IR` bundle would be dead code on the first byte. That is the
+ * `LocalizedStringProvider` finding at the top of this file, reached from the
+ * opposite direction — and it is why this file's answer is props.
+ *
+ * So the date family renders `<FieldError>` ONLY when the author supplied a
+ * message, and `DateBounds` in `packages/ui/src/date-field.tsx` makes that
+ * message a REQUIRED prop the moment any bound exists. Adding a `minValue` to a
+ * field is a compile error until its message is written. Not added to
+ * `LumoStrings`: these sentences are about a specific product's rules, so the
+ * library cannot author them — it can only refuse to let you forget.
+ *
+ * Note what is NOT in any of these lists: the Persian date itself renders
+ * correctly with zero configuration (`۱۴۰۵ مرداد ۱۹, دوشنبه`), as do Persian
+ * numerals and the RTL keyboard semantics. Only the English verbs leak.
  */
 export interface LumoStrings {
   comboBox: {
@@ -136,10 +188,34 @@ export interface LumoStrings {
     /** Reachable via `aria-label` on `<Button slot="previous">`. */
     previousMonth: string;
     /**
-     * Leak: `aria-label="Next"`. Reachable via `<Button slot="next">` — but note
-     * a SECOND internal "Next" survives, composed by RAC. See the file header.
+     * Leak: `aria-label="Next"`. Reachable via `<Button slot="next">`.
+     *
+     * The SECOND, composed "Next" that once survived alongside it is closed by
+     * the patch — the bundle it came from now answers in Persian. Both routes
+     * are kept: the prop is the contract, the bundle is the backstop, and they
+     * carry the same words so a reader never hears two different ones.
      */
     nextMonth: string;
+  };
+
+  datePicker: {
+    /**
+     * The button that opens a DatePicker's or DateRangePicker's calendar.
+     *
+     * Leak: `aria-label="Calendar"` — composed by RAC from the `calendar` key
+     * of its datepicker bundle and appended to the field's own name, so the
+     * unpatched announcement is «تاریخ سفر, Calendar»: a Persian noun inside an
+     * English name, which is the half-translated shape this file exists to
+     * prevent.
+     *
+     * Reachable via `aria-label` on the trigger `<Button>`, and it REPLACES
+     * rather than duplicates — verified by rendering: with the prop set, the
+     * word appears exactly once in the output. That is worth stating because
+     * the same move on NumberField's `<Group>` emits BOTH values and English
+     * wins; which element accepts an override is a per-component fact, and the
+     * only way to know it is to render and grep.
+     */
+    openCalendar: string;
   };
 }
 
@@ -159,6 +235,7 @@ export const fa: LumoStrings = {
     roleDescription: "فیلد عددی",
   },
   calendar: { previousMonth: "ماه قبل", nextMonth: "ماه بعد" },
+  datePicker: { openCalendar: "باز کردن تقویم" },
 };
 
 export const en: LumoStrings = {
@@ -170,6 +247,7 @@ export const en: LumoStrings = {
     roleDescription: "Number field",
   },
   calendar: { previousMonth: "Previous month", nextMonth: "Next month" },
+  datePicker: { openCalendar: "Open calendar" },
 };
 
 /**

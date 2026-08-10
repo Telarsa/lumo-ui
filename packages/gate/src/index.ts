@@ -1,10 +1,70 @@
 import { parseHTML } from "linkedom";
-import { RULES, type Doc, type Rule, type Violation } from "./rules.ts";
+import { RULES, digitSystem, type DigitSystem, type Doc, type Rule, type Violation } from "./rules.ts";
 
 export * from "./rules.ts";
 
-/** Locales this gate knows how to grade, and the direction each must declare. */
-const KNOWN: Record<string, "rtl" | "ltr"> = { "fa-IR": "rtl", "en-US": "ltr" };
+/**
+ * The digit sets, one per numbering system rather than one per locale — several
+ * locales share a system, and the range is a property of the system.
+ *
+ * `name` is what a violation message calls them. "Persian" is deliberate and
+ * load-bearing: it is the word the floor rule printed when the range was
+ * hardwired, so a `fa-IR` violation still reads byte-for-byte as it always did.
+ */
+const ARABEXT = digitSystem("Persian", "arabext", "۰"); // U+06F0–U+06F9
+const ARAB = digitSystem("Arabic-Indic", "arab", "٠"); //  U+0660–U+0669
+const LATN = digitSystem("Latin", "latn", "0"); //         U+0030–U+0039
+
+/** Everything the gate needs to know about a locale to grade a page in it. */
+export interface LocaleGrading {
+  direction: "rtl" | "ltr";
+  digits: DigitSystem;
+}
+
+/**
+ * Locales this gate knows how to grade.
+ *
+ * Two properties, deliberately independent. Direction was once used as a stand-in
+ * for "numbers in its own digits", which is true of Persian and Arabic and false
+ * in both directions in general — Urdu is rtl and commonly latn, and nothing
+ * about ltr implies Latin numerals. Conflating them is why the digit rules were
+ * silently Persian-only, so both are stated.
+ *
+ * This table is the gate's OWN scope and is deliberately wider than
+ * `@lumo-ui/core`'s `Locale` union: core's union is the set of locales the
+ * LIBRARY ships complete string sets for, while this is the set of locales the
+ * grader can grade — including a consumer's, whose HTML it is handed but whose
+ * translations it does not own. `ar-SA` is here for that reason and because a
+ * parametrisation with one instantiation is indistinguishable from a hardwire;
+ * `fixtures/locales/` grades real Arabic bytes through it.
+ */
+const KNOWN: Record<string, LocaleGrading> = {
+  "fa-IR": { direction: "rtl", digits: ARABEXT },
+  "ar-SA": { direction: "rtl", digits: ARAB },
+  "en-US": { direction: "ltr", digits: LATN },
+};
+
+/** The locales `localeForPath` will accept. Used by the gate's own self-test. */
+export function knownLocales(): string[] {
+  return Object.keys(KNOWN);
+}
+
+/**
+ * How a locale is graded. Throws rather than defaulting: a locale with no entry
+ * would otherwise be graded against some other locale's digits, which is a
+ * wrong answer wearing a green tick.
+ */
+export function gradingFor(locale: string): LocaleGrading {
+  const grading = KNOWN[locale];
+  if (!grading) {
+    throw new Error(
+      `No grading rules for locale ${JSON.stringify(locale)}. Add it to KNOWN in ` +
+        `packages/gate/src/index.ts with its direction AND its numbering system — ` +
+        `a locale graded against another locale's digits reports green on defects.`,
+    );
+  }
+  return grading;
+}
 
 /**
  * Derives the expected locale from a route path.
@@ -37,7 +97,7 @@ export function localeForPath(
     "_not-found/index.html", "_not-found.html",
   ]);
   if (ROOT_DOCS.has(clean)) {
-    return { locale: rootLocale, direction: KNOWN[rootLocale]! };
+    return { locale: rootLocale, direction: gradingFor(rootLocale).direction };
   }
   // The locale may be any segment, not only the first: preview routes are
   // /view/<locale>/<slug>/. Scanning rather than assuming a position means a new
@@ -53,13 +113,21 @@ export function localeForPath(
         `An ungraded page is an unprotected page.`,
     );
   }
-  return { locale: match, direction: KNOWN[match]! };
+  return { locale: match, direction: gradingFor(match).direction };
 }
 
 export function gradeHtml(path: string, html: string, rules: Rule[] = RULES): Violation[] {
   const { locale, direction } = localeForPath(path);
   const { document } = parseHTML(html);
-  const doc: Doc = { path, document: document as unknown as Document, locale, direction };
+  // `localeForPath` deliberately still returns only locale+direction: it answers
+  // "which page is this", and the digit set is looked up from the same table.
+  const doc: Doc = {
+    path,
+    document: document as unknown as Document,
+    locale,
+    direction,
+    digits: gradingFor(locale).digits,
+  };
   return rules.flatMap((r) => r.run(doc));
 }
 

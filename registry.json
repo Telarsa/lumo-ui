@@ -232,6 +232,33 @@
       ]
     },
     {
+      "name": "calendar",
+      "type": "registry:ui",
+      "title": "Calendar",
+      "description": "A month grid, in the reader's own calendar system.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/calendar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/calendar.tsx"
+        },
+        {
+          "path": "packages/ui/src/calendar.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar.variants.ts"
+        }
+      ]
+    },
+    {
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
@@ -381,6 +408,79 @@
           "path": "packages/ui/src/context-menu.tsx",
           "type": "registry:ui",
           "target": "components/ui/context-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "date-field",
+      "type": "registry:ui",
+      "title": "Date Field",
+      "description": "A date typed segment by segment: ۱۴۰۵ / ۵ / ۱۹.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "calendar",
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/date-field.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "date-picker",
+      "type": "registry:ui",
+      "title": "Date Picker",
+      "description": "A typed date with a calendar behind a button.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "calendar",
+        "date-field",
+        "form",
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/date-picker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-picker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "date-range-picker",
+      "type": "registry:ui",
+      "title": "Date Range Picker",
+      "description": "Two typed dates and a range grid behind one button.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "lucide-react",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "calendar",
+        "date-field",
+        "date-picker",
+        "form",
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/date-range-picker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-range-picker.tsx"
         }
       ]
     },
@@ -929,6 +1029,28 @@
       ]
     },
     {
+      "name": "range-calendar",
+      "type": "registry:ui",
+      "title": "Range Calendar",
+      "description": "A month grid that selects a span of days.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "calendar",
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/range-calendar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/range-calendar.tsx"
+        }
+      ]
+    },
+    {
       "name": "rating",
       "type": "registry:ui",
       "title": "Rating",
@@ -1357,6 +1479,29 @@
       ]
     },
     {
+      "name": "time-field",
+      "type": "registry:ui",
+      "title": "Time Field",
+      "description": "A time typed segment by segment: ۲۳:۴۵.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "registryDependencies": [
+        "calendar",
+        "date-field",
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/time-field.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/time-field.tsx"
+        }
+      ]
+    },
+    {
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
@@ -1398,6 +1543,29 @@
       ]
     },
     {
+      "name": "toggle",
+      "type": "registry:ui",
+      "title": "Toggle",
+      "description": "ONE two-state button. Bold on / bold off, muted / unmuted, pinned / unpinned.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/toggle.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/toggle.tsx"
+        },
+        {
+          "path": "packages/ui/src/toggle.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/toggle.variants.ts"
+        }
+      ]
+    },
+    {
       "name": "toolbar",
       "type": "registry:ui",
       "title": "Toolbar",
@@ -1435,6 +1603,29 @@
           "path": "packages/ui/src/tooltip.tsx",
           "type": "registry:ui",
           "target": "components/ui/tooltip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tree",
+      "type": "registry:ui",
+      "title": "Tree",
+      "description": "A nested outline: folders, a category hierarchy, an org chart's reporting line.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "react-aria-components"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/tree.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tree.tsx"
+        },
+        {
+          "path": "packages/ui/src/tree.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/tree.variants.ts"
         }
       ]
     },

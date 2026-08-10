@@ -573,19 +573,25 @@ export {
   ChartData,
   ChartLegend,
   ChartLegendContent,
+  ChartPie,
+  ChartPieCenter,
   ChartStyle,
   ChartTooltip,
   ChartTooltipContent,
   ChartValueAxis,
+  ChartValueLabelList,
 } from "./chart.tsx";
 export type {
   ChartAxisProps,
   ChartContainerProps,
   ChartDataProps,
   ChartLegendContentProps,
+  ChartPieCenterProps,
+  ChartPieProps,
   ChartRow,
   ChartTooltipContentProps,
   ChartTooltipProps,
+  ChartValueLabelListProps,
 } from "./chart.tsx";
 
 /*
@@ -597,12 +603,15 @@ export type {
  * would make them client references and fail that page's prerender.
  */
 export {
+  CHART_PIE_SWEEP,
+  CHART_PIE_SWEEP_HALF,
   chartColor,
   chartColorVar,
   chartContainerVariants,
   chartLegendItemVariants,
   chartLegendVariants,
   chartMirror,
+  chartPieCenterVariants,
   chartStyleSheet,
   chartTickFormatter,
   chartTooltipIndicatorVariants,
@@ -613,6 +622,7 @@ export type {
   ChartCrossAxisMirror,
   ChartMainAxisMirror,
   ChartMirror,
+  ChartPieSweep,
 } from "./chart.variants.ts";
 
 export {
@@ -799,3 +809,76 @@ export type {
   SidebarSectionProps,
   SidebarTriggerProps,
 } from "./sidebar.tsx";
+
+export { Calendar, CalendarHeader } from "./calendar.tsx";
+export type { CalendarHeaderProps, CalendarProps } from "./calendar.tsx";
+
+/*
+ * The whole date family's classes come from ONE directive-free module, and they
+ * come from it DIRECTLY — never through the six components, every one of which
+ * carries "use client". Same rule as `pagination.variants.ts` above, and the
+ * same reason: a re-export routed through a client module is a client reference
+ * for every importer however server-safe its definition is. A server component
+ * rendering a static month beside the interactive calendar needs these.
+ */
+export {
+  calendarCellVariants,
+  calendarGridVariants,
+  calendarHeaderCellVariants,
+  calendarHeaderVariants,
+  calendarHeadingVariants,
+  calendarNavButtonVariants,
+  calendarVariants,
+  dateInputVariants,
+  dateLiteralVariants,
+  datePickerGroupVariants,
+  datePickerTriggerVariants,
+  dateRangeSeparatorVariants,
+  dateSegmentVariants,
+  rangeCalendarCellVariants,
+} from "./calendar.variants.ts";
+
+export { DateField, renderSegment } from "./date-field.tsx";
+export type { DateBounds, DateFieldProps, DateFieldSize } from "./date-field.tsx";
+
+export { DatePicker, renderPickerCell, renderPickerHeaderCell } from "./date-picker.tsx";
+export type { DatePickerProps } from "./date-picker.tsx";
+
+export { DateRangePicker } from "./date-range-picker.tsx";
+export type { DateRangePickerProps } from "./date-range-picker.tsx";
+
+export { RangeCalendar } from "./range-calendar.tsx";
+export type { RangeCalendarProps } from "./range-calendar.tsx";
+
+export { TimeField } from "./time-field.tsx";
+export type { TimeFieldProps } from "./time-field.tsx";
+
+/*
+ * The standalone two-state button. Its set-of-options sibling is
+ * `toggle-group.tsx` further up — `ToggleButton` / `ToggleButtonGroup`.
+ */
+export { IconToggle, Toggle } from "./toggle.tsx";
+export type { IconToggleProps, ToggleProps } from "./toggle.tsx";
+
+/* Directive-free module, direct — same rule as the date family above. */
+export { toggleVariants } from "./toggle.variants.ts";
+export type { ToggleVariantProps } from "./toggle.variants.ts";
+
+export { Tree, TreeItem } from "./tree.tsx";
+export type { TreeItemProps, TreeProps } from "./tree.tsx";
+
+/*
+ * Same rule again. A server component rendering a static outline beside the
+ * interactive tree calls `treeChevronTurnFor(locale)` and the row classes.
+ */
+export {
+  TREE_CHEVRON_GLYPH,
+  treeChevronGlyphVariants,
+  treeChevronTurn,
+  treeChevronTurnFor,
+  treeChevronVariants,
+  treeItemVariants,
+  treeLeafSpacerVariants,
+  treeVariants,
+} from "./tree.variants.ts";
+export type { TreeChevronTurn } from "./tree.variants.ts";

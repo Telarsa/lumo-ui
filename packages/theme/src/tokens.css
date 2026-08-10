@@ -109,10 +109,80 @@
     --lumo-ref-radius-md: calc(0.5rem   * var(--lumo-ref-radius-scale));
     --lumo-ref-radius-lg: calc(0.625rem * var(--lumo-ref-radius-scale));
 
-    /* ---- control height. The 44px floor is Khroos's stated touch target. - */
+    /* ---- control height ------------------------------------------------
+     *
+     * `lg` is a FLOOR, so density cannot lower it — `max()`, not `calc()`.
+     * Round 4's review measured the previous arithmetic: 2.75rem × 0.9 = 39.6px
+     * at the shipped density and 33px under compact, while the docs told the
+     * reader in both locales that lg "meets the forty-four pixel touch floor".
+     * A floor that a knob can scale away is not a floor; it is a default with a
+     * reassuring comment. Density still SCALES lg upward (a roomier brand gets
+     * a bigger target), it simply cannot take it below Khroos's 44px. sm and md
+     * are not floors and scale freely.
+     */
     --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
     --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
-    --lumo-ref-control-lg: calc(2.75rem  * var(--lumo-ref-density));
+    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
+  }
+
+  /* ---- the density ISLAND. One attribute hook: [data-density]. -----------
+   *
+   * `[data-theme]` made a subtree's THEME expressible without owning the
+   * document; this is the same move for its proportions, and the docs preview
+   * stage uses it exactly the same way. `comfortable` restates the shipped
+   * default (0.9) rather than inventing a looser value, so the two options
+   * BRACKET what the library already ships and the control can start truthfully
+   * selected instead of claiming nothing.
+   *
+   * Stating BOTH values, not only the compact one, is the lesson `[data-theme]`
+   * learned the expensive way: a system that can scope one direction and not the
+   * other leaves a stage stamped "comfortable" inside a compact page silently
+   * inheriting compact, and the button that set it does nothing.
+   *
+   * ── WHY THE DERIVED RAMP IS RESTATED AND NOT JUST THE KNOB ───────────────
+   *
+   * Setting `--lumo-ref-density` alone here would change NOTHING, and the reason
+   * is a property of custom properties rather than of this file. An unregistered
+   * custom property's `var()` is substituted at computed-value time ON THE
+   * ELEMENT WHERE THE DECLARATION SITS: `--lumo-ref-control-md` is declared on
+   * `:root`, so its `calc()` has already consumed `:root`'s density before any
+   * descendant exists. Descendants inherit the finished length, not the formula.
+   * So the island restates every derivation that reads the knob — which is also
+   * why this rule is the ONE place that has to be kept in step with the ramp
+   * above it.
+   *
+   * ── WHAT DENSITY MOVES, AND WHAT IT DELIBERATELY DOES NOT ────────────────
+   *
+   * Control heights, through `--lumo-ref-control-*` — every button, input,
+   * select, toggle and segmented item reads them, so this is the visible change.
+   * Tailwind's own `--spacing` is NOT touched: v4 computes `size-*` from the
+   * same variable as `p-*`, so scaling it would shrink every ICON with the
+   * padding, and a control that shrinks icons is a zoom, not a density.
+   */
+  [data-density="comfortable"] {
+    --lumo-ref-density: 0.9;
+    --lumo-ref-space-1: calc(0.25rem * var(--lumo-ref-density));
+    --lumo-ref-space-2: calc(0.5rem  * var(--lumo-ref-density));
+    --lumo-ref-space-3: calc(0.75rem * var(--lumo-ref-density));
+    --lumo-ref-space-4: calc(1rem    * var(--lumo-ref-density));
+    --lumo-ref-space-6: calc(1.5rem  * var(--lumo-ref-density));
+    --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
+    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
+    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
+    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
+  }
+
+  [data-density="compact"] {
+    --lumo-ref-density: 0.75;
+    --lumo-ref-space-1: calc(0.25rem * var(--lumo-ref-density));
+    --lumo-ref-space-2: calc(0.5rem  * var(--lumo-ref-density));
+    --lumo-ref-space-3: calc(0.75rem * var(--lumo-ref-density));
+    --lumo-ref-space-4: calc(1rem    * var(--lumo-ref-density));
+    --lumo-ref-space-6: calc(1.5rem  * var(--lumo-ref-density));
+    --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
+    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
+    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
+    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
   }
 }
 

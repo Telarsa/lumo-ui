@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Rows2, Rows4, Sun } from "lucide-react";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { direction } from "@lumo-ui/core";
+import { oppositeDirectionLocale } from "@/lib/locale";
 import { SegmentedControl, SegmentedControlItem } from "@lumo-ui/ui";
 
 /**
@@ -53,6 +54,26 @@ import { SegmentedControl, SegmentedControlItem } from "@lumo-ui/ui";
  * direction does. So theme is real client state, scoped to the preview's own
  * wrapper rather than `<html>` — it restyles only the box below, and leaves the
  * site's own chrome (and its independent `ThemeToggle`) untouched.
+ *
+ * ── DENSITY IS THEME'S TWIN, WITH ONE DIFFERENCE ────────────────────────────
+ *
+ * v0.5 shipped without this control and ROADMAP.md recorded why: "the token
+ * exists, the toolbar does not expose it yet". It does now, by the same
+ * mechanism — a `data-density` stamp on the stage, which tokens.css answers with
+ * an island rule beside its `[data-theme]` ones. Two notes worth keeping:
+ *
+ *  1. **The roadmap named the wrong token.** It says `--lumo-density`; the knob
+ *     is `--lumo-ref-density`, at the `ref` tier, and the island has to restate
+ *     the derived control heights rather than only the knob — a custom
+ *     property's `calc()` is substituted where it is DECLARED, so a descendant
+ *     that changes only the knob inherits an already-multiplied length and
+ *     nothing moves. tokens.css's own comment carries the full explanation.
+ *  2. **Density needs no mount gate, and theme does.** The effective theme
+ *     depends on `prefers-color-scheme`, which the server cannot see, so the
+ *     theme control starts as `null` and reads the document after mount. Density
+ *     has no OS input at all: `comfortable` IS the shipped default, so stamping
+ *     it during the server render changes nothing visually and lets the control
+ *     be honestly selected in the very first byte.
  */
 
 export interface PreviewToolbarProps {
@@ -62,6 +83,7 @@ export interface PreviewToolbarProps {
 }
 
 type Theme = "light" | "dark";
+type Density = "comfortable" | "compact";
 
 const COPY: Record<
   Locale,
@@ -72,6 +94,9 @@ const COPY: Record<
     themeGroup: string;
     light: string;
     dark: string;
+    densityGroup: string;
+    comfortable: string;
+    compact: string;
   }
 > = {
   "fa-IR": {
@@ -81,6 +106,9 @@ const COPY: Record<
     themeGroup: "پوستهٔ پیش‌نمایش",
     light: "روشن",
     dark: "تیره",
+    densityGroup: "تراکم پیش‌نمایش",
+    comfortable: "معمولی",
+    compact: "فشرده",
   },
   "en-US": {
     directionGroup: "Preview direction",
@@ -89,6 +117,9 @@ const COPY: Record<
     themeGroup: "Preview theme",
     light: "Light",
     dark: "Dark",
+    densityGroup: "Preview density",
+    comfortable: "Comfortable",
+    compact: "Compact",
   },
 };
 
@@ -104,6 +135,13 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
    * document instead of asserted.
    */
   const [theme, setTheme] = useState<Theme | null>(null);
+  /*
+   * No `null` here, unlike theme. `comfortable` is the value tokens.css already
+   * ships on `:root`, so stamping it during the server render is a no-op that
+   * the reader cannot see — and it buys a control that is correctly selected in
+   * the first byte instead of one that briefly claims nothing.
+   */
+  const [density, setDensity] = useState<Density>("comfortable");
   const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -117,15 +155,34 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
 
   /** Flip the stage with the same one-frame transition kill the header uses. */
   function setStageTheme(next: Theme) {
+    snap(() => setTheme(next));
+  }
+
+  /**
+   * Density gets the same treatment for the same reason: control heights come
+   * from tokens, dozens of surfaces carry `transition-colors`/`transition-all`
+   * for hover feedback, and a token swap under a transition reads as a smear
+   * rather than a change. `globals.css`'s `.lumo-theme-snap` is not
+   * theme-specific — it kills transitions on the subtree for one frame — so it
+   * is the right tool for any token flip, and reusing it keeps ONE rule to
+   * maintain instead of a second one that will drift.
+   */
+  function setStageDensity(next: Density) {
+    snap(() => setDensity(next));
+  }
+
+  function snap(apply: () => void) {
     const stage = stageRef.current;
     stage?.classList.add("lumo-theme-snap");
-    setTheme(next);
+    apply();
+    // One frame for the restyled paint, one to be safely past it — the double
+    // rAF `theme-toggle.tsx` uses on the document.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => stage?.classList.remove("lumo-theme-snap"));
     });
   }
   const t = COPY[lang];
-  const otherLang: Locale = lang === "fa-IR" ? "en-US" : "fa-IR";
+  const otherLang = oppositeDirectionLocale(lang);
   const dir = direction(lang);
   const otherDir = direction(otherLang);
 
@@ -201,6 +258,38 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
             <Moon aria-hidden="true" />
           </SegmentedControlItem>
         </SegmentedControl>
+
+        {/*
+         * The deferred v0.5 control, beside its twin. Same component, same
+         * shape, same stage — the only difference is that this one knows its
+         * own initial value without asking the document.
+         */}
+        <SegmentedControl
+          label={t.densityGroup}
+          selectedKeys={[density]}
+          onSelectionChange={(keys) => {
+            const next = [...keys][0];
+            if (next === "comfortable" || next === "compact") setStageDensity(next);
+          }}
+        >
+          <SegmentedControlItem
+            id="comfortable"
+            size="sm"
+            aria-label={t.comfortable}
+            className="h-6 px-2 [&_svg]:size-3.5"
+          >
+            {/* Two rows vs four in the same box: the glyph IS the proportion. */}
+            <Rows2 aria-hidden="true" />
+          </SegmentedControlItem>
+          <SegmentedControlItem
+            id="compact"
+            size="sm"
+            aria-label={t.compact}
+            className="h-6 px-2 [&_svg]:size-3.5"
+          >
+            <Rows4 aria-hidden="true" />
+          </SegmentedControlItem>
+        </SegmentedControl>
       </div>
 
       {/*
@@ -221,6 +310,15 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
       <div
         ref={stageRef}
         data-theme={theme ?? undefined}
+        /*
+         * Scoped exactly like `data-theme` above, and answered by exactly the
+         * same kind of rule: tokens.css defines `[data-density="compact"]` and
+         * `[data-density="comfortable"]` without a `:root` qualifier, so a
+         * subtree can carry proportions of its own. Both values are stamped
+         * explicitly — the half-scoped theme system this stage already exposed
+         * once is the reason neither direction is left implicit.
+         */
+        data-density={density}
         data-lumo-demo-root=""
         /*
          * The preview is a STAGE, not a paragraph: a generous minimum height

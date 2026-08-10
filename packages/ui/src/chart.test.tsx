@@ -19,17 +19,33 @@
  * build fails instead of the dashboard quietly growing an axis of Latin digits.
  */
 
+import type { ReactNode } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Bar, BarChart, Legend } from "recharts";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  LabelList,
+  Legend,
+  Line,
+  LineChart,
+  Pie,
+  PieChart,
+} from "recharts";
 
 import {
+  CHART_PIE_SWEEP,
+  CHART_PIE_SWEEP_HALF,
   ChartCategoryAxis,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
+  ChartPie,
   ChartValueAxis,
+  ChartValueLabelList,
   chartColor,
   chartMirror,
   chartStyleSheet,
@@ -297,6 +313,288 @@ describe("chart — recharts' OWN legend is the thing being replaced, not restyl
     // recharts' default markup, which we are NOT rendering: an <li> carrying an
     // inline `margin-right`. Its absence is the assertion.
     expect(legend?.querySelector("li")).toBeNull();
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE OTHER THREE SHAPES
+ *
+ * Bar was the first. Line, area and pie arrive with one new question each:
+ * does the curve mirror with the axis (it does, and nothing extra says so), and
+ * does the pie's sweep mirror (it does not, and that is a decision — see
+ * `chart.variants.ts` above `CHART_PIE_SWEEP`).
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+const pieData = [
+  { category: "خوراک", value: 50 },
+  { category: "پوشاک", value: 50 },
+];
+
+const pieConfig = {
+  category: { label: "دسته" },
+  value: { label: "سهم", color: "oklch(0.6 0.15 250)" },
+} satisfies ChartConfig;
+
+/** The first `M x,y` of a path, which for a sector is where the sweep begins. */
+function firstPoint(d: string): { x: number; y: number } {
+  const m = /M\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)/.exec(d);
+  if (!m) throw new Error(`no move-to in ${JSON.stringify(d)}`);
+  return { x: Number(m[1]), y: Number(m[2]) };
+}
+
+/**
+ * The final `L x,y` of a sector path — recharts closes a sector by drawing back
+ * to the pie's centre, so this is the centre without having to compute it.
+ */
+function centrePoint(d: string): { x: number; y: number } {
+  const tail = d.slice(d.lastIndexOf("L"));
+  const m = /L\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)/.exec(tail);
+  if (!m) throw new Error(`no closing line-to in ${JSON.stringify(d)}`);
+  return { x: Number(m[1]), y: Number(m[2]) };
+}
+
+/**
+ * The `sweep-flag` of a path's first arc. SVG defines 1 as "the arc is drawn in
+ * the direction of increasing angle" — clockwise, in a y-down coordinate system.
+ */
+function sweepFlag(d: string): number {
+  const a = /A\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*,\s*([01])\s*,\s*([01])\s*,/.exec(
+    d.replace(/\s+/g, " "),
+  );
+  if (!a) throw new Error(`no arc in ${JSON.stringify(d)}`);
+  return Number(a[2]);
+}
+
+function sectorPaths(root: ParentNode): string[] {
+  return Array.from(root.querySelectorAll("path.recharts-sector")).map(
+    (p) => p.getAttribute("d") ?? "",
+  );
+}
+
+function LineDemo({ locale }: { locale: "fa-IR" | "en-US" }) {
+  return (
+    <ChartContainer
+      config={config}
+      locale={locale}
+      label="نمودار خطی فروش"
+      data={data}
+      categoryKey="month"
+      dataCaption="داده‌های فروش ماهانه"
+    >
+      <LineChart data={data} width={400} height={200}>
+        <ChartCategoryAxis dataKey="month" />
+        <ChartValueAxis />
+        <Line dataKey="sales" stroke={chartColor("sales")} isAnimationActive={false} />
+      </LineChart>
+    </ChartContainer>
+  );
+}
+
+function AreaDemo({ locale }: { locale: "fa-IR" | "en-US" }) {
+  return (
+    <ChartContainer
+      config={config}
+      locale={locale}
+      label="نمودار سطحی فروش"
+      data={data}
+      categoryKey="month"
+      dataCaption="داده‌های فروش ماهانه"
+    >
+      <AreaChart data={data} width={400} height={200}>
+        <ChartCategoryAxis dataKey="month" />
+        <ChartValueAxis />
+        <Area
+          dataKey="sales"
+          stroke={chartColor("sales")}
+          fill={chartColor("sales")}
+          isAnimationActive={false}
+        />
+      </AreaChart>
+    </ChartContainer>
+  );
+}
+
+function PieDemo({ locale }: { locale: "fa-IR" | "en-US" }) {
+  return (
+    <ChartContainer
+      config={pieConfig}
+      locale={locale}
+      label="سهم دسته‌ها از سبد خرید"
+      data={pieData}
+      categoryKey="category"
+      dataCaption="داده‌های سهم دسته‌ها"
+    >
+      <PieChart width={320} height={200}>
+        <ChartPie
+          data={pieData}
+          dataKey="value"
+          nameKey="category"
+          outerRadius={100}
+          isAnimationActive={false}
+        />
+      </PieChart>
+    </ChartContainer>
+  );
+}
+
+describe("chart — line and area mirror through the axis and need nothing else", () => {
+  it("the first plotted point sits at the reading start, in both shapes", () => {
+    const { container: faLine } = render(<LineDemo locale="fa-IR" />);
+    const faCurve = faLine.querySelector(".recharts-line-curve")?.getAttribute("d") ?? "";
+    cleanup();
+    const { container: enLine } = render(<LineDemo locale="en-US" />);
+    const enCurve = enLine.querySelector(".recharts-line-curve")?.getAttribute("d") ?? "";
+
+    expect(faCurve).not.toBe("");
+    expect(enCurve).not.toBe("");
+    // The claim in chart.tsx's header, made checkable: `reversed` acts on the
+    // scale's RANGE, so the curve mirrors with the category axis and there is
+    // no second thing for an author to remember. Persian starts on the right.
+    expect(firstPoint(faCurve).x).toBeGreaterThan(firstPoint(enCurve).x);
+  });
+
+  it("the area's fill mirrors with its own curve rather than staying behind", () => {
+    const { container: fa } = render(<AreaDemo locale="fa-IR" />);
+    const faArea = fa.querySelector(".recharts-area-area")?.getAttribute("d") ?? "";
+    cleanup();
+    const { container: en } = render(<AreaDemo locale="en-US" />);
+    const enArea = en.querySelector(".recharts-area-area")?.getAttribute("d") ?? "";
+
+    expect(faArea).not.toBe("");
+    expect(firstPoint(faArea).x).toBeGreaterThan(firstPoint(enArea).x);
+  });
+
+  it("still serves the figures, because ChartContainer renders the table for every shape", () => {
+    const html = renderToStaticMarkup(<AreaDemo locale="fa-IR" />);
+    expect(html).toContain("<table");
+    expect(html).toContain("۱٬۲۰۰");
+    expect(html).not.toContain("<svg");
+  });
+});
+
+describe("chart — the pie's sweep is a decision, and the decision is not to mirror", () => {
+  it("starts at the block start and winds clockwise", () => {
+    const { container } = render(<PieDemo locale="fa-IR" />);
+    const [first] = sectorPaths(container);
+    expect(first).toBeTruthy();
+
+    // cy − outerRadius: 12 o'clock. The centre is at the chart's own midpoint,
+    // so the assertion is "the sweep begins directly above the centre".
+    const start = firstPoint(first!);
+    const centre = centrePoint(first!);
+    expect(start.x).toBeCloseTo(centre.x, 5);
+    expect(start.y).toBeLessThan(centre.y);
+    // 1 = increasing angle = clockwise in SVG's y-down space.
+    expect(sweepFlag(first!)).toBe(1);
+  });
+
+  it("draws IDENTICAL geometry under fa-IR and en-US — the whole argument, as an assertion", () => {
+    const { container: fa } = render(<PieDemo locale="fa-IR" />);
+    const faSectors = sectorPaths(fa);
+    cleanup();
+    const { container: en } = render(<PieDemo locale="en-US" />);
+    const enSectors = sectorPaths(en);
+
+    expect(faSectors.length).toBe(2);
+    /*
+     * Two mirror-imaged pies of one dataset read as two datasets — a sector
+     * changes its neighbours and its side under a flip, where a bar only changes
+     * its position and keeps its height. So the pie is the ONE place in this
+     * file where equality between the directions is the correct result, and
+     * this test is what stops a well-meaning future reader from "fixing" it.
+     */
+    expect(faSectors).toEqual(enSectors);
+  });
+
+  it("recharts' own default is neither: 3 o'clock, counter-clockwise", () => {
+    const { container } = render(
+      <ChartContainer
+        config={pieConfig}
+        locale="fa-IR"
+        label="سهم دسته‌ها از سبد خرید"
+        data={pieData}
+        categoryKey="category"
+        dataCaption="داده‌های سهم دسته‌ها"
+      >
+        <PieChart width={320} height={200}>
+          <Pie
+            data={pieData}
+            dataKey="value"
+            nameKey="category"
+            outerRadius={100}
+            isAnimationActive={false}
+          />
+        </PieChart>
+      </ChartContainer>,
+    );
+    const [first] = sectorPaths(container);
+    const start = firstPoint(first!);
+    const centre = centrePoint(first!);
+    // Starts level with the centre and to its right — 3 o'clock — and winds the
+    // other way. Pinned rather than merely described: if a recharts release
+    // changes its default, CHART_PIE_SWEEP's justification changes with it.
+    expect(start.y).toBeCloseTo(centre.y, 5);
+    expect(start.x).toBeGreaterThan(centre.x);
+    expect(sweepFlag(first!)).toBe(0);
+  });
+
+  it("the sweep constants are a full turn and a half turn of the same winding", () => {
+    expect(CHART_PIE_SWEEP.startAngle - CHART_PIE_SWEEP.endAngle).toBe(360);
+    expect(CHART_PIE_SWEEP_HALF.startAngle - CHART_PIE_SWEEP_HALF.endAngle).toBe(180);
+    // Decreasing angle in recharts' counter-clockwise degree space is clockwise
+    // on screen. Both constants have to agree about that or a donut and a gauge
+    // in one dashboard would wind opposite ways.
+    expect(CHART_PIE_SWEEP.endAngle).toBeLessThan(CHART_PIE_SWEEP.startAngle);
+    expect(CHART_PIE_SWEEP_HALF.endAngle).toBeLessThan(CHART_PIE_SWEEP_HALF.startAngle);
+  });
+
+  it("is not a second, unnameable tab stop", () => {
+    const { container } = render(<PieDemo locale="fa-IR" />);
+    const root = container.querySelector(".recharts-pie");
+    // recharts' `defaultPieProps` sets `rootTabIndex: 0` on a <g> that receives
+    // no other prop — verified in `PieImpl`, which passes it only `tabIndex` and
+    // `className`. A tab stop that cannot be named is removed from the tab order
+    // instead; the named `role="application"` surface is the way in.
+    expect(root?.getAttribute("tabindex")).toBe("-1");
+    // And no sector claims the chart's name: forwarding `aria-label` put the
+    // SAME name on every sector path, which is worse than none.
+    expect(container.querySelectorAll("path.recharts-sector[aria-label]")).toHaveLength(0);
+  });
+});
+
+describe("chart — a figure drawn on the plot is formatted like every other figure", () => {
+  const withList = (list: ReactNode) => (
+    <ChartContainer
+      config={config}
+      locale="fa-IR"
+      label="نمودار فروش ماهانه"
+      data={data}
+      categoryKey="month"
+      dataCaption="داده‌های فروش ماهانه"
+    >
+      <BarChart data={data} width={400} height={200}>
+        <Bar dataKey="sales" fill={chartColor("sales")} isAnimationActive={false}>
+          {list}
+        </Bar>
+      </BarChart>
+    </ChartContainer>
+  );
+
+  it("ChartValueLabelList draws Persian digits", () => {
+    const { container } = render(
+      withList(<ChartValueLabelList dataKey="sales" position="top" />),
+    );
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "");
+    expect(texts).toContain("۱٬۲۰۰");
+    expect(texts.some((t) => ASCII_DIGIT.test(t))).toBe(false);
+  });
+
+  it("a bare recharts LabelList draws Latin ones — the defect being replaced", () => {
+    const { container } = render(withList(<LabelList dataKey="sales" position="top" />));
+    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "");
+    // Measured: `1200`, `2400`. The value never passes through JSX, so LumoNode
+    // cannot catch it and no gate can see it — recharts serves no bytes.
+    expect(texts).toContain("1200");
   });
 });
 

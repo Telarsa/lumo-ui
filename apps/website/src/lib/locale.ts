@@ -1,5 +1,5 @@
 import type { Locale } from "@lumo-ui/core";
-import { LOCALES } from "@lumo-ui/core";
+import { LOCALES, direction } from "@lumo-ui/core";
 
 /**
  * Locale is a ROUTE SEGMENT, never client state.
@@ -28,6 +28,34 @@ export function assertLocale(value: string): Locale {
     );
   }
   return value;
+}
+
+/**
+ * The locale a "both directions, side by side" exhibit mirrors a page against.
+ *
+ * Both the component and the block pages spelled this `lang === "fa-IR" ?
+ * "en-US" : "fa-IR"`, which is not copy but LOGIC — and logic that assumed the
+ * site would only ever serve two locales. With a third, a German page would have
+ * compared itself against Persian and an Arabic page against Persian too,
+ * neither of which demonstrates anything about direction, and no type would have
+ * objected. The exhibit exists to show BOTH DIRECTIONS, so it asks for a locale
+ * whose direction differs — derived, never a hand-kept pairing, which is the
+ * same rule `direction()` itself exists to enforce.
+ *
+ * Lives here rather than in either page because it is locale logic, not page
+ * chrome; the pages' own headers are right that a route file must not export
+ * helpers for a sibling route to import.
+ */
+export function oppositeDirectionLocale(lang: Locale): Locale {
+  const other = LOCALES.find((l) => direction(l) !== direction(lang));
+  if (!other) {
+    throw new Error(
+      `No locale with a direction opposite to ${JSON.stringify(lang)} is declared, so the ` +
+        `side-by-side comparison has nothing to show. Refusing to render the page's own ` +
+        `locale twice and call it a comparison.`,
+    );
+  }
+  return other;
 }
 
 /**
