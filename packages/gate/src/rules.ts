@@ -330,27 +330,66 @@ export const namedControls: Rule = {
 /**
  * Rule 6 — ARIA references must resolve.
  *
- * NOTE the deliberate limitation: this runs on PRERENDERED html, and React
- * Aria's SSR legitimately emits `aria-describedby` pointing at ids that only
- * exist after hydration. Verified: post-hydration the dangle count is 0. So
- * describedby is excluded here and belongs to the hydrated test tier. Only
- * `aria-labelledby` and `aria-controls` are graded, where a dangling reference
- * means the name is genuinely absent.
+ * ── `aria-describedby` WAS EXCLUDED WHOLESALE. IT IS NOW EXEMPTED BY ID. ────
+ *
+ * The exclusion was real and its reason was right: React Aria's server render
+ * legitimately emits `aria-describedby` pointing at ids that only exist after
+ * hydration (post-hydration the dangle count is 0), so grading the attribute
+ * under React Aria produced hundreds of violations for a defect that was not
+ * there. It was excluded, and described as belonging to the hydrated test tier.
+ *
+ * **The reason was never about the ATTRIBUTE. It was about one ENGINE.**
+ * Measured on the 442-document export of this branch, 11 Aug 2026:
+ *
+ *     dangling aria-describedby, total          301
+ *     …whose id begins `react-aria-`            301
+ *     …from Base UI, from Lumo, from anything    0
+ *
+ *     documents affected                         16
+ *     components                                  4  — date-picker,
+ *                                                      date-range-picker,
+ *                                                      time-field, list-box
+ *
+ * Those four are exactly the React Aria roots the Base UI migration has not
+ * reached. So the exclusion is narrowed to what it always meant: ids matching
+ * `react-aria-`, which that library mints and no other code in this tree does.
+ * Everything else is graded from now on.
+ *
+ * That matters because `form-state.tsx` made `aria-describedby` LOAD-BEARING:
+ * a validation error reaches the reader through that attribute and through
+ * nothing else. A dangling one is an error that is drawn and announced by
+ * nobody — visually identical to a working form. Under the old rule the gate
+ * could not see it. The gap was found by writing the poison twin for
+ * `form-state.test.tsx` and watching it fail to fire.
+ *
+ * ── THE EXEMPTION EXPIRES BY ITSELF ────────────────────────────────────────
+ *
+ * `react-aria-` ids stop being emitted when the last React Aria root goes. At
+ * that point this exemption matches nothing, and deleting it is a no-op that
+ * can be verified with a build rather than argued about — grep the export for
+ * `react-aria-`, and if the count is 0 delete the constant below. It is written
+ * as an exemption rather than a `TODO` for that reason.
  */
+const HYDRATION_DEFERRED_ID = /^react-aria-/;
+
 export const resolvedIdrefs: Rule = {
   id: "resolved-idrefs",
   because:
-    "A dangling aria-labelledby means the element has no name at all, while " +
-    "looking fully labelled in the markup.",
+    "A dangling aria-labelledby means the element has no name at all, and a " +
+    "dangling aria-describedby means its help text or validation error is " +
+    "announced by nobody — both while looking fully wired in the markup.",
   run: (doc) => {
     const ids = new Set(Array.from(doc.document.querySelectorAll("[id]")).map((e) => e.getAttribute("id")!));
     const v: Violation[] = [];
-    for (const attr of ["aria-labelledby", "aria-controls"]) {
+    // `aria-errormessage` is graded with the others and not separately: it is
+    // the same defect as a dangling describedby, on the attribute whose ONLY
+    // job is to carry a validation error.
+    for (const attr of ["aria-labelledby", "aria-controls", "aria-describedby", "aria-errormessage"]) {
       for (const el of Array.from(doc.document.querySelectorAll(`[${attr}]`))) {
         for (const ref of (el.getAttribute(attr) ?? "").split(/\s+/).filter(Boolean)) {
-          if (!ids.has(ref)) {
-            v.push({ rule: "resolved-idrefs", path: doc.path, detail: `${attr} points at missing id ${JSON.stringify(ref)}`, snippet: el.outerHTML.slice(0, 120) });
-          }
+          if (ids.has(ref)) continue;
+          if (HYDRATION_DEFERRED_ID.test(ref)) continue; // see the header
+          v.push({ rule: "resolved-idrefs", path: doc.path, detail: `${attr} points at missing id ${JSON.stringify(ref)}`, snippet: el.outerHTML.slice(0, 120) });
         }
       }
     }

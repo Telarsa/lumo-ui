@@ -76,16 +76,22 @@ const EXTERNAL = new Set([
   // Rendering dependencies, not behaviour ones. A consumer who copies chart.tsx
   // or carousel.tsx without these gets an unresolved import, and the smoke test
   // cannot see it: its node_modules symlink already has them.
-  "recharts",
+  //
+  // `recharts` WAS in this set and is gone with the pin (pnpm-workspace.yaml):
+  // `chart.tsx` stopped importing it on the TanStack swap, so the entry was
+  // telling every consumer of the `chart` item to install a renderer that item
+  // no longer contains. An EXTERNAL entry is only ever justified by an import
+  // that exists.
   "embla-carousel-react",
   "@base-ui/react",
-  // The renderer since 11 Aug 2026 (chart.tsx) and the two headless state
-  // layers (table.tsx, virtual-list.tsx). All three are imported by SUBPATH —
-  // `@tanstack/charts/react`, `@tanstack/charts/scales/linear` — which is
-  // exactly the case the `packageOf` matcher below exists for.
+  // The renderer since 11 Aug 2026 (chart.tsx) and the three headless state
+  // layers (table.tsx, virtual-list.tsx, form-state.tsx). All are imported by
+  // SUBPATH — `@tanstack/charts/react`, `@tanstack/charts/scales/linear` —
+  // which is exactly the case the `packageOf` matcher below exists for.
   "@tanstack/charts",
   "@tanstack/react-table",
   "@tanstack/react-virtual",
+  "@tanstack/react-form",
 ]);
 
 const items = [];

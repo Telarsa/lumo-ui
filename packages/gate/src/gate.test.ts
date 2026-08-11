@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { gradeHtml, gradingFor, knownLocales, localeForPath } from "./index.ts";
-import { RULES, digitSystem, persianDigitFloor } from "./rules.ts";
+import { RULES, digitSystem, persianDigitFloor, resolvedIdrefs } from "./rules.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "fixtures");
 const read = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -37,6 +37,41 @@ describe("self-test — every rule rejects its poison", () => {
       expect(v.map((x) => x.rule)).toContain(ruleId);
     });
   }
+
+  /*
+   * The `aria-describedby` half of resolved-idrefs, pinned from both sides.
+   *
+   * The rule used to skip the attribute entirely, because React Aria's server
+   * render dangles it by design. Measured on the 442-document export of this
+   * branch, ALL 301 dangling describedby references carried a `react-aria-` id
+   * and none came from Base UI or Lumo — so the exclusion narrowed from the
+   * attribute to that id prefix.
+   *
+   * Both directions need a test or the narrowing is reversible by accident:
+   * without the first, someone restores the wholesale exclusion and the gate
+   * silently stops grading the attribute `form-state.tsx` routes every
+   * validation error through; without the second, someone deletes the exemption
+   * early and 301 documents go red for a defect that is not there.
+   */
+  it("grades a dangling aria-describedby — a message announced by nobody", () => {
+    const html =
+      '<!doctype html><html lang="fa-IR" dir="rtl"><body>' +
+      '<label id="l">ایمیل</label>' +
+      '<input aria-labelledby="l" aria-describedby="gone" aria-invalid="true" />' +
+      "</body></html>";
+    const v = gradeHtml("fa-IR/index.html", html, [resolvedIdrefs]);
+    expect(v).toHaveLength(1);
+    expect(v[0]?.detail).toMatch(/aria-describedby points at missing id "gone"/);
+  });
+
+  it("exempts React Aria's hydration-deferred ids, until the last one is gone", () => {
+    const html =
+      '<!doctype html><html lang="fa-IR" dir="rtl"><body>' +
+      '<label id="l">ایمیل</label>' +
+      '<input aria-labelledby="l" aria-describedby="react-aria-_R_1abc_" />' +
+      "</body></html>";
+    expect(gradeHtml("fa-IR/index.html", html, [resolvedIdrefs])).toEqual([]);
+  });
 
   it("persian-digit-floor fires when a page renders no Persian digits", () => {
     const rule = persianDigitFloor({ "fa-IR/index.html": 20 });

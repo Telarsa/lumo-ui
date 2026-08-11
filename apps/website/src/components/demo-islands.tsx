@@ -6,8 +6,10 @@ import {
   Button,
   ChartContainer,
   ChartLegend,
+  LumoForm,
   Pagination,
   Rating,
+  TextField,
   ToastRegion,
   barY,
   chartCategoryAxis,
@@ -16,8 +18,11 @@ import {
   chartValueAxis,
   createToastQueue,
   defineChart,
+  fieldControl,
+  lumoValidators,
   scaleBand,
   scaleLinear,
+  useLumoForm,
   type ChartConfig,
 } from "@lumo-ui/ui";
 
@@ -1095,5 +1100,98 @@ export function AutocompleteIsland({
         </AutocompleteListBox>
       </div>
     </Autocomplete>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────── form state ── */
+
+export interface FormStateIslandProps {
+  locale: Locale;
+  /** The three field labels. */
+  nameLabel: string;
+  nationalIdLabel: string;
+  mobileLabel: string;
+  /** Help text under the national-ID field, explaining that Persian digits work. */
+  nationalIdHelp: string;
+  /** The submit button. */
+  submitLabel: string;
+  /** Announced once the form has been accepted. */
+  successMessage: string;
+  /** Overrides the default «این فیلد الزامی است» for the name field. */
+  nameRequiredMessage: string;
+}
+
+/**
+ * A real, validating, three-field form.
+ *
+ * An island for the reason the file header gives — `useLumoForm` is a hook, and
+ * `demos.tsx` is a server module — and every string below is still a prop, so
+ * no copy lives on this side.
+ *
+ * It is deliberately the WHOLE loop rather than a screenshot of one: type
+ * nothing and submit, and the browser does not intervene (`Form` emits
+ * `noValidate`), Lumo's own messages appear in Persian, and focus lands on the
+ * first invalid control. That last step is the part a static preview cannot
+ * show and the part most likely to be missing from a hand-rolled form.
+ *
+ * The national-ID and mobile fields accept Persian digits — «۰۴۹۹۳۷۰۸۹۹» is
+ * checked, not rejected — which is the single most load-bearing claim
+ * `form-state.tsx` makes and the one worth being able to try.
+ */
+export function FormStateIsland({
+  locale,
+  nameLabel,
+  nationalIdLabel,
+  mobileLabel,
+  nationalIdHelp,
+  submitLabel,
+  successMessage,
+  nameRequiredMessage,
+}: FormStateIslandProps) {
+  const [saved, setSaved] = useState(false);
+  const v = lumoValidators(locale);
+
+  const form = useLumoForm({
+    defaultValues: { fullName: "", nationalId: "", mobile: "" },
+    onSubmit: () => {
+      setSaved(true);
+    },
+  });
+
+  return (
+    <LumoForm form={form} className="max-w-sm">
+      <form.Field
+        name="fullName"
+        validators={{ onDynamic: v.all(v.required(nameRequiredMessage), v.minLength(3)) }}
+      >
+        {(field) => <TextField label={nameLabel} {...fieldControl(field, locale)} />}
+      </form.Field>
+
+      <form.Field name="nationalId" validators={{ onDynamic: v.all(v.required(), v.nationalId()) }}>
+        {(field) => (
+          <TextField
+            label={nationalIdLabel}
+            description={nationalIdHelp}
+            {...fieldControl(field, locale)}
+          />
+        )}
+      </form.Field>
+
+      <form.Field name="mobile" validators={{ onDynamic: v.all(v.required(), v.mobile()) }}>
+        {(field) => <TextField label={mobileLabel} {...fieldControl(field, locale)} />}
+      </form.Field>
+
+      <Button type="submit" className="w-fit">
+        {submitLabel}
+      </Button>
+
+      {/* Announced, not merely drawn — a form that reports success only in
+          pixels reports nothing to a screen reader. */}
+      {saved ? (
+        <p role="status" className="text-sm text-positive">
+          {successMessage}
+        </p>
+      ) : null}
+    </LumoForm>
   );
 }

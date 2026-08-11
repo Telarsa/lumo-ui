@@ -19,10 +19,10 @@
     "@internationalized/date": "catalog:",
     "class-variance-authority": "catalog:",
     "lucide-react": "catalog:",
-    "recharts": "catalog:",
     "@tanstack/charts": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@tanstack/react-virtual": "catalog:",
+    "@tanstack/react-form": "catalog:",
     "embla-carousel-react": "catalog:"
   },
   "devDependencies": {

@@ -44,6 +44,31 @@ export type {
   LabelProps,
 } from "./form.tsx";
 
+/**
+ * Form STATE, which is a separate registry item from the form CHROME above and
+ * must stay one: `form.tsx` travels with every labelled control in the library,
+ * and folding the state layer into it would make `@tanstack/react-form` a
+ * declared dependency of `checkbox`. See `form-state.tsx`'s header.
+ */
+export {
+  LumoForm,
+  fieldControl,
+  firstError,
+  focusFirstInvalid,
+  isValidNationalId,
+  lumoValidators,
+  revalidateLogic,
+  useLumoForm,
+  visibleLength,
+} from "./form-state.tsx";
+export type {
+  LumoFieldControl,
+  LumoFormField,
+  LumoFormInstance,
+  LumoFormProps,
+  LumoValidator,
+} from "./form-state.tsx";
+
 export { TextField, inputVariants } from "./text-field.tsx";
 export type { TextFieldProps } from "./text-field.tsx";
 

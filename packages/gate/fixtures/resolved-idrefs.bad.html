@@ -1,4 +1,31 @@
 <!doctype html>
 <html lang="fa-IR" dir="rtl">
-  <body><input aria-labelledby="does-not-exist" /></body>
+  <body>
+    <!-- A name that resolves to nothing. -->
+    <input aria-labelledby="does-not-exist" />
+
+    <!--
+      A validation error that is DRAWN and announced by nobody. Visually this is
+      a correct, complete, invalid field; the only thing wrong with it is the
+      one thing a screen reader depends on. `form-state.tsx` routes every
+      validation message through this attribute, so grading it is what makes
+      that route trustworthy.
+    -->
+    <label id="email-label">ایمیل</label>
+    <input aria-labelledby="email-label" aria-describedby="email-error" aria-invalid="true" />
+    <p>نشانی ایمیل معتبر نیست</p>
+
+    <!-- The attribute whose only job is to carry an error, carrying nothing. -->
+    <input aria-labelledby="email-label" aria-errormessage="gone" />
+
+    <!--
+      NOT a violation, and the reason this file says so out loud: React Aria
+      resolves its describedby in a layout effect, so its server output dangles
+      by design and is exempted by id prefix. See `resolvedIdrefs`' header — the
+      exemption expires with the last React Aria root, and this line is how
+      someone deleting it learns that the fixture expects it to keep passing
+      until then.
+    -->
+    <input aria-labelledby="email-label" aria-describedby="react-aria-_R_1abc_" />
+  </body>
 </html>

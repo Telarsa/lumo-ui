@@ -88,15 +88,17 @@ catalog:
   lucide-react: 1.30.0
 
   # --- charts ----------------------------------------------------------------
-  # The one dependency Lumo takes for rendered geometry rather than behaviour.
-  # Pinned exactly to the version shadcn's `chart` item declares, because the
-  # vendored file uses recharts' own types (`TooltipValueType`,
-  # `DefaultTooltipContentProps`, `DefaultLegendContentProps`, and
-  # `ResponsiveContainer`'s `initialDimension`) and a minor that renames one of
-  # them turns a vendored file into a compile error nobody asked for. Newer
-  # releases exist (3.10.1); adopting one is a deliberate bump plus a re-vendor,
-  # not a range.
-  recharts: 3.8.0
+  # recharts 3.8.0 WAS HERE and is gone as of 11 Aug 2026. It was the one
+  # dependency Lumo took for rendered geometry rather than behaviour, pinned to
+  # the version shadcn's `chart` item declares. `@tanstack/charts` replaced it
+  # in `chart.tsx` on the measured axis below, and the pin was left behind for
+  # exactly one commit: no file in the tree imported it, while two package.json
+  # manifests and the registry's EXTERNAL set still told consumers to install
+  # it. A dependency nothing imports is not free — it is a version this project
+  # is on the hook for, an entry in every consumer's lockfile, and a line in the
+  # `chart` registry item's install command that installs a renderer the file
+  # no longer uses. Deleted rather than kept "in case".
+  #
   # THE RENDERER, since 11 Aug 2026. `@tanstack/charts` replaces recharts in
   # `chart.tsx` on one measured axis: recharts serves 127 bytes and NO `<svg>`,
   # TanStack serves 4,717 with a real `<svg>` and Persian ticks, so `lumo-gate`
@@ -124,19 +126,59 @@ catalog:
   shiki: 4.4.2
 
   # --- headless STATE, with no markup and no ARIA -----------------------------
-  # Both of these are deliberately NOT accessibility dependencies, and that is
-  # the whole reason they are acceptable beside Base UI. Base UI has no table and
-  # no virtualiser; TanStack supplies the arithmetic (sort/filter/paginate/select
-  # state; item offsets and a window) and emits no DOM, no role, no aria-* and no
-  # focus management. Lumo keeps role=grid, aria-sort, aria-rowcount, the roving
-  # tab stop and the RTL arrow mapping — one accessibility dependency, not two.
-  # If a future TanStack minor starts returning props with `role` or `aria-*` in
-  # them, that is the signal to stop spreading its output, not to adopt it.
+  # None of these are accessibility dependencies, and that is the whole reason
+  # they are acceptable beside Base UI. Base UI has no table, no virtualiser and
+  # no form state; TanStack supplies the arithmetic (sort/filter/paginate/select
+  # state; item offsets and a window; field values, validity and submission) and
+  # emits no DOM, no role, no aria-* and no focus management. Lumo keeps
+  # role=grid, aria-sort, aria-rowcount, aria-setsize, the roving tab stop, the
+  # RTL arrow mapping and the error/description associations — one accessibility
+  # dependency, not two. If a future TanStack minor starts returning props with
+  # `role` or `aria-*` in them, that is the signal to stop spreading its output,
+  # not to adopt it.
   #
-  # Exact pins for the usual reason: both compute geometry or ordering that the
-  # committed tests read back out.
+  # Exact pins for the usual reason: all three compute geometry, ordering or
+  # validity that the committed tests read back out.
   '@tanstack/react-table': 9.1.2
   '@tanstack/react-virtual': 3.14.9
+  # THE FORM STATE LAYER, since 11 Aug 2026. Adopted for one reason that is
+  # Lumo's rather than general, and it is the exact inverse of React Aria's:
+  #
+  #   React Aria ships 34 locale bundles of announced strings and `fa` is not
+  #   among them, so every leak had to be measured and closed (see
+  #   `packages/core/src/strings.ts`). TanStack Form ships NO announced strings
+  #   AT ALL. Verified against the published 1.33.4 tarballs, runtime `.js`
+  #   only: zero `aria-*`, zero `role`, zero host element names — every `jsx()`
+  #   call in the React adapter renders a Fragment, a Context.Provider or one of
+  #   the library's own components, so `<form.Field>` contributes ZERO BYTES to
+  #   the served HTML. The only English in the runtime is developer assertions
+  #   ("field component names must be unique", "Path must be a string.") which
+  #   reach a console and never a page.
+  #
+  #   Nothing to translate is a stronger property than translatable, because
+  #   there is no version bump that can add a string behind our back to a
+  #   surface that renders no text.
+  #
+  # SSR: field state is read from the store DURING RENDER; the layout effects
+  # (`useIsomorphicLayoutEffect`, which is `useEffect` on the server and so a
+  # no-op) only mount and update. So default values are in the first byte and
+  # this is NOT another instance of the Base UI layout-effect defect. The form
+  # id comes from React's own `useId`. Both verified by reading dist, and both
+  # pinned by `form-state.test.tsx`.
+  #
+  # TRANSITIVE COST, CHECKED: `@tanstack/form-core` imports
+  # `@tanstack/devtools-event-client` unconditionally and constructs a client at
+  # module scope with `reconnectEveryMs: 1000`. That reads alarming and is not —
+  # the package's root export is
+  # `process.env.NODE_ENV !== "development" ? EventClientNoOp : EventClient`, so
+  # a production build folds it to a no-op class and tree-shakes the real client
+  # (with its `setInterval` and its `window.addEventListener`) away. Recorded
+  # because the next person to read that import will have the same reaction.
+  #
+  # 1.33.4 published 2026-08-08T22:31Z, 58 hours old at adoption — clears
+  # `minimumReleaseAge: 1440`. A 2.0.0-alpha.0 exists on the `alpha` tag and is
+  # not a candidate.
+  '@tanstack/react-form': 1.33.4
 
   # --- carousel --------------------------------------------------------------
   # 9.0.0-rc02 is a prerelease; 8.6.0 is the newest stable. Exact, because embla

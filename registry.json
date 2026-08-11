@@ -652,6 +652,27 @@
       ]
     },
     {
+      "name": "form-state",
+      "type": "registry:ui",
+      "title": "Form State",
+      "description": "Form STATE: values, validity, submission. The chrome is `form.tsx`.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/react-form"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/form-state.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/form-state.tsx"
+        }
+      ]
+    },
+    {
       "name": "form",
       "type": "registry:ui",
       "title": "Form",
