@@ -1263,6 +1263,24 @@
       ]
     },
     {
+      "name": "scrollspy",
+      "type": "registry:ui",
+      "title": "Scrollspy",
+      "description": "A table of contents that knows where the reader is.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/scrollspy.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/scrollspy.tsx"
+        }
+      ]
+    },
+    {
       "name": "search-field",
       "type": "registry:ui",
       "title": "Search Field",
@@ -1667,6 +1685,24 @@
           "path": "packages/ui/src/time-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/time-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "timeline",
+      "type": "registry:ui",
+      "title": "Timeline",
+      "description": "A sequence of events down a rail — an order's history, an audit trail.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/timeline.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/timeline.tsx"
         }
       ]
     },

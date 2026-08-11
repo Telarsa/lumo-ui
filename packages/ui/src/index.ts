@@ -828,6 +828,30 @@ export {
 export type { MessageScrollerProps } from "./message-scroller.tsx";
 
 export {
+  Timeline,
+  TimelineBody,
+  TimelineItem,
+  TimelineTime,
+  TimelineTitle,
+  timelineBodyVariants,
+  timelineItemVariants,
+  timelineMarkerVariants,
+  timelineRailVariants,
+  timelineTimeVariants,
+  timelineTitleVariants,
+  timelineVariants,
+} from "./timeline.tsx";
+export type {
+  TimelineItemProps,
+  TimelineProps,
+  TimelineSectionProps,
+  TimelineTimeProps,
+} from "./timeline.tsx";
+
+export { Scrollspy, scrollspyLinkVariants, scrollspyVariants } from "./scrollspy.tsx";
+export type { ScrollspyItem, ScrollspyProps } from "./scrollspy.tsx";
+
+export {
   NativeSelect,
   NativeSelectOptGroup,
   NativeSelectOption,
