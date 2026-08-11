@@ -11,7 +11,7 @@ import type {
   TabsProps as AriaTabsProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { attr } from "@lumo-ui/base-ui-ssr";
+import { attr, useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 
 /**
  * Tabs. **BASE UI ENGINE.**
@@ -160,7 +160,22 @@ export interface TabsProps extends Omit<AriaTabsProps, "children" | "className">
  * Only the panel association is added here for that reason. `aria-controls` is
  * a SHOULD in the ARIA tabs pattern; the panel's name is what a reader loses.
  */
-const TabsIdContext = createContext<string | undefined>(undefined);
+interface TabsContextValue {
+  /** The `useId` base every part's DOM id is derived from. */
+  base: string;
+  /**
+   * The value that will be selected in the FIRST byte — the caller's
+   * `selectedKey`, else `defaultSelectedKey`, else the derived first tab.
+   *
+   * Carried on the context for `useCompositeTabStop`: a `Tab` otherwise has no
+   * way to know whether it is the one that should hold the server's single tab
+   * stop, and a composite with no tab stop at all is unreachable by keyboard
+   * until hydration. See `Tab`.
+   */
+  selected: unknown;
+}
+
+const TabsIdContext = createContext<TabsContextValue | undefined>(undefined);
 
 /** `base-tab-profile` / `base-tabpanel-profile`, or `undefined` outside a `Tabs`. */
 function partId(base: string | undefined, part: "tab" | "tabpanel", key: unknown) {
@@ -269,11 +284,15 @@ export function Tabs({
       ? undefined
       : firstTabId((rest as { children?: LumoNode }).children);
   const idBase = useId();
+  // The same expression `defaultValue` below resolves to, hoisted so a `Tab`
+  // can read it. One source, so the served tab stop and the served selection
+  // cannot land on different tabs.
+  const selected = selectedKey ?? defaultSelectedKey ?? derivedDefault;
 
   return (
     // The provider renders no DOM, so `Tabs.Root` is still the outer element and
     // `className` / `data-lumo` still land where they did.
-    <TabsIdContext.Provider value={idBase}>
+    <TabsIdContext.Provider value={{ base: idBase, selected }}>
       <BaseTabs.Root
         data-lumo=""
         className={cn(tabsVariants(), className)}
@@ -380,13 +399,39 @@ export function Tab({
    */
   // An explicit, derivable DOM id so the PANEL can name itself from this tab in
   // the served bytes. See `TabsIdContext`.
-  const base = useContext(TabsIdContext);
+  const tabs = useContext(TabsIdContext);
+  const base = tabs?.base;
+  /*
+   * ── A SERVED TAB LIST WAS UNREACHABLE BY THE TAB KEY ───────────────────────
+   *
+   * Measured on this repository's own 442-document export BEFORE this line
+   * existed: 132 elements with `role="tab"` carrying `tabindex="-1"` and ZERO
+   * carrying `tabindex="0"`. Not mis-ordered — unreachable, for the whole
+   * window between first paint and hydration, on every tab set on the site.
+   *
+   * `Tabs` is one of the four Base UI widgets built on `CompositeRoot`, which
+   * resolves the roving stop in a layout effect that never runs on the server;
+   * `@lumo-ui/base-ui-ssr` documents the defect and its measured table names
+   * Tabs explicitly. `useCompositeTabStop` is the fix and it EXPIRES — the
+   * attribute is served, survives hydration, and is handed back in the commit
+   * after, so the composite owns it again. A constant `tabIndex={0}` would win
+   * forever and leave two permanent tab stops; the hook's header measures that
+   * trap too.
+   *
+   * The stop goes on the SELECTED tab rather than the first, because that is
+   * the one a keyboard user expects to land on and it is what Base UI itself
+   * chooses once mounted. No `gate:html` rule grades a missing tabindex, which
+   * is exactly why this was found by measuring the built HTML rather than by a
+   * test going red.
+   */
+  const tabStop = useCompositeTabStop(id !== undefined && id === tabs?.selected);
   const tabProps = {
     "data-lumo": "",
     className: cn(tabVariants(), className),
     ...attr("value", id),
     ...attr("id", partId(base, "tab", id)),
     ...attr("disabled", isDisabled),
+    ...tabStop,
     ...rest,
   } as unknown as BaseTabs.Tab.Props;
   return <BaseTabs.Tab {...tabProps} />;
@@ -412,7 +457,7 @@ export function TabPanel({
   // `aria-labelledby` points at the tab with the same `id`, which is always
   // rendered — see `TabsIdContext` for why the association runs this way round
   // and not the other.
-  const base = useContext(TabsIdContext);
+  const base = useContext(TabsIdContext)?.base;
   return (
     <BaseTabs.Panel
       data-lumo=""

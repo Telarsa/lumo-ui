@@ -10,10 +10,13 @@
  * from the first byte — the exact tier this project grades.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { type LumoNode } from "@lumo-ui/core";
 import { Tab, TabList, TabPanel, Tabs } from "./tabs.tsx";
+
+afterEach(cleanup);
 
 const uncontrolled = (
   <Tabs>
@@ -141,5 +144,84 @@ describe("Tabs — the default selection has to survive to the first byte", () =
       </Tabs>,
     );
     expect(html).toContain("محتوای پروفایل");
+  });
+});
+
+/**
+ * ── THE SECOND FIRST-BYTE DEFECT IN THIS FILE, AND HOW IT WAS FOUND ─────────
+ *
+ * Not by a test going red — nothing graded it. It was found by counting
+ * attributes in this repository's own 442-document static export:
+ *
+ *     role="tab" with tabindex="-1"   132
+ *     role="tab" with tabindex="0"      0
+ *
+ * `Tabs` is one of the four Base UI widgets built on `CompositeRoot`, which
+ * decides which item holds the roving tab stop in a layout effect. A layout
+ * effect does not run on the server, so every served tab list on the site was
+ * UNREACHABLE by the Tab key until hydration — not mis-ordered, unreachable.
+ * `@lumo-ui/base-ui-ssr`'s `useCompositeTabStop` is the fix; `tabs.tsx` had the
+ * adapter imported for `attr` and never used that export.
+ *
+ * These assertions are on `renderToStaticMarkup` for the reason the whole
+ * adapter's suite is: the defect self-heals on hydration, so jsdom, Testing
+ * Library and axe-in-a-browser all pass with or without the fix.
+ */
+/**
+ * The opening tag of every `role="tab"` in a string of HTML.
+ *
+ * Scoped to the tabs deliberately: the PANEL is also `tabindex="0"` and should
+ * be — the ARIA tabs pattern makes a panel with no focusable content a focus
+ * stop of its own — so a whole-document count of `tabindex="0"` would assert
+ * the wrong number and hide a regression in either element behind the other.
+ */
+function servedTabs(html: string): string[] {
+  return [...html.matchAll(/<button[^>]*role="tab"[^>]*>/g)].map((m) => m[0]);
+}
+
+describe("Tabs — the served tab list can be reached with the Tab key", () => {
+  it("serves exactly one tabindex=0 among the tabs, on the selected one", () => {
+    const tabs = servedTabs(renderToStaticMarkup(uncontrolled));
+    expect(tabs).toHaveLength(2);
+    expect(tabs.filter((tag) => tag.includes('tabindex="0"'))).toHaveLength(1);
+    // ...and it is the SELECTED tab, not merely the first element that could
+    // take it. With no selection given, `Tabs` derives the first tab, so the
+    // two coincide here — the controlled case below is what separates them.
+    expect(tabs[0]).toContain('tabindex="0"');
+    expect(tabs[1]).toContain('tabindex="-1"');
+  });
+
+  it("puts the stop on the SELECTED tab when that is not the first one", () => {
+    const html = renderToStaticMarkup(
+      <Tabs defaultSelectedKey="billing">
+        <TabList label="بخش‌های حساب">
+          <Tab id="profile">پروفایل</Tab>
+          <Tab id="billing">صورت‌حساب</Tab>
+        </TabList>
+        <TabPanel id="billing">محتوای صورت‌حساب</TabPanel>
+      </Tabs>,
+    );
+    // The stop and the selection are read from ONE expression on the context,
+    // so they cannot land on different tabs.
+    const tabs = servedTabs(html);
+    const withStop = tabs.filter((tag) => tag.includes('tabindex="0"'));
+    expect(withStop).toHaveLength(1);
+    expect(withStop[0]).toContain('aria-selected="true"');
+  });
+
+  it("hands the attribute back after hydration, so there is never a second stop", () => {
+    // The trap `useCompositeTabStop` exists to avoid: a constant `tabIndex={0}`
+    // also produces correct HTML and then never gives the attribute back, so
+    // the first arrow key leaves TWO permanent tab stops. The hook's value
+    // expires in the commit after hydration.
+    const { container } = render(uncontrolled);
+    const tabs = [...container.querySelectorAll('[role="tab"]')];
+    expect(tabs.map((t) => t.getAttribute("tabindex"))).toEqual(["0", "-1"]);
+    act(() => {
+      (tabs[0] as HTMLElement).focus();
+      fireEvent.keyDown(tabs[0]!, { key: "ArrowRight" });
+    });
+    const after = tabs.map((t) => t.getAttribute("tabindex"));
+    expect(after.filter((t) => t === "0")).toHaveLength(1);
   });
 });

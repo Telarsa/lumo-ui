@@ -38,13 +38,26 @@ import { cva, type VariantProps } from "class-variance-authority";
  */
 
 /**
- * `hover:` AND `data-hovered:` on purpose.
+ * `hover:` ONLY, and `data-hovered:` is gone.
  *
- * React Aria publishes `data-hovered` on the controls in `pagination.tsx` (it is
- * pointer-type aware, which `:hover` is not, so it does not stick after a touch
- * tap). A bare `<a>` in a server-rendered block publishes nothing, and would sit
- * there inert. Carrying both is what lets ONE class list serve both spellings —
- * which is the whole point of this module existing.
+ * It used to carry both, and the reason it did is worth keeping because it was a
+ * good reason that stopped being true. React Aria published `data-hovered` on
+ * the controls in `pagination.tsx` — pointer-type aware, unlike `:hover`, so it
+ * did not stick after a touch tap — while a bare `<a>` in a server-rendered
+ * block published nothing. Carrying both let ONE class list serve both
+ * spellings, which is the whole point of this module existing.
+ *
+ * Base UI publishes no hover attribute anywhere. `grep -rl 'data-hovered'` over
+ * the whole installed 1.7.0 dist returns zero files (the `data-hovering` it does
+ * ship belongs to `ScrollArea.Scrollbar` and means something else). So the
+ * second half of every hover rule here now matches no element in any state:
+ * present in the emitted CSS, addressed to an engine that is no longer there,
+ * and indistinguishable in review from a rule that works.
+ *
+ * Deleted rather than left as a hedge. The two spellings still both work,
+ * because `:hover` is the one that was already carrying the `<a>` case — the
+ * pointer-type awareness is what is genuinely lost, and it is lost with the
+ * engine rather than with this edit.
  */
 export const paginationItemVariants = cva(
   // No `tabular-nums`, tempting as it is on a row of numerals. theme.css resets
@@ -57,7 +70,7 @@ export const paginationItemVariants = cva(
   "inline-flex select-none items-center justify-center rounded-md " +
     "font-medium whitespace-nowrap no-underline " +
     "cursor-pointer outline-none transition-colors " +
-    "hover:bg-surface-hover data-hovered:bg-surface-hover " +
+    "hover:bg-surface-hover " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "aria-disabled:pointer-events-none aria-disabled:opacity-50",
   {
@@ -73,7 +86,7 @@ export const paginationItemVariants = cva(
         // The page you are on. `aria-current="page"` is what announces it; this
         // is only the visual half, which is why the announcement is not
         // optional in either spelling.
-        true: "bg-accent text-accent-fg hover:bg-accent-hover data-hovered:bg-accent-hover",
+        true: "bg-accent text-accent-fg hover:bg-accent-hover",
         false: "text-fg",
       },
     },

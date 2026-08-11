@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl"><body>
+  <!-- Poison: a tablist whose every tab is tabindex=-1. This is exactly what
+       the Base UI migration served — 132 of these — while every other tier
+       reported green, because the defect self-heals on hydration. -->
+  <div role="tablist" aria-label="بخش‌ها">
+    <button role="tab" tabindex="-1" aria-selected="true">پیش‌نمایش</button>
+    <button role="tab" tabindex="-1" aria-selected="false">کد</button>
+  </div>
+  <p>۱۲۳</p>
+</body></html>

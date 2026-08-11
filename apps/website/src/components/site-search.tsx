@@ -123,6 +123,22 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
     [blocks, query, lang],
   );
 
+  /*
+   * `items` for Base UI's Autocomplete root, and it carries the ALREADY-FILTERED
+   * union rather than the whole index. This page filters itself — `matches()`
+   * folds ZWNJ, tashkeel and the Arabic/Persian letter pairs, which no collator
+   * setting does — so the engine's own filter is switched off with
+   * `filter={() => true}` and `items` is handed the result.
+   *
+   * It is not bookkeeping. `CommandEmpty` mounts exactly when
+   * `filteredItems.length === 0`, so this array is what makes "nothing matched"
+   * an announced live region rather than a div nobody hears.
+   */
+  const visibleAll = useMemo(
+    () => [...visibleDocs, ...visibleComponents, ...visibleBlocks],
+    [visibleDocs, visibleComponents, visibleBlocks],
+  );
+
   return (
     <CommandDialog
       title={copy.dialogTitle[lang]}
@@ -162,7 +178,7 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
        * `matches()` — see the file header for why RAC's own default filter
        * must be disabled rather than left to run a second time.
        */}
-      <Command inputValue={query} onInputChange={setQuery} filter={() => true}>
+      <Command items={visibleAll} inputValue={query} onInputChange={setQuery} filter={() => true}>
         <CommandInput label={copy.inputLabel[lang]} placeholder={copy.inputPlaceholder[lang]} />
         {/*
          * The result count that used to sit here is gone — a number over a
@@ -176,11 +192,7 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
          * still participates in MATCHING (it is part of `matches()`' haystack
          * and `textValue`), it is just no longer drawn in the row.
          */}
-        <CommandList
-          renderEmptyState={() => (
-            <CommandEmpty role="status">{copy.emptyMessage[lang]}</CommandEmpty>
-          )}
-        >
+        <CommandList label={copy.inputLabel[lang]}>
           {visibleDocs.length > 0 ? (
             <CommandGroup heading={copy.docsHeading[lang]}>
               {visibleDocs.map((doc) => (
@@ -188,7 +200,6 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
                   key={doc.id}
                   id={`doc-${doc.id}`}
                   href={doc.href[lang]}
-                  textValue={`${doc.title[lang]} ${doc.intro[lang]}`}
                 >
                   <span className="min-w-0 flex-1 truncate">{doc.title[lang]}</span>
                 </CommandItem>
@@ -202,7 +213,6 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
                   key={doc.id}
                   id={`component-${doc.id}`}
                   href={doc.href[lang]}
-                  textValue={`${doc.title[lang]} ${doc.intro[lang]}`}
                 >
                   <span className="min-w-0 flex-1 truncate">{doc.title[lang]}</span>
                 </CommandItem>
@@ -216,7 +226,6 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
                   key={doc.id}
                   id={`block-${doc.id}`}
                   href={doc.href[lang]}
-                  textValue={`${doc.title[lang]} ${doc.intro[lang]}`}
                 >
                   <span className="min-w-0 flex-1 truncate">{doc.title[lang]}</span>
                 </CommandItem>
@@ -224,6 +233,13 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
             </CommandGroup>
           ) : null}
         </CommandList>
+        {/*
+          * A sibling of the list, not a `renderEmptyState` prop: Base UI's
+          * `Autocomplete.Empty` IS the live region (`role="status"
+          * aria-live="polite"`) and mounts its children only when the filtered
+          * set is empty. React Aria needed the announcement to be added by hand.
+          */}
+        <CommandEmpty>{copy.emptyMessage[lang]}</CommandEmpty>
       </Command>
     </CommandDialog>
   );

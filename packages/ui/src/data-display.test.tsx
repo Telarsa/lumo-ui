@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableSelectAllColumn,
   TableSelectionCell,
+  useLumoTable,
 } from "./table.tsx";
 import { ListBox, ListBoxItem } from "./list-box.tsx";
 import { Link } from "./link.tsx";
@@ -57,13 +58,61 @@ function spokenAttributes(root: ParentNode = document): string[] {
 
 const englishIn = (values: string[]) => values.filter((v) => LATIN_WORD.test(v));
 
+/*
+ * ═══ RESTATED FOR THE BASE UI / TANSTACK ENGINE, 11 Aug 2026 ═══════════════
+ *
+ * Everything below the ListBox heading is untouched. The Table block was
+ * restated, and the rule applied was: **a case that pinned a BEHAVIOUR keeps
+ * its assertion; a case that pinned REACT ARIA'S VOCABULARY is rewritten to
+ * pin the same behaviour in the new one.** The list, so a reviewer can check
+ * the judgement rather than take it:
+ *
+ *   kept, verbatim behaviour
+ *     role=grid / columnheader / rowheader / gridcell, aria-colindex,
+ *     aria-selected, aria-multiselectable, aria-sort on both columns, the
+ *     Persian sort direction as sr-only text, the four Persian names, and
+ *     "no spoken attribute anywhere contains an English word".
+ *
+ *   rewritten, vocabulary only
+ *     `selectionMode="multiple"` and `sortDescriptor={…}` were React Aria's
+ *     props for facts that now live in `useLumoTable`. Same facts, same
+ *     assertions, different spelling.
+ *
+ *   INVERTED, and this is the interesting one
+ *     `aria-valuetext="\d+ pixels"` asserted that React Aria leaked an English,
+ *     Latin-digited string onto a hidden <input type="range"> that no prop
+ *     could reach — the defect `patches/react-aria@3.51.0.patch` existed to
+ *     translate. There is no hidden input and no bundle any more, so the
+ *     assertion is inverted rather than deleted: the resizer must emit NO
+ *     aria-valuetext at all. Deleting it would have thrown away the record that
+ *     the defect existed and is gone.
+ *
+ *   INVERTED, same shape
+ *     `'sortable column'` was React Aria appending a detached, English
+ *     description node to document.body after mount. Lumo emits the direction
+ *     itself, in Persian, in the first byte. The assertion now says that
+ *     nothing is appended to the body at all.
+ */
+
+const ORDERS = [
+  { name: "سارا", city: "تهران" },
+  { name: "رضا", city: "اصفهان" },
+];
+
 function SortedTable() {
+  const table = useLumoTable({
+    locale: "fa-IR",
+    data: ORDERS,
+    columns: [
+      { id: "name", accessorKey: "name" },
+      { id: "city", accessorKey: "city" },
+    ],
+    enableRowSelection: true,
+    initialState: { sorting: [{ id: "name", desc: false }] },
+  });
+
   return (
-    <Table
-      label="سفارش‌ها"
-      selectionMode="multiple"
-      sortDescriptor={{ column: "name", direction: "ascending" }}
-    >
+    <Table label="سفارش‌ها" locale="fa-IR" table={table}>
       <TableHeader>
         <TableSelectAllColumn label="انتخاب همه" />
         <Column
@@ -85,13 +134,45 @@ function SortedTable() {
         </Column>
       </TableHeader>
       <TableBody>
-        <Row id="1">
-          <TableSelectionCell label="انتخاب ردیف" />
-          <Cell>سارا</Cell>
-          <Cell>تهران</Cell>
-        </Row>
+        {table.getRowModel().rows.map((row) => (
+          <Row key={row.id} row={row}>
+            <TableSelectionCell label="انتخاب ردیف" />
+            <Cell>{String(row.getValue("name"))}</Cell>
+            <Cell>{String(row.getValue("city"))}</Cell>
+          </Row>
+        ))}
       </TableBody>
     </Table>
+  );
+}
+
+function ResizableTable() {
+  const table = useLumoTable({
+    locale: "fa-IR",
+    data: ORDERS,
+    columns: [{ id: "name", accessorKey: "name" }],
+  });
+  return (
+    <ResizableTableContainer>
+      <Table label="سفارش‌ها" locale="fa-IR" table={table}>
+        <TableHeader>
+          <Column
+            id="name"
+            isRowHeader
+            resizer={<ColumnResizer label="تغییر اندازه ستون" columnId="name" />}
+          >
+            نام
+          </Column>
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <Row key={row.id} row={row}>
+              <Cell>{String(row.getValue("name"))}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+    </ResizableTableContainer>
   );
 }
 
@@ -117,21 +198,31 @@ describe("Table is a real ARIA grid, in the first byte", () => {
 
   it("announces the active sort direction in Persian as well as via aria-sort", () => {
     // aria-sort is spoken by most screen readers in their own language, but
-    // Android TalkBack ignores it entirely — which is the gap RAC papers over
-    // with an English description this component cannot reach. See table.tsx.
+    // Android TalkBack ignores it entirely. See table.tsx.
     const html = renderToStaticMarkup(<SortedTable />);
     expect(html).toContain("مرتب‌شده صعودی");
     expect(html).not.toContain("مرتب‌شده نزولی");
   });
+
+  it("takes ONE Tab stop for the whole grid", () => {
+    // 3 columns x 3 rows = 9 focusable positions, exactly one of which is in
+    // the tab order. This was React Aria's behaviour and is now Lumo's, so it
+    // needs an assertion it did not need before.
+    const html = renderToStaticMarkup(<SortedTable />);
+    expect((html.match(/tabindex="0"/g) ?? []).length).toBe(1);
+    expect((html.match(/tabindex="-1"/g) ?? []).length).toBeGreaterThan(5);
+  });
 });
 
-describe("Table's reachable English strings are all closed", () => {
-  it("the select-all and row checkboxes take Persian names, replacing RAC's", () => {
+describe("Table's announced strings are all Persian", () => {
+  it("the select-all and row checkboxes take Persian names", () => {
     const html = renderToStaticMarkup(<SortedTable />);
     expect(html).toContain('aria-label="انتخاب همه"');
     expect(html).toContain('aria-label="انتخاب ردیف"');
-    // The strings they replace. `Select All` is the header checkbox, `Select`
-    // the row one; both come from @react-aria/table's en-US bundle.
+    // The strings React Aria used to supply. There is no bundle now, so the
+    // failure this guards against inverted from "English" to "absent" — see
+    // table.tsx. Asserting their absence still costs nothing and would catch a
+    // reintroduced dependency.
     expect(html).not.toContain("Select All");
     expect(html).not.toMatch(/aria-label="Select"/);
   });
@@ -142,75 +233,56 @@ describe("Table's reachable English strings are all closed", () => {
     expect(englishIn(spokenAttributes(container))).toEqual([]);
   });
 
-  it("the ColumnResizer takes a Persian name, replacing RAC's 'Resizer'", () => {
-    const html = renderToStaticMarkup(
-      <ResizableTableContainer>
-        <Table label="سفارش‌ها">
-          <TableHeader>
-            <Column id="name" isRowHeader resizer={<ColumnResizer label="تغییر اندازه ستون" />}>
-              نام
-            </Column>
-          </TableHeader>
-          <TableBody>
-            <Row id="1">
-              <Cell>سارا</Cell>
-            </Row>
-          </TableBody>
-        </Table>
-      </ResizableTableContainer>,
-    );
+  it("the ColumnResizer takes a Persian name", () => {
+    const html = renderToStaticMarkup(<ResizableTable />);
     expect(html).toContain('aria-label="تغییر اندازه ستون"');
     expect(html).not.toContain("Resizer");
   });
 });
 
-describe("Table's UNREACHABLE React Aria leaks, pinned rather than papered over", () => {
-  it("the resizer's aria-valuetext is English AND Latin-digited, in the first byte", () => {
+describe("Two React Aria leaks this migration RETIRED, asserted as gone", () => {
+  it("the resizer emits no aria-valuetext at all, and no hidden input", () => {
     /*
-     * `useTableColumnResize` sets 'aria-valuetext': format('columnSize', {value})
-     * on its hidden <input type="range">, and en-US spells that `${value} pixels`.
-     * It is not a prop: passing aria-valuetext to <ColumnResizer> goes through
-     * filterDOMProps(props, {global: true}), which carries no aria-* at all.
+     * INVERTED from `expect(html).toMatch(/aria-valuetext="\d+ pixels"/)`.
      *
-     * Consequence, stated so nobody rediscovers it in production: this trips
-     * @lumo-ui/gate's `no-latin-aria` rule, so a ColumnResizer must not appear
-     * on a fa-IR route until React Aria closes it. When this test goes red,
-     * that restriction can be lifted.
+     * `useTableColumnResize` set that attribute on a hidden <input type="range">
+     * from React Aria's own en-US bundle, and no prop reached it —
+     * `filterDOMProps(props, {global: true})` carries no aria-* at all. Lumo
+     * shipped `patches/react-aria@3.51.0.patch` to add a fa-IR bundle, so the
+     * correctness of a Persian page depended on a node_modules patch surviving
+     * every install.
+     *
+     * The handle is a plain <button> now. If this assertion ever goes red,
+     * something has reintroduced a hidden range input into the resizer.
      */
-    const html = renderToStaticMarkup(
-      <ResizableTableContainer>
-        <Table label="سفارش‌ها">
-          <TableHeader>
-            <Column id="name" isRowHeader resizer={<ColumnResizer label="تغییر اندازه ستون" />}>
-              نام
-            </Column>
-          </TableHeader>
-          <TableBody>
-            <Row id="1">
-              <Cell>سارا</Cell>
-            </Row>
-          </TableBody>
-        </Table>
-      </ResizableTableContainer>,
-    );
-    expect(html).toMatch(/aria-valuetext="\d+ pixels"/);
+    const html = renderToStaticMarkup(<ResizableTable />);
+    expect(html).not.toContain("aria-valuetext");
+    expect(html).not.toContain("pixels");
+    expect(html).not.toContain('type="range"');
   });
 
-  it("'sortable column' appears only after hydration, in a detached description node", () => {
+  it("nothing is appended to document.body after mount", () => {
     /*
-     * `useTableColumnHeader` builds `sortable column` and hands it to
-     * `useDescription`, which appends <div style="display:none"> to
-     * document.body and points the header's aria-describedby at it. So it is
-     * absent from the server output the gate grades, and it is not an attribute
-     * — which is why neither tier sees it and this assertion is the only record.
+     * INVERTED from `expect(descriptions).toContain("sortable column")`.
+     *
+     * `useTableColumnHeader` fed that English phrase to `useDescription`, which
+     * appends a <div style="display:none"> to document.body AFTER mount and
+     * points the header's aria-describedby at it. It was invisible to the HTML
+     * gate (absent from the first byte) and to `no-latin-aria` (not an
+     * attribute), so this test was the only record of it.
+     *
+     * Lumo states the direction itself, in Persian, in the served bytes — which
+     * the case above asserts. This one asserts the detached node is gone.
      */
     expect(renderToStaticMarkup(<SortedTable />)).not.toContain("sortable column");
 
+    const before = document.body.children.length;
     render(<SortedTable />);
-    const descriptions = [...document.querySelectorAll("body > div")]
+    const stray = [...document.querySelectorAll("body > div")]
       .map((el) => el.textContent ?? "")
       .filter((text) => LATIN_WORD.test(text));
-    expect(descriptions).toContain("sortable column");
+    expect(stray).toEqual([]);
+    expect(document.body.children.length).toBe(before + 1);
   });
 });
 

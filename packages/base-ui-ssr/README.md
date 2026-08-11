@@ -104,6 +104,43 @@ the naive workaround, a hard-coded `aria-expanded={false}`, survives onto an
 **open** trigger. A constant is a worse defect than the gap. Emit the real value
 or emit nothing.
 
+### 3b. A server-rendered composite cannot be reached with the Tab key
+
+`useCompositeTabStop`
+
+Every Base UI widget with a roving tabindex — Toolbar, ToggleGroup, Tabs,
+RadioGroup — is built on `CompositeRoot`, and `CompositeRoot` decides which item
+holds the stop on the CLIENT. The server therefore emits `tabindex="-1"` on every
+item and `tabindex="0"` on none. Measured with `renderToStaticMarkup`, two items
+each, bare libraries:
+
+| | `tabindex="0"` | `tabindex="-1"` |
+|---|---:|---:|
+| Base UI Toolbar / ToggleGroup / Tabs / RadioGroup | **0** | 2 |
+| React Aria TagGroup | 3 | 0 |
+| React Aria ToggleButtonGroup | 2 | 0 |
+| React Aria Tabs | 0 | 2 |
+
+A control with no `tabindex="0"` anywhere in it is **unreachable by keyboard**
+until hydration — not mis-ordered, unreachable. Read the React Aria column
+honestly: its Tabs has the same hole and its TagGroup overshoots the other way
+(three stops for two chips). Neither library serves a correct roving tabindex.
+The difference is that React Aria's failure is degraded and Base UI's is total.
+
+**The trap here is the same shape as `useOpenMirror`'s and it is worth more than
+the fix.** A constant `tabIndex={0}` on the first item produces correct HTML and
+then never gives the attribute back — measured, `<Toolbar>` with two buttons:
+`0, -1` initially, `0, 0` after one ArrowRight, permanently. Two tab stops, a
+control that looks and arrows correctly, nothing red. So the value has to EXPIRE:
+`useSyncExternalStore` reports `false` on the server and during hydration and
+`true` in the commit after, which is the one React API that promises exactly
+that boundary.
+
+Retired by `CompositeRoot` resolving its initial highlighted index during render
+rather than in `useIsoLayoutEffect`. The information needs no measurement — it is
+index 0, or the index matching `value`. **Not reported upstream** as of
+2026-08-11.
+
 ### 4. There is no internationalisation of any kind
 
 `baseUiStringsFor`, `BASE_UI_STRINGS`
@@ -242,6 +279,7 @@ believing it.
 | `useFieldWiring` — the describing arm | The same change applied to `descriptionId`. | Same: unreported. |
 | `useFieldWiring` — id correctness (not first-byte presence) | **#5456** "Fix label association when a control unregisters" and **#5457** "[checkbox] Fix stale and duplicated control ids" — both OPEN. (#5448 was CLOSED unmerged the same day, split into these two.) | These make the effect-published id CORRECT. They are a **different axis**: this package's complaint is that the id is published from an effect at all. Neither retires anything here. |
 | `useOpenMirror` | `aria-expanded` emitted on `Menu.Trigger` at SSR, as `Dialog.Trigger` and `Popover.Trigger` already do. | Unreported. |
+| `useCompositeTabStop` | `CompositeRoot` resolving its initial highlighted index during render instead of in `useIsoLayoutEffect`. | Unreported. Found while migrating the collections family, 2026-08-11. |
 | `baseUiStringsFor` — the resolver and its types | A first-party translations/labels provider. | The maintainers have signalled one is intended; `#5263` is the live thread. When it lands, the resolver goes and the **phrases stay** — those are yours to author either way. |
 | The unreachable `"Dismiss"` | **#5263**, OPEN. Proposed shape: `labels?: { dismiss?: string }` on `Combobox.Root`, threaded onto the store the sentinel already subscribes to, read as `store.state.labels?.dismiss ?? "Dismiss"`. | Acknowledged by a maintainer within 5 days; interim prop accepted in principle. |
 
@@ -260,6 +298,7 @@ The engine layer, excluding its own test suite:
 | `field-wiring.ts` | 189 | 60 | 120 | Compensating for Base UI |
 | `strings.ts` | 281 | 69 | 202 | Compensating for Base UI (43) + Persian/English phrases you would author anyway (26) |
 | `open-mirror.ts` | 55 | 16 | 38 | Compensating for Base UI |
+| `composite-tab-stop.ts` | 108 | 14 | 91 | Compensating for Base UI |
 | `children.ts` | 46 | 14 | 31 | Composition plumbing |
 | `attr.ts` | 18 | 3 | 15 | `exactOptionalPropertyTypes` plumbing, engine-neutral |
 | `index.ts` | 50 | 7 | 40 | Barrel |

@@ -15,6 +15,67 @@ import { optional } from "./form.tsx";
 /**
  * A standalone selectable list — no popover, no trigger.
  *
+ * ═══ STILL REACT ARIA. THIS IS THE ONE THAT DID NOT MOVE. ═══════════════════
+ *
+ * **`mui/base-ui#5115 "[listbox] Create the Listbox component" is OPEN.** Base
+ * UI 1.7.0 exposes 83 subpaths and none of them is a listbox. This component is
+ * blocked on that issue, and the paragraphs below are the working that says so
+ * — written out because "no primitive" was ALSO true of `file-upload.tsx`, which
+ * migrated in an afternoon, and the two situations are not comparable.
+ *
+ * ── WHAT THE BRIEF ASKED, AND WHAT MEASURING IT FOUND ─────────────────────
+ *
+ * The question was whether Lumo already owns the ARIA — roving focus, typeahead,
+ * `role="option"`, `aria-selected` — in which case the engine underneath is
+ * replaceable. **It does not own any of it.** This file is 153 lines and every
+ * one of them is a class string, a prop rename or a comment. `AriaListBox` and
+ * `AriaListBoxItem` supply, with nothing in this file participating:
+ *
+ *     role=listbox / role=option / aria-selected / aria-multiselectable
+ *     one tab stop with a roving tabindex over the options
+ *     arrow keys resolved against the DOCUMENT direction
+ *     typeahead — jump to the option whose text starts with what was typed,
+ *       in the reader's own script, with the collator that makes ی and ي equal
+ *     single / multiple / none selection, with disabled options skipped
+ *     Home / End / PageUp / PageDown, and shift-range selection
+ *
+ * That is a state machine, not a composition. The premise "Lumo already owns
+ * that code" is false here, and it is the finding rather than an excuse.
+ *
+ * ── COULD IT BE BUILT ON WHAT BASE UI DOES SHIP? YES, AND HERE IS THE COST ──
+ *
+ * Base UI's `CompositeRoot` is exactly the roving-tabindex machine this needs.
+ * It is reachable — `@base-ui/react/internals/composite` is a real entry in the
+ * package's `exports` map, and it publishes `CompositeRoot`, `CompositeItem`,
+ * `CompositeList` and `gridNavigation`. Two things stop it being the answer:
+ *
+ *  1. **The subpath is called `internals`.** `@lumo-ui/base-ui-ssr`'s first rule
+ *     is "public API only — nothing imports a Base UI internal module path", and
+ *     the package earned that rule by measuring what the alternative cost:
+ *     React Aria's equivalent defects needed a 27 KB patch of `node_modules`.
+ *     A component built on `internals/composite` is a fork with extra steps, and
+ *     it would break on a patch release with no type error.
+ *  2. **`CompositeRoot` has no typeahead.** Grepped: no `useTypeahead`, no
+ *     `onTypingChange`, nothing. Base UI's own Select and Menu get typeahead
+ *     from `floating-ui-react/useTypeahead`, wired in their roots. So the build
+ *     is `internals/composite` + `floating-ui-react` + a selection model + the
+ *     `role`/`aria-selected` wiring — three undocumented dependencies and real
+ *     state, to reimplement a component upstream has an open issue to ship.
+ *
+ * **The recommendation is to wait for #5115, and the cost of waiting is one
+ * React Aria import in a library that is otherwise off it.** That is a real
+ * cost — `form.tsx` already carries `FOCUS_RING` and `FOCUS_RING_SELF` side by
+ * side because the library is mid-migration — and it is smaller than the cost of
+ * owning a listbox state machine forever.
+ *
+ * ── WHAT MOVED ANYWAY: SEE `combobox.tsx` AND `select.tsx` ────────────────
+ *
+ * The listbox INSIDE a popover did migrate, because Base UI ships those roots
+ * and `Combobox.List` / `Select.List` come with them. So Base UI has a listbox;
+ * it just has no way to have one without a trigger. That is precisely the
+ * separation this component exists for — see the section below.
+
+ *
  *     <ListBox
  *       label="پرونده‌ها"
  *       selectionMode="single"

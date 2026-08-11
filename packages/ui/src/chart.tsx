@@ -1,16 +1,28 @@
 "use client";
 
 import * as React from "react";
-import * as RechartsPrimitive from "recharts";
-import type { TooltipValueType, XAxisProps, YAxisProps } from "recharts";
+import { Chart as TanstackChart } from "@tanstack/charts/react";
+import { defineChart } from "@tanstack/charts";
+import { tooltip as tooltipExtension } from "@tanstack/charts/tooltip";
+import { barY } from "@tanstack/charts/bar";
+import { lineY } from "@tanstack/charts/line";
+import { areaY } from "@tanstack/charts/area";
+import { dot } from "@tanstack/charts/dot";
+import { scaleBand } from "@tanstack/charts/scales/band";
+import { scalePoint } from "@tanstack/charts/scales/point";
+import { scaleLinear } from "@tanstack/charts/scales/linear";
 
 import { cn, formatNumber, type Locale } from "@lumo-ui/core";
 // No `"use client"` in that module, so a SERVER-rendered chart panel can call
-// the variants and the direction arithmetic. See chart.variants.ts's header,
-// which also records everything that was measured about recharts under RTL.
+// the variants, the direction arithmetic AND — new on this renderer — the axis
+// builders. See chart.variants.ts's header.
 import {
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
+  CHART_ROLE_DESCRIPTION,
+  CHART_VALUE_AXIS_TRAILING_EDGE,
+  TANSTACK_ROLE_DESCRIPTION,
+  chartCategoryAxis,
   chartColor,
   chartColorVar,
   chartContainerVariants,
@@ -18,10 +30,13 @@ import {
   chartLegendVariants,
   chartMirror,
   chartPieCenterVariants,
+  chartRenderSvg,
   chartStyleSheet,
   chartTickFormatter,
   chartTooltipIndicatorVariants,
   chartTooltipVariants,
+  chartValueAxis,
+  type ChartAxisSpecOptions,
   type ChartConfig,
   type ChartMirror,
   type ChartPieSweep,
@@ -30,6 +45,10 @@ import {
 export {
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
+  CHART_ROLE_DESCRIPTION,
+  CHART_VALUE_AXIS_TRAILING_EDGE,
+  TANSTACK_ROLE_DESCRIPTION,
+  chartCategoryAxis,
   chartColor,
   chartColorVar,
   chartContainerVariants,
@@ -37,111 +56,145 @@ export {
   chartLegendVariants,
   chartMirror,
   chartPieCenterVariants,
+  chartRenderSvg,
   chartStyleSheet,
   chartTickFormatter,
   chartTooltipIndicatorVariants,
   chartTooltipVariants,
+  chartValueAxis,
 };
-export type { ChartConfig, ChartMirror, ChartPieSweep };
+export type { ChartAxisSpecOptions, ChartConfig, ChartMirror, ChartPieSweep };
 
 /**
- * Charts. The one thing no headless library ships, and the reason this file is
- * vendored from shadcn rather than written: ~10.5k characters of recharts
- * plumbing that already works.
+ * The marks, re-exported so a caller composes a chart from ONE import.
  *
- *     <ChartContainer config={config} locale={locale} label="فروش ماهانه">
- *       <BarChart data={data} layout="horizontal">
- *         <CartesianGrid vertical={false} />
- *         <ChartCategoryAxis dataKey="month" />
- *         <ChartValueAxis />
- *         <ChartTooltip content={<ChartTooltipContent />} />
- *         <ChartLegend content={<ChartLegendContent />} />
- *         <Bar dataKey="sales" fill={chartColor("sales")} radius={4} />
- *       </BarChart>
- *     </ChartContainer>
+ * They are TanStack's own and are deliberately not wrapped: a wrapper that only
+ * forwards options is a second name for one thing, and `barY(data, {…})` takes
+ * a plain object with no direction and no number in it — nothing for Lumo to
+ * correct. What Lumo supplies is `chartColor(key)` for the `fill`, so a mark
+ * takes its colour from `ChartConfig` and the theme stylesheet rather than from
+ * a literal.
+ */
+export { areaY, barY, dot, lineY, scaleBand, scaleLinear, scalePoint };
+
+/**
+ * Charts, on `@tanstack/charts` 0.9.0.
  *
- * ═══ FOUR SHAPES, ONE CONTAINER ═════════════════════════════════════════════
+ *     const definition = defineChart({
+ *       marks: [barY(data, { id: "sales", x: "month", y: "sales", fill: chartColor("sales") })],
+ *       x: chartCategoryAxis(locale, { scale: () => scaleBand<string>().padding(0.2) }),
+ *       y: chartValueAxis(locale, { scale: scaleLinear, grid: true }),
+ *     });
  *
- * `BarChart`, `LineChart`, `AreaChart` and `PieChart` are recharts' own — Lumo
- * adds no wrapper for them, because a wrapper that only forwards props is a
- * second name for one thing. What Lumo DOES supply is every part of a chart that
- * has a direction or a number in it:
+ *     <ChartContainer
+ *       config={config} locale={locale} label="فروش ماهانه"
+ *       definition={definition}
+ *       data={data} categoryKey="month" dataCaption="داده‌های نمودار فروش ماهانه"
+ *     />
  *
- *     cartesian (bar/line/area)   ChartCategoryAxis · ChartValueAxis
- *     any shape                   ChartTooltip · ChartTooltipContent
- *                                 ChartLegend + ChartLegendContent
- *                                 ChartValueLabelList
- *     polar (pie/donut)           ChartPie · ChartPieCenter
- *     always, and not optional    <ChartData>, rendered by ChartContainer
+ * ═══ THE MEASUREMENT THAT MOVED THE RENDERER ════════════════════════════════
  *
- * Line and area need nothing beyond the axes: `reversed` acts on the SCALE's
- * range, so the curve, its dots, its gradient and the grid all mirror with the
- * category axis and there is no second thing to remember. Verified rather than
- * assumed — `chart.test.tsx` renders a line and an area under `fa-IR` and reads
- * the first plotted point's x back out.
+ *     recharts 3.8.0    127 bytes, NO <svg>, 0 <text>, 0 digits
+ *     TanStack 0.9.0  4,717 bytes,  a <svg>, 7 <text>, 13 PERSIAN digits
  *
- * The pie is the one that does NOT mirror, and that is a decision with an
- * argument behind it rather than an omission. It is written out in full in
- * `chart.variants.ts` above `CHART_PIE_SWEEP`; the one-line version is that two
- * mirror-imaged pies of the same data read as two different datasets, where two
- * mirror-imaged bar charts read as one.
+ * Same harness, same day, `renderToStaticMarkup`, control arm installed beside
+ * the subject (`experiments/measurements/tanstack-charts.json`). recharts had
+ * no configuration that put a plot in the served bytes — not with a fixed size,
+ * not without `ResponsiveContainer`.
  *
- * ═══ THE GATE CANNOT SEE THE PLOT. IT CAN SEE `<ChartData>` ═════════════════
+ * **The consequence was never about pixels. It was about the GATE.** `lumo-gate`
+ * grades the SERVED HTML, so a recharts chart contributed nothing for it to
+ * grade: no digits to count, no text to check. Graded with the gate's own
+ * rules, a deliberately broken chart (Latin axis) scores
  *
- * Measured: recharts renders 127–316 bytes on the server — a `<div>`, no
- * `<svg>`, no `<text>`. This is NOT the `ResponsiveContainer` measurement gate,
- * which was the obvious suspect and is innocent: with a fixed `width`/`height`
- * and no wrapper at all it emits 127 bytes and still no `<svg>`. There is no
- * configuration of recharts 3.8 that puts a plot in the served bytes.
+ *     recharts, correct   0 violations
+ *     recharts, BROKEN    0 violations      ← the blind spot, as a number
+ *     TanStack, correct   0 violations
+ *     TanStack, BROKEN    5 violations
  *
- * Six alternatives were measured under `renderToStaticMarkup`, then confirmed
- * in real Chrome with JavaScript disabled. visx, nivo, victory, @mui/x-charts
- * and echarts all server-render a real `<svg>` with Persian tick text; unovis
- * does not. Adding a tooltip changes the server output by zero bytes in every
- * one of them — the "interactivity forces client-only" intuition is a recharts
- * artefact, not a law. The full comparison is in ROADMAP.md.
+ * That is the whole argument, and it is the reason the header of this file used
+ * to say "THE GATE CANNOT SEE THE PLOT". **It can now.**
  *
- * The renderer was kept anyway, because switching it buys less than it looks
- * like:
+ * ═══ `<ChartData>` STAYS, AND THE REASON IS UNCHANGED ═══════════════════════
  *
- *     an SSR'd <svg> puts axis TICKS in the served bytes.
- *     it does not put the DATA there. bar heights are geometry.
+ * An SSR'd `<svg>` puts axis TICKS in the served bytes. It does not put the
+ * DATA there — bar heights are geometry. Measured on the same run, TanStack's
+ * collision-aware label thinning DROPPED one of four category labels from the
+ * served text, so not even every tick is guaranteed.
  *
- * A no-JS reader and a screen reader both still get nothing meaningful from a
- * server-rendered plot. So the hole is closed with the thing that actually
- * carries the figures:
+ * So `ChartContainer` still renders `<ChartData>` — a real `<table>` with
+ * `<th scope>` — and `data`, `categoryKey` and `dataCaption` are still REQUIRED
+ * props. A no-JS reader and a screen reader get the figures, related to their
+ * categories, in reading order. Two lines of defence over different things: the
+ * gate now grades the ticks AND the figures.
  *
- * **`<ChartData>` renders a real `<table>` on the server, and `ChartContainer`
- * renders it for you — it is not opt-in.** `data` and `categoryKey` are
- * required props for the same reason `locale` and `label` are: an optional
- * accessibility affordance is one nobody adds.
+ * ═══ API CHANGES, ALL FORCED BY THE GRAMMAR ═════════════════════════════════
  *
- * That makes this component gate-visible after all. `no-latin-digits` grades
- * the table, `persian-digit-floor` counts it, and a chart panel is no longer a
- * page-shaped blind spot. `rules.ts` reports every text node visible by design
- * — it has no CSS model — so `sr-only` text is graded exactly like prose, which
- * is what makes this work rather than a way to hide from the gate.
+ * recharts is a component tree; TanStack is a KEYED SCENE built from a plain
+ * definition object. Nothing wraps that difference away, so:
  *
- * `chart.test.tsx` still mounts the chart and reads the real SVG. That suite
- * grades the plot; the gate now grades the figures. Two lines of defence over
- * different things, which is the point.
+ *  1. **`ChartContainer` takes `definition`, not a chart element child.** Its
+ *     `children: React.ReactElement` prop is gone, and with it
+ *     `React.cloneElement` — the old file had to clone the child to get
+ *     `aria-label` onto the `<svg>`, because that was the only element recharts
+ *     forwarded unknown props to. `ariaLabel` is a first-class REQUIRED prop of
+ *     TanStack's `<Chart>`; the house rule this library enforces by hand on
+ *     every wrapper is enforced by the library's own types here.
  *
- * ═══ WHY `locale` AND `label` ARE REQUIRED ══════════════════════════════════
+ *  2. **`ChartCategoryAxis` / `ChartValueAxis` are `chartCategoryAxis` /
+ *     `chartValueAxis`** — functions returning an axis options object, in the
+ *     directive-free module. They could not stay components: TanStack's axes are
+ *     values in the definition, not children. The rename to lower case is
+ *     deliberate rather than cosmetic, because a capitalised function that
+ *     returns a plain object reads as a component and will be written as `<X/>`
+ *     by the next person. **What is gained is worth the break**: a SERVER
+ *     component can now build the entire spec — scales, mirroring, tick
+ *     formatters — and hand it to the client island as data.
  *
- * `locale` because every tick, every tooltip value and every legend figure is a
- * number, and `LumoNode` cannot reach inside recharts to stop `1,200` — recharts
- * builds those `<text>` nodes itself. A context with a default would render
- * confidently in the wrong numbering system with nothing red anywhere, which is
- * the argument `pagination.tsx` and `progress.tsx` already make.
+ *  3. **`ChartTooltip` / `ChartTooltipContent` are `chartTooltip(locale)`**, one
+ *     function returning the tooltip extension plus a Persian `format`. The old
+ *     pair existed to (a) reverse recharts' preferred side under RTL and (b)
+ *     replace its content renderer. Neither is needed: TanStack's tooltip
+ *     placement is `'auto'` with a mirrored candidate list, and its `format` hook
+ *     is a documented option rather than a component slot.
  *
- * `label` because recharts' accessibility layer emits, measured,
- * `<svg role="application" tabindex="0">`. That is a keyboard-focusable element
- * with a role that tells a screen reader to hand over its own key handling — and
- * without a name it is announced as bare "application". It is the same defect as
- * the 33 unnamed controls, on the one element in the library a user can tab into
- * and get nothing from. The name is cloned onto the chart child because that is
- * the only element whose attributes recharts forwards to that `<svg>`; verified
- * by rendering with `aria-label` and reading the output.
+ *  4. **`ChartLegend` + `ChartLegendContent` are one `<ChartLegend>`** taking
+ *     `config` directly. Under recharts the pair existed because recharts OWNED
+ *     the legend and Lumo had to displace it with `content=`; the measured
+ *     defects were `<li style="margin-right:10px">`, `text-align:left` and
+ *     `<svg aria-label="v legend icon">` — three physical properties and a Latin
+ *     `aria-label` no prop reached. TanStack's legend is opt-in
+ *     (`color.legend`), so there is nothing to displace: Lumo simply renders its
+ *     own, which it was doing anyway, and the payload comes from `ChartConfig`
+ *     instead of from a render-prop.
+ *
+ *  5. **`ChartPie`, `ChartPieCenter` and `ChartValueLabelList` are NOT PORTED in
+ *     this pass, and are removed rather than stubbed.** TanStack has no `<Pie>`:
+ *     a pie is a composition of `polar` + `radialArc` and a donut is the same
+ *     with an inner radius, so porting them is authoring a composition rather
+ *     than translating a component. Shipping a stub that renders nothing would
+ *     be worse than an honest absence — a chart that silently draws no sectors
+ *     is exactly the class of defect this library measures itself against.
+ *     `CHART_PIE_SWEEP`, `CHART_PIE_SWEEP_HALF` and `chartPieCenterVariants`
+ *     are KEPT, because the sweep decision and its argument outlive any
+ *     renderer, and the harness confirmed TanStack's default already matches it.
+ *
+ * ═══ THE ONE ENGLISH STRING, AND THE ONE UNFIXABLE RTL CRITERION ════════════
+ *
+ * Both live in `chart.variants.ts` with their evidence:
+ * `chartRenderSvg(locale)` closes `aria-roledescription="chart"` through the
+ * public `renderSvg` prop; `CHART_VALUE_AXIS_TRAILING_EDGE` records that the
+ * value axis cannot be moved to the reading edge at 0.9.0 and states how that
+ * is handled.
+ *
+ * ═══ WHAT THIS COSTS ═══════════════════════════════════════════════════════
+ *
+ * The upstream repo was 13 days old with 19 releases at adoption, self-describes
+ * its API as pre-alpha, and has already REPLACED the axis configuration surface
+ * once — the exact surface `chartCategoryAxis`/`chartValueAxis` sit on. Expect
+ * this wrapper to be REWRITTEN, not re-pinned, on roughly every minor until 1.0.
+ * That is stated in `pnpm-workspace.yaml` beside the pin, and it is the price of
+ * a chart the gate can see.
  */
 
 interface ChartContextProps {
@@ -153,39 +206,50 @@ const ChartContext = React.createContext<ChartContextProps | null>(null);
 
 function useChart() {
   const context = React.useContext(ChartContext);
-
   if (!context) {
-    // Not user-facing: this is a developer error thrown at mount, never a string
-    // a reader sees. The library's no-English rule is about announced strings.
+    // Not user-facing: a developer error thrown at mount, never a string a
+    // reader sees. The library's no-English rule is about announced strings.
     throw new Error("useChart must be used within a <ChartContainer />");
   }
-
   return context;
 }
 
-const INITIAL_DIMENSION = { width: 320, height: 200 } as const;
+/** One plotted row. Values are the series figures; the category is a label. */
+export type ChartRow = Record<string, string | number | null | undefined>;
 
 export interface ChartContainerProps
   extends Omit<React.ComponentProps<"div">, "children" | "className" | "aria-label"> {
+  /**
+   * Chrome AROUND the plot — a `<ChartLegend>`, a caption, a footnote.
+   *
+   * NOT the chart itself, which is `definition`. Under recharts this prop was
+   * `React.ReactElement` and held the chart element, which is why the old file
+   * had to `cloneElement` it to get an `aria-label` onto the `<svg>`. It holds
+   * siblings now, and it is optional because the plot and its data table are
+   * complete without one.
+   */
+  children?: import("@lumo-ui/core").LumoNode;
   config: ChartConfig;
   /** The numbering system every tick, tooltip and legend figure is formatted in. */
   locale: Locale;
   /**
    * The chart's announced name, e.g. «فروش ماهانه به تفکیک دسته».
    *
-   * REQUIRED. recharts makes the plot a focusable `role="application"`; an
-   * unnamed one is a tab stop that announces nothing.
+   * REQUIRED. The plot is a `role="img"` with `tabindex="0"` — a keyboard stop —
+   * and an unnamed one announces "chart" and nothing else. TanStack types its
+   * own `ariaLabel` as required too, which is the first dependency in this
+   * library to enforce Lumo's rule 3 on Lumo's behalf.
    */
   label: string;
-  /** Exactly one recharts chart element. */
-  children: React.ReactElement;
+  /** The definition from `defineChart`. See the file header for the shape. */
+  definition: React.ComponentProps<typeof TanstackChart>["definition"];
   /**
-   * The same rows the chart plots.
+   * The same rows the marks plot.
    *
-   * REQUIRED, and yes — it is passed twice, once here and once to the recharts
-   * element. That redundancy is deliberate: the alternative is an optional prop,
-   * and an optional data table is one nobody adds. recharts serves no bytes, so
-   * this is the ONLY figure a no-JS reader or a screen reader receives.
+   * REQUIRED, and yes — passed twice, once here and once to the marks. That
+   * redundancy is deliberate: the alternative is an optional prop, and an
+   * optional data table is one nobody adds. See the header on why an SSR'd
+   * `<svg>` does not retire it.
    */
   data: ChartRow[];
   /** Which column names the row, e.g. `"month"`. Becomes each `<th scope="row">`. */
@@ -198,9 +262,19 @@ export interface ChartContainerProps
    * distinction is worse than no caption.
    */
   dataCaption: string;
-  initialDimension?: { width: number; height: number } | undefined;
+  /** Plot height in pixels. */
+  height?: number | undefined;
+  /**
+   * The width the SERVER render lays out against, before `ResizeObserver` has
+   * measured anything. TanStack's documented "deterministic fallback for server
+   * output"; this is what puts real ticks in the first byte.
+   */
+  initialWidth?: number | undefined;
   className?: string | undefined;
 }
+
+const INITIAL_WIDTH = 320;
+const HEIGHT = 200;
 
 export function ChartContainer({
   id,
@@ -209,23 +283,16 @@ export function ChartContainer({
   config,
   locale,
   label,
+  definition,
   data,
   categoryKey,
   dataCaption,
-  initialDimension = INITIAL_DIMENSION,
+  height = HEIGHT,
+  initialWidth = INITIAL_WIDTH,
   ...props
 }: ChartContainerProps) {
   const uniqueId = React.useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
-
-  // recharts forwards unknown props from the chart element straight onto the
-  // root `<svg>` (verified: `RootSurface` spreads `otherAttributes`), and that
-  // `<svg>` is the element carrying `role="application" tabindex="0"`. Naming
-  // the wrapper `<div>` instead would leave the actual tab stop nameless.
-  const named = React.cloneElement(
-    children as React.ReactElement<{ "aria-label"?: string }>,
-    { "aria-label": label },
-  );
 
   return (
     <ChartContext.Provider value={{ config, locale }}>
@@ -244,16 +311,25 @@ export function ChartContainer({
           categoryKey={categoryKey}
           caption={dataCaption}
         />
-        <RechartsPrimitive.ResponsiveContainer initialDimension={initialDimension}>
-          {named}
-        </RechartsPrimitive.ResponsiveContainer>
+        <TanstackChart
+          definition={definition}
+          // Required by TanStack's own types. See `label`'s doc comment.
+          ariaLabel={label}
+          height={height}
+          initialWidth={initialWidth}
+          /*
+           * The library's own renderer with its one English literal localised.
+           * A prop-level fix: `renderSvg` is public and typed, `renderChartSvg`
+           * is a public export, and nothing here imports an internal path or
+           * patches node_modules. See `chartRenderSvg`.
+           */
+          renderSvg={chartRenderSvg(locale) as never}
+        />
+        {children}
       </div>
     </ChartContext.Provider>
   );
 }
-
-/** One plotted row. Values are the series figures; the category is a label. */
-export type ChartRow = Record<string, string | number | null | undefined>;
 
 export interface ChartDataProps {
   config: ChartConfig;
@@ -270,13 +346,22 @@ export interface ChartDataProps {
  * exported for the case the container cannot cover: a plot composed outside the
  * container, or a panel showing one table for several charts.
  *
+ * ── ITS REASON SURVIVED THE RENDERER CHANGE, AND ONE HALF OF IT DID NOT ─────
+ *
+ * The half that is CLOSED: "the gate can see nothing at all". TanStack serves a
+ * real `<svg>` with real Persian ticks, so the plot is graded now.
+ *
+ * The half that SURVIVES, and it was always the stronger half: **an axis is not
+ * the data.** A tick tells a reader the scale runs to ۳٬۰۰۰; it does not tell
+ * them فروردین was ۱٬۲۰۰. Bar heights are geometry, and geometry is not text.
+ * Measured on the adoption run, TanStack's collision-aware thinning also dropped
+ * one of four category labels, so even the ticks are not a promise.
+ *
  * ── WHY A TABLE AND NOT A LIST OF `<Num>` ───────────────────────────────────
  *
- * chart.tsx's header previously said to put the same figures in a `<Num>` beside
- * the chart. That advice is withdrawn. It was advisory — nothing failed when it
- * was skipped — and it produced a bag of numbers with no stated relationship.
- * A `<table>` with `<th scope>` is what lets a screen reader say "فروردین,
- * فروش, ۱٬۲۰۰" instead of reading twelve unattached figures.
+ * A bag of numbers with no stated relationship is not an equivalent. A `<table>`
+ * with `<th scope>` is what lets a screen reader say "فروردین, فروش, ۱٬۲۰۰"
+ * instead of reading twelve unattached figures.
  *
  * ── WHY `sr-only` IS NOT HIDING FROM THE GATE ───────────────────────────────
  *
@@ -317,8 +402,8 @@ export function ChartData({ config, locale, data, categoryKey, caption }: ChartD
       <tbody>
         {data.map((row, index) => (
           // The category value is the stable identity here; the index is the
-          // fallback for data that repeats one, which is legitimate in a
-          // time series.
+          // fallback for data that repeats one, which is legitimate in a time
+          // series.
           <tr key={`${String(row[categoryKey] ?? "")}-${index}`}>
             <th scope="row">{cell(row[categoryKey])}</th>
             {series.map((key) => (
@@ -340,517 +425,139 @@ export function ChartStyle({ id, config }: { id: string; config: ChartConfig }) 
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
- * AXES
- *
- * `ChartCategoryAxis` and `ChartValueAxis` are Lumo additions, not upstream's.
- * They exist because the two things recharts gets wrong under RTL — the scale
- * direction and the tick text anchor — are both fixed by props the author has to
- * remember on every axis of every chart, and a rule nobody can follow by hand is
- * a rule that fails silently. These make the mirrored path the default path.
- *
- * They work because recharts 3 registers axes through its own store rather than
- * by inspecting `element.type` on its direct children, so a wrapper component is
- * a first-class child. Verified: a wrapper emitted the same reversed, right-hand,
- * Persian-ticked axis as the inline form. Recharts 2 did NOT work this way — if
- * this ever regresses on an upgrade, the axes disappear entirely rather than
- * degrade, so the test asserts on tick text.
- * ═══════════════════════════════════════════════════════════════════════════ */
-
-/** Everything a caller may still set. Direction and formatting are ours. */
-type AxisPassthrough = Omit<
-  YAxisProps,
-  "orientation" | "reversed" | "textAnchor" | "tickFormatter" | "ref"
->;
-
-export interface ChartAxisProps extends AxisPassthrough {
-  /**
-   * The chart's own `layout`. MUST match the value given to the chart, because
-   * it decides which of the two axes carries the categories and therefore which
-   * one mirrors. Default `"horizontal"`, same as recharts.
-   */
-  layout?: "horizontal" | "vertical" | undefined;
-  /** Passed to `Intl.NumberFormat` for numeric ticks. */
-  numberFormat?: Intl.NumberFormatOptions | undefined;
-}
-
-/**
- * The axis that carries the categories — X when bars stand up, Y when they lie
- * down. Under RTL the scale reverses, so the first category sits at the reading
- * start.
- */
-export function ChartCategoryAxis({
-  layout = "horizontal",
-  numberFormat,
-  ...props
-}: ChartAxisProps) {
-  const { locale } = useChart();
-  const mirror = chartMirror(locale);
-  const tickFormatter = chartTickFormatter(locale, numberFormat);
-
-  return layout === "horizontal" ? (
-    <RechartsPrimitive.XAxis
-      // One cast, stated rather than hidden: XAxis and YAxis share every prop
-      // this component exposes, but recharts declares them as two unrelated
-      // types, so there is no structural way to write "the props of whichever
-      // axis this turns out to be".
-      {...(props as XAxisProps)}
-      {...mirror.mainAxis}
-      tickFormatter={tickFormatter}
-    />
-  ) : (
-    <RechartsPrimitive.YAxis {...props} {...mirror.crossAxis} tickFormatter={tickFormatter} />
-  );
-}
-
-/**
- * The axis that carries the values — Y when bars stand up, X when they lie down.
- *
- * Its ticks are ALWAYS numbers, which is why `tickFormatter` is not optional
- * here in practice: it is the only thing that reaches the `<text>` recharts
- * builds from the scale domain.
- */
-export function ChartValueAxis({
-  layout = "horizontal",
-  numberFormat,
-  ...props
-}: ChartAxisProps) {
-  const { locale } = useChart();
-  const mirror = chartMirror(locale);
-  const tickFormatter = chartTickFormatter(locale, numberFormat);
-
-  return layout === "horizontal" ? (
-    <RechartsPrimitive.YAxis {...props} {...mirror.crossAxis} tickFormatter={tickFormatter} />
-  ) : (
-    <RechartsPrimitive.XAxis
-      {...(props as XAxisProps)}
-      {...mirror.mainAxis}
-      tickFormatter={tickFormatter}
-    />
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
  * TOOLTIP
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export type ChartTooltipProps = Omit<
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip>,
-  "reverseDirection"
->;
-
 /**
- * Upstream re-exports recharts' `Tooltip` unchanged. Lumo wraps it for one
- * reason, measured in `getTooltipTranslate`: the tooltip prefers
- * `coordinate.x + offset`, i.e. the space to the RIGHT of the pointer, and only
- * falls back to the left when it would overflow. In Persian the space ahead of
- * the pointer is the left, so a tooltip that leads the cursor in English trails
- * it in Persian. `reverseDirection.x` swaps the preference and is derived from
- * the locale rather than accepted as a prop.
+ * The tooltip, as a definition fragment.
+ *
+ *     defineChart({ marks: [...], x: …, y: …, tooltip: chartTooltip(locale, config) })
+ *
+ * ── WHAT TWO RECHARTS COMPONENTS USED TO DO HERE, AND WHY NEITHER IS NEEDED ─
+ *
+ * `ChartTooltip` existed for ONE measured reason: recharts' `getTooltipTranslate`
+ * prefers `coordinate.x + offset` — the space to the RIGHT of the pointer — and
+ * only falls back left on overflow. In Persian the space AHEAD of the pointer is
+ * the left, so a tooltip that led the cursor in English trailed it in Persian,
+ * and `reverseDirection.x` had to be derived from the locale. TanStack's
+ * `placement` defaults to `'auto'` over a candidate list rather than to a
+ * physical side, so there is no preference to reverse.
+ *
+ * `ChartTooltipContent` existed to replace recharts' content renderer wholesale.
+ * TanStack exposes `format` as an ordinary option, so the number goes through
+ * `formatNumber` at the one seam rather than by substituting a component.
+ *
+ * ── THE NUMBER IS THE POINT ─────────────────────────────────────────────────
+ *
+ * A tooltip value is a number the renderer stringifies, and a stringified
+ * JavaScript number is Latin digits. It is not a JSX child, so `LumoNode` cannot
+ * see it, and it appears only on hover, so no server render and no gate can
+ * either. `format` is the only place it can be caught.
  */
-export function ChartTooltip(props: ChartTooltipProps) {
-  const { locale } = useChart();
-  return <RechartsPrimitive.Tooltip {...props} {...chartMirror(locale).tooltip} />;
-}
-
-type TooltipNameType = number | string;
-
-/**
- * An intersection rather than an `interface extends`, because recharts declares
- * `formatter` differently on `TooltipProps` and on `DefaultTooltipContentProps`
- * and an interface may not extend two types that disagree on a member. Upstream
- * writes the same intersection inline in the parameter position.
- */
-export type ChartTooltipContentProps = React.ComponentProps<
-  typeof RechartsPrimitive.Tooltip
-> &
-  React.ComponentProps<"div"> & {
-    hideLabel?: boolean;
-    hideIndicator?: boolean;
-    indicator?: "line" | "dot" | "dashed";
-    nameKey?: string;
-    labelKey?: string;
-  } & Omit<
-    RechartsPrimitive.DefaultTooltipContentProps<TooltipValueType, TooltipNameType>,
-    "accessibilityLayer"
-  >;
-
-export function ChartTooltipContent({
-  active,
-  payload,
-  className,
-  indicator = "dot",
-  hideLabel = false,
-  hideIndicator = false,
-  label,
-  labelFormatter,
-  labelClassName,
-  formatter,
-  color,
-  nameKey,
-  labelKey,
-}: ChartTooltipContentProps) {
-  const { config, locale } = useChart();
-
-  const tooltipLabel = React.useMemo(() => {
-    if (hideLabel || !payload?.length) {
-      return null;
-    }
-
-    const [item] = payload;
-    const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`;
-    const itemConfig = getPayloadConfigFromPayload(config, item, key);
-    const value =
-      !labelKey && typeof label === "string"
-        ? (config[label]?.label ?? label)
-        : itemConfig?.label;
-
-    if (labelFormatter) {
-      return (
-        <div className={cn("font-medium", labelClassName)}>
-          {labelFormatter(value, payload)}
-        </div>
-      );
-    }
-
-    if (!value) {
-      return null;
-    }
-
-    return <div className={cn("font-medium", labelClassName)}>{value}</div>;
-  }, [label, labelFormatter, payload, hideLabel, labelClassName, config, labelKey]);
-
-  if (!active || !payload?.length) {
-    return null;
-  }
-
-  const nestLabel = payload.length === 1 && indicator !== "dot";
-
-  return (
-    <div className={cn(chartTooltipVariants(), className)}>
-      {!nestLabel ? tooltipLabel : null}
-      <div className="grid gap-1.5">
-        {payload
-          .filter((item) => item.type !== "none")
-          .map((item, index) => {
-            const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`;
-            const itemConfig = getPayloadConfigFromPayload(config, item, key);
-            const indicatorColor = color ?? item.payload?.fill ?? item.color;
-
-            return (
-              <div
-                key={index}
-                className={cn(
-                  "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-fg-muted",
-                  indicator === "dot" && "items-center",
-                )}
-              >
-                {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
-                ) : (
-                  <>
-                    {itemConfig?.icon ? (
-                      <itemConfig.icon />
-                    ) : (
-                      !hideIndicator && (
-                        <div
-                          className={cn(
-                            chartTooltipIndicatorVariants({ indicator, nested: nestLabel }),
-                          )}
-                          // `--lumo-chart-swatch`, not `--color-bg`/`--color-border`:
-                          // those two names ARE Tailwind theme tokens in this
-                          // workspace, so upstream's inline values would shadow
-                          // the design system inside every tooltip.
-                          style={
-                            { "--lumo-chart-swatch": indicatorColor } as React.CSSProperties
-                          }
-                        />
-                      )
-                    )}
-                    <div
-                      className={cn(
-                        "flex flex-1 justify-between leading-none",
-                        nestLabel ? "items-end" : "items-center",
-                      )}
-                    >
-                      <div className="grid gap-1.5">
-                        {nestLabel ? tooltipLabel : null}
-                        <span className="text-fg-muted">
-                          {itemConfig?.label ?? formatName(item.name, locale)}
-                        </span>
-                      </div>
-                      {item.value != null && (
-                        // No `font-mono`, and no `tabular-nums`. tokens.css
-                        // resets `font-variant-numeric` to `normal` under
-                        // `:lang(fa)` because tabular figures are a Latin
-                        // typographic idea, and a utility here would out-specify
-                        // that reset for arabext digits. `num.tsx` makes the same
-                        // omission for the same reason.
-                        <span className="font-medium text-fg">
-                          {typeof item.value === "number"
-                            ? formatNumber(item.value, locale)
-                            : String(item.value)}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-      </div>
-    </div>
-  );
-}
-
-/**
- * A series name falls back to recharts' own `name`, which is typed
- * `number | string`. The number case is the one that matters: it renders Latin
- * digits, and it is exactly the case a reviewer never sees because the fallback
- * only fires for series missing from `config`.
- */
-function formatName(name: unknown, locale: Locale): string {
-  if (name == null) return "";
-  if (typeof name === "number") {
-    return Number.isFinite(name) ? formatNumber(name, locale) : "";
-  }
-  return String(name);
+export function chartTooltip(locale: Locale, config: ChartConfig) {
+  const format = chartTickFormatter(locale);
+  return {
+    use: tooltipExtension,
+    /*
+     * `point.datum` is the caller's original row — TanStack keeps it, which is
+     * what makes a series LABEL reachable at all. The series key falls back to
+     * the mark id, and `ChartConfig.label` is what turns that English identifier
+     * into Persian; the fallback is the defect `ChartConfig.label` is required
+     * to prevent, so it is left visible rather than papered over with the key.
+     */
+    format: (point: { yValue?: unknown; markId?: string }) => {
+      /*
+       * `yValue`, not `value` — `ChartPoint` has no `value` field. Verified
+       * against the installed `dist/types.d.ts`: the interface is
+       * `{ key, markId, group, groupLabel, datum, datumIndex, xValue, yValue,
+       * x, y, color }`. Reading a field that does not exist would have produced
+       * `undefined`, which `chartTickFormatter` turns into the EMPTY STRING —
+       * a tooltip with a label and no number, on hover only, which no server
+       * render and no gate can see.
+       */
+      const label = point.markId === undefined ? undefined : config[point.markId]?.label;
+      const value = format(point.yValue);
+      return typeof label === "string" ? `${label}: ${value}` : value;
+    },
+  };
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
  * LEGEND
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export const ChartLegend = RechartsPrimitive.Legend;
-
-export type ChartLegendContentProps = React.ComponentProps<"div"> & {
-  hideIcon?: boolean;
-  nameKey?: string;
-} & RechartsPrimitive.DefaultLegendContentProps;
+export interface ChartLegendProps
+  extends Omit<React.ComponentProps<"div">, "className" | "children"> {
+  /** Where the legend sits relative to the plot. */
+  verticalAlign?: "top" | "bottom" | "middle" | undefined;
+  /**
+   * Series to omit, e.g. one drawn only as a reference line.
+   *
+   * NOT `hidden`, which is a real HTML attribute of type `boolean` on every
+   * element — a name collision that would have made `<ChartLegend hidden>`
+   * mean two contradictory things and would only have surfaced as a type error
+   * at the call site.
+   */
+  hiddenSeries?: readonly string[] | undefined;
+  className?: string | undefined;
+}
 
 /**
- * `content={<ChartLegendContent />}` is not optional styling.
+ * The legend. Lumo's own markup, driven by `ChartConfig`.
  *
- * Measured on recharts' DEFAULT legend under `dir="rtl"`: every item is an
+ * ── THIS WAS NEVER OPTIONAL STYLING, AND STILL IS NOT ───────────────────────
+ *
+ * Measured on recharts' DEFAULT legend under `dir="rtl"`: every item was an
  * `<li style="display:inline-block;margin-right:10px">` inside a
- * `<ul style="text-align:left">`, and each swatch is
+ * `<ul style="text-align:left">`, and each swatch was
  * `<svg aria-label="v legend icon">` — the dataKey, in English, in an attribute
  * a screen reader speaks. Three physical properties and a Latin `aria-label`,
- * none of which any prop reaches.
+ * none of which any prop reached; passing `content=` was the only way to keep it
+ * out of the document.
  *
- * This replacement is a flex row, so it mirrors from `direction` alone, and its
+ * TanStack's legend is opt-in rather than default, so nothing has to be
+ * displaced — but the replacement is unchanged, because the reasons for it were
+ * never about recharts. A flex row mirrors from `direction` alone, and its
  * swatches are `aria-hidden` decoration beside real text.
+ *
+ * The payload now comes from `ChartConfig` instead of from a render-prop, which
+ * removes the one case the old version could not name: a series present in the
+ * plot and absent from `config` fell back to `item.value`, i.e. the raw key.
+ * There is no fallback here because there is no second source.
  */
-export function ChartLegendContent({
-  className,
-  hideIcon = false,
-  payload,
+export function ChartLegend({
   verticalAlign = "bottom",
-  nameKey,
-}: ChartLegendContentProps) {
-  const { config, locale } = useChart();
-
-  if (!payload?.length) {
-    return null;
-  }
+  hiddenSeries,
+  className,
+  ...props
+}: ChartLegendProps) {
+  const { config } = useChart();
+  const skip = new Set(hiddenSeries ?? []);
+  const entries = Object.entries(config).filter(([key]) => !skip.has(key));
+  if (entries.length === 0) return null;
 
   return (
-    <div className={cn(chartLegendVariants({ verticalAlign }), className)}>
-      {payload
-        .filter((item) => item.type !== "none")
-        .map((item, index) => {
-          const key = `${nameKey ?? item.dataKey ?? "value"}`;
-          const itemConfig = getPayloadConfigFromPayload(config, item, key);
-
-          return (
-            <div key={index} className={cn(chartLegendItemVariants())}>
-              {itemConfig?.icon && !hideIcon ? (
-                <itemConfig.icon />
-              ) : (
-                <span
-                  aria-hidden="true"
-                  className="h-2 w-2 shrink-0 rounded-[2px] bg-(--lumo-chart-swatch)"
-                  style={{ "--lumo-chart-swatch": item.color } as React.CSSProperties}
-                />
-              )}
-              {itemConfig?.label ?? formatName(item.value, locale)}
-            </div>
-          );
-        })}
+    <div className={cn(chartLegendVariants({ verticalAlign }), className)} {...props}>
+      {entries.map(([key, item]) => (
+        <div key={key} className={cn(chartLegendItemVariants())}>
+          {item.icon ? (
+            <item.icon />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="h-2 w-2 shrink-0 rounded-[2px] bg-(--lumo-chart-swatch)"
+              style={{ "--lumo-chart-swatch": chartColor(key) } as React.CSSProperties}
+            />
+          )}
+          {item.label}
+        </div>
+      ))}
     </div>
   );
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
- * VALUE LABELS
+ * THE DEFINITION BUILDER
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export type ChartValueLabelListProps = Omit<
-  React.ComponentProps<typeof RechartsPrimitive.LabelList>,
-  "formatter"
-> & {
-  /** Passed to `Intl.NumberFormat`, e.g. `{ style: "percent" }`. */
-  numberFormat?: Intl.NumberFormatOptions | undefined;
-};
-
-/**
- * The figures drawn ON the plot — the number above a bar, beside a line's dot,
- * outside a pie sector.
- *
- * The same defect as an unformatted axis, in the place it is least likely to be
- * noticed: recharts builds these `<text>` nodes from the raw datum, so a bare
- * `<LabelList dataKey="sales" />` prints `1,200` on a Persian page. There is no
- * `LumoNode` in the way — the value never passes through JSX — and no gate can
- * see it, because recharts serves no bytes.
- *
- * `chartTickFormatter` is reused rather than reimplemented, so a label and the
- * axis tick beside it can never disagree about a numbering system.
- */
-export function ChartValueLabelList({ numberFormat, ...props }: ChartValueLabelListProps) {
-  const { locale } = useChart();
-  return (
-    <RechartsPrimitive.LabelList
-      {...props}
-      formatter={chartTickFormatter(locale, numberFormat)}
-    />
-  );
-}
-
-/* ════════════════════════════════════════════════════════════════════════════
- * PIE AND DONUT
- *
- * The sweep convention and the whole argument for NOT mirroring it live in
- * `chart.variants.ts`, above `CHART_PIE_SWEEP`. This is the part that applies it.
- * ═══════════════════════════════════════════════════════════════════════════ */
-
-export interface ChartPieProps
-  extends Omit<
-    React.ComponentProps<typeof RechartsPrimitive.Pie>,
-    "startAngle" | "endAngle" | "rootTabIndex" | "label"
-  > {
-  /**
-   * A half turn — the gauge shape — instead of the full one.
-   *
-   * Not a `startAngle`/`endAngle` pair, because those are the two numbers this
-   * component exists to own: see `CHART_PIE_SWEEP` in `chart.variants.ts`.
-   */
-  half?: boolean | undefined;
-}
-
-/**
- * A pie or, with `innerRadius`, a donut.
- *
- *     <ChartPie dataKey="value" nameKey="category" innerRadius={60}>
- *       <ChartValueLabelList dataKey="value" />
- *     </ChartPie>
- *
- * recharts' own `label` prop is deliberately removed from the type: `label`
- * means "the announced name" everywhere else in Lumo, and recharts' version
- * draws unformatted figures on the plot. Sector figures are
- * `<ChartValueLabelList>`, which formats through the locale.
- *
- * ── WHY THIS TURNS OFF A TAB STOP RATHER THAN NAMING ONE ────────────────────
- *
- * The first version of this component took a required `label` and forwarded it
- * as `aria-label`, on the assumption that it would name the sector group that
- * `defaultPieProps` makes focusable (`rootTabIndex: 0`). Rendered and read, that
- * was wrong in both halves, and the measurement is worth keeping:
- *
- *   - `aria-label` does NOT reach the focusable element. recharts spreads a
- *     `<Pie>`'s presentation props onto every SECTOR — measured output carried
- *     the same `aria-label` on both `<path class="recharts-sector">` nodes, two
- *     elements claiming one name, which is worse than none.
- *   - The focusable element is `<g class="recharts-pie" tabindex="0">`, built by
- *     `PieImpl` as `<Layer tabIndex={rootTabIndex} className={layerClass}>` —
- *     tabIndex and className are the ONLY props it receives. Verified unreachable
- *     in the sense `strings.ts` uses the word: no prop lands on it.
- *
- * So the name cannot be supplied, and an unnamed tab stop is the defect
- * `button.tsx` exists to prevent. What can be supplied is `rootTabIndex={-1}`,
- * which removes it from the tab order and leaves exactly one keyboard stop per
- * chart: the `role="application"` surface `ChartContainer` already names. Nothing
- * is lost with it — the sector paths are `tabindex="-1"` either way, and the
- * figures a keyboard or screen-reader user needs are in `<ChartData>`'s table,
- * which is served whether or not recharts ever paints.
- */
-export function ChartPie({ half, ...props }: ChartPieProps) {
-  const sweep = half ? CHART_PIE_SWEEP_HALF : CHART_PIE_SWEEP;
-  return <RechartsPrimitive.Pie {...props} {...sweep} rootTabIndex={-1} />;
-}
-
-export interface ChartPieCenterProps {
-  /** The big figure, ALREADY formatted — pass `formatNumber(n, locale)`. */
-  value: string;
-  /** The line under it, e.g. «کل سفارش‌ها». */
-  caption: string;
-  /** Where the donut's hole is, in the chart's own coordinates. */
-  cx?: number | string | undefined;
-  cy?: number | string | undefined;
-}
-
-/**
- * The figure in a donut's hole.
- *
- * `value` is a `string`, not a `number`, and that is the entire point of the
- * component existing: an SVG `<text>` is one of the few places in this library a
- * number can reach the DOM without passing a `LumoNode`, so the type refuses the
- * unformatted case at the call site instead of discovering it in a screenshot.
- *
- * Rendered through recharts' `<Label>` so it inherits the pie's own centre
- * coordinates rather than being positioned by hand.
- */
-export function ChartPieCenter({ value, caption, cx, cy }: ChartPieCenterProps) {
-  return (
-    <RechartsPrimitive.Label
-      position="center"
-      content={({ viewBox }) => {
-        // recharts hands a polar view box here; the cartesian branch is the
-        // fallback for a caller that placed this somewhere unusual.
-        const box = viewBox as { cx?: number; cy?: number } | undefined;
-        const x = box?.cx ?? cx;
-        const y = box?.cy ?? cy;
-        if (x === undefined || y === undefined) return null;
-        return (
-          <text x={x} y={y} textAnchor="middle" dominantBaseline="middle">
-            <tspan x={x} y={y} className={chartPieCenterVariants({ tone: "value" })}>
-              {value}
-            </tspan>
-            <tspan
-              x={x}
-              // A rem offset rather than a px one, so the caption stays under
-              // the figure when the density knob moves the type scale.
-              dy="1.4rem"
-              className={chartPieCenterVariants({ tone: "caption" })}
-            >
-              {caption}
-            </tspan>
-          </text>
-        );
-      }}
-    />
-  );
-}
-
-function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key: string) {
-  if (typeof payload !== "object" || payload === null) {
-    return undefined;
-  }
-
-  const payloadPayload =
-    "payload" in payload && typeof payload.payload === "object" && payload.payload !== null
-      ? payload.payload
-      : undefined;
-
-  let configLabelKey: string = key;
-
-  if (key in payload && typeof payload[key as keyof typeof payload] === "string") {
-    configLabelKey = payload[key as keyof typeof payload] as string;
-  } else if (
-    payloadPayload &&
-    key in payloadPayload &&
-    typeof payloadPayload[key as keyof typeof payloadPayload] === "string"
-  ) {
-    configLabelKey = payloadPayload[key as keyof typeof payloadPayload] as string;
-  }
-
-  return configLabelKey in config ? config[configLabelKey] : config[key];
-}
+export { defineChart };

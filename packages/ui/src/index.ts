@@ -22,6 +22,8 @@ export {
   FieldError,
   FOCUS_RING,
   FOCUS_RING_SELF,
+  Field,
+  FieldInput,
   Form,
   Label,
   descriptionVariants,
@@ -30,8 +32,17 @@ export {
   formVariants,
   labelVariants,
   optional,
+  useFieldControl,
 } from "./form.tsx";
-export type { DescriptionProps, FieldErrorProps, FormProps, LabelProps } from "./form.tsx";
+export type {
+  DescriptionProps,
+  FieldErrorProps,
+  FieldInputProps,
+  FieldProps,
+  FormProps,
+  FormValidationBehavior,
+  LabelProps,
+} from "./form.tsx";
 
 export { TextField, inputVariants } from "./text-field.tsx";
 export type { TextFieldProps } from "./text-field.tsx";
@@ -293,11 +304,12 @@ export type { BreadcrumbProps, BreadcrumbsProps } from "./breadcrumbs.tsx";
 
 export {
   Toolbar,
+  ToolbarItem,
   ToolbarSeparator,
   toolbarSeparatorVariants,
   toolbarVariants,
 } from "./toolbar.tsx";
-export type { ToolbarProps, ToolbarSeparatorProps } from "./toolbar.tsx";
+export type { ToolbarItemProps, ToolbarProps, ToolbarSeparatorProps } from "./toolbar.tsx";
 
 export {
   ToggleButton,
@@ -321,14 +333,9 @@ export {
   TableHeader,
   TableSelectAllColumn,
   TableSelectionCell,
-  cellVariants,
-  columnResizerVariants,
-  columnVariants,
-  resizableTableContainerVariants,
-  rowVariants,
-  tableBodyVariants,
-  tableHeaderVariants,
-  tableVariants,
+  localeSortFn,
+  lumoTableFeatures,
+  useLumoTable,
 } from "./table.tsx";
 export type {
   CellProps,
@@ -341,7 +348,34 @@ export type {
   TableProps,
   TableSelectAllColumnProps,
   TableSelectionCellProps,
+  // The structural seam the grid reads TanStack through. Exported because a
+  // consumer wiring their own state layer needs to know what `Table` asks for —
+  // and because the interfaces ARE the statement that TanStack owns no ARIA.
+  LumoTableColumn,
+  LumoTableFeatures,
+  LumoTableInstance,
+  LumoTableOptions,
+  LumoTableRow,
 } from "./table.tsx";
+
+/*
+ * Same rule as `pagination.variants.ts` and `chart.variants.ts`. Table's classes
+ * AND its keyboard-direction arithmetic come from the directive-free module: a
+ * server component framing a grid may call them, and `gridArrow(locale)` is a
+ * pure function precisely so the RTL arrow mapping can be tested without a DOM.
+ */
+export {
+  cellVariants,
+  columnResizerVariants,
+  columnVariants,
+  gridArrow,
+  resizableTableContainerVariants,
+  rowVariants,
+  tableBodyVariants,
+  tableHeaderVariants,
+  tableVariants,
+} from "./table.variants.ts";
+export type { GridArrow, GridStep } from "./table.variants.ts";
 
 export { ListBox, ListBoxItem, listBoxItemVariants, listBoxVariants } from "./list-box.tsx";
 export type { ListBoxItemProps, ListBoxProps } from "./list-box.tsx";
@@ -371,6 +405,7 @@ export {
   toastVariants,
 } from "./toast.tsx";
 export type {
+  LumoQueuedToast,
   LumoToastContent,
   LumoToastQueue,
   ToastProps,
@@ -569,30 +604,27 @@ export type {
 } from "./command.tsx";
 
 export {
-  ChartCategoryAxis,
   ChartContainer,
   ChartData,
   ChartLegend,
-  ChartLegendContent,
-  ChartPie,
-  ChartPieCenter,
   ChartStyle,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartValueAxis,
-  ChartValueLabelList,
+  chartTooltip,
+  // TanStack's own marks and scales, re-exported so a chart is composed from a
+  // single import. Deliberately unwrapped — see chart.tsx.
+  areaY,
+  barY,
+  defineChart,
+  dot,
+  lineY,
+  scaleBand,
+  scaleLinear,
+  scalePoint,
 } from "./chart.tsx";
 export type {
-  ChartAxisProps,
   ChartContainerProps,
   ChartDataProps,
-  ChartLegendContentProps,
-  ChartPieCenterProps,
-  ChartPieProps,
+  ChartLegendProps,
   ChartRow,
-  ChartTooltipContentProps,
-  ChartTooltipProps,
-  ChartValueLabelListProps,
 } from "./chart.tsx";
 
 /*
@@ -606,6 +638,10 @@ export type {
 export {
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
+  CHART_ROLE_DESCRIPTION,
+  CHART_VALUE_AXIS_TRAILING_EDGE,
+  TANSTACK_ROLE_DESCRIPTION,
+  chartCategoryAxis,
   chartColor,
   chartColorVar,
   chartContainerVariants,
@@ -613,15 +649,17 @@ export {
   chartLegendVariants,
   chartMirror,
   chartPieCenterVariants,
+  chartRenderSvg,
   chartStyleSheet,
   chartTickFormatter,
   chartTooltipIndicatorVariants,
   chartTooltipVariants,
+  chartValueAxis,
 } from "./chart.variants.ts";
 export type {
+  ChartAxisSpecOptions,
   ChartConfig,
-  ChartCrossAxisMirror,
-  ChartMainAxisMirror,
+  ChartAxisMirror,
   ChartMirror,
   ChartPieSweep,
 } from "./chart.variants.ts";
@@ -883,3 +921,21 @@ export {
   treeVariants,
 } from "./tree.variants.ts";
 export type { TreeChevronTurn } from "./tree.variants.ts";
+
+export { VirtualList } from "./virtual-list.tsx";
+export type { VirtualListProps } from "./virtual-list.tsx";
+
+/*
+ * Same rule again — and here it is the RTL arithmetic that needs it. A server
+ * component framing a virtualised list (a heading, a count, a filter bar) may
+ * call `virtualMirror(locale, orientation)` to reason about the same direction
+ * the client island will use, and routing it through `virtual-list.tsx` would
+ * make it a client reference.
+ */
+export {
+  virtualListItemVariants,
+  virtualListSizerVariants,
+  virtualListVariants,
+  virtualMirror,
+} from "./virtual-list.variants.ts";
+export type { VirtualListOrientation, VirtualMirror } from "./virtual-list.variants.ts";

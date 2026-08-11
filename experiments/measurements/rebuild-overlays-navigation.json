@@ -1,0 +1,407 @@
+{
+  "$about": "The overlay and navigation family rebuilt on Base UI 1.7.0: drawer, hover-card, disclosure, menubar, navigation-menu, toolbar, toast, breadcrumbs, pagination, steps. Every claim here is from a render (renderToStaticMarkup for served bytes, jsdom for mounted) or from a grep of the installed dist. Nothing is read off a changelog.",
+  "branch": "experiment/base-ui",
+  "engine": "@base-ui/react@1.7.0",
+  "generated_at": "2026-08-11",
+  "method": {
+    "served_bytes": "renderToStaticMarkup, because every defect in this batch self-heals on hydration. jsdom, Testing Library and axe-in-a-browser all pass with or without the fixes.",
+    "mounted": "@testing-library/react under jsdom, dumping EVERY attribute of EVERY element rather than querying for the ones expected.",
+    "absence": "Every claim of ABSENCE cross-checked against a grep of the installed dist. A state a render did not happen to trigger is not the same as a state that does not exist."
+  },
+
+  "headline": {
+    "components": 10,
+    "vendored_from_base_vega": ["drawer(rejected)", "hover-card", "menubar", "navigation-menu", "toast", "pagination"],
+    "no_base_vega_counterpart": ["disclosure", "toolbar", "breadcrumbs", "steps"],
+    "needed_no_engine_at_all": ["breadcrumbs", "pagination", "steps"],
+    "changed_zero_lines": ["steps"],
+    "engines_rejected_after_measurement": ["drawer"],
+    "new_first_byte_defect_class_found": "roving-tabindex composites serve tabindex=-1 on every item",
+    "api_changes": 5,
+    "capability_losses": 4,
+    "capability_gains": 7
+  },
+
+  "the_new_defect_class": {
+    "id": "composite.roving-tabindex-absent-at-ssr",
+    "severity": "first-byte keyboard trap",
+    "claim": "Base UI elects the one tabbable member of a roving tabindex in an effect. An effect does not run on the server, so a server-rendered Toolbar or Menubar serves tabindex=-1 on EVERY item and cannot be reached by Tab at all until JavaScript arrives.",
+    "measured": {
+      "react_aria_ssr": "<div role=\"toolbar\" aria-label=\"ابزار\"><button tabindex=\"0\">الف</button><button tabindex=\"0\">ب</button></div>",
+      "base_ui_ssr": "<div role=\"toolbar\" aria-label=\"ابزار\"><button data-focusable=\"\" tabindex=\"-1\">الف</button><button data-focusable=\"\" tabindex=\"-1\">ب</button></div>",
+      "base_ui_mounted": "first item tabindex=\"0\", rest tabindex=\"-1\""
+    },
+    "affects": ["toolbar", "menubar", "and every future component built on internals/composite"],
+    "why_nothing_catches_it": "It self-heals on hydration, so every jsdom assertion passes with or without a fix. It leaks no English, so no string count sees it. No HTML gate rule grades tabindex.",
+    "fixable_from_outside": true,
+    "fix": "A caller's tabIndex wins: CompositeItem spreads [compositeProps, ...props, elementProps] and CompositeRoot does the same. Serve tabIndex=0 and withdraw it on mount, so pre-hydration behaviour matches React Aria's served HTML and post-hydration the engine's roving takes over.",
+    "why_a_constant_is_worse": "A constant tabIndex=0 survives onto the mounted element and destroys the roving tabindex, turning one Tab stop into N. Identical in shape to the constant-aria-expanded trap useOpenMirror's docblock records.",
+    "adapter": "BELONGS IN @lumo-ui/base-ui-ssr and is not there yet. It is neither a naming nor an open-state problem, so it did not fit either existing hook; it is implemented locally in toolbar.tsx (useHasMounted + ToolbarItem) and menubar.tsx. Proposed export: useServedTabStop().",
+    "gotcha_found_while_implementing": {
+      "id": "composite.render-target-receives-engine-props",
+      "claim": "When a Base UI part's render target is a COMPONENT rather than an element, useRenderElement hands it the merged props as ordinary React props. So the engine's tabIndex=-1 arrives inside that component's `rest` and beats anything the component sets before the spread.",
+      "measured": "render={<button tabIndex={0}/>} serves tabindex=\"0\"; render={<MenubarButton/>} with the same intent served tabindex=\"-1\" until MenubarButton intercepted tabIndex out of rest and emitted it last.",
+      "generalises_to": "any Lumo component used as a Base UI render target"
+    }
+  },
+
+  "per_component": {
+    "toolbar": {
+      "vendored": false,
+      "vendor_check": "no base-vega counterpart (404); listed among the 29 in base-vega-inventory.json",
+      "engine": "@base-ui/react/toolbar — Toolbar.Root, Toolbar.Button, Toolbar.Separator",
+      "tests": "packages/ui/src/toolbar.test.tsx — 7 assertions, all passing",
+      "api_changes": [
+        {
+          "change": "NEW PART: ToolbarItem",
+          "reason": "React Aria's Toolbar DISCOVERED focusable descendants; Base UI's Toolbar.Root is a CompositeRoot with a REGISTRY, so only Toolbar.Button/Link/Input/Group register.",
+          "evidence": "Two plain <button> children of a Toolbar.Root render with no tabindex, no data-focusable, no registration — measured. Arrow keys do nothing.",
+          "why_not_auto_wrapped": "Real call sites pass a ToggleButtonGroup (a composite of its own) and a ToolbarSeparator. Wrapping either in Toolbar.Button would make a group or a divider a focusable button. Discriminating by child.type is the identity test that passes jsdom and silently fails when a server component composes the tree (findChildProp's docblock).",
+          "severity": "SILENT REGRESSION at existing call sites until they wrap: the toolbar still renders, still announces, and its one behaviour is gone",
+          "call_sites_needing_the_wrap": [
+            "apps/website/src/lib/demos.tsx:1408",
+            "packages/blocks/src/data-toolbar.tsx:148"
+          ]
+        }
+      ],
+      "gains": [
+        "Toolbar.Separator DERIVES aria-orientation as the perpendicular of the toolbar. The React Aria build hard-coded aria-orientation=\"vertical\", which was a latent bug in a vertical toolbar — measured: vertical toolbar now yields aria-orientation=\"horizontal\"."
+      ],
+      "state_selector_rewrites": 0,
+      "state_note": "data-orientation is written on the root by both engines, so the named-group separator rules needed no edit at all."
+    },
+
+    "menubar": {
+      "vendored": false,
+      "vendor_check": "base-vega HAS a menubar (200 OK) but its emit is a dropdown-menu recipe with a different public API; the Base UI primitive was used directly",
+      "engine": "@base-ui/react/menubar — Menubar (single component, not parts)",
+      "tests": "packages/ui/src/menubar.test.tsx — REWRITTEN, 7 assertions, all passing",
+      "pinned_measurement_overturned": {
+        "was": "role is toolbar, not menubar — RAC 1.20 ships NO Menubar and role=\"menubar\" appears nowhere in its dist",
+        "test_that_pinned_it": "expect(document.querySelector('[role=\"menubar\"]')).toBeNull()",
+        "header_promise": "If RAC ships a Menubar, this file adopts it and the role assertion in menubar.test.tsx goes red to say so.",
+        "outcome": "The alarm fired. The test is FLIPPED to assert presence, which is strictly stronger: asserting a role is absent is satisfied by any markup including no menubar; asserting it is present on a named element rules out every tree but the correct one.",
+        "measured_first_byte": "<div role=\"menubar\" aria-orientation=\"horizontal\" aria-label=\"نوار منو\"><button role=\"menuitem\" aria-haspopup=\"menu\" …>پرونده</button></div>"
+      },
+      "gains": [
+        "real role=menubar + aria-orientation, and role=menuitem on each trigger (Menu.Trigger switches to a CompositeItem when parent.type === 'menubar')",
+        "roving tabindex over the triggers, direction-resolved — Menu.Root passes rtl: direction === 'rtl' into its list navigation, so ArrowLeft moves FORWARD in Persian",
+        "open-on-hover ACROSS triggers once any menu is open (Menubar passes highlightItemOnHover: hasSubmenuOpen). The React Aria build listed this as flatly missing."
+      ],
+      "api_changes": [
+        {
+          "change": "MenubarProps no longer extends Omit<ToolbarProps,'orientation'>",
+          "reason": "the row is no longer a Toolbar. label/children/className are unchanged; `orientation` is declared `never` so the old annotation still compiles.",
+          "severity": "source-compatible"
+        },
+        {
+          "change": "MenubarButton renders a plain <button> instead of an RAC Button",
+          "reason": "it is the element Menu.Trigger adopts through `render`; adopting an RAC Button would put React Aria's press machinery underneath a Base UI composite item",
+          "severity": "the RAC press/hover callbacks it accepted were already inert under Base UI (see button.tsx)"
+        }
+      ],
+      "first_byte_gaps_closed": [
+        "aria-expanded — already closed by menu.tsx's useOpenMirror, and VERIFIED to survive the menubar path: a caller's aria-expanded lands on the role=menuitem element at SSR",
+        "tabindex — see the_new_defect_class"
+      ],
+      "state_selector_rewrites": 4,
+      "state_mapping": {
+        "data-hovered": ":hover",
+        "data-pressed": "data-popup-open — RESUBJECT AND REDEFINE, not a rename. React Aria's data-pressed is the transient pointer-down; Base UI's is a persistent ON state. Carrying the name across gives the trigger a permanent sunken look.",
+        "data-focus-visible": ":focus-visible",
+        "aria-expanded": "unchanged, kept ALONGSIDE data-popup-open because aria-expanded is the one that exists in the first byte",
+        "NEW: data-highlighted": "cross-trigger hover while a menu is open — a state that only exists because the menubar is real"
+      }
+    },
+
+    "disclosure": {
+      "vendored": false,
+      "vendor_check": "no base-vega counterpart (404)",
+      "engine": "@base-ui/react/accordion — NOT collapsible",
+      "tests": "packages/ui/src/disclosure.test.tsx — 8 assertions, all passing",
+      "the_decision": {
+        "id": "disclosure.accordion-not-collapsible",
+        "claim": "Collapsible is the mapping that reads more naturally for a lone <Disclosure> and it is the wrong one. Its panel is an anonymous generic.",
+        "measured_open": {
+          "collapsible": "<button aria-controls aria-expanded=\"true\"> … <div id=\"…\">  — no role, no name",
+          "accordion": "<h3><button aria-controls aria-expanded=\"true\" id=\"T\"></h3> … <div id=\"…\" role=\"region\" aria-labelledby=\"T\">"
+        },
+        "cost_of_the_wrong_choice": "A screen-reader user who expands a section and navigates into it has left the trigger behind and has nothing telling them which section they are in. The panel is not a landmark, is not named, and does not appear in a rotor. This is what DisclosurePanel gave under React Aria.",
+        "consequence": "every disclosure is an Accordion.Root, including a lone one; Disclosure supplies its own root when not inside a DisclosureGroup, and learns which case it is in from a Lumo-owned React context"
+      },
+      "traps_found": [
+        {
+          "id": "disclosure.multiple-default",
+          "claim": "base-vega's vendored accordion spells the prop `openMultiple`; Base UI's real prop is `multiple`. Both default to FALSE — checked in AccordionRoot.d.ts:84 rather than assumed. Getting it backwards turns every single-open accordion in every consuming project into a multi-open one, with nothing red anywhere.",
+          "pinned_in_both_directions": true
+        }
+      ],
+      "gains": [
+        "keepMounted / hiddenUntilFound put a collapsed panel in the first byte behind `hidden`, with role=region and its name intact — measured at SSR. An FAQ's answers become indexable and find-in-page-able with no JavaScript. Exposed as a prop, NOT switched on: turning it on changes what every existing consumer ships in their first byte.",
+        "aria-controls on the trigger, which React Aria also supplied"
+      ],
+      "state_selector_rewrites": 3,
+      "state_mapping": {
+        "data-hovered": ":hover",
+        "data-focus-visible": ":focus-visible — WCAG 2.4.7, and the row that gets missed",
+        "group-data-expanded/lumo-disclosure": "group-data-panel-open/lumo-disclosure-trigger — RESUBJECT: Base UI writes data-open on the ITEM and data-panel-open on the TRIGGER. The rule moved down a level rather than being renamed in place."
+      }
+    },
+
+    "hover_card": {
+      "vendored": true,
+      "vendor_source": "base-vega hover-card → PreviewCard.Root/Trigger/Portal/Positioner/Popup, composition adopted verbatim; public surface NOT adopted (upstream exposes three parts and no name)",
+      "engine": "@base-ui/react/preview-card",
+      "tests": "packages/ui/src/hover-card.test.tsx — 6 assertions including a POISON TWIN, all passing",
+      "lines_deleted": "the entire hand-rolled intent-delay state machine: one shared timer, open delay, close grace period, focus/blur pair, touch guard, two Escape handlers, manual focus restore",
+      "engine_equivalents": {
+        "touch guard": "mouseOnly: true",
+        "close grace period": "handleClose: safePolygon() — BETTER than what it replaced: the timer was approximating the triangle between pointer and card, and is too short on a slow diagonal, too long on a fast one",
+        "asymmetric delays": "delay: () => ({ open, close })",
+        "Escape from either element": "useDismiss on the floating root context",
+        "isNonModal's five behaviours": "PreviewCard has no modal mode at all — measured: no focus guards, no aria-hidden on the document, no scroll lock. The prop that could be forgotten no longer exists."
+      },
+      "defect_still_present_and_still_ours": {
+        "id": "previewCard.popup-has-no-role",
+        "claim": "PreviewCard.Popup carries NO role and NO name. An un-overridden card is an anonymous run of content parked at the end of <body> — identical to the React Aria defect.",
+        "measured": "<div data-open data-side=\"bottom\" data-align=\"center\" tabindex=\"-1\" data-base-ui-focusable>",
+        "difference_from_react_aria": "RAC wrote role: isDialog ? 'dialog' : undefined AFTER the prop spread, so a role prop was silently discarded and the workaround was an inner div. Base UI FORWARDS both — measured, role=\"dialog\" and aria-label land on the popup itself. The defect is identical; only the escape hatch is open.",
+        "poison_twin": "hover-card.test.tsx asserts bare Base UI IS broken. If a future release starts emitting a role, the twin goes red and the override should be DELETED rather than maintained."
+      },
+      "losses": [
+        {
+          "id": "hoverCard.focus-delay-not-separable",
+          "claim": "The React Aria build opened on focus with NO delay — 'a keyboard user has already committed by arriving, and a timer would only make the interface feel broken.' Base UI passes the SAME delay to useFocus as to the hover interaction (PreviewCardTrigger.mjs:66), from one prop.",
+          "consequence": "openDelay={700} now also delays the keyboard path; openDelay={0} would remove the pointer intent rule the component exists for",
+          "fixable_from_outside": false,
+          "why_not_emulated": "reproducing it means putting an onFocus back on the trigger and driving a controlled `open`, i.e. rebuilding the state machine this migration deleted, to win 700ms on one input path"
+        },
+        {
+          "id": "hoverCard.isDisabled-has-no-counterpart",
+          "claim": "PreviewCard.Root has no `disabled` prop.",
+          "handled": "the whole card is omitted and the trigger rendered alone, rather than accepting the prop and dropping it"
+        }
+      ],
+      "api_changes": []
+    },
+
+    "drawer": {
+      "vendored": true,
+      "vendor_source": "base-vega drawer — 200-line recipe, read and REJECTED",
+      "engine": "@base-ui/react/dialog (NOT @base-ui/react/drawer)",
+      "tests": "packages/ui/src/overlays.test.tsx — unchanged and passing",
+      "the_finding": {
+        "id": "drawer.swipe-direction-is-physical",
+        "severity": "the engine is unusable for a logically-anchored drawer",
+        "claim": "Base UI ships a Drawer with swipe-to-dismiss, snap points and nested stacking. The edge it is anchored to is chosen by ONE prop whose union is strictly physical, and the module never consults direction.",
+        "evidence": [
+          "type SwipeDirection = 'up' | 'down' | 'left' | 'right' — utils/useSwipeDismiss.d.ts:2",
+          "getDisplacement switches on the literal 'left'/'right' and returns -deltaX/deltaX — useSwipeDismiss.mjs:17",
+          "grep -l useDirection over the whole drawer/ directory returns ZERO files, while menu/root, navigation-menu/popup, navigation-menu/trigger, select/popup, slider/thumb, slider/control, combobox/root, scroll-area/viewport and internals/composite/root all import it",
+          "contrast Popover.Positioner's Side in the SAME library, which carries 'inline-start' | 'inline-end' as first-class members"
+        ],
+        "why_it_could_not_be_bridged": [
+          "a new locale prop → a public API change, bought for a physical mapping",
+          "document.dir at runtime → client-only, so the served drawer is on the wrong edge until hydration, and the file can no longer claim 'no dir inspection anywhere in the component'",
+          "DirectionProvider → measured inert; the drawer does not read it"
+        ],
+        "given_up": ["swipe-to-dismiss", "snap points", "nested drawer stacking", "Drawer.Viewport's virtual-keyboard handling"],
+        "kept": "inset-inline-* animation — the reason the file exists as its own file. base-vega's vendored drawer is built on exactly the transform this file rejects: [--closed-transform:translate3d(calc(-100%-…),0,0)] keyed on data-[swipe-direction=left].",
+        "upstream_ask": "swipeDirection wants 'inline-start' | 'inline-end', exactly as Side already has them. Clearest upstream ask in this batch."
+      },
+      "api_changes": [],
+      "state_selector_rewrites": 4,
+      "state_mapping": {
+        "data-entering": "data-starting-style",
+        "data-exiting": "data-ending-style"
+      },
+      "state_note": "Two renames, but they appear TWICE PER SIDE because the offsets live inside the side variant keyed on the state. A rename that missed one would leave a drawer that enters correctly and exits by teleporting."
+    },
+
+    "navigation_menu": {
+      "vendored": true,
+      "vendor_source": "base-vega navigation-menu — composition adopted, public surface not",
+      "engine": "@base-ui/react/navigation-menu",
+      "tests": "packages/ui/src/navigation-menu.test.tsx — unchanged and passing",
+      "trade_the_react_aria_build_accepted_and_this_reverses": "The old header: 'each trigger owns an independent popover, so moving pointer or focus from one open trigger to the next closes and reopens rather than morphing one shared viewport … bought with a hand-rolled focus/hover state machine on the inline axis — the exact class of direction-sensitive code this library rents instead of writes.' NavigationMenu.Root owns one open value and one shared Portal→Positioner→Popup→Viewport, and navigation-menu/trigger and navigation-menu/popup both import useDirection.",
+      "the_finding": {
+        "id": "navigationMenu.second-unnamed-nav-landmark",
+        "claim": "NavigationMenu.Popup renders a <nav> element with no name, so a screen reader's landmark list gains an anonymous 'navigation' entry the moment a panel opens.",
+        "measured": "document.querySelectorAll('nav').length === 2 with one trigger open: <nav aria-label=\"ناوبری اصلی\"> and <nav> (in the portal)",
+        "why_nothing_catches_it": "it leaks no string, so no English count sees it; it is invisible in a screenshot",
+        "fixable_from_outside": true,
+        "fix": "render={<div/>} on the Popup demotes it and the landmark count returns to one. Verified.",
+        "why_not_named_instead": "the panel is INSIDE the navigation it belongs to, so a second landmark is a duplicate however well named"
+      },
+      "api_changes": [
+        {
+          "change": "NavigationMenuItem's onOpenChange is accepted and NOT called",
+          "reason": "React Aria put open state on each trigger (NavigationMenuItem was a PopoverTrigger). Base UI puts ONE value on the Root naming the open item, and fires onValueChange there. Bridging defaultOpen/isOpen works through a constant sentinel value (OPEN_ITEM) that the Root finds with findChildProp; a per-item CALLBACK would have to be routed back down by the same constant, which cannot distinguish two items.",
+          "severity": "silent — the callback simply never fires"
+        },
+        {
+          "change": "NavigationMenuPanel's `placement` is read by NavigationMenu, not applied locally",
+          "reason": "there is one Positioner for the whole menu, so a per-panel placement has nowhere to land. Lifted with findChildProp so the prop stays meaningful; two panels asking for different placements is not expressible and the first wins."
+        },
+        {
+          "change": "NavigationMenuItemProps no longer extends PopoverTriggerProps",
+          "reason": "it is no longer a PopoverTrigger. The three open-state props are redeclared, so source compiles unchanged."
+        }
+      ],
+      "deliberate_non_adoptions": [
+        {
+          "id": "navigationMenu.link-not-adopted",
+          "claim": "NavigationMenu.Link is an <a> that registers with the composite for arrow-key traversal. Adopting it costs link.tsx's isCurrent (→ aria-current + data-current) and the newTab/newTabLabel typed pair, neither of which Base UI has an equivalent for.",
+          "decision": "a nav link that can be marked as the current page matters more than arrow-key traversal of a four-item marketing row, and the typed pair is a required-string rule the library will not trade away"
+        },
+        {
+          "id": "navigationMenu.list-and-item-rendered-as-divs",
+          "claim": "Base UI's defaults are <ul> and <li>. Lumo's API also accepts a bare <NavigationMenuLink> as a direct child, and an <a> that is a direct child of a <ul> is invalid HTML that browsers reparent — moving the link OUT of the nav in the parsed tree.",
+          "decision": "render={<div/>} on both, preserving the React Aria build's <nav><div> shape and every existing call site. Costs list semantics the component never had."
+        }
+      ],
+      "first_byte": {
+        "aria_expanded": "SERVED, unlike Menu.Trigger's — so this file needs no useOpenMirror",
+        "panel_content": "ABSENT at SSR, same as the React Aria build. Not a regression; stated because a marketing nav is the one place someone will assume otherwise."
+      },
+      "state_selector_rewrites": 5,
+      "state_mapping": {
+        "data-hovered": ":hover",
+        "data-pressed": ":active",
+        "data-focus-visible": ":focus-visible",
+        "aria-expanded (trigger open style)": "data-popup-open",
+        "group-aria-expanded/lumo-nav-trigger (chevron)": "group-data-popup-open/lumo-nav-trigger",
+        "data-placement": "data-side + data-align — a SPLIT, not a rename"
+      }
+    },
+
+    "toast": {
+      "vendored": true,
+      "vendor_source": "base-vega toast — composition adopted, queue API not",
+      "engine": "@base-ui/react/toast",
+      "tests": "packages/ui/src/controls.test.tsx — one assertion restated, POISON twin untouched and still passing",
+      "the_defect_that_is_gone": {
+        "id": "toast.rac-portal-dir",
+        "was": "ToastRegion was one of only two RAC components that stamped a dir attribute on the element it rendered, through createPortal(region, document.body), AFTER the prop spread, from useLocale() — a hardcoded {locale:'en-US',direction:'ltr'} during SSR. A correct Persian page viewed on an en-US browser laid its toasts out LTR.",
+        "fix_that_is_now_deleted": "an I18nProvider mounted from the required locale prop",
+        "measured_now": "<div tabindex=\"-1\" role=\"region\" aria-live=\"polite\" aria-atomic=\"false\" aria-relevant=\"additions text\" aria-label=\"اعلان‌ها\"> — no dir anywhere, so the portalled node inherits dir=\"rtl\" from <html>",
+        "test_restated": "expect(dir).toBe('rtl') → expect(dir).toBeNull(). STRONGER: 'rtl' would also be satisfied by a component that hardcoded it and would then be wrong on an English page; 'writes no dir' can only be satisfied by inheriting. The POISON twin renders bare React Aria and still measures dir=\"ltr\" and aria-label=\"1 notification.\", so the defect is proven to have been real."
+      },
+      "english": {
+        "react_aria": 2,
+        "base_ui": 1,
+        "base_ui_string": "'Notifications' at toast/viewport/ToastViewport.mjs:184, inside a defaultProps object merged BEFORE the caller's — so an aria-label wins. Verified by render.",
+        "toast_close": "no default name at all, unlike RAC's 'Close'. The unlabelled failure mode is now a NAMELESS button rather than an English one: worse, because nothing on screen says a string is missing.",
+        "already_catalogued": "BASE_UI_STRINGS.toast.viewport in @lumo-ui/base-ui-ssr"
+      },
+      "the_wcag_trap": {
+        "id": "toast.timeout-default-inverted",
+        "claim": "ToastObject.timeout is documented @default 5000. Lumo has deliberately had NO default — an auto-dismissing toast is a moving target under WCAG 2.2.1, and anything a user must act on should have no timeout.",
+        "consequence_if_adopted_as_is": "every existing toasts.add(…) call in every consuming project gains a five-second fuse, with nothing red anywhere",
+        "fix": "createToastQueue passes timeout: 0 — Base UI's 'never auto-dismiss' — when the caller gives none. Restored at the adapter, which is the only place it can be restored without an API change."
+      },
+      "architecture_change": "React Aria put role=\"alert\" + aria-atomic on each toast's CONTENT. Base UI puts one polite live region on the VIEWPORT and gives each toast role=\"dialog\" with aria-labelledby/aria-describedby wired to its own Title and Description. Same outcome, different mechanism — and the announcement now depends on the toast being INSIDE the viewport, so a <Toast> rendered anywhere else is silent.",
+      "api_changes": [
+        {
+          "change": "LumoToastQueue is a Lumo object wrapping Base UI's ToastManager, not a type alias to an engine class",
+          "reason": "Base UI's manager.add takes ONE flat object; Lumo's queue.add(content, options) is what every call site writes. The adapter keeps the two-argument shape AND restores the timeout default.",
+          "severity": "none — createToastQueue(), queue.add(content, {timeout}) and queue.close() are unchanged"
+        },
+        {
+          "change": "LumoQueuedToast (the `toast` prop's type) is flat: .title/.description/.data instead of .content.title",
+          "reason": "Base UI's store, not Lumo's, owns the shape",
+          "severity": "affects only a consumer who edited their copy of <Toast> to read toast.content.*; the documented usage passes the object through untouched",
+          "id": "toast.queued-toast-shape"
+        },
+        {
+          "change": "maxVisibleToasts is carried from createToastQueue to Base UI's `limit` on the Provider",
+          "reason": "React Aria took it on the queue constructor; Base UI takes it on the provider. Same meaning, and the public API keeps it where it was."
+        },
+        {
+          "change": "the `locale` prop is now INERT",
+          "reason": "it existed solely to reach the dir RAC wrote on its own portal. Base UI writes none. Kept required because the public API may not change, and documented as inert because a stale justification is worse than no prop.",
+          "id": "toast.locale-prop-now-inert"
+        }
+      ],
+      "available_and_deliberately_not_wired": "Base UI's priority: 'high' promotes a toast to role=\"alertdialog\" and an assertive announcement. NOT wired to tone=\"critical\": tone is a colour and priority is an interruption, and silently making every red toast interrupt the user's current sentence is the kind of coupling that is discovered in the field."
+    },
+
+    "breadcrumbs": {
+      "vendored": false,
+      "vendor_check": "no base-vega counterpart (404); no breadcrumbs primitive among Base UI's 48 export subpaths",
+      "engine": "NONE — plain markup",
+      "tests": "packages/ui/src/overlays.test.tsx — unchanged and passing",
+      "verdict": "the clearest 'no engine needed' in the batch",
+      "what_react_aria_supplied": ["an <ol>/<li> pair", "a data-current flag on the last crumb", "an English aria-label default this file existed to override"],
+      "replacements": ["markup", "Children.count + cloneElement", "nothing — the default is gone rather than overridden"],
+      "gain": "NO \"use client\". A trail of links is a picture of the route — nothing pressable, no state, no subscription. Under React Aria it had to be a client component because Breadcrumbs is a collection component; a page header now renders its breadcrumbs on the server.",
+      "why_cloneElement_and_not_child_type": "cloneElement ADDS a prop to whatever element it is given without needing to know what that element is, so it survives a server component composing the tree. A child.type test would not.",
+      "the_lesson_kept": "React Aria's 'Breadcrumbs' string was NOT among the eight recorded in core/strings.ts, because that sweep rendered components in their DEFAULT state and every overlay in the batch renders null while closed. Breadcrumbs are never closed. 'Measured zero' means 'zero in the states we rendered' — the sentence to carry into every Base UI string count.",
+      "failure_mode_inverted": "an unlabelled trail is now anonymous rather than English, which is the WORSE of the two: an English word is something a gate can catch and a reviewer can see; a missing accessible name leaks no string and passes every count. label stays required.",
+      "api_changes": [
+        {
+          "change": "Breadcrumbs' render-function children form is gone; `items` is a type carrier typed `never`",
+          "reason": "there is no collection builder to feed it",
+          "severity": "the type PARAMETER survives so existing annotations compile; passing a value is now a compile error rather than a silently dropped prop"
+        }
+      ]
+    },
+
+    "pagination": {
+      "vendored": true,
+      "vendor_source": "base-vega pagination",
+      "engine": "@base-ui/react/button, and ONLY for one attribute",
+      "tests": "packages/ui/src/controls.test.tsx — unchanged and passing",
+      "verdict": "the marginal case; the answer is 'barely'",
+      "vendor_finding": "the base-vega emit contains NO Base UI import at all — <nav>, <ul>, <li>, <a>, and a Button used only for its classes. There is no pagination primitive in Base UI and there was none in React Aria.",
+      "upstream_string_count": {
+        "count": 6,
+        "strings": ["aria-label=\"pagination\"", "aria-label=\"Go to previous page\"", "aria-label=\"Go to next page\"", "text = \"Previous\"", "text = \"Next\"", "<span class=\"sr-only\">More pages</span>"],
+        "note": "all optional, all unreachable on a Persian page except by remembering. Lumo's five required props are the same six strings with the defaults removed, which is why the vendored file could not simply be adopted."
+      },
+      "why_an_engine_at_all": "Base UI's Button emits data-disabled alongside the native disabled, and paginationItemVariants styles the disabled arrows with data-disabled:. A bare <button disabled> would have been simpler and would have silently dropped that rule.",
+      "state_selector_rewrites": 2,
+      "state_mapping": {
+        "data-hovered:": "DELETED from pagination.variants.ts — the file carried BOTH hover: and data-hovered: so one class list could serve a client button and a server-rendered <a>. Base UI publishes no hover attribute anywhere, so the second half now matches no element in any state. What is genuinely lost is React Aria's pointer-type awareness, and it is lost with the engine rather than with the edit."
+      },
+      "api_changes": []
+    },
+
+    "steps": {
+      "vendored": false,
+      "vendor_check": "no base-vega counterpart (404); no stepper among Base UI's 48 export subpaths",
+      "engine": "NONE",
+      "lines_changed": 0,
+      "verdict": "the proof that 'no engine' is a real answer and not a dodge",
+      "checked_on_all_three_axes": {
+        "engine": "no react-aria-components import, nothing to vendor, nothing to translate",
+        "state_selectors": "zero — its only stateful class is data-status, which it WRITES itself on the <li> from its own `current` prop. State it owns cannot have a vocabulary that belongs to somebody else.",
+        "announced_strings": "four required props, no engine defaults to override, nothing to re-check against a new dist"
+      },
+      "the_argument": "a component that rents nothing pays nothing when the rental changes. breadcrumbs.tsx reached the same place by DELETING its engine in this batch; this one was already there."
+    }
+  },
+
+  "adapter_usage": {
+    "useFieldWiring": "not used — no component in this family has a field label",
+    "useOpenMirror": {
+      "menubar": "used INDIRECTLY through menu.tsx's MenuTrigger, and verified to survive the menubar path — a caller's aria-expanded lands on the role=menuitem element at SSR",
+      "navigation_menu": "NOT needed — NavigationMenu.Trigger serves aria-expanded in the first byte, unlike Menu.Trigger. This is the inconsistency useOpenMirror's docblock describes, measured from a third direction.",
+      "drawer": "not needed — Dialog.Trigger serves aria-haspopup=\"dialog\" and aria-expanded=\"false\" at SSR",
+      "hover_card": "not applicable — PreviewCard.Trigger is an <a> and emits no expanded state in either engine"
+    },
+    "baseUiStringsFor": "toast.viewport is in the catalogue and is the one English string this family can hit. Lumo's ToastRegion requires `label` instead, so the catalogue entry serves consumers who do not.",
+    "attr": "used in disclosure, navigation-menu, drawer — exactOptionalPropertyTypes plumbing",
+    "findChildProp": "used in navigation-menu (defaultOpen, isOpen, placement lifted to the Root) and read by dialog.tsx for the drawer's isDismissable",
+    "proposed_addition": "useServedTabStop() — see the_new_defect_class"
+  },
+
+  "not_done": {
+    "call_sites_needing_ToolbarItem": [
+      "apps/website/src/lib/demos.tsx:1408 — the toolbar demo",
+      "packages/blocks/src/data-toolbar.tsx:148 — the data toolbar"
+    ],
+    "reason": "both files are outside this agent's ownership. Until they wrap their controls, those two toolbars render and announce correctly and their arrow keys do nothing.",
+    "adapter_export": "useServedTabStop belongs in @lumo-ui/base-ui-ssr and is implemented locally in toolbar.tsx and menubar.tsx instead"
+  }
+}

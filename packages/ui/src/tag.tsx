@@ -6,6 +6,21 @@ import { cn, type LumoNode } from "@lumo-ui/core";
 /**
  * A chip — a filter, a selected value, a keyword — optionally removable.
  *
+ * ── NO ENGINE, AND THIS FILE IS THE MIGRATION'S CONTROL GROUP ──────────────
+ *
+ * Nothing here changed for the Base UI branch, because there was nothing to
+ * change: this file imported no component library before the migration and
+ * imports none after it. A `<span>`, a `<button type="button">` and an inline
+ * `<svg>`, with `cva` and `cn`.
+ *
+ * That is worth recording rather than skipping past. The engine census that
+ * prices this migration counts 77 components; `state-vocabulary.json` measures
+ * that 34 of them carry zero state selectors. This one goes further — zero
+ * selectors AND zero imports — so its cost on every axis the migration is
+ * measured on is exactly nothing, and it is the baseline the expensive files
+ * should be read against. `tag-group.tsx`, one file over, is the same idea with
+ * a collection under it and was one of the most expensive in the set.
+ *
  * `"use client"` is required and is NOT about React Aria: `onRemove` is a
  * function prop, and a function cannot cross the server/client boundary. Left
  * off, a removable Tag rendered from a server component fails at build with

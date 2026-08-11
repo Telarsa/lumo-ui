@@ -733,7 +733,7 @@ const BLOCKS: BlockDemo[] = [
                 </Button>
               </div>
               <div className="w-full overflow-auto">
-                <Table label={l === "fa-IR" ? "آخرین سفارش‌ها" : "Latest orders"}>
+                <Table label={l === "fa-IR" ? "آخرین سفارش‌ها" : "Latest orders"} locale={l}>
                   <TableHeader>
                     <Column id="customer" isRowHeader>
                       {l === "fa-IR" ? "مشتری" : "Customer"}

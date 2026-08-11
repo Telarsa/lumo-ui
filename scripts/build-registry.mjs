@@ -79,6 +79,13 @@ const EXTERNAL = new Set([
   "recharts",
   "embla-carousel-react",
   "@base-ui/react",
+  // The renderer since 11 Aug 2026 (chart.tsx) and the two headless state
+  // layers (table.tsx, virtual-list.tsx). All three are imported by SUBPATH —
+  // `@tanstack/charts/react`, `@tanstack/charts/scales/linear` — which is
+  // exactly the case the `packageOf` matcher below exists for.
+  "@tanstack/charts",
+  "@tanstack/react-table",
+  "@tanstack/react-virtual",
 ]);
 
 const items = [];
@@ -91,7 +98,27 @@ for (const { dir, type, target } of SOURCES) {
   const name = file.replace(/\.tsx$/, "");
   const source = await readFile(join(dir, file), "utf8");
 
-  const imports = [...source.matchAll(/from\s+["']([^"']+)["']/g)]
+  /*
+   * A component's imports are its OWN plus its companion's.
+   *
+   * The companion is shipped in the same registry item (see the files array
+   * below), so a consumer copying `table` receives `table.variants.ts` — and
+   * that file has imports of its own. Scanning only the `.tsx` declared ZERO
+   * dependencies for anything a companion alone imports, and the consumer got
+   * an unresolved specifier that the smoke test cannot see, because its
+   * node_modules symlink already resolves it.
+   *
+   * Found when `cva()` moved out of table.tsx into table.variants.ts during the
+   * TanStack migration: `class-variance-authority` silently left the item's
+   * dependency list while the import stayed in the shipped files. chart.tsx had
+   * carried the same hole since its companion was introduced.
+   */
+  const companionSource = await readFile(
+    join(dir, file.replace(/\.tsx$/, ".variants.ts")),
+    "utf8",
+  ).catch(() => "");
+
+  const imports = [...`${source}\n${companionSource}`.matchAll(/from\s+["']([^"']+)["']/g)]
     .map((m) => m[1])
     .filter((i) => i !== undefined);
   /*

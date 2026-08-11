@@ -12,6 +12,7 @@
       "dependencies": [
         "@base-ui/react",
         "@lumo-ui/core",
+        "class-variance-authority",
         "react-aria-components"
       ],
       "registryDependencies": [
@@ -94,21 +95,25 @@
       "name": "autocomplete",
       "type": "registry:ui",
       "title": "Autocomplete",
-      "description": "A text field bound to a collection it filters. The primitive underneath a",
+      "description": "A text field bound to a collection it filters. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
-      ],
-      "registryDependencies": [
-        "form"
       ],
       "files": [
         {
           "path": "packages/ui/src/autocomplete.tsx",
           "type": "registry:ui",
           "target": "components/ui/autocomplete.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -156,8 +161,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -219,6 +223,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
+        "class-variance-authority",
         "react-aria-components"
       ],
       "files": [
@@ -247,6 +252,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
+        "class-variance-authority",
         "lucide-react",
         "react-aria-components"
       ],
@@ -310,11 +316,12 @@
       "name": "chart",
       "type": "registry:ui",
       "title": "Chart",
-      "description": "Charts. The one thing no headless library ships, and the reason this file is",
+      "description": "The marks, re-exported so a caller composes a chart from ONE import.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "recharts"
+        "@tanstack/charts",
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -384,12 +391,14 @@
       "description": "A command palette — a filtered list of actions, keyboard-first.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
         "react-aria-components"
       ],
       "registryDependencies": [
+        "autocomplete",
         "dialog"
       ],
       "files": [
@@ -397,6 +406,11 @@
           "path": "packages/ui/src/command.tsx",
           "type": "registry:ui",
           "target": "components/ui/command.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -557,6 +571,8 @@
       "description": "A collapsible section, and the accordion that groups several of them.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -574,9 +590,10 @@
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",
-      "description": "A modal that slides in from an INLINE edge.",
+      "description": "A modal that slides in from an INLINE edge. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -615,12 +632,11 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "lucide-react",
-        "react-aria-components"
+        "class-variance-authority",
+        "lucide-react"
       ],
       "registryDependencies": [
-        "button",
-        "form"
+        "button"
       ],
       "files": [
         {
@@ -642,6 +658,8 @@
       "description": "The field chrome every form control in Lumo is built from: the wrapper, the",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -658,12 +676,12 @@
       "name": "hover-card",
       "type": "registry:ui",
       "title": "Hover Card",
-      "description": "A preview panel that opens when a link is hovered or focused.",
+      "description": "A preview panel that opens when a link is hovered or focused. **BASE UI.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "popover"
@@ -711,7 +729,9 @@
       "description": "The generic row: media, content, actions. The workhorse under lists of",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
+        "class-variance-authority",
         "react-aria-components"
       ],
       "registryDependencies": [
@@ -722,6 +742,11 @@
           "path": "packages/ui/src/item.tsx",
           "type": "registry:ui",
           "target": "components/ui/item.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         },
         {
           "path": "packages/ui/src/item.variants.ts",
@@ -756,8 +781,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -835,15 +859,13 @@
       "name": "menubar",
       "type": "registry:ui",
       "title": "Menubar",
-      "description": "A horizontal row of menus — File/Edit/View in an app chrome.",
+      "description": "A horizontal row of menus — File/Edit/View in an app chrome. **BASE UI.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
-      ],
-      "registryDependencies": [
-        "toolbar"
       ],
       "files": [
         {
@@ -896,10 +918,11 @@
       "description": "The marketing-site top navigation: a row of links and triggers whose",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "link",
@@ -967,8 +990,9 @@
       "description": "A page selector.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1008,12 +1032,13 @@
       "name": "progress",
       "type": "registry:ui",
       "title": "Progress",
-      "description": "ProgressBar (an operation in flight) and Meter (a quantity within a range).",
+      "description": "EXPERIMENT — ProgressBar (an operation in flight) and Meter (a quantity",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1030,6 +1055,7 @@
       "description": "Mount this once, high in every Lumo application. It is not optional.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "react-aria-components"
       ],
@@ -1053,6 +1079,8 @@
       "description": "The list of options.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1094,13 +1122,14 @@
       "name": "rating",
       "type": "registry:ui",
       "title": "Rating",
-      "description": "A star rating, read-only or interactive.",
+      "description": "A star rating, read-only or interactive. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "form"
@@ -1177,9 +1206,11 @@
       "name": "segmented-control",
       "type": "registry:ui",
       "title": "Segmented Control",
-      "description": "Two to four mutually exclusive options, shown all at once.",
+      "description": "Two to four mutually exclusive options, shown all at once. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1225,8 +1256,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1243,7 +1273,8 @@
       "description": "The app sidebar: a collapsible rail of grouped navigation items.",
       "author": "Telarsa",
       "dependencies": [
-        "@lumo-ui/core"
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "button",
@@ -1404,23 +1435,27 @@
       "name": "table",
       "type": "registry:ui",
       "title": "Table",
-      "description": "A data grid.",
+      "description": "`<Checkbox>` with a `tabIndex`, which its own public API does not declare.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
+        "@tanstack/react-table",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
-        "checkbox",
-        "form"
+        "checkbox"
       ],
       "files": [
         {
           "path": "packages/ui/src/table.tsx",
           "type": "registry:ui",
           "target": "components/ui/table.tsx"
+        },
+        {
+          "path": "packages/ui/src/table.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/table.variants.ts"
         }
       ]
     },
@@ -1452,6 +1487,8 @@
       "description": "A keyboard-navigable list of filters, keywords or selected values.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1508,7 +1545,7 @@
       "name": "text-field",
       "type": "registry:ui",
       "title": "Text Field",
-      "description": "The input box. Shared by TextField, SearchField and NumberField, which differ",
+      "description": "The input box. Shared by TextField, SearchField and InputGroup, which differ",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1553,12 +1590,12 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "Transient notifications.",
+      "description": "Transient notifications. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "button"
@@ -1575,9 +1612,11 @@
       "name": "toggle-group",
       "type": "registry:ui",
       "title": "Toggle Group",
-      "description": "A segmented control.",
+      "description": "A segmented control. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1600,6 +1639,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
+        "class-variance-authority",
         "react-aria-components"
       ],
       "files": [
@@ -1624,9 +1664,10 @@
       "name": "toolbar",
       "type": "registry:ui",
       "title": "Toolbar",
-      "description": "A group of controls with arrow-key navigation.",
+      "description": "A group of controls with arrow-key navigation. **BASE UI ENGINE.**",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1671,6 +1712,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
+        "class-variance-authority",
         "react-aria-components"
       ],
       "files": [
@@ -1683,6 +1725,30 @@
           "path": "packages/ui/src/tree.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/tree.variants.ts"
+        }
+      ]
+    },
+    {
+      "name": "virtual-list",
+      "type": "registry:ui",
+      "title": "Virtual List",
+      "description": "A list that renders a window instead of a corpus.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/react-virtual",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/virtual-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/virtual-list.tsx"
+        },
+        {
+          "path": "packages/ui/src/virtual-list.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/virtual-list.variants.ts"
         }
       ]
     },

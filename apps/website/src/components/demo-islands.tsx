@@ -1,22 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import { Bar, BarChart, CartesianGrid } from "recharts";
 import type { Locale } from "@lumo-ui/core";
 import {
   Button,
-  ChartCategoryAxis,
   ChartContainer,
   ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartValueAxis,
   Pagination,
   Rating,
   ToastRegion,
+  barY,
+  chartCategoryAxis,
   chartColor,
+  chartTooltip,
+  chartValueAxis,
   createToastQueue,
+  defineChart,
+  scaleBand,
+  scaleLinear,
   type ChartConfig,
 } from "@lumo-ui/ui";
 
@@ -34,9 +35,15 @@ import {
  *    function into the RSC payload, so the closure has to be built on this side.
  *  - **A class instance.** `ToastRegion.queue` is a live `ToastQueue` with a
  *    subscription list. Only plain objects cross.
- *  - **A component that is not marked `"use client"` and cannot run on the
- *    server.** recharts is that: its chart elements call hooks, so constructing
- *    `<BarChart>` in a server module renders it during the RSC pass and throws.
+ *  - **A DEFINITION built from functions.** The charts below were on this side
+ *    of the boundary because recharts' chart elements call hooks and threw
+ *    during the RSC pass. That reason is GONE — `@tanstack/charts` builds a
+ *    plain definition object and `chartCategoryAxis`/`chartValueAxis` live in a
+ *    directive-free module, so a server component could now build the whole
+ *    spec. What keeps them here is smaller and different: `defineChart`'s marks
+ *    hold scale FACTORIES and a tooltip `format` closure, and a function still
+ *    cannot cross into the RSC payload. So the island stays and its reason is
+ *    restated rather than inherited.
  *
  * So the boundary is drawn here instead, and it is drawn narrowly: every prop
  * below is a STRING the caller supplies per locale. There is no copy in this
@@ -45,8 +52,10 @@ import {
  *
  * These still render under the static export. A client component is
  * server-rendered during prerender exactly like any other, so `lumo-gate` grades
- * their first byte too — with the one documented exception of the chart, which
- * recharts renders as an empty box on the server (see `chart.tsx`).
+ * their first byte too — and **the chart is no longer the exception**. TanStack
+ * server-renders a real `<svg>` with real Persian ticks (4,717 bytes against
+ * recharts' 127 and its zero digits), so the plot on these pages is graded like
+ * everything else.
  */
 
 /* ───────────────────────────────────────────────────────────────── rating ── */
@@ -214,7 +223,7 @@ export function ToastIsland({
 
 export interface ChartIslandProps {
   locale: Locale;
-  /** The chart's announced name — recharts makes the plot a focusable region. */
+  /** The chart's announced name — the plot is `role="img"` with a Tab stop. */
   label: string;
   /** The series' legend and tooltip name, e.g. «فروش». */
   seriesLabel: string;
@@ -242,30 +251,43 @@ export function ChartIsland({
     sales: { label: seriesLabel, color: "oklch(0.62 0.16 255)" },
   };
 
+  const rows = [...data];
+
   return (
     <ChartContainer
       config={config}
       locale={locale}
       label={label}
-      data={[...data]}
+      /*
+       * The plot IS this object now — TanStack is a keyed scene rather than a
+       * component tree, so there is no `<BarChart>` child and no `cloneElement`
+       * to get a name onto the `<svg>`. `ariaLabel` is required by the library's
+       * own types, which is the first dependency here to enforce Lumo's
+       * announced-string rule on Lumo's behalf.
+       *
+       * The Lumo axis builders, never TanStack's bare axis options: they reverse
+       * the scale's RANGE under RTL — so bars, ticks and grid mirror together —
+       * and run every tick through `formatNumber`. A bare axis emits `0 600
+       * 1200` in Latin digits, and unlike under recharts the gate would now SEE
+       * that, because these ticks are in the served bytes.
+       */
+      definition={
+        defineChart({
+          marks: [barY(rows, { id: "sales", x: "month", y: "sales", fill: chartColor("sales") })],
+          x: chartCategoryAxis(locale, {
+            scale: () => scaleBand<string>().padding(0.2),
+          }) as never,
+          y: chartValueAxis(locale, { scale: scaleLinear, grid: true }) as never,
+          tooltip: chartTooltip(locale, config),
+        }) as never
+      }
+      data={rows}
       categoryKey="month"
       dataCaption={dataCaption}
       className="w-full"
     >
-      <BarChart data={[...data]}>
-        <CartesianGrid vertical={false} />
-        {/*
-         * The Lumo axes, never recharts' bare `XAxis`/`YAxis`: these mirror the
-         * scale under RTL and run every tick through `formatNumber`. A bare axis
-         * emits `0 600 1200` in Latin digits and no gate can see it, because
-         * recharts renders nothing on the server.
-         */}
-        <ChartCategoryAxis dataKey="month" tickLine={false} axisLine={false} />
-        <ChartValueAxis tickLine={false} axisLine={false} width={56} />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="sales" fill={chartColor("sales")} radius={4} />
-      </BarChart>
+      {/* Chrome AROUND the plot now, not a render-prop inside it. */}
+      <ChartLegend hiddenSeries={["month"]} />
     </ChartContainer>
   );
 }
@@ -396,26 +418,30 @@ export function ResizableIsland({
   );
 }
 
-/* ────────────────────────────────────────── chart: line, area, donut ── */
+/* ──────────────────────────────────────────────── chart: line and area ── */
 
 /*
  * Appended by the round-4 misc batch, same append-only contract as the blocks
  * above: import declarations are hoisted, and `Locale`, `ChartConfig`,
- * `ChartContainer`, `ChartCategoryAxis`, `ChartValueAxis`, `ChartTooltip`,
- * `ChartTooltipContent`, `ChartLegend`, `ChartLegendContent` and `chartColor`
- * are already imported at the top of this file. Only the genuinely new names
- * are pulled in here.
+ * `ChartContainer`, `ChartLegend`, `chartCategoryAxis`, `chartValueAxis`,
+ * `chartTooltip`, `chartColor`, `defineChart` and `scaleLinear` are already
+ * imported at the top of this file. Only the genuinely new names are here.
  *
- * All three exist for the SAME reason `ChartIsland` does, and it is worth
- * restating because it is the one boundary in this repo that is about a library
- * rather than about a prop: recharts' chart elements call hooks, so building a
- * `<LineChart>` inside a server module renders it during the RSC pass and
- * throws. Every user-visible string below still arrives as a prop from the
- * examples file, in both locales.
+ * ── THE DONUT IS GONE, AND THAT IS AN HONEST ABSENCE ────────────────────────
+ *
+ * `ChartDonutIsland` used `ChartPie`, `ChartPieCenter` and
+ * `ChartValueLabelList`, and `chart.tsx` removed all three rather than stub
+ * them: `@tanstack/charts` 0.9.0 has no pie mark at all — a pie is a
+ * composition of `polar` + `radialArc`, and a donut is that with an inner
+ * radius, so porting it is AUTHORING a chart type rather than translating a
+ * component. The island and its example are deleted here for the same reason
+ * the components were: a donut that renders an empty box, or a wrapper that
+ * silently draws no sectors, is exactly the defect class this site measures
+ * itself against, and a docs page is the worst place to keep one. The gap is
+ * recorded in `bulk-migration-result.json` as a capability gap with the
+ * evidence, not papered over.
  */
-import { Area, AreaChart, Cell, Line, LineChart, PieChart } from "recharts";
-import { formatNumber } from "@lumo-ui/core";
-import { ChartPie, ChartPieCenter, ChartValueLabelList } from "@lumo-ui/ui";
+import { areaY, lineY, scalePoint } from "@lumo-ui/ui";
 
 /**
  * One plotted row of a two-column series: a category and a figure.
@@ -432,7 +458,7 @@ export type SeriesRow = {
 
 interface SeriesIslandProps {
   locale: Locale;
-  /** The plot's announced name — recharts makes it a focusable region. */
+  /** The plot's announced name — it is `role="img"` and a Tab stop. */
   label: string;
   /** The series' legend and tooltip name, e.g. «بازدید». */
   seriesLabel: string;
@@ -459,34 +485,41 @@ export function ChartLineIsland({
   dataCaption,
   data,
 }: SeriesIslandProps) {
+  const config = seriesConfig(categoryLabel, seriesLabel);
+  const rows = [...data];
+
   return (
     <ChartContainer
-      config={seriesConfig(categoryLabel, seriesLabel)}
+      config={config}
       locale={locale}
       label={label}
-      data={[...data]}
+      /*
+       * `scalePoint`, not `scaleBand`: a line's vertices sit ON the category
+       * rather than across a band, and the axis builder still does the whole
+       * mirror — it reverses the scale's RANGE, so the curve moves with its
+       * categories and there is nothing on the mark itself to remember.
+       */
+      definition={
+        defineChart({
+          marks: [
+            lineY(rows, {
+              id: "value",
+              x: "category",
+              y: "value",
+              stroke: chartColor("value"),
+            }),
+          ],
+          x: chartCategoryAxis(locale, { scale: scalePoint }) as never,
+          y: chartValueAxis(locale, { scale: scaleLinear, grid: true }) as never,
+          tooltip: chartTooltip(locale, config),
+        }) as never
+      }
+      data={rows}
       categoryKey="category"
       dataCaption={dataCaption}
       className="w-full"
     >
-      <LineChart data={[...data]}>
-        {/*
-         * The Lumo axes do the whole mirror: `reversed` acts on the scale's
-         * RANGE, so the curve and its dots move with the categories and there is
-         * nothing on the `<Line>` itself to remember.
-         */}
-        <ChartCategoryAxis dataKey="category" tickLine={false} axisLine={false} />
-        <ChartValueAxis tickLine={false} axisLine={false} width={56} />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Line
-          dataKey="value"
-          type="monotone"
-          stroke={chartColor("value")}
-          strokeWidth={2}
-          dot={false}
-        />
-      </LineChart>
+      <ChartLegend hiddenSeries={["category"]} />
     </ChartContainer>
   );
 }
@@ -499,104 +532,46 @@ export function ChartAreaIsland({
   dataCaption,
   data,
 }: SeriesIslandProps) {
+  const config = seriesConfig(categoryLabel, seriesLabel);
+  const rows = [...data];
+
   return (
     <ChartContainer
-      config={seriesConfig(categoryLabel, seriesLabel)}
+      config={config}
       locale={locale}
       label={label}
-      data={[...data]}
+      /*
+       * `areaY` fills to the baseline and `stroke` draws its edge — two options
+       * on one mark, where recharts needed `<Area stroke fill fillOpacity>` and
+       * a separate opacity to stop the fill swallowing the line.
+       */
+      definition={
+        defineChart({
+          marks: [
+            areaY(rows, {
+              id: "value",
+              x: "category",
+              y: "value",
+              fill: chartColor("value"),
+              fillOpacity: 0.15,
+              stroke: chartColor("value"),
+            }),
+          ],
+          x: chartCategoryAxis(locale, { scale: scalePoint }) as never,
+          y: chartValueAxis(locale, { scale: scaleLinear, grid: true }) as never,
+          tooltip: chartTooltip(locale, config),
+        }) as never
+      }
+      data={rows}
       categoryKey="category"
       dataCaption={dataCaption}
       className="w-full"
     >
-      <AreaChart data={[...data]}>
-        <ChartCategoryAxis dataKey="category" tickLine={false} axisLine={false} />
-        <ChartValueAxis tickLine={false} axisLine={false} width={56} />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Area
-          dataKey="value"
-          type="monotone"
-          stroke={chartColor("value")}
-          fill={chartColor("value")}
-          fillOpacity={0.15}
-          strokeWidth={2}
-        />
-      </AreaChart>
+      <ChartLegend hiddenSeries={["category"]} />
     </ChartContainer>
   );
 }
 
-export interface ChartDonutIslandProps extends Omit<SeriesIslandProps, "seriesLabel"> {
-  /** Names the figure column, e.g. «سهم». */
-  seriesLabel: string;
-  /** The line under the centre figure, e.g. «کل بازدیدها». */
-  centerCaption: string;
-}
-
-/**
- * A donut. The sweep is `CHART_PIE_SWEEP` and does NOT mirror — the argument is
- * in `chart.variants.ts` and the page states it in prose beside this preview.
- */
-export function ChartDonutIsland({
-  locale,
-  label,
-  seriesLabel,
-  categoryLabel,
-  dataCaption,
-  centerCaption,
-  data,
-}: ChartDonutIslandProps) {
-  // One hue per slice, walked around the ramp. Not from `config`, because
-  // `ChartData` derives the table's COLUMNS from config's keys — a per-slice
-  // config would grow the table a column per category instead of a row.
-  const slice = [
-    "oklch(0.62 0.16 255)",
-    "oklch(0.70 0.14 190)",
-    "oklch(0.55 0.15 300)",
-    "oklch(0.75 0.13 95)",
-  ] as const;
-  const total = data.reduce((sum, row) => sum + row.value, 0);
-
-  return (
-    <ChartContainer
-      config={seriesConfig(categoryLabel, seriesLabel)}
-      locale={locale}
-      label={label}
-      data={[...data]}
-      categoryKey="category"
-      dataCaption={dataCaption}
-      className="w-full"
-    >
-      <PieChart>
-        <ChartTooltip content={<ChartTooltipContent nameKey="category" />} />
-        <ChartPie
-          data={[...data]}
-          dataKey="value"
-          nameKey="category"
-          innerRadius="55%"
-          outerRadius="80%"
-          paddingAngle={2}
-        >
-          {data.map((row, index) => (
-            <Cell key={row.category} fill={slice[index % slice.length] ?? slice[0]} />
-          ))}
-          {/*
-           * The slice names, drawn on the plot. `ChartValueLabelList` passes an
-           * authored string through untouched and formats a number — the same
-           * formatter the axes use, so a label and a tick can never disagree.
-           */}
-          <ChartValueLabelList dataKey="category" position="outside" />
-          {/*
-           * `value` is a STRING here and the type insists on it: an SVG <text>
-           * is one of the few places a number can reach the DOM without passing
-           * a LumoNode.
-           */}
-          <ChartPieCenter value={formatNumber(total, locale)} caption={centerCaption} />
-        </ChartPie>
-      </PieChart>
-    </ChartContainer>
-  );
-}
 
 /*
  * Appended by the round-4 integration, same append-only contract as the blocks
@@ -667,5 +642,458 @@ export function CalendarClosedDaysIsland({
       isDateUnavailable={isWeekend}
       errorMessage={errorMessage}
     />
+  );
+}
+
+/* ──────────────────────────────────────────────── table: state examples ── */
+
+/*
+ * Appended by the Base UI integration pass, same append-only contract.
+ *
+ * ── WHY A TABLE NEEDS AN ISLAND NOW, WHEN IT DID NOT BEFORE ─────────────────
+ *
+ * React Aria's `Table` carried `selectionMode`, `defaultSelectedKeys` and
+ * `sortDescriptor` as ELEMENT props, so a selectable, sortable grid was pure
+ * markup and lived happily in a server module. Base UI has no table at all;
+ * `table.tsx` is markup and keyboard over a TanStack instance, and that
+ * instance comes from `useLumoTable` — a HOOK. A hook cannot run in a server
+ * component, so the two stateful examples move here beside the chart and the
+ * calendar, for the same class of reason and a new instance of it.
+ *
+ * This is the honest cost of the migration at the docs layer and it is worth
+ * stating rather than hiding: the *component* is no worse, but "a sorted table
+ * is static markup" stopped being true.
+ *
+ * Every user-visible string still arrives as a prop, in both locales.
+ */
+import {
+  Cell,
+  Column,
+  ColumnResizer,
+  ResizableTableContainer,
+  Row,
+  Table,
+  TableBody,
+  TableHeader,
+  TableSelectAllColumn,
+  TableSelectionCell,
+  useLumoTable,
+} from "@lumo-ui/ui";
+
+/** One order. Plain data, so it crosses the RSC boundary. */
+export type OrderDemoRow = {
+  readonly id: string;
+  readonly customer: string;
+  readonly city: string;
+};
+
+export interface TableSelectionIslandProps {
+  locale: Locale;
+  /** Announced name of the grid. */
+  label: string;
+  customerHeader: string;
+  cityHeader: string;
+  selectAllLabel: string;
+  /** Announced name of ONE row's checkbox. */
+  selectRowLabel: string;
+  rows: readonly OrderDemoRow[];
+}
+
+export function TableSelectionIsland({
+  locale,
+  label,
+  customerHeader,
+  cityHeader,
+  selectAllLabel,
+  selectRowLabel,
+  rows,
+}: TableSelectionIslandProps) {
+  const table = useLumoTable<OrderDemoRow>({
+    locale,
+    data: [...rows],
+    columns: [
+      { id: "customer", accessorKey: "customer" },
+      { id: "city", accessorKey: "city" },
+    ],
+    getRowId: (row: OrderDemoRow) => row.id,
+    enableRowSelection: true,
+    // The pre-selected row the React Aria example showed with
+    // `defaultSelectedKeys`. It is initial STATE now rather than an attribute,
+    // which is the whole shape of this migration in one line.
+    initialState: { rowSelection: { b: true } },
+  });
+
+  return (
+    <Table label={label} locale={locale} table={table} className="max-w-xl">
+      <TableHeader>
+        <TableSelectAllColumn label={selectAllLabel} />
+        <Column id="customer" isRowHeader>
+          {customerHeader}
+        </Column>
+        <Column id="city">{cityHeader}</Column>
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <Row key={row.id} row={row}>
+            <TableSelectionCell label={selectRowLabel} />
+            <Cell isRowHeader>{row.original.customer}</Cell>
+            <Cell>{row.original.city}</Cell>
+          </Row>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+export interface TableSortingIslandProps extends Omit<TableSelectionIslandProps, "selectAllLabel" | "selectRowLabel"> {
+  sortAscendingLabel: string;
+  sortDescendingLabel: string;
+}
+
+export function TableSortingIsland({
+  locale,
+  label,
+  customerHeader,
+  cityHeader,
+  sortAscendingLabel,
+  sortDescendingLabel,
+  rows,
+}: TableSortingIslandProps) {
+  const table = useLumoTable<OrderDemoRow>({
+    locale,
+    data: [...rows],
+    columns: [
+      { id: "customer", accessorKey: "customer" },
+      { id: "city", accessorKey: "city" },
+    ],
+    getRowId: (row: OrderDemoRow) => row.id,
+    /*
+     * The sort is REAL now. React Aria's `sortDescriptor` only announced a
+     * state and left the sorting to the consumer, so this example used to show
+     * `aria-sort="ascending"` over rows in their original order. `useLumoTable`
+     * compares with `Intl.Collator` over the page's own locale, so «اصفهان»
+     * precedes «تبریز» because Persian says so.
+     */
+    initialState: { sorting: [{ id: "city", desc: false }] },
+  });
+
+  return (
+    <Table label={label} locale={locale} table={table} className="max-w-xl">
+      <TableHeader>
+        <Column id="customer" isRowHeader>
+          {customerHeader}
+        </Column>
+        <Column
+          id="city"
+          allowsSorting
+          sortAscendingLabel={sortAscendingLabel}
+          sortDescendingLabel={sortDescendingLabel}
+        >
+          {cityHeader}
+        </Column>
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <Row key={row.id} row={row}>
+            <Cell isRowHeader>{row.original.customer}</Cell>
+            <Cell>{row.original.city}</Cell>
+          </Row>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+/**
+ * The table demo on the home page's component list: four columns, a resizable
+ * first column, a checkbox column and a sortable one.
+ *
+ * Everything it shows is state, so all of it is here rather than in
+ * `demos.tsx` — see the boundary note above the two islands before it.
+ */
+export interface TableDemoIslandProps {
+  locale: Locale;
+  label: string;
+  customerHeader: string;
+  cityHeader: string;
+  amountHeader: string;
+  selectAllLabel: string;
+  selectRowLabel: string;
+  sortAscendingLabel: string;
+  sortDescendingLabel: string;
+  resizeLabel: string;
+  /** Rows, with the amount ALREADY formatted — see `Cell`. */
+  rows: readonly (OrderDemoRow & { readonly amount: number; readonly amountText: string })[];
+}
+
+export function TableDemoIsland({
+  locale,
+  label,
+  customerHeader,
+  cityHeader,
+  amountHeader,
+  selectAllLabel,
+  selectRowLabel,
+  sortAscendingLabel,
+  sortDescendingLabel,
+  resizeLabel,
+  rows,
+}: TableDemoIslandProps) {
+  const table = useLumoTable({
+    locale,
+    data: [...rows],
+    columns: [
+      { id: "customer", accessorKey: "customer", size: 180 },
+      { id: "city", accessorKey: "city", size: 120 },
+      // Sorted on the NUMBER, never on `amountText`: a formatted «۱٬۲۵۰٬۰۰۰»
+      // collates by its first digit, which is not what "sort by amount" means.
+      { id: "amount", accessorKey: "amount", size: 140 },
+    ],
+    getRowId: (row) => row.id,
+    enableRowSelection: true,
+    initialState: {
+      rowSelection: { b: true },
+      sorting: [{ id: "city", desc: false }],
+    },
+  });
+
+  return (
+    <ResizableTableContainer className="max-w-xl">
+      <Table label={label} locale={locale} table={table}>
+        <TableHeader>
+          <TableSelectAllColumn label={selectAllLabel} defaultWidth={48} />
+          {/*
+           * The resizer's own announced value USED to be React Aria's English
+           * "75 pixels", closed by a 27 KB patch of `node_modules` that shipped
+           * an `fa-IR` table bundle. The patch is retired: this handle is Lumo's
+           * own `<button>` with a required Persian `label` and no value string
+           * at all to leak. One workaround the migration DELETED rather than
+           * translated.
+           */}
+          <Column
+            id="customer"
+            isRowHeader
+            defaultWidth={180}
+            resizer={<ColumnResizer label={resizeLabel} columnId="customer" />}
+          >
+            {customerHeader}
+          </Column>
+          <Column
+            id="city"
+            defaultWidth={120}
+            allowsSorting
+            sortAscendingLabel={sortAscendingLabel}
+            sortDescendingLabel={sortDescendingLabel}
+          >
+            {cityHeader}
+          </Column>
+          <Column id="amount" defaultWidth={140}>
+            {amountHeader}
+          </Column>
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <Row key={row.id} row={row}>
+              <TableSelectionCell label={selectRowLabel} />
+              <Cell isRowHeader>{row.original.customer}</Cell>
+              <Cell>{row.original.city}</Cell>
+              <Cell>{row.original.amountText}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+    </ResizableTableContainer>
+  );
+}
+
+/* ─────────────────────────────────────────────── command: the palette ── */
+
+/*
+ * ── WHY THE PALETTE NEEDS AN ISLAND NOW, AND IT IS THE SAME OLD REASON ──────
+ *
+ * `CommandList` and `CommandGroup` take RENDER FUNCTIONS over the filtered set
+ * on this engine: Base UI filters the `items` ARRAY inside its combobox root,
+ * so what a row renders and what it is matched on are structurally separate
+ * (which is exactly what retired React Aria's `textValue` derivation trap). A
+ * render prop is a FUNCTION, and this file's header lists a function as the
+ * first thing that cannot cross into the RSC payload — the prerender fails with
+ * «Functions cannot be passed directly to Client Components».
+ *
+ * A palette built from static JSX children compiles and would dodge the
+ * boundary. It must not be used here: static children on this engine are
+ * rendered and never filtered, so the demo would be a search box that returns
+ * everything for every query — the precise defect `command.tsx` made `items`
+ * required to prevent, shipped on the page that documents it.
+ */
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@lumo-ui/ui";
+
+/** One command. Plain data, so it crosses the boundary. */
+export type CommandIslandItem = {
+  readonly value: string;
+  readonly label: string;
+  /** Drawn at the row's inline end. Never part of the filter string. */
+  readonly shortcut?: string;
+};
+
+/** A titled group of commands, for the grouped `items` shape. */
+export type CommandIslandGroup = {
+  readonly value: string;
+  readonly heading: string;
+  readonly items: readonly CommandIslandItem[];
+};
+
+export interface CommandPaletteIslandProps {
+  /** Announced name of the results list. */
+  listLabel: string;
+  /** Announced name of the search field — never its placeholder. */
+  inputLabel: string;
+  inputPlaceholder?: string | undefined;
+  /** Flat commands. Mutually exclusive with `groups`. */
+  items?: readonly CommandIslandItem[] | undefined;
+  /** Grouped commands. Mutually exclusive with `items`. */
+  groups?: readonly CommandIslandGroup[] | undefined;
+  /** Shown when the filter matches nothing. Omit to render no empty state. */
+  emptyText?: string | undefined;
+  /** Wraps the palette in a `CommandDialog`. Omit to render it inline. */
+  dialog?:
+    | {
+        readonly title: string;
+        readonly description: string;
+        readonly closeLabel: string;
+        readonly triggerLabel: string;
+        readonly isDismissable?: boolean;
+      }
+    | undefined;
+  /** A separator under the list, as the modal example shows. */
+  withSeparator?: boolean | undefined;
+  className?: string | undefined;
+}
+
+function commandRow(item: CommandIslandItem) {
+  return (
+    <CommandItem key={item.value} id={item.value}>
+      {item.label}
+      {item.shortcut === undefined ? null : <CommandShortcut>{item.shortcut}</CommandShortcut>}
+    </CommandItem>
+  );
+}
+
+export function CommandPaletteIsland({
+  listLabel,
+  inputLabel,
+  inputPlaceholder,
+  items,
+  groups,
+  emptyText,
+  dialog,
+  withSeparator,
+  className,
+}: CommandPaletteIslandProps) {
+  const palette = (
+    <Command<CommandIslandItem | CommandIslandGroup>
+      items={groups ?? items ?? []}
+      {...(dialog === undefined && className !== undefined ? { className } : {})}
+    >
+      <CommandInput
+        label={inputLabel}
+        {...(inputPlaceholder === undefined ? {} : { placeholder: inputPlaceholder })}
+      />
+      <CommandList<CommandIslandItem | CommandIslandGroup> label={listLabel}>
+        {(entry: CommandIslandItem | CommandIslandGroup) =>
+          "items" in entry ? (
+            <CommandGroup<CommandIslandItem>
+              key={entry.value}
+              heading={entry.heading}
+              items={entry.items}
+            >
+              {(item: CommandIslandItem) => commandRow(item)}
+            </CommandGroup>
+          ) : (
+            commandRow(entry)
+          )
+        }
+      </CommandList>
+      {/*
+       * A SIBLING of the list, not a `renderEmptyState` prop. `CommandEmpty`
+       * renders Base UI's `Autocomplete.Empty`, which is `role="status"
+       * aria-live="polite"` and mounts only when the filter emptied the list —
+       * so "no results" is announced, where React Aria's was merely drawn.
+       */}
+      {emptyText === undefined ? null : <CommandEmpty>{emptyText}</CommandEmpty>}
+      {withSeparator === true ? <CommandSeparator /> : null}
+    </Command>
+  );
+
+  if (dialog === undefined) return palette;
+
+  return (
+    <CommandDialog
+      title={dialog.title}
+      description={dialog.description}
+      closeLabel={dialog.closeLabel}
+      {...(dialog.isDismissable === true ? { isDismissable: true } : {})}
+      trigger={<Button variant="outline">{dialog.triggerLabel}</Button>}
+      {...(className === undefined ? {} : { className })}
+    >
+      {palette}
+    </CommandDialog>
+  );
+}
+
+/* ────────────────────────────────────────────────────────── autocomplete ── */
+
+/*
+ * Same boundary as the palette above, and it arrives for the same reason:
+ * `AutocompleteListBox` renders the FILTERED items through a render function,
+ * because Base UI filters the `items` array on the root rather than a JSX
+ * collection. A function cannot cross into the RSC payload.
+ */
+import { Autocomplete, AutocompleteInput, AutocompleteItem, AutocompleteListBox } from "@lumo-ui/ui";
+
+export interface AutocompleteIslandProps {
+  /** Announced name of the input. Shown visibly as well. */
+  inputLabel: string;
+  inputPlaceholder?: string | undefined;
+  /** Announced name of the list of suggestions. */
+  listLabel: string;
+  items: readonly CommandIslandItem[];
+}
+
+export function AutocompleteIsland({
+  inputLabel,
+  inputPlaceholder,
+  listLabel,
+  items,
+}: AutocompleteIslandProps) {
+  return (
+    <Autocomplete items={items}>
+      <div className="flex w-full max-w-xs flex-col gap-2">
+        <AutocompleteInput
+          label={inputLabel}
+          showLabel
+          {...(inputPlaceholder === undefined ? {} : { placeholder: inputPlaceholder })}
+        />
+        <AutocompleteListBox
+          label={listLabel}
+          className="rounded-md border border-border bg-surface"
+        >
+          {(item: CommandIslandItem) => (
+            <AutocompleteItem key={item.value} id={item.value}>
+              {item.label}
+            </AutocompleteItem>
+          )}
+        </AutocompleteListBox>
+      </div>
+    </Autocomplete>
   );
 }

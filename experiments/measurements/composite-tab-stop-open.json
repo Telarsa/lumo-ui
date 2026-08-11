@@ -1,0 +1,15 @@
+{
+ "$about": "composite-tab-stop: 12 known violations, open. Recorded rather than silenced.",
+ "rule": "composite-tab-stop",
+ "count": 12,
+ "components": [
+  "autocomplete",
+  "command",
+  "list-box"
+ ],
+ "shape": "role=listbox rendered ALWAYS-OPEN on a docs page: container tabindex=-1, every option tabindex=-1, and no element in the served bytes carries aria-controls or aria-activedescendant pointing at it (verified by grep on the built HTML).",
+ "mechanism": "Same class as the naming and roving-tabstop defects: Base UI wires the combobox relationship (aria-controls, aria-activedescendant, aria-expanded) in layout effects that do not run on the server.",
+ "severity_honest": "Real, but scoped to the always-open demo shape. In production usage the list lives in a popup that is closed at SSR and renders null, so there is nothing to grade. The docs pages render it open on purpose to show it.",
+ "fix": "The next adapter increment: a useComboboxWiring beside useFieldWiring and useOpenMirror, minting the listbox id at render and threading aria-controls/aria-activedescendant onto the input. Same pattern, same public-prop route.",
+ "why_not_silenced": "Weakening the rule to skip listboxes with no controller would make it blind to a standalone listbox that genuinely has no tab stop — which is list-box.tsx, still on React Aria and in this list for a different reason. The rule is right; the code is not finished."
+}

@@ -1,0 +1,214 @@
+{
+  "$schema": "https://lumo-ui.com/schemas/measurement.json",
+  "title": "Base UI migration — integration pass: gates, triage, and the two defects the gate could not see",
+  "role": "integration (fifth agent). Four siblings migrated the families; nothing was committed and nothing was run end to end.",
+  "branch": "experiment/base-ui",
+  "baseCommit": "35cadf0",
+  "engine": "@base-ui/react 1.7.0",
+  "react": "19.2.8",
+  "measuredOn": "2026-08-11",
+  "committed": false,
+
+  "headline": {
+    "gate_html": "0 violations, 442 documents graded — held, and it is now held over a build that includes two defect classes no HTML rule grades",
+    "gates": "every gate green except gate:registry, which fails only on `git diff --exit-code` because this pass may not commit",
+    "tests": "749 + 91 + 61 + 26 + 25 + 13 + 13 = 978 passing, 0 failing, 0 skipped, 0 weakened",
+    "biggest_finding": "gate:html was 0 BEFORE this pass and 0 AFTER, and in between the built HTML contained 132 role=\"tab\" elements with tabindex=\"-1\" and none with 0, plus six documents whose radio groups had no tab stop at all. The gate cannot see a missing tabindex. A green number is not the same as a correct build."
+  },
+
+  "gates": [
+    {
+      "gate": "gate:types",
+      "result": "PASS",
+      "note": "Failed on arrival with 8 errors in @lumo-ui/blocks and, once that unblocked pnpm's fail-fast, 14 more in apps/website. Every one was a consumer still on a pre-migration API. All fixed; see `triage`."
+    },
+    { "gate": "gate:no-css-modules", "result": "PASS", "note": "clean, unchanged" },
+    {
+      "gate": "gate:test",
+      "result": "PASS",
+      "note": "Failed on arrival with 4 failures in apps/website/src/components/site-search.test.tsx. All four were `getByRole(\"searchbox\")` — a React Aria ROLE, not a behaviour. Restated to `combobox` with the reason recorded in the file. No assertion changed."
+    },
+    {
+      "gate": "gate:registry",
+      "result": "FAIL BY DESIGN — generator verified correct and idempotent",
+      "note": "`node scripts/build-registry.mjs && git diff --exit-code registry.json`. The generator ran clean and two consecutive runs produced byte-identical output (`diff -q` on the two emits). The gate fails only on the `git diff` half, because this pass is forbidden from committing and the working tree carries five agents' uncommitted work. 108 items (was 107; `base-ui-adapter` is new). Read past it — the rest of verify was then run gate by gate."
+    },
+    { "gate": "gate:smoke", "result": "PASS", "note": "108 items copied into a bare project; every one type-checks outside the workspace" },
+    {
+      "gate": "gate:html",
+      "result": "PASS — 0 violations, 442 documents",
+      "note": "Run three times: after the port (0), after the Tabs fix (0), after the RadioGroup fix (0). The number never moved, which is the point of the two findings below."
+    }
+  ],
+
+  "triage": {
+    "not_yet_migrated": [
+      {
+        "unit": "packages/blocks/src/command-palette.tsx",
+        "symptom": "4 type errors: `Command` needs `items`, `CommandList` has no `onAction`, `CommandItem` has no `textValue`.",
+        "action": "Ported. Groups feed `Command items` directly (this block already held its commands as data, so it needed no restructuring); `CommandList` gets the required `label`; the empty state is a sibling `CommandEmpty` rather than a `renderEmptyState` render prop.",
+        "public_api": "unchanged — `CommandPaletteProps.onSelect` keeps its exact shape"
+      },
+      {
+        "unit": "packages/blocks/src/table-view.tsx",
+        "symptom": "2 type errors: `TableProps` no longer has `selectionMode`, and `locale` is required and was being destructured away rather than forwarded.",
+        "action": "Ported. The block now BUILDS the TanStack instance with `useLumoTable` from the props it already had (rows → data, rowKey → getRowId, selectionMode → enableRowSelection) and renders `table.getRowModel().rows`.",
+        "public_api": "`selectionMode` declared on the block instead of inherited (same name, same meaning); `table` omitted from the inherited props so the grid cannot have two sources of state; `onSelectionChange` added, reporting the caller's own row keys.",
+        "capability_gained": "a sortable column now actually sorts. Under React Aria this block forwarded `sortDescriptor` and left the sorting to the consumer — and the website's own TableViewIsland never implemented it, so the docs shipped four sortable headers that were pure decoration. TanStack compares through useLumoTable's Persian Intl.Collator.",
+        "cost": "`TableViewColumn` is now a typed union: `allowsSorting: true` requires `sortValue`, because `cell` returns a LumoNode and you cannot sort a <Badge>. Forgetting it is a compile error rather than a silent no-op."
+      },
+      {
+        "unit": "apps/website/src/components/demo-islands.tsx — the four chart islands",
+        "symptom": "12 type errors. The chart sibling replaced recharts with @tanstack/charts and removed ChartCategoryAxis/ChartValueAxis/ChartTooltip/ChartTooltipContent/ChartLegendContent/ChartPie/ChartPieCenter/ChartValueLabelList; the only consumer in the repo was never updated.",
+        "action": "Bar, line and area islands rewritten onto `defineChart` + `barY`/`lineY`/`areaY` + `chartCategoryAxis`/`chartValueAxis` + `chartTooltip`, with `<ChartLegend>` as chrome around the plot. The donut island is DELETED — see capability_gaps."
+      },
+      {
+        "unit": "apps/website/src/examples/table.tsx, src/lib/demos.tsx, src/lib/blocks.tsx",
+        "symptom": "`Table` requires `locale`; `selectionMode`/`defaultSelectedKeys`/`sortDescriptor` are gone.",
+        "action": "Static tables gained `locale`. The selection and sorting examples became islands (`TableSelectionIsland`, `TableSortingIsland`, `TableDemoIsland`), because state now comes from the `useLumoTable` HOOK and a hook cannot run in a server module."
+      },
+      {
+        "unit": "apps/website/src/lib/demos.tsx + src/examples/command.tsx — the palette demos",
+        "symptom": "Compiled after the API port and then FAILED THE PRERENDER: «Functions cannot be passed directly to Client Components». `CommandList`/`CommandGroup` take render functions over the filtered set, and these are server modules.",
+        "action": "`CommandPaletteIsland` added; five example renders moved onto it.",
+        "note": "The compiling alternative — static JSX children — was rejected on purpose: static children on this engine render and are never filtered, so the palette that documents `items` would have been a search box returning everything for every query."
+      },
+      {
+        "unit": "apps/website/src/lib/demos.tsx — the autocomplete demo",
+        "symptom": "Same prerender failure, same cause: `AutocompleteListBox`'s render-function children in a server module.",
+        "action": "`AutocompleteIsland` added."
+      }
+    ],
+
+    "our_bugs_fixed": [
+      {
+        "id": "tabs-no-served-tab-stop",
+        "severity": "high — a served control the Tab key could not reach",
+        "component": "packages/ui/src/tabs.tsx",
+        "how_found": "Not by a test. By counting attributes in the built 442-document export, because gate:html grades names and idrefs and no rule grades a missing tabindex.",
+        "measured_before": { "role=tab with tabindex=-1": 132, "role=tab with tabindex=0": 0 },
+        "measured_after": { "role=tab with tabindex=-1": 776, "role=tab with tabindex=0": 464, "documents_with_tabs_and_no_stop": 0, "tab_lists_with_exactly_one_stop": "all 8 real tab lists on the tabs docs page; the 9th match was a source-code listing" },
+        "why": "Tabs is one of the four Base UI widgets built on `CompositeRoot`, which resolves the roving stop in a layout effect that never runs on the server. `@lumo-ui/base-ui-ssr` documents this exactly and names Tabs in its measured table — `tabs.tsx` imported the adapter for `attr` and never used `useCompositeTabStop`.",
+        "fix": "`TabsIdContext` widened from a string to `{ base, selected }`, where `selected` is the same expression `defaultValue` already resolved to, so the served tab stop and the served selection are read from ONE source and cannot land on different tabs. `Tab` calls `useCompositeTabStop(id === selected)`.",
+        "why_not_a_constant": "A constant `tabIndex={0}` keeps winning the prop merge forever, so the composite can never move the single stop and the Tab key lands inside the widget twice, permanently. The hook's value expires in the commit after hydration.",
+        "tests_added": 3,
+        "counting_note": "The count is scoped to `role=\"tab\"` elements: the PANEL is also `tabindex=\"0\"` and should be, per the ARIA tabs pattern, so a whole-document count would assert the wrong number and hide a regression in either element behind the other."
+      },
+      {
+        "id": "radiogroup-no-served-tab-stop",
+        "severity": "high — same class, in a form control",
+        "component": "packages/ui/src/radio-group.tsx",
+        "how_found": "The same attribute count, widened to every roving-tabindex role after the Tabs fix landed.",
+        "measured_before": { "documents_containing_radios": 162, "documents_with_no_served_radio_tab_stop": 6, "examples": ["view/en-US/radio-group", "view-block/fa-IR/preferences", "view-block/fa-IR/product-detail"] },
+        "measured_after": { "documents_with_no_served_radio_tab_stop": 0 },
+        "why": "`segmented-control.tsx` — the same engine part, `BaseRadio.Root` inside `BaseRadioGroup` — had already been given `useCompositeTabStop` by the sibling that migrated it. `radio-group.tsx` had not. That asymmetry is the finding: a family-wide sweep reached one member of the pair and not the other, and nothing was red either way.",
+        "fix": "`RadioTabStopContext` carries `value ?? defaultValue ?? firstRadioValue(children)` (the checked option, falling back to the first — the WAI-ARIA rule), and `Radio` calls `useCompositeTabStop`. `useContext` is hoisted above the guard so the hook call stays unconditional.",
+        "tests_added": 3
+      },
+      {
+        "id": "command-lost-its-activation-callback",
+        "severity": "medium — a public capability dropped with no replacement",
+        "component": "packages/ui/src/command.tsx",
+        "how_found": "packages/blocks failed to compile: `CommandListProps` used to extend RAC's `MenuProps`, which carried `onAction(key)`, and the migrated version has no equivalent anywhere.",
+        "fix": "`CommandItem.onAction` added, wired to Base UI's `AutocompleteItem.onClick` — documented as firing for a pointer press AND for Enter on the highlighted item, so the capability survives intact.",
+        "api_change": "the handler moved from the LIST to the ITEM. Forced: `AutocompleteRootProps` omits selectionMode/selectedValue/onSelectedValueChange, so the root models no activation a list-level handler could subscribe to. Recorded in the prop's doc comment."
+      }
+    ],
+
+    "capability_gaps": [
+      {
+        "id": "no-pie-mark",
+        "claim": "@tanstack/charts 0.9.0 has no pie or donut. Not a gap in the wrapper — a gap in the renderer.",
+        "evidence": "chart.tsx's header, item 5: a pie is a composition of `polar` + `radialArc` and a donut is that with an inner radius, so porting is authoring a chart type rather than translating a component. `ChartPie`, `ChartPieCenter` and `ChartValueLabelList` were removed rather than stubbed.",
+        "action_taken": "Followed through at the docs layer rather than left half-done: `ChartDonutIsland` and the chart page's `donut` example are DELETED, with the reason in both files. An example that draws an empty box is a worse artifact than an absent one.",
+        "adapter_can_close_it": false,
+        "cost": "The site lost one of four chart examples. `CHART_PIE_SWEEP`, `CHART_PIE_SWEEP_HALF` and `chartPieCenterVariants` are deliberately KEPT — the sweep decision outlives any renderer."
+      },
+      {
+        "id": "rsc-boundary-widened",
+        "claim": "Three component families that were static markup on React Aria now require a client island. This is a real cost of the migration at the composition layer, not a docs-site quirk.",
+        "cases": [
+          "Table — selection and sorting were ELEMENT props; they are `useLumoTable` state now, and a hook cannot run in a server component.",
+          "Command and Autocomplete — the filtered list is rendered through a render FUNCTION, because Base UI filters an items array rather than a JSX collection. A function cannot be serialised into the RSC payload.",
+          "Chart — was already an island for a different reason (recharts called hooks); that reason is retired, and a new smaller one replaced it (defineChart holds scale factories and a tooltip format closure)."
+        ],
+        "adapter_can_close_it": false,
+        "note": "Not a defect and not fixable from outside — it follows from where each library puts its state. Recorded because 'a sorted table is static markup' stopped being true, and no gate would ever have told us."
+      },
+      {
+        "id": "react-aria-patches-cannot-retire-yet",
+        "claim": "`patches/react-aria@3.51.0.patch` (561 lines) and `patches/react-aria-components@1.20.0.patch` (33 lines) are still load-bearing.",
+        "evidence": "Ten components still render React Aria: the four date/calendar components, `time-field`, `list-box`, `tree`, plus `form.tsx` (FieldError/Label/Text) and `provider.tsx` (I18nProvider, which the date components need). `patch.test.tsx` passes and pins the Persian bundles those components depend on.",
+        "adapter_can_close_it": false,
+        "note": "One patched surface DID retire: `ColumnResizer`'s English `aria-valuetext` («75 pixels») is gone because the resizer is Lumo's own `<button>` with a required Persian label and no value string to leak. The demo comment that credited the patch has been rewritten to say so."
+      }
+    ]
+  },
+
+  "state_of_the_migration": {
+    "component_source_files": 78,
+    "on_base_ui": 32,
+    "engine_free": 36,
+    "still_rendering_react_aria": 10,
+    "still_rendering_react_aria_list": [
+      "calendar.tsx", "date-picker.tsx", "date-range-picker.tsx", "range-calendar.tsx",
+      "time-field.tsx", "date-field.tsx (AriaDateSegment only)", "list-box.tsx", "tree.tsx",
+      "form.tsx (FieldError/Label/Text)", "provider.tsx (I18nProvider)"
+    ],
+    "engine_free_note": "36 files import neither engine. That is not 36 components skipped — it includes `table.tsx` and `chart.tsx` and `virtual-list.tsx` (now TanStack), plus the components that were always markup and cva.",
+    "adapter_reach": {
+      "source_modules_importing_@lumo-ui/base-ui-ssr": 35,
+      "useFieldWiring": 13,
+      "useOpenMirror": 5,
+      "useCompositeTabStop": "6 after this pass (was 4): rating, segmented-control, tag-group, toggle-group, + tabs, radio-group"
+    },
+    "registry": {
+      "items": 108,
+      "previously": 107,
+      "new_item": "base-ui-adapter",
+      "tanstack_declared_per_item": {
+        "chart": ["@lumo-ui/core", "@tanstack/charts", "class-variance-authority"],
+        "table": ["@lumo-ui/core", "@tanstack/react-table", "class-variance-authority", "lucide-react"],
+        "virtual-list": ["@lumo-ui/core", "@tanstack/react-virtual", "class-variance-authority"]
+      },
+      "recharts": "removed from the `chart` item's dependencies by the generator, correctly — nothing imports it any more",
+      "react_aria_still_declared_on": "the ten items above, plus `command` and `provider`, which keep a TYPE-only import (`Key`, prop shapes). Correct: a copy-in consumer still needs the package installed to type-check."
+    }
+  },
+
+  "largest_remaining_risk": {
+    "first": "The gate grades what it was taught to grade. Two whole controls — every tab list and six radio groups — were served keyboard-unreachable while `gate:html` reported 0 violations across 442 documents, and both were found by counting attributes by hand. `named-controls` and `resolved-idrefs` do not cover roving tabindex, and every defect in this class self-heals on hydration, so jsdom, Testing Library and axe-in-a-browser pass with or without a fix. THE FIX IS A GATE RULE, not more vigilance: a `composite-tab-stop` rule that fails any element with a roving-tabindex role whose group serves no `tabindex=\"0\"` would have caught both on the build that introduced them, and would catch the next member of the family that skips the hook. It is the single highest-value thing left to build.",
+    "second": "Every adapter fix compensates for an implementation CHOICE, not a documented seam — an id published from a layout effect, an English literal at a known file and line, a roving index resolved in an effect. A Base UI patch release can defeat any of them with no type error and a green build. The poison-twin tests in `@lumo-ui/base-ui-ssr` are the tripwire and they must be run on every upgrade; the version is pinned exactly for this reason.",
+    "third": "The collection layer still does not close from outside. `Select.Value` resolves an option's label only from the Root's `items`, and the options live in a portal that renders `null` while closed, so a server-rendered `<Select defaultValue=\"thr\">` displays the raw key. No ARIA attribute can conjure text that was never rendered.",
+    "fourth": "@tanstack/charts was 13 days old with 19 releases at adoption and self-describes as pre-alpha; it has already replaced the axis-configuration surface once — the exact surface `chartCategoryAxis`/`chartValueAxis` sit on. Expect that wrapper to be rewritten rather than re-pinned on roughly every minor until 1.0."
+  },
+
+  "cleanups_flagged_not_done": [
+    {
+      "item": "`recharts` is still a declared dependency of packages/ui/package.json and apps/website/package.json, and nothing imports it.",
+      "why_not_done": "Removing it edits pnpm-lock.yaml, which no gate in this pass can re-verify without a full install. The consumer-facing surface is already correct — the registry no longer declares it for `chart` — so this is a workspace hygiene item, not a shipped defect.",
+      "action": "drop both entries and re-run `pnpm install` in a pass that is allowed to touch the lockfile"
+    },
+    {
+      "item": "`experiments/upstream/base-ui-ssr-naming.md` is still unfiled, and four of the five defects the adapter compensates for are unreported upstream (naming, describing, aria-expanded on Menu.Trigger, CompositeRoot's initial index).",
+      "why_not_done": "out of scope for an integration pass",
+      "action": "file them; every one of them is the difference between a workaround with an expiry date and a workaround forever"
+    }
+  ],
+
+  "files_changed_by_this_pass": {
+    "packages/ui/src": ["command.tsx (onAction)", "tabs.tsx (composite tab stop)", "tabs.test.tsx (+3)", "radio-group.tsx (composite tab stop)", "form-family.test.tsx (+3)"],
+    "packages/blocks/src": ["command-palette.tsx", "table-view.tsx"],
+    "apps/website/src": [
+      "components/demo-islands.tsx (charts rewritten; donut deleted; TableSelectionIsland, TableSortingIsland, TableDemoIsland, CommandPaletteIsland, AutocompleteIsland added)",
+      "components/site-search.test.tsx (searchbox → combobox, 4 queries)",
+      "examples/chart.tsx (donut example removed; parts list rewritten)",
+      "examples/table.tsx (two examples moved to islands)",
+      "examples/command.tsx (four examples moved to the island)",
+      "lib/demos.tsx (table, command, autocomplete demos moved to islands)",
+      "lib/blocks.tsx (Table locale)",
+      "app/view-block/block-islands.tsx (sortValue on the two sortable columns)"
+    ],
+    "registry.json": "regenerated"
+  }
+}

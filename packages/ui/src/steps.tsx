@@ -18,6 +18,35 @@ import { cn, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
  *       ]}
  *     />
  *
+ * ═══ THE ONLY FILE IN THE OVERLAY/NAVIGATION BATCH THAT CHANGED NOTHING ═════
+ *
+ * The brief for the Base UI migration asked whether the navigation-chrome
+ * components need an engine. This one is the proof that "no engine" is a real
+ * answer and not a dodge: the React Aria → Base UI migration edited zero lines
+ * of this file, because there was never an engine in it to swap.
+ *
+ * The check was run rather than assumed, on all three axes the migration costs
+ * everywhere else:
+ *
+ *  - ENGINE. No `react-aria-components` import, and none needed. `@base-ui/react`
+ *    ships no stepper (48 export subpaths, none is one) and base-vega has no
+ *    `steps` item (`vendor-from-shadcn.mjs` → 404, and it is listed among the 29
+ *    without a counterpart in base-vega-inventory.json). Nothing to vendor,
+ *    nothing to translate.
+ *  - STATE SELECTORS. The measured cost of this migration is a rewrite of every
+ *    interaction-state utility — hover, focus-visible, pressed, selected — and
+ *    this file has none. Its only stateful class is `data-status`, which it
+ *    WRITES itself on the `<li>` from its own `current` prop. State it owns
+ *    cannot have a vocabulary that belongs to somebody else, which is the whole
+ *    reason the number is zero.
+ *  - ANNOUNCED STRINGS. Four required props, no engine defaults to override,
+ *    nothing to re-check against a new dist.
+ *
+ * That is the argument for the boundary, stated with a number: a component that
+ * rents nothing pays nothing when the rental changes. `breadcrumbs.tsx` reached
+ * the same place by DELETING its engine in this batch; this one was already
+ * there.
+ *
  * ── NO `"use client"`, AND IT IS A DECISION RATHER THAN AN OMISSION ─────────
  *
  * A stepper is a picture of state, not a control: nothing here is pressable,

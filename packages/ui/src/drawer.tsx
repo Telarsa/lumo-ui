@@ -1,15 +1,15 @@
 "use client";
 
+import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  Modal as AriaModal,
-  ModalOverlay as AriaModalOverlay,
-  type ModalOverlayProps as AriaModalOverlayProps,
-} from "react-aria-components";
+import { Dialog as BaseDialog } from "@base-ui/react/dialog";
+// TYPE-ONLY. The public API may not change, so the prop names stay React Aria's.
+// Erased at build; no RAC runtime in this file.
+import type { ModalOverlayProps as AriaModalOverlayProps } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
- * A modal that slides in from an INLINE edge.
+ * A modal that slides in from an INLINE edge. **BASE UI ENGINE.**
  *
  *     <DialogTrigger>
  *       <Button>منو</Button>
@@ -20,9 +20,54 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  *       </DrawerOverlay>
  *     </DialogTrigger>
  *
+ * ═══ BASE UI SHIPS A `Drawer`. THIS FILE MEASURED IT AND DOES NOT USE IT. ═══
+ *
+ * That is the finding, so it goes first.
+ *
+ * `@base-ui/react/drawer` exists, base-vega vendors a 200-line recipe for it,
+ * and it brings things Lumo has never had: swipe-to-dismiss, snap points, nested
+ * drawer stacking, a `Drawer.Viewport` that survives the virtual keyboard. The
+ * edge it is anchored to is chosen by ONE prop, and that prop is:
+ *
+ *     type SwipeDirection = 'up' | 'down' | 'left' | 'right'
+ *     — utils/useSwipeDismiss.d.ts:2
+ *
+ * Four physical values and no logical ones. Compare `Popover.Positioner`'s
+ * `Side`, in the SAME library, which carries `'inline-start' | 'inline-end'` as
+ * first-class members — the reason popover.tsx could translate Lumo's logical
+ * placements losslessly. The drawer did not get that union. And it is not merely
+ * the type: the module never consults direction. `getDisplacement` switches on
+ * the literal `'left'`/`'right'` and returns `-deltaX`/`deltaX`
+ * (useSwipeDismiss.mjs:17); `grep -l useDirection` over the whole `drawer/`
+ * directory returns zero files, while `menu/root`, `navigation-menu/popup`,
+ * `select/popup`, `slider/thumb` and `internals/composite/root` all import it.
+ * The one component in the library whose entire job is an edge is the one
+ * component that does not know which edge the reader starts from.
+ *
+ * So mapping Lumo's `side="start"` onto it requires resolving direction inside
+ * this wrapper, and every way of doing that breaks a rule this library is built
+ * on:
+ *
+ *   - a new `locale` prop → a public API change, to buy a physical mapping;
+ *   - `document.dir` at runtime → client-only, so the served drawer is on the
+ *     wrong edge until hydration, and the file's own header stops being able to
+ *     claim "no `dir` inspection anywhere in the component";
+ *   - `DirectionProvider` → measured inert; the drawer does not read it.
+ *
+ * The engine underneath is therefore `Dialog`, which is what the React Aria
+ * build effectively used too (`ModalOverlay` + `Modal`) and which composes with
+ * this file's public API unchanged — `<DialogTrigger>` is dialog.tsx's, already
+ * a `Dialog.Root`. What is given up is swipe-to-dismiss and snap points, neither
+ * of which the component ever had. What is kept is the reason the file exists.
+ *
+ * Recorded as `drawer.swipe-direction-is-physical` in the measurements file. It
+ * is also the clearest upstream ask in this batch: `swipeDirection` wants
+ * `'inline-start' | 'inline-end'`, exactly as `Side` already has them.
+ *
  * ── WHY THIS ANIMATES `inset-inline-*` AND NOT `translate-x` ────────────────
  *
- * This is the whole reason the component exists as its own file.
+ * This is the whole reason the component exists as its own file, and the
+ * paragraph above is why it still is.
  *
  * Every drawer in every library slides with `transform: translateX(-100%)`. CSS
  * transforms have NO logical form: the x axis is physical, always, in every
@@ -34,7 +79,9 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  *
  * The closed state ends up on the far side of the screen and the panel flies in
  * across the page instead of out of the edge it belongs to. It looks like a bug
- * in the animation, not a direction bug, so it survives review.
+ * in the animation, not a direction bug, so it survives review. (base-vega's
+ * vendored drawer is built on exactly this: `[--closed-transform:translate3d(
+ * calc(-100%-…),0,0)]` keyed on `data-[swipe-direction=left]`.)
  *
  * `inset-inline-start` / `inset-inline-end` ARE logical. Transitioning them from
  * `-(--lumo-drawer-size)` to `0` produces a slide that leaves and re-enters the
@@ -48,17 +95,47 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  * `100%`. A percentage on `inset-inline-start` resolves against the containing
  * block — the viewport — which would make a 24rem panel travel the full screen
  * width and arrive late on a wide monitor.
+ *
+ * ── THE FOUR LAYERS NEST DIFFERENTLY UNDERNEATH, EXACTLY AS IN dialog.tsx ───
+ *
+ * React Aria nested `ModalOverlay > Modal`. Base UI's `Dialog.Portal` holds
+ * `Backdrop` and `Popup` as SIBLINGS, so `DrawerOverlay` becomes Portal+Backdrop
+ * and renders its children as the backdrop's sibling, and `Drawer` becomes the
+ * `Dialog.Popup` — which is now the `role="dialog"` element. dialog.tsx's header
+ * makes this argument at length; it is the same mapping and it is not restated.
+ *
+ * One consequence is local: the panel no longer needs the overlay to lay it out,
+ * which it never did here anyway — a drawer positions itself against a viewport
+ * edge, which is what `fixed inset-y-0` + the `side` variant have always done.
+ *
+ * ── THE TRANSITION VOCABULARY ──────────────────────────────────────────────
+ *
+ *     data-entering → data-starting-style
+ *     data-exiting  → data-ending-style
+ *
+ * Two clean renames. Both libraries express the same idea — a one-frame
+ * "before" style the transition runs away from, and a held "after" style during
+ * the unmount delay — so the meaning survives and only the spelling moves. Base
+ * UI's names mirror the CSS `@starting-style` rule; React Aria's came from its
+ * own presence machinery. Verified present on both the backdrop and the popup in
+ * `dialog/`'s dist.
+ *
+ * They are also the reason the `side` variant needed a real edit rather than a
+ * find-and-replace: the offsets live INSIDE the variant, keyed on the state, so
+ * both spellings appear twice per side and a rename that missed one would leave
+ * a drawer that enters correctly and exits by teleporting.
  */
 
 /**
- * The scrim. Separate from the panel because RAC emits `data-entering` /
- * `data-exiting` on both, and the scrim should cross-fade while the panel
- * travels — one shared animation would tie the fade to the slide's duration.
+ * The scrim. Separate from the panel because Base UI emits
+ * `data-starting-style` / `data-ending-style` on both, and the scrim should
+ * cross-fade while the panel travels — one shared animation would tie the fade
+ * to the slide's duration.
  */
 export const drawerOverlayVariants = cva(
   "fixed inset-0 z-50 bg-black/50 " +
     "transition-opacity duration-300 ease-out " +
-    "data-entering:opacity-0 data-exiting:opacity-0 " +
+    "data-starting-style:opacity-0 data-ending-style:opacity-0 " +
     "motion-reduce:transition-none",
 );
 
@@ -88,12 +165,12 @@ export const drawerVariants = cva(
          */
         start:
           "start-0 border-e border-border " +
-          "data-entering:start-[var(--lumo-drawer-offset)] " +
-          "data-exiting:start-[var(--lumo-drawer-offset)]",
+          "data-starting-style:start-[var(--lumo-drawer-offset)] " +
+          "data-ending-style:start-[var(--lumo-drawer-offset)]",
         end:
           "end-0 border-s border-border " +
-          "data-entering:end-[var(--lumo-drawer-offset)] " +
-          "data-exiting:end-[var(--lumo-drawer-offset)]",
+          "data-starting-style:end-[var(--lumo-drawer-offset)] " +
+          "data-ending-style:end-[var(--lumo-drawer-offset)]",
       },
       size: {
         // `min()` rather than a breakpoint variant: the panel must never exceed
@@ -113,9 +190,43 @@ export interface DrawerOverlayProps
   className?: string | undefined;
 }
 
-export function DrawerOverlay({ className, ...props }: DrawerOverlayProps) {
+/**
+ * The scrim — and, under Base UI, also the Portal boundary.
+ *
+ * `isDismissable` is READ FROM HERE BY `DialogTrigger`, which is the state owner
+ * and inspects this element's props before render (see dialog.tsx's header and
+ * `findChildProp`'s docblock). It is destructured out below so it cannot reach
+ * the DOM as an unknown attribute; nothing in this component acts on it.
+ *
+ * `isKeyboardDismissDisabled` remains INERT: Base UI's Dialog.Root has no
+ * counterpart — Escape always closes — so there is nothing to translate it onto.
+ */
+export function DrawerOverlay({
+  className,
+  children,
+  // — accepted by the API, unreachable in Base UI —
+  isDismissable: _isDismissable,
+  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
+  isOpen: _isOpen,
+  defaultOpen: _defaultOpen,
+  onOpenChange: _onOpenChange,
+  isEntering: _isEntering,
+  isExiting: _isExiting,
+  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
+  UNSTABLE_portalContainer: _portalContainer,
+  render: _render,
+  slot: _slot,
+  style: _style,
+  ...rest
+}: DrawerOverlayProps) {
   return (
-    <AriaModalOverlay className={cn(drawerOverlayVariants(), className)} {...props} />
+    <BaseDialog.Portal>
+      <BaseDialog.Backdrop
+        className={cn(drawerOverlayVariants(), className)}
+        {...rest}
+      />
+      {children as React.ReactNode}
+    </BaseDialog.Portal>
   );
 }
 
@@ -127,13 +238,39 @@ export interface DrawerProps
 }
 
 /**
+ * The panel, and — under Base UI — the `role="dialog"` element itself.
+ *
  * `side` is `"start" | "end"`, never `"left" | "right"`.
  *
  * The union is the enforcement. A designer who wants the panel on the right in
  * Persian has to say `side="start"`, which is what they actually mean; there is
  * no spelling of this prop that names a physical edge, so there is no way to
- * write a drawer that refuses to mirror.
+ * write a drawer that refuses to mirror. That is precisely the property Base
+ * UI's own `swipeDirection` does not have — see the file header.
  */
-export function Drawer({ className, side, size, ...props }: DrawerProps) {
-  return <AriaModal className={cn(drawerVariants({ side, size }), className)} {...props} />;
+export function Drawer({
+  className,
+  side,
+  size,
+  children,
+  // — accepted by the API, unreachable in Base UI —
+  isDismissable: _isDismissable,
+  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
+  isOpen: _isOpen,
+  defaultOpen: _defaultOpen,
+  onOpenChange: _onOpenChange,
+  isEntering: _isEntering,
+  isExiting: _isExiting,
+  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
+  UNSTABLE_portalContainer: _portalContainer,
+  render: _render,
+  slot: _slot,
+  style: _style,
+  ...rest
+}: DrawerProps) {
+  return (
+    <BaseDialog.Popup className={cn(drawerVariants({ side, size }), className)} {...rest}>
+      {children as React.ReactNode}
+    </BaseDialog.Popup>
+  );
 }

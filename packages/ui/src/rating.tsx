@@ -2,16 +2,14 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import { Star } from "lucide-react";
-import {
-  RadioButton as AriaRadioButton,
-  RadioField as AriaRadioField,
-  RadioGroup as AriaRadioGroup,
-} from "react-aria-components";
+import { RadioGroup as BaseRadioGroup } from "@base-ui/react/radio-group";
+import { Radio as BaseRadio } from "@base-ui/react/radio";
 import { cn, formatNumber, type Locale } from "@lumo-ui/core";
-import { FOCUS_RING, optional } from "./form.tsx";
+import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
+import { FOCUS_RING_SELF } from "./form.tsx";
 
 /**
- * A star rating, read-only or interactive.
+ * A star rating, read-only or interactive. **BASE UI ENGINE.**
  *
  *     <Rating
  *       isReadOnly
@@ -51,19 +49,34 @@ import { FOCUS_RING, optional } from "./form.tsx";
  *
  * ── WHY THE INTERACTIVE CASE IS A RadioGroup ───────────────────────────────
  *
- * Five stars with one selected IS a radio group, and saying so gets the whole
+ * Five stars with one selected IS a radio group, and saying so gets most of the
  * keyboard and screen-reader contract for free: one Tab stop for the group,
  * arrow keys between options, `role="radiogroup"` with a name, `aria-checked`
- * per star, and — the part that is invisible until it is wrong — arrow-key
- * direction resolved against the document direction, so ArrowLeft moves toward
- * HIGHER ratings in Persian. A hand-rolled roving tabindex over five buttons
- * would have to re-implement that mapping, and would get it wrong in exactly the
- * way that only shows up on the Persian build.
+ * per star. Base UI's `RadioGroup` + `Radio` emit all of that natively —
+ * measured, bare library:
  *
- * `RadioField` + `RadioButton`, not the flat `Radio`: React Aria 1.20 marks
- * `Radio` `@deprecated`. `value` lives on the field, so the field is where the
- * per-star `aria-label` goes — `useRadio` puts it on the hidden `<input>`.
+ *     <div role="radiogroup" aria-label="امتیاز شما">
+ *       <span role="radio" aria-checked="true" data-checked="" aria-label="۳ ستاره">
+ *       <input type="radio" aria-hidden="true" tabindex="-1" value="3">
  *
+ * The `aria-label` reaches the `role="radio"` element itself here, where React
+ * Aria put it on the hidden `<input>`. That is a small improvement and a real
+ * one: the name now sits on the element the accessibility tree actually exposes.
+ *
+ * ── ONE THING THAT WAS FREE AND IS NOT ANY MORE ────────────────────────────
+ *
+ * React Aria resolved arrow-key direction against the DOCUMENT direction, so on
+ * a Persian page ArrowLeft moved toward HIGHER ratings with no configuration at
+ * all. Base UI's composite resolves it against `useDirection()`, which returns
+ * `'ltr'` when no `<DirectionProvider>` is mounted
+ * (`internals/direction-context/DirectionContext.mjs:7`) — and `LumoProvider`
+ * does not mount one. So the arrow keys run left-to-right on a right-to-left row
+ * of stars unless the application supplies `<DirectionProvider direction="rtl">`.
+ * The stars still LOOK right, which is what makes this worth writing down: it is
+ * the same defect shape `tabs.tsx` records, and it is a regression against React
+ * Aria rather than a limitation both engines share.
+ *
+
  * ── AND WHY READ-ONLY IS NOT `isReadOnly` ON THAT RadioGroup ────────────────
  *
  * RAC's read-only radio group is still a control: it takes a Tab stop and
@@ -109,31 +122,66 @@ export const ratingVariants = cva("inline-flex w-fit items-center", {
 });
 
 /**
- * One interactive star, on the `RadioField` element.
+ * One interactive star. Sits on the `role="radio"` element itself.
  *
  * `fill-current` on the glyph in both states: an unfilled star drawn as an
  * outline reads as a different SHAPE at 16px, and a rating is a comparison of
  * quantity, not of shapes. Colour carries the value, and the value is also in
  * the accessible name — so this is not colour as the sole carrier of meaning.
+ *
+ * ── EVERY SIBLING SELECTOR HERE HAD TO BE RE-TARGETED, NOT JUST RENAMED ────
+ *
+ * `data-selected` → `data-checked` is the rename. The RE-TARGETING is the part a
+ * migration script cannot do, and it comes from a fact about Base UI's DOM that
+ * React Aria's did not have: **`Radio.Root` renders an `aria-hidden`
+ * `<input type="radio">` as its SIBLING**, so the row's children alternate
+ * `span, input, span, input, …`. Measured in the served markup.
+ *
+ * `~` and `:has(~ …)` walk siblings, so the inputs are now in the walk. Two
+ * consequences, both fixed below:
+ *
+ *  1. `:has(~[data-checked])` is still correct — an input never carries the
+ *     attribute — so that one is a pure rename.
+ *  2. `:has(~:hover)` is NOT. The proxy input is `position: fixed; top: 0;
+ *     left: 0; width: 1px; height: 1px`, so it is a real hoverable box in the
+ *     page's top-left corner; a pointer resting there would light every star
+ *     that precedes an input, which is all of them. The selector is narrowed to
+ *     `~[role=radio]:hover`, which is what it always meant.
+ *
+ * The hover preview stays expressed as `:not(:hover) > &` on the checked rules
+ * rather than as an override stacked on top of them — two rules that can never
+ * both match need no cascade order to resolve.
  */
 export const ratingStarVariants = cva(
-  "cursor-pointer text-fg-subtle transition-colors [&_svg]:fill-current " +
-    // Selected, and everything before it — but only while the row is NOT
+  "cursor-pointer text-fg-subtle transition-colors outline-none [&_svg]:fill-current " +
+    // Checked, and everything before it — but only while the row is NOT
     // hovered, so a pointer previewing a lower score does not leave the old
     // higher score lit behind it.
-    "[:not(:hover)>&[data-selected]]:text-caution " +
-    "[:not(:hover)>&:has(~[data-selected])]:text-caution " +
-    // The preview: the star under the pointer and everything before it.
+    "[:not(:hover)>&[data-checked]]:text-caution " +
+    "[:not(:hover)>&:has(~[data-checked])]:text-caution " +
+    // The preview: the star under the pointer and everything before it. Scoped
+    // to `[role=radio]` for the reason in the header — a bare `~:hover` now
+    // matches Base UI's 1px proxy input.
     "hover:text-caution " +
-    "[&:has(~:hover)]:text-caution " +
-    "data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50",
+    "[&:has(~[role=radio]:hover)]:text-caution " +
+    // WCAG 2.4.7. Base UI's `role="radio"` element IS the focusable one, so the
+    // ring goes here rather than on an inner span standing in for a clipped
+    // `<input>` — see `FOCUS_RING_SELF` in form.tsx.
+    "rounded-sm " +
+    FOCUS_RING_SELF +
+    " data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50",
 );
 
 export const ratingButtonVariants = cva(
   // `p-0.5` rather than a gap on the row: the padding belongs to the star, so
   // the hit areas touch and there is no dead strip between them. It also lifts
   // the target above the bare glyph size toward the touch floor.
-  "group inline-flex cursor-pointer items-center p-0.5",
+  //
+  // The `group` marker is gone. It existed only so `FOCUS_RING`'s
+  // `group-data-focus-visible:` could reach down from React Aria's `<label>` to
+  // an inner span; Base UI's radio is its own focusable element, so the ring is
+  // on the star itself and there is nothing left for a group to address.
+  "inline-flex cursor-pointer items-center p-0.5",
 );
 
 export type RatingVariantProps = VariantProps<typeof ratingVariants>;
@@ -278,52 +326,83 @@ function InteractiveRating({
   className,
 }: InteractiveRatingProps) {
   return (
-    <AriaRadioGroup
+    <BaseRadioGroup
       data-lumo=""
       aria-label={label}
-      // RAC's radio value is a string; a rating's value is a number. The
+      // Base UI's radio value is a string; a rating's value is a number. The
       // conversion is confined to this boundary rather than pushed onto the
       // consumer, so `onChange` hands back the number they gave. These strings
-      // are `value` attributes on a visually hidden `<input>` — machine values,
+      // are `value` attributes on an `aria-hidden` `<input>` — machine values,
       // never text nodes and never announced, so they are outside the
       // Latin-digit rule. What IS announced is `starLabel`, which is formatted.
-      {...optional("value", value === undefined ? undefined : String(value))}
-      {...optional("defaultValue", defaultValue === undefined ? undefined : String(defaultValue))}
-      {...optional(
-        "onChange",
-        onChange === undefined ? undefined : (next: string) => onChange(Number(next)),
-      )}
-      {...optional("isDisabled", isDisabled)}
-      {...optional("isRequired", isRequired)}
-      {...optional("name", name)}
-      // `orientation="horizontal"` is not decoration: it is what tells React
-      // Aria that Left/Right are the arrow keys for this group, and RAC resolves
-      // which of them means "next" from the document direction.
-      orientation="horizontal"
+      {...(value === undefined ? {} : { value: String(value) })}
+      {...(defaultValue === undefined ? {} : { defaultValue: String(defaultValue) })}
+      {...(onChange === undefined
+        ? {}
+        : { onValueChange: (next: unknown) => onChange(Number(next)) })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+      {...(isRequired === undefined ? {} : { required: isRequired })}
+      {...(name === undefined ? {} : { name })}
+      /*
+       * `orientation` IS GONE, AND ITS ABSENCE IS A CAPABILITY GAP.
+       *
+       * React Aria took `orientation="horizontal"` here, and that was what told
+       * it Left/Right were this group's arrow keys. Base UI's `RadioGroup` has
+       * no `orientation` prop at all — `RadioGroup.d.ts` declares disabled,
+       * readOnly, required, name, form, value, defaultValue, onValueChange and
+       * inputRef, and nothing else — and it hands its `CompositeRoot` no
+       * orientation either, so BOTH axes of arrow keys navigate the group. On a
+       * one-row rating that is harmless and arguably friendlier. It is recorded
+       * because it is a behaviour this file used to state and can no longer
+       * state, not because it is a defect here.
+       */
       className={cn(ratingVariants({ size }), className)}
     >
       {starPositions(maxValue).map((star) => (
-        <AriaRadioField
+        <RatingStar
           key={star}
-          value={String(star)}
-          aria-label={starLabel(formatNumber(star, locale))}
-          className={cn(ratingStarVariants())}
-        >
-          <AriaRadioButton className={cn(ratingButtonVariants())}>
-            {/*
-             * The ring is re-derived from the shared tokens rather than left to
-             * `:where([data-lumo]):focus-visible`, for the reason form.tsx
-             * documents: the element that actually takes focus is an `<input>`
-             * clipped to a 1px box, and an outline on a clipped element is
-             * invisible. RAC surfaces the state on this `<label>` instead.
-             */}
-            <span className={cn("inline-flex rounded-sm", FOCUS_RING)}>
-              <Star aria-hidden="true" className="fill-current" />
-            </span>
-          </AriaRadioButton>
-        </AriaRadioField>
+          star={star}
+          /*
+           * The star that carries the tab stop in the SERVED HTML. Base UI's
+           * RadioGroup resolves its roving index on the client, so without this
+           * every star is `tabindex="-1"` and the whole control is unreachable
+           * by Tab before hydration — see `useCompositeTabStop`. The CHOSEN
+           * star, or the first when nothing is chosen, which is where a radio
+           * group's stop belongs.
+           */
+          isTabStop={(value ?? defaultValue ?? 1) === star}
+          label={starLabel(formatNumber(star, locale))}
+        />
       ))}
-    </AriaRadioGroup>
+    </BaseRadioGroup>
+  );
+}
+
+/**
+ * One star. Split out only so the tab-stop hook can be called per star — hooks
+ * may not sit inside a `.map()` callback in the parent's body.
+ */
+function RatingStar({
+  star,
+  isTabStop,
+  label,
+}: {
+  star: number;
+  isTabStop: boolean;
+  label: string;
+}) {
+  const tabStop = useCompositeTabStop(isTabStop);
+  return (
+    <BaseRadio.Root
+      value={String(star)}
+      aria-label={label}
+      {...tabStop}
+      className={cn(ratingStarVariants())}
+    >
+      <span className={cn(ratingButtonVariants())}>
+        <Star aria-hidden="true" className="fill-current" />
+      </span>
+    </BaseRadio.Root>
   );
 }
 

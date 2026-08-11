@@ -9,9 +9,8 @@ import {
   Table,
   TableBody,
   TableHeader,
-  TableSelectAllColumn,
-  TableSelectionCell,
 } from "@lumo-ui/ui";
+import { TableSelectionIsland, TableSortingIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -20,6 +19,14 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  *
  * Amounts go through `formatNumber` — a bare number child would not compile,
  * and a Latin digit on the Persian route would not pass the gate.
+ *
+ * ── TWO OF THE FOUR EXAMPLES ARE ISLANDS NOW ────────────────────────────────
+ *
+ * Selection and sorting were element props on React Aria's `Table` and are
+ * TanStack state on this one, which arrives from the `useLumoTable` HOOK — and
+ * a hook cannot run in a server module. The two stateful examples therefore
+ * render through `demo-islands.tsx`, which states the boundary once. The basic
+ * and resizing examples need no state and stay right here, as markup.
  */
 
 const t = {
@@ -42,7 +49,7 @@ const t = {
 
 function BasicExample(l: Locale) {
   return (
-    <Table label={t.ordersGrid[l]} className="max-w-xl">
+    <Table label={t.ordersGrid[l]} locale={l} className="max-w-xl">
       <TableHeader>
         <Column id="name" isRowHeader>
           {t.customer[l]}
@@ -73,81 +80,43 @@ function BasicExample(l: Locale) {
 
 function SelectionExample(l: Locale) {
   return (
-    <Table
+    <TableSelectionIsland
+      locale={l}
       label={t.ordersGrid[l]}
-      selectionMode="multiple"
-      defaultSelectedKeys={["b"]}
-      className="max-w-xl"
-    >
-      <TableHeader>
-        <TableSelectAllColumn label={t.selectAllOrders[l]} />
-        <Column id="name" isRowHeader>
-          {t.customer[l]}
-        </Column>
-        <Column id="city">{t.city[l]}</Column>
-      </TableHeader>
-      <TableBody>
-        <Row id="a">
-          <TableSelectionCell label={t.selectOrder[l]} />
-          <Cell>{t.customerOne[l]}</Cell>
-          <Cell>{t.isfahan[l]}</Cell>
-        </Row>
-        <Row id="b">
-          <TableSelectionCell label={t.selectOrder[l]} />
-          <Cell>{t.customerTwo[l]}</Cell>
-          <Cell>{t.tabriz[l]}</Cell>
-        </Row>
-        <Row id="c">
-          <TableSelectionCell label={t.selectOrder[l]} />
-          <Cell>{t.customerThree[l]}</Cell>
-          <Cell>{t.tehran[l]}</Cell>
-        </Row>
-      </TableBody>
-    </Table>
+      customerHeader={t.customer[l]}
+      cityHeader={t.city[l]}
+      selectAllLabel={t.selectAllOrders[l]}
+      selectRowLabel={t.selectOrder[l]}
+      rows={[
+        { id: "a", customer: t.customerOne[l], city: t.isfahan[l] },
+        { id: "b", customer: t.customerTwo[l], city: t.tabriz[l] },
+        { id: "c", customer: t.customerThree[l], city: t.tehran[l] },
+      ]}
+    />
   );
 }
 
 function SortingExample(l: Locale) {
   return (
-    <Table
+    <TableSortingIsland
+      locale={l}
       label={t.ordersGrid[l]}
-      sortDescriptor={{ column: "city", direction: "ascending" }}
-      className="max-w-xl"
-    >
-      <TableHeader>
-        <Column id="name" isRowHeader>
-          {t.customer[l]}
-        </Column>
-        <Column
-          id="city"
-          allowsSorting
-          sortAscendingLabel={t.sortedAscending[l]}
-          sortDescendingLabel={t.sortedDescending[l]}
-        >
-          {t.city[l]}
-        </Column>
-        <Column id="total">{t.amount[l]}</Column>
-      </TableHeader>
-      <TableBody>
-        <Row id="a">
-          <Cell>{t.customerOne[l]}</Cell>
-          <Cell>{t.isfahan[l]}</Cell>
-          <Cell>{formatNumber(1250000, l)}</Cell>
-        </Row>
-        <Row id="b">
-          <Cell>{t.customerTwo[l]}</Cell>
-          <Cell>{t.tabriz[l]}</Cell>
-          <Cell>{formatNumber(890000, l)}</Cell>
-        </Row>
-      </TableBody>
-    </Table>
+      customerHeader={t.customer[l]}
+      cityHeader={t.city[l]}
+      sortAscendingLabel={t.sortedAscending[l]}
+      sortDescendingLabel={t.sortedDescending[l]}
+      rows={[
+        { id: "a", customer: t.customerOne[l], city: t.isfahan[l] },
+        { id: "b", customer: t.customerTwo[l], city: t.tabriz[l] },
+      ]}
+    />
   );
 }
 
 function ResizingExample(l: Locale) {
   return (
     <ResizableTableContainer className="max-w-xl">
-      <Table label={t.ordersGrid[l]}>
+      <Table label={t.ordersGrid[l]} locale={l}>
         <TableHeader>
           <Column
             id="name"
@@ -184,14 +153,16 @@ function ResizingExample(l: Locale) {
 export const EXAMPLES: ComponentExamples = {
   meta: {
     composition: [
+      `const table = useLumoTable({ locale, data, columns, enableRowSelection: true })`,
+      ``,
       `<ResizableTableContainer>`,
-      `  <Table label="…" selectionMode="…">`,
+      `  <Table label="…" locale={locale} table={table}>`,
       `    <TableHeader>`,
       `      <TableSelectAllColumn label="…" />`,
       `      <Column id="…" isRowHeader resizer={<ColumnResizer label="…" />}>…</Column>`,
       `    </TableHeader>`,
       `    <TableBody>`,
-      `      <Row id="…">`,
+      `      <Row row={row}>`,
       `        <TableSelectionCell label="…" />`,
       `        <Cell>…</Cell>`,
       `      </Row>`,
@@ -231,8 +202,15 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "Row",
         description: {
-          "fa-IR": "یک ردیف داده با کلید خودش.",
-          "en-US": "One data row with its own key.",
+          "fa-IR": "یک ردیف داده؛ ردیفِ TanStack را می‌گیرد تا انتخاب و aria-selected یک منبع داشته باشند.",
+          "en-US": "One data row; it takes the TanStack row so selection and aria-selected have one source.",
+        },
+      },
+      {
+        name: "useLumoTable",
+        description: {
+          "fa-IR": "لایهٔ حالت: انتخاب، مرتب‌سازی و صفحه‌بندی، با مقایسه‌گر زبان‌آگاه به‌عنوان پیش‌فرض.",
+          "en-US": "The state layer: selection, sorting and pagination, with the locale-aware comparator as the default.",
         },
       },
       {
@@ -295,8 +273,8 @@ export const EXAMPLES: ComponentExamples = {
       id: "sorting",
       title: { "fa-IR": "مرتب‌سازی", "en-US": "Sorting" },
       description: {
-        "fa-IR": "جهت مرتب‌سازی اعلام می‌شود، پس هر دو برچسب صعودی و نزولی اجباری‌اند.",
-        "en-US": "The sort direction is announced, so both the ascending and descending labels are required.",
+        "fa-IR": "جهت مرتب‌سازی اعلام می‌شود، پس هر دو برچسب صعودی و نزولی اجباری‌اند. مرتب‌سازی هم واقعی است: مقایسه با Intl.Collator فارسی انجام می‌شود.",
+        "en-US": "The sort direction is announced, so both labels are required — and the sort is real: the comparison runs through a Persian Intl.Collator.",
       },
       render: SortingExample,
     },

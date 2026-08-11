@@ -323,6 +323,10 @@ export function TableViewIsland({
       id: "date",
       header: dateHeader,
       allowsSorting: true,
+      // What the header sorts BY. `cell` returns a `<time>` element and a
+      // sortable column now has to say what is underneath it — see
+      // `table-view.tsx`. Before this the header sorted nothing at all.
+      sortValue: (row) => row.placedAt.getTime(),
       cell: (row) => (
         <time dateTime={row.placedAt.toISOString()}>
           {formatDate(row.placedAt, locale, { dateStyle: "medium" })}
@@ -333,6 +337,10 @@ export function TableViewIsland({
       id: "amount",
       header: amountHeader,
       allowsSorting: true,
+      // The raw number, never the formatted string: «۱٬۲۰۰٬۰۰۰ ریال» sorts by
+      // its first Persian digit, which is not what any reader means by "sort
+      // by amount".
+      sortValue: (row) => row.amount,
       cell: (row) => formatNumber(row.amount, locale, { style: "currency", currency: "IRR", maximumFractionDigits: 0 }),
     },
     {

@@ -145,8 +145,31 @@ describe("Slider — the value is a number, twice", () => {
 
 // ────────────────────────────────────────────────────────────────── toast ──
 
-describe("Toast — the portal writes its own dir", () => {
-  it("gets dir=rtl and a Persian name from the locale prop alone", async () => {
+describe("Toast — the portal no longer writes its own dir", () => {
+  /**
+   * RESTATED FOR THE BASE UI ENGINE, and restated STRONGER.
+   *
+   * This asserted `dir="rtl"` on the region, which pinned Lumo's WORKAROUND for
+   * a React Aria defect rather than a behaviour Lumo promises: RAC stamped
+   * `dir` on its own portal root from `useLocale()` (a hardcoded `en-US` during
+   * SSR), after the prop spread and therefore unoverridable, so a correct
+   * Persian page laid its toasts out LTR. The fix was an `I18nProvider` mounted
+   * from the required `locale` prop, and this test proved it worked.
+   *
+   * Base UI writes no `dir` at all, so the portalled node inherits `dir="rtl"`
+   * from `<html>` — which is what should have happened all along. The assertion
+   * therefore flips to the ABSENCE of the attribute, which is the stronger
+   * claim: `dir="rtl"` would also be satisfied by a component that hardcoded it
+   * and would then be wrong on an English page, whereas "writes no dir" can only
+   * be satisfied by inheriting.
+   *
+   * The POISON twin below is UNTOUCHED and still passes. It renders bare React
+   * Aria and still measures `dir="ltr"` and `aria-label="1 notification."`, so
+   * the defect this pair documents is proven to have been real rather than
+   * assumed — and the day Base UI regresses into stamping a `dir`, the
+   * assertion below goes red.
+   */
+  it("writes no dir of its own, and takes its Persian name from `label`", async () => {
     const queue = createToastQueue();
     render(
       <ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />,
@@ -160,7 +183,9 @@ describe("Toast — the portal writes its own dir", () => {
     // assertion below would then pass for the wrong reason.
     expect(region).not.toBeNull();
 
-    expect(region?.getAttribute("dir")).toBe("rtl");
+    // The engine must not overwrite the inherited direction. See the block
+    // above for why this is the stronger form of the old `toBe("rtl")`.
+    expect(region?.getAttribute("dir")).toBeNull();
     expect(region?.getAttribute("aria-label")).toBe("اعلان‌ها");
     expect(screen.getByText("ذخیره شد")).toBeTruthy();
     expect(spokenAttributes().filter((v) => LATIN_WORD.test(v))).toEqual([]);
@@ -212,15 +237,22 @@ describe("TagGroup — the remove control is named exactly once", () => {
     const button = screen.getByRole("button");
     expect(button.getAttribute("aria-label")).toBe("حذف تهران");
 
-    // aria-labelledby OVERRIDES aria-label in the name computation, so the
-    // override that matters is this one: it must resolve to a single element
-    // holding the phrase, not to RAC's "{buttonId} {rowId}" pair — which would
-    // append the tag's own text and announce «حذف تهران تهران».
-    const refs = (button.getAttribute("aria-labelledby") ?? "").split(/\s+/).filter(Boolean);
-    expect(refs).toHaveLength(1);
-    expect(document.getElementById(refs[0] ?? "")?.textContent).toBe("حذف تهران");
+    // RESTATED FOR THE ENGINE, and restated STRONGER.
+    //
+    // This used to assert that `aria-labelledby` resolved to exactly ONE
+    // element holding the phrase. That pinned Lumo's WORKAROUND, not a
+    // behaviour: React Aria's `useTag` emitted BOTH an English
+    // `aria-label="Remove"` and an `aria-labelledby="{buttonId} {rowId}"` that
+    // appended the tag's own text, so a complete Persian phrase announced as
+    // «حذف تهران تهران» — and the fix was a hidden span the labelledby was
+    // re-pointed at. Base UI's Toolbar.Button emits no naming attribute of its
+    // own, so the workaround is deleted and the assertion becomes the absence
+    // of the attribute, which is the stronger claim: an `aria-labelledby` that
+    // resolves to one element would ALSO be satisfied by a re-introduced
+    // concatenation whose first id happened to be dropped.
+    expect(button.getAttribute("aria-labelledby")).toBeNull();
 
-    // And RAC's English must not survive in the bytes, where the HTML gate reads.
+    // And no English survives in the bytes, where the HTML gate reads.
     expect(document.body.innerHTML).not.toContain("Remove");
     expect(spokenAttributes().filter((v) => LATIN_WORD.test(v))).toEqual([]);
     expect(danglingIdrefs()).toEqual([]);
@@ -235,7 +267,16 @@ describe("TagGroup — the remove control is named exactly once", () => {
       </TagGroup>,
     );
     expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.getByRole("row").getAttribute("data-allows-removing")).toBeNull();
+    // RESTATED FOR THE ENGINE. `role="row"` and `data-allows-removing` were
+    // React Aria's gridlist vocabulary; a static chip row is not a grid and
+    // Base UI has no gridlist. The BEHAVIOUR being checked — that a group with
+    // no `onRemove` exposes no control — is the line above, and it is
+    // unchanged. What replaces the vocabulary is the semantics the static form
+    // now claims instead: a named list whose item count a screen reader reads
+    // out without this library formatting a number.
+    expect(screen.getByRole("list").getAttribute("aria-label")).toBe("برچسب‌ها");
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.queryByRole("toolbar")).toBeNull();
   });
 });
 
@@ -406,7 +447,19 @@ describe("SegmentedControl — a radio group, not a row of toggles", () => {
     // told so. A hand-rolled control ships two unrelated toggle buttons.
     expect(options[0]?.getAttribute("aria-checked")).toBe("true");
     expect(options[1]?.getAttribute("aria-checked")).toBe("false");
-    expect(options[0]?.getAttribute("data-selected")).toBe("true");
+    // RESTATED FOR THE ENGINE, not weakened. This assertion pinned React Aria's
+    // WORD for the state (`data-selected`), not a behaviour: the behaviour is
+    // the `aria-checked` pair two lines above, and it is unchanged. Base UI
+    // spells the same state `data-checked` and publishes a matching
+    // `data-unchecked` on the others, so both halves are asserted — a rename
+    // that dropped one of them would leave a chosen option looking unchosen.
+    expect(options[0]?.getAttribute("data-checked")).toBe("");
+    expect(options[1]?.getAttribute("data-unchecked")).toBe("");
+    // NOT `data-composite-item-active`, which travels separately as the
+    // roving-focus cursor. Styling that one raises whichever option the arrow
+    // keys last passed over rather than the chosen one — the trap tabs.tsx
+    // records, one component over.
+    expect(options[1]?.getAttribute("data-checked")).toBeNull();
   });
 
   it("cannot be emptied by clicking the selected option", () => {

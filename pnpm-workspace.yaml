@@ -97,10 +97,46 @@ catalog:
   # releases exist (3.10.1); adopting one is a deliberate bump plus a re-vendor,
   # not a range.
   recharts: 3.8.0
+  # THE RENDERER, since 11 Aug 2026. `@tanstack/charts` replaces recharts in
+  # `chart.tsx` on one measured axis: recharts serves 127 bytes and NO `<svg>`,
+  # TanStack serves 4,717 with a real `<svg>` and Persian ticks, so `lumo-gate`
+  # — which grades the SERVED HTML — stops being structurally blind to the most
+  # number-dense component in the library (experiments/measurements/
+  # tanstack-charts.json).
+  #
+  # 0.9.0 AND NOT 0.11.0, and that is the cooldown working rather than a
+  # preference. Checked at 2026-08-11T07:38Z: 0.11.0 published 06:17 earlier,
+  # 0.10.0 07:18 earlier — both inside `minimumReleaseAge: 1440`. 0.9.0
+  # published 2026-08-09T23:13Z, 32 hours old, clears it. Pinned one — two —
+  # releases behind rather than adding an exclude, per CONTRIBUTING.md.
+  #
+  # THE PIN IS LOAD-BEARING AND THE MAINTENANCE COST IS REAL. The upstream repo
+  # is 13 days old, has shipped 19 releases, self-describes its API as
+  # "pre-alpha", and has already REPLACED the axis configuration surface once
+  # (0.3.0) — the one surface Lumo's RTL work sits on. Budget a wrapper REWRITE,
+  # not a re-pin, on roughly every minor until 1.0. The React adapter is the
+  # `./react` subpath of this one package; `@tanstack/react-charts` is the dead
+  # pre-0.9.0 name and must not be added.
+  '@tanstack/charts': 0.9.0
   # Build-time only: server components highlight during the static export, so
   # none of this reaches a client bundle. 4.4.3 was six hours old at adoption —
   # inside the 24h cooldown — so this pins one release behind, per the rule.
   shiki: 4.4.2
+
+  # --- headless STATE, with no markup and no ARIA -----------------------------
+  # Both of these are deliberately NOT accessibility dependencies, and that is
+  # the whole reason they are acceptable beside Base UI. Base UI has no table and
+  # no virtualiser; TanStack supplies the arithmetic (sort/filter/paginate/select
+  # state; item offsets and a window) and emits no DOM, no role, no aria-* and no
+  # focus management. Lumo keeps role=grid, aria-sort, aria-rowcount, the roving
+  # tab stop and the RTL arrow mapping — one accessibility dependency, not two.
+  # If a future TanStack minor starts returning props with `role` or `aria-*` in
+  # them, that is the signal to stop spreading its output, not to adopt it.
+  #
+  # Exact pins for the usual reason: both compute geometry or ordering that the
+  # committed tests read back out.
+  '@tanstack/react-table': 9.1.2
+  '@tanstack/react-virtual': 3.14.9
 
   # --- carousel --------------------------------------------------------------
   # 9.0.0-rc02 is a prerelease; 8.6.0 is the newest stable. Exact, because embla

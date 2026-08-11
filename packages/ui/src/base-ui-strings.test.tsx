@@ -27,9 +27,12 @@
  *   Lumo components   `Slider` and `NumberField` are rebuilt on Base UI, so the
  *                     string is asserted through Lumo's own public API.
  *   Bare carriers     `Progress.Root`, `Toast.Viewport` and a two-thumb
- *                     `Slider.Thumb` are NOT yet Lumo components on this engine
- *                     — progress.tsx and toast.tsx are still React Aria, and
- *                     Lumo ships no range slider. They are rendered directly,
+ *                     `Slider.Thumb` are rendered directly rather than through
+ *                     a Lumo component. toast.tsx is still React Aria and Lumo
+ *                     ships no range slider; progress.tsx IS on Base UI now, and
+ *                     its own suite (progress.test.tsx) makes the stronger
+ *                     claim — this file keeps the bare case because it grades
+ *                     the catalogue rather than any one component. They are rendered directly,
  *                     wired the way the catalogue says to wire them. That is a
  *                     weaker claim than a component test and it is labelled as
  *                     such: it proves the catalogue reaches the attribute, not
@@ -162,9 +165,12 @@ describe("base-ui strings — a fa-IR SERVER render carries Persian for all 7", 
 
   /* ── 4 · Progress.Root while indeterminate ───────────────────────────────── */
   it("Progress.Root announces the Persian indeterminate phrase (bare carrier)", () => {
-    // BARE CARRIER. progress.tsx is still React Aria, which emits no
-    // aria-valuetext at all while indeterminate — so this is what the file will
-    // have to do the day it is rebuilt, asserted before it is written.
+    // BARE CARRIER, and it is now the WEAKER of two tests rather than the only
+    // one: progress.tsx was rebuilt on Base UI on 11 Aug 2026 and threads this
+    // exact wiring, asserted through Lumo's own public API in progress.test.tsx.
+    // This case stays because it grades the CATALOGUE — that the phrase reaches
+    // the attribute through a documented prop — independently of whether any
+    // Lumo component happens to call it.
     //
     // `getAriaValueText` receives the EMPTY STRING as `formattedValue` in this
     // state (ProgressRoot.mjs:43,64), so the callback cannot learn from its own

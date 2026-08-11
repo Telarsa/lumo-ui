@@ -1,13 +1,11 @@
 "use client";
 
-import type { HTMLAttributes } from "react";
-import {
-  Button as AriaButton,
-  Link as AriaLink,
-  type ButtonProps as AriaButtonProps,
-  type LinkProps as AriaLinkProps,
-} from "react-aria-components";
+import type { AnchorHTMLAttributes, HTMLAttributes, MouseEvent as ReactMouseEvent } from "react";
+import { Button as BaseButton } from "@base-ui/react/button";
+// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
+import type { ButtonProps as AriaButtonProps } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
+import { pressFromClick } from "./base-ui-adapter.ts";
 import { Separator, type SeparatorProps } from "./separator.tsx";
 // Class definitions live in item.variants.ts with no "use client", so a
 // server-rendered listing can style static rows without dragging this module's
@@ -40,8 +38,28 @@ import {
  *       <ItemActions>…</ItemActions>
  *     </Item>
  *
- * `"use client"` because the interactive forms come from react-aria-components,
- * which is client-only.
+ * `"use client"` because `onPress` is a function prop and a function cannot
+ * cross the server/client boundary. **BASE UI ENGINE** — but only just: see the
+ * note below on what this component actually rented.
+ *
+ * ── THE ENGINE WAS DOING ALMOST NOTHING HERE, AND THAT IS THE FINDING ──────
+ *
+ * This is the cheapest migration in the family, and the reason is worth stating
+ * because it is the exception rather than the rule. React Aria supplied exactly
+ * two things: `Link`, which rendered an `<a href>` with press handling, and
+ * `Button`, which rendered a `<button>` with `data-pressed`. Neither is a
+ * behaviour the platform lacks.
+ *
+ *   - The LINK is now a plain `<a>`. Base UI ships no Link part at all — 40
+ *     export subpaths, none of them a link — and it does not need to: an anchor
+ *     with an `href` is already keyboard-operable, middle-clickable and
+ *     crawlable. What React Aria added on top was a synthetic press model, and
+ *     `onPress` was never in this component's public API.
+ *   - The BUTTON is Base UI's `Button`, translated through `pressFromClick` the
+ *     same way `button.tsx` does, so the frozen `onPress` signature survives.
+ *
+ * Recorded because the inventory reads the same for `item` as for `tree`: both
+ * are components in a family being migrated. One of them cost two imports.
  *
  * ── WHAT THE ELEMENT IS, IS THE API ─────────────────────────────────────────
  * One row, three renderings, decided by the props' own shape:
@@ -82,14 +100,14 @@ interface ItemCommonProps extends ItemVariantProps {
 
 export interface ItemLinkProps
   extends ItemCommonProps,
-    Omit<AriaLinkProps, "children" | "className" | "target" | "rel"> {
+    Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children" | "className" | "target" | "rel"> {
   /** Renders the row as a real anchor. */
   href: string;
 }
 
 export interface ItemButtonProps
   extends ItemCommonProps,
-    Omit<AriaButtonProps, "children" | "className"> {
+    Omit<HTMLAttributes<HTMLButtonElement>, "children" | "className" | "onClick"> {
   href?: undefined;
   /** Renders the row as a button. Required — a handler-less button is a static row. */
   onPress: NonNullable<AriaButtonProps["onPress"]>;
@@ -108,7 +126,7 @@ export function Item(props: ItemProps) {
   if (props.href !== undefined) {
     const { variant, size, className, ...link } = props;
     return (
-      <AriaLink
+      <a
         data-lumo=""
         className={cn(itemVariants({ variant, size }), className)}
         {...link}
@@ -116,11 +134,15 @@ export function Item(props: ItemProps) {
     );
   }
   if (props.onPress !== undefined) {
-    const { variant, size, className, href: _href, ...button } = props;
+    const { variant, size, className, href: _href, onPress, ...button } = props;
     return (
-      <AriaButton
+      <BaseButton
         data-lumo=""
         className={cn(itemVariants({ variant, size }), className)}
+        // React Aria's `PressEvent` rebuilt from the real `click`. Every field
+        // is read from the DOM event and the two that cannot be derived are
+        // documented in `base-ui-adapter.ts` rather than filled with a guess.
+        onClick={(event: ReactMouseEvent<HTMLButtonElement>) => onPress(pressFromClick(event))}
         {...button}
       />
     );

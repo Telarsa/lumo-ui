@@ -1,16 +1,14 @@
 "use client";
 
-import { CloudUpload, Paperclip, X } from "lucide-react";
 import {
-  DropZone as AriaDropZone,
-  FileTrigger as AriaFileTrigger,
-  Text as AriaText,
-  isFileDropItem,
-  type DropZoneProps as AriaDropZoneProps,
-} from "react-aria-components";
+  useRef,
+  useState,
+  type ClipboardEvent as ReactClipboardEvent,
+  type DragEvent as ReactDragEvent,
+} from "react";
+import { CloudUpload, Paperclip, X } from "lucide-react";
 import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button, IconButton } from "./button.tsx";
-import { optional } from "./form.tsx";
 // The cva definitions and the size formatter live in a module with no
 // "use client" so a SERVER-rendered list of existing attachments can use them.
 // See file-upload.variants.ts, and button.variants.ts for the rule.
@@ -30,6 +28,7 @@ import {
 
 /**
  * A drop area and a file picker, plus the list of what was chosen.
+ * **NO ENGINE — Base UI ships neither half, and this is what that cost.**
  *
  *     <FileUpload
  *       label="کشیدن و رها کردن پرونده‌ها"
@@ -50,54 +49,72 @@ import {
  *       ))}
  *     </FileUploadList>
  *
- * ── BOTH PIECES EXIST IN 1.20.0, AND THEY ARE NOT THE SAME PIECE ───────────
+ * ═══ WHAT BASE UI HAS: NOTHING. WHAT THAT ACTUALLY COST: 30 LINES ═══════════
  *
- * `DropZone` and `FileTrigger` are both exported from
- * `react-aria-components@1.20.0` (verified in `dist/types/exports/index.d.ts`),
- * and they solve different halves. `DropZone` is a drop target with a clipboard
- * path — it renders a visually hidden `<button>` so a keyboard user can paste
- * files into it. `FileTrigger` is a `<PressResponder>` around a hidden
- * `<input type="file">`. Neither implies the other, so both are here: a drop
- * area with no button is unusable without a pointer, and a button with no drop
- * area throws away the interaction most people reach for first.
+ * `@base-ui/react@1.7.0` exposes 40 subpaths and none of them is a drop zone, a
+ * file trigger or a file input. React Aria supplied two components here —
+ * `DropZone` and `FileTrigger` — and both are gone with no counterpart to
+ * migrate to.
  *
- * ═══ TWO LEAKS, MEASURED IN THE SOURCE, AND NEITHER IS OBVIOUS ══════════════
+ * That reads like the worst case in this family and it is close to the best. The
+ * reason is worth separating from the headline, because the same sentence
+ * ("Base UI has no primitive") is true of `tree.tsx` and means something
+ * completely different there:
  *
- * **1. The drop area names itself in English.** From `private/DropZone.mjs`:
+ *   - A TREE rents a state machine — roving tabindex over a FLATTENED visible
+ *     order, typeahead in the reader's own script, expand/collapse bound to
+ *     arrow keys that swap under RTL. None of that is in the platform.
+ *   - A DROP AREA rents four DOM events. `dragenter`, `dragover`, `dragleave`
+ *     and `drop` are platform APIs, `<input type="file">` is a platform element,
+ *     and `.click()` on a hidden one is the pattern every custom file button has
+ *     used for twenty years. There is no keyboard model, no focus order and no
+ *     collection.
  *
- *     let ariaLabel = props['aria-label'] || stringFormatter.format('dropzoneLabel');
+ * So "no primitive" is not one number. It is the difference between rebuilding a
+ * behaviour and calling `addEventListener`.
  *
- * and the bundle it reads is react-aria-components' OWN
- * `dist/private/intl/en-US.mjs`:
+ * ═══ AND BOTH OF REACT ARIA'S LEAKS RETIRE, WHICH IS A NET WIN ══════════════
  *
- *     {selectPlaceholder: "Select an item", tableResizer: "Resizer",
- *      dropzoneLabel: "DropZone", colorSwatchPicker: "Color swatches"}
+ * The previous version of this file documented two English leaks at length. Both
+ * are gone, and neither needed a workaround to remove — they were React Aria's
+ * to begin with:
  *
- * Note WHICH package that is. `patches/react-aria@3.51.0.patch` adds `fa-IR`
- * bundles to **react-aria**'s intl packages — fifteen of them — and this string
- * is not in any of them, because it does not come from react-aria. A Persian
- * page with the patch applied and the provider mounted still renders
- * `aria-label="DropZone"` on the drop area's button, in the first byte, where
- * `lumo-gate`'s `no-latin-aria` rule reads it. So `label` is a required prop,
- * and it is the reason this component cannot have a sensible default.
+ * **1. The drop area named itself in English.** `private/DropZone.mjs` read
+ * `props['aria-label'] || stringFormatter.format('dropzoneLabel')` from
+ * react-aria-components' OWN `intl/en-US.mjs` — a bundle
+ * `patches/react-aria@3.51.0.patch` does not cover, because the patch adds
+ * `fa-IR` files to *react-aria*'s intl packages and this string does not come
+ * from there. A Persian page with the patch applied and the provider mounted
+ * still served `aria-label="DropZone"`. There is no bundle now, so there is
+ * nothing to leak.
  *
- * **2. The file input has no accessible name, and `aria-label` cannot reach
- * it.** `FileTrigger` forwards props to its `<input type="file">` with
- * `filterDOMProps(rest, {global: true})` — and `global` covers `dir`, `lang`,
- * `hidden`, `inert`, `translate` and the global events. It does NOT pass
- * `labelable`, so `aria-label` / `aria-labelledby` are dropped on the floor. The
- * input is `style="display:none"`, but the HTML gate grades SERVER-RENDERED
- * markup with no layout and reports everything visible on purpose (see
- * `packages/gate/src/rules.ts`) — so its `named-controls` rule matches
- * `input:not([type=hidden])` and finds an unnamed control.
+ * **2. The file input had no accessible name and `aria-label` could not reach
+ * it.** `FileTrigger` forwarded props with `filterDOMProps(rest, {global: true})`
+ * and `global` does not include `labelable`, so `aria-label` was dropped on the
+ * floor and the served `<input type="file">` was an unnamed control. The lever
+ * that worked was `hidden`. The input is written directly here now, so
+ * `hidden` is a choice rather than the only reachable one — and it is still the
+ * right choice, for the reason it always was: the input is never meant to be
+ * perceived, it is clicked programmatically by the `<Button>` beside it, and
+ * `hidden` takes the whole element out of the accessibility tree.
  *
- * The lever that IS reachable is `hidden`, and it happens to be the correct
- * answer rather than a workaround: the input is never meant to be perceived, it
- * is clicked programmatically by the `<Button>` beside it, and `hidden` takes
- * the whole element out of the accessibility tree — which is also the skip the
- * gate performs (`el.closest('[aria-hidden="true"],[hidden]')`). `.click()` on a
- * hidden input still opens the picker; that is the pattern the platform has
- * always used for custom file buttons.
+ * ── THE DROP AREA IS A GROUP, NOT A BUTTON, AND THAT IS THE `label` FIX ────
+ *
+ * React Aria modelled the drop area as a hidden `role="button"` so a keyboard
+ * user could paste files into it — which is also precisely why it needed an
+ * accessible name, and therefore why it had an English one to leak. A drop
+ * target is not a button for a keyboard user; the PICKER is, and it is visible,
+ * labelled and already in the tab order. So the area is `role="group"` with the
+ * caller's `label`, which is what it is: a labelled container holding a control
+ * and a hint.
+ *
+ * **CAPABILITY NARROWED, stated rather than discovered:** React Aria's hidden
+ * button was itself a TAB STOP, so the drop area could receive a clipboard paste
+ * of files on its own. `onPaste` is now on the container and `paste` bubbles, so
+ * a keyboard user who tabs to «انتخاب پرونده» and presses ⌘V still gets their
+ * files — but something inside must be focused first, and the area is no longer
+ * a tab stop of its own. Recorded as a genuine regression against React Aria,
+ * and it is the ONE thing in this file that got worse.
  *
  * ═══ A FILE SIZE IS A NUMBER, AND SO IS ITS UNIT ════════════════════════════
  *
@@ -107,13 +124,14 @@ import {
  * because it grades digits. Read that file before changing the call below.
  */
 
-export interface FileUploadProps
-  extends Omit<AriaDropZoneProps, "children" | "className" | "aria-label" | "onDrop"> {
+export interface FileUploadProps {
   /**
    * Announced name of the drop area, e.g. «کشیدن و رها کردن پرونده‌ها».
    *
-   * REQUIRED. See the file header: React Aria's own fallback is the English
-   * literal "DropZone", from a bundle the fa-IR patch does not cover.
+   * REQUIRED, and the argument for it CHANGED with the engine. Under React Aria
+   * the fallback was the English literal "DropZone"; there is no fallback now,
+   * so a missing label is a `role="group"` announced as a bare "group". The
+   * quieter defect of the two, and the same reason `list-box.tsx` gives.
    */
   label: string;
   /**
@@ -126,6 +144,7 @@ export interface FileUploadProps
   /** MIME types or extensions the picker offers, e.g. `["image/png", ".pdf"]`. */
   acceptedFileTypes?: readonly string[] | undefined;
   allowsMultiple?: boolean | undefined;
+  isDisabled?: boolean | undefined;
   /** Hint under the button — a size limit, an accepted-formats line. */
   children?: LumoNode;
   className?: string | undefined;
@@ -137,32 +156,89 @@ export function FileUpload({
   onSelectFiles,
   acceptedFileTypes,
   allowsMultiple,
+  isDisabled,
   children,
   className,
-  ...props
 }: FileUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  /*
+   * A COUNTER, not a boolean, and this is the bug every hand-written drop zone
+   * ships. `dragleave` fires when the pointer crosses into a CHILD element, so a
+   * boolean flag flickers off every time the drag passes over the icon or the
+   * hint text and the highlight strobes. Counting enter/leave pairs is the only
+   * form that survives nested children.
+   *
+   * This is also the one `useState` in the component and it does not break
+   * rule 5: rule 5 bans mirroring state the DOM already publishes, and there is
+   * no DOM property that says "a drag is currently over this box".
+   */
+  const [dragDepth, setDragDepth] = useState(0);
+
+  const deliver = (files: FileList | null | undefined) => {
+    // `FileList` is not an array. `Array.from` rather than a spread so the
+    // conversion is explicit at the boundary where the DOM type ends.
+    if (files && files.length > 0) onSelectFiles?.(Array.from(files));
+  };
+
+  const accept = acceptedFileTypes === undefined ? undefined : acceptedFileTypes.join(",");
+
   return (
-    <AriaDropZone
+    <div
       data-lumo=""
-      // Leak 1, closed. Without this the served bytes carry
-      // aria-label="DropZone" on a Persian page.
+      // `role="group"` and not a hidden button — see the file header.
+      role="group"
       aria-label={label}
+      {...(isDisabled === true ? { "data-disabled": "" } : {})}
+      {...(dragDepth > 0 ? { "data-lumo-drop-target": "" } : {})}
       className={cn(dropZoneVariants(), className)}
-      onDrop={(event) => {
-        if (!onSelectFiles) return;
-        // `items` is a heterogeneous list — a drag can carry text, a URL, or a
-        // directory. `isFileDropItem` is RAC's own guard, used rather than a
-        // hand-written `kind === "file"` check so a future DnD shape change is
-        // their problem and not a silent filter that stops matching.
-        //
-        // `getFile()` is async, so the whole handler is: an async handler is
-        // assignable to RAC's `(e: DropEvent) => void`, and there is nothing to
-        // await it for — the result is delivered by callback either way.
-        void Promise.all(event.items.filter(isFileDropItem).map((item) => item.getFile())).then(
-          (files) => onSelectFiles(files),
-        );
+      onDragEnter={(event: ReactDragEvent<HTMLDivElement>) => {
+        // Only a drag that actually carries files. A text selection dragged
+        // across the page would otherwise light the target and then drop
+        // nothing, which reads as a broken control.
+        if (isDisabled === true || !event.dataTransfer.types.includes("Files")) return;
+        event.preventDefault();
+        setDragDepth((depth) => depth + 1);
       }}
-      {...props}
+      onDragOver={(event: ReactDragEvent<HTMLDivElement>) => {
+        if (isDisabled === true || !event.dataTransfer.types.includes("Files")) return;
+        // `preventDefault` on EVERY dragover, not just the first. Without it the
+        // browser's default is "not a drop target" and the drop event never
+        // fires — the single most common reason a hand-written drop zone
+        // highlights correctly and then does nothing.
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+      }}
+      onDragLeave={() => {
+        setDragDepth((depth) => Math.max(0, depth - 1));
+      }}
+      onDrop={(event: ReactDragEvent<HTMLDivElement>) => {
+        if (isDisabled === true) return;
+        event.preventDefault();
+        setDragDepth(0);
+        deliver(event.dataTransfer.files);
+      }}
+      /*
+       * The clipboard path, replacing the hidden `role="button"` React Aria used
+       * to carry it. `paste` BUBBLES, so putting the handler on the container
+       * catches a paste from any focusable descendant — today that is the picker
+       * button, tomorrow anything a caller composes in. It is still narrower
+       * than React Aria's: RAC's hidden button was itself a tab stop, so the
+       * whole area could receive a paste on its own. Here something inside must
+       * be focused first. Recorded as a regression, not presented as parity.
+       *
+       * `onPaste` could not go on `<Button>`: Lumo's public `ButtonProps` is
+       * `Omit<AriaButtonProps, …>` and React Aria never declared it, so `tsc`
+       * rejects it — the frozen API stating a limit, which is the same shape of
+       * constraint `base-ui-adapter.ts` exists for.
+       */
+      onPaste={(event: ReactClipboardEvent<HTMLDivElement>) => {
+        if (isDisabled === true) return;
+        const files = event.clipboardData?.files;
+        if (files && files.length > 0) {
+          event.preventDefault();
+          deliver(files);
+        }
+      }}
     >
       {/*
        * A cloud with an upward arrow. `aria-hidden` because the drop area is
@@ -173,41 +249,55 @@ export function FileUpload({
        */}
       <CloudUpload aria-hidden="true" className="size-8 shrink-0 text-fg-muted" />
 
-      <AriaFileTrigger
-        // Leak 2, closed. `hidden` is the only lever that reaches the input —
-        // `aria-label` is filtered out before it gets there. See the file header.
+      {/*
+       * `hidden`, and it is the correct answer rather than a workaround: the
+       * input is never meant to be perceived, `hidden` removes it from the
+       * accessibility tree (which is also the skip `@lumo-ui/gate` performs —
+       * `el.closest('[aria-hidden="true"],[hidden]')`), and `.click()` on a
+       * hidden input still opens the picker.
+       */}
+      <input
+        ref={inputRef}
+        type="file"
         hidden
-        onSelect={(files) => {
-          // `FileList` is not an array. `Array.from` rather than a spread so the
-          // conversion is explicit at the boundary where the DOM type ends.
-          onSelectFiles?.(Array.from(files ?? []));
+        {...(accept === undefined ? {} : { accept })}
+        {...(allowsMultiple === true ? { multiple: true } : {})}
+        onChange={(event) => {
+          deliver(event.target.files);
+          // Cleared so choosing the SAME file twice in a row still fires a
+          // change event. Without this the second attempt is silent.
+          event.target.value = "";
         }}
-        {...optional("acceptedFileTypes", acceptedFileTypes)}
-        {...optional("allowsMultiple", allowsMultiple)}
+      />
+
+      <Button
+        variant="outline"
+        size="sm"
+        isDisabled={isDisabled ?? false}
+        onPress={() => {
+          inputRef.current?.click();
+        }}
       >
-        <Button variant="outline" size="sm">
-          {triggerLabel}
-        </Button>
-      </AriaFileTrigger>
+        {triggerLabel}
+      </Button>
 
       {/*
-       * `Text`, not a bare `<div>`, and it is rendered even when there is no
-       * hint. `DropZone` mints an id with `useSlotId()` and puts it in the drop
-       * button's `aria-labelledby`; `useSlotId` only clears an unclaimed id in a
-       * layout effect, which never runs on the server. Measured in the
-       * prerendered bytes: `aria-labelledby="<buttonId> react-aria-_R_0_"` with
-       * nothing carrying the second id — a dangling reference that fails
-       * `@lumo-ui/gate`'s `resolved-idrefs`. RAC publishes that id through
-       * `TextContext`, so this element is what claims it. `list-box.tsx` records
-       * the same trap; `toast.tsx` states the rule.
+       * A plain `<div>`, and rendered only when there IS a hint.
        *
-       * `elementType="div"`: the hint is prose and a consumer will pass a `<p>`,
-       * which is not valid inside the `<span>` `Text` renders by default.
+       * React Aria forced this element to exist unconditionally: `DropZone` mint
+       * an id with `useSlotId()` and put it in the hidden button's
+       * `aria-labelledby`, and `useSlotId` only clears an unclaimed id in a
+       * layout effect — which never runs on the server. The served bytes carried
+       * `aria-labelledby="<buttonId> react-aria-_R_0_"` with nothing holding the
+       * second id, failing `@lumo-ui/gate`'s `resolved-idrefs`, so RAC's `Text`
+       * had to be rendered even when empty purely to claim it.
+       *
+       * No hidden button, no slot, no id, nothing to claim. The wrapper is a div
+       * again and an empty hint renders nothing at all. A third RAC-specific
+       * workaround retired by the migration rather than translated.
        */}
-      <AriaText slot="label" elementType="div" className="text-center">
-        {children}
-      </AriaText>
-    </AriaDropZone>
+      {children == null ? null : <div className="text-center">{children}</div>}
+    </div>
   );
 }
 

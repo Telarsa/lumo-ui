@@ -1,16 +1,6 @@
 import type { Locale } from "@lumo-ui/core";
-import {
-  Button,
-  Command,
-  CommandDialog,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-  Kbd,
-} from "@lumo-ui/ui";
+import { Kbd } from "@lumo-ui/ui";
+import { CommandPaletteIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -20,6 +10,15 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * The dialog variants show only their trigger in the first byte (overlays
  * return null during SSR); the inline variant is fully in the served bytes,
  * which is exactly what makes it worth showing separately.
+ *
+ * ── EVERY EXAMPLE GOES THROUGH AN ISLAND ────────────────────────────────────
+ *
+ * `CommandList`'s children are a RENDER FUNCTION on this engine, and a function
+ * cannot be serialised into the RSC payload — this file is a server module, so
+ * the prerender fails on it. The palette therefore renders through
+ * `demo-islands.tsx`, which states that boundary once and explains why the
+ * compiling alternative (static JSX children, never filtered) is worse than the
+ * island.
  */
 
 const t = {
@@ -42,30 +41,43 @@ const t = {
   print: { "fa-IR": "چاپ", "en-US": "Print" },
 } satisfies Record<string, LocalizedText>;
 
+
+/**
+ * The commands as DATA, not JSX.
+ *
+ * `Command` takes `items` on the root now: Base UI filters an array, where React
+ * Aria filtered a JSX collection. A JSX-only palette still renders and is
+ * silently never filtered, so the prop is required — see the header of
+ * `packages/ui/src/command.tsx`.
+ */
+interface Cmd {
+  value: string;
+  label: string;
+  shortcut?: string;
+}
+
+const group = (l: Locale, values: readonly (keyof typeof t)[]): readonly Cmd[] =>
+  values.map((value) => ({ value: String(value), label: t[value][l] }));
+
 function PaletteExample(l: Locale) {
   return (
     <div className="flex items-center gap-3">
-      <CommandDialog
-        title={t.palette[l]}
-        description={t.paletteHelp[l]}
-        closeLabel={t.close[l]}
-        trigger={<Button variant="outline">{t.openPalette[l]}</Button>}
-      >
-        <Command>
-          <CommandInput label={t.commandSearch[l]} placeholder={t.commandPlaceholder[l]} />
-          <CommandList aria-label={t.palette[l]}>
-            <CommandGroup heading={t.suggestions[l]}>
-              <CommandItem id="new">{t.newDocument[l]}</CommandItem>
-              <CommandItem id="open">{t.openFile[l]}</CommandItem>
-            </CommandGroup>
-            <CommandSeparator />
-            <CommandGroup heading={t.settings[l]}>
-              <CommandItem id="profile">{t.profile[l]}</CommandItem>
-              <CommandItem id="theme">{t.theme[l]}</CommandItem>
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </CommandDialog>
+      <CommandPaletteIsland
+        listLabel={t.palette[l]}
+        inputLabel={t.commandSearch[l]}
+        inputPlaceholder={t.commandPlaceholder[l]}
+        withSeparator
+        dialog={{
+          title: t.palette[l],
+          description: t.paletteHelp[l],
+          closeLabel: t.close[l],
+          triggerLabel: t.openPalette[l],
+        }}
+        groups={[
+          { value: "s", heading: t.suggestions[l], items: group(l, ["newDocument", "openFile"]) },
+          { value: "t", heading: t.settings[l], items: group(l, ["profile", "theme"]) },
+        ]}
+      />
       <Kbd keys={["Ctrl", "K"]} />
     </div>
   );
@@ -73,58 +85,52 @@ function PaletteExample(l: Locale) {
 
 function InlineExample(l: Locale) {
   return (
-    <Command className="w-full max-w-md border border-border shadow-sm">
-      <CommandInput label={t.commandSearch[l]} placeholder={t.commandPlaceholder[l]} />
-      <CommandList aria-label={t.palette[l]}>
-        <CommandGroup heading={t.suggestions[l]}>
-          <CommandItem id="new">{t.newDocument[l]}</CommandItem>
-          <CommandItem id="open">{t.openFile[l]}</CommandItem>
-          <CommandItem id="search">{t.search[l]}</CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <CommandPaletteIsland
+      listLabel={t.palette[l]}
+      inputLabel={t.commandSearch[l]}
+      inputPlaceholder={t.commandPlaceholder[l]}
+      items={group(l, ["newDocument", "openFile", "search"])}
+      className="w-full max-w-md border border-border shadow-sm"
+    />
   );
 }
 
 function ShortcutsExample(l: Locale) {
   return (
-    <Command className="w-full max-w-md border border-border shadow-sm">
-      <CommandInput label={t.commandSearch[l]} placeholder={t.commandPlaceholder[l]} />
-      <CommandList aria-label={t.palette[l]}>
-        <CommandGroup heading={t.suggestions[l]}>
-          <CommandItem id="new" textValue={t.newDocument[l]}>
-            {t.newDocument[l]}
-            <CommandShortcut>⌘N</CommandShortcut>
-          </CommandItem>
-          <CommandItem id="print" textValue={t.print[l]}>
-            {t.print[l]}
-            <CommandShortcut>⌘P</CommandShortcut>
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </Command>
+    <CommandPaletteIsland
+      listLabel={t.palette[l]}
+      inputLabel={t.commandSearch[l]}
+      inputPlaceholder={t.commandPlaceholder[l]}
+      /*
+       * `textValue` is gone from `CommandItem` and its absence is the point:
+       * under React Aria a row whose children were an ARRAY (text plus a
+       * shortcut) matched nothing unless this prop was passed by hand. Base UI
+       * matches the items array, so a shortcut cannot affect the search.
+       */
+      items={[
+        { value: "new", label: t.newDocument[l], shortcut: "\u2318N" },
+        { value: "print", label: t.print[l], shortcut: "\u2318P" },
+      ]}
+      className="w-full max-w-md border border-border shadow-sm"
+    />
   );
 }
 
 function DismissableExample(l: Locale) {
   return (
-    <CommandDialog
-      title={t.palette[l]}
-      description={t.paletteHelp[l]}
-      closeLabel={t.close[l]}
-      isDismissable
-      trigger={<Button variant="outline">{t.openPalette[l]}</Button>}
-    >
-      <Command>
-        <CommandInput label={t.commandSearch[l]} placeholder={t.commandPlaceholder[l]} />
-        <CommandList aria-label={t.palette[l]}>
-          <CommandGroup heading={t.suggestions[l]}>
-            <CommandItem id="new">{t.newDocument[l]}</CommandItem>
-            <CommandItem id="open">{t.openFile[l]}</CommandItem>
-          </CommandGroup>
-        </CommandList>
-      </Command>
-    </CommandDialog>
+    <CommandPaletteIsland
+      listLabel={t.palette[l]}
+      inputLabel={t.commandSearch[l]}
+      inputPlaceholder={t.commandPlaceholder[l]}
+      items={group(l, ["newDocument", "openFile"])}
+      dialog={{
+        title: t.palette[l],
+        description: t.paletteHelp[l],
+        closeLabel: t.close[l],
+        triggerLabel: t.openPalette[l],
+        isDismissable: true,
+      }}
+    />
   );
 }
 
@@ -133,18 +139,17 @@ export const EXAMPLES: ComponentExamples = {
     isNew: true,
     composition: [
       `<CommandDialog title="…" description="…" closeLabel="…" trigger={…}>`,
-      `  <Command>`,
+      `  <Command items={commands}>`,
       `    <CommandInput label="…" />`,
-      `    <CommandList>`,
-      `      <CommandGroup heading="…">`,
-      `        <CommandItem id="…">`,
-      `          …`,
+      `    <CommandList label="…">`,
+      `      {(item) => (`,
+      `        <CommandItem key={item.value} id={item.value}>`,
+      `          {item.label}`,
       `          <CommandShortcut>…</CommandShortcut>`,
       `        </CommandItem>`,
-      `      </CommandGroup>`,
-      `      <CommandSeparator />`,
-      `      <CommandEmpty>…</CommandEmpty>`,
+      `      )}`,
       `    </CommandList>`,
+      `    <CommandEmpty>…</CommandEmpty>`,
       `  </Command>`,
       `</CommandDialog>`,
     ].join("\n"),
@@ -187,8 +192,8 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "CommandItem",
         description: {
-          "fa-IR": "یک فرمان؛ فرزند غیررشته‌ای textValue می‌خواهد وگرنه فیلتر پیدایش نمی‌کند.",
-          "en-US": "One command; non-string children need a textValue or the filter cannot find it.",
+          "fa-IR": "یک فرمان. دیگر textValue ندارد: تطبیق روی آرایهٔ items انجام می‌شود، پس میان‌بر نمی‌تواند جست‌وجو را خراب کند.",
+          "en-US": "One command. No textValue any more: matching runs on the items array, so a shortcut cannot break the search.",
         },
       },
       {

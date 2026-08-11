@@ -6,10 +6,6 @@ import {
   Alert,
   AlertDialog,
   AspectRatio,
-  Autocomplete,
-  AutocompleteInput,
-  AutocompleteItem,
-  AutocompleteListBox,
   Avatar,
   Badge,
   Breadcrumb,
@@ -27,21 +23,10 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-  Cell,
   Checkbox,
   CheckboxGroup,
-  Column,
-  ColumnResizer,
   ComboBox,
   ComboBoxItem,
-  Command,
-  CommandDialog,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
   Container,
   ContextMenu,
   ContextMenuTrigger,
@@ -88,8 +73,6 @@ import {
   ProgressBar,
   Radio,
   RadioGroup,
-  ResizableTableContainer,
-  Row,
   SearchField,
   SegmentedControl,
   SegmentedControlItem,
@@ -112,11 +95,6 @@ import {
   Tab,
   TabList,
   TabPanel,
-  Table,
-  TableBody,
-  TableHeader,
-  TableSelectAllColumn,
-  TableSelectionCell,
   Tabs,
   Tag,
   TextArea,
@@ -129,9 +107,12 @@ import {
   TooltipTrigger,
 } from "@lumo-ui/ui";
 import {
+  AutocompleteIsland,
   ChartIsland,
+  CommandPaletteIsland,
   PaginationIsland,
   RatingIsland,
+  TableDemoIsland,
   ToastIsland,
 } from "@/components/demo-islands";
 
@@ -1459,67 +1440,41 @@ const DEMOS: Demo[] = [
     behaviour: true,
     source: source("table.tsx"),
     render: (l) => (
-      <ResizableTableContainer className="max-w-xl">
-        <Table
-          label={copy.ordersGrid[l]}
-          selectionMode="multiple"
-          defaultSelectedKeys={["b"]}
-          sortDescriptor={{ column: "city", direction: "ascending" }}
-        >
-          <TableHeader>
-            <TableSelectAllColumn label={copy.selectAllOrders[l]} defaultWidth={48} />
-            {/*
-             * The resizer is here deliberately. React Aria's own
-             * `aria-valuetext` on it used to read "75 pixels" — English words
-             * and Latin digits in a spoken attribute — and `table.tsx` said not
-             * to put one on a Persian route until that closed. It is closed:
-             * `patches/react-aria@3.51.0.patch` adds an `fa-IR` table bundle
-             * whose `columnSize` reads «۷۵ پیکسل», and with `LumoProvider`
-             * mounted that is what the first byte now carries.
-             */}
-            <Column
-              id="name"
-              isRowHeader
-              defaultWidth={180}
-              resizer={<ColumnResizer label={copy.resizeColumn[l]} />}
-            >
-              {copy.customer[l]}
-            </Column>
-            <Column
-              id="city"
-              defaultWidth={120}
-              allowsSorting
-              sortAscendingLabel={copy.sortedAscending[l]}
-              sortDescendingLabel={copy.sortedDescending[l]}
-            >
-              {copy.city[l]}
-            </Column>
-            <Column id="total" defaultWidth={140}>
-              {copy.amount[l]}
-            </Column>
-          </TableHeader>
-          <TableBody>
-            <Row id="a">
-              <TableSelectionCell label={copy.selectOrder[l]} />
-              <Cell>{copy.customerOne[l]}</Cell>
-              <Cell>{copy.isfahan[l]}</Cell>
-              <Cell>{formatNumber(1250000, l)}</Cell>
-            </Row>
-            <Row id="b">
-              <TableSelectionCell label={copy.selectOrder[l]} />
-              <Cell>{copy.customerTwo[l]}</Cell>
-              <Cell>{copy.tabriz[l]}</Cell>
-              <Cell>{formatNumber(890000, l)}</Cell>
-            </Row>
-            <Row id="c">
-              <TableSelectionCell label={copy.selectOrder[l]} />
-              <Cell>{copy.customerThree[l]}</Cell>
-              <Cell>{copy.tehran[l]}</Cell>
-              <Cell>{formatNumber(2340000, l)}</Cell>
-            </Row>
-          </TableBody>
-        </Table>
-      </ResizableTableContainer>
+      <TableDemoIsland
+        locale={l}
+        label={copy.ordersGrid[l]}
+        customerHeader={copy.customer[l]}
+        cityHeader={copy.city[l]}
+        amountHeader={copy.amount[l]}
+        selectAllLabel={copy.selectAllOrders[l]}
+        selectRowLabel={copy.selectOrder[l]}
+        sortAscendingLabel={copy.sortedAscending[l]}
+        sortDescendingLabel={copy.sortedDescending[l]}
+        resizeLabel={copy.resizeColumn[l]}
+        rows={[
+          {
+            id: "a",
+            customer: copy.customerOne[l],
+            city: copy.isfahan[l],
+            amount: 1250000,
+            amountText: formatNumber(1250000, l),
+          },
+          {
+            id: "b",
+            customer: copy.customerTwo[l],
+            city: copy.tabriz[l],
+            amount: 890000,
+            amountText: formatNumber(890000, l),
+          },
+          {
+            id: "c",
+            customer: copy.customerThree[l],
+            city: copy.tehran[l],
+            amount: 2340000,
+            amountText: formatNumber(2340000, l),
+          },
+        ]}
+      />
     ),
   },
   {
@@ -1800,24 +1755,21 @@ const DEMOS: Demo[] = [
     tier: "form",
     behaviour: true,
     source: source("autocomplete.tsx"),
+    // `items` on the ROOT, not children in the list. Base UI filters a data
+    // array; a JSX collection still renders and is silently never filtered, so
+    // the prop is required and this call site is what the requirement caught.
+    // See the header of `packages/ui/src/autocomplete.tsx`.
     render: (l) => (
-      <Autocomplete>
-        <div className="flex w-full max-w-xs flex-col gap-2">
-          <AutocompleteInput
-            label={copy.commandSearch[l]}
-            showLabel
-            placeholder={copy.commandPlaceholder[l]}
-          />
-          <AutocompleteListBox
-            label={copy.commandsList[l]}
-            className="rounded-md border border-border bg-surface"
-          >
-            <AutocompleteItem id="new">{copy.newDocument[l]}</AutocompleteItem>
-            <AutocompleteItem id="open">{copy.openFile[l]}</AutocompleteItem>
-            <AutocompleteItem id="export">{copy.exportFile[l]}</AutocompleteItem>
-          </AutocompleteListBox>
-        </div>
-      </Autocomplete>
+      <AutocompleteIsland
+        inputLabel={copy.commandSearch[l]}
+        inputPlaceholder={copy.commandPlaceholder[l]}
+        listLabel={copy.commandsList[l]}
+        items={[
+          { value: "new", label: copy.newDocument[l] },
+          { value: "open", label: copy.openFile[l] },
+          { value: "export", label: copy.exportFile[l] },
+        ]}
+      />
     ),
   },
   {
@@ -1950,32 +1902,39 @@ const DEMOS: Demo[] = [
     source: source("command.tsx"),
     render: (l) => (
       <div className="flex items-center gap-3">
-        <CommandDialog
-          title={copy.palette[l]}
-          description={copy.paletteHelp[l]}
-          closeLabel={copy.close[l]}
-          trigger={<Button variant="outline">{copy.openPalette[l]}</Button>}
-        >
-          <Command>
-            <CommandInput
-              label={copy.commandSearch[l]}
-              placeholder={copy.commandPlaceholder[l]}
-            />
-            <CommandList>
-              <CommandGroup heading={copy.suggestions[l]}>
-                <CommandItem id="new">
-                  {copy.newDocument[l]}
-                  <CommandShortcut>⌘N</CommandShortcut>
-                </CommandItem>
-                <CommandItem id="open">{copy.openFile[l]}</CommandItem>
-              </CommandGroup>
-              <CommandSeparator />
-              <CommandGroup heading={copy.settings[l]}>
-                <CommandItem id="profile">{copy.profile[l]}</CommandItem>
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </CommandDialog>
+        {/*
+          * An island, because `CommandList`'s children are a RENDER FUNCTION on
+          * this engine and a function cannot cross into the RSC payload. The
+          * commands are data on the root: Base UI filters an array, and a
+          * JSX-only palette is silently never filtered.
+          */}
+        <CommandPaletteIsland
+          listLabel={copy.palette[l]}
+          inputLabel={copy.commandSearch[l]}
+          inputPlaceholder={copy.commandPlaceholder[l]}
+          withSeparator
+          dialog={{
+            title: copy.palette[l],
+            description: copy.paletteHelp[l],
+            closeLabel: copy.close[l],
+            triggerLabel: copy.openPalette[l],
+          }}
+          groups={[
+            {
+              value: "suggestions",
+              heading: copy.suggestions[l],
+              items: [
+                { value: "new", label: copy.newDocument[l], shortcut: "\u2318N" },
+                { value: "open", label: copy.openFile[l] },
+              ],
+            },
+            {
+              value: "settings",
+              heading: copy.settings[l],
+              items: [{ value: "profile", label: copy.profile[l] }],
+            },
+          ]}
+        />
         <Kbd keys={["Ctrl", "K"]} />
       </div>
     ),

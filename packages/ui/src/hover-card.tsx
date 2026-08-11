@@ -1,13 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import * as React from "react";
 import { cva } from "class-variance-authority";
-import { Popover as AriaPopover } from "react-aria-components";
+import { PreviewCard as BasePreviewCard } from "@base-ui/react/preview-card";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { popoverVariants, type LumoPlacement } from "./popover.tsx";
+import { popoverVariants, placementToSideAlign, type LumoPlacement } from "./popover.tsx";
 
 /**
- * A preview panel that opens when a link is hovered or focused.
+ * A preview panel that opens when a link is hovered or focused. **BASE UI.**
  *
  *     <HoverCard
  *       label="نمای کوتاه نمایه"
@@ -16,112 +16,129 @@ import { popoverVariants, type LumoPlacement } from "./popover.tsx";
  *       <p>…</p>
  *     </HoverCard>
  *
- * ── REACT ARIA HAS NO HoverCard, AND THE MISSING PIECE IS INTENT ────────────
+ * Vendored shape, Lumo API: shadcn's base-vega `hover-card` is
+ * `PreviewCard.Root/Trigger/Portal/Positioner/Popup`, and that composition is
+ * adopted here verbatim. What is NOT adopted is its public surface — upstream
+ * exposes three parts and no name; Lumo keeps `label`/`trigger`/`children`,
+ * because `label` is required and a required prop cannot live on a part the
+ * caller may omit.
  *
- * RAC ships `Tooltip` (a description, `aria-describedby`, text only) and
- * `Popover` (a click-opened overlay). A hover card is neither: it is a
- * hover-opened overlay with rich, focusable content. What has to be built here
- * is the INTENT DELAY — the rule that separates "the pointer crossed this link
- * on its way somewhere" from "the reader stopped on this link". Everything else
- * is rented from `Popover`.
+ * ═══ THE 130 LINES THIS FILE USED TO BE ARE THE FINDING ═════════════════════
  *
- * The two delays are asymmetric on purpose. Opening waits ~700ms because a
- * pointer sweeping across a paragraph of links must not detonate a row of
- * panels. Closing waits ~300ms because the panel is portalled to `document.body`
- * and does not touch the trigger, so the pointer crosses a gap of dead pixels on
- * its way in; without the grace period the card closes underneath the cursor.
- * Focus opens with NO delay at all — a keyboard user has already committed by
- * arriving, and a timer would only make the interface feel broken.
+ * React Aria had no HoverCard. It shipped `Tooltip` (a description, text only)
+ * and `Popover` (click-opened), and a hover card is neither — so the React Aria
+ * build hand-wrote the INTENT DELAY: one shared timer, an open delay, a close
+ * grace period, a focus/blur pair, a touch guard, an Escape handler on the
+ * trigger AND another on the card, and a manual focus restore. Every one of
+ * those is a real behaviour with a real edge case, and every one of them was
+ * ours to keep correct.
  *
- * ── `isNonModal` IS THE WHOLE ACCESSIBILITY DESIGN, NOT A DETAIL ────────────
+ * Base UI's `PreviewCard` is that component. Read out of its dist rather than
+ * off a docs page — `preview-card/trigger/PreviewCardTrigger.mjs:53`:
  *
- * A hover card is supplementary. It must not steal focus, must not trap it, and
- * must not hide the rest of the page from assistive technology. In
- * react-aria-components 1.20.0 all four of those behaviours hang off one prop.
- * Measured in `private/Popover.mjs` and `react-aria/private/overlays/usePopover.mjs`:
+ *     useHoverReferenceInteraction(floatingRootContext, {
+ *       mouseOnly: true,                       ← the touch guard
+ *       handleClose: safePolygon(),            ← the pointer's path to the card
+ *       delay: () => ({ open: …, close: … }),  ← the asymmetric intent delays
+ *     })
+ *     useFocus(floatingRootContext, { delay })  ← focus opens it
+ *     useDismiss(floatingRootContext)           ← Escape, from either element
  *
- *     shouldBeDialog = !props.isNonModal || trigger === 'SubmenuTrigger' || …
- *     …
- *     role:      isDialog ? 'dialog' : undefined
- *     tabIndex:  isDialog ? -1 : undefined
- *     useEffect: if (isDialog …) focusSafely(ref.current)        ← steals focus
- *     <Overlay shouldContainFocus={isDialog …}>                  ← traps focus
- *     usePreventScroll({isDisabled: isNonModal || !state.isOpen}) ← locks scroll
- *     isNonModal ? keepVisible(…) : ariaHideOutside([…])          ← hides the page
+ * `safePolygon()` is the part worth naming, because it is BETTER than what was
+ * replaced rather than equal to it. The old close delay existed because the card
+ * is portalled and the pointer crosses dead pixels on its way in, so the fix was
+ * a 300ms grace period — a timer that is too short on a slow diagonal and too
+ * long on a fast one. A safe polygon computes the triangle between the pointer
+ * and the card and keeps the card open while the pointer stays inside it, which
+ * is the thing the timer was approximating.
  *
- * So `isNonModal` turns off all five at once, which is exactly the contract this
- * component needs. It also removes the leading `DismissButton` (the trailing one
- * is unconditional) and the full-viewport underlay.
+ * ── THE ROLE NOW GOES WHERE IT BELONGS ─────────────────────────────────────
  *
- * ── THE SURPRISE: YOU CANNOT PUT A ROLE ON RAC'S POPOVER ────────────────────
+ * The React Aria build could not put a role on its popover: RAC wrote
+ * `role: isDialog ? 'dialog' : undefined` AFTER the prop spread, so under
+ * `isNonModal` a `role` prop was silently discarded and an `aria-label` on the
+ * same element was inert. The workaround was an inner `<div role="dialog">` that
+ * also had to carry every event handler, because RAC's `PopoverProps` accepted
+ * pointer events but not focus or keyboard ones.
  *
- * `role` is written AFTER the prop spread in that same element:
+ * Base UI forwards both. Measured on an open card:
  *
- *     {...mergeProps(filterDOMProps(props, {global: true}), popoverProps)},
- *     role: isDialog ? 'dialog' : undefined,
- *     "aria-label": props['aria-label'],
+ *     <div data-open data-side="bottom" data-align="center" tabindex="-1"
+ *          data-base-ui-focusable role="dialog" aria-label="نمای کوتاه نمایه">
  *
- * With `isNonModal` the popover element therefore has NO role, and a `role` prop
- * passed in is silently discarded — which also makes `aria-label` on it inert,
- * since a roleless `<div>` is not exposed as anything to name. The card would be
- * an anonymous run of content parked at the end of `<body>`.
+ * — the role lands, the name lands, on the element that IS the panel. The inner
+ * div is deleted. Note what the measurement also shows: Base UI's Popup carries
+ * NO role of its own, so without this override the card would be an anonymous
+ * run of content parked at the end of `<body>`, exactly as under React Aria.
+ * The defect is identical; only the escape hatch is open now.
  *
- * The fix is an INNER element that carries `role="dialog"` and the name. It is
- * also where every event handler lives, because RAC's `PopoverProps` accepts
- * pointer events (via `GlobalDOMAttributes`) but deliberately not focus or
- * keyboard events — "supported directly on focusable elements", per
- * `@react-types/shared`. One element for the role, the name, the pointer grace
- * period and the Escape key is simpler than splitting them across two.
+ * ── SUPPLEMENTARY BY DEFAULT, WITH NOTHING TO SWITCH OFF ───────────────────
  *
- * RAC notices the nested role and stands down: `setDialog(shouldBeDialog &&
- * !ref.current.querySelector('[role=dialog]'))`.
+ * A hover card must not steal focus, must not trap it, must not lock scroll and
+ * must not hide the rest of the page. Under React Aria all four hung off
+ * `isNonModal`, and getting it wrong was one forgotten prop away. `PreviewCard`
+ * has no modal mode at all — measured on an open card, no focus guards, no
+ * `aria-hidden` on the document, no scroll lock. The prop that could be
+ * forgotten no longer exists.
  *
- * ── WHAT ESCAPE NEEDS THAT RAC DOES NOT GIVE ───────────────────────────────
+ * ── ONE MEASURED BEHAVIOUR LOST, NOT PAPERED OVER ──────────────────────────
  *
- * `useOverlay` installs its Escape handler through `useKeyboard`, i.e. as
- * `onKeyDown` ON THE OVERLAY ELEMENT. That works only while focus is inside the
- * card — and the defining case for a hover card is that focus is still on the
- * TRIGGER. So the trigger wrapper handles Escape too. Both paths close; the one
- * on the card also returns focus to the trigger, because unmounting a portal
- * that contains the active element otherwise drops focus onto `<body>` and a
- * keyboard reader loses their place in the document.
+ * FOCUS NOW WAITS. The React Aria build opened on focus with NO delay, and the
+ * reason is in its header: "a keyboard user has already committed by arriving,
+ * and a timer would only make the interface feel broken." Base UI passes the
+ * SAME `delay` to `useFocus` as to the hover interaction
+ * (`PreviewCardTrigger.mjs:66`), and there is one prop feeding both — so
+ * `openDelay={700}` now also delays the keyboard path, and `openDelay={0}` would
+ * remove the pointer intent rule the component exists for. They are not
+ * separable through any public prop.
  *
- * ── WHY THE TRIGGER IS A PROP AND NOT A CHILD ──────────────────────────────
+ * Recorded rather than emulated: reproducing it would mean putting an
+ * `onFocus` back on the trigger and calling a controlled `open`, i.e. rebuilding
+ * the state machine this migration deleted, to win 700ms on one input path.
+ * `hoverCard.focus-delay-not-separable` in the measurements file.
  *
- * `PopoverTrigger` can take `[control, overlay]` as children because RAC's
- * `DialogTrigger` owns the state and wires them by context. Here the state is
- * ours, and the hover handlers have to sit on a real element that also serves as
- * the positioning anchor. Passing the control as `trigger` makes that wrapper's
- * existence honest, and — the reason that decides it — keeps `label` on the same
- * component, where forgetting it is a compile error rather than a card with no
- * name.
+ * ── TOUCH (unchanged conclusion, now the engine's) ─────────────────────────
  *
- * ── TOUCH ──────────────────────────────────────────────────────────────────
- *
- * `pointerType === "touch"` is ignored outright. A tap would fire enter and
- * leave in the same gesture, and a card that flashes open under a thumb and then
- * eats the next tap is worse than no card. Touch users get the trigger's own
- * behaviour, which is why the content here must always be supplementary: whatever
- * is in the card has to be reachable some other way.
+ * `mouseOnly: true` means a tap never opens the card. Same call the React Aria
+ * build made by hand and for the same reason — a tap fires enter and leave in
+ * one gesture, and a card that flashes open under a thumb and eats the next tap
+ * is worse than no card. So the content here must always be supplementary:
+ * whatever is in the card has to be reachable some other way.
  */
 
 export const hoverCardTriggerVariants = cva(
-  // `inline-flex w-fit` rather than `block`: the wrapper must not change the
-  // trigger's layout, and it must hug its content so the popover anchors to the
+  // `inline-flex w-fit` rather than `block`: the trigger must not change the
+  // surrounding layout, and it must hug its content so the card anchors to the
   // link rather than to the full line box. `align-middle` keeps it on the
   // baseline of surrounding prose in both scripts.
+  //
+  // It is applied to the TRIGGER ELEMENT ITSELF now. The React Aria build needed
+  // a wrapping `<span>` to hang its pointer handlers and its positioning ref on;
+  // `PreviewCard.Trigger` adopts the caller's element through `render`, so there
+  // is one fewer node in the document and the anchor is the link.
   "inline-flex w-fit align-middle",
 );
 
 export const hoverCardVariants = cva(
   // `w-max` lets the card size to its content up to `max-w-xs`; a fixed width
   // would clip Persian, which sets wider than English at the same point size.
-  // Padding is `p-0` here and lives on the inner element instead, so the pointer
-  // grace period covers the whole visible surface rather than a smaller box
-  // inside it.
   "w-max max-w-xs p-0",
 );
 
+/**
+ * KEPT, and now applied to the SAME element as `hoverCardVariants`.
+ *
+ * Under React Aria these two styled different nodes: the surface was `p-0` so
+ * the pointer grace period — which lived on the inner `role="dialog"` div —
+ * covered the whole visible box, and the padding went on that inner div.
+ * `safePolygon` works off the popup's own geometry and the role now lands on the
+ * popup, so the inner element is gone.
+ *
+ * The cva stays exported and stays separate rather than being folded into the
+ * one above, because both are public and a consumer who composed a card out of
+ * these classes by hand still gets the same two class lists. Deleting an
+ * exported cva is a silent break in every copy of this file someone has edited.
+ */
 export const hoverCardContentVariants = cva(
   "flex flex-col gap-2 p-4 text-sm text-fg outline-none",
 );
@@ -130,9 +147,9 @@ export interface HoverCardProps {
   /**
    * Announced name of the card, e.g. «نمای کوتاه نمایه».
    *
-   * REQUIRED. See the file header: with `isNonModal` the popover element has no
-   * role at all, so this is the name of the inner `role="dialog"` and it is the
-   * only thing that identifies the panel to a reader who navigates into it.
+   * REQUIRED. Base UI's Popup carries no role and no name — see the file header
+   * — so this is the name of the `role="dialog"` this component declares, and
+   * the only thing identifying the panel to a reader who navigates into it.
    */
   label: string;
   /** The control the card describes. Must be focusable — usually a `<Link>`. */
@@ -148,26 +165,17 @@ export interface HoverCardProps {
   isDisabled?: boolean;
   /** Class for the floating surface. */
   className?: string | undefined;
-  /** Class for the wrapper around the trigger. */
+  /** Class for the trigger element. */
   triggerClassName?: string | undefined;
 }
-
-/**
- * What counts as "the trigger" when focus has to be restored.
- *
- * The wrapper `<span>` is not focusable itself, so Escape hands focus back to
- * the first focusable descendant — which for the intended usage (one link, one
- * button) is the trigger. Written as a constant rather than inline so the
- * selector is greppable if this ever needs to grow.
- */
-const FOCUSABLE =
-  'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),' +
-  'textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 export function HoverCard({
   label,
   trigger,
   children,
+  // Lumo's 700 rather than Base UI's 600, and 300 matches. Passed explicitly:
+  // an engine default is a number that changes in a patch release, and the
+  // open delay is the one number this component is about.
   openDelay = 700,
   closeDelay = 300,
   placement = "top",
@@ -175,152 +183,73 @@ export function HoverCard({
   className,
   triggerClassName,
 }: HoverCardProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const triggerRef = useRef<HTMLSpanElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { side, align } = placementToSideAlign(placement);
+  const triggerElement = trigger as React.ReactNode;
 
-  const cancel = useCallback(() => {
-    if (timer.current !== null) {
-      clearTimeout(timer.current);
-      timer.current = null;
-    }
-  }, []);
-
-  /**
-   * One scheduler for both directions. A single pending timer is what makes the
-   * intent rule correct: re-entering the trigger during the close grace period
-   * must CANCEL the close, not queue an open behind it.
+  /*
+   * `isDisabled` has no counterpart on `PreviewCard.Root` — there is no
+   * `disabled` prop anywhere in the part. Rather than accept the prop and drop
+   * it (a control that silently ignores "never open" is worse than one that
+   * cannot be told), the whole card is omitted and the trigger is rendered
+   * alone. The caller's element keeps its classes and its behaviour; what
+   * disappears is the panel that was never going to be shown.
    */
-  const schedule = useCallback(
-    (open: boolean, delay: number) => {
-      cancel();
-      if (delay <= 0) {
-        setIsOpen(open);
-        return;
-      }
-      timer.current = setTimeout(() => {
-        timer.current = null;
-        setIsOpen(open);
-      }, delay);
-    },
-    [cancel],
-  );
-
-  // A pending timer that fires after unmount would set state on a dead
-  // component; a pending timer that fires after a route change would open a card
-  // whose trigger is gone.
-  useEffect(() => cancel, [cancel]);
-
-  const close = useCallback(() => {
-    cancel();
-    setIsOpen(false);
-  }, [cancel]);
-
-  const restoreFocus = useCallback(() => {
-    triggerRef.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus();
-  }, []);
-
-  /** Focus that leaves both the trigger and the card closes it, immediately. */
-  const closeIfFocusLeft = useCallback(
-    (related: EventTarget | null) => {
-      const next = related instanceof Node ? related : null;
-      if (next && (triggerRef.current?.contains(next) || cardRef.current?.contains(next))) {
-        return;
-      }
-      close();
-    },
-    [close],
-  );
+  if (isDisabled) {
+    return React.isValidElement(triggerElement) ? (
+      React.cloneElement(triggerElement as React.ReactElement<{ className?: string }>, {
+        className: cn(
+          hoverCardTriggerVariants(),
+          (triggerElement as React.ReactElement<{ className?: string }>).props.className,
+          triggerClassName,
+        ),
+      })
+    ) : (
+      <>{triggerElement}</>
+    );
+  }
 
   return (
-    <>
-      <span
-        ref={triggerRef}
-        className={cn(hoverCardTriggerVariants(), triggerClassName)}
-        onPointerEnter={(e) => {
-          if (isDisabled || e.pointerType === "touch") return;
-          schedule(true, openDelay);
-        }}
-        onPointerLeave={(e) => {
-          if (e.pointerType === "touch") return;
-          schedule(false, closeDelay);
-        }}
-        // `onFocus`/`onBlur` are React's focusin/focusout, so they fire for the
-        // focusable element INSIDE this span. No delay: see the file header.
-        onFocus={() => {
-          if (isDisabled) return;
-          cancel();
-          setIsOpen(true);
-        }}
-        onBlur={(e) => {
-          closeIfFocusLeft(e.relatedTarget);
-        }}
-        onKeyDown={(e) => {
-          // The trigger's Escape path. RAC's own handler is bound to the
-          // overlay element and never sees this keystroke.
-          if (e.key === "Escape" && isOpen) {
-            e.stopPropagation();
-            close();
-          }
-        }}
-      >
-        {trigger}
-      </span>
-
-      <AriaPopover
+    <BasePreviewCard.Root>
+      <BasePreviewCard.Trigger
         data-lumo=""
-        triggerRef={triggerRef}
-        isOpen={isOpen}
-        onOpenChange={setIsOpen}
-        // The load-bearing prop. See the file header for the five behaviours it
-        // turns off and why every one of them is wrong for a hover card.
-        isNonModal
-        placement={placement}
-        className={cn(popoverVariants({ padded: false }), hoverCardVariants(), className)}
+        delay={openDelay}
+        closeDelay={closeDelay}
+        className={cn(hoverCardTriggerVariants(), triggerClassName)}
+        {...(React.isValidElement(triggerElement)
+          ? { render: triggerElement as React.ReactElement<Record<string, unknown>> }
+          : {})}
       >
-        {/*
-         * The role, the name, the pointer grace period and the Escape key all
-         * live on this element because none of them can live on the popover:
-         * RAC overwrites `role` with `undefined` under `isNonModal`, and its
-         * props type accepts pointer events but not focus or keyboard ones.
-         *
-         * `tabIndex={-1}` makes the panel a focus TARGET without putting it in
-         * the tab order — enough for `restoreFocus` to have somewhere to return
-         * from, and for a screen reader's own navigation to land on a named
-         * region. Focus is never moved here automatically.
-         */}
-        <div
-          ref={cardRef}
-          role="dialog"
-          aria-label={label}
-          tabIndex={-1}
-          className={cn(hoverCardContentVariants())}
-          onPointerEnter={(e) => {
-            if (e.pointerType === "touch") return;
-            cancel();
-          }}
-          onPointerLeave={(e) => {
-            if (e.pointerType === "touch") return;
-            schedule(false, closeDelay);
-          }}
-          onFocus={cancel}
-          onBlur={(e) => {
-            closeIfFocusLeft(e.relatedTarget);
-          }}
-          onKeyDown={(e) => {
-            if (e.key !== "Escape") return;
-            e.stopPropagation();
-            close();
-            // Unmounting a portal that holds the active element drops focus on
-            // <body>, which sends a keyboard reader back to the top of the
-            // document. Put it back where it came from.
-            restoreFocus();
-          }}
+        {React.isValidElement(triggerElement) ? undefined : triggerElement}
+      </BasePreviewCard.Trigger>
+
+      <BasePreviewCard.Portal>
+        <BasePreviewCard.Positioner
+          className="isolate z-50"
+          side={side}
+          align={align}
+          sideOffset={8}
         >
-          {children}
-        </div>
-      </AriaPopover>
-    </>
+          {/*
+           * The role and the name go HERE — see the file header. `tabIndex` is
+           * Base UI's own `-1`: the panel is a focus TARGET without being in the
+           * tab order, which is what lets a screen reader's navigation land on a
+           * named region while focus is never moved here automatically.
+           */}
+          <BasePreviewCard.Popup
+            data-lumo=""
+            role="dialog"
+            aria-label={label}
+            className={cn(
+              popoverVariants({ padded: false }),
+              hoverCardVariants(),
+              hoverCardContentVariants(),
+              className,
+            )}
+          >
+            {children as React.ReactNode}
+          </BasePreviewCard.Popup>
+        </BasePreviewCard.Positioner>
+      </BasePreviewCard.Portal>
+    </BasePreviewCard.Root>
   );
 }

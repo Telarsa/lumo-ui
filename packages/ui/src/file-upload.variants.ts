@@ -15,32 +15,40 @@ import { formatNumber, type Locale } from "@lumo-ui/core";
  * `paginationRange` under exactly this argument.
  */
 
+/**
+ * ── EVERY STATE SELECTOR IN THIS BLOCK CHANGED, AND ONE OF THEM VANISHED ──
+ *
+ * The drop area used to be React Aria's `DropZone`, which published three
+ * attributes onto this element. Base UI ships no drop zone at all, so the
+ * element is now a plain `<div>` this library owns and there is no library left
+ * to publish anything.
+ *
+ *     data-hovered      → CSS `:hover`. Not an engine rename: nothing is
+ *                         tracking a pointer any more, so this is the platform
+ *                         doing what a library was doing.
+ *     data-drop-target  → `data-lumo-drop-target`, written by `file-upload.tsx`
+ *                         from its own `dragenter`/`dragleave` counter. The one
+ *                         piece of state in this component that a `useState`
+ *                         legitimately holds — rule 5 bans MIRRORING what the
+ *                         DOM already says, and the DOM says nothing about
+ *                         whether a drag is currently over this box.
+ *     data-focus-visible → GONE, along with the element that carried it. React
+ *                         Aria put the focusable element INSIDE the drop area (a
+ *                         `<VisuallyHidden><button/></VisuallyHidden>`, verified
+ *                         in `private/DropZone.mjs`), so the thing matching
+ *                         `:focus-visible` was clipped to a 1px box and the ring
+ *                         had to be mirrored onto this container. There is no
+ *                         hidden button now: the picker button IS the focusable
+ *                         element and it draws its own ring. One workaround
+ *                         retired rather than translated.
+ */
 export const dropZoneVariants = cva(
   "flex w-full flex-col items-center justify-center gap-3 rounded-lg " +
     "border-2 border-dashed border-border-control bg-surface p-6 text-center " +
     "transition-colors " +
-    "data-hovered:border-border-strong " +
-    "data-drop-target:border-accent data-drop-target:bg-surface-hover " +
-    "data-disabled:pointer-events-none data-disabled:opacity-50 " +
-    /*
-     * The focus ring is restated here rather than left to the shared
-     * `:where([data-lumo]):focus-visible` rule in theme.css, and neither does
-     * `FOCUS_RING` from form.tsx fit.
-     *
-     * React Aria's DropZone puts the focusable element INSIDE the drop area — a
-     * `<VisuallyHidden><button …/></VisuallyHidden>` before the children
-     * (verified in react-aria-components 1.20.0, `private/DropZone.mjs`). So the
-     * element that matches `:focus-visible` is clipped to a 1px box and an
-     * outline on it is invisible, exactly as with Checkbox and Radio. RAC
-     * mirrors the state onto this container as `data-focus-visible`.
-     *
-     * `FOCUS_RING` is the `group-data-focus-visible:` spelling, which expects
-     * the attribute on an ANCESTOR. Here it is on this element itself, so the
-     * variant has to be the bare `data-focus-visible:` form. Same tokens, so a
-     * brand that moves `--lumo-sys-focus` still moves this.
-     */
-    "data-focus-visible:[outline:var(--lumo-sys-focus-width)_solid_var(--lumo-sys-focus)] " +
-    "data-focus-visible:[outline-offset:var(--lumo-sys-focus-offset)]",
+    "hover:border-border-strong " +
+    "data-lumo-drop-target:border-accent data-lumo-drop-target:bg-surface-hover " +
+    "data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 
 export const fileUploadListVariants = cva("flex w-full flex-col gap-1");

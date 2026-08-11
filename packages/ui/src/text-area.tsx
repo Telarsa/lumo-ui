@@ -1,19 +1,9 @@
 "use client";
 
 import { cva } from "class-variance-authority";
-import {
-  TextArea as AriaTextArea,
-  TextField as AriaTextField,
-  type TextFieldProps as AriaTextFieldProps,
-} from "react-aria-components";
+import type { TextFieldProps as AriaTextFieldProps } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import {
-  Description,
-  FieldError,
-  Label,
-  fieldVariants,
-  optional,
-} from "./form.tsx";
+import { Description, Field, FieldError, FieldInput, Label, optional } from "./form.tsx";
 
 /**
  * The multi-line box.
@@ -28,11 +18,17 @@ import {
  * browser-dependent mess. `py-2` pairs with a line-height that `:lang(fa)` sets to
  * 1.75 in theme.css, which is why the padding is smaller here than the inline
  * padding — Persian brings its own vertical air.
+ *
+ * `data-hovered:` became `hover:` on the engine swap — Base UI publishes no
+ * hover attribute anywhere in the dist. `data-invalid` and `data-disabled` are
+ * unchanged; both reach a control that sits inside a `Field.Root`, which this
+ * one always does. The reasoning is written out once on `inputVariants` in
+ * text-field.tsx rather than repeated here.
  */
 export const textAreaVariants = cva(
   "min-h-20 w-full min-w-0 resize-y rounded-md border border-border-control bg-surface " +
     "px-3 py-2 text-sm text-fg text-start transition-colors placeholder:text-fg-subtle " +
-    "data-hovered:border-border-strong " +
+    "hover:border-border-strong " +
     "data-invalid:border-critical " +
     "data-disabled:cursor-not-allowed data-disabled:bg-surface-sunken",
 );
@@ -40,9 +36,29 @@ export const textAreaVariants = cva(
 /**
  * A multi-line text field.
  *
- * React Aria has no `TextAreaField`: a textarea is a `TextField` whose control
+ * Neither engine has a `TextAreaField`: a textarea is a text field whose control
  * happens to be a `<textarea>`, so the label, description and error wiring is
  * identical and only the inner element changes.
+ *
+ * ── HOW THE ELEMENT CHANGES UNDER BASE UI ──────────────────────────────────
+ *
+ * React Aria shipped a separate `<TextArea>` component that read the same
+ * context `<Input>` did. Base UI has no textarea part at all — `@base-ui/react`
+ * exports `input` and nothing else in that family. The replacement is the
+ * `render` prop on `Field.Control`, which swaps the rendered element while
+ * keeping every piece of Field behaviour (`data-invalid`, `data-disabled`, the
+ * filled/dirty/touched tracking, the form value).
+ *
+ * That is a genuine improvement rather than a workaround: under React Aria the
+ * two components were separate implementations that had to be kept in
+ * agreement, and this file's old header documented one place they had already
+ * drifted (`InputProps` redeclared `placeholder?: string` while `TextAreaProps`
+ * did not). One control, one element choice.
+ *
+ * `rows` goes on the RENDERED element rather than on `Field.Control`, because
+ * `Field.Control`'s props are typed against `<input>` and `rows` is not one of
+ * them. Passing it to the wrong side is a compile error, which is the outcome
+ * worth having.
  */
 export interface TextAreaProps
   extends Omit<AriaTextFieldProps, "children" | "className" | "isInvalid"> {
@@ -70,32 +86,62 @@ export function TextArea({
   rows = 4,
   className,
   textAreaClassName,
-  ...props
+  // — translated onto <Field> —
+  isDisabled,
+  name,
+  validate,
+  // — translated onto the control —
+  value,
+  defaultValue,
+  onChange,
+  isReadOnly,
+  isRequired,
+  autoFocus,
+  // — accepted by the API, unreachable in Base UI. See text-field.tsx. —
+  validationBehavior,
+  excludeFromTabOrder,
+  type,
+  slot,
+  ...rest
 }: TextAreaProps) {
   return (
-    <AriaTextField
-      data-lumo=""
-      className={cn(fieldVariants(), className)}
-      {...optional("isInvalid", isInvalid ?? (errorMessage != null ? true : undefined))}
-      {...props}
+    <Field
+      label={label}
+      description={description}
+      errorMessage={errorMessage}
+      explicit={rest}
+      className={className}
+      {...optional("isDisabled", isDisabled)}
+      {...optional("isInvalid", isInvalid)}
+      {...optional("name", name)}
+      {...optional(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const result = validate(String(fieldValue ?? ""));
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
       <Label>{label}</Label>
-      {/*
-       * Note the asymmetry with `TextField`: React Aria REDECLARES
-       * `placeholder?: string` on `InputProps` (dropping React's `| undefined`)
-       * but leaves `TextAreaProps` inheriting React's own
-       * `placeholder?: string | undefined`. So this one could be passed
-       * directly — it goes through `optional()` anyway, because a reader should
-       * not have to know which of the two declarations they are looking at.
-       */}
-      <AriaTextArea
-        data-lumo=""
-        rows={rows}
+      <FieldInput
+        render={<textarea rows={rows} />}
         className={cn(textAreaVariants(), textAreaClassName)}
         {...optional("placeholder", placeholder)}
+        {...optional("value", value)}
+        {...optional("defaultValue", defaultValue)}
+        {...optional(
+          "onValueChange",
+          onChange === undefined ? undefined : (next: string) => onChange(next),
+        )}
+        {...optional("readOnly", isReadOnly)}
+        {...optional("required", isRequired)}
+        {...optional("autoFocus", autoFocus)}
+        {...(rest as object)}
       />
       {description != null ? <Description>{description}</Description> : null}
       <FieldError>{errorMessage}</FieldError>
-    </AriaTextField>
+    </Field>
   );
 }

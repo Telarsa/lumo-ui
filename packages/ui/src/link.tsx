@@ -1,19 +1,52 @@
-"use client";
-
+import type { AnchorHTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Link as AriaLink, type LinkProps as AriaLinkProps } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
  * A navigational link.
  *
- * `"use client"` is here because `react-aria-components` marks itself
- * `client-only` — importing `Link` from a server component is a build error in
- * Next.js, not a runtime surprise. RAC is used rather than a bare `<a>` because
- * `useLink` supplies the pieces a bare anchor lacks: press handling that works
- * for touch, keyboard and mouse alike, `data-pressed`/`data-focus-visible` for
- * styling, and the `<span role="link" tabindex="0">` fallback when there is no
- * `href` (verified in RAC 1.20.0 — `elementType = props.href && !props.isDisabled ? 'a' : 'span'`).
+ * ── NO ENGINE, AND NO `"use client"` ───────────────────────────────────────
+ *
+ * This file used to import React Aria's `Link`, and the header argued the
+ * dependency bought four things a bare `<a>` lacks: press handling for touch,
+ * keyboard and mouse alike; `data-pressed` / `data-focus-visible` to style
+ * against; the `<span role="link" tabindex="0">` fallback when there is no
+ * `href`; and `aria-current` written through to `data-current`.
+ *
+ * Base UI has no link primitive at all — 83 export subpaths, none of them a
+ * link — so the migration question was never "which primitive" but "does this
+ * need one". Item by item, against the measured Base UI state vocabulary
+ * (`experiments/measurements/state-vocabulary.json`):
+ *
+ *   press handling      An `<a href>` is activated by click, by Enter and by
+ *                       touch by the PLATFORM. React Aria's press abstraction
+ *                       earns its keep on `<div>`s pretending to be buttons;
+ *                       on a real anchor it is re-implementing the browser.
+ *   data-pressed        Would have had to go anyway. Base UI publishes NO press
+ *                       attribute (`button/ButtonDataAttributes` declares
+ *                       `disabled` and nothing else), so the whole library's
+ *                       answer here is CSS `:active`. That is a partial
+ *                       fidelity loss and it is stated: React Aria's press
+ *                       state survived the pointer leaving and returning;
+ *                       `:active` ends when the pointer leaves.
+ *   data-focus-visible  Same — zero files in the dist. The answer is
+ *                       `:focus-visible`, which is what it always modelled.
+ *   the span fallback   Three lines, below, and now VISIBLE rather than a
+ *                       behaviour a reader has to know RAC has.
+ *   aria-current        The old header spent thirty lines proving React Aria
+ *                       wrote this attribute through even though `LinkProps`
+ *                       omitted it by accident. Writing it directly is one
+ *                       line and needs no proof.
+ *
+ * With all four answered, RAC was buying a client-component boundary and
+ * nothing else. Dropping it makes this file server-renderable: a link in prose,
+ * in a footer, in a server-rendered block, now costs the consumer no hydration.
+ * `navigation-menu.tsx`, `sidebar.tsx` and `breadcrumbs.tsx` build on it and are
+ * client components for their own reasons; they are unaffected.
+ *
+ * `data-current` is still emitted, with the same value RAC emitted
+ * (`"true"`), because `navigation-menu.tsx` and `breadcrumbs.tsx` style
+ * `data-current:` and `sidebar.test.tsx` asserts it.
  *
  * ── Two decisions that are about Persian, not about links ───────────────────
  *
@@ -30,48 +63,13 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  *     optional. `target` and `rel` are removed from the prop type so there is
  *     no back door: opening a new tab is only reachable through `newTab`, and
  *     `newTab` without `newTabLabel` does not compile.
- *
- * ── `isCurrent`: A TYPE GAP, NOT A CAPABILITY GAP ──────────────────────────
- *
- * `app-shell.tsx` records that Lumo's `Link` "cannot express `aria-current`",
- * because React Aria declares that attribute on `AriaBaseButtonProps` and
- * nowhere on the link side. The first half is right and the conclusion is
- * wrong, and the difference was settled by rendering rather than by reading
- * types.
- *
- * React Aria 1.20.0's `useLink` writes the attribute through **explicitly**:
- *
- *     linkProps: mergeProps(domProps, routerLinkProps, {
- *       …,
- *       'aria-disabled': isDisabled || undefined,
- *       'aria-current': props['aria-current'],
- *     })
- *
- * and RAC's `Link` reads the same prop a second time to derive its own render
- * state — `isCurrent: !!props['aria-current']` — and stamps `data-current` on
- * the element. `LinkRenderProps.isCurrent` is a documented render prop with a
- * documented `[data-current]` selector. The runtime is not merely tolerant of
- * `aria-current`; it is built around it.
- *
- * Only `LinkProps` omits it, and it omits it by accident: the interface extends
- * `AriaLabelingProps` (label/labelledby/describedby/details) and
- * `GlobalDOMAttributes` (dir/lang/hidden/inert/translate), and `aria-current`
- * belongs to neither set.
- *
- * Verified by server-rendering `<Link href="/a" aria-current="page">`:
- *
- *     <a … href="/a" tabindex="0" aria-current="page" data-current="true">
- *
- * So the attribute is real, it is in the first byte, and the gate can see it.
- * `isCurrent` is the typed spelling of it — a boolean or one of ARIA's
- * enumerated values, so a caller cannot write `aria-current="pages"`. It is
- * NOT an announced string and therefore not subject to rule 2: `aria-current`
- * is a state token that a screen reader speaks in its OWN language, which is
- * exactly what makes it better than the `sr-only` Persian phrase it replaces.
  */
 export const linkVariants = cva(
   "inline-flex items-center gap-1 rounded-sm underline-offset-4 " +
     "transition-colors cursor-pointer " +
+    // `data-disabled` is still an ATTRIBUTE rather than `:disabled`, because an
+    // `<a>` has no disabled state in the platform at all — the component writes
+    // it, so the component may as well keep styling it.
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4",
   {
@@ -79,15 +77,18 @@ export const linkVariants = cva(
       variant: {
         // The default. Coloured and underlined, because colour alone is not a
         // distinguishing feature (WCAG 1.4.1) once the link sits inside prose.
+        //
+        // `data-hovered:`/`data-pressed:` → `hover:`/`active:` on the engine
+        // swap. See the file header: neither attribute exists in Base UI, and
+        // this component no longer has React Aria to emit them either.
         accent:
-          "text-accent underline decoration-accent/40 data-hovered:decoration-accent data-pressed:decoration-accent",
+          "text-accent underline decoration-accent/40 hover:decoration-accent active:decoration-accent",
         // For dense secondary navigation, where an underline on every item is
         // noise. The underline appears on hover so the affordance is not lost.
-        subtle:
-          "text-fg-muted no-underline data-hovered:text-fg data-hovered:underline data-pressed:text-fg",
+        subtle: "text-fg-muted no-underline hover:text-fg hover:underline active:text-fg",
         // Inherits the surrounding colour. For a link wrapping a whole card or
         // a heading, where the target is obvious from the layout.
-        quiet: "text-current no-underline data-hovered:underline",
+        quiet: "text-current no-underline hover:underline",
       },
       size: {
         sm: "text-sm",
@@ -109,7 +110,10 @@ export const linkVariants = cva(
 export type LinkCurrent = true | "page" | "step" | "location" | "date" | "time";
 
 interface LinkBaseProps
-  extends Omit<AriaLinkProps, "children" | "className" | "target" | "rel">,
+  extends Omit<
+      AnchorHTMLAttributes<HTMLAnchorElement>,
+      "children" | "className" | "target" | "rel" | "aria-current"
+    >,
     VariantProps<typeof linkVariants> {
   children?: LumoNode;
   className?: string | undefined;
@@ -117,12 +121,16 @@ interface LinkBaseProps
    * Marks this link as the resource the reader is currently on — usually
    * `"page"` for a navigation item, `"step"` inside a wizard.
    *
-   * Emits `aria-current` and, through React Aria, `data-current` — so the
-   * active state is styleable with `data-current:` and announced without an
-   * `sr-only` string. See the file header for why this compiles even though
-   * `AriaLinkProps` does not declare the attribute.
+   * Emits `aria-current` AND `data-current`, so the active state is styleable
+   * with `data-current:` and announced without an `sr-only` string.
    */
   isCurrent?: LinkCurrent | false | undefined;
+  /**
+   * Renders a non-navigating link: no `href`, not in the tab order, styled as
+   * unavailable. Kept from the React Aria API — `app-shell.tsx` and the
+   * navigation components pass it.
+   */
+  isDisabled?: boolean | undefined;
 }
 
 /** The ordinary case: navigation stays in the current tab. */
@@ -157,41 +165,68 @@ export function Link({
   newTab,
   newTabLabel,
   isCurrent,
+  isDisabled,
+  href,
   ...props
 }: LinkProps) {
+  const classes = cn(linkVariants({ variant, size }), className);
+  const current =
+    isCurrent === undefined || isCurrent === false
+      ? {}
+      : { "aria-current": isCurrent, "data-current": "true" as const };
+
   /*
-   * Spread rather than written as a JSX attribute, and the shape is the point:
-   * `AriaLinkProps` does not DECLARE `aria-current`, so `<AriaLink
-   * aria-current={…}>` is a compile error even though `useLink` reads exactly
-   * that key. Building the object separately keeps the one place where Lumo
-   * knows more than React Aria's types visible and commented, instead of
-   * scattering a cast through the call.
+   * Appended AFTER the visible text, so the accessible name reads
+   * "<link text>, <warning>" in document order. That order is the correct one
+   * in both scripts: an accessible name is concatenated in DOM order, which the
+   * bidi algorithm never reorders, so no `dir` island is needed here the way it
+   * is in Kbd.
    */
-  const currentProps: { "aria-current"?: LinkCurrent } =
-    isCurrent === undefined || isCurrent === false ? {} : { "aria-current": isCurrent };
+  const content = (
+    <>
+      {children}
+      {newTabLabel !== undefined ? <span className="sr-only">{newTabLabel}</span> : null}
+    </>
+  );
+
+  /*
+   * No `href`, or disabled: a `<span role="link">` rather than an `<a>` with no
+   * destination. This is what React Aria did (`elementType = props.href &&
+   * !props.isDisabled ? 'a' : 'span'`) and the reason is the accessibility tree
+   * — an `<a>` without `href` is not a link to a screen reader, it is a
+   * generic. The span is NOT given `tabindex="0"` when disabled: a control that
+   * cannot be activated should not be a tab stop.
+   */
+  if (href === undefined || isDisabled === true) {
+    return (
+      <span
+        data-lumo=""
+        role="link"
+        className={classes}
+        {...(isDisabled === true
+          ? { "aria-disabled": true, "data-disabled": "" }
+          : { tabIndex: 0 })}
+        {...current}
+        {...props}
+      >
+        {content}
+      </span>
+    );
+  }
 
   return (
-    <AriaLink
+    <a
       data-lumo=""
-      className={cn(linkVariants({ variant, size }), className)}
-      {...currentProps}
+      href={href}
+      className={classes}
+      {...current}
       // `rel` travels with `target` and is not separately settable. `noopener`
       // closes the reverse-`window.opener` hole; `noreferrer` is included
       // because the two are only jointly honoured by older engines.
-      {...(newTab === true
-        ? ({ target: "_blank", rel: "noopener noreferrer" } as const)
-        : {})}
+      {...(newTab === true ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {})}
       {...props}
     >
-      {children}
-      {/*
-       * Appended AFTER the visible text, so the accessible name reads
-       * "<link text>, <warning>" in document order. That order is the correct
-       * one in both scripts: an accessible name is concatenated in DOM order,
-       * which the bidi algorithm never reorders, so no `dir` island is needed
-       * here the way it is in Kbd.
-       */}
-      {newTabLabel !== undefined ? <span className="sr-only">{newTabLabel}</span> : null}
-    </AriaLink>
+      {content}
+    </a>
   );
 }

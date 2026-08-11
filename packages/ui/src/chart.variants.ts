@@ -1,86 +1,111 @@
 import { cva } from "class-variance-authority";
+import { renderChartSvg } from "@tanstack/charts/svg";
 import { direction, formatNumber, type Direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import type { ComponentType } from "react";
 
 /**
- * Chart's class definitions, its theme stylesheet builder, and the direction
- * arithmetic — deliberately in a module with NO `"use client"`.
+ * Chart's class definitions, its theme stylesheet builder, and — now — the
+ * whole CHART SPECIFICATION, in a module with NO `"use client"`.
  *
- * The reason is `button.variants.ts`'s reason: a `cva()` exported from a client
- * module is a client reference in the RSC graph, and the "chart panel" block on
- * the roadmap is a SERVER component that frames a chart with a title, a delta
- * and a legend key. It must be able to call these.
+ * This module carried the direction arithmetic before, for `button.variants.ts`'s
+ * reason. It carries much more of the component after the renderer change, and
+ * that is the single most important structural consequence of moving to
+ * `@tanstack/charts`:
  *
- * It also holds `chartMirror()` and `chartTickFormatter()`, which are pure
- * functions of a locale. Keeping them here means a server component can compute
- * the same axis props it will hand to the client island, and means they are
- * testable without a DOM.
+ *   **recharts' axes were CHILD ELEMENTS of a client component. TanStack's are
+ *   values in a plain object.** So the thing that decides which way a scale
+ *   runs, where a tick label anchors and how a number is formatted is now data
+ *   a SERVER component can build, hand to the client island, and — because the
+ *   island server-renders — see in the output it produced.
  *
- * ═══ WHAT WAS MEASURED ABOUT RECHARTS, BEFORE ANY OF THIS WAS WRITTEN ═══════
+ * That is why `chartCategoryAxis` and `chartValueAxis` are functions here rather
+ * than components in `chart.tsx`. See the API-change note in that file.
  *
- * Rendered `<BarChart>` under `dir="rtl"` in jsdom (recharts 3.8.0) and read the
- * emitted SVG. Every claim below is from that output, not from the docs:
+ * ═══ WHAT WAS MEASURED ABOUT `@tanstack/charts` 0.9.0 ═══════════════════════
  *
- *  1. **recharts renders NOTHING on the server.** `renderToStaticMarkup` of a
- *     400×200 BarChart produces 148 bytes: `<div class="recharts-wrapper">` and
- *     no `<svg>` at all. The chart is drawn only after the client mounts.
+ * Full harness output in `experiments/measurements/tanstack-charts.json`; the
+ * numbers that decided the switch and the four that constrain this file:
  *
- *     That is the single most important fact about this component for Lumo,
- *     because `lumo-gate` grades the SERVED HTML. A chart contributes zero bytes
- *     to it — no digits to count, no `aria-label` to inspect, no text to check.
- *     `no-latin-digits` and `persian-digit-floor` cannot see a chart, so a chart
- *     that renders `1,200` on a Persian page passes every gate in `verify`.
- *     Chart correctness therefore lives ENTIRELY in `chart.test.tsx`, which
- *     mounts and reads the real SVG. Do not weaken those tests.
+ *  1. **It SERVES A PLOT.** `renderToStaticMarkup` of a 400×200 bar chart is
+ *     4,717 bytes with a real `<svg>`, 7 `<text>` nodes and 13 Persian digits.
+ *     recharts, measured in the same harness on the same day, is 127 bytes and
+ *     no `<svg>` at all — in ANY configuration, including a fixed size with no
+ *     wrapper. That is the whole reason for the change: `lumo-gate` grades the
+ *     SERVED HTML, so under recharts the most number-dense component in the
+ *     library was structurally invisible to it. Graded with the gate's own
+ *     rules, a deliberately broken TanStack chart (Latin axis) scores five
+ *     violations; a deliberately broken recharts chart scores **zero**, because
+ *     there is nothing in the bytes to grade.
  *
- *  2. **Axis ticks are raw numbers.** A default `<YAxis>` emitted
- *     `0 600 1200 1800 2400` — Latin digits, in a Persian document. There is no
- *     `LumoNode` here to stop it: recharts builds the `<text>` itself from the
- *     scale's domain. Only a `tickFormatter` reaches it, which is why
- *     `chartTickFormatter` exists and why `ChartValueAxis` applies it by default.
+ *  2. **Tick formatters run on the server.** `Intl` is a function like any
+ *     other; `renderToStaticMarkup` calls it. `۰ ۱٬۰۰۰ ۲٬۰۰۰ ۳٬۰۰۰` in the
+ *     first byte, versus `0 1000 2000 3000` without the formatter.
  *
- *  3. **`text-anchor` is direction-RELATIVE, and recharts computes it as if the
- *     world were LTR.** Measured: a left-oriented `<YAxis>` emits
- *     `text-anchor="end"`, which per SVG means "the END of the text sits at the
- *     anchor point" — and end/start resolve against the inline base direction.
- *     Under `direction: rtl` that flips: the text extends from the tick INTO the
- *     plot area instead of away from it. Both orientations are inverted the same
- *     way, so the fix is to state the anchor explicitly under RTL rather than to
- *     move the axis and hope. Verified that an explicit `textAnchor` prop wins:
- *     `<YAxis orientation="right" textAnchor="end">` emitted `text-anchor="end"`
- *     where recharts' own default for that orientation is `start`.
+ *  3. **The category scale does not mirror on its own, and the lever is
+ *     `x.reverse`.** Measured bar positions: `67, 149.25, 231.5, 313.75` LTR;
+ *     `300, 204, 108, 12` with the lever; and WITHOUT the lever under RTL,
+ *     identical to LTR. `reverse` acts on the scale's range, so bars, lines,
+ *     areas, dots and the grid all mirror with it.
  *
- *  4. **The scale is LTR.** With no mirroring, the first category sat at x=147.5
- *     and the second at x=312.5 — left to right, in a right-to-left document.
- *     `<XAxis reversed>` moved them to 252.5 and 87.5. `reversed` acts on the
- *     scale's range, so bars, lines, areas and the grid all mirror with it; it
- *     is the whole horizontal flip, not just the axis labels.
+ *  4. **Tick text does not anchor on its own, and the lever is
+ *     `axis.tickLabels.anchor`.** Measured: `end` in LTR, `start` under RTL with
+ *     the lever, and `end` without it — i.e. the label runs INTO the plot.
  *
- *  5. **recharts' own `<Legend>` is hardcoded LTR and leaks English.** Its
- *     `DefaultLegendContent` emits `<li style="margin-right:10px">`,
- *     `text-align:left`, and — measured — `<svg aria-label="v legend icon">`,
- *     built from the dataKey. That is a Latin-script `aria-label` on a Persian
- *     page, which is exactly what `no-latin-aria` exists to fail. It is also
- *     invisible to that gate, per (1). So `ChartLegendContent` is not a styling
- *     preference: passing `content=` is the only way to keep recharts' default
- *     legend out of the document.
+ * ═══ THE ONE THING NO LEVER REACHES ═════════════════════════════════════════
  *
- *  6. **The tooltip leads the cursor on the wrong side.** `getTooltipTranslate`
- *     prefers `coordinate.x + offset` — to the RIGHT of the pointer — and falls
- *     back to the left only on overflow. In RTL, "ahead of the pointer" is the
- *     left. `reverseDirection: {x: true}` swaps the preference.
+ * **The value axis cannot be moved to the trailing edge.** In LTR it is drawn at
+ * the physical left, which is the leading edge and correct. Under RTL the
+ * leading edge is the right, and there is no option to put it there: measured,
+ * the value labels sit at x = 4 in both directions.
+ *
+ * This is not a lever that was missed. `ChartAxisPresentationOptions` in the
+ * installed `dist/types.d.ts` declares exactly `line`, `ticks`, `tickLabels`,
+ * `label` and `motion` — there is no `orient`, `side`, `position` or `placement`
+ * field anywhere in the axis types, and a grep for those names over the whole
+ * type surface returns nothing. recharts had `orientation="right"`; TanStack
+ * has no equivalent at 0.9.0.
+ *
+ * **How it is handled, in four parts, none of which pretends it is fixed:**
+ *
+ *   1. `CHART_VALUE_AXIS_TRAILING_EDGE` below is a single named constant set to
+ *      `false`, with `chartValueAxis` reading it. When upstream adds the option,
+ *      exactly one line changes and the tests that pin the current behaviour go
+ *      red on purpose. A gap spread across a wrapper is a gap nobody can close.
+ *   2. The reachable half IS applied: `tickLabels.anchor` is set to `"start"`
+ *      under RTL so the labels read AWAY from the plot rather than across it.
+ *      A misplaced axis whose labels also overlap the bars is two defects.
+ *   3. The INFORMATION is not lost, because `<ChartData>` carries every figure
+ *      in a real `<table>`, in reading order, in the served bytes. That
+ *      component was introduced when recharts served no plot at all; it is
+ *      still the only thing that carries the DATA rather than the ticks, and it
+ *      is now also the mitigation for this.
+ *   4. It is a layout defect and not an accessibility one, which is why it is
+ *      shipped rather than blocking. A Persian reader meets the value scale on
+ *      the far side of the plot: unfamiliar, legible, and identical for every
+ *      series. Contrast criterion 3, where the failure is text drawn over data.
+ *
+ * ═══ AND ONE ENGLISH STRING, WHICH IS REACHABLE ═════════════════════════════
+ *
+ * `svg-renderer.js:19` builds the root element with a hardcoded
+ * `aria-roledescription="chart"` inside a template literal. It is not a prop —
+ * but `renderSvg` IS a public, typed prop, `(scene, options) => string`, and
+ * `renderChartSvg` is a public export. So `chartRenderSvg(locale)` below wraps
+ * the library's own renderer and replaces the one literal.
+ *
+ * That is the difference between this and `@visx/xychart`'s
+ * `aria-label="XYChart"`, which ROADMAP.md records as unfixable: same defect,
+ * and this one has an escape hatch.
  */
 
 /**
  * A chart's series metadata.
  *
- * `label` is REQUIRED, which is a deliberate tightening of upstream's optional
- * one. Without it `ChartLegendContent` renders an empty swatch and
- * `ChartTooltipContent` falls back to `item.name` — the dataKey, which is an
- * English identifier like `desktop` or `revenue`. A legend of English dataKeys
- * on a Persian dashboard is rule 2's defect wearing a chart's clothes, and the
- * only place it can be stopped is here, where the author is already writing the
- * series out by hand.
+ * `label` is REQUIRED, a deliberate tightening of upstream's optional one.
+ * Without it a legend renders an empty swatch and a tooltip falls back to the
+ * series key — an English identifier like `desktop` or `revenue`. A legend of
+ * English dataKeys on a Persian dashboard is rule 2's defect wearing a chart's
+ * clothes, and the only place it can be stopped is here, where the author is
+ * already writing the series out by hand.
  *
  * `LumoNode` rather than `string` because a legend entry is visible text and may
  * legitimately be an element; it excludes a bare `number` for the usual reason.
@@ -99,27 +124,19 @@ export type ChartConfig = Record<
 /**
  * The container.
  *
- * Upstream's utilities are kept where they name a recharts internal class —
- * those selectors are the API for restyling recharts and rewriting them would
- * break the styling, not improve it. What changed is every token: `bg-background`
- * → `bg-surface`, `text-muted-foreground` → `text-fg-muted`, `fill-muted` →
- * `fill-surface-sunken`. Lumo has no shadcn token names, so upstream's classes
- * would have silently resolved to nothing.
+ * ── EVERY RECHARTS SELECTOR IN HERE IS GONE, AND THAT IS A REAL SAVING ──────
+ *
+ * The old value was thirteen `[&_.recharts-*]` escape hatches — restyling
+ * another library's internal class names, which is the API recharts offers for
+ * theming and is also a promise nobody made. TanStack emits `ts-chart__*` class
+ * names AND, measured, `font-family: inherit` everywhere, so Vazirmatn is not
+ * overridden — the defect that disqualified victory and MUI's legend in the
+ * seven-library round. Two selectors replace thirteen, and both are colour.
  */
 export const chartContainerVariants = cva(
   "flex aspect-video justify-center text-xs " +
-    "[&_.recharts-cartesian-axis-tick_text]:fill-fg-muted " +
-    "[&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 " +
-    "[&_.recharts-curve.recharts-tooltip-cursor]:stroke-border " +
-    "[&_.recharts-dot[stroke='#fff']]:stroke-transparent " +
-    "[&_.recharts-layer]:outline-hidden " +
-    "[&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border " +
-    "[&_.recharts-radial-bar-background-sector]:fill-surface-sunken " +
-    "[&_.recharts-rectangle.recharts-tooltip-cursor]:fill-surface-sunken " +
-    "[&_.recharts-reference-line_[stroke='#ccc']]:stroke-border " +
-    "[&_.recharts-sector]:outline-hidden " +
-    "[&_.recharts-sector[stroke='#fff']]:stroke-transparent " +
-    "[&_.recharts-surface]:outline-hidden",
+    "[&_.ts-chart__grid]:text-border/50 " +
+    "[&_.ts-chart__axis]:text-fg-muted",
 );
 
 export const chartTooltipVariants = cva(
@@ -128,16 +145,15 @@ export const chartTooltipVariants = cva(
 );
 
 /**
- * The little colour chip beside a tooltip row.
+ * The little colour chip beside a tooltip or legend row.
  *
- * The custom property is `--lumo-chart-swatch`, not upstream's `--color-bg` /
+ * The custom property is `--lumo-chart-swatch`, not `--color-bg` /
  * `--color-border`. Those two names are Tailwind v4 THEME variables in this
- * workspace — `theme.css` defines `--color-bg` as `var(--lumo-sys-bg)` and
- * `--color-border` as `var(--lumo-sys-border)`. Setting them inline on the chip
- * would have shadowed the design tokens for that element and everything under
- * it, so a `border-border` anywhere inside would resolve to a series colour.
- * Upstream gets away with it because its token names differ; Lumo's collide
- * exactly.
+ * workspace — `theme.css` defines `--color-bg` as `var(--lumo-sys-bg)` — so
+ * setting them inline would shadow the design tokens for that element and
+ * everything under it, and a `border-border` anywhere inside would resolve to a
+ * series colour. Upstream gets away with it because its token names differ;
+ * Lumo's collide exactly.
  */
 export const chartTooltipIndicatorVariants = cva(
   "shrink-0 rounded-[2px] border-(--lumo-chart-swatch) bg-(--lumo-chart-swatch)",
@@ -160,8 +176,10 @@ export const chartTooltipIndicatorVariants = cva(
  *
  * `flex` and nothing else on the inline axis: a flex row follows the resolved
  * `direction`, so the series order mirrors itself under `dir="rtl"` with no
- * class to remember. That is the whole reason Lumo renders its own legend rather
- * than recharts' — see the header, item 5.
+ * class to remember. Lumo renders its own legend for the same reason it did
+ * under recharts — a library legend is a box of physical margins and
+ * library-authored `aria-label`s — and the reason survived the renderer change
+ * unaltered.
  */
 export const chartLegendVariants = cva("flex items-center justify-center gap-4", {
   variants: {
@@ -177,7 +195,7 @@ export const chartLegendItemVariants = cva(
 /**
  * The custom property a series colour is published under.
  *
- * Namespaced `--lumo-chart-*` rather than upstream's `--color-*` for the reason
+ * Namespaced `--lumo-chart-*` rather than `--color-*` for the reason
  * `chartTooltipIndicatorVariants` documents: `--color-*` is Tailwind v4's theme
  * namespace here, and a config key called `bg`, `fg`, `border` or `accent`
  * would silently repaint every token-styled element inside the chart.
@@ -186,7 +204,7 @@ export function chartColorVar(key: string): string {
   return `--lumo-chart-${key}`;
 }
 
-/** `var(--lumo-chart-<key>)`, for a `fill=` or `stroke=` on a recharts series. */
+/** `var(--lumo-chart-<key>)`, for a mark's `fill` or `stroke`. */
 export function chartColor(key: string): string {
   return `var(${chartColorVar(key)})`;
 }
@@ -194,20 +212,19 @@ export function chartColor(key: string): string {
 /**
  * Config keys reach a `<style>` element through `dangerouslySetInnerHTML`, so
  * they are restricted to characters that cannot terminate a declaration or a
- * rule. Upstream interpolates the key unescaped; a key containing `}` there is a
- * stylesheet-injection primitive, and config often comes from an API response.
+ * rule. A key containing `}` there is a stylesheet-injection primitive, and
+ * config often comes from an API response.
  */
 const SAFE_KEY = /^[A-Za-z0-9_-]+$/;
 
 /**
  * Builds the per-chart colour stylesheet.
  *
- * Upstream emits two blocks keyed by `{ light: "", dark: ".dark" }`. Lumo's
- * theme has THREE states, not two — `tokens.css` defines light on bare `:root`,
- * dark under `@media (prefers-color-scheme: dark) :root:not([data-theme="light"])`,
- * and dark again under `[data-theme="dark"]` so an explicit choice wins in both
- * directions. A `.dark` selector matches nothing in this system, so upstream's
- * dark palette would simply never have applied.
+ * Lumo's theme has THREE states, not two — `tokens.css` defines light on bare
+ * `:root`, dark under `@media (prefers-color-scheme: dark)
+ * :root:not([data-theme="light"])`, and dark again under `[data-theme="dark"]`
+ * so an explicit choice wins in both directions. A `.dark` selector matches
+ * nothing in this system.
  */
 export function chartStyleSheet(id: string, config: ChartConfig): string {
   const entries = Object.entries(config).filter(
@@ -242,6 +259,11 @@ export function chartStyleSheet(id: string, config: ChartConfig): string {
  * category axis's ticks are already authored strings and re-formatting them
  * would be wrong. A non-finite value renders as the empty string rather than
  * "NaN", which is an English word in a Persian document.
+ *
+ * Unchanged from the recharts era, and that is worth noting: this function was
+ * never about recharts. It is about the fact that a chart library builds its own
+ * `<text>` nodes from a scale domain, so `LumoNode` cannot reach them and a
+ * formatter is the only seam. Every renderer has that property.
  */
 export function chartTickFormatter(
   locale: Locale,
@@ -255,53 +277,243 @@ export function chartTickFormatter(
   };
 }
 
+/* ════════════════════════════════════════════════════════════════════════════
+ * DIRECTION
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * **The one RTL criterion `@tanstack/charts` 0.9.0 cannot meet.** See the long
+ * note in this file's header for the evidence and for the four-part handling.
+ *
+ * A named constant rather than an inline `false`, so the day upstream ships an
+ * axis-side option this is the single line that changes — and so a reader who
+ * greps for why a Persian chart's value axis is on the wrong side finds a name
+ * rather than an absence.
+ */
+export const CHART_VALUE_AXIS_TRAILING_EDGE = false as const;
+
+export interface ChartAxisMirror {
+  /** `reverse` on the axis that carries the CATEGORIES. */
+  reverse?: boolean;
+  /** `axis.tickLabels.anchor` on the axis that carries the VALUES. */
+  tickLabelAnchor: "start" | "middle" | "end";
+}
+
+export interface ChartMirror {
+  /** Derived from the locale via `Intl.Locale.getTextInfo()`. Never passed in. */
+  direction: Direction;
+  /** Spread into the category axis's options object. */
+  categoryAxis: { reverse?: boolean };
+  /** The anchor the value axis's tick labels take. */
+  valueTickAnchor: "start" | "end";
+  /**
+   * Whether the value axis sits at the trailing edge, as it should under RTL.
+   * Always `false` at this version — see `CHART_VALUE_AXIS_TRAILING_EDGE`.
+   */
+  valueAxisAtTrailingEdge: boolean;
+}
+
+/**
+ * Everything the chart spec needs told about direction, derived from the locale.
+ *
+ * There is no `dir` argument, for the reason `LumoProvider` gives at length: a
+ * wrong direction should be unrepresentable rather than discouraged.
+ *
+ * Under LTR every field is the identity — `reverse` absent, anchor `"end"` —
+ * so the mirrored path and the plain path are the same code, which is the only
+ * arrangement in which the mirrored one stays working.
+ */
+export function chartMirror(locale: Locale): ChartMirror {
+  const dir = direction(locale);
+  const rtl = dir === "rtl";
+
+  return {
+    direction: dir,
+    categoryAxis: rtl ? { reverse: true } : {},
+    // Measured: TanStack computes `end` in LTR and keeps computing `end` under
+    // RTL, which runs the label INTO the plot. Stating it explicitly is the fix;
+    // moving the axis, which would be the other fix, is not available.
+    valueTickAnchor: rtl ? "start" : "end",
+    valueAxisAtTrailingEdge: CHART_VALUE_AXIS_TRAILING_EDGE,
+  };
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE AXES, AS SPEC FRAGMENTS
+ *
+ * These were COMPONENTS under recharts (`<ChartCategoryAxis />`). They are
+ * builders now, because TanStack's axes are values in a definition object
+ * rather than children of a chart element. The API change is recorded in
+ * chart.tsx; the gain is that a server component can build the whole spec.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/** A scale factory or instance, passed straight through to TanStack. */
+export interface ChartAxisSpecOptions {
+  /** The scale. `scaleBand`/`scalePoint` for categories, `scaleLinear` for values. */
+  scale: unknown;
+  /** `Intl.NumberFormat` options for numeric ticks. */
+  numberFormat?: Intl.NumberFormatOptions | undefined;
+  /** Draw grid lines from this axis's ticks. */
+  grid?: boolean | undefined;
+  /** Round the inferred domain outward. */
+  nice?: boolean | undefined;
+}
+
+/**
+ * The axis that carries the CATEGORIES.
+ *
+ * Under RTL the scale reverses, so the first category sits at the reading
+ * start — and because `reverse` acts on the scale's RANGE, the bars, the line,
+ * the area, the dots and the grid mirror with it. There is no second thing to
+ * remember, which is the same property recharts' `reversed` had and the reason
+ * both libraries only need one lever here.
+ *
+ * Ticks go through `chartTickFormatter` even though a category is usually a
+ * string: the formatter passes strings through untouched and catches the case
+ * that is actually dangerous — a NUMERIC category, e.g. a year, which would
+ * otherwise print `2026` on a Persian page.
+ */
+export function chartCategoryAxis(locale: Locale, options: ChartAxisSpecOptions) {
+  const mirror = chartMirror(locale);
+  const format = chartTickFormatter(locale, options.numberFormat);
+  return {
+    scale: options.scale,
+    ...mirror.categoryAxis,
+    ...(options.nice === undefined ? {} : { nice: options.nice }),
+    ...(options.grid === undefined ? {} : { grid: options.grid }),
+    axis: {
+      ticks: { format },
+      // Categories sit UNDER their band, so the label is centred in both
+      // directions and this is deliberately not mirrored.
+      tickLabels: { anchor: "middle" as const },
+    },
+  };
+}
+
+/**
+ * The axis that carries the VALUES.
+ *
+ * Its ticks are ALWAYS numbers, which is why the formatter is not optional in
+ * practice: it is the only thing that reaches the `<text>` TanStack builds from
+ * the scale domain.
+ *
+ * `anchor` is the mirrored half. The axis's SIDE is the half no lever reaches —
+ * see the file header.
+ */
+export function chartValueAxis(locale: Locale, options: ChartAxisSpecOptions) {
+  const mirror = chartMirror(locale);
+  const format = chartTickFormatter(locale, options.numberFormat);
+  return {
+    scale: options.scale,
+    nice: options.nice ?? true,
+    ...(options.grid === undefined ? {} : { grid: options.grid }),
+    axis: {
+      ticks: { format },
+      tickLabels: { anchor: mirror.valueTickAnchor },
+    },
+  };
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE ONE ENGLISH STRING
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * The exact literal `@tanstack/charts` 0.9.0 writes into its root `<svg>`.
+ *
+ * `svg-renderer.js:19`, inside a template literal, after the class and before
+ * `aria-label`. Kept as a named constant so the conformance test can assert
+ * that BARE TanStack still emits it — the poison-twin discipline
+ * `@lumo-ui/base-ui-ssr` uses. If that assertion goes red, upstream has changed
+ * the string and `chartRenderSvg` is silently doing nothing.
+ */
+export const TANSTACK_ROLE_DESCRIPTION = 'aria-roledescription="chart"';
+
+/**
+ * The Persian and English words for what a chart IS.
+ *
+ * `aria-roledescription` replaces the role a screen reader announces, so this is
+ * spoken on every focus of every chart. It is engine vocabulary, not consumer
+ * content — «نمودار» is the same word in every application — so it lives in a
+ * `Record<Locale, …>` here rather than being a required prop, on exactly the
+ * argument `@lumo-ui/base-ui-ssr`'s catalogue header makes for Base UI's seven.
+ *
+ * `satisfies Record<Locale, string>` makes a new locale a compile error here.
+ */
+export const CHART_ROLE_DESCRIPTION = {
+  "fa-IR": "نمودار",
+  "en-US": "chart",
+} satisfies Record<Locale, string>;
+
+/**
+ * TanStack's own SVG renderer, with its one English literal localised.
+ *
+ * Pass as the `renderSvg` prop. `renderChartSvg` is a public export and
+ * `renderSvg` is a public typed prop, so this is a prop-level fix with no
+ * patch, no fork and no internal import — the same bar `@lumo-ui/base-ui-ssr`
+ * holds itself to.
+ *
+ * A string replacement on markup is a blunt instrument and it is bounded on
+ * purpose: ONE occurrence, of a full `attribute="value"` pair, on the root
+ * element the renderer builds two lines above. `String.replace` with a string
+ * pattern replaces only the first match, which is the one we want; the same
+ * attribute cannot legitimately appear earlier in the output because the root
+ * element IS the output's first tag.
+ *
+ * `en-US` goes through this path too and lands on the same word TanStack would
+ * have emitted. That is deliberate: if English fell through to the library
+ * default, the Persian branch would be the only one exercised and a regression
+ * in the wiring would show up in exactly one locale.
+ */
+export function chartRenderSvg(locale: Locale) {
+  const replacement = `aria-roledescription="${CHART_ROLE_DESCRIPTION[locale]}"`;
+  return (scene: never, options: never): string =>
+    renderChartSvg(scene, options).replace(TANSTACK_ROLE_DESCRIPTION, replacement);
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE PIE'S SWEEP — NOW A CONFIRMATION RATHER THAN AN OVERRIDE
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
 /**
  * ═══ THE PIE'S SWEEP DOES NOT MIRROR. THIS IS A DECISION, NOT AN OVERSIGHT ═══
  *
- * ROADMAP.md listed the winding direction of a pie under RTL as open. It is
- * closed here, and the answer is: **clockwise from the block start (12
- * o'clock), in both directions, always.** `CHART_PIE_SWEEP` is a constant and
- * takes no locale — deliberately, because a function that accepted a locale and
- * ignored it would read as a bug waiting to be "fixed".
+ * **And under TanStack it is also, measured, the default.** The harness rendered
+ * a four-sector pie under both directions and the four `<path d="…">` strings
+ * are BYTE-IDENTICAL, starting at 0 rad at 12 o'clock and winding clockwise —
+ * which is exactly what `CHART_PIE_SWEEP` encodes. Under recharts these
+ * constants were an override of a wrong default (`startAngle: 0`, i.e. 3
+ * o'clock, sweeping counter-clockwise). They are now a statement of a decision
+ * that the renderer happens to agree with, and they are kept for that reason:
+ * a convention that is only true because a dependency's default is true is a
+ * convention that changes in a patch release.
  *
  * The reasoning, because the opposite choice is the intuitive one:
  *
  *  1. **A pie's sweep is not layout.** Everything else this file mirrors is a
- *     position along the INLINE axis — a scale's range, an axis's orientation, a
- *     tooltip's preferred side. Those mirror because reading order runs along
- *     that axis, so "first" means "at the start of the line". A pie has no
- *     inline axis. Its sectors are ordered by ANGLE around a centre, and angle
- *     has no reading order to agree with.
+ *     position along the INLINE axis — a scale's range, a tick anchor. Those
+ *     mirror because reading order runs along that axis. A pie has no inline
+ *     axis; its sectors are ordered by ANGLE around a centre, and angle has no
+ *     reading order to agree with.
  *
  *  2. **Two mirror-imaged pies of the same data read as different data.** This
  *     is the decisive one. Mirror a bar chart and every bar keeps its height —
  *     the quantity survives the flip, only its position moves. Mirror a pie and
- *     each sector keeps its area but changes its NEIGHBOURS and its side: the
- *     40% slice that sat to the right of the 25% slice now sits to its left.
- *     Put a Persian dashboard and its English translation side by side and a
- *     reader comparing them sees two different pictures of one dataset, with
- *     nothing in either one saying which is the mirror. That is a worse failure
- *     than any asymmetry, because it is invisible in each document alone.
+ *     each sector keeps its area but changes its NEIGHBOURS and its side. Put a
+ *     Persian dashboard and its English translation side by side and a reader
+ *     comparing them sees two different pictures of one dataset, with nothing in
+ *     either one saying which is the mirror.
  *
- *  3. **Clocks do not mirror.** A pie is read as a clock face; Persian, Arabic
- *     and Hebrew documents all render analogue clocks running clockwise, and
- *     Persian calendars, gauges and progress rings do the same. Mirroring the
- *     sweep would make Lumo's pies disagree with every other round thing on a
- *     Persian page. (Contrast the linear progress bar, which DOES fill from the
+ *  3. **Clocks do not mirror.** Persian, Arabic and Hebrew documents all render
+ *     analogue clocks running clockwise, and Persian gauges and progress rings
+ *     do the same. (Contrast the linear progress bar, which DOES fill from the
  *     inline start, because that one is a line and lines are read.)
  *
  *  4. **What mirrors instead is everything textual around it.** The legend is a
- *     flex row and follows `direction` for free; the tooltip flips its preferred
- *     side; `<ChartData>`'s table is a real RTL table. So the Persian reader gets
- *     the sequence in reading order where sequence is meaningful — in the words —
- *     and gets the same picture as everyone else where it is not.
- *
- * The 12 o'clock start is the other half of the decision and is not free either:
- * recharts' own default is `startAngle: 0`, i.e. 3 o'clock, sweeping
- * COUNTER-clockwise (its angles are measured counter-clockwise from the positive
- * x-axis, so a default `0 → 360` pie runs backwards past 12). Nobody reads a pie
- * that way in either script. `90 → -270` is the same full turn starting at the
- * top and running clockwise.
+ *     flex row and follows `direction` for free; `<ChartData>`'s table is a real
+ *     RTL table. The Persian reader gets the sequence in reading order where
+ *     sequence is meaningful — in the words — and the same picture as everyone
+ *     else where it is not.
  */
 export interface ChartPieSweep {
   /** Degrees, counter-clockwise from 3 o'clock — so 90 is the top. */
@@ -310,30 +522,21 @@ export interface ChartPieSweep {
   endAngle: number;
 }
 
-/**
- * The one winding every Lumo pie and donut uses, in every locale.
- *
- * Exported as data rather than hidden inside `ChartPie` so a composition this
- * file does not cover — a radial bar, a gauge, a half pie — can start from the
- * same convention instead of re-deciding it.
- */
+/** The one winding every Lumo pie and donut uses, in every locale. */
 export const CHART_PIE_SWEEP: ChartPieSweep = { startAngle: 90, endAngle: -270 };
 
 /**
- * A half pie — the gauge shape — on the same convention: it starts at the inline
- * side that is "up and over" in a clock's sense (9 o'clock) and sweeps clockwise
- * through 12 to 3. Same argument as the full turn: the sweep is a clock, not a
- * line, so it does not mirror.
+ * A half pie — the gauge shape — on the same convention: it starts at 9 o'clock
+ * and sweeps clockwise through 12 to 3. Same argument as the full turn.
  */
 export const CHART_PIE_SWEEP_HALF: ChartPieSweep = { startAngle: 180, endAngle: 0 };
 
 /**
- * The class the pie/donut centre label sits in.
+ * The class a pie/donut centre label sits in.
  *
  * The centre of a donut is the one place in a chart where Lumo puts real text
  * inside the plot, so it is the one place a `font-variant-numeric` or a physical
- * text alignment could sneak into an SVG. `text-anchor` is set by recharts on
- * the `<text>` itself; this only carries colour and weight.
+ * text alignment could sneak into an SVG. This carries colour and weight only.
  */
 export const chartPieCenterVariants = cva("select-none", {
   variants: {
@@ -344,62 +547,3 @@ export const chartPieCenterVariants = cva("select-none", {
   },
   defaultVariants: { tone: "value" },
 });
-
-/**
- * The axis the scale runs ALONG — X in the default layout, Y when the chart is
- * `layout="vertical"`. Reversing it mirrors the scale's range, and with it every
- * bar, line, area and grid line.
- */
-export interface ChartMainAxisMirror {
-  reversed?: boolean;
-}
-
-/**
- * The axis that sits BESIDE the plot — Y in the default layout. Its tick text
- * runs alongside the plot rather than under it, which is what makes the
- * `text-anchor` inversion (header, item 3) visible.
- */
-export interface ChartCrossAxisMirror {
-  orientation?: "left" | "right";
-  textAnchor?: "start" | "end";
-}
-
-export interface ChartMirror {
-  /** Derived from the locale via `Intl.Locale.getTextInfo()`. Never passed in. */
-  direction: Direction;
-  /** Spread onto `<XAxis>` in the default layout, `<YAxis>` when vertical. */
-  mainAxis: ChartMainAxisMirror;
-  /** Spread onto `<YAxis>` in the default layout, `<XAxis>` when vertical. */
-  crossAxis: ChartCrossAxisMirror;
-  /** Spread onto recharts' `<Tooltip>`. */
-  tooltip: { reverseDirection: { x: boolean; y: boolean } };
-}
-
-/**
- * Everything recharts needs told about direction, derived from the locale.
- *
- * There is no `dir` argument, for rule 4's reason: a wrong direction should be
- * unrepresentable rather than discouraged.
- *
- * The fields are named for the GEOMETRY (main/cross) rather than for the data
- * (category/value), because which one carries the categories depends on the
- * chart's `layout` while what needs mirroring does not. `ChartCategoryAxis` and
- * `ChartValueAxis` do that mapping once, in one place.
- *
- * Under LTR every field is absent, so spreading this is a no-op in English — the
- * mirrored path and the plain path are the same code, which is the only way the
- * mirrored one stays working.
- */
-export function chartMirror(locale: Locale): ChartMirror {
-  const dir = direction(locale);
-  const rtl = dir === "rtl";
-
-  return {
-    direction: dir,
-    mainAxis: rtl ? { reversed: true } : {},
-    // Under RTL the cross axis moves to the trailing (right) edge AND states its
-    // anchor, because recharts' computed anchor inverts under `direction: rtl`.
-    crossAxis: rtl ? { orientation: "right", textAnchor: "end" } : {},
-    tooltip: { reverseDirection: { x: rtl, y: false } },
-  };
-}

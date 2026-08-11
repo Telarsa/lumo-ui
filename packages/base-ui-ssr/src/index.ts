@@ -40,6 +40,15 @@
 export { useFieldWiring } from "./field-wiring";
 export type { FieldWiring, FieldWiringInput, FieldWiringMode } from "./field-wiring";
 export { useOpenMirror } from "./open-mirror";
+/*
+ * Added while migrating the collections family. Same shape as the two above — a
+ * relationship Base UI resolves in a layout effect and therefore not at all on
+ * the server — and the most expensive of the three for a keyboard user: a
+ * server-rendered composite (Toolbar, ToggleGroup, Tabs, RadioGroup) carries
+ * `tabindex="-1"` on every item and `tabindex="0"` on none, so the Tab key
+ * cannot reach it before hydration. Measured table in the module header.
+ */
+export { useCompositeTabStop } from "./composite-tab-stop";
 
 // ── the i18n layer ─────────────────────────────────────────────────────────
 export { BASE_UI_STRINGS, baseUiStringsFor } from "./strings";

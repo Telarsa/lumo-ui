@@ -12,7 +12,12 @@ import { cva } from "class-variance-authority";
 export const inputGroupInputVariants = cva(
   "w-full min-w-0 rounded-md border border-border-control bg-surface text-fg text-start " +
     "transition-colors placeholder:text-fg-subtle " +
-    "data-hovered:border-border-strong " +
+    // `hover:`, not `data-hovered:`. Base UI publishes NO hover attribute
+    // anywhere — a grep for `data-hovered` over the whole installed 1.7.0 dist
+    // returns zero files — so the old class would style nothing while reviewing
+    // as if it did. The cost is stated in text-field.tsx: jsdom models no
+    // pointer, so this rule loses its unit tier.
+    "hover:border-border-strong " +
     "data-invalid:border-critical " +
     "data-disabled:cursor-not-allowed data-disabled:bg-surface-sunken",
   {

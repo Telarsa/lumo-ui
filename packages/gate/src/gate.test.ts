@@ -219,6 +219,7 @@ describe("fa-IR grading is unchanged by the parametrisation", () => {
       "no-latin-aria",
       "named-controls",
       "resolved-idrefs",
+      "composite-tab-stop",
     ]);
     expect(persianDigitFloor({}).id).toBe("persian-digit-floor");
   });

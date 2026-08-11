@@ -1,6 +1,6 @@
 "use client";
 
-import { Button as AriaButton } from "react-aria-components";
+import { Button as BaseButton } from "@base-ui/react/button";
 import { cn, formatNumber, type Locale } from "@lumo-ui/core";
 import {
   paginationGapVariants,
@@ -35,11 +35,41 @@ export type { PaginationItemVariantProps, PaginationSlot };
  *       pageLabel={(n) => `صفحه ${n}`}
  *     />
  *
- * `"use client"` because `onPageChange` is a function prop and the controls are
- * React Aria buttons. The class definitions and the page-window arithmetic live
- * in `pagination.variants.ts` with no directive, so a SERVER-rendered listing
- * can render the identical pager as real `<a href>` links — see that file's
- * header, which is where the argument is made.
+ * `"use client"` because `onPageChange` is a function prop. The class
+ * definitions and the page-window arithmetic live in `pagination.variants.ts`
+ * with no directive, so a SERVER-rendered listing can render the identical pager
+ * as real `<a href>` links — see that file's header, which is where the argument
+ * is made.
+ *
+ * ═══ NO ENGINE HERE EITHER, AND THE BUTTON IS THE ONLY REASON ONE IS IMPORTED
+ *
+ * The brief for this batch asked whether the navigation-chrome components need
+ * an engine. Pagination is the marginal case and the answer is "barely".
+ *
+ * base-vega DOES ship a `pagination`, and vendoring it settles the question: its
+ * emit contains no Base UI import at all — `<nav>`, `<ul>`, `<li>`, `<a>`, and a
+ * `Button` used only for its classes. There is no pagination primitive in
+ * `@base-ui/react@1.7.0`, and there was none in React Aria either. A pager is a
+ * list of destinations; the arithmetic is `paginationRange` and the layout is
+ * normal flow.
+ *
+ * Upstream's emit also happens to be a compact demonstration of rule 3. Every
+ * announced string in it is an English literal with a default:
+ * `aria-label="pagination"`, `aria-label="Go to previous page"`,
+ * `aria-label="Go to next page"`, `text = "Previous"`, `text = "Next"`,
+ * `<span className="sr-only">More pages</span>` — six, all optional, all
+ * unreachable on a Persian page except by remembering. Lumo's five required
+ * props are the same six strings with the defaults removed, which is why the
+ * vendored file could not simply be adopted.
+ *
+ * What DID change: the controls were React Aria `Button`s, imported purely for
+ * `isDisabled` and `onPress`. They are now `@base-ui/react/button`, imported
+ * purely for one attribute — Base UI's Button emits `data-disabled` alongside
+ * the native `disabled`, and `paginationItemVariants` styles the disabled arrows
+ * with `data-disabled:`. A bare `<button disabled>` would have been simpler and
+ * would have silently dropped that rule, which is the shape of edit this
+ * migration is meant to catch rather than make. `onPress` becomes `onClick`: a
+ * native button already fires it for Space and Enter, so nothing is lost.
  *
  * ═══ EVERY VISIBLE THING HERE IS A NUMBER ═══════════════════════════════════
  *
@@ -150,15 +180,15 @@ export function Pagination({
        */}
       <ul className={cn(paginationListVariants())}>
         <li>
-          <AriaButton
+          <BaseButton
             data-lumo=""
             aria-label={previousLabel}
-            isDisabled={current <= 1}
-            onPress={() => onPageChange(current - 1)}
+            disabled={current <= 1}
+            onClick={() => onPageChange(current - 1)}
             className={cn(paginationItemVariants({ size }))}
           >
             <span aria-hidden="true">‹</span>
-          </AriaButton>
+          </BaseButton>
         </li>
 
         {slots.map((slot) =>
@@ -187,15 +217,15 @@ export function Pagination({
         )}
 
         <li>
-          <AriaButton
+          <BaseButton
             data-lumo=""
             aria-label={nextLabel}
-            isDisabled={current >= total}
-            onPress={() => onPageChange(current + 1)}
+            disabled={current >= total}
+            onClick={() => onPageChange(current + 1)}
             className={cn(paginationItemVariants({ size }))}
           >
             <span aria-hidden="true">›</span>
-          </AriaButton>
+          </BaseButton>
         </li>
       </ul>
     </nav>
@@ -224,17 +254,17 @@ function PaginationPage({
   // `valueLabel`.
   const formatted = formatNumber(page, locale);
   return (
-    <AriaButton
+    <BaseButton
       data-lumo=""
       aria-label={pageLabel(formatted)}
       // `aria-current="page"` is the announcement, and it is not optional: the
       // fill colour from `current: true` is invisible to a screen reader and,
       // on its own, would be colour as the sole carrier of meaning (WCAG 1.4.1).
       {...(isCurrent ? { "aria-current": "page" as const } : {})}
-      onPress={() => onPress(page)}
+      onClick={() => onPress(page)}
       className={cn(paginationItemVariants({ size, current: isCurrent }))}
     >
       {formatted}
-    </AriaButton>
+    </BaseButton>
   );
 }

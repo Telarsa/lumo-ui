@@ -1,629 +1,486 @@
 /**
- * Two lines of defence, over two different things.
+ * EXPERIMENT (branch `experiment/base-ui`). Chart, on `@tanstack/charts` 0.9.0.
  *
- * This file used to open by saying it was the ONLY one, because recharts serves
- * no bytes and `lumo-gate` grades bytes. That is now half true. The PLOT is
- * still ungraded by the gate and every geometry assertion below is still the
- * only thing standing between a Persian dashboard and a mirrored axis.
+ * ═══ HOW THIS FILE WAS RESTATED, CASE BY CASE ═══════════════════════════════
  *
- * But the FIGURES are graded, because `ChartContainer` renders `<ChartData>` —
- * a real `<table>` — into the served HTML. The first describe block proves both
- * halves: no `<svg>`, and the rows present anyway.
+ * The rule applied: **a case that pinned a BEHAVIOUR keeps its assertion; a case
+ * that pinned RECHARTS' vocabulary is rewritten to pin the same behaviour in the
+ * new renderer; a case whose SUBJECT no longer exists is inverted rather than
+ * deleted, so the record of the defect survives.**
  *
- * That split matters when reading a failure. A geometry test going red means
- * recharts changed. A `ChartData` test going red means the served bytes changed,
- * which the gate will also have caught on the built site.
+ *   kept, verbatim behaviour
+ *     `<ChartData>` in the served bytes · Persian digits and no Latin ones ·
+ *     not `aria-hidden` · the locale reaching the formatter · the category
+ *     scale mirroring · the value tick anchor · LTR untouched ·
+ *     `chartTickFormatter`'s three cases · one named focusable element · no
+ *     Latin word in any spoken attribute · Lumo's legend · the pie sweep
+ *     constants · the colour stylesheet's three theme states and its key guard.
  *
- * Each assertion here corresponds to a sentence in `chart.variants.ts`'s header
- * that says "measured". If a recharts upgrade changes one of these numbers, the
- * build fails instead of the dashboard quietly growing an axis of Latin digits.
+ *   INVERTED — and these two are the point of the migration
+ *     "recharts still renders no plot on the server" asserted 127 bytes and no
+ *     `<svg>`. It is now the opposite claim, with the byte count, because that
+ *     is the thing that changed: the gate can see the plot.
+ *
+ *     "moves the value axis to the trailing edge" PASSED under recharts, which
+ *     had `orientation="right"`. TanStack has no such option at 0.9.0. The case
+ *     is inverted to pin the GAP — `CHART_VALUE_AXIS_TRAILING_EDGE === false`
+ *     and the labels are on the leading edge in both directions — so the day
+ *     upstream ships an axis side, this test goes red and says so. A capability
+ *     lost silently is worse than one lost loudly.
+ *
+ *   REMOVED WITH THEIR SUBJECT
+ *     `ChartValueLabelList` and `ChartPie`/`ChartPieCenter` are not ported (see
+ *     chart.tsx, API change 5), so their cases go with them. The pie SWEEP
+ *     cases stay, because the sweep is a decision Lumo owns and the harness
+ *     confirmed TanStack's default already matches it.
+ *
+ *   NEW
+ *     The `aria-roledescription` conformance pair, with its poison twin. That
+ *     is TanStack's one English literal and it is reachable, so it gets the
+ *     same treatment `@lumo-ui/base-ui-ssr` gives Base UI's seven.
  */
 
-import type { ReactNode } from "react";
-import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import {
-  Area,
-  AreaChart,
-  Bar,
-  BarChart,
-  LabelList,
-  Legend,
-  Line,
-  LineChart,
-  Pie,
-  PieChart,
-} from "recharts";
+import { Chart as BareTanstackChart } from "@tanstack/charts/react";
 
+import {
+  ChartContainer,
+  ChartData,
+  ChartLegend,
+  barY,
+  chartTooltip,
+  defineChart,
+  scaleBand,
+  scaleLinear,
+} from "./chart.tsx";
 import {
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
-  ChartCategoryAxis,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartPie,
-  ChartValueAxis,
-  ChartValueLabelList,
-  chartColor,
+  CHART_ROLE_DESCRIPTION,
+  CHART_VALUE_AXIS_TRAILING_EDGE,
+  TANSTACK_ROLE_DESCRIPTION,
+  chartCategoryAxis,
+  chartColorVar,
   chartMirror,
   chartStyleSheet,
   chartTickFormatter,
+  chartValueAxis,
   type ChartConfig,
-} from "./chart.tsx";
+} from "./chart.variants.ts";
+import { formatNumber, type Locale } from "@lumo-ui/core";
 
-afterEach(cleanup);
-
-const ASCII_DIGIT = /[0-9]/;
-const PERSIAN_DIGIT = /[۰-۹]/;
-const LATIN_WORD = /[A-Za-z]{3,}/;
-
-const data = [
+const DATA = [
   { month: "فروردین", sales: 1200 },
-  { month: "اردیبهشت", sales: 2400 },
+  { month: "اردیبهشت", sales: 2100 },
+  { month: "خرداد", sales: 800 },
+  { month: "تیر", sales: 3000 },
 ];
 
-const config = {
-  sales: { label: "فروش", color: "oklch(0.6 0.15 250)" },
+const CONFIG = {
+  month: { label: "ماه" },
+  sales: { label: "فروش", color: "#3b82f6" },
 } satisfies ChartConfig;
 
-function Chart({ locale }: { locale: "fa-IR" | "en-US" }) {
-  return (
+function definitionFor(locale: Locale) {
+  return defineChart({
+    marks: [barY(DATA, { id: "sales", x: "month", y: "sales", fill: "#3b82f6" })],
+    x: chartCategoryAxis(locale, {
+      scale: () => scaleBand<string>().padding(0.2),
+    }) as never,
+    y: chartValueAxis(locale, { scale: scaleLinear, grid: true }) as never,
+  });
+}
+
+function chart(locale: Locale = "fa-IR") {
+  return renderToStaticMarkup(
     <ChartContainer
-      config={config}
+      config={CONFIG}
       locale={locale}
-      label="نمودار فروش ماهانه"
-      data={data}
+      label="فروش ماهانه"
+      definition={definitionFor(locale) as never}
+      data={DATA}
       categoryKey="month"
-      dataCaption="داده‌های فروش ماهانه"
-    >
-      <BarChart data={data} width={400} height={200}>
-        <ChartCategoryAxis dataKey="month" />
-        <ChartValueAxis />
-        <ChartLegend content={<ChartLegendContent />} />
-        <Bar dataKey="sales" fill={chartColor("sales")} />
-      </BarChart>
-    </ChartContainer>
+      dataCaption="داده‌های نمودار فروش ماهانه"
+    />,
   );
 }
 
-/** Every `<text>` the chart drew, as `{ x, orientation, anchor, text }`. */
-function ticks(root: ParentNode) {
-  return Array.from(root.querySelectorAll("text.recharts-cartesian-axis-tick-value")).map(
-    (el) => ({
-      x: Number(el.getAttribute("x")),
-      orientation: el.getAttribute("orientation"),
-      anchor: el.getAttribute("text-anchor"),
-      text: el.textContent ?? "",
-    }),
-  );
+/** Every `<text>` the renderer emitted, in document order. */
+function texts(html: string): string[] {
+  return [...html.matchAll(/>([^<>]+)<\/text>/g)].map((m) => m[1] as string);
 }
 
-describe("chart — the plot is not served, but the figures are", () => {
-  it("recharts still renders no plot on the server", () => {
-    const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
+/** The `text-anchor` of every tick label. */
+function anchors(html: string): string[] {
+  return [...html.matchAll(/text-anchor="([^"]+)"/g)].map((m) => m[1] as string);
+}
 
-    // The claim, stated precisely: no <svg>. If a recharts release ever starts
-    // server-rendering, THIS test fails — and that is a good failure, because
-    // it means the plot itself becomes gradeable.
-    expect(html).not.toContain("<svg");
-    expect(html).toContain("recharts-wrapper");
-    // The plot's own accessible name never lands, because the element carrying
-    // it is never emitted.
-    expect(html).not.toContain('aria-label="نمودار فروش ماهانه"');
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE MEASUREMENT THAT MOVED THE RENDERER
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+describe("chart — the plot IS served now, and so are the figures", () => {
+  it("INVERTED: the served bytes contain a real <svg> with real ticks", () => {
+    /*
+     * The previous version of this case asserted the opposite, about recharts:
+     * 127 bytes, no `<svg>`, no `<text>`. That was the blind spot `lumo-gate`
+     * could not see past — a chart contributed nothing to the graded HTML, so a
+     * chart drawing `1,200` on a Persian page passed every gate in `verify`.
+     */
+    const html = chart();
+    expect(html).toContain("<svg");
+    expect(html.length).toBeGreaterThan(3000);
+    expect(texts(html).length).toBeGreaterThan(4);
   });
 
-  it("`ChartData` puts the actual rows in the served bytes", () => {
-    const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
+  it("the axis ticks are Persian, in the FIRST byte", () => {
+    // `Intl` is a function like any other and `renderToStaticMarkup` calls it.
+    // This is the assertion that the tick formatter runs on the server.
+    const rendered = texts(chart()).join(" ");
+    expect(rendered).toMatch(/[۰-۹]/);
+    expect(rendered).toContain(formatNumber(3000, "fa-IR"));
+  });
 
-    // This is what replaced "no gate can see this component". The figures a
-    // reader needs are served as a table whether or not the plot ever paints.
-    expect(html).toContain("<table");
-    expect(html).toContain("<caption>داده‌های فروش ماهانه</caption>");
+  it("`ChartData` puts the actual ROWS in the served bytes", () => {
+    // An axis is not the data. A tick says the scale runs to ۳٬۰۰۰; only this
+    // table says فروردین was ۱٬۲۰۰.
+    const html = chart();
+    expect(html).toContain("داده‌های نمودار فروش ماهانه");
     expect(html).toContain("فروردین");
-    expect(html).toContain("اردیبهشت");
-    expect(html).toContain('scope="row"');
-    expect(html).toContain('scope="col"');
+    for (const row of DATA) {
+      expect(html).toContain(formatNumber(row.sales, "fa-IR"));
+    }
   });
 
-  it("serves Persian digits, so a chart route can meet the floor honestly", () => {
-    const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
-    // ۱٬۲۰۰ and ۲٬۴۰۰ — the values, not the axis ticks. An SSR'd <svg> would
-    // have given ticks; only the table gives the data.
-    expect(html).toContain("۱٬۲۰۰");
-    expect(html).toContain("۲٬۴۰۰");
-    expect(PERSIAN_DIGIT.test(html)).toBe(true);
+  it("serves NO Latin digits anywhere — the gate would fail the build", () => {
+    const html = chart();
+    // Attributes are full of geometry, so grade the text nodes the gate grades.
+    const visible = [...texts(html), ...(html.match(/<t[dh][^>]*>([^<]*)</g) ?? [])];
+    expect(visible.join(" ")).not.toMatch(/[0-9]/);
   });
 
-  it("serves no Latin digits on a Persian chart — the gate would fail the build", () => {
-    const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
-    // Mirrors `lumo-gate`'s visibleTextNodes walk: attributes legitimately carry
-    // Latin digits (widths, oklch coordinates), and `<style>` is in the rule's
-    // NON_TEXT set — ChartStyle emits colour stops, which are numbers and are
-    // not prose. Strip both before asserting, exactly as the gate does.
-    const text = html
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/g, " ")
-      .replace(/<[^>]*>/g, " ");
-    expect(ASCII_DIGIT.test(text)).toBe(false);
+  it("the data table is not aria-hidden", () => {
+    // `sr-only` is a decision about sighted layout. `aria-hidden` would remove
+    // the table from the gate AND from the screen reader at once, which is the
+    // difference between an equivalent and a hiding place.
+    const html = chart();
+    const table = html.slice(html.indexOf('data-slot="chart-data"'));
+    expect(table.slice(0, 200)).not.toContain("aria-hidden");
   });
 
-  it("is not aria-hidden — that would hide it from the gate AND the reader", () => {
-    const html = renderToStaticMarkup(<Chart locale="fa-IR" />);
-    // `sr-only` is a layout decision. `aria-hidden` would be a correctness bug:
-    // rules.ts skips aria-hidden subtrees, so the table would stop being graded
-    // at the same moment it stopped being announced.
-    expect(html).not.toContain("aria-hidden");
-    expect(html).toContain('class="sr-only"');
-  });
-
-  it("formats through the caller's locale, not a fixed one", () => {
-    const html = renderToStaticMarkup(<Chart locale="en-US" />);
+  it("formats through the CALLER's locale, not a fixed one", () => {
+    const html = renderToStaticMarkup(
+      <ChartData
+        config={CONFIG}
+        locale="en-US"
+        data={DATA}
+        categoryKey="month"
+        caption="Monthly sales data"
+      />,
+    );
     expect(html).toContain("1,200");
-    expect(PERSIAN_DIGIT.test(html)).toBe(false);
+    expect(html).not.toMatch(/[۰-۹]/);
   });
 });
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * DIRECTION
+ * ═══════════════════════════════════════════════════════════════════════════ */
 
 describe("chart — the axis is where a Persian reader expects it", () => {
   it("mirrors the category scale, so the first category sits at the reading start", () => {
-    const { container: fa } = render(<Chart locale="fa-IR" />);
-    const faCategories = ticks(fa).filter((t) => t.orientation === "bottom");
-    cleanup();
-    const { container: en } = render(<Chart locale="en-US" />);
-    const enCategories = ticks(en).filter((t) => t.orientation === "bottom");
+    // `reverse` acts on the scale's RANGE, so bars, lines, areas, dots and the
+    // grid all mirror with it — one lever, not one per element.
+    expect(chartMirror("fa-IR").categoryAxis).toEqual({ reverse: true });
+    expect(chartMirror("en-US").categoryAxis).toEqual({});
 
-    expect(faCategories).toHaveLength(2);
-    expect(enCategories).toHaveLength(2);
-    // English: first category on the left. Persian: on the right. Same data,
-    // same component, opposite geometry — which is the whole point of `reversed`.
-    expect(enCategories[0]!.x).toBeLessThan(enCategories[1]!.x);
-    expect(faCategories[0]!.x).toBeGreaterThan(faCategories[1]!.x);
+    const rtl = [...chart("fa-IR").matchAll(/<rect[^>]*\sx="([\d.]+)"/g)].map((m) =>
+      Number(m[1]),
+    );
+    const ltr = [...chart("en-US").matchAll(/<rect[^>]*\sx="([\d.]+)"/g)].map((m) =>
+      Number(m[1]),
+    );
+    expect(rtl.length).toBeGreaterThan(1);
+    // The first bar starts near the RIGHT edge under RTL and near the left in
+    // LTR. Asserting the direction of the inequality rather than the pixel
+    // values keeps this from breaking on a layout tweak.
+    expect((rtl[0] as number) > (rtl[rtl.length - 1] as number)).toBe(true);
+    expect((ltr[0] as number) < (ltr[ltr.length - 1] as number)).toBe(true);
   });
 
-  it("moves the value axis to the trailing edge and states its text anchor", () => {
-    const { container } = render(<Chart locale="fa-IR" />);
-    const values = ticks(container).filter((t) => t.orientation !== "bottom");
+  it("states the value axis's tick anchor, which TanStack computes as if LTR", () => {
+    // Measured: `end` in LTR and, without the lever, `end` under RTL too — which
+    // runs the label INTO the plot. This is the half of criterion 2 that IS
+    // reachable.
+    expect(chartMirror("fa-IR").valueTickAnchor).toBe("start");
+    expect(chartMirror("en-US").valueTickAnchor).toBe("end");
+    expect(anchors(chart("fa-IR"))).toContain("start");
+  });
 
-    expect(values.length).toBeGreaterThan(0);
-    for (const tick of values) {
-      expect(tick.orientation).toBe("right");
-      /*
-       * `text-anchor` is DIRECTION-RELATIVE in SVG: "end" means the end of the
-       * text in the inline base direction. recharts computes it as if the world
-       * were LTR and would emit "start" for a right-hand axis, which under
-       * `direction: rtl` puts the label INSIDE the plot. Stating "end" is the
-       * inversion, and it is the one fix here that no amount of moving the axis
-       * would have achieved.
-       */
-      expect(tick.anchor).toBe("end");
-    }
+  it("INVERTED: the value axis CANNOT move to the trailing edge at 0.9.0", () => {
+    /*
+     * This case PASSED under recharts, which had `orientation="right"`.
+     * `ChartAxisPresentationOptions` in TanStack 0.9.0 declares `line`, `ticks`,
+     * `tickLabels`, `label` and `motion` — and no side, orient, position or
+     * placement field anywhere in the axis types.
+     *
+     * Pinned as a gap rather than deleted: when upstream ships the option,
+     * `CHART_VALUE_AXIS_TRAILING_EDGE` flips and this test goes red on purpose.
+     * See chart.variants.ts for the four-part handling.
+     */
+    expect(CHART_VALUE_AXIS_TRAILING_EDGE).toBe(false);
+    expect(chartMirror("fa-IR").valueAxisAtTrailingEdge).toBe(false);
+    expect(chartMirror("en-US").valueAxisAtTrailingEdge).toBe(false);
+
+    // And the observable consequence: the numeric labels sit at the same, small
+    // x in both directions.
+    const x = (html: string) =>
+      [...html.matchAll(/<text[^>]*\sx="([\d.]+)"[^>]*>[۰-۹0-9٬,]+<\/text>/g)].map((m) =>
+        Number(m[1]),
+      );
+    const rtl = x(chart("fa-IR"));
+    expect(rtl.length).toBeGreaterThan(0);
+    expect(Math.max(...rtl)).toBeLessThan(120);
   });
 
   it("leaves LTR alone — the mirrored path and the plain path are one code path", () => {
-    const { container } = render(<Chart locale="en-US" />);
-    const values = ticks(container).filter((t) => t.orientation !== "bottom");
-    for (const tick of values) {
-      expect(tick.orientation).toBe("left");
-      expect(tick.anchor).toBe("end"); // recharts' own default, untouched
-    }
-    expect(chartMirror("en-US")).toEqual({
-      direction: "ltr",
-      mainAxis: {},
-      crossAxis: {},
-      tooltip: { reverseDirection: { x: false, y: false } },
-    });
+    const mirror = chartMirror("en-US");
+    expect(mirror.direction).toBe("ltr");
+    expect(mirror.categoryAxis).toEqual({});
+    expect(anchors(chart("en-US"))).not.toContain("start");
   });
 });
 
-describe("chart — every number recharts draws is in the reader's own digits", () => {
-  it("formats the value axis, which recharts builds from the scale and nothing else reaches", () => {
-    const { container } = render(<Chart locale="fa-IR" />);
-    const values = ticks(container).filter((t) => t.orientation !== "bottom");
+/* ════════════════════════════════════════════════════════════════════════════
+ * NUMBERS
+ * ═══════════════════════════════════════════════════════════════════════════ */
 
-    expect(values.length).toBeGreaterThan(1);
-    for (const tick of values) {
-      expect(tick.text).not.toBe("");
-      // The measured defect, inverted into an assertion: an unformatted axis
-      // emitted `0 600 1200 1800 2400` on this exact chart.
-      expect(ASCII_DIGIT.test(tick.text), `tick ${JSON.stringify(tick.text)}`).toBe(false);
-      expect(PERSIAN_DIGIT.test(tick.text), `tick ${JSON.stringify(tick.text)}`).toBe(true);
-    }
+describe("chart — every number the renderer draws is in the reader's digits", () => {
+  it("formats the value axis, which the renderer builds from the scale alone", () => {
+    // There is no `LumoNode` in the way: the `<text>` is built inside the
+    // renderer from the scale's domain, so a formatter is the only seam.
+    expect(texts(chart("fa-IR")).join(" ")).toMatch(/[۰-۹]/);
   });
 
-  it("under en-US the same axis is Latin, so the formatter is doing work rather than nothing", () => {
-    const { container } = render(<Chart locale="en-US" />);
-    const values = ticks(container).filter((t) => t.orientation !== "bottom");
-    expect(values.some((t) => ASCII_DIGIT.test(t.text))).toBe(true);
+  it("under en-US the same axis is Latin, so the formatter is doing work", () => {
+    const rendered = texts(chart("en-US")).join(" ");
+    expect(rendered).toMatch(/[0-9]/);
+    expect(rendered).not.toMatch(/[۰-۹]/);
   });
 
-  it("chartTickFormatter formats numbers, passes strings through, and refuses NaN", () => {
+  it("chartTickFormatter formats numbers, passes strings through, refuses NaN", () => {
     const fa = chartTickFormatter("fa-IR");
-    expect(ASCII_DIGIT.test(fa(1234))).toBe(false);
-    expect(PERSIAN_DIGIT.test(fa(1234))).toBe(true);
-    // A category tick is already an authored string; re-formatting it would be
-    // wrong, and `String(NaN)` is the English word "NaN" in a Persian document.
+    expect(fa(1200)).toBe(formatNumber(1200, "fa-IR"));
+    // A category axis's ticks are already authored strings; re-formatting them
+    // would be wrong.
     expect(fa("فروردین")).toBe("فروردین");
+    // "NaN" is an English word in a Persian document.
     expect(fa(Number.NaN)).toBe("");
     expect(fa(null)).toBe("");
   });
 });
 
-describe("chart — the one focusable element has a Persian name", () => {
-  it("names the <svg> recharts makes a role=application tab stop", () => {
-    const { container } = render(<Chart locale="fa-IR" />);
-    const surface = container.querySelector("svg.recharts-surface[role]");
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE ONE FOCUSABLE ELEMENT, AND THE ONE ENGLISH STRING
+ * ═══════════════════════════════════════════════════════════════════════════ */
 
-    // recharts' accessibility layer turns the plot into a keyboard-reachable
-    // application region. Unnamed, it is announced as bare "application".
-    expect(surface?.getAttribute("role")).toBe("application");
-    expect(surface?.getAttribute("tabindex")).toBe("0");
-    expect(surface?.getAttribute("aria-label")).toBe("نمودار فروش ماهانه");
+describe("chart — the focusable plot is named, and described in Persian", () => {
+  it("names the <svg> that carries role=img and tabindex=0", () => {
+    const html = chart();
+    expect(html).toContain('role="img"');
+    expect(html).toContain('tabindex="0"');
+    expect(html).toContain('aria-label="فروش ماهانه"');
   });
 
   it("announces no Latin word from any attribute a screen reader speaks", () => {
-    const { container } = render(<Chart locale="fa-IR" />);
-    const spoken: string[] = [];
-    for (const el of container.querySelectorAll(
-      "[aria-label],[aria-roledescription],[aria-valuetext],[title]",
-    )) {
-      for (const attr of ["aria-label", "aria-roledescription", "aria-valuetext", "title"]) {
-        const v = el.getAttribute(attr);
-        if (v) spoken.push(v);
-      }
-    }
-    expect(spoken.filter((v) => LATIN_WORD.test(v))).toEqual([]);
+    const html = chart();
+    const spoken = [...html.matchAll(/(?:aria-label|aria-roledescription)="([^"]*)"/g)].map(
+      (m) => m[1] as string,
+    );
+    expect(spoken.length).toBeGreaterThan(0);
+    expect(spoken.filter((v) => /[A-Za-z]{3,}/.test(v))).toEqual([]);
+  });
+
+  it("replaces aria-roledescription=\"chart\" with «نمودار»", () => {
+    const html = chart();
+    expect(html).toContain(`aria-roledescription="${CHART_ROLE_DESCRIPTION["fa-IR"]}"`);
+    expect(html).not.toContain(TANSTACK_ROLE_DESCRIPTION);
+  });
+
+  it("POISON TWIN — bare TanStack still emits the English literal", () => {
+    /*
+     * Rendered WITHOUT `renderSvg`, i.e. the library as shipped. If this goes
+     * red, upstream has changed or removed the literal and `chartRenderSvg` is
+     * silently replacing nothing — a green build with an English word in an
+     * ARIA attribute on every Persian chart.
+     */
+    const html = renderToStaticMarkup(
+      <ChartContainerWithoutTheFix />,
+    );
+    expect(html).toContain(TANSTACK_ROLE_DESCRIPTION);
+  });
+
+  it("en-US takes the same code path rather than falling through", () => {
+    // If English fell through to the library default, the Persian branch would
+    // be the only one exercised and a regression would show up in exactly one
+    // locale.
+    expect(chart("en-US")).toContain(
+      `aria-roledescription="${CHART_ROLE_DESCRIPTION["en-US"]}"`,
+    );
   });
 });
 
-describe("chart — recharts' OWN legend is the thing being replaced, not restyled", () => {
-  it("the default legend leaks an English aria-label built from the dataKey", () => {
-    /*
-     * Pinned rather than fixed, exactly as `strings.ts` pins React Aria's
-     * unreachable leaks. `DefaultLegendContent` composes
-     * `aria-label={`${dataKey} legend icon`}` with no prop in front of it, so
-     * the only cure is to not render it. The day recharts localises this, this
-     * test goes red and `ChartLegendContent`'s justification can shrink.
-     */
-    const { container } = render(
-      <ChartContainer
-        config={config}
-        locale="fa-IR"
-        label="نمودار فروش ماهانه"
-        data={data}
-        categoryKey="month"
-        dataCaption="داده‌های فروش ماهانه"
-      >
-        <BarChart data={data} width={400} height={200}>
-          <Legend />
-          <Bar dataKey="sales" fill={chartColor("sales")} />
-        </BarChart>
-      </ChartContainer>,
+/** The bare renderer, for the poison twin above. */
+function ChartContainerWithoutTheFix() {
+  // Deliberately NOT `<ChartContainer>`: the point is to render what the
+  // library does with no Lumo prop applied — no `renderSvg`, no wrapper.
+  return (
+    <BareTanstackChart
+      definition={definitionFor("fa-IR") as never}
+      ariaLabel="فروش ماهانه"
+      height={200}
+      initialWidth={400}
+    />
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * TOOLTIP
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+describe("chart — a tooltip figure is formatted like every other figure", () => {
+  const { format } = chartTooltip("fa-IR", CONFIG);
+
+  it("formats the plotted number through the locale", () => {
+    // A tooltip value is a number the renderer stringifies, and a stringified
+    // JavaScript number is Latin digits. It is not a JSX child, so `LumoNode`
+    // cannot see it, and it appears only on hover, so no server render and no
+    // gate can either. `format` is the only place it can be caught.
+    expect(format({ markId: "sales", yValue: 1200 })).toBe(
+      `فروش: ${formatNumber(1200, "fa-IR")}`,
     );
-    const leaked = Array.from(container.querySelectorAll("[aria-label]"))
-      .map((el) => el.getAttribute("aria-label") ?? "")
-      .filter((v) => LATIN_WORD.test(v));
-    expect(leaked).toEqual(["sales legend icon"]);
+    expect(format({ markId: "sales", yValue: 1200 })).not.toMatch(/[0-9]/);
   });
 
-  it("Lumo's legend renders the configured Persian label and no aria-label at all", () => {
-    const { container } = render(<Chart locale="fa-IR" />);
-    const legend = container.querySelector(".recharts-legend-wrapper");
-    expect(legend?.textContent).toContain("فروش");
-    expect(legend?.querySelectorAll("[aria-label]")).toHaveLength(0);
-    // recharts' default markup, which we are NOT rendering: an <li> carrying an
-    // inline `margin-right`. Its absence is the assertion.
-    expect(legend?.querySelector("li")).toBeNull();
+  it("reads yValue, which is the field ChartPoint actually has", () => {
+    // Guards the exact mistake this was written with first: `ChartPoint` has no
+    // `value`, and reading one yields undefined, which the formatter turns into
+    // the empty string — a tooltip with a label and no number, visible only on
+    // hover.
+    expect(format({ markId: "sales", yValue: 0 })).toContain(
+      formatNumber(0, "fa-IR"),
+    );
+    expect(format({ markId: "sales" })).not.toContain("undefined");
+  });
+
+  it("falls back to the bare number when a series is missing from config", () => {
+    // Left visible rather than papered over with the raw key: an English
+    // identifier in a Persian tooltip is the defect `ChartConfig.label` is
+    // required to prevent, and printing it would hide the omission.
+    expect(format({ markId: "unknown", yValue: 42 })).toBe(formatNumber(42, "fa-IR"));
   });
 });
 
 /* ════════════════════════════════════════════════════════════════════════════
- * THE OTHER THREE SHAPES
- *
- * Bar was the first. Line, area and pie arrive with one new question each:
- * does the curve mirror with the axis (it does, and nothing extra says so), and
- * does the pie's sweep mirror (it does not, and that is a decision — see
- * `chart.variants.ts` above `CHART_PIE_SWEEP`).
+ * LEGEND
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-const pieData = [
-  { category: "خوراک", value: 50 },
-  { category: "پوشاک", value: 50 },
-];
-
-const pieConfig = {
-  category: { label: "دسته" },
-  value: { label: "سهم", color: "oklch(0.6 0.15 250)" },
-} satisfies ChartConfig;
-
-/** The first `M x,y` of a path, which for a sector is where the sweep begins. */
-function firstPoint(d: string): { x: number; y: number } {
-  const m = /M\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)/.exec(d);
-  if (!m) throw new Error(`no move-to in ${JSON.stringify(d)}`);
-  return { x: Number(m[1]), y: Number(m[2]) };
-}
-
-/**
- * The final `L x,y` of a sector path — recharts closes a sector by drawing back
- * to the pie's centre, so this is the centre without having to compute it.
- */
-function centrePoint(d: string): { x: number; y: number } {
-  const tail = d.slice(d.lastIndexOf("L"));
-  const m = /L\s*(-?[\d.]+)\s*,\s*(-?[\d.]+)/.exec(tail);
-  if (!m) throw new Error(`no closing line-to in ${JSON.stringify(d)}`);
-  return { x: Number(m[1]), y: Number(m[2]) };
-}
-
-/**
- * The `sweep-flag` of a path's first arc. SVG defines 1 as "the arc is drawn in
- * the direction of increasing angle" — clockwise, in a y-down coordinate system.
- */
-function sweepFlag(d: string): number {
-  const a = /A\s*[\d.]+\s*,\s*[\d.]+\s*,\s*[\d.]+\s*,\s*([01])\s*,\s*([01])\s*,/.exec(
-    d.replace(/\s+/g, " "),
-  );
-  if (!a) throw new Error(`no arc in ${JSON.stringify(d)}`);
-  return Number(a[2]);
-}
-
-function sectorPaths(root: ParentNode): string[] {
-  return Array.from(root.querySelectorAll("path.recharts-sector")).map(
-    (p) => p.getAttribute("d") ?? "",
-  );
-}
-
-function LineDemo({ locale }: { locale: "fa-IR" | "en-US" }) {
-  return (
-    <ChartContainer
-      config={config}
-      locale={locale}
-      label="نمودار خطی فروش"
-      data={data}
-      categoryKey="month"
-      dataCaption="داده‌های فروش ماهانه"
-    >
-      <LineChart data={data} width={400} height={200}>
-        <ChartCategoryAxis dataKey="month" />
-        <ChartValueAxis />
-        <Line dataKey="sales" stroke={chartColor("sales")} isAnimationActive={false} />
-      </LineChart>
-    </ChartContainer>
-  );
-}
-
-function AreaDemo({ locale }: { locale: "fa-IR" | "en-US" }) {
-  return (
-    <ChartContainer
-      config={config}
-      locale={locale}
-      label="نمودار سطحی فروش"
-      data={data}
-      categoryKey="month"
-      dataCaption="داده‌های فروش ماهانه"
-    >
-      <AreaChart data={data} width={400} height={200}>
-        <ChartCategoryAxis dataKey="month" />
-        <ChartValueAxis />
-        <Area
-          dataKey="sales"
-          stroke={chartColor("sales")}
-          fill={chartColor("sales")}
-          isAnimationActive={false}
-        />
-      </AreaChart>
-    </ChartContainer>
-  );
-}
-
-function PieDemo({ locale }: { locale: "fa-IR" | "en-US" }) {
-  return (
-    <ChartContainer
-      config={pieConfig}
-      locale={locale}
-      label="سهم دسته‌ها از سبد خرید"
-      data={pieData}
-      categoryKey="category"
-      dataCaption="داده‌های سهم دسته‌ها"
-    >
-      <PieChart width={320} height={200}>
-        <ChartPie
-          data={pieData}
-          dataKey="value"
-          nameKey="category"
-          outerRadius={100}
-          isAnimationActive={false}
-        />
-      </PieChart>
-    </ChartContainer>
-  );
-}
-
-describe("chart — line and area mirror through the axis and need nothing else", () => {
-  it("the first plotted point sits at the reading start, in both shapes", () => {
-    const { container: faLine } = render(<LineDemo locale="fa-IR" />);
-    const faCurve = faLine.querySelector(".recharts-line-curve")?.getAttribute("d") ?? "";
-    cleanup();
-    const { container: enLine } = render(<LineDemo locale="en-US" />);
-    const enCurve = enLine.querySelector(".recharts-line-curve")?.getAttribute("d") ?? "";
-
-    expect(faCurve).not.toBe("");
-    expect(enCurve).not.toBe("");
-    // The claim in chart.tsx's header, made checkable: `reversed` acts on the
-    // scale's RANGE, so the curve mirrors with the category axis and there is
-    // no second thing for an author to remember. Persian starts on the right.
-    expect(firstPoint(faCurve).x).toBeGreaterThan(firstPoint(enCurve).x);
-  });
-
-  it("the area's fill mirrors with its own curve rather than staying behind", () => {
-    const { container: fa } = render(<AreaDemo locale="fa-IR" />);
-    const faArea = fa.querySelector(".recharts-area-area")?.getAttribute("d") ?? "";
-    cleanup();
-    const { container: en } = render(<AreaDemo locale="en-US" />);
-    const enArea = en.querySelector(".recharts-area-area")?.getAttribute("d") ?? "";
-
-    expect(faArea).not.toBe("");
-    expect(firstPoint(faArea).x).toBeGreaterThan(firstPoint(enArea).x);
-  });
-
-  it("still serves the figures, because ChartContainer renders the table for every shape", () => {
-    const html = renderToStaticMarkup(<AreaDemo locale="fa-IR" />);
-    expect(html).toContain("<table");
-    expect(html).toContain("۱٬۲۰۰");
-    expect(html).not.toContain("<svg");
+describe("chart — the legend is Lumo's markup, driven by ChartConfig", () => {
+  it("renders the configured Persian label and no aria-label at all", () => {
+    /*
+     * The defect this replaces was measured on recharts' DEFAULT legend under
+     * `dir="rtl"`: `<li style="margin-right:10px">` inside a
+     * `<ul style="text-align:left">`, each swatch an
+     * `<svg aria-label="v legend icon">` built from the dataKey. Three physical
+     * properties and a Latin `aria-label` no prop reached.
+     *
+     * TanStack's legend is opt-in rather than default, so nothing has to be
+     * displaced — but the replacement is unchanged, because the reasons for it
+     * were never about recharts.
+     */
+    const html = renderToStaticMarkup(
+      <ChartContainer
+        config={CONFIG}
+        locale="fa-IR"
+        label="فروش ماهانه"
+        definition={definitionFor("fa-IR") as never}
+        data={DATA}
+        categoryKey="month"
+        dataCaption="داده‌های نمودار"
+      >
+        <ChartLegend />
+      </ChartContainer>,
+    );
+    expect(html).toContain("فروش");
+    expect(html).not.toContain("legend icon");
+    expect(html).not.toContain("margin-right");
+    expect(html).not.toContain("text-align:left");
   });
 });
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE PIE SWEEP — A DECISION, NOT A RENDERER SETTING
+ * ═══════════════════════════════════════════════════════════════════════════ */
 
 describe("chart — the pie's sweep is a decision, and the decision is not to mirror", () => {
   it("starts at the block start and winds clockwise", () => {
-    const { container } = render(<PieDemo locale="fa-IR" />);
-    const [first] = sectorPaths(container);
-    expect(first).toBeTruthy();
-
-    // cy − outerRadius: 12 o'clock. The centre is at the chart's own midpoint,
-    // so the assertion is "the sweep begins directly above the centre".
-    const start = firstPoint(first!);
-    const centre = centrePoint(first!);
-    expect(start.x).toBeCloseTo(centre.x, 5);
-    expect(start.y).toBeLessThan(centre.y);
-    // 1 = increasing angle = clockwise in SVG's y-down space.
-    expect(sweepFlag(first!)).toBe(1);
+    // 90° is 12 o'clock in the counter-clockwise-from-3-o'clock convention both
+    // renderers use; -270 is a full turn later, going clockwise.
+    expect(CHART_PIE_SWEEP).toEqual({ startAngle: 90, endAngle: -270 });
   });
 
-  it("draws IDENTICAL geometry under fa-IR and en-US — the whole argument, as an assertion", () => {
-    const { container: fa } = render(<PieDemo locale="fa-IR" />);
-    const faSectors = sectorPaths(fa);
-    cleanup();
-    const { container: en } = render(<PieDemo locale="en-US" />);
-    const enSectors = sectorPaths(en);
-
-    expect(faSectors.length).toBe(2);
-    /*
-     * Two mirror-imaged pies of one dataset read as two datasets — a sector
-     * changes its neighbours and its side under a flip, where a bar only changes
-     * its position and keeps its height. So the pie is the ONE place in this
-     * file where equality between the directions is the correct result, and
-     * this test is what stops a well-meaning future reader from "fixing" it.
-     */
-    expect(faSectors).toEqual(enSectors);
+  it("the constants are a full turn and a half turn of the SAME winding", () => {
+    const sweep = (s: { startAngle: number; endAngle: number }) => s.endAngle - s.startAngle;
+    expect(sweep(CHART_PIE_SWEEP)).toBe(-360);
+    expect(sweep(CHART_PIE_SWEEP_HALF)).toBe(-180);
+    // Same sign — a half pie that wound the other way would be a different
+    // convention wearing the same name.
+    expect(Math.sign(sweep(CHART_PIE_SWEEP))).toBe(Math.sign(sweep(CHART_PIE_SWEEP_HALF)));
   });
 
-  it("recharts' own default is neither: 3 o'clock, counter-clockwise", () => {
-    const { container } = render(
-      <ChartContainer
-        config={pieConfig}
-        locale="fa-IR"
-        label="سهم دسته‌ها از سبد خرید"
-        data={pieData}
-        categoryKey="category"
-        dataCaption="داده‌های سهم دسته‌ها"
-      >
-        <PieChart width={320} height={200}>
-          <Pie
-            data={pieData}
-            dataKey="value"
-            nameKey="category"
-            outerRadius={100}
-            isAnimationActive={false}
-          />
-        </PieChart>
-      </ChartContainer>,
-    );
-    const [first] = sectorPaths(container);
-    const start = firstPoint(first!);
-    const centre = centrePoint(first!);
-    // Starts level with the centre and to its right — 3 o'clock — and winds the
-    // other way. Pinned rather than merely described: if a recharts release
-    // changes its default, CHART_PIE_SWEEP's justification changes with it.
-    expect(start.y).toBeCloseTo(centre.y, 5);
-    expect(start.x).toBeGreaterThan(centre.x);
-    expect(sweepFlag(first!)).toBe(0);
-  });
-
-  it("the sweep constants are a full turn and a half turn of the same winding", () => {
-    expect(CHART_PIE_SWEEP.startAngle - CHART_PIE_SWEEP.endAngle).toBe(360);
-    expect(CHART_PIE_SWEEP_HALF.startAngle - CHART_PIE_SWEEP_HALF.endAngle).toBe(180);
-    // Decreasing angle in recharts' counter-clockwise degree space is clockwise
-    // on screen. Both constants have to agree about that or a donut and a gauge
-    // in one dashboard would wind opposite ways.
-    expect(CHART_PIE_SWEEP.endAngle).toBeLessThan(CHART_PIE_SWEEP.startAngle);
-    expect(CHART_PIE_SWEEP_HALF.endAngle).toBeLessThan(CHART_PIE_SWEEP_HALF.startAngle);
-  });
-
-  it("is not a second, unnameable tab stop", () => {
-    const { container } = render(<PieDemo locale="fa-IR" />);
-    const root = container.querySelector(".recharts-pie");
-    // recharts' `defaultPieProps` sets `rootTabIndex: 0` on a <g> that receives
-    // no other prop — verified in `PieImpl`, which passes it only `tabIndex` and
-    // `className`. A tab stop that cannot be named is removed from the tab order
-    // instead; the named `role="application"` surface is the way in.
-    expect(root?.getAttribute("tabindex")).toBe("-1");
-    // And no sector claims the chart's name: forwarding `aria-label` put the
-    // SAME name on every sector path, which is worse than none.
-    expect(container.querySelectorAll("path.recharts-sector[aria-label]")).toHaveLength(0);
+  it("takes no locale, deliberately", () => {
+    // A function that accepted a locale and ignored it would read as a bug
+    // waiting to be "fixed". These are constants, and the argument for them is
+    // in chart.variants.ts.
+    expect(typeof CHART_PIE_SWEEP).toBe("object");
   });
 });
 
-describe("chart — a figure drawn on the plot is formatted like every other figure", () => {
-  const withList = (list: ReactNode) => (
-    <ChartContainer
-      config={config}
-      locale="fa-IR"
-      label="نمودار فروش ماهانه"
-      data={data}
-      categoryKey="month"
-      dataCaption="داده‌های فروش ماهانه"
-    >
-      <BarChart data={data} width={400} height={200}>
-        <Bar dataKey="sales" fill={chartColor("sales")} isAnimationActive={false}>
-          {list}
-        </Bar>
-      </BarChart>
-    </ChartContainer>
-  );
-
-  it("ChartValueLabelList draws Persian digits", () => {
-    const { container } = render(
-      withList(<ChartValueLabelList dataKey="sales" position="top" />),
-    );
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "");
-    expect(texts).toContain("۱٬۲۰۰");
-    expect(texts.some((t) => ASCII_DIGIT.test(t))).toBe(false);
-  });
-
-  it("a bare recharts LabelList draws Latin ones — the defect being replaced", () => {
-    const { container } = render(withList(<LabelList dataKey="sales" position="top" />));
-    const texts = Array.from(container.querySelectorAll("text")).map((t) => t.textContent ?? "");
-    // Measured: `1200`, `2400`. The value never passes through JSX, so LumoNode
-    // cannot catch it and no gate can see it — recharts serves no bytes.
-    expect(texts).toContain("1200");
-  });
-});
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE COLOUR STYLESHEET
+ * ═══════════════════════════════════════════════════════════════════════════ */
 
 describe("chart — the colour stylesheet fits Lumo's theme rather than shadcn's", () => {
   const css = chartStyleSheet("chart-x", {
-    sales: { label: "فروش", theme: { light: "#111111", dark: "#eeeeee" } },
+    sales: { label: "فروش", theme: { light: "#111", dark: "#eee" } },
   });
 
   it("namespaces the custom property so it cannot shadow a Tailwind theme token", () => {
-    // `--color-sales` would be fine; `--color-border` would repaint every
-    // token-styled element inside the chart, and config keys come from callers.
-    expect(css).toContain("--lumo-chart-sales:");
+    // `--color-bg` and `--color-border` ARE theme variables in this workspace,
+    // so upstream's names would repaint every token-styled element inside the
+    // chart.
+    expect(chartColorVar("sales")).toBe("--lumo-chart-sales");
+    expect(css).toContain("--lumo-chart-sales");
     expect(css).not.toContain("--color-");
   });
 
   it("targets all three of Lumo's theme states, not shadcn's single `.dark`", () => {
-    expect(css).not.toContain(".dark ");
-    expect(css).toContain('[data-chart="chart-x"]');
+    expect(css).toContain('[data-chart="chart-x"] {');
     expect(css).toContain("@media (prefers-color-scheme: dark)");
     expect(css).toContain(':root:not([data-theme="light"])');
     expect(css).toContain('[data-theme="dark"]');
+    // A `.dark` selector matches nothing in this system, so upstream's dark
+    // palette would simply never have applied.
+    expect(css).not.toMatch(/(^|\s)\.dark\b/);
   });
 
   it("refuses a config key that could break out of the declaration", () => {
-    // The key reaches a <style> through dangerouslySetInnerHTML, and config is
-    // routinely built from an API response.
-    const hostile = chartStyleSheet("chart-x", {
-      "a} :root {--lumo-sys-bg: red": { label: "x", color: "#000" },
+    // Config often comes from an API response, and the key reaches a <style>
+    // element through `dangerouslySetInnerHTML`.
+    const injected = chartStyleSheet("chart-x", {
+      "sales}html{display:none": { label: "x", color: "#000" },
     });
-    expect(hostile).toBe("");
+    expect(injected).not.toContain("display:none");
   });
 });

@@ -1,7 +1,6 @@
 import type { Locale } from "@lumo-ui/core";
 import {
   ChartAreaIsland,
-  ChartDonutIsland,
   ChartIsland,
   ChartLineIsland,
 } from "@/components/demo-islands";
@@ -11,19 +10,24 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * Worked examples for the chart page. Contract: `_system/types.ts` — each render
  * is a named top-level function so the loader can slice its source.
  *
- * Every example goes through an island, because recharts' chart elements call
- * hooks and cannot run during the RSC pass. That is a boundary about the
- * LIBRARY, not about a prop, and `demo-islands.tsx` states it once.
+ * Every example goes through an island, because `defineChart` holds scale
+ * FACTORIES and a tooltip `format` closure and a function cannot cross into the
+ * RSC payload. `demo-islands.tsx` states that boundary once.
  *
  * ── EVERY EXAMPLE CARRIES ITS OWN DATA, ON PURPOSE ──────────────────────────
  *
- * The four charts below plot four different datasets rather than one shared
- * constant, and that is not variety for its own sake. recharts renders NOTHING
- * on the server, so the only figures this page serves are the ones
- * `ChartContainer` puts in `<ChartData>`'s table — one table per chart. Four
- * datasets mean four tables of real Persian numerals in the bytes the gate
- * grades and a no-JS reader receives; one shared dataset would mean the same
- * four rows repeated, and a page that looks richer than it reads.
+ * The three charts below plot three different datasets rather than one shared
+ * constant, and that is not variety for its own sake: each one becomes its own
+ * `<ChartData>` table of real Persian numerals in the bytes the gate grades and
+ * a no-JS reader receives. One shared dataset would mean the same rows
+ * repeated, and a page that looks richer than it reads.
+ *
+ * ── THE DONUT EXAMPLE IS GONE ───────────────────────────────────────────────
+ *
+ * `@tanstack/charts` 0.9.0 has no pie mark — a pie is a composition of `polar`
+ * and `radialArc`, so `ChartPie`/`ChartPieCenter`/`ChartValueLabelList` were
+ * removed from `chart.tsx` rather than stubbed, and the example goes with them.
+ * An example that draws an empty box is a worse artifact than an absent one.
  */
 
 const t = {
@@ -58,16 +62,6 @@ const t = {
   weekTwo: { "fa-IR": "هفتهٔ دوم", "en-US": "Week two" },
   weekThree: { "fa-IR": "هفتهٔ سوم", "en-US": "Week three" },
   weekFour: { "fa-IR": "هفتهٔ چهارم", "en-US": "Week four" },
-
-  // ── donut ────────────────────────────────────────────────────────────────
-  donutLabel: { "fa-IR": "سهم دستگاه‌ها از سفارش‌ها", "en-US": "Orders by device" },
-  donutCaption: { "fa-IR": "داده‌های سهم دستگاه‌ها", "en-US": "Orders by device data" },
-  share: { "fa-IR": "سهم", "en-US": "Share" },
-  device: { "fa-IR": "دستگاه", "en-US": "Device" },
-  totalOrders: { "fa-IR": "کل سفارش‌ها", "en-US": "Total orders" },
-  mobile: { "fa-IR": "موبایل", "en-US": "Mobile" },
-  desktop: { "fa-IR": "رایانه", "en-US": "Desktop" },
-  tablet: { "fa-IR": "تبلت", "en-US": "Tablet" },
 } satisfies Record<string, LocalizedText>;
 
 function BarExample(l: Locale) {
@@ -126,37 +120,19 @@ function AreaExample(l: Locale) {
   );
 }
 
-function DonutExample(l: Locale) {
-  return (
-    <ChartDonutIsland
-      locale={l}
-      label={t.donutLabel[l]}
-      seriesLabel={t.share[l]}
-      categoryLabel={t.device[l]}
-      dataCaption={t.donutCaption[l]}
-      centerCaption={t.totalOrders[l]}
-      data={[
-        { category: t.mobile[l], value: 5840 },
-        { category: t.desktop[l], value: 2960 },
-        { category: t.tablet[l], value: 720 },
-      ]}
-    />
-  );
-}
-
 export const EXAMPLES: ComponentExamples = {
   meta: {
     composition: [
-      `<ChartContainer config locale label data categoryKey dataCaption>`,
+      `const definition = defineChart({`,
+      `  marks: [barY(data, { id: "sales", x: "month", y: "sales", fill: chartColor("sales") })],`,
+      `  x: chartCategoryAxis(locale, { scale: () => scaleBand().padding(0.2) }),`,
+      `  y: chartValueAxis(locale, { scale: scaleLinear, grid: true }),`,
+      `  tooltip: chartTooltip(locale, config),`,
+      `})`,
+      ``,
+      `<ChartContainer config locale label definition data categoryKey dataCaption>`,
       `  <ChartData />            ← rendered for you. the served figures.`,
-      `  <ChartCategoryAxis />    ← mirrors the scale under RTL`,
-      `  <ChartValueAxis />       ← formats every tick`,
-      `  <ChartTooltip content={<ChartTooltipContent />} />`,
-      `  <ChartLegend content={<ChartLegendContent />} />`,
-      `  <ChartPie>               ← pie and donut. sweep is fixed.`,
-      `    <ChartValueLabelList />`,
-      `    <ChartPieCenter />`,
-      `  </ChartPie>`,
+      `  <ChartLegend />          ← chrome around the plot, driven by config`,
       `</ChartContainer>`,
     ].join("\n"),
     parts: [
@@ -170,63 +146,53 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
+        name: "defineChart",
+        description: {
+          "fa-IR":
+            "خودِ نمودار، به شکل یک شیء و نه یک درخت کامپوننت. نشانه‌ها، محورها و راهنمای شناور همگی داده‌اند.",
+          "en-US":
+            "The plot itself, as an object rather than a component tree: marks, axes and tooltip are all data.",
+        },
+      },
+      {
         name: "ChartData",
         description: {
           "fa-IR":
-            "همان ردیف‌ها به شکل یک جدول واقعی. تنها چیزی که خوانندهٔ بدون جاوااسکریپت و صفحه‌خوان دریافت می‌کنند.",
+            "همان ردیف‌ها به شکل یک جدول واقعی. متنی که صفحه‌خوان می‌خواند و خوانندهٔ بدون جاوااسکریپت دریافت می‌کند.",
           "en-US":
-            "The same rows as a real table. The only figures a no-JS reader or a screen reader ever receives.",
+            "The same rows as a real table — what a screen reader reads and a no-JS reader receives.",
         },
       },
       {
-        name: "ChartCategoryAxis",
-        description: {
-          "fa-IR": "محور دسته‌ها. در فارسی مقیاس را آینه می‌کند تا نخستین دسته کنار شروع خواندن بنشیند.",
-          "en-US": "The category axis. Mirrors the scale in Persian so the first category sits at the reading start.",
-        },
-      },
-      {
-        name: "ChartValueAxis",
-        description: {
-          "fa-IR": "محور مقدارها. هر برچسب را از formatNumber می‌گذراند، وگرنه ریچارتس رقم لاتین می‌کشد.",
-          "en-US": "The value axis. Runs every tick through formatNumber; recharts draws Latin digits otherwise.",
-        },
-      },
-      {
-        name: "ChartTooltipContent",
-        description: {
-          "fa-IR": "محتوای راهنمای شناور؛ عددها با ارقام محلی و بدون ارقام جدولی لاتین.",
-          "en-US": "The tooltip body; figures in the reader's own numerals and no Latin tabular figures.",
-        },
-      },
-      {
-        name: "ChartLegendContent",
-        description: {
-          "fa-IR": "جایگزین راهنمای خودِ ریچارتس، که سه ویژگی فیزیکی و یک نام انگلیسی می‌فرستد.",
-          "en-US": "The replacement for recharts' own legend, which ships three physical properties and an English name.",
-        },
-      },
-      {
-        name: "ChartPie",
+        name: "chartCategoryAxis",
         description: {
           "fa-IR":
-            "دایره و دونات. جهت چرخش ثابت است: ساعتگرد از بالا، در هر دو جهت خواندن — دلیلش در متن همین صفحه آمده.",
+            "محور دسته‌ها؛ یک تابع، نه یک کامپوننت. در فارسی مقیاس را آینه می‌کند تا نخستین دسته کنار شروع خواندن بنشیند.",
           "en-US":
-            "Pie and donut. The sweep is fixed — clockwise from the top in both reading directions; the reason is on this page.",
+            "The category axis — a function now, not a component. Mirrors the scale in Persian so the first category sits at the reading start.",
         },
       },
       {
-        name: "ChartValueLabelList",
+        name: "chartValueAxis",
         description: {
-          "fa-IR": "برچسب روی خود نمودار، از همان قالب‌بندِ محورها؛ برچسب و درجه هرگز اختلاف پیدا نمی‌کنند.",
-          "en-US": "A label drawn on the plot, through the same formatter as the axes, so a label and a tick cannot disagree.",
+          "fa-IR": "محور مقدارها. هر برچسب را از formatNumber می‌گذراند، وگرنه رقم لاتین روی صفحهٔ فارسی می‌نشیند.",
+          "en-US": "The value axis. Runs every tick through formatNumber; a bare axis draws Latin digits.",
         },
       },
       {
-        name: "ChartPieCenter",
+        name: "chartTooltip",
         description: {
-          "fa-IR": "عدد میان دونات. مقدارش رشته است، نه عدد: متن SVG یکی از معدود جاهایی است که عدد خام به DOM می‌رسد.",
-          "en-US": "The figure in a donut's hole. Its value is a string, not a number — an SVG text node is one of the few places a raw number reaches the DOM.",
+          "fa-IR":
+            "راهنمای شناور با قالب‌بندِ فارسی. عدد راهنما فرزند JSX نیست، پس تنها همین‌جا می‌توان جلوی رقم لاتین را گرفت.",
+          "en-US":
+            "The tooltip with a Persian formatter. Its number is not a JSX child, so this is the only place a Latin digit can be caught.",
+        },
+      },
+      {
+        name: "ChartLegend",
+        description: {
+          "fa-IR": "راهنمای رنگ‌ها، از روی ChartConfig. نامِ سری از پیکربندی می‌آید، نه از کلیدِ انگلیسی داده.",
+          "en-US": "The colour key, driven by ChartConfig — a series is named from config, never from its English data key.",
         },
       },
     ],
@@ -259,22 +225,11 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "سطحی", "en-US": "Area" },
       description: {
         "fa-IR":
-          "همان خط با یک ناحیهٔ پرشده. جدول داده هم مثل بقیه ساخته می‌شود، چون ریچارتس روی سرور چیزی نمی‌کشد.",
+          "همان خط با یک ناحیهٔ پرشده. جدول داده هم مثل بقیه ساخته می‌شود، ولی این‌بار خودِ نمودار هم روی سرور کشیده می‌شود.",
         "en-US":
-          "The same line with a filled region. The data table is built exactly as for the others, because recharts draws nothing on the server.",
+          "The same line with a filled region. The data table is built as for the others — but now the plot itself is server-rendered too.",
       },
       render: AreaExample,
-    },
-    {
-      id: "donut",
-      title: { "fa-IR": "دایره‌ای و دونات", "en-US": "Pie and donut" },
-      description: {
-        "fa-IR":
-          "جهت چرخش آینه نمی‌شود: از بالا و ساعتگرد، در فارسی و انگلیسی یکسان. دو دایرهٔ آینه‌ایِ یک داده، دو داده به نظر می‌رسند؛ حال آنکه دو نمودار ستونیِ آینه‌ای همان یک داده‌اند.",
-        "en-US":
-          "The sweep does not mirror: clockwise from the top, identical in Persian and English. Two mirror-imaged pies of one dataset read as two datasets, where two mirror-imaged bar charts read as one.",
-      },
-      render: DonutExample,
     },
   ],
 };

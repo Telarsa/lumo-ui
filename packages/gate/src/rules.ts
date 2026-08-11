@@ -358,4 +358,74 @@ export const resolvedIdrefs: Rule = {
   },
 };
 
-export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs];
+
+/**
+ * Rule 6 — a composite widget must have a tab stop in the SERVED bytes.
+ *
+ * A roving-tabindex widget (tablist, radiogroup, tree, listbox, toolbar, menu)
+ * is one Tab stop from the outside: exactly ONE member carries `tabindex="0"`
+ * and the arrow keys move it. If every member is `tabindex="-1"`, the widget is
+ * unreachable by keyboard entirely.
+ *
+ * ── WHY THIS RULE EXISTS, MEASURED ──────────────────────────────────────────
+ *
+ * Base UI elects the tabbable member in a layout effect, which does not run on
+ * the server — the same architecture that left controls unnamed and produced
+ * `useFieldWiring`. The migration shipped a build with **132 `role="tab"`
+ * elements at `tabindex="-1"` and none at `0`**, plus six radio groups with no
+ * tab stop at all. Every tab list on the site was keyboard-unreachable until
+ * hydration.
+ *
+ * Nothing caught it. The gate had no rule for a MISSING attribute, and the
+ * defect self-heals on hydration, so jsdom, Testing Library and axe all pass in
+ * both states. It was found by counting attributes in the export by hand. This
+ * rule is that count, made permanent.
+ *
+ * Two shapes are legitimately exempt and are not violations:
+ *  - the container manages focus itself via `aria-activedescendant`, so the
+ *    CONTAINER is the tab stop and its items are correctly all `-1`;
+ *  - every member is disabled, so there is nothing to focus.
+ */
+const COMPOSITE_ROLES: Record<string, string> = {
+  tablist: "tab",
+  radiogroup: "radio",
+  tree: "treeitem",
+  listbox: "option",
+  toolbar: "button",
+  menu: "menuitem",
+  menubar: "menuitem",
+};
+
+export const compositeTabStop: Rule = {
+  id: "composite-tab-stop",
+  because:
+    "A roving-tabindex widget whose members are all tabindex=-1 is unreachable " +
+    "by keyboard. It self-heals on hydration, so no jsdom test and no axe run " +
+    "can see it — only the served bytes can.",
+  run: (doc) => {
+    const v: Violation[] = [];
+    for (const [containerRole, itemRole] of Object.entries(COMPOSITE_ROLES)) {
+      for (const el of Array.from(doc.document.querySelectorAll(`[role="${containerRole}"]`))) {
+        // The container owns focus itself; its items are meant to be -1.
+        if (el.hasAttribute("aria-activedescendant")) continue;
+        if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
+        const items = Array.from(el.querySelectorAll(`[role="${itemRole}"]`)).filter(
+          (i) => i.getAttribute("aria-disabled") !== "true" && !i.hasAttribute("disabled"),
+        );
+        if (items.length === 0) continue;
+        const stops = items.filter((i) => i.getAttribute("tabindex") === "0");
+        if (stops.length === 0) {
+          v.push({
+            rule: "composite-tab-stop",
+            path: doc.path,
+            detail: `role="${containerRole}" has ${items.length} enabled ${itemRole}(s) and none is tabbable — the whole widget is unreachable by keyboard in the served bytes`,
+            snippet: el.outerHTML.slice(0, 140),
+          });
+        }
+      }
+    }
+    return v;
+  },
+};
+
+export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop];

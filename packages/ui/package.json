@@ -20,6 +20,9 @@
     "class-variance-authority": "catalog:",
     "lucide-react": "catalog:",
     "recharts": "catalog:",
+    "@tanstack/charts": "catalog:",
+    "@tanstack/react-table": "catalog:",
+    "@tanstack/react-virtual": "catalog:",
     "embla-carousel-react": "catalog:"
   },
   "devDependencies": {
