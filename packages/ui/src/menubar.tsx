@@ -3,10 +3,9 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { Menubar as BaseMenubar } from "@base-ui/react/menubar";
-// TYPE-ONLY. `MenubarButtonProps` keeps React Aria's prop names because the
-// public API may not change. Erased at build; no RAC runtime in this file.
-import type { ButtonProps as AriaButtonProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// `MenubarButtonProps` keeps the prop names the public API froze; the shape is
+// Lumo's own now. See `@lumo-ui/core`'s `props.ts`.
+import { type ButtonPropsBase, cn, type LumoNode } from "@lumo-ui/core";
 
 /**
  * A horizontal row of menus — File/Edit/View in an app chrome. **BASE UI.**
@@ -191,7 +190,7 @@ export function Menubar({ label, className, children, isDisabled }: MenubarProps
   );
 }
 
-export interface MenubarButtonProps extends Omit<AriaButtonProps, "children" | "className"> {
+export interface MenubarButtonProps extends ButtonPropsBase {
   children?: LumoNode;
   className?: string | undefined;
   /**
@@ -232,7 +231,6 @@ export function MenubarButton({
   isPending: _isPending,
   preventFocusOnPress: _preventFocusOnPress,
   excludeFromTabOrder: _excludeFromTabOrder,
-  render: _render,
   slot: _slot,
   style: _style,
   // The composite's roving value, injected by `Menu.Trigger`. Intercepted here

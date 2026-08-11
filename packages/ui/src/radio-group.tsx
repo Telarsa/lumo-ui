@@ -5,11 +5,18 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { Field as BaseField } from "@base-ui/react/field";
 import { Radio as BaseRadio } from "@base-ui/react/radio";
 import { RadioGroup as BaseRadioGroup } from "@base-ui/react/radio-group";
-import type {
-  RadioFieldProps as AriaRadioFieldProps,
-  RadioGroupProps as AriaRadioGroupProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import {
+  type AriaLabelingProps,
+  cn,
+  type DOMProps,
+  type FieldGroupPropsBase,
+  type FocusableProps,
+  type GlobalDOMAttributes,
+  type LumoNode,
+  type PressEvents,
+  type SlotProps,
+  type StyleProps,
+} from "@lumo-ui/core";
 import { useCompositeTabStop, useFieldWiring } from "@lumo-ui/base-ui-ssr";
 import {
   Description,
@@ -126,10 +133,7 @@ export const radioIndicatorVariants = cva(
  * option on an RTL page.
  */
 export interface RadioGroupProps
-  extends Omit<
-      AriaRadioGroupProps,
-      "children" | "className" | "isInvalid" | "orientation"
-    >,
+  extends Omit<FieldGroupPropsBase<string | null, string>, "isInvalid">,
     // `orientation` is taken from the cva rather than from React Aria so the two
     // cannot disagree about the literal union, and — since the engine swap —
     // because it is now a purely visual prop with no keyboard meaning to keep in
@@ -317,7 +321,25 @@ function RadioGroupList({
  * a radio set belongs to the group by construction. So there is still no
  * `errorMessage` here.
  */
-export interface RadioProps extends Omit<AriaRadioFieldProps, "children" | "className"> {
+/** One option's props, minus its children and class. */
+interface RadioFieldPropsBase
+  extends FocusableProps,
+    PressEvents,
+    DOMProps,
+    AriaLabelingProps,
+    SlotProps,
+    StyleProps,
+    // `onClick` is the press API's; see `@lumo-ui/core`'s `ButtonPropsBase`.
+    Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
+  /** The value submitted with form data when this option is chosen. REQUIRED. */
+  value: string;
+  /** Whether this option is disabled. */
+  isDisabled?: boolean;
+  /** A ref for the hidden `<input>` element. */
+  inputRef?: React.RefObject<HTMLInputElement | null>;
+}
+
+export interface RadioProps extends RadioFieldPropsBase {
   children?: LumoNode;
   /** Help text under this option. */
   description?: LumoNode;

@@ -14,17 +14,18 @@
  *   are now `@lumo-ui/base-ui-ssr` — a package with a README, a version it is
  *   verified against, and an upstream issue that would retire each part.
  *
- *   API-SHAPE TRANSLATION — Lumo's public API is `Omit<AriaButtonProps, …>`, so
- *   the library promises `onPress` and a React Aria-shaped `onKeyDown`. Base UI
- *   promises `onClick` and React's own. Something has to sit between them. That
- *   is what remains in this file, and it compensates for LUMO'S FROZEN API, not
- *   for Base UI: a Base UI-native API would delete it outright.
+ *   API-SHAPE TRANSLATION — Lumo's public API promises `onPress` and a
+ *   press-flavoured `onKeyDown`, because that is what it promised when React
+ *   Aria was the engine and the migration froze the API. Base UI promises
+ *   `onClick` and React's own event. Something has to sit between them. That is
+ *   what remains in this file, and it compensates for LUMO'S FROZEN API, not for
+ *   Base UI: a Base UI-native API would delete it outright.
  *
- * The line is not a matter of taste. `@lumo-ui/base-ui-ssr` may depend only on
- * `react`, `@base-ui/react` and `@lumo-ui/core` — the two functions below import
- * types from `react-aria-components`, which is exactly the dependency a
- * republishable Base UI package must not have. The type import is the proof that
- * these two belong on this side of the line.
+ * The line is not a matter of taste. `@lumo-ui/base-ui-ssr` is a package ABOUT
+ * Base UI, versioned against it, and the two functions below are about a shape
+ * Base UI never had. They name a Lumo concept — the frozen press API — which is
+ * why the shapes they translate to now live in `@lumo-ui/core` beside the rest
+ * of Lumo's invariants, and no longer in a third-party type import.
  *
  * No `"use client"`: both functions are pure, so a server module can call them.
  * Same rule `button.variants.ts` states for `cva()`.
@@ -42,14 +43,17 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
 } from "react";
-import type { ButtonProps as AriaButtonProps } from "react-aria-components";
+import type { LumoKeyboardEvent as CoreKeyboardEvent, PressEvent } from "@lumo-ui/core";
 
 /**
- * React Aria's press event, taken from the prop's own signature rather than by
- * importing `@react-types/shared` — which is not a declared dependency of this
- * package and must not become one for an experiment.
+ * The press event Lumo's frozen API hands a caller.
+ *
+ * Re-exported under the name the library already published rather than
+ * renamed: `LumoPressEvent` is in `index.ts` and a consumer may be importing
+ * it. The SHAPE is declared once, in `@lumo-ui/core`'s `props.ts`, so this file
+ * and every component that types `onPress` read the same definition.
  */
-export type LumoPressEvent = Parameters<NonNullable<AriaButtonProps["onPress"]>>[0];
+export type LumoPressEvent = PressEvent;
 
 /**
  * Build a `PressEvent` from a real `click`.
@@ -103,20 +107,21 @@ export function pressFromClick(event: ReactMouseEvent<Element>): LumoPressEvent 
 }
 
 /**
- * React Aria's keyboard event, taken from the prop's signature for the same
- * reason as `LumoPressEvent`.
+ * The keyboard event Lumo's frozen API hands a caller — React's own, plus
+ * `continuePropagation()`. Declared in `@lumo-ui/core` for the same reason as
+ * `LumoPressEvent`.
  */
-export type LumoKeyboardEvent = Parameters<NonNullable<AriaButtonProps["onKeyDown"]>>[0];
+export type LumoKeyboardEvent = CoreKeyboardEvent;
 
 /**
  * Hand a React keyboard event to a React Aria-shaped handler.
  *
  * This one is NOT cosmetic and it is the reason `onKeyDown` had to be
  * translated at all rather than spread through with the other global DOM
- * attributes: React Aria types `onKeyDown` as `BaseEvent<React.KeyboardEvent>`
- * — React's event PLUS `continuePropagation()` and a deprecated
- * `stopPropagation()` — so the two libraries' `onKeyDown` are not the same
- * type and `tsc` refuses the spread. Verified: TS2322 on
+ * attributes: Lumo's `onKeyDown` is React's event PLUS
+ * `continuePropagation()` and a redeclared `stopPropagation()` — the shape
+ * React Aria published and the migration froze — so Lumo's `onKeyDown` and Base
+ * UI's are not the same type and `tsc` refuses the spread. Verified: TS2322 on
  * `Types of property 'onKeyDown' are incompatible`.
  *
  * The event object itself is real and is augmented in place, which is what

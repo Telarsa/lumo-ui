@@ -3,8 +3,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Field } from "@base-ui/react/field";
 import { Switch as BaseSwitch } from "@base-ui/react/switch";
-import type { SwitchFieldProps as AriaSwitchFieldProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, type LumoNode, type ToggleFieldPropsBase } from "@lumo-ui/core";
 import { descriptionVariants, fieldErrorVariants, FOCUS_RING_SELF } from "./form.tsx";
 import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
 
@@ -237,7 +236,7 @@ export type SwitchVariantProps = VariantProps<typeof switchVariants>;
  * with no visible label must pass `aria-label`, and the `named-controls` gate rule
  * is what catches the omission in the prerendered HTML.
  */
-export interface SwitchProps extends Omit<AriaSwitchFieldProps, "children" | "className"> {
+export interface SwitchProps extends ToggleFieldPropsBase {
   children?: LumoNode;
   /**
    * `md` is shadcn's current compact scale; `lg` keeps the row at the 44px
@@ -300,7 +299,6 @@ export function Switch({
   excludeFromTabOrder,
   onFocusChange,
   slot,
-  render,
   style,
   ...rest
 }: SwitchProps) {
@@ -352,7 +350,7 @@ export function Switch({
           {...attr("form", form)}
           {...attr("id", id)}
           {...attr("inputRef", inputRef)}
-          {...attr("style", typeof style === "function" ? undefined : style)}
+          {...attr("style", style)}
           {...(rest as object)}
         >
           <BaseSwitch.Thumb aria-hidden="true" className={switchThumbVariants({ size })} />

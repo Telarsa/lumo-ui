@@ -1,8 +1,10 @@
 "use client";
 
 import { cva } from "class-variance-authority";
-import type { TextFieldProps as AriaTextFieldProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// The prop SHAPE the public API is pinned to — the same surface `TextFieldProps`
+// from `react-aria-components` supplied before the type-only imports were
+// removed, now owned by Lumo. See `@lumo-ui/core`'s `props.ts`.
+import { cn, type LumoNode, type TextFieldPropsBase } from "@lumo-ui/core";
 import { Description, Field, FieldError, FieldInput, Label, optional } from "./form.tsx";
 
 /**
@@ -60,8 +62,7 @@ export const textAreaVariants = cva(
  * them. Passing it to the wrong side is a compile error, which is the outcome
  * worth having.
  */
-export interface TextAreaProps
-  extends Omit<AriaTextFieldProps, "children" | "className" | "isInvalid"> {
+export interface TextAreaProps extends Omit<TextFieldPropsBase, "isInvalid"> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
   description?: LumoNode;

@@ -4,9 +4,22 @@ import type * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { NumberField as BaseNumberField } from "@base-ui/react/number-field";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type { NumberFieldProps as AriaNumberFieldProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+
+import {
+  type AriaLabelingProps,
+  cn,
+  type DOMProps,
+  type FocusableProps,
+  type GlobalDOMAttributes,
+  type InputBase,
+  type InputDOMProps,
+  type LumoNode,
+  type SlotProps,
+  type StyleProps,
+  type TextInputDOMEvents,
+  type Validation,
+  type ValueBase,
+} from "@lumo-ui/core";
 import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
 import { asAriaKeyboardEvent } from "./base-ui-adapter.ts";
 import {
@@ -156,16 +169,39 @@ export const stepperVariants = cva(
  * expected to disagree, which removes the one signal React would have given.
  * See experiments/measurements/rebuild-overlays.json.
  */
+/**
+ * The numeric field's own props, minus its children, class and the two stepper
+ * names — those arrive as REQUIRED `decrementLabel` / `incrementLabel` below,
+ * because an unnamed stepper button is the defect this library exists for.
+ */
+interface NumberFieldPropsBase
+  extends InputBase,
+    Omit<Validation<number>, "isInvalid">,
+    ValueBase<number>,
+    FocusableProps,
+    DOMProps,
+    InputDOMProps,
+    AriaLabelingProps,
+    SlotProps,
+    StyleProps,
+    TextInputDOMEvents<HTMLInputElement>,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** Passed to `Intl.NumberFormat` for the visible value and `aria-valuetext`. */
+  formatOptions?: Intl.NumberFormatOptions;
+  /** The smallest value allowed. */
+  minValue?: number;
+  /** The largest value allowed. */
+  maxValue?: number;
+  /** The amount the value changes with each increment or decrement tick. */
+  step?: number;
+  /** Whether the field ignores the scroll wheel. */
+  isWheelDisabled?: boolean;
+  /** Whether an out-of-range value snaps or is reported invalid. */
+  commitBehavior?: "snap" | "validate";
+}
+
 export interface NumberFieldProps
-  extends Omit<
-      AriaNumberFieldProps,
-      | "children"
-      | "className"
-      | "size"
-      | "isInvalid"
-      | "decrementAriaLabel"
-      | "incrementAriaLabel"
-    >,
+  extends NumberFieldPropsBase,
     VariantProps<typeof numberInputVariants> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
@@ -225,7 +261,6 @@ export function NumberField({
   // Same incompatibility as `onKeyDown`, but nothing in Lumo's API needs to
   // deliver it, so it is dropped rather than translated.
   onKeyUp: _onKeyUp,
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest

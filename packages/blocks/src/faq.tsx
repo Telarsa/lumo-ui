@@ -13,9 +13,12 @@ import {
  *
  * ── NO `"use client"`, WHICH IS NOT OBVIOUS HERE ───────────────────────────
  *
- * `Disclosure` and its friends ARE client components — `react-aria-components`
- * marks itself `client-only`. But this block adds no callback and no state of
- * its own, so it stays a server component that RENDERS client components, and
+ * `Disclosure` and its friends ARE client components — they carry `"use client"`
+ * because `@base-ui/react`'s Accordion holds expansion state. (It was
+ * `react-aria-components` marking itself `client-only` before the migration;
+ * the conclusion is the same and the reason is now Lumo's own directive.) But
+ * this block adds no callback and no state of its own, so it stays a server
+ * component that RENDERS client components, and
  * the answers arrive in the served HTML where a crawler can index them. That
  * distinction is the whole reason rule 1 says "only where genuinely needed":
  * `"use client"` marks a boundary, not a dependency, and putting it on a

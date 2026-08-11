@@ -27,11 +27,11 @@
     "@tanstack/react-table": "catalog:",
     "class-variance-authority": "catalog:",
     "embla-carousel-react": "catalog:",
-    "lucide-react": "catalog:",
-    "react-aria-components": "catalog:"
+    "lucide-react": "catalog:"
   },
   "devDependencies": {
     "@testing-library/react": "catalog:",
+    "react-aria-components": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",

@@ -3,9 +3,7 @@
 import { Children, createContext, isValidElement, useContext } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Toolbar as BaseToolbar } from "@base-ui/react/toolbar";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type { Key } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, type Key, type LumoNode } from "@lumo-ui/core";
 import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 
 /**

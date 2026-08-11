@@ -3,9 +3,14 @@
 import { useMemo } from "react";
 import { cva } from "class-variance-authority";
 import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type { Key } from "react-aria-components";
-import { cn, formatNumber, FORMAT_LOCALE, type Locale, type LumoNode } from "@lumo-ui/core";
+import {
+  cn,
+  formatNumber,
+  FORMAT_LOCALE,
+  type Key,
+  type Locale,
+  type LumoNode,
+} from "@lumo-ui/core";
 import {
   ComboboxWiringProvider,
   useComboboxInputWiring,

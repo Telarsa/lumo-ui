@@ -15,23 +15,40 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
-// TYPE-ONLY, and the runtime import is gone. `TreeProps`/`TreeItemProps` are the
-// frozen public API of this component — every prop name a consumer already
-// writes — so they stay the base of Lumo's interfaces while the ENGINE
-// underneath is Lumo's own. `date-field.tsx` keeps React Aria's
-// `@internationalized/date` value types for the same reason: a migration that
-// also renames props is two changes reviewed as one.
+// `TreeProps`/`TreeItemProps` are the frozen public API of this component —
+// every prop name a consumer already writes — so the SHAPE React Aria published
+// is kept while the ENGINE underneath is Lumo's own. It is declared in
+// `@lumo-ui/core` rather than imported from `react-aria-components`, which is
+// the last thing that made that package a consumer's dependency.
+// `date-field.tsx` keeps `@internationalized/date`'s value types for the
+// related reason: a migration that also renames props is two changes reviewed
+// as one.
 //
-// `Key` and `Selection` come from here rather than from `react` because they are
-// the exact types `onSelectionChange` and `onExpandedChange` hand back, and a
-// structurally-equal copy is a second definition that can drift.
-import type {
-  Key,
-  Selection as AriaSelection,
-  TreeItemProps as AriaTreeItemProps,
-  TreeProps as AriaTreeProps,
-} from "react-aria-components";
-import { cn, direction, type LumoNode } from "@lumo-ui/core";
+// `Key` and `Selection` come from `@lumo-ui/core` rather than from `react`
+// because they are the exact types `onSelectionChange` and `onExpandedChange`
+// hand back, and a structurally-equal copy per component is a second definition
+// that can drift.
+import {
+  type AriaLabelingProps,
+  cn,
+  type CollectionStateBase,
+  direction,
+  type DisabledBehavior,
+  type DOMProps,
+  type Expandable,
+  type HoverEvents,
+  type FocusStrategy,
+  type GlobalDOMAttributes,
+  type Key,
+  type LinkDOMProps,
+  type LumoNode,
+  type MultipleSelection,
+  type PressEvents,
+  type Selection as AriaSelection,
+  type SelectionBehavior,
+  type SlotProps,
+  type StyleProps,
+} from "@lumo-ui/core";
 import { useLumoLocale } from "./locale.ts";
 // No `"use client"` in that module, so the classes, the two verbs and the
 // chevron arithmetic stay callable from a server component. See
@@ -500,8 +517,55 @@ function renderLevel(children: LumoNode, level: number, parentKey: string): Reac
  * TREE
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export interface TreeProps<T extends object>
-  extends Omit<AriaTreeProps<T>, "children" | "className" | "aria-label"> {
+/**
+ * The tree's own props, minus its children, class and `aria-label` — the name
+ * arrives as a REQUIRED `label` below.
+ */
+interface TreePropsBase<T extends object>
+  extends MultipleSelection,
+    Expandable,
+    CollectionStateBase<T>,
+    DOMProps,
+    Omit<AriaLabelingProps, "aria-label">,
+    SlotProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** Whether a row receives focus on mount, and from which end. */
+  autoFocus?: boolean | FocusStrategy;
+  /** Handler that is called when a row is activated. */
+  onAction?: (key: Key) => void;
+  /*
+   * `dragAndDropHooks` is GONE from this shape and is the one prop the type-only
+   * cleanup could not carry across. It was `DragAndDropHooks<T>` — the object
+   * `react-aria-components`' `useDragAndDrop()` RETURNS, i.e. a runtime value of
+   * a library this file no longer imports. There is nothing to produce one, so
+   * a caller could not have satisfied the type anyway; declaring it would have
+   * meant either keeping the dependency or inventing a shape nothing builds.
+   * Recorded in "WHAT WAS LOST" rather than faked.
+   */
+  /** How selection responds to a plain click. */
+  selectionBehavior?: SelectionBehavior;
+  /** Whether selection happens on press-up rather than press-down. */
+  shouldSelectOnPressUp?: boolean;
+  /** What Escape does inside the tree. */
+  escapeKeyBehavior?: "clearSelection" | "none";
+  /** Whether arrow keys or Tab move between rows. */
+  keyboardNavigationBehavior?: "arrow" | "tab";
+  /** Whether a disabled row is merely unselectable, or wholly inert. */
+  disabledBehavior?: DisabledBehavior;
+  /**
+   * What to draw when the tree has no rows.
+   *
+   * ACCEPTED AND UNREACHABLE — this engine has no collection layer, so it never
+   * calls the function. The argument is narrowed to the two flags a caller
+   * could have read here; React Aria also handed over its own `TreeState`
+   * object, which does not exist any more and could not be typed honestly.
+   * Recorded in the header's "WHAT WAS LOST" list.
+   */
+  renderEmptyState?: (props: { isFocused: boolean; isFocusVisible: boolean }) => LumoNode;
+}
+
+export interface TreeProps<T extends object> extends TreePropsBase<T> {
   /**
    * Announced name of the tree, e.g. «پرونده‌های پروژه».
    *
@@ -752,8 +816,38 @@ export function Tree<T extends object>({ label, className, children, ...props }:
  * TREE ITEM
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export interface TreeItemProps<T extends object = object>
-  extends Omit<AriaTreeItemProps<T>, "children" | "className" | "title"> {
+/**
+ * One row's props, minus its children, class and `title`.
+ *
+ * `textValue` is REQUIRED here and optional on `TreeItemProps` below only in
+ * the sense that the interface restates it — see the doc on it there.
+ */
+interface TreeItemPropsBase<T extends object>
+  extends LinkDOMProps,
+    HoverEvents,
+    PressEvents,
+    StyleProps,
+    // `onClick` is the press API's; see `@lumo-ui/core`'s `ButtonPropsBase`.
+    Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
+  /** The row's collection key. */
+  id?: Key;
+  /** The item object this row was rendered from. */
+  value?: T;
+  /** The row's accessible name, when `title` is not a plain string. */
+  "aria-label"?: string;
+  /** Whether this row is disabled. */
+  isDisabled?: boolean;
+  /** Handler that is called when the row is activated. */
+  onAction?: () => void;
+  /** Whether the row has children even before they are rendered. */
+  hasChildItems?: boolean;
+  /** Whether focus lands on the row or on a child of it. */
+  focusMode?: "child" | "row";
+  /** Whether arrow keys navigate within the row. */
+  allowsArrowNavigation?: boolean;
+}
+
+export interface TreeItemProps<T extends object = object> extends TreeItemPropsBase<T> {
   /**
    * The row's announced name AND its typeahead key. Kept required rather than
    * derived from `title`, because `title` may be an element and a name may not.

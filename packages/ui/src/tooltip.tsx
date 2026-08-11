@@ -3,12 +3,16 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { Tooltip as BaseTooltip } from "@base-ui/react/tooltip";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type {
-  TooltipProps as AriaTooltipProps,
-  TooltipTriggerComponentProps as AriaTooltipTriggerProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+
+import {
+  type AriaLabelingProps,
+  cn,
+  type GlobalDOMAttributes,
+  type LumoNode,
+  type OverlayTriggerProps,
+  type PositionProps,
+  type StyleProps,
+} from "@lumo-ui/core";
 import { attr, useOpenMirror } from "@lumo-ui/base-ui-ssr";
 import { PLACEMENT, type LumoPlacement } from "./popover.tsx";
 
@@ -128,7 +132,21 @@ export const tooltipVariants = cva(
  * reason `DialogTrigger` and `PopoverTrigger` do it: React Aria wired the
  * trigger implicitly through context, Base UI needs a literal trigger element.
  */
-export interface TooltipTriggerProps extends Omit<AriaTooltipTriggerProps, "children"> {
+/** The trigger's own props, minus its children. */
+interface TooltipTriggerPropsBase extends OverlayTriggerProps {
+  /** Whether the tooltip is disabled entirely. */
+  isDisabled?: boolean;
+  /** What opens the tooltip. */
+  trigger?: "hover" | "focus";
+  /** The delay before the tooltip opens, in milliseconds. */
+  delay?: number;
+  /** The delay before the tooltip closes, in milliseconds. */
+  closeDelay?: number;
+  /** Whether pressing the trigger closes the tooltip. */
+  shouldCloseOnPress?: boolean;
+}
+
+export interface TooltipTriggerProps extends TooltipTriggerPropsBase {
   /** The trigger control, then the `<Tooltip>`. In that order. */
   children: LumoNode;
 }
@@ -172,8 +190,29 @@ export function TooltipTrigger({
   );
 }
 
-export interface TooltipProps
-  extends Omit<AriaTooltipProps, "children" | "className" | "placement"> {
+/**
+ * The tooltip surface's own props, minus its children, class and `placement` —
+ * the last is redeclared below as the logical-only `LumoPlacement`.
+ */
+interface TooltipPropsBase
+  extends Omit<PositionProps, "placement">,
+    OverlayTriggerProps,
+    AriaLabelingProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** A ref to the element the tooltip is positioned against. */
+  triggerRef?: React.RefObject<Element | null>;
+  /** Offset applied to the arrow's own boundary. */
+  arrowBoundaryOffset?: number;
+  /** Whether the tooltip is currently performing an entry animation. */
+  isEntering?: boolean;
+  /** Whether the tooltip is currently performing an exit animation. */
+  isExiting?: boolean;
+  /** The container the tooltip portals into. */
+  UNSTABLE_portalContainer?: Element;
+}
+
+export interface TooltipProps extends TooltipPropsBase {
   /** Logical only — see `LumoPlacement` in popover.tsx. */
   placement?: LumoPlacement;
   children?: LumoNode;
@@ -197,7 +236,6 @@ export function Tooltip({
   containerPadding: _containerPadding,
   arrowBoundaryOffset: _arrowBoundaryOffset,
   UNSTABLE_portalContainer: _portalContainer,
-  render: _render,
   style: _style,
   ...rest
 }: TooltipProps) {

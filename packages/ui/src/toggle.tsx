@@ -2,8 +2,19 @@
 
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
 import { Toggle as BaseToggle } from "@base-ui/react/toggle";
-import type { ToggleButtonProps as AriaToggleButtonProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import {
+  type AriaLabelingProps,
+  type ButtonAriaProps,
+  cn,
+  type FocusableProps,
+  type GlobalDOMAttributes,
+  type HoverEvents,
+  type Key,
+  type LumoNode,
+  type PressEvents,
+  type SlotProps,
+  type StyleProps,
+} from "@lumo-ui/core";
 // No `"use client"` in that module, so a SERVER component can call the variants
 // — the split button.variants.ts's header argues for.
 import { toggleVariants, type ToggleVariantProps } from "./toggle.variants.ts";
@@ -109,8 +120,50 @@ export type { ToggleVariantProps };
  * toggle — which is exactly what `theme-toggle.tsx` is.
  */
 
+/**
+ * A two-state button's prop surface, minus its children and class.
+ *
+ * Deliberately NOT `ButtonPropsBase`: a toggle has no `type`/`name`/`form`
+ * submit behaviour and no `isPending`, and it HAS `isSelected` / `onChange`,
+ * which a plain button does not. Sharing one shape between them would hand each
+ * the other's props. This is the same split React Aria drew, kept.
+ */
+interface ToggleButtonPropsBase
+  extends FocusableProps,
+    PressEvents,
+    HoverEvents,
+    AriaLabelingProps,
+    Omit<ButtonAriaProps, "aria-current">,
+    SlotProps,
+    StyleProps,
+    // `onClick` is the press API's; see `ButtonPropsBase`.
+    Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
+  /**
+   * The toggle's collection key, not a DOM id — `toggle-group.tsx` addresses
+   * it. A `Key` rather than `FocusableDOMProps`'s `string`, which is why this
+   * shape does not extend that interface.
+   */
+  id?: Key;
+  /**
+   * Whether to exclude the toggle from the sequential tab order.
+   *
+   * ACCEPTED AND UNREACHABLE; `tabIndex={-1}` is what this ever meant.
+   */
+  excludeFromTabOrder?: boolean;
+  /** Whether the toggle is disabled. */
+  isDisabled?: boolean;
+  /** Whether the toggle is on (controlled). */
+  isSelected?: boolean;
+  /** Whether the toggle is on by default (uncontrolled). */
+  defaultSelected?: boolean;
+  /** Handler that is called when the toggle's state changes. */
+  onChange?: (isSelected: boolean) => void;
+  /** Whether to prevent focus from moving to the toggle on press. */
+  preventFocusOnPress?: boolean;
+}
+
 export interface ToggleProps
-  extends Omit<AriaToggleButtonProps, "children" | "className">,
+  extends ToggleButtonPropsBase,
     Omit<ToggleVariantProps, "iconOnly"> {
   children?: LumoNode;
   className?: string | undefined;
@@ -145,7 +198,6 @@ function toBaseToggleProps({
    */
   id,
   slot,
-  render,
   style,
   // — accepted by the API, unreachable in Base UI. See button.tsx's header. —
   preventFocusOnPress,
@@ -166,7 +218,7 @@ function toBaseToggleProps({
     disabled: isDisabled ?? false,
     ...attr("id", id === undefined ? undefined : String(id)),
     ...attr("tabIndex", excludeFromTabOrder === true ? -1 : undefined),
-    ...attr("style", typeof style === "function" ? undefined : style),
+    ...attr("style", style),
     ...attr("slot", slot ?? undefined),
     ...attr(
       "onClick",

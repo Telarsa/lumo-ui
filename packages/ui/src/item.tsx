@@ -2,9 +2,9 @@
 
 import type { AnchorHTMLAttributes, HTMLAttributes, MouseEvent as ReactMouseEvent } from "react";
 import { Button as BaseButton } from "@base-ui/react/button";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type { ButtonProps as AriaButtonProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// `onPress` hands back a `PressEvent`, the shape the frozen public API promises
+// and `base-ui-adapter.ts` builds from a real click.
+import { cn, type LumoNode, type PressEvent } from "@lumo-ui/core";
 import { pressFromClick } from "./base-ui-adapter.ts";
 import { Separator, type SeparatorProps } from "./separator.tsx";
 // Class definitions live in item.variants.ts with no "use client", so a
@@ -110,7 +110,7 @@ export interface ItemButtonProps
     Omit<HTMLAttributes<HTMLButtonElement>, "children" | "className" | "onClick"> {
   href?: undefined;
   /** Renders the row as a button. Required — a handler-less button is a static row. */
-  onPress: NonNullable<AriaButtonProps["onPress"]>;
+  onPress: (e: PressEvent) => void;
 }
 
 export interface ItemStaticProps

@@ -4,9 +4,7 @@ import { useId, useMemo } from "react";
 import { cva } from "class-variance-authority";
 import { CheckIcon, SearchIcon } from "lucide-react";
 import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type { Key } from "react-aria-components";
-import { cn, FORMAT_LOCALE, type LumoNode } from "@lumo-ui/core";
+import { cn, FORMAT_LOCALE, type Key, type LumoNode } from "@lumo-ui/core";
 import { foldPersian } from "./autocomplete.tsx";
 import {
   ComboboxWiringProvider,

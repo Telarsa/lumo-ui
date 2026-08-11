@@ -3,14 +3,22 @@
 import { Children, createContext, isValidElement, useContext, useId } from "react";
 import { cva } from "class-variance-authority";
 import { Tabs as BaseTabs } from "@base-ui/react/tabs";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type {
-  TabListProps as AriaTabListProps,
-  TabPanelProps as AriaTabPanelProps,
-  TabProps as AriaTabProps,
-  TabsProps as AriaTabsProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import {
+  type AriaLabelingProps,
+  cn,
+  type CollectionStateBase,
+  type DOMProps,
+  type FocusEvents,
+  type GlobalDOMAttributes,
+  type HoverEvents,
+  type Key,
+  type LinkDOMProps,
+  type LumoNode,
+  type Orientation,
+  type PressEvents,
+  type SlotProps,
+  type StyleProps,
+} from "@lumo-ui/core";
 import { attr, useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 
 /**
@@ -124,7 +132,30 @@ export const tabVariants = cva(
 
 export const tabPanelVariants = cva("flex-1 outline-none");
 
-export interface TabsProps extends Omit<AriaTabsProps, "children" | "className"> {
+/** The tab set's own props, minus its children and class. */
+interface TabsPropsBase
+  extends DOMProps,
+    AriaLabelingProps,
+    SlotProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** Whether the whole tab set is disabled. */
+  isDisabled?: boolean;
+  /** The selected tab's key (controlled). */
+  selectedKey?: Key;
+  /** The selected tab's key (uncontrolled). */
+  defaultSelectedKey?: Key;
+  /** Handler that is called when the selected tab changes. */
+  onSelectionChange?: (key: Key) => void;
+  /** Whether arrowing to a tab selects it, or only moves focus. */
+  keyboardActivation?: "automatic" | "manual";
+  /** The tab set's layout axis. */
+  orientation?: Orientation;
+  /** The keys of the tabs that cannot be selected. */
+  disabledKeys?: Iterable<Key>;
+}
+
+export interface TabsProps extends TabsPropsBase {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -273,7 +304,6 @@ export function Tabs({
   isDisabled: _isDisabled,
   keyboardActivation: _keyboardActivation,
   disabledKeys: _disabledKeys,
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest
@@ -325,8 +355,17 @@ export function Tabs({
  * has no collection-render form, so the `(item: T) => LumoNode` child shape is
  * accepted by the type and never invoked. Recorded as a gap.
  */
-export interface TabListProps<T extends object>
-  extends Omit<AriaTabListProps<T>, "children" | "className" | "aria-label"> {
+/**
+ * The tab list's own props, minus its children, class and `aria-label` — the
+ * name arrives as a REQUIRED `label` below.
+ */
+interface TabListPropsBase<T extends object>
+  extends CollectionStateBase<T>,
+    Omit<AriaLabelingProps, "aria-label">,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {}
+
+export interface TabListProps<T extends object> extends TabListPropsBase<T> {
   /** Announced name of the tab list. Required. */
   label: string;
   children?: LumoNode | ((item: T) => LumoNode);
@@ -339,7 +378,6 @@ export function TabList<T extends object>({
   // — accepted by the API, unreachable in Base UI: no collection layer —
   items: _items,
   dependencies: _dependencies,
-  render: _render,
   style: _style,
   ...rest
 }: TabListProps<T>) {
@@ -352,7 +390,23 @@ export function TabList<T extends object>({
   );
 }
 
-export interface TabProps extends Omit<AriaTabProps, "children" | "className"> {
+/** One tab's props, minus its children and class. */
+interface TabPropsBase
+  extends FocusEvents,
+    HoverEvents,
+    PressEvents,
+    LinkDOMProps,
+    AriaLabelingProps,
+    StyleProps,
+    // `onClick` is the press API's; see `@lumo-ui/core`'s `ButtonPropsBase`.
+    Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
+  /** The tab's collection key, which its panel is matched to. */
+  id?: Key;
+  /** Whether this tab is disabled. */
+  isDisabled?: boolean;
+}
+
+export interface TabProps extends TabPropsBase {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -383,7 +437,6 @@ export function Tab({
   onHoverEnd: _onHoverEnd,
   onHoverChange: _onHoverChange,
   onFocusChange: _onFocusChange,
-  render: _render,
   style: _style,
   ...rest
 }: TabProps) {
@@ -437,7 +490,18 @@ export function Tab({
   return <BaseTabs.Tab {...tabProps} />;
 }
 
-export interface TabPanelProps extends Omit<AriaTabPanelProps, "children" | "className"> {
+/** One panel's props, minus its children and class. */
+interface TabPanelPropsBase
+  extends AriaLabelingProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** The panel's collection key, matched to its tab. */
+  id?: Key;
+  /** Whether the panel renders while hidden rather than not at all. */
+  shouldForceMount?: boolean;
+}
+
+export interface TabPanelProps extends TabPanelPropsBase {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -447,7 +511,6 @@ export function TabPanel({
   // — translated onto Tabs.Panel —
   id,
   shouldForceMount,
-  render: _render,
   style: _style,
   ...rest
 }: TabPanelProps) {

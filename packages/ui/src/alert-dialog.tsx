@@ -2,11 +2,10 @@
 
 import { useId } from "react";
 import { AlertDialog as BaseAlertDialog } from "@base-ui/react/alert-dialog";
-// TYPE-ONLY, and the same rule dialog.tsx states: the public API may not change,
-// so the accepted prop names stay React Aria's even though the engine
-// underneath is Base UI. Erased at build; no RAC runtime reaches this file.
-import type { DialogProps as AriaDialogProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+
+// The prop SHAPE the public API is pinned to. `role` is fixed to
+// `alertdialog` by this component, so it is subtracted here.
+import { cn, type DialogPropsBase, type LumoNode } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
 import { DialogHeading, dialogVariants } from "./dialog.tsx";
 
@@ -142,8 +141,7 @@ export { alertDialogFooterVariants };
 
 export type AlertDialogTone = "accent" | "critical";
 
-export interface AlertDialogProps
-  extends Omit<AriaDialogProps, "children" | "className" | "role"> {
+export interface AlertDialogProps extends Omit<DialogPropsBase, "role"> {
   /** Announced name of the dialog. Required: an unnamed interruption is noise. */
   title: string;
   /** The confirming verb — «حذف», not «بله». Required. */

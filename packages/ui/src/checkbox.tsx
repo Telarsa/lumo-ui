@@ -5,11 +5,12 @@ import { CheckIcon, MinusIcon } from "lucide-react";
 import { Checkbox as BaseCheckbox } from "@base-ui/react/checkbox";
 import { CheckboxGroup as BaseCheckboxGroup } from "@base-ui/react/checkbox-group";
 import { Field } from "@base-ui/react/field";
-import type {
-  CheckboxFieldProps as AriaCheckboxFieldProps,
-  CheckboxGroupProps as AriaCheckboxGroupProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import {
+  cn,
+  type FieldGroupPropsBase,
+  type LumoNode,
+  type ToggleFieldPropsBase,
+} from "@lumo-ui/core";
 import {
   descriptionVariants,
   fieldErrorVariants,
@@ -135,8 +136,12 @@ export const checkboxIndicatorVariants = cva(
  * prerendered HTML. That is the tier the project already relies on for exactly
  * this class of defect, and it is engine-independent.
  */
-export interface CheckboxProps
-  extends Omit<AriaCheckboxFieldProps, "children" | "className"> {
+export interface CheckboxProps extends ToggleFieldPropsBase {
+  /**
+   * Whether the checkbox is in a mixed state. The one field a switch does not
+   * have, which is why it is declared here and not on `ToggleFieldPropsBase`.
+   */
+  isIndeterminate?: boolean;
   children?: LumoNode;
   /** Help text under the checkbox. */
   description?: LumoNode;
@@ -178,7 +183,6 @@ export function Checkbox({
   excludeFromTabOrder,
   onFocusChange,
   slot,
-  render,
   style,
   ...rest
 }: CheckboxProps) {
@@ -218,7 +222,7 @@ export function Checkbox({
           {...attr("form", form)}
           {...attr("id", id)}
           {...attr("inputRef", inputRef)}
-          {...attr("style", typeof style === "function" ? undefined : style)}
+          {...attr("style", style)}
           {...(rest as object)}
         >
           {/*
@@ -279,7 +283,7 @@ export function Checkbox({
  * read-only concept, and neither does `Field.Root`. Recorded as a capability gap.
  */
 export interface CheckboxGroupProps
-  extends Omit<AriaCheckboxGroupProps, "children" | "className" | "isInvalid"> {
+  extends Omit<FieldGroupPropsBase<string[]>, "isInvalid"> {
   /** Announced and displayed name for the whole group. Required. */
   label: string;
   children?: LumoNode;
@@ -311,7 +315,6 @@ export function CheckboxGroup({
   isRequired,
   validationBehavior,
   slot,
-  render,
   style,
   ...rest
 }: CheckboxGroupProps) {
@@ -363,7 +366,7 @@ export function CheckboxGroup({
         {...attr("value", value)}
         {...attr("defaultValue", defaultValue)}
         {...attr("onValueChange", onChange)}
-        {...attr("style", typeof style === "function" ? undefined : style)}
+        {...attr("style", style)}
         {...(rest as object)}
       >
         {children}

@@ -3,8 +3,7 @@
 import { useRef, type KeyboardEvent } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { SearchIcon, XIcon } from "lucide-react";
-import type { SearchFieldProps as AriaSearchFieldProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, type LumoNode, type TextFieldPropsBase } from "@lumo-ui/core";
 import { IconButton } from "./button.tsx";
 import { Description, Field, FieldError, FieldInput, Label, optional } from "./form.tsx";
 
@@ -101,8 +100,20 @@ export const searchInputVariants = cva(
  * when the caller passes no `placeholder`. A control that works only when an
  * unrelated optional prop is set is worse than a documented gap.
  */
+/**
+ * A search field is a text field plus two events the text field has no notion
+ * of. Stated here rather than in `@lumo-ui/core` because they are this
+ * component's, and only this component's.
+ */
+interface SearchFieldPropsBase extends Omit<TextFieldPropsBase, "isInvalid"> {
+  /** Handler that is called when the Enter key is pressed. */
+  onSubmit?: (value: string) => void;
+  /** Handler that is called when the clear button is pressed. */
+  onClear?: () => void;
+}
+
 export interface SearchFieldProps
-  extends Omit<AriaSearchFieldProps, "children" | "className" | "isInvalid">,
+  extends SearchFieldPropsBase,
     VariantProps<typeof searchInputVariants> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;

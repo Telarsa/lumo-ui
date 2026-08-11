@@ -16,13 +16,16 @@ import {
 } from "react";
 import { cva } from "class-variance-authority";
 import { Check } from "lucide-react";
-import type {
-  Key,
-  Selection,
-  ListBoxItemProps as AriaListBoxItemProps,
-  ListBoxProps as AriaListBoxProps,
-} from "react-aria-components";
-import { cn, direction, FORMAT_LOCALE, type LumoNode } from "@lumo-ui/core";
+import {
+  cn,
+  direction,
+  FORMAT_LOCALE,
+  type Key,
+  type LumoNode,
+  type Orientation,
+  type Selection,
+  type SelectionMode,
+} from "@lumo-ui/core";
 import { foldPersian } from "./autocomplete.tsx";
 import { useLumoLocale } from "./locale.ts";
 import { optional } from "./form.tsx";
@@ -273,30 +276,42 @@ function startsWithFolded(text: string, query: string, collator: Intl.Collator):
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * `Pick` rather than `Omit`, and that is the whole statement of what survived.
+ * AN ALLOW-LIST, NOT A SUBTRACTION, and that is the whole statement of what
+ * survived.
  *
- * Every prop below keeps React Aria's own declared type — the names, the
- * `'all' | Iterable<Key>` shapes, the `Selection` handed to `onSelectionChange`
- * — through a TYPE-ONLY import, which is this branch's established pattern for a
- * frozen public API. Everything React Aria declared and this file does not
- * implement is therefore absent from the type, so passing it is a compile error
- * naming the call site. See the header for the list and the argument.
+ * This was `Pick<AriaListBoxProps<T>, …>` from `react-aria-components` and is
+ * now the picked members written out, because the type import was the last
+ * thing making that package a dependency of anyone who copies this file. Every
+ * prop keeps the declared type it had — the names, the `'all' | Iterable<Key>`
+ * shapes, the `Selection` handed to `onSelectionChange`.
+ *
+ * What matters is what is ABSENT: everything React Aria declared and this file
+ * does not implement, so passing it is a compile error naming the call site.
+ * See the header for the list and the argument.
  */
-export interface ListBoxProps<T extends object>
-  extends Pick<
-    AriaListBoxProps<T>,
-    | "id"
-    | "items"
-    | "selectionMode"
-    | "selectedKeys"
-    | "defaultSelectedKeys"
-    | "onSelectionChange"
-    | "disallowEmptySelection"
-    | "disabledKeys"
-    | "onAction"
-    | "orientation"
-    | "shouldFocusWrap"
-  > {
+export interface ListBoxProps<T extends object> {
+  /** The list's DOM id. */
+  id?: string;
+  /** Item objects for the collection render form. */
+  items?: Iterable<T>;
+  /** How many options may be selected at once. */
+  selectionMode?: SelectionMode;
+  /** The selected keys (controlled). */
+  selectedKeys?: "all" | Iterable<Key>;
+  /** The selected keys (uncontrolled). */
+  defaultSelectedKeys?: "all" | Iterable<Key>;
+  /** Handler that is called when the selection changes. */
+  onSelectionChange?: (keys: Selection) => void;
+  /** Whether the list refuses to end up with nothing selected. */
+  disallowEmptySelection?: boolean;
+  /** The keys that cannot be selected. */
+  disabledKeys?: Iterable<Key>;
+  /** Handler that is called when an option is activated. */
+  onAction?: (key: Key) => void;
+  /** The list's layout axis. */
+  orientation?: Orientation;
+  /** Whether keyboard navigation wraps at the ends. */
+  shouldFocusWrap?: boolean;
   /** Announced name of the list. Required. */
   label: string;
   /** Options: static children, or a render function over `items`. */
@@ -692,11 +707,19 @@ export function ListBox<T extends object>({
  * derivation is what keeps typeahead working for an option whose children are
  * an icon and a label rather than a bare string.
  */
-export interface ListBoxItemProps<T extends object = object>
-  extends Pick<
-    AriaListBoxItemProps<T>,
-    "id" | "value" | "textValue" | "isDisabled" | "aria-label" | "onAction"
-  > {
+export interface ListBoxItemProps<T extends object = object> {
+  /** The option's collection key. */
+  id?: Key;
+  /** The item object this option was rendered from. */
+  value?: T;
+  /** The option's typeahead text, when its children are not a bare string. */
+  textValue?: string;
+  /** Whether this option is disabled. */
+  isDisabled?: boolean;
+  /** The option's accessible name, when its children are not one. */
+  "aria-label"?: string;
+  /** Handler that is called when this option is activated. */
+  onAction?: () => void;
   children?: LumoNode;
   className?: string | undefined;
 }

@@ -4,15 +4,16 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
-// TYPE-ONLY. The public API may not change, so the prop names stay React Aria's
-// even though the engine underneath is Base UI. Erased at build; no RAC runtime.
-import type {
-  DialogProps as AriaDialogProps,
-  DialogTriggerProps as AriaDialogTriggerProps,
-  HeadingProps as AriaHeadingProps,
-  ModalOverlayProps as AriaModalOverlayProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// The prop SHAPES the public API is pinned to. They were
+// `react-aria-components` type imports until those were removed; the surface is
+// unchanged and now owned by Lumo. See `@lumo-ui/core`'s `props.ts`.
+import {
+  cn,
+  type DialogPropsBase,
+  type LumoNode,
+  type ModalOverlayPropsBase,
+  type OverlayTriggerProps,
+} from "@lumo-ui/core";
 import { attr, findChildProp } from "@lumo-ui/base-ui-ssr";
 import { IconButton } from "./button.tsx";
 
@@ -191,7 +192,7 @@ export const dialogVariants = cva(
  * needs a literal trigger element. See popover.tsx's `splitTrigger` for the same
  * problem stated at length.
  */
-export interface DialogTriggerProps extends Omit<AriaDialogTriggerProps, "children"> {
+export interface DialogTriggerProps extends OverlayTriggerProps {
   /** The trigger control, then the overlay. In that order. */
   children: LumoNode;
 }
@@ -235,8 +236,7 @@ export function DialogTrigger({
  *
  * `isKeyboardDismissDisabled` remains INERT: Base UI has no counterpart.
  */
-export interface DialogOverlayProps
-  extends Omit<AriaModalOverlayProps, "children" | "className"> {
+export interface DialogOverlayProps extends ModalOverlayPropsBase {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -254,7 +254,6 @@ export function DialogOverlay({
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
   UNSTABLE_portalContainer: _portalContainer,
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest
@@ -280,7 +279,7 @@ export function DialogOverlay({
  * change rather than a restyle.
  */
 export interface DialogModalProps
-  extends Omit<AriaModalOverlayProps, "children" | "className">,
+  extends ModalOverlayPropsBase,
     VariantProps<typeof dialogModalVariants> {
   children?: LumoNode;
   className?: string | undefined;
@@ -332,7 +331,6 @@ export function DialogModal({
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
   UNSTABLE_portalContainer: _portalContainer,
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest
@@ -367,7 +365,7 @@ export function DialogModal({
  * `onClick` survives that boundary is measured rather than assumed — see
  * experiments/measurements/rebuild-overlays.json.
  */
-export interface DialogProps extends Omit<AriaDialogProps, "children" | "className"> {
+export interface DialogProps extends DialogPropsBase {
   /** Announced name of the ✕ button. Required: an icon is not a name. */
   closeLabel: string;
   children?: LumoNode;
@@ -439,8 +437,14 @@ export function Dialog({
  * `pe-8` reserves the trailing gutter for the ✕. Logical, so the reserved space
  * moves to the left edge in Persian along with the button.
  */
+/**
+ * The heading is a plain `<h*>`: React Aria's `HeadingProps` were React's own
+ * `HTMLAttributes` plus a `level`, so this says that directly.
+ */
 export interface DialogHeadingProps
-  extends Omit<AriaHeadingProps, "children" | "className"> {
+  extends Omit<React.HTMLAttributes<HTMLElement>, "children" | "className"> {
+  /** The heading level. Defaults to 2. */
+  level?: number;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -448,7 +452,6 @@ export interface DialogHeadingProps
 export function DialogHeading({
   level: _level = 2,
   className,
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest

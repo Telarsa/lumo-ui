@@ -3,10 +3,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { ToggleGroup as BaseToggleGroup } from "@base-ui/react/toggle-group";
 import { Toggle as BaseToggle } from "@base-ui/react/toggle";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type { Key } from "react-aria-components";
 import { Children, createContext, isValidElement, useContext } from "react";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, type Key, type LumoNode } from "@lumo-ui/core";
 import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 
 /**

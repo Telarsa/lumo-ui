@@ -10,17 +10,20 @@ import { cva } from "class-variance-authority";
 import { Field as BaseField } from "@base-ui/react/field";
 import { Input as BaseInput } from "@base-ui/react/input";
 import { Form as BaseForm } from "@base-ui/react/form";
-// TYPE-ONLY. The three RUNTIME imports this file used to carry — `FieldError`,
-// `Label` and `Text` — are gone; see "THE REACT ARIA FALLBACK, AND WHAT
-// REPLACED IT" below. The prop TYPES stay React Aria's because the public API
-// may not change, and a type import is erased at build, so nothing of
-// react-aria-components reaches a consumer's bundle through this file.
-import type {
-  FieldErrorProps as AriaFieldErrorProps,
-  LabelProps as AriaLabelProps,
-  TextProps as AriaTextProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// The three RUNTIME `react-aria-components` imports this file used to carry —
+// `FieldError`, `Label` and `Text` — are gone; see "THE REACT ARIA FALLBACK,
+// AND WHAT REPLACED IT" below. The three PROP TYPES that outlasted them are
+// gone too: `Label`, `Text` and `FieldError` were thin wrappers over React's
+// own `LabelHTMLAttributes` / `HTMLAttributes`, so the shapes below say that
+// directly instead of routing through a package this file no longer uses.
+import type { HTMLAttributes, LabelHTMLAttributes } from "react";
+import {
+  cn,
+  type DOMProps,
+  type GlobalDOMAttributes,
+  type LumoNode,
+  type StyleProps,
+} from "@lumo-ui/core";
 import { useFieldWiring, type FieldWiring, type FieldWiringMode } from "@lumo-ui/base-ui-ssr";
 
 /**
@@ -435,7 +438,10 @@ export function Form({ className, validationBehavior = "aria", ...props }: FormP
  * header for why it cannot be a Base UI part there, and which one component
  * that branch is for.
  */
-export interface LabelProps extends Omit<AriaLabelProps, "children" | "render"> {
+export interface LabelProps
+  extends Omit<LabelHTMLAttributes<HTMLLabelElement>, "children" | "className"> {
+  /** The element type to render. */
+  elementType?: string;
   children?: LumoNode;
   className?: string | undefined;
   /**
@@ -499,7 +505,10 @@ export function Label({ className, nativeLabel, ...props }: LabelProps) {
  * accessible-name rule grades names; the loss is real all the same (WCAG 1.3.1
  * / 4.1.2) and it is the half nobody was counting.
  */
-export interface DescriptionProps extends Omit<AriaTextProps, "children"> {
+export interface DescriptionProps
+  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className"> {
+  /** The element type to render. */
+  elementType?: string;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -544,7 +553,14 @@ export function Description({ className, ...props }: DescriptionProps) {
  * every field is a visible layout shift rather than a no-op.
  */
 export interface FieldErrorProps
-  extends Omit<AriaFieldErrorProps, "children" | "className"> {
+  extends DOMProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /**
+   * The element type to render. Defaults to `'span'`; set `'div'` for
+   * block-level children.
+   */
+  elementType?: string;
   children?: LumoNode;
   className?: string | undefined;
 }

@@ -3,10 +3,8 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
-// TYPE-ONLY. The public API may not change, so the prop names stay React Aria's.
-// Erased at build; no RAC runtime in this file.
-import type { ModalOverlayProps as AriaModalOverlayProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+
+import { cn, type LumoNode, type ModalOverlayPropsBase } from "@lumo-ui/core";
 
 /**
  * A modal that slides in from an INLINE edge. **BASE UI ENGINE.**
@@ -184,8 +182,7 @@ export const drawerVariants = cva(
   },
 );
 
-export interface DrawerOverlayProps
-  extends Omit<AriaModalOverlayProps, "children" | "className"> {
+export interface DrawerOverlayProps extends ModalOverlayPropsBase {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -214,7 +211,6 @@ export function DrawerOverlay({
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
   UNSTABLE_portalContainer: _portalContainer,
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest
@@ -231,7 +227,7 @@ export function DrawerOverlay({
 }
 
 export interface DrawerProps
-  extends Omit<AriaModalOverlayProps, "children" | "className">,
+  extends ModalOverlayPropsBase,
     VariantProps<typeof drawerVariants> {
   children?: LumoNode;
   className?: string | undefined;
@@ -263,7 +259,6 @@ export function Drawer({
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
   UNSTABLE_portalContainer: _portalContainer,
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest

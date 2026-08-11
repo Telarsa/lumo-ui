@@ -4,15 +4,20 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { ChevronDown } from "lucide-react";
 import { Accordion as BaseAccordion } from "@base-ui/react/accordion";
-// TYPE-ONLY. The public API may not change, so the prop names stay React Aria's.
-// Erased at build; no RAC runtime in this file.
-import type {
-  ButtonProps as AriaButtonProps,
-  DisclosureGroupProps as AriaDisclosureGroupProps,
-  DisclosurePanelProps as AriaDisclosurePanelProps,
-  DisclosureProps as AriaDisclosureProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// The prop SHAPES the public API is pinned to. They were `react-aria-components`
+// type imports until those were removed; the surface is unchanged and now owned
+// by Lumo. See `@lumo-ui/core`'s `props.ts`.
+import {
+  type AriaLabelingProps,
+  type ButtonPropsBase,
+  cn,
+  type DOMProps,
+  type GlobalDOMAttributes,
+  type Key,
+  type LumoNode,
+  type SlotProps,
+  type StyleProps,
+} from "@lumo-ui/core";
 import { attr } from "@lumo-ui/base-ui-ssr";
 
 /**
@@ -160,11 +165,23 @@ const InDisclosureGroup = React.createContext(false);
  * DOM `id`, for the reason menu.tsx gives — two accordions offering the same
  * section would then emit duplicate ids.
  */
-export interface DisclosureGroupProps
-  extends Omit<
-    AriaDisclosureGroupProps,
-    "children" | "className" | "expandedKeys" | "defaultExpandedKeys" | "onExpandedChange"
-  > {
+/**
+ * What a disclosure group accepts BESIDES its own expansion props.
+ *
+ * The three expansion props are redeclared on `DisclosureGroupProps` below with
+ * `string` keys rather than inherited, which is why they are absent here.
+ */
+interface DisclosureGroupPropsBase
+  extends DOMProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** Whether the whole group is disabled. */
+  isDisabled?: boolean;
+  /** Whether more than one section may be expanded at a time. */
+  allowsMultipleExpanded?: boolean;
+}
+
+export interface DisclosureGroupProps extends DisclosureGroupPropsBase {
   /** Expanded section keys. Maps to Base UI's `value`. */
   expandedKeys?: Iterable<string> | undefined;
   /** Initially expanded section keys. Maps to Base UI's `defaultValue`. */
@@ -186,7 +203,6 @@ export function DisclosureGroup({
   // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
   // `render` and `style` are RAC-shaped and collide with Base UI's own props of
   // the same name; the spread below does not type-check without them.
-  render: _render,
   style: _style,
   ...rest
 }: DisclosureGroupProps) {
@@ -224,7 +240,27 @@ export function DisclosureGroup({
   );
 }
 
-export interface DisclosureProps extends Omit<AriaDisclosureProps, "children" | "className"> {
+/** One section's own props, minus its children and class. */
+interface DisclosurePropsBase
+  extends StyleProps,
+    SlotProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /**
+   * The section's collection key. A `Key`, not a DOM `id` — see the note above
+   * `DisclosureGroupProps`, which is also why it is not spread onto an element.
+   */
+  id?: Key;
+  /** Whether this section is disabled. */
+  isDisabled?: boolean;
+  /** Whether the section is expanded (controlled). */
+  isExpanded?: boolean;
+  /** Whether the section is expanded by default (uncontrolled). */
+  defaultExpanded?: boolean;
+  /** Handler that is called when the section expands or collapses. */
+  onExpandedChange?: (isExpanded: boolean) => void;
+}
+
+export interface DisclosureProps extends DisclosurePropsBase {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -245,7 +281,6 @@ export function Disclosure({
   defaultExpanded,
   onExpandedChange,
   isDisabled,
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest
@@ -291,8 +326,7 @@ export function Disclosure({
   );
 }
 
-export interface DisclosureTriggerProps
-  extends Omit<AriaButtonProps, "children" | "className" | "slot"> {
+export interface DisclosureTriggerProps extends Omit<ButtonPropsBase, "slot"> {
   children?: LumoNode;
   className?: string | undefined;
   /** Heading level for the outline entry. Defaults to 3. */
@@ -324,7 +358,6 @@ export function DisclosureTrigger({
   isPending: _isPending,
   preventFocusOnPress: _preventFocusOnPress,
   excludeFromTabOrder: _excludeFromTabOrder,
-  render: _render,
   style: _style,
   ...rest
 }: DisclosureTriggerProps) {
@@ -358,8 +391,25 @@ export function DisclosureTrigger({
   );
 }
 
-export interface DisclosurePanelProps
-  extends Omit<AriaDisclosurePanelProps, "children" | "className"> {
+/** The panel's own props, minus its children and class. */
+interface DisclosurePanelPropsBase
+  extends DOMProps,
+    StyleProps,
+    AriaLabelingProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** The content to display as the panel's label. */
+  label?: React.ReactNode;
+  /** The element type of the label. */
+  labelElementType?: React.ElementType;
+  /**
+   * The landmark role for the panel.
+   *
+   * @default 'group'
+   */
+  role?: "group" | "region";
+}
+
+export interface DisclosurePanelProps extends DisclosurePanelPropsBase {
   children?: LumoNode;
   className?: string | undefined;
   /**
@@ -376,7 +426,6 @@ export function DisclosurePanel({
   className,
   children,
   keepMounted,
-  render: _render,
   style: _style,
   ...rest
 }: DisclosurePanelProps) {

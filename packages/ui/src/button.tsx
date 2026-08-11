@@ -2,8 +2,10 @@
 
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
 import { Button as BaseButton } from "@base-ui/react/button";
-import type { ButtonProps as AriaButtonProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// The prop SHAPE the public API is pinned to. It was `AriaButtonProps` until
+// the type-only React Aria imports were removed; it is the same surface, owned
+// here. See `@lumo-ui/core`'s `props.ts`.
+import { type ButtonPropsBase, cn, type LumoNode } from "@lumo-ui/core";
 // The cva definition lives in a module with no "use client" so SERVER components
 // can call it — see button.variants.ts. Re-exported here for convenience.
 import { buttonVariants, type ButtonVariantProps } from "./button.variants.ts";
@@ -55,9 +57,7 @@ export type { ButtonVariantProps };
  * `experiments/measurements/rebuild-simple.json` under `dead_selectors`.
  */
 
-export interface ButtonProps
-  extends Omit<AriaButtonProps, "children" | "className">,
-    ButtonVariantProps {
+export interface ButtonProps extends ButtonPropsBase, ButtonVariantProps {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -105,13 +105,7 @@ export function Button({
   onHoverEnd,
   onHoverChange,
   onFocusChange,
-  // Both libraries call this `render` and they are not the same prop. React
-  // Aria hands the function six state flags (`isHovered`, `isPressed`,
-  // `isFocused`, `isFocusVisible`, `isDisabled`, `isPending`); Base UI hands it
-  // one (`disabled`). `tsc` rejects the assignment outright — TS2322,
-  // `ButtonState is missing … isHovered, isPressed, isFocused, isFocusVisible,
-  // and 2 more` — which is the type system stating the capability gap for us.
-  render,
+  // Destructured only so it is not spread: `style` reaches Base UI below.
   style,
   ...rest
 }: ButtonProps) {
@@ -121,11 +115,13 @@ export function Button({
       className={cn(buttonVariants({ variant, size }), className)}
       disabled={isDisabled ?? false}
       {...attr("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
-      // `style` is `CSSProperties | ((state) => CSSProperties)` in BOTH
-      // libraries, but React Aria's callback takes ITS render props and Base
-      // UI's takes `{ disabled }`. A function is therefore not portable and is
-      // dropped rather than called with the wrong argument.
-      {...attr("style", typeof style === "function" ? undefined : style)}
+      // `style` is plain `CSSProperties` here. Base UI also accepts a
+      // `(state) => CSSProperties` callback and Lumo does NOT expose that: the
+      // React Aria API this one is frozen against took a callback of its own
+      // shape — six state flags Base UI does not have — so a portable function
+      // form never existed. The prop is a value; see `@lumo-ui/core`'s
+      // `props.ts` for the full argument.
+      {...attr("style", style)}
       {...attr("slot", slot ?? undefined)}
       {...attr(
         "onClick",

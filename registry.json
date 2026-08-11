@@ -12,8 +12,7 @@
       "dependencies": [
         "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "button",
@@ -101,8 +100,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -223,8 +221,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -353,8 +350,7 @@
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "form"
@@ -401,8 +397,7 @@
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "autocomplete",
@@ -483,8 +478,7 @@
         "@base-ui/react",
         "@internationalized/date",
         "@lumo-ui/base-ui-ssr",
-        "@lumo-ui/core",
-        "react-aria-components"
+        "@lumo-ui/core"
       ],
       "registryDependencies": [
         "calendar",
@@ -693,8 +687,7 @@
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "button"
@@ -718,8 +711,7 @@
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "files": [
         {
@@ -738,8 +730,7 @@
       "dependencies": [
         "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -825,8 +816,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -920,8 +910,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "button",
@@ -970,8 +959,7 @@
       "dependencies": [
         "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "separator"
@@ -1058,8 +1046,7 @@
       "dependencies": [
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "autocomplete",
@@ -1128,8 +1115,7 @@
       "dependencies": [
         "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1247,8 +1233,7 @@
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "form"
@@ -1322,8 +1307,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1361,8 +1345,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
-        "@lumo-ui/core",
-        "react-aria-components"
+        "@lumo-ui/core"
       ],
       "files": [
         {
@@ -1387,8 +1370,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "form"
@@ -1516,8 +1498,7 @@
       "dependencies": [
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "button",
@@ -1541,8 +1522,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1671,8 +1651,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1765,8 +1744,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "form"
@@ -1817,8 +1795,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1838,8 +1815,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1875,8 +1851,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "form"
@@ -1897,8 +1872,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "form"
@@ -2000,8 +1974,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -2021,8 +1994,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -2051,8 +2023,7 @@
       "dependencies": [
         "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -2072,8 +2043,7 @@
         "@base-ui/react",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "popover"
@@ -2094,8 +2064,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {

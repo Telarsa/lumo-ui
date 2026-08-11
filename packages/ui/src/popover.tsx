@@ -3,18 +3,23 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Popover as BasePopover } from "@base-ui/react/popover";
-// TYPE-ONLY, and it is load-bearing that it stays. `LumoPlacement` is consumed by
-// seven still-React-Aria components (menu, select, combobox, hover-card,
-// navigation-menu, date-picker, date-range-picker) which pass it straight to an
-// RAC `<Popover placement>`. Deriving it from anything else would either break
-// their types or silently widen what they accept. A type import is erased at
-// build, so this file carries no RAC runtime.
-import type {
-  DialogTriggerProps as AriaDialogTriggerProps,
-  Placement as AriaPlacement,
-  PopoverProps as AriaPopoverProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// `Placement` is the FULL union, physical spellings included, so the `Exclude`
+// below can subtract them. Seven sibling components (menu, select, combobox,
+// hover-card, navigation-menu, date-picker, date-range-picker) import
+// `LumoPlacement` from here and pass it to their own positioners, so the union
+// has to stay exactly what it was — deriving it from anything narrower would
+// silently change what they accept.
+import {
+  cn,
+  type FocusWithinEvents,
+  type GlobalDOMAttributes,
+  type LumoNode,
+  type OverlayTriggerProps,
+  type Placement,
+  type PositionProps,
+  type SlotProps,
+  type StyleProps,
+} from "@lumo-ui/core";
 import { attr } from "@lumo-ui/base-ui-ssr";
 
 /**
@@ -27,10 +32,13 @@ import { attr } from "@lumo-ui/base-ui-ssr";
  *
  * ── PLACEMENT IS A CLOSED, LOGICAL UNION (unchanged) ────────────────────────
  *
- * `LumoPlacement` still subtracts the physical spellings from RAC's `Placement`
- * with a template-literal `Exclude`, because the public API may not change and
- * because seven RAC components still consume this type. What changed is what
- * happens underneath: Base UI does not take a single `placement` string. It
+ * `LumoPlacement` still subtracts the physical spellings with the same
+ * template-literal `Exclude`, because the public API may not change and because
+ * seven sibling components consume this type. What it subtracts FROM is no
+ * longer React Aria's `Placement` — the union is declared in `@lumo-ui/core`
+ * now, unchanged member for member, so that a consumer copying this file does
+ * not have to install a library it does not run. What changed underneath is
+ * bigger: Base UI does not take a single `placement` string. It
  * takes `side` and `align` on `Popover.Positioner`, and its `side` union is
  * ALREADY logical — `'inline-start' | 'inline-end'` are first-class values
  * alongside the four physical ones. So the translation below is lossless in the
@@ -49,12 +57,12 @@ import { attr } from "@lumo-ui/base-ui-ssr";
  * The selectors are now Base UI's; the block on `popoverVariants` names each
  * one and flags the one that is a SPLIT rather than a rename.
  *
- * The seven React Aria consumers that style against this exported cva are the
- * cost this edit makes visible: they now receive a class string that addresses
- * an engine THEY are not on. On a real migration they move with it; in this
- * experiment they are the reason the number in
- * `experiments/measurements/state-vocabulary.json` is a floor and not a
- * ceiling.
+ * The seven siblings that style against this exported cva were the cost this
+ * edit made visible while they were still on React Aria: they received a class
+ * string addressing an engine they were not on. They have since moved, so the
+ * gap is closed — but the number in
+ * `experiments/measurements/state-vocabulary.json` was counted while it was
+ * open, and is a floor rather than a ceiling for that reason.
  *
  * ── NO "Dismiss" BUTTONS AT ALL ─────────────────────────────────────────────
  *
@@ -67,7 +75,7 @@ import { attr } from "@lumo-ui/base-ui-ssr";
  * attributes. This is the one place the engine swap is a straight win.
  */
 export type LumoPlacement = Exclude<
-  AriaPlacement,
+  Placement,
   `${string}left${string}` | `${string}right${string}`
 >;
 
@@ -222,7 +230,7 @@ function splitTrigger(children: LumoNode): {
  *
  * It renders no DOM and therefore takes no `className`.
  */
-export interface PopoverTriggerProps extends Omit<AriaDialogTriggerProps, "children"> {
+export interface PopoverTriggerProps extends OverlayTriggerProps {
   /** The trigger control, then the `<Popover>`. In that order. */
   children: LumoNode;
 }
@@ -256,8 +264,57 @@ export function PopoverTrigger({
   );
 }
 
+/**
+ * The popover surface's own props, minus its children, class and `placement` —
+ * the last is redeclared below as the logical-only `LumoPlacement`.
+ */
+interface PopoverPropsBase
+  extends Omit<PositionProps, "placement">,
+    OverlayTriggerProps,
+    FocusWithinEvents,
+    SlotProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  "aria-describedby"?: string;
+  "aria-details"?: string;
+  /** A ref to the element the popover is positioned against. */
+  triggerRef?: React.RefObject<Element | null>;
+  /** A ref to the arrow element, if there is one. */
+  arrowRef?: React.RefObject<Element | null>;
+  /** A ref to the scrollable region the popover repositions inside. */
+  scrollRef?: React.RefObject<Element | null>;
+  /** The element the popover is constrained to. */
+  boundaryElement?: Element;
+  /** Whether the popover keeps repositioning after it opens. */
+  shouldUpdatePosition?: boolean;
+  /** The largest height the popover may take. */
+  maxHeight?: number;
+  /** Offset applied to the arrow's own boundary. */
+  arrowBoundaryOffset?: number;
+  /** Overrides the rect the popover positions against. */
+  getTargetRect?: (target: Element) => DOMRect | null | undefined;
+  /** Whether the popover leaves the rest of the page interactive. */
+  isNonModal?: boolean;
+  /** Whether Escape is prevented from closing the popover. */
+  isKeyboardDismissDisabled?: boolean;
+  /** Decides, per element, whether an outside interaction should close it. */
+  shouldCloseOnInteractOutside?: (element: Element) => boolean;
+  /** The slot name of the trigger this popover belongs to. */
+  trigger?: string;
+  /** Whether the popover is currently performing an entry animation. */
+  isEntering?: boolean;
+  /** Whether the popover is currently performing an exit animation. */
+  isExiting?: boolean;
+  /** Whether the open/close animation is skipped. */
+  shouldSkipAnimation?: boolean;
+  /** The container the popover portals into. */
+  UNSTABLE_portalContainer?: Element;
+}
+
 export interface PopoverProps
-  extends Omit<AriaPopoverProps, "children" | "className" | "placement">,
+  extends PopoverPropsBase,
     VariantProps<typeof popoverVariants> {
   /**
    * Logical only — see `LumoPlacement`. Defaults to `'bottom'`.
@@ -310,7 +367,6 @@ export function Popover({
   trigger: _trigger,
   // `render`, `slot` and `style` are RAC-shaped and collide with Base UI's own
   // props of the same name — the spread below does not type-check without them.
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest

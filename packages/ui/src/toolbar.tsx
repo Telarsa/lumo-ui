@@ -3,10 +3,15 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { Toolbar as BaseToolbar } from "@base-ui/react/toolbar";
-// TYPE-ONLY. The public API may not change, so `ToolbarProps` keeps React Aria's
-// prop names. Erased at build; no RAC runtime in this file.
-import type { ToolbarProps as AriaToolbarProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import {
+  type AriaLabelingProps,
+  cn,
+  type GlobalDOMAttributes,
+  type LumoNode,
+  type Orientation,
+  type SlotProps,
+  type StyleProps,
+} from "@lumo-ui/core";
 
 /**
  * A group of controls with arrow-key navigation. **BASE UI ENGINE.**
@@ -153,7 +158,21 @@ function useHasMounted(): boolean {
   return mounted;
 }
 
-export interface ToolbarProps extends Omit<AriaToolbarProps, "children" | "className" | "aria-label"> {
+/**
+ * The toolbar's own props, minus its children, class and `aria-label` — the
+ * name arrives as a REQUIRED `label` below instead, which is the rule the whole
+ * library is built on.
+ */
+interface ToolbarPropsBase
+  extends Omit<AriaLabelingProps, "aria-label">,
+    SlotProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** The toolbar's layout axis. */
+  orientation?: Orientation;
+}
+
+export interface ToolbarProps extends ToolbarPropsBase {
   /** Announced name of the toolbar. Required. */
   label: string;
   children?: LumoNode;
@@ -166,10 +185,9 @@ export function Toolbar({
   orientation,
   // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
   // `Toolbar.Root` takes `orientation`, `disabled`, `loop` and the global DOM
-  // props. RAC's render/slot/style trio is RAC-shaped and collides with Base
-  // UI's own props of the same name, so it is destructured out rather than
+  // props. Lumo's `slot` and `style` collide with Base UI's own props of
+  // the same name, so they are destructured out rather than
   // spread — the same treatment popover.tsx and dialog.tsx give it.
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest

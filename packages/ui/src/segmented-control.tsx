@@ -3,10 +3,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { RadioGroup as BaseRadioGroup } from "@base-ui/react/radio-group";
 import { Radio as BaseRadio } from "@base-ui/react/radio";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type { Key } from "react-aria-components";
 import { Children, createContext, isValidElement, useContext } from "react";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, type Key, type LumoNode } from "@lumo-ui/core";
 import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 
 /**

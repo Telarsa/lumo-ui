@@ -1,8 +1,10 @@
 "use client";
 
 import type { VariantProps } from "class-variance-authority";
-import type { TextFieldProps as AriaTextFieldProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// The prop SHAPE the public API is pinned to — the same surface `TextFieldProps`
+// from `react-aria-components` supplied before the type-only imports were
+// removed, now owned by Lumo. See `@lumo-ui/core`'s `props.ts`.
+import { cn, type LumoNode, type TextFieldPropsBase } from "@lumo-ui/core";
 import { IconButton, type IconButtonProps } from "./button.tsx";
 import { Description, Field, FieldError, FieldInput, Label, optional } from "./form.tsx";
 
@@ -61,7 +63,7 @@ import { inputGroupAddonVariants, inputGroupInputVariants } from "./input-group.
 export { inputGroupAddonVariants, inputGroupInputVariants };
 
 export interface InputGroupProps
-  extends Omit<AriaTextFieldProps, "children" | "className" | "size" | "isInvalid">,
+  extends Omit<TextFieldPropsBase, "isInvalid">,
     Pick<VariantProps<typeof inputGroupInputVariants>, "size"> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;

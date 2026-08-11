@@ -111,7 +111,21 @@ const SHARED_COMPANIONS = new Set([
 
 /** Packages a consumer must install; everything else is workspace-internal. */
 const EXTERNAL = new Set([
-  "react-aria-components",
+  /*
+   * `react-aria-components` WAS the first entry here and is gone, by the rule
+   * the `recharts` note below states: an EXTERNAL entry is only ever justified
+   * by an import that exists.
+   *
+   * The runtime imports went with the Base UI migration, but 31 files kept
+   * `import type { … } from "react-aria-components"` to `Omit` and `Pick` from,
+   * and a type import matches the scanner above exactly as a runtime one does —
+   * so every one of those 31 items was still telling a consumer to install
+   * React Aria to get types for behaviour the component no longer had. That is
+   * the failure this file is otherwise good at preventing, arriving through the
+   * one door a bundler cannot see. The shapes live in `@lumo-ui/core`'s
+   * `props.ts` now; the package is a devDependency of `packages/ui`, kept only
+   * so the poison-twin tests can render real React Aria.
+   */
   "@internationalized/date",
   // The calendar grid itself since 11 Aug 2026. A consumer copying `calendar`
   // installs it; the CALENDAR SYSTEM still comes from

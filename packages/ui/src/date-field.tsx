@@ -3,13 +3,21 @@
 import { useId, useRef } from "react";
 import { Field } from "@base-ui/react/field";
 import type { DateValue } from "@internationalized/date";
-// TYPE-ONLY now. `renderSegment` — the one React Aria RUNTIME import left in
-// this file — was deleted with the migration: `date-input.tsx` is the segment
-// implementation for the whole family, and the three siblings that used to
-// import this function render that instead. The prop TYPE stays React Aria's
-// because the public API may not change. Erased at build; no RAC runtime here.
-import type { DateFieldProps as AriaDateFieldProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+
+import {
+  type AriaLabelingProps,
+  cn,
+  type DOMProps,
+  type FocusableProps,
+  type GlobalDOMAttributes,
+  type InputBase,
+  type InputDOMProps,
+  type LumoNode,
+  type SlotProps,
+  type StyleProps,
+  type Validation,
+  type ValueBase,
+} from "@lumo-ui/core";
 import {
   dateInputVariants,
   dateLiteralVariants,
@@ -166,17 +174,55 @@ export type DateBounds<P> =
 
 export type DateFieldSize = "sm" | "md" | "lg";
 
-export interface DateFieldProps<T extends DateValue>
-  extends Omit<
-    AriaDateFieldProps<T>,
-    | "children"
-    | "className"
-    | "aria-label"
-    | "minValue"
-    | "maxValue"
-    | "isDateUnavailable"
-    | "isInvalid"
-  > {
+/**
+ * The three bound props, with the EXACT signatures the date family shares.
+ *
+ * They were read off `react-aria-components`' `DateFieldProps` until the
+ * type-only imports were removed; `DateBounds` picks from this now. Note
+ * `minValue`/`maxValue` are `DateValue`, not the component's `T` — a bound may
+ * be expressed in any calendar system, which is the whole point of a Jalali
+ * field bounded by a Gregorian date.
+ */
+export interface DateFieldBoundProps {
+  /** The earliest allowed date. */
+  minValue?: DateValue | null;
+  /** The latest allowed date. */
+  maxValue?: DateValue | null;
+  /** Marks individual dates unselectable. */
+  isDateUnavailable?: (date: DateValue) => boolean;
+}
+
+/**
+ * The field's own props, minus its children, class, `aria-label` and the three
+ * bounds — the name arrives as a REQUIRED `label`, and the bounds arrive
+ * through `DateBounds`, which pairs them with a required `errorMessage`.
+ */
+interface DateFieldPropsBase<T extends DateValue>
+  extends InputBase,
+    Omit<Validation<T>, "isInvalid">,
+    ValueBase<T | null, T | null>,
+    FocusableProps,
+    DOMProps,
+    InputDOMProps,
+    Omit<AriaLabelingProps, "aria-label">,
+    SlotProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** Describes the type of autocomplete functionality the input should provide. */
+  autoComplete?: string;
+  /** A date that sets the field's granularity and era before a value exists. */
+  placeholderValue?: T | null;
+  /** Whether the hour is shown on a 12- or 24-hour clock. */
+  hourCycle?: 12 | 24;
+  /** The smallest unit the field edits. */
+  granularity?: "day" | "hour" | "minute" | "second";
+  /** Whether the time zone segment is hidden. */
+  hideTimeZone?: boolean;
+  /** Whether single-digit segments are padded with a leading zero. */
+  shouldForceLeadingZeros?: boolean;
+}
+
+export interface DateFieldProps<T extends DateValue> extends DateFieldPropsBase<T> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
   description?: LumoNode;
@@ -237,7 +283,7 @@ export function DateField<T extends DateValue>({
   placeholderValue,
   isDisabled,
   isReadOnly,
-}: DateFieldProps<T> & DateBounds<AriaDateFieldProps<T>>) {
+}: DateFieldProps<T> & DateBounds<DateFieldBoundProps>) {
   const locale = useLumoLocale();
 
   const state = useDateFieldState({

@@ -35,8 +35,18 @@ packages:
 # Ranges are used only for build tooling whose output the gates already check.
 catalog:
   # --- behaviour layer (see DECISIONS.md §0) --------------------------------
-  # Pinned exactly: RAC minors have changed default accessible names before, and
-  # that is precisely what the committed AX snapshots exist to catch.
+  # TEST-ONLY since the type-only imports went. No shipped component imports
+  # this package at runtime OR in a type position any more, so it is a
+  # devDependency of `packages/ui` and appears in NO registry item — a consumer
+  # copying a component never installs it. What still needs it are the six
+  # POISON TWINS (`dates.test.tsx`, `controls.test.tsx`, `provider.test.tsx`,
+  # `hydrated.test.tsx`, `collections-no-primitive.test.tsx`,
+  # `scroll-area.test.tsx`), which render real React Aria to pin the defects the
+  # migration was for. Deleting the pin would delete the evidence.
+  #
+  # Still pinned exactly, for the original reason: RAC minors have changed
+  # default accessible names before, and a poison fixture that silently changes
+  # what it pins is worse than no fixture.
   react-aria-components: 1.20.0
   # Must stay on the version RAC itself resolves, or `Calendar` types come from
   # two copies of the package and will not assign.
