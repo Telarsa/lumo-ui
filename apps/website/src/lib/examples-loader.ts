@@ -69,19 +69,68 @@ export interface LoadedComponentExamples {
   examples: readonly LoadedExample[];
 }
 
-/** Every component slug that has an examples file, alphabetical. */
+/**
+ * Every component slug that has examples, alphabetical.
+ *
+ * ── TWO SHAPES, AND WHY BOTH ARE ACCEPTED ───────────────────────────────────
+ *
+ *     examples/button.tsx              a FILE
+ *     examples/button/index.tsx        a DIRECTORY
+ *
+ * The directory form is what a component with twenty examples needs: `index.tsx`
+ * still exports `EXAMPLES`, and it may import render functions from siblings
+ * beside it, so a page's worth of examples stops being one file that only grows.
+ *
+ * Both are accepted rather than the file form being migrated away, and that is
+ * deliberate. A component with three examples is not improved by a directory
+ * containing one file, and a flag day across forty-three files buys nothing
+ * except a large diff — `sourceOf` below resolves either shape, so a component
+ * moves when it has a reason to.
+ *
+ * A slug may not exist in BOTH forms. That would be two files claiming one
+ * page, and which one wins would depend on directory-read order — so it throws
+ * rather than picking.
+ */
 export function exampleSlugs(): string[] {
   if (!existsSync(EXAMPLES_DIR)) return [];
-  return readdirSync(EXAMPLES_DIR, { withFileTypes: true })
+  const entries = readdirSync(EXAMPLES_DIR, { withFileTypes: true });
+  const named = (name: string) => !name.startsWith("_") && !name.includes(".test.");
+
+  const files = entries
+    .filter((e) => e.isFile() && e.name.endsWith(".tsx") && named(e.name))
+    .map((e) => e.name.slice(0, -".tsx".length));
+
+  const dirs = entries
     .filter(
       (e) =>
-        e.isFile() &&
-        e.name.endsWith(".tsx") &&
-        !e.name.startsWith("_") &&
-        !e.name.includes(".test."),
+        e.isDirectory() && named(e.name) && existsSync(join(EXAMPLES_DIR, e.name, "index.tsx")),
     )
-    .map((e) => e.name.slice(0, -".tsx".length))
-    .sort((a, b) => a.localeCompare(b));
+    .map((e) => e.name);
+
+  const both = files.filter((slug) => dirs.includes(slug));
+  if (both.length > 0) {
+    throw new Error(
+      `[examples] ${both.join(", ")}: both examples/<slug>.tsx and ` +
+        `examples/<slug>/index.tsx exist. Two files claiming one page, with the ` +
+        `winner decided by directory-read order. Delete one.`,
+    );
+  }
+
+  return [...files, ...dirs].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * The path of a slug's entry module, whichever shape it is in.
+ *
+ * Returns `undefined` when the component has no examples at all — which is not
+ * an error, it is the `coverage.ts` manifest's whole subject.
+ */
+export function sourceOf(slug: string): string | undefined {
+  const flat = join(EXAMPLES_DIR, `${slug}.tsx`);
+  if (existsSync(flat)) return flat;
+  const nested = join(EXAMPLES_DIR, slug, "index.tsx");
+  if (existsSync(nested)) return nested;
+  return undefined;
 }
 
 function assertLocalizedText(value: LocalizedText, file: string, field: string): void {
@@ -110,11 +159,15 @@ const cache = new Map<string, Promise<LoadedComponentExamples>>();
  * its single `demos.tsx` demo, which is the contract's stated default.
  */
 export function loadExamplesFor(slug: string): Promise<LoadedComponentExamples> | undefined {
-  const file = `${slug}.tsx`;
-  if (!existsSync(join(EXAMPLES_DIR, file))) return undefined;
+  const path = sourceOf(slug);
+  if (path === undefined) return undefined;
+  // The name used in every error message: the shape the author actually wrote.
+  const file = path.endsWith(`${slug}.tsx`) && !path.includes(`/${slug}/`)
+    ? `${slug}.tsx`
+    : `${slug}/index.tsx`;
   let pending = cache.get(slug);
   if (pending === undefined) {
-    pending = loadAndValidate(slug, file);
+    pending = loadAndValidate(slug, file, path);
     cache.set(slug, pending);
   }
   return pending;
@@ -180,13 +233,25 @@ function normalizeModule(
   );
 }
 
-async function loadAndValidate(slug: string, file: string): Promise<LoadedComponentExamples> {
+async function loadAndValidate(
+  slug: string,
+  file: string,
+  path: string,
+): Promise<LoadedComponentExamples> {
   // A dynamic import whose specifier keeps a static prefix and a static
   // extension — the shape bundlers turn into a directory context, which is
   // what lets discovery-by-existence still be bundled statically.
-  const mod = (await import(`../examples/${slug}.tsx`)) as Parameters<
-    typeof normalizeModule
-  >[0];
+  /*
+   * TWO specifiers, both with a static prefix and a static extension — the
+   * shape a bundler turns into a directory context. One dynamic specifier
+   * covering both shapes would need a variable segment in the middle, which
+   * defeats that, so the branch is here rather than in the string.
+   */
+  const mod = (
+    file.endsWith("/index.tsx")
+      ? await import(`../examples/${slug}/index.tsx`)
+      : await import(`../examples/${slug}.tsx`)
+  ) as Parameters<typeof normalizeModule>[0];
   const spec = normalizeModule(mod, file);
   if (spec.examples.length === 0) {
     throw new Error(
@@ -195,7 +260,7 @@ async function loadAndValidate(slug: string, file: string): Promise<LoadedCompon
     );
   }
 
-  const fileText = readFileSync(join(EXAMPLES_DIR, file), "utf8");
+  const fileText = readFileSync(path, "utf8");
   const seen = new Set<string>();
   const examples: LoadedExample[] = [];
   for (const example of spec.examples) {
@@ -274,7 +339,12 @@ async function loadAndValidate(slug: string, file: string): Promise<LoadedCompon
 export async function newExampleSlugs(): Promise<ReadonlySet<string>> {
   const flags = await Promise.all(
     exampleSlugs().map(async (slug) => {
-      const mod = (await import(`../examples/${slug}.tsx`)) as {
+      const nested = sourceOf(slug)?.endsWith("/index.tsx") === true;
+      const mod = (
+        nested
+          ? await import(`../examples/${slug}/index.tsx`)
+          : await import(`../examples/${slug}.tsx`)
+      ) as {
         EXAMPLES?: ComponentExamples;
         meta?: { isNew?: boolean };
       };

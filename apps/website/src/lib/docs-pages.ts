@@ -62,6 +62,14 @@ export const DOCS_PAGES: readonly DocsPage[] = [
     },
   },
   {
+    slug: "coverage",
+    label: { "fa-IR": "پوشش نمونه‌ها", "en-US": "Example coverage" },
+    intro: {
+      "fa-IR": "کدام کامپوننت نمونه دارد و کدام ندارد — شمرده از روی رجیستری، نه از روی حافظه.",
+      "en-US": "Which components have worked examples and which do not — counted from the registry, not from memory.",
+    },
+  },
+  {
     slug: "changelog",
     label: { "fa-IR": "تاریخچهٔ تغییرات", "en-US": "Changelog" },
     intro: {

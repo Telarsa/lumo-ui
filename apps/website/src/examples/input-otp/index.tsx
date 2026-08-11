@@ -1,6 +1,13 @@
 import type { Locale } from "@lumo-ui/core";
 import { InputOtp } from "@lumo-ui/ui";
-import type { ComponentExamples, LocalizedText } from "./_system/types";
+import type { ComponentExamples } from "../_system/types";
+// The copy table, in a sibling. THE reason this component is a directory: the
+// strings are the part that grows with the example count, and a page's worth of
+// them buried above the render functions is what makes a long examples file
+// unreadable. The render functions stay HERE, because `_system/extract.ts`
+// slices their source out of THIS file's text — moving one out would leave its
+// code panel unrecoverable, which is a build error by design.
+import { t } from "./copy.ts";
 
 /**
  * Worked examples for the input-otp page. Contract: `_system/types.ts`.
@@ -25,33 +32,6 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  *     in every script, and the boxes are a picture of that string.
  */
 
-const t = {
-  smsLabel: { "fa-IR": "کد پیامک‌شده", "en-US": "Code from the text message" },
-  smsHelp: {
-    "fa-IR": "کد شش‌رقمی که همین حالا برایتان پیامک شد.",
-    "en-US": "The six-digit code we have just texted you.",
-  },
-  prefilledLabel: { "fa-IR": "کد تأیید", "en-US": "Verification code" },
-  prefilledHelp: {
-    "fa-IR": "همان رشتهٔ ASCII به فراخوان می‌رسد؛ چیزی که می‌بینید ارقام خودِ خواننده است.",
-    "en-US": "The caller still receives ASCII; what you see is the reader's own numerals.",
-  },
-  pinLabel: { "fa-IR": "رمز دوم کارت", "en-US": "Card PIN" },
-  pinHelp: {
-    "fa-IR": "چهار رقم.",
-    "en-US": "Four digits.",
-  },
-  wrongLabel: { "fa-IR": "کد تأیید", "en-US": "Verification code" },
-  wrongError: {
-    "fa-IR": "کد واردشده درست نیست. کد تازه‌ای بخواهید.",
-    "en-US": "That code is not right. Ask for a new one.",
-  },
-  lockedLabel: { "fa-IR": "کد یک‌بارمصرف", "en-US": "One-time code" },
-  lockedHelp: {
-    "fa-IR": "تا پایان شمارش معکوس نمی‌توانید کد تازه‌ای وارد کنید.",
-    "en-US": "You cannot enter a new code until the countdown ends.",
-  },
-} satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
   return (
