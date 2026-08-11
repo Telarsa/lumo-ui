@@ -173,11 +173,31 @@ describe("the real example files on disk", () => {
         expect(example.source.endsWith("}")).toBe(true);
       }
     }
-  });
+    /*
+     * ── WHY THESE TWO CARRY AN EXPLICIT TIMEOUT ─────────────────────────────
+     *
+     * Both reach the loader's DYNAMIC IMPORT, whose specifier keeps a static
+     * prefix and extension so a bundler turns it into a directory context —
+     * and a directory context is compiled as a whole. The examples directory
+     * went from 32 files to 81 when coverage was closed, so the first `await`
+     * in this file now pays for transforming every example module on disk, not
+     * just the flagships it names.
+     *
+     * That is a property of the fixture growing, not of anything being slow:
+     * the work is real, it is one-time per run, and the build does the same.
+     * Vitest's 5s default was sized for the 32-file directory. Raising it here
+     * rather than globally keeps the default tight for every other test, so a
+     * genuinely slow unit test still shows up as one.
+     */
+  }, 60_000);
 
-  it("exposes isNew to the sidebar", async () => {
-    const flagged = await newExampleSlugs();
-    expect(flagged.has("command")).toBe(true);
-    expect(flagged.has("button")).toBe(false);
-  });
+  it(
+    "exposes isNew to the sidebar",
+    async () => {
+      const flagged = await newExampleSlugs();
+      expect(flagged.has("command")).toBe(true);
+      expect(flagged.has("button")).toBe(false);
+    },
+    60_000,
+  );
 });

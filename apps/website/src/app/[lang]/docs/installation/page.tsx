@@ -18,7 +18,7 @@ pnpm verify      # types → no-CSS-Modules → tests → build → gate
 pnpm dev         # the showcase site, live`;
 
 const PREVIEW_CMDS = `pnpm --filter website build
-pnpm --filter website preview   # http://localhost:4173/fa/`;
+pnpm start                     # http://localhost:4173/fa/`;
 
 const CSS_IMPORTS = `@import "tailwindcss";
 @import "@lumo-ui/theme/tokens.css";
@@ -98,8 +98,11 @@ const COPY = {
       ),
       workspacePreview: (
         <>
-          <Term>pnpm start</Term> وجود ندارد — سایت یک خروجی استاتیک است و سروری در کار نیست.
-          برای دیدن همان بایت‌هایی که دروازه نمره داده:
+          <Term>next start</Term> اینجا کار نمی‌کند — سایت یک خروجی استاتیک است و سروری برای
+          راه‌اندازی وجود ندارد. <Term>pnpm start</Term> به‌جایش همان پوشهٔ خروجی را سرو می‌کند،
+          دقیقاً همان‌طور که یک میزبان واقعی: نشانی بدون اسلشِ پایانی به شکل اسلش‌دار هدایت
+          می‌شود و صفحهٔ خطای چهارصدوچهار خودِ سایت سرو می‌شود، نه پیام خام Node. پس همان
+          بایت‌هایی را می‌بینید که دروازه نمره داده:
         </>
       ),
       css: (
@@ -166,8 +169,11 @@ const COPY = {
       ),
       workspacePreview: (
         <>
-          There is no <Term>pnpm start</Term> — the site is a static export, so there is no
-          server to start. To view the exact bytes the gate graded:
+          <Term>next start</Term> does not work here — the site is a static export, so there is
+          no server to start. <Term>pnpm start</Term> serves the export instead, and serves it
+          the way a real host would: an unslashed URL redirects to its slashed form, and the
+          site&rsquo;s own 404 page is served rather than a bare Node message. So what you see is
+          the exact bytes the gate graded:
         </>
       ),
       css: (

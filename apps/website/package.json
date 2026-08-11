@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "gate": "node --experimental-strip-types ../../packages/gate/src/cli.ts out gate.floors.json",
-    "preview": "python3 -m http.server 4173 -d out"
+    "preview": "node ../../scripts/serve-static.mjs out"
   },
   "dependencies": {
     "@lumo-ui/core": "workspace:*",

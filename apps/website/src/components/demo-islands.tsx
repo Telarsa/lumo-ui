@@ -1961,3 +1961,329 @@ export function FileUploadIsland({
     </div>
   );
 }
+
+/* ───────────────────────── date-input · pagination · toast · virtual-list ── */
+
+/*
+ * Appended by the round-7 batch, under the same append-only contract as every
+ * block above: import declarations are hoisted, and `useState`, `Locale`,
+ * `formatNumber`, `Button`, `Pagination`, `ToastRegion` and `createToastQueue`
+ * are already bound at the top of this file. Only the genuinely new names are
+ * imported here — re-importing a bound one is a duplicate-binding error rather
+ * than a shadow.
+ *
+ * FOUR components in this batch cannot be demonstrated from a server module,
+ * and each reason is the component's own rather than a limitation of this file:
+ *
+ *  - `DateInput` is handed a STATE OBJECT built by `useDateFieldState` or
+ *    `useTimeFieldState`. A hook cannot run during the RSC pass, and the state
+ *    it returns carries `cycle`, `setSegment` and `clearSegment` — functions.
+ *  - `VirtualList`'s `children` is a FUNCTION of a row index. A static child
+ *    list is not a smaller version of that; it is a list that is never
+ *    virtualised, which renders and type-checks and silently does nothing.
+ *  - `Pagination` requires `onPageChange` AND `pageLabel`, both functions, the
+ *    second one because «صفحه ۳» is a sentence Persian authors rather than
+ *    assembles.
+ *  - `ToastRegion.queue` is a live object with a subscription list. Only plain
+ *    objects cross into the payload.
+ *
+ * As everywhere else in this file, NO copy is authored here. Every word arrives
+ * as a prop, in both locales, from the examples module; every number arrives as
+ * data and leaves through `formatNumber`.
+ */
+import { useId } from "react";
+import {
+  DateInput,
+  VirtualList,
+  useDateFieldState,
+  useTimeFieldState,
+  type LumoToastQueue,
+  type TimeFields,
+} from "@lumo-ui/ui";
+
+/* ─────────────────────────────────────────────────────────────── date-input ─ */
+
+export interface DateInputIslandProps {
+  locale: Locale;
+  /**
+   * The group's visible name. It is rendered as a real element here and reaches
+   * the component as an IDREF, because that is the only shape `DateInput`
+   * accepts — see its `labelId` prop.
+   */
+  label: string;
+  /** `"time"` builds the state with `useTimeFieldState` instead. */
+  kind?: "date" | "time" | undefined;
+  granularity?: "hour" | "minute" | "second" | undefined;
+  hourCycle?: 12 | 24 | undefined;
+  /** Three plain numbers, so a starting time crosses the boundary intact. */
+  defaultTime?: TimeFields | undefined;
+  size?: "sm" | "md" | "lg" | undefined;
+  isReadOnly?: boolean | undefined;
+  isDisabled?: boolean | undefined;
+  bare?: boolean | undefined;
+}
+
+/**
+ * A working segmented input.
+ *
+ * BOTH hooks are called on every render and one result is chosen, rather than
+ * the call being made conditional: a hook behind a branch is the rules-of-hooks
+ * violation that only shows up when the branch changes, and the two states are
+ * cheap to build.
+ */
+export function DateInputIsland({
+  locale,
+  label,
+  kind,
+  granularity,
+  hourCycle,
+  defaultTime,
+  size,
+  isReadOnly,
+  isDisabled,
+  bare,
+}: DateInputIslandProps) {
+  const labelId = useId();
+  const dateState = useDateFieldState({ locale });
+  const timeState = useTimeFieldState({
+    locale,
+    ...(granularity === undefined ? {} : { granularity }),
+    ...(hourCycle === undefined ? {} : { hourCycle }),
+    ...(defaultTime === undefined ? {} : { defaultValue: defaultTime }),
+  });
+  const state = kind === "time" ? timeState : dateState;
+  return (
+    <div className="flex w-full max-w-xs flex-col gap-1.5">
+      <span id={labelId} className="text-sm font-medium text-fg">
+        {label}
+      </span>
+      <DateInput
+        state={state}
+        locale={locale}
+        labelId={labelId}
+        {...(size === undefined ? {} : { size })}
+        {...(isReadOnly === undefined ? {} : { isReadOnly })}
+        {...(isDisabled === undefined ? {} : { isDisabled })}
+        {...(bare === undefined ? {} : { bare })}
+      />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────── pagination ─ */
+
+export interface PaginationExampleIslandProps {
+  locale: Locale;
+  count: number;
+  /** Where the pager starts. A constant, so the prerendered bytes are stable. */
+  defaultPage?: number | undefined;
+  siblingCount?: number | undefined;
+  size?: "sm" | "md" | undefined;
+  /** Announced name of the `<nav>` landmark. */
+  label: string;
+  previousLabel: string;
+  nextLabel: string;
+  /** The noun a page is called by: «صفحه» → «صفحه ۳». */
+  pageWord: string;
+}
+
+/** A working pager. The window arithmetic is `paginationRange`, not this file. */
+export function PaginationExampleIsland({
+  locale,
+  count,
+  defaultPage,
+  siblingCount,
+  size,
+  label,
+  previousLabel,
+  nextLabel,
+  pageWord,
+}: PaginationExampleIslandProps) {
+  const [page, setPage] = useState(defaultPage ?? 1);
+  return (
+    <Pagination
+      locale={locale}
+      page={page}
+      count={count}
+      onPageChange={setPage}
+      label={label}
+      previousLabel={previousLabel}
+      nextLabel={nextLabel}
+      pageLabel={(formattedPage) => `${pageWord} ${formattedPage}`}
+      {...(siblingCount === undefined ? {} : { siblingCount })}
+      {...(size === undefined ? {} : { size })}
+    />
+  );
+}
+
+/* ──────────────────────────────────────────────────────────────────── toast ─ */
+
+/**
+ * The queues, at MODULE SCOPE, keyed so each example owns one.
+ *
+ * One shared queue would be wrong for a page with several regions on it: every
+ * mounted viewport subscribes to the manager it is given, so one `add` would
+ * appear four times. One queue per example keeps the demonstration honest.
+ *
+ * That this map can exist at all — outside React, outside any component, with
+ * no context to reach for — is the property `toast.tsx`'s header opens with.
+ */
+const exampleQueues = new Map<string, LumoToastQueue>();
+
+function queueFor(key: string): LumoToastQueue {
+  let queue = exampleQueues.get(key);
+  if (queue === undefined) {
+    queue = createToastQueue({ maxVisibleToasts: 3 });
+    exampleQueues.set(key, queue);
+  }
+  return queue;
+}
+
+/** One button and the toast it raises. Plain data, so it crosses the boundary. */
+export interface ToastButtonSpec {
+  key: string;
+  /** Visible text on the button. */
+  trigger: string;
+  title: string;
+  description?: string | undefined;
+  tone?: "neutral" | "positive" | "critical" | "caution" | undefined;
+  /** Milliseconds. Omitted means never auto-dismiss, which is Lumo's default. */
+  timeout?: number | undefined;
+}
+
+/**
+ * NOT a component, and not a hook — an ordinary function that happens to raise
+ * a toast. A fetch wrapper or a service-worker message handler would call it
+ * exactly like this.
+ */
+function raiseToast(queueKey: string, spec: ToastButtonSpec): void {
+  queueFor(queueKey).add(
+    {
+      title: spec.title,
+      ...(spec.description === undefined ? {} : { description: spec.description }),
+      ...(spec.tone === undefined ? {} : { tone: spec.tone }),
+    },
+    ...(spec.timeout === undefined ? [] : [{ timeout: spec.timeout }]),
+  );
+}
+
+export interface ToastExampleIslandProps {
+  locale: Locale;
+  /** Distinguishes this example's queue from its neighbours' — see `queueFor`. */
+  queueKey: string;
+  /** Announced name of the notification landmark. */
+  regionLabel: string;
+  /** Announced name of every toast's ✕. */
+  closeLabel: string;
+  placement?: "bottom-end" | "bottom-start" | "top-end" | "top-start" | undefined;
+  buttons: readonly ToastButtonSpec[];
+}
+
+/**
+ * The buttons, and the region they fill.
+ *
+ * The region renders an empty landmark until something is queued, so it costs
+ * the served bytes one element and contributes no strings to grade — the same
+ * reason every overlay demo on this site shows its trigger.
+ */
+export function ToastExampleIsland({
+  locale,
+  queueKey,
+  regionLabel,
+  closeLabel,
+  placement,
+  buttons,
+}: ToastExampleIslandProps) {
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      {buttons.map((spec) => (
+        <Button
+          key={spec.key}
+          variant="outline"
+          onPress={() => {
+            raiseToast(queueKey, spec);
+          }}
+        >
+          {spec.trigger}
+        </Button>
+      ))}
+      <ToastRegion
+        queue={queueFor(queueKey)}
+        locale={locale}
+        label={regionLabel}
+        closeLabel={closeLabel}
+        {...(placement === undefined ? {} : { placement })}
+      />
+    </div>
+  );
+}
+
+/* ───────────────────────────────────────────────────────────── virtual-list ─ */
+
+export interface VirtualListIslandProps {
+  locale: Locale;
+  /** Announced name of the scroller, which is the list's single tab stop. */
+  label: string;
+  /** How many rows EXIST. Reaches every row as a raw `aria-setsize` integer. */
+  count: number;
+  /** A row's main-axis size in pixels before it is measured. */
+  rowSize: number;
+  /** Makes the estimate a function of the index instead of a constant. */
+  varyingSizes?: boolean | undefined;
+  /** The viewport size the SERVER render lays out against. */
+  initialSize: number;
+  orientation?: "vertical" | "horizontal" | undefined;
+  gap?: number | undefined;
+  /** The noun a row is called by: «ردیف» → «ردیف ۱٬۰۰۰». */
+  rowWord: string;
+  className?: string | undefined;
+  itemClassName?: string | undefined;
+}
+
+/**
+ * A working virtualised list.
+ *
+ * Nothing here announces the corpus size: `aria-setsize` and `aria-posinset`
+ * are emitted by the component on every row, from `count` and the row's TRUE
+ * index, because an affordance a caller has to remember per row is one that is
+ * eventually forgotten on one row.
+ */
+export function VirtualListIsland({
+  locale,
+  label,
+  count,
+  rowSize,
+  varyingSizes,
+  initialSize,
+  orientation,
+  gap,
+  rowWord,
+  className,
+  itemClassName,
+}: VirtualListIslandProps) {
+  return (
+    <VirtualList
+      label={label}
+      locale={locale}
+      count={count}
+      estimateSize={
+        varyingSizes === true
+          ? (index) => (index % 3 === 0 ? rowSize + 28 : rowSize)
+          : rowSize
+      }
+      initialSize={initialSize}
+      {...(orientation === undefined ? {} : { orientation })}
+      {...(gap === undefined ? {} : { gap })}
+      {...(className === undefined ? {} : { className })}
+      {...(itemClassName === undefined ? {} : { itemClassName })}
+    >
+      {(index) => (
+        <div className="flex h-full items-center gap-2 px-3 text-sm">
+          <span className="text-fg-muted">{rowWord}</span>
+          {/* Through `formatNumber` — a bare {index} is a Latin digit. */}
+          <span className="font-medium text-fg">{formatNumber(index + 1, locale)}</span>
+        </div>
+      )}
+    </VirtualList>
+  );
+}
