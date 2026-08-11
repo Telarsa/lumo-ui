@@ -503,3 +503,57 @@ inheritance, which is why this note exists.
 
 TRIPWIRE: revisit if Lynx reaches 1.0 AND the RTL cascade holds up under a real
 test. Not before.
+
+## §13 — What "one Tab stop" means, and the two rules the gate needed
+
+Recorded 11 Aug 2026, on the commit that made `pnpm run verify` pass end to end
+for the first time: 446 documents, 0 violations.
+
+`composite-tab-stop` had been reporting 12 violations for weeks, described in
+`experiments/measurements/composite-tab-stop-open.json` as "recorded rather
+than silenced". They were two entirely different things, and treating them as
+one is why they sat there.
+
+**Four of them were the RULE being wrong.** React Aria's collections make the
+COLLECTION tabbable while nothing inside is focused, and marshal focus into the
+first item on entry — `useSelectableCollection` computes
+`tabIndex = manager.focusedKey == null ? 0 : -1` in the render body and
+`useSelectableItem` computes the mirror in the same pass, so the two swap
+atomically and there is never a moment with two stops. The served shape is
+`role="listbox" tabindex="0"` with all options at `-1`, which is a tab stop.
+The rule's header had described that case in words from the beginning; it only
+ever DETECTED it via `aria-activedescendant`, which React Aria does not use.
+
+**Eight of them were real.** Base UI's combobox serves an input claiming to own
+a popup and never saying which one — `aria-controls` and
+`aria-activedescendant` are both written from a ref callback after mount. So in
+the served bytes there is a listbox with three unfocusable options and nothing
+referencing it. `useComboboxWiring` mints the id during render and hands it to
+both halves.
+
+Two rules came out of this that generalise beyond the gate:
+
+1. **A rule that reports a false positive is a bug in the rule, not a licence
+   to narrow it until the build is green.** The distinction is whether the
+   exemption describes a shape that is genuinely reachable. `tabindex="0"` on
+   the container is; "a combobox happens to share my parentElement" is not, and
+   that draft was rejected — it is blindness by adjacency, and it would have
+   made the rule miss a standalone listbox with no tab stop at all.
+
+2. **An exemption and the markup it exempts land in the same commit.** A rule
+   narrowed to fit markup that does not exist yet has stopped grading anything.
+   The `aria-controls` arm was unreachable by any page in the export until
+   `useComboboxWiring` shipped; if it had gone in first, its only test would
+   have been a synthetic fixture — the vacuous-pass shape `gate.test.ts`'s own
+   header warns about.
+
+Both exemptions carry negative twins: a container at `tabindex="-1"` still
+fires, a combobox with no `aria-controls` still fires, one pointing elsewhere
+still fires, and a disabled or `tabindex="-1"` owner still fires. Those five
+tests are what stop the next "tidy-up" from widening `=== "0"` to
+`hasAttribute("tabindex")`, which would silently swallow the eight real ones.
+
+TRIPWIRE for deleting `useComboboxWiring`: Base UI computing its list id during
+render and passing it down its own context, so `aria-controls` is a prop rather
+than a ref-callback write. Nothing needs measuring for that — the id is a
+`useId()` either way.
