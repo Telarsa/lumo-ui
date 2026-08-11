@@ -39,13 +39,72 @@ const card = (
 describe("HoverCard — the panel is a named dialog", () => {
   it("adopts the caller's trigger element rather than wrapping it", () => {
     const html = renderToStaticMarkup(card);
-    // One anchor, carrying BOTH the caller's class and the component's.
+    // One anchor, carrying the caller's class.
     expect(html.split("<a ").length - 1).toBe(1);
     expect(html).toContain("lumo-trigger");
-    expect(html).toContain("inline-flex");
     // No <span> wrapper: the React Aria build needed one to hang its pointer
     // handlers and positioning ref on. `safePolygon` and `render` removed it.
     expect(html).not.toContain("<span");
+  });
+
+  /*
+   * THE REGRESSION. This test used to assert `inline-flex` was PRESENT.
+   *
+   * The reported symptom was "the hover card pushes the text up", and the
+   * instinct is to look at the popup — but a portalled, `position: fixed` panel
+   * cannot move anything. The trigger can, and did: `align-middle` on a
+   * line-height-tall box raises its top ~0.2em above the surrounding ascenders,
+   * the line box grows, and every line above it shifts. It happens on FIRST
+   * PAINT, not on open; "when it opens" was the moment it got noticed, not the
+   * moment it started.
+   *
+   * So the assertion is inverted rather than deleted. An adopted element must
+   * leave the paragraph exactly as it found it.
+   */
+  it("puts NO layout class on an adopted trigger — the prose must not reflow", () => {
+    const html = renderToStaticMarkup(card);
+    for (const layoutClass of ["align-middle", "inline-flex", "w-fit"]) {
+      expect(html).not.toContain(layoutClass);
+    }
+  });
+
+  it("still renders its own box when the trigger is not an element", () => {
+    // The case `hoverCardTriggerVariants` was always right for: nothing was
+    // adopted, so the component owns the display and has to declare one.
+    const html = renderToStaticMarkup(
+      <HoverCard label="نما" trigger="کامیاب نظری">
+        <p>سازندهٔ لومو</p>
+      </HoverCard>,
+    );
+    expect(html).toContain("inline-flex");
+  });
+
+  it("`isDisabled` leaves the trigger byte-identical to the enabled one", () => {
+    // A card that is switched off must not reflow the paragraph either — the
+    // disabled path used to add the same two classes by a different route.
+    const enabled = renderToStaticMarkup(card);
+    const disabled = renderToStaticMarkup(
+      <HoverCard
+        isDisabled
+        label="نمای کوتاه نمایه"
+        trigger={
+          <a href="/u/kamyab" className="lumo-trigger">
+            کامیاب نظری
+          </a>
+        }
+      >
+        <p>سازندهٔ لومو</p>
+      </HoverCard>,
+    );
+    // `data-*` and Base UI's generated `id` are wiring, not layout, and the
+    // enabled path legitimately carries both. Everything that can move a line
+    // box — the class list, the tag — has to match.
+    const anchor = (html: string) =>
+      /<a\b[^>]*>/
+        .exec(html)?.[0]
+        .replace(/ (?:data-[a-z-]+|id)="[^"]*"/g, "")
+        .replace(/ data-[a-z-]+(?=[ >])/g, "");
+    expect(anchor(disabled)).toBe(anchor(enabled));
   });
 
   it("names the panel — role AND aria-label land on the popup itself", () => {

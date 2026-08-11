@@ -106,18 +106,44 @@ import { popoverVariants, placementToSideAlign, type LumoPlacement } from "./pop
  * whatever is in the card has to be reachable some other way.
  */
 
-export const hoverCardTriggerVariants = cva(
-  // `inline-flex w-fit` rather than `block`: the trigger must not change the
-  // surrounding layout, and it must hug its content so the card anchors to the
-  // link rather than to the full line box. `align-middle` keeps it on the
-  // baseline of surrounding prose in both scripts.
-  //
-  // It is applied to the TRIGGER ELEMENT ITSELF now. The React Aria build needed
-  // a wrapping `<span>` to hang its pointer handlers and its positioning ref on;
-  // `PreviewCard.Trigger` adopts the caller's element through `render`, so there
-  // is one fewer node in the document and the anchor is the link.
-  "inline-flex w-fit align-middle",
-);
+/**
+ * A STANDALONE trigger's box. NOT applied to an adopted element — see below.
+ *
+ * ── THE `align-middle` DEFECT, AND WHY THE DOCSTRING DID NOT CATCH IT ───────
+ *
+ * This cva used to read `"inline-flex w-fit align-middle"` and it was applied
+ * unconditionally to whatever the caller passed as `trigger`. The comment above
+ * it claimed the classes existed so "the trigger must not change the surrounding
+ * layout". They were the thing changing it.
+ *
+ * A hover card's trigger is nearly always a link inside running prose — that is
+ * the component's whole use — and both halves of that class string are wrong
+ * there:
+ *
+ *   `align-middle`   is `vertical-align: middle`, which aligns the box's CENTRE
+ *                    with the baseline plus half an x-height. For a box whose
+ *                    height is the line-height (~1.5em) that puts its top about
+ *                    1.0em above the baseline, against ~0.8em for the ascenders
+ *                    around it. The line box grows to fit, and every line above
+ *                    the trigger shifts. Reported as "when it opens under a text
+ *                    it pushed the text up" — it is not the opening that moves
+ *                    the text, it is the trigger, on first paint.
+ *
+ *   `inline-flex`    makes the link an atomic box, so a multi-word Persian name
+ *                    can no longer break across two lines. In a narrow column
+ *                    that is an overflow rather than a wrap.
+ *
+ * Neither shadcn's `hover-card` nor Radix's `HoverCardTrigger` puts any class on
+ * the trigger; they hand the caller's element straight through. That is now what
+ * this component does too, and it is the correct reading of "must not change the
+ * surrounding layout": the caller's element keeps ITS OWN display.
+ *
+ * The cva stays exported — deleting one is a silent break in every copy of this
+ * file someone has already edited — and stays useful for the case it was
+ * actually right for: a trigger that is not a run of text, where the component
+ * renders the box itself.
+ */
+export const hoverCardTriggerVariants = cva("inline-flex w-fit");
 
 export const hoverCardVariants = cva(
   // `w-max` lets the card size to its content up to `max-w-xs`; a fixed width
@@ -197,8 +223,10 @@ export function HoverCard({
   if (isDisabled) {
     return React.isValidElement(triggerElement) ? (
       React.cloneElement(triggerElement as React.ReactElement<{ className?: string }>, {
+        // The caller's own classes first and no box classes of ours — the
+        // disabled path must leave the element EXACTLY as the enabled path
+        // does, or turning a card off reflows the paragraph it sits in.
         className: cn(
-          hoverCardTriggerVariants(),
           (triggerElement as React.ReactElement<{ className?: string }>).props.className,
           triggerClassName,
         ),
@@ -214,7 +242,16 @@ export function HoverCard({
         data-lumo=""
         delay={openDelay}
         closeDelay={closeDelay}
-        className={cn(hoverCardTriggerVariants(), triggerClassName)}
+        /*
+         * The box classes apply ONLY when this component is rendering the box.
+         * An adopted element brings its own display, and overriding it is the
+         * `align-middle` defect the cva's docblock records: a link in prose is
+         * already inline and already correct.
+         */
+        className={cn(
+          React.isValidElement(triggerElement) ? undefined : hoverCardTriggerVariants(),
+          triggerClassName,
+        )}
         {...(React.isValidElement(triggerElement)
           ? { render: triggerElement as React.ReactElement<Record<string, unknown>> }
           : {})}
