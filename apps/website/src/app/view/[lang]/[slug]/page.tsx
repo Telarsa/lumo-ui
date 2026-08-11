@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { LOCALES } from "@lumo-ui/core";
-import { assertLocale } from "@/lib/locale";
+import { assertLocale, segmentFor } from "@/lib/locale";
 import { allCatalog, catalogById } from "@/lib/catalog";
 
 export async function generateStaticParams() {
   const entries = await allCatalog();
-  return LOCALES.flatMap((lang) => entries.map((d) => ({ lang, slug: d.id })));
+  return LOCALES.flatMap((lang) => entries.map((d) => ({ lang: segmentFor(lang), slug: d.id })));
 }
 
 export default async function View({

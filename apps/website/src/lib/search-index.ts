@@ -77,8 +77,8 @@ export function buildSearchIndex(
     intro: d.intro,
     tier: undefined,
     href: {
-      "fa-IR": `/fa-IR/docs/${d.id}/`,
-      "en-US": `/en-US/docs/${d.id}/`,
+      "fa-IR": `/fa/docs/${d.id}/`,
+      "en-US": `/en/docs/${d.id}/`,
     },
   }));
   const componentDocs: SearchDoc[] = components.map((d) => ({
@@ -88,8 +88,8 @@ export function buildSearchIndex(
     intro: d.intro,
     tier: d.tier,
     href: {
-      "fa-IR": `/fa-IR/components/${d.id}/`,
-      "en-US": `/en-US/components/${d.id}/`,
+      "fa-IR": `/fa/components/${d.id}/`,
+      "en-US": `/en/components/${d.id}/`,
     },
   }));
 
@@ -102,8 +102,8 @@ export function buildSearchIndex(
     // Mirrors apps/website/src/app/[lang]/blocks/[slug]/page.tsx, whose own
     // generateStaticParams keys every block's route on `b.id` the same way.
     href: {
-      "fa-IR": `/fa-IR/blocks/${b.id}/`,
-      "en-US": `/en-US/blocks/${b.id}/`,
+      "fa-IR": `/fa/blocks/${b.id}/`,
+      "en-US": `/en/blocks/${b.id}/`,
     },
   }));
 
@@ -148,7 +148,7 @@ export function buildSearchIndex(
 //    no-op, so rules 1–4 above are load-bearing on their own and cannot be
 //    skipped because "we already lowercase everything". `.toLowerCase()` is
 //    still applied, last, because the same palette also searches English
-//    titles on `/en-US/` and "Kbd" has to find "kbd".
+//    titles on `/en/` and "Kbd" has to find "kbd".
 //
 // Order matters only between steps that could otherwise interact (diacritics
 // before letter-mapping, so a diacritic sitting on a remapped letter doesn't

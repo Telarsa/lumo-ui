@@ -1,10 +1,10 @@
 import { notFound } from "next/navigation";
 import { LOCALES } from "@lumo-ui/core";
-import { assertLocale } from "@/lib/locale";
+import { assertLocale, segmentFor } from "@/lib/locale";
 import { allBlocks, blockById } from "@/lib/blocks";
 
 export function generateStaticParams() {
-  return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang, slug: b.id })));
+  return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang: segmentFor(lang), slug: b.id })));
 }
 
 /**

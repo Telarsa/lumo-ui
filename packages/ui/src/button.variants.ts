@@ -13,7 +13,7 @@ import { cva, type VariantProps } from "class-variance-authority";
  * Which is exactly what happened: `hero.tsx` and `pricing-table.tsx` are
  * server-rendered blocks — that is the point of them, so their marketing copy is
  * in the first byte — and they style their links with `buttonVariants()`. The
- * whole `/fa-IR/blocks` route failed to prerender.
+ * whole `/fa/blocks` route failed to prerender.
  *
  * So the rule for the library: **a `cva()` definition lives in a
  * `*.variants.ts` file, never in the `.tsx` that carries the directive.** The

@@ -3,7 +3,7 @@ import { Check, Languages } from "lucide-react";
 import type { Locale } from "@lumo-ui/core";
 import { cn, LOCALES } from "@lumo-ui/core";
 import { IconButton, Menu, MenuItem, MenuPopover, MenuTrigger } from "@lumo-ui/ui";
-import { LOCALE_NAMES, site } from "@/lib/locale";
+import { LOCALE_NAMES, site, segmentFor} from "@/lib/locale";
 import { allBlocks } from "@/lib/blocks";
 import { allCatalog } from "@/lib/catalog";
 import { buildSearchIndex } from "@/lib/search-index";
@@ -85,9 +85,9 @@ export async function SiteShell({
   // Docs first — reading order, and the review's finding: a docs section that
   // no header link reaches is a docs section that does not exist on a phone.
   const navLinks: Array<{ key: "docs" | "components" | "blocks"; href: string; label: string }> = [
-    { key: "docs", href: `/${lang}/docs/introduction/`, label: t.docs },
-    { key: "components", href: `/${lang}/components/`, label: t.components },
-    { key: "blocks", href: `/${lang}/blocks/`, label: t.blocks },
+    { key: "docs", href: `/${segmentFor(lang)}/docs/introduction/`, label: t.docs },
+    { key: "components", href: `/${segmentFor(lang)}/components/`, label: t.components },
+    { key: "blocks", href: `/${segmentFor(lang)}/blocks/`, label: t.blocks },
   ];
 
   return (
@@ -95,7 +95,7 @@ export async function SiteShell({
       <header className="sticky top-0 z-40 border-b border-border bg-surface/80 backdrop-blur supports-backdrop-filter:bg-surface/60">
         <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center gap-6 px-6">
           <Link
-            href={`/${lang}/`}
+            href={`/${segmentFor(lang)}/`}
             className="flex items-center gap-2 text-sm font-semibold tracking-tight text-fg"
           >
             <span

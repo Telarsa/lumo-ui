@@ -23,7 +23,7 @@ export default function NotFound() {
             This page could not be found.
           </p>
           <a
-            href="/fa-IR/"
+            href="/fa/"
             className="mt-6 inline-flex h-control-md items-center rounded-md bg-accent px-4 text-sm font-medium text-accent-fg"
           >
             بازگشت به خانه

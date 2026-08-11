@@ -29,7 +29,7 @@ import {
  * The generic row: media, content, actions. The workhorse under lists of
  * files, people, settings and search results.
  *
- *     <Item href="/fa-IR/profile" variant="outlined">
+ *     <Item href="/fa/profile" variant="outlined">
  *       <ItemMedia media="icon">…svg…</ItemMedia>
  *       <ItemContent>
  *         <ItemTitle>پروفایل</ItemTitle>

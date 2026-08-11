@@ -1,5 +1,6 @@
 "use client";
 
+import { segmentFor } from "@/lib/locale";
 import { useEffect, useId, useState } from "react";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { cn, direction } from "@lumo-ui/core";
@@ -188,7 +189,7 @@ export function DemoFrame({
         <code>{`lang="${lang}" dir="${direction(lang)}"`}</code>
       </figcaption>
       <iframe
-        src={`/view/${lang}/${slug}/`}
+        src={`/view/${segmentFor(lang)}/${slug}/`}
         /*
          * The frame's accessible name is in the PAGE's language, because a
          * screen reader reads it from the surrounding document. Interpolating

@@ -14,7 +14,7 @@ import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
 import { highlight } from "@/lib/highlight";
 import { PreviewToolbar } from "@/components/preview-toolbar";
 import { EvidencePanel } from "@/components/evidence-panel";
-import { assertLocale, oppositeDirectionLocale, site } from "@/lib/locale";
+import { assertLocale, oppositeDirectionLocale, site, segmentFor} from "@/lib/locale";
 import { allCatalog, catalogById } from "@/lib/catalog";
 import { loadExamplesFor, type LoadedComponentExamples } from "@/lib/examples-loader";
 import { ExampleCard } from "@/components/example-card";
@@ -25,7 +25,7 @@ export async function generateStaticParams() {
   // registration was an examples file, and this line — then reading demos.tsx
   // alone — quietly built no page for any of them. See lib/catalog.ts.
   const entries = await allCatalog();
-  return LOCALES.flatMap((lang) => entries.map((d) => ({ lang, slug: d.id })));
+  return LOCALES.flatMap((lang) => entries.map((d) => ({ lang: segmentFor(lang), slug: d.id })));
 }
 
 /**
@@ -435,13 +435,13 @@ export default async function ComponentPage({
               <Pager
                 prev={
                   prevDemo && {
-                    href: `/${lang}/components/${prevDemo.id}/`,
+                    href: `/${segmentFor(lang)}/components/${prevDemo.id}/`,
                     title: prevDemo.title[lang],
                   }
                 }
                 next={
                   nextDemo && {
-                    href: `/${lang}/components/${nextDemo.id}/`,
+                    href: `/${segmentFor(lang)}/components/${nextDemo.id}/`,
                     title: nextDemo.title[lang],
                   }
                 }

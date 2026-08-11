@@ -130,15 +130,15 @@ describe("buildSearchIndex", () => {
   it("builds a per-locale href for a component, under /components/", () => {
     const index = buildSearchIndex(components, blocks);
     const doc = index.find((d) => d.id === "button")!;
-    expect(doc.href["fa-IR"]).toBe("/fa-IR/components/button/");
-    expect(doc.href["en-US"]).toBe("/en-US/components/button/");
+    expect(doc.href["fa-IR"]).toBe("/fa/components/button/");
+    expect(doc.href["en-US"]).toBe("/en/components/button/");
   });
 
   it("builds a per-locale href for a block, under /blocks/", () => {
     const index = buildSearchIndex(components, blocks);
     const doc = index.find((d) => d.id === "hero")!;
-    expect(doc.href["fa-IR"]).toBe("/fa-IR/blocks/hero/");
-    expect(doc.href["en-US"]).toBe("/en-US/blocks/hero/");
+    expect(doc.href["fa-IR"]).toBe("/fa/blocks/hero/");
+    expect(doc.href["en-US"]).toBe("/en/blocks/hero/");
   });
 
   it("carries both locales' title and intro through untouched", () => {

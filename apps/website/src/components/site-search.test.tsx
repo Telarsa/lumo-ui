@@ -21,7 +21,7 @@ const INDEX: SearchDoc[] = [
     title: { "fa-IR": "دکمه", "en-US": "Button" },
     intro: { "fa-IR": "کنش اصلی رابط کاربری.", "en-US": "The interface's primary action." },
     tier: "form",
-    href: { "fa-IR": "/fa-IR/components/button/", "en-US": "/en-US/components/button/" },
+    href: { "fa-IR": "/fa/components/button/", "en-US": "/en/components/button/" },
   },
   {
     id: "table",
@@ -29,7 +29,7 @@ const INDEX: SearchDoc[] = [
     title: { "fa-IR": "جدول", "en-US": "Table" },
     intro: { "fa-IR": "نمایش داده‌های ردیفی.", "en-US": "Displays tabular data." },
     tier: "data",
-    href: { "fa-IR": "/fa-IR/components/table/", "en-US": "/en-US/components/table/" },
+    href: { "fa-IR": "/fa/components/table/", "en-US": "/en/components/table/" },
   },
   {
     id: "hero",
@@ -37,7 +37,7 @@ const INDEX: SearchDoc[] = [
     title: { "fa-IR": "سربرگ صفحه", "en-US": "Hero" },
     intro: { "fa-IR": "نخستین بخش صفحه.", "en-US": "The opening section." },
     tier: undefined,
-    href: { "fa-IR": "/fa-IR/blocks/hero/", "en-US": "/en-US/blocks/hero/" },
+    href: { "fa-IR": "/fa/blocks/hero/", "en-US": "/en/blocks/hero/" },
   },
 ];
 

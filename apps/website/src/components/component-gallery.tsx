@@ -1,5 +1,6 @@
 "use client";
 
+import { segmentFor } from "@/lib/locale";
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { cn, formatNumber, type Locale } from "@lumo-ui/core";
@@ -213,7 +214,7 @@ export function ComponentGallery({ lang, items, tiers, strings }: ComponentGalle
           {shown.map((item) => (
             <li key={item.id}>
               <Link
-                href={`/${lang}/components/${item.id}/`}
+                href={`/${segmentFor(lang)}/components/${item.id}/`}
                 className={cn(
                   "group flex h-full flex-col overflow-hidden rounded-lg border border-border",
                   "bg-surface transition-colors hover:border-border-strong hover:bg-surface-hover",
@@ -231,7 +232,7 @@ export function ComponentGallery({ lang, items, tiers, strings }: ComponentGalle
                   className="pointer-events-none h-44 overflow-hidden border-b border-border bg-surface-sunken"
                 >
                   <iframe
-                    src={`/view/${lang}/${item.id}/`}
+                    src={`/view/${segmentFor(lang)}/${item.id}/`}
                     loading="lazy"
                     tabIndex={-1}
                     className="block h-full w-full bg-surface"

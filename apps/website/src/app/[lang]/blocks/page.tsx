@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { formatNumber, type Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
-import { assertLocale, localeParams, site } from "@/lib/locale";
+import { assertLocale, localeParams, site, segmentFor} from "@/lib/locale";
 import { allBlocks, CATEGORIES, categoryLabel } from "@/lib/blocks";
 
 export function generateStaticParams() {
@@ -95,7 +95,7 @@ export default async function Blocks({ params }: { params: Promise<{ lang: strin
                     className="pointer-events-none relative block aspect-16/10 shrink-0 overflow-hidden border-be border-border bg-bg"
                   >
                     <iframe
-                      src={`/view-block/${lang}/${block.id}/`}
+                      src={`/view-block/${segmentFor(lang)}/${block.id}/`}
                       loading="lazy"
                       tabIndex={-1}
                       className="absolute top-0 inset-s-0 h-[400%] w-[400%] scale-25 border-0 ltr:origin-top-left rtl:origin-top-right"
@@ -104,7 +104,7 @@ export default async function Blocks({ params }: { params: Promise<{ lang: strin
                   <span className="flex flex-col gap-1 px-4 py-3">
                     {/* The card's one link; the ::after stretches it over the preview too. */}
                     <Link
-                      href={`/${lang}/blocks/${block.id}/`}
+                      href={`/${segmentFor(lang)}/blocks/${block.id}/`}
                       className="text-sm font-medium text-fg after:absolute after:inset-0"
                     >
                       {block.title[lang]}

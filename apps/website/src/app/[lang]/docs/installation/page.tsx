@@ -18,7 +18,7 @@ pnpm verify      # types → no-CSS-Modules → tests → build → gate
 pnpm dev         # the showcase site, live`;
 
 const PREVIEW_CMDS = `pnpm --filter website build
-pnpm --filter website preview   # http://localhost:4173/fa-IR/`;
+pnpm --filter website preview   # http://localhost:4173/fa/`;
 
 const CSS_IMPORTS = `@import "tailwindcss";
 @import "@lumo-ui/theme/tokens.css";

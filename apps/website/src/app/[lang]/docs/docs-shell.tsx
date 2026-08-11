@@ -1,3 +1,4 @@
+import { segmentFor } from "@/lib/locale";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
@@ -106,7 +107,7 @@ export function DocsShell({
           {DOCS_PAGES.map((d) => (
             <li key={d.slug}>
               <Link
-                href={`/${lang}/docs/${d.slug}/`}
+                href={`/${segmentFor(lang)}/docs/${d.slug}/`}
                 aria-current={d.slug === slug ? "page" : undefined}
                 className={cn(
                   "block whitespace-nowrap rounded-md px-2.5 py-1 transition-colors",
@@ -150,7 +151,7 @@ export function DocsShell({
             >
               {prev ? (
                 <Link
-                  href={`/${lang}/docs/${prev.slug}/`}
+                  href={`/${segmentFor(lang)}/docs/${prev.slug}/`}
                   className="group flex max-w-[45%] flex-col gap-0.5 rounded-md border border-border px-4 py-3 transition-colors hover:bg-surface-hover"
                 >
                   <span className="text-xs text-fg-subtle">
@@ -164,7 +165,7 @@ export function DocsShell({
               )}
               {next ? (
                 <Link
-                  href={`/${lang}/docs/${next.slug}/`}
+                  href={`/${segmentFor(lang)}/docs/${next.slug}/`}
                   className="group flex max-w-[45%] flex-col gap-0.5 rounded-md border border-border px-4 py-3 text-end transition-colors hover:bg-surface-hover"
                 >
                   <span className="text-xs text-fg-subtle">

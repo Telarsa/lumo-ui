@@ -13,11 +13,11 @@ export default function Root() {
   return (
     <LumoHtml lang="fa-IR">
       <head>
-        <meta httpEquiv="refresh" content="0; url=/fa-IR/" />
-        <link rel="canonical" href="/fa-IR/" />
+        <meta httpEquiv="refresh" content="0; url=/fa/" />
+        <link rel="canonical" href="/fa/" />
       </head>
       <body className="grid min-h-dvh place-items-center p-8">
-        <a href="/fa-IR/" className="text-accent underline">
+        <a href="/fa/" className="text-accent underline">
           رفتن به لومو
         </a>
       </body>

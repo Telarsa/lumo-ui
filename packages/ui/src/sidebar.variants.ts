@@ -7,7 +7,7 @@ import { cva, type VariantProps } from "class-variance-authority";
  * when it adopts this component's styling it will CALL these functions from
  * the server. A cva exported from a client module is a client reference, and
  * calling one from a server component is the build failure that once took down
- * the whole /fa-IR/blocks route.
+ * the whole /fa/blocks route.
  *
  * ── THE COLLAPSE CHANNEL ────────────────────────────────────────────────────
  *

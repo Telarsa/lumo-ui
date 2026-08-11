@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Locale } from "@lumo-ui/core";
 import { cn, formatNumber } from "@lumo-ui/core";
-import { site } from "@/lib/locale";
+import { site, segmentFor} from "@/lib/locale";
 import { TIERS } from "@/lib/demos";
 import { allCatalog } from "@/lib/catalog";
 import { DOCS_PAGES } from "@/lib/docs-pages";
@@ -83,8 +83,8 @@ export async function DocsSidebar({
   const docs = DOCS_PAGES.map((d) => ({ slug: d.slug, label: d.label[lang] }));
 
   const sections: Array<{ href: string; label: string }> = [
-    { href: `/${lang}/components/`, label: t.components },
-    { href: `/${lang}/blocks/`, label: t.blocks },
+    { href: `/${segmentFor(lang)}/components/`, label: t.components },
+    { href: `/${segmentFor(lang)}/blocks/`, label: t.blocks },
   ];
 
   // ~28px rows at 13px type: dense enough that all seven tiers scan without a
@@ -106,7 +106,7 @@ export async function DocsSidebar({
           {docs.map((d) => (
             <li key={d.slug}>
               <Link
-                href={`/${lang}/docs/${d.slug}/`}
+                href={`/${segmentFor(lang)}/docs/${d.slug}/`}
                 aria-current={active === `docs:${d.slug}` ? "page" : undefined}
                 className={cn(
                   row,
@@ -146,7 +146,7 @@ export async function DocsSidebar({
               {inTier.map((d) => (
                 <li key={d.id}>
                   <Link
-                    href={`/${lang}/components/${d.id}/`}
+                    href={`/${segmentFor(lang)}/components/${d.id}/`}
                     aria-current={active === d.id ? "page" : undefined}
                     className={cn(
                       row,

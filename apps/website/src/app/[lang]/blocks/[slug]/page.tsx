@@ -6,7 +6,7 @@ import { SiteShell } from "@/components/site-shell";
 import { OnThisPage } from "@/components/on-this-page";
 import { CopyButton } from "@/components/code-block";
 import { DirectionCompare, PreviewFrameThemeSync } from "@/components/demo-frame";
-import { assertLocale, oppositeDirectionLocale, site } from "@/lib/locale";
+import { assertLocale, oppositeDirectionLocale, site, segmentFor} from "@/lib/locale";
 import { allBlocks, blockById } from "@/lib/blocks";
 
 /**
@@ -24,7 +24,7 @@ const SCROLLBAR =
   "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border-strong";
 
 export function generateStaticParams() {
-  return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang, slug: b.id })));
+  return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang: segmentFor(lang), slug: b.id })));
 }
 
 /**
@@ -178,7 +178,7 @@ function BlockFrame({
   pageLang: Locale;
 }) {
   const c = COPY[pageLang];
-  const href = `/view-block/${lang}/${slug}/`;
+  const href = `/view-block/${segmentFor(lang)}/${slug}/`;
   return (
     <figure className="m-0 overflow-hidden rounded-lg border border-border">
       <figcaption
@@ -252,13 +252,13 @@ export default async function BlockPage({
               <Pager
                 prev={
                   prevBlock && {
-                    href: `/${lang}/blocks/${prevBlock.id}/`,
+                    href: `/${segmentFor(lang)}/blocks/${prevBlock.id}/`,
                     title: prevBlock.title[lang],
                   }
                 }
                 next={
                   nextBlock && {
-                    href: `/${lang}/blocks/${nextBlock.id}/`,
+                    href: `/${segmentFor(lang)}/blocks/${nextBlock.id}/`,
                     title: nextBlock.title[lang],
                   }
                 }

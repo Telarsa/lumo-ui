@@ -16,7 +16,7 @@ import {
   Tabs,
 } from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
-import { assertLocale, localeParams, site } from "@/lib/locale";
+import { assertLocale, localeParams, site, segmentFor} from "@/lib/locale";
 import { demoById } from "@/lib/demos";
 import { allCatalog } from "@/lib/catalog";
 
@@ -218,7 +218,7 @@ function Showcase({ lang }: { lang: Locale }) {
               return (
                 <Link
                   key={id}
-                  href={`/${lang}/components/${id}/`}
+                  href={`/${segmentFor(lang)}/components/${id}/`}
                   className="font-medium underline-offset-4 transition-colors hover:text-fg hover:underline"
                 >
                   {demo.title[lang]}
@@ -240,7 +240,7 @@ function Showcase({ lang }: { lang: Locale }) {
               >
                 <div className="flex items-center justify-between border-be border-border px-4 py-2">
                   <Link
-                    href={`/${lang}/components/${id}/`}
+                    href={`/${segmentFor(lang)}/components/${id}/`}
                     className="text-sm font-medium text-fg after:absolute after:inset-0"
                   >
                     {demo.title[lang]}
@@ -279,7 +279,7 @@ function Showcase({ lang }: { lang: Locale }) {
  * Persian pages.
  *
  * The numbers and the date render through `@lumo-ui/core`'s formatters, so on
- * `/fa-IR/` they arrive as Persian digits and a Jalali date in the served HTML,
+ * `/fa/` they arrive as Persian digits and a Jalali date in the served HTML,
  * before any JavaScript runs. That is not decoration either: `no-latin-digits`
  * fails this page if any of them regress, and `persian-digit-floor` fails it if
  * the page stops rendering them at all. The claim and its test are the same
@@ -321,13 +321,13 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         */}
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            href={`/${lang}/components/`}
+            href={`/${segmentFor(lang)}/components/`}
             className="inline-flex h-control-md items-center rounded-md bg-accent px-5 text-sm font-medium text-accent-fg hover:bg-accent-hover"
           >
             {h.getStarted}
           </Link>
           <Link
-            href={`/${lang}/blocks/`}
+            href={`/${segmentFor(lang)}/blocks/`}
             className="inline-flex h-control-md items-center rounded-md border border-border px-5 text-sm font-medium text-fg hover:bg-surface-hover"
           >
             {h.browseBlocks}

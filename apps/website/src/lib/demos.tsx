@@ -131,7 +131,7 @@ import {
  * ── THREE RULES EVERY `render` OBEYS, AND WHY ───────────────────────────────
  *
  *  1. Every user-visible string is keyed by locale. There is no English literal
- *     in any demo: `@lumo-ui/gate` grades the prerendered `/fa-IR/` HTML and an
+ *     in any demo: `@lumo-ui/gate` grades the prerendered `/fa/` HTML and an
  *     English `aria-label` on a Persian page is a failing build, not a review
  *     comment.
  *  2. No bare numbers. `LumoNode` makes `{5}` a compile error, so a count goes
