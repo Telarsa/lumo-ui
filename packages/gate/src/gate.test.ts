@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { gradeHtml, gradingFor, knownLocales, localeForPath } from "./index.ts";
-import { RULES, digitSystem, persianDigitFloor, resolvedIdrefs } from "./rules.ts";
+import { RULES, digitSystem, nativeCalendar, persianDigitFloor, resolvedIdrefs } from "./rules.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "fixtures");
 const read = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -71,6 +71,37 @@ describe("self-test — every rule rejects its poison", () => {
       '<input aria-labelledby="l" aria-describedby="react-aria-_R_1abc_" />' +
       "</body></html>";
     expect(gradeHtml("fa-IR/index.html", html, [resolvedIdrefs])).toEqual([]);
+  });
+
+  /*
+   * native-calendar, from both sides.
+   *
+   * The poison above proves it fires. These two prove it is not merely
+   * pattern-matching Persian words: the SAME date written in the calendar Iran
+   * actually uses must pass, and a Gregorian month on an ENGLISH page must pass
+   * too — `en-US` readers count in `gregory`, so there is nothing to catch and
+   * the rule returns early rather than inventing a check.
+   */
+  it("accepts the same date written in the reader's own calendar", () => {
+    const html =
+      '<!doctype html><html lang="fa-IR" dir="rtl"><body><p>۱ مرداد ۱۴۰۳</p></body></html>';
+    expect(gradeHtml("fa-IR/index.html", html, [nativeCalendar])).toEqual([]);
+  });
+
+  it("is vacuous on a Gregorian locale rather than pretending to grade it", () => {
+    const html = '<!doctype html><html lang="en-US" dir="ltr"><body><p>22 July 2024</p></body></html>';
+    expect(gradeHtml("en-US/index.html", html, [nativeCalendar])).toEqual([]);
+  });
+
+  it("grades ARABIC against its own calendar, not Persian's", () => {
+    // The parametrisation, proven with a second locale — a rule with one
+    // instantiation is indistinguishable from a hardwire. `ar-SA` counts in
+    // islamic-umalqura, and this is the ICU default that is NOT its own
+    // calendar, so the defect is live here in a way it is not for fa-IR.
+    const bad = '<!doctype html><html lang="ar-SA" dir="rtl"><body><p>٢٢ يوليو ٢٠٢٤</p></body></html>';
+    const good = '<!doctype html><html lang="ar-SA" dir="rtl"><body><p>١٦ محرم ١٤٤٦</p></body></html>';
+    expect(gradeHtml("ar-SA/index.html", bad, [nativeCalendar])).toHaveLength(1);
+    expect(gradeHtml("ar-SA/index.html", good, [nativeCalendar])).toEqual([]);
   });
 
   it("persian-digit-floor fires when a page renders no Persian digits", () => {
@@ -255,6 +286,7 @@ describe("fa-IR grading is unchanged by the parametrisation", () => {
       "named-controls",
       "resolved-idrefs",
       "composite-tab-stop",
+      "native-calendar",
     ]);
     expect(persianDigitFloor({}).id).toBe("persian-digit-floor");
   });

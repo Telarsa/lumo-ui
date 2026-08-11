@@ -19,6 +19,20 @@ const LATN = digitSystem("Latin", "latn", "0"); //         U+0030–U+0039
 export interface LocaleGrading {
   direction: "rtl" | "ltr";
   digits: DigitSystem;
+  /**
+   * The Unicode calendar its readers count years in. A THIRD independent
+   * property, for the same reason direction and digits are already two: it does
+   * not follow from either. Persian is rtl/arabext/persian, Arabic is
+   * rtl/arab/islamic-umalqura — same direction, different digits AND a
+   * different calendar — and Urdu is rtl/latn/gregory. Deriving any one from
+   * another is how `no-latin-digits` was silently Persian-only.
+   *
+   * Measured, and the reason this is data rather than an ICU default: on this
+   * project's Node, `Intl.DateTimeFormat("fa-IR")` picks `persian` by itself
+   * while `Intl.DateTimeFormat("ar-SA")` picks GREGORIAN. The default is not
+   * something a gate can rely on, and it can differ between a laptop and CI.
+   */
+  calendar: string;
 }
 
 /**
@@ -39,9 +53,9 @@ export interface LocaleGrading {
  * `fixtures/locales/` grades real Arabic bytes through it.
  */
 const KNOWN: Record<string, LocaleGrading> = {
-  "fa-IR": { direction: "rtl", digits: ARABEXT },
-  "ar-SA": { direction: "rtl", digits: ARAB },
-  "en-US": { direction: "ltr", digits: LATN },
+  "fa-IR": { direction: "rtl", digits: ARABEXT, calendar: "persian" },
+  "ar-SA": { direction: "rtl", digits: ARAB, calendar: "islamic-umalqura" },
+  "en-US": { direction: "ltr", digits: LATN, calendar: "gregory" },
 };
 
 /** The locales `localeForPath` will accept. Used by the gate's own self-test. */
@@ -127,6 +141,7 @@ export function gradeHtml(path: string, html: string, rules: Rule[] = RULES): Vi
     locale,
     direction,
     digits: gradingFor(locale).digits,
+    calendar: gradingFor(locale).calendar,
   };
   return rules.flatMap((r) => r.run(doc));
 }

@@ -80,6 +80,11 @@ export interface Doc {
   direction: "rtl" | "ltr";
   /** The digits this locale's readers expect. See `DigitSystem`. */
   digits: DigitSystem;
+  /**
+   * The Unicode calendar this locale's readers count years in — `"persian"`,
+   * `"islamic-umalqura"`, `"gregory"`. See `nativeCalendar`.
+   */
+  calendar: string;
 }
 
 export interface Violation {
@@ -467,4 +472,178 @@ export const compositeTabStop: Rule = {
   },
 };
 
-export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop];
+
+/**
+ * Rule 7 — a date must be in the READER'S calendar, not merely their language.
+ *
+ * ── THE DEFECT, WHICH EVERY OTHER RULE IN THIS FILE PASSES ──────────────────
+ *
+ * A Persian page can render «۲۲ ژوئیه ۲۰۲۴» — Persian digits, Persian script,
+ * Persian month name — and be completely wrong. Iran uses the Jalali calendar,
+ * where that day is «۱ مرداد ۱۴۰۳». Wrong year, wrong month, wrong day, and
+ * ژوئیه is not a month anyone in Iran uses: it is "July" transliterated.
+ *
+ * Nothing else here can see it. The digits ARE Persian, so `no-latin-digits` is
+ * green. There is no Latin in the ARIA, so `no-latin-aria` is green. The
+ * controls are named and the idrefs resolve. **The page is green on every rule
+ * and off by 622 years.** A reviewer who does not read the calendar sees a
+ * correct, fully localised date.
+ *
+ * ── WHY THE RISK IS REAL RATHER THAN THEORETICAL ────────────────────────────
+ *
+ * Measured on this project's Node, 11 Aug 2026:
+ *
+ *     new Intl.DateTimeFormat("fa-IR").format(d)   →  ۱ مرداد ۱۴۰۳    Jalali
+ *     new Intl.DateTimeFormat("ar-SA").format(d)   →  ٢٢ يوليو ٢٠٢٤   GREGORIAN
+ *
+ * `fa-IR` happens to default to its own calendar in this ICU build. `ar-SA`
+ * does NOT. So the same code, written the same way, is correct in one RTL
+ * locale and silently wrong in the next — and because it is an ICU DEFAULT it
+ * can differ between a laptop and CI. That is precisely why
+ * `packages/core/src/format.ts` states `-u-ca-persian` explicitly rather than
+ * inheriting it, and this rule is what makes that discipline enforceable
+ * instead of remembered.
+ *
+ * It also guards the one thing `react-day-picker` gets wrong by default: its
+ * v10 `locale/fa-IR` is `date-fns`'s Persian locale over a GREGORIAN grid, so
+ * an import written the obvious way ships exactly this defect.
+ *
+ * ── HOW IT GRADES ──────────────────────────────────────────────────────────
+ *
+ * By asking `Intl` for both month lists rather than hardcoding either — the
+ * same construction `parseNumber` uses for digits, and for the same reason: a
+ * hardcoded list is correct until CLDR revises a name, and then it is a rule
+ * that silently stops detecting.
+ *
+ *   NATIVE  the 12 month names in the locale's own calendar
+ *   FOREIGN the 12 month names of the GREGORIAN calendar in the same LANGUAGE
+ *
+ * A foreign name in the served text is the violation. Verified to be
+ * unambiguous — the two sets have **zero overlap** in both non-Gregorian
+ * locales the gate knows:
+ *
+ *     fa-IR  native  دی بهمن اسفند فروردین …    foreign  ژانویه فوریه … ژوئیه …
+ *     ar-SA  native  محرم صفر ربيع الأول …      foreign  يناير فبراير … يوليو …
+ *
+ * A locale whose calendar IS `gregory` has no distinguishable foreign set, so
+ * the rule is vacuous there and returns early rather than inventing a check.
+ * That is the honest behaviour for `en-US` and it is stated so nobody later
+ * reads the empty result as coverage.
+ *
+ * ── TWO FALSE-POSITIVE TRAPS, BOTH MEASURED ON THE REAL BUILD ──────────────
+ *
+ * The first version of this rule used `text.includes(name)` and reported **481
+ * violations across 446 documents**, every one of them wrong. Two causes, and
+ * both are specific to non-Latin script:
+ *
+ *   1. **There is no `` for Persian.** «مه» (Gregorian May) is two letters
+ *      and occurs inside «برنامه», «نامه», «ادامه» — ordinary words on nearly
+ *      every page. Substring matching on a short month name in an abjad is
+ *      matching noise. Fixed with explicit letter lookarounds over `\p{L}\p{M}`,
+ *      which is what `` would mean if it were script-aware.
+ *
+ *   2. **A month name can be an ordinary word.** «مه» ALSO means fog in
+ *      Persian, and «آذر» is a common given name. A bare match is therefore not
+ *      evidence of a date even when the boundaries are right.
+ *
+ * So the rule requires a DATE SHAPE: the month name, bounded, with a run of
+ * digits beside it. That is what the rule actually means — «۲۲ ژوئیه ۲۰۲۴» is
+ * a date in the wrong calendar; «مه غلیظی شهر را گرفت» is a sentence about fog.
+ * Both digit systems count, because a page can render a Gregorian date with
+ * Latin digits too, and that is a worse defect rather than an exempt one.
+ *
+ * ── THE ESCAPE HATCH, WHICH IS A REAL PATTERN AND NOT A CONCESSION ─────────
+ *
+ * `[data-lumo-gregory]` marks a subtree whose Gregorian date is DELIBERATE.
+ * Same shape, same reasoning and the same file as `[data-lumo-latn]`, which
+ * exempts genuinely-Latin runs like an order ID from the digit rule.
+ *
+ * It exists because a real, correct pattern needs it: Iranian software
+ * routinely prints BOTH calendars — this repository's own changelog renders
+ * «۱۹ مرداد ۱۴۰۵ — ۱۰ اوت ۲۰۲۶», Jalali first with the Gregorian beside it,
+ * which is helpful rather than wrong. Those three were the only survivors once
+ * the false positives were fixed, so the hatch is carrying its real weight and
+ * nothing else.
+ *
+ * It is deliberately an ATTRIBUTE on the markup rather than a path allow-list
+ * in a config file: the exemption then lives next to the date it exempts, where
+ * the person changing that date will see it, instead of in a file nobody opens.
+ */
+const monthNameCache = new Map<string, string[]>();
+
+function monthNames(locale: string, calendar: string): string[] {
+  const key = `${locale}|${calendar}`;
+  let names = monthNameCache.get(key);
+  if (!names) {
+    const format = new Intl.DateTimeFormat(`${locale}-u-ca-${calendar}`, {
+      month: "long",
+      timeZone: "UTC",
+    });
+    // Mid-month, so a timezone slip cannot roll into a neighbouring month.
+    names = [
+      ...new Set(
+        Array.from({ length: 12 }, (_, i) => format.format(new Date(Date.UTC(2024, i, 15)))),
+      ),
+    ];
+    monthNameCache.set(key, names);
+  }
+  return names;
+}
+
+/**
+ * A month name in a DATE, not a month name in a sentence.
+ *
+ * `(?<![\p{L}\p{M}])` / `(?![\p{L}\p{M}])` are `\b` rewritten to be
+ * script-aware: JavaScript's own `\b` is defined over `[A-Za-z0-9_]`, so in
+ * Persian it fires between two letters and the boundary means nothing.
+ *
+ * The digit run either side is what makes it a date. `\p{Nd}` covers every
+ * decimal numbering system at once — Latin, Persian, Arabic-Indic — so a
+ * Gregorian date is caught whichever digits it is written in.
+ */
+function datePattern(monthName: string): RegExp {
+  const L = "\\p{L}\\p{M}";
+  const escaped = monthName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const bounded = `(?<![${L}])${escaped}(?![${L}])`;
+  // digits ... month, or month ... digits — within a few characters either way,
+  // which is every date format either locale writes.
+  return new RegExp(`(\\p{Nd}[\\p{Nd}\\s،,/-]{0,12}${bounded})|(${bounded}[\\s،,/-]{0,3}\\p{Nd})`, "u");
+}
+
+export const nativeCalendar: Rule = {
+  id: "native-calendar",
+  because:
+    "A date rendered in the reader's language but the WRONG CALENDAR is green " +
+    "on every other rule and off by centuries. «۲۲ ژوئیه ۲۰۲۴» is Persian text " +
+    "for a day Iran calls «۱ مرداد ۱۴۰۳».",
+  run: (doc) => {
+    if (doc.calendar === "gregory") return []; // nothing to distinguish — see the header
+    const native = monthNames(doc.locale, doc.calendar);
+    const foreign = monthNames(doc.locale, "gregory").filter((name) => !native.includes(name));
+    if (foreign.length === 0) return [];
+    const patterns = foreign.map((name) => [name, datePattern(name)] as const);
+
+    const v: Violation[] = [];
+    for (const node of visibleTextNodes(doc.document)) {
+      // A deliberately dual-calendar subtree. See the header.
+      if (node.parentElement?.closest?.("[data-lumo-gregory]")) continue;
+      const text = node.data;
+      for (const [name, pattern] of patterns) {
+        if (!pattern.test(text)) continue;
+        v.push({
+          rule: "native-calendar",
+          path: doc.path,
+          detail:
+            `Gregorian month ${JSON.stringify(name)} in a date on a ${doc.locale} page, whose ` +
+            `readers count in the ${doc.calendar} calendar. The text is localised; the ` +
+            `CALENDAR is not.`,
+          snippet: text.trim().slice(0, 120),
+        });
+        break; // one violation per text node, not one per matching name
+      }
+    }
+    return v;
+  },
+};
+
+export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop, nativeCalendar];

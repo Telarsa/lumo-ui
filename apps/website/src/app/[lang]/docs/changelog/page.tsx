@@ -303,19 +303,19 @@ export default async function ChangelogPage({
     <DocsShell lang={lang} slug="changelog" title={t.title} intro={t.intro} sections={sections}>
       <P>{t.lead}</P>
 
-      <DocSection id="d20260810" title={t.heading.d20260810}>
+      <DocSection id="d20260810" title={t.heading.d20260810} dualCalendar>
         <Bullets items={t.entries.d20260810} />
       </DocSection>
 
-      <DocSection id="d20260809" title={t.heading.d20260809}>
+      <DocSection id="d20260809" title={t.heading.d20260809} dualCalendar>
         <Bullets items={t.entries.d20260809} />
       </DocSection>
 
-      <DocSection id="d20260808" title={t.heading.d20260808}>
+      <DocSection id="d20260808" title={t.heading.d20260808} dualCalendar>
         <Bullets items={t.entries.d20260808} />
       </DocSection>
 
-      <DocSection id="d20260730" title={t.heading.d20260730}>
+      <DocSection id="d20260730" title={t.heading.d20260730} dualCalendar>
         <Bullets items={t.entries.d20260730} />
       </DocSection>
     </DocsShell>

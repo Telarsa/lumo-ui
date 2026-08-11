@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <!--
+      THE POISON, AND WHY IT IS THE HARDEST DEFECT IN THIS DIRECTORY TO SEE.
+
+      Every other fixture here is visibly wrong once you know what to look for:
+      a Latin digit, an English aria-label, a dangling idref. This one is
+      flawless by every one of those measures.
+
+        · The digits are Persian.        → no-latin-digits passes
+        · There is no Latin anywhere.    → no-latin-aria passes
+        · lang and dir are correct.      → lang-dir passes
+        · Nothing interactive, nothing unnamed, no idrefs.
+
+      And it is off by 622 years. 22 July 2024 is «۱ مرداد ۱۴۰۳» in the calendar
+      Iran actually uses. «ژوئیه» is not a Persian month — it is "July"
+      transliterated into Persian script, which is what you get from a Gregorian
+      calendar wearing a Persian locale.
+
+      This is exactly what `react-day-picker`'s v10 `locale/fa-IR` produces: the
+      date-fns Persian locale over a Gregorian grid.
+    -->
+    <p>۲۲ ژوئیه ۲۰۲۴</p>
+    <p>تاریخ تولد: ۱۵ ژانویه ۱۹۹۰</p>
+  </body>
+</html>

@@ -190,15 +190,35 @@ export function DocsShell({
 export function DocSection({
   id,
   title,
+  dualCalendar,
   children,
 }: {
   id: string;
   title: string;
+  /**
+   * Marks the heading as deliberately carrying a GREGORIAN date beside the
+   * native one — «۱۹ مرداد ۱۴۰۵ — ۱۰ اوت ۲۰۲۶».
+   *
+   * `lumo-gate`'s `native-calendar` rule fires on a Gregorian month in a date
+   * on a `fa-IR` page, because that is normally the silent defect of a date
+   * localised in language but not in calendar. Printing BOTH is the one case
+   * where it is correct and helpful, and Iranian software does it routinely.
+   *
+   * Same shape as `data-lumo-latn` for the digit rule: a narrow, marked
+   * exemption that lives on the markup beside the thing it exempts, so whoever
+   * edits the date sees why it is allowed. Not a config allow-list.
+   */
+  dualCalendar?: boolean | undefined;
   children?: LumoNode;
 }) {
   return (
     <section id={id} className="scroll-mt-24">
-      <h2 className="text-xl font-semibold text-fg">{title}</h2>
+      <h2
+        className="text-xl font-semibold text-fg"
+        {...(dualCalendar ? { "data-lumo-gregory": "" } : {})}
+      >
+        {title}
+      </h2>
       <div className="mt-4 flex flex-col gap-4">{children}</div>
     </section>
   );

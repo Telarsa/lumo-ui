@@ -1,11 +1,25 @@
 <!doctype html>
 <html lang="ar-SA" dir="rtl">
+  <!--
+    THE DATE HERE WAS «١٨ أغسطس ٢٠٢٦» UNTIL 11 Aug 2026, AND IT WAS WRONG.
+
+    Arabic-Indic digits, Arabic script, correct direction — and أغسطس is the
+    GREGORIAN August. Saudi Arabia counts in islamic-umalqura, where that day
+    is ٥ ربيع الأول ١٤٤٨. The fixture that exists to prove this gate grades
+    Arabic correctly was itself localised in every respect except the calendar,
+    and it passed every rule for as long as it existed.
+
+    It was caught on the first run of `native-calendar`, by the rule written for
+    exactly this defect. That is the strongest argument for that rule there is:
+    the person who wrote this file was being careful, and the calendar simply
+    was not a thing anyone was thinking about.
+  -->
   <body>
     <h1>الطلبات</h1>
     <button aria-label="إضافة طلب">+</button>
     <p id="hint">تلميح</p>
     <input aria-labelledby="hint" />
-    <table><tr><td>١٢٠٬٠٠٠ ريال</td><td>١٨ أغسطس ٢٠٢٦</td></tr></table>
+    <table><tr><td>١٢٠٬٠٠٠ ريال</td><td>٥ ربيع الأول ١٤٤٨</td></tr></table>
     <span data-lumo-latn dir="ltr">KH-4825</span>
   </body>
 </html>
