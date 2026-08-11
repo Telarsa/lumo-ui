@@ -1,80 +1,37 @@
 "use client";
 
+import {
+  Children,
+  createContext,
+  Fragment,
+  isValidElement,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type MouseEvent as ReactMouseEvent,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import { cva } from "class-variance-authority";
 import { Check } from "lucide-react";
-import {
-  ListBox as AriaListBox,
-  ListBoxItem as AriaListBoxItem,
-  Text as AriaText,
-  type ListBoxItemProps as AriaListBoxItemProps,
-  type ListBoxProps as AriaListBoxProps,
+import type {
+  Key,
+  Selection,
+  ListBoxItemProps as AriaListBoxItemProps,
+  ListBoxProps as AriaListBoxProps,
 } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, direction, FORMAT_LOCALE, type LumoNode } from "@lumo-ui/core";
+import { foldPersian } from "./autocomplete.tsx";
+import { useLumoLocale } from "./locale.ts";
 import { optional } from "./form.tsx";
 
 /**
  * A standalone selectable list — no popover, no trigger.
  *
- * ═══ STILL REACT ARIA. THIS IS THE ONE THAT DID NOT MOVE. ═══════════════════
- *
- * **`mui/base-ui#5115 "[listbox] Create the Listbox component" is OPEN.** Base
- * UI 1.7.0 exposes 83 subpaths and none of them is a listbox. This component is
- * blocked on that issue, and the paragraphs below are the working that says so
- * — written out because "no primitive" was ALSO true of `file-upload.tsx`, which
- * migrated in an afternoon, and the two situations are not comparable.
- *
- * ── WHAT THE BRIEF ASKED, AND WHAT MEASURING IT FOUND ─────────────────────
- *
- * The question was whether Lumo already owns the ARIA — roving focus, typeahead,
- * `role="option"`, `aria-selected` — in which case the engine underneath is
- * replaceable. **It does not own any of it.** This file is 153 lines and every
- * one of them is a class string, a prop rename or a comment. `AriaListBox` and
- * `AriaListBoxItem` supply, with nothing in this file participating:
- *
- *     role=listbox / role=option / aria-selected / aria-multiselectable
- *     one tab stop with a roving tabindex over the options
- *     arrow keys resolved against the DOCUMENT direction
- *     typeahead — jump to the option whose text starts with what was typed,
- *       in the reader's own script, with the collator that makes ی and ي equal
- *     single / multiple / none selection, with disabled options skipped
- *     Home / End / PageUp / PageDown, and shift-range selection
- *
- * That is a state machine, not a composition. The premise "Lumo already owns
- * that code" is false here, and it is the finding rather than an excuse.
- *
- * ── COULD IT BE BUILT ON WHAT BASE UI DOES SHIP? YES, AND HERE IS THE COST ──
- *
- * Base UI's `CompositeRoot` is exactly the roving-tabindex machine this needs.
- * It is reachable — `@base-ui/react/internals/composite` is a real entry in the
- * package's `exports` map, and it publishes `CompositeRoot`, `CompositeItem`,
- * `CompositeList` and `gridNavigation`. Two things stop it being the answer:
- *
- *  1. **The subpath is called `internals`.** `@lumo-ui/base-ui-ssr`'s first rule
- *     is "public API only — nothing imports a Base UI internal module path", and
- *     the package earned that rule by measuring what the alternative cost:
- *     React Aria's equivalent defects needed a 27 KB patch of `node_modules`.
- *     A component built on `internals/composite` is a fork with extra steps, and
- *     it would break on a patch release with no type error.
- *  2. **`CompositeRoot` has no typeahead.** Grepped: no `useTypeahead`, no
- *     `onTypingChange`, nothing. Base UI's own Select and Menu get typeahead
- *     from `floating-ui-react/useTypeahead`, wired in their roots. So the build
- *     is `internals/composite` + `floating-ui-react` + a selection model + the
- *     `role`/`aria-selected` wiring — three undocumented dependencies and real
- *     state, to reimplement a component upstream has an open issue to ship.
- *
- * **The recommendation is to wait for #5115, and the cost of waiting is one
- * React Aria import in a library that is otherwise off it.** That is a real
- * cost — `form.tsx` already carries `FOCUS_RING` and `FOCUS_RING_SELF` side by
- * side because the library is mid-migration — and it is smaller than the cost of
- * owning a listbox state machine forever.
- *
- * ── WHAT MOVED ANYWAY: SEE `combobox.tsx` AND `select.tsx` ────────────────
- *
- * The listbox INSIDE a popover did migrate, because Base UI ships those roots
- * and `Combobox.List` / `Select.List` come with them. So Base UI has a listbox;
- * it just has no way to have one without a trigger. That is precisely the
- * separation this component exists for — see the section below.
-
+ * ═══ HAND-WRITTEN. BASE UI SHIPS NO LISTBOX, AND THE PIECE IT DOES SHIP IS ══
+ * ═══ AN `internals` PATH THAT WOULD NOT HAVE COVERED THE HARD PART. ═════════
  *
  *     <ListBox
  *       label="پرونده‌ها"
@@ -86,35 +43,119 @@ import { optional } from "./form.tsx";
  *       <ListBoxItem id="2">پرونده دوم</ListBoxItem>
  *     </ListBox>
  *
+ * The previous header of this file argued, at length, that the component should
+ * WAIT for `mui/base-ui#5115 "[listbox] Create the Listbox component"` rather
+ * than own a state machine. That issue is still open, and the argument has been
+ * overtaken by a simpler fact: this was one of the last two shipped components
+ * still constructing React Aria at runtime, on a branch whose purpose is to
+ * remove that engine. So the state machine is now Lumo's, and the paragraphs
+ * below are the working — the same shape as `date-input.tsx`, which hand-wrote
+ * the segmented input when Base UI had no date field.
+ *
+ * ── WHAT `internals/composite` ACTUALLY IS, MEASURED RATHER THAN ASSUMED ────
+ *
+ * `@base-ui/react/internals/composite` is real and reachable, and it publishes
+ * `CompositeRoot`, `CompositeItem`, `CompositeList`, `useCompositeRoot`,
+ * `useCompositeListItem`, `gridNavigation`, `findNonDisabledListIndex`,
+ * `isListIndexDisabled` and `scrollIntoViewIfNeeded`. Read rather than guessed
+ * at (every `.d.ts` under `internals/composite`, and the matching `.mjs`), it supplies
+ * exactly one of the six things this component needs — roving focus — and it
+ * supplies it in a shape that costs more here than it saves:
+ *
+ *  1. **The subpath is called `internals`.** `@lumo-ui/base-ui-ssr`'s first rule
+ *     is "public API only — nothing imports a Base UI internal module path", and
+ *     the package earned that rule by measuring the alternative: React Aria's
+ *     equivalent defects needed a 27 KB patch of `node_modules`. A component
+ *     built on it is a fork with extra steps that breaks on a patch release with
+ *     no type error.
+ *
+ *  2. **It has no typeahead.** Grepped the whole subtree: the only occurrence of
+ *     the word is a doc comment on `CompositeList` telling you to wire the list
+ *     into `floating-ui-react`'s `useTypeahead` yourself. Base UI's own Select
+ *     and Menu do exactly that in their roots. Typeahead is the behaviour this
+ *     component's docs page SELLS — «ش» jumps to شیراز — so a dependency that
+ *     does not carry it is not carrying the hard part.
+ *
+ *  3. **`CompositeItem` writes `tabIndex: isHighlighted ? 0 : -1`, and on the
+ *     server nothing is highlighted.** `useCompositeItem` takes its index from
+ *     `useCompositeListItem`, which is only given a `guess` by callers that pass
+ *     one — `CompositeItem` does not — so every item renders at index `-1`,
+ *     `highlightedIndex` matches none of them, and the served bytes contain
+ *     `tabindex="-1"` and nothing else. That is the exact defect
+ *     `packages/base-ui-ssr/src/composite-tab-stop.ts` exists for, and it would
+ *     have had to be papered over here with `useCompositeTabStop`.
+ *
+ *  4. Selection (single / multiple / none, `disabledKeys`, shift-ranges) is not
+ *     in `composite` at all under any spelling. It would have been Lumo's either
+ *     way.
+ *
+ * So the choice was between owning five sixths of a widget on top of an internal
+ * module path, or owning all of it on top of nothing. **Hand-written**, and the
+ * decisive line is (3): with no library resolving anything in a layout effect,
+ * the roving tab stop is computed DURING RENDER from state whose initial value
+ * is known — the same trick `table.tsx` uses for its grid — so the served bytes
+ * are correct with no hydration-scoped workaround anywhere in the file.
+ *
+ * ── WHAT REACT ARIA WAS SUPPLYING, AND WHERE EACH PIECE LIVES NOW ──────────
+ *
+ *     role=listbox / role=option / aria-selected      the JSX below
+ *     aria-multiselectable                             `ListBox`, from selectionMode
+ *     one tab stop with a roving tabindex              `activeIndex` + `data-index`
+ *     arrow keys resolved against the direction        `onKeyDown`, via direction()
+ *     typeahead in the reader's own script             `matchTypeahead`
+ *     single / multiple / none, disabled skipped       `commit` / `toggleAt`
+ *     Home / End / PageUp / PageDown, shift-ranges     `onKeyDown`
+ *
+ * ── WHAT IS LOST, LISTED RATHER THAN OMITTED ───────────────────────────────
+ *
+ *  · **Drag and drop** (`dragAndDropHooks`), **`renderEmptyState`**, **`layout:
+ *    "grid"`**, **`selectionBehavior: "replace"`**, **`escapeKeyBehavior`**,
+ *    **`shouldSelectOnPressUp`** and **`autoFocus`** are gone from the TYPE, not
+ *    merely unimplemented. Nothing in this repository passed one, and a prop
+ *    that is accepted and silently does nothing is the defect class this
+ *    project's ledger is made of — a compile error naming the call site is the
+ *    honest version.
+ *
+ *  · **Sections.** `ListBoxSection` was never exported by Lumo, so no API is
+ *    lost; a grouped listbox now needs this file to grow `role="group"` support
+ *    rather than to re-export something.
+ *
+ *  · **Shift-range selection REPLACES the selection with the range** rather than
+ *    unioning it with an earlier disjoint range. React Aria's range model keeps
+ *    both. This is a genuine reduction and it is the one behaviour here a user
+ *    could notice.
+ *
+ *  · **Virtual focus and `aria-activedescendant`** are not implemented, because
+ *    they were not used: a standalone listbox owns real DOM focus. The combobox
+ *    case that needs them lives in `autocomplete.tsx` on its own engine.
+ *
+ * What is GAINED is one measured defect retired, described below on `ListBoxItem`.
+ *
+ * ── NO ENGLISH LEAKS, AND NOW THERE IS NO BUNDLE TO LEAK FROM ──────────────
+ *
+ * Rendered on a `fa-IR` page this emits `role="listbox"`, `aria-orientation`,
+ * `aria-multiselectable`, and one `role="option"` + `aria-selected` per item.
+ * Under React Aria that list was measured to contain no bundle string; now there
+ * is no bundle at all, so the property is structural rather than lucky.
+ *
+ * `label` is still REQUIRED, for the reason `Table` states about `role="grid"`:
+ * an unnamed `role="listbox"` is a single Tab stop that announces "list box" and
+ * nothing else. Nothing leaks; it simply arrives anonymous, which is the
+ * `named-controls` defect in its quietest form.
+ *
  * ── WHY THIS EXISTS SEPARATELY FROM `Select` AND `ComboBox` ────────────────
  *
  * Both of those wrap a listbox, and both bind it to a popover — the listbox is
  * unreachable outside the overlay. So the master pane of a list/detail screen,
  * which is a listbox in every sense that matters, had to be built from
  * `<Button>` rows instead. That composition works and it is announced (a button
- * can carry `aria-current`), but it loses two things RAC gives away for free
- * and neither is recoverable with CSS:
+ * can carry `aria-current`), but it loses two things neither CSS nor a popover
+ * can give back:
  *
  *   - **One Tab stop.** `role="listbox"` takes a single stop and moves between
- *     options with arrow keys, resolved against the document direction. Fifty
- *     buttons are fifty stops, and a keyboard reader must Tab past every record
- *     to reach the detail pane.
+ *     options with arrow keys. Fifty buttons are fifty stops, and a keyboard
+ *     reader must Tab past every record to reach the detail pane.
  *   - **Typeahead.** Typing «س» jumps to the first option starting with it.
- *     RAC reads that string from a LITERAL string child, which is why
- *     `ListBoxItem` re-derives `textValue` below.
- *
- * ── NO ENGLISH LEAKS IN THIS ONE, AND THAT WAS MEASURED ────────────────────
- *
- * Rendered on a `fa-IR` page, a standalone ListBox emits `role="listbox"`,
- * `aria-orientation`, `aria-multiselectable` and one `role="option"` +
- * `aria-selected` per item — and no string from React Aria's bundle at all. The
- * two English labels the ComboBox has to close ("Show suggestions",
- * "Suggestions") come from `useComboBox`, not from the listbox.
- *
- * `label` is still REQUIRED, for the reason `Toolbar` states: an unnamed
- * `role="listbox"` is a single Tab stop that announces "list box" and nothing
- * else. Nothing leaks; it simply arrives anonymous, which is the
- * `named-controls` defect in its quietest form.
  */
 
 export const listBoxVariants = cva(
@@ -126,15 +167,136 @@ export const listBoxItemVariants = cva(
   // edge, and `justify-between` puts the selection mark on the trailing one.
   "flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 " +
     "text-start text-sm text-fg outline-none " +
-    "data-hovered:bg-surface-hover " +
-    "data-focused:bg-surface-hover " +
+    // ── `data-hovered` → `:hover`, `data-focused` → `:focus` ────────────────
+    //
+    // Both were React Aria attributes and there is no engine here to publish
+    // them any more. The platform already has both states, and this component
+    // moves REAL DOM focus rather than a virtual cursor — so `:focus` is the
+    // same set of moments `data-focused` was, one selector earlier. Keeping the
+    // old spelling would have left two rules that style nothing and review as if
+    // they did, which is the substitution `table.variants.ts` made for the same
+    // reason when the grid became Lumo's own markup.
+    "hover:bg-surface-hover " +
+    "focus:bg-surface-hover " +
+    // These two are still attributes, because they are still ours to write.
     "data-selected:bg-surface-sunken data-selected:font-medium " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
 );
 
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE CONTEXTS
+ *
+ * Two, for the reason `table.tsx` needs two: an option must know both something
+ * about the LIST (the selection model, which item currently holds the tab stop)
+ * and something only its POSITION can tell it. The index arrives through a
+ * provider per child rather than through a registry an item writes into from an
+ * effect — an effect would put the index one commit behind the first paint,
+ * which is precisely how a roving tabindex ends up absent from the served bytes.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+interface ListBoxContextValue {
+  selectionMode: "none" | "single" | "multiple";
+  isSelected: (key: Key | undefined) => boolean;
+  isKeyDisabled: (key: Key | undefined) => boolean;
+  /** The one index whose option is `tabindex="0"`. */
+  activeIndex: number;
+  onItemFocus: (index: number) => void;
+  onItemClick: (index: number, event: ReactMouseEvent) => void;
+}
+
+const ListBoxContext = createContext<ListBoxContextValue | null>(null);
+const ListBoxIndexContext = createContext<number>(-1);
+
+/** One option, as the LIST sees it. Text is read from the DOM, never from here. */
+interface OptionDescriptor {
+  key: Key | undefined;
+  disabled: boolean;
+}
+
+/**
+ * The options, flattened, in DOM order.
+ *
+ * `Children.toArray` flattens arrays and NOT fragments, and the difference is
+ * invisible until it is a defect: a caller who groups options in a `<>…</>` —
+ * which is the natural way to write a conditional block of them — would hand
+ * this component ONE child, so every option inside it would receive index 0,
+ * every option would render `tabindex="0"`, and a list that looks right would
+ * be as many Tab stops as it has rows. Found by writing that call shape down and
+ * running it, not by review — nothing in this repository passes a fragment
+ * today, which is precisely why it would have shipped. `list-box.test.tsx`
+ * groups its options in one for exactly this reason.
+ */
+function flattenOptions<T extends object>(node: ReactNode): ReactElement<ListBoxItemProps<T>>[] {
+  const out: ReactElement<ListBoxItemProps<T>>[] = [];
+  for (const child of Children.toArray(node)) {
+    if (!isValidElement(child)) continue;
+    if (child.type === Fragment) {
+      out.push(...flattenOptions<T>((child.props as { children?: ReactNode }).children));
+      continue;
+    }
+    out.push(child as ReactElement<ListBoxItemProps<T>>);
+  }
+  return out;
+}
+
+/** `'all' | Iterable<Key> | undefined` → the one shape everything below reads. */
+function toSelection(keys: "all" | Iterable<Key> | undefined): Selection {
+  if (keys === undefined) return new Set<Key>();
+  if (keys === "all") return "all";
+  return new Set<Key>(keys);
+}
+
+/**
+ * Does `text` begin with `query`, to a Persian reader?
+ *
+ * `foldPersian` on BOTH sides before the collator sees either — imported from
+ * `autocomplete.tsx` rather than restated, exactly as `command.tsx` imports it.
+ * Its header carries the measurement: `Intl.Collator` under `usage: "search"`
+ * does NOT fold ی~ي or ک~ك on ICU 78.3, which is the single most common reason a
+ * Persian reader typing on an Arabic layout jumps nowhere. The collator is still
+ * asked for what it IS good at — case, accents, punctuation — over the page's
+ * own `FORMAT_LOCALE`, so an `en-US` list compares as English.
+ *
+ * The prefix is taken by LENGTH after folding, which is safe because both sides
+ * are folded by the same function: ZWNJ is removed from both or from neither.
+ */
+function startsWithFolded(text: string, query: string, collator: Intl.Collator): boolean {
+  const folded = foldPersian(text);
+  const needle = foldPersian(query);
+  if (needle === "") return false;
+  return collator.compare(folded.slice(0, needle.length), needle) === 0;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE LIST
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * `Pick` rather than `Omit`, and that is the whole statement of what survived.
+ *
+ * Every prop below keeps React Aria's own declared type — the names, the
+ * `'all' | Iterable<Key>` shapes, the `Selection` handed to `onSelectionChange`
+ * — through a TYPE-ONLY import, which is this branch's established pattern for a
+ * frozen public API. Everything React Aria declared and this file does not
+ * implement is therefore absent from the type, so passing it is a compile error
+ * naming the call site. See the header for the list and the argument.
+ */
 export interface ListBoxProps<T extends object>
-  extends Omit<AriaListBoxProps<T>, "children" | "className" | "aria-label"> {
+  extends Pick<
+    AriaListBoxProps<T>,
+    | "id"
+    | "items"
+    | "selectionMode"
+    | "selectedKeys"
+    | "defaultSelectedKeys"
+    | "onSelectionChange"
+    | "disallowEmptySelection"
+    | "disabledKeys"
+    | "onAction"
+    | "orientation"
+    | "shouldFocusWrap"
+  > {
   /** Announced name of the list. Required. */
   label: string;
   /** Options: static children, or a render function over `items`. */
@@ -142,16 +304,360 @@ export interface ListBoxProps<T extends object>
   className?: string | undefined;
 }
 
-export function ListBox<T extends object>({ label, className, ...props }: ListBoxProps<T>) {
+export function ListBox<T extends object>({
+  label,
+  className,
+  children,
+  items,
+  id,
+  selectionMode = "none",
+  selectedKeys,
+  defaultSelectedKeys,
+  onSelectionChange,
+  disallowEmptySelection,
+  disabledKeys,
+  onAction,
+  orientation = "vertical",
+  shouldFocusWrap,
+}: ListBoxProps<T>) {
+  const locale = useLumoLocale();
+  const ref = useRef<HTMLDivElement>(null);
+
+  /**
+   * Where the roving tab stop has been MOVED to, or `null` for "nobody has
+   * moved it yet".
+   *
+   * `null` and not `0`, because the two are different facts and the difference
+   * is what puts a tab stop in the first byte: with nothing moved, the stop is
+   * derived below from the selection, which the server knows. This is not state
+   * mirroring the DOM — `document.activeElement` says where focus IS, and this
+   * says where focus RETURNS when the list is Tabbed back into, which no DOM
+   * property records.
+   */
+  const [movedTo, setMovedTo] = useState<number | null>(null);
+  const [uncontrolled, setUncontrolled] = useState<Selection>(() =>
+    toSelection(defaultSelectedKeys),
+  );
+  /** The last item selected without Shift — the fixed end of a Shift range. */
+  const anchor = useRef<number | null>(null);
+  /** Typeahead buffer. A ref: it must not survive a blur, and it is never rendered. */
+  const typed = useRef<{ query: string; at: number } | null>(null);
+
+  const selection = selectedKeys === undefined ? uncontrolled : toSelection(selectedKeys);
+  const disabledSet = useMemo(() => new Set<Key>(disabledKeys ?? []), [disabledKeys]);
+
+  const isSelected = (key: Key | undefined): boolean =>
+    key !== undefined && (selection === "all" || selection.has(key));
+  const isKeyDisabled = (key: Key | undefined): boolean =>
+    key !== undefined && disabledSet.has(key);
+
+  /*
+   * The options, as ELEMENTS, so their order and their `id` are known during
+   * render. This is a collection walk, and `select.tsx` refuses to do one — for
+   * a different reason that does not apply here: there it would have
+   * REIMPLEMENTED a builder the rented engine already owns. Here there is no
+   * engine, this component IS the collection widget, and the alternative is to
+   * learn the option order from an effect, i.e. after the first paint.
+   */
+  const optionElements = useMemo(() => {
+    const rendered: ReactNode =
+      typeof children === "function"
+        ? Array.from(items ?? []).map((item) => children(item) as ReactNode)
+        : (children as ReactNode);
+    return flattenOptions<T>(rendered);
+  }, [children, items]);
+
+  const descriptors: OptionDescriptor[] = optionElements.map((element) => {
+    const key = element.props.id;
+    return {
+      key,
+      disabled: element.props.isDisabled === true || isKeyDisabled(key),
+    };
+  });
+
+  /**
+   * The one option that is `tabindex="0"`, resolved DURING RENDER.
+   *
+   * First the selected option, then the first enabled one — which is what a
+   * reader expects when Tabbing into a list that already has an answer in it,
+   * and what React Aria did. `-1` only when every option is disabled, in which
+   * case the widget has nothing to focus and `composite-tab-stop` skips it too.
+   */
+  const firstEnabled = descriptors.findIndex((d) => !d.disabled);
+  const firstSelected = descriptors.findIndex((d) => !d.disabled && isSelected(d.key));
+  const activeIndex = movedTo ?? (firstSelected === -1 ? firstEnabled : firstSelected);
+
+  function commit(next: Selection) {
+    if (selectedKeys === undefined) setUncontrolled(next);
+    onSelectionChange?.(next);
+  }
+
+  /** Every enabled option's index, in DOM order. The candidate set for a key. */
+  function enabledIndices(): number[] {
+    const out: number[] = [];
+    descriptors.forEach((d, index) => {
+      if (!d.disabled) out.push(index);
+    });
+    return out;
+  }
+
+  /** Moves focus, and reports where it landed. `null` if it did not move. */
+  function focusIndex(index: number): number | null {
+    const root = ref.current;
+    if (!root) return null;
+    // Read out of the DOM rather than out of a registry of refs — the argument
+    // `table.tsx` makes for the same query, and the reason an option carries
+    // `data-index` at all. `focus()` scrolls the option into view inside the
+    // list's own `overflow-auto` box; nothing here needs to compute that.
+    const target = root.querySelector<HTMLElement>(`[data-index="${index}"]`);
+    if (!target) return null;
+    setMovedTo(index);
+    target.focus();
+    return index;
+  }
+
+  /**
+   * The landed index is RETURNED rather than read back off the DOM afterwards,
+   * and that is the difference between a working Shift-range and a silent one:
+   * `setMovedTo` is a state update, so `[tabindex="0"]` is still on the option
+   * focus just LEFT until the next commit. Measured — the first version of this
+   * queried for it and extended the range by nothing.
+   */
+  function move(from: number, step: number): number | null {
+    const order = enabledIndices();
+    const at = order.indexOf(from);
+    let next = at === -1 ? 0 : at + step;
+    if (next < 0 || next >= order.length) {
+      if (shouldFocusWrap !== true || order.length === 0) return null;
+      next = (next + order.length) % order.length;
+    }
+    const target = order[next];
+    return target === undefined ? null : focusIndex(target);
+  }
+
+  /**
+   * How many options fit in one screenful of the list.
+   *
+   * Measured off the DOM rather than declared, because the list's height is a
+   * class the CALLER writes (`max-h-48` in the docs' master-pane example) and a
+   * fixed page of ten would page past the end of a list showing four.
+   */
+  function pageSize(): number {
+    const root = ref.current;
+    const option = root?.querySelector<HTMLElement>('[role="option"]');
+    if (!root || !option || option.offsetHeight === 0) return 10;
+    return Math.max(1, Math.floor(root.clientHeight / option.offsetHeight));
+  }
+
+  function toggleAt(index: number) {
+    if (selectionMode === "none") return;
+    const key = descriptors[index]?.key;
+    if (key === undefined) return;
+
+    if (selectionMode === "single") {
+      const next =
+        isSelected(key) && disallowEmptySelection !== true
+          ? new Set<Key>()
+          : new Set<Key>([key]);
+      anchor.current = index;
+      commit(next);
+      return;
+    }
+
+    const next =
+      selection === "all"
+        ? new Set<Key>(descriptors.map((d) => d.key).filter((k): k is Key => k !== undefined))
+        : new Set<Key>(selection);
+    if (next.has(key)) {
+      if (next.size > 1 || disallowEmptySelection !== true) next.delete(key);
+    } else {
+      next.add(key);
+    }
+    anchor.current = index;
+    commit(next);
+  }
+
+  /** Shift-extend. See the header: this REPLACES the selection with the range. */
+  function selectRange(to: number) {
+    if (selectionMode !== "multiple") {
+      toggleAt(to);
+      return;
+    }
+    const from = anchor.current ?? to;
+    const lo = Math.min(from, to);
+    const hi = Math.max(from, to);
+    const next = new Set<Key>();
+    for (let index = lo; index <= hi; index += 1) {
+      const d = descriptors[index];
+      if (d && !d.disabled && d.key !== undefined) next.add(d.key);
+    }
+    commit(next);
+  }
+
+  function activate(index: number) {
+    const key = descriptors[index]?.key;
+    toggleAt(index);
+    if (key !== undefined) onAction?.(key);
+  }
+
+  const collator = useMemo(
+    () => new Intl.Collator(FORMAT_LOCALE[locale], { usage: "search", sensitivity: "base" }),
+    [locale],
+  );
+
+  /**
+   * The option a typed string means, or `null`.
+   *
+   * The search starts AFTER the current option so that typing the same letter
+   * twice walks the options beginning with it, which is what every listbox
+   * does; a repeated single character is detected rather than accumulated for
+   * exactly that reason. The text comes from `data-text` when the item derived
+   * one, and from `textContent` otherwise — the option's own rendered text, in
+   * the reader's own script, with no collection of strings to keep in sync.
+   */
+  function matchTypeahead(query: string, from: number): number | null {
+    const root = ref.current;
+    if (!root) return null;
+    const order = enabledIndices();
+    if (order.length === 0) return null;
+    const start = Math.max(0, order.indexOf(from));
+    for (let step = 1; step <= order.length; step += 1) {
+      const index = order[(start + step) % order.length];
+      if (index === undefined) continue;
+      const element = root.querySelector<HTMLElement>(`[data-index="${index}"]`);
+      const text = element?.dataset["text"] ?? element?.textContent ?? "";
+      if (startsWithFolded(text, query, collator)) return index;
+    }
+    return null;
+  }
+
+  function onKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
+    const option = (event.target as HTMLElement | null)?.closest<HTMLElement>('[role="option"]');
+    const raw = option?.dataset["index"];
+    const from = raw === undefined ? activeIndex : Number(raw);
+    if (from < 0) return;
+
+    /*
+     * WHICH arrow advances is resolved from the locale, never written down —
+     * the rule `date-input.tsx` and `table.variants.ts`'s `gridArrow` both state,
+     * and the only line in this file that a Latin-only reviewer cannot check by
+     * looking. It only applies to a HORIZONTAL list: no writing mode mirrors the
+     * block axis, so a vertical list's Down/Up are the same in both directions.
+     */
+    const dir = direction(locale);
+    const forward = orientation === "horizontal" ? (dir === "rtl" ? "ArrowLeft" : "ArrowRight") : "ArrowDown";
+    const backward = orientation === "horizontal" ? (dir === "rtl" ? "ArrowRight" : "ArrowLeft") : "ArrowUp";
+    const order = enabledIndices();
+
+    switch (event.key) {
+      case forward:
+      case backward: {
+        event.preventDefault();
+        typed.current = null;
+        const landed = move(from, event.key === forward ? 1 : -1);
+        if (event.shiftKey && landed !== null) selectRange(landed);
+        return;
+      }
+      case "Home":
+      case "End": {
+        event.preventDefault();
+        typed.current = null;
+        // NOT mirrored, and that is deliberate: they mean first and last in
+        // READING order, and reading order is what already flipped. Mirroring
+        // them too would flip it back. Same argument as `date-input.tsx`.
+        const target = event.key === "Home" ? order[0] : order[order.length - 1];
+        if (target !== undefined) focusIndex(target);
+        return;
+      }
+      case "PageUp":
+      case "PageDown": {
+        event.preventDefault();
+        typed.current = null;
+        move(from, (event.key === "PageDown" ? 1 : -1) * pageSize());
+        return;
+      }
+      case "Enter":
+        event.preventDefault();
+        typed.current = null;
+        activate(from);
+        return;
+      default:
+        break;
+    }
+
+    if (event.key === "a" && (event.ctrlKey || event.metaKey)) {
+      if (selectionMode !== "multiple") return;
+      event.preventDefault();
+      commit("all");
+      return;
+    }
+
+    // A space CONTINUES a typeahead in progress and otherwise selects, which is
+    // the only reading under which «فاز دو» is typeable in a list that also
+    // selects with Space.
+    const continuing = typed.current !== null && Date.now() - typed.current.at < 1000;
+    if (event.key === " " && !continuing) {
+      event.preventDefault();
+      if (event.shiftKey) selectRange(from);
+      else activate(from);
+      return;
+    }
+
+    if (event.key.length !== 1 || event.ctrlKey || event.metaKey || event.altKey) return;
+    const previous = continuing ? typed.current?.query ?? "" : "";
+    const query = previous + event.key;
+    typed.current = { query, at: Date.now() };
+    // A repeated single character walks the options starting with it rather
+    // than searching for a doubled letter that no option has.
+    const needle = /^(.)\1+$/.test(query) ? event.key : query;
+    const match = matchTypeahead(needle, from);
+    if (match === null) return;
+    event.preventDefault();
+    focusIndex(match);
+  }
+
+  const context: ListBoxContextValue = {
+    selectionMode,
+    isSelected,
+    isKeyDisabled,
+    activeIndex,
+    onItemFocus: setMovedTo,
+    onItemClick: (index, event) => {
+      setMovedTo(index);
+      if (event.shiftKey && selectionMode === "multiple") selectRange(index);
+      else activate(index);
+    },
+  };
+
   return (
-    <AriaListBox
-      data-lumo=""
-      aria-label={label}
-      className={cn(listBoxVariants(), className)}
-      {...props}
-    />
+    <ListBoxContext.Provider value={context}>
+      <div
+        ref={ref}
+        data-lumo=""
+        role="listbox"
+        aria-label={label}
+        // Written even when it is the default, because it is a fact a reader is
+        // told before touching anything, and because a horizontal list that
+        // omits it is announced as a vertical one.
+        aria-orientation={orientation}
+        {...(selectionMode === "multiple" ? { "aria-multiselectable": true } : {})}
+        {...optional("id", id)}
+        onKeyDown={onKeyDown}
+        className={cn(listBoxVariants(), className)}
+      >
+        {optionElements.map((element, index) => (
+          <ListBoxIndexContext.Provider key={element.key ?? index} value={index}>
+            {element}
+          </ListBoxIndexContext.Provider>
+        ))}
+      </div>
+    </ListBoxContext.Provider>
   );
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * ONE OPTION
+ * ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
  * One option.
@@ -162,29 +668,35 @@ export function ListBox<T extends object>({ label, className, ...props }: ListBo
  * colour alone is not a distinguishing feature (WCAG 1.4.1), and it is
  * `aria-hidden` because selection is already in the tree as `aria-selected`.
  *
- * `textValue` is re-derived from a string child for the reason documented at
- * length in menu.tsx: RAC extracts typeahead text only from a LITERAL string
- * child, and the wrapper the check mark forces destroys it silently — the list
- * still renders, still type-checks, and simply stops responding to typing.
+ * ── ONE DANGLING IDREF, RETIRED RATHER THAN WORKED AROUND ──────────────────
  *
- * ── THE WRAPPER IS `Text`, NOT A `<span>`, AND THAT IS A DANGLING IDREF FIX ──
+ * The React Aria version of this file wrapped the option's text in RAC's `Text`
+ * part rather than a `<span>`, and the wrapper was a FIX: `useOption` minted a
+ * label id with `useSlotId()`, pointed the option's `aria-labelledby` at it, and
+ * cleared an unclaimed id only inside a layout effect — which never runs on the
+ * server. Measured in the prerendered bytes of a standalone ListBox:
+ * `aria-labelledby="react-aria-_R_5m_"` on every option, pointing at an element
+ * that does not exist. `@lumo-ui/gate`'s `resolved-idrefs` fails a build over
+ * exactly that.
  *
- * `useOption` mints a label id with `useSlotId()` and points the option's
- * `aria-labelledby` at it. `useSlotId` only CLEARS an unclaimed id in a layout
- * effect — which never runs on the server. Measured in the prerendered bytes of
- * a standalone ListBox: `aria-labelledby="react-aria-_R_5m_"` on every option,
- * pointing at an element that does not exist. `@lumo-ui/gate`'s `resolved-idrefs`
- * rule fails a build over exactly that, and it is right to: an unresolvable name
- * reference is indistinguishable from a missing name in the first byte.
+ * There is no id here to dangle. This component names an option the way the
+ * ARIA spec's first rule does — from its own contents — so it mints no ids at
+ * all, and the wrapper is a plain `<span>` again. That is the one thing this
+ * migration straightforwardly GAINED, and it is recorded here rather than
+ * quietly deleted along with the workaround.
  *
- * RAC publishes that id through `TextContext`'s DEFAULT slot, so the fix is to
- * make the wrapper the element RAC is looking for. This is the same trap
- * `toast.tsx` records — "a plain element with a slot attribute claims nothing" —
- * and the reason it went unnoticed here is that Select's and ComboBox's
- * listboxes live inside popovers, which render `null` during SSR.
+ * `textValue` is still re-derived from a string child, and the reason changed:
+ * React Aria READ it and lost it the moment the check mark made `children` an
+ * element (the trap documented at length in `menu.tsx`). Nothing reads it now
+ * except this file's own typeahead, which falls back to `textContent` — so the
+ * derivation is what keeps typeahead working for an option whose children are
+ * an icon and a label rather than a bare string.
  */
 export interface ListBoxItemProps<T extends object = object>
-  extends Omit<AriaListBoxItemProps<T>, "children" | "className"> {
+  extends Pick<
+    AriaListBoxItemProps<T>,
+    "id" | "value" | "textValue" | "isDisabled" | "aria-label" | "onAction"
+  > {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -193,22 +705,53 @@ export function ListBoxItem<T extends object = object>({
   className,
   children,
   textValue,
-  ...props
+  id,
+  isDisabled,
+  onAction,
+  "aria-label": ariaLabel,
 }: ListBoxItemProps<T>) {
+  const list = useContext(ListBoxContext);
+  const index = useContext(ListBoxIndexContext);
+
   const resolvedTextValue = textValue ?? (typeof children === "string" ? children : undefined);
+  const disabled = isDisabled === true || (list?.isKeyDisabled(id) ?? false);
+  const selected = list?.isSelected(id) ?? false;
+
   return (
-    <AriaListBoxItem
+    <div
       data-lumo=""
+      role="option"
+      // The index the list's own DOM queries find this option by. See
+      // `focusIndex` — the same device as `table.tsx`'s `data-row-index`.
+      data-index={index}
+      {...optional("data-text", resolvedTextValue)}
+      {...optional("aria-label", ariaLabel)}
+      // Omitted entirely when nothing is selectable: an `aria-selected="false"`
+      // on a list that cannot be selected from announces a state that does not
+      // exist. React Aria omitted it under `selectionMode="none"` too.
+      {...(list === null || list.selectionMode === "none" ? {} : { "aria-selected": selected })}
+      {...(disabled ? { "aria-disabled": true, "data-disabled": "" } : {})}
+      {...(selected ? { "data-selected": "" } : {})}
+      /*
+       * The roving tab stop. Exactly one enabled option in the list is 0, it is
+       * resolved during render, and it is therefore in the SERVED BYTES —
+       * `composite-tab-stop` fails a build over a widget whose only tab stop
+       * appears at hydration, and `@lumo-ui/base-ui-ssr` exists because Base UI
+       * resolves this one in a layout effect.
+       */
+      tabIndex={!disabled && list !== null && index === list.activeIndex ? 0 : -1}
+      onFocus={() => {
+        if (!disabled) list?.onItemFocus(index);
+      }}
+      onClick={(event) => {
+        if (disabled) return;
+        list?.onItemClick(index, event);
+        onAction?.();
+      }}
       className={cn(listBoxItemVariants(), className)}
-      {...optional("textValue", resolvedTextValue)}
-      {...props}
     >
-      {({ isSelected }) => (
-        <>
-          <AriaText className="min-w-0 flex-1">{children}</AriaText>
-          {isSelected ? <Check aria-hidden="true" className="ms-auto text-accent" /> : null}
-        </>
-      )}
-    </AriaListBoxItem>
+      <span className="min-w-0 flex-1">{children}</span>
+      {selected ? <Check aria-hidden="true" className="ms-auto text-accent" /> : null}
+    </div>
   );
 }

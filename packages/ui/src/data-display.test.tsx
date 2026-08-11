@@ -313,10 +313,19 @@ describe("ListBox stands on its own", () => {
   });
 
   it("keeps typeahead text despite the wrapper the check mark forces", () => {
-    // RAC derives a typeahead string from a LITERAL string child only. The
-    // check mark makes children an element, so ListBoxItem re-derives
-    // `textValue` — without that the list renders, type-checks, and silently
-    // stops responding to typing.
+    /*
+     * The assertion is engine-neutral; the REASON changed underneath it.
+     *
+     * React Aria derived a typeahead string from a LITERAL string child only,
+     * so the check mark — which makes `children` an element — silently
+     * destroyed typing, and `ListBoxItem` re-derived `textValue` to survive it.
+     * `list-box.tsx` is Lumo's own keyboard model now and matches against the
+     * item's rendered text, so the trap is gone rather than worked around.
+     *
+     * The test stays because the GUARANTEE has not changed: a decorated item
+     * must still be reachable by typing its name. It is the shape of defect
+     * that comes back the first time someone wraps the label in something.
+     */
     const { getAllByRole } = render(
       <ListBox label="پرونده‌ها" selectionMode="single">
         <ListBoxItem id="1">سارا</ListBoxItem>
