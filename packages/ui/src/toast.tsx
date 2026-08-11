@@ -212,9 +212,31 @@ export function createToastQueue(options?: {
  *
  * These now work by INHERITANCE rather than in spite of the engine: with no
  * `dir` written on the portal root, `end-4` resolves against `<html dir>`.
+ *
+ * ── `z-100`, AND IT IS THE ONE LAYER IN THE LIBRARY THAT IS NOT `z-50` ──────
+ *
+ * Every other floating surface here — popover, menu, select, combobox, tooltip,
+ * hover card, navigation menu, dialog, drawer — is `z-50`, and that is correct
+ * for all of them: they are portalled to `<body>` and OPENED ON DEMAND, so the
+ * most recently opened one is last in document order and wins the tie by
+ * painting order alone. No number needs to arbitrate between them.
+ *
+ * The toast region is the exception because it is the only one that is NOT
+ * opened on demand. It is mounted once, at the app root, before anything else
+ * exists — so at `z-50` it is EARLIER in the document than a dialog that opens
+ * later, and the dialog's `fixed inset-0 z-50 bg-black/50` scrim paints over
+ * it. The stack is still there, still announced, and completely invisible
+ * behind the dim layer.
+ *
+ * That is the worst possible case for this component in particular: a toast is
+ * how a failed save reports itself, and a failed save inside a modal is exactly
+ * when one is raised. The bug hides the message precisely when it matters.
+ *
+ * shadcn reaches the same number from the same reasoning — sonner's toaster
+ * sits above the dialog layer rather than beside it.
  */
 export const toastRegionVariants = cva(
-  "fixed z-50 flex w-[min(24rem,90vw)] flex-col gap-2 outline-none",
+  "fixed z-100 flex w-[min(24rem,90vw)] flex-col gap-2 outline-none",
   {
     variants: {
       placement: {

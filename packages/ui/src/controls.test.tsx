@@ -35,7 +35,8 @@ import { SegmentedControl, SegmentedControlItem } from "./segmented-control.tsx"
 import { Slider } from "./slider.tsx";
 import { Steps } from "./steps.tsx";
 import { TagGroup, TagItem, TagList } from "./tag-group.tsx";
-import { ToastRegion, createToastQueue } from "./toast.tsx";
+import { ToastRegion, createToastQueue, toastRegionVariants } from "./toast.tsx";
+import { dialogOverlayVariants } from "./dialog.tsx";
 
 afterEach(cleanup);
 
@@ -190,6 +191,31 @@ describe("Toast — the portal no longer writes its own dir", () => {
     expect(screen.getByText("ذخیره شد")).toBeTruthy();
     expect(spokenAttributes().filter((v) => LATIN_WORD.test(v))).toEqual([]);
     expect(danglingIdrefs()).toEqual([]);
+  });
+
+  /*
+   * THE STACK MUST OUTRANK THE MODAL SCRIM.
+   *
+   * Every other floating surface in the library is `z-50` and that is right:
+   * they open on demand, so the last one opened is last in the document and
+   * wins on painting order. The toast region is the only one mounted ONCE at
+   * the app root, before anything else exists — so at `z-50` a dialog that
+   * opens later paints its `bg-black/50` scrim straight over the stack.
+   *
+   * The toast is still there and still announced; it is just invisible. And a
+   * toast is how a failed save reports itself, which is a thing that happens
+   * inside modals more than anywhere else.
+   *
+   * Asserted as an inequality against the dialog's own class rather than as
+   * `toContain("z-100")`, so it stays true if either number is ever retuned.
+   */
+  it("sits above the dialog's scrim rather than beside it", () => {
+    const layer = (classes: string) => {
+      const found = /(?:^|\s)z-(\d+)(?:\s|$)/.exec(classes);
+      expect(found).not.toBeNull();
+      return Number(found?.[1]);
+    };
+    expect(layer(toastRegionVariants())).toBeGreaterThan(layer(dialogOverlayVariants()));
   });
 
   it("POISON: the same region without the provider is LTR and English", async () => {
