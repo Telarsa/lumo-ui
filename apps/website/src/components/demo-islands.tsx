@@ -1195,3 +1195,271 @@ export function FormStateIsland({
     </LumoForm>
   );
 }
+
+/* ─────────────────────── phone-input, sortable and kanban ── */
+
+/*
+ * Appended by the round-5 batch, same append-only contract as the blocks above:
+ * import declarations are hoisted, and `useState` and `Locale` are already
+ * imported at the top of this file.
+ *
+ * ── WHY THESE THREE, AND NOT THE OTHER SEVEN IN THE BATCH ───────────────────
+ *
+ * Seven of the ten components this batch documented needed no island at all,
+ * which is worth stating because it is the interesting result: `InputOtp` is a
+ * client component whose handlers are all OPTIONAL and whose value is
+ * uncontrolled by default, so its examples type real codes while crossing the
+ * boundary with nothing but strings. `MessageScroller` and `Scrollspy` are the
+ * same shape. These three are here because each requires something React
+ * refuses to serialise:
+ *
+ *  - **PhoneInput** is a CONTROLLED field with no uncontrolled mode. Without an
+ *    `onChange` the value is derived from a prop that never changes, so the
+ *    second keystroke erases the first — a static demo of it would be a field
+ *    that cannot be typed into, which is the one thing this component has to be
+ *    watched doing.
+ *  - **Sortable** and **Kanban** require `onReorder`/`onColumnsChange`, a
+ *    `children` RENDER FUNCTION, and a `strings` object with a function member.
+ *
+ * ── THE ANNOUNCEMENT CLOSURES, AND WHAT ASSEMBLING THEM COSTS ───────────────
+ *
+ * `SortableStrings.position` and `KanbanStrings.movedTo` are functions rather
+ * than templates precisely so a translator can AUTHOR clause order — the
+ * argument `core/src/strings.ts` makes once for the library. Assembling them
+ * from word parts here, as `PaginationIsland` and `ResizableIsland` already do
+ * for their own single-word cases, is admissible only because these two
+ * particular sentences happen to place their figures identically in both
+ * locales: «مورد ۳ از ۷» and "item 3 of 7" are the same shape.
+ *
+ * That is a fact about THESE sentences, not a general licence, and it is the
+ * reason the parts are passed rather than the sentence: a real caller writes
+ * the closure on their own client, where nothing has to cross a boundary and
+ * the whole sentence can be authored per locale. The docs page says so.
+ *
+ * As everywhere else in this file, there is no copy here — every word arrives
+ * as a prop, written in both locales in the examples module.
+ */
+import {
+  Kanban,
+  PhoneInput,
+  Sortable,
+  type KanbanColumn,
+  type PhoneCountry,
+  type SortableItem,
+} from "@lumo-ui/ui";
+
+export interface PhoneInputIslandProps {
+  locale: Locale;
+  /** Names the field, e.g. «شمارهٔ موبایل». */
+  label: string;
+  /** Names the country selector — a second control inside one field. */
+  countryLabel: string;
+  /** Help text under the row. */
+  description?: string;
+  /** Placeholder for the number itself. */
+  placeholder?: string;
+  /** Shown when the number is rejected. */
+  errorMessage?: string;
+  /** ISO 3166-1 alpha-2 of the country selected first. */
+  defaultCountry?: string;
+  /** Overrides the shipped country list. Plain data, so it crosses. */
+  countries?: readonly PhoneCountry[];
+  /** Initial E.164 value, or `""` for an empty field. */
+  defaultValue?: string;
+  /**
+   * Caption for the read-out below, e.g. «چیزی که ذخیره می‌شود». The E.164
+   * string beside it is the component's own output, not copy.
+   */
+  storedLabel: string;
+  /** Shown in place of the E.164 string while the field is empty. */
+  emptyText: string;
+}
+
+/**
+ * A phone field that can actually be typed into, plus what it stores.
+ *
+ * The read-out is the demonstration. Type «۰۹۱۲۱۲۳۴۵۶۷» — the number every
+ * Iranian knows by heart, leading zero and all — and watch `+989121234567`
+ * appear underneath. That trunk zero is a domestic dialling artefact rather
+ * than part of the number, and reconciling the two is the entire reason the
+ * component exists; neither half of it is visible in a screenshot.
+ */
+export function PhoneInputIsland({
+  locale,
+  label,
+  countryLabel,
+  description,
+  placeholder,
+  errorMessage,
+  defaultCountry,
+  countries,
+  defaultValue = "",
+  storedLabel,
+  emptyText,
+}: PhoneInputIslandProps) {
+  const [value, setValue] = useState(defaultValue);
+  return (
+    <div className="flex w-full max-w-sm flex-col gap-3">
+      <PhoneInput
+        locale={locale}
+        label={label}
+        countryLabel={countryLabel}
+        value={value}
+        onChange={setValue}
+        {...(description === undefined ? {} : { description })}
+        {...(placeholder === undefined ? {} : { placeholder })}
+        {...(errorMessage === undefined ? {} : { errorMessage })}
+        {...(defaultCountry === undefined ? {} : { defaultCountry })}
+        {...(countries === undefined ? {} : { countries })}
+      />
+      <div className="rounded-md bg-surface-sunken px-3 py-2 text-xs text-fg-muted">
+        <span>{storedLabel}</span>{" "}
+        {value === "" ? (
+          <span>{emptyText}</span>
+        ) : (
+          /*
+           * E.164 is a Latin run by definition, and `data-lumo-latn` is the
+           * sanctioned marker for one — the same pair `phone-input.tsx` uses
+           * for the dial code. `<bdi>` isolates it so the `+` does not migrate
+           * to the wrong end inside an RTL paragraph.
+           */
+          <bdi data-lumo-latn="" dir="ltr" className="font-medium text-fg">
+            {value}
+          </bdi>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export interface SortableIslandProps {
+  locale: Locale;
+  /** Names the list. */
+  label: string;
+  /** The rows, in their starting order. Plain data, so it crosses. */
+  items: readonly SortableItem[];
+  orientation?: "vertical" | "horizontal";
+  /** Announced role of the handle, e.g. «دستگیرهٔ جابه‌جایی». */
+  handleRoleDescription: string;
+  /** Announced name of the handle, e.g. «جابه‌جایی». */
+  handleLabel: string;
+  /** Announced on pick-up, e.g. «برداشته شد». */
+  pickedUp: string;
+  /** Announced on drop, e.g. «رها شد». */
+  dropped: string;
+  /** Announced on Escape, e.g. «لغو شد». */
+  cancelled: string;
+  /** The noun in «مورد ۳ از ۷» — see the block header on assembling these. */
+  itemWord: string;
+  /** The joining word in «مورد ۳ از ۷». */
+  ofWord: string;
+}
+
+/**
+ * A working sortable list. Pick a handle up with Space, move it with the arrow
+ * keys, drop it with Space or put it back with Escape.
+ *
+ * The numbers reaching `position` are already localised — `sortable.tsx`
+ * formats them before the closure built here ever sees them, so this file never
+ * hands a translator a raw `number`.
+ */
+export function SortableIsland({
+  locale,
+  label,
+  items,
+  orientation,
+  handleRoleDescription,
+  handleLabel,
+  pickedUp,
+  dropped,
+  cancelled,
+  itemWord,
+  ofWord,
+}: SortableIslandProps) {
+  const [order, setOrder] = useState<SortableItem[]>(() => [...items]);
+  return (
+    <Sortable
+      locale={locale}
+      label={label}
+      items={order}
+      onReorder={setOrder}
+      {...(orientation === undefined ? {} : { orientation })}
+      strings={{
+        handleRoleDescription,
+        handleLabel,
+        pickedUp,
+        dropped,
+        cancelled,
+        position: (index: string, total: string) => `${itemWord} ${index} ${ofWord} ${total}`,
+      }}
+      className={orientation === "horizontal" ? "w-full flex-wrap" : "w-full max-w-sm"}
+    >
+      {(item: SortableItem) => <span className="text-sm text-fg">{item.label}</span>}
+    </Sortable>
+  );
+}
+
+export interface KanbanIslandProps {
+  locale: Locale;
+  /** Names the board. */
+  label: string;
+  /** The columns and their cards. Plain data, so it crosses. */
+  columns: ReadonlyArray<KanbanColumn>;
+  handleRoleDescription: string;
+  handleLabel: string;
+  pickedUp: string;
+  dropped: string;
+  cancelled: string;
+  /** The noun for a column in the announcement, e.g. «ستون». */
+  columnWord: string;
+  /** The noun in «مورد ۲ از ۴». */
+  itemWord: string;
+  /** The joining word in «مورد ۲ از ۴». */
+  ofWord: string;
+}
+
+/**
+ * A working board. Space picks a card up; the arrow keys move it within a
+ * column and ACROSS columns; Escape puts it back where it started.
+ *
+ * The horizontal pair is the thing to try on the fa route: columns run
+ * right-to-left there, so ArrowLeft advances a card toward «انجام‌شده» and
+ * ArrowRight retreats it — the exact opposite of the English mapping, and a
+ * difference no screenshot can show.
+ */
+export function KanbanIsland({
+  locale,
+  label,
+  columns,
+  handleRoleDescription,
+  handleLabel,
+  pickedUp,
+  dropped,
+  cancelled,
+  columnWord,
+  itemWord,
+  ofWord,
+}: KanbanIslandProps) {
+  const [board, setBoard] = useState<Array<KanbanColumn>>(() =>
+    columns.map((column) => ({ ...column, cards: [...column.cards] })),
+  );
+  return (
+    <Kanban
+      locale={locale}
+      label={label}
+      columns={board}
+      onColumnsChange={setBoard}
+      strings={{
+        handleRoleDescription,
+        handleLabel,
+        pickedUp,
+        dropped,
+        cancelled,
+        movedTo: (column: string, index: string, total: string) =>
+          `${columnWord} ${column} — ${itemWord} ${index} ${ofWord} ${total}`,
+      }}
+    >
+      {(card) => <span className="text-fg">{card.label}</span>}
+    </Kanban>
+  );
+}
