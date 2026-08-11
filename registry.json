@@ -853,6 +853,25 @@
       ]
     },
     {
+      "name": "kanban",
+      "type": "registry:ui",
+      "title": "Kanban",
+      "description": "A board of columns whose cards move between them.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/kanban.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/kanban.tsx"
+        }
+      ]
+    },
+    {
       "name": "kbd",
       "type": "registry:ui",
       "title": "Kbd",

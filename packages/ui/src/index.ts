@@ -877,6 +877,17 @@ export {
 export type { SortableItem, SortableProps, SortableStrings } from "./sortable.tsx";
 
 export {
+  Kanban,
+  kanbanCardVariants,
+  kanbanColumnHeaderVariants,
+  kanbanColumnVariants,
+  kanbanHandleVariants,
+  kanbanVariants,
+  moveCard,
+} from "./kanban.tsx";
+export type { KanbanCard, KanbanColumn, KanbanProps, KanbanStrings } from "./kanban.tsx";
+
+export {
   NativeSelect,
   NativeSelectOptGroup,
   NativeSelectOption,
