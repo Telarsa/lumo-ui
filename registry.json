@@ -744,6 +744,27 @@
       ]
     },
     {
+      "name": "input-otp",
+      "type": "registry:ui",
+      "title": "Input Otp",
+      "description": "A one-time code, entered into a row of boxes.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/input-otp.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input-otp.tsx"
+        }
+      ]
+    },
+    {
       "name": "item",
       "type": "registry:ui",
       "title": "Item",

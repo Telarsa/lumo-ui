@@ -80,6 +80,16 @@ export {
 } from "./input-group.tsx";
 export type { InputGroupButtonProps, InputGroupProps } from "./input-group.tsx";
 
+export {
+  InputOtp,
+  otpDigits,
+  inputOtpCaretVariants,
+  inputOtpControlVariants,
+  inputOtpRowVariants,
+  inputOtpSlotVariants,
+} from "./input-otp.tsx";
+export type { InputOtpProps } from "./input-otp.tsx";
+
 export { TextArea, textAreaVariants } from "./text-area.tsx";
 export type { TextAreaProps } from "./text-area.tsx";
 
