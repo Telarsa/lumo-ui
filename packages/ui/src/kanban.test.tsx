@@ -12,12 +12,30 @@
  */
 
 import * as React from "react";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 
-import { Kanban, moveCard, type KanbanColumn, type KanbanStrings } from "./kanban.tsx";
+import {
+  Kanban,
+  kanbanHandleVariants,
+  moveCard,
+  type KanbanColumn,
+  type KanbanStrings,
+} from "./kanban.tsx";
 
 afterEach(cleanup);
+
+beforeAll(() => {
+  /*
+   * jsdom implements no pointer capture at all, so the real methods are absent
+   * rather than inert. The component calls `setPointerCapture` behind a typeof
+   * guard for exactly that reason; these stubs exist so the pointer tests below
+   * exercise the same path a browser takes rather than the fallback.
+   */
+  const proto = window.Element.prototype as unknown as Record<string, unknown>;
+  proto["setPointerCapture"] = function () {};
+  proto["releasePointerCapture"] = function () {};
+});
 
 const fa: KanbanStrings = {
   handleRoleDescription: "دستگیرهٔ جابه‌جایی",
@@ -344,5 +362,227 @@ describe("a board is capped by its container rather than pushing it open", () =>
     const outer = board.parentElement;
     expect(outer).not.toBeNull();
     expect(outer?.className).toContain("max-w-full");
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────── pointer ── */
+
+function rect(left: number, top: number, width: number, height: number): DOMRect {
+  return {
+    left,
+    right: left + width,
+    top,
+    bottom: top + height,
+    width,
+    height,
+    x: left,
+    y: top,
+    toJSON: () => ({}),
+  } as DOMRect;
+}
+
+/**
+ * Lays the LIVE board out, 300px columns side by side and 100px cards.
+ *
+ * `mirrored` is the whole point of the RTL test below: it reverses the columns'
+ * BOXES — first column rightmost, as a Persian browser paints them — without
+ * touching the DOM order, which is what a real `dir="rtl"` does and what jsdom
+ * will not do for us. LTR column boxes are 0–300 / 300–600 / 600–900; mirrored
+ * they are 600–900 / 300–600 / 0–300.
+ */
+function layout(mirrored = false) {
+  const columns = Array.from(document.querySelectorAll<HTMLElement>("[data-kanban-column]"));
+  columns.forEach((element, index) => {
+    const left = (mirrored ? columns.length - 1 - index : index) * 300;
+    element.getBoundingClientRect = () => rect(left, 0, 300, 600);
+    Array.from(element.querySelectorAll<HTMLElement>("[data-kanban-card]")).forEach(
+      (card, row) => {
+        card.getBoundingClientRect = () => rect(left, row * 100, 300, 100);
+      },
+    );
+  });
+}
+
+/** jsdom has no `PointerEvent`; a MouseEvent carrying a pointerId is enough. */
+function pointerEvent(type: string, init: MouseEventInit = {}) {
+  const event = new MouseEvent(type, { bubbles: true, ...init });
+  Object.defineProperty(event, "pointerId", { value: 1 });
+  return event;
+}
+
+/** One pointermove, re-measuring the board as the browser would. */
+function drag(clientX: number, clientY: number, mirrored = false) {
+  layout(mirrored);
+  act(() => {
+    window.dispatchEvent(pointerEvent("pointermove", { clientX, clientY }));
+  });
+}
+
+/** Starts a drag from a card's grip. */
+function grab(label: string, mirrored = false) {
+  layout(mirrored);
+  fireEvent.pointerDown(grip(label), { button: 0, pointerType: "mouse", pointerId: 1 });
+}
+
+describe("the pointer drag reaches the same state machine", () => {
+  it("keeps the handle's touch gesture away from the board's scroller", () => {
+    /*
+     * The board IS a scroll container, so a finger starting on the handle is a
+     * genuinely ambiguous gesture and the browser resolves it as a scroll:
+     * `pointercancel` fires and the drag ends before it began. jsdom does not
+     * model touch-action, so what this pins is that the declaration is present.
+     */
+    expect(kanbanHandleVariants()).toContain("touch-none");
+  });
+
+  it("moves a card within its own column", () => {
+    /*
+     * The cards of «در صف» have midpoints at y=50 and y=150; y=160 is past
+     * both, so the insertion point is 2. `cards` still contains the dragged
+     * card, so 2 is an insertion point and not a final index — uncorrected,
+     * «الف» would land at index 2 of a two-card column, which is to say off the
+     * end of the list it is being dragged inside.
+     */
+    const { onChange } = harness();
+    grab("الف");
+    drag(150, 160);
+    expect(onChange).toHaveBeenLastCalledWith([["2", "1"], ["3"], []]);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("moves a card ACROSS columns, from the rect the finger is over", () => {
+    // x=450 is inside «در حال انجام» (300–600); y=10 is above «پ»'s midpoint.
+    // Crossing needs no insertion-point correction: the card is not in the
+    // destination's list, so the insertion point IS the final index.
+    const { onChange } = harness();
+    grab("الف");
+    drag(450, 10);
+    expect(onChange).toHaveBeenLastCalledWith([["2"], ["1", "3"], []]);
+  });
+
+  it("drops into an EMPTY column, which has no card to hit-test against", () => {
+    /*
+     * The case a board derived from "the neighbour I am next to" cannot do at
+     * all on this route: «انجام‌شده» contains no `[data-kanban-card]`, so the
+     * vertical scan matches nothing. The COLUMN's own rect is the target, the
+     * index falls out as 0, and `moveCard` clamps.
+     */
+    const { onChange } = harness();
+    grab("الف");
+    drag(750, 300);
+    expect(onChange).toHaveBeenLastCalledWith([["2"], ["3"], ["1"]]);
+  });
+
+  it("finds the column by rect, so a mirrored board needs no isRtl branch", () => {
+    /*
+     * The defect this whole approach exists to make impossible. With the boxes
+     * mirrored — «در صف» rightmost, as Persian paints it — x=150 is the LAST
+     * column, «انجام‌شده». A hit-test that walked the columns array and reasoned
+     * about "the one after this" would have to be told the board runs the other
+     * way; a hit-test on rects is told by the geometry, which the browser
+     * already mirrored.
+     *
+     * The assertion is the same x that lands in the FIRST column above.
+     */
+    const { onChange } = harness();
+    grab("الف", true);
+    drag(150, 300, true);
+    expect(onChange).toHaveBeenLastCalledWith([["2"], ["3"], ["1"]]);
+  });
+
+  it("does not thrash while the finger stays over one slot", () => {
+    // The stale-closure symptom: the "did anything change" guard compared the
+    // new destination against the board as of pointerdown, so it never held and
+    // every pointermove pushed an identical board through onColumnsChange.
+    const { onChange } = harness();
+    grab("الف");
+    drag(450, 10);
+    drag(460, 20);
+    drag(455, 40);
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("can be dragged back to the column it came from", () => {
+    // The same staleness made this impossible in the list version: once the
+    // item had moved, its target kept being compared against where it started
+    // and the guard rejected everything. Here the card must cross twice.
+    const { onChange } = harness();
+    grab("الف");
+    drag(750, 300);
+    expect(onChange).toHaveBeenLastCalledWith([["2"], ["3"], ["1"]]);
+    drag(150, 10);
+    expect(onChange).toHaveBeenLastCalledWith([["1", "2"], ["3"], []]);
+  });
+
+  it("announces the column AND the position it actually finished in", () => {
+    /*
+     * Read through a stale board, the drop reports where the card was PICKED
+     * UP — column name included, which is the board's own version of the
+     * defect and the more misleading one: it names a column the card is not in.
+     * y=900 is past «پ»'s midpoint, so «الف» lands second in «در حال انجام».
+     */
+    harness();
+    grab("الف");
+    drag(450, 900);
+    act(() => {
+      window.dispatchEvent(pointerEvent("pointerup"));
+    });
+    expect(screen.getByRole("status").textContent).toBe("رها شد در حال انجام، مورد ۲ از ۲");
+    expect(grip("الف").getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("keeps listening after the crossing that destroyed the handle", () => {
+    /*
+     * The listeners are on `window`, not on the handle. A card crossing a
+     * column is unmounted and re-mounted under a different `<ul>`, so the
+     * captured element is destroyed rather than merely re-inserted, and capture
+     * is released implicitly with it — a drag anchored to it would die on the
+     * first crossing it succeeded in making. Nothing in jsdom models capture,
+     * so what this pins is the reachability: a move dispatched anywhere still
+     * steers the drag, twice over.
+     */
+    const { onChange } = harness();
+    grab("الف");
+    drag(450, 10);
+    drag(750, 300);
+    expect(onChange).toHaveBeenLastCalledWith([["2"], ["3"], ["1"]]);
+  });
+
+  it("ignores a second finger's events", () => {
+    const { onChange } = harness();
+    grab("الف");
+    const other = new MouseEvent("pointermove", { bubbles: true, clientX: 750, clientY: 300 });
+    Object.defineProperty(other, "pointerId", { value: 2 });
+    act(() => {
+      window.dispatchEvent(other);
+    });
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("puts the whole board back on pointercancel", () => {
+    // What a touch gets when the browser decides the gesture was a scroll —
+    // and, like Escape, it restores the board rather than undoing one step.
+    const { onChange } = harness();
+    layout();
+    fireEvent.pointerDown(grip("الف"), { button: 0, pointerType: "touch", pointerId: 1 });
+    drag(450, 10);
+    drag(750, 300);
+    act(() => {
+      window.dispatchEvent(pointerEvent("pointercancel"));
+    });
+    expect(onChange).toHaveBeenLastCalledWith([["1", "2"], ["3"], []]);
+    expect(screen.getByRole("status").textContent).toBe("لغو شد");
+  });
+
+  it("leaves the keyboard route intact, and a picked-up card droppable by key", () => {
+    // The pointer is a second route into the same state machine, not a parallel
+    // one: a card picked up by finger is held by the SAME state the keyboard
+    // reads, and the refocus effect must not have been disturbed by it.
+    const { onChange } = harness();
+    grip("الف").focus();
+    press(" ");
+    press("ArrowLeft");
+    expect(focused()).toBe(grip("الف"));
+    expect(onChange).toHaveBeenLastCalledWith([["2"], ["1", "3"], []]);
   });
 });
