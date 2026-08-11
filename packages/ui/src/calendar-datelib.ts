@@ -119,6 +119,43 @@ function toJsDate(date: CalendarDate): Date {
   return new Date(g.year, g.month - 1, g.day, 12, 0, 0, 0);
 }
 
+/*
+ * ═══ THE VALUE BOUNDARY ═════════════════════════════════════════════════════
+ *
+ * Lumo's date components take and return `CalendarDate`, not JS `Date`, and
+ * that stays true through this migration. It is not inertia — it is the same
+ * argument the whole calendar work rests on:
+ *
+ *   A JS `Date` is an INSTANT. It has no calendar, so `getMonth()` is
+ *   necessarily Gregorian and «مرداد» is not a question it can answer. Handing
+ *   one across an API is handing over a value that has already lost the thing
+ *   this library exists to preserve.
+ *
+ *   A `CalendarDate` carries its calendar. `date.year` on a Jalali value IS
+ *   1403, not 2024, and converting between systems is `toCalendar`, explicitly.
+ *
+ * react-day-picker speaks JS `Date`, so the conversion happens HERE, at the
+ * seam, twice per interaction — and nowhere else in the library. The two
+ * functions below are the only place a Lumo date becomes calendar-less, and
+ * they are immediately adjacent so the round trip can be read in one screen.
+ */
+
+/** A Lumo `CalendarDate` as the JS `Date` react-day-picker's grid expects. */
+export function toPickerDate(date: CalendarDate): Date {
+  return toJsDate(date);
+}
+
+/**
+ * A JS `Date` from the grid, back into the reader's own calendar.
+ *
+ * Returns a `CalendarDate` IN THE LOCALE'S CALENDAR — so a click on the cell
+ * drawn «۱» in Mordad yields `{year: 1403, month: 5, day: 1}`, not a Gregorian
+ * 2024-07-22 that a caller would have to convert and would sometimes forget to.
+ */
+export function fromPickerDate(date: Date, locale: Locale): CalendarDate {
+  return toCalendar(fromJsDate(date), createCalendar(CALENDAR_FOR[locale]));
+}
+
 /**
  * The formatter cache.
  *
