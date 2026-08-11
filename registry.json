@@ -1069,6 +1069,28 @@
       ]
     },
     {
+      "name": "phone-input",
+      "type": "registry:ui",
+      "title": "Phone Input",
+      "description": "A phone number, entered the way Iranians actually type one.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "form",
+        "native-select"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/phone-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/phone-input.tsx"
+        }
+      ]
+    },
+    {
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",

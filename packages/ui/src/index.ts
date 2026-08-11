@@ -90,6 +90,18 @@ export {
 } from "./input-otp.tsx";
 export type { InputOtpProps } from "./input-otp.tsx";
 
+export {
+  COUNTRIES,
+  PhoneInput,
+  isValidPhone,
+  phoneDigits,
+  phoneInputControlVariants,
+  phoneInputRowVariants,
+  toE164,
+  toNational,
+} from "./phone-input.tsx";
+export type { PhoneCountry, PhoneInputProps } from "./phone-input.tsx";
+
 export { TextArea, textAreaVariants } from "./text-area.tsx";
 export type { TextAreaProps } from "./text-area.tsx";
 
