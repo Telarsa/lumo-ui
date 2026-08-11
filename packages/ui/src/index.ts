@@ -1135,3 +1135,124 @@ export {
   virtualMirror,
 } from "./virtual-list.variants.ts";
 export type { VirtualListOrientation, VirtualMirror } from "./virtual-list.variants.ts";
+
+/*
+ * A timeline of tasks over dates, in the reader's own calendar.
+ *
+ * The arithmetic is exported beside the component on purpose. `ganttGeometry`,
+ * `ganttBarPlacement`, `moveGanttTask` and `ganttDateIn` have no React and no
+ * DOM in them, so a server route that has to reason about the same range — or a
+ * test that wants the placement without a renderer — calls the same functions
+ * rather than a second implementation that agrees today and drifts in Esfand.
+ * Same call `date-selector.tsx` makes for `resolveDateRangePreset`.
+ */
+export {
+  GANTT_SCALES,
+  Gantt,
+  ganttBarPlacement,
+  ganttDate,
+  ganttDateIn,
+  ganttGeometry,
+  moveGanttTask,
+} from "./gantt.tsx";
+export type {
+  GanttColumn,
+  GanttGeometry,
+  GanttPlacement,
+  GanttProps,
+  GanttScale,
+  GanttStrings,
+  GanttTask,
+} from "./gantt.tsx";
+
+/*
+ * Directive-free module, imported directly — the same rule the date family
+ * above follows. A server component drawing a static legend or a print view of
+ * the same chart may call these; routing them through `gantt.tsx` would make
+ * every one of them a client reference in the RSC graph.
+ */
+export {
+  ganttBarProgressVariants,
+  ganttBarVariants,
+  ganttColumnHeaderVariants,
+  ganttRowVariants,
+  ganttScaleButtonVariants,
+  ganttScaleGroupVariants,
+  ganttScaleRowVariants,
+  ganttSplitVariants,
+  ganttTaskHeaderVariants,
+  ganttTaskListVariants,
+  ganttTaskRowVariants,
+  ganttTimelineVariants,
+  ganttVariants,
+} from "./gantt.variants.ts";
+
+/*
+ * The scheduling calendar. `event-calendar.variants.ts` is exported DIRECTLY
+ * beside it, the same rule the date family above follows: a `cva()` re-exported
+ * through a `"use client"` module becomes a client reference in the RSC graph,
+ * and a server component that CALLS it fails the build. A page framing a
+ * read-only month grid — a heading, a legend, a printed schedule — may use the
+ * classes without paying for the island.
+ *
+ * `layoutDayEvents` and `indexEvents` are exported for the reason
+ * `resolveDateRangePreset` is: the arithmetic is the valuable part, it has no
+ * React in it, and a caller writing their own day view should not reimplement
+ * the overlap packing or the per-day segment cut.
+ */
+export {
+  EventCalendar,
+  eventCalendarDay,
+  eventCalendarEvent,
+  indexEvents,
+  layoutDayEvents,
+} from "./event-calendar.tsx";
+export type {
+  EventCalendarAllDayEvent,
+  EventCalendarEvent,
+  EventCalendarEventInput,
+  EventCalendarPlacement,
+  EventCalendarProps,
+  EventCalendarSegment,
+  EventCalendarSpan,
+  EventCalendarStrings,
+  EventCalendarTimedEvent,
+  EventCalendarTone,
+  EventCalendarView,
+} from "./event-calendar.tsx";
+export {
+  eventCalendarAgendaDateVariants,
+  eventCalendarAgendaDayVariants,
+  eventCalendarAgendaRowVariants,
+  eventCalendarAgendaTimeVariants,
+  eventCalendarAgendaVariants,
+  eventCalendarAllDayCaptionVariants,
+  eventCalendarAllDayVariants,
+  eventCalendarChipVariants,
+  eventCalendarDayCellVariants,
+  eventCalendarDayNumberVariants,
+  eventCalendarEmptyVariants,
+  eventCalendarGridVariants,
+  eventCalendarGutterVariants,
+  eventCalendarHourLineVariants,
+  eventCalendarHourVariants,
+  eventCalendarMoreVariants,
+  eventCalendarNavButtonVariants,
+  eventCalendarNavVariants,
+  eventCalendarPeriodVariants,
+  eventCalendarTimedColumnVariants,
+  eventCalendarToolbarVariants,
+  eventCalendarVariants,
+  eventCalendarViewButtonVariants,
+  eventCalendarViewSwitchVariants,
+  eventCalendarWeekCellVariants,
+  eventCalendarWeekdayVariants,
+  eventCalendarWeekGridVariants,
+  eventCalendarWeekHeadDayVariants,
+  eventCalendarWeekHeadVariants,
+} from "./event-calendar.variants.ts";
+export type {
+  EventCalendarChipVariantProps,
+  EventCalendarDayCellVariantProps,
+  EventCalendarViewButtonVariantProps,
+} from "./event-calendar.variants.ts";

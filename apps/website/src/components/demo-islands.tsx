@@ -2388,3 +2388,284 @@ export function DateSelectorIsland({
     />
   );
 }
+
+/* ────────────────────────────────────────────────────────────────── gantt ── */
+
+/*
+ * Appended by the gantt pass, same append-only contract as every block above.
+ * Imports are hoisted; `useState` and `Locale` are already imported at the top
+ * of this file.
+ *
+ * A gantt needs an island for THREE of the reasons this file's header
+ * enumerates, and it is worth naming all three rather than the first:
+ *
+ *  1. **Functions.** `strings.barName` and `strings.movedTo` are required
+ *     functions — a bar's accessible name and a move announcement are whole
+ *     Persian sentences, and Persian word order has to be authored rather than
+ *     assembled from holes. React refuses to serialise a function into the RSC
+ *     payload, so the closures are built on this side from words that arrive as
+ *     props.
+ *  2. **State.** `onTasksChange` receives a new list on every keyboard move, so
+ *     a chart that can actually be moved needs a `useState` to hold it.
+ *  3. **A CLASS INSTANCE.** `GanttTask.start` is a `CalendarDate`, which is not
+ *     plain data and cannot cross the boundary either — and `apps/website` does
+ *     not depend on `@internationalized/date`, so it could not construct one
+ *     anyway (`examples/calendar.tsx` records the same wall). The dates arrive
+ *     as ISO strings and `ganttDate` — exported from `@lumo-ui/ui` for exactly
+ *     this — turns them into calendar FIELDS with no instant and therefore no
+ *     time zone in the problem at all.
+ *
+ * As everywhere else in this file, no copy is authored here. Every word arrives
+ * as a prop in the caller's locale.
+ */
+import { Gantt, ganttDate, type GanttScale, type GanttTask } from "@lumo-ui/ui";
+
+/** One row, as data a server module can hand across the boundary. */
+export interface GanttIslandTask {
+  id: string;
+  /** The task's name, in the page's locale. */
+  label: string;
+  /** `YYYY-MM-DD`. A DAY, not an instant — see the block above. */
+  start: string;
+  /** `YYYY-MM-DD`, inclusive. */
+  end: string;
+  /** `0…1`. Omitted means the task reports no progress at all. */
+  progress?: number;
+}
+
+export interface GanttIslandProps {
+  locale: Locale;
+  /** Names the whole chart. */
+  label: string;
+  tasks: readonly GanttIslandTask[];
+  /** Names the group of scale buttons. */
+  scaleGroupLabel: string;
+  /** The three scale names. No English default exists for these. */
+  dayWord: string;
+  weekWord: string;
+  monthWord: string;
+  /** Heads the task-name column. */
+  taskColumnHeader: string;
+  /** Names the timeline region. */
+  timelineLabel: string;
+  /** What a bar IS, e.g. «نوار زمان‌بندی». */
+  barRoleDescription: string;
+  /**
+   * The words that JOIN the two ends of a range.
+   *
+   * Words rather than a dash, and the reason is the one `DateSelectorIsland`
+   * states above: a neutral character between two Arabic-number runs resolves
+   * under the PARAGRAPH's direction, so «۱ مرداد – ۷ مرداد» can render with its
+   * ends swapped in Persian and only in Persian.
+   */
+  fromWord: string;
+  toWord: string;
+  /**
+   * What separates the clauses — «، » in Persian, ", " in English.
+   *
+   * A prop rather than a literal because the Arabic comma U+060C is not the
+   * ASCII one, and hardcoding either would put the wrong punctuation on one of
+   * the two routes. Same discipline as every other word in this file.
+   */
+  separator: string;
+  /** Closes the progress clause, e.g. «انجام‌شده». */
+  doneWord: string;
+  pickedUp: string;
+  dropped: string;
+  cancelled: string;
+  defaultScale?: GanttScale;
+}
+
+/**
+ * A working chart. Space picks a bar up, the arrow keys move it, Escape puts
+ * the dates back.
+ *
+ * The horizontal pair is the thing to try on the fa route: time runs toward the
+ * reader's end edge, so ArrowLeft moves a bar LATER there and ArrowRight moves
+ * it earlier — the exact opposite of the English mapping, and a difference no
+ * screenshot can show. The bars' POSITIONS mirror without being asked, because
+ * they are `inset-inline-start` rather than a computed `left`.
+ */
+export function GanttIsland({
+  locale,
+  label,
+  tasks,
+  scaleGroupLabel,
+  dayWord,
+  weekWord,
+  monthWord,
+  taskColumnHeader,
+  timelineLabel,
+  barRoleDescription,
+  fromWord,
+  toWord,
+  separator,
+  doneWord,
+  pickedUp,
+  dropped,
+  cancelled,
+  defaultScale,
+}: GanttIslandProps) {
+  const [rows, setRows] = useState<GanttTask[]>(() =>
+    tasks.map((task) => ({
+      id: task.id,
+      label: task.label,
+      start: ganttDate(task.start),
+      end: ganttDate(task.end),
+      ...(task.progress === undefined ? {} : { progress: task.progress }),
+    })),
+  );
+  return (
+    <Gantt
+      locale={locale}
+      label={label}
+      tasks={rows}
+      onTasksChange={setRows}
+      {...(defaultScale === undefined ? {} : { defaultScale })}
+      strings={{
+        scaleGroupLabel,
+        scaleNames: { day: dayWord, week: weekWord, month: monthWord },
+        taskColumnHeader,
+        timelineLabel,
+        barRoleDescription,
+        barName: (name, from, to, progress) =>
+          progress === undefined
+            ? `${name}${separator}${fromWord} ${from} ${toWord} ${to}`
+            : `${name}${separator}${fromWord} ${from} ${toWord} ${to}${separator}${progress} ${doneWord}`,
+        pickedUp,
+        dropped,
+        cancelled,
+        movedTo: (name, from, to) => `${name}${separator}${fromWord} ${from} ${toWord} ${to}`,
+      }}
+    />
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * EVENT CALENDAR
+ *
+ * An island for the same three reasons the Gantt one lists, and it is worth
+ * naming which of them bites hardest here.
+ *
+ *  1. **Functions.** Four members of `EventCalendarStrings` are functions — a
+ *     day's announced name, an event's announced name, a range read-out and the
+ *     overflow sentence. React refuses to serialise a function into the RSC
+ *     payload, so the closures are built on THIS side from words that arrive as
+ *     props. The library's own advice is to write those functions directly; a
+ *     word-assembly island is what an example file can carry, not what an
+ *     application should.
+ *  2. **State.** The view and the focused day are the reader's, so the
+ *     component keeps them; the island exists to be the client boundary they
+ *     live behind.
+ *  3. **CLASS INSTANCES.** `EventCalendarEvent.start` is a `CalendarDate` or a
+ *     `CalendarDateTime`, which is not plain data — and `apps/website` does not
+ *     depend on `@internationalized/date`, so it could not construct one
+ *     anyway. `eventCalendarEvent` and `eventCalendarDay`, exported from
+ *     `@lumo-ui/ui` for exactly this, turn ISO strings into calendar FIELDS.
+ *     There is no instant anywhere in the path and therefore no time zone in
+ *     the problem — which is a stronger guarantee than stating one.
+ *
+ * As everywhere else in this file, no copy is authored here. Every word arrives
+ * as a prop in the caller's locale.
+ */
+import {
+  EventCalendar,
+  eventCalendarDay,
+  eventCalendarEvent,
+  type EventCalendarEventInput,
+  type EventCalendarView,
+} from "@lumo-ui/ui";
+
+export interface EventCalendarIslandProps {
+  /** Names the grid. */
+  label: string;
+  /** The three view buttons, in the caller's own words. */
+  monthView: string;
+  weekView: string;
+  agendaView: string;
+  /** Names the group the three sit in. */
+  viewSwitcherLabel: string;
+  previous: string;
+  next: string;
+  /** The all-day strip's caption. */
+  allDay: string;
+  /** Shown when the agenda's month holds nothing. */
+  empty: string;
+  /** Prefixed to an event on every day after its first. */
+  continued: string;
+  /**
+   * The WORD between two ends — «تا», "to". A word rather than a dash on
+   * purpose: a neutral character between two Arabic-number runs resolves under
+   * the paragraph's direction and can render the range reversed.
+   */
+  joinWord: string;
+  /** What separates a date from what follows it — «، », ", ". */
+  separator: string;
+  /** The noun after a count in a day's announced name — «رویداد», "events". */
+  eventsWord: string;
+  /** The word after a count in the overflow chip — «رویداد دیگر», "more". */
+  moreWord: string;
+  /** Plain data all the way down. `YYYY-MM-DD` or `YYYY-MM-DDTHH:mm`. */
+  events: readonly EventCalendarEventInput[];
+  /** `YYYY-MM-DD`. FIXED — a prerendered grid must not depend on a clock. */
+  focusedDay: string;
+  /** `YYYY-MM-DD`, marked as today. Also fixed, for the same reason. */
+  todayDay?: string;
+  defaultView?: EventCalendarView;
+  maxEventsPerDay?: number;
+}
+
+/**
+ * A working calendar. The view and the focused day are the reader's.
+ *
+ * No `today()` anywhere: the component requires an opening day precisely so a
+ * prerendered page and the browser that hydrates it cannot disagree about which
+ * month is on screen.
+ */
+export function EventCalendarIsland({
+  label,
+  monthView,
+  weekView,
+  agendaView,
+  viewSwitcherLabel,
+  previous,
+  next,
+  allDay,
+  empty,
+  continued,
+  joinWord,
+  separator,
+  eventsWord,
+  moreWord,
+  events,
+  focusedDay,
+  todayDay,
+  defaultView,
+  maxEventsPerDay,
+}: EventCalendarIslandProps) {
+  return (
+    <EventCalendar
+      label={label}
+      defaultFocusedDate={eventCalendarDay(focusedDay)}
+      {...(todayDay === undefined ? {} : { todayDate: eventCalendarDay(todayDay) })}
+      {...(defaultView === undefined ? {} : { defaultView })}
+      {...(maxEventsPerDay === undefined ? {} : { maxEventsPerDay })}
+      events={events.map(eventCalendarEvent)}
+      strings={{
+        monthView,
+        weekView,
+        agendaView,
+        viewSwitcherLabel,
+        previous,
+        next,
+        allDay,
+        empty,
+        continued,
+        dayLabel: (date, count) => `${date}${separator}${count} ${eventsWord}`,
+        eventLabel: (title, when) => `${title}${separator}${when}`,
+        range: (from, to) => `${from} ${joinWord} ${to}`,
+        moreEvents: (count) => `${count} ${moreWord}`,
+      }}
+    />
+  );
+}

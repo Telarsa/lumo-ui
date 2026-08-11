@@ -759,6 +759,41 @@
       ]
     },
     {
+      "name": "event-calendar",
+      "type": "registry:ui",
+      "title": "Event Calendar",
+      "description": "A scheduling calendar in the READER'S OWN calendar system.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@internationalized/date",
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/event-calendar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/event-calendar.tsx"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
+        },
+        {
+          "path": "packages/ui/src/event-calendar.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/event-calendar.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        }
+      ]
+    },
+    {
       "name": "file-upload",
       "type": "registry:ui",
       "title": "File Upload",
@@ -841,6 +876,35 @@
           "path": "packages/ui/src/frame.tsx",
           "type": "registry:ui",
           "target": "components/ui/frame.tsx"
+        }
+      ]
+    },
+    {
+      "name": "gantt",
+      "type": "registry:ui",
+      "title": "Gantt",
+      "description": "A timeline of tasks over dates, in the reader's own calendar.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@internationalized/date",
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/gantt.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/gantt.tsx"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
+        },
+        {
+          "path": "packages/ui/src/gantt.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/gantt.variants.ts"
         }
       ]
     },
