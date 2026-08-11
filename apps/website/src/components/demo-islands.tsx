@@ -1638,3 +1638,326 @@ export function DataGridIsland({
     </DataGrid>
   );
 }
+
+/* ──────────────────────────────────────────── autocomplete · rating · tags ── */
+
+/*
+ * Appended by the round-6 form batch, same append-only contract as every block
+ * above: imports are hoisted, and `useState`, `Locale` and `formatNumber` are
+ * already imported at the top of this file. Only the genuinely new names are
+ * imported here — `Autocomplete`, `AutocompleteInput`, `AutocompleteItem`,
+ * `AutocompleteListBox` and `Rating` are already bound by earlier blocks, and
+ * re-importing them is a duplicate-binding error rather than a shadow.
+ *
+ * Four components in this batch cannot be demonstrated from a server module,
+ * each for a reason its own docblock states:
+ *
+ *  - `Autocomplete` filters a DATA ARRAY and hands the survivors to its list as
+ *    a RENDER ARGUMENT. The children are therefore a function, and a static
+ *    child list is the worst possible outcome — it renders, type-checks and is
+ *    silently never filtered.
+ *  - `Rating` requires `valueLabel` / `starLabel`, functions of an
+ *    already-formatted number, because «۴ از ۵» and «۴ ستاره» are sentences
+ *    Persian has to author rather than assemble.
+ *  - `TagGroup`'s removable form requires `onRemove` AND `removeLabel`, and the
+ *    union makes half of that pair unrepresentable.
+ *  - `FileUpload`'s list requires `onRemove` per row and a `removeLabel` built
+ *    from the file's own name.
+ *
+ * As everywhere else in this file, NO copy is authored here. Every word arrives
+ * as a prop, in both locales, from the examples module; every number arrives as
+ * data and leaves through the component's own formatter.
+ */
+import { FileUpload, FileUploadItem, FileUploadList, TagGroup, TagItem, TagList } from "@lumo-ui/ui";
+
+/** One filterable row. Plain data, so it crosses the boundary. */
+export interface AutocompleteRow {
+  value: string;
+  label: string;
+}
+
+export interface AutocompleteExampleIslandProps {
+  /** Announced name of the query field. Also shown above it. */
+  inputLabel: string;
+  inputPlaceholder?: string | undefined;
+  /** Announced name of the results list — Base UI names it nothing. */
+  listLabel: string;
+  items: readonly AutocompleteRow[];
+  /** Which collator comparison the built-in filter uses. */
+  match?: "contains" | "startsWith" | "endsWith" | undefined;
+  /**
+   * Replace the built-in filter with a subsequence match, so the example can
+   * show what a consumer-supplied filter receives: the RAW text and the RAW
+   * query, unfolded, because folding behind a consumer's back would silently
+   * change what their own comparison sees.
+   */
+  subsequence?: boolean | undefined;
+  /** Rows that render but cannot be chosen. Still filtered like any other. */
+  disabledValues?: readonly string[] | undefined;
+  /** Seeds the query so the list arrives already narrowed. */
+  defaultInputValue?: string | undefined;
+}
+
+/**
+ * A working autocomplete: an input and an always-visible list, no popup.
+ *
+ * The `inline` + `open` pairing that removes Base UI's English «Dismiss»
+ * sentinel is inside the component, not here — this island passes no such prop
+ * because there is none to pass.
+ */
+export function AutocompleteExampleIsland({
+  inputLabel,
+  inputPlaceholder,
+  listLabel,
+  items,
+  match,
+  subsequence,
+  disabledValues,
+  defaultInputValue,
+}: AutocompleteExampleIslandProps) {
+  /*
+   * A subsequence match: every character of the query, in order, anywhere in
+   * the text. It is handed the raw strings deliberately — see the prop's doc.
+   */
+  const fuzzy = (textValue: string, inputValue: string) => {
+    let at = 0;
+    for (const char of inputValue) {
+      at = textValue.indexOf(char, at) + 1;
+      if (at === 0) return false;
+    }
+    return true;
+  };
+
+  return (
+    <Autocomplete
+      items={items}
+      {...(match === undefined ? {} : { match })}
+      {...(subsequence === true ? { filter: fuzzy } : {})}
+      {...(defaultInputValue === undefined ? {} : { defaultInputValue })}
+    >
+      <div className="flex w-full max-w-xs flex-col gap-2">
+        <AutocompleteInput
+          label={inputLabel}
+          showLabel
+          {...(inputPlaceholder === undefined ? {} : { placeholder: inputPlaceholder })}
+        />
+        <AutocompleteListBox
+          label={listLabel}
+          className="max-h-56 rounded-md border border-border bg-surface"
+        >
+          {(item: AutocompleteRow) => (
+            <AutocompleteItem
+              key={item.value}
+              id={item.value}
+              {...(disabledValues?.includes(item.value) === true ? { isDisabled: true } : {})}
+            >
+              {item.label}
+            </AutocompleteItem>
+          )}
+        </AutocompleteListBox>
+      </div>
+    </Autocomplete>
+  );
+}
+
+export interface RatingSummaryIslandProps {
+  locale: Locale;
+  /** The score. Fractional values clip the fill from the reading edge. */
+  value: number;
+  maxValue?: number | undefined;
+  size?: "sm" | "md" | "lg" | undefined;
+  /** The joining word in «۴٫۵ از ۵». Both numbers arrive already formatted. */
+  ofWord: string;
+}
+
+/**
+ * The read-only form: a `role="img"` with one authored name, no tab stop and no
+ * five-way navigation through information that is not a choice.
+ */
+export function RatingSummaryIsland({
+  locale,
+  value,
+  maxValue,
+  size,
+  ofWord,
+}: RatingSummaryIslandProps) {
+  return (
+    <Rating
+      isReadOnly
+      value={value}
+      locale={locale}
+      {...(maxValue === undefined ? {} : { maxValue })}
+      {...(size === undefined ? {} : { size })}
+      valueLabel={(v, max) => `${v} ${ofWord} ${max}`}
+    />
+  );
+}
+
+export interface RatingInputIslandProps {
+  locale: Locale;
+  /** Announced name of the `role="radiogroup"`. */
+  label: string;
+  /** The noun one star is counted in: «ستاره» → «۳ ستاره». */
+  starWord: string;
+  defaultValue?: number | undefined;
+  maxValue?: number | undefined;
+  size?: "sm" | "md" | "lg" | undefined;
+  isDisabled?: boolean | undefined;
+}
+
+/** The interactive form: five stars with one checked IS a radio group. */
+export function RatingInputIsland({
+  locale,
+  label,
+  starWord,
+  defaultValue,
+  maxValue,
+  size,
+  isDisabled,
+}: RatingInputIslandProps) {
+  return (
+    <Rating
+      locale={locale}
+      label={label}
+      starLabel={(v) => `${v} ${starWord}`}
+      {...(defaultValue === undefined ? {} : { defaultValue })}
+      {...(maxValue === undefined ? {} : { maxValue })}
+      {...(size === undefined ? {} : { size })}
+      {...(isDisabled === undefined ? {} : { isDisabled })}
+    />
+  );
+}
+
+/** One chip. Plain data, so it crosses the boundary. */
+export interface TagRow {
+  id: string;
+  text: string;
+}
+
+export interface TagGroupIslandProps {
+  /** Announced name of the `role="toolbar"`. */
+  label: string;
+  tags: readonly TagRow[];
+  size?: "sm" | "md" | undefined;
+  /**
+   * The remove control's name is assembled from these two around the tag's own
+   * text — «حذف تهران» with a prefix, «تهران را بردارید» with a suffix. The
+   * component takes a FUNCTION for exactly this reason; the island supplies the
+   * closure and the examples module supplies the words.
+   */
+  removePrefix?: string | undefined;
+  removeSuffix?: string | undefined;
+}
+
+/**
+ * A working removable tag row. Arrow the chips and listen: each remove control
+ * names the tag it drops, which is what makes eight filters eight distinct
+ * announcements instead of eight buttons called «حذف».
+ */
+export function TagGroupIsland({
+  label,
+  tags,
+  size,
+  removePrefix,
+  removeSuffix,
+}: TagGroupIslandProps) {
+  const [remaining, setRemaining] = useState(tags);
+  return (
+    <TagGroup
+      label={label}
+      removeLabel={(tag) => `${removePrefix ?? ""}${tag}${removeSuffix ?? ""}`}
+      onRemove={(keys) => {
+        const dropped = new Set([...keys].map(String));
+        setRemaining((current) => current.filter((tag) => !dropped.has(tag.id)));
+      }}
+    >
+      <TagList>
+        {remaining.map((tag) => (
+          <TagItem key={tag.id} id={tag.id} textValue={tag.text} {...(size === undefined ? {} : { size })}>
+            {tag.text}
+          </TagItem>
+        ))}
+      </TagList>
+    </TagGroup>
+  );
+}
+
+/** One row of the attachment list. A real `File` cannot be built on a server. */
+export interface UploadedFile {
+  name: string;
+  /** Size in BYTES. A number — the component formats it, nothing interpolates it. */
+  size: number;
+}
+
+export interface FileUploadIslandProps {
+  locale: Locale;
+  /** Announced name of the `role="group"` drop area. */
+  label: string;
+  /** Visible text on the picker button. */
+  triggerLabel: string;
+  /** The hint under the button — a size limit, an accepted-formats line. */
+  hint?: string | undefined;
+  /** The verb of the remove phrase: «حذف» → «حذف گزارش.pdf». */
+  removeWord: string;
+  acceptedFileTypes?: readonly string[] | undefined;
+  allowsMultiple?: boolean | undefined;
+  isDisabled?: boolean | undefined;
+  /** Rows the list starts with, so a size boundary can be shown without a picker. */
+  initialFiles?: readonly UploadedFile[] | undefined;
+}
+
+/**
+ * A working uploader: drop files on the area, pick them with the button, or
+ * paste them while something inside is focused.
+ *
+ * The three things worth doing here are all invisible in a screenshot — the
+ * drag highlight survives the pointer crossing into the icon (a counter, not a
+ * flag), choosing the same file twice in a row still fires, and every size is
+ * formatted with its unit in the reader's own language.
+ */
+export function FileUploadIsland({
+  locale,
+  label,
+  triggerLabel,
+  hint,
+  removeWord,
+  acceptedFileTypes,
+  allowsMultiple,
+  isDisabled,
+  initialFiles,
+}: FileUploadIslandProps) {
+  const [files, setFiles] = useState<readonly UploadedFile[]>(() => initialFiles ?? []);
+  return (
+    <div className="flex w-full max-w-md flex-col gap-3">
+      <FileUpload
+        label={label}
+        triggerLabel={triggerLabel}
+        {...(acceptedFileTypes === undefined ? {} : { acceptedFileTypes })}
+        {...(allowsMultiple === undefined ? {} : { allowsMultiple })}
+        {...(isDisabled === undefined ? {} : { isDisabled })}
+        onSelectFiles={(chosen) => {
+          const rows = chosen.map((file) => ({ name: file.name, size: file.size }));
+          setFiles((current) => (allowsMultiple === true ? [...current, ...rows] : rows));
+        }}
+      >
+        {hint === undefined ? null : <p className="text-xs text-fg-muted">{hint}</p>}
+      </FileUpload>
+      {files.length === 0 ? null : (
+        <FileUploadList>
+          {files.map((file) => (
+            <FileUploadItem
+              key={file.name}
+              name={file.name}
+              size={file.size}
+              locale={locale}
+              removeLabel={(fileName) => `${removeWord} ${fileName}`}
+              onRemove={() => {
+                setFiles((current) => current.filter((row) => row.name !== file.name));
+              }}
+            />
+          ))}
+        </FileUploadList>
+      )}
+    </div>
+  );
+}

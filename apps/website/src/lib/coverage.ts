@@ -36,10 +36,29 @@ import { exampleSlugs, loadExamplesFor, sourceOf } from "./examples-loader.ts";
 
 const REGISTRY = join(process.cwd(), "..", "..", "registry.json");
 
+/**
+ * Only `registry:ui` items can HAVE examples, so only they are counted.
+ *
+ * ── A MANIFEST THAT REPORTS FALSE GAPS IS WORSE THAN NO MANIFEST ───────────
+ *
+ * The first cut counted every registry item and reported 79 uncovered, of which
+ * 30 were blocks — and a block is not undocumented, it is documented somewhere
+ * else. `app/[lang]/blocks/[slug]/page.tsx` renders from `lib/blocks.tsx` and
+ * never touches the examples loader: a block's page is a live preview, its
+ * install command and its full source, which is the right shape for a
+ * composition somebody copies whole. There is no `examples/<block>.tsx` for the
+ * same reason there is no API table on a block page.
+ *
+ * So those 30 were not a backlog; they were the manifest measuring the wrong
+ * thing. A number that overstates the gap teaches people to discount it, which
+ * costs more than the gap it was inflating.
+ */
+const ELIGIBLE = "registry:ui";
+
 export interface CoverageRow {
   /** The registry item's name, which is also the page slug. */
   slug: string;
-  /** `registry:ui` or `registry:block`. */
+  /** Always `registry:ui` — see `ELIGIBLE` on why blocks are not counted. */
   type: string;
   /** How many worked examples the component has. Zero is the interesting case. */
   examples: number;
@@ -75,8 +94,10 @@ async function build(): Promise<Coverage> {
   };
   const slugs = new Set(exampleSlugs());
 
+  const items = registry.items.filter((i) => i.type === ELIGIBLE);
+
   const rows: CoverageRow[] = [];
-  for (const item of registry.items) {
+  for (const item of items) {
     const path = sourceOf(item.name);
     if (path === undefined) {
       rows.push({ slug: item.name, type: item.type, examples: 0, shape: "none" });
@@ -92,7 +113,7 @@ async function build(): Promise<Coverage> {
   }
   rows.sort((a, b) => a.slug.localeCompare(b.slug));
 
-  const registryNames = new Set(registry.items.map((i) => i.name));
+  const registryNames = new Set(items.map((i) => i.name));
   const orphans = [...slugs].filter((s) => !registryNames.has(s)).sort();
 
   return {
