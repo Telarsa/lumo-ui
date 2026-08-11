@@ -16,6 +16,7 @@ import {
   columnFilteringFeature,
   columnResizingFeature,
   columnSizingFeature,
+  columnVisibilityFeature,
   createFilteredRowModel,
   createPaginatedRowModel,
   createSortedRowModel,
@@ -249,6 +250,11 @@ export const lumoTableFeatures = tableFeatures({
   globalFilteringFeature,
   columnSizingFeature,
   columnResizingFeature,
+  // Switched on for `data-grid.tsx`'s column menu. Opt-in like every other
+  // feature in TanStack 9, and opting in HERE rather than at the call site is
+  // the same argument this block already makes about `rowSortingFeature`: a
+  // consumer who forgets it gets a menu whose toggles tick and hide nothing.
+  columnVisibilityFeature,
   sortedRowModel: createSortedRowModel(),
   filteredRowModel: createFilteredRowModel(),
   paginatedRowModel: createPaginatedRowModel(),

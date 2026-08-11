@@ -437,6 +437,37 @@
       ]
     },
     {
+      "name": "data-grid",
+      "type": "registry:ui",
+      "title": "Data Grid",
+      "description": "The chrome around a `<Table>` — search, column visibility, paging, emptiness.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "button",
+        "menu",
+        "native-select",
+        "pagination",
+        "search-field"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/data-grid.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/data-grid.tsx"
+        },
+        {
+          "path": "packages/ui/src/data-grid.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/data-grid.variants.ts"
+        }
+      ]
+    },
+    {
       "name": "date-field",
       "type": "registry:ui",
       "title": "Date Field",

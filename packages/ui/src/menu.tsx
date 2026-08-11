@@ -469,3 +469,106 @@ export interface MenuSeparatorProps {
 export function MenuSeparator({ className }: MenuSeparatorProps) {
   return <BaseMenu.Separator className={cn(menuSeparatorVariants(), className)} />;
 }
+
+/* ────────────────────────────────────────────────── the checkable item ── */
+
+export const menuCheckboxIndicatorVariants = cva(
+  // A fixed-width gutter whether or not the tick is drawn, so the labels in a
+  // menu of toggles line up instead of shifting sideways as each is checked.
+  // `size-4` matches the `[&_svg]:size-4` every other item uses.
+  "grid size-4 shrink-0 place-items-center text-accent",
+);
+
+export interface MenuCheckboxItemProps {
+  /**
+   * Whether the item is ticked. CONTROLLED — there is no uncontrolled mode.
+   *
+   * A menu of toggles is always a view of state that lives somewhere else (which
+   * columns are visible, which filters are on), and an item that could hold its
+   * own answer is an item that can disagree with the thing it claims to
+   * describe. `data-grid.tsx`'s column menu is the motivating case.
+   */
+  isSelected: boolean;
+  /** Called with the new state. */
+  onChange: (isSelected: boolean) => void;
+  /**
+   * Typeahead string, and the accessible name when `children` is not a plain
+   * string. Same contract as `MenuItem.textValue`, and same reason: a server
+   * render has no DOM for Base UI to read text content out of.
+   */
+  textValue?: string | undefined;
+  isDisabled?: boolean | undefined;
+  /**
+   * Keeps the menu open after a tick, which is the right default HERE and the
+   * wrong one for `MenuItem`: toggling three columns should not mean reopening
+   * the menu three times. Set `false` for a toggle that ends the interaction.
+   */
+  closeOnClick?: boolean | undefined;
+  children?: LumoNode;
+  className?: string | undefined;
+}
+
+/**
+ * One `role="menuitemcheckbox"` — a toggle that lives inside a menu.
+ *
+ * ── WHY THIS IS NOT A `<Checkbox>` INSIDE A `<MenuItem>` ────────────────────
+ *
+ * That composition renders and is wrong twice over. A `role="menuitem"` may not
+ * contain an interactive descendant, so the checkbox is either a second tab
+ * stop inside a widget that owns its own roving focus, or it is `tabindex="-1"`
+ * and unreachable — and either way the item announces "menu item" followed by
+ * "checkbox, checked", which is two controls where a reader has one.
+ * `menuitemcheckbox` is the single role that carries both facts, and Base UI's
+ * `Menu.CheckboxItem` is what emits it with `aria-checked` attached.
+ *
+ * The tick is `Menu.CheckboxItemIndicator`, not a `::before` — browsers fold
+ * pseudo-element content into an accessible name, so a CSS tick would append a
+ * stray glyph to every checked item's announcement. Same call `MenuItem` makes
+ * for its submenu chevron.
+ *
+ * The gutter is reserved whether or not the tick is drawn, so ticking an item
+ * does not shove its own label sideways.
+ */
+export function MenuCheckboxItem({
+  isSelected,
+  onChange,
+  textValue,
+  isDisabled,
+  closeOnClick = false,
+  children,
+  className,
+}: MenuCheckboxItemProps) {
+  const resolvedTextValue = textValue ?? (typeof children === "string" ? children : undefined);
+  return (
+    <BaseMenu.CheckboxItem
+      data-lumo=""
+      checked={isSelected}
+      onCheckedChange={onChange}
+      closeOnClick={closeOnClick}
+      {...(resolvedTextValue === undefined ? {} : { label: resolvedTextValue })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+      className={cn(menuItemVariants(), className)}
+    >
+      <span aria-hidden="true" className={menuCheckboxIndicatorVariants()}>
+        <BaseMenu.CheckboxItemIndicator>
+          {/*
+           * Inline rather than a lucide import: this glyph is the ONE piece of
+           * chrome in the file, and `menu.tsx` is copied into a consumer's repo
+           * by `shadcn add` — a new icon import is a new dependency edge for
+           * them to resolve. `check.tsx`'s tick is drawn the same way.
+           */}
+          <svg viewBox="0 0 16 16" fill="none" className="size-3.5">
+            <path
+              d="M3.5 8.5l3 3 6-6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </BaseMenu.CheckboxItemIndicator>
+      </span>
+      <span className="flex-1 truncate">{children}</span>
+    </BaseMenu.CheckboxItem>
+  );
+}

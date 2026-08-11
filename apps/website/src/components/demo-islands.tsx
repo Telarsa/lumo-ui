@@ -1463,3 +1463,163 @@ export function KanbanIsland({
     </Kanban>
   );
 }
+
+/* ────────────────────────────────────────────────────────────── data-grid ── */
+
+/*
+ * Appended by the round-5 batch. Imports are hoisted; `useState` and `Locale`
+ * are already imported at the top of this file.
+ *
+ * `DataGrid` cannot be demonstrated from a server module for three separate
+ * reasons, any one of which would be enough: `useLumoTable` is a hook, and
+ * `pageLabel` and `rangeLabel` are required FUNCTIONS. As everywhere else in
+ * this file, no copy is authored here — every word arrives as a prop, and the
+ * numbers arrive as data and go out through `formatNumber`.
+ */
+// Only the genuinely new names: `Cell`, `Column`, `Row`, `Table`, `TableBody`,
+// `TableHeader` and `useLumoTable` are already imported by the table block
+// above, and import declarations are hoisted — re-importing them is a
+// duplicate-binding error, not a shadow.
+import {
+  DataGrid,
+  DataGridColumnsMenu,
+  DataGridEmpty,
+  DataGridPagination,
+  DataGridSearch,
+  DataGridToolbar,
+  type DataGridColumnLabel,
+} from "@lumo-ui/ui";
+import { formatNumber } from "@lumo-ui/core";
+
+/** One plotted row. Plain data, so it crosses the boundary. */
+export interface DataGridIslandRow {
+  id: string;
+  name: string;
+  city: string;
+  /** A real number. It reaches the cell through `formatNumber`, never bare. */
+  total: number;
+}
+
+export interface DataGridIslandProps {
+  locale: Locale;
+  rows: readonly DataGridIslandRow[];
+  /** Announced name of the grid itself. */
+  label: string;
+  /** Column names, for both the headers and the visibility menu. */
+  columns: readonly DataGridColumnLabel[];
+  searchLabel: string;
+  searchClearLabel: string;
+  searchPlaceholder: string;
+  columnsLabel: string;
+  emptyText: string;
+  sortAscendingLabel: string;
+  sortDescendingLabel: string;
+  pagerLabel: string;
+  previousLabel: string;
+  nextLabel: string;
+  /** The noun in «صفحهٔ ۳» — the closure is built here, the word is not. */
+  pageWord: string;
+  /** The joining word in «۱–۵ از ۱۲». */
+  ofWord: string;
+  pageSizeLabel: string;
+  /** Rows per page. Omit for no size control. */
+  pageSizes?: readonly number[];
+  /** Starting rows per page. */
+  pageSize?: number;
+}
+
+/**
+ * A working data grid: type in the search box, hide a column, change the page.
+ *
+ * The three things worth doing are all invisible in a screenshot — filtering
+ * returns to page one, the LAST visible column's toggle is disabled so the view
+ * cannot be trapped empty, and every figure on the footer is in the reader's
+ * own numerals including the rows-per-page options.
+ */
+export function DataGridIsland({
+  locale,
+  rows,
+  label,
+  columns,
+  searchLabel,
+  searchClearLabel,
+  searchPlaceholder,
+  columnsLabel,
+  emptyText,
+  sortAscendingLabel,
+  sortDescendingLabel,
+  pagerLabel,
+  previousLabel,
+  nextLabel,
+  pageWord,
+  ofWord,
+  pageSizeLabel,
+  pageSizes,
+  pageSize = 5,
+}: DataGridIslandProps) {
+  const [data] = useState(() => [...rows]);
+  const table = useLumoTable({
+    locale,
+    data,
+    columns: [
+      { id: "name", accessorKey: "name" },
+      { id: "city", accessorKey: "city" },
+      { id: "total", accessorKey: "total" },
+    ],
+    initialState: { pagination: { pageIndex: 0, pageSize } },
+  });
+
+  const sortStrings = { sortAscendingLabel, sortDescendingLabel } as const;
+  const nameOf = (id: string) => columns.find((c) => c.id === id)?.label ?? id;
+
+  return (
+    <DataGrid locale={locale} table={table}>
+      <DataGridToolbar>
+        <DataGridSearch
+          label={searchLabel}
+          clearLabel={searchClearLabel}
+          placeholder={searchPlaceholder}
+        />
+        <DataGridColumnsMenu label={columnsLabel} columns={columns} />
+      </DataGridToolbar>
+
+      <Table label={label} locale={locale} table={table}>
+        <TableHeader>
+          <Column id="name" isRowHeader allowsSorting {...sortStrings}>
+            {nameOf("name")}
+          </Column>
+          <Column id="city" allowsSorting {...sortStrings}>
+            {nameOf("city")}
+          </Column>
+          <Column id="total" allowsSorting {...sortStrings}>
+            {nameOf("total")}
+          </Column>
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <Row key={row.id} row={row}>
+              <Cell isRowHeader>{String(row.getValue("name"))}</Cell>
+              <Cell>{String(row.getValue("city"))}</Cell>
+              {/* Through `formatNumber` — a bare {total} is a Latin digit. */}
+              <Cell>{formatNumber(Number(row.getValue("total")), locale)}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+
+      <DataGridEmpty>{emptyText}</DataGridEmpty>
+
+      <DataGridPagination
+        label={pagerLabel}
+        previousLabel={previousLabel}
+        nextLabel={nextLabel}
+        pageLabel={(n: string) => `${pageWord} ${n}`}
+        rangeLabel={(from: string, to: string, total: string) =>
+          `${from}–${to} ${ofWord} ${total}`
+        }
+        pageSizeLabel={pageSizeLabel}
+        {...(pageSizes === undefined ? {} : { pageSizes })}
+      />
+    </DataGrid>
+  );
+}

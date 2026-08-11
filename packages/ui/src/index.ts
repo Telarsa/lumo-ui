@@ -252,8 +252,10 @@ export {
   MenuPopover,
   MenuSection,
   MenuSeparator,
+  MenuCheckboxItem,
   MenuTrigger,
   SubmenuTrigger,
+  menuCheckboxIndicatorVariants,
   menuItemVariants,
   menuPopoverVariants,
   menuSectionHeaderVariants,
@@ -262,6 +264,7 @@ export {
   menuVariants,
 } from "./menu.tsx";
 export type {
+  MenuCheckboxItemProps,
   MenuItemProps,
   MenuPopoverProps,
   MenuProps,
@@ -270,6 +273,32 @@ export type {
   MenuTriggerProps,
   SubmenuTriggerProps,
 } from "./menu.tsx";
+
+export {
+  DataGrid,
+  DataGridColumnsMenu,
+  DataGridEmpty,
+  DataGridPagination,
+  DataGridSearch,
+  DataGridToolbar,
+  dataGridEmptyVariants,
+  dataGridFooterVariants,
+  dataGridPageSizeVariants,
+  dataGridRangeVariants,
+  dataGridToolbarVariants,
+  dataGridVariants,
+} from "./data-grid.tsx";
+export type {
+  DataGridColumn,
+  DataGridColumnLabel,
+  DataGridColumnsMenuProps,
+  DataGridEmptyProps,
+  DataGridPaginationProps,
+  DataGridProps,
+  DataGridSearchProps,
+  DataGridTableInstance,
+  DataGridToolbarProps,
+} from "./data-grid.tsx";
 
 export { ContextMenu, ContextMenuTrigger } from "./context-menu.tsx";
 export type { ContextMenuProps, ContextMenuTriggerProps } from "./context-menu.tsx";
