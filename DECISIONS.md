@@ -557,3 +557,78 @@ TRIPWIRE for deleting `useComboboxWiring`: Base UI computing its list id during
 render and passing it down its own context, so `aria-controls` is a prop rather
 than a ref-callback write. Nothing needs measuring for that — the id is a
 `useId()` either way.
+
+## §14 — The site is a static export, and `pnpm start` is not `next start`
+
+Recorded on 11 Aug 2026 because someone asked why, and the repository could not
+answer: the choice existed only in a docblock in `apps/website/next.config.ts`,
+and the reason that docblock gives is the weakest of the three real ones.
+
+Default Next.js is a Node server — `next build` produces `.next/`, `next start`
+serves it, and `start` means that in every Next project anyone has worked on
+before this one. `output: "export"` is a supported, documented, NON-DEFAULT mode
+in which `next start` refuses to run at all. So this is a divergence from the
+standard, it is deliberate, and it needs to be written down.
+
+### The three reasons, in the order that actually decides it
+
+1. **Free hosting, which is a standing constraint rather than a preference.**
+   A directory of files goes on Cloudflare Pages, GitHub Pages, S3 or nginx at
+   zero cost. A Node server wants a paid host or a free tier with limits and an
+   idle timeout. "No paid services" is a rule this project has held everywhere
+   else — it killed the Expo Snack embeds — and it holds here too. This reason
+   appears nowhere in the config, and it is the strongest.
+
+2. **Nothing on this site is computed per request.** The registry, the examples,
+   the coverage manifest, the search index and the docs are all derived from the
+   filesystem at build time. There is no user data, no personalisation, no
+   session, no authoring UI. A Node server would spend its life re-serving
+   constants.
+
+3. **The gate wants a directory of exactly the bytes a reader receives**, and
+   `out/` is that with nothing else in it. This is the config's stated reason,
+   and it is a convenience rather than a blocker: a server build still
+   prerenders, so `lumo-gate` could be pointed at `.next/server/app/**/*.html`.
+   It would be grading the same HTML mixed in with RSC payloads and harder to
+   map back to routes. Worth having; not worth deciding on alone.
+
+### What it costs, and one of those costs is already being paid
+
+- **`images: { unoptimized: true }`** is in the config right now. That is not a
+  styling choice, it is export forcing the issue — there is no image optimiser
+  without a server.
+- **No middleware, no route handlers, no Server Actions, no ISR.** Nothing on
+  the site wants them today. That is the point of reason 2, and it is also the
+  thing to re-check before assuming it stays true.
+- **`next start` does not exist**, so `pnpm start` had to mean something else.
+  It serves `out/` through `scripts/serve-static.mjs`, and the banner it prints
+  says so — because someone who types `pnpm start` expecting a Node server, and
+  is not told otherwise, will later wonder why a route handler they added does
+  nothing.
+
+That script exists rather than a dependency for the same reason as everything
+else here: `serve` or `http-server` is a package on a repo constrained by disk,
+and `npx` needs the network at run time. Sixty lines of `node:http` needs
+neither. It reproduces two host behaviours that a naive static server gets
+wrong — the `trailingSlash` 301, and serving the site's own gate-graded
+`404.html` rather than a bare Node message.
+
+### The state this decision is actually in
+
+**The site is not deployed anywhere.** `.github/workflows/ci.yml` builds it,
+grades it, and uploads `out/` as an artifact ON FAILURE only. There is no
+`vercel.json`, no `netlify.toml`, no Pages workflow. So export is currently a
+decision about a build, not about a host — and the host decision, when it is
+made, is the moment to re-read this section rather than inherit it.
+
+### TRIPWIRE — the one condition that reopens this
+
+**Auth in front of the docs.** Lumo is private-first; the repository is private
+and the library is not published. If these pages ever need to sit behind a
+login, a static export cannot do it at the application level. The options then
+are host-level gating (Cloudflare Access and equivalents, still free at this
+scale) or moving to a server build — and only the second changes this decision.
+
+Two weaker signals that would also warrant a re-read: wanting search served
+rather than shipped as an index, and wanting real image optimisation on a page
+of screenshots. Neither is a reason on its own; both together, with auth, are.
