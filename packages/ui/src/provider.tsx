@@ -1,6 +1,9 @@
 "use client";
 
 import { DirectionProvider } from "@base-ui/react/direction-provider";
+// RUNTIME, on purpose, and the LAST one in this file. See "THE ONE REMAINING
+// RUNTIME `react-aria-components` IMPORT — A BRIDGE" below: `list-box.tsx` and
+// `tree.tsx` are still React Aria and read their locale from this and only this.
 import { I18nProvider } from "react-aria-components";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { FORMAT_LOCALE, direction } from "@lumo-ui/core";
@@ -15,7 +18,8 @@ import { LumoLocaleContext } from "./locale.ts";
  * this function:
  *
  *     locale ──┬─► LumoLocaleContext   the Base UI half's locale + strings
- *              ├─► I18nProvider        the React Aria half, FORMAT_LOCALE[locale]
+ *              ├─► I18nProvider        the React Aria REMAINDER — list-box and
+ *              │                       tree only — FORMAT_LOCALE[locale]
  *              └─► DirectionProvider   Base UI's direction, direction(locale)
  *
  * **There is no `direction` prop and there will not be one.** That is the whole
@@ -34,14 +38,36 @@ import { LumoLocaleContext } from "./locale.ts";
  * adding a locale to `Locale` cannot forget to add its direction — the same
  * argument CONTRIBUTING.md's "Adding a locale" step 1 makes.
  *
- * ═══ WHY REACT ARIA'S PROVIDER IS STILL HERE ════════════════════════════════
+ * ═══ THE ONE REMAINING RUNTIME `react-aria-components` IMPORT — A BRIDGE ════
  *
- * Because 58 source modules in this package still import
- * `react-aria-components` against 24 on Base UI. The migration is mid-flight,
- * and removing `I18nProvider` while `calendar`, `slider`, `toolbar`, `tree` and
- * fifty others resolve their locale from it would put every one of them back on
- * `navigator.language || 'en-US'`. It goes when the last RAC import goes, and
- * `provider.test.tsx` is the thing that will fail loudly if it goes early.
+ * `I18nProvider` is DELIBERATELY still here, and this is the note the migration
+ * plan asked for rather than an oversight.
+ *
+ * Three of the five shipped components that still rendered React Aria after the
+ * date family migrated have been taken off it — `select.tsx` (`LabelContext`),
+ * `form.tsx` (`FieldError`/`Label`/`Text`) and everything they compose with. Two
+ * have NOT: `list-box.tsx` and `tree.tsx`, which are the two whose cost was
+ * scoped separately in `experiments/in-flight/README.md` (a `treegrid` with
+ * roving focus and typeahead is the same class of work the segmented input was).
+ * Both resolve direction, collation and typeahead order from RAC's `useLocale()`,
+ * and `useLocale()` reads THIS provider and nothing else.
+ *
+ * Measured on this branch, `renderToStaticMarkup` of a `<TreeItem>` inside
+ * `<LumoProvider locale="fa-IR">`, reading the expand marker's turn class:
+ *
+ *     with I18nProvider      group-data-expanded/lumo-tree-item:-rotate-90   ← rtl
+ *     without I18nProvider   group-data-expanded/lumo-tree-item:rotate-90    ← ltr
+ *
+ * That is a Persian page served with the marker turning the wrong way, and
+ * ArrowLeft/ArrowRight swapped with it, because RAC fell back to
+ * `navigator.language || 'en-US'` and there is no `navigator` on the server. It
+ * is the same defect shape as the Slider offset below, on a different component.
+ *
+ * So the import cannot go until `list-box.tsx` and `tree.tsx` do, and it is
+ * scoped to exactly that: nothing else in this file, and nothing in `select.tsx`
+ * or `form.tsx`, touches React Aria any more. `provider.test.tsx` is what fails
+ * loudly if it goes early — removing it turns three of its cases red, which is
+ * how the measurement above was taken.
  *
  * The defect it exists for is worth restating, because it is the reason this is
  * a component with a required prop rather than a line of documentation. React

@@ -1518,10 +1518,10 @@
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
+        "form",
         "popover"
       ],
       "files": [

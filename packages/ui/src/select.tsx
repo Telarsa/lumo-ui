@@ -4,9 +4,9 @@ import { createContext, useContext } from "react";
 import { cva } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
-import { LabelContext } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
+import { FieldLabelContext } from "./form.tsx";
 import { useFieldWiring } from "@lumo-ui/base-ui-ssr";
 
 /**
@@ -212,17 +212,24 @@ export function Select<T extends object>({
          * `phase-a-result.json` recorded the cause as STRUCTURAL — "the
          * CONSUMER renders the Label, so there is no seam to inject through
          * without either cloning children or making form.tsx's Label
-         * context-aware". The second half of that sentence turns out to be the
-         * answer, and it needed no change to `form.tsx` at all: RAC's `Label`
-         * ALREADY reads `LabelContext` through `useContextProps`, and
-         * `LabelContext` is a public export of `react-aria-components`.
-         * Nothing was providing it. Verified by rendering — a `<Label>` under a
-         * provider carrying `{id, htmlFor}` emits both attributes at the first
-         * byte, and an explicit `id` on the element still wins.
+         * context-aware". The second half of that sentence is the answer, and
+         * it is now literally what happens: `form.tsx`'s `<Label>` reads
+         * `FieldLabelContext`, and this is the only thing that provides it.
          *
-         * So the fix is a PUBLIC-API prop-level fix on both sides of the
-         * engine boundary, which is the bet this branch is testing. No
-         * node_modules, no internal module path.
+         * The FIRST version of the fix did it through React Aria instead —
+         * RAC's `Label` already read RAC's `LabelContext`, which is a public
+         * export, so providing it here worked without touching `form.tsx`.
+         * That was the cheaper edit and it is why it was written first, but it
+         * left a RUNTIME `react-aria-components` import in a SHIPPED component
+         * for a wiring concern that has nothing to do with React Aria, on a
+         * branch whose whole purpose is to delete that dependency. The context
+         * is Lumo's now. The mechanism and the served bytes are unchanged —
+         * a `<Label>` under a provider carrying `{id, htmlFor}` emits both
+         * attributes at the first byte, and an explicit `id` on the element
+         * still wins, because the caller's own props are spread last.
+         *
+         * So the fix is still a PUBLIC-API prop-level fix, with one engine
+         * fewer in it. No node_modules, no internal module path.
          *
          * The direction is deliberate and is argued in `FieldWiringMode`: the
          * LABEL points at the control with `htmlFor`, not the reverse. This
@@ -234,11 +241,11 @@ export function Select<T extends object>({
          * `<Select>` provided — the thing `className` and `data-lumo` were
          * attached to — has to be a real element here.
          */}
-        <LabelContext.Provider value={wiring.labelProps}>
+        <FieldLabelContext.Provider value={wiring.labelProps}>
           <div data-lumo="" className={cn(selectVariants(), className)}>
             {children}
           </div>
-        </LabelContext.Provider>
+        </FieldLabelContext.Provider>
       </SelectFieldContext.Provider>
     </BaseSelect.Root>
   );

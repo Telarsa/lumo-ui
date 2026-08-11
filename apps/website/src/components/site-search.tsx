@@ -158,18 +158,38 @@ export function SiteSearch({ lang, index }: SiteSearchProps) {
        * every docs site converged on, because it advertises what will open.
        * It is still a Button underneath: pressing it opens a dialog, and an
        * element that behaves as a button must be one.
+       *
+       * ── WHY THE PILL COLLAPSES TO AN ICON BELOW `lg` ─────────────────────
+       *
+       * The pill is 160–208px of a header whose contents measured a 580px
+       * (fa) / 594px (en) min-content floor against a 375px viewport — that
+       * floor was the site's sideways scroll on EVERY page (see site-shell).
+       * Below `lg` the drawn label and the ⌘K hint are dropped and the button
+       * becomes the same 32px square as its neighbours: the hint names a key
+       * a phone has not got, and the magnifier is the one icon that needs no
+       * caption. The control is NOT hidden — it stays in the header, in the
+       * tab order, at a full 32px target — so the search a phone user reaches
+       * for is one press away, exactly as on a desktop.
+       *
+       * `aria-label` (not a visually-hidden span) carries the name, because
+       * the name must survive `hidden` on the drawn text. It is the same
+       * translated string the pill draws at `lg`, so the visible label and
+       * the announced one never diverge.
        */
       trigger={
         <Button
           variant="outline"
           size="sm"
-          className="h-8 w-40 justify-between gap-2 border-border bg-surface-sunken/60 px-2.5 font-normal text-fg-subtle hover:bg-surface-sunken hover:text-fg-muted sm:w-52"
+          aria-label={copy.triggerLabel[lang]}
+          className="size-8 shrink-0 justify-center gap-2 border-border bg-surface-sunken/60 px-0 font-normal text-fg-subtle hover:bg-surface-sunken hover:text-fg-muted lg:h-8 lg:w-52 lg:justify-between lg:px-2.5"
         >
           <span className="flex min-w-0 items-center gap-2">
             <SearchIcon aria-hidden="true" className="size-3.5 shrink-0" />
-            <span className="truncate text-[0.8125rem]/5">{copy.triggerLabel[lang]}</span>
+            <span className="hidden truncate text-[0.8125rem]/5 lg:inline">
+              {copy.triggerLabel[lang]}
+            </span>
           </span>
-          <Kbd keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="sm" />
+          <Kbd keys={isMac ? ["⌘", "K"] : ["Ctrl", "K"]} size="sm" className="hidden lg:inline-flex" />
         </Button>
       }
     >

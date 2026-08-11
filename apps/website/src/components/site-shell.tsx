@@ -93,10 +93,35 @@ export async function SiteShell({
   return (
     <div className="min-h-dvh flex flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-surface/80 backdrop-blur supports-backdrop-filter:bg-surface/60">
-        <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center gap-6 px-6">
+        {/*
+         * ── WHY THIS ROW WRAPS BELOW `md` ────────────────────────────────
+         *
+         * Measured on the built export via CDP, 11 Aug 2026: this element's
+         * own `scrollWidth` was 580 (fa) / 594 (en) — a MIN-CONTENT floor,
+         * identical at every viewport — against a 375px `clientWidth`. Being
+         * the widest box on the page, it set `documentElement.scrollWidth` to
+         * 581, so every page on the site scrolled sideways on a phone. Logo +
+         * three nav labels + a 160px search pill + three icon buttons + two
+         * 24px gaps simply do not fit in one 375px line, and no amount of
+         * shrinking makes them: `nowrap` text has no smaller size to go to.
+         *
+         * So the line breaks instead. `flex-wrap` plus `order-last w-full` on
+         * the nav puts the section links on their own row below `md`, where
+         * they measure ~240px (fa) and fit at 320. The DOM order is unchanged
+         * — logo, nav, actions — so tab order still follows reading order;
+         * only the visual line assignment moves. The height therefore cannot
+         * be a fixed `h-14` on a phone: `py-2` lets two rows breathe, and
+         * `md:h-14` restores the exact single-row header everywhere it fits.
+         *
+         * `min-w-0` on the two flexible children is the other half: a flex
+         * item's `min-width: auto` floors it at min-content and out-ranks any
+         * width you give it, which is the mechanism that produced this bug in
+         * the first place.
+         */}
+        <div className="mx-auto flex w-full max-w-screen-2xl flex-wrap items-center gap-x-6 gap-y-1 px-6 py-2 md:h-14 md:flex-nowrap md:py-0">
           <Link
             href={`/${segmentFor(lang)}/`}
-            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-fg"
+            className="flex shrink-0 items-center gap-2 text-sm font-semibold tracking-tight text-fg"
           >
             <span
               aria-hidden="true"
@@ -104,7 +129,7 @@ export async function SiteShell({
             />
             {t.title}
           </Link>
-          <nav className="flex items-center gap-5 text-sm">
+          <nav className="order-last flex w-full min-w-0 flex-wrap items-center gap-x-5 gap-y-1 text-sm md:order-0 md:w-auto md:flex-nowrap">
             {navLinks.map((l) => (
               <Link
                 key={l.key}
@@ -119,7 +144,14 @@ export async function SiteShell({
               </Link>
             ))}
           </nav>
-          <div className="ms-auto flex items-center gap-1.5">
+          {/*
+           * `ms-auto` — logical, so the cluster sits at the END of the line in
+           * both directions — and `min-w-0` so this cluster is allowed to be
+           * narrower than its contents' min-content rather than pushing the
+           * row past the viewport, which is what it did before the search
+           * trigger learned to collapse (see site-search.tsx).
+           */}
+          <div className="ms-auto flex min-w-0 items-center gap-1.5">
             <SiteSearch lang={lang} index={await searchIndexPromise} />
             <div className="flex items-center gap-0.5">
               {/* Icon-only, so the accessible name is required copy — see locale.ts. */}

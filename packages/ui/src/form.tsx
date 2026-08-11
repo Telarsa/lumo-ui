@@ -10,13 +10,15 @@ import { cva } from "class-variance-authority";
 import { Field as BaseField } from "@base-ui/react/field";
 import { Input as BaseInput } from "@base-ui/react/input";
 import { Form as BaseForm } from "@base-ui/react/form";
-import {
-  FieldError as AriaFieldError,
-  type FieldErrorProps as AriaFieldErrorProps,
-  Label as AriaLabel,
-  type LabelProps as AriaLabelProps,
-  Text as AriaText,
-  type TextProps as AriaTextProps,
+// TYPE-ONLY. The three RUNTIME imports this file used to carry — `FieldError`,
+// `Label` and `Text` — are gone; see "THE REACT ARIA FALLBACK, AND WHAT
+// REPLACED IT" below. The prop TYPES stay React Aria's because the public API
+// may not change, and a type import is erased at build, so nothing of
+// react-aria-components reaches a consumer's bundle through this file.
+import type {
+  FieldErrorProps as AriaFieldErrorProps,
+  LabelProps as AriaLabelProps,
+  TextProps as AriaTextProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { useFieldWiring, type FieldWiring, type FieldWiringMode } from "@lumo-ui/base-ui-ssr";
@@ -58,22 +60,42 @@ import { useFieldWiring, type FieldWiring, type FieldWiringMode } from "@lumo-ui
  * built on `<Field>` is server-named by construction rather than by
  * remembering.
  *
- * ── THE REACT ARIA FALLBACK, AND ITS EXACT EXPIRY ──────────────────────────
+ * ── THE REACT ARIA FALLBACK, AND WHAT REPLACED IT ──────────────────────────
  *
- * `Label`, `Description` and `FieldError` still fall back to React Aria's when
- * they are rendered OUTSIDE a Lumo `<Field>`. That is not hedging: four
- * components in this tree — `date-picker.tsx`, `date-range-picker.tsx`,
- * `time-field.tsx` and `date-field.tsx` — are still React Aria roots that
- * render these three as children and depend on RAC's own `LabelContext` /
- * `TextContext` / `FieldErrorContext` to associate them. Making these three
- * unconditionally Base UI would silently unname all four, in the same
- * self-healing, jsdom-invisible way this whole file exists to prevent.
+ * The previous version of this paragraph named an expiry: `Label`,
+ * `Description` and `FieldError` fell back to React Aria's own components when
+ * rendered OUTSIDE a Lumo `<Field>`, because `date-picker.tsx`,
+ * `date-range-picker.tsx`, `time-field.tsx` and `date-field.tsx` were React Aria
+ * roots that rendered these three as children and relied on RAC's `LabelContext`
+ * / `TextContext` / `FieldErrorContext` to associate them.
  *
- * The fallback is deleted, and this paragraph with it, when the date family
- * migrates. Nothing else in the library reaches it: every other caller of
- * `Label`/`Description`/`FieldError` in this tree is inside a `<Field>`.
- * `FOCUS_RING` and `FOCUS_RING_SELF` below are the same shape of thing — a
- * library mid-swap needs both spellings, and says which is which.
+ * That expiry has arrived. The date family migrated (see
+ * `experiments/in-flight/README.md`), and all four now compose
+ * `Field.Root`/`Field.Label`/`Field.Description` by hand out of the cva strings
+ * below rather than out of these components. Grepped, not assumed: the ONLY
+ * caller of `<Label>` outside a Lumo `<Field>` left in the whole repository is
+ * `<Select>`, in `select.tsx` and in the site's select examples. There are no
+ * callers of `<Description>` or `<FieldError>` outside a `<Field>` at all.
+ *
+ * So the fallback is no longer React Aria's — it is a PLAIN ELEMENT plus a
+ * Lumo-owned context, `FieldLabelContext`, that a non-`<Field>` wrapper uses to
+ * hand `<Label>` the `id`/`htmlFor` pair it minted. Two measurements forced that
+ * shape rather than "just use Base UI's part everywhere":
+ *
+ *   1. Base UI's Field parts THROW outside a `Field.Root` — verified by
+ *      rendering, not by reading source: `renderToStaticMarkup(<Field.Label/>)`
+ *      raises "Base UI: FieldRootContext is missing. Field parts must be placed
+ *      within <Field.Root>." Same for `Field.Description` and `Field.Error`. A
+ *      `<Select>` has no `Field.Root` — Base UI's Select is its own root — so
+ *      the null-chrome branch cannot be a Base UI part.
+ *
+ *   2. The association still has to be in the SERVED BYTES, so it cannot be
+ *      delegated to any layout effect on either engine. The ids arrive as props
+ *      from `useFieldWiring`, already resolved during render.
+ *
+ * `FOCUS_RING` and `FOCUS_RING_SELF` below are still the shape of a library
+ * mid-swap — `rating.tsx` needs the first, the form family needs the second —
+ * and they say which is which.
  */
 
 /**
@@ -198,6 +220,30 @@ interface FieldChrome extends FieldWiring {
 }
 
 const FieldChromeContext = createContext<FieldChrome | null>(null);
+
+/**
+ * The label wiring published by a wrapper that is NOT a Lumo `<Field>`.
+ *
+ * One consumer today, `<Select>`, and the direction of its arrow is the reason
+ * this is a second context rather than a second `FieldChrome`. A `<Field>` wires
+ * `"aria"` mode — the control points at the label — and can do that because it
+ * is given the label's CONTENT and therefore knows one will render. A `<Select>`
+ * wires `"native"` mode: the CONSUMER renders the `<Label>` as a sibling the
+ * wrapper never sees, so the label carries `htmlFor` and the trigger carries the
+ * matching `id`, and nothing dangles when no label is rendered at all. See
+ * `FieldWiringMode` in `@lumo-ui/base-ui-ssr` for the full argument.
+ *
+ * Reusing `FieldChromeContext` for this would be worse than verbose, it would be
+ * wrong: `<Description>` and `<FieldError>` branch on that context to decide
+ * whether to render a Base UI `Field` part, and a Base UI `Field` part inside a
+ * `<Select>` throws — there is no `Field.Root` above it. This context carries the
+ * label pair and nothing else, so it cannot be mistaken for a field.
+ *
+ * It is deliberately NOT re-exported from the package barrel. It is the seam
+ * between two files that already travel together in the registry, not a public
+ * extension point; a consumer wanting this shape composes `useFieldWiring`.
+ */
+export const FieldLabelContext = createContext<FieldWiring["labelProps"] | null>(null);
 
 /**
  * The props a control must spread to be named and described in the FIRST BYTE.
@@ -384,9 +430,10 @@ export function Form({ className, validationBehavior = "aria", ...props }: FormP
  * the words in both directions.
  *
  * Inside a `<Field>` this is Base UI's `Field.Label` carrying the id the control
- * points at, so the name is in the served HTML. Outside one it is still React
- * Aria's — see the file header for which four components that is for, and when
- * it goes.
+ * points at, so the name is in the served HTML. Outside one it is a plain
+ * `<label>` carrying whatever `FieldLabelContext` published — see the file
+ * header for why it cannot be a Base UI part there, and which one component
+ * that branch is for.
  */
 export interface LabelProps extends Omit<AriaLabelProps, "children" | "render"> {
   children?: LumoNode;
@@ -403,8 +450,33 @@ export interface LabelProps extends Omit<AriaLabelProps, "children" | "render"> 
 
 export function Label({ className, nativeLabel, ...props }: LabelProps) {
   const chrome = useContext(FieldChromeContext);
+  const external = useContext(FieldLabelContext);
   if (chrome === null) {
-    return <AriaLabel className={cn(labelVariants(), className)} {...props} />;
+    /*
+     * A plain element, not a Base UI part: `Field.Label` outside a `Field.Root`
+     * throws (measured — see the file header), and a `<Select>` has no
+     * `Field.Root` above it.
+     *
+     * `htmlFor` is dropped on the `<span>` arm. `nativeLabel={false}` is the
+     * "there is no single labelable control" case, and `for` is only valid on a
+     * `<label>`; emitting it on a span would be an attribute the parser drops
+     * and a reader of the source would believe.
+     *
+     * The caller's own props go LAST so an explicit `id`/`htmlFor` still wins,
+     * which is the behaviour RAC's `LabelContext` had through `useContextProps`.
+     */
+    const { htmlFor, ...idOnly } = external ?? {};
+    if (nativeLabel === false) {
+      return <span className={cn(labelVariants(), className)} {...idOnly} {...props} />;
+    }
+    return (
+      <label
+        className={cn(labelVariants(), className)}
+        {...idOnly}
+        {...optional("htmlFor", htmlFor)}
+        {...props}
+      />
+    );
   }
   return (
     <BaseField.Label
@@ -435,9 +507,17 @@ export interface DescriptionProps extends Omit<AriaTextProps, "children"> {
 export function Description({ className, ...props }: DescriptionProps) {
   const chrome = useContext(FieldChromeContext);
   if (chrome === null) {
-    return (
-      <AriaText slot="description" className={cn(descriptionVariants(), className)} {...props} />
-    );
+    /*
+     * Unreachable from anything in this repository — grepped, there is no
+     * `<Description>` outside a `<Field>` — and kept as a plain `<span>` rather
+     * than deleted, because deleting it would make a composition that used to
+     * render text render a crash instead. A `<span>` is the element React Aria's
+     * `<Text slot="description">` rendered, so a consumer who was already doing
+     * this gets the same box and the same class. It carries NO id and nothing
+     * points at it: outside a `<Field>` there is no wiring to read, and minting
+     * an id here would produce a described-by target nobody references.
+     */
+    return <span className={cn(descriptionVariants(), className)} {...props} />;
   }
   return (
     <BaseField.Description
@@ -469,14 +549,24 @@ export interface FieldErrorProps
   className?: string | undefined;
 }
 
-export function FieldError({ className, children, ...props }: FieldErrorProps) {
+/*
+ * No rest parameter, unlike `Label` and `Description`. The Base UI arm below
+ * never forwarded one — `BaseField.Error` is given `match`, the class and the
+ * wiring and nothing else — and the React Aria arm that did forward it is gone.
+ * Binding a `...props` nobody spreads would read as forwarding.
+ */
+export function FieldError({ className, children }: FieldErrorProps) {
   const chrome = useContext(FieldChromeContext);
   if (chrome === null) {
-    return (
-      <AriaFieldError className={cn(fieldErrorVariants(), className)} {...props}>
-        {children}
-      </AriaFieldError>
-    );
+    /*
+     * `null`, and that is BYTE-IDENTICAL to what React Aria did here rather than
+     * a simplification of it. `FieldError.mjs` opens with
+     * `if (!validation?.isInvalid) return null;` against a `FieldErrorContext`
+     * that is `null` outside a RAC field or form — so outside a Lumo `<Field>`
+     * this component has always rendered nothing at all, authored children
+     * included. Unreachable from anything in this repository either way.
+     */
+    return null;
   }
   if (children == null) return null;
   return (
