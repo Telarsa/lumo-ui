@@ -8,6 +8,12 @@ import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
 import type { Key } from "react-aria-components";
 import { cn, FORMAT_LOCALE, type LumoNode } from "@lumo-ui/core";
 import { foldPersian } from "./autocomplete.tsx";
+import {
+  ComboboxWiringProvider,
+  useComboboxInputWiring,
+  useComboboxListId,
+  useComboboxListWiring,
+} from "@lumo-ui/base-ui-ssr";
 import { useLumoLocale } from "./locale.ts";
 import {
   Dialog,
@@ -228,6 +234,7 @@ export function Command<T = unknown>({
   const locale = useLumoLocale();
   const baseFilter = BaseAutocomplete.useFilter({ locale: FORMAT_LOCALE[locale] });
   const toString = itemToString ?? (defaultItemToString as (item: T) => string);
+  const listId = useComboboxListId();
 
   const filterFn = useMemo(() => {
     if (filter) return (item: T, query: string) => filter(toString(item), query);
@@ -253,7 +260,8 @@ export function Command<T = unknown>({
           ? {}
           : { onValueChange: (value: string) => onInputChange(value) })}
       >
-        {children}
+        {/* The list id. See `combobox-wiring.ts` and autocomplete.tsx. */}
+        <ComboboxWiringProvider value={listId}>{children}</ComboboxWiringProvider>
       </BaseAutocomplete.Root>
     </div>
   );
@@ -352,6 +360,7 @@ export interface CommandInputProps {
 }
 
 export function CommandInput({ label, placeholder, className }: CommandInputProps) {
+  const listWiring = useComboboxInputWiring();
   return (
     <div data-slot="command-input-wrapper" className={commandInputWrapperVariants()}>
       {/* Inline, not absolutely positioned — see commandInputWrapperVariants. */}
@@ -372,6 +381,8 @@ export function CommandInput({ label, placeholder, className }: CommandInputProp
        */}
       <BaseAutocomplete.Input
         autoFocus
+        // `aria-controls` in the first byte — see `combobox-wiring.ts`.
+        {...listWiring}
         aria-label={label}
         data-slot="command-input"
         className={cn(commandInputVariants(), className)}
@@ -397,9 +408,11 @@ export interface CommandListProps<T = unknown> {
 }
 
 export function CommandList<T = unknown>({ label, className, children }: CommandListProps<T>) {
+  const listProps = useComboboxListWiring();
   return (
     <BaseAutocomplete.List
       data-lumo=""
+      {...listProps}
       data-slot="command-list"
       aria-label={label}
       className={cn(commandListVariants(), className)}

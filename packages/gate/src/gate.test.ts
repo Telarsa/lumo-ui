@@ -185,6 +185,61 @@ describe("rules do not fire where they should not", () => {
     expect(fired).toContain("composite-tab-stop");
   });
 
+  /*
+   * THE COMBOBOX EXEMPTION, and the three ways it must NOT apply.
+   *
+   * In the combobox pattern focus never enters the list: it stays on the input,
+   * the options are correctly -1, and the input names the active one. That is
+   * one Tab from the outside — the input's.
+   *
+   * The three negative cases below are the ones that matter, because each is a
+   * plausible loosening someone would make while "simplifying" this.
+   */
+  const combobox = (input: string, listAttrs = 'id="lumo-list"') => `<!doctype html>
+    <html lang="fa-IR" dir="rtl"><body>
+      <input role="combobox" aria-label="جست‌وجو" aria-expanded="true" ${input} />
+      <div role="listbox" aria-label="نتیجه‌ها" tabindex="-1" ${listAttrs}>
+        <div role="option" tabindex="-1">تهران</div>
+      </div><p>۱۲۳</p></body></html>`;
+
+  const composite = (html: string) =>
+    gradeHtml("fa-IR/index.html", html)
+      .map((v) => v.rule)
+      .filter((r) => r === "composite-tab-stop");
+
+  it("a listbox controlled by a tabbable combobox is not a violation", () => {
+    expect(composite(combobox('aria-controls="lumo-list"'))).toEqual([]);
+  });
+
+  it("still fires when the combobox names no list at all", () => {
+    // The adjacency heuristic this replaced would have excused this one: a
+    // combobox is right there, sharing a parent. Nothing points at the list.
+    expect(composite(combobox(""))).toEqual(["composite-tab-stop"]);
+  });
+
+  it("still fires when the combobox points somewhere else", () => {
+    expect(composite(combobox('aria-controls="a-different-list"'))).toEqual([
+      "composite-tab-stop",
+    ]);
+  });
+
+  it("still fires when the combobox itself cannot be reached", () => {
+    // A disabled input is not a tab stop, so the list behind it is exactly as
+    // unreachable as it looks.
+    expect(composite(combobox('aria-controls="lumo-list" disabled'))).toEqual([
+      "composite-tab-stop",
+    ]);
+    expect(composite(combobox('aria-controls="lumo-list" tabindex="-1"'))).toEqual([
+      "composite-tab-stop",
+    ]);
+  });
+
+  it("reads aria-controls as the token LIST it is", () => {
+    // One input may control a list and a grid. An exact-match comparison fails
+    // that silently, which is the quietest kind of wrong.
+    expect(composite(combobox('aria-controls="some-grid lumo-list"'))).toEqual([]);
+  });
+
   it("each poison fires its own rule and nothing unexplained", () => {
     // One implication is real and worth stating rather than designing around:
     // a dangling aria-labelledby means the control genuinely HAS no accessible

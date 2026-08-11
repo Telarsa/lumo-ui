@@ -6,7 +6,13 @@ import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
 // TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
 import type { Key } from "react-aria-components";
 import { cn, formatNumber, FORMAT_LOCALE, type Locale, type LumoNode } from "@lumo-ui/core";
-import { useFieldWiring } from "@lumo-ui/base-ui-ssr";
+import {
+  ComboboxWiringProvider,
+  useComboboxInputWiring,
+  useComboboxListId,
+  useComboboxListWiring,
+  useFieldWiring,
+} from "@lumo-ui/base-ui-ssr";
 import { useLumoLocale } from "./locale.ts";
 
 /**
@@ -309,6 +315,8 @@ export function Autocomplete<T = string>({
       compare(item, foldPersian(query), (value: T) => foldPersian(toString(value)));
   }, [filter, match, baseFilter, toString]);
 
+  const listId = useComboboxListId();
+
   return (
     <BaseAutocomplete.Root<T>
       items={items}
@@ -324,7 +332,13 @@ export function Autocomplete<T = string>({
         ? {}
         : { onValueChange: (value: string) => onInputValueChange(value) })}
     >
-      {children}
+      {/*
+       * The list id, minted here because the input and the list are siblings a
+       * caller composes and neither can see the other's. See
+       * `combobox-wiring.ts` — without it the served bytes contain a listbox
+       * that nothing references and whose every option is `tabindex="-1"`.
+       */}
+      <ComboboxWiringProvider value={listId}>{children}</ComboboxWiringProvider>
     </BaseAutocomplete.Root>
   );
 }
@@ -382,6 +396,7 @@ export function AutocompleteInput({
     ...(showLabel ? { label } : {}),
     explicit: showLabel ? {} : { "aria-label": label },
   });
+  const listWiring = useComboboxInputWiring();
 
   return (
     <div data-lumo="" className={cn("flex w-full flex-col gap-1.5", className)}>
@@ -392,6 +407,10 @@ export function AutocompleteInput({
       ) : null}
       <BaseAutocomplete.Input
         data-lumo=""
+        // `aria-controls` in the FIRST BYTE. Base UI writes the same value from
+        // a ref callback after mount, so the two agree and React reconciles
+        // nothing — see `combobox-wiring.ts`.
+        {...listWiring}
         className={cn(autocompleteInputVariants(), inputClassName)}
         {...(showLabel ? {} : { "aria-label": label })}
         {...wiring.controlProps}
@@ -468,6 +487,7 @@ export type AutocompleteListBoxProps<T> = AnnouncingListBoxProps<T> | SilentList
  */
 export function AutocompleteListBox<T>(props: AutocompleteListBoxProps<T>) {
   const { label, className, children, resultCount, locale, resultsAnnouncement } = props;
+  const listProps = useComboboxListWiring();
 
   // The union makes a partially-supplied announcement unrepresentable; the
   // three-way check is what proves that to the compiler at this narrowing site.
@@ -488,6 +508,9 @@ export function AutocompleteListBox<T>(props: AutocompleteListBoxProps<T>) {
       )}
       <BaseAutocomplete.List
         data-lumo=""
+        // The id the input's `aria-controls` points at. Overrides Base UI's
+        // own generated one; its post-mount write then reads this element.
+        {...listProps}
         aria-label={label}
         className={cn(autocompleteListBoxVariants(), className)}
       >

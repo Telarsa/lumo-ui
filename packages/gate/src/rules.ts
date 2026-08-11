@@ -453,7 +453,53 @@ export const resolvedIdrefs: Rule = {
  * across the whole export, no other composite container carries any tabindex at
  * all — 470 tablists, 322 radiogroups, 8 toolbars, 8 menubars, none of them —
  * so this exemption cannot reach the defect the rule was written for.
+ *
+ * ── THE FOURTH: A COMBOBOX'S LIST ───────────────────────────────────────────
+ *
+ * The same principle as the first, with the focus manager living on a DIFFERENT
+ * ELEMENT. In the combobox pattern focus never enters the list at all: it stays
+ * on the input, the options are correctly `tabindex="-1"`, and the input names
+ * the active one with `aria-activedescendant`. A listbox reached this way is
+ * one Tab from the outside — the input's Tab.
+ *
+ * The exemption is deliberately NARROW, and the narrowness is the whole of it:
+ *
+ *   · the owner must reference this list BY ID through `aria-controls`. An
+ *     earlier draft matched any `role="combobox"` sharing a `parentElement`,
+ *     which excuses a listbox because a combobox happens to sit next to it —
+ *     blindness by adjacency, and precisely the weakening
+ *     `experiments/measurements/composite-tab-stop-open.json` rejected;
+ *   · the owner must itself be TABBABLE. A combobox that is disabled or at
+ *     `tabindex="-1"` cannot be Tabbed to, so the list behind it is exactly as
+ *     unreachable as it looks and the violation is real.
+ *
+ * Nothing in the export satisfied this before `useComboboxWiring` shipped —
+ * Base UI writes `aria-controls` from a ref callback after mount, so the served
+ * input pointed at nothing. The exemption and the fix landed together, which is
+ * the only order in which either is honest: a rule narrowed to fit markup that
+ * does not exist yet is a rule that has stopped grading anything.
  */
+
+/**
+ * Is this listbox referenced by a `role="combobox"` that can itself be reached?
+ *
+ * `aria-controls` is a SPACE-SEPARATED LIST, so `~=` rather than `=`: one input
+ * may control a list and a grid, and an exact match silently fails that case.
+ */
+function ownedByTabbableCombobox(document: Doc["document"], list: Element): boolean {
+  const id = list.getAttribute("id");
+  // An id with a quote or whitespace in it would break the selector — and a
+  // thrown SyntaxError inside the gate reads as "the build is broken" rather
+  // than "this page has an odd id". Refuse to match rather than to run.
+  if (id === null || id === "" || /["'\\\s]/.test(id)) return false;
+  const owner = document.querySelector(`[role="combobox"][aria-controls~="${id}"]`);
+  if (owner === null) return false;
+  return (
+    !owner.hasAttribute("disabled") &&
+    owner.getAttribute("aria-disabled") !== "true" &&
+    owner.getAttribute("tabindex") !== "-1"
+  );
+}
 const COMPOSITE_ROLES: Record<string, string> = {
   tablist: "tab",
   radiogroup: "radio",
@@ -479,6 +525,9 @@ export const compositeTabStop: Rule = {
         // The container IS the tab stop, without saying so via
         // aria-activedescendant. See the third exemption in the header.
         if (el.getAttribute("tabindex") === "0") continue;
+        // A combobox's list: the INPUT is the tab stop and the options are
+        // correctly all -1. See the fourth exemption in the header.
+        if (containerRole === "listbox" && ownedByTabbableCombobox(doc.document, el)) continue;
         if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
         const items = Array.from(el.querySelectorAll(`[role="${itemRole}"]`)).filter(
           (i) => i.getAttribute("aria-disabled") !== "true" && !i.hasAttribute("disabled"),

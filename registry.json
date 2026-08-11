@@ -392,6 +392,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",

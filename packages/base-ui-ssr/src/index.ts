@@ -49,6 +49,12 @@ export { useOpenMirror } from "./open-mirror";
  * cannot reach it before hydration. Measured table in the module header.
  */
 export { useCompositeTabStop } from "./composite-tab-stop";
+export {
+  ComboboxWiringProvider,
+  useComboboxInputWiring,
+  useComboboxListId,
+  useComboboxListWiring,
+} from "./combobox-wiring";
 
 // ── the i18n layer ─────────────────────────────────────────────────────────
 export { BASE_UI_STRINGS, baseUiStringsFor } from "./strings";
