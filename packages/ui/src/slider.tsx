@@ -3,9 +3,19 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slider as BaseSlider } from "@base-ui/react/slider";
 import { DirectionProvider } from "@base-ui/react/direction-provider";
-// TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
-import type { SliderProps as AriaSliderProps } from "react-aria-components";
-import { FORMAT_LOCALE, cn, direction, formatNumber, type Locale } from "@lumo-ui/core";
+import {
+  type AriaLabelingProps,
+  cn,
+  direction,
+  type DOMProps,
+  FORMAT_LOCALE,
+  formatNumber,
+  type GlobalDOMAttributes,
+  type Locale,
+  type SlotProps,
+  type StyleProps,
+  type ValueBase,
+} from "@lumo-ui/core";
 import { attr, baseUiStringsFor } from "@lumo-ui/base-ui-ssr";
 
 /**
@@ -149,8 +159,22 @@ export const sliderTrackVariants = cva(
 export const sliderFillVariants = cva("absolute h-full rounded-full bg-accent");
 
 export const sliderThumbVariants = cva(
-  "top-1/2 rounded-full border-2 border-accent bg-surface shadow-sm outline-none " +
-    "transition-[box-shadow] " +
+  /*
+   * No `outline-none`, and no `transition-[box-shadow]`.
+   *
+   * Both were wrong for the same reason. `outline-none` suppressed the one
+   * treatment `theme.css` defines for the whole system, and the transition
+   * animated a property this element never sets. Together they meant a
+   * keyboard user tabbing to a slider saw NOTHING — measured as pixel-identical
+   * focused and unfocused, a WCAG 2.4.7 failure.
+   *
+   * The ring now comes from `theme.css`'s `:has(> input:focus-visible)` arm,
+   * which exists because Base UI puts the real `<input type="range">` inside
+   * this element, clipped to nothing. The comment further down this file that
+   * said the focus rule "has to be able to reach it" was false at runtime; it
+   * has been corrected.
+   */
+  "top-1/2 rounded-full border-2 border-accent bg-surface shadow-sm " +
     "data-dragging:scale-110 " +
     "data-disabled:border-border-control data-disabled:bg-surface-sunken",
   {
@@ -167,12 +191,31 @@ export const sliderThumbVariants = cva(
 
 export type SliderVariantProps = VariantProps<typeof sliderTrackVariants>;
 
-export interface SliderProps
-  extends Omit<
-      AriaSliderProps<number>,
-      "children" | "className" | "aria-label" | "orientation" | "formatOptions"
-    >,
-    SliderVariantProps {
+/**
+ * The slider's own props, minus its children, class, `aria-label`, orientation
+ * and `formatOptions` — the last three are redeclared below, and the name
+ * arrives as a REQUIRED `label`.
+ */
+interface SliderPropsBase
+  extends ValueBase<number>,
+    DOMProps,
+    Omit<AriaLabelingProps, "aria-label">,
+    SlotProps,
+    StyleProps,
+    GlobalDOMAttributes<HTMLDivElement> {
+  /** Whether the slider is disabled. */
+  isDisabled?: boolean;
+  /** Handler that is called when the user stops dragging. */
+  onChangeEnd?: (value: number) => void;
+  /** The smallest value allowed. */
+  minValue?: number;
+  /** The largest value allowed. */
+  maxValue?: number;
+  /** The amount the value changes with each tick. */
+  step?: number;
+}
+
+export interface SliderProps extends SliderPropsBase, SliderVariantProps {
   /**
    * Announced name of the slider, e.g. «بودجه».
    *
@@ -215,7 +258,6 @@ export function Slider({
   onChangeEnd,
   // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
   //   isRequired  Base UI's required lives on Field.Root, not Slider.Root
-  render: _render,
   slot: _slot,
   style: _style,
   ...rest
@@ -270,9 +312,16 @@ export function Slider({
              */}
             <BaseSlider.Indicator className={cn(sliderFillVariants())} />
             {/*
-             * `data-lumo` on the thumb: it is the focus stop (Base UI nests a
-             * visually-hidden `<input type="range">` inside it), so the single
-             * focus rule in theme.css has to be able to reach it.
+             * `data-lumo` on the thumb. It is NOT itself the focus stop, and
+             * the earlier version of this comment said it was: Base UI nests a
+             * real `<input type="range">` inside, clipped with
+             * `clip-path: inset(50%)`, and the INPUT takes focus. So
+             * `:where([data-lumo]):focus-visible` matched a box with nothing
+             * painted, and the visible thumb rendered identically focused and
+             * unfocused — measured, and a WCAG 2.4.7 failure.
+             *
+             * `data-lumo` is still what the rule keys on; the arm that matches
+             * is `:has(> input:focus-visible)` in theme.css.
              *
              * `aria-label` is on the thumb as well as on the root. Under React
              * Aria this doubled as a dangling-IDREF fix — `useSlot` started

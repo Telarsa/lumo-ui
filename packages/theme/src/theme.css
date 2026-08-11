@@ -57,4 +57,28 @@
     outline: var(--lumo-sys-focus-width) solid var(--lumo-sys-focus);
     outline-offset: var(--lumo-sys-focus-offset);
   }
+
+  /*
+   * ── THE CONTROL THAT TAKES FOCUS IS NOT ALWAYS THE ONE YOU SEE ───────────
+   *
+   * Base UI's `Slider.Thumb` renders a real `<input type="range">` clipped to
+   * nothing (`clip-path: inset(50%)`) INSIDE the visible thumb, and that input
+   * is the focus stop. So the rule above matches the input — which has no
+   * painted box — and never the div a reader is looking at.
+   *
+   * Measured before this rule existed: tabbing to a slider produced a thumb
+   * pixel-identical to its unfocused state. That is WCAG 2.4.7 failing on a
+   * control that looks perfectly fine in every screenshot, which is exactly the
+   * class of defect this library exists to catch.
+   *
+   * `:has()` fixes it where the component cannot: the visible element rings
+   * when it CONTAINS the focused input. Scoped to `[data-lumo]` like everything
+   * else here, and using `:focus-visible` on the input so it still stays quiet
+   * for a mouse. Any future primitive that hides its real control behind a
+   * painted one is covered by the same rule rather than needing its own.
+   */
+  :where([data-lumo]):has(> input:focus-visible) {
+    outline: var(--lumo-sys-focus-width) solid var(--lumo-sys-focus);
+    outline-offset: var(--lumo-sys-focus-offset);
+  }
 }

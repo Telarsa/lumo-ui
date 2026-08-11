@@ -119,10 +119,25 @@
      * reassuring comment. Density still SCALES lg upward (a roomier brand gets
      * a bigger target), it simply cannot take it below Khroos's 44px. sm and md
      * are not floors and scale freely.
+     *
+     * ── `round()`, BECAUSE A MULTIPLIER PRODUCES FRACTIONS ─────────────────
+     *
+     * A density knob is a multiplier, so fractional pixels are inherent rather
+     * than accidental. At the shipped 0.9, `md` lands on 36 by arithmetic luck
+     * and `lg` is held by its floor, while `sm` computes 2rem × 0.9 = 28.8px —
+     * a control box on a fractional boundary paints its 1px border across two
+     * device pixels, which reads as a soft or uneven edge on a non-retina
+     * screen.
+     *
+     * `round()` is applied to all three rather than to the one that shows it
+     * today, because WHICH size lands fractionally is a property of the density
+     * VALUE and not of the size: at 0.95, `md` becomes 38 and `sm` becomes
+     * 30.4. Fixing only `sm` would hard-code today's knob position into the
+     * scale. Baseline in every engine this library targets.
      */
-    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
-    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
-    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
+    --lumo-ref-control-sm: round(calc(2rem   * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-md: round(calc(2.5rem * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-lg: max(2.75rem, round(calc(2.75rem * var(--lumo-ref-density)), 1px));
   }
 
   /* ---- the density ISLAND. One attribute hook: [data-density]. -----------
@@ -167,9 +182,14 @@
     --lumo-ref-space-4: calc(1rem    * var(--lumo-ref-density));
     --lumo-ref-space-6: calc(1.5rem  * var(--lumo-ref-density));
     --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
-    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
-    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
-    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
+    /* `round()` for the reason the root block states: a multiplier makes
+     * fractional pixels inherent, and which SIZE shows it depends on the knob's
+     * value. Restated here rather than inherited, because these islands
+     * redeclare the whole scale — an island that dropped the rounding would
+     * reintroduce the soft border only for the subtree that opted into it. */
+    --lumo-ref-control-sm: round(calc(2rem   * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-md: round(calc(2.5rem * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-lg: max(2.75rem, round(calc(2.75rem * var(--lumo-ref-density)), 1px));
   }
 
   [data-density="compact"] {
@@ -180,9 +200,14 @@
     --lumo-ref-space-4: calc(1rem    * var(--lumo-ref-density));
     --lumo-ref-space-6: calc(1.5rem  * var(--lumo-ref-density));
     --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
-    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
-    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
-    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
+    /* `round()` for the reason the root block states: a multiplier makes
+     * fractional pixels inherent, and which SIZE shows it depends on the knob's
+     * value. Restated here rather than inherited, because these islands
+     * redeclare the whole scale — an island that dropped the rounding would
+     * reintroduce the soft border only for the subtree that opted into it. */
+    --lumo-ref-control-sm: round(calc(2rem   * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-md: round(calc(2.5rem * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-lg: max(2.75rem, round(calc(2.75rem * var(--lumo-ref-density)), 1px));
   }
 }
 
