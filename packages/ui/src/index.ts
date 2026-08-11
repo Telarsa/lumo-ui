@@ -868,6 +868,15 @@ export {
 export type { FrameProps } from "./frame.tsx";
 
 export {
+  Sortable,
+  moveItem,
+  sortableHandleVariants,
+  sortableItemVariants,
+  sortableVariants,
+} from "./sortable.tsx";
+export type { SortableItem, SortableProps, SortableStrings } from "./sortable.tsx";
+
+export {
   NativeSelect,
   NativeSelectOptGroup,
   NativeSelectOption,
