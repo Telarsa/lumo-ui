@@ -120,6 +120,38 @@ catalog:
   # `./react` subpath of this one package; `@tanstack/react-charts` is the dead
   # pre-0.9.0 name and must not be added.
   '@tanstack/charts': 0.9.0
+
+  # --- the calendar GRID (not the calendar SYSTEM) ---------------------------
+  # Adopted 11 Aug 2026 for the date family, and the split is the whole point:
+  # this supplies the month grid, its roving tab stop, its labels and its
+  # keyboard model; `@internationalized/date` supplies WHICH CALENDAR those days
+  # belong to. Lumo binds the two with `calendar-datelib.ts`.
+  #
+  # 10.0.1 AND NOT 9.14.0, which is the version that ships
+  # `react-day-picker/persian`. That entry point is genuinely excellent —
+  # measured on a server render, it produced «۱ مرداد ۱۴۰۳», 57 Persian digits,
+  # zero Latin, and ZERO lumo-gate violations with no configuration at all — and
+  # it is still the wrong choice here, because it is PERSIAN-ONLY. Its calendars
+  # are separate entry points bound to separate forked date libraries
+  # (`/persian` -> date-fns-jalali, `/hijri` -> a hijri converter), so a second
+  # locale is a second component and a second dependency. Lumo serves fa-IR,
+  # en-US and grades ar-SA; a design where adding a locale means adding a
+  # package is the opposite of this library's reason to exist.
+  #
+  # v10 dropped those entry points AND their date libraries — its `locale/fa-IR`
+  # is date-fns's Persian locale over a GREGORIAN grid, which renders
+  # «۲۲ ژوئیه ۲۰۲۴» and is exactly the defect `native-calendar` was written to
+  # catch. What v10 KEPT is the seam: `dateLib` overrides and the `formatters`
+  # prop group. So v10 is not a regression for us, it is an invitation — bring
+  # your own calendar — and `@internationalized/date` brings thirteen of them
+  # behind one runtime `createCalendar(id)`.
+  #
+  # Exact pin for the usual reason, plus one specific to this package: the
+  # `DateLib` surface IS our integration contract, and a minor that renames a
+  # member silently drops an override back to Gregorian. `native-calendar` is
+  # the backstop that turns that into a red build rather than a wrong year.
+  # 10.0.1 published 2026-05-15, three months old — well clear of the cooldown.
+  react-day-picker: 10.0.1
   # Build-time only: server components highlight during the static export, so
   # none of this reaches a client bundle. 4.4.3 was six hours old at adoption —
   # inside the 24h cooldown — so this pins one release behind, per the rule.

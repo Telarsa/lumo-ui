@@ -19,6 +19,7 @@
   "dependencies": {
     "@base-ui/react": "catalog:",
     "@internationalized/date": "catalog:",
+    "react-day-picker": "catalog:",
     "@lumo-ui/base-ui-ssr": "workspace:*",
     "@lumo-ui/core": "workspace:*",
     "@tanstack/charts": "catalog:",
