@@ -1,6 +1,6 @@
 # `packages/native` — a spike, and its gate
 
-**Status: NOT STARTED. The gate below has not been run on a device, and nothing
+**Status: NOT STARTED. The gate below has not been run under Hermes, and nothing
 should be built here until it has.**
 
 This directory contains exactly one file — `src/icu-probe.ts` — and this
@@ -42,7 +42,7 @@ REPL.
 node --experimental-strip-types packages/native/src/icu-probe.ts
 ```
 
-Node is the **control**, not the result. On this machine it reports:
+On Node — a full-ICU runtime — it reports:
 
 ```
 lumo icu probe — PASS
@@ -53,11 +53,36 @@ lumo icu probe — PASS
   ok   calendar-not-gregorian  got "۱۴۰۵ (→ 1405)"
 ```
 
-**The result that decides the spike is a physical device's**, and it needs four:
-a recent Android, an Android old enough to matter (whatever the product's floor
-is), a recent iOS, and — if the product ships one — a release build, because
-release builds are where a trimmed ICU shows up and debug builds are where it
-does not.
+Node is the control. **What decides the spike is a run under Hermes**, and the
+axis that matters is the BUILD, not the hardware — an earlier draft of this file
+asked for four physical handsets, which was wrong and would have sent someone
+hunting for phones to answer a question a build flag decides.
+
+Everything that strips locale data is build-time and reproduces on an emulator:
+
+- Hermes compiled without its `intl` flag;
+- R8 / ProGuard minification and resource shrinking in a release variant;
+- `resConfigs` in `build.gradle` pruning locales;
+- Play App Bundle **language splits** — the locale the split does not carry is
+  the locale the user does not get.
+
+So:
+
+| run | what it settles | blocking? |
+| --- | --- | --- |
+| emulator / simulator, debug | does the engine honour the extensions at all | **yes — do this first** |
+| emulator, **release** build | minification, `resConfigs`, language splits | **yes** |
+| iOS simulator | Foundation-backed `Intl` on iOS | yes, and sufficient |
+| one real Samsung or Xiaomi | OEM-modified ICU, and Mainline drift | one run for confidence, not a gate |
+
+The last row is the only one that genuinely wants hardware, and the reason is
+narrow: OEMs ship their own locale data, and since Android 12 ICU is an
+updatable Mainline module (`com.android.i18n`), so an updated handset can differ
+from a stock emulator image in either direction. For this product's market that
+means Samsung and Xiaomi specifically.
+
+An emulator image is the AOSP baseline for its API level. That is the right
+thing to gate on; the handset is the thing to sanity-check against once.
 
 ### What each outcome means
 
@@ -94,8 +119,9 @@ be shown on the website inside a bezel without a second mechanism.
 
 ## The order of work, once the gate is green
 
-1. Confirm the gate on all four device configurations above. Paste the reports
-   into this file — the outputs are the evidence, and a summary of them is not.
+1. Confirm the gate on the runs in the table above — the two emulator rows are
+   the blocking ones. Paste the reports into this file verbatim: the outputs are
+   the evidence, and a summary of them is not.
 2. Decide the toolchain. Expo + NativeWind is the working assumption and is not
    settled; NativeWind in particular buys Tailwind-shaped class strings, which
    matters for `shadcn migrate rtl` only if the RTL transform is taught to walk
@@ -109,7 +135,9 @@ be shown on the website inside a bezel without a second mechanism.
 
 ## Standing constraints that apply to this directory
 
-- **No paid services.** Device testing is a physical device and a cable.
+- **No paid services.** The blocking runs are an emulator and a simulator, both
+  free; the optional handset run is a phone and a cable. Nothing here needs a
+  device farm.
 - **Low RAM and disk.** Expo's install is large; do not add it until step 2 is
   actually being started, and remove it if the spike is parked.
 - **React Native / Expo, never Flutter.**

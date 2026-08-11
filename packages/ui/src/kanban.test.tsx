@@ -62,6 +62,18 @@ function harness(locale: "fa-IR" | "en-US" = "fa-IR") {
 const grip = (label: string, name = "جابه‌جایی") =>
   screen.getByRole("button", { name: `${name} — ${label}` });
 
+/*
+ * Keys go where FOCUS is, not where a query says the grip is.
+ *
+ * Re-finding the button by its accessible name before every press is a thing
+ * no keyboard does, and it hides the defect the focus tests below pin: a card
+ * that crosses a column is unmounted and re-mounted under a different `<ul>`,
+ * so the element the reader was holding stops existing and their next key
+ * lands on `<body>`.
+ */
+const press = (key: string) => fireEvent.keyDown(document.activeElement as HTMLElement, { key });
+const focused = () => document.activeElement as HTMLElement;
+
 describe("moveCard", () => {
   it("moves across columns without mutating the caller's board", () => {
     const next = moveCard(BOARD, "1", 1, 0);
@@ -185,5 +197,129 @@ describe("a move is two facts, so it is announced as two", () => {
     fireEvent.keyDown(grip("الف"), { key: "Escape" });
     expect(onChange).toHaveBeenLastCalledWith([["1", "2"], ["3"], []]);
     expect(screen.getByRole("status").textContent).toBe("لغو شد");
+  });
+});
+
+describe("focus follows the card across the board", () => {
+  /*
+   * The board's version of the defect, and the worse one. A card moving inside
+   * its column is a keyed node React re-inserts, which blurs it. A card
+   * CROSSING a column changes parent `<ul>`: React unmounts it on one side and
+   * mounts a new node on the other, and the held element stops existing.
+   *
+   * Measured before the fix: after one ArrowLeft, `document.activeElement` was
+   * `<body>`; a second ArrowLeft produced no reorder at all; and the card sat
+   * with `aria-pressed="true"` and no key able to reach it — not another move,
+   * not a drop, not Escape.
+   */
+  it("keeps focus when the card crosses into the next column", () => {
+    const { onChange } = harness();
+    grip("الف").focus();
+    press(" ");
+    press("ArrowLeft");
+    expect(onChange).toHaveBeenLastCalledWith([["2"], ["1", "3"], []]);
+    expect(focused()).toBe(grip("الف"));
+  });
+
+  it("so a second crossing reaches the same card", () => {
+    // «در صف» → «در حال انجام» → «انجام‌شده», the empty one, in two presses.
+    const { onChange } = harness();
+    grip("الف").focus();
+    press(" ");
+    press("ArrowLeft");
+    press("ArrowLeft");
+    expect(onChange).toHaveBeenLastCalledWith([["2"], ["3"], ["1"]]);
+    expect(focused()).toBe(grip("الف"));
+    expect(screen.getByRole("status").textContent).toBe("برداشته شد انجام‌شده، مورد ۱ از ۱");
+  });
+
+  it("can still be dropped after crossing", () => {
+    // The whole gesture end to end: pick up, cross, put down. Every press after
+    // the first went nowhere before, so the card could never be released.
+    const { onChange } = harness();
+    grip("الف").focus();
+    press(" ");
+    press("ArrowLeft");
+    press(" ");
+    expect(grip("الف").getAttribute("aria-pressed")).toBe("false");
+    expect(screen.getByRole("status").textContent).toBe("رها شد در حال انجام، مورد ۱ از ۲");
+    expect(onChange).toHaveBeenCalledTimes(1);
+  });
+
+  it("can still be cancelled after crossing, and keeps focus through the restore", () => {
+    const { onChange } = harness();
+    grip("الف").focus();
+    press(" ");
+    press("ArrowLeft");
+    press("Escape");
+    expect(onChange).toHaveBeenLastCalledWith([["1", "2"], ["3"], []]);
+    expect(focused()).toBe(grip("الف"));
+    expect(grip("الف").getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("keeps focus on a move within one column too", () => {
+    // Same mechanism, milder: the node is re-inserted rather than destroyed.
+    harness();
+    grip("الف").focus();
+    press(" ");
+    press("ArrowDown");
+    expect(focused()).toBe(grip("الف"));
+  });
+
+  it("does not pull focus out of somewhere else", () => {
+    // The effect reclaims only focus that is still on the board or was lost to
+    // `<body>` by the unmount. A consumer who moved it elsewhere keeps it.
+    harness();
+    const outside = document.createElement("button");
+    document.body.append(outside);
+    grip("الف").focus();
+    press(" ");
+    outside.focus();
+    fireEvent.keyDown(grip("الف"), { key: "ArrowLeft" });
+    expect(focused()).toBe(outside);
+    outside.remove();
+  });
+});
+
+describe("the ends of a column", () => {
+  it("ArrowUp on the top card does nothing rather than wrapping", () => {
+    // Wrapping to the bottom would be a move the reader did not ask for, and
+    // one they cannot see coming.
+    const { onChange } = harness();
+    grip("الف").focus();
+    press(" ");
+    press("ArrowUp");
+    expect(onChange).not.toHaveBeenCalled();
+    expect(focused()).toBe(grip("الف"));
+  });
+
+  it("ArrowDown on the only card of a column does nothing", () => {
+    const { onChange } = harness();
+    grip("پ").focus(); // the single card in «در حال انجام»
+    press(" ");
+    press("ArrowDown");
+    press("ArrowUp");
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it("crossing into an empty column lands, and says where", () => {
+    // The case a board derived from "the neighbour I am next to" drops: an
+    // empty column has no neighbour. The index is clamped on arrival instead.
+    const { onChange } = harness();
+    grip("پ").focus();
+    press(" ");
+    press("ArrowLeft");
+    expect(onChange).toHaveBeenLastCalledWith([["1", "2"], [], ["3"]]);
+    expect(screen.getByRole("status").textContent).toBe("برداشته شد انجام‌شده، مورد ۱ از ۱");
+    expect(focused()).toBe(grip("پ"));
+  });
+
+  it("will not carry a card off the last column", () => {
+    const { onChange } = harness();
+    grip("پ").focus();
+    press(" ");
+    press("ArrowLeft");
+    press("ArrowLeft");
+    expect(onChange).toHaveBeenCalledTimes(1);
   });
 });

@@ -60,6 +60,27 @@ import { cn, direction, formatNumber, type Locale, type LumoNode } from "@lumo-u
  * "next to", and in an empty column there is no neighbour. Here the index is
  * clamped into `[0, length]` on arrival rather than derived from a sibling, so
  * an empty column is not a special case at all.
+ *
+ * ═══ CROSSING A COLUMN DESTROYS THE FOCUSED HANDLE ══════════════════════════
+ *
+ * This is the defect a board gets for free and the reason `sortable.tsx` grew
+ * the same machinery. A card that moves within its column is a keyed node React
+ * re-inserts, and a re-inserted node has been removed from the document first,
+ * so it is blurred. A card that CROSSES a column changes parent `<ul>`
+ * entirely: React unmounts it on one side and mounts a brand-new node on the
+ * other, and the element the reader was holding no longer exists.
+ *
+ * Measured on the version without the effect below: pick up the first card of
+ * «در صف», press ArrowLeft once — the card moves, and `document.activeElement`
+ * is `<body>`. A second ArrowLeft produces no reorder at all, because there is
+ * nothing focused to receive it. The card is left with `aria-pressed="true"`
+ * and no way to move it, drop it, or Escape it; the reader has to tab back
+ * through the board to find it again.
+ *
+ * Nothing about that is visible. The board renders correctly, the first move is
+ * correct, and a test that re-queries the handle by name before each keypress
+ * passes — because it aims the key at an element a real reader's keyboard can
+ * no longer reach.
  */
 
 export const kanbanVariants = cva("flex gap-4 overflow-x-auto p-1");
@@ -173,8 +194,28 @@ export function Kanban<T extends KanbanCard>({
   const [heldId, setHeldId] = React.useState<string | null>(null);
   const originRef = React.useRef<ReadonlyArray<KanbanColumn<T>> | null>(null);
   const [announcement, setAnnouncement] = React.useState("");
+  const rootRef = React.useRef<HTMLDivElement>(null);
 
   const isRtl = direction(locale) === "rtl";
+
+  /** The handle to put focus back on once the move has been committed. */
+  const refocusRef = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    const id = refocusRef.current;
+    if (id === null) return;
+    refocusRef.current = null;
+    const root = rootRef.current;
+    if (root === null) return;
+    /*
+     * Only take focus back if it is ours to take — still on the board, or lost
+     * to `<body>` by the unmount we just caused. A consumer who moved focus
+     * elsewhere between the keypress and this effect keeps it.
+     */
+    const active = document.activeElement;
+    if (active !== null && active !== document.body && !root.contains(active)) return;
+    const handles = Array.from(root.querySelectorAll<HTMLElement>("[data-kanban-handle]"));
+    handles.find((handle) => handle.dataset["kanbanHandle"] === id)?.focus();
+  });
 
   const announce = React.useCallback(
     (prefix: string, board: ReadonlyArray<KanbanColumn<T>>, cardId: string) => {
@@ -204,11 +245,17 @@ export function Kanban<T extends KanbanCard>({
     announce(strings.dropped, columns, cardId);
   };
 
-  const cancel = () => {
+  const cancel = (cardId: string) => {
     const origin = originRef.current;
     originRef.current = null;
     setHeldId(null);
-    if (origin) onColumnsChange(origin.map((c) => ({ ...c, cards: [...c.cards] })));
+    if (origin) {
+      onColumnsChange(origin.map((c) => ({ ...c, cards: [...c.cards] })));
+      // Putting the board back moves the card too, across a column boundary if
+      // that is where it had got to. Cancelling must not cost the reader their
+      // place in the tab order.
+      refocusRef.current = cardId;
+    }
     setAnnouncement(strings.cancelled);
   };
 
@@ -228,6 +275,7 @@ export function Kanban<T extends KanbanCard>({
     }
     const next = moveCard(columns, cardId, toColumn, toIndex);
     onColumnsChange(next);
+    refocusRef.current = cardId;
     announce(strings.pickedUp, next, cardId);
   };
 
@@ -241,7 +289,7 @@ export function Kanban<T extends KanbanCard>({
     }
     if (event.key === "Escape" && held) {
       event.preventDefault();
-      cancel();
+      cancel(cardId);
       return;
     }
     if (!held) return;
@@ -276,7 +324,12 @@ export function Kanban<T extends KanbanCard>({
        * region and each column is its own named list inside it, which is what
        * lets a screen reader's list navigation jump between columns.
        */}
-      <div role="group" aria-label={label} className={cn(kanbanVariants(), className)}>
+      <div
+        ref={rootRef}
+        role="group"
+        aria-label={label}
+        className={cn(kanbanVariants(), className)}
+      >
         {columns.map((column) => (
           <section key={column.id} aria-label={column.label} className={kanbanColumnVariants()}>
             <header className={kanbanColumnHeaderVariants()}>
@@ -299,6 +352,9 @@ export function Kanban<T extends KanbanCard>({
                     <button
                       type="button"
                       data-lumo=""
+                      // How the refocus effect finds this handle again after
+                      // React has mounted it under a different column's <ul>.
+                      data-kanban-handle={card.id}
                       aria-label={`${strings.handleLabel} — ${card.label}`}
                       aria-roledescription={strings.handleRoleDescription}
                       aria-pressed={held}

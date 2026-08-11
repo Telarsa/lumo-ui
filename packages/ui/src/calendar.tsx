@@ -9,11 +9,14 @@ import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.t
 import {
   calendarCellVariants,
   calendarDayButtonVariants,
+  calendarFooterVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
   calendarHeaderVariants,
   calendarHeadingVariants,
+  calendarMonthsVariants,
   calendarNavButtonVariants,
+  calendarNavVariants,
   calendarVariants,
 } from "./calendar.variants.ts";
 import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
@@ -21,11 +24,14 @@ import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
 export {
   calendarCellVariants,
   calendarDayButtonVariants,
+  calendarFooterVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
   calendarHeaderVariants,
   calendarHeadingVariants,
+  calendarMonthsVariants,
   calendarNavButtonVariants,
+  calendarNavVariants,
   calendarVariants,
 };
 
@@ -179,11 +185,15 @@ export function describedByWith(
 export function calendarClassNames(): Record<string, string> {
   return {
     root: calendarVariants(),
-    months: "flex flex-col gap-4",
+    // `months` is the POSITIONING CONTEXT and `nav` is stretched across the
+    // top of it — react-day-picker emits `nav` as a SIBLING of `month`, not
+    // inside the caption, so a plain flex row put the chevrons on their own
+    // line above a separately-centred month name. See `calendarHeaderVariants`.
+    months: calendarMonthsVariants(),
     month: "flex flex-col gap-4",
     month_caption: calendarHeaderVariants(),
     caption_label: calendarHeadingVariants(),
-    nav: "flex items-center gap-1",
+    nav: calendarNavVariants(),
     button_previous: calendarNavButtonVariants(),
     button_next: calendarNavButtonVariants(),
     month_grid: calendarGridVariants(),
@@ -292,7 +302,10 @@ export function Calendar({
           : {})}
       />
       {description != null ? (
-        <div id={descriptionId} className={descriptionVariants()}>
+        // `calendarFooterVariants` keeps a sentence from inflating the `w-fit`
+        // wrapper past the grid — see its docblock; this is what made the
+        // calendar look off-centre on the website.
+        <div id={descriptionId} className={cn(calendarFooterVariants(), descriptionVariants())}>
           {description}
         </div>
       ) : null}
@@ -300,7 +313,7 @@ export function Calendar({
         // `role="alert"` rather than a slot: react-day-picker has no error slot,
         // and an error a reader is never told about is the defect `form.tsx`
         // describes at length.
-        <div role="alert" className={fieldErrorVariants()}>
+        <div role="alert" className={cn(calendarFooterVariants(), fieldErrorVariants())}>
           {errorMessage}
         </div>
       ) : null}

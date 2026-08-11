@@ -7,6 +7,7 @@ import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
 import { calendarChevron, calendarClassNames, describedByWith } from "./calendar.tsx";
 import {
+  calendarFooterVariants,
   rangeCalendarCellVariants,
   rangeCalendarSelectionVariants,
 } from "./calendar.variants.ts";
@@ -185,12 +186,12 @@ export function RangeCalendar({
           : {})}
       />
       {description != null ? (
-        <div id={descriptionId} className={descriptionVariants()}>
+        <div id={descriptionId} className={cn(calendarFooterVariants(), descriptionVariants())}>
           {description}
         </div>
       ) : null}
       {errorMessage != null ? (
-        <div role="alert" className={fieldErrorVariants()}>
+        <div role="alert" className={cn(calendarFooterVariants(), fieldErrorVariants())}>
           {errorMessage}
         </div>
       ) : null}

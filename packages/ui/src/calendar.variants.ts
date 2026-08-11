@@ -33,9 +33,46 @@ export const calendarVariants = cva(
   "flex w-fit flex-col gap-4 text-fg select-none",
 );
 
-/** The month header: previous, the month name, next. */
+/**
+ * The month header row: previous, the month name, next.
+ *
+ * ── WHY THE NAV IS POSITIONED OVER THIS ROW RATHER THAN INSIDE IT ───────────
+ *
+ * React Aria's `CalendarHeader` was ONE element containing all three, so a
+ * flex row with `justify-between` put the chevrons at the ends and the month in
+ * the middle. react-day-picker's DOM is not that shape: `nav` is a SIBLING of
+ * `month`, emitted BEFORE it, so the same classes produced a row of chevrons
+ * floating above a separately-centred caption — which is what the first render
+ * after the migration actually looked like.
+ *
+ * The fix is the standard one for this markup: `months` becomes the positioning
+ * context, `nav` is stretched across the top of it, and the caption reserves
+ * room at both ends with LOGICAL padding so the month name cannot slide under a
+ * chevron in either direction. `px-9` is one control width plus the gap.
+ */
 export const calendarHeaderVariants = cva(
-  "flex items-center justify-between gap-2 px-1",
+  "flex h-control-sm items-center justify-center px-9",
+);
+
+/**
+ * The stack that owns the month(s) — and the nav's positioning context.
+ *
+ * `relative` is load-bearing: `calendarNavVariants` below is absolute, and
+ * without a positioned ancestor it would anchor to the page.
+ */
+export const calendarMonthsVariants = cva("relative flex flex-col gap-4");
+
+/**
+ * The previous/next pair, stretched across the caption row.
+ *
+ * `inset-x-0` and not `left-0 right-0` — symmetric, so there is nothing to
+ * mirror; and `justify-between` names no side, so the chevrons land at the
+ * reader's own start and end from `dir` alone. WHICH GLYPH goes in which button
+ * is still a component decision, because no class can flip a glyph — see
+ * `calendarChevron` in `calendar.tsx`.
+ */
+export const calendarNavVariants = cva(
+  "absolute inset-x-0 top-0 flex h-control-sm items-center justify-between",
 );
 
 /**
@@ -48,7 +85,9 @@ export const calendarHeaderVariants = cva(
  * the whole document, and a utility on this element would out-specify it.
  */
 export const calendarHeadingVariants = cva(
-  "flex-1 text-center text-sm font-medium text-fg",
+  // No `flex-1`: the caption row centres it, and stretching it made it push
+  // against the absolutely-positioned nav rather than sit between the buttons.
+  "text-sm font-medium text-fg",
 );
 
 /** A previous/next month button. Sized to the touch floor at every breakpoint. */
@@ -291,3 +330,23 @@ export const datePickerTriggerVariants = cva(
 
 /** The dash between a range's two date inputs. */
 export const dateRangeSeparatorVariants = cva("px-1 text-fg-subtle");
+
+/**
+ * The block under the grid — a description or an error.
+ *
+ * ── `w-0 min-w-full` IS NOT A HACK, IT IS THE ONLY CORRECT ANSWER HERE ──────
+ *
+ * The calendar's outer wrapper is `w-fit`, which sizes to the widest child's
+ * MAX-CONTENT. A description is a sentence, and a sentence's max-content is the
+ * whole sentence on one line — so a one-line help text made the wrapper several
+ * hundred pixels wider than the grid, and the grid then sat at the start of it.
+ * On the website that read as "the calendar is not centred"; it was centred, in
+ * a box the description had silently inflated.
+ *
+ * `w-0` removes the text from that intrinsic-width calculation entirely, and
+ * `min-w-full` renders it at the resolved width of the container the GRID
+ * decided. The pair is the standard CSS answer to "participate in layout but
+ * not in sizing", and every alternative is worse: a fixed `max-w` hard-codes
+ * seven cell widths into a class, and `items-start` centres nothing.
+ */
+export const calendarFooterVariants = cva("w-0 min-w-full");
