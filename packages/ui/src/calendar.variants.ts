@@ -19,8 +19,8 @@ import { cva } from "class-variance-authority";
  *
  * The two that would otherwise be silent:
  *
- *  1. The month nav arrows are chosen by `useLocale().direction` in the
- *     component, not by a class. An arrow is a glyph, and no utility can flip a
+ *  1. The month nav arrows are chosen by `direction(locale)` in the component,
+ *     not by a class. An arrow is a glyph, and no utility can flip a
  *     glyph — a chevron that points to the reader's past is the correct icon in
  *     both scripts and it is a DIFFERENT icon in each.
  *  2. The range highlight rounds its corners with the logical corner utilities,
@@ -41,8 +41,9 @@ export const calendarHeaderVariants = cva(
 /**
  * The month/year heading.
  *
- * Its text comes from React Aria's own `DateFormatter`, so under the persian
- * calendar it reads «۱۴۰۵ مرداد» with no work here. Deliberately NOT given
+ * Its text comes from `formatters.formatCaption` in `calendar-datelib.ts`, which
+ * asks `@internationalized/date`, so under the persian calendar it reads
+ * «۱۴۰۵ مرداد» with no work here. Deliberately NOT given
  * tabular figures: `theme.css` turns those off under the Persian language for
  * the whole document, and a utility on this element would out-specify it.
  */
@@ -54,9 +55,9 @@ export const calendarHeadingVariants = cva(
 export const calendarNavButtonVariants = cva(
   "flex h-control-sm w-control-sm shrink-0 cursor-pointer items-center justify-center " +
     "rounded-md text-fg-muted transition-colors " +
-    "data-hovered:bg-surface-hover data-hovered:text-fg " +
-    "data-pressed:bg-surface-sunken " +
-    "data-disabled:pointer-events-none data-disabled:opacity-40 " +
+    "hover:bg-surface-hover hover:text-fg " +
+    "active:bg-surface-sunken " +
+    "disabled:pointer-events-none disabled:opacity-40 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4",
 );
 
@@ -65,8 +66,9 @@ export const calendarGridVariants = cva("border-collapse");
 /**
  * A weekday header cell.
  *
- * React Aria supplies the abbreviations from the locale, which under `fa-IR`
- * are ش ی د س چ پ ج — one letter each. The width is fixed to the day cell's so
+ * react-day-picker supplies the abbreviations through `formatters.formatWeekdayName`,
+ * which `calendar-datelib.ts` points at `@internationalized/date` — under `fa-IR`
+ * that is ش ی د س چ پ ج, one letter each. The width is fixed to the day cell's so
  * the columns line up in a script whose weekday letters are far narrower than
  * `Mon`/`Tue`.
  */
@@ -75,53 +77,119 @@ export const calendarHeaderCellVariants = cva(
 );
 
 /**
- * One day.
+ * One day — the `<td role="gridcell">`, which is where every state lives.
  *
- * Every visual state is read off React Aria's own attributes rather than
- * mirrored in React state. `data-outside-month` is why the trailing days of
- * Tir and the leading days of Shahrivar can be shown without being mistaken for
- * Mordad — a distinction Jalali makes conspicuous, because month lengths change
- * inside the year (31,31,31,31,31,31,30,30,30,30,30,29-or-30).
+ * ── REWRITTEN FOR REACT-DAY-PICKER'S ATTRIBUTE SET, WHICH IS A SMALLER ONE ──
+ *
+ * Every class here used to be keyed on REACT ARIA's names. Read out of
+ * `DayPicker.js` rather than off the docs, v10 emits a different, smaller set on
+ * the day cell:
+ *
+ *     data-day  data-month  data-selected  data-disabled
+ *     data-hidden  data-outside  data-focused  data-today
+ *
+ * Three names the old file relied on are simply gone, and each needed a
+ * different answer rather than a rename:
+ *
+ *   data-hovered              → `hover:`. React Aria tracked hover in JS because
+ *                               it unified pointer and touch; RDP does not, and
+ *                               the browser's own pseudo-class is then the
+ *                               honest source. Same call `dateInputVariants`
+ *                               already documents.
+ *   data-unavailable          → `data-disabled`. RDP has ONE disabled concept,
+ *                               so "unavailable" and "disabled" are no longer
+ *                               distinguishable in CSS. The strike-through that
+ *                               used to mark unavailable-but-in-range days is
+ *                               therefore gone; keeping it would have applied it
+ *                               to out-of-range days too, which reads as an
+ *                               error rather than as a boundary.
+ *   data-outside-visible-range→ `data-hidden`, which RDP sets on days it renders
+ *                               but does not show.
+ *
+ * `data-selection-start`/`-end` have no equivalent AT ALL: RDP delivers range
+ * ends as MODIFIER CLASS NAMES joined into this element's `className`, which is
+ * why `rangeCalendarSelectionVariants` below is a map of class strings rather
+ * than more attribute selectors.
+ *
+ * `data-outside` is why the trailing days of Tir and the leading days of
+ * Shahrivar can be shown without being mistaken for Mordad — a distinction
+ * Jalali makes conspicuous, because month lengths change inside the year
+ * (31,31,31,31,31,31,30,30,30,30,30,29-or-30).
  */
 export const calendarCellVariants = cva(
-  "flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-sm " +
-    "text-fg outline-none transition-colors " +
-    "data-hovered:bg-surface-hover " +
-    "data-pressed:bg-surface-sunken " +
+  "h-9 w-9 p-0 text-center align-middle text-sm text-fg transition-colors " +
+    "rounded-md " +
+    "hover:bg-surface-hover " +
     "data-selected:bg-accent data-selected:text-accent-fg " +
+    "data-selected:hover:bg-accent " +
     "data-disabled:pointer-events-none data-disabled:text-fg-subtle " +
-    "data-unavailable:pointer-events-none data-unavailable:text-fg-subtle " +
-    "data-unavailable:line-through " +
-    "data-outside-month:text-fg-subtle data-outside-month:opacity-60 " +
-    "data-outside-visible-range:invisible data-outside-visible-range:pointer-events-none " +
+    "data-outside:text-fg-subtle data-outside:opacity-60 " +
+    "data-hidden:invisible data-hidden:pointer-events-none " +
     "data-today:font-semibold data-today:text-accent " +
     "data-today:data-selected:text-accent-fg",
 );
 
 /**
+ * The `<button>` inside the day cell.
+ *
+ * Deliberately carries NO colour of its own. The cell above is the painted
+ * surface, so the button is a transparent full-size hit area — which keeps one
+ * element responsible for the day's appearance instead of two that can disagree
+ * about what "selected" looks like. It owns exactly one thing the cell cannot:
+ * the focus ring, because focus lands on the button.
+ */
+export const calendarDayButtonVariants = cva(
+  "h-full w-full cursor-pointer rounded-md bg-transparent text-inherit " +
+    "outline-none disabled:pointer-events-none disabled:cursor-not-allowed",
+);
+
+/**
  * A day inside a selected range.
  *
- * The middle of a range is a continuous band, so the cell loses its own radius
- * and the two ends round on the logical corners: the start rounds on the side
- * the reader enters from, which is the right in Persian and the left in
+ * The middle of a range is a continuous band, so a cell in it loses its own
+ * radius and the two ends round on the LOGICAL corners: the start rounds on the
+ * side the reader enters from, which is the right in Persian and the left in
  * English, from the same class string.
  */
 export const rangeCalendarCellVariants = cva(
-  "flex h-9 w-9 cursor-pointer items-center justify-center text-sm " +
-    "text-fg outline-none transition-colors rounded-none " +
-    "data-hovered:bg-surface-hover " +
-    "data-selected:bg-surface-sunken " +
-    "data-selected:data-selection-start:rounded-ss-md data-selected:data-selection-start:rounded-es-md " +
-    "data-selected:data-selection-end:rounded-se-md data-selected:data-selection-end:rounded-ee-md " +
-    "data-selected:data-selection-start:bg-accent data-selected:data-selection-start:text-accent-fg " +
-    "data-selected:data-selection-end:bg-accent data-selected:data-selection-end:text-accent-fg " +
+  "h-9 w-9 p-0 text-center align-middle text-sm text-fg transition-colors " +
+    "rounded-none " +
+    "hover:bg-surface-hover " +
     "data-disabled:pointer-events-none data-disabled:text-fg-subtle " +
-    "data-unavailable:pointer-events-none data-unavailable:text-fg-subtle " +
-    "data-unavailable:line-through " +
-    "data-outside-month:text-fg-subtle data-outside-month:opacity-60 " +
-    "data-outside-visible-range:invisible data-outside-visible-range:pointer-events-none " +
+    "data-outside:text-fg-subtle data-outside:opacity-60 " +
+    "data-hidden:invisible data-hidden:pointer-events-none " +
     "data-today:font-semibold",
 );
+
+/**
+ * The range's three selection states, as CLASS NAMES rather than attributes.
+ *
+ * This is the shape react-day-picker actually offers. `getClassNamesForModifiers`
+ * looks each active modifier up in the `classNames` map and JOINS the result
+ * onto the day cell's `className`, so `range_start` is a class this file
+ * supplies and never an attribute it can select on. That is the single biggest
+ * difference from the React Aria build and the reason the variants had to be
+ * rewritten rather than renamed.
+ *
+ * Returned as a plain object so `Calendar` and `RangeCalendar` spread the same
+ * one into `classNames` — a second copy is how the two ends of a range come to
+ * round differently.
+ */
+export function rangeCalendarSelectionVariants(): Record<string, string> {
+  return {
+    range_middle: "bg-surface-sunken",
+    range_start:
+      "bg-accent text-accent-fg rounded-ss-md rounded-es-md " +
+      "hover:bg-accent",
+    range_end:
+      "bg-accent text-accent-fg rounded-se-md rounded-ee-md " +
+      "hover:bg-accent",
+    // No `selected` entry, deliberately. In `mode="range"` a one-day range sets
+    // range_start AND range_end at once, so both corner pairs apply and the cell
+    // rounds on all four without a rule of its own — and a `selected` class here
+    // would also hit every middle day and break the band.
+  };
+}
 
 /**
  * The box a set of date segments sits in.
@@ -161,9 +229,10 @@ export const dateInputVariants = cva(
 /**
  * One editable segment — a year, a month, a day, an hour.
  *
- * `data-placeholder` is the empty state React Aria marks before a value exists.
- * The placeholder TEXT is the locale's own segment name («سال», «ماه», «روز»)
- * and comes from the patched `datepicker` bundle, not from anything here.
+ * `data-placeholder` is the empty state `date-input.tsx` writes before a value
+ * exists. The placeholder TEXT is the segment's own name («سال», «ماه», «روز»),
+ * and it comes from `strings.ts` — authored per locale, because no API produces
+ * the NAME of a date part. It used to come from a patched react-aria bundle.
  *
  * `text-center` and not a start/end alignment: a segment is a fixed-width slot
  * inside a formatted date, and centring is the only alignment that does not
@@ -183,15 +252,19 @@ export const dateSegmentVariants = cva(
     "data-disabled:text-fg-subtle",
 );
 
-/** The literal separators React Aria emits between segments. */
+/** The literal separators the engine emits between segments. */
 export const dateLiteralVariants = cva("px-0.5 text-fg-subtle");
 
 /** The group that fuses a date input with its calendar trigger. */
 export const datePickerGroupVariants = cva(
+  // `hover:`/`focus-within:` and not `data-hovered`/`data-focus-within`: this
+  // group was React Aria's `<Group>`, which tracked both in JS. It is a plain
+  // element now, so the browser's own pseudo-classes are the honest source —
+  // the same exception `dateInputVariants` documents just above.
   "flex w-fit items-center gap-1 rounded-md border border-border-control bg-surface " +
     "text-fg transition-colors " +
-    "data-hovered:border-border-strong " +
-    "data-focus-within:border-accent " +
+    "hover:border-border-strong " +
+    "focus-within:border-accent " +
     "data-invalid:border-critical " +
     "data-disabled:cursor-not-allowed data-disabled:bg-surface-sunken",
   {
@@ -210,9 +283,9 @@ export const datePickerGroupVariants = cva(
 export const datePickerTriggerVariants = cva(
   "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm " +
     "text-fg-muted transition-colors " +
-    "data-hovered:bg-surface-hover data-hovered:text-fg " +
-    "data-pressed:bg-surface-sunken " +
-    "data-disabled:pointer-events-none data-disabled:opacity-40 " +
+    "hover:bg-surface-hover hover:text-fg " +
+    "active:bg-surface-sunken " +
+    "disabled:pointer-events-none disabled:opacity-40 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4",
 );
 

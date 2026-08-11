@@ -114,12 +114,12 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
-        name: "renderSegment",
+        name: "DateInput",
         description: {
           "fa-IR":
-            "یک بخش را می‌کشد. تابعی نام‌دار و مشترک میان همهٔ اعضای خانواده، تا بخش‌های فیلد و انتخابگر یک چیز باشند؛ و بدون children، چون یک عدد خام همان نقص ارقام لاتین است.",
+            "همان ورودیِ بخش‌بندی‌شده که کل خانوادهٔ تاریخ به کار می‌برد: مدلِ صفحه‌کلید، یک‌بار. کلیدهای جهت از روی جهتِ صفحه تفسیر می‌شوند، پس در فارسی چپ به بخشِ بعدی می‌رود. جای renderSegment قدیمی را گرفته، که ری‌اکت‌آریا بود.",
           "en-US":
-            "Draws one segment. A named function shared by the whole family so a field's slots and a picker's are the same thing — and with no children, because a raw number is the Latin-digit defect itself.",
+            "The same segmented input the whole date family uses: the keyboard model, once. The arrow keys are resolved from the page's direction, so in Persian the left one moves to the NEXT segment. It replaced renderSegment, which was React Aria's.",
         },
       },
     ],

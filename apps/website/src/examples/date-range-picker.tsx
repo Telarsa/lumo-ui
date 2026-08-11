@@ -17,9 +17,9 @@ const t = {
     "fa-IR": "میان دو فیلد یک خط تیره است، نه یک پیکان؛ پیکان جهت را ادعا می‌کند و جهت با خط عوض می‌شود.",
     "en-US": "A dash sits between the two fields, not an arrow; an arrow claims a direction and direction flips with the script.",
   },
-  previous: { "fa-IR": "ماه قبل", "en-US": "Previous month" },
-  next: { "fa-IR": "ماه بعد", "en-US": "Next month" },
   open: { "fa-IR": "باز کردن تقویم", "en-US": "Open calendar" },
+  start: { "fa-IR": "تاریخ شروع", "en-US": "Start date" },
+  end: { "fa-IR": "تاریخ پایان", "en-US": "End date" },
   stay: { "fa-IR": "بازهٔ رزرو اقامتگاه", "en-US": "Accommodation booking range" },
   stayHelp: {
     "fa-IR": "هر بخش خودش می‌گوید که به تاریخ شروع تعلق دارد یا به تاریخ پایان.",
@@ -39,8 +39,8 @@ function BasicExample(l: Locale) {
       className="w-full max-w-md"
       label={t.trip[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      startLabel={t.start[l]}
+      endLabel={t.end[l]}
       description={t.tripHelp[l]}
     />
   );
@@ -52,8 +52,8 @@ function LabelledHalvesExample(l: Locale) {
       className="w-full max-w-md"
       label={t.stay[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      startLabel={t.start[l]}
+      endLabel={t.end[l]}
       description={t.stayHelp[l]}
     />
   );
@@ -65,8 +65,8 @@ function InvalidExample(l: Locale) {
       className="w-full max-w-md"
       label={t.report[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      startLabel={t.start[l]}
+      endLabel={t.end[l]}
       errorMessage={t.reportError[l]}
     />
   );
@@ -78,8 +78,8 @@ function DisabledExample(l: Locale) {
       className="w-full max-w-md"
       label={t.archive[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      startLabel={t.start[l]}
+      endLabel={t.end[l]}
       isDisabled
     />
   );
@@ -98,7 +98,7 @@ export const EXAMPLES: ComponentExamples = {
     },
     composition: [
       `<DateRangePicker label openCalendarLabel`,
-      `                 previousMonthLabel nextMonthLabel`,
+      `                 startLabel endLabel`,
       `                 errorMessage>   ← authored: a reversed range speaks English`,
       `  …start segments · dash · end segments   ← rendered for you`,
       `  …the range calendar in a popover        ← rendered for you`,
@@ -115,12 +115,12 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
-        name: "renderSegment",
+        name: "DateInput",
         description: {
           "fa-IR":
-            "همان تابع بخش، برای هر چهار جای این کنترل. یکی بودنشان همان چیزی است که نمی‌گذارد نیمهٔ شروع و نیمهٔ پایان از هم دور بیفتند.",
+            "همان ورودیِ بخش‌بندی‌شده، دو بار: یکی برای شروع و یکی برای پایان. یکی بودنشان همان چیزی است که نمی‌گذارد دو نیمه از هم دور بیفتند.",
           "en-US":
-            "The same segment function, in all four places this control has one. Their being one thing is what keeps the start half and the end half from drifting.",
+            "The same segmented input, twice: one for the start and one for the end. Their being one thing is what keeps the two halves from drifting.",
         },
       },
     ],

@@ -248,13 +248,14 @@
       "name": "calendar",
       "type": "registry:ui",
       "title": "Calendar",
-      "description": "A month grid, in the reader's own calendar system.",
+      "description": "A month grid, in the reader's own calendar.",
       "author": "Telarsa",
       "dependencies": [
+        "@internationalized/date",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
-        "react-aria-components"
+        "react-day-picker"
       ],
       "registryDependencies": [
         "form"
@@ -264,6 +265,11 @@
           "path": "packages/ui/src/calendar.tsx",
           "type": "registry:ui",
           "target": "components/ui/calendar.tsx"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
         },
         {
           "path": "packages/ui/src/calendar.variants.ts",
@@ -482,6 +488,7 @@
       ],
       "registryDependencies": [
         "calendar",
+        "date-input",
         "form"
       ],
       "files": [
@@ -496,9 +503,40 @@
           "target": "components/ui/date-field-state.ts"
         },
         {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
           "path": "packages/ui/src/locale.ts",
           "type": "registry:ui",
           "target": "components/ui/locale.ts"
+        }
+      ]
+    },
+    {
+      "name": "date-input",
+      "type": "registry:ui",
+      "title": "Date Input",
+      "description": "THE segmented input. The keyboard model, once, for every date surface.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "calendar",
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
         }
       ]
     },
@@ -509,13 +547,15 @@
       "description": "A typed date with a calendar behind a button.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "calendar",
-        "date-field",
+        "date-input",
         "form",
         "popover"
       ],
@@ -524,6 +564,21 @@
           "path": "packages/ui/src/date-picker.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-picker.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
+        },
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -534,22 +589,39 @@
       "description": "Two typed dates and a range grid behind one button.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "calendar",
-        "date-field",
-        "date-picker",
+        "date-input",
         "form",
-        "popover"
+        "popover",
+        "range-calendar"
       ],
       "files": [
         {
           "path": "packages/ui/src/date-range-picker.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-range-picker.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
+        },
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -1291,8 +1363,9 @@
       "description": "A month grid that selects a span of days.",
       "author": "Telarsa",
       "dependencies": [
+        "@internationalized/date",
         "@lumo-ui/core",
-        "react-aria-components"
+        "react-day-picker"
       ],
       "registryDependencies": [
         "calendar",
@@ -1303,6 +1376,11 @@
           "path": "packages/ui/src/range-calendar.tsx",
           "type": "registry:ui",
           "target": "components/ui/range-calendar.tsx"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
         }
       ]
     },
@@ -1795,12 +1873,13 @@
       "description": "A time typed segment by segment: ۲۳:۴۵.",
       "author": "Telarsa",
       "dependencies": [
-        "@lumo-ui/core",
-        "react-aria-components"
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core"
       ],
       "registryDependencies": [
         "calendar",
-        "date-field",
+        "date-input",
         "form"
       ],
       "files": [
@@ -1808,6 +1887,21 @@
           "path": "packages/ui/src/time-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/time-field.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
+        },
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },

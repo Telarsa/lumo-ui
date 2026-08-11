@@ -46,8 +46,7 @@ function BasicExample(l: Locale) {
   return (
     <Calendar
       label={t.trip[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      locale={l}
       description={t.tripHelp[l]}
     />
   );
@@ -57,8 +56,7 @@ function UnavailableExample(l: Locale) {
   return (
     <CalendarClosedDaysIsland
       label={t.booking[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      locale={l}
       description={t.bookingHelp[l]}
       errorMessage={t.bookingError[l]}
     />
@@ -69,10 +67,9 @@ function ReadOnlyExample(l: Locale) {
   return (
     <Calendar
       label={t.archive[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      locale={l}
       description={t.archiveHelp[l]}
-      isReadOnly
+      isDisabled
     />
   );
 }
@@ -81,8 +78,7 @@ function DisabledExample(l: Locale) {
   return (
     <Calendar
       label={t.closed[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      locale={l}
       isDisabled
     />
   );
@@ -100,9 +96,11 @@ export const EXAMPLES: ComponentExamples = {
         "A month grid in the reader's own calendar. Under fa-IR that is Jalali — not Gregorian wearing Persian numerals — and every digit on screen is Persian.",
     },
     composition: [
-      `<Calendar label previousMonthLabel nextMonthLabel>`,
-      `  <CalendarHeader />   ← rendered for you. previous · month · next.`,
-      `  …the month grid      ← rendered for you. 42 cells, each named by the locale.`,
+      `<Calendar label locale value onChange>`,
+      `  the nav row          ← rendered for you. previous · month · next, all named`,
+      `                         by calendar-datelib.ts rather than by props.`,
+      `  the month grid       ← rendered for you. Every cell named in the reader's`,
+      `                         own calendar, by the same file.`,
       `</Calendar>`,
     ].join("\n"),
     parts: [
@@ -116,12 +114,12 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
-        name: "CalendarHeader",
+        name: "calendarClassNames",
         description: {
           "fa-IR":
-            "ردیف قبل و بعد به‌همراه نام ماه. جدا صادر شده چون تقویم بازه‌ای هم همین را می‌کشد و دو نسخه همان‌جایی است که این دو از هم دور می‌افتند.",
+            "نگاشتِ کلاس‌های لومو روی جایگاه‌های react-day-picker. جای CalendarHeader قدیمی را گرفته: تقویم بازه‌ای و هر دو انتخابگر همین یک نگاشت را می‌گیرند، پس دو نسخه‌ای نیست که از هم دور بیفتد — همان استدلال، این بار به‌شکل داده نه نشانه‌گذاری.",
           "en-US":
-            "The previous/next row with the month name. Exported separately because the range calendar draws the same one, and a second copy is where the two drift apart.",
+            "The map of Lumo's classes onto react-day-picker's slots. It replaced the old CalendarHeader: the range calendar and both pickers take this one map, so there is no second copy to drift — the same argument, expressed as data rather than as markup.",
         },
       },
     ],

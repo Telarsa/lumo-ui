@@ -82,12 +82,41 @@ const SHARED_COMPANIONS = new Set([
    * exists to prevent, on the exact day the set gained a member.
    */
   "virtualizer.ts",
+  /*
+   * Two more, added by the react-day-picker migration on 11 Aug 2026, and both
+   * for the reason this set exists rather than by analogy:
+   *
+   *   calendar-datelib.ts  binds react-day-picker's grid to
+   *                        `@internationalized/date`'s calendar systems. It is
+   *                        the file that makes a Jalali month a Jalali month,
+   *                        and `calendar.tsx` and `range-calendar.tsx` both
+   *                        import it. Not named `calendar.variants.ts` because
+   *                        it is not classes — it is a `DateLib`, a formatter
+   *                        set and a label table.
+   *
+   *   date-input.tsx       THE segmented input: the keyboard model, once, for
+   *                        the whole date family. `date-field`, `time-field`,
+   *                        `date-picker` and `date-range-picker` all render it.
+   *                        It carries `"use client"` and its own markup, so it
+   *                        is neither a variants module nor a plain helper.
+   *
+   * Both were caught by `gate:smoke` compiling the item as a consumer receives
+   * it — the dangling `./calendar-datelib.ts` showed up on the same run that
+   * introduced it, which is the third time this set has gained a member that
+   * way.
+   */
+  "calendar-datelib.ts",
+  "date-input.tsx",
 ]);
 
 /** Packages a consumer must install; everything else is workspace-internal. */
 const EXTERNAL = new Set([
   "react-aria-components",
   "@internationalized/date",
+  // The calendar grid itself since 11 Aug 2026. A consumer copying `calendar`
+  // installs it; the CALENDAR SYSTEM still comes from
+  // `@internationalized/date`, which rides along as a companion file.
+  "react-day-picker",
   "class-variance-authority",
   "lucide-react",
   "clsx",

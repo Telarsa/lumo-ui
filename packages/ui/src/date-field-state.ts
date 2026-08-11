@@ -71,11 +71,23 @@ import {
 import { FORMAT_LOCALE, formatNumber, stringsFor, type Locale } from "@lumo-ui/core";
 
 /** The segment kinds this engine emits. `literal` is the separator between them. */
-export type DateSegmentType = "year" | "month" | "day" | "literal";
+export type DateSegmentType =
+  | "year"
+  | "month"
+  | "day"
+  | "hour"
+  | "minute"
+  | "second"
+  | "dayPeriod"
+  | "literal";
 
-/** The three the user can edit, in no particular order — the LOCALE orders them. */
+/** The date half. In no particular order — the LOCALE orders them. */
 export const EDITABLE_SEGMENTS = ["year", "month", "day"] as const;
-export type EditableSegmentType = (typeof EDITABLE_SEGMENTS)[number];
+/** The time half, added when `useTimeFieldState` is the engine in use. */
+export const TIME_SEGMENTS = ["hour", "minute", "second", "dayPeriod"] as const;
+export type EditableSegmentType =
+  | (typeof EDITABLE_SEGMENTS)[number]
+  | (typeof TIME_SEGMENTS)[number];
 
 export interface LumoDateSegment {
   type: DateSegmentType;
@@ -162,6 +174,18 @@ export interface DateFieldState {
   clearSegment: (type: EditableSegmentType) => void;
   /** Bounds for one segment, used for `aria-valuemin`/`aria-valuemax` and typing. */
   boundsOf: (type: EditableSegmentType) => { min: number; max: number };
+  /**
+   * The texts a NON-NUMERIC segment can hold, indexed by its value.
+   *
+   * Only `dayPeriod` has any: «قبل‌ازظهر» / «بعدازظهر», read out of `Intl` by
+   * the time engine. It exists so `date-input.tsx` can match a typed LETTER
+   * against them without knowing an alphabet — the alternative is a table of
+   * "a"/"p" in a file whose whole point is that it hard-codes no script.
+   *
+   * Returns `undefined` for every numeric segment, which is every segment the
+   * date engine emits.
+   */
+  optionTexts?: ((type: EditableSegmentType) => readonly string[] | undefined) | undefined;
 }
 
 export function useDateFieldState(options: DateFieldStateOptions): DateFieldState {
@@ -287,6 +311,17 @@ export function useDateFieldState(options: DateFieldStateOptions): DateFieldStat
            * have, and `toValue` refuses to turn it into a date. 31 for Jalali.
            */
           return { min: 1, max: calendar.getMaximumDaysInMonth() };
+        default:
+          /*
+           * `EditableSegmentType` widened to include the TIME segments when
+           * `useTimeFieldState` was added, so this switch is no longer
+           * exhaustive over the union — but it IS exhaustive over what this
+           * engine emits. A time segment arriving here is a programming error
+           * (the wrong engine behind a `<DateInput>`), and bounds that admit
+           * nothing surface it on the first arrow key instead of silently
+           * cycling a field that has no hour.
+           */
+          return { min: 0, max: 0 };
       }
     },
     [calendar, reference],
@@ -301,7 +336,12 @@ export function useDateFieldState(options: DateFieldStateOptions): DateFieldStat
       // bound, so the first ArrowUp on an empty field lands on a plausible date
       // instead of on year 1.
       if (current == null) {
-        commit({ ...fields, [type]: placeholder[type] });
+        // Only the three date segments have a placeholder to reach for; the
+        // narrowing is what keeps `placeholder` a `CalendarDate` rather than
+        // something indexed by the widened union.
+        const seed =
+          type === "year" || type === "month" || type === "day" ? placeholder[type] : min;
+        commit({ ...fields, [type]: seed });
         return;
       }
       let next = current + delta;
@@ -391,4 +431,285 @@ export function digitFromKey(key: string, locale: Locale): number | null {
     digitTables.set(locale, table);
   }
   return table.get(key) ?? null;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * TIME
+ *
+ * A second engine rather than a `granularity` prop on the first, and the
+ * reason is that they share almost nothing but their SHAPE. A time has no
+ * calendar: there is no Esfand to be 29 or 30 days long, no leap rule, no
+ * `toValue` that can refuse, and 24 hours is 24 hours in every calendar system
+ * ever built. Threading `granularity` through `useDateFieldState` would put
+ * `calendar.getDaysInMonth` and `hourCycle` in one function where every branch
+ * is dead for one of the two callers.
+ *
+ * What they DO share is `DateFieldState`, so one `<DateInput>` renders either.
+ * That is the interface worth sharing; the arithmetic is not.
+ *
+ * ── THE HOUR CYCLE IS THE LOCALE'S DECISION, AND IT IS ASKED ────────────────
+ *
+ * Whether the field reads ۲۳:۴۵ or ۱۱:۴۵ بعدازظهر is a user-visible convention,
+ * and hard-coding either is the same class of mistake as writing `dir` by hand.
+ * `Intl.DateTimeFormat(...).resolvedOptions().hourCycle` is asked, and fa-IR
+ * answers `h23` on its own. `hourCycle` is accepted as an override for the
+ * product that genuinely needs one clock everywhere, and overriding it is
+ * overriding a convention — which is stated on the prop.
+ *
+ * ── THE `dayPeriod` VALUES COME FROM `Intl`, NOT FROM `strings.ts` ──────────
+ *
+ * «قبل‌ازظهر» / «بعدازظهر» are read out of `formatToParts` for two times of day.
+ * Authoring them in `strings.ts` would be a second source of truth for a string
+ * the platform gives correctly, and `strings.ts` says so on the `dayPeriod`
+ * key: what IS authored there is the segment's NAME, which no API produces.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/** What a time engine can produce. Structural, so `Time` satisfies it. */
+export interface TimeFields {
+  hour: number;
+  minute: number;
+  second: number;
+}
+
+export interface TimeFieldStateOptions {
+  locale: Locale;
+  value?: TimeFields | null | undefined;
+  defaultValue?: TimeFields | null | undefined;
+  onChange?: ((value: TimeFields | null) => void) | undefined;
+  isDisabled?: boolean | undefined;
+  isReadOnly?: boolean | undefined;
+  /**
+   * How much of the time is editable. `minute` is the default because a
+   * seconds segment nobody asked for is a fourth tab stop on every time field.
+   */
+  granularity?: "hour" | "minute" | "second" | undefined;
+  /** Overrides the locale's own clock. See the block header before using it. */
+  hourCycle?: 12 | 24 | undefined;
+}
+
+/** The two `dayPeriod` strings the locale actually uses, read from `Intl`. */
+function dayPeriodsOf(formatLocale: string): [string, string] {
+  const fmt = new Intl.DateTimeFormat(formatLocale, { hour: "numeric", hour12: true });
+  const read = (hour: number) =>
+    fmt
+      .formatToParts(new Date(Date.UTC(2020, 0, 1, hour)))
+      .find((p) => p.type === "dayPeriod")?.value ?? "";
+  // 09:00 and 21:00 UTC — but the formatter has no time zone set, so these are
+  // read in the RUNTIME's zone. Both are far enough from a boundary that no
+  // real offset moves them across noon.
+  return [read(9), read(21)];
+}
+
+export function useTimeFieldState(options: TimeFieldStateOptions): DateFieldState {
+  const { locale, value, defaultValue, onChange, granularity = "minute" } = options;
+  const formatLocale = FORMAT_LOCALE[locale];
+  const strings = stringsFor(locale);
+
+  const resolved = useMemo(() => {
+    const probe = new Intl.DateTimeFormat(formatLocale, {
+      hour: "numeric",
+      minute: "numeric",
+      ...(granularity === "second" ? { second: "numeric" } : {}),
+      ...(options.hourCycle === undefined ? {} : { hour12: options.hourCycle === 12 }),
+    });
+    const opts = probe.resolvedOptions();
+    // `hourCycle` is `h11 | h12 | h23 | h24`; only the 12/24 distinction
+    // matters here, and `h11`/`h12` are the two twelve-hour spellings.
+    const is12 = opts.hourCycle === "h11" || opts.hourCycle === "h12";
+    return {
+      is12,
+      parts: probe
+        .formatToParts(new Date(Date.UTC(2020, 0, 1, 15, 4, 5)))
+        .map((p) => ({ type: p.type as DateSegmentType, literal: p.value })),
+    };
+  }, [formatLocale, granularity, options.hourCycle]);
+
+  const periods = useMemo(() => dayPeriodsOf(formatLocale), [formatLocale]);
+
+  const initial = value !== undefined ? value : defaultValue;
+
+  const toFields = useCallback(
+    (t: TimeFields | null | undefined): Fields => {
+      if (t == null) return {};
+      const base: Fields = { minute: t.minute, second: t.second };
+      if (resolved.is12) {
+        // 0 → 12 AM and 13 → 1 PM. The modulus alone gives 0 for midnight,
+        // which no twelve-hour clock has ever displayed.
+        base.hour = t.hour % 12 === 0 ? 12 : t.hour % 12;
+        base.dayPeriod = t.hour < 12 ? 0 : 1;
+      } else {
+        base.hour = t.hour;
+      }
+      return base;
+    },
+    [resolved.is12],
+  );
+
+  const [fields, setFields] = useState<Fields>(() => toFields(initial));
+
+  // Controlled resynchronisation in RENDER, for the reason the date engine
+  // gives above: an effect emits one stale frame and never runs on the server.
+  const lastExternal = useRef<TimeFields | null | undefined>(value);
+  if (value !== undefined && value !== lastExternal.current) {
+    lastExternal.current = value;
+    setFields(toFields(value));
+  }
+
+  const needed = useMemo<EditableSegmentType[]>(() => {
+    const list: EditableSegmentType[] = ["hour"];
+    if (granularity !== "hour") list.push("minute");
+    if (granularity === "second") list.push("second");
+    if (resolved.is12) list.push("dayPeriod");
+    return list;
+  }, [granularity, resolved.is12]);
+
+  const boundsOf = useCallback(
+    (type: EditableSegmentType) => {
+      switch (type) {
+        case "hour":
+          // 1–12 on a twelve-hour clock, 0–23 on a twenty-four-hour one. The
+          // asymmetry is real: there is no hour 0 on a twelve-hour clock and
+          // no hour 24 on either.
+          return resolved.is12 ? { min: 1, max: 12 } : { min: 0, max: 23 };
+        case "minute":
+        case "second":
+          return { min: 0, max: 59 };
+        case "dayPeriod":
+          return { min: 0, max: 1 };
+        default:
+          // A date segment reaching a time engine is a programming error, not a
+          // user-visible one. Bounds that admit nothing make it obvious fast.
+          return { min: 0, max: 0 };
+      }
+    },
+    [resolved.is12],
+  );
+
+  /** The three numbers a caller wants, or nothing while a segment is empty. */
+  const toTime = useCallback(
+    (next: Fields): TimeFields | null => {
+      const { hour, minute, second, dayPeriod } = next;
+      if (hour == null) return null;
+      if (granularity !== "hour" && minute == null) return null;
+      if (granularity === "second" && second == null) return null;
+      if (resolved.is12 && dayPeriod == null) return null;
+      let h = hour;
+      if (resolved.is12) {
+        // 12 AM is hour 0 and 12 PM is hour 12 — the one pair that is wrong
+        // under a plain `+ 12`.
+        h = hour % 12;
+        if (dayPeriod === 1) h += 12;
+      }
+      return { hour: h, minute: minute ?? 0, second: second ?? 0 };
+    },
+    [granularity, resolved.is12],
+  );
+
+  const lastEmitted = useRef<string | null>(
+    (() => {
+      const t = toTime(toFields(initial));
+      return t == null ? null : `${t.hour}:${t.minute}:${t.second}`;
+    })(),
+  );
+
+  const commit = useCallback(
+    (next: Fields) => {
+      setFields(next);
+      const t = toTime(next);
+      const key = t == null ? null : `${t.hour}:${t.minute}:${t.second}`;
+      if (key === lastEmitted.current) return;
+      lastEmitted.current = key;
+      onChange?.(t);
+    },
+    [onChange, toTime],
+  );
+
+  const guard = options.isDisabled === true || options.isReadOnly === true;
+
+  const cycle = useCallback(
+    (type: EditableSegmentType, delta: number) => {
+      if (guard) return;
+      const { min, max } = boundsOf(type);
+      const current = fields[type];
+      // An untouched segment starts at its minimum rather than wrapping from
+      // nothing — there is no "today" for a time, so there is no placeholder
+      // value to reach for the way the date engine reaches for one.
+      if (current == null) {
+        commit({ ...fields, [type]: delta > 0 ? min : max });
+        return;
+      }
+      let next = current + delta;
+      // WRAP inside the unit. 59 + 1 is 0 of the same hour: spinbutton
+      // semantics, not clock arithmetic. Nothing here carries.
+      if (next > max) next = min;
+      if (next < min) next = max;
+      commit({ ...fields, [type]: next });
+    },
+    [boundsOf, commit, fields, guard],
+  );
+
+  const setSegment = useCallback(
+    (type: EditableSegmentType, next: number) => {
+      if (guard) return;
+      commit({ ...fields, [type]: next });
+    },
+    [commit, fields, guard],
+  );
+
+  const clearSegment = useCallback(
+    (type: EditableSegmentType) => {
+      if (guard) return;
+      const next = { ...fields };
+      delete next[type];
+      commit(next);
+    },
+    [commit, fields, guard],
+  );
+
+  const segments = useMemo<LumoDateSegment[]>(() => {
+    const out: LumoDateSegment[] = [];
+    for (const part of resolved.parts) {
+      if (part.type === "literal") {
+        out.push({ type: "literal", text: part.literal, isEditable: false, isPlaceholder: true });
+        continue;
+      }
+      const type = part.type as EditableSegmentType;
+      if (!needed.includes(type)) continue;
+      const current = fields[type];
+      const { min, max } = boundsOf(type);
+      out.push({
+        type,
+        text:
+          current == null
+            ? strings.dateField[type as keyof typeof strings.dateField]
+            : type === "dayPeriod"
+              ? // From `Intl`, never authored — see the block header.
+                (periods[current === 0 ? 0 : 1] ?? "")
+              : // `formatNumber`, never `String(n)`. Two digits, because a
+                // clock reading ۹:۵ instead of ۰۹:۰۵ is a clock nobody wrote.
+                formatNumber(current, locale, {
+                  useGrouping: false,
+                  minimumIntegerDigits: type === "hour" && !resolved.is12 ? 2 : 2,
+                }),
+        isEditable: true,
+        isPlaceholder: current == null,
+        value: current,
+        minValue: min,
+        maxValue: max,
+      });
+    }
+    return out;
+  }, [boundsOf, fields, locale, needed, periods, resolved.is12, resolved.parts, strings]);
+
+  const editableIndices = useMemo(
+    () => segments.map((s, i) => (s.isEditable ? i : -1)).filter((i) => i >= 0),
+    [segments],
+  );
+
+  const optionTexts = useCallback(
+    (type: EditableSegmentType) => (type === "dayPeriod" ? periods : undefined),
+    [periods],
+  );
+
+  return { segments, editableIndices, cycle, setSegment, clearSegment, boundsOf, optionTexts };
 }

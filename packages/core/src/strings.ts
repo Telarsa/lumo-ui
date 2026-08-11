@@ -244,6 +244,26 @@ export interface LumoStrings {
     /** Name and placeholder text of the day segment. */
     day: string;
     /**
+     * Names of the TIME segments.
+     *
+     * ── WHY THESE ARE HERE AND `dayPeriod`'s VALUES ARE NOT ─────────────────
+     *
+     * These four are the segments' NAMES — what a screen reader announces the
+     * control as ("hour", "minute"). They are authored per locale, exactly like
+     * `year`/`month`/`day`, because no API produces them: `Intl` formats a
+     * time, it does not name the parts of one.
+     *
+     * The `dayPeriod`'s VALUES — «قبل‌ازظهر» / «بعدازظهر» — are deliberately
+     * ABSENT. Those come from `Intl.DateTimeFormat.formatToParts`, which
+     * already answers in the page's locale, and authoring them here would be a
+     * second source of truth for a string the platform is willing to give
+     * correctly. `date-field-state.ts` reads them from the formatter.
+     */
+    hour: string;
+    minute: string;
+    second: string;
+    dayPeriod: string;
+    /**
      * `aria-valuetext` of a segment with no value yet.
      *
      * A spinbutton with no `aria-valuenow` is announced as "blank" by the
@@ -273,7 +293,16 @@ export const fa: LumoStrings = {
   datePicker: { openCalendar: "باز کردن تقویم" },
   // The same four words react-aria's patched fa-IR bundle produces, verified by
   // rendering the React Aria field and reading its output before deleting it.
-  dateField: { year: "سال", month: "ماه", day: "روز", empty: "خالی" },
+  dateField: {
+    year: "سال",
+    month: "ماه",
+    day: "روز",
+    hour: "ساعت",
+    minute: "دقیقه",
+    second: "ثانیه",
+    dayPeriod: "قبل یا بعد از ظهر",
+    empty: "خالی",
+  },
 };
 
 export const en: LumoStrings = {
@@ -286,7 +315,16 @@ export const en: LumoStrings = {
   },
   calendar: { previousMonth: "Previous month", nextMonth: "Next month" },
   datePicker: { openCalendar: "Open calendar" },
-  dateField: { year: "year", month: "month", day: "day", empty: "Empty" },
+  dateField: {
+    year: "year",
+    month: "month",
+    day: "day",
+    hour: "hour",
+    minute: "minute",
+    second: "second",
+    dayPeriod: "AM/PM",
+    empty: "Empty",
+  },
 };
 
 /**

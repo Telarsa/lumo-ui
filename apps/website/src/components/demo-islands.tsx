@@ -614,13 +614,30 @@ function isWeekend(date: { toDate: (timeZone: string) => Date }) {
   return weekday === 4 || weekday === 5;
 }
 
+/*
+ * `Calendar`'s `isDateUnavailable` is typed `(date: CalendarDate) => boolean`,
+ * and `CalendarDate` is not importable in this package — see `isWeekend`'s own
+ * note. The cast is the seam between two declarations of one fact, and it
+ * narrows rather than widens: the predicate uses one member of a type that has
+ * many, so nothing it cannot handle can reach it.
+ */
+const isWeekendDate = isWeekend as (date: { toDate: (tz: string) => Date }) => boolean as (
+  date: Parameters<NonNullable<React.ComponentProps<typeof Calendar>["isDateUnavailable"]>>[0],
+) => boolean;
+
 export interface CalendarClosedDaysIslandProps {
   /** Announced name of the calendar. */
   label: string;
-  /** Name of the previous-month button. */
-  previousMonthLabel: string;
-  /** Name of the next-month button. */
-  nextMonthLabel: string;
+  /**
+   * Selects the calendar system, the digits, the week start and the direction.
+   *
+   * Required since the react-day-picker migration: `Calendar` used to read it
+   * from React Aria's `I18nProvider`, and there is no such provider now.
+   * `previousMonthLabel`/`nextMonthLabel` went the other way — the nav buttons'
+   * names are composed by `calendar-datelib.ts` per locale, so they are no
+   * longer props anyone can forget.
+   */
+  locale: Locale;
   /** Help text under the grid, naming which days are closed. */
   description: string;
   /**
@@ -633,18 +650,16 @@ export interface CalendarClosedDaysIslandProps {
 
 export function CalendarClosedDaysIsland({
   label,
-  previousMonthLabel,
-  nextMonthLabel,
+  locale,
   description,
   errorMessage,
 }: CalendarClosedDaysIslandProps) {
   return (
     <Calendar
       label={label}
-      previousMonthLabel={previousMonthLabel}
-      nextMonthLabel={nextMonthLabel}
+      locale={locale}
       description={description}
-      isDateUnavailable={isWeekend}
+      isDateUnavailable={isWeekendDate}
       errorMessage={errorMessage}
     />
   );

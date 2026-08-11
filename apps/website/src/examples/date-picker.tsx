@@ -39,8 +39,6 @@ function BasicExample(l: Locale) {
       className="w-full max-w-sm"
       label={t.travel[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
       description={t.travelHelp[l]}
     />
   );
@@ -52,8 +50,6 @@ function DescriptionExample(l: Locale) {
       className="w-full max-w-sm"
       label={t.booking[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
       description={t.bookingHelp[l]}
     />
   );
@@ -65,8 +61,6 @@ function InvalidExample(l: Locale) {
       className="w-full max-w-sm"
       label={t.delivery[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
       errorMessage={t.deliveryError[l]}
     />
   );
@@ -78,8 +72,6 @@ function DisabledExample(l: Locale) {
       className="w-full max-w-sm"
       label={t.archive[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
       isDisabled
     />
   );
@@ -92,15 +84,11 @@ function SizesExample(l: Locale) {
         size="sm"
         label={t.travel[l]}
         openCalendarLabel={t.open[l]}
-        previousMonthLabel={t.previous[l]}
-        nextMonthLabel={t.next[l]}
       />
       <DatePicker
         size="lg"
         label={t.travel[l]}
         openCalendarLabel={t.open[l]}
-        previousMonthLabel={t.previous[l]}
-        nextMonthLabel={t.next[l]}
       />
     </div>
   );
@@ -119,7 +107,7 @@ export const EXAMPLES: ComponentExamples = {
     },
     composition: [
       `<DatePicker label openCalendarLabel`,
-      `            previousMonthLabel nextMonthLabel>`,
+      `            description errorMessage>`,
       `  …the segments and the trigger   ← rendered for you`,
       `  …the calendar in a popover      ← rendered for you`,
       `</DatePicker>`,
@@ -129,27 +117,27 @@ export const EXAMPLES: ComponentExamples = {
         name: "DatePicker",
         description: {
           "fa-IR":
-            "فیلد و تقویم با هم. چهار نام اعلام‌شده اجباری است، چون چهار کنترل جداگانه خوانده می‌شوند: خودِ فیلد، دکمهٔ باز کردن، و دو دکمهٔ ماه داخل پاپ‌اور.",
+            "فیلد و تقویم با هم. حالا فقط دو نام اعلام‌شده اجباری است — خودِ فیلد و دکمهٔ باز کردن — چون نام دکمه‌های ماه را calendar-datelib.ts برای هر زبان می‌سازد و دیگر ویژگی نیست که کسی از قلم بیندازد.",
           "en-US":
-            "The field and the calendar together. Four announced names are required because four controls are announced separately: the field, the trigger, and the two month buttons inside the popover.",
+            "The field and the calendar together. Only TWO announced names are required now — the field and the trigger — because the month buttons' names are composed per locale by calendar-datelib.ts and are no longer props anyone can forget.",
         },
       },
       {
-        name: "renderPickerCell",
+        name: "DateInput",
         description: {
           "fa-IR":
-            "خانهٔ روز داخل پاپ‌اور. جدا از خانهٔ تقویم مستقل است چون اندازه‌اش فرق دارد، و مثل آن بدون children می‌ماند تا ری‌اکت‌آریا خودش رقم را با شمارش زبان بنویسد.",
+            "نیمهٔ تایپی: همان ورودیِ بخش‌بندی‌شده که فیلد تاریخ هم به کار می‌برد. جای renderPickerCell و renderPickerHeaderCell را گرفته، که هر دو نشانه‌گذاریِ ری‌اکت‌آریا بودند.",
           "en-US":
-            "The day cell inside the popover. Separate from the standalone calendar's because its size differs, and childless for the same reason: React Aria writes the digit in the locale's own numbering.",
+            "The typed half: the same segmented input the date field uses. It replaced renderPickerCell and renderPickerHeaderCell, which were both React Aria's markup.",
         },
       },
       {
-        name: "renderPickerHeaderCell",
+        name: "Calendar",
         description: {
           "fa-IR":
-            "خانهٔ نام روز هفته در همان شبکه. فهرست روزها هرگز دستی نوشته نمی‌شود؛ هفتهٔ فارسی از شنبه آغاز می‌شود و این را زبان می‌گوید.",
+            "نیمهٔ شبکه‌ای، بی‌کم‌وکاست همان تقویمی که به‌تنهایی هم رندر می‌شود. انتخابگر مقدار را خودش نگه می‌دارد و به هر دو نیمه می‌دهد، پس بخش‌ها و شبکه نمی‌توانند دربارهٔ روزِ انتخاب‌شده اختلاف پیدا کنند.",
           "en-US":
-            "The weekday-name cell in the same grid. The day list is never hand-written: the Persian week starts on Saturday and the locale is what says so.",
+            "The grid half, exactly the calendar that also renders on its own. The picker holds the value itself and hands it to both halves, so the segments and the grid cannot disagree about which day is selected.",
         },
       },
     ],

@@ -1,19 +1,21 @@
 "use client";
 
-import { useCallback, useId, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useId, useRef } from "react";
 import { Field } from "@base-ui/react/field";
 import type { DateValue } from "@internationalized/date";
-import {
-  DateSegment as AriaDateSegment,
-  type DateFieldProps as AriaDateFieldProps,
-  type DateSegmentProps as AriaDateSegmentProps,
-} from "react-aria-components";
-import { cn, direction, stringsFor, type LumoNode } from "@lumo-ui/core";
+// TYPE-ONLY now. `renderSegment` — the one React Aria RUNTIME import left in
+// this file — was deleted with the migration: `date-input.tsx` is the segment
+// implementation for the whole family, and the three siblings that used to
+// import this function render that instead. The prop TYPE stays React Aria's
+// because the public API may not change. Erased at build; no RAC runtime here.
+import type { DateFieldProps as AriaDateFieldProps } from "react-aria-components";
+import { cn, type LumoNode } from "@lumo-ui/core";
 import {
   dateInputVariants,
   dateLiteralVariants,
   dateSegmentVariants,
 } from "./calendar.variants.ts";
+import { DateInput, type DateInputHandle } from "./date-input.tsx";
 import {
   descriptionVariants,
   fieldErrorVariants,
@@ -23,11 +25,7 @@ import {
 } from "./form.tsx";
 import { attr } from "@lumo-ui/base-ui-ssr";
 import { useLumoLocale } from "./locale.ts";
-import {
-  digitFromKey,
-  useDateFieldState,
-  type EditableSegmentType,
-} from "./date-field-state.ts";
+import { useDateFieldState } from "./date-field-state.ts";
 
 export { dateInputVariants, dateLiteralVariants, dateSegmentVariants };
 
@@ -241,8 +239,6 @@ export function DateField<T extends DateValue>({
   isReadOnly,
 }: DateFieldProps<T> & DateBounds<AriaDateFieldProps<T>>) {
   const locale = useLumoLocale();
-  const strings = stringsFor(locale);
-  const dir = direction(locale);
 
   const state = useDateFieldState({
     locale,
@@ -268,97 +264,15 @@ export function DateField<T extends DateValue>({
       .filter((id): id is string => id != null)
       .join(" ") || undefined;
 
-  const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  /** Digits typed so far in the segment currently being filled. */
-  const typed = useRef<{ index: number; buffer: number } | null>(null);
-
-  const focusSegment = useCallback((index: number) => {
-    segmentRefs.current[index]?.focus();
-  }, []);
-
-  const move = useCallback(
-    (from: number, step: number) => {
-      const order = state.editableIndices;
-      const at = order.indexOf(from);
-      const next = order[at + step];
-      if (next != null) focusSegment(next);
-    },
-    [focusSegment, state.editableIndices],
-  );
-
-  const onSegmentKeyDown = useCallback(
-    (event: ReactKeyboardEvent<HTMLDivElement>, index: number, type: EditableSegmentType) => {
-      /*
-       * ARROW TRAVERSAL IS DIRECTION-DEPENDENT AND THIS IS THE WHOLE POINT.
-       *
-       * On a Persian page the segments run right to left, so ArrowLeft moves to
-       * the NEXT segment and ArrowRight to the previous one. Hard-coding the
-       * Latin mapping is the class of defect that renders correctly, passes
-       * every type check, and is wrong for every user of this library.
-       */
-      const forward = dir === "rtl" ? "ArrowLeft" : "ArrowRight";
-      const backward = dir === "rtl" ? "ArrowRight" : "ArrowLeft";
-
-      switch (event.key) {
-        case "ArrowUp":
-          event.preventDefault();
-          typed.current = null;
-          state.cycle(type, 1);
-          return;
-        case "ArrowDown":
-          event.preventDefault();
-          typed.current = null;
-          state.cycle(type, -1);
-          return;
-        case forward:
-          event.preventDefault();
-          typed.current = null;
-          move(index, 1);
-          return;
-        case backward:
-          event.preventDefault();
-          typed.current = null;
-          move(index, -1);
-          return;
-        case "Backspace":
-        case "Delete":
-          event.preventDefault();
-          typed.current = null;
-          state.clearSegment(type);
-          return;
-        default:
-          break;
-      }
-
-      const digit = digitFromKey(event.key, locale);
-      if (digit == null) return;
-      event.preventDefault();
-
-      /*
-       * TYPE-TO-FILL.
-       *
-       * Digits accumulate inside one segment until another would overflow its
-       * bound, then focus advances on its own — typing ۱۹ into a day segment
-       * lands on 19 and moves on, typing ۴ moves on immediately because 40
-       * cannot be a day. The buffer is a ref rather than state because it must
-       * not survive a blur or an arrow key, and because it is not rendered.
-       */
-      const { max } = state.boundsOf(type);
-      const buffer = typed.current?.index === index ? typed.current.buffer : 0;
-      let next = buffer * 10 + digit;
-      if (next > max) next = digit;
-      state.setSegment(type, next);
-
-      if (next * 10 > max) {
-        typed.current = null;
-        move(index, 1);
-      } else {
-        typed.current = { index, buffer: next };
-      }
-    },
-    [dir, locale, move, state],
-  );
+  /*
+   * The keyboard model, the refs and the segment markup all moved to
+   * `date-input.tsx`. They were inline here, which is precisely why
+   * `time-field.tsx`, `date-picker.tsx` and `date-range-picker.tsx` could not
+   * use them and stayed on React Aria's `renderSegment` — two segmented inputs
+   * in one library, with different keyboard behaviour. The handle is kept so a
+   * click on the label still lands on the first segment.
+   */
+  const inputRef = useRef<DateInputHandle>(null);
 
   return (
     <Field.Root
@@ -379,85 +293,24 @@ export function DateField<T extends DateValue>({
         render={<span />}
         className={labelVariants()}
         onClick={() => {
-          const first = state.editableIndices[0];
-          if (first != null) focusSegment(first);
+          inputRef.current?.focus();
         }}
       >
         {label}
       </Field.Label>
 
-      <div
-        data-lumo=""
-        role="group"
-        aria-labelledby={labelId}
-        {...optional("aria-describedby", describedBy)}
-        className={cn(dateInputVariants({ size }), inputClassName)}
-        {...(invalid === true ? { "data-invalid": "" } : {})}
-        {...(isDisabled === true ? { "data-disabled": "" } : {})}
-      >
-        {state.segments.map((segment, index) => {
-          if (!segment.isEditable) {
-            return (
-              <span
-                // Separators are positional and there is nothing else to key on.
-                key={`literal-${String(index)}`}
-                data-lumo=""
-                data-type="literal"
-                aria-hidden="true"
-                className={dateLiteralVariants()}
-              >
-                {segment.text}
-              </span>
-            );
-          }
-          const type = segment.type as EditableSegmentType;
-          return (
-            <div
-              key={type}
-              ref={(node) => {
-                segmentRefs.current[index] = node;
-              }}
-              data-lumo=""
-              data-type={type}
-              /*
-               * `role="spinbutton"` is what makes a screen reader announce a
-               * value that changes under arrow keys rather than reading the
-               * text again. `aria-valuenow` is required by the spec to be a
-               * DECIMAL NUMBER, so it cannot carry Persian digits — that is the
-               * one announced value on this component that must stay Latin, and
-               * `aria-valuetext` is the override that makes it audible in
-               * Persian anyway.
-               */
-              role="spinbutton"
-              tabIndex={isDisabled === true ? -1 : 0}
-              aria-label={strings.dateField[type]}
-              aria-valuemin={segment.minValue}
-              aria-valuemax={segment.maxValue}
-              {...optional("aria-valuenow", segment.value)}
-              aria-valuetext={
-                segment.value == null ? strings.dateField.empty : segment.text
-              }
-              {...(segment.isPlaceholder ? { "data-placeholder": "" } : {})}
-              {...(focusedIndex === index ? { "data-focused": "" } : {})}
-              {...(invalid === true ? { "data-invalid": "" } : {})}
-              {...(isDisabled === true ? { "data-disabled": "" } : {})}
-              onFocus={() => {
-                setFocusedIndex(index);
-              }}
-              onBlur={() => {
-                setFocusedIndex((current) => (current === index ? null : current));
-                typed.current = null;
-              }}
-              onKeyDown={(event) => {
-                onSegmentKeyDown(event, index, type);
-              }}
-              className={dateSegmentVariants()}
-            >
-              {segment.text}
-            </div>
-          );
-        })}
-      </div>
+      <DateInput
+        ref={inputRef}
+        state={state}
+        locale={locale}
+        labelId={labelId}
+        {...optional("describedBy", describedBy)}
+        {...optional("isDisabled", isDisabled)}
+        {...optional("isReadOnly", isReadOnly)}
+        {...optional("isInvalid", invalid)}
+        {...optional("size", size)}
+        {...optional("className", inputClassName)}
+      />
 
       {description != null ? (
         <Field.Description id={descriptionId} className={descriptionVariants()}>
@@ -476,34 +329,5 @@ export function DateField<T extends DateValue>({
         </div>
       ) : null}
     </Field.Root>
-  );
-}
-
-/**
- * One segment — STILL ON REACT ARIA, and that is the finding, not an oversight.
- *
- * `date-picker.tsx`, `date-range-picker.tsx` and `time-field.tsx` all import
- * this function and render it inside a React Aria `<DateInput>`. It is the
- * shared piece of the date family, and it is why the family cannot be migrated
- * one component at a time: a `DatePicker` contains a date INPUT, so rebuilding
- * the field without rebuilding the picker leaves two different segment
- * implementations in the same library, and rebuilding the picker means
- * rebuilding the calendar's roving-focus grid too.
- *
- * Left untouched so the three unmigrated siblings keep compiling and so
- * `dates.test.tsx` can be run unedited. Every line below is React Aria's.
- *
- * React Aria decides which segments exist and in what ORDER from the locale —
- * under fa-IR that is year, month, day, which is the reverse of the American
- * order and is not something to hard-code anywhere. `date-field-state.ts` gets
- * the same answer from `Intl.DateTimeFormat.formatToParts`.
- */
-export function renderSegment(segment: AriaDateSegmentProps["segment"]) {
-  return (
-    <AriaDateSegment
-      data-lumo=""
-      segment={segment}
-      className={segment.type === "literal" ? dateLiteralVariants() : dateSegmentVariants()}
-    />
   );
 }

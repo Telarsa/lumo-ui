@@ -115,12 +115,12 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
-        name: "renderSegment",
+        name: "DateInput",
         description: {
           "fa-IR":
-            "همان تابع بخش که فیلد تاریخ به کار می‌برد. ساعت و تاریخ یک نوع بخش دارند، پس یک تعریف دارند.",
+            "همان ورودیِ بخش‌بندی‌شده که فیلد تاریخ به کار می‌برد. ساعت و روز یک نوع بخش‌اند، پس یک پیاده‌سازی دارند — و پیش از این دو تا داشتند، چون این پرونده روی ری‌اکت‌آریا مانده بود.",
           "en-US":
-            "The same segment function the date field uses. A time and a date have one kind of segment, so they have one definition.",
+            "The same segmented input the date field uses. An hour slot and a day slot are one kind of thing, so they have one implementation — and until this migration they had two, because this file was still on React Aria.",
         },
       },
     ],

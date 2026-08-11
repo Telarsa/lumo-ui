@@ -315,7 +315,25 @@ export function lumoCalendar(locale: Locale): LumoCalendarConfig {
     formatMonthDropdown: (date: Date) => formatter(locale, { month: "long" }).format(date),
     formatYearDropdown: (date: Date) => formatter(locale, { year: "numeric" }).format(date),
     formatDay: (date: Date) => formatter(locale, { day: "numeric" }).format(date),
-    formatWeekdayName: (date: Date) => formatter(locale, { weekday: "short" }).format(date),
+    /*
+     * The widest abbreviation that FITS, measured rather than tabled.
+     *
+     * Persian's "short" weekday IS its long one — «چهارشنبه», nine characters —
+     * so it overflows a day-wide column and the narrow form (ش ی د س چ پ ج) is
+     * the only one that works. English's "Sat" fits and is far less ambiguous
+     * than narrow's two S's and two T's. Choosing by length keeps both right
+     * without this file naming either locale.
+     *
+     * The ACCESSIBLE name is the full weekday in both cases — see
+     * `labelWeekday` below — so the abbreviation is a visual convenience and
+     * never the only carrier of which day a column is.
+     */
+    formatWeekdayName: (date: Date) => {
+      const short = formatter(locale, { weekday: "short" }).format(date);
+      return [...short].length <= 3
+        ? short
+        : formatter(locale, { weekday: "narrow" }).format(date);
+    },
     formatWeekNumber: (weekNumber: number) =>
       new Intl.NumberFormat(FORMAT_LOCALE[locale], { useGrouping: false }).format(weekNumber),
   };
@@ -360,6 +378,7 @@ export function lumoCalendar(locale: Locale): LumoCalendarConfig {
     yearDropdown: { "fa-IR": "انتخاب سال", "en-US": "Choose the year" },
     weekNumberHeader: { "fa-IR": "شمارهٔ هفته", "en-US": "Week number" },
     week: { "fa-IR": "هفتهٔ", "en-US": "Week" },
+    today: { "fa-IR": "امروز", "en-US": "Today" },
   } as const satisfies Record<string, Record<Locale, string>>;
 
   const longDate = (date: Date) =>
@@ -379,9 +398,21 @@ export function lumoCalendar(locale: Locale): LumoCalendarConfig {
     // The grid names itself by the month it shows, in that month's own calendar.
     labelGrid: (date: Date) => formatter(locale, { month: "long", year: "numeric" }).format(date),
     labelWeekday: (date: Date) => formatter(locale, { weekday: "long" }).format(date),
-    // The two a reader hears most: a full, calendar-correct date per cell.
-    labelGridcell: (date: Date) => longDate(date),
-    labelDayButton: (date: Date) => longDate(date),
+    /*
+     * The two a reader hears most: a full, calendar-correct date per cell.
+     *
+     * «امروز» is prefixed when the cell IS today, because "today" is the one
+     * fact about a day cell that a reader cannot get from the date itself — it
+     * requires knowing what today is, which is exactly what a screen-reader
+     * user navigating a grid does not. React Aria composed the same prefix from
+     * its patched bundle; here it is a word in a file, in both languages.
+     *
+     * `modifiers` is react-day-picker's second argument to both labels.
+     */
+    labelGridcell: (date: Date, modifiers?: { today?: boolean }) =>
+      modifiers?.today === true ? `${CHROME.today[locale]}، ${longDate(date)}` : longDate(date),
+    labelDayButton: (date: Date, modifiers?: { today?: boolean }) =>
+      modifiers?.today === true ? `${CHROME.today[locale]}، ${longDate(date)}` : longDate(date),
   };
 
   return { calendar, dateLib, formatters: formattersProp, labels, weekStartsOn };

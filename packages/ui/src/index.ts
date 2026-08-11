@@ -993,8 +993,8 @@ export type {
   SidebarTriggerProps,
 } from "./sidebar.tsx";
 
-export { Calendar, CalendarHeader } from "./calendar.tsx";
-export type { CalendarHeaderProps, CalendarProps } from "./calendar.tsx";
+export { Calendar, calendarChevron, calendarClassNames, describedByWith } from "./calendar.tsx";
+export type { CalendarProps } from "./calendar.tsx";
 
 /*
  * The whole date family's classes come from ONE directive-free module, and they
@@ -1006,6 +1006,7 @@ export type { CalendarHeaderProps, CalendarProps } from "./calendar.tsx";
  */
 export {
   calendarCellVariants,
+  calendarDayButtonVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
   calendarHeaderVariants,
@@ -1019,19 +1020,41 @@ export {
   dateRangeSeparatorVariants,
   dateSegmentVariants,
   rangeCalendarCellVariants,
+  rangeCalendarSelectionVariants,
 } from "./calendar.variants.ts";
 
-export { DateField, renderSegment } from "./date-field.tsx";
+export { DateField } from "./date-field.tsx";
 export type { DateBounds, DateFieldProps, DateFieldSize } from "./date-field.tsx";
 
-export { DatePicker, renderPickerCell, renderPickerHeaderCell } from "./date-picker.tsx";
+export { DateInput } from "./date-input.tsx";
+export type { DateInputHandle, DateInputProps, DateInputSize } from "./date-input.tsx";
+
+export {
+  EDITABLE_SEGMENTS,
+  TIME_SEGMENTS,
+  digitFromKey,
+  toValue,
+  useDateFieldState,
+  useTimeFieldState,
+} from "./date-field-state.ts";
+export type {
+  DateFieldState,
+  DateFieldStateOptions,
+  DateSegmentType,
+  EditableSegmentType,
+  LumoDateSegment,
+  TimeFields,
+  TimeFieldStateOptions,
+} from "./date-field-state.ts";
+
+export { DatePicker } from "./date-picker.tsx";
 export type { DatePickerProps } from "./date-picker.tsx";
 
 export { DateRangePicker } from "./date-range-picker.tsx";
 export type { DateRangePickerProps } from "./date-range-picker.tsx";
 
 export { RangeCalendar } from "./range-calendar.tsx";
-export type { RangeCalendarProps } from "./range-calendar.tsx";
+export type { CalendarDateRange, RangeCalendarProps } from "./range-calendar.tsx";
 
 export { TimeField } from "./time-field.tsx";
 export type { TimeFieldProps } from "./time-field.tsx";

@@ -1,184 +1,236 @@
 "use client";
 
+import { useId, useRef, useState } from "react";
 import { CalendarIcon } from "lucide-react";
-import {
-  Button as AriaButton,
-  CalendarCell as AriaCalendarCell,
-  CalendarGrid as AriaCalendarGrid,
-  CalendarGridBody as AriaCalendarGridBody,
-  CalendarGridHeader as AriaCalendarGridHeader,
-  CalendarHeaderCell as AriaCalendarHeaderCell,
-  Calendar as AriaCalendar,
-  DateInput as AriaDateInput,
-  DatePicker as AriaDatePicker,
-  Dialog as AriaDialog,
-  Group as AriaGroup,
-  Popover as AriaPopover,
-  type CalendarCellProps as AriaCalendarCellProps,
-  type DatePickerProps as AriaDatePickerProps,
-  type DateValue,
-} from "react-aria-components";
+import { Field } from "@base-ui/react/field";
+import type { CalendarDate } from "@internationalized/date";
+import { attr } from "@lumo-ui/base-ui-ssr";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { CalendarHeader } from "./calendar.tsx";
+import { Calendar } from "./calendar.tsx";
 import {
-  calendarCellVariants,
-  calendarGridVariants,
-  calendarHeaderCellVariants,
-  calendarVariants,
   datePickerGroupVariants,
   datePickerTriggerVariants,
 } from "./calendar.variants.ts";
-import { renderSegment, type DateBounds, type DateFieldSize } from "./date-field.tsx";
-import { Description, FieldError, Label, fieldVariants, optional } from "./form.tsx";
-import { popoverVariants } from "./popover.tsx";
+import { DateInput, type DateInputHandle, type DateInputSize } from "./date-input.tsx";
+import { useDateFieldState } from "./date-field-state.ts";
+import {
+  descriptionVariants,
+  fieldErrorVariants,
+  fieldVariants,
+  labelVariants,
+  optional,
+} from "./form.tsx";
+import { useLumoLocale } from "./locale.ts";
+import { Popover, PopoverTrigger } from "./popover.tsx";
 
 export { datePickerGroupVariants, datePickerTriggerVariants };
 
 /**
  * A typed date with a calendar behind a button.
  *
- * The composition is `DateField` plus `Calendar`, and both halves keep their own
- * files' guarantees: the segments are the ones `date-field.tsx` documents, and
- * the grid is the one `calendar.tsx` documents. This file's job is the seam.
+ * ═══ THE LAST FILE THAT HELD THE DATE FAMILY TO REACT ARIA ══════════════════
  *
- * ── FOUR ANNOUNCED STRINGS, ALL REQUIRED, ALL MEASURED ──────────────────────
+ * The composition is `DateInput` plus `Calendar`, and until this rewrite it was
+ * React Aria's `<DatePicker>` — a context that owned the value and fed BOTH
+ * halves. That is why the family could not be migrated one component at a time,
+ * and why `experiments/in-flight/README.md` recorded three reverted attempts:
+ * replacing the calendar alone left the picker's grid bound to RAC's state, and
+ * replacing the input alone left RAC's DatePicker feeding a segment
+ * implementation that no longer existed.
+ *
+ * The knot is cut by owning the value HERE. This component holds one
+ * `CalendarDate | null`, hands it to `useDateFieldState` for the segments and to
+ * `Calendar` for the grid, and both halves are then ordinary controlled
+ * components with no shared context at all. That is a smaller mechanism than
+ * the one it replaces, and it is the reason both halves could move at once.
+ *
+ * ═══ THE ANNOUNCED STRINGS, AND WHICH ONES STOPPED BEING A PATCH ════════════
  *
  *   label               the field's own name.
- *   openCalendarLabel   the trigger button. React Aria composes its name from
- *                       the `calendar` key of its datepicker bundle, and a
- *                       local `aria-label` REPLACES it rather than duplicating
- *                       — verified by rendering: with the prop set, «تقویم»
- *                       appears exactly once in the output. (Contrast
- *                       NumberField's `aria-roledescription`, where the same
- *                       move on the wrong element emits both.)
- *   previousMonthLabel  }  the grid's nav pair, exactly as on `Calendar`.
- *   nextMonthLabel      }
+ *   openCalendarLabel   the trigger button — an icon, so without it the control
+ *                       is anonymous and `named-controls` fails the build.
  *
- * Everything else the picker announces — the segment names «سال ماه روز», the
- * cell names «امروز، …», the empty-segment value «خالی» — is composed inside
- * React Aria's hooks where no prop reaches, and is Persian because
- * `patches/react-aria@3.51.0.patch` gives those hooks a real `fa-IR` bundle.
+ * `previousMonthLabel` and `nextMonthLabel` are GONE from this component's API,
+ * and their absence is the migration's headline: react-day-picker composes the
+ * nav buttons' names through `labels`, which `calendar-datelib.ts` supplies per
+ * locale. They were props here because React Aria's equivalents were reachable
+ * only by prop, and the grid's per-cell names were not reachable at all — which
+ * is what `patches/react-aria@3.51.0.patch` existed to fix.
  *
- * ── THE POPOVER IS CLOSED IN THE FIRST BYTE, WHICH HIDES THINGS ─────────────
+ * ═══ THE PANEL IS CLOSED IN THE FIRST BYTE, WHICH HIDES THINGS ══════════════
  *
- * A closed `Popover` renders `null`. Every string inside the calendar is
- * therefore absent from server output, and a sweep that only reads the first
- * byte will score them as clean whether they are or not — the exact measurement
- * error recorded in `@lumo-ui/core`'s strings.ts, which is why `dates.test.tsx`
- * renders the grid directly rather than trusting a closed picker.
+ * A closed popover renders nothing, so every string inside the calendar is
+ * absent from server output and a sweep that only reads the first byte scores
+ * them clean whether they are or not. That measurement error is recorded in
+ * `@lumo-ui/core`'s strings.ts, and it is why `dates.test.tsx` renders the grid
+ * directly rather than trusting a closed picker.
  *
- * The two `aria-label="Dismiss"` buttons RAC brackets popover content with are
- * a known, unreachable, hydration-only leak shared by every overlay in the
- * library; `popover.tsx` records the measurement.
+ * ═══ PLACEMENT ═════════════════════════════════════════════════════════════
  *
- * ── PLACEMENT ───────────────────────────────────────────────────────────────
- *
- * The panel opens `bottom start` — logical, so it anchors to the field's
- * leading edge in both directions. `popover.tsx` explains why the physical
- * spellings are subtracted from the type rather than merely discouraged.
+ * The panel opens `bottom start` — logical, so it anchors to the field's leading
+ * edge in both directions. `popover.tsx` explains why the physical spellings are
+ * subtracted from the type rather than merely discouraged.
  */
-export interface DatePickerProps<T extends DateValue>
-  extends Omit<
-    AriaDatePickerProps<T>,
-    | "children"
-    | "className"
-    | "aria-label"
-    | "minValue"
-    | "maxValue"
-    | "isDateUnavailable"
-    | "isInvalid"
-  > {
+export interface DatePickerProps {
   /** Announced and displayed name. Required. */
   label: string;
-  /** Name of the button that opens the calendar. Required. `strings.datePicker.openCalendar`. */
+  /** Name of the button that opens the calendar. Required — the trigger is an icon. */
   openCalendarLabel: string;
-  /** Name of the previous-month button. Required. `strings.calendar.previousMonth`. */
-  previousMonthLabel: string;
-  /** Name of the next-month button. Required. `strings.calendar.nextMonth`. */
-  nextMonthLabel: string;
+  value?: CalendarDate | null | undefined;
+  defaultValue?: CalendarDate | null | undefined;
+  onChange?: ((value: CalendarDate | null) => void) | undefined;
+  /** The date an empty field cycles from. Defaults to today. */
+  placeholderValue?: CalendarDate | undefined;
+  minValue?: CalendarDate | undefined;
+  maxValue?: CalendarDate | undefined;
+  isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
   description?: LumoNode;
+  /** Shown under the field. Supplying one marks it invalid. */
+  errorMessage?: LumoNode;
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;
-  size?: DateFieldSize;
+  isDisabled?: boolean | undefined;
+  isReadOnly?: boolean | undefined;
+  size?: DateInputSize;
   className?: string | undefined;
 }
 
-export function DatePicker<T extends DateValue>({
+export function DatePicker({
   label,
   openCalendarLabel,
-  previousMonthLabel,
-  nextMonthLabel,
-  description,
-  errorMessage,
-  isInvalid,
-  size,
-  className,
+  value,
+  defaultValue,
+  onChange,
+  placeholderValue,
   minValue,
   maxValue,
   isDateUnavailable,
-  ...props
-}: DatePickerProps<T> & DateBounds<AriaDatePickerProps<T>>) {
-  // Omitted rather than passed as undefined — see the same block in
-  // `date-field.tsx` for why `exactOptionalPropertyTypes` forces the shape.
-  const bounds = {
-    ...optional("minValue", minValue),
-    ...optional("maxValue", maxValue),
-    ...optional("isDateUnavailable", isDateUnavailable),
+  description,
+  errorMessage,
+  isInvalid,
+  isDisabled,
+  isReadOnly,
+  size,
+  className,
+}: DatePickerProps) {
+  const locale = useLumoLocale();
+
+  /*
+   * ONE value, owned here, feeding two controlled halves.
+   *
+   * Uncontrolled state exists only when the caller did not supply `value` —
+   * the same shape every other field in the library uses, and the reason the
+   * segments and the grid cannot disagree about what is selected.
+   */
+  const [uncontrolled, setUncontrolled] = useState<CalendarDate | null>(defaultValue ?? null);
+  const selected = value !== undefined ? value : uncontrolled;
+
+  const commit = (next: CalendarDate | null) => {
+    if (value === undefined) setUncontrolled(next);
+    onChange?.(next);
   };
+
+  const state = useDateFieldState({
+    locale,
+    value: selected,
+    ...optional("placeholderValue", placeholderValue),
+    onChange: (next) => {
+      commit((next as CalendarDate | null) ?? null);
+    },
+    ...optional("isDisabled", isDisabled),
+    ...optional("isReadOnly", isReadOnly),
+  });
+
+  const labelId = useId();
+  const descriptionId = useId();
+  const errorId = useId();
+  const invalid = isInvalid ?? (errorMessage != null ? true : undefined);
+  const inputRef = useRef<DateInputHandle>(null);
+
+  const describedBy =
+    [description != null ? descriptionId : null, errorMessage != null ? errorId : null]
+      .filter((id): id is string => id != null)
+      .join(" ") || undefined;
+
   return (
-    <AriaDatePicker
+    <Field.Root
       data-lumo=""
       className={cn(fieldVariants(), className)}
-      {...optional("isInvalid", isInvalid ?? (errorMessage != null ? true : undefined))}
-      {...bounds}
-      {...props}
+      {...attr("disabled", isDisabled)}
+      {...attr("invalid", invalid)}
     >
-      <Label>{label}</Label>
+      <Field.Label
+        id={labelId}
+        nativeLabel={false}
+        render={<span />}
+        className={labelVariants()}
+        onClick={() => {
+          inputRef.current?.focus();
+        }}
+      >
+        {label}
+      </Field.Label>
+
       {/*
-       * `Group` and not a plain div: RAC gives it role="group" plus the
-       * disabled/invalid state for the segments and the trigger as one unit,
-       * and it is the element that emits data-hovered and data-focus-within —
-       * which DateInput, measurably, does not.
+       * A plain element, not React Aria's `<Group>`. RAC's Group was carried
+       * for its `data-hovered`/`data-focus-within`; without it the browser's own
+       * pseudo-classes do the same job, which is what `calendar.variants.ts`
+       * now says on `datePickerGroupVariants`.
        */}
-      <AriaGroup className={datePickerGroupVariants({ size })}>
-        <AriaDateInput className="flex flex-1 items-center">{renderSegment}</AriaDateInput>
-        <AriaButton aria-label={openCalendarLabel} className={datePickerTriggerVariants()}>
-          <CalendarIcon aria-hidden="true" />
-        </AriaButton>
-      </AriaGroup>
-      {description != null ? <Description>{description}</Description> : null}
-      {/* Only when authored — see `DateBounds`. An empty FieldError is English. */}
-      {errorMessage != null ? <FieldError>{errorMessage}</FieldError> : null}
-      <AriaPopover placement="bottom start" className={cn(popoverVariants({ padded: true }))}>
-        <AriaDialog className="outline-none">
-          <AriaCalendar className={calendarVariants()}>
-            <CalendarHeader
-              previousMonthLabel={previousMonthLabel}
-              nextMonthLabel={nextMonthLabel}
+      <div
+        className={datePickerGroupVariants({ size })}
+        {...(invalid === true ? { "data-invalid": "" } : {})}
+        {...(isDisabled === true ? { "data-disabled": "" } : {})}
+      >
+        <DateInput
+          ref={inputRef}
+          bare
+          state={state}
+          locale={locale}
+          labelId={labelId}
+          {...optional("describedBy", describedBy)}
+          {...optional("isDisabled", isDisabled)}
+          {...optional("isReadOnly", isReadOnly)}
+          {...optional("isInvalid", invalid)}
+        />
+        <PopoverTrigger>
+          <button
+            type="button"
+            data-lumo=""
+            aria-label={openCalendarLabel}
+            {...(isDisabled === true ? { disabled: true } : {})}
+            className={datePickerTriggerVariants()}
+          >
+            <CalendarIcon aria-hidden="true" />
+          </button>
+          <Popover placement="bottom start" padded>
+            <Calendar
+              label={label}
+              locale={locale}
+              {...optional("value", selected ?? undefined)}
+              {...optional("defaultMonth", selected ?? placeholderValue)}
+              {...optional("minValue", minValue)}
+              {...optional("maxValue", maxValue)}
+              {...optional("isDateUnavailable", isDateUnavailable)}
+              onChange={(next) => {
+                commit(next ?? null);
+              }}
             />
-            <AriaCalendarGrid className={calendarGridVariants()}>
-              <AriaCalendarGridHeader>{renderPickerHeaderCell}</AriaCalendarGridHeader>
-              <AriaCalendarGridBody>{renderPickerCell}</AriaCalendarGridBody>
-            </AriaCalendarGrid>
-          </AriaCalendar>
-        </AriaDialog>
-      </AriaPopover>
-    </AriaDatePicker>
+          </Popover>
+        </PopoverTrigger>
+      </div>
+
+      {description != null ? (
+        <Field.Description id={descriptionId} className={descriptionVariants()}>
+          {description}
+        </Field.Description>
+      ) : null}
+
+      {errorMessage != null ? (
+        <div id={errorId} className={fieldErrorVariants()}>
+          {errorMessage}
+        </div>
+      ) : null}
+    </Field.Root>
   );
-}
-
-/**
- * The weekday row and the day cells inside a picker's panel.
- *
- * Exported so `date-range-picker.tsx` uses the same two functions: a range
- * picker whose cells were built from a second copy of this markup is a range
- * picker whose cells will eventually differ from a single picker's.
- */
-export function renderPickerHeaderCell(day: string) {
-  return <AriaCalendarHeaderCell className={calendarHeaderCellVariants()}>{day}</AriaCalendarHeaderCell>;
-}
-
-/** No `children`. See `calendar.tsx`'s `renderCell`. */
-export function renderPickerCell(date: AriaCalendarCellProps["date"]) {
-  return <AriaCalendarCell data-lumo="" date={date} className={calendarCellVariants()} />;
 }

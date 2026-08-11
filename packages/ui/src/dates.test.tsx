@@ -76,9 +76,44 @@ function announcedEnglish(html: string): string[] {
 const persianCalendar = () => new PersianCalendar();
 const jalali = (y: number, m: number, d: number) => new CalendarDate(persianCalendar(), y, m, d);
 
-/** Day cells, as rendered text, excluding the header row. */
+/**
+ * Day cells, as rendered text, excluding the header row.
+ *
+ * `role="gridcell"` and no longer `role="button"`: react-day-picker renders the
+ * day as a `<td role="gridcell">` with a `<button>` inside it, where React Aria
+ * put the role on the pressable element itself. The text is on the button, so
+ * the match reaches through one tag.
+ */
 function dayCells(html: string): string[] {
-  return [...html.matchAll(/role="button"[^>]*>([^<]*)</g)].map((m) => m[1]!);
+  /*
+   * Split on the tag rather than matching one regex across it: the day cell's
+   * class string is long enough that a single pattern with two `[^>]*` groups
+   * around `role="gridcell"` is easy to get subtly wrong, and a regex that
+   * silently matches nothing turns this file's headline assertion — "no Latin
+   * digit in any cell" — vacuously green.
+   *
+   * `data-hidden` cells are empty `<td>`s react-day-picker renders to keep the
+   * grid rectangular. They carry no text by design, so counting them would fail
+   * the emptiness assertion on a fact about layout rather than about digits.
+   */
+  return html
+    .split("<td")
+    .slice(1)
+    // `data-hidden="` with the quote, not the bare substring: the cell's own
+    // class string contains `data-hidden:invisible`, a Tailwind variant, so a
+    // plain `includes("data-hidden")` matches EVERY cell and filters the whole
+    // grid away — which turns this file's headline assertion vacuously green.
+    .filter((chunk) => chunk.includes('role="gridcell"') && !chunk.includes('data-hidden="'))
+    .map((chunk) => {
+      const body = chunk.slice(chunk.indexOf(">") + 1);
+      const text = body.replace(/<[^>]*>/g, "");
+      return text.slice(0, text.indexOf("</td") === -1 ? undefined : text.indexOf("</td"));
+    });
+}
+
+/** The month/year caption. A `<span role="status">` under react-day-picker. */
+function caption(container: HTMLElement): string {
+  return container.querySelector('[role="status"]')?.textContent ?? "";
 }
 
 function segmentText(container: HTMLElement): string {
@@ -91,11 +126,26 @@ function segment(container: HTMLElement, type: string): HTMLElement {
   return el as HTMLElement;
 }
 
+/*
+ * The labels each surface still requires.
+ *
+ * `previousMonthLabel`/`nextMonthLabel` are GONE: react-day-picker composes the
+ * nav buttons' names through `labels`, which `calendar-datelib.ts` supplies per
+ * locale. They were props only because React Aria's equivalents were reachable
+ * no other way. `locale` is now required and explicit, because there is no
+ * `I18nProvider` to read it from.
+ */
+const CAL = { label: "تاریخ سفر", locale: "fa-IR" } as const;
+
 const LABELS = {
   label: "تاریخ سفر",
-  previousMonthLabel: "ماه قبل",
-  nextMonthLabel: "ماه بعد",
   openCalendarLabel: "باز کردن تقویم",
+} as const;
+
+const RANGE_LABELS = {
+  ...LABELS,
+  startLabel: "تاریخ شروع",
+  endLabel: "تاریخ پایان",
 } as const;
 
 /* ══════════════════════════════════════════════════════════════════════════ */
@@ -238,19 +288,29 @@ describe("segment entry across month boundaries", () => {
     // month must grow from 30 cells to 31, which is the Jalali shape rather
     // than the Gregorian one.
     const { container } = live(
-      <Calendar {...LABELS} defaultValue={jalali(1403, 12, 1)} />,
+      <Calendar {...CAL} defaultMonth={jalali(1403, 12, 1)} />,
     );
+    /*
+     * `data-outside` and not `data-outside-month`, `role="gridcell"` and not
+     * `role="button"`. Both are react-day-picker's spellings, read out of
+     * `DayPicker.js` rather than off the docs — its attribute set is smaller
+     * than React Aria's, and these are two of the three renames it forced.
+     * `data-hidden` days are rendered but not shown, so they are excluded too.
+     */
     const inMonth = () =>
-      [...container.querySelectorAll('[role="button"]')].filter(
-        (el) => !el.hasAttribute("data-outside-month"),
+      [...container.querySelectorAll('[role="gridcell"]')].filter(
+        (el) => !el.hasAttribute("data-outside") && !el.hasAttribute("data-hidden"),
       ).length;
 
-    expect(container.querySelector("h2")?.textContent).toContain("اسفند");
+    expect(caption(container as HTMLElement)).toContain("اسفند");
     expect(inMonth()).toBe(30);
 
-    fireEvent.click(container.querySelector('[slot="next"]') as HTMLElement);
+    // Named, not slotted: the nav buttons' names come from `labels` in
+    // `calendar-datelib.ts`, which is the whole reason the react-aria patch
+    // could be deleted.
+    fireEvent.click(container.querySelector('button[aria-label="ماه بعد"]') as HTMLElement);
 
-    const heading = container.querySelector("h2")?.textContent ?? "";
+    const heading = caption(container as HTMLElement);
     expect(heading).toContain("فروردین");
     expect(heading).toContain(formatNumber(1404, "fa-IR", { useGrouping: false }));
     expect(inMonth()).toBe(31);
@@ -287,18 +347,18 @@ describe("today is derived from the persian calendar, not from Gregorian", () =>
     const gregorianToday = today(getLocalTimeZone());
     const jalaliToday = toCalendar(gregorianToday, persianCalendar());
 
-    const { container } = live(<Calendar {...LABELS} />);
+    const { container } = live(<Calendar {...CAL} />);
     const todayCell = container.querySelector("[data-today]");
     expect(todayCell).not.toBeNull();
     expect(todayCell?.textContent).toBe(formatNumber(jalaliToday.day, "fa-IR"));
 
-    const heading = container.querySelector("h2")?.textContent ?? "";
+    const heading = caption(container as HTMLElement);
     expect(heading).toContain(formatNumber(jalaliToday.year, "fa-IR", { useGrouping: false }));
     expect(jalaliToday.year).not.toBe(gregorianToday.year);
   });
 
   it("the today cell announces itself in Persian, starting with «امروز»", () => {
-    const html = ssr(<Calendar {...LABELS} />);
+    const html = ssr(<Calendar {...CAL} />);
     const todayLabel = html.match(/aria-label="(امروز[^"]*)"/)?.[1];
     expect(todayLabel, "no Persian today-label found").toBeDefined();
     expect(todayLabel).not.toMatch(LATIN_WORD);
@@ -324,7 +384,7 @@ describe("every visible digit is ارقام فارسی", () => {
      *
      * Mordad 1405 begins on a Friday and has 31 days, so its grid is six rows.
      */
-    const html = ssr(<Calendar {...LABELS} defaultValue={jalali(1405, 5, 1)} />);
+    const html = ssr(<Calendar {...CAL} defaultMonth={jalali(1405, 5, 1)} />);
     const cells = dayCells(html);
     // A month grid is 7 columns × 5 or 6 rows; the emptiness assertion below is
     // the point, and this bound is what stops it passing on an empty grid.
@@ -336,8 +396,8 @@ describe("every visible digit is ارقام فارسی", () => {
   it("no range-calendar cell contains a Latin digit either", () => {
     const html = ssr(
       <RangeCalendar
-        {...LABELS}
-        defaultValue={{ start: jalali(1405, 5, 10), end: jalali(1405, 5, 15) }}
+        {...CAL}
+        value={{ from: jalali(1405, 5, 10), to: jalali(1405, 5, 15) }}
       />,
     );
     const cells = dayCells(html);
@@ -363,7 +423,7 @@ describe("every visible digit is ارقام فارسی", () => {
   });
 
   it("the weekday header row is the Persian week, starting on شنبه", () => {
-    const html = ssr(<Calendar {...LABELS} />);
+    const html = ssr(<Calendar {...CAL} />);
     const headers = [...html.matchAll(/<th[^>]*>([^<]*)<\/th>/g)].map((m) => m[1]);
     expect(headers).toEqual(["ش", "ی", "د", "س", "چ", "پ", "ج"]);
   });
@@ -378,12 +438,12 @@ describe("no component in the family announces English", () => {
    * real `fa-IR` bundle.
    */
   const cases: [string, React.ReactElement][] = [
-    ["Calendar", <Calendar {...LABELS} />],
-    ["RangeCalendar", <RangeCalendar {...LABELS} />],
+    ["Calendar", <Calendar {...CAL} />],
+    ["RangeCalendar", <RangeCalendar {...CAL} />],
     ["DateField", <DateField label="تاریخ" />],
     ["TimeField", <TimeField label="ساعت" />],
     ["DatePicker", <DatePicker {...LABELS} />],
-    ["DateRangePicker", <DateRangePicker {...LABELS} />],
+    ["DateRangePicker", <DateRangePicker {...RANGE_LABELS} />],
   ];
 
   for (const [name, element] of cases) {
@@ -414,12 +474,12 @@ describe("no component in the family announces English", () => {
    * is exactly the kind of thing a version bump moves.
    */
   const described: [string, React.ReactElement][] = [
-    ["Calendar", <Calendar {...LABELS} description="راهنمای تقویم" />],
-    ["RangeCalendar", <RangeCalendar {...LABELS} description="راهنمای بازه" />],
+    ["Calendar", <Calendar {...CAL} description="راهنمای تقویم" />],
+    ["RangeCalendar", <RangeCalendar {...CAL} description="راهنمای بازه" />],
     ["DateField", <DateField label="تاریخ" description="راهنمای فیلد" />],
     ["TimeField", <TimeField label="ساعت" description="راهنمای ساعت" />],
     ["DatePicker", <DatePicker {...LABELS} description="راهنمای انتخابگر" />],
-    ["DateRangePicker", <DateRangePicker {...LABELS} description="راهنمای بازه" />],
+    ["DateRangePicker", <DateRangePicker {...RANGE_LABELS} description="راهنمای بازه" />],
   ];
 
   for (const [name, element] of described) {
@@ -460,10 +520,33 @@ describe("no component in the family announces English", () => {
   });
 
   it("both halves of a range picker say which half they are, in Persian", () => {
-    const html = ssr(<DateRangePicker {...LABELS} />);
-    const labels = [...html.matchAll(/aria-label="([^"]*)"/g)].map((m) => m[1]!);
-    expect(labels.filter((l) => l.includes("تاریخ شروع"))).toHaveLength(3);
-    expect(labels.filter((l) => l.includes("تاریخ پایان"))).toHaveLength(3);
+    /*
+     * ── THE MECHANISM CHANGED, THE GUARANTEE DID NOT ────────────────────────
+     *
+     * React Aria concatenated the half into every segment's own name — «سال,
+     * تاریخ شروع», six times — from its patched `datepicker` bundle, which was
+     * the only route to it. Here each half is a `role="group"` named by its own
+     * element, so a screen reader announces «سال» inside a group called «تاریخ
+     * شروع»: the same fact, delivered by structure instead of by string
+     * concatenation, and reachable from a prop.
+     *
+     * What is asserted is therefore the STRUCTURE and that the idrefs RESOLVE —
+     * `resolved-idrefs` in `lumo-gate` fails the build on a dangling one, and a
+     * group pointing at nothing is announced as "group" and nothing else.
+     */
+    const html = ssr(<DateRangePicker {...RANGE_LABELS} />);
+    const groups = [...html.matchAll(/role="group"[^>]*aria-labelledby="([^"]*)"/g)].map(
+      (m) => m[1]!,
+    );
+    expect(groups.length).toBeGreaterThanOrEqual(2);
+
+    const textOf = (id: string) =>
+      html.match(new RegExp(`id="${id}"[^>]*>([^<]*)<`))?.[1] ?? "";
+    const named = groups.map(textOf);
+    expect(named).toContain("تاریخ شروع");
+    expect(named).toContain("تاریخ پایان");
+    // Every one of them resolves. An empty string here is a dangling idref.
+    expect(named.filter((n) => n.trim() === "")).toEqual([]);
   });
 });
 
@@ -584,7 +667,6 @@ describe("the English no patch can reach, pinned in both directions", () => {
           minValue={jalali(1405, 6, 1)}
           value={jalali(1405, 1, 1)}
           errorMessage="تاریخ باید از ۱ شهریور ۱۴۰۵ پس‌تر باشد."
-          validationBehavior="aria"
         />
       </AriaForm>,
     );
@@ -598,11 +680,10 @@ describe("the English no patch can reach, pinned in both directions", () => {
     const { container } = live(
       <AriaForm validationBehavior="aria">
         <DateRangePicker
-          {...LABELS}
+          {...RANGE_LABELS}
           minValue={jalali(1405, 1, 1)}
-          value={{ start: jalali(1405, 6, 10), end: jalali(1405, 6, 1) }}
+          value={{ from: jalali(1405, 6, 10), to: jalali(1405, 6, 1) }}
           errorMessage="تاریخ پایان نمی‌تواند پیش از تاریخ شروع باشد."
-          validationBehavior="aria"
         />
       </AriaForm>,
     );
