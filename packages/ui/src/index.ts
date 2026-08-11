@@ -1060,6 +1060,31 @@ export type { DateRangePickerProps } from "./date-range-picker.tsx";
 export { RangeCalendar } from "./range-calendar.tsx";
 export type { CalendarDateRange, RangeCalendarProps } from "./range-calendar.tsx";
 
+/*
+ * The preset-driven range picker. `resolveDateRangePreset` and `todayIn` are
+ * exported beside the component because the arithmetic is the valuable half and
+ * has no React in it: a server route that must run the same «این ماه» its
+ * dashboard displays should call this function rather than grow a second
+ * implementation that agrees today and drifts in Esfand.
+ */
+export { DateSelector, resolveDateRangePreset, todayIn } from "./date-selector.tsx";
+export type {
+  DateRangeRule,
+  DateSelectorPreset,
+  DateSelectorProps,
+} from "./date-selector.tsx";
+
+/* Directive-free module, direct — same rule as the date family above. */
+export {
+  dateSelectorPanelVariants,
+  dateSelectorPlaceholderVariants,
+  dateSelectorPresetListVariants,
+  dateSelectorPresetVariants,
+  dateSelectorTriggerVariants,
+  dateSelectorValueVariants,
+} from "./date-selector.variants.ts";
+export type { DateSelectorTriggerVariantProps } from "./date-selector.variants.ts";
+
 export { TimeField } from "./time-field.tsx";
 export type { TimeFieldProps } from "./time-field.tsx";
 

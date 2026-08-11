@@ -2287,3 +2287,104 @@ export function VirtualListIsland({
     </VirtualList>
   );
 }
+
+/* ────────────────────────────────────────────────────────────── date-selector ─ */
+
+/*
+ * Appended by the date-selector batch, under the same append-only contract as
+ * every block above: `useState` and `Locale` are already bound at the top of
+ * this file, so only the genuinely new names are imported here — re-importing a
+ * bound one is a duplicate-binding error rather than a shadow.
+ *
+ * `DateSelector` cannot be demonstrated from a server module for two reasons,
+ * and only one of them is the usual one:
+ *
+ *  - `formatRange` is a required FUNCTION. It is a function rather than a
+ *    template because a range read-out is the bidi trap `data-grid.tsx`
+ *    documents at length — two Arabic-number runs with a neutral between them
+ *    take the paragraph's direction and can render with their ends swapped —
+ *    so the whole sentence belongs to the author, who can reach for the word
+ *    «تا» instead of a dash. React refuses to serialise a function into the RSC
+ *    payload, so the closure is built on this side.
+ *  - The selector OWNS a range and shows it in its own trigger. A demo with no
+ *    state would show the placeholder forever and prove nothing about the one
+ *    thing the component is for.
+ *
+ * What does NOT need an island is the preset list. A `DateRangeRule` is plain
+ * data — `{ kind: "thisMonth" }` — precisely so a server component can build
+ * the array, and the labels beside it are ordinary strings. So the `presets`
+ * prop below is passed straight through from the examples module, in both
+ * locales, and no copy is authored in this file.
+ */
+import { DateSelector, type CalendarDateRange, type DateSelectorPreset } from "@lumo-ui/ui";
+
+/**
+ * NO `locale` PROP, and that is the one thing worth noticing here.
+ *
+ * Every other island in this file takes one, because it formats a number or
+ * builds a queue. `DateSelector` reads `LumoLocaleContext` instead — the
+ * context `locale.ts` exists to provide, set once by the page's provider — so
+ * passing a locale beside it would be a SECOND lever that can disagree with the
+ * first. That is the exact failure `locale.ts`'s header records against Base
+ * UI's own per-component `locale` prop sitting beside a global
+ * `DirectionProvider`.
+ */
+export interface DateSelectorIslandProps {
+  /** Names the whole control; rendered `sr-only` inside the trigger. */
+  label: string;
+  /** Names the popover dialog. */
+  panelLabel: string;
+  /** Names the list of preset buttons. */
+  presetsLabel: string;
+  /** Names the range grid. */
+  calendarLabel: string;
+  /** The trigger's read-out before anything is chosen. */
+  placeholder: string;
+  /**
+   * The WORD between the two ends — «تا», "to". A word rather than a dash on
+   * purpose: a neutral character between two Arabic-number runs resolves under
+   * the paragraph's direction and can flip the range. See the block above.
+   */
+  joinWord: string;
+  /** Plain data all the way down, so the whole list crosses the boundary. */
+  presets: readonly DateSelectorPreset[];
+  size?: "sm" | "md" | "lg" | undefined;
+  isDisabled?: boolean | undefined;
+}
+
+/**
+ * A working selector. The range it holds is the reader's, not the page's.
+ *
+ * No `defaultValue`: a prerendered read-out would have to be computed from
+ * `today()`, which is a different day on a build machine than in a reader's
+ * browser, and the mismatch would show as the trigger's text changing on
+ * hydration. The placeholder is stable in every byte.
+ */
+export function DateSelectorIsland({
+  label,
+  panelLabel,
+  presetsLabel,
+  calendarLabel,
+  placeholder,
+  joinWord,
+  presets,
+  size,
+  isDisabled,
+}: DateSelectorIslandProps) {
+  const [range, setRange] = useState<CalendarDateRange | null>(null);
+  return (
+    <DateSelector
+      label={label}
+      panelLabel={panelLabel}
+      presetsLabel={presetsLabel}
+      calendarLabel={calendarLabel}
+      placeholder={placeholder}
+      presets={presets}
+      value={range}
+      onChange={setRange}
+      formatRange={(from, to) => (to === undefined ? from : `${from} ${joinWord} ${to}`)}
+      {...(size === undefined ? {} : { size })}
+      {...(isDisabled === undefined ? {} : { isDisabled })}
+    />
+  );
+}

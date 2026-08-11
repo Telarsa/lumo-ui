@@ -94,10 +94,6 @@ catalogs:
       specifier: ^4.1.10
       version: 4.1.10
 
-patchedDependencies:
-  react-aria-components@1.20.0: 5c3e44613bd0dc3fdce3c25a2b0a8e2ec85f2ebc1b027cdfc19779e24bf534bc
-  react-aria@3.51.0: 299571dff3d40f171873d669d9c0e5bb7ab8bbef8fd37100c4383358f18be642
-
 importers:
 
   .:
@@ -339,7 +335,7 @@ importers:
         version: 1.30.0(react@19.2.8)
       react-aria-components:
         specifier: 'catalog:'
-        version: 1.20.0(patch_hash=5c3e44613bd0dc3fdce3c25a2b0a8e2ec85f2ebc1b027cdfc19779e24bf534bc)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 1.20.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react-day-picker:
         specifier: 'catalog:'
         version: 10.0.1(@types/react@19.2.18)(react@19.2.8)
@@ -3296,7 +3292,7 @@ snapshots:
 
   punycode@2.3.1: {}
 
-  react-aria-components@1.20.0(patch_hash=5c3e44613bd0dc3fdce3c25a2b0a8e2ec85f2ebc1b027cdfc19779e24bf534bc)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-aria-components@1.20.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@internationalized/date': 3.12.3
       '@internationalized/string': 3.2.10
@@ -3304,11 +3300,11 @@ snapshots:
       '@swc/helpers': 0.5.23
       client-only: 0.0.1
       react: 19.2.8
-      react-aria: 3.51.0(patch_hash=299571dff3d40f171873d669d9c0e5bb7ab8bbef8fd37100c4383358f18be642)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-aria: 3.51.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       react-dom: 19.2.8(react@19.2.8)
       react-stately: 3.49.0(react@19.2.8)
 
-  react-aria@3.51.0(patch_hash=299571dff3d40f171873d669d9c0e5bb7ab8bbef8fd37100c4383358f18be642)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+  react-aria@3.51.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
     dependencies:
       '@internationalized/date': 3.12.3
       '@internationalized/number': 3.6.7

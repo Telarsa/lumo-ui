@@ -626,6 +626,45 @@
       ]
     },
     {
+      "name": "date-selector",
+      "type": "registry:ui",
+      "title": "Date Selector",
+      "description": "The control in a dashboard's corner: named ranges beside a range grid.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@internationalized/date",
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "popover",
+        "range-calendar"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/date-selector.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-selector.tsx"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
+        },
+        {
+          "path": "packages/ui/src/date-selector.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-selector.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        }
+      ]
+    },
+    {
       "name": "description-list",
       "type": "registry:ui",
       "title": "Description List",
@@ -1023,6 +1062,7 @@
         "react-aria-components"
       ],
       "registryDependencies": [
+        "autocomplete",
         "form"
       ],
       "files": [
@@ -1030,6 +1070,11 @@
           "path": "packages/ui/src/list-box.tsx",
           "type": "registry:ui",
           "target": "components/ui/list-box.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -2057,6 +2102,11 @@
           "path": "packages/ui/src/tree.tsx",
           "type": "registry:ui",
           "target": "components/ui/tree.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         },
         {
           "path": "packages/ui/src/tree.variants.ts",

@@ -1,60 +1,28 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { Slider, SliderThumb, SliderTrack } from "react-aria-components";
 import { useDirection } from "@base-ui/react/direction-provider";
 import { LumoProvider } from "./provider.tsx";
 
 /**
  * The defect this file pins is invisible to every other gate in the repo.
  *
- * React Aria resolves its locale from `useDefaultLocale()`, which reads
- * `navigator.language` and falls back to `'en-US'`. During server rendering
- * there is no `navigator`, so every React Aria component renders `en-US`/`ltr`
- * no matter what `<html lang dir>` says — and the result is valid HTML with
- * plausible inline styles, so `lumo-gate` (which grades attributes and text)
- * cannot see it.
+ * An engine that resolves its own locale from the BROWSER renders `ltr` on a
+ * server, whatever `<html lang dir>` says — and the result is valid HTML with
+ * plausible inline geometry, so `lumo-gate`, which grades attributes and text,
+ * cannot see it. The site shipped that way for a day: a slider thumb at value
+ * 40 sat at `left: 40%` instead of `left: 60%`, the mirror image of where it
+ * belongs, on every Persian page.
  *
- * The site shipped without a provider for a day. A slider thumb at value 40 sat
- * at `left: 40%` instead of `left: 60%`: the mirror image of where it belongs,
- * on every Persian page.
+ * That was React Aria reading `navigator.language` with no `navigator` present.
+ * Those assertions lived here until 12 Aug 2026 and were removed with the
+ * engine — `provider.tsx`'s header keeps the measurement, because the SHAPE of
+ * the defect outlives the library that had it and Base UI's own
+ * `DirectionProvider` defaults to `ltr` for the same class of reason.
+ *
+ * What remains is the guarantee that survived the migration: one prop in,
+ * direction DERIVED, and no second lever that can disagree with it.
  */
 
-const thumb = (
-  <Slider aria-label="قیمت" defaultValue={40}>
-    <SliderTrack>
-      <SliderThumb />
-    </SliderTrack>
-  </Slider>
-);
-
-/** The inline offset React Aria computes for the thumb. */
-function offset(html: string): string {
-  return (html.match(/(?:left|right|inset-inline-start)\s*:\s*[\d.]+%/) ?? ["(none)"])[0];
-}
-
-describe("LumoProvider — direction reaches React Aria's own geometry", () => {
-  it("without a provider, React Aria measures from the LTR edge", () => {
-    // Not an aspiration — this is what shipped, and it is why the provider is a
-    // required component rather than a documented convention.
-    expect(offset(renderToStaticMarkup(thumb))).toBe("left:40%");
-  });
-
-  it("with LumoProvider fa-IR, it measures from the RTL edge", () => {
-    const html = renderToStaticMarkup(<LumoProvider locale="fa-IR">{thumb}</LumoProvider>);
-    expect(offset(html)).toBe("left:60%");
-  });
-
-  it("en-US is unchanged, so the provider is not a Persian-only patch", () => {
-    const html = renderToStaticMarkup(<LumoProvider locale="en-US">{thumb}</LumoProvider>);
-    expect(offset(html)).toBe("left:40%");
-  });
-
-  it("the two locales genuinely differ (guards a vacuous pass)", () => {
-    const fa = offset(renderToStaticMarkup(<LumoProvider locale="fa-IR">{thumb}</LumoProvider>));
-    const en = offset(renderToStaticMarkup(<LumoProvider locale="en-US">{thumb}</LumoProvider>));
-    expect(fa).not.toBe(en);
-  });
-});
 
 /* ════════════════════════════════════════════════════════════════════════════
  * THE BASE UI HALF
@@ -122,16 +90,23 @@ describe("LumoProvider — direction reaches Base UI, derived from the locale", 
     expect(fa).not.toBe(en);
   });
 
-  it("direction and locale cannot disagree: both halves see the same locale", () => {
-    // The point of the rework. One prop in, and the RAC geometry and the Base UI
-    // direction are two views of it — there is no second lever to set wrong.
+  it("derives direction from the locale, with no second lever to set wrong", () => {
+    /*
+     * This used to render a React Aria Slider BESIDE the direction probe and
+     * assert both halves agreed — the point being that one prop fed two
+     * engines. There is no second engine now: `list-box` and `tree` were the
+     * last components reading RAC's locale, so `LumoProvider` stopped rendering
+     * `<I18nProvider>` on 12 Aug 2026 and the assertion has one half left.
+     *
+     * What it still guards is the thing that mattered: direction is DERIVED,
+     * so there is nothing to set inconsistently. The test below pins that
+     * `direction` is not a prop and must never become one.
+     */
     const html = renderToStaticMarkup(
       <LumoProvider locale="fa-IR">
-        {thumb}
         <DirectionProbe />
       </LumoProvider>,
     );
-    expect(offset(html)).toBe("left:60%");
     expect(probeDirection(html)).toBe("rtl");
   });
 

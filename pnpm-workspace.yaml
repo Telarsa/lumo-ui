@@ -264,6 +264,3 @@ catalog:
   # `shadcn migrate rtl` cannot change its rewrite table under us between runs.
   shadcn: 4.16.2
 
-patchedDependencies:
-  react-aria-components@1.20.0: patches/react-aria-components@1.20.0.patch
-  react-aria@3.51.0: patches/react-aria@3.51.0.patch

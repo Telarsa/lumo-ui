@@ -1,6 +1,3 @@
-import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -547,58 +544,6 @@ describe("no component in the family announces English", () => {
     expect(named).toContain("تاریخ پایان");
     // Every one of them resolves. An empty string here is a dangling idref.
     expect(named.filter((n) => n.trim() === "")).toEqual([]);
-  });
-});
-
-describe("the patched bundles have not silently lost a key", () => {
-  /**
-   * `pnpm patch` fails loudly when an upstream file changes SHAPE. It says
-   * nothing when upstream adds a key the fa-IR bundle does not have — the
-   * patch still applies, the component still renders, and exactly one string
-   * comes back in English. This is the check for that.
-   */
-  /*
-   * Resolved off disk rather than imported by specifier: the bundles live under
-   * `dist/private`, which react-aria's `exports` map does not publish — the
-   * patch reaches them because pnpm rewrites the installed files, not because
-   * they are importable names. Asking the resolver for `package.json` (which IS
-   * exported) and walking from there is how a test reads a patched artefact
-   * without pretending it is a public entry point.
-   */
-  const require = createRequire(import.meta.url);
-  const intlRoot = join(dirname(require.resolve("react-aria/package.json")), "dist/private/intl");
-  const load = async (dir: string, locale: string) =>
-    (await import(pathToFileURL(join(intlRoot, dir, `${locale}.mjs`)).href)).default as Record<
-      string,
-      unknown
-    >;
-
-  for (const dir of ["calendar", "datepicker", "spinbutton"]) {
-    it(`react-aria's ${dir} bundle has fa-IR parity with en-US`, async () => {
-      const fa = await load(dir, "fa-IR");
-      const en = await load(dir, "en-US");
-      expect(Object.keys(fa).sort()).toEqual(Object.keys(en).sort());
-      expect(Object.keys(fa).length).toBeGreaterThan(0);
-      const stillEnglish = Object.entries(fa).filter(
-        ([, v]) => typeof v === "string" && LATIN_WORD.test(v),
-      );
-      expect(stillEnglish).toEqual([]);
-    });
-  }
-
-  it("react-aria-components' own bundle has fa-IR parity too", async () => {
-    const racRoot = join(
-      dirname(require.resolve("react-aria-components/package.json")),
-      "dist/private/intl",
-    );
-    const read = async (locale: string) =>
-      (await import(pathToFileURL(join(racRoot, `${locale}.mjs`)).href)).default as Record<
-        string,
-        unknown
-      >;
-    expect(Object.keys(await read("fa-IR")).sort()).toEqual(
-      Object.keys(await read("en-US")).sort(),
-    );
   });
 });
 
