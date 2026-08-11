@@ -808,6 +808,14 @@ export type {
 } from "./message.tsx";
 
 export {
+  MessageScroller,
+  messageScrollerJumpVariants,
+  messageScrollerVariants,
+  messageScrollerViewportVariants,
+} from "./message-scroller.tsx";
+export type { MessageScrollerProps } from "./message-scroller.tsx";
+
+export {
   NativeSelect,
   NativeSelectOptGroup,
   NativeSelectOption,
