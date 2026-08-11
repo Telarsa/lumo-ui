@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { Chart as TanstackChart } from "@tanstack/charts/react";
-import { defineChart } from "@tanstack/charts";
+import { defineChart as defineChartBase } from "@tanstack/charts";
+import { focusGroupX } from "@tanstack/charts/focus";
 import { tooltip as tooltipExtension } from "@tanstack/charts/tooltip";
 import { barY } from "@tanstack/charts/bar";
 import { lineY } from "@tanstack/charts/line";
@@ -560,4 +561,65 @@ export function ChartLegend({
  * THE DEFINITION BUILDER
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export { defineChart };
+/**
+ * `defineChart`, with the hit-testing a reader actually expects.
+ *
+ * ── THE DEFECT, WHICH IS A DEFAULT RATHER THAN A BUG ────────────────────────
+ *
+ * TanStack hit-tests the pointer by NEAREST POINT, radially, capped at
+ * `maxFocusDistance ?? 48` pixels (`renderer.js:764`). So a tooltip appears only
+ * within 48px of an actual datum and vanishes the moment the pointer drifts off
+ * the line vertically. On a tall plot with a shallow series that is most of the
+ * chart area, and it reads as the tooltip being broken rather than as a
+ * configured radius.
+ *
+ * recharts — which this library used until 11 Aug 2026 — does something
+ * different: it bisects the x scale across the whole plot band, so anywhere in
+ * a column is live and every series at that x is reported together. That is
+ * what a reader who has used any dashboard expects, and losing it was a
+ * regression the chart migration introduced silently.
+ *
+ * ── THE FIX IS UPSTREAM'S OWN, IT WAS JUST NEVER TURNED ON ──────────────────
+ *
+ * `focusGroupX` (`@tanstack/charts/focus`) measures distance on the X AXIS
+ * ONLY — `Math.abs(point.x - target)`, y ignored entirely — and groups every
+ * series sharing that x. That IS recharts' shared-tooltip behaviour, expressed
+ * as a strategy object. Pairing it with `maxFocusDistance: Infinity` makes the
+ * whole plot band live, which is the other half of what a band-based hit test
+ * means.
+ *
+ * ── WHY THIS IS A DEFAULT AND NOT DOCUMENTATION ─────────────────────────────
+ *
+ * Same argument `lumoTableFeatures` makes about TanStack Table's opt-in
+ * features: a caller who forgets gets degraded behaviour with NO error, and
+ * "remember to pass focus" is a rule that is followed on the first chart and
+ * forgotten on the fourth. Both remain ordinary options — pass `focus` or
+ * `maxFocusDistance` explicitly and yours wins, because the spread is last.
+ *
+ * `focusGroupX` and not `focusNearestX`: grouped reports every series at that
+ * x, which is the whole value of a shared tooltip on a multi-series chart. The
+ * ungrouped variant exists for the single-series case and is one prop away.
+ *
+ * ── THE SIGNATURE IS BORROWED, NOT RESTATED ────────────────────────────────
+ *
+ * `defineChart` carries FIVE overloads — static and responsive, with and
+ * without a config object. Typing the wrapper as
+ * `Parameters<typeof defineChartBase>[0]` selects only the LAST of them, and
+ * the first attempt did exactly that: every responsive chart in the library
+ * stopped compiling because `marks` is not a property of the overload it had
+ * collapsed to.
+ *
+ * So the whole signature is borrowed with a cast, for the same reason
+ * `useLumoForm` borrows `typeof useForm`: restating an overload set badly is
+ * worse than not restating it, because the failure is a caller silently losing
+ * the shape they were using. The body genuinely produces what `defineChart`
+ * produces, with two defaults merged in ahead of the caller's own.
+ */
+export const defineChart = ((definition: Record<string, unknown>) =>
+  (defineChartBase as (d: unknown) => unknown)({
+    focus: focusGroupX,
+    // A band hit test has no radius; 48px would re-impose one on the axis the
+    // strategy above deliberately stopped measuring.
+    maxFocusDistance: Number.POSITIVE_INFINITY,
+    ...definition,
+  })) as unknown as typeof defineChartBase;

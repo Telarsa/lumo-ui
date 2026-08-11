@@ -426,3 +426,80 @@ first component costs 40 KB.
 3. **Whether Zag's SSR style output can be suppressed.** If the positioner can
    be told not to emit inline styles server-side, the CSP problem disappears and
    Tessalor's objection halves.
+
+## §12 — Platform destinations, and the two we are not taking yet
+
+Decided 11 Aug 2026. Recorded because the REASONS are non-obvious and will
+otherwise be re-litigated from scratch.
+
+### Every React framework is already a destination, and it is enforced
+
+    framework imports across ui / core / blocks / base-ui-ssr:   NONE
+    gate:smoke — 109 items compiled in a bare project with no
+                 framework, jsx: react-jsx, moduleResolution: bundler:  109/109
+
+Vite, Next.js, Remix, TanStack Start, Astro-with-React need no work: `gate:smoke`
+copies each registry item into a frameworkless project and type-checks it on
+every commit, so anything reaching for `next/link` fails the day it is written.
+
+Three things a consumer wires, none framework-specific: Tailwind v4 plus
+`theme.css`; `"use client"` (required by RSC, an inert string literal
+elsewhere); and `@lumo-ui/base-ui-ssr`, which is correct everywhere and only
+DOES anything where there is a server render.
+
+State the limit honestly in the docs: `lumo-gate` grades SERVED BYTES. A
+client-only Vite SPA has none, so the components remain correct but the
+consumer loses the mechanism that proves it. The gate does not travel with the
+package.
+
+### React Native / Expo — deferred, architecture already ready
+
+Shared unchanged: `@lumo-ui/core` (formatters, `parseNumber`, `FORMAT_LOCALE`,
+the `strings.ts` contract), `calendar-datelib.ts` and `@internationalized/date`,
+the validators in `form-state.tsx`, TanStack Table/Form state, token values.
+Rebuilt: every `.tsx` in `packages/ui`.
+
+A UNIVERSAL calendar is a fiction and we should not be talked into one. The
+platforms differ in INTERACTION, not styling: a web calendar is an arrow-key
+grid with a roving tabindex; a mobile calendar is a swipeable month with 44pt
+targets and no Tab key. Shared math, per-platform grid. When we build it,
+prefer `@marceloterreiro/flash-calendar` (no bundled date library, driveable
+from `calendar-datelib.ts`) over `react-native-ui-datepicker` (bundles
+`dayjs` + `jalali-plugin-dayjs`, i.e. the forked-date-library-per-calendar
+pattern already rejected for react-day-picker v9).
+
+VERIFY FIRST, before anything else: `Intl.DateTimeFormat` with `-u-ca-persian`
+on a real device. Hermes has historically shipped without full ICU, and the
+entire Persian story rests on it.
+
+Docs previews: Expo Snack is FREE (Expo's paid products are EAS Build/Update/
+Submit). Its real constraint is that it installs from public npm, so private
+`@lumo-ui/*` will not resolve — inline the component source into the Snack
+payload instead, which suits a copy-in registry: the embed then shows exactly
+what a consumer pastes. If `react-native-web` previews are used instead, they
+need a `data-lumo-native` gate exemption beside `data-lumo-latn` and
+`data-lumo-gregory`, because RN-web emits `<div>` for everything and grading
+its output would report failures about a translation rather than about the
+native accessibility tree — a red gate that means nothing, or worse a green one.
+
+### Lynx — not now, and the reason is ours alone
+
+    @lynx-js/react  0.123.3, released 7 Aug 2026        36k / week
+    react-native                                    11,400k / week
+    expo                                             7,700k / week
+
+0.3% of React Native's adoption and still 0.x after ~17 months. But
+`@lynx-js/types` carries `marginInlineStart`, `paddingInlineEnd`,
+`insetInlineStart` and `direction` — Lynx has real CSS with logical properties
+and an inherited direction. React Native has none of that: flat style keys, no
+cascade, and RTL via the process-wide `I18nManager.forceRTL` needing an app
+restart.
+
+Lumo's ENTIRE RTL strategy is logical properties. It would port to Lynx nearly
+directly and does not port to React Native at all — on RN every mirroring
+decision is re-derived in a model that cannot express it. Most people weighing
+Lynx care about its dual-threaded performance; we would care about `direction`
+inheritance, which is why this note exists.
+
+TRIPWIRE: revisit if Lynx reaches 1.0 AND the RTL cascade holds up under a real
+test. Not before.

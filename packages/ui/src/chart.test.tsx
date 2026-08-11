@@ -54,6 +54,7 @@ import {
   scaleBand,
   scaleLinear,
 } from "./chart.tsx";
+import { focusGroupX, focusNearestX } from "@tanstack/charts/focus";
 import {
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
@@ -482,5 +483,48 @@ describe("chart — the colour stylesheet fits Lumo's theme rather than shadcn's
       "sales}html{display:none": { label: "x", color: "#000" },
     });
     expect(injected).not.toContain("display:none");
+  });
+});
+
+/**
+ * The pointer hit test — the one thing a reader touches on every chart.
+ *
+ * These assert a DEFAULT rather than a behaviour, which is unusual here and
+ * deliberate: the behaviour lives in TanStack's renderer and is not reachable
+ * from jsdom, since it needs a laid-out plot and real pointer coordinates.
+ * What IS reachable, and what actually regressed, is whether the definition
+ * carries the strategy at all — the failure was never "the hit test is subtly
+ * wrong", it was "nobody passed `focus`, so it stayed radial".
+ */
+describe("charts hit-test by band, the way every dashboard does", () => {
+  it("defaults to grouped-by-x with no radius", () => {
+    /*
+     * Measured in TanStack's `renderer.js:764`: the radial nearest-point search
+     * is capped at `maxFocusDistance ?? 48`, so a tooltip appears only within
+     * 48px of a datum and dies when the pointer drifts off the line vertically.
+     * On a tall plot that is most of the chart area, and it reads as a broken
+     * tooltip rather than as a configured radius. recharts — which this library
+     * used until 11 Aug 2026 — bisects the x scale across the whole band.
+     */
+    const definition = defineChart({ marks: [], x: null, y: null } as never) as unknown as Record<
+      string,
+      unknown
+    >;
+    expect(definition["maxFocusDistance"]).toBe(Number.POSITIVE_INFINITY);
+    // The strategy object itself: `focusGroupX` measures `Math.abs(point.x -
+    // target)` with y ignored, and groups every series sharing that x.
+    expect(definition["focus"]).toBe(focusGroupX);
+  });
+
+  it("lets a caller override both, because they are ordinary options", () => {
+    const definition = defineChart({
+      marks: [],
+      x: null,
+      y: null,
+      focus: focusNearestX,
+      maxFocusDistance: 12,
+    } as never) as unknown as Record<string, unknown>;
+    expect(definition["focus"]).toBe(focusNearestX);
+    expect(definition["maxFocusDistance"]).toBe(12);
   });
 });
