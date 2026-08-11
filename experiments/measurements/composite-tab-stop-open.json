@@ -1,15 +1,25 @@
 {
- "$about": "composite-tab-stop: 12 known violations, open. Recorded rather than silenced.",
+ "$about": "composite-tab-stop: CLOSED 11 Aug 2026. 12 violations -> 0. Kept because the file's own prediction was half right and half wrong, and both halves are worth having on record.",
  "rule": "composite-tab-stop",
- "count": 12,
- "components": [
-  "autocomplete",
-  "command",
-  "list-box"
+ "count_when_recorded": 12,
+ "count_now": 0,
+ "closed_by": [
+  "e58145f — the rule's third exemption: a container that IS the tab stop",
+  "33e40c9 — useComboboxWiring, plus the rule's fourth exemption"
  ],
- "shape": "role=listbox rendered ALWAYS-OPEN on a docs page: container tabindex=-1, every option tabindex=-1, and no element in the served bytes carries aria-controls or aria-activedescendant pointing at it (verified by grep on the built HTML).",
- "mechanism": "Same class as the naming and roving-tabstop defects: Base UI wires the combobox relationship (aria-controls, aria-activedescendant, aria-expanded) in layout effects that do not run on the server.",
- "severity_honest": "Real, but scoped to the always-open demo shape. In production usage the list lives in a popup that is closed at SSR and renders null, so there is nothing to grade. The docs pages render it open on purpose to show it.",
- "fix": "The next adapter increment: a useComboboxWiring beside useFieldWiring and useOpenMirror, minting the listbox id at render and threading aria-controls/aria-activedescendant onto the input. Same pattern, same public-prop route.",
- "why_not_silenced": "Weakening the rule to skip listboxes with no controller would make it blind to a standalone listbox that genuinely has no tab stop — which is list-box.tsx, still on React Aria and in this list for a different reason. The rule is right; the code is not finished."
+
+ "what_this_file_got_right": {
+  "the_mechanism": "Exactly as predicted. Base UI wires aria-controls and aria-activedescendant in a ref callback after mount, so the served input pointed at nothing. Eight of the twelve were real and were fixed by minting the list id during render.",
+  "the_fix": "Also as predicted, down to the name: 'a useComboboxWiring beside useFieldWiring and useOpenMirror, minting the listbox id at render'. That is what shipped.",
+  "why_not_silenced": "The strongest thing here. A draft narrowing matched any role=combobox sharing a parentElement — blindness by adjacency — and this paragraph is what rejected it. The exemption that shipped requires aria-controls BY ID and a tabbable owner."
+ },
+
+ "what_this_file_got_wrong": {
+  "claim": "'list-box.tsx, still on React Aria and in this list for a different reason. The rule is right; the code is not finished.'",
+  "correction": "The rule was wrong about list-box, and the code was finished. React Aria's collections make the COLLECTION tabbable while manager.focusedKey is null and marshal focus into the first item on entry — useSelectableCollection computes `tabIndex = focusedKey == null ? 0 : -1` in the RENDER BODY, and useSelectableItem computes the mirror in the same pass. The two swap atomically; there is never a moment with two stops. The served shape, role=listbox tabindex=0 with all options at -1, IS a tab stop.",
+  "why_it_was_missed": "The rule's header had described that exact case from the beginning — 'the CONTAINER is the tab stop and its items are correctly all -1'. It only ever DETECTED it via aria-activedescendant, which React Aria does not use here. A rule can carry a correct description of an exemption it does not implement, and nothing will say so.",
+  "severity_honest_was_also_soft": "This file called the defect 'scoped to the always-open demo shape'. True of autocomplete and command; it was not true of list-box, which was never a defect at all."
+ },
+
+ "the_lesson_kept": "Two different findings under one violation count is why they sat here for weeks. A count is not a diagnosis. See DECISIONS.md §13."
 }
