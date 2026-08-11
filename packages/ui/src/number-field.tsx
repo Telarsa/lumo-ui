@@ -7,7 +7,8 @@ import { NumberField as BaseNumberField } from "@base-ui/react/number-field";
 // TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
 import type { NumberFieldProps as AriaNumberFieldProps } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { asAriaKeyboardEvent, attr, useSsrLabelId } from "./base-ui-adapter.ts";
+import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
+import { asAriaKeyboardEvent } from "./base-ui-adapter.ts";
 import {
   Description,
   FieldError,
@@ -109,6 +110,29 @@ export const stepperVariants = cva(
  *    merge-props/mergeProps.mjs:118 states «In case of conflicts, the external
  *    props take precedence.»
  *
+ * ── WHY THE CATALOGUE DOES NOT APPEAR IN THIS FILE ─────────────────────────
+ *
+ * `@lumo-ui/base-ui-ssr`'s string catalogue carries all three of these strings,
+ * and
+ * this component reads NONE of them. That is deliberate and it is the one place
+ * the new i18n layer stops at Lumo's own door.
+ *
+ * All three are already REQUIRED PROPS on Lumo's frozen public API —
+ * `roleDescription`, `incrementLabel`, `decrementLabel` — and the precedence
+ * rule the catalogue states is *explicit prop, else catalogue*. A required prop
+ * is always explicit, so the catalogue can never fire here. Routing them through
+ * it instead would mean relaxing three required props to optional, which is both
+ * an API change this experiment may not make and a house rule it may not weaken.
+ *
+ * The catalogue is still where their VALUES come from: the call site reads
+ * `stringsFor(locale).numberField.*`, and the catalogue deliberately
+ * imports `roleDescription` from that same `LumoStrings` entry rather than
+ * re-authoring «فیلد عددی», so the two catalogues cannot drift into two Persian
+ * phrases for one concept. Two of the seven strings are therefore covered by a
+ * mechanism that predates the layer; that is counted honestly in
+ * `experiments/measurements/base-ui-i18n-layer.json` rather than presented as
+ * three more strings the layer closed.
+ *
  * The React Aria build applied the two button labels TWICE — once on the root as
  * `decrementAriaLabel`/`incrementAriaLabel`, once as `aria-label` on each button
  * — because RAC's root props also nulled out an `aria-labelledby` that would
@@ -206,7 +230,18 @@ export function NumberField({
   style: _style,
   ...rest
 }: NumberFieldProps) {
-  const labelId = useSsrLabelId(label, rest);
+  /*
+   * `errorMessage` is deliberately NOT handed to the wiring hook here, and the
+   * reason is a defect in this file rather than a choice: `FieldError` below is
+   * still React Aria's, and RAC's `FieldError` renders NOTHING without a
+   * `FieldErrorContext` — measured, `renderToStaticMarkup(<FieldError>خطا
+   * </FieldError>)` is the empty string. Nothing provides that context inside a
+   * Base UI `NumberField.Root`, so the error element does not exist and an
+   * `aria-describedby` pointing at it would be a dangling idref. The message
+   * being dropped is recorded in `ssr-naming-complete.json`; it is the same
+   * unported-`form.tsx` root cause, one component further along.
+   */
+  const wiring = useFieldWiring({ label, description, explicit: rest });
   /*
    * The spread below is `as unknown as`, and the reason is worth stating:
    * React Aria types this component's global DOM handlers against
@@ -256,7 +291,7 @@ export function NumberField({
        * `gate:html` counted it. Naming it explicitly is the fix that does not
        * require porting `form.tsx` for all 77 components first.
        */}
-      <Label {...attr("id", labelId)}>{label}</Label>
+      <Label {...wiring.labelProps}>{label}</Label>
       {/*
        * `Group` earns its place: Base UI feeds it `role="group"` and ties the
        * input and its steppers together as one unit, the same job React Aria's
@@ -267,7 +302,7 @@ export function NumberField({
         <BaseNumberField.Input
           data-lumo=""
           aria-roledescription={roleDescription}
-          {...attr("aria-labelledby", labelId)}
+          {...wiring.controlProps}
           className={cn(numberInputVariants({ size }), inputClassName)}
           {...optional("placeholder", placeholder)}
         />
@@ -288,7 +323,9 @@ export function NumberField({
           </BaseNumberField.Decrement>
         </div>
       </BaseNumberField.Group>
-      {description != null ? <Description>{description}</Description> : null}
+      {description != null ? (
+        <Description {...wiring.descriptionProps}>{description}</Description>
+      ) : null}
       <FieldError>{errorMessage}</FieldError>
     </BaseNumberField.Root>
   );

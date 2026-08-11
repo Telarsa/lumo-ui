@@ -15,7 +15,7 @@ import type {
   PopoverProps as AriaPopoverProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { attr } from "./base-ui-adapter.ts";
+import { attr } from "@lumo-ui/base-ui-ssr";
 
 /**
  * A positioned overlay. **BASE UI ENGINE** — see experiments/measurements/.
@@ -164,6 +164,31 @@ export function placementToSideAlign(placement: LumoPlacement | undefined): Side
 }
 
 /**
+ * The trigger's id, so the popup can be named by it.
+ *
+ * ── A MEASURED NAMING LOSS, CLOSED HERE ────────────────────────────────────
+ *
+ * Base UI's `Popover.Popup` is `role="dialog"` and carries NO accessible name:
+ * measured attribute set `[data-open, data-side, data-align, id, role,
+ * tabindex, data-base-ui-focusable, data-lumo, class]` — no `aria-label`, no
+ * `aria-labelledby` (`probe.api-shape-detail.json → popover.base.dialog`). An
+ * unnamed dialog is announced as bare "dialog", which is the same class of
+ * defect as an unnamed checkbox and is invisible to every string count because
+ * it leaks no English.
+ *
+ * React Aria did not leave it unnamed: its Popover pointed `aria-labelledby` at
+ * the TRIGGER, so the name was the trigger's visible text — measured resolving
+ * to «بیشتر» in the same probe. That is the behaviour reproduced here, and it
+ * is reproducible because Base UI forwards an `aria-labelledby` prop on the
+ * Popup verbatim (`probe.api-shape-fixability.json → Q3`).
+ *
+ * The reference cannot dangle: the trigger is in the document whenever the
+ * popup is, and unlike the tooltip's popup it is present in the first byte too.
+ * A caller who names the popup explicitly wins — see `Popover`.
+ */
+const PopoverNameContext = React.createContext<string | undefined>(undefined);
+
+/**
  * Splits `[trigger, ...overlay]` and wires the first child as the trigger.
  *
  * MEASURED STRUCTURAL DIFFERENCE, and the reason this helper exists at all.
@@ -209,6 +234,7 @@ export function PopoverTrigger({
   onOpenChange,
 }: PopoverTriggerProps) {
   const { trigger, rest } = splitTrigger(children);
+  const triggerId = React.useId();
   return (
     // RAC spells the controlled prop `isOpen`; Base UI spells it `open`. The
     // public name stays RAC's because the API may not change.
@@ -218,11 +244,14 @@ export function PopoverTrigger({
       {...attr("onOpenChange", onOpenChange)}
     >
       {React.isValidElement(trigger) ? (
-        <BasePopover.Trigger render={trigger as React.ReactElement<Record<string, unknown>>} />
+        <BasePopover.Trigger
+          id={triggerId}
+          render={trigger as React.ReactElement<Record<string, unknown>>}
+        />
       ) : (
         trigger
       )}
-      {rest}
+      <PopoverNameContext.Provider value={triggerId}>{rest}</PopoverNameContext.Provider>
     </BasePopover.Root>
   );
 }
@@ -287,6 +316,13 @@ export function Popover({
   ...rest
 }: PopoverProps) {
   const { side, align } = PLACEMENT[placement ?? "bottom"];
+  // Name the dialog by its trigger, as React Aria did — unless the caller named
+  // it, in which case relabelling would be the one way this can make things
+  // worse. See `PopoverNameContext`.
+  const triggerId = React.useContext(PopoverNameContext);
+  const named =
+    (rest as Record<string, unknown>)["aria-label"] !== undefined ||
+    (rest as Record<string, unknown>)["aria-labelledby"] !== undefined;
   return (
     <BasePopover.Portal>
       <BasePopover.Positioner
@@ -298,6 +334,7 @@ export function Popover({
       >
         <BasePopover.Popup
           data-lumo=""
+          {...attr("aria-labelledby", named ? undefined : triggerId)}
           className={cn(popoverVariants({ padded }), className)}
           {...rest}
         />

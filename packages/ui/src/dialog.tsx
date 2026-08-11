@@ -13,7 +13,7 @@ import type {
   ModalOverlayProps as AriaModalOverlayProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { attr } from "./base-ui-adapter.ts";
+import { attr, findChildProp } from "@lumo-ui/base-ui-ssr";
 import { IconButton } from "./button.tsx";
 
 /**
@@ -71,16 +71,41 @@ import { IconButton } from "./button.tsx";
  * DATA in experiments/measurements/rebuild-overlays.json and the test is left
  * exactly as it is.
  *
- * ── `isDismissable` IS ACCEPTED AND INERT, AND THE DEFAULT IS INVERTED ──────
+ * ── `isDismissable` IS HONOURED AGAIN, AND WITHOUT AN API CHANGE ────────────
  *
- * MEASURED GAP. RAC read dismissal off the ModalOverlay and published it by
- * context; opt-in, default off. Base UI puts the inverse control
- * (`disablePointerDismissal`) on `Dialog.Root`, and outside-press dismissal is
- * ON by default. Lumo's public API places the prop on `DialogOverlay`, which is
- * a Portal+Backdrop pair with no route back up to the Root, so the prop cannot
- * be honoured from where the API puts it. It is destructured out so it cannot
- * reach the DOM, and it is NOT emulated. Every Base UI dialog in this build is
- * dismissable whether or not the caller asked.
+ * THE GAP, as first measured. RAC read dismissal off the `ModalOverlay` and
+ * published it by context; opt-in, default OFF. Base UI puts the INVERSE
+ * control, `disablePointerDismissal`, on `Dialog.Root`, and outside-press
+ * dismissal is ON by default. Lumo's public API places the prop on
+ * `DialogOverlay` — a Portal+Backdrop pair under Base UI, with no route back up
+ * to the Root — so the prop type-checked and did nothing, and every dialog in
+ * the build was dismissable whether or not the caller asked. The direction of
+ * that failure is the dangerous one: `alert-dialog.tsx`'s docblock FORBIDS
+ * scrim dismissal, because an alert dialog exists to force a choice, and the
+ * mode that would have enforced it was unreachable.
+ *
+ * THE FIX. `disablePointerDismissal` is a documented public prop on
+ * `Dialog.Root`, so the only thing missing was a route from the overlay's prop
+ * up to the root. Contexts flow down, not up — but PROPS of a child element are
+ * readable by its parent before render, and `DialogTrigger` IS the root and the
+ * `DialogOverlay` IS its descendant. `findChildProp` reads `isDismissable` off
+ * the overlay element's props and hands the root the inverse.
+ *
+ * WHY IT KEYS ON A PROP AND NOT ON `child.type === DialogOverlay`: that is the
+ * identity test that passed jsdom and silently did nothing on the real site
+ * when a SERVER component composed the tree, because each `child.type` is then
+ * a client reference rather than this module's function. The whole argument is
+ * in `findChildProp`'s docblock; it is written once there because this is the
+ * second component in the library to need it.
+ *
+ * AND THE DEFAULT IS RESTORED. Absent the prop, the root now gets
+ * `disablePointerDismissal` — RAC's documented default, which every Lumo
+ * consumer has been writing against. `<DialogOverlay isDismissable>` opts back
+ * in, exactly as before.
+ *
+ * WHAT IS STILL INERT: `isKeyboardDismissDisabled`. Base UI has no counterpart
+ * anywhere on `Dialog.Root` — Escape always closes — so there is nothing to
+ * translate it onto. Recorded, not emulated.
  */
 
 /**
@@ -179,9 +204,13 @@ export function DialogTrigger({
 }: DialogTriggerProps) {
   const items = React.Children.toArray(children as React.ReactNode);
   const [trigger, ...rest] = items;
+  // See the file header. RAC's default is opt-in, so anything other than an
+  // explicit `isDismissable` means "do not dismiss on outside press".
+  const dismissable = findChildProp(children, "isDismissable") === true;
   return (
     // RAC spells the controlled prop `isOpen`; Base UI spells it `open`.
     <BaseDialog.Root
+      disablePointerDismissal={!dismissable}
       {...attr("open", isOpen)}
       {...attr("defaultOpen", defaultOpen)}
       {...attr("onOpenChange", onOpenChange)}
@@ -199,9 +228,12 @@ export function DialogTrigger({
 /**
  * The backdrop — and, under Base UI, also the Portal boundary.
  *
- * `isDismissable` / `isKeyboardDismissDisabled` are accepted for API parity and
- * are INERT. See the file header: Base UI's equivalent lives on the Root, with
- * the opposite default, and there is no route from here back up to it.
+ * `isDismissable` is READ FROM HERE BY `DialogTrigger` and honoured — see the
+ * file header. It is still destructured out below so it cannot reach the DOM as
+ * an unknown attribute; the prop's value travels by `DialogTrigger` inspecting
+ * this element's props, not by this component doing anything with it.
+ *
+ * `isKeyboardDismissDisabled` remains INERT: Base UI has no counterpart.
  */
 export interface DialogOverlayProps
   extends Omit<AriaModalOverlayProps, "children" | "className"> {
@@ -254,9 +286,42 @@ export interface DialogModalProps
   className?: string | undefined;
 }
 
+/**
+ * The role the popup announces.
+ *
+ * ── A MEASURED SEMANTIC GAP NOBODY HAD NAMED ───────────────────────────────
+ *
+ * Under React Aria the roled element and the focus-trapped element were the
+ * SAME element: `ModalOverlay > Modal` carried no role and the RAC `<Dialog
+ * role="alertdialog">` inside it was the one dialog in the tree.
+ *
+ * Under Base UI the focus trap belongs to `Dialog.Popup`, which is
+ * unconditionally `role="dialog"`, and `alert-dialog.tsx` declares
+ * `role="alertdialog"` on a plain `<div>` INSIDE it. Measured on an open alert
+ * dialog: `div[role=dialog]` wrapping `div[role=alertdialog]`, both pointing
+ * `aria-labelledby` at the same heading. So there are two dialogs where there
+ * was one, and the one a screen reader announces on entry — the focus boundary
+ * — is the WRONG one. An alert dialog that announces as a plain dialog loses
+ * exactly the urgency the role exists to carry.
+ *
+ * `role` is an ordinary prop on `Dialog.Popup` and overriding it keeps the
+ * title wiring intact — measured, `probe.api-shape-fixability.json → Q7`:
+ * `role="alertdialog"` lands and `aria-labelledby` is still published by
+ * `Dialog.Title`. So the role is lifted to the element that owns the trap, and
+ * `alert-dialog.tsx` renders a roleless `<div>`.
+ *
+ * The detection is by PROP, not by `child.type` — `confirmLabel` is required by
+ * `AlertDialogProps` and appears on nothing else in the library — for the
+ * reason `findChildProp`'s docblock gives at length.
+ */
+function popupRole(children: unknown): "alertdialog" | undefined {
+  return findChildProp(children, "confirmLabel") === undefined ? undefined : "alertdialog";
+}
+
 export function DialogModal({
   className,
   size,
+  children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
   isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
@@ -274,9 +339,12 @@ export function DialogModal({
 }: DialogModalProps) {
   return (
     <BaseDialog.Popup
+      {...attr("role", popupRole(children))}
       className={cn("fixed inset-0 z-50 m-auto h-fit", dialogModalVariants({ size }), className)}
       {...rest}
-    />
+    >
+      {children as React.ReactNode}
+    </BaseDialog.Popup>
   );
 }
 

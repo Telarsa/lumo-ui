@@ -213,7 +213,21 @@ export function ComboBox<T extends object>({
             {label}
           </label>
         )}
-        <div className={comboBoxGroupVariants()}>
+        {/*
+         * `role="group"` restores a semantic React Aria emitted here and Base UI
+         * does not. Measured: the RAC baseline's SSR carried
+         * `<div role="group" class="…">` around the input and its trigger
+         * (`probe.api-shape-fixability.json → Q8.rac_combobox_group`); the Base
+         * UI rebuild's census reports `group` as the one ROLE lost by this
+         * component (`probe.api-shape.json → combobox.diff.roles_lost`).
+         *
+         * It is not decoration. The «نمایش پیشنهادها» button and the text field
+         * are one control to a reader, and without the grouping a screen
+         * reader's element-by-element walk meets a button that belongs to
+         * nothing. `role` is a plain DOM attribute on a plain `<div>`, so this
+         * costs nothing and depends on no engine behaviour.
+         */}
+        <div role="group" className={comboBoxGroupVariants()}>
           <BaseCombobox.Input
             className={comboBoxInputVariants()}
             {...(placeholder === undefined ? {} : { placeholder })}

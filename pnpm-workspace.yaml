@@ -41,11 +41,26 @@ catalog:
   # Must stay on the version RAC itself resolves, or `Calendar` types come from
   # two copies of the package and will not assign.
   '@internationalized/date': 3.12.3
-  # EXPERIMENT ONLY (branch experiment/base-ui). Present so its dist can be read
-  # and measured; no shipped component imports it. NOTE the package RENAME:
+  # EXPERIMENT ONLY (branch experiment/base-ui). NOTE the package RENAME:
   # `@base-ui-components/react` is dead at 1.0.0-rc.0 and must not be measured.
   # 1.7.0 published 2026-08-04, six days before adoption — clears the cooldown.
+  #
+  # THE PIN IS LOAD-BEARING HERE IN A WAY IT IS NOT FOR THE OTHERS. Every fix in
+  # `packages/base-ui-ssr` compensates for an implementation choice — an
+  # accessible name published from a layout effect, an English literal at a known
+  # file and line — and not for a documented seam. A patch release may retire a
+  # workaround or silently defeat it, in both cases with no type error. So this
+  # version is the one that package declares in its peer range and its README's
+  # "verified against" line, and moving it is a deliberate bump that re-runs
+  # `gate:html` and `packages/base-ui-ssr`'s own suite, never a resolution
+  # difference between two machines.
   '@base-ui/react': 1.7.0
+
+  # NOT IN THIS CATALOG, deliberately: `@lumo-ui/base-ui-ssr`. The catalog names
+  # versions of packages Lumo does not control. A workspace package enters
+  # through `workspace:*`, the same route `@lumo-ui/core` takes; if the SSR layer
+  # is ever published and consumed from the registry rather than the workspace,
+  # its version belongs here and not before.
 
   # --- runtime ---------------------------------------------------------------
   react: 19.2.8

@@ -80,6 +80,12 @@ try {
           paths: {
             "@lumo-ui/core": [join(ROOT, "packages/core/src/index.ts")],
             "@lumo-ui/ui": [join(ROOT, "packages/ui/src/index.ts")],
+            // The engine-compat layer is the third. It is a package rather than
+            // a copied file precisely so that it can be upgraded away when Base
+            // UI fixes the defects it works around — which means a consumer
+            // resolves it from node_modules, and that resolution is under test
+            // here exactly like the other two.
+            "@lumo-ui/base-ui-ssr": [join(ROOT, "packages/base-ui-ssr/src/index.ts")],
           },
         },
         include: ["components/**/*"],

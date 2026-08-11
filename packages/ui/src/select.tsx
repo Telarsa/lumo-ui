@@ -4,8 +4,10 @@ import { createContext, useContext } from "react";
 import { cva } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
+import { LabelContext } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
+import { useFieldWiring } from "@lumo-ui/base-ui-ssr";
 
 /**
  * EXPERIMENT — this file is the React Aria Select rebuilt on Base UI 1.7.0.
@@ -121,6 +123,11 @@ export const selectItemVariants = cva(
 interface SelectFieldContextValue {
   placeholder: string;
   label: string | undefined;
+  /**
+   * The id the consumer's `<Label>` is pointing its `htmlFor` at. See the
+   * header section on the twelve.
+   */
+  triggerId: string | undefined;
 }
 
 const SelectFieldContext = createContext<SelectFieldContextValue | null>(null);
@@ -176,6 +183,7 @@ export function Select<T extends object>({
   className,
   children,
 }: SelectProps<T>) {
+  const wiring = useFieldWiring({ mode: "native", explicit: { "aria-label": ariaLabel } });
   return (
     <BaseSelect.Root
       {...(selectedKey === undefined ? {} : { value: selectedKey })}
@@ -190,15 +198,47 @@ export function Select<T extends object>({
       {...(onOpenChange === undefined ? {} : { onOpenChange: (open: boolean) => onOpenChange(open) })}
       {...(name === undefined ? {} : { name })}
     >
-      <SelectFieldContext.Provider value={{ placeholder, label: ariaLabel }}>
+      <SelectFieldContext.Provider
+        value={{ placeholder, label: ariaLabel, triggerId: wiring.controlProps.id }}
+      >
         {/*
+         * ── THE TWELVE, AND THE SEAM PHASE A SAID DID NOT EXIST ─────────────
+         *
+         * Every one of `gate:html`'s twelve remaining `named-controls`
+         * violations was this component: `<button role="combobox">` with no
+         * accessible name, on the six Select instances across the docs site
+         * that use a visible `<Label>` instead of `aria-label`, in two locales.
+         *
+         * `phase-a-result.json` recorded the cause as STRUCTURAL — "the
+         * CONSUMER renders the Label, so there is no seam to inject through
+         * without either cloning children or making form.tsx's Label
+         * context-aware". The second half of that sentence turns out to be the
+         * answer, and it needed no change to `form.tsx` at all: RAC's `Label`
+         * ALREADY reads `LabelContext` through `useContextProps`, and
+         * `LabelContext` is a public export of `react-aria-components`.
+         * Nothing was providing it. Verified by rendering — a `<Label>` under a
+         * provider carrying `{id, htmlFor}` emits both attributes at the first
+         * byte, and an explicit `id` on the element still wins.
+         *
+         * So the fix is a PUBLIC-API prop-level fix on both sides of the
+         * engine boundary, which is the bet this branch is testing. No
+         * node_modules, no internal module path.
+         *
+         * The direction is deliberate and is argued in `FieldWiringMode`: the
+         * LABEL points at the control with `htmlFor`, not the reverse. This
+         * component cannot know whether the consumer rendered a `<Label>`, and
+         * an `aria-labelledby` minted on that guess would dangle. `htmlFor` on
+         * an element that does not exist emits nothing.
+         *
          * Base UI's Root renders no DOM at all, so the field box React Aria's
          * `<Select>` provided — the thing `className` and `data-lumo` were
          * attached to — has to be a real element here.
          */}
-        <div data-lumo="" className={cn(selectVariants(), className)}>
-          {children}
-        </div>
+        <LabelContext.Provider value={wiring.labelProps}>
+          <div data-lumo="" className={cn(selectVariants(), className)}>
+            {children}
+          </div>
+        </LabelContext.Provider>
       </SelectFieldContext.Provider>
     </BaseSelect.Root>
   );
@@ -220,10 +260,16 @@ export interface SelectTriggerProps {
 
 export function SelectTrigger({ className, children }: SelectTriggerProps) {
   const field = useContext(SelectFieldContext);
+  /*
+   * `id` is the other end of the `htmlFor` the consumer's `<Label>` is carrying
+   * — see the block in `Select`. Overriding Base UI's own generated trigger id
+   * is safe: nothing else in the server output references it.
+   */
   return (
     <BaseSelect.Trigger
       data-lumo=""
       {...(field?.label === undefined ? {} : { "aria-label": field.label })}
+      {...(field?.triggerId === undefined ? {} : { id: field.triggerId })}
       className={cn(selectTriggerVariants(), className)}
     >
       {children ?? <SelectValue />}

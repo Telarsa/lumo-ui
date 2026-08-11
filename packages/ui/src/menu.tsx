@@ -4,6 +4,7 @@ import { Children, createContext, isValidElement, useContext, type ReactElement 
 import { cva } from "class-variance-authority";
 import { Menu as BaseMenu } from "@base-ui/react/menu";
 import { cn, type LumoNode } from "@lumo-ui/core";
+import { attr, findChildProp, useOpenMirror } from "@lumo-ui/base-ui-ssr";
 import { placementToSideAlign, popoverVariants, type LumoPlacement } from "./popover.tsx";
 
 /**
@@ -144,15 +145,40 @@ export interface MenuTriggerProps {
 export function MenuTrigger({ children, isOpen, defaultOpen, onOpenChange }: MenuTriggerProps) {
   const parts = Children.toArray(children);
   const [control, ...rest] = parts;
+  /*
+   * ── A MEASURED FIRST-BYTE GAP, CLOSED HERE ────────────────────────────────
+   *
+   * Base UI's `Menu.Trigger` emits `aria-haspopup="menu"` in the served bytes
+   * and NO `aria-expanded` — the attribute only appears once the component has
+   * mounted on the client. Measured side by side in
+   * `probe.api-shape-detail.json`: React Aria's trigger served
+   * `aria-haspopup="true" aria-expanded="false"`, Base UI's served
+   * `aria-haspopup="menu"` alone. A button that announces it owns a popup while
+   * refusing to say whether the popup is open is worse than one that says
+   * nothing, and it is invisible to `gate:html` because no rule grades it.
+   *
+   * `Dialog.Trigger` and `Popover.Trigger` do NOT have this gap in the same
+   * build, which is what makes it a Base UI inconsistency rather than a policy.
+   *
+   * The fix is a plain prop — but a CONSTANT would be a second, worse defect:
+   * Base UI resolves a conflict between its own `aria-expanded` and the
+   * caller's by letting the CALLER win, so `aria-expanded={false}` survives
+   * onto an OPEN trigger (`probe.api-shape-fixability.json → Q2`). So the value
+   * has to be the real one, which is what `useOpenMirror` is for.
+   */
+  const { open, handleOpenChange } = useOpenMirror(isOpen, defaultOpen, onOpenChange);
 
   return (
     <BaseMenu.Root
       {...(isOpen === undefined ? {} : { open: isOpen })}
       {...(defaultOpen === undefined ? {} : { defaultOpen })}
-      {...(onOpenChange === undefined ? {} : { onOpenChange: (open: boolean) => onOpenChange(open) })}
+      onOpenChange={handleOpenChange}
     >
       {isValidElement(control) ? (
-        <BaseMenu.Trigger render={control as ReactElement<Record<string, unknown>>} />
+        <BaseMenu.Trigger
+          aria-expanded={open}
+          render={control as ReactElement<Record<string, unknown>>}
+        />
       ) : (
         control
       )}
@@ -213,6 +239,16 @@ export function MenuPopover({ className, placement, children }: MenuPopoverProps
       >
         <BaseMenu.Popup
           data-lumo=""
+          /*
+           * `<Menu aria-label>` is written one level DOWN, on the part the
+           * caller thinks of as the menu — but `role="menu"` is on this popup,
+           * so the name has to travel up. `findChildProp` reads it off the
+           * child's PROPS, which is the only key that survives a server
+           * component composing this tree; see its docblock for the build this
+           * lesson cost. Measured to land verbatim on the popup:
+           * `probe.api-shape-fixability.json → Q1`.
+           */
+          {...attr("aria-label", findChildProp(children, "aria-label") as string | undefined)}
           className={cn(popoverVariants({ padded: false }), menuPopoverVariants(), className)}
         >
           {/*
@@ -237,6 +273,29 @@ export interface MenuProps<T extends object> {
   children?: LumoNode | ((item: T) => LumoNode);
   /** Called with the activated item's `id`. */
   onAction?: ((key: string) => void) | undefined;
+  /**
+   * Announced name of the menu.
+   *
+   * ── RESTORED AFTER A MEASURED SILENT DROP ─────────────────────────────────
+   *
+   * React Aria's `MenuProps` extended `AriaMenuProps`, so this prop was public
+   * and landed as `aria-label` on the `role="menu"` element — measured
+   * `aria-label="کارها"` in `probe.api-shape-detail.json → menu.rac.role_menu`.
+   * The first Base UI rebuild narrowed `MenuProps` to three fields and the prop
+   * disappeared from the type, so the same probe found `aria-label` NOWHERE in
+   * an open Base UI menu.
+   *
+   * It is not merely a name: Base UI names the popup from the TRIGGER
+   * (`aria-labelledby` → the trigger's id), so an unlabelled menu is announced
+   * with the trigger's visible text. That is a reasonable default and a wrong
+   * answer whenever the trigger is an ellipsis icon — which is the composition
+   * this file's own docblock opens with.
+   *
+   * It is declared here, on the part the caller writes it on, and LIFTED to the
+   * popup by `MenuPopover` — because `Menu` renders INSIDE `Menu.Popup`, and
+   * the element that carries `role="menu"` is the popup, one level up.
+   */
+  "aria-label"?: string | undefined;
   className?: string | undefined;
 }
 

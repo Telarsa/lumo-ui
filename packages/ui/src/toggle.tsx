@@ -7,7 +7,8 @@ import { cn, type LumoNode } from "@lumo-ui/core";
 // No `"use client"` in that module, so a SERVER component can call the variants
 // — the split button.variants.ts's header argues for.
 import { toggleVariants, type ToggleVariantProps } from "./toggle.variants.ts";
-import { asAriaKeyboardEvent, attr, pressFromClick } from "./base-ui-adapter.ts";
+import { attr } from "@lumo-ui/base-ui-ssr";
+import { asAriaKeyboardEvent, pressFromClick } from "./base-ui-adapter.ts";
 
 export { toggleVariants };
 export type { ToggleVariantProps };

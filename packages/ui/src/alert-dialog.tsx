@@ -36,30 +36,49 @@ import { DialogHeading, dialogVariants } from "./dialog.tsx";
  *       </DialogOverlay>
  *     </DialogTrigger>
  *
- * ── THE NATIVE ROOT IS AT THE WRONG LAYER, AND THAT IS THE FINDING ──────────
+ * ── THE NATIVE ROOT IS AT THE WRONG LAYER — AND IT TURNS OUT NOT TO MATTER ──
  *
- * Base UI DOES ship `@base-ui/react/alert-dialog`. But it is a ROOT-level
- * component: `AlertDialog.Root` is `Dialog.Root` in `'alert-dialog'` mode, and
- * everything `role="alertdialog"` means is carried in that root's store and
- * read back out by `AlertDialog.Popup`. Its other parts — `Close`,
- * `Description`, `Popup`, `Portal`, `Title`, `Backdrop`, `Viewport` — are not
- * alert-dialog components at all; the dist re-exports the IDENTICAL `Dialog.*`
- * modules under alert-dialog names.
+ * THE STRUCTURAL FACT, unchanged. Base UI DOES ship
+ * `@base-ui/react/alert-dialog`, but it is a ROOT-level component:
+ * `AlertDialog.Root` is `Dialog.Root` in `'alert-dialog'` mode. Its other parts
+ * — `Close`, `Description`, `Popup`, `Portal`, `Title`, `Backdrop`, `Viewport`
+ * — are not alert-dialog components at all; the dist re-exports the IDENTICAL
+ * `Dialog.*` modules under alert-dialog names. Lumo's public API already spent
+ * the root and the popup (`DialogTrigger`, `DialogModal`), so `AlertDialog.Root`
+ * has nowhere to go and `AlertDialog.Popup` cannot render here either — it would
+ * register a second popup and a second `FloatingFocusManager` against the one
+ * root `DialogModal` already owns.
  *
- * Lumo's public API already spent the root and the popup: `DialogTrigger` is
- * the root and `DialogModal` is the popup, and an alert dialog is composed from
- * them. So `AlertDialog.Root` has nowhere to go — the caller never writes an
- * alert-dialog root — and `AlertDialog.Popup` cannot be rendered here either,
- * because it would register a SECOND popup element and a second
- * `FloatingFocusManager` against the one root that `DialogModal` already owns.
+ * WHAT THE ROOT WAS SUPPOSED TO BUY, AND WHERE EACH PIECE ACTUALLY CAME FROM.
+ * The previous round recorded this as the file's one unresolved item and
+ * proposed an `AlertDialogTrigger` / `AlertDialogOverlay` / `AlertDialogModal`
+ * trio — a public API change — as the fix. That proposal is REJECTED, because
+ * the two things the root actually provides are both reachable from public
+ * props on the parts Lumo already exposes, and were measured to be:
  *
- * What this file therefore does is the native composition MINUS the two parts
- * the API has no slot for: `AlertDialog.Close` drives both verbs, the heading
- * goes through `Dialog.Title` (`DialogHeading`), and the `alertdialog` role is
- * declared on the body element rather than inherited from a root mode nobody
- * can construct. Adopting the root natively would mean giving alert dialogs
- * their own trigger/overlay/modal — an API change this experiment may not make.
- * That is the one genuinely unresolved item in these two files.
+ *   1. `disablePointerDismissal` forced on. This was the real cost: a scrim
+ *      click could quietly answer a question the reader never answered. It is a
+ *      documented prop on `Dialog.Root`, and `dialog.tsx` now reads
+ *      `isDismissable` off the overlay's props and defaults it OFF — React
+ *      Aria's documented default. An alert dialog that passes nothing is no
+ *      longer dismissable, which is what this file's docblock has always said.
+ *
+ *   2. `role="alertdialog"` on the FOCUS-TRAPPED element. `Dialog.Popup`
+ *      accepts a `role` override and keeps its `aria-labelledby` wiring
+ *      (measured: `probe.api-shape-fixability.json → Q7`), so `DialogModal`
+ *      lifts the role onto the popup. See `popupRole` in dialog.tsx.
+ *
+ * THE COST OF SAYING IT PLAINLY: the trio would have been a BREAKING public API
+ * change — every existing alert dialog call site rewritten — bought nothing the
+ * public props do not, and would have split one dialog surface into two nearly
+ * identical ones. Lumo's public API is UNCHANGED by this file's fixes. What did
+ * change is behaviour: an alert dialog composed exactly as before now refuses a
+ * scrim dismissal and announces as `alertdialog` at the focus boundary.
+ *
+ * THE RESIDUE, stated rather than hidden: this composition never reaches
+ * `AlertDialog.Root`, so anything Base UI adds to alert-dialog MODE in a future
+ * release arrives here only if it is also exposed as a prop. That is a real
+ * upgrade risk and it is the honest reason to keep this section.
  *
  * ── HOW THE NAME IS WIRED NOW ───────────────────────────────────────────────
  *
@@ -106,10 +125,10 @@ import { DialogHeading, dialogVariants } from "./dialog.tsx";
  *
  * Do NOT pass `isDismissable` to the overlay of one of these. An alert dialog
  * exists to force a choice, and a scrim click that quietly picks "cancel" is
- * the choice the reader did not make. NOTE that under Base UI the prop is inert
- * either way (see dialog.tsx) and outside-press dismissal is ON — the one thing
- * a native `AlertDialog.Root` would have fixed for free, since it forces
- * `disablePointerDismissal`. Another cost of the root being unreachable.
+ * the choice the reader did not make. The rule is now ENFORCED rather than
+ * merely stated: passing nothing means not dismissable, because dialog.tsx
+ * restored React Aria's default. Passing `isDismissable` on the overlay of an
+ * alert dialog is still wrong, and it is now wrong in the sense that it works.
  *
  * The footer's source order is cancel-then-confirm — the safe action first in
  * tab order — while `justify-end` places the confirm verb at the reading end,
@@ -162,13 +181,16 @@ export function AlertDialog({
   const titleId = useId();
 
   return (
-    <div
-      data-lumo=""
-      role="alertdialog"
-      aria-labelledby={titleId}
-      className={cn(dialogVariants(), className)}
-      {...rest}
-    >
+    /*
+     * NO `role` AND NO `aria-labelledby` HERE ANY MORE. Both moved up to
+     * `Dialog.Popup`, the element that owns the focus trap — see `popupRole` in
+     * dialog.tsx. Declaring them here as well produced a `role="alertdialog"`
+     * nested inside a `role="dialog"`, two dialogs pointing at one heading,
+     * with the wrong one announced on entry. `titleId` is still minted and
+     * still given to the heading, because that is what `Dialog.Title` publishes
+     * into the root store for the popup to read.
+     */
+    <div data-lumo="" className={cn(dialogVariants(), className)} {...rest}>
       <DialogHeading id={titleId}>{title}</DialogHeading>
       {children}
       <div className={alertDialogFooterVariants()}>

@@ -6,7 +6,7 @@
  * controls ARE named once the browser hydrates, so a jsdom test that renders
  * and then asserts passes happily. Only the SERVER render is wrong.
  *
- * The mechanism is in `useSsrLabelId` — Base UI publishes the label id from a
+ * The mechanism is in `useFieldWiring` — Base UI publishes the label id from a
  * layout effect, and layout effects do not run on the server — so these
  * assertions all use `renderToStaticMarkup`, which runs no effects at all. A
  * test that used `render()` from testing-library would prove nothing here.

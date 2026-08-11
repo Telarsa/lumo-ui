@@ -173,6 +173,37 @@ importers:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0))
 
+  packages/base-ui-ssr:
+    dependencies:
+      '@lumo-ui/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
+      '@base-ui/react':
+        specifier: 'catalog:'
+        version: 1.7.0(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.18
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.4(@types/react@19.2.18)
+      '@vitejs/plugin-react':
+        specifier: 'catalog:'
+        version: 6.0.5(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0))
+      react:
+        specifier: 'catalog:'
+        version: 19.2.8
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.8(react@19.2.8)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0))
+
   packages/blocks:
     dependencies:
       '@lumo-ui/core':
@@ -276,6 +307,9 @@ importers:
       '@internationalized/date':
         specifier: 'catalog:'
         version: 3.12.3
+      '@lumo-ui/base-ui-ssr':
+        specifier: workspace:*
+        version: link:../base-ui-ssr
       '@lumo-ui/core':
         specifier: workspace:*
         version: link:../core

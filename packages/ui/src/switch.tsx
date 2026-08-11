@@ -6,7 +6,7 @@ import { Switch as BaseSwitch } from "@base-ui/react/switch";
 import type { SwitchFieldProps as AriaSwitchFieldProps } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { descriptionVariants, fieldErrorVariants, FOCUS_RING_SELF } from "./form.tsx";
-import { attr, useSsrLabelId } from "./base-ui-adapter.ts";
+import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
 
 /**
  * The clickable row.
@@ -307,7 +307,7 @@ export function Switch({
   // Track width plus the 0.5rem gap, on the inline axis: md 2rem + 0.5rem,
   // lg 2.75rem + 0.5rem. Keeps the description's start edge on the label's.
   const indent = size === "lg" ? "ps-13" : "ps-10";
-  const labelId = useSsrLabelId(children, rest);
+  const wiring = useFieldWiring({ label: children, description, errorMessage, explicit: rest });
   return (
     <Field.Root
       data-lumo=""
@@ -330,17 +330,18 @@ export function Switch({
         by containment. The row still wraps the track, so a click anywhere on
         the row still toggles.
 
-        That association is HYDRATION-ONLY, which is why `labelId` is threaded
+        That association is HYDRATION-ONLY, which is why the ids are threaded
         through both elements by hand — the control is a `<span role="switch">`
-        and ships unnamed otherwise. See `useSsrLabelId`.
+        and ships unnamed otherwise. The description under it is unannounced for
+        the same reason. See `useFieldWiring`.
       */}
       <Field.Label
         className={cn(switchVariants({ size }), controlClassName)}
-        {...attr("id", labelId)}
+        {...wiring.labelProps}
       >
         <BaseSwitch.Root
           className={switchTrackVariants({ size })}
-          {...attr("aria-labelledby", labelId)}
+          {...wiring.controlProps}
           {...attr("checked", isSelected)}
           {...attr("defaultChecked", defaultSelected)}
           {...attr("onCheckedChange", onChange)}
@@ -359,7 +360,7 @@ export function Switch({
         {children}
       </Field.Label>
       {description != null ? (
-        <Field.Description className={cn(descriptionVariants(), indent)}>
+        <Field.Description {...wiring.descriptionProps} className={cn(descriptionVariants(), indent)}>
           {description}
         </Field.Description>
       ) : null}
@@ -370,7 +371,7 @@ export function Switch({
         never natively invalid.
       */}
       {errorMessage != null ? (
-        <Field.Error match className={cn(fieldErrorVariants(), indent)}>
+        <Field.Error match {...wiring.errorProps} className={cn(fieldErrorVariants(), indent)}>
           {errorMessage}
         </Field.Error>
       ) : null}

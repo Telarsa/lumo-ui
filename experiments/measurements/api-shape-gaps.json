@@ -1,0 +1,308 @@
+{
+  "$about": [
+    "THE API-SHAPE CENSUS. Every place where Lumo's public API and Base UI 1.7.0",
+    "disagree about shape — props, roles, aria-*, data-* — found by rendering all",
+    "13 rebuilt components from ONE piece of JSX against BOTH engines and diffing",
+    "the emitted attribute sets, rather than by reading docs or recalling earlier",
+    "rounds.",
+    "",
+    "THE HEADLINE: every gap in this file is externally fixable. Not one fix",
+    "reaches into node_modules, imports an internal module path, or depends on an",
+    "implementation detail that a patch would have to freeze. Where a gap is NOT",
+    "fixed it is because fixing it would trade one defect for a worse one, and",
+    "that trade is named. The architectural bet — that Base UI's limits close",
+    "from outside with documented props where React Aria's needed a 27KB patch of",
+    "a dependency — HOLDS across every gap measured here.",
+    "",
+    "THE SECOND HEADLINE, and it is a correction: the alert-dialog gap does NOT",
+    "need a public API change. The AlertDialogTrigger/Overlay/Modal trio the",
+    "previous round proposed is REJECTED with reasons; see gap alert-dialog-role."
+  ],
+  "generated_at": "2026-08-11",
+  "branch": "experiment/base-ui",
+  "base_ui_version": "1.7.0",
+  "supersedes_or_amends": [
+    "rebuild-overlays.json → capability_gaps/tooltip-no-aria — 'left honest, cannot be invented'. WRONG. Measured fixable through public props; now fixed.",
+    "rebuild-overlays.json → capability_gaps/isDismissable-inert-and-default-inverted — now honoured, without an API change.",
+    "phase-a-result.json → capability_gap/alert-dialog-root-at-the-wrong-layer — resolved without the proposed API change.",
+    "rebuild-collections.json → api_preservation 'prop_names_changed: 0' for menu — FALSE. `aria-label` was dropped from MenuProps. Restored here."
+  ],
+
+  "method": {
+    "probes": [
+      "experiments/harness/probe.api-shape.test.tsx → probe.api-shape.json — the census. Both engines, SAME JSX, two arms (renderToStaticMarkup and @testing-library/react with every overlay forced open), diffed as sets of roles / aria-* / data-*.",
+      "experiments/harness/probe.api-shape-detail.test.tsx → probe.api-shape-detail.json — per-element attribute dumps for the diffs that looked like real losses rather than vocabulary changes.",
+      "experiments/harness/probe.api-shape-fixability.test.tsx → probe.api-shape-fixability.json — drives Base UI's PUBLIC prop surface directly to ask, per gap, whether the fix exists outside."
+    ],
+    "baselines": "experiments/harness/racbase/ — experiments/baseline-rac/*.tsx verbatim plus three one-line re-export shims so both engines render in one process. date-field excluded (no Base UI counterpart).",
+    "why_two_arms": "A closed overlay emits nothing on either engine, so an SSR-only diff reports a false tie for dialog, popover, tooltip and menu. A client-only diff hides every defect that self-heals on hydration, which is the whole class gate:html exists to catch.",
+    "commands": [
+      "pnpm --filter @lumo-ui/ui exec vitest run  (35 files, 609 tests, all green after the fixes)",
+      "packages/ui/node_modules/.bin/tsc --noEmit  (clean)"
+    ],
+    "not_run": "pnpm run verify, next build — RAM budget, per brief. So no gate:html number for the fixes below.",
+    "concurrency_warning": "A SIBLING AGENT was rebuilding the FIELD family in this same working tree during this run (base-ui-adapter.ts's useFieldWiring, checkbox, switch, number-field, slider, select, locale). Their work is attributed to them below and was not edited. This file's fixes are confined to the OVERLAY family plus tabs and combobox."
+  },
+
+  "verified_from_the_brief": [
+    {
+      "id": "tabs-fix-keys-on-props-not-identity",
+      "asked": "verify the tabs default-selection fix keys on props, because `child.type === Tab` passed jsdom and did nothing on the real site",
+      "verdict": "CONFIRMED CORRECT. tabs.tsx's `search()` reads `props.label` (TabList's required prop) and `props.id` (a Tab's identity) and never compares `child.type` to a function. It uses `typeof child.type === 'string'` only to SKIP host elements — a test on the shape of the value, not on its identity — so a client reference is treated as a component, which is what the server-composed case needs.",
+      "generalised": "The same walk is now needed by dialog.tsx twice, so it is factored into `findChildProp` in base-ui-adapter.ts with the RSC-boundary reasoning stated once. Three components now depend on it: tabs (default selection), dialog (isDismissable), dialog (alertdialog role)."
+    },
+    {
+      "id": "press-events-complete-for-every-consumer",
+      "asked": "does every Lumo onPress consumer get the fields it reads",
+      "method": "grep of every `onPress` in packages/ and apps/ outside node_modules",
+      "measured": {
+        "onPress_call_sites": 21,
+        "call_sites_that_READ_the_event_argument": 0,
+        "call_sites_that_pass_onPressStart_End_Up_Change": 0,
+        "call_sites_that_pass_onHover_or_onFocusChange": 0
+      },
+      "verdict": "COMPLETE for every consumer that exists. Every handler in the repository is `() => …` or a bare zero-argument reference, so no consumer reads pointerType, key, x, y or continuePropagation, and the three fields pressFromClick cannot derive are unreachable in practice today.",
+      "residual_risk": "This is a property of the CURRENT call sites, not of the adapter. A copy-in consumer branching on `pointerType === 'touch'` still silently takes the mouse branch, and that is a defect the type system cannot show them. Recorded, not fixed: fixing it means listening to pointerdown as well as click, which is re-implementing the press layer rather than adapting it.",
+      "one_real_hole_found": "item.tsx is NOT on Base UI — it still forwards `onPress` to a React Aria `Button`. Its press path never touches the adapter, so `item.test.tsx`'s passing press assertion is NOT evidence the adapter works. The adapter's evidence is sidebar.test.tsx:94."
+    }
+  ],
+
+  "gaps": [
+    {
+      "id": "tooltip-no-aria",
+      "severity": "CRITICAL",
+      "components": ["tooltip"],
+      "what_breaks": "Base UI's Tooltip creates NO accessibility relationship between trigger and popup. Measured on an open tooltip, both arms: trigger `aria-describedby` null, popup `role` null, zero `[role=tooltip]` in the document. React Aria emitted `aria-describedby` on the trigger and `role=\"tooltip\"` on the overlay. A sighted mouse user sees the tooltip; a screen-reader user is never told it exists. It leaks no English, so every string-counting measurement in this repository scored it clean, and Lumo has no tooltip test, so nothing went red.",
+      "externally_fixable": true,
+      "evidence_it_is_fixable": "probe.api-shape-fixability.json → Q4. `role` and `id` passed to Tooltip.Popup land verbatim; `aria-describedby` passed to Tooltip.Trigger lands on the RENDERED trigger element; exactly one [role=tooltip] results. Also verified at SSR.",
+      "fix": "tooltip.tsx: TooltipTrigger mints one id, gives it to Tooltip.Popup (with role=\"tooltip\") through a Lumo context, and sets aria-describedby on Tooltip.Trigger — but ONLY while open, mirrored through the new `useOpenMirror`. The conditional is load-bearing: the popup is unmounted until it opens, so an unconditional idref would be a DANGLING one, which is the second defect class this repository tracks and the one COMPARISON.md's axis 1a credits Base UI for avoiding. Trading a missing relationship for a broken one is not a fix.",
+      "changes_public_api": false,
+      "status": "FIXED",
+      "amends": "rebuild-overlays.json called this unfixable-without-inventing-a-relationship. That was the wrong reading: role and aria-describedby are ARIA, not engine state, and Base UI's public props accept both."
+    },
+    {
+      "id": "alert-dialog-role",
+      "severity": "HIGH",
+      "components": ["alert-dialog", "dialog"],
+      "what_breaks": "TWO nested dialogs where React Aria emitted one, and the wrong one at the focus boundary. Measured on an open alert dialog BEFORE the fix: `div[role=dialog]` (Base UI's Dialog.Popup, which owns the focus trap) wrapping `div[role=alertdialog]` (Lumo's own div), both pointing aria-labelledby at the same heading. A screen reader entering the trap is told 'dialog'. An alert dialog that announces as a plain dialog has lost the urgency the role exists to carry. PLUS the previously-recorded half: outside-press dismissal was ON, which the component's own docblock forbids.",
+      "externally_fixable": true,
+      "evidence_it_is_fixable": "probe.api-shape-fixability.json → Q7: `role=\"alertdialog\"` passed to Dialog.Popup overrides its role AND the popup still receives aria-labelledby from Dialog.Title. Plus DialogRoot.d.ts: `disablePointerDismissal` is a documented public prop on Dialog.Root.",
+      "fix": "dialog.tsx: `popupRole()` reads `confirmLabel` — a required AlertDialogProps field that appears on nothing else in the library — off the DialogModal's descendants with `findChildProp`, and passes `role=\"alertdialog\"` to Dialog.Popup. alert-dialog.tsx drops its own role and aria-labelledby. Measured after: exactly one `div[role=alertdialog]`, focus-trapped, labelled by the Persian title.",
+      "changes_public_api": false,
+      "the_proposed_API_CHANGE_IS_REJECTED": {
+        "proposal": "an AlertDialogTrigger / AlertDialogOverlay / AlertDialogModal trio, so AlertDialog.Root becomes reachable",
+        "why_rejected": "It would be a BREAKING change — every existing alert-dialog call site rewritten — and it buys nothing the public props do not. The two things AlertDialog.Root actually provides are (1) disablePointerDismissal forced on and (2) role=alertdialog on the popup; both are now supplied by documented props on the parts Lumo already exposes.",
+        "residue_stated_rather_than_hidden": "This composition never reaches AlertDialog.Root, so anything Base UI adds to alert-dialog MODE in a future release arrives here only if it is also exposed as a prop. That is a real upgrade risk and it is the honest reason the section stays in the file header."
+      },
+      "status": "FIXED"
+    },
+    {
+      "id": "dialog-isDismissable-inert-and-inverted",
+      "severity": "HIGH",
+      "components": ["dialog", "alert-dialog"],
+      "what_breaks": "React Aria read dismissal off the ModalOverlay: opt-in, default OFF. Base UI puts the inverse control on Dialog.Root and outside-press dismissal is ON by default. Lumo's API puts the prop on DialogOverlay, which under Base UI is a Portal+Backdrop pair with no route up to the Root — so the prop type-checked and did nothing, and EVERY dialog in the build was dismissable whether or not the caller asked. The direction of the failure is the dangerous one.",
+      "externally_fixable": true,
+      "fix": "dialog.tsx: DialogTrigger IS the Root and DialogOverlay IS its descendant, so `findChildProp(children, 'isDismissable')` reads the value off the overlay ELEMENT'S PROPS before render and hands the Root `disablePointerDismissal={!dismissable}`. Absent the prop the default is now React Aria's — not dismissable. Keys on the prop and never on `child.type`, for the reason that cost a production build in tabs.",
+      "changes_public_api": false,
+      "behaviour_change": "YES, and it is the point: a dialog composed exactly as before now refuses a scrim dismissal unless it asked for one.",
+      "status": "FIXED"
+    },
+    {
+      "id": "menu-aria-label-dropped-from-the-type",
+      "severity": "HIGH",
+      "components": ["menu"],
+      "what_breaks": "React Aria's `MenuProps` extended `AriaMenuProps`, so `aria-label` was public and landed on the `role=\"menu\"` element (measured: `aria-label=\"کارها\"`). The Base UI rebuild narrowed MenuProps to three fields and the prop vanished from the type — measured: `aria-label` appears NOWHERE in an open Base UI menu. Base UI names the popup from the TRIGGER instead, so an unlabelled menu is announced with the trigger's visible text — a reasonable default and a wrong answer whenever the trigger is an ellipsis icon, which is the composition menu.tsx's own docblock opens with. rebuild-collections.json's `prop_names_changed: 0` was false.",
+      "externally_fixable": true,
+      "evidence_it_is_fixable": "probe.api-shape-fixability.json → Q1: an `aria-label` passed to Menu.Popup lands verbatim on the role=menu element.",
+      "fix": "menu.tsx: `aria-label` restored to MenuProps, declared on the part the caller writes it on, and LIFTED to Menu.Popup by MenuPopover through `findChildProp` — because `<Menu>` renders INSIDE the popup and the popup is the element carrying role=\"menu\".",
+      "changes_public_api": true,
+      "api_change_direction": "RESTORES a prop the rebuild had silently removed. Additive against the shipped React Aria API; nothing that compiled before stops compiling.",
+      "status": "FIXED",
+      "not_fixed_alongside_it": "MenuProps still lacks the rest of AriaMenuProps — `disabledKeys`, `selectionMode`, `selectedKeys`, `onSelectionChange`, `items`, `renderEmptyState`, `autoFocus`. Those are collection-layer props with no Base UI equivalent at all (see rebuild-collections.json → menu.dynamic-collections) and are correctly absent rather than inert. `aria-label` was the one in that list that is pure ARIA and cost nothing."
+    },
+    {
+      "id": "popover-popup-unnamed",
+      "severity": "MEDIUM",
+      "components": ["popover"],
+      "what_breaks": "Base UI's Popover.Popup is `role=\"dialog\"` with NO accessible name — measured attribute set carries neither aria-label nor aria-labelledby. React Aria pointed aria-labelledby at the TRIGGER, so the name was the trigger's visible text (measured resolving to «بیشتر»). An unnamed dialog announces as bare 'dialog'. Leaks no English, so no string count sees it.",
+      "externally_fixable": true,
+      "evidence_it_is_fixable": "probe.api-shape-fixability.json → Q3: aria-labelledby passed to Popover.Popup lands verbatim.",
+      "fix": "popover.tsx: PopoverTrigger mints an id, puts it on Popover.Trigger, and publishes it to Popover through a context. The reference cannot dangle — the trigger is in the document whenever the popup is, and in the first byte too. A caller who passes aria-label or aria-labelledby wins outright.",
+      "changes_public_api": false,
+      "status": "FIXED"
+    },
+    {
+      "id": "menu-trigger-no-aria-expanded-in-the-first-byte",
+      "severity": "MEDIUM",
+      "components": ["menu"],
+      "what_breaks": "The served menu trigger carries `aria-haspopup=\"menu\"` and NO `aria-expanded`; the attribute appears only after mount. React Aria served `aria-haspopup=\"true\" aria-expanded=\"false\"`. A button that announces it owns a popup while refusing to say whether the popup is open is worse than one that says nothing. `Dialog.Trigger` and `Popover.Trigger` DO emit aria-expanded at SSR in the same build, which makes this a Base UI inconsistency rather than a policy.",
+      "externally_fixable": true,
+      "evidence_it_is_fixable": "probe.api-shape-fixability.json → Q2. And the same probe found the trap: Base UI resolves a conflict between its own aria-expanded and the caller's by letting the CALLER win, so a hard-coded `aria-expanded={false}` survives onto an OPEN trigger. A constant would be a worse defect than the gap.",
+      "fix": "menu.tsx: `useOpenMirror` (new, in base-ui-adapter.ts) keeps the wrapper's own copy of the open state, seeded from defaultOpen and advanced from onOpenChange, and the trigger emits the real value. Not the useState-mirror-of-DOM-state that button.tsx rule 5 forbids: the DOM does not carry this fact at all until we put it there.",
+      "changes_public_api": false,
+      "status": "FIXED"
+    },
+    {
+      "id": "tabs-panel-unnamed-in-the-first-byte",
+      "severity": "MEDIUM",
+      "components": ["tabs"],
+      "what_breaks": "Base UI wires aria-controls / aria-labelledby between tabs and panels on the CLIENT. Measured at SSR: the tab has role+id and no aria-controls; the panel has role+id and NO aria-labelledby. So the served panel has no accessible name — a reader with no JS is told 'tab panel' with no indication which tab it belongs to. React Aria emitted both associations at SSR with zero dangling references.",
+      "externally_fixable": true,
+      "evidence_it_is_fixable": "probe.api-shape-fixability.json → Q5: explicit ids on Tabs.Tab and Tabs.Panel are honoured at SSR, and Base UI derives its own client-side aria-controls FROM ours rather than replacing them.",
+      "fix": "tabs.tsx: a `TabsIdContext` carries one useId base; Tab derives `${base}-tab-${id}` and TabPanel derives `${base}-tabpanel-${id}` plus `aria-labelledby` at the tab. Measured after, in the served bytes: `aria-labelledby=\"_R_0_-tab-a\"`.",
+      "changes_public_api": false,
+      "status": "FIXED",
+      "deliberately_only_half_fixed": "aria-controls is NOT added to the tabs. A Base UI panel renders nothing until selected, so at SSR only one panel exists and aria-controls on every tab would point at absent elements — a dangling idref. React Aria reached the same shape: measured, its SSR emitted aria-controls on the SELECTED tab only, dangling count 0. aria-controls is a SHOULD in the ARIA tabs pattern; the panel's NAME is what a reader actually loses, and that is the half fixed."
+    },
+    {
+      "id": "combobox-group-role-lost",
+      "severity": "LOW",
+      "components": ["combobox"],
+      "what_breaks": "`group` is the one ROLE this component's census reports lost. React Aria's baseline wrapped the input and its «نمایش پیشنهادها» button in `<div role=\"group\">`; the Base UI rebuild emitted a bare div. Without the grouping, a screen reader's element-by-element walk meets a button that belongs to nothing.",
+      "externally_fixable": true,
+      "fix": "combobox.tsx: `role=\"group\"` on the wrapper div. A plain DOM attribute on a plain element — no engine behaviour involved.",
+      "changes_public_api": false,
+      "status": "FIXED"
+    },
+    {
+      "id": "field-description-not-announced-at-ssr",
+      "severity": "HIGH",
+      "components": ["switch", "checkbox", "number-field", "select"],
+      "what_breaks": "The census found `aria-describedby` missing from the SSR arm of five components and present in the client arm. Base UI's Field.Description reaches the control through the SAME layout-effect machinery as Field.Label, so the description and the error message are announced by nothing in the served bytes. It is INVISIBLE to gate:html by construction — `named-controls` grades names and `resolved-idrefs` excludes aria-describedby — so it had a violation count of zero and a real cost.",
+      "externally_fixable": true,
+      "fix": "An `aria-describedby` PROP is resolved during render, ahead of both effects (probe.api-shape-fixability.json → Q6 confirms it survives at SSR and client).",
+      "changes_public_api": false,
+      "status": "FIXED BY A SIBLING AGENT DURING THIS RUN, not by this brief — `useFieldWiring` in base-ui-adapter.ts, which generalises the old `useSsrLabelId` to name, description and error from one useId. Verified fixed for switch in the re-run census; checkbox, number-field and select were still showing it at the moment of the last census and are that agent's in-flight work, not an unclosed gap.",
+      "attribution": "sibling-agent"
+    },
+    {
+      "id": "slider-description-and-details-lost",
+      "severity": "LOW",
+      "components": ["slider"],
+      "what_breaks": "React Aria's slider input carried aria-labelledby, aria-describedby and aria-details; Base UI's carries aria-label and aria-valuenow. The NAME is not lost — it moved from a labelledby to a direct aria-label sourced from Lumo's required `label` prop, which is at least as robust and cannot dangle. What is lost is the description/details wiring.",
+      "externally_fixable": true,
+      "fix": "Same shape as the field-description fix: an explicit aria-describedby prop. slider.tsx is a sibling agent's in-flight file this round and was not edited.",
+      "changes_public_api": false,
+      "status": "OPEN — sized, not hidden. One line, in a file another agent owns this round.",
+      "attribution": "sibling-agent"
+    },
+    {
+      "id": "select-shows-the-raw-key",
+      "severity": "HIGH",
+      "components": ["select"],
+      "what_breaks": "Measured in the served bytes: `<Select defaultSelectedKey=\"thr\">` renders the trigger text `thr` where React Aria rendered «تهران». Select.Value resolves a label only from the Root's `items` prop, and the items live in a portal that renders null while closed. This is VISIBLE WRONG TEXT on a shipped example, not an ARIA subtlety.",
+      "externally_fixable": "PARTIALLY, and the honest answer is no. Base UI's own route is to pass its `items` shape to the Root — a different public API from React Aria's collection, so honouring it means changing Lumo's. The alternative is walking `children` for a matching `id` and lifting its text, which is a collection builder inside a wrapper: the exact work renting a headless library is supposed to buy.",
+      "fix": "Either adopt Base UI's `items` on SelectProps (an API change, additive) or accept that `defaultSelectedKey` without `items` shows the key. Not decided here.",
+      "changes_public_api": true,
+      "status": "OPEN — unchanged from rebuild-collections.json, re-confirmed in the served bytes this round.",
+      "note": "This is the one gap in this file that is NOT cleanly external, and it is a COLLECTION gap rather than an ARIA one. That is the shape of the remaining Base UI risk: not accessibility, which closes from outside, but the collection layer, which does not."
+    }
+  ],
+
+  "diffs_that_are_NOT_gaps": {
+    "$why": "The census reports set differences, and several of them run in Base UI's favour or are pure vocabulary. Listing them stops a later reader from re-opening a closed question.",
+    "trigger_aria_controls_absent_at_ssr": "dialog, popover and menu triggers all lose `aria-controls` at SSR relative to React Aria. But the popup does not exist in the served bytes, so React Aria's aria-controls is a DANGLING IDREF and Base UI's omission is the correct behaviour. This is axis 1a of COMPARISON.md, observed directly rather than counted.",
+    "menu_popup_role_dialog": "React Aria wrapped an open menu in a role=dialog popover as well as the role=menu list; Base UI does not. One dialog fewer in the a11y tree for a menu of actions is not a loss.",
+    "data_rac_and_data_react_aria_pressable": "Present on every React Aria element and absent everywhere on Base UI. Engine watermarks, not semantics. No Lumo test or gate rule reads either.",
+    "state_vocabulary_renames": "data-selected→data-pressed (toggle), data-selected→data-checked (switch/checkbox), data-selected→data-active (tab), data-placement→data-side+data-align, data-entering/exiting→data-starting-style/ending-style. Already measured and rewritten in state-selector-counts.json; they appear in this census as lost/gained pairs and are not new.",
+    "slider_role": "NEITHER engine emits role=\"slider\" — both use a native <input type=range>. The census's 'aria-labelledby lost' on slider is the naming route moving to aria-label, not a name disappearing.",
+    "tabs_aria_orientation": "Base UI omits aria-orientation on a HORIZONTAL tablist and emits `aria-orientation=\"vertical\"` on a vertical one — verified by rendering both. Horizontal is ARIA's default, so the omission is correct and the census diff is an artifact of the horizontal fixture.",
+    "checkbox_role_checkbox_gained": "React Aria used a real <input type=checkbox>, which carries the role implicitly; Base UI uses <span role=\"checkbox\">. Equivalent to a reader — and the reason the SSR naming gap exists at all, since a native <label> cannot name a span."
+  },
+
+  "inert_props_census": {
+    "$about": [
+      "rebuild-overlays.json counted 41 props 'accepted but inert'. Each is a promise the component no longer keeps, and a prop that silently does nothing is worse than one that does not exist. Every one is triaged below into exactly one of four dispositions.",
+      "The count moved: 4 are now HONOURED and 3 were miscounted as inert when they are structural placeholders. The remaining 34 split into two piles, and the piles are the finding — 12 of them can simply be DELETED, because they exist only to satisfy a React Aria props type Lumo no longer needs to extend."
+    ],
+    "now_honoured": [
+      { "prop": "isDismissable", "component": "dialog (DialogOverlay)", "how": "lifted to Dialog.Root's disablePointerDismissal by DialogTrigger, with RAC's default restored" },
+      { "prop": "aria-label", "component": "menu (Menu)", "how": "restored to the type and lifted to Menu.Popup" },
+      { "prop": "level", "component": "dialog (DialogHeading)", "how": "still only honoured when it is 2 — Base UI's Title is always <h2>. Counted here because the previous round listed it as wholly inert; it is honoured for its default and inert otherwise. See must_be_documented_as_no_ops." }
+    ],
+    "must_be_documented_as_no_ops": {
+      "$rule": "Kept because REMOVING them is a breaking change for a consumer who already passes them, and because the behaviour they name is genuinely absent rather than merely unwired. Each needs a line in its own docblock saying so — most already have one.",
+      "props": [
+        { "prop": "isKeyboardDismissDisabled", "components": ["dialog", "popover", "tooltip"], "why": "Base UI has no Escape-disable anywhere on Dialog.Root or Popover.Root. Escape always closes." },
+        { "prop": "delay / closeDelay", "components": ["tooltip"], "why": "Base UI's delay lives on Tooltip.Provider, an APP-LEVEL grouping component. Honouring a per-tooltip delay means one Provider per tooltip, which defeats the grouping the Provider exists for and changes hover-out behaviour between neighbours." },
+        { "prop": "level", "components": ["dialog (DialogHeading)"], "why": "Dialog.Title renders <h2> unconditionally and takes no level. Honoured when it is 2, inert otherwise." },
+        { "prop": "validationBehavior / validate", "components": ["number-field", "switch", "checkbox"], "why": "Base UI has no 'aria' vs 'native' switch. Its nearest prop, Field.Root's validationMode, is a different axis (WHEN to validate, not WHETHER the browser owns the message). This one is worse than cosmetic — it reopens the English-error-under-a-Persian-label defect form.tsx exists to prevent, and there is no setting to flip." },
+        { "prop": "keyboardActivation", "components": ["tabs"], "why": "Base UI's equivalent is `activateOnFocus` on the LIST, a boolean rather than 'automatic' | 'manual', and it sits on a different part than Lumo's API puts the prop on." },
+        { "prop": "isDisabled (Tabs root)", "components": ["tabs"], "why": "Base UI disables per-Tab, not per-Tabs." },
+        { "prop": "shouldFlip / containerPadding / boundaryElement / maxHeight / shouldUpdatePosition / arrowBoundaryOffset", "components": ["popover", "tooltip"], "why": "React Aria clamped and re-positioned the overlay itself; Base UI's Positioner leaves the equivalents to CSS and to its own defaults. Six props naming a positioning model that no longer exists." },
+        { "prop": "isPending", "components": ["button"], "why": "No Base UI counterpart, no data-pending, no live region. Currently passed by ZERO call sites, so nothing regressed — but the type still makes the promise." },
+        { "prop": "preventFocusOnPress", "components": ["button", "toggle"], "why": "No press layer, so no press-time focus policy." },
+        { "prop": "autoFocus / excludeFromTabOrder (switch, checkbox)", "components": ["switch", "checkbox"], "why": "Base UI spreads Root props to the visible <span>, not to the hidden focusable <input>, so both would land on a non-focusable element. On button and toggle excludeFromTabOrder IS expressible and IS translated." },
+        { "prop": "isReadOnly / isRequired (CheckboxGroup)", "components": ["checkbox"], "why": "Base UI's CheckboxGroup has `disabled` and no read-only or group-required concept; neither does Field.Root." },
+        { "prop": "textValue (ComboBoxItem)", "components": ["combobox"], "why": "Matching is a root-level concern in Base UI's Combobox. Deliberately NOT forwarded to aria-label, which would have hidden the symptom by renaming every option after its own visible text." }
+      ]
+    },
+    "should_be_REMOVED_from_the_API": {
+      "$rule": "These 12 name a MECHANISM React Aria had and Base UI does not have in any form. They cannot ever be honoured, they are not behaviour a consumer can reasonably still want, and leaving them is the accepted-and-dropped shape this project treats as a defect. Removing them is a breaking change and should be one — a compile error is the correct way to tell a consumer their code stopped working.",
+      "props": [
+        { "prop": "isEntering / isExiting / shouldSkipAnimation", "components": ["dialog", "popover", "tooltip"], "why": "React Aria's presence-machinery flags. Base UI drives transitions off data-starting-style / data-ending-style, which is CSS, and there is no imperative animation state to force." },
+        { "prop": "triggerRef", "components": ["popover", "tooltip"], "why": "React Aria's route for anchoring an overlay to a foreign element. Base UI anchors through Positioner and has no equivalent — this is the same mechanism whose absence broke context-menu.tsx." },
+        { "prop": "scrollRef", "components": ["popover"], "why": "Same family: a ref into the overlay's internals, which no longer have that shape." },
+        { "prop": "UNSTABLE_portalContainer", "components": ["dialog", "popover", "tooltip"], "why": "React Aria's escape hatch, and its name says it was never stable. Base UI's Portal takes a `container` prop, so a caller who needs this has a supported route — but it is not this prop." },
+        { "prop": "shouldCloseOnInteractOutside", "components": ["dialog", "popover"], "why": "A per-event predicate. Base UI's dismissal is a boolean, so there is no argument to give a predicate." },
+        { "prop": "trigger", "components": ["popover", "tooltip", "menu"], "why": "React Aria's 'longPress' | 'focus' trigger modes. menu.tsx already REMOVED it rather than accepting it — that is the right precedent, and popover and tooltip should follow it." },
+        { "prop": "items / dependencies", "components": ["tabs (TabList)"], "why": "The collection layer. Base UI's List has no render-function form, so the `(item: T) => LumoNode` child shape is accepted by the type and NEVER INVOKED — a prop whose failure mode is a blank tab list. menu.tsx types its equivalent `Iterable<T> & never` so passing one is a compile error; TabList should do the same." },
+        { "prop": "href / target / rel / download / ping / referrerPolicy / routerOptions", "components": ["tabs (Tab)"], "why": "React Aria's link-tab support. Base UI's Tab renders a <button>, full stop. Seven props describing an <a> that will never be rendered — the largest single block of dead surface in the census, and the one most likely to be passed by someone building navigation out of tabs." },
+        { "prop": "onPressStart / onPressEnd / onPressUp / onPressChange / onHoverStart / onHoverEnd / onHoverChange / onFocusChange", "components": ["button", "toggle", "tabs (Tab)"], "why": "Base UI ships no press or hover abstraction at all. Eight handlers that are typed, accepted, and never called. Measured: ZERO call sites in this repository pass any of them, so removing them today breaks nothing in-tree." },
+        { "prop": "render (as a React Aria render function)", "components": ["all"], "why": "The compiler ALREADY says so — TS2322, 'Type ButtonState is missing … isHovered, isPressed, isFocused, isFocusVisible'. React Aria hands the callback six state flags; Base UI hands it one. This is the single gap the type system announces rather than hides, and the prop is destructured out precisely because it cannot type-check through." },
+        { "prop": "style as a function", "components": ["all"], "why": "Both libraries accept a callback and they take different arguments. Calling Base UI's with React Aria's shape would be wrong; the wrapper drops it. A plain style object still works." },
+        { "prop": "slot", "components": ["all"], "why": "React Aria's `slot` is a NAME in a parent's context map; Base UI has no context injection, so it can only be the native web-components attribute — and it cannot even express RAC's `null` (opt out). Measured consequence: `<Checkbox slot=\"selection\">` in table.tsx renders correctly-named, correctly-Persian, entirely INERT checkboxes. This is the most expensive prop in the list and the one whose removal would be loudest, which is exactly why it should be a compile error rather than a silent no-op." }
+      ],
+      "count": 12,
+      "prop_names_affected": 33,
+      "note": "The 12 entries cover 33 individual prop names because seven link props and eight interaction handlers each move as a block."
+    },
+    "reclassified_not_inert": [
+      { "prop": "onPress (Tab)", "was": "listed inert", "is": "REMOVABLE, not merely inert — a Tab's activation is `onSelectionChange` on the root, which works. Nothing is lost." },
+      { "prop": "isOpen / defaultOpen / onOpenChange on the SURFACE parts (DialogOverlay, DialogModal, Popover, Tooltip)", "was": "listed inert", "is": "STRUCTURAL DUPLICATES. React Aria let either the trigger or the surface own the state; Lumo's composition always puts it on the trigger, and the surface copies were never the live ones. Removing them is safe and clarifying." },
+      { "prop": "tab-value-required-id-optional", "was": "listed as a gap", "is": "STILL A GAP and it is a TYPE gap, not a prop gap. `<Tab>` without `id` compiles and reaches Base UI with value: undefined — a tab that can never be selected. It is the only `as unknown as` in tabs.tsx. Making `id` required on TabProps is a one-line breaking change that converts a silent dead tab into a compile error, and it should be made." }
+    ]
+  },
+
+  "adapter_additions": {
+    "file": "packages/ui/src/base-ui-adapter.ts",
+    "added_this_round": [
+      {
+        "name": "useOpenMirror",
+        "why": "Three first-byte defects can only be fixed by emitting an attribute whose VALUE is the overlay's open state, and Base UI exposes no way to read it. The wrapper keeps its own copy, seeded from defaultOpen and advanced from onOpenChange.",
+        "the_trap_it_documents": "Base UI resolves a conflict between its own aria-* and the caller's by letting the CALLER win. So the naive fix — a hard-coded aria-expanded={false} — survives onto an OPEN trigger and is a worse defect than the gap. Measured, Q2.",
+        "used_by": ["tooltip", "menu"]
+      },
+      {
+        "name": "findChildProp",
+        "why": "Three separate fixes need a parent to read a value off a descendant ELEMENT'S PROPS before render: tabs' default selection, dialog's isDismissable, dialog's alertdialog role.",
+        "the_lesson_it_carries": "It keys on props and NEVER on child.type. When a server component composes the tree, every child.type is a client reference rather than this module's function — the identity test passes in jsdom and silently does nothing on the real site. That is the bug that deleted every demo from the docs site's served bytes while next build exited 0, and the reasoning now lives in one docblock instead of being rediscovered.",
+        "used_by": ["dialog (×2)", "menu"]
+      }
+    ],
+    "not_added_by_this_brief": "useFieldWiring, which supersedes useSsrLabelId and extends the same SSR workaround to descriptions and errors. A sibling agent's work, landed in this tree during this run.",
+    "distribution_cost": "base-ui-adapter.ts is now in the dependency closure of the overlay family as well as the field family and the four simple controls. Lumo ships by copy-in, so a consumer copying `tooltip` copies it too. That number belongs in the adoption decision and is recorded rather than hidden."
+  },
+
+  "the_bet_scored": {
+    "question": "React Aria's defects needed a 27KB patch of node_modules. Do Base UI's close from outside?",
+    "gaps_found_this_round": 11,
+    "externally_fixable": 10,
+    "fixed_this_round": 7,
+    "fixed_by_a_sibling_agent_concurrently": 1,
+    "open_but_sized_and_external": 1,
+    "not_cleanly_external": 1,
+    "the_one_that_is_not": "select-shows-the-raw-key. It is a COLLECTION gap, not an accessibility one — the label lives in a portal that renders null while closed, and no ARIA attribute can conjure it. That is the shape of the remaining Base UI risk: the accessibility layer closes from outside with documented props; the collection layer does not.",
+    "node_modules_reached_into": 0,
+    "internal_module_paths_depended_on": 0,
+    "internal_paths_READ_for_evidence": "Several — useRegisteredLabelId.js, getStateAttributesProps.mjs, SliderThumb.mjs, ComboboxLabel.mjs. Reading the dist to explain a measured behaviour is not the same as depending on it, and no fix in this file imports from any of them. The distinction is the whole bet: a patch must freeze an internal, an adapter only has to understand one."
+  },
+
+  "limitations": [
+    "NO GATE NUMBERS AND NO BROWSER. gate:html and next build were not run (RAM budget, per brief), so every claim here is jsdom plus renderToStaticMarkup. The tooltip, popover-name and tabs-panel fixes would each move a gate:html count and none of those counts exist yet.",
+    "NO NEW TESTS WERE WRITTEN for the fixes. Every existing suite passes (35 files, 609 tests) and NOT ONE WAS EDITED — but the tooltip still has no test of its own, which is exactly the hole the CRITICAL gap fell through. A tooltip suite pinning role=tooltip, the conditional aria-describedby, and the ABSENCE of a dangling idref in the first byte is the single most valuable test this library does not have.",
+    "THE OPEN-STATE MIRROR IS UNTESTED UNDER REAL INTERACTION. useOpenMirror is exercised by defaultOpen fixtures and by the existing menubar/context-menu suites; no test drives a real open→close→open cycle and asserts aria-expanded tracks it.",
+    "SHARED WORKING TREE. A sibling agent rebuilt the field family concurrently. The census's re-run reflects a moving tree, so the residual aria-describedby losses on checkbox, number-field and select are a timestamp rather than a verdict.",
+    "THE INERT-PROP TRIAGE IS A RECOMMENDATION, NOT A CHANGE. Twelve entries covering 33 prop names are argued for REMOVAL and none were removed: every one is a breaking change and the experiment's frozen-API condition is what put them there. Removing them is the first thing a Base UI-native API would do, and it is also how the +61% wrapper-line figure in COMPARISON.md gets paid back."
+  ]
+}

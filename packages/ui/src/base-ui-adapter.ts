@@ -1,34 +1,47 @@
 /**
- * EXPERIMENT ONLY (branch `experiment/base-ui`). The translation layer between
- * Lumo's React Aria-shaped public API and Base UI's native-DOM-shaped one.
+ * EXPERIMENT ONLY (branch `experiment/base-ui`). What is left of the adapter
+ * after the engine layer moved out.
  *
- * This file exists because the experiment's whole validity rests on the public
- * API not moving. Lumo's `ButtonProps` is `Omit<AriaButtonProps, …>`, so the
- * library promises `isDisabled`, `onPress`, `defaultSelected`, `isInvalid`.
- * Base UI promises `disabled`, `onClick`, `defaultPressed`, and nothing at all
- * for validity outside `Field.Root`. Something has to sit between them, and the
- * SIZE of that something is one of the numbers this experiment is measuring —
- * so it is one named file rather than four copies of the same twenty lines.
+ * ── THE SPLIT, AND WHY THE LINE FALLS EXACTLY HERE ──────────────────────────
  *
- * No `"use client"`: the FUNCTIONS here are pure, so a server module can call
- * them. Same rule `button.variants.ts` states for `cva()`. The one exception is
- * `useSsrLabelId`, which is a hook and therefore only callable from a component
- * — it lives here anyway because four components need the identical three
- * lines, and the file has no directive to inherit, so importing it from a
- * client component is what puts it on the client. A server module calling it
- * would fail for the ordinary reason any hook does.
+ * This file used to hold two different kinds of code under one name, and the
+ * difference only became visible when the package was extracted:
  *
- * ── WHAT THIS FILE COSTS LUMO'S DISTRIBUTION MODEL ──────────────────────────
+ *   ENGINE COMPENSATION — Base UI does something on the client that it should do
+ *   during render, or does not do at all. `useFieldWiring`, `useOpenMirror`,
+ *   `findChildProp`, `attr` and the Base UI string catalogue are all this shape.
+ *   They are true for ANYONE using Base UI, they name no Lumo concept, and they
+ *   are now `@lumo-ui/base-ui-ssr` — a package with a README, a version it is
+ *   verified against, and an upstream issue that would retire each part.
  *
- * Lumo ships by copy-in. Today `button.tsx` travels with `button.variants.ts`
- * and `cn`. On Base UI it would also travel with this, and so would switch,
- * checkbox and toggle — a new shared module in the dependency closure of every
- * interactive component in the library. That is a real cost and it is recorded
- * rather than hidden inside four files.
+ *   API-SHAPE TRANSLATION — Lumo's public API is `Omit<AriaButtonProps, …>`, so
+ *   the library promises `onPress` and a React Aria-shaped `onKeyDown`. Base UI
+ *   promises `onClick` and React's own. Something has to sit between them. That
+ *   is what remains in this file, and it compensates for LUMO'S FROZEN API, not
+ *   for Base UI: a Base UI-native API would delete it outright.
+ *
+ * The line is not a matter of taste. `@lumo-ui/base-ui-ssr` may depend only on
+ * `react`, `@base-ui/react` and `@lumo-ui/core` — the two functions below import
+ * types from `react-aria-components`, which is exactly the dependency a
+ * republishable Base UI package must not have. The type import is the proof that
+ * these two belong on this side of the line.
+ *
+ * No `"use client"`: both functions are pure, so a server module can call them.
+ * Same rule `button.variants.ts` states for `cva()`.
+ *
+ * ── WHAT THIS FILE STILL COSTS LUMO'S DISTRIBUTION MODEL ────────────────────
+ *
+ * Lumo ships by copy-in, and this remains a shared companion: `button.tsx`,
+ * `toggle.tsx` and `number-field.tsx` travel with it. The engine layer no longer
+ * does — a consumer installs `@lumo-ui/base-ui-ssr` the way they already install
+ * `@lumo-ui/core`, which is the right shape for code that must not be forked per
+ * consumer.
  */
 
-import { useId } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+} from "react";
 import type { ButtonProps as AriaButtonProps } from "react-aria-components";
 
 /**
@@ -117,59 +130,4 @@ export function asAriaKeyboardEvent(event: ReactKeyboardEvent<Element>): LumoKey
       /* no-op — see the header */
     },
   }) as unknown as LumoKeyboardEvent;
-}
-
-/**
- * Spread an attribute only when it has a value.
- *
- * A duplicate of `optional()` in `form.tsx` on purpose: that module carries
- * `"use client"`, and this one must stay server-callable. `exactOptionalPropertyTypes`
- * is on, so `disabled={maybeUndefined}` against Base UI's `disabled?: boolean | undefined`
- * is fine but `id={maybeUndefined}` against `id?: string` is not.
- */
-export function attr<K extends string, V>(key: K, value: V | undefined): { [P in K]?: V } {
-  return (value === undefined ? {} : { [key]: value }) as { [P in K]?: V };
-}
-
-/**
- * An id to put on the visible label AND on the control's `aria-labelledby`.
- *
- * ── A MEASURED BASE UI CAPABILITY GAP, WORKED AROUND HERE ──────────────────
- *
- * Base UI names a control from `Field.Label` by publishing the label's id into
- * a context — and it does that inside `useIsoLayoutEffect`
- * (`utils/useRegisteredLabelId.js`), which does not run on the server. Its
- * second route, scanning the DOM for an associated `<label>`
- * (`internals/labelable-provider/useAriaLabelledBy.js`), is in a layout effect
- * too. BOTH naming paths are therefore inert during a server render.
- *
- * The consequence is not cosmetic and a wrapping `<label>` does not save it:
- * Base UI exposes `<span role="checkbox">` / `role="switch"` /
- * `role="combobox"` as the control, and a native label names only labelable
- * ELEMENTS — a span with a role is not one. So the served HTML carries a
- * control with NO accessible name, which a screen reader announces as a bare
- * "checkbox", and the name appears only after hydration. `gate:html` measured
- * 98 of these across four components on the first run that ever produced data
- * on this branch.
- *
- * `aria-labelledby` passed as a PROP is the one naming route Base UI resolves
- * during render — `useAriaLabelledBy` reads it first, ahead of both effects —
- * so minting the id here and threading it to both elements fixes the first
- * byte. It is a workaround for an engine gap, not a Lumo wiring bug, and it
- * must be re-checked if Base UI moves the registration out of the effect.
- *
- * Returns `undefined` — meaning "do not wire it" — when there is no visible
- * label to point at, or when the caller already named the control explicitly.
- * A `<Checkbox aria-label="…">` in a table header must not be relabelled.
- */
-export function useSsrLabelId(
-  visibleLabel: unknown,
-  explicit: Record<string, unknown>,
-): string | undefined {
-  // Unconditional: hooks may not sit behind the branches below.
-  const generated = useId();
-  if (visibleLabel === undefined || visibleLabel === null) return undefined;
-  if (explicit["aria-label"] !== undefined) return undefined;
-  if (explicit["aria-labelledby"] !== undefined) return undefined;
-  return generated;
 }

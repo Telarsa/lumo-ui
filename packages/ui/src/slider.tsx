@@ -6,7 +6,7 @@ import { DirectionProvider } from "@base-ui/react/direction-provider";
 // TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
 import type { SliderProps as AriaSliderProps } from "react-aria-components";
 import { FORMAT_LOCALE, cn, direction, formatNumber, type Locale } from "@lumo-ui/core";
-import { attr } from "./base-ui-adapter.ts";
+import { attr, baseUiStringsFor } from "@lumo-ui/base-ui-ssr";
 
 /**
  * A single value chosen from a range. **BASE UI ENGINE.**
@@ -82,6 +82,52 @@ import { attr } from "./base-ui-adapter.ts";
  */
 
 export const sliderVariants = cva("flex w-full flex-col gap-2");
+
+/**
+ * Every `aria-valuetext` this component can emit, from one locale.
+ *
+ * ── WHY THIS IS A NAMED FUNCTION AND NOT AN INLINE ARROW ────────────────────
+ *
+ * Lumo ships ONE thumb, so `index` is always 0 and only the first branch runs
+ * today. It is written for two anyway, and that is not speculation — Lumo
+ * components are COPIED, not imported. A consumer who wants a range slider edits
+ * THIS FILE and adds `<Slider.Thumb index={1}>`, which is the shape Base UI's
+ * own docs require for SSR (`SliderThumb.d.ts:39` — "This prop is required to
+ * support server-side rendering for range sliders with multiple thumbs").
+ *
+ * The moment they do, Base UI's default for a two-value slider takes over:
+ * `getDefaultAriaValueText` (SliderThumb.mjs:33-40) returns
+ * `` `${formatNumber(values[index], locale, format)} ${index === 0 ? 'start' : 'end'} range` ``
+ * — a HALF-localised string whose digits obey `Slider.Root`'s `locale` prop and
+ * whose words do not. `base-ui-i18n.json` calls that the worst of the eight
+ * leaks, because «۲۰ start range» is the one shape a reviewer who does not read
+ * Persian will pass: the Persian half is what they look at.
+ *
+ * `getAriaValueText` is consulted BEFORE that default (SliderThumb.mjs:244), so
+ * supplying a function that already handles index 1 means the second thumb is
+ * correct on the first byte it is ever rendered, rather than correct only if the
+ * person adding it also happened to read this comment.
+ *
+ * `thumbCount` and not `index > 0`: on a SINGLE-thumb slider index 0 must be the
+ * bare formatted number, and on a RANGE it must be «۲۰ آغاز بازه». The two cases
+ * differ at the same index, so the count is the only thing that separates them —
+ * which is exactly what Base UI's own `values.length === 2` check is doing.
+ */
+function thumbValueText(
+  locale: Locale,
+  formatOptions: Intl.NumberFormatOptions | undefined,
+  thumbCount: number,
+): (formattedValue: string, value: number, index: number) => string {
+  // Resolved once per render, from the same `locale` prop that feeds
+  // `formatNumber` and `direction()` below. One source, three consumers.
+  const strings = baseUiStringsFor(locale);
+  return (_formattedValue, value, index) => {
+    if (thumbCount < 2) return formatNumber(value, locale, formatOptions);
+    return index === 0
+      ? strings.slider.rangeStart(value, formatOptions)
+      : strings.slider.rangeEnd(value, formatOptions);
+  };
+}
 
 export const sliderTrackVariants = cva(
   // Base UI's `Slider.Control` is the pointer surface and `Slider.Track` the
@@ -237,14 +283,19 @@ export function Slider({
              *
              * `getAriaValueText` rather than a literal `aria-valuetext`: the
              * callback receives the raw value, so the string comes out of
-             * `formatNumber` — byte-identical to the `<output>` above.
+             * `formatNumber` — byte-identical to the `<output>` above. It is
+             * built by `thumbValueText` above, which also carries the range
+             * strings out of the Base UI catalogue; see its header for why a
+             * one-thumb component implements two.
              */}
             <BaseSlider.Thumb
               data-lumo=""
               aria-label={label}
-              getAriaValueText={(_formattedValue, value) =>
-                formatNumber(value, locale, formatOptions)
-              }
+              // No explicit `index`: a single thumb resolves to 0 on its own,
+              // and pinning it would change the generated ids the existing
+              // controls.test.tsx renders against for no benefit. A SECOND thumb
+              // does need `index`, which is what `SliderThumb.d.ts:39` is about.
+              getAriaValueText={thumbValueText(locale, formatOptions, 1)}
               className={cn(sliderThumbVariants({ size }))}
             />
           </BaseSlider.Track>

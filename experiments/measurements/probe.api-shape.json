@@ -1,0 +1,2392 @@
+{
+  "button": {
+    "ssr": {
+      "base-ui": {
+        "roles": [],
+        "aria": [
+          "aria-label"
+        ],
+        "data": [
+          "data-lumo"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "حذف"
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-label"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "حذف"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [],
+        "aria_gained": [],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": []
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [],
+        "aria": [
+          "aria-label"
+        ],
+        "data": [
+          "data-lumo"
+        ],
+        "tags": [
+          "button",
+          "div"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "حذف"
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-label"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button",
+          "div"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "حذف"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [],
+        "aria_gained": [],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": []
+      }
+    }
+  },
+  "toggle": {
+    "ssr": {
+      "base-ui": {
+        "roles": [],
+        "aria": [
+          "aria-label",
+          "aria-pressed"
+        ],
+        "data": [
+          "data-lumo",
+          "data-pressed"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "بی‌صدا"
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-label",
+          "aria-pressed"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "بی‌صدا"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [],
+        "aria_gained": [],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "data_gained": [
+          "data-pressed"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [],
+        "aria": [
+          "aria-label",
+          "aria-pressed"
+        ],
+        "data": [
+          "data-lumo",
+          "data-pressed"
+        ],
+        "tags": [
+          "button",
+          "div"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "بی‌صدا"
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-label",
+          "aria-pressed"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "tags": [
+          "button",
+          "div"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "بی‌صدا"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [],
+        "aria_gained": [],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "data_gained": [
+          "data-pressed"
+        ]
+      }
+    }
+  },
+  "switch": {
+    "ssr": {
+      "base-ui": {
+        "roles": [
+          "switch"
+        ],
+        "aria": [
+          "aria-checked",
+          "aria-describedby",
+          "aria-hidden",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-checked",
+          "data-lumo"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "label",
+          "p",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "span",
+            "role": "switch",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "switch"
+        ],
+        "aria": [
+          "aria-describedby",
+          "aria-hidden"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "label",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": "switch",
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [],
+        "aria_gained": [
+          "aria-checked",
+          "aria-labelledby"
+        ],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "data_gained": [
+          "data-checked"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "switch"
+        ],
+        "aria": [
+          "aria-checked",
+          "aria-describedby",
+          "aria-hidden",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-checked",
+          "data-filled",
+          "data-lumo"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "label",
+          "p",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "span",
+            "role": "switch",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "switch"
+        ],
+        "aria": [
+          "aria-describedby",
+          "aria-hidden"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "label",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": "switch",
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [],
+        "aria_gained": [
+          "aria-checked",
+          "aria-labelledby"
+        ],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "data_gained": [
+          "data-checked",
+          "data-filled"
+        ]
+      }
+    }
+  },
+  "checkbox": {
+    "ssr": {
+      "base-ui": {
+        "roles": [
+          "checkbox",
+          "group"
+        ],
+        "aria": [
+          "aria-checked",
+          "aria-hidden",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-lumo",
+          "data-unchecked"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "label",
+          "path",
+          "span",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "span",
+            "role": "checkbox",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "span",
+            "role": "checkbox",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-describedby",
+          "aria-hidden",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "label",
+          "path",
+          "span",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [
+          "checkbox"
+        ],
+        "aria_lost": [
+          "aria-describedby"
+        ],
+        "aria_gained": [
+          "aria-checked"
+        ],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-unchecked"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "checkbox",
+          "group"
+        ],
+        "aria": [
+          "aria-checked",
+          "aria-hidden",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-lumo",
+          "data-unchecked"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "label",
+          "path",
+          "span",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "span",
+            "role": "checkbox",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "span",
+            "role": "checkbox",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-hidden",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "label",
+          "path",
+          "span",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [
+          "checkbox"
+        ],
+        "aria_lost": [],
+        "aria_gained": [
+          "aria-checked"
+        ],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-unchecked"
+        ]
+      }
+    }
+  },
+  "tabs": {
+    "ssr": {
+      "base-ui": {
+        "roles": [
+          "tab",
+          "tablist",
+          "tabpanel"
+        ],
+        "aria": [
+          "aria-disabled",
+          "aria-label",
+          "aria-labelledby",
+          "aria-selected"
+        ],
+        "data": [
+          "data-activation-direction",
+          "data-active",
+          "data-composite-item-active",
+          "data-index",
+          "data-lumo",
+          "data-orientation"
+        ],
+        "tags": [
+          "button",
+          "div"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": "tab",
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": "tab",
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "tab",
+          "tablist",
+          "tabpanel"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-label",
+          "aria-labelledby",
+          "aria-orientation",
+          "aria-selected"
+        ],
+        "data": [
+          "data-collection",
+          "data-key",
+          "data-lumo",
+          "data-orientation",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "tags": [
+          "div",
+          "template"
+        ],
+        "named": [
+          {
+            "tag": "div",
+            "role": "tab",
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "tab",
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-controls",
+          "aria-orientation"
+        ],
+        "aria_gained": [
+          "aria-disabled"
+        ],
+        "data_lost": [
+          "data-collection",
+          "data-key",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "data_gained": [
+          "data-activation-direction",
+          "data-active",
+          "data-composite-item-active",
+          "data-index"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "tab",
+          "tablist",
+          "tabpanel"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-disabled",
+          "aria-label",
+          "aria-labelledby",
+          "aria-selected"
+        ],
+        "data": [
+          "data-activation-direction",
+          "data-active",
+          "data-composite-item-active",
+          "data-index",
+          "data-lumo",
+          "data-orientation"
+        ],
+        "tags": [
+          "button",
+          "div"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": "tab",
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": "tab",
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "tab",
+          "tablist",
+          "tabpanel"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-label",
+          "aria-labelledby",
+          "aria-orientation",
+          "aria-selected"
+        ],
+        "data": [
+          "data-collection",
+          "data-key",
+          "data-lumo",
+          "data-orientation",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "tags": [
+          "div",
+          "template"
+        ],
+        "named": [
+          {
+            "tag": "div",
+            "role": "tab",
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "tab",
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-orientation"
+        ],
+        "aria_gained": [
+          "aria-disabled"
+        ],
+        "data_lost": [
+          "data-collection",
+          "data-key",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-selected"
+        ],
+        "data_gained": [
+          "data-activation-direction",
+          "data-active",
+          "data-composite-item-active",
+          "data-index"
+        ]
+      }
+    }
+  },
+  "slider": {
+    "ssr": {
+      "base-ui": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-label",
+          "aria-live",
+          "aria-orientation",
+          "aria-valuenow",
+          "aria-valuetext"
+        ],
+        "data": [
+          "data-index",
+          "data-lumo",
+          "data-orientation"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "output",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": "بلندی صدا"
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-describedby",
+          "aria-details",
+          "aria-label",
+          "aria-labelledby",
+          "aria-live",
+          "aria-orientation",
+          "aria-valuetext"
+        ],
+        "data": [
+          "data-lumo",
+          "data-orientation",
+          "data-rac"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "output",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": "بلندی صدا"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-describedby",
+          "aria-details",
+          "aria-labelledby"
+        ],
+        "aria_gained": [
+          "aria-valuenow"
+        ],
+        "data_lost": [
+          "data-rac"
+        ],
+        "data_gained": [
+          "data-index"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-label",
+          "aria-live",
+          "aria-orientation",
+          "aria-valuenow",
+          "aria-valuetext"
+        ],
+        "data": [
+          "data-index",
+          "data-lumo",
+          "data-orientation"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "output",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": "بلندی صدا"
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-describedby",
+          "aria-details",
+          "aria-label",
+          "aria-labelledby",
+          "aria-live",
+          "aria-orientation",
+          "aria-valuetext"
+        ],
+        "data": [
+          "data-lumo",
+          "data-orientation",
+          "data-rac"
+        ],
+        "tags": [
+          "div",
+          "input",
+          "output",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": "بلندی صدا"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-describedby",
+          "aria-details",
+          "aria-labelledby"
+        ],
+        "aria_gained": [
+          "aria-valuenow"
+        ],
+        "data_lost": [
+          "data-rac"
+        ],
+        "data_gained": [
+          "data-index"
+        ]
+      }
+    }
+  },
+  "number-field": {
+    "ssr": {
+      "base-ui": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-disabled",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby",
+          "aria-roledescription"
+        ],
+        "data": [
+          "data-lumo"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "label",
+          "path",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "افزایش تعداد"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "کاهش تعداد"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-describedby",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby",
+          "aria-roledescription"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "label",
+          "path",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "افزایش تعداد"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "کاهش تعداد"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-describedby"
+        ],
+        "aria_gained": [
+          "aria-disabled"
+        ],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": []
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-disabled",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby",
+          "aria-roledescription"
+        ],
+        "data": [
+          "data-lumo"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "label",
+          "path",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "افزایش تعداد"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "کاهش تعداد"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "group"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby",
+          "aria-roledescription"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "label",
+          "path",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": null,
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "افزایش تعداد"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "کاهش تعداد"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [],
+        "aria_gained": [
+          "aria-disabled"
+        ],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": []
+      }
+    }
+  },
+  "select": {
+    "ssr": {
+      "base-ui": {
+        "roles": [
+          "combobox"
+        ],
+        "aria": [
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label"
+        ],
+        "data": [
+          "data-lumo"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "path",
+          "span",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": "combobox",
+            "name": "شهر"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-describedby",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-a11y-ignore",
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-react-aria-prevent-focus",
+          "data-testid"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "label",
+          "option",
+          "path",
+          "select",
+          "span",
+          "svg",
+          "template"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": "شهر"
+          },
+          {
+            "tag": "select",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [
+          "combobox"
+        ],
+        "aria_lost": [
+          "aria-describedby",
+          "aria-labelledby"
+        ],
+        "aria_gained": [],
+        "data_lost": [
+          "data-a11y-ignore",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-react-aria-prevent-focus",
+          "data-testid"
+        ],
+        "data_gained": []
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "combobox"
+        ],
+        "aria": [
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label"
+        ],
+        "data": [
+          "data-lumo"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "path",
+          "span",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": "combobox",
+            "name": "شهر"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-a11y-ignore",
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-react-aria-prevent-focus",
+          "data-testid"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "label",
+          "option",
+          "path",
+          "select",
+          "span",
+          "svg",
+          "template"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": "شهر"
+          },
+          {
+            "tag": "select",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [
+          "combobox"
+        ],
+        "aria_lost": [
+          "aria-labelledby"
+        ],
+        "aria_gained": [],
+        "data_lost": [
+          "data-a11y-ignore",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-react-aria-prevent-focus",
+          "data-testid"
+        ],
+        "data_gained": []
+      }
+    }
+  },
+  "combobox": {
+    "ssr": {
+      "base-ui": {
+        "roles": [
+          "combobox",
+          "group"
+        ],
+        "aria": [
+          "aria-autocomplete",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label"
+        ],
+        "data": [
+          "data-list-empty",
+          "data-lumo",
+          "data-placeholder"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "label",
+          "path",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": "combobox",
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": "combobox",
+            "name": "نمایش پیشنهادها"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "combobox",
+          "group"
+        ],
+        "aria": [
+          "aria-autocomplete",
+          "aria-describedby",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "label",
+          "path",
+          "svg",
+          "template"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": "combobox",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "نمایش پیشنهادها"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-describedby",
+          "aria-labelledby"
+        ],
+        "aria_gained": [],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-list-empty",
+          "data-placeholder"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "combobox",
+          "group"
+        ],
+        "aria": [
+          "aria-autocomplete",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label"
+        ],
+        "data": [
+          "data-list-empty",
+          "data-lumo",
+          "data-placeholder"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "label",
+          "path",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": "combobox",
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "نمایش پیشنهادها"
+          },
+          {
+            "tag": "input",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "combobox",
+          "group"
+        ],
+        "aria": [
+          "aria-autocomplete",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "input",
+          "label",
+          "path",
+          "svg",
+          "template"
+        ],
+        "named": [
+          {
+            "tag": "input",
+            "role": "combobox",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "نمایش پیشنهادها"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-labelledby"
+        ],
+        "aria_gained": [],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-list-empty",
+          "data-placeholder"
+        ]
+      }
+    }
+  },
+  "menu": {
+    "ssr": {
+      "base-ui": {
+        "roles": [],
+        "aria": [
+          "aria-expanded",
+          "aria-haspopup"
+        ],
+        "data": [
+          "data-lumo"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-controls",
+          "aria-expanded",
+          "aria-haspopup"
+        ],
+        "data": [
+          "data-lumo",
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-controls"
+        ],
+        "aria_gained": [],
+        "data_lost": [
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": []
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "group",
+          "menu",
+          "menuitem",
+          "none",
+          "presentation",
+          "separator"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby",
+          "aria-orientation",
+          "aria-owns"
+        ],
+        "data": [
+          "data-align",
+          "data-base-ui-focus-guard",
+          "data-base-ui-focusable",
+          "data-base-ui-inert",
+          "data-base-ui-portal",
+          "data-lumo",
+          "data-open",
+          "data-orientation",
+          "data-popup-open",
+          "data-pressed",
+          "data-rootownerid",
+          "data-side",
+          "data-type"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "menuitem",
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "menuitem",
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "dialog",
+          "group",
+          "menu",
+          "menuitem",
+          "presentation",
+          "separator"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-collection",
+          "data-focus-scope-end",
+          "data-focus-scope-start",
+          "data-key",
+          "data-lumo",
+          "data-placement",
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-testid",
+          "data-trigger"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "header",
+          "section",
+          "span",
+          "template"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "dialog",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "Dismiss"
+          },
+          {
+            "tag": "div",
+            "role": "menuitem",
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "menuitem",
+            "name": null
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "Dismiss"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [
+          "dialog"
+        ],
+        "roles_gained": [
+          "none"
+        ],
+        "aria_lost": [],
+        "aria_gained": [
+          "aria-orientation",
+          "aria-owns"
+        ],
+        "data_lost": [
+          "data-collection",
+          "data-focus-scope-end",
+          "data-focus-scope-start",
+          "data-key",
+          "data-placement",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-testid",
+          "data-trigger"
+        ],
+        "data_gained": [
+          "data-align",
+          "data-base-ui-focus-guard",
+          "data-base-ui-focusable",
+          "data-base-ui-inert",
+          "data-base-ui-portal",
+          "data-open",
+          "data-orientation",
+          "data-popup-open",
+          "data-rootownerid",
+          "data-side",
+          "data-type"
+        ]
+      }
+    }
+  },
+  "dialog": {
+    "ssr": {
+      "base-ui": {
+        "roles": [],
+        "aria": [
+          "aria-expanded",
+          "aria-haspopup"
+        ],
+        "data": [
+          "data-base-ui-click-trigger",
+          "data-lumo"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-controls",
+          "aria-expanded"
+        ],
+        "data": [
+          "data-lumo",
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-controls"
+        ],
+        "aria_gained": [
+          "aria-haspopup"
+        ],
+        "data_lost": [
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-base-ui-click-trigger"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "dialog",
+          "presentation"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-base-ui-click-trigger",
+          "data-base-ui-focus-guard",
+          "data-base-ui-focusable",
+          "data-base-ui-inert",
+          "data-base-ui-portal",
+          "data-lumo",
+          "data-open",
+          "data-popup-open",
+          "data-type"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "h2",
+          "path",
+          "span",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "dialog",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "بستن"
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "dialog"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-expanded",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-focus-scope-end",
+          "data-focus-scope-start",
+          "data-lumo",
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "h2",
+          "path",
+          "section",
+          "span",
+          "svg"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "section",
+            "role": "dialog",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "بستن"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [
+          "presentation"
+        ],
+        "aria_lost": [],
+        "aria_gained": [
+          "aria-haspopup"
+        ],
+        "data_lost": [
+          "data-focus-scope-end",
+          "data-focus-scope-start",
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-base-ui-click-trigger",
+          "data-base-ui-focus-guard",
+          "data-base-ui-focusable",
+          "data-base-ui-inert",
+          "data-base-ui-portal",
+          "data-open",
+          "data-popup-open",
+          "data-type"
+        ]
+      }
+    }
+  },
+  "popover": {
+    "ssr": {
+      "base-ui": {
+        "roles": [],
+        "aria": [
+          "aria-expanded",
+          "aria-haspopup"
+        ],
+        "data": [
+          "data-base-ui-click-trigger",
+          "data-lumo"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-controls",
+          "aria-expanded"
+        ],
+        "data": [
+          "data-lumo",
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [
+          "aria-controls"
+        ],
+        "aria_gained": [
+          "aria-haspopup"
+        ],
+        "data_lost": [
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-base-ui-click-trigger"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "dialog",
+          "presentation"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-expanded",
+          "aria-haspopup",
+          "aria-hidden",
+          "aria-labelledby",
+          "aria-owns"
+        ],
+        "data": [
+          "data-align",
+          "data-base-ui-click-trigger",
+          "data-base-ui-focus-guard",
+          "data-base-ui-focusable",
+          "data-base-ui-inert",
+          "data-base-ui-portal",
+          "data-lumo",
+          "data-open",
+          "data-popup-open",
+          "data-side",
+          "data-type"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "dialog",
+            "name": "«labelledby»"
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "dialog"
+        ],
+        "aria": [
+          "aria-controls",
+          "aria-expanded",
+          "aria-hidden",
+          "aria-label",
+          "aria-labelledby"
+        ],
+        "data": [
+          "data-focus-scope-end",
+          "data-focus-scope-start",
+          "data-lumo",
+          "data-placement",
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-testid",
+          "data-trigger"
+        ],
+        "tags": [
+          "button",
+          "div",
+          "span"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "dialog",
+            "name": "«labelledby»"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "Dismiss"
+          },
+          {
+            "tag": "button",
+            "role": null,
+            "name": "Dismiss"
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [
+          "presentation"
+        ],
+        "aria_lost": [
+          "aria-label"
+        ],
+        "aria_gained": [
+          "aria-haspopup",
+          "aria-owns"
+        ],
+        "data_lost": [
+          "data-focus-scope-end",
+          "data-focus-scope-start",
+          "data-placement",
+          "data-pressed",
+          "data-rac",
+          "data-react-aria-pressable",
+          "data-testid",
+          "data-trigger"
+        ],
+        "data_gained": [
+          "data-align",
+          "data-base-ui-click-trigger",
+          "data-base-ui-focus-guard",
+          "data-base-ui-focusable",
+          "data-base-ui-inert",
+          "data-base-ui-portal",
+          "data-open",
+          "data-popup-open",
+          "data-side",
+          "data-type"
+        ]
+      }
+    }
+  },
+  "tooltip": {
+    "ssr": {
+      "base-ui": {
+        "roles": [],
+        "aria": [
+          "aria-describedby"
+        ],
+        "data": [
+          "data-base-ui-tooltip-trigger",
+          "data-lumo"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [],
+        "aria": [
+          "aria-describedby"
+        ],
+        "data": [
+          "data-lumo",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [],
+        "aria_lost": [],
+        "aria_gained": [],
+        "data_lost": [
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-base-ui-tooltip-trigger"
+        ]
+      }
+    },
+    "client": {
+      "base-ui": {
+        "roles": [
+          "presentation",
+          "tooltip"
+        ],
+        "aria": [
+          "aria-describedby"
+        ],
+        "data": [
+          "data-align",
+          "data-base-ui-focusable",
+          "data-base-ui-portal",
+          "data-base-ui-tooltip-trigger",
+          "data-lumo",
+          "data-open",
+          "data-popup-open",
+          "data-side"
+        ],
+        "tags": [
+          "button",
+          "div"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "tooltip",
+            "name": null
+          }
+        ]
+      },
+      "react-aria": {
+        "roles": [
+          "tooltip"
+        ],
+        "aria": [
+          "aria-describedby"
+        ],
+        "data": [
+          "data-lumo",
+          "data-overlay-container",
+          "data-placement",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "tags": [
+          "button",
+          "div"
+        ],
+        "named": [
+          {
+            "tag": "button",
+            "role": null,
+            "name": null
+          },
+          {
+            "tag": "div",
+            "role": "tooltip",
+            "name": null
+          }
+        ]
+      },
+      "diff": {
+        "roles_lost": [],
+        "roles_gained": [
+          "presentation"
+        ],
+        "aria_lost": [],
+        "aria_gained": [],
+        "data_lost": [
+          "data-overlay-container",
+          "data-placement",
+          "data-rac",
+          "data-react-aria-pressable"
+        ],
+        "data_gained": [
+          "data-align",
+          "data-base-ui-focusable",
+          "data-base-ui-portal",
+          "data-base-ui-tooltip-trigger",
+          "data-open",
+          "data-popup-open",
+          "data-side"
+        ]
+      }
+    }
+  }
+}

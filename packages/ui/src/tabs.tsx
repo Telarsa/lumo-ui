@@ -1,6 +1,6 @@
 "use client";
 
-import { Children, isValidElement } from "react";
+import { Children, createContext, isValidElement, useContext, useId } from "react";
 import { cva } from "class-variance-authority";
 import { Tabs as BaseTabs } from "@base-ui/react/tabs";
 // TYPE-ONLY. The public API may not change; the prop names stay React Aria's.
@@ -11,7 +11,7 @@ import type {
   TabsProps as AriaTabsProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { attr } from "./base-ui-adapter.ts";
+import { attr } from "@lumo-ui/base-ui-ssr";
 
 /**
  * Tabs. **BASE UI ENGINE.**
@@ -130,6 +130,45 @@ export interface TabsProps extends Omit<AriaTabsProps, "children" | "className">
 }
 
 /**
+ * The id prefix a `Tabs` hands its `Tab`s and `TabPanel`s.
+ *
+ * ── A MEASURED FIRST-BYTE GAP, CLOSED HERE ─────────────────────────────────
+ *
+ * Base UI generates its own ids for tabs and panels and wires `aria-controls` /
+ * `aria-labelledby` from them — but it does that on the CLIENT. Measured in
+ * `probe.api-shape-detail.json → tabs.base.ssr.*`: the served tab carries
+ * `role="tab" aria-selected id=…` and NO `aria-controls`; the served panel
+ * carries `role="tabpanel" id=…` and NO `aria-labelledby`. So the panel in the
+ * first byte has no accessible name — a screen reader on the served HTML is
+ * told "tab panel" with no indication which tab it belongs to. React Aria
+ * emitted both associations at SSR (`probe.api-shape-fixability.json → Q8`),
+ * with zero dangling references.
+ *
+ * The engine accepts explicit ids on both parts and derives its own client-side
+ * `aria-controls` from ours (Q5), so the fix is to mint them here.
+ *
+ * ── WHY THE PANEL POINTS AT THE TAB AND NOT THE OTHER WAY ROUND ────────────
+ *
+ * A Base UI panel renders NOTHING until its value is selected, so at SSR only
+ * one panel exists. An `aria-controls` on every tab would therefore point at
+ * elements that are not in the document — a DANGLING IDREF, the second defect
+ * class this repository tracks and the one COMPARISON.md's axis 1a scores. The
+ * tabs, by contrast, are all rendered, so `aria-labelledby` on the panel can
+ * never dangle. React Aria reached the same shape: measured, its SSR emitted
+ * `aria-controls` on the SELECTED tab only, and its dangling count was 0.
+ *
+ * Only the panel association is added here for that reason. `aria-controls` is
+ * a SHOULD in the ARIA tabs pattern; the panel's name is what a reader loses.
+ */
+const TabsIdContext = createContext<string | undefined>(undefined);
+
+/** `base-tab-profile` / `base-tabpanel-profile`, or `undefined` outside a `Tabs`. */
+function partId(base: string | undefined, part: "tab" | "tabpanel", key: unknown) {
+  if (base === undefined || key === undefined || key === null) return undefined;
+  return `${base}-${part}-${String(key)}`;
+}
+
+/**
  * The first `<Tab>`'s `id`, found depth-first, or `undefined` if the tabs are
  * built some way this cannot see (a render function, a runtime-built array of
  * elements Lumo does not own).
@@ -229,22 +268,27 @@ export function Tabs({
     selectedKey !== undefined || defaultSelectedKey !== undefined
       ? undefined
       : firstTabId((rest as { children?: LumoNode }).children);
+  const idBase = useId();
 
   return (
-    <BaseTabs.Root
-      data-lumo=""
-      className={cn(tabsVariants(), className)}
-      {...attr("value", selectedKey)}
-      {...attr("defaultValue", defaultSelectedKey ?? derivedDefault)}
-      {...attr("orientation", orientation)}
-      {...attr(
-        "onValueChange",
-        onSelectionChange === undefined
-          ? undefined
-          : (value: BaseTabs.Tab.Value) => onSelectionChange(value as never),
-      )}
-      {...rest}
-    />
+    // The provider renders no DOM, so `Tabs.Root` is still the outer element and
+    // `className` / `data-lumo` still land where they did.
+    <TabsIdContext.Provider value={idBase}>
+      <BaseTabs.Root
+        data-lumo=""
+        className={cn(tabsVariants(), className)}
+        {...attr("value", selectedKey)}
+        {...attr("defaultValue", defaultSelectedKey ?? derivedDefault)}
+        {...attr("orientation", orientation)}
+        {...attr(
+          "onValueChange",
+          onSelectionChange === undefined
+            ? undefined
+            : (value: BaseTabs.Tab.Value) => onSelectionChange(value as never),
+        )}
+        {...rest}
+      />
+    </TabsIdContext.Provider>
   );
 }
 
@@ -334,10 +378,14 @@ export function Tab({
    * only `as unknown as` in this file: without it the compiler would demand the
    * prop Lumo's API does not.
    */
+  // An explicit, derivable DOM id so the PANEL can name itself from this tab in
+  // the served bytes. See `TabsIdContext`.
+  const base = useContext(TabsIdContext);
   const tabProps = {
     "data-lumo": "",
     className: cn(tabVariants(), className),
     ...attr("value", id),
+    ...attr("id", partId(base, "tab", id)),
     ...attr("disabled", isDisabled),
     ...rest,
   } as unknown as BaseTabs.Tab.Props;
@@ -360,11 +408,18 @@ export function TabPanel({
 }: TabPanelProps) {
   // `data-lumo` because the panel is a focus stop when it holds no focusable
   // content, so the shared focus ring has to be able to reach it.
+  //
+  // `aria-labelledby` points at the tab with the same `id`, which is always
+  // rendered — see `TabsIdContext` for why the association runs this way round
+  // and not the other.
+  const base = useContext(TabsIdContext);
   return (
     <BaseTabs.Panel
       data-lumo=""
       className={cn(tabPanelVariants(), className)}
       {...attr("value", id)}
+      {...attr("id", partId(base, "tabpanel", id))}
+      {...attr("aria-labelledby", partId(base, "tab", id))}
       {...attr("keepMounted", shouldForceMount)}
       {...(rest as BaseTabs.Panel.Props)}
     />

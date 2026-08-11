@@ -13,6 +13,7 @@
   "peerDependencies": { "react": ">=19", "react-dom": ">=19" },
   "dependencies": {
     "@lumo-ui/core": "workspace:*",
+    "@lumo-ui/base-ui-ssr": "workspace:*",
     "react-aria-components": "catalog:",
     "@base-ui/react": "catalog:",
     "@internationalized/date": "catalog:",

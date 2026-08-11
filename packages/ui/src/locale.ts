@@ -37,11 +37,49 @@
  */
 
 import { createContext, useContext } from "react";
-import type { Locale } from "@lumo-ui/core";
+import { type Locale } from "@lumo-ui/core";
+import { baseUiStringsFor, type BaseUiStrings } from "@lumo-ui/base-ui-ssr";
 
 export const LumoLocaleContext = createContext<Locale>("fa-IR");
 
 /** The locale every Base UI-based Lumo component formats and announces in. */
 export function useLumoLocale(): Locale {
   return useContext(LumoLocaleContext);
+}
+
+/**
+ * The seven English strings Base UI emits, resolved for the current locale.
+ *
+ * ── WHY THIS IS A HOOK OVER A CONTEXT AND NOT A SECOND PROVIDER ─────────────
+ *
+ * There is exactly one locale lever in Lumo and it is `LumoLocaleContext`. A
+ * `LumoStringsProvider` beside it would be a SECOND lever, and two levers that
+ * can disagree is the precise failure `base-ui-i18n.json` records against Base
+ * UI itself: a per-component `locale` prop and a global `DirectionProvider` with
+ * nothing tying them together, so a page that sets one and forgets the other
+ * renders Persian digits sliding the wrong way with nothing red anywhere. The
+ * strings are DERIVED from the locale, never passed alongside it — the same rule
+ * `direction()` follows in `@lumo-ui/core`.
+ *
+ * ── IT RESOLVES ON THE SERVER, WHICH IS WHY IT IS A CONTEXT AT ALL ──────────
+ *
+ * `React.createContext` + a real Provider is read during render, so the value is
+ * present in the first byte. That is the distinction `core/src/strings.ts`
+ * measured against React Aria's `LocalizedStringProvider`, which renders no
+ * children and only sets `window[Symbol.for('react-aria.i18n.strings')]` — zero
+ * reach during `renderToStaticMarkup`. Nothing here touches `window`, and
+ * nothing here runs in an effect, which is the same defect in the other organ:
+ * `useRegisteredLabelId` and `useAriaLabelledBy` are both layout effects, which
+ * is why `useFieldWiring` exists in `@lumo-ui/base-ui-ssr`.
+ *
+ * ── WHERE IT IS USED, AND WHERE THE PROP IS USED INSTEAD ────────────────────
+ *
+ * A component whose frozen public API already carries a required `locale` prop —
+ * `Slider`, `ProgressBar`, `Meter`, `ToastRegion` — must call
+ * `baseUiStringsFor(locale)` with THAT prop, not this hook. Same reason again:
+ * one source per component. This hook is for components with no locale prop of
+ * their own, such as `NumberField` and `DateField`.
+ */
+export function useBaseUiStrings(): BaseUiStrings {
+  return baseUiStringsFor(useContext(LumoLocaleContext));
 }

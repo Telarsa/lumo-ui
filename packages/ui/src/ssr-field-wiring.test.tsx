@@ -1,0 +1,317 @@
+/*
+ * THE FIELD WIRING, PROVEN THE WAY EVERY GATE RULE IN THIS REPO IS PROVEN:
+ * with a poison fixture that FAILS.
+ *
+ * `first-byte-names.test.tsx` pins the NAMES this project already fixed. This
+ * file exists for the two things that one could not do:
+ *
+ *   1. It grades with the SHIPPED GATE RULES rather than a regex, so a test
+ *      that passes here means the same thing `gate:html` means. The rules are
+ *      imported by relative path from `packages/gate` — no new dependency, and
+ *      deliberately the real module rather than a copy, because a copied rule
+ *      is a rule that stops agreeing with the gate the day the gate changes.
+ *
+ *   2. Every assertion has a POISON TWIN: the same markup shape rendered
+ *      WITHOUT the wiring, asserted to FIRE the rule. Without that, a green
+ *      test proves only that some markup passed — the defect these components
+ *      shipped is invisible precisely because everything else about them is
+ *      correct. A fix nobody has watched fail is decoration.
+ *
+ * Everything here is `renderToStaticMarkup`, which runs NO effects. That is the
+ * whole point: Base UI's naming and describing both live in layout effects, so
+ * a `render()` from testing-library would show these controls perfectly wired
+ * and prove nothing about the bytes a crawler or a pre-hydration reader gets.
+ * The one exception is the last block, which uses `render()` on purpose to
+ * check that the hand-wired ids and Base UI's own hydrated wiring AGREE.
+ */
+
+import { describe, expect, it } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { render, cleanup } from "@testing-library/react";
+import { afterEach } from "vitest";
+import { Checkbox as BaseCheckbox } from "@base-ui/react/checkbox";
+import { Field } from "@base-ui/react/field";
+import { Select as BaseSelect } from "@base-ui/react/select";
+import { gradeHtml, namedControls, resolvedIdrefs } from "../../gate/src/index.ts";
+import { Checkbox, CheckboxGroup } from "./checkbox.tsx";
+import { Switch } from "./switch.tsx";
+import { NumberField } from "./number-field.tsx";
+import { Select, SelectTrigger } from "./select.tsx";
+import { Label } from "./form.tsx";
+
+afterEach(cleanup);
+
+/**
+ * Grade a fragment with the real gate, on a real `fa-IR` page skeleton so the
+ * document rules have the locale they demand.
+ *
+ * Only the two rules this defect class can trip are run. `lang-dir` and the
+ * digit rules would fire on a fragment for reasons that have nothing to do with
+ * field wiring, and a fixture that fires three rules is a fixture testing three
+ * things.
+ */
+function gate(fragment: string): string[] {
+  const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>${fragment}</body></html>`;
+  return gradeHtml("fa-IR/fixture.html", html, [namedControls, resolvedIdrefs]).map((v) => v.rule);
+}
+
+/** The value of one attribute on the first element matching `role`. */
+function attrOn(html: string, role: string, attribute: string): string | undefined {
+  const el = new RegExp(`<[a-z]+[^>]*role="${role}"[^>]*>`).exec(html)?.[0];
+  return el === undefined ? undefined : new RegExp(`${attribute}="([^"]*)"`).exec(el)?.[1];
+}
+
+/**
+ * The text of the element carrying `id`, tags stripped.
+ *
+ * Parsed into a real DOM rather than matched with a regex: the label WRAPS the
+ * control here, so its content is two `<svg>`s and an `<input>` around the
+ * words, and a lazy regex closing on the first `</…>` it meets returns the
+ * empty string — which is exactly how the first draft of this file made its
+ * strongest assertions pass against nothing.
+ */
+function textOfId(html: string, id: string): string | undefined {
+  const host = document.createElement("div");
+  host.innerHTML = html;
+  return host.querySelector(`[id="${CSS.escape(id)}"]`)?.textContent?.trim();
+}
+
+describe("poison — the un-wired shapes, which must FAIL the gate", () => {
+  /*
+   * This is not a hand-written imitation of the defect. It is Base UI composed
+   * exactly as its own documentation composes it, rendered on the server. That
+   * it fails is the capability gap itself, reproduced on demand.
+   */
+  it("a bare Base UI Field + Checkbox ships an unnamed control", () => {
+    const html = renderToStaticMarkup(
+      <Field.Root>
+        <Field.Label>شرایط را می‌پذیرم</Field.Label>
+        <BaseCheckbox.Root />
+      </Field.Root>,
+    );
+    expect(attrOn(html, "checkbox", "aria-labelledby")).toBeUndefined();
+    expect(gate(html)).toContain("named-controls");
+  });
+
+  it("a bare Base UI Field + Select trigger ships an unnamed control — the twelve", () => {
+    const html = renderToStaticMarkup(
+      <BaseSelect.Root>
+        <Label>شهر</Label>
+        <BaseSelect.Trigger>
+          <BaseSelect.Value placeholder="یک شهر انتخاب کنید" />
+        </BaseSelect.Trigger>
+      </BaseSelect.Root>,
+    );
+    expect(gate(html)).toContain("named-controls");
+  });
+
+  /*
+   * The description half has NO gate rule — `resolved-idrefs` deliberately
+   * excludes `aria-describedby` (see its docblock) and `named-controls` grades
+   * names. So this poison is asserted on the attribute directly, and that
+   * absence is the finding: the defect was unmeasurable, not absent.
+   */
+  it("a bare Base UI Field + Description never reaches the control, and no rule sees it", () => {
+    const html = renderToStaticMarkup(
+      <Field.Root>
+        <Field.Label id="L">شرایط</Field.Label>
+        <BaseCheckbox.Root aria-labelledby="L" />
+        <Field.Description>این را بخوانید</Field.Description>
+      </Field.Root>,
+    );
+    expect(attrOn(html, "checkbox", "aria-describedby")).toBeUndefined();
+    // Named, so the gate is clean — while the help text is announced by nothing.
+    expect(gate(html)).toEqual([]);
+  });
+});
+
+describe("names at the first byte — the same shapes through Lumo", () => {
+  it("Checkbox", () => {
+    const html = renderToStaticMarkup(<Checkbox>شرایط را می‌پذیرم</Checkbox>);
+    const ref = attrOn(html, "checkbox", "aria-labelledby");
+    expect(textOfId(html, ref ?? "")).toBe("شرایط را می‌پذیرم");
+    expect(gate(html)).toEqual([]);
+  });
+
+  it("Switch", () => {
+    const html = renderToStaticMarkup(<Switch>اعلان‌ها</Switch>);
+    expect(gate(html)).toEqual([]);
+  });
+
+  it("NumberField", () => {
+    const html = renderToStaticMarkup(
+      <NumberField
+        label="تعداد"
+        decrementLabel="کاهش تعداد"
+        incrementLabel="افزایش تعداد"
+        roleDescription="فیلد عدد"
+      />,
+    );
+    expect(gate(html)).toEqual([]);
+  });
+
+  it("Select, with the visible Label the consumer renders — the twelve, fixed", () => {
+    const html = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید">
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>,
+    );
+    // The arrow runs label → control, so the label carries `for` and the
+    // trigger carries the matching `id`. See `FieldWiringMode`.
+    const forId = /<label[^>]*\bfor="([^"]*)"/.exec(html)?.[1];
+    expect(forId, "the visible Label emitted no htmlFor").toBeDefined();
+    expect(attrOn(html, "combobox", "id")).toBe(forId);
+    expect(gate(html)).toEqual([]);
+  });
+
+  /*
+   * One of the twelve was the DISABLED Select — `tabindex="-1" disabled`, and
+   * a selected value instead of the placeholder. `named-controls` skips nothing
+   * for being disabled (a disabled control is still announced), so it needs its
+   * own arm rather than an assumption that it behaves like the other five.
+   */
+  it("Select, disabled and with a value — the twelfth shape", () => {
+    const html = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید" defaultSelectedKey="thr" isDisabled>
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>,
+    );
+    expect(gate(html)).toEqual([]);
+  });
+
+  it("an explicit aria-label is never overridden, and never made to dangle", () => {
+    const named = renderToStaticMarkup(<Checkbox aria-label="انتخاب همه" />);
+    expect(attrOn(named, "checkbox", "aria-labelledby")).toBeUndefined();
+    expect(gate(named)).toEqual([]);
+
+    const select = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید" aria-label="انتخاب شهر">
+        <SelectTrigger />
+      </Select>,
+    );
+    expect(attrOn(select, "combobox", "aria-labelledby")).toBeUndefined();
+    expect(gate(select)).toEqual([]);
+  });
+
+  /*
+   * The reason Select wires label → control and not the reverse. A Select with
+   * no `<Label>` and no `aria-label` is already broken; the wiring must not
+   * make it MORE broken by adding a reference to an element that never renders.
+   */
+  it("a Select with no Label at all emits no reference to one", () => {
+    const html = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید">
+        <SelectTrigger />
+      </Select>,
+    );
+    expect(attrOn(html, "combobox", "aria-labelledby")).toBeUndefined();
+    // Still unnamed — that is the caller's defect and the gate must keep saying
+    // so. What must NOT appear is a second, dangling one.
+    expect(gate(html)).toEqual(["named-controls"]);
+  });
+});
+
+describe("descriptions at the first byte — the half nobody had measured", () => {
+  it("Checkbox's description reaches the control", () => {
+    const html = renderToStaticMarkup(
+      <Checkbox description="این را بخوانید">شرایط</Checkbox>,
+    );
+    const ref = attrOn(html, "checkbox", "aria-describedby");
+    expect(ref, "the control carries no aria-describedby").toBeDefined();
+    expect(textOfId(html, ref ?? "")).toBe("این را بخوانید");
+  });
+
+  it("Switch's description reaches the control", () => {
+    const html = renderToStaticMarkup(<Switch description="توضیح">اعلان‌ها</Switch>);
+    const ref = attrOn(html, "switch", "aria-describedby");
+    expect(textOfId(html, ref ?? "")).toBe("توضیح");
+  });
+
+  it("a description AND an error are both announced, in that order", () => {
+    const html = renderToStaticMarkup(
+      <Checkbox description="این را بخوانید" errorMessage="باید بپذیرید">
+        شرایط
+      </Checkbox>,
+    );
+    const refs = (attrOn(html, "checkbox", "aria-describedby") ?? "").split(" ").filter(Boolean);
+    expect(refs).toHaveLength(2);
+    expect(refs.map((id) => textOfId(html, id))).toEqual(["این را بخوانید", "باید بپذیرید"]);
+  });
+
+  it("NumberField's description reaches the input across the half-migrated Label", () => {
+    const html = renderToStaticMarkup(
+      <NumberField
+        label="تعداد"
+        description="بین ۱ تا ۱۰"
+        decrementLabel="کاهش"
+        incrementLabel="افزایش"
+        roleDescription="فیلد عدد"
+      />,
+    );
+    const ref = /<input[^>]*aria-describedby="([^"]*)"/.exec(html)?.[1];
+    expect(ref, "the input carries no aria-describedby").toBeDefined();
+    expect(textOfId(html, ref ?? "")).toBe("بین ۱ تا ۱۰");
+  });
+
+  /*
+   * `CheckboxGroup` is here rather than in the naming block because it is the
+   * one instance of this defect class that NO gate rule can reach: the group is
+   * `role="group"`, and `named-controls` grades the `INTERACTIVE` selector,
+   * which does not list it. Measured un-wired, the served `<div role="group">`
+   * carried neither attribute — so both halves are asserted here directly.
+   */
+  it("CheckboxGroup's own name and description reach the group element", () => {
+    const html = renderToStaticMarkup(
+      <CheckboxGroup label="علاقه‌مندی‌ها" description="یک یا چند مورد">
+        <Checkbox value="a">الف</Checkbox>
+      </CheckboxGroup>,
+    );
+    expect(textOfId(html, attrOn(html, "group", "aria-labelledby") ?? "")).toBe("علاقه‌مندی‌ها");
+    expect(textOfId(html, attrOn(html, "group", "aria-describedby") ?? "")).toBe("یک یا چند مورد");
+  });
+
+  it("an explicit aria-describedby is not replaced", () => {
+    const html = renderToStaticMarkup(
+      <Checkbox description="این را بخوانید" aria-describedby="mine">
+        شرایط
+      </Checkbox>,
+    );
+    expect(attrOn(html, "checkbox", "aria-describedby")).toBe("mine");
+  });
+
+  it("no description means no reference — nothing minted, nothing dangling", () => {
+    const html = renderToStaticMarkup(<Checkbox>شرایط</Checkbox>);
+    expect(attrOn(html, "checkbox", "aria-describedby")).toBeUndefined();
+    expect(gate(html)).toEqual([]);
+  });
+});
+
+/*
+ * The other half of the promise. Hand-minted ids are only a fix if Base UI's
+ * own hydrated wiring lands on the SAME elements — an id that changes after
+ * hydration would move the name and the description out from under a screen
+ * reader that had already read them.
+ */
+describe("server and client agree", () => {
+  it("the checkbox's name and description point at the same elements after effects run", () => {
+    const server = renderToStaticMarkup(
+      <Checkbox description="این را بخوانید">شرایط</Checkbox>,
+    );
+    const serverName = textOfId(server, attrOn(server, "checkbox", "aria-labelledby") ?? "");
+    const serverDesc = textOfId(server, attrOn(server, "checkbox", "aria-describedby") ?? "");
+
+    const { container } = render(<Checkbox description="این را بخوانید">شرایط</Checkbox>);
+    const control = container.querySelector('[role="checkbox"]')!;
+    const byId = (attribute: string) =>
+      (control.getAttribute(attribute) ?? "")
+        .split(" ")
+        .filter(Boolean)
+        .map((id) => container.ownerDocument.getElementById(id)?.textContent?.trim())
+        .join(" ");
+
+    expect(byId("aria-labelledby")).toBe(serverName);
+    expect(byId("aria-describedby")).toBe(serverDesc);
+  });
+});

@@ -17,7 +17,7 @@ import {
   fieldVariants,
   labelVariants,
 } from "./form.tsx";
-import { attr, useSsrLabelId } from "./base-ui-adapter.ts";
+import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
 
 /**
  * The clickable row: indicator, then label.
@@ -182,7 +182,7 @@ export function Checkbox({
   style,
   ...rest
 }: CheckboxProps) {
-  const labelId = useSsrLabelId(children, rest);
+  const wiring = useFieldWiring({ label: children, description, errorMessage, explicit: rest });
 
   return (
     <Field.Root
@@ -202,11 +202,11 @@ export function Checkbox({
     >
       <Field.Label
         className={cn(checkboxVariants(), controlClassName)}
-        {...attr("id", labelId)}
+        {...wiring.labelProps}
       >
         <BaseCheckbox.Root
           className={checkboxIndicatorVariants()}
-          {...attr("aria-labelledby", labelId)}
+          {...wiring.controlProps}
           {...attr("checked", isSelected)}
           {...attr("defaultChecked", defaultSelected)}
           {...attr("indeterminate", isIndeterminate)}
@@ -248,12 +248,12 @@ export function Checkbox({
       {/* Indented to the label, not to the box: `ps-7` is the indicator's 1.25rem
           plus the 0.5rem gap, on the inline axis so it follows the reading side. */}
       {description != null ? (
-        <Field.Description className={cn(descriptionVariants(), "ps-7")}>
+        <Field.Description {...wiring.descriptionProps} className={cn(descriptionVariants(), "ps-7")}>
           {description}
         </Field.Description>
       ) : null}
       {errorMessage != null ? (
-        <Field.Error match className={cn(fieldErrorVariants(), "ps-7")}>
+        <Field.Error match {...wiring.errorProps} className={cn(fieldErrorVariants(), "ps-7")}>
           {errorMessage}
         </Field.Error>
       ) : null}
@@ -315,6 +315,17 @@ export function CheckboxGroup({
   style,
   ...rest
 }: CheckboxGroupProps) {
+  /*
+   * The group has the SAME first-byte defect as the controls inside it, and it
+   * is invisible to `gate:html` for a different reason: `named-controls` grades
+   * the `INTERACTIVE` selector, which does not include `role="group"`. Measured
+   * before the fix — `renderToStaticMarkup` of a `<CheckboxGroup label="…">`
+   * emits `<div role="group">` with no `aria-labelledby` and no
+   * `aria-describedby`, while the docblock above correctly says Base UI's
+   * `CheckboxGroup` emits `aria-labelledby={labelId}`. It does; the id is just
+   * `undefined` until a layout effect runs.
+   */
+  const wiring = useFieldWiring({ label, description, errorMessage, explicit: rest });
   return (
     <Field.Root
       data-lumo=""
@@ -338,11 +349,17 @@ export function CheckboxGroup({
         which is what `CheckboxGroup` reads. A native label here would claim to
         focus a control that does not exist.
       */}
-      <Field.Label nativeLabel={false} render={<span />} className={labelVariants()}>
+      <Field.Label
+        nativeLabel={false}
+        render={<span />}
+        className={labelVariants()}
+        {...wiring.labelProps}
+      >
         {label}
       </Field.Label>
       <BaseCheckboxGroup
         className="flex flex-col gap-2"
+        {...wiring.controlProps}
         {...attr("value", value)}
         {...attr("defaultValue", defaultValue)}
         {...attr("onValueChange", onChange)}
@@ -352,10 +369,12 @@ export function CheckboxGroup({
         {children}
       </BaseCheckboxGroup>
       {description != null ? (
-        <Field.Description className={descriptionVariants()}>{description}</Field.Description>
+        <Field.Description {...wiring.descriptionProps} className={descriptionVariants()}>
+          {description}
+        </Field.Description>
       ) : null}
       {errorMessage != null ? (
-        <Field.Error match className={fieldErrorVariants()}>
+        <Field.Error match {...wiring.errorProps} className={fieldErrorVariants()}>
           {errorMessage}
         </Field.Error>
       ) : null}

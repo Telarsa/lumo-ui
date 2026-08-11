@@ -21,7 +21,7 @@ import {
   labelVariants,
   optional,
 } from "./form.tsx";
-import { attr } from "./base-ui-adapter.ts";
+import { attr } from "@lumo-ui/base-ui-ssr";
 import { useLumoLocale } from "./locale.ts";
 import {
   digitFromKey,

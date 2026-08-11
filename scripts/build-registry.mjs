@@ -39,13 +39,25 @@ const SOURCES = [
  * worth keeping visible:
  *
  *   base-ui-adapter.ts   Translates an API that exists. Base UI has a button;
- *                        it just spells `onPress` as `onClick`.
+ *                        it just spells `onPress` as `onClick`. It shrank when
+ *                        the ENGINE half of it left — see below.
  *   date-field-state.ts  IS the primitive. Base UI ships no date field at all,
  *                        so the segmented-entry engine React Aria used to
  *                        supply is now a file in this repo that every date
  *                        component copies.
  *   locale.ts            The locale context Base UI has no equivalent for; it
  *                        models direction and nothing else.
+ *
+ * A FOURTH KIND deliberately does NOT appear in this set: `@lumo-ui/base-ui-ssr`
+ * is a PACKAGE, not a companion file, so it is declared in `dependencies` beside
+ * `@lumo-ui/core` rather than copied. The rule is the same one DECISIONS.md
+ * states for core, and it applies for a sharper reason here. That module exists
+ * to compensate for a specific version of somebody else's library; when Base UI
+ * fixes the layout-effect naming upstream, one `pnpm up` retires it for every
+ * consumer at once. Copied into 107 items it would instead be 107 forks of a
+ * workaround, each frozen at the day it was copied, each still shipping after
+ * the bug it works around is gone. Copy-in is right for code a consumer should
+ * own and edit; it is wrong for a patch against an upstream defect.
  */
 const SHARED_COMPANIONS = new Set([
   "base-ui-adapter.ts",
@@ -124,6 +136,10 @@ for (const { dir, type, target } of SOURCES) {
   // @lumo-ui/core is a package, not a copy-in item: it holds the invariants a
   // consumer must NOT diverge from. See DECISIONS.md on the package/copy-in line.
   if (imports.includes("@lumo-ui/core")) dependencies.push("@lumo-ui/core");
+  // @lumo-ui/base-ui-ssr is a package for the opposite reason: it holds a
+  // workaround against a dated upstream defect, and a copied workaround is one
+  // that outlives its bug. See the header.
+  if (imports.includes("@lumo-ui/base-ui-ssr")) dependencies.push("@lumo-ui/base-ui-ssr");
   // A block composes shipped components rather than reimplementing primitives,
   // so it depends on the library as a package.
   if (imports.includes("@lumo-ui/ui")) dependencies.push("@lumo-ui/ui");

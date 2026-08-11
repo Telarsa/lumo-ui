@@ -9,8 +9,19 @@ import type {
   TooltipTriggerComponentProps as AriaTooltipTriggerProps,
 } from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { attr } from "./base-ui-adapter.ts";
+import { attr, useOpenMirror } from "@lumo-ui/base-ui-ssr";
 import { PLACEMENT, type LumoPlacement } from "./popover.tsx";
+
+/**
+ * The id the open tooltip's popup carries and the trigger's
+ * `aria-describedby` points at, or `undefined` while it is closed.
+ *
+ * A context rather than a prop because Lumo's public composition is
+ * `<TooltipTrigger><Button/><Tooltip/></TooltipTrigger>` — the two elements are
+ * siblings written by the CALLER, so there is no prop route between them and
+ * cloning the child would be the `child.type` trap in another costume.
+ */
+const TooltipNameContext = React.createContext<string | undefined>(undefined);
 
 /**
  * A description shown on hover or focus. **BASE UI ENGINE.**
@@ -20,39 +31,49 @@ import { PLACEMENT, type LumoPlacement } from "./popover.tsx";
  *       <Tooltip>حذف این ردیف</Tooltip>
  *     </TooltipTrigger>
  *
- * ══ THE TOOLTIP IS NOT ANNOUNCED AT ALL. MEASURED. ═════════════════════════
+ * ══ BASE UI ANNOUNCES NOTHING HERE, AND THIS FILE NOW SUPPLIES IT ══════════
  *
- * This is the most serious finding in this component and it is the one Lumo's
- * suite could not have caught, because there is no tooltip test in the
- * repository — see experiments/measurements/rebuild-overlays.json.
- *
- * React Aria wired the tooltip as `aria-describedby` on the trigger and put
- * `role="tooltip"` on the overlay. **Base UI emits neither.** Rendered open in
- * jsdom, the trigger carries no `aria-describedby`, the popup carries no `id`
- * and no `role`, and its attribute list is exactly:
+ * THE GAP. React Aria wired the tooltip as `aria-describedby` on the trigger and
+ * put `role="tooltip"` on the overlay. **Base UI emits neither.** Rendered open
+ * in jsdom, the trigger carried no `aria-describedby`, the popup carried no
+ * `id` and no `role`, and its attribute list was exactly:
  *
  *     ["data-open", "data-side", "data-align", "tabindex",
  *      "data-base-ui-focusable", "class"]
  *
  * Confirmed against the source rather than inferred from one render: the ONLY
  * `aria-*` attribute anywhere under `@base-ui/react/tooltip` is `aria-hidden`
- * on `TooltipArrow`. There is no `role`, no `aria-describedby` and no
- * `useRole`-equivalent in `TooltipRoot`, `TooltipTrigger` or `TooltipPopup`.
+ * on `TooltipArrow`. There is no `role` and no `useRole`-equivalent in
+ * `TooltipRoot`, `TooltipTrigger` or `TooltipPopup`. So the tooltip was visible
+ * text that assistive technology was never pointed at — and it produced zero
+ * English, so every string-counting measurement in this repository scored it
+ * clean while a screen-reader user got nothing.
  *
- * So the tooltip is visible text that assistive technology is never pointed at.
- * A sighted mouse user sees it; a screen reader user gets nothing. It is not a
- * localisation defect — there is no English to find — which is precisely why
- * every string-counting measurement in this repository scores it clean.
+ * THE FIX, AND WHY IT IS NOT AN INVENTION. An earlier round left this open on
+ * the grounds that hanging `aria-describedby` on the trigger would "invent a
+ * relationship the engine does not have". That was the wrong reading. The
+ * relationship is not the engine's to have: `role="tooltip"` and
+ * `aria-describedby` are ARIA, and Base UI's PUBLIC prop surface accepts both
+ * and preserves them verbatim. Measured, not assumed —
+ * `experiments/measurements/probe.api-shape-fixability.json → Q4`: a `role` and
+ * an `id` passed to `Tooltip.Popup` land on the popup, an `aria-describedby`
+ * passed to `Tooltip.Trigger` lands on the rendered trigger, and exactly one
+ * `[role=tooltip]` exists in the document. Nothing here reaches into
+ * `node_modules` and nothing depends on an internal module path.
  *
- * NOT PAPERED OVER. Generating an id here and hanging `aria-describedby` on the
- * trigger would be inventing a relationship the engine does not have, and the
- * brief for this experiment says to leave the behaviour honest and record the
- * gap. The component below therefore describes nothing, and this comment is the
- * deliverable.
+ * THE ONE SUBTLETY — WHY THE ATTRIBUTE IS CONDITIONAL. The popup is not
+ * mounted until the tooltip opens, so an unconditional `aria-describedby` would
+ * point at an element that does not exist in the served bytes. That is a
+ * DANGLING IDREF: the second defect class this repository tracks, and precisely
+ * the one COMPARISON.md's axis 1a credits Base UI for not having. Trading a
+ * missing relationship for a broken one is not a fix. So the id is wired only
+ * while the tooltip is OPEN, mirrored through `useOpenMirror` — which means the
+ * first byte carries neither attribute and neither dangles, and the
+ * relationship exists exactly when the thing it points at does.
  *
- * The old header's rule still holds and now holds harder: an icon-only trigger
- * needs its own `label`, because the tooltip supplements a name at best and
- * here supplies nothing. That is why no prop in this file is named `label`.
+ * The old header's rule still holds: an icon-only trigger needs its own
+ * `label`. A tooltip is a DESCRIPTION, never a name. That is why no prop in
+ * this file is named `label`.
  *
  * ── PLACEMENT ───────────────────────────────────────────────────────────────
  *
@@ -125,19 +146,28 @@ export function TooltipTrigger({
 }: TooltipTriggerProps) {
   const items = React.Children.toArray(children as React.ReactNode);
   const [trigger, ...rest] = items;
+  // One id, used twice: as the popup's `id` and as the trigger's
+  // `aria-describedby`. Both only while open — see the file header on why an
+  // unconditional idref would be a dangling one.
+  const popupId = React.useId();
+  const { open, handleOpenChange } = useOpenMirror(isOpen, defaultOpen, onOpenChange);
+  const described = open ? popupId : undefined;
   return (
     <BaseTooltip.Root
       {...attr("open", isOpen)}
       {...attr("defaultOpen", defaultOpen)}
-      {...attr("onOpenChange", onOpenChange)}
+      onOpenChange={handleOpenChange}
       {...attr("disabled", isDisabled)}
     >
       {React.isValidElement(trigger) ? (
-        <BaseTooltip.Trigger render={trigger as React.ReactElement<Record<string, unknown>>} />
+        <BaseTooltip.Trigger
+          {...attr("aria-describedby", described)}
+          render={trigger as React.ReactElement<Record<string, unknown>>}
+        />
       ) : (
         trigger
       )}
-      {rest}
+      <TooltipNameContext.Provider value={popupId}>{rest}</TooltipNameContext.Provider>
     </BaseTooltip.Root>
   );
 }
@@ -174,6 +204,10 @@ export function Tooltip({
   // RAC's default placement for a tooltip is `'top'`, not `'bottom'` — the block
   // axis either way, so it is identical in both scripts.
   const { side, align } = PLACEMENT[placement ?? "top"];
+  // The id `TooltipTrigger` minted. `role="tooltip"` is stated here rather than
+  // inherited: Base UI's Popup has no role of its own, and `role` is an ordinary
+  // prop it forwards. See the file header.
+  const popupId = React.useContext(TooltipNameContext);
   // No `data-lumo`: the tooltip is never focusable, so the shared focus-ring
   // rule has nothing to match. The attribute marks controls, not decoration.
   return (
@@ -185,7 +219,12 @@ export function Tooltip({
         {...attr("alignOffset", crossOffset)}
         className="isolate z-50"
       >
-        <BaseTooltip.Popup className={cn(tooltipVariants(), className)} {...rest} />
+        <BaseTooltip.Popup
+          role="tooltip"
+          {...attr("id", popupId)}
+          className={cn(tooltipVariants(), className)}
+          {...rest}
+        />
       </BaseTooltip.Positioner>
     </BaseTooltip.Portal>
   );

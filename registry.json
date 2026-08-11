@@ -217,6 +217,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "react-aria-components"
       ],
@@ -336,6 +337,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -349,11 +351,6 @@
           "path": "packages/ui/src/checkbox.tsx",
           "type": "registry:ui",
           "target": "components/ui/checkbox.tsx"
-        },
-        {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -433,6 +430,7 @@
       "dependencies": [
         "@base-ui/react",
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "react-aria-components"
       ],
@@ -445,11 +443,6 @@
           "path": "packages/ui/src/date-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-field.tsx"
-        },
-        {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
         },
         {
           "path": "packages/ui/src/date-field-state.ts",
@@ -540,6 +533,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -553,11 +547,6 @@
           "path": "packages/ui/src/dialog.tsx",
           "type": "registry:ui",
           "target": "components/ui/dialog.tsx"
-        },
-        {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -827,6 +816,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority"
       ],
@@ -948,6 +938,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -1000,6 +991,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1009,11 +1001,6 @@
           "path": "packages/ui/src/popover.tsx",
           "type": "registry:ui",
           "target": "components/ui/popover.tsx"
-        },
-        {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1213,9 +1200,11 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react"
+        "lucide-react",
+        "react-aria-components"
       ],
       "registryDependencies": [
         "popover"
@@ -1320,6 +1309,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1329,11 +1319,6 @@
           "path": "packages/ui/src/slider.tsx",
           "type": "registry:ui",
           "target": "components/ui/slider.tsx"
-        },
-        {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1399,6 +1384,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1411,11 +1397,6 @@
           "path": "packages/ui/src/switch.tsx",
           "type": "registry:ui",
           "target": "components/ui/switch.tsx"
-        },
-        {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1451,6 +1432,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1460,11 +1442,6 @@
           "path": "packages/ui/src/tabs.tsx",
           "type": "registry:ui",
           "target": "components/ui/tabs.tsx"
-        },
-        {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1621,6 +1598,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "react-aria-components"
       ],
@@ -1665,10 +1643,11 @@
       "name": "tooltip",
       "type": "registry:ui",
       "title": "Tooltip",
-      "description": "A description shown on hover or focus. **BASE UI ENGINE.**",
+      "description": "The id the open tooltip's popup carries and the trigger's",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "react-aria-components"
@@ -1681,11 +1660,6 @@
           "path": "packages/ui/src/tooltip.tsx",
           "type": "registry:ui",
           "target": "components/ui/tooltip.tsx"
-        },
-        {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },

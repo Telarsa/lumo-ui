@@ -7,7 +7,8 @@ import { cn, type LumoNode } from "@lumo-ui/core";
 // The cva definition lives in a module with no "use client" so SERVER components
 // can call it — see button.variants.ts. Re-exported here for convenience.
 import { buttonVariants, type ButtonVariantProps } from "./button.variants.ts";
-import { asAriaKeyboardEvent, attr, pressFromClick } from "./base-ui-adapter.ts";
+import { attr } from "@lumo-ui/base-ui-ssr";
+import { asAriaKeyboardEvent, pressFromClick } from "./base-ui-adapter.ts";
 
 export { buttonVariants };
 export type { ButtonVariantProps };
