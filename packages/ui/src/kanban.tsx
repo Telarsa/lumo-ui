@@ -83,6 +83,30 @@ import { cn, direction, formatNumber, type Locale, type LumoNode } from "@lumo-u
  * no longer reach.
  */
 
+/**
+ * The outer element — the announcer's host, and the board's width boundary.
+ *
+ * ── WHY A BARE `max-w-full` IS LOAD-BEARING HERE ────────────────────────────
+ *
+ * `kanbanVariants` below carries `overflow-x-auto`, which reads like a promise
+ * that a board too wide for its container scrolls. It is not, on its own: a
+ * scroll container with an auto width still reports its CONTENT's width as its
+ * max-content size, and this wrapper — a flex or grid item in almost every real
+ * placement — is then floored by its automatic minimum size at that same width.
+ * The board does not scroll; it pushes its container open and paints outside it.
+ *
+ * Measured on the docs preview canvas at a 1440px viewport: three `w-72`
+ * columns plus their gaps are 904px, the canvas cell is 672px, and the wrapper
+ * rendered at 904 — 84px of board outside the canvas border on each side, drawn
+ * over the page. `min-width: 0` does NOT fix it (measured: still 904); the
+ * automatic minimum is not what is being hit, the fit-content width is. Only a
+ * definite cap does, and `max-w-full` is the one that caps without also forcing
+ * a narrow board to stretch: wrapper 904 → 672, and the inner scroller's
+ * `scrollWidth` stays 904, so the columns are reachable by scrolling instead of
+ * by leaving the box.
+ */
+export const kanbanRootVariants = cva("max-w-full");
+
 export const kanbanVariants = cva("flex gap-4 overflow-x-auto p-1");
 
 export const kanbanColumnVariants = cva(
@@ -315,7 +339,7 @@ export function Kanban<T extends KanbanCard>({
   };
 
   return (
-    <div data-lumo="">
+    <div data-lumo="" className={kanbanRootVariants()}>
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>

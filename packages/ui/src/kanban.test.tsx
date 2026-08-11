@@ -323,3 +323,26 @@ describe("the ends of a column", () => {
     expect(onChange).toHaveBeenCalledTimes(1);
   });
 });
+
+/*
+ * The board's OWN width, which is the one thing about a kanban that is not a
+ * keyboard question — and the one that was wrong on the docs site.
+ *
+ * jsdom does not lay out, so this cannot assert pixels. What it CAN assert is
+ * that the cap is present, and the cap is the whole fix: `overflow-x-auto` on
+ * the scroller is not a promise that a wide board scrolls, because an
+ * auto-width scroll container still reports its content's width as its own
+ * max-content size. Measured in Chrome before the cap, on a 672px docs canvas:
+ * the wrapper rendered at 904px and the board painted 84px outside the canvas
+ * border on each side. With it: wrapper 672px, scroller `scrollWidth` 904px.
+ */
+describe("a board is capped by its container rather than pushing it open", () => {
+  it("caps the outer element and keeps the scroller on the inner one", () => {
+    harness();
+    const board = screen.getByRole("group", { name: "تخته" });
+    expect(board.className).toContain("overflow-x-auto");
+    const outer = board.parentElement;
+    expect(outer).not.toBeNull();
+    expect(outer?.className).toContain("max-w-full");
+  });
+});

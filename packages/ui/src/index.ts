@@ -911,6 +911,7 @@ export {
   kanbanColumnHeaderVariants,
   kanbanColumnVariants,
   kanbanHandleVariants,
+  kanbanRootVariants,
   kanbanVariants,
   moveCard,
 } from "./kanban.tsx";

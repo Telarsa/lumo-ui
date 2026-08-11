@@ -328,7 +328,22 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
          */
         className="grid min-h-96 place-items-center rounded-lg border border-border bg-bg p-8 sm:p-10"
       >
-        <div className="w-full max-w-2xl">{children}</div>
+        {/*
+         * `min-w-0` and not just `w-full max-w-2xl`. This element is a GRID
+         * ITEM, so its `min-width` resolves to `auto` — the automatic minimum
+         * size — and that floor is the demo's min-content width, which
+         * out-ranks both `w-full` and the stage's padding. A demo whose content
+         * has a hard minimum therefore pushed this cell WIDER than the canvas
+         * and painted over the page instead of being contained by it.
+         *
+         * Measured at a 390px viewport, where the stage's content box is 263px:
+         * the carousel's cell rendered at 400px and spilled 138px past the
+         * border; pagination 78px, steps 31px, tabs' second example 28px.
+         * `min-w-0` removes the floor and every one of those resolves to the
+         * canvas width — the demos below then shrink or scroll internally,
+         * which is what their own `overflow` rules were written to do.
+         */}
+        <div className="w-full min-w-0 max-w-2xl">{children}</div>
       </div>
     </div>
   );

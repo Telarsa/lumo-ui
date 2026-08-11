@@ -62,7 +62,16 @@ export function ExampleCard({
          * the inline axis while full-width ones still span the cell.
          */}
         <div className="grid min-h-44 place-items-center rounded-lg border border-border bg-bg p-6 sm:p-8">
-          <div className="flex w-full max-w-2xl flex-col items-center">{children}</div>
+          {/*
+           * `min-w-0` for the reason `preview-toolbar.tsx` measures in full: a
+           * grid item's `min-width: auto` floors it at its content's min-content
+           * width, so an example whose content cannot shrink pushed this cell
+           * past the canvas border rather than being held inside it. Keeping
+           * the two stages identical here is deliberate — they are the same
+           * anatomy at two scales, and a fix that landed on only one of them
+           * would show up as examples behaving differently from the preview.
+           */}
+          <div className="flex w-full min-w-0 max-w-2xl flex-col items-center">{children}</div>
         </div>
         <ViewCode
           code={code}

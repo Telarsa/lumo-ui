@@ -67,9 +67,28 @@ function BrowserExample(l: Locale) {
   );
 }
 
+/**
+ * The phone, at the width the component itself ships.
+ *
+ * This carried `className="max-w-[16rem]"`, and the measured result was a
+ * handset 256px wide between a 448px browser window and a 448px plain frame on
+ * the same page — centred (the canvas put 248.5px on each side of it, so it was
+ * never off-centre, only small), but visibly the runt of the three, with an 8px
+ * bezel wrapped around 224px of screen.
+ *
+ * `frameVariants`' phone already ships `w-[min(22rem,100%)]` — 352px, a real
+ * handset width, and the `min()` keeps it inside a narrow canvas without help.
+ * Overriding it here made the example argue with the component it documents,
+ * and the override bought nothing: the stage is 817px wide either way.
+ *
+ * The comment lives above the declaration rather than inside it because
+ * `_system/extract.ts` slices the shown source from `function PhoneExample(`
+ * onward — a note about a past defect is not part of the example a reader
+ * copies.
+ */
 function PhoneExample(l: Locale) {
   return (
-    <Frame device="phone" label={t.phoneLabel[l]} className="max-w-[16rem]">
+    <Frame device="phone" label={t.phoneLabel[l]}>
       <div className="flex flex-col gap-4 p-5">
         <div className="text-sm text-fg-muted">{t.appGreeting[l]}</div>
         <div className="rounded-xl bg-surface-sunken p-4">
