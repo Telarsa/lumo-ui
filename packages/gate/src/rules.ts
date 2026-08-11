@@ -425,10 +425,34 @@ export const resolvedIdrefs: Rule = {
  * both states. It was found by counting attributes in the export by hand. This
  * rule is that count, made permanent.
  *
- * Two shapes are legitimately exempt and are not violations:
+ * THREE shapes are legitimately exempt and are not violations:
  *  - the container manages focus itself via `aria-activedescendant`, so the
  *    CONTAINER is the tab stop and its items are correctly all `-1`;
+ *  - the container carries `tabindex="0"` itself — the same idea, arrived at
+ *    without `aria-activedescendant`. See below;
  *  - every member is disabled, so there is nothing to focus.
+ *
+ * ── THE THIRD EXEMPTION, AND HOW IT WAS FOUND ───────────────────────────────
+ *
+ * By this rule reporting four violations that were not defects. React Aria's
+ * collections make the COLLECTION tabbable while nothing inside it is focused
+ * and marshal focus into the first item on entry — `useSelectableCollection`
+ * computes `tabIndex = manager.focusedKey == null ? 0 : -1` in the RENDER BODY,
+ * and `useSelectableItem` computes the mirror of it in the same pass, so the
+ * two swap atomically. There is never a moment with two stops, and Tab into the
+ * container lands on a real option. The served shape — `role="listbox"
+ * tabindex="0"` with every option at `-1` — is the rule's own first exemption,
+ * reached by a different route, and the rule simply had no test for it.
+ *
+ * The header above already described this case in words. It was only ever
+ * DETECTED via `aria-activedescendant`, which React Aria does not use here.
+ *
+ * `=== "0"` and not `hasAttribute("tabindex")`, measured: the looser spelling
+ * also swallows the eight autocomplete/command containers, which sit at
+ * `tabindex="-1"` and ARE genuinely unreachable in the served bytes. Measured
+ * across the whole export, no other composite container carries any tabindex at
+ * all — 470 tablists, 322 radiogroups, 8 toolbars, 8 menubars, none of them —
+ * so this exemption cannot reach the defect the rule was written for.
  */
 const COMPOSITE_ROLES: Record<string, string> = {
   tablist: "tab",
@@ -452,6 +476,9 @@ export const compositeTabStop: Rule = {
       for (const el of Array.from(doc.document.querySelectorAll(`[role="${containerRole}"]`))) {
         // The container owns focus itself; its items are meant to be -1.
         if (el.hasAttribute("aria-activedescendant")) continue;
+        // The container IS the tab stop, without saying so via
+        // aria-activedescendant. See the third exemption in the header.
+        if (el.getAttribute("tabindex") === "0") continue;
         if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
         const items = Array.from(el.querySelectorAll(`[role="${itemRole}"]`)).filter(
           (i) => i.getAttribute("aria-disabled") !== "true" && !i.hasAttribute("disabled"),

@@ -148,6 +148,43 @@ describe("rules do not fire where they should not", () => {
     expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
   });
 
+  /*
+   * THE COLLECTION-AS-TAB-STOP EXEMPTION.
+   *
+   * Inline rather than a `composite-tab-stop-clean.bad.html`: the loop above
+   * generates a "fires on its poison" test per `*.bad.html` and asserts the
+   * fixture basenames equal the rule-id list exactly, so a second file for the
+   * same rule fails the no-orphans assertion.
+   *
+   * React Aria's collections serve `role="listbox" tabindex="0"` with every
+   * option at `-1`, and marshal focus into the first option on entry. That IS
+   * a tab stop. The rule reported four of these as unreachable widgets before
+   * the exemption existed.
+   */
+  it("a composite whose CONTAINER is the tab stop is not a violation", () => {
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="listbox" aria-label="شهرها" tabindex="0">
+        <div role="option" tabindex="-1">تهران</div>
+        <div role="option" tabindex="-1">شیراز</div>
+      </div><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
+  });
+
+  /*
+   * THE ANTI-VACUITY GUARD for the exemption above. Without this, widening
+   * `=== "0"` to `hasAttribute("tabindex")` — which looks like a tidy-up —
+   * would silently swallow the eight autocomplete/command containers, which
+   * sit at `tabindex="-1"` and ARE genuinely unreachable in the served bytes.
+   */
+  it("a container at tabindex=-1 with no tabbable option still fires", () => {
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="listbox" aria-label="شهرها" tabindex="-1">
+        <div role="option" tabindex="-1">تهران</div>
+      </div><p>۱۲۳</p></body></html>`;
+    const fired = gradeHtml("fa-IR/index.html", html).map((v) => v.rule);
+    expect(fired).toContain("composite-tab-stop");
+  });
+
   it("each poison fires its own rule and nothing unexplained", () => {
     // One implication is real and worth stating rather than designing around:
     // a dangling aria-labelledby means the control genuinely HAS no accessible
