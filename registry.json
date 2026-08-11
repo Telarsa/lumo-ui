@@ -695,6 +695,24 @@
       ]
     },
     {
+      "name": "frame",
+      "type": "registry:ui",
+      "title": "Frame",
+      "description": "Device chrome around a preview — a browser bar or a phone bezel.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/frame.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/frame.tsx"
+        }
+      ]
+    },
+    {
       "name": "hover-card",
       "type": "registry:ui",
       "title": "Hover Card",
@@ -713,6 +731,42 @@
           "path": "packages/ui/src/hover-card.tsx",
           "type": "registry:ui",
           "target": "components/ui/hover-card.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-stack",
+      "type": "registry:ui",
+      "title": "Icon Stack",
+      "description": "Overlapping avatars, with a count for the rest — the row on a shared",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/icon-stack.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/icon-stack.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-tile",
+      "type": "registry:ui",
+      "title": "Icon Tile",
+      "description": "An icon in a tinted square — the thing at the top of a feature card.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/icon-tile.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/icon-tile.tsx"
         }
       ]
     },

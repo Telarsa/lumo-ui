@@ -851,6 +851,22 @@ export type {
 export { Scrollspy, scrollspyLinkVariants, scrollspyVariants } from "./scrollspy.tsx";
 export type { ScrollspyItem, ScrollspyProps } from "./scrollspy.tsx";
 
+export { IconTile, iconTileVariants } from "./icon-tile.tsx";
+export type { IconTileProps } from "./icon-tile.tsx";
+
+export { IconStack, iconStackOverflowVariants, iconStackVariants } from "./icon-stack.tsx";
+export type { IconStackProps } from "./icon-stack.tsx";
+
+export {
+  Frame,
+  frameAddressVariants,
+  frameBarVariants,
+  frameDotVariants,
+  frameNotchVariants,
+  frameVariants,
+} from "./frame.tsx";
+export type { FrameProps } from "./frame.tsx";
+
 export {
   NativeSelect,
   NativeSelectOptGroup,
