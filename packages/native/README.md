@@ -1,0 +1,115 @@
+# `packages/native` — a spike, and its gate
+
+**Status: NOT STARTED. The gate below has not been run on a device, and nothing
+should be built here until it has.**
+
+This directory contains exactly one file — `src/icu-probe.ts` — and this
+document. That is deliberate: the spike's shape depends on an answer nobody in
+this repository has yet, and writing components before getting it is how a spike
+becomes a rewrite.
+
+## The gate, and why it comes first
+
+Lumo's entire claim rests on three properties of the runtime's `Intl`:
+
+| property | what the library calls | what it needs |
+| --- | --- | --- |
+| direction | `direction(locale)` | `Intl.Locale("fa-IR").getTextInfo().direction === "rtl"` |
+| digits | `formatNumber` | the `-u-nu-arabext` extension actually produces ۱۲۳ |
+| calendar | `formatDate` | the `-u-ca-persian` extension actually produces مرداد ۱۴۰۵ |
+
+On a browser these are Baseline and the library takes them for granted. On React
+Native they are a question — Hermes shipped for years with no `Intl` at all,
+Android builds back it with the platform's own ICU (whose completeness varies by
+OS version and by whether the app was built against a trimmed ICU), and iOS
+bridges to Foundation rather than to ICU proper.
+
+The failure that matters is not a crash. **A runtime can answer
+`Intl.DateTimeFormat` truthy and silently ignore `-u-ca-persian`**, returning a
+Gregorian date in Persian script: «۲۲ ژوئیه ۲۰۲۴» for a day Iran calls «۱ مرداد
+۱۴۰۳». Right script, right digits, wrong calendar, wrong year, and green on every
+other check. `calendar-not-gregorian` in the probe exists for exactly that, and
+it asserts the year NEGATIVELY — a Jalali year can never equal a Gregorian one,
+which is a fact no formatting bug can fake.
+
+### Running it
+
+Dependency-free and framework-free on purpose — no React, no Expo, no test
+runner — so it can be pasted into a bare RN app's entry file or run in a Hermes
+REPL.
+
+```
+node --experimental-strip-types packages/native/src/icu-probe.ts
+```
+
+Node is the **control**, not the result. On this machine it reports:
+
+```
+lumo icu probe — PASS
+  ok   intl-present            got "true"
+  ok   direction               got "rtl"
+  ok   digits                  got "۱۲۳۴"
+  ok   calendar                got "مرداد"
+  ok   calendar-not-gregorian  got "۱۴۰۵ (→ 1405)"
+```
+
+**The result that decides the spike is a physical device's**, and it needs four:
+a recent Android, an Android old enough to matter (whatever the product's floor
+is), a recent iOS, and — if the product ships one — a release build, because
+release builds are where a trimmed ICU shows up and debug builds are where it
+does not.
+
+### What each outcome means
+
+| outcome | consequence |
+| --- | --- |
+| all pass | `@lumo-ui/core` runs unchanged. The shared-math plan holds: `formatNumber`, `formatDate`, `direction` and `FORMAT_LOCALE` are the same code on web and native, and only the COMPONENTS are per-platform. |
+| calendar fails | The plan changes shape. `formatDate` needs a native implementation over `@internationalized/date`, which carries its own calendar arithmetic with no React and no Intl dependency — already a dependency here, and `calendar-datelib.ts` already proves the pattern. Cost: real, bounded. |
+| digits fail | Worse. Digits are everywhere and `formatNumber` runs per table cell. A numeral map is possible, but the library's rule (`core/src/format.ts`) is that the map is built by ASKING Intl — which is what would be unavailable. This needs a decision, not a workaround. |
+| direction fails | Cheapest and least likely: a two-entry table. `direction()` asks the platform only to avoid a stale hand-kept map; on a runtime that cannot answer, a map is the honest fallback. |
+| `Intl` absent | The spike stops. `@formatjs/intl-*` is ~400KB before locale data, and the bar for a runtime dependency here is "owning it must fix a defect". That is its own decision, recorded, before any component work. |
+
+## What is already established, and needs no further investigation
+
+Recorded so the next person does not re-derive it.
+
+**There is no cross-platform headless accessibility engine.** Measured, not
+assumed:
+
+- `@zag-js/react` and `@react-stately/*` both peer-depend on `react-dom`.
+- Base UI is DOM-only — its whole value here is the `data-*` state attributes it
+  writes onto DOM elements.
+- The "universal" libraries work through `react-native-web`, which is the wrong
+  direction for Lumo: RNW emits `<div>` for everything, so a library built on it
+  produces exactly the unnamed, roleless markup `lumo-gate` exists to fail.
+
+**Therefore: shared math in `@lumo-ui/core`, per-platform components.** There is
+no third option that preserves the accessibility guarantee, and the guarantee is
+the product.
+
+**Lynx is not being taken.** `DECISIONS.md` §12 records why, with its tripwire.
+
+**`Frame device="phone"`** already exists in `packages/ui`, so native results can
+be shown on the website inside a bezel without a second mechanism.
+
+## The order of work, once the gate is green
+
+1. Confirm the gate on all four device configurations above. Paste the reports
+   into this file — the outputs are the evidence, and a summary of them is not.
+2. Decide the toolchain. Expo + NativeWind is the working assumption and is not
+   settled; NativeWind in particular buys Tailwind-shaped class strings, which
+   matters for `shadcn migrate rtl` only if the RTL transform is taught to walk
+   them. Check that before committing to it.
+3. Port `@lumo-ui/core` — which, if the gate is green, is a re-export and a
+   `package.json`, not a port.
+4. ONE component, end to end, chosen because it is direction-sensitive and
+   small. `switch` or `segmented-control`. Not `button`: a button that renders
+   proves nothing about the thing this library is for.
+5. Only then decide whether there is a library here.
+
+## Standing constraints that apply to this directory
+
+- **No paid services.** Device testing is a physical device and a cable.
+- **Low RAM and disk.** Expo's install is large; do not add it until step 2 is
+  actually being started, and remove it if the spike is parked.
+- **React Native / Expo, never Flutter.**
