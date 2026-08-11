@@ -65,43 +65,36 @@ export const virtualListItemVariants = cva(
 );
 
 /**
- * ═══ WHAT `@tanstack/react-virtual` GETS RIGHT, AND THE ONE THING IT DOES NOT ══
+ * ═══ WHAT MIRRORS, WHAT DOES NOT, AND WHERE THE ONE PHYSICAL SIGN LIVES ════
  *
- * Measured against the installed 3.14.9 / virtual-core 3.17.7, by reading the
- * dist rather than the docs:
+ * This section used to be an audit of `@tanstack/react-virtual`. The
+ * virtualiser is Lumo's now (`virtualizer.ts`), so what remains is the part
+ * that was never the library's to get right or wrong — the CSS.
  *
- *  1. **A VERTICAL virtualiser is direction-neutral.** `observeElementOffset`
- *     reads `el.scrollTop` with no direction term at all, and a row's `start` is
- *     a block-axis offset. Nothing to mirror, and that is a real property rather
- *     than luck: block-axis scrolling means the same thing in every horizontal
- *     writing mode.
+ *  1. **A VERTICAL list is direction-neutral, and that is structural.** The
+ *     block axis means the same thing in every horizontal writing mode, so a
+ *     row's offset is a block-axis offset and there is nothing to mirror. The
+ *     old audit noted TanStack read `scrollTop` with no direction term; ours
+ *     does the same, for the same reason, and neither is a choice.
  *
- *  2. **A HORIZONTAL one is direction-dependent and defaults to WRONG.**
- *     `virtual-core/dist/esm/index.js:119` —
+ *  2. **A HORIZONTAL one is direction-dependent, and the SCROLL half is now
+ *     handled without an option at all.** `virtualizer.ts` reads
+ *     `Math.abs(el.scrollLeft)`, which is correct under both scroll models any
+ *     engine still ships — so there is no `isRtl` to default wrong and no
+ *     second source of direction for a page to set in disagreement with its own
+ *     `<html dir>`. That is why `VirtualMirror` no longer carries an `isRtl`
+ *     field: it existed only to feed TanStack's option, and an exported value
+ *     nothing consumes is a value that drifts.
  *
- *         const { horizontal, isRtl } = instance.options
- *         return horizontal ? el.scrollLeft * (isRtl && -1 || 1) : el.scrollTop
- *
- *     and `isRtl` defaults to `false` (line 274). So a horizontal list in a
- *     Persian document reads `scrollLeft` with the wrong sign, computes a
- *     negative offset, and renders the window from the wrong end of the data —
- *     while looking, to anyone who does not read Persian, like a list that
- *     simply starts somewhere odd.
- *
- *     `isRtl` is the lever, and it is exactly the shape of lever this library
- *     distrusts: a second, independent source of direction that a page can set
- *     to disagree with its own `<html dir>`. So `virtualMirror()` DERIVES it
- *     from the locale and `VirtualList` exposes no `isRtl` prop — the same rule
- *     `chartMirror()` follows for recharts and `LumoProvider` follows for Base
- *     UI's `DirectionProvider`.
- *
- *  3. **`transform` is physical and stays physical.** There is no logical
- *     transform in CSS: `translateX(+n)` moves an element toward the physical
- *     right in every direction. A row placed at `insetInlineStart: 0` under
- *     `dir="rtl"` starts at the RIGHT edge, so advancing it along the reading
- *     axis means translating it NEGATIVELY. That sign is the whole of
- *     `mainAxisTranslate` below, it cannot be expressed as a logical property,
- *     and it is why this arithmetic is a function rather than a class.
+ *  3. **`transform` is physical and stays physical — this is the whole reason
+ *     this function still exists.** There is no logical transform in CSS:
+ *     `translateX(+n)` moves an element toward the physical right in every
+ *     direction. A row placed at `insetInlineStart: 0` under `dir="rtl"` starts
+ *     at the RIGHT edge, so advancing it along the reading axis means
+ *     translating it NEGATIVELY. That sign is the whole of `mainAxisTranslate`
+ *     below, it cannot be expressed as a logical property, and it is the one
+ *     piece of direction arithmetic that no amount of owning the virtualiser
+ *     removes.
  *
  * Under LTR every value below is the identity, so the mirrored path and the
  * plain path are the same code — the only arrangement in which the mirrored one
@@ -112,13 +105,6 @@ export type VirtualListOrientation = "vertical" | "horizontal";
 export interface VirtualMirror {
   /** Derived from the locale via `Intl.Locale.getTextInfo()`. Never passed in. */
   direction: Direction;
-  /**
-   * `@tanstack/react-virtual`'s `isRtl` option. Only consulted when
-   * `horizontal` is true; passed unconditionally because passing it under a
-   * vertical list is a documented no-op and a conditional would be one more
-   * branch that can be got wrong.
-   */
-  isRtl: boolean;
   /**
    * A row's offset, as a CSS `transform`.
    *
@@ -137,7 +123,6 @@ export function virtualMirror(
 
   return {
     direction: dir,
-    isRtl: rtl,
     mainAxisTranslate: (start: number) =>
       horizontal
         ? `translateX(${rtl ? -start : start}px)`

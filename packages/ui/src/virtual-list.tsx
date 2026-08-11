@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type CSSProperties } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useVirtualWindow } from "./virtualizer.ts";
 import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 import {
   virtualListItemVariants,
@@ -32,14 +32,20 @@ export type { VirtualListOrientation };
  *       {(index) => <OrderRow order={orders[index]} />}
  *     </VirtualList>
  *
- * ═══ WHY THIS IS HEADLESS-PLUS-OUR-OWN-MARKUP AND NOT A RENTED COMPONENT ════
+ * ═══ THE ARITHMETIC IS OURS NOW ═════════════════════════════════════════════
  *
- * `@tanstack/react-virtual` 3.14.9 emits **no DOM, no role, no `aria-*` and no
- * focus management**. That is not a limitation being worked around, it is the
- * reason it is acceptable beside Base UI: Lumo already has exactly one
- * accessibility dependency and adding a second is how a library ends up with
- * two libraries' opinions about the same tab stop. What is rented here is
- * arithmetic — a window of indices and their offsets — and nothing else.
+ * This was `@tanstack/react-virtual` 3.14.9 until 11 Aug 2026, and the reason
+ * that dependency was acceptable — it emits no DOM, no role, no `aria-*` and no
+ * focus management — is the same reason it was replaceable: what it supplied
+ * was ARITHMETIC, and arithmetic this file already had tests for. It is now
+ * `virtualizer.ts`, whose header records the three defects the swap closed
+ * (measurements keyed by position rather than by item, a scroller getter that
+ * re-subscribes on every render, and an `isRtl` flag defaulting to wrong).
+ *
+ * What did NOT change is the division of labour: the hook computes a window of
+ * indices and their offsets and nothing else, and every role, name, tab stop
+ * and `aria-*` attribute below belongs to this file. That was the rule when the
+ * arithmetic was rented and it is the rule now that it is owned.
  *
  * ═══ THE DEFECT VIRTUALISATION INTRODUCES, AND THE ONLY FIX FOR IT ══════════
  *
@@ -174,31 +180,27 @@ export function VirtualList({
   const mirror = virtualMirror(locale, orientation);
   const horizontal = orientation === "horizontal";
 
-  const virtualizer = useVirtualizer({
+  const { items, totalSize, measureElement } = useVirtualWindow({
     count,
-    getScrollElement: () => scrollRef.current,
+    // The ref itself, not a getter that closes over it — see `virtualizer.ts`.
+    scrollRef,
     estimateSize: typeof estimateSize === "number" ? () => estimateSize : estimateSize,
     overscan,
     horizontal,
-    // Derived, never accepted. See the header's RTL section.
-    isRtl: mirror.isRtl,
     /*
-     * The deterministic viewport the server render lays out against. Without
-     * it `getVirtualItems()` is empty during `renderToStaticMarkup` and the
-     * served bytes contain an empty list — see the header.
+     * The deterministic viewport the server render lays out against. Without it
+     * the window is empty during `renderToStaticMarkup` and the served bytes
+     * contain an empty list — see the header.
      *
-     * `Rect` demands both axes and the virtualiser reads only the main one, so
-     * both get `initialSize` rather than the cross axis getting a zero that
-     * would read as "no viewport". Which of the two is the main axis is
-     * `horizontal`'s business, not this literal's.
+     * ONE number, along the main axis. The old call passed a `Rect` carrying
+     * both axes because TanStack's type demanded both and read one; which axis
+     * is the main one is `horizontal`'s business, so the caller now states a
+     * length rather than a rectangle and cannot get the pairing wrong.
      */
-    initialRect: { width: initialSize, height: initialSize },
+    initialSize,
     ...(getItemKey === undefined ? {} : { getItemKey }),
     ...(gap === undefined ? {} : { gap }),
   });
-
-  const items = virtualizer.getVirtualItems();
-  const total = virtualizer.getTotalSize();
 
   return (
     <div
@@ -220,8 +222,8 @@ export function VirtualList({
          */
         style={
           (horizontal
-            ? { inlineSize: `${total}px`, blockSize: "100%" }
-            : { blockSize: `${total}px` }) as CSSProperties
+            ? { inlineSize: `${totalSize}px`, blockSize: "100%" }
+            : { blockSize: `${totalSize}px` }) as CSSProperties
         }
       >
         {items.map((item) => (
@@ -238,7 +240,7 @@ export function VirtualList({
             data-index={item.index}
             // Real measurement replaces `estimateSize` as rows mount. Without
             // this the scrollbar stays a guess for the lifetime of the list.
-            ref={virtualizer.measureElement}
+            ref={measureElement}
             className={cn(virtualListItemVariants({ orientation }), itemClassName)}
             style={{ transform: mirror.mainAxisTranslate(item.start) }}
           >

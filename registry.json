@@ -1757,7 +1757,6 @@
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "@tanstack/react-virtual",
         "class-variance-authority"
       ],
       "files": [
@@ -1770,6 +1769,11 @@
           "path": "packages/ui/src/virtual-list.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/virtual-list.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/virtualizer.ts",
+          "type": "registry:ui",
+          "target": "components/ui/virtualizer.ts"
         }
       ]
     },

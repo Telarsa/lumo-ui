@@ -140,7 +140,19 @@ catalog:
   # Exact pins for the usual reason: all three compute geometry, ordering or
   # validity that the committed tests read back out.
   '@tanstack/react-table': 9.1.2
-  '@tanstack/react-virtual': 3.14.9
+  #
+  # `@tanstack/react-virtual` 3.14.9 WAS HERE and is gone as of 11 Aug 2026 —
+  # the one TanStack package replaced rather than kept, because it was the only
+  # one with defects measured against THIS library rather than in general:
+  # measurements cached by index so they stay behind when a list reorders, a
+  # `getScrollElement` getter that re-subscribes the scroll listener on every
+  # render, and an `isRtl` option defaulting to `false` that silently windows
+  # the wrong end of a horizontal Persian list. All three are closed by DELETING
+  # the option rather than setting it, in `packages/ui/src/virtualizer.ts`.
+  #
+  # The others stay, and the test that separates them is the same one: owning it
+  # must fix a defect, not merely remove a name from a manifest. Table and Form
+  # emit no DOM, no ARIA and no English, and neither had a defect for us.
   # THE FORM STATE LAYER, since 11 Aug 2026. Adopted for one reason that is
   # Lumo's rather than general, and it is the exact inverse of React Aria's:
   #

@@ -66,16 +66,32 @@ describe("VirtualList — the served bytes carry real rows", () => {
     expect(html).toMatch(/[۰-۹]/);
   });
 
-  it("POISON TWIN — without a deterministic viewport there are no rows at all", () => {
-    // `initialSize` is a required prop precisely because this is what happens
-    // without it. Asserted against the same component with a zero viewport,
-    // which is what the virtualiser assumes when nothing tells it otherwise.
-    //
-    // Measured: ZERO rows, not one. The list is served completely empty — no
-    // text, therefore no Latin digits, therefore a vacuous pass on every rule
-    // the HTML gate owns.
-    const html = list({ initialSize: 0 });
-    expect(rows(html)).toBe(0);
+  it("POISON TWIN — without a deterministic viewport, most of the screenful is missing", () => {
+    /*
+     * `initialSize` is a required prop precisely because of this. Asserted
+     * against the same component with a zero viewport, which is what a
+     * virtualiser assumes when nothing tells it otherwise.
+     *
+     * ── THIS ASSERTION CHANGED WHEN THE VIRTUALISER BECAME OURS ────────────
+     *
+     * Under `@tanstack/react-virtual` the measured answer was ZERO rows: the
+     * list was served completely empty, so it had no text, therefore no Latin
+     * digits, therefore a vacuous pass on every rule the HTML gate owns.
+     *
+     * `virtualizer.ts` serves 9 — the first row plus the overscan, because
+     * overscan is applied to the window rather than gated on it being
+     * non-empty. That is a real improvement and it is worth naming: a Lumo
+     * virtualised list can no longer be a completely blank region in the served
+     * bytes, whatever the caller passes. The gate cannot be made structurally
+     * blind here by a misconfiguration.
+     *
+     * `initialSize` is still REQUIRED, and this is still a poison twin, because
+     * 9 is less than half of the 20 the real viewport needs. A list that serves
+     * under half its screenful is a list whose first paint is short and whose
+     * scrollbar is wrong — quieter than blank, and quieter is worse.
+     */
+    expect(rows(list({ initialSize: 0 }))).toBe(9);
+    expect(rows(list())).toBe(20);
   });
 
   it("renders a WINDOW and not the corpus", () => {
@@ -172,13 +188,15 @@ describe("VirtualList — direction", () => {
 });
 
 describe("virtualMirror — the arithmetic on its own", () => {
-  it("derives isRtl from the locale, which is the lever TanStack defaults wrong", () => {
-    // `virtual-core/dist/esm/index.js:274` is `isRtl: false`, and line 119 uses
-    // it to sign `scrollLeft`. A horizontal Persian list without this option
-    // computes a negative scroll offset and windows the wrong end of the data.
-    expect(virtualMirror("fa-IR", "horizontal").isRtl).toBe(true);
-    expect(virtualMirror("en-US", "horizontal").isRtl).toBe(false);
-  });
+  /*
+   * `isRtl` was asserted here until 11 Aug 2026, because TanStack's option
+   * defaulted to `false` and a horizontal Persian list without it windowed the
+   * wrong end of the data. The option is gone with the dependency —
+   * `virtualizer.ts` reads `Math.abs(scrollLeft)`, which needs no flag — so the
+   * field was deleted rather than left exported and unread. What replaces this
+   * assertion is `virtualizer.test.ts`, which grades the scroll behaviour the
+   * flag used to configure.
+   */
 
   it("reports the direction it derived rather than one it was told", () => {
     expect(virtualMirror("fa-IR", "vertical").direction).toBe("rtl");

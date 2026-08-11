@@ -5,35 +5,39 @@
   "license": "MIT",
   "type": "module",
   "sideEffects": false,
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
-  "peerDependencies": { "react": ">=19", "react-dom": ">=19" },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
   "dependencies": {
-    "@lumo-ui/core": "workspace:*",
-    "@lumo-ui/base-ui-ssr": "workspace:*",
-    "react-aria-components": "catalog:",
     "@base-ui/react": "catalog:",
     "@internationalized/date": "catalog:",
-    "class-variance-authority": "catalog:",
-    "lucide-react": "catalog:",
+    "@lumo-ui/base-ui-ssr": "workspace:*",
+    "@lumo-ui/core": "workspace:*",
     "@tanstack/charts": "catalog:",
-    "@tanstack/react-table": "catalog:",
-    "@tanstack/react-virtual": "catalog:",
     "@tanstack/react-form": "catalog:",
-    "embla-carousel-react": "catalog:"
+    "@tanstack/react-table": "catalog:",
+    "class-variance-authority": "catalog:",
+    "embla-carousel-react": "catalog:",
+    "lucide-react": "catalog:",
+    "react-aria-components": "catalog:"
   },
   "devDependencies": {
+    "@testing-library/react": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "jsdom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
-    "jsdom": "catalog:",
-    "@testing-library/react": "catalog:",
-    "@vitejs/plugin-react": "catalog:"
+    "vitest": "catalog:"
   }
 }

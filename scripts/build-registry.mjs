@@ -63,6 +63,25 @@ const SHARED_COMPANIONS = new Set([
   "base-ui-adapter.ts",
   "date-field-state.ts",
   "locale.ts",
+  /*
+   * A FIFTH kind, and the newest: `virtualizer.ts` is not a translation, not a
+   * missing primitive and not a context — it is ARITHMETIC that used to be a
+   * dependency. `virtual-list.tsx` ran on `@tanstack/react-virtual` until
+   * 11 Aug 2026; replacing it moved a package into this repository, and a
+   * consumer who copies `virtual-list` must receive the arithmetic with it or
+   * receive an unresolved import.
+   *
+   * It is listed here rather than picked up automatically because the automatic
+   * companion rule matches `<name>.variants.ts` only, and this is deliberately
+   * NOT named `virtual-list.variants.ts`: the variants module is directive-free
+   * so a server component can call it, and this one carries `"use client"`.
+   * Merging them would drag the whole hook into the RSC graph.
+   *
+   * Caught by `gate:smoke`, which compiled the item as a consumer receives it
+   * and found the dangling `./virtualizer.ts` — the exact failure this set
+   * exists to prevent, on the exact day the set gained a member.
+   */
+  "virtualizer.ts",
 ]);
 
 /** Packages a consumer must install; everything else is workspace-internal. */
@@ -84,13 +103,17 @@ const EXTERNAL = new Set([
   // that exists.
   "embla-carousel-react",
   "@base-ui/react",
-  // The renderer since 11 Aug 2026 (chart.tsx) and the three headless state
-  // layers (table.tsx, virtual-list.tsx, form-state.tsx). All are imported by
-  // SUBPATH — `@tanstack/charts/react`, `@tanstack/charts/scales/linear` —
-  // which is exactly the case the `packageOf` matcher below exists for.
+  // The renderer since 11 Aug 2026 (chart.tsx) and the two headless state
+  // layers (table.tsx, form-state.tsx). Both are imported by SUBPATH —
+  // `@tanstack/charts/react`, `@tanstack/charts/scales/linear` — which is
+  // exactly the case the `packageOf` matcher below exists for.
+  //
+  // `@tanstack/react-virtual` was here and is gone: `virtual-list.tsx` runs on
+  // Lumo's own `virtualizer.ts` since 11 Aug 2026. It is the ONE TanStack
+  // package that was replaced rather than kept, because it was the one with
+  // measured defects for this library — see that file's header.
   "@tanstack/charts",
   "@tanstack/react-table",
-  "@tanstack/react-virtual",
   "@tanstack/react-form",
 ]);
 
