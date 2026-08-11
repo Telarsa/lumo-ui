@@ -500,7 +500,7 @@ function ownedByTabbableCombobox(document: Doc["document"], list: Element): bool
     owner.getAttribute("tabindex") !== "-1"
   );
 }
-const COMPOSITE_ROLES: Record<string, string> = {
+const COMPOSITE_ROLES: Record<string, string | readonly string[]> = {
   tablist: "tab",
   radiogroup: "radio",
   tree: "treeitem",
@@ -508,6 +508,39 @@ const COMPOSITE_ROLES: Record<string, string> = {
   toolbar: "button",
   menu: "menuitem",
   menubar: "menuitem",
+  /*
+   * ── THE THREE GRID SHAPES, ADDED BECAUSE THE LIBRARY GREW INTO THEM ──────
+   *
+   * `grid` and `treegrid` were absent until 12 Aug 2026, and their absence was
+   * reported by the components themselves rather than found by this file:
+   * `tree.tsx`, `event-calendar.tsx` and `gantt.tsx` each landed with a header
+   * saying, in effect, "my shape is right because I measured it, not because
+   * the gate would have caught me". Three components volunteering that they are
+   * ungraded is the signal to grade them.
+   *
+   * A `treegrid`'s members are ROWS, not `treeitem`s — that is the whole reason
+   * `tree: "treeitem"` did not cover `tree.tsx` after its migration, since ARIA
+   * names the two container roles differently and the row is what takes focus.
+   *
+   * `grid` is entered here as `gridcell` rather than `row` deliberately: a data
+   * grid moves focus per CELL (`table.tsx` tracks `{row, col}`), and a calendar
+   * grid does too. A widget that roves over rows instead is still covered,
+   * because the container-is-the-tab-stop exemption below fires first for it.
+   */
+  /*
+   * A grid's focusable member is a CELL, and ARIA spells "cell" three ways.
+   * The first draft of this entry mapped `grid → "gridcell"` alone and fired on
+   * three of the library's own tables — whose roving stop legitimately sits on
+   * a `columnheader`, because row 0 of a data grid IS the header row and
+   * `{row: 0, col: 0}` lands there. That was a bug in the rule, not a licence
+   * to narrow it (DECISIONS §13), so the value is a LIST and the container
+   * passes if any spelling carries the stop.
+   *
+   * `treegrid` takes `row` and not `treeitem`: ARIA names the two tree
+   * containers differently, and in a treegrid it is the row that takes focus.
+   */
+  grid: ["gridcell", "columnheader", "rowheader"],
+  treegrid: ["row"],
 };
 
 export const compositeTabStop: Rule = {
@@ -518,7 +551,10 @@ export const compositeTabStop: Rule = {
     "can see it — only the served bytes can.",
   run: (doc) => {
     const v: Violation[] = [];
-    for (const [containerRole, itemRole] of Object.entries(COMPOSITE_ROLES)) {
+    for (const [containerRole, itemRoleSpec] of Object.entries(COMPOSITE_ROLES)) {
+      // One role or several — see the grid entry above for why several.
+      const itemRoles = typeof itemRoleSpec === "string" ? [itemRoleSpec] : itemRoleSpec;
+      const itemSelector = itemRoles.map((r) => `[role="${r}"]`).join(",");
       for (const el of Array.from(doc.document.querySelectorAll(`[role="${containerRole}"]`))) {
         // The container owns focus itself; its items are meant to be -1.
         if (el.hasAttribute("aria-activedescendant")) continue;
@@ -529,16 +565,55 @@ export const compositeTabStop: Rule = {
         // correctly all -1. See the fourth exemption in the header.
         if (containerRole === "listbox" && ownedByTabbableCombobox(doc.document, el)) continue;
         if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
-        const items = Array.from(el.querySelectorAll(`[role="${itemRole}"]`)).filter(
-          (i) => i.getAttribute("aria-disabled") !== "true" && !i.hasAttribute("disabled"),
-        );
+        const items = Array.from(el.querySelectorAll(itemSelector)).filter((i) => {
+          if (i.getAttribute("aria-disabled") === "true" || i.hasAttribute("disabled")) {
+            return false;
+          }
+          /*
+           * Under WIDGET focus the disablement is on the control, not on the
+           * cell. A fully disabled calendar serves 42 cells that are not
+           * themselves disabled, each holding a `<button disabled>` — and it is
+           * CORRECT for it to have no tab stop, because there is nothing to
+           * focus. Judging the cell alone reported those as unreachable
+           * widgets, which is the rule being wrong about a correct state.
+           *
+           * A cell with no controls at all is left enabled: that is the
+           * cell-focus model, where the cell itself is the thing.
+           */
+          const controls = Array.from(i.querySelectorAll("button,a[href],input,select,textarea"));
+          if (controls.length === 0) return true;
+          return controls.some(
+            (c) => !c.hasAttribute("disabled") && c.getAttribute("aria-disabled") !== "true",
+          );
+        });
         if (items.length === 0) continue;
-        const stops = items.filter((i) => i.getAttribute("tabindex") === "0");
+        /*
+         * The stop may be ON the item or INSIDE it, and both are specified.
+         *
+         * ARIA gives a grid two focus models: CELL focus, where the cell itself
+         * is tabbable (`table.tsx` does this — it tracks `{row, col}` and puts
+         * the stop on the active cell), and WIDGET focus, where the cell holds
+         * a control that takes focus instead. react-day-picker uses the second:
+         * measured on a served calendar, 42 day buttons with 41 at `-1` and
+         * exactly one at `0`, inside cells that are not tabbable at all.
+         *
+         * The first version of this line looked only at the item and reported
+         * every calendar in the library as an unreachable widget. That is the
+         * rule being wrong about a correct pattern, so it is widened to the
+         * pattern rather than exempted for the component — the distinction
+         * DECISIONS §13 draws. It cannot hide a real defect: a widget with no
+         * tabbable element anywhere inside it still has no stops.
+         */
+        const stops = items.filter(
+          (i) =>
+            i.getAttribute("tabindex") === "0" ||
+            i.querySelector('[tabindex="0"]') !== null,
+        );
         if (stops.length === 0) {
           v.push({
             rule: "composite-tab-stop",
             path: doc.path,
-            detail: `role="${containerRole}" has ${items.length} enabled ${itemRole}(s) and none is tabbable — the whole widget is unreachable by keyboard in the served bytes`,
+            detail: `role="${containerRole}" has ${items.length} enabled ${itemRoles.join("/")} element(s) and none is tabbable — the whole widget is unreachable by keyboard in the served bytes`,
             snippet: el.outerHTML.slice(0, 140),
           });
         }

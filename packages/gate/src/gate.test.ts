@@ -186,6 +186,110 @@ describe("rules do not fire where they should not", () => {
   });
 
   /*
+   * THE THREE GRID SHAPES, added on 12 Aug 2026 — and their anti-vacuity twins.
+   *
+   * `grid` and `treegrid` were absent from `COMPOSITE_ROLES` until three
+   * components (`tree`, `event-calendar`, `gantt`) each shipped a header saying
+   * their shape was right because it had been MEASURED, not because this rule
+   * would have caught them. A rule entry that never fires is worse than no
+   * entry, so each of the three gets a poison twin here rather than only a
+   * clean case.
+   *
+   * `treegrid` maps to `row` and not to `treeitem`: ARIA names the two
+   * container roles differently and it is the ROW that takes focus, which is
+   * exactly why `tree: "treeitem"` did not cover `tree.tsx` after its
+   * migration.
+   */
+  it("a treegrid whose rows are all -1 is a violation", () => {
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="treegrid" aria-label="پرونده‌ها">
+        <div role="row" tabindex="-1" aria-level="1"><span role="gridcell">اسناد</span></div>
+        <div role="row" tabindex="-1" aria-level="1"><span role="gridcell">تصویرها</span></div>
+      </div><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html).map((x) => x.rule)).toContain(
+      "composite-tab-stop",
+    );
+  });
+
+  it("a grid whose cells are all -1 is a violation", () => {
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="grid" aria-label="مرداد">
+        <div role="row"><span role="gridcell" tabindex="-1">۱</span></div>
+        <div role="row"><span role="gridcell" tabindex="-1">۲</span></div>
+      </div><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html).map((x) => x.rule)).toContain(
+      "composite-tab-stop",
+    );
+  });
+
+  it("but a grid whose CONTAINER holds the stop is clean — the shape all three ship", () => {
+    // `tree.tsx`, `event-calendar.tsx` and `gantt.tsx` all compute
+    // `tabIndex={entered ? -1 : 0}` on the container in the render body, so the
+    // stop is in the served bytes with no effect to wait for. If this went red,
+    // every one of them would be failing a rule they were built to satisfy.
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="grid" aria-label="مرداد" tabindex="0">
+        <div role="row"><span role="gridcell" tabindex="-1">۱</span></div>
+      </div><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
+  });
+
+  it("a grid using WIDGET focus — the stop inside the cell — is clean", () => {
+    /*
+     * react-day-picker's shape, measured on a served calendar: the cells are
+     * not tabbable and each holds a button, 41 at -1 and one at 0. ARIA
+     * specifies both cell focus and widget focus; a rule that knew only the
+     * first reported every calendar in the library as unreachable.
+     */
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <table role="grid" aria-label="مرداد"><tbody>
+        <tr><td role="gridcell"><button tabindex="0">۱</button></td>
+            <td role="gridcell"><button tabindex="-1">۲</button></td></tr>
+      </tbody></table><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
+  });
+
+  it("but widget focus with EVERY control at -1 still fires", () => {
+    // The anti-vacuity twin for the widening above: reaching inside the cell
+    // must not become "any cell with a control in it passes".
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <table role="grid" aria-label="مرداد"><tbody>
+        <tr><td role="gridcell"><button tabindex="-1">۱</button></td>
+            <td role="gridcell"><button tabindex="-1">۲</button></td></tr>
+      </tbody></table><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html).map((x) => x.rule)).toContain(
+      "composite-tab-stop",
+    );
+  });
+
+  it("a fully DISABLED grid has nothing to focus, and that is not a violation", () => {
+    /*
+     * `<Calendar isDisabled>` serves 42 cells that are not themselves disabled,
+     * each holding a `<button disabled>` at -1. Having no tab stop is correct —
+     * there is nothing to focus. Judging the cell alone called that unreachable.
+     */
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <table role="grid" aria-label="مرداد"><tbody>
+        <tr><td role="gridcell"><button disabled tabindex="-1">۱</button></td>
+            <td role="gridcell"><button disabled tabindex="-1">۲</button></td></tr>
+      </tbody></table><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
+  });
+
+  it("one ENABLED control among disabled ones still demands a stop", () => {
+    // The anti-vacuity twin: "some control is disabled" must not become
+    // "the widget is exempt".
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <table role="grid" aria-label="مرداد"><tbody>
+        <tr><td role="gridcell"><button disabled tabindex="-1">۱</button></td>
+            <td role="gridcell"><button tabindex="-1">۲</button></td></tr>
+      </tbody></table><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html).map((x) => x.rule)).toContain(
+      "composite-tab-stop",
+    );
+  });
+
+  /*
    * THE COMBOBOX EXEMPTION, and the three ways it must NOT apply.
    *
    * In the combobox pattern focus never enters the list: it stays on the input,

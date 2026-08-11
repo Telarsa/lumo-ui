@@ -248,3 +248,72 @@ describe("Table — the grid the two libraries build together", () => {
     expect([...roles].sort()).toEqual(["columnheader", "gridcell", "grid", "row", "rowheader"].sort());
   });
 });
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE COLUMN INDEX A CONDITIONAL COLUMN USED TO EAT
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * The shape every optionally-selectable table is written in.
+ *
+ * `Table` puts its roving tab stop on `{row: 0, col: 0}`, and `Children.map`
+ * calls back for a NULLISH child — so `{flag ? <Column/> : null}` consumed
+ * index 0 while rendering nothing, the real columns started at 1, and the stop
+ * matched no element at all. Measured on the built site at
+ * `view-block/fa/table-view`: 24 cells, every one `tabindex="-1"`, a grid
+ * unreachable by keyboard until hydration moved focus for the first time.
+ *
+ * Graded on the SERVED BYTES, because that is the only tier where it exists —
+ * and found by `composite-tab-stop` only after that rule learned `role="grid"`.
+ */
+function Conditional({ withSelection }: { withSelection: boolean }) {
+  const table = useLumoTable({
+    locale: "fa-IR",
+    data: PEOPLE,
+    columns: [
+      { id: "name", accessorKey: "name" },
+      { id: "city", accessorKey: "city" },
+    ],
+  });
+  return (
+    <Table label="افراد" locale="fa-IR" table={table}>
+      <TableHeader>
+        {withSelection ? <Column id="pick">انتخاب</Column> : null}
+        <Column id="name" isRowHeader>
+          نام
+        </Column>
+        <Column id="city">شهر</Column>
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <Row key={row.id} row={row}>
+            {withSelection ? <Cell>—</Cell> : null}
+            <Cell>{String(row.getValue("name"))}</Cell>
+            <Cell>{String(row.getValue("city"))}</Cell>
+          </Row>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+describe("a column that renders nothing does not consume index 0", () => {
+  it("serves exactly one tab stop with the conditional column ABSENT", () => {
+    const html = renderToStaticMarkup(<Conditional withSelection={false} />);
+    expect([...html.matchAll(/tabindex="0"/g)]).toHaveLength(1);
+  });
+
+  it("and exactly one with it PRESENT", () => {
+    const html = renderToStaticMarkup(<Conditional withSelection />);
+    expect([...html.matchAll(/tabindex="0"/g)]).toHaveLength(1);
+  });
+
+  it("numbers the RENDERED columns from zero either way", () => {
+    expect(renderToStaticMarkup(<Conditional withSelection={false} />)).toContain(
+      'data-col-index="0"',
+    );
+    expect(renderToStaticMarkup(<Conditional withSelection />)).toContain(
+      'data-col-index="0"',
+    );
+  });
+});

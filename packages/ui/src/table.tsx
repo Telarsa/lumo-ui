@@ -443,8 +443,33 @@ function useTableContext(): TableContextValue {
  * on a context rather than by cloning.
  */
 function withColumnIndexes(children: ReactNode): ReactNode {
-  return Children.map(children, (child, index) => (
-    <ColContext.Provider value={index}>{child}</ColContext.Provider>
+  /*
+   * `Children.toArray` and NOT `Children.map`, and this is a fix rather than a
+   * preference.
+   *
+   * `Children.map` calls back for a NULLISH child too, so a conditional column
+   * — the shape every table with optional selection is written in —
+   *
+   *     {hasCheckboxColumn ? <TableSelectAllColumn … /> : null}
+   *
+   * consumed index 0 while rendering nothing, and the real columns started at
+   * 1. `Table` puts its roving tab stop on `{row: 0, col: 0}`, which then
+   * matched no element at all: the served bytes carried 24 cells, every one at
+   * `tabindex="-1"`, and the whole grid was unreachable by keyboard until
+   * hydration moved focus for the first time.
+   *
+   * Measured on `view-block/fa/table-view` — and found by the gate only after
+   * `composite-tab-stop` learned about `role="grid"`, which is the argument for
+   * widening that rule rather than exempting the components it surprised.
+   *
+   * `toArray` drops null, undefined and booleans, and flattens fragments — so
+   * the index a column receives is its index among the columns that actually
+   * render. `list-box.tsx` hit the fragment half of this same distinction.
+   */
+  return Children.toArray(children).map((child, index) => (
+    <ColContext.Provider key={index} value={index}>
+      {child}
+    </ColContext.Provider>
   ));
 }
 
