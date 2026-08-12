@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
- * A surface with a header, a body and a footer. Six components, no state.
+ * A surface with a header, a body and a footer. Seven components, no state.
  *
  * No `"use client"` anywhere in this file — see badge.tsx. A card is the single
  * most common wrapper around server-rendered content, so making it a client
@@ -55,11 +55,87 @@ export interface CardSectionProps
 }
 
 /**
- * Title and description. `pbe-0` so the header's own bottom padding does not
- * add to `CardBody`'s top padding and open a 32px gap that nobody asked for.
+ * Title and description, and optionally a `CardAction` opposite them.
+ *
+ * `pbe-0` so the header's own bottom padding does not add to `CardBody`'s top
+ * padding and open a 32px gap that nobody asked for.
+ *
+ * ── WHY THIS IS A GRID AND NOT A COLUMN ────────────────────────────────────
+ *
+ * It was `flex flex-col gap-1`, which is the right layout for a title stacked
+ * on a description and has no answer at all for the third thing a header
+ * carries: the control that acts on the whole card — a «مدیریت» link, an
+ * overflow menu, a switch. Every consumer who needed one rebuilt the header as
+ * a two-column flex row around a nested column, and rebuilt it differently each
+ * time.
+ *
+ * A grid does it in one declaration, and it is a grid rather than
+ * `flex justify-between` because the action has to sit opposite the TITLE
+ * specifically — level with the first line, not centred against a two-line
+ * title-plus-description block, which is where the flex version drifts.
+ *
+ * ── AND WHY THE SECOND COLUMN IS CONDITIONAL ───────────────────────────────
+ *
+ * `grid-cols-[1fr_auto]` unconditionally would create both tracks in every
+ * header, and a column gap is drawn between tracks whether or not the second
+ * one has anything in it — so every action-less card would lose 16px of title
+ * width to a track that renders nothing. `has-data-lumo-card-action:` turns the
+ * second column on only when a `CardAction` is actually present, which is a
+ * statement about the DOM rather than a prop the caller has to remember to keep
+ * in step with its own children.
+ *
+ * Nothing here is direction-aware and nothing needs to be: grid columns are
+ * laid along the INLINE axis, so column 2 is the right-hand column in English
+ * and the left-hand one in Persian from the same class.
  */
 export function CardHeader({ className, ...props }: CardSectionProps) {
-  return <div className={cn("flex flex-col gap-1 p-4 pbe-0", className)} {...props} />;
+  return (
+    <div
+      className={cn(
+        "grid auto-rows-min items-start gap-y-1 p-4 pbe-0 " +
+          "has-data-lumo-card-action:grid-cols-[1fr_auto] has-data-lumo-card-action:gap-x-4",
+        className,
+      )}
+      {...props}
+    />
+  );
+}
+
+/**
+ * The control that acts on the whole card, sitting opposite the title.
+ *
+ * A slot rather than a prop on `CardHeader`, for the reason `Column`'s
+ * `resizer` is a slot: it has to be INSIDE the header — that is what makes it
+ * level with the title — while staying out of the header's own reading flow.
+ * As a sibling it lands after the title and description in the DOM, so a
+ * screen reader meets the card's name before the button that acts on it, which
+ * is the order that makes the button's own name mean something.
+ *
+ * `data-lumo-card-action` is what `CardHeader`'s `has-` variant looks for. It
+ * is deliberately NOT `data-lumo`: that attribute is the focus-ring hook in
+ * theme.css and belongs to the focusable control this slot WRAPS, not to the
+ * wrapper. A `<Button>` inside carries its own.
+ *
+ * This part announces nothing of its own — whatever the consumer puts inside it
+ * carries the name — so it takes no required string. It is the one part of this
+ * family with nothing to say.
+ */
+export function CardAction({ className, ...props }: CardSectionProps) {
+  return (
+    <div
+      data-lumo-card-action=""
+      className={cn(
+        // Row 1, column 2, spanning the description's row as well, so a
+        // one-line action stays level with the title while a taller one can
+        // reach down past it. `justify-self-end` is the INLINE end — grid
+        // resolves it against direction, the same way `CardFooter`'s
+        // `justify-end` does.
+        "col-start-2 row-span-2 row-start-1 flex items-center gap-2 justify-self-end",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
 const HEADING_TAGS = { 2: "h2", 3: "h3", 4: "h4", 5: "h5", 6: "h6" } as const;

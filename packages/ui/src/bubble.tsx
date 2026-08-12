@@ -182,8 +182,8 @@ export interface BubbleCollapseProps {
 
 /**
  * Collapsible long content inside a bubble, composed from Disclosure rather
- * than re-implemented: RAC supplies aria-expanded, aria-controls and the
- * keyboard handling, and its chevron already rotates a half turn — its own
+ * than re-implemented: `Disclosure` supplies aria-expanded, aria-controls and
+ * the keyboard handling, and its chevron already rotates a half turn — its own
  * mirror image, safe in both scripts (disclosure.tsx records why).
  *
  * The trigger restates its colors as `text-current` so it inherits the

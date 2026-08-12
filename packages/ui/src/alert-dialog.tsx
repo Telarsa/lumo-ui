@@ -190,7 +190,31 @@ export function AlertDialog({
      */
     <div data-lumo="" className={cn(dialogVariants(), className)} {...rest}>
       <DialogHeading id={titleId}>{title}</DialogHeading>
-      {children}
+      {/*
+       * THE BODY IS THE DESCRIPTION, so it is wired as one rather than left as
+       * loose children.
+       *
+       * An alert dialog's `children` is not decoration: it is the consequence
+       * the reader is being asked to accept — «این کار قابل بازگشت نیست». The
+       * title alone is the VERB («حذف فاکتور»), and a reader who hears only the
+       * verb is being asked to confirm something they have not been told. Until
+       * this wiring existed, `Dialog.Popup` published `aria-labelledby` and no
+       * `aria-describedby`, so that sentence was announced only if the reader
+       * chose to traverse into the dialog after entering it.
+       *
+       * `render={<div />}` rather than Base UI's default `<p>`: the body is
+       * arbitrary caller markup — the test in this directory passes its own
+       * `<p>` — and a `<p>` inside a `<p>` is invalid HTML that browsers repair
+       * by splitting the paragraph. `dialog.tsx`'s `DialogDescription` makes the
+       * same call for the same reason.
+       *
+       * Rendered only when there IS a body: an empty `Description` would point
+       * `aria-describedby` at an empty element, which announces a pause instead
+       * of nothing.
+       */}
+      {children === undefined ? null : (
+        <BaseAlertDialog.Description render={<div />}>{children}</BaseAlertDialog.Description>
+      )}
       <div className={alertDialogFooterVariants()}>
         <BaseAlertDialog.Close render={<Button variant="outline" />}>
           {cancelLabel}

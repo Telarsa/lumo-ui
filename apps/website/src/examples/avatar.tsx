@@ -35,6 +35,11 @@ const t = {
   samiraInitials: { "fa-IR": "س م", "en-US": "SM" },
   rezaInitials: { "fa-IR": "ر ک", "en-US": "RK" },
   narginInitials: { "fa-IR": "ن ط", "en-US": "NT" },
+  nargin: { "fa-IR": "نرگین طاهری", "en-US": "Nargin Taheri" },
+
+  online: { "fa-IR": "آنلاین", "en-US": "Online" },
+  busy: { "fa-IR": "در جلسه", "en-US": "In a meeting" },
+  offline: { "fa-IR": "آفلاین", "en-US": "Offline" },
 
   assignedTo: { "fa-IR": "ارجاع‌شده به", "en-US": "Assigned to" },
   ticketOne: { "fa-IR": "خطای درگاه پرداخت", "en-US": "Payment gateway error" },
@@ -102,6 +107,46 @@ function InitialsExample(l: Locale) {
   );
 }
 
+function StatusExample(l: Locale) {
+  return (
+    <ul className="flex w-full max-w-sm list-none flex-col gap-3 p-0">
+      <li className="flex items-center gap-3">
+        {/*
+         * `statusLabel` is required to draw a dot at all — there is no boolean
+         * and no default. The colour is the fast read; the word is what makes
+         * the dot mean anything to a screen reader or to a reader who cannot
+         * separate the green from the amber.
+         */}
+        <Avatar
+          size="lg"
+          src={PORTRAIT_A}
+          alt=""
+          initials={t.samiraInitials[l]}
+          statusLabel={t.online[l]}
+          statusTone="positive"
+        />
+        <span className="truncate text-sm font-medium text-fg">{t.samira[l]}</span>
+      </li>
+      <li className="flex items-center gap-3">
+        <Avatar
+          size="lg"
+          src={PORTRAIT_B}
+          alt=""
+          initials={t.rezaInitials[l]}
+          statusLabel={t.busy[l]}
+          statusTone="caution"
+        />
+        <span className="truncate text-sm font-medium text-fg">{t.reza[l]}</span>
+      </li>
+      <li className="flex items-center gap-3">
+        {/* No tone given — `neutral`, which is what "no signal" should look like. */}
+        <Avatar size="lg" initials={t.narginInitials[l]} statusLabel={t.offline[l]} />
+        <span className="truncate text-sm font-medium text-fg">{t.nargin[l]}</span>
+      </li>
+    </ul>
+  );
+}
+
 function SizesExample(l: Locale) {
   return (
     <div className="flex items-center gap-3">
@@ -126,6 +171,9 @@ export const EXAMPLES: ComponentExamples = {
     composition: [
       `<Avatar src alt initials size>   ← src present → alt is required by the TYPE`,
       `                                 ← no src → initials become required instead`,
+      `       statusLabel statusTone    ← the dot needs a WORD; there is no boolean`,
+      ``,
+      `<IconStack label locale max>     ← the group and its +N count live there, not here`,
     ].join("\n"),
     parts: [
       {
@@ -134,7 +182,16 @@ export const EXAMPLES: ComponentExamples = {
           "fa-IR":
             "کل جزء، به‌شکل یک اجتماع تفکیک‌شده: یا src و alt با هم می‌آیند، یا هیچ‌کدام و آنگاه initials اجباری می‌شود. جایگزینی تصویر خراب با حروف نخست عمداً وجود ندارد؛ آن کار به state نیاز دارد و هر آواتار را به جزء کلاینتی تبدیل می‌کند.",
           "en-US":
-            "The whole component, as a discriminated union: either src and alt arrive together, or neither does and initials become required instead. There is deliberately no swap from a broken image to the initials — that needs state, and state here makes every avatar a client component.",
+            "The whole component, as a discriminated union: either src and alt arrive together, or neither does and initials become required instead. There is deliberately no swap from a broken image to the initials — that needs state, and state here makes every avatar a client component. statusLabel is what draws the presence dot, and it is a string rather than a flag because a state carried by colour alone fails WCAG 1.4.1.",
+        },
+      },
+      {
+        name: "IconStack",
+        description: {
+          "fa-IR":
+            "گروه آواتارها و شمارندهٔ سرریز جای دیگری است، نه اینجا. همپوشانی روی محور درون‌خطی نوشته شده تا در هر دو خط به سمت خواننده بیفتد، شمارنده از formatNumber می‌گذرد و رقمش فارسی درمی‌آید نه لاتین، و کل ردیف یک برچسب اجباری می‌گیرد چون پنج چهره یک واقعیت‌اند. جزء دومی برای همین کار، همان ایرادِ رقمِ لاتین را دوباره می‌آورد.",
+          "en-US":
+            "The avatar group and its overflow count live there, not here. The overlap is written on the inline axis so the stack leans the reader's way in both scripts, the count goes through formatNumber («+۲», never «+2»), and the whole row takes one required label because five faces are one fact. A second component for the same job would ship the Latin-digit defect back alongside the fix for it.",
         },
       },
     ],
@@ -172,6 +229,17 @@ export const EXAMPLES: ComponentExamples = {
           "With no src the initials are the whole content, and the type makes them required. There is no uppercase utility on this element: such a rule is a silent no-op for Arabic script while quietly rewriting Latin input — a transformation that behaves differently per script is a bug waiting for a locale switch.",
       },
       render: InitialsExample,
+    },
+    {
+      id: "status",
+      title: { "fa-IR": "نقطهٔ وضعیت، با یک واژه", "en-US": "The status dot, with a word" },
+      description: {
+        "fa-IR":
+          "نقطه روی گوشهٔ پایانیِ دایره می‌نشیند — پایین‌راست در انگلیسی، پایین‌چپ در فارسی — چون جایش با end تعیین شده نه با right. نسخهٔ دست‌سازِ همین نقطه را همه با right می‌نویسند و فقط در فارسی غلط است، یعنی در هیچ اسکرین‌شات انگلیسی دیده نمی‌شود. حلقهٔ دوپیکسلی به رنگ زمینه هم برای همین است که نقطه روی پرتره‌ای هم‌رنگ خودش گم نشود.",
+        "en-US":
+          "The dot sits at the circle's trailing corner — bottom-right in English, bottom-LEFT in Persian — because its place is written with end rather than right. The hand-rolled version of this dot is written right-0 by everyone and is wrong in Persian only, which means it shows up in no English screenshot. The two-pixel ring in the page colour is there so the dot does not vanish against a portrait that happens to share its hue.",
+      },
+      render: StatusExample,
     },
     {
       id: "sizes",

@@ -1,6 +1,15 @@
 import type { Locale } from "@lumo-ui/core";
 import { formatNumber } from "@lumo-ui/core";
-import { Button, Card, CardBody, CardDescription, CardFooter, CardHeader, CardTitle } from "@lumo-ui/ui";
+import {
+  Button,
+  Card,
+  CardAction,
+  CardBody,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@lumo-ui/ui";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -57,6 +66,17 @@ const t = {
     "fa-IR": "کارت پیش‌فرض برای تمدید خودکار.",
     "en-US": "The default card for automatic renewal.",
   },
+
+  actionTitle: { "fa-IR": "فضای ذخیره‌سازی", "en-US": "Storage" },
+  actionDescription: {
+    "fa-IR": "از هجده گیگابایت طرح شما، دوازده گیگابایت پر شده است.",
+    "en-US": "Twelve gigabytes of your eighteen-gigabyte plan are in use.",
+  },
+  manage: { "fa-IR": "مدیریت", "en-US": "Manage" },
+  actionBody: {
+    "fa-IR": "پرونده‌های حذف‌شده تا سی روز در سطل بازیافت می‌مانند و همچنان فضا اشغال می‌کنند.",
+    "en-US": "Deleted files stay in the bin for thirty days and keep taking up room.",
+  },
 } satisfies Record<string, LocalizedText>;
 
 function AnatomyExample(l: Locale) {
@@ -76,6 +96,31 @@ function AnatomyExample(l: Locale) {
         <Button variant="ghost">{t.compare[l]}</Button>
         <Button>{t.choose[l]}</Button>
       </CardFooter>
+    </Card>
+  );
+}
+
+function ActionExample(l: Locale) {
+  return (
+    <Card className="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle>{t.actionTitle[l]}</CardTitle>
+        <CardDescription>{t.actionDescription[l]}</CardDescription>
+        {/*
+         * Last in the DOM, first in the layout's trailing column. The order is
+         * the point: a screen reader meets the card's name and its summary
+         * before the button that acts on them, which is what makes «مدیریت»
+         * mean anything on its own.
+         */}
+        <CardAction>
+          <Button variant="ghost" size="sm">
+            {t.manage[l]}
+          </Button>
+        </CardAction>
+      </CardHeader>
+      <CardBody>
+        <p className="m-0 text-sm text-fg-muted">{t.actionBody[l]}</p>
+      </CardBody>
     </Card>
   );
 }
@@ -145,15 +190,16 @@ export const EXAMPLES: ComponentExamples = {
     title: { "fa-IR": "کارت", "en-US": "Card" },
     intro: {
       "fa-IR":
-        "سطحی با سربرگ، بدنه و پاورقی — شش جزء و هیچ حالتی. پاورقی کنش‌ها را با justify-end به لبهٔ پایانی می‌برد، و لبهٔ پایانی را خودِ الگوریتم چیدمان از روی جهت ظرف تعیین می‌کند: راست در انگلیسی، چپ در فارسی، بدون هیچ قاعدهٔ جداگانه. عنوان به‌جای برچسب عنصر، ویژگی level می‌گیرد، چون کارت در فهرست سرفصل‌های صفحه جایی دارد و پرش سطح یک نقص واقعی ناوبری است.",
+        "سطحی با سربرگ، بدنه و پاورقی — هفت جزء و هیچ حالتی. پاورقی کنش‌ها را با justify-end به لبهٔ پایانی می‌برد، و لبهٔ پایانی را خودِ الگوریتم چیدمان از روی جهت ظرف تعیین می‌کند: راست در انگلیسی، چپ در فارسی، بدون هیچ قاعدهٔ جداگانه. عنوان به‌جای برچسب عنصر، ویژگی level می‌گیرد، چون کارت در فهرست سرفصل‌های صفحه جایی دارد و پرش سطح یک نقص واقعی ناوبری است.",
       "en-US":
-        "A surface with a header, a body and a footer — six components and no state. The footer sends its actions to the inline end with justify-end, and the layout algorithm resolves that end against the container's direction: right in English, left in Persian, with no separate rule. The title takes a level NUMBER rather than an element name, because a card has a place in the page outline and a skipped level is a real navigation defect.",
+        "A surface with a header, a body and a footer — seven components and no state. The footer sends its actions to the inline end with justify-end, and the layout algorithm resolves that end against the container's direction: right in English, left in Persian, with no separate rule. The title takes a level NUMBER rather than an element name, because a card has a place in the page outline and a skipped level is a real navigation defect.",
     },
     composition: [
       `<Card variant>                 ← outlined | elevated | plain`,
-      `  <CardHeader>`,
+      `  <CardHeader>              ← a grid; the 2nd column exists only with an action`,
       `    <CardTitle level>          ← 2–6, never 1: a card is not the page`,
       `    <CardDescription>          ← a <p>, so :lang(fa) line-height applies`,
+      `    <CardAction>               ← last in the DOM, opposite the title in the layout`,
       `  </CardHeader>`,
       `  <CardBody>`,
       `  <CardFooter>                 ← justify-end = the INLINE end`,
@@ -197,6 +243,15 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
+        name: "CardAction",
+        description: {
+          "fa-IR":
+            "کنشی که روی کل کارت اثر می‌گذارد و روبه‌روی عنوان می‌نشیند. در DOM پس از عنوان و توضیح می‌آید تا صفحه‌خوان اول نام کارت را بشنود؛ در چیدمان به ستون دوم می‌رود، و ستون دوم فقط وقتی ساخته می‌شود که این جزء واقعاً حاضر باشد — وگرنه هر کارتِ بی‌کنش عرض عنوانش را به یک ستون خالی می‌داد.",
+          "en-US":
+            "The control that acts on the whole card, sitting opposite the title. It comes after the title and description in the DOM so a screen reader hears the card's name first; in the layout it moves to the second column, and that column is only created when this part is actually present — otherwise every action-less card would give away title width to an empty track.",
+        },
+      },
+      {
         name: "CardBody",
         description: {
           "fa-IR": "محتوای اصلی. کمینه‌عرضِ صفر دارد تا محتوای طولانی کارت را پهن‌تر از ظرفش نکند.",
@@ -225,6 +280,17 @@ export const EXAMPLES: ComponentExamples = {
           "Put the card side by side in the two languages: the buttons move, and not one class in this file changed. Flexbox resolves justify-end against the container's direction, which is the reason this library reaches for flex before it reaches for anything positional.",
       },
       render: AnatomyExample,
+    },
+    {
+      id: "action",
+      title: { "fa-IR": "کنش روبه‌روی عنوان", "en-US": "The action opposite the title" },
+      description: {
+        "fa-IR":
+          "سربرگ یک grid است، نه یک ستون flex، و دلیلش دقیقاً همین‌جا دیده می‌شود: دکمه هم‌تراز سطر نخست می‌ماند، نه وسطِ بلوکِ دو سطریِ عنوان و توضیح. جای دکمه با شمارهٔ ستون تعیین می‌شود و شمارهٔ ستون روی محور درون‌خطی حل می‌شود، پس در فارسی بدون هیچ قاعدهٔ تازه‌ای به چپ می‌رود.",
+        "en-US":
+          "The header is a grid rather than a flex column, and this is where the difference shows: the button stays level with the first line instead of centring against the two-line title-and-description block. Its place is a column NUMBER, and grid columns are laid along the inline axis — so it moves to the left in Persian with no new rule.",
+      },
+      render: ActionExample,
     },
     {
       id: "heading-level",

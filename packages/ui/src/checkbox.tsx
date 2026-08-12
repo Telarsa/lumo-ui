@@ -146,8 +146,14 @@ export interface CheckboxProps extends ToggleFieldPropsBase {
   /** Help text under the checkbox. */
   description?: LumoNode;
   /**
-   * An error for a STANDALONE checkbox. Inside a `CheckboxGroup` React Aria
-   * moves validation to the group, and this renders nothing.
+   * An error for a STANDALONE checkbox.
+   *
+   * CORRECTED: this used to say that a `CheckboxGroup` moves validation to the
+   * group and that the prop "renders nothing" inside one. React Aria did that.
+   * There is no React Aria runtime here and no such redirection: the message
+   * renders wherever it is passed, so a group whose members each carry one
+   * shows one error per box beside the group's own. Put the error on the GROUP
+   * when the rule is about the answer rather than about a single box.
    */
   errorMessage?: LumoNode;
   className?: string | undefined;

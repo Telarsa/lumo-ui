@@ -2,6 +2,7 @@ import type { Locale } from "@lumo-ui/core";
 import {
   Button,
   Dialog,
+  DialogDescription,
   DialogHeading,
   DialogTrigger,
   Drawer,
@@ -115,7 +116,7 @@ function EndExample(l: Locale) {
         <Drawer side="end" size="md">
           <Dialog closeLabel={t.close[l]}>
             <DialogHeading>{t.filtersHeading[l]}</DialogHeading>
-            <p className="text-sm text-fg-muted">{t.filtersBody[l]}</p>
+            <DialogDescription>{t.filtersBody[l]}</DialogDescription>
           </Dialog>
         </Drawer>
       </DrawerOverlay>
@@ -132,7 +133,7 @@ function SizesExample(l: Locale) {
           <Drawer side="start" size="sm">
             <Dialog closeLabel={t.close[l]}>
               <DialogHeading>{t.smallHeading[l]}</DialogHeading>
-              <p className="text-sm text-fg-muted">{t.smallBody[l]}</p>
+              <DialogDescription>{t.smallBody[l]}</DialogDescription>
             </Dialog>
           </Drawer>
         </DrawerOverlay>
@@ -143,7 +144,7 @@ function SizesExample(l: Locale) {
           <Drawer side="end" size="lg">
             <Dialog closeLabel={t.close[l]}>
               <DialogHeading>{t.largeHeading[l]}</DialogHeading>
-              <p className="text-sm text-fg-muted">{t.largeBody[l]}</p>
+              <DialogDescription>{t.largeBody[l]}</DialogDescription>
             </Dialog>
           </Drawer>
         </DrawerOverlay>
@@ -160,7 +161,7 @@ function DismissableExample(l: Locale) {
         <Drawer side="end" size="md">
           <Dialog closeLabel={t.close[l]}>
             <DialogHeading>{t.cartHeading[l]}</DialogHeading>
-            <p className="text-sm text-fg-muted">{t.cartBody[l]}</p>
+            <DialogDescription>{t.cartBody[l]}</DialogDescription>
           </Dialog>
         </Drawer>
       </DrawerOverlay>
@@ -184,7 +185,8 @@ export const EXAMPLES: ComponentExamples = {
       `  <DrawerOverlay isDismissable>            ← the scrim, and the portal boundary`,
       `    <Drawer side="start" size="md">        ← start | end. Never left | right.`,
       `      <Dialog closeLabel="…">              ← the ✕ needs a name in every language`,
-      `        <DialogHeading>…</DialogHeading>`,
+      `        <DialogHeading>…</DialogHeading>       ← aria-labelledby`,
+      `        <DialogDescription>…</DialogDescription>  ← aria-describedby`,
       `      </Dialog>`,
       `    </Drawer>`,
       `  </DrawerOverlay>`,
@@ -234,6 +236,15 @@ export const EXAMPLES: ComponentExamples = {
             "سطحِ محاوره درونِ پنل، با ✕ خودش. closeLabel اجباری است چون یک ✕ در هیچ زبانی نام نیست — همان دلیلی که IconButton برایش وجود دارد.",
           "en-US":
             "The dialog surface inside the panel, with its own ✕. `closeLabel` is required because an ✕ is not a name in any language — the same reason `IconButton` exists.",
+        },
+      },
+      {
+        name: "DialogDescription",
+        description: {
+          "fa-IR":
+            "متن پشتیبانِ کشو، و همان رشته‌ای که پس از نام خوانده می‌شود. یک «p» دست‌نویس با همان کلاس‌ها دقیقاً همان‌طور دیده می‌شود و به هیچ‌کس اعلام نمی‌شود؛ این جزء شناسه‌اش را به aria-describedby پنجره می‌بندد.",
+          "en-US":
+            "The drawer's supporting prose, and the string read AFTER the name. A hand-written «p» with the same classes LOOKS identical and is announced to nobody; the part binds its id to the popup's aria-describedby.",
         },
       },
     ],

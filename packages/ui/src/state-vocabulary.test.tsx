@@ -772,4 +772,45 @@ describe("hover and press — structural only, and the reason is measured", () =
     const b = render(<Button>سلام</Button>).container.querySelector("button")!;
     expect(b.getAttribute("class")).toContain("active:bg-accent-hover");
   });
+
+  it("the press treatment is DIFFERENT from the hover treatment, in every variant", () => {
+    /*
+     * The regression this pins is not a missing selector — it is a selector
+     * with the same value as the one beside it. `scratchpad/visual-audit.md`
+     * finding 3 measured `active:` as byte-identical to `hover:` in all four
+     * variants, which reads as "pressed is styled" to every grep and every
+     * reviewer, and produces NOTHING on a touch device, where hover never
+     * happens and the press is the only event there is.
+     *
+     * So the assertion is a comparison, not a presence check: extract each
+     * variant's `hover:`/`active:` utilities and require the two sets to
+     * differ. jsdom still cannot enter either state (see the test above), so
+     * this stays structural — but it is the structural check that would have
+     * caught the defect.
+     */
+    const utilities = (classes: string, prefix: string) =>
+      classes
+        .split(/\s+/)
+        .filter((c) => c.startsWith(prefix))
+        .map((c) => c.slice(prefix.length))
+        .sort()
+        .join(" ");
+
+    for (const variant of ["solid", "outline", "ghost", "critical"] as const) {
+      const classes = buttonVariants({ variant });
+      const hover = utilities(classes, "hover:");
+      const active = utilities(classes, "active:");
+      expect(hover, `${variant} has no hover treatment`).not.toBe("");
+      expect(active, `${variant} has no press treatment`).not.toBe("");
+      expect(active, `${variant}'s press is a copy of its hover`).not.toBe(hover);
+    }
+  });
+
+  it("the press nudge is on the block axis and skips overlay triggers", () => {
+    // `translate-y-px`, not a logical utility: a press pushes the control INTO
+    // the page and the block axis does not mirror. The `not-aria-[haspopup]`
+    // exemption keeps an opening menu from moving with the trigger it is
+    // anchored to.
+    expect(buttonVariants()).toContain("active:not-aria-[haspopup]:translate-y-px");
+  });
 });

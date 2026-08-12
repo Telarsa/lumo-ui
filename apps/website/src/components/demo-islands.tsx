@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Locale } from "@lumo-ui/core";
 import {
+  Alert,
   Button,
   ChartContainer,
   ChartLegend,
@@ -2667,5 +2668,60 @@ export function EventCalendarIsland({
         moreEvents: (count) => `${count} ${moreWord}`,
       }}
     />
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * ALERT — DISMISSAL
+ *
+ * `Alert` itself is a SERVER component and stays one: it is a `<div>` with
+ * tokens, and a page of four callouts should cost no hydration. The dismiss
+ * control does not change that — `alert.tsx` renders the `<button>` only when
+ * `onClose` is present, so the branch that carries an event handler is
+ * unreachable from a server module by construction.
+ *
+ * Which is exactly why this island exists. A function cannot cross the RSC
+ * boundary, so the ONE example on the alert page that has a handler has to be
+ * authored on this side. Every string still arrives as a prop, per locale, from
+ * `demos.tsx`.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface AlertDismissIslandProps {
+  title: string;
+  body: string;
+  /** Announced name of the dismiss button. Required by `Alert`, not defaulted here. */
+  closeLabel: string;
+  /** Shown after the alert has been dismissed, so the demo can be replayed. */
+  restoreLabel: string;
+}
+
+export function AlertDismissIsland({
+  title,
+  body,
+  closeLabel,
+  restoreLabel,
+}: AlertDismissIslandProps) {
+  const [open, setOpen] = useState(true);
+
+  // Dismissal is the CALLER's to own — `Alert` unmounts nothing and remembers
+  // nothing. That is the same division `Dialog` makes: the component draws the
+  // thing, the application decides whether it exists.
+  return (
+    <div className="flex w-full max-w-lg flex-col gap-3">
+      {open ? (
+        <Alert
+          tone="info"
+          title={title}
+          onClose={() => setOpen(false)}
+          closeLabel={closeLabel}
+        >
+          {body}
+        </Alert>
+      ) : (
+        <Button variant="outline" onPress={() => setOpen(true)}>
+          {restoreLabel}
+        </Button>
+      )}
+    </div>
   );
 }

@@ -195,7 +195,7 @@ export const EXAMPLES: ComponentExamples = {
       `  <DialogOverlay>                             ← pass NO isDismissable here`,
       `    <DialogModal size="sm">                   ← owns role="alertdialog"`,
       `      <AlertDialog title confirmLabel cancelLabel tone>`,
-      `        …the question…`,
+      `        …the question…                        ← wired to aria-describedby`,
       `      </AlertDialog>`,
       `    </DialogModal>`,
       `  </DialogOverlay>`,
@@ -206,9 +206,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "AlertDialog",
         description: {
           "fa-IR":
-            "خودِ پرسش و دو فعلش. عنوان و هر دو فعل رشته‌های اجباری‌اند و نه اختیاری‌های دارای پیش‌فرض: این کتابخانه زبانی از خودش ندارد که در آن پیش‌فرض بگذارد. هیچ نقشی و هیچ aria-labelledby ای اینجا اعلام نمی‌شود — هر دو یک لایه بالاتر روی عنصری نشسته‌اند که تلهٔ فوکوس را دارد، وگرنه یک alertdialog داخل یک dialog می‌شد و اشتباهی‌اش اعلام می‌شد.",
+            "خودِ پرسش و دو فعلش. عنوان و هر دو فعل رشته‌های اجباری‌اند و نه اختیاری‌های دارای پیش‌فرض: این کتابخانه زبانی از خودش ندارد که در آن پیش‌فرض بگذارد. هیچ نقشی و هیچ aria-labelledby ای اینجا اعلام نمی‌شود — هر دو یک لایه بالاتر روی عنصری نشسته‌اند که تلهٔ فوکوس را دارد، وگرنه یک alertdialog داخل یک dialog می‌شد و اشتباهی‌اش اعلام می‌شد. فرزندان هم متنِ رها نیستند: به aria-describedby بسته می‌شوند تا پیامدِ کار پس از نام خوانده شود — عنوان فقط فعل است، و خواننده‌ای که تنها «حذف فاکتور» را می‌شنود، دارد چیزی را تأیید می‌کند که به او گفته نشده.",
           "en-US":
-            "The question and its two verbs. The title and both verbs are REQUIRED strings rather than optional ones with defaults: this library has no language of its own to default them in. No role and no `aria-labelledby` is declared here — both moved one level up onto the element that owns the focus trap, or an `alertdialog` would sit nested inside a `dialog` and the wrong one would be announced.",
+            "The question and its two verbs. The title and both verbs are REQUIRED strings rather than optional ones with defaults: this library has no language of its own to default them in. No role and no `aria-labelledby` is declared here — both moved one level up onto the element that owns the focus trap, or an `alertdialog` would sit nested inside a `dialog` and the wrong one would be announced. The children are not loose body text either: they are wired through the description part, so the CONSEQUENCE is announced after the name. The title is the verb — a reader who hears «حذف فاکتور» and nothing else is being asked to confirm something they have not been told.",
         },
       },
       {

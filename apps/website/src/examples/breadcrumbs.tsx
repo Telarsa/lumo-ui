@@ -1,5 +1,5 @@
 import type { Locale } from "@lumo-ui/core";
-import { Breadcrumb, Breadcrumbs, Link } from "@lumo-ui/ui";
+import { Breadcrumb, BreadcrumbEllipsis, Breadcrumbs, Link } from "@lumo-ui/ui";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -39,6 +39,9 @@ const t = {
   invoice: { "fa-IR": "فاکتور", "en-US": "Invoice" },
 
   archive: { "fa-IR": "بایگانی", "en-US": "Archive" },
+
+  kitchen: { "fa-IR": "آشپزخانه", "en-US": "Kitchen" },
+  hidden: { "fa-IR": "خرده‌های میانی", "en-US": "The crumbs in between" },
 } satisfies Record<string, LocalizedText>;
 
 function TrailExample(l: Locale) {
@@ -108,6 +111,31 @@ function SeparatorExample(l: Locale) {
   );
 }
 
+function ElidedExample(l: Locale) {
+  return (
+    <Breadcrumbs label={t.trailLabel[l]}>
+      <Breadcrumb id="home">
+        <Link href="#example-elided" variant="subtle" size="sm">
+          {t.home[l]}
+        </Link>
+      </Breadcrumb>
+      {/*
+       * Two crumbs stand where three were — فروشگاه and لوازم خانگی are gone,
+       * and the name says so in the reader's language. Written by hand as
+       * «<Breadcrumb>…</Breadcrumb>» this crumb's whole accessible name would be
+       * one punctuation character.
+       */}
+      <BreadcrumbEllipsis label={t.hidden[l]} />
+      <Breadcrumb id="kitchen">
+        <Link href="#example-elided" variant="subtle" size="sm">
+          {t.kitchen[l]}
+        </Link>
+      </Breadcrumb>
+      <Breadcrumb id="kettle">{t.kettle[l]}</Breadcrumb>
+    </Breadcrumbs>
+  );
+}
+
 function CurrentOverrideExample(l: Locale) {
   return (
     <Breadcrumbs label={t.trailLabel[l]}>
@@ -147,7 +175,9 @@ export const EXAMPLES: ComponentExamples = {
       `  <Breadcrumb id separator isCurrent isDisabled>`,
       `    <Link href>                ← every crumb but the last`,
       `  </Breadcrumb>`,
-      `  <Breadcrumb>plain text</Breadcrumb>   ← the last: the page you are on`,
+      `  <BreadcrumbEllipsis label separator>  ← stands in for a run of crumbs`,
+      `  <Breadcrumb>plain text</Breadcrumb>   ← the last: the page you are on,`,
+      `                                           and the one carrying aria-current`,
       `</Breadcrumbs>`,
     ].join("\n"),
     parts: [
@@ -167,6 +197,15 @@ export const EXAMPLES: ComponentExamples = {
             "یک خرده، یعنی یک «li». جداکننده روی خردهٔ پایانی رسم نمی‌شود بدون آنکه کسی بداند کدام خرده آخر است، و aria-hidden است چون نقطه‌گذاری میان پیوندهاست نه محتوا. اگر جداکننده را عوض می‌کنید، با نویسه‌ای آینه‌ای عوض کنید وگرنه همان ایرادی برمی‌گردد که این پیش‌فرض برای نبودنش هست.",
           "en-US":
             "One crumb, i.e. one «li». The separator is not drawn on the last crumb without anybody having to know which one that is, and it is aria-hidden because it is punctuation between links rather than content. If you override it, override it with another MIRRORED character or you have reintroduced the bug the default exists to avoid.",
+        },
+      },
+      {
+        name: "BreadcrumbEllipsis",
+        description: {
+          "fa-IR":
+            "جای خالی چند خرده. مسیرها از مسیریابی ساخته می‌شوند و عمیق می‌شوند، و روی گوشی یک مسیر شش‌تایی به سه سطر می‌رسد — پس هر محصولی میانه را حذف می‌کند. نوشتنِ دستی‌اش خرده‌ای است که تمام نامش یک نویسهٔ نقطه‌گذاری است. label اجباری است تا چنین خرده‌ای اصلاً ساخته نشود. غیرفعال است و عمداً: تبدیلش به دکمهٔ منو، «use client» را به این پرونده برمی‌گرداند.",
+          "en-US":
+            "The crumbs that were left out. Trails are generated from routes and routes get deep — six crumbs wrap to three lines on a phone — so every product elides the middle. The hand-written version is a crumb whose entire accessible name is one punctuation character; label is required so that crumb cannot be built. It is inert on purpose: making it a menu trigger would put «use client» back into the file.",
         },
       },
     ],
@@ -206,13 +245,24 @@ export const EXAMPLES: ComponentExamples = {
       render: SeparatorExample,
     },
     {
+      id: "elided",
+      title: { "fa-IR": "مسیر بلند، میانهٔ حذف‌شده", "en-US": "A long trail with the middle elided" },
+      description: {
+        "fa-IR":
+          "سه نقطه چیزی می‌گوید که دیده می‌شود ولی شنیده نمی‌شد. خودِ نویسه aria-hidden است و نام فارسی کنارش می‌نشیند، پس صفحه‌خوان به‌جای «نقطهٔ افقی» می‌شنود چه چیزی حذف شده است. نویسهٔ سه‌نقطه برخلاف جداکننده آینه‌ای نیست و لازم هم ندارد باشد: سه نقطه روی یک خط قرینه‌اند.",
+        "en-US":
+          "The ellipsis says something that was visible and unhearable. The glyph itself is aria-hidden and the Persian name sits beside it, so a screen reader hears WHAT was left out instead of «horizontal ellipsis». Unlike the separator the character is not mirrored and does not need to be: three dots on a line are symmetric.",
+      },
+      render: ElidedExample,
+    },
+    {
       id: "current-crumb",
       title: { "fa-IR": "وقتی صفحهٔ جاری آخرین نیست", "en-US": "When the current page is not last" },
       description: {
         "fa-IR":
-          "به‌طور پیش‌فرض آخرین خرده صفحهٔ جاری است، اما isCurrent صریح بر آن پیشی می‌گیرد — مسیری که خرده‌های بعدی هم دارد غیرعادی است، ولی نامعتبر نیست، و زیر پا گذاشتنِ قصدِ فراخوان هرگز پیش‌فرض درستی نیست. خردهٔ غیرفعال فقط ظاهر را عوض می‌کند: خرده یک کنترل نیست.",
+          "خردهٔ جاری علاوه بر data-current، ویژگی aria-current=\"page\" هم دارد؛ data-current فقط وزن قلم را عوض می‌کند و در هیچ نگاشت دسترس‌پذیری‌ای نیست، پس پیش از این، خردهٔ آخر برای صفحه‌خوان با خرده‌های پیش از خودش فرقی نداشت. به‌طور پیش‌فرض آخرین خرده صفحهٔ جاری است، اما isCurrent صریح بر آن پیشی می‌گیرد — مسیری که خرده‌های بعدی هم دارد غیرعادی است، ولی نامعتبر نیست، و زیر پا گذاشتنِ قصدِ فراخوان هرگز پیش‌فرض درستی نیست. خردهٔ غیرفعال فقط ظاهر را عوض می‌کند: خرده یک کنترل نیست.",
         "en-US":
-          "By default the last crumb is the current page, but an explicit isCurrent wins — a trail with crumbs after the current one is unusual and not illegal, and overriding a caller's stated intent is never the right default. A disabled crumb changes styling only: a crumb is not a control.",
+          "The current crumb carries aria-current=\"page\" as well as the data attribute the bold weight is keyed to — data-current is in nobody's accessibility mapping, so before it the last crumb was announced as an ordinary list item identical to the ones before it. By default the last crumb is the current page, but an explicit isCurrent wins — a trail with crumbs after the current one is unusual and not illegal, and overriding a caller's stated intent is never the right default. A disabled crumb changes styling only: a crumb is not a control.",
       },
       render: CurrentOverrideExample,
     },

@@ -35,14 +35,53 @@ export const emptyStateVariants = cva(
   },
 );
 
+/**
+ * The `icon` slot's frame — and the reason it is a variant rather than a fixed
+ * class list.
+ *
+ * ── THE GAP: THE CHIP REFUSED THE PICTURE ──────────────────────────────────
+ *
+ * The `icon` slot used to be wrapped unconditionally in a 40px circle with a
+ * sunken fill and `[&_svg]:size-5`. That is right for a 20px lucide glyph and
+ * wrong for the other thing empty states actually contain: a first-run panel in
+ * a real product shows an ILLUSTRATION — an `<Image>`, an inline SVG scene, a
+ * brand mark — and the hard wrapper cropped it to a 40px circle and shrank any
+ * nested `<svg>` to 20px on the way. There was no prop to turn that off, so the
+ * only way out was to stop using the slot and hand-render the picture above the
+ * component, which loses the gap rhythm and the centring the panel exists for.
+ *
+ * `media="bare"` frames nothing and constrains nothing; `media="icon"` is the
+ * chip, unchanged, and stays the default so every existing call site renders
+ * byte-identically.
+ *
+ * Both arms are `aria-hidden` at the call site below: whichever it is, the title
+ * already says what the picture says, and an unnamed graphic adds a stop with no
+ * content. A picture that carries meaning the title does not is not decoration
+ * and does not belong in this slot.
+ */
+export const emptyStateMediaVariants = cva("flex items-center justify-center", {
+  variants: {
+    media: {
+      icon: "size-10 rounded-full bg-surface-sunken text-fg-subtle [&_svg]:size-5",
+      // `max-w-full` so a wide illustration cannot push the panel's own width
+      // out; the block axis is left to the picture, which knows its own ratio.
+      bare: "max-w-full text-fg-subtle",
+    },
+  },
+  defaultVariants: { media: "icon" },
+});
+
 const HEADING_TAGS = { 2: "h2", 3: "h3", 4: "h4", 5: "h5", 6: "h6" } as const;
 
 export interface EmptyStateProps
   extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className" | "title">,
-    VariantProps<typeof emptyStateVariants> {
+    VariantProps<typeof emptyStateVariants>,
+    VariantProps<typeof emptyStateMediaVariants> {
   /**
    * Decorative illustration or glyph. `aria-hidden`, because the title already
    * says what the icon says and an unnamed graphic adds a stop with no content.
+   *
+   * Framed by `media` — the 40px chip by default, unframed with `media="bare"`.
    */
   icon?: LumoNode;
   /**
@@ -73,6 +112,7 @@ export function EmptyState({
   action,
   level = 3,
   size,
+  media,
   className,
   ...props
 }: EmptyStateProps) {
@@ -81,10 +121,7 @@ export function EmptyState({
   return (
     <div className={cn(emptyStateVariants({ size }), className)} {...props}>
       {icon !== undefined ? (
-        <span
-          aria-hidden="true"
-          className="flex size-10 items-center justify-center rounded-full bg-surface-sunken text-fg-subtle [&_svg]:size-5"
-        >
+        <span aria-hidden="true" className={emptyStateMediaVariants({ media })}>
           {icon}
         </span>
       ) : null}

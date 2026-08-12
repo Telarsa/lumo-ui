@@ -18,7 +18,7 @@ import { cleanup, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { Button } from "./button.tsx";
-import { Breadcrumb, Breadcrumbs } from "./breadcrumbs.tsx";
+import { Breadcrumb, BreadcrumbEllipsis, Breadcrumbs } from "./breadcrumbs.tsx";
 import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { Dialog, DialogHeading, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Drawer, DrawerOverlay } from "./drawer.tsx";
@@ -131,6 +131,38 @@ describe("server-rendered markup carries no English", () => {
     // engine draws it as ‹ under RTL with no CSS involved.
     expect(html.split("›").length - 1).toBe(2);
     expect(html).not.toContain("→");
+  });
+
+  it("the current crumb is ANNOUNCED, not only painted", () => {
+    const html = renderToStaticMarkup(
+      <Breadcrumbs label="مسیر صفحه">
+        <Breadcrumb id="a">خانه</Breadcrumb>
+        <Breadcrumb id="b">کتری برقی</Breadcrumb>
+      </Breadcrumbs>,
+    );
+    // `data-current` drives the bold weight and is in nobody's accessibility
+    // mapping; before `aria-current` the last crumb was announced as an ordinary
+    // list item identical to the ones before it.
+    expect(html.split('aria-current="page"').length - 1).toBe(1);
+    expect(html).toContain("data-current");
+  });
+
+  it("BreadcrumbEllipsis cannot render as an unnamed punctuation mark", () => {
+    const html = renderToStaticMarkup(
+      <Breadcrumbs label="مسیر صفحه">
+        <Breadcrumb id="a">خانه</Breadcrumb>
+        <BreadcrumbEllipsis label="خرده‌های میانی" />
+        <Breadcrumb id="c">کتری برقی</Breadcrumb>
+      </Breadcrumbs>,
+    );
+    // The glyph is hidden and the Persian name carries it. `label` is required,
+    // so there is no arm of this component that announces «…» and nothing else.
+    expect(html).toContain("خرده‌های میانی");
+    // No English anywhere a reader could hear it. (Class names are Latin and
+    // are not read, so the check is on the TEXT between tags.)
+    expect(html.replace(/<[^>]*>/g, "")).not.toMatch(/[A-Za-z]{3,}/);
+    // An elision is never the page you are on, even when it lands last.
+    expect(html.split('aria-current="page"').length - 1).toBe(1);
   });
 
   it("TabList and Toolbar cannot render unnamed", () => {

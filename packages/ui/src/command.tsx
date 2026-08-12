@@ -15,6 +15,7 @@ import {
 import { useLumoLocale } from "./locale.ts";
 import {
   Dialog,
+  DialogDescription,
   DialogHeading,
   DialogModal,
   DialogOverlay,
@@ -334,7 +335,16 @@ export function CommandDialog({
             )}
           >
             <DialogHeading className="sr-only pe-0">{title}</DialogHeading>
-            <p className="sr-only">{description}</p>
+            {/*
+             * `DialogDescription`, not a bare `<p className="sr-only">`. The
+             * paragraph this replaces was sr-only text that NOTHING pointed at:
+             * `Dialog.Popup` published `aria-labelledby` from the heading and no
+             * `aria-describedby` at all, so «برای اجرای یک فرمان جست‌وجو کنید»
+             * was reached only by a reader who traversed into the palette after
+             * entering it — i.e. never, for the reader it was written for. The
+             * part writes its id into the same root store the title uses.
+             */}
+            <DialogDescription className="sr-only">{description}</DialogDescription>
             {children}
           </Dialog>
         </DialogModal>

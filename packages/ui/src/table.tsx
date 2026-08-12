@@ -41,6 +41,7 @@ import {
   resizableTableContainerVariants,
   rowVariants,
   tableBodyVariants,
+  tableFooterVariants,
   tableHeaderVariants,
   tableVariants,
 } from "./table.variants.ts";
@@ -53,6 +54,7 @@ export {
   resizableTableContainerVariants,
   rowVariants,
   tableBodyVariants,
+  tableFooterVariants,
   tableHeaderVariants,
   tableVariants,
 };
@@ -417,6 +419,22 @@ interface TableContextValue {
    * which is why `Cell` also accepts an explicit `isRowHeader`.
    */
   rowHeaderColumns: Set<number>;
+  /**
+   * How many rows `TableBody` rendered, so `TableFooter` knows which row index
+   * comes after them.
+   *
+   * The same render-phase write into a ref as `rowHeaderColumns`, for the same
+   * reason and with the same caveat: `<tbody>` renders before `<tfoot>` in one
+   * synchronous pass, in React and in `renderToStaticMarkup` alike, and the
+   * write is idempotent so StrictMode's double render changes nothing.
+   *
+   * It has to be a ref rather than a count derived in `Table`, because `Table`
+   * writes its own attributes before any child has rendered, and a footer whose
+   * coordinates guessed wrong would put two elements at the same
+   * `data-row-index`/`data-col-index` — where `querySelector` silently takes
+   * the first and the arrow keys stop at the last body row.
+   */
+  bodyRowCount: { current: number };
 }
 
 const TableContext = createContext<TableContextValue | null>(null);
@@ -505,6 +523,7 @@ export function Table({ label, locale, table, className, ...props }: TableProps)
   const [active, setActive] = useState({ row: 0, col: 0 });
   const arrow = useMemo(() => gridArrow(locale), [locale]);
   const rowHeaderColumns = useRef<Set<number>>(new Set()).current;
+  const bodyRowCount = useRef(0);
 
   /**
    * Move the roving tab stop.
@@ -535,8 +554,8 @@ export function Table({ label, locale, table, className, ...props }: TableProps)
   }
 
   const value = useMemo<TableContextValue>(
-    () => ({ locale, active, table, rowHeaderColumns }),
-    [locale, active, table, rowHeaderColumns],
+    () => ({ locale, active, table, rowHeaderColumns, bodyRowCount }),
+    [locale, active, table, rowHeaderColumns, bodyRowCount],
   );
 
   /*
@@ -817,8 +836,14 @@ export function TableBody({
   renderEmptyState,
   ...props
 }: TableBodyProps) {
+  const { bodyRowCount } = useTableContext();
   const rows = Children.toArray(children);
   const empty = rows.length === 0;
+
+  // See `TableContextValue.bodyRowCount`. Written here rather than counted in
+  // `Table`, which has no access to this list at the time it writes its own
+  // attributes.
+  bodyRowCount.current = rows.length;
 
   return (
     <tbody
@@ -836,6 +861,70 @@ export function TableBody({
             </RowContext.Provider>
           ))}
     </tbody>
+  );
+}
+
+export interface TableFooterProps
+  extends Omit<ComponentProps<"tfoot">, "children" | "className"> {
+  children?: LumoNode;
+  className?: string | undefined;
+}
+
+/**
+ * The summary row — totals, a count, a balance.
+ *
+ * ═══ WHY THIS IS A COMPONENT AND NOT A NOTE IN THE DOCS ═════════════════════
+ *
+ * A consumer can write `<tfoot><tr><td>` inside `<Table>` today; the grid does
+ * not stop them. What they get is a row with none of the grid's markup and none
+ * of its keyboard: no `role`, no `aria-rowindex`, no coordinates — so the arrow
+ * keys walk down the body and stop dead one row above the number the whole
+ * table was built to show. That is the shape of gap worth closing: not a class
+ * string anyone could copy, but the coordinate space, which only this file
+ * knows.
+ *
+ * The footer's row index is `bodyRowCount + 1` — read from the ref `TableBody`
+ * wrote during the same pass, see `TableContextValue.bodyRowCount` — so a
+ * `<Cell>` inside it lands in the same `{row, col}` grid the arrow keys search,
+ * one step below the last body row, and Down from the last row reaches the
+ * total.
+ *
+ * ── WHAT IS DELIBERATELY *NOT* CHANGED: `aria-rowcount` ─────────────────────
+ *
+ * `Table` writes `aria-rowcount` from `getRowModel().rows.length + 1`, and this
+ * component does not add itself to it. That is a decision, not an oversight.
+ * `aria-rowcount` describes the DATA SET — it is the attribute a reader uses to
+ * hear "row 3 of 4,000" while paginated or virtualised, and it is written from
+ * the model rather than from what is on screen for exactly that reason. A
+ * totals row is not a row of that set; it is a statement about it. Counting it
+ * would inflate the announced size of every paged table by one.
+ *
+ * ── ONE ROW, DELIBERATELY ──────────────────────────────────────────────────
+ *
+ * `children` is the cells, not rows: a `<tfoot>` with several rows would need
+ * its own index arithmetic and there is no product need behind it. A second
+ * summary row is a body row.
+ */
+export function TableFooter({ className, children, ...props }: TableFooterProps) {
+  const { bodyRowCount } = useTableContext();
+  // Body rows occupy 1…n in the coordinate space the keyboard walks (the header
+  // is row 0), so the footer is n+1.
+  const index = bodyRowCount.current + 1;
+
+  return (
+    <tfoot className={cn(tableFooterVariants(), className)} {...props}>
+      <RowContext.Provider value={{ index, row: undefined }}>
+        {/*
+         * `aria-rowindex` is 1-based on top of a 0-based header row, the same
+         * arithmetic `Row` does — written out here rather than reusing `Row`
+         * because a footer row is never selectable and must never carry
+         * `aria-selected`.
+         */}
+        <tr data-lumo="" role="row" aria-rowindex={index + 1}>
+          {withColumnIndexes(children)}
+        </tr>
+      </RowContext.Provider>
+    </tfoot>
   );
 }
 
@@ -1054,12 +1143,26 @@ export function TableSelectionCell({ label, className, ...props }: TableSelectio
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * Wraps a `<Table>` to make it scroll.
+ * Wraps a `<Table>` to make it scroll. **This is the scroll container for any
+ * wide table, resizable or not.**
  *
- * Also the reason column resizing does not push the page sideways: a resized
- * grid is wider than its container, and a horizontal scrollbar on the DOCUMENT
- * is the one thing that behaves differently under `dir="rtl"` in every engine.
- * Keeping the overflow on a named box keeps it out of that argument entirely.
+ * That sentence is here because the name does not say it, and a screenshot
+ * audit (`scratchpad/visual-audit.md`, finding 6) recorded Lumo as having no
+ * `table-container` at all next to shadcn's and ReUI's. It has had one since
+ * the React Aria days; what it has is a name inherited from
+ * `ResizableTableContainer`, which reads as an opt-in for one feature rather
+ * than as the answer to "my table is wider than its column". The name is not
+ * changed — it is public API and a rename would break every consumer to fix a
+ * documentation problem — so the documentation is fixed instead, and the
+ * examples now reach for it on a plain wide table as well as on a resizable
+ * one.
+ *
+ * It is also the reason column resizing does not push the page sideways: a
+ * resized grid is wider than its container, and a horizontal scrollbar on the
+ * DOCUMENT is the one thing that behaves differently under `dir="rtl"` in every
+ * engine. Keeping the overflow on a named box keeps it out of that argument
+ * entirely — which is the same reason it is worth reaching for on a table that
+ * merely has too many columns.
  */
 export interface ResizableTableContainerProps
   extends Omit<ComponentProps<"div">, "children" | "className"> {

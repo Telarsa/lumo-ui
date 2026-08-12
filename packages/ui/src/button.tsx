@@ -48,13 +48,19 @@ export type { ButtonVariantProps };
  *                       for the ON state — see toggle.tsx).
  *     data-focus-visible Base UI emits nothing. It expects `:focus-visible`.
  *
- * `button.variants.ts` is reused BYTE-IDENTICAL, on purpose — the experiment
- * swaps the engine, not the styling. The consequence is that every
- * `data-hovered:` and `data-pressed:` utility in it is now a class that matches
- * no element in any state: the solid button never lightens on hover, the
- * outline button never fills. Tailwind emits the rules, the DOM never carries
- * the attribute, and nothing anywhere errors. Measured and recorded in
+ * `button.variants.ts` was reused BYTE-IDENTICAL for the first rounds of the
+ * experiment, on purpose — swap the engine, hold the styling still. The
+ * consequence was that every `data-hovered:` and `data-pressed:` utility in it
+ * matched no element in any state: the solid button never lightened on hover,
+ * the outline button never filled. Tailwind emitted the rules, the DOM never
+ * carried the attribute, and nothing anywhere errored. Measured and recorded in
  * `experiments/measurements/rebuild-simple.json` under `dead_selectors`.
+ *
+ * **That is history now.** `button.variants.ts` is written against the platform
+ * pseudo-classes this engine actually publishes — `hover:`, `active:`,
+ * `data-disabled:` — and `state-vocabulary.test.tsx` asserts both that the dead
+ * selectors are gone from the cva source and that live ones replaced them, so
+ * "not dead" cannot be satisfied by deleting the rule.
  */
 
 export interface ButtonProps extends ButtonPropsBase, ButtonVariantProps {

@@ -164,8 +164,10 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "CommandDialog",
         description: {
-          "fa-IR": "پوستهٔ مودال پالت؛ عنوان، توضیح و نام دکمهٔ بستن هر سه اجباری‌اند.",
-          "en-US": "The palette's modal shell; title, description and the close name are all required.",
+          "fa-IR":
+            "پوستهٔ مودال پالت؛ عنوان، توضیح و نام دکمهٔ بستن هر سه اجباری‌اند. هر دوی عنوان و توضیح sr-only اند — پالت هدفش را از راه ورودی‌اش نشان می‌دهد — ولی توضیح حالا از راه DialogDescription به aria-describedby بسته می‌شود؛ پیش از آن یک «p» با کلاس sr-only بود که هیچ‌چیز به آن اشاره نمی‌کرد، یعنی متنی برای خواننده‌ای که هرگز به آن نمی‌رسید.",
+          "en-US":
+            "The palette's modal shell; title, description and the close name are all required. Both title and description are sr-only — a palette shows its purpose through its input — but the description is now bound to aria-describedby through DialogDescription. Before that it was a «p» with an sr-only class that nothing pointed at: text placed for a reader who never reached it.",
         },
       },
       {

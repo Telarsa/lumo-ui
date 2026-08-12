@@ -8,6 +8,7 @@ import {
   Row,
   Table,
   TableBody,
+  TableFooter,
   TableHeader,
 } from "@lumo-ui/ui";
 import { TableSelectionIsland, TableSortingIsland } from "@/components/demo-islands";
@@ -45,6 +46,7 @@ const t = {
   sortedAscending: { "fa-IR": "مرتب‌شده صعودی", "en-US": "Sorted ascending" },
   sortedDescending: { "fa-IR": "مرتب‌شده نزولی", "en-US": "Sorted descending" },
   resizeColumn: { "fa-IR": "تغییر پهنای ستون", "en-US": "Resize the column" },
+  total: { "fa-IR": "جمع", "en-US": "Total" },
 } satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
@@ -75,6 +77,58 @@ function BasicExample(l: Locale) {
         </Row>
       </TableBody>
     </Table>
+  );
+}
+
+function FooterExample(l: Locale) {
+  /*
+   * `ResizableTableContainer` around a table that nothing resizes. Its name
+   * says "resizing" and its job is "overflow" — it is the scroll box for any
+   * table wider than its column, and reaching for it here is the point of the
+   * example as much as the footer is. Without it a wide grid pushes a
+   * horizontal scrollbar onto the DOCUMENT, which is the one scrollbar that
+   * behaves differently under dir="rtl" in every engine.
+   */
+  return (
+    <ResizableTableContainer className="max-w-xl">
+      <Table label={t.ordersGrid[l]} locale={l}>
+        <TableHeader>
+          <Column id="name" isRowHeader>
+            {t.customer[l]}
+          </Column>
+          <Column id="city">{t.city[l]}</Column>
+          <Column id="total">{t.amount[l]}</Column>
+        </TableHeader>
+        <TableBody>
+          <Row id="a">
+            <Cell>{t.customerOne[l]}</Cell>
+            <Cell>{t.isfahan[l]}</Cell>
+            <Cell>{formatNumber(1250000, l)}</Cell>
+          </Row>
+          <Row id="b">
+            <Cell>{t.customerTwo[l]}</Cell>
+            <Cell>{t.tabriz[l]}</Cell>
+            <Cell>{formatNumber(890000, l)}</Cell>
+          </Row>
+          <Row id="c">
+            <Cell>{t.customerThree[l]}</Cell>
+            <Cell>{t.tehran[l]}</Cell>
+            <Cell>{formatNumber(2340000, l)}</Cell>
+          </Row>
+        </TableBody>
+        {/*
+         * The cells here are the same `<Cell>` the body uses, and they land in
+         * the same {row, col} space the arrow keys walk — the footer's row
+         * index is counted from what `TableBody` rendered rather than guessed,
+         * so Down from the last order reaches the total.
+         */}
+        <TableFooter>
+          <Cell isRowHeader>{t.total[l]}</Cell>
+          <Cell />
+          <Cell>{formatNumber(4480000, l)}</Cell>
+        </TableFooter>
+      </Table>
+    </ResizableTableContainer>
   );
 }
 
@@ -167,8 +221,11 @@ export const EXAMPLES: ComponentExamples = {
       `        <Cell>…</Cell>`,
       `      </Row>`,
       `    </TableBody>`,
+      `    <TableFooter>            ← one summary row, in the same coordinate space`,
+      `      <Cell>…</Cell>`,
+      `    </TableFooter>`,
       `  </Table>`,
-      `</ResizableTableContainer>`,
+      `</ResizableTableContainer>          ← the scroll box for ANY wide table, not only a resizable one`,
     ].join("\n"),
     parts: [
       {
@@ -197,6 +254,15 @@ export const EXAMPLES: ComponentExamples = {
         description: {
           "fa-IR": "بدنهٔ ردیف‌ها؛ حالت خالی هم همین‌جا رندر می‌شود.",
           "en-US": "The rows' body; the empty state renders here too.",
+        },
+      },
+      {
+        name: "TableFooter",
+        description: {
+          "fa-IR":
+            "ردیف جمع‌بندی. شمارهٔ ردیفش از روی چیزی که TableBody رندر کرده شمرده می‌شود، نه حدس زده؛ پس خانه‌هایش در همان فضای مختصاتی می‌نشینند که پیکان‌ها در آن راه می‌روند و کلید پایین از آخرین ردیف به جمع می‌رسد. aria-rowcount عمداً دست‌نخورده می‌ماند: آن ویژگی اندازهٔ مجموعهٔ داده را می‌گوید و ردیف جمع، عضوِ آن مجموعه نیست.",
+          "en-US":
+            "The summary row. Its row index is COUNTED from what TableBody rendered rather than guessed, so its cells land in the same coordinate space the arrow keys walk and Down from the last order reaches the total. aria-rowcount is deliberately left alone: it states the size of the data set, and a totals row is not a member of it.",
         },
       },
       {
@@ -237,15 +303,19 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "ResizableTableContainer",
         description: {
-          "fa-IR": "ظرفی که تغییر پهنای ستون را ممکن می‌کند.",
-          "en-US": "The container that makes column resizing possible.",
+          "fa-IR":
+            "ظرف پیمایش برای هر جدولِ پهن، نه فقط برای جدولی که ستون‌هایش تغییر پهنا می‌دهند — نامش این را نمی‌گوید و بازنگری‌اش نام عمومی کتابخانه است. سرریز را روی یک جعبهٔ نام‌دار نگه می‌دارد تا نوار پیمایش افقی روی خودِ سند نیفتد، که تنها نوار پیمایشی است که در راست‌چین در هر موتور رفتار دیگری دارد.",
+          "en-US":
+            "The scroll box for ANY wide table, not only one whose columns resize — the name does not say so, and the name is public API. It keeps the overflow on a named box rather than on the document, whose horizontal scrollbar is the one that behaves differently under dir=rtl in every engine.",
         },
       },
       {
         name: "ColumnResizer",
         description: {
-          "fa-IR": "دستگیرهٔ پهنا؛ مقدارش به فارسی اعلام می‌شود.",
-          "en-US": "The width handle; its value is announced in Persian.",
+          "fa-IR":
+            "دستگیرهٔ پهنا. یک «button» است که همین‌جا رندر می‌شود و نامش ویژگی اجباری است؛ هیچ ورودی پنهانی و هیچ رشتهٔ باندلی در کار نیست، و وصلهٔ node_modules که زمانی aria-valuetext انگلیسی را ترجمه می‌کرد، برای این جزء دیگر لازم نیست.",
+          "en-US":
+            "The width handle. A «button» rendered right here, with its name as a required prop; there is no hidden input and no bundle string, and the node_modules patch that once translated an English aria-valuetext is no longer load-bearing for this part.",
         },
       },
     ],
@@ -259,6 +329,17 @@ export const EXAMPLES: ComponentExamples = {
         "en-US": "Three columns, three rows; the first column is the row header so every row has a name.",
       },
       render: BasicExample,
+    },
+    {
+      id: "footer",
+      title: { "fa-IR": "ردیف جمع‌بندی", "en-US": "The summary row" },
+      description: {
+        "fa-IR":
+          "یک «tfoot» واقعی با همان خانه‌های بدنه. چیزی که یک نسخهٔ دست‌ساز از دست می‌دهد، ظاهر نیست — مختصات است: ردیفی که با «td» خالی نوشته شود نه نقش دارد، نه aria-rowindex و نه جایی در فضایی که پیکان‌ها در آن راه می‌روند، پس کلید پایین یک ردیف بالاتر از عددی که کل جدول برای نشان‌دادنش ساخته شده می‌ایستد.",
+        "en-US":
+          "A real «tfoot» with the same cells the body uses. What a hand-rolled version loses is not the look — it is the coordinates: a row written with bare «td» has no role, no aria-rowindex and no place in the space the arrow keys walk, so Down stops one row above the number the whole table was built to show.",
+      },
+      render: FooterExample,
     },
     {
       id: "selection",

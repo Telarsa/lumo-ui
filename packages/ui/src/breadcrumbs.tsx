@@ -89,6 +89,8 @@ export const breadcrumbVariants = cva(
 
 export const breadcrumbSeparatorVariants = cva("px-1 text-fg-subtle");
 
+export const breadcrumbEllipsisVariants = cva("select-none leading-none text-fg-subtle");
+
 export interface BreadcrumbsProps<T extends object> {
   /**
    * Announced name of the trail. Required — see the file header.
@@ -178,7 +180,23 @@ export function Breadcrumb({
   return (
     <li
       data-lumo=""
-      {...(isCurrent ? { "data-current": "true" } : {})}
+      /*
+       * `aria-current="page"` — the current crumb was PAINTED and not ANNOUNCED.
+       *
+       * `data-current` drives `font-medium text-fg` in the cva above, so a
+       * sighted reader can see which crumb is the page they are on. A screen
+       * reader could not: the attribute is a data attribute, it is in nobody's
+       * accessibility mapping, and the last crumb was announced as an ordinary
+       * list item identical to the four before it. `aria-current` is the one
+       * attribute in ARIA whose entire job is this distinction, and `"page"` is
+       * its token for exactly this case — the crumb IS a page in a set of pages.
+       *
+       * It sits on the `<li>` rather than on the crumb's content because the
+       * crumb's content is whatever the caller passed: usually bare text with no
+       * element of its own to carry it, sometimes a `<Link>` this file may not
+       * reach into. `aria-current` is a global attribute and is valid on `<li>`.
+       */
+      {...(isCurrent ? { "data-current": "true", "aria-current": "page" as const } : {})}
       {...(isDisabled ? { "data-disabled": "true" } : {})}
       className={cn(breadcrumbVariants(), className)}
     >
@@ -196,6 +214,84 @@ export function Breadcrumb({
           {separator as React.ReactNode}
         </span>
       )}
+    </li>
+  );
+}
+
+/**
+ * The crumbs that were left out — one `…` standing in for a run of them.
+ *
+ * ── WHY THIS IS A PART AND NOT THE CALLER'S PROBLEM ─────────────────────────
+ *
+ * A trail is generated from a route, and routes get deep: خانه ← فروشگاه ←
+ * لوازم خانگی ← آشپزخانه ← کتری و سماور ← کتری برقی پارس‌آوند is six crumbs, and
+ * `flex-wrap` on the list means it silently becomes three lines of chrome above
+ * the content on a phone. Every product hits this, so every product elides the
+ * middle — and the elision written by hand is `<Breadcrumb>…</Breadcrumb>`,
+ * which is a crumb whose entire accessible name is one punctuation character.
+ * A screen reader reads it as «horizontal ellipsis», or as nothing, depending on
+ * the verbosity setting. That is the version this part exists to stop shipping,
+ * which is the same argument `IconButton` makes: a glyph is not a name.
+ *
+ * `label` is therefore REQUIRED and there is no default, for the reason the file
+ * header already gives about `label` on the trail — the library has no language
+ * of its own to default it in, and «More» is the English that would appear.
+ *
+ * ── THE GLYPH NEEDS NO MIRRORING, AND THAT IS WORTH SAYING HERE ─────────────
+ *
+ * The separator above is `›` because it MIRRORS. `…` (U+2026) does not carry
+ * `Bidi_Mirrored` and does not need to: three dots on a line are symmetric, so
+ * there is no handedness to get wrong and no reason to reach for a class. The
+ * rule the file is teaching is "a directional glyph must mirror itself", not
+ * "every glyph must".
+ *
+ * ── IT IS INERT, DELIBERATELY ──────────────────────────────────────────────
+ *
+ * Upstream libraries make the ellipsis a dropdown trigger that reveals the
+ * hidden crumbs. That would put `"use client"` back into this file, which the
+ * header records as the whole win of the rewrite — a page header would start
+ * paying hydration for the one part of the page that is pure navigation. A
+ * caller who wants the menu composes it themselves from `Menu`, around this
+ * part or instead of it. The elision itself is markup and stays markup.
+ *
+ * `isCurrent` is accepted and ignored: `Breadcrumbs` clones the flag onto every
+ * child by position, and an elision is never the page you are on even when it
+ * lands last.
+ */
+export interface BreadcrumbEllipsisProps {
+  /**
+   * What the `…` stands for, e.g. «خرده‌های میانی». REQUIRED — see above.
+   */
+  label: string;
+  /** A mirrored character. See the file header before changing it. */
+  separator?: LumoNode;
+  /** Written by `Breadcrumbs` from position, and ignored here. */
+  isCurrent?: boolean;
+  className?: string | undefined;
+}
+
+export function BreadcrumbEllipsis({
+  label,
+  separator = "›",
+  isCurrent: _isCurrent,
+  className,
+}: BreadcrumbEllipsisProps) {
+  return (
+    <li data-lumo="" className={cn(breadcrumbVariants(), className)}>
+      {/*
+       * `aria-hidden` glyph plus `sr-only` text, rather than
+       * `role="img" aria-label={label}` on the glyph. Both announce the same
+       * string, but the sr-only span degrades to plain readable text if a
+       * consumer's build drops the utility, whereas a mislaid `role="img"`
+       * announces a graphic that is not there.
+       */}
+      <span aria-hidden="true" className={breadcrumbEllipsisVariants()}>
+        …
+      </span>
+      <span className="sr-only">{label}</span>
+      <span aria-hidden="true" className={breadcrumbSeparatorVariants()}>
+        {separator as React.ReactNode}
+      </span>
     </li>
   );
 }

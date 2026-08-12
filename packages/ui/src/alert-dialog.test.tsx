@@ -80,6 +80,23 @@ describe("AlertDialog — open, named and clean", () => {
     expect(englishIn(spokenAttributes())).toEqual([]);
   });
 
+  it("the consequence is described, not merely rendered", () => {
+    render(composed());
+    const dialog = screen.getByRole("alertdialog");
+    // The title is the VERB. A reader who hears «حذف فاکتور» and nothing else is
+    // being asked to confirm something they have not been told. Until the body
+    // was wired through AlertDialog.Description, the popup carried
+    // aria-labelledby and no aria-describedby at all.
+    const describedBy = dialog.getAttribute("aria-describedby");
+    expect(describedBy).toBeTruthy();
+    expect(document.getElementById(describedBy ?? "")?.textContent).toBe(
+      "این کار قابل بازگشت نیست.",
+    );
+    // render={<div />}: the caller's own <p> would be invalid inside Base UI's
+    // default <p>, and browsers repair that by splitting the paragraph.
+    expect(document.getElementById(describedBy ?? "")?.tagName).toBe("DIV");
+  });
+
   it("tone=critical puts the destructive variant on the CONFIRM verb only", () => {
     render(composed());
     expect(screen.getByRole("button", { name: "حذف" }).className).toContain("bg-critical");

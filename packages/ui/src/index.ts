@@ -145,11 +145,17 @@ export type { BadgeProps } from "./badge.tsx";
 export { Tag, tagVariants } from "./tag.tsx";
 export type { TagProps } from "./tag.tsx";
 
-export { Avatar, avatarVariants } from "./avatar.tsx";
+export {
+  Avatar,
+  avatarStatusVariants,
+  avatarStatusWrapperVariants,
+  avatarVariants,
+} from "./avatar.tsx";
 export type { AvatarProps } from "./avatar.tsx";
 
 export {
   Card,
+  CardAction,
   CardBody,
   CardDescription,
   CardFooter,
@@ -164,10 +170,10 @@ export type {
   CardTitleProps,
 } from "./card.tsx";
 
-export { Alert, alertIconVariants, alertVariants } from "./alert.tsx";
-export type { AlertLive, AlertProps } from "./alert.tsx";
+export { Alert, alertCloseVariants, alertIconVariants, alertVariants } from "./alert.tsx";
+export type { AlertDismissProps, AlertLive, AlertProps } from "./alert.tsx";
 
-export { EmptyState, emptyStateVariants } from "./empty-state.tsx";
+export { EmptyState, emptyStateMediaVariants, emptyStateVariants } from "./empty-state.tsx";
 export type { EmptyStateProps } from "./empty-state.tsx";
 
 export { Separator, separatorVariants } from "./separator.tsx";
@@ -218,6 +224,7 @@ export type { BoxTag, ContainerProps, GridProps, StackProps } from "./stack.tsx"
 
 export {
   Dialog,
+  DialogDescription,
   DialogHeading,
   DialogModal,
   DialogOverlay,
@@ -227,6 +234,7 @@ export {
   dialogVariants,
 } from "./dialog.tsx";
 export type {
+  DialogDescriptionProps,
   DialogHeadingProps,
   DialogModalProps,
   DialogOverlayProps,
@@ -371,12 +379,18 @@ export type {
 
 export {
   Breadcrumb,
+  BreadcrumbEllipsis,
   Breadcrumbs,
+  breadcrumbEllipsisVariants,
   breadcrumbSeparatorVariants,
   breadcrumbVariants,
   breadcrumbsVariants,
 } from "./breadcrumbs.tsx";
-export type { BreadcrumbProps, BreadcrumbsProps } from "./breadcrumbs.tsx";
+export type {
+  BreadcrumbEllipsisProps,
+  BreadcrumbProps,
+  BreadcrumbsProps,
+} from "./breadcrumbs.tsx";
 
 export {
   Toolbar,
@@ -406,6 +420,7 @@ export {
   Row,
   Table,
   TableBody,
+  TableFooter,
   TableHeader,
   TableSelectAllColumn,
   TableSelectionCell,
@@ -420,6 +435,7 @@ export type {
   ResizableTableContainerProps,
   RowProps,
   TableBodyProps,
+  TableFooterProps,
   TableHeaderProps,
   TableProps,
   TableSelectAllColumnProps,
@@ -448,6 +464,7 @@ export {
   resizableTableContainerVariants,
   rowVariants,
   tableBodyVariants,
+  tableFooterVariants,
   tableHeaderVariants,
   tableVariants,
 } from "./table.variants.ts";

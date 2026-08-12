@@ -339,11 +339,12 @@ export function DisclosureTrigger({
   level = 3,
   isDisabled,
   // Base UI's parts type their DOM handlers as `BaseUIEvent<…>`, which carries a
-  // `preventBaseUIHandler` escape hatch React Aria's do not have — so RAC's
-  // handler types are not assignable and the spread does not compile with them
-  // in `rest`. Dropped rather than cast: a cast would let a caller pass a
-  // handler whose event object lacks `continuePropagation`, which is the RAC
-  // API it would be typed against.
+  // `preventBaseUIHandler` escape hatch the handler shapes in `@lumo-ui/core`'s
+  // props.ts do not — those restate the vocabulary this API was pinned to, so
+  // they are not assignable and the spread does not compile with them in
+  // `rest`. Dropped rather than cast: a cast would let a caller pass a handler
+  // whose event object lacks `continuePropagation`, which is the shape it would
+  // be typed against.
   onKeyDown: _onKeyDown,
   onKeyUp: _onKeyUp,
   onPress: _onPress,

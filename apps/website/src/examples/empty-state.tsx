@@ -35,6 +35,14 @@ const t = {
   },
   newProject: { "fa-IR": "پروژهٔ تازه", "en-US": "New project" },
 
+  illustratedTitle: { "fa-IR": "هنوز فروشی ثبت نشده", "en-US": "No sale has been recorded yet" },
+  illustratedBody: {
+    "fa-IR":
+      "وقتی نخستین سفارش پرداخت شود، نمودار فروش همین‌جا ساخته می‌شود. تا آن وقت این قاب خالی می‌ماند.",
+    "en-US":
+      "Once the first order is paid, the sales chart is built right here. Until then this frame stays empty.",
+  },
+
   inboxTitle: { "fa-IR": "صندوق خالی است", "en-US": "The inbox is empty" },
   inboxBody: {
     "fa-IR": "پیام تازه‌ای نمانده است.",
@@ -103,6 +111,47 @@ function InCardExample(l: Locale) {
   );
 }
 
+/**
+ * `media="bare"` — the slot with no frame around it.
+ *
+ * The default `media="icon"` wraps whatever it is given in a 40px circle and
+ * shrinks any nested `<svg>` to 20px, which is right for a lucide glyph and
+ * destroys an ILLUSTRATION. A first-run panel in a real product shows a picture,
+ * not a 20px symbol, and before this variant the only way to get one was to stop
+ * using the slot and hand-render the artwork above the component — losing the
+ * gap rhythm and the centring the panel exists for.
+ *
+ * The drawing is still `aria-hidden`, exactly as the glyph is: the title says
+ * what it says. A picture carrying meaning the title does not is not decoration
+ * and does not belong in this slot.
+ */
+function IllustratedExample(l: Locale) {
+  return (
+    <div className="w-full max-w-md rounded-lg border border-border bg-surface">
+      <EmptyState
+        size="lg"
+        media="bare"
+        icon={
+          <svg
+            viewBox="0 0 120 72"
+            aria-hidden="true"
+            className="h-20 w-auto text-border"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            {/* A bar chart with no bars — the picture of the state itself. */}
+            <path d="M12 8v52h96" strokeLinecap="round" />
+            <path d="M30 60V44M54 60V32M78 60V50M102 60V26" strokeDasharray="4 5" />
+          </svg>
+        }
+        title={t.illustratedTitle[l]}
+        description={t.illustratedBody[l]}
+      />
+    </div>
+  );
+}
+
 function BareExample(l: Locale) {
   return (
     <div className="w-full max-w-md rounded-lg border border-border bg-surface">
@@ -122,7 +171,7 @@ export const EXAMPLES: ComponentExamples = {
         "The \"there is nothing here yet\" panel: an icon, a title, an explanation and one action. The action is a SLOT rather than a callback, and that single decision is what keeps the component on the server — an onAction prop would be a function crossing the boundary and would make every empty state in the app a client component. The title is required and typed LumoNode, so a bare count inside it does not compile.",
     },
     composition: [
-      `<EmptyState size level icon title description action>`,
+      `<EmptyState size media level icon title description action>`,
       `                          ← icon is aria-hidden: the title already says it`,
       `                          ← action is a NODE, so a client Button fits inside`,
       `                             a server-rendered panel`,
@@ -135,6 +184,15 @@ export const EXAMPLES: ComponentExamples = {
             "کل جزء. size فقط لایه‌گذاری محور بلوکی را عوض می‌کند، پس چیزی برای قرینه‌شدن ندارد؛ level همان عددِ سرفصل است که در card.tsx توضیح داده شده و برای حالتی که پنل درون کارتی دیگر می‌نشیند لازم می‌شود.",
           "en-US":
             "The whole component. size changes only block-axis padding, so it has nothing to mirror; level is the same heading number card.tsx argues for, and it earns its keep the moment the panel sits inside another card.",
+        },
+      },
+      {
+        name: "emptyStateMediaVariants",
+        description: {
+          "fa-IR":
+            "قابِ شکافِ تصویر. icon همان دایرهٔ چهل‌پیکسلی است و پیش‌فرض می‌ماند؛ bare هیچ قابی نمی‌کشد و هیچ اندازه‌ای تحمیل نمی‌کند. تفاوت وقتی مهم می‌شود که محتوا یک تصویرسازی باشد نه یک نماد بیست‌پیکسلی — که در پنلِ «نخستین بار» همیشه همین است.",
+          "en-US":
+            "The media slot's frame. icon is the 40px chip and stays the default; bare frames nothing and constrains nothing. The difference matters the moment the content is an ILLUSTRATION rather than a 20px symbol — which, in a first-run panel, it always is.",
         },
       },
     ],
@@ -172,6 +230,17 @@ export const EXAMPLES: ComponentExamples = {
           "Two things here are invisible. First level, pushed to five because the card's own title is a four and a skipped level breaks the outline. Second the count inside the description, which goes through formatNumber — description is LumoNode too and refuses a bare number.",
       },
       render: InCardExample,
+    },
+    {
+      id: "illustrated",
+      title: { "fa-IR": "تصویرسازی به‌جای نماد", "en-US": "An illustration instead of a symbol" },
+      description: {
+        "fa-IR":
+          "media=\"bare\" قاب را برمی‌دارد. با پیش‌فرض، همین نقاشی درون دایره‌ای چهل‌پیکسلی بریده می‌شد و هر svg تودرتویش به بیست پیکسل کوچک می‌شد — و تنها راه فرار، رهاکردن خودِ شکاف بود. تصویر همچنان aria-hidden است: عنوان همان را می‌گوید و یک گرافیکِ بی‌نام فقط یک ایستگاهِ بی‌محتوا اضافه می‌کند.",
+        "en-US":
+          "media=\"bare\" takes the frame off. Under the default this drawing would be cropped into a 40px circle and any nested svg shrunk to 20px, and the only escape was to abandon the slot. The picture is still aria-hidden: the title says what it says, and an unnamed graphic only adds a stop with no content.",
+      },
+      render: IllustratedExample,
     },
     {
       id: "bare",

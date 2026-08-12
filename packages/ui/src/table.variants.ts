@@ -85,6 +85,23 @@ export const columnVariants = cva(
 
 export const tableBodyVariants = cva("data-empty:text-fg-muted");
 
+/**
+ * `<tfoot>`. The summary row — totals, a count, a balance.
+ *
+ * `border-bs` and not `border-t`, for `card.tsx`'s reason: the block axis does
+ * not mirror, and a rule with a carve-out is a rule people get wrong. It is a
+ * DOUBLE rule against the body's own row borders on purpose — the footer is not
+ * one more row of the same kind, and the heavier line is what says so before
+ * the numbers are read.
+ *
+ * `font-medium` rather than `font-semibold`: a totals row is emphasis inside a
+ * table, not a heading, and Vazirmatn's semibold at 14px against a full column
+ * of regular reads as a second header row.
+ */
+export const tableFooterVariants = cva(
+  "border-bs border-border bg-surface-sunken font-medium text-fg",
+);
+
 export const rowVariants = cva(
   "border-bs border-border outline-none " +
     "hover:bg-surface-hover " +

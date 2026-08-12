@@ -279,7 +279,7 @@
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
-      "description": "A surface with a header, a body and a footer. Six components, no state.",
+      "description": "A surface with a header, a body and a footer. Seven components, no state.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",

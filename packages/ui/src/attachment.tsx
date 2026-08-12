@@ -102,7 +102,8 @@ export function Attachment({
   return (
     <div
       // Stamped so descendants can restyle per state/shape with group-data
-      // variants, the same wiring RAC components get for free.
+      // variants. Written here rather than inherited: this component has no
+      // engine under it at all, so nothing else publishes the state.
       data-variant={variant}
       data-state={state}
       className={cn(attachmentVariants({ variant }), className)}
@@ -235,8 +236,9 @@ export interface AttachmentProgressProps {
  * The uploading state's bar. A thin wrapper over ProgressBar with `maxValue`
  * pinned to 1, so the 0–1 fraction every upload API hands out is the value —
  * no ×100 at the call site, and the announced `aria-valuetext` comes out
- * through Intl as «۴۵٪» on a Persian page rather than the browser-locale
- * formatting React Aria would fall back to.
+ * through Intl as «۴۵٪» on a Persian page — `ProgressBar` takes the locale as a
+ * prop and formats against it, rather than falling back to whatever locale the
+ * browser happens to be set to.
  */
 export function AttachmentProgress({ locale, label, value, className }: AttachmentProgressProps) {
   return (

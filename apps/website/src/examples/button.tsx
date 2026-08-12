@@ -29,6 +29,27 @@ function VariantsExample(l: Locale) {
   );
 }
 
+function PressExample(l: Locale) {
+  /*
+   * There is nothing to see here at rest, and that is the example. Press each
+   * button — with a mouse, and then on a phone — and it steps somewhere hover
+   * did not go, plus a 1px nudge into the page.
+   *
+   * The nudge is the half that matters on touch: a touch device never enters
+   * `:hover`, so before this the whole feedback budget of a tap was spent on a
+   * state that device cannot reach, and a tap produced literally no visual
+   * change. Measured in `scratchpad/visual-audit.md`, finding 3.
+   */
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button>{t.save[l]}</Button>
+      <Button variant="outline">{t.cancel[l]}</Button>
+      <Button variant="ghost">{t.cancel[l]}</Button>
+      <Button variant="critical">{t.remove[l]}</Button>
+    </div>
+  );
+}
+
 function SizesExample(l: Locale) {
   return (
     <div className="flex flex-wrap items-center gap-3">
@@ -125,6 +146,17 @@ export const EXAMPLES: ComponentExamples = {
       render: VariantsExample,
     },
     {
+      id: "pressed",
+      title: { "fa-IR": "حالت فشرده", "en-US": "The pressed state" },
+      description: {
+        "fa-IR":
+          "این‌ها را فشار دهید — با ماوس، و بعد روی تلفن. تا پیش از این، مقدارِ active در هر چهار گونه بایت‌به‌بایت همان مقدارِ hover بود: روی ماوس یعنی فشردن چیزی جز آنچه اشاره‌گر پیش‌تر ساخته بود نمی‌ساخت، و روی لمس یعنی هیچ. دستگاه لمسی اصلاً وارد hover نمی‌شود، پس تمام بودجهٔ بازخوردِ یک ضربه صرف حالتی می‌شد که آن دستگاه هرگز به آن نمی‌رسد. تکانِ یک‌پیکسلی روی محور بلوکی است، پس قرینه نمی‌شود؛ و روی دکمه‌هایی که خودشان یک لایه باز می‌کنند اعمال نمی‌شود، چون آن لایه به همین دکمه لنگر انداخته است.",
+        "en-US":
+          "Press these — with a mouse, and then on a phone. Until now `active:` was byte-identical to `hover:` in all four variants: on a pointer that meant pressing changed nothing hovering had not already changed, and on touch it meant nothing at all. A touch device never enters hover, so the entire feedback budget of a tap was spent on a state that device cannot reach. The 1px nudge is on the block axis, so it does not mirror — and it is skipped on buttons that own an overlay, because the overlay is anchored to the button that would have moved.",
+      },
+      render: PressExample,
+    },
+    {
       id: "sizes",
       title: { "fa-IR": "اندازه‌ها", "en-US": "Sizes" },
       description: {
@@ -155,8 +187,8 @@ export const EXAMPLES: ComponentExamples = {
       id: "disabled",
       title: { "fa-IR": "غیرفعال", "en-US": "Disabled" },
       description: {
-        "fa-IR": "حالت غیرفعال از data-disabled خود ری‌اکت‌آریا می‌آید، نه از state آینه‌شده.",
-        "en-US": "The disabled state styles from React Aria's own data-disabled, not from mirrored state.",
+        "fa-IR": "حالت غیرفعال از data-disabled خودِ موتور می‌آید، نه از state آینه‌شده. همان ویژگی نشانگر را هم خاموش می‌کند، پس دکمهٔ غیرفعال اصلاً وارد حالت فشرده نمی‌شود و استثنای جداگانه‌ای لازم ندارد.",
+        "en-US": "The disabled state styles from the engine's own data-disabled, not from mirrored state. That same attribute switches pointer events off, so a disabled button never enters the pressed state and needs no separate carve-out.",
       },
       render: DisabledExample,
     },

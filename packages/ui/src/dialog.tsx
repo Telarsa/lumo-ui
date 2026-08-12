@@ -463,3 +463,63 @@ export function DialogHeading({
     />
   );
 }
+
+/**
+ * The dialog's supporting prose, and — the point of the part — the string a
+ * screen reader reads AFTER the name when focus enters.
+ *
+ * ── THE GAP THIS CLOSES: A DIALOG BODY THAT NOBODY ANNOUNCES ────────────────
+ *
+ * `DialogHeading` publishes `aria-labelledby`. Nothing in this file published
+ * `aria-describedby`, so every dialog Lumo shipped announced its TITLE and then
+ * silence — the reader arrived at «حذف فاکتور» with no indication that the next
+ * paragraph says «این کار قابل بازگشت نیست». Sighted readers see that sentence;
+ * it is the whole reason the dialog interrupts. Measured on the pre-existing
+ * tree: `Dialog.Popup` carried `aria-labelledby` and no `aria-describedby` at
+ * all, in every composition in this workspace including the command palette,
+ * which went as far as rendering `<p className="sr-only">{description}</p>` —
+ * a paragraph placed for a reader who never reaches it, because nothing pointed
+ * at it and `sr-only` text inside a dialog is only read on traversal.
+ *
+ * `Dialog.Description` writes its id into the same root store `Dialog.Title`
+ * uses, and `Dialog.Popup` reads both. So the wiring costs one part and no prop.
+ *
+ * ── WHY IT TAKES `render`, AND WHY THE DEFAULT ELEMENT IS A `<p>` ───────────
+ *
+ * Base UI renders a `<p>`, which is right for the ordinary case — one sentence
+ * of prose — and wrong the moment a dialog's description is a list or holds a
+ * `<div>`, because block content inside a `<p>` is invalid HTML that browsers
+ * silently repair by splitting the paragraph, exactly as `badge.tsx` records for
+ * `<span>` vs `<div>`. `render` is Base UI's own escape hatch and is passed
+ * through rather than re-invented: `<DialogDescription render={<div />}>`.
+ *
+ * There is no `description` STRING prop and no requirement, deliberately. Unlike
+ * `closeLabel`, this text is visible — a missing description is a hole a
+ * reviewer can see on the page, not a silent one — and plenty of dialogs are a
+ * heading plus a form with nothing to describe. Requiring it would push callers
+ * toward writing filler for the attribute's sake, which is worse than the
+ * attribute's absence.
+ */
+export interface DialogDescriptionProps
+  extends Omit<React.HTMLAttributes<HTMLParagraphElement>, "children" | "className"> {
+  /** Swap the rendered element, e.g. `render={<div />}` for block content. */
+  render?: React.ReactElement<Record<string, unknown>> | undefined;
+  children?: LumoNode;
+  className?: string | undefined;
+}
+
+export function DialogDescription({
+  className,
+  render,
+  slot: _slot,
+  style: _style,
+  ...rest
+}: DialogDescriptionProps) {
+  return (
+    <BaseDialog.Description
+      className={cn("text-sm text-fg-muted", className)}
+      {...attr("render", render)}
+      {...rest}
+    />
+  );
+}

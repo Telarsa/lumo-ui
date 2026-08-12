@@ -2,6 +2,7 @@ import type { Locale } from "@lumo-ui/core";
 import { formatNumber } from "@lumo-ui/core";
 import { CheckCircleIcon, InfoIcon, TriangleAlertIcon, XCircleIcon } from "lucide-react";
 import { Alert } from "@lumo-ui/ui";
+import { AlertDismissIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -62,6 +63,14 @@ const t = {
     "fa-IR": "برای ثبت سفارش‌های بالای دو میلیون تومان، تأیید تلفنی هم لازم است.",
     "en-US": "Orders above two million toman also need a confirmation by phone.",
   },
+
+  dismissTitle: { "fa-IR": "نسخهٔ تازه در دسترس است", "en-US": "A new version is available" },
+  dismissBody: {
+    "fa-IR": "برای دریافت آخرین تغییرها، صفحه را دوباره بارگذاری کنید.",
+    "en-US": "Reload the page to pick up the latest changes.",
+  },
+  close: { "fa-IR": "بستن", "en-US": "Dismiss" },
+  restore: { "fa-IR": "دوباره نشان بده", "en-US": "Show it again" },
 } satisfies Record<string, LocalizedText>;
 
 /** A single unbroken token, of the shape that overflows a flex item. */
@@ -124,6 +133,40 @@ function PlainExample(l: Locale) {
   );
 }
 
+function BoundaryExample(l: Locale) {
+  // The same alert on a SUNKEN surface, which is the case the hairline was
+  // added for: an 8% tint against `--lumo-sys-bg` reads, and the same tint
+  // against `--lumo-sys-surface-sunken` very nearly does not.
+  return (
+    <div className="flex w-full max-w-lg flex-col gap-3 rounded-lg bg-surface-sunken p-4">
+      <Alert tone="info" icon={<InfoIcon aria-hidden="true" />} title={t.infoTitle[l]}>
+        {t.infoBody[l]}
+      </Alert>
+      <Alert tone="caution" icon={<TriangleAlertIcon aria-hidden="true" />}>
+        {t.plainBody[l]}
+      </Alert>
+    </div>
+  );
+}
+
+function DismissExample(l: Locale) {
+  /*
+   * The one example on this page that is an ISLAND, and the only one that could
+   * not be anything else: `onClose` is a function, and a function cannot cross
+   * the RSC boundary. `Alert` itself is still a server component — the button
+   * exists only where a handler was passed, so a server-rendered callout never
+   * reaches that branch.
+   */
+  return (
+    <AlertDismissIsland
+      title={t.dismissTitle[l]}
+      body={t.dismissBody[l]}
+      closeLabel={t.close[l]}
+      restoreLabel={t.restore[l]}
+    />
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
     tier: "feedback",
@@ -136,6 +179,7 @@ export const EXAMPLES: ComponentExamples = {
     },
     composition: [
       `<Alert tone live icon title>   ← live defaults to "off": no role, read in document order`,
+      `      onClose closeLabel       ← a typed PAIR: no handler without a name, no name without one`,
       `  the body                     ← prose stays text-fg; only the icon takes the tone colour`,
       `</Alert>`,
     ].join("\n"),
@@ -144,9 +188,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "Alert",
         description: {
           "fa-IR":
-            "کل جزء. live ویژگی‌ای است که نقش را تعیین می‌کند: off یعنی هیچ نقشی، polite یعنی status و assertive یعنی alert. title یک «p» است نه سرفصل، چون پیامی گذرا نباید وارد فهرست سرفصل‌های صفحه شود.",
+            "کل جزء. live ویژگی‌ای است که نقش را تعیین می‌کند: off یعنی هیچ نقشی، polite یعنی status و assertive یعنی alert. title یک «p» است نه سرفصل، چون پیامی گذرا نباید وارد فهرست سرفصل‌های صفحه شود. onClose و closeLabel یک جفت تایپ‌شده‌اند: هیچ‌کدام بدون دیگری کامپایل نمی‌شود، پس دکمهٔ بستن هرگز بی‌نام نمی‌رسد. جای جداگانه‌ای برای کنش عمداً وجود ندارد — کنش محتواست و جایش کنار همان جمله‌ای است که توضیحش می‌دهد.",
           "en-US":
-            "The whole component. live is what picks the role: off means no role at all, polite gives status, assertive gives alert. title renders as a «p» rather than a heading — a transient message has no business in the outline a screen-reader user navigates by.",
+            "The whole component. live is what picks the role: off means no role at all, polite gives status, assertive gives alert. title renders as a «p» rather than a heading — a transient message has no business in the outline a screen-reader user navigates by. onClose and closeLabel are a typed pair: neither compiles without the other, so a dismiss button can never arrive unnamed. There is deliberately no action slot — an action is content, and content belongs in the children beside the sentence that explains it.",
         },
       },
     ],
@@ -195,6 +239,28 @@ export const EXAMPLES: ComponentExamples = {
           "Both are optional, and for a single sentence leaving them out is the better answer. A title that summarises the one sentence below it adds nothing but an extra stop for a screen reader.",
       },
       render: PlainExample,
+    },
+    {
+      id: "dismiss",
+      title: { "fa-IR": "بستن، با نامی که اجباری است", "en-US": "Dismissal, with a name that is required" },
+      description: {
+        "fa-IR":
+          "دکمهٔ بستن یک آیکون است و آیکون نام نیست. هر کتابخانه‌ای که این دکمه را می‌فرستد، یک aria-label انگلیسی هم با آن می‌فرستد — واژه‌ای که از پرونده‌ای می‌آید که هیچ‌کس ویرایشش نکرده. اینجا closeLabel هیچ پیش‌فرضی ندارد و onClose بدون آن کامپایل نمی‌شود. حذف‌شدن خودِ هشدار هم کار فراخوان است، نه کار جزء؛ همین مثال برای همین یک جزیرهٔ کلاینتی است.",
+        "en-US":
+          "A close button is an icon, and an icon is not a name. Every library that ships one ships an English aria-label with it — a word arriving from a file nobody edited. Here closeLabel has no default at all and onClose does not compile without it. Removing the alert is the caller's job rather than the component's, which is why this one example is a client island.",
+      },
+      render: DismissExample,
+    },
+    {
+      id: "boundary",
+      title: { "fa-IR": "مرزِ هشدار", "en-US": "The alert's boundary" },
+      description: {
+        "fa-IR":
+          "نوار چهارپیکسلی روی لبهٔ آغازین همیشه بوده؛ چیزی که تازه است، یک موی‌خط یک‌پیکسلی به همان رنگ روی هر چهار لبه است. تا پیش از آن، تنها چیزی که هشدار را از صفحه جدا می‌کرد یک ته‌رنگ هشت‌درصدی بود — روی زمینهٔ پیش‌فرض کافی، و روی هر سطح فرورفته یا رنگی، نه. ناحیه‌ای که وضعیت را اعلام می‌کند، آخرین جایی است که باید به رنگِ پشتِ خودش وابسته باشد.",
+        "en-US":
+          "The four-pixel bar on the leading edge has always been there; what is new is a one-pixel hairline in the same tone on all four. Before it, the only thing separating the alert from the page was an eight-percent tint — enough on the default background and not on a sunken or tinted one. A region that announces a status is the last thing that should depend on what is behind it.",
+      },
+      render: BoundaryExample,
     },
   ],
 };
