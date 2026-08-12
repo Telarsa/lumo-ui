@@ -115,6 +115,29 @@ export const segmentedControlItemVariants = cva(
     "transition-colors " +
     "hover:text-fg " +
     "data-checked:bg-surface data-checked:text-fg data-checked:shadow-sm " +
+    /*
+     * ── A PRESS HERE CAN PERMANENTLY PRODUCE NOTHING, BY CONSTRUCTION ────────
+     *
+     * `toggle.variants.ts` declines an `active:` rule because a toggle's press
+     * changes its state and therefore answers itself. A radio group is the case
+     * that breaks that reasoning outright: pressing the ALREADY-CHECKED option
+     * re-checks it, and Base UI's `RadioGroup` has no path to any other outcome
+     * — which is the same fact `disallowEmptySelection`'s doc turns into a
+     * feature. So one of the two-to-four options in every segmented control is
+     * permanently unable to respond to being pressed.
+     *
+     * On a pointer, hover already said something. On TOUCH there is no hover, so
+     * tapping the selected option is byte-for-byte the `button` defect: the only
+     * event the device can produce, spent on nothing. That is why this rule is
+     * an adoption of the FINDING rather than of the shape.
+     *
+     * `brightness-95` over whichever fill is showing, so one rule covers checked
+     * and unchecked and no token is invented. No `translate-y-px`: the checked
+     * option is already raised out of the track with `shadow-sm`, and nudging it
+     * on the block axis fights the elevation the component's whole visual model
+     * rests on.
+     */
+    "active:brightness-95 " +
     // WCAG 2.4.7. Base UI inverts React Aria's arrangement: the `role="radio"`
     // element is itself focusable (the `<input>` beside it is tabindex="-1" and
     // aria-hidden), so the ring goes here directly and the `group-` hop

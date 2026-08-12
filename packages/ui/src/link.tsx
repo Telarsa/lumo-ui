@@ -81,14 +81,41 @@ export const linkVariants = cva(
         // `data-hovered:`/`data-pressed:` → `hover:`/`active:` on the engine
         // swap. See the file header: neither attribute exists in Base UI, and
         // this component no longer has React Aria to emit them either.
+        //
+        // ── THE PRESS WAS A COPY OF THE HOVER, MEASURED ────────────────────
+        //
+        // The rename above produced `hover:decoration-accent
+        // active:decoration-accent` on `accent` — the same byte-identical shape
+        // `button.variants.ts` was fixed for, and here it is the DECORATION
+        // rather than the fill, which makes it even quieter. `subtle` was the
+        // second half of it: `active:text-fg` is a strict SUBSET of
+        // `hover:text-fg hover:underline`, so a press after a hover changed
+        // nothing and a press with no hover before it — every tap on a phone —
+        // coloured the text and left the affordance off. `quiet` had no press
+        // rule at all.
+        //
+        // Colour is already spent on the hover in all three, so the press steps
+        // on THICKNESS instead: `decoration-2` is a genuinely different axis, it
+        // is legible against the `underline-offset-4` these links already carry
+        // for Persian descenders, and text-decoration thickness does not
+        // participate in layout — so no line reflows under a finger.
+        //
+        // No `active:translate-y-px` here, which button and pagination both
+        // carry. Those are boxes with their own bounds; a link is usually a run
+        // of text INSIDE a paragraph, and nudging it by a pixel moves the words
+        // relative to the sentence around them. A control that is part of a line
+        // of prose has no depth to be pushed into.
         accent:
-          "text-accent underline decoration-accent/40 hover:decoration-accent active:decoration-accent",
+          "text-accent underline decoration-accent/40 hover:decoration-accent " +
+          "active:decoration-accent active:decoration-2",
         // For dense secondary navigation, where an underline on every item is
         // noise. The underline appears on hover so the affordance is not lost.
-        subtle: "text-fg-muted no-underline hover:text-fg hover:underline active:text-fg",
+        subtle:
+          "text-fg-muted no-underline hover:text-fg hover:underline " +
+          "active:text-fg active:underline active:decoration-2",
         // Inherits the surrounding colour. For a link wrapping a whole card or
         // a heading, where the target is obvious from the layout.
-        quiet: "text-current no-underline hover:underline",
+        quiet: "text-current no-underline hover:underline active:underline active:decoration-2",
       },
       size: {
         sm: "text-sm",

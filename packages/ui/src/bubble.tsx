@@ -204,7 +204,20 @@ export function BubbleCollapse({
     >
       <DisclosureTrigger
         {...(level !== undefined ? { level } : {})}
-        className="gap-2 py-1 text-xs font-medium text-current data-hovered:text-current data-hovered:underline"
+        /*
+         * `hover:` and not `data-hovered:`. React Aria wrote a `data-hovered`
+         * attribute; Base UI writes none at all, so these two utilities matched
+         * nothing from the day `disclosure.tsx` changed engines — the trigger
+         * inside a bubble had no hover affordance whatever. Dead classes are
+         * the quietest kind of rot: they compile, they lint, and the only
+         * symptom is an interaction that never happens.
+         *
+         * `text-current` is kept deliberately. A bubble sets its own foreground
+         * (a sent bubble is on the accent fill), and the underline is the whole
+         * hover signal — recolouring it would take the trigger off the bubble's
+         * palette for the one state where it matters most.
+         */
+        className="gap-2 py-1 text-xs font-medium text-current hover:text-current hover:underline"
       >
         {label}
       </DisclosureTrigger>

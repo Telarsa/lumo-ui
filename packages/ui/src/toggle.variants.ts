@@ -32,22 +32,84 @@ import { cva, type VariantProps } from "class-variance-authority";
  * — the selector simply stops matching. This row fails QUIETLY in both
  * directions: apply it backwards and you get a toggle that flashes under the
  * finger and forgets, which is a plausible-looking control, not a broken one.
- * `toggle-group.tsx` is still on React Aria and still means the RAC thing by
- * `data-selected`; the two files now disagree about the word on purpose, and
- * this paragraph is the only thing standing between that and a bad copy/paste.
+ * `toggle-group.tsx` reaches the same conclusion from the other side and states
+ * the measurement there; both files are on Base UI now and both mean the
+ * PERSISTENT state by `data-pressed`.
  *
  *     data-hovered   → NONE. CSS `:hover`.
  *     data-selected  → data-pressed. Same state, a name Base UI spends on the
  *                      opposite meaning of RAC's.
  *     data-disabled  → data-disabled. No edit.
+ *
+ * ── THE ATTRIBUTE WAS RIGHT AND THE COLOUR IT PAINTED WAS NOT ──────────────
+ *
+ * Everything above got `data-pressed` onto the correct element, and then gave
+ * the ON state a fill the OFF state already had. Three appearances were
+ * specified and, on the light theme, ONE was rendered. Measured — tokens.css,
+ * the `:root, [data-theme="light"]` block:
+ *
+ *     --lumo-sys-surface-hover:  var(--lumo-ref-neutral-100)
+ *     --lumo-sys-surface-sunken: var(--lumo-ref-neutral-100)   ← same token
+ *
+ * so `hover:bg-surface-hover` (OFF, under the cursor) and
+ * `data-pressed:bg-surface-sunken` (ON) resolved to the SAME COLOUR. Hovering
+ * an off toggle made it indistinguishable from an on one — a state that is
+ * painted and cannot be read, which is the `breadcrumbs` defect with the
+ * announcement intact and the pixels missing instead.
+ *
+ * The dark theme separated those two (surface-sunken is neutral-950 there,
+ * surface-hover is neutral-800) and lost the state a different way: the rule
+ * `data-pressed:hover:bg-surface-hover` sent an ON toggle back to EXACTLY the
+ * OFF-hover fill. Verified in a built 4.3.3 stylesheet rather than reasoned —
+ * `.data-pressed\:hover\:bg-surface-hover[data-pressed]:hover` is specificity
+ * (0,3,0) against (0,2,0) for the plain `data-pressed:` rule, so it wins
+ * outright and nothing about source order can rescue it.
+ *
+ * Net: on light the ON state was invisible whenever the pointer was anywhere
+ * near the control; on dark it was invisible whenever the pointer was ON it.
+ *
+ * The ON state moves onto the accent tint instead — `bg-accent/10` +
+ * `text-accent`, which is the house pairing for a subtle selected state and is
+ * already what `date-selector.variants.ts`, `badge.tsx` and `icon-tile.tsx`
+ * spend it on. It is a different HUE from every neutral fill, so it cannot
+ * collide with a hover on either theme no matter what the neutral ramp does
+ * later, and it adds a second channel (colour AND fill) where there was one.
+ *
+ * NOT `bg-accent` — that is `toggle-group.tsx`'s ON state and it is right
+ * there, where an item sits in a bordered strip of alternatives and the fill is
+ * how you tell which one is chosen. A standalone toggle is usually one of a row
+ * of formatting controls; a solid brand fill on every active one turns a text
+ * toolbar into a traffic light.
+ *
+ * ── NO `active:` HERE, AND THAT IS THE DIFFERENCE FROM `button` ─────────────
+ *
+ * `button.variants.ts` needed a press treatment because a button that has been
+ * pressed looks exactly like a button that has not, so on touch — where
+ * `:hover` never fires — the tap produced no feedback at all. A toggle's press
+ * CHANGES ITS STATE, and the state is now visible, so the tap answers itself.
+ * Adding `active:` here would be adopting the shape of the button fix rather
+ * than the reason for it.
+ *
+ * The two places that reason DOES survive are `toggle-group.tsx` (a press that
+ * `disallowEmptySelection` cancels) and `segmented-control.tsx` (pressing the
+ * already-checked option, which Base UI's RadioGroup can never act on). Both
+ * are noted in those files.
  */
 export const toggleVariants = cva(
   "inline-flex shrink-0 cursor-pointer select-none items-center justify-center gap-2 " +
     "rounded-md font-medium whitespace-nowrap text-fg-muted outline-none transition-colors " +
     "hover:bg-surface-hover hover:text-fg " +
-    // The ON state. See the header: on THIS engine that is `data-pressed`.
-    "data-pressed:bg-surface-sunken data-pressed:text-fg " +
-    "data-pressed:hover:bg-surface-hover " +
+    // The ON state. See the header: on THIS engine that is `data-pressed`, and
+    // the tint is a different HUE from the neutral hover rather than a
+    // different step on the same ramp — which is what made the previous fill
+    // vanish under the cursor on dark and vanish outright on light.
+    "data-pressed:bg-accent/10 data-pressed:text-accent " +
+    // Stated explicitly for BOTH properties, not left to the cascade. The
+    // `hover:` rules above and the `data-pressed:` rules beside them are all
+    // specificity (0,2,0), so which one paints an ON toggle under the cursor
+    // would otherwise be decided by the order Tailwind happens to emit its
+    // variants in — the thing that has to be true is not "it works today".
+    "data-pressed:hover:bg-accent/20 data-pressed:hover:text-accent " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {

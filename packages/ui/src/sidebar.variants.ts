@@ -54,11 +54,50 @@ export const sidebarGroupLabelVariants = cva(
     "group-data-collapsed/lumo-sidebar:sr-only",
 );
 
+/**
+ * One navigation row.
+ *
+ * ── TWO DEAD CLASSES AND A COLLISION UNDERNEATH THEM ───────────────────────
+ *
+ * This string carried `data-hovered:no-underline` and
+ * `data-hovered:bg-surface-hover` — React Aria's vocabulary, on a component
+ * that has not had a React Aria runtime since `link.tsx` dropped it. `Link`
+ * styles `:hover` now (its own header records the swap), nothing anywhere
+ * writes `data-hovered`, and a grep of the installed `@base-ui/react` dist
+ * returns zero files for it. So a sidebar item had NO hover treatment at all:
+ * the classes read as a hover state to every reviewer and painted nothing.
+ *
+ * `no-underline` was the quieter half. `Link`'s `quiet` variant carries
+ * `hover:underline`, so with the cancel dead every navigation row in the rail
+ * underlined itself on hover — the one hover effect that DID happen was the
+ * one this string was written to suppress.
+ *
+ * Renaming the attribute alone would have shipped a second defect, because the
+ * current row's fill was `bg-surface-sunken` and, on the light theme,
+ * tokens.css resolves `--lumo-sys-surface-sunken` and
+ * `--lumo-sys-surface-hover` to the SAME `--lumo-ref-neutral-100`. A working
+ * hover would therefore have made every row look like the current one. So the
+ * current row moves to the accent tint — `bg-accent/10` + `text-accent`, the
+ * pairing `date-selector.variants.ts` and `badge.tsx` already use for a subtle
+ * selected state, and a different HUE rather than another step on the neutral
+ * ramp. `toggle.variants.ts` had the identical collision and its header carries
+ * the measurement in full.
+ *
+ * The FILL is not what announces the current page and never was: `Link` emits
+ * `aria-current` beside `data-current`, so the row is announced whatever it
+ * looks like. `font-medium` stays for the same reason it was there — colour
+ * plus weight is two channels, and WCAG 1.4.1 asks for more than one.
+ */
 export const sidebarItemVariants = cva(
   "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-fg " +
-    "no-underline data-hovered:no-underline " +
-    "data-hovered:bg-surface-hover " +
-    "data-current:bg-surface-sunken data-current:font-medium " +
+    "no-underline hover:no-underline " +
+    "hover:bg-surface-hover " +
+    "data-current:bg-accent/10 data-current:text-accent data-current:font-medium " +
+    // Explicit rather than left to the cascade: `hover:bg-surface-hover` and
+    // `data-current:bg-accent/10` are both specificity (0,2,0), so which one
+    // paints the current row under the cursor would be decided by the order
+    // Tailwind emits its variants in.
+    "data-current:hover:bg-accent/20 " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     // In the rail, only the icon keeps a box; centre it so the column of
     // glyphs is optically one rail rather than a ragged start-aligned strip.

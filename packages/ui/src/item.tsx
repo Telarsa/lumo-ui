@@ -64,9 +64,12 @@ import {
  * ── WHAT THE ELEMENT IS, IS THE API ─────────────────────────────────────────
  * One row, three renderings, decided by the props' own shape:
  *
- *   - `href`     → RAC `Link`, a real `<a>`: crawlable, middle-clickable.
- *   - `onPress`  → RAC `Button`: press handling for touch/keyboard/mouse,
- *                  `data-pressed` for styling.
+ *   - `href`     → a plain `<a>`: crawlable, middle-clickable.
+ *   - `onPress`  → Base UI `Button`, which is a real `<button>`: keyboard and
+ *                  touch activation from the platform, `data-disabled` for
+ *                  styling. Hover and press are CSS pseudo-classes here, and
+ *                  `item.variants.ts` keys them on the `interactive` variant
+ *                  this branch sets.
  *   - neither    → a plain `<div>` with no role and no tab stop.
  *
  * The union makes the wrong mixtures unrepresentable — `href` with `onPress`
@@ -93,7 +96,13 @@ import {
  *     not carry; two sizes remain.
  */
 
-interface ItemCommonProps extends ItemVariantProps {
+/**
+ * `interactive` is omitted, not forwarded. It is DERIVED from `href`/`onPress`
+ * below — the same discriminant the union already switches on — so exposing it
+ * would let a caller paint pointer feedback onto a static row, which is the one
+ * thing `item.variants.ts` added the variant to prevent.
+ */
+interface ItemCommonProps extends Omit<ItemVariantProps, "interactive"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -128,7 +137,7 @@ export function Item(props: ItemProps) {
     return (
       <a
         data-lumo=""
-        className={cn(itemVariants({ variant, size }), className)}
+        className={cn(itemVariants({ variant, size, interactive: true }), className)}
         {...link}
       />
     );
@@ -138,7 +147,7 @@ export function Item(props: ItemProps) {
     return (
       <BaseButton
         data-lumo=""
-        className={cn(itemVariants({ variant, size }), className)}
+        className={cn(itemVariants({ variant, size, interactive: true }), className)}
         // React Aria's `PressEvent` rebuilt from the real `click`. Every field
         // is read from the DOM event and the two that cannot be derived are
         // documented in `base-ui-adapter.ts` rather than filled with a guess.
@@ -148,6 +157,8 @@ export function Item(props: ItemProps) {
     );
   }
   const { variant, size, className, href: _href, onPress: _onPress, ...rest } = props;
+  // No `interactive` — a static row has no role and no tab stop, so it must not
+  // light up under a pointer. See item.variants.ts.
   return <div className={cn(itemVariants({ variant, size }), className)} {...rest} />;
 }
 

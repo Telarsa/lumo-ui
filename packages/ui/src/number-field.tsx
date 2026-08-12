@@ -88,16 +88,28 @@ export const numberInputVariants = cva(
  * either reverses the pair (and the muscle memory) or keeps it (and reverses the
  * meaning). Stacking sidesteps the question: up is more in both scripts.
  *
- * `data-hovered` in the class string is React Aria's vocabulary. Base UI does not
- * emit a hover attribute — hover is `:hover` — so that one utility is dead here.
- * Left unchanged: this experiment swaps the engine, not the styling.
+ * `data-hovered` in the class string was React Aria's vocabulary. Base UI does
+ * not emit a hover attribute — hover is `:hover` — so that utility was dead, and
+ * it is gone.
+ *
+ * ── AND THE PRESS, WHICH MATTERS MORE HERE THAN ANYWHERE ───────────────────
+ *
+ * A stepper had `hover:` and no `active:`, which is `pagination`'s defect on the
+ * control that suffers most from it. A stepper is the one button in the library
+ * a reader taps REPEATEDLY — ten presses to get from ۱ to ۱۱ — and on touch,
+ * where `:hover` never fires, none of those ten presses moved a pixel of the
+ * button. The value above it changes, which is why this reads as acceptable; but
+ * the value also changes when the field is typed into, so a reader cannot tell a
+ * registered tap from a missed one, and the recovery from a missed tap is
+ * another tap. `active:` closes it with the ghost-button step
+ * `button.variants.ts` uses, and with no nudge: two stacked steppers moving
+ * independently by a pixel would shear the pair.
  */
 export const stepperVariants = cva(
   "flex flex-1 cursor-pointer items-center justify-center rounded-sm px-1 text-fg-muted " +
-    // `data-hovered` has no Base UI equivalent on any part of any component;
-    // hover is the platform's pseudo-class. `data-disabled` below is unchanged
-    // — Base UI puts it on both stepper buttons.
+    // `data-disabled` is unchanged — Base UI puts it on both stepper buttons.
     "transition-colors hover:bg-surface-hover hover:text-fg " +
+    "active:bg-surface-sunken active:text-fg " +
     "data-disabled:pointer-events-none data-disabled:opacity-40 " +
     "[&_svg]:pointer-events-none [&_svg]:size-3.5",
 );

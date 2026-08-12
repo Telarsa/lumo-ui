@@ -58,6 +58,40 @@ import { cva, type VariantProps } from "class-variance-authority";
  * because `:hover` is the one that was already carrying the `<a>` case — the
  * pointer-type awareness is what is genuinely lost, and it is lost with the
  * engine rather than with this edit.
+ *
+ * ── AND THEN THERE WAS NO PRESS RULE AT ALL ────────────────────────────────
+ *
+ * `button.variants.ts` was carried into this file as "the same defect" —
+ * `active:` byte-identical to `hover:`. Measured here, it was WORSE than the
+ * report: `grep -o 'active:[^ ]*' pagination.variants.ts` returned NOTHING.
+ * Three hover utilities across the base string and the `current` variant, zero
+ * active ones. So the byte-identical reading was wrong and the conclusion was
+ * right, for a stronger reason: a pager cell had no press treatment to be a
+ * copy of.
+ *
+ * On a pointer that is a missing polish detail. On touch it is the whole
+ * feedback budget of the interaction — `:hover` never fires there, so tapping
+ * «۳» changed nothing on screen until the results below it re-rendered, which
+ * on a slow list is hundreds of milliseconds of a control that looks dead.
+ * Pagination is the component where that matters most: it is the one control
+ * on a listing page whose entire job is to be tapped repeatedly.
+ *
+ * The steps are `button.variants.ts`'s, token for token, because a pager cell
+ * IS a button-shaped control and inventing a second press vocabulary for it
+ * would be the drift that file's header exists to prevent:
+ *
+ *     resting   hover:bg-surface-hover   active:bg-surface-sunken
+ *     current   hover:bg-accent-hover    active:bg-accent-hover + brightness-95
+ *
+ * The 1px nudge is here too, and WITHOUT button's `not-aria-[haspopup]`
+ * carve-out. That exemption exists because Base UI anchors an overlay to its
+ * trigger's box, so nudging the trigger jitters the panel as it opens — and no
+ * cell in a pager owns an overlay: every one of them is a page link or an
+ * arrow, `aria-haspopup` appears nowhere in `pagination.tsx`, and a `<a href>`
+ * in a server-rendered block cannot grow one without leaving this file's
+ * classes behind. Carrying the carve-out anyway would be a selector guarding
+ * against a state this component cannot enter, which is the exact shape of the
+ * dead `data-hovered:` rules deleted above.
  */
 export const paginationItemVariants = cva(
   // No `tabular-nums`, tempting as it is on a row of numerals. theme.css resets
@@ -70,7 +104,12 @@ export const paginationItemVariants = cva(
   "inline-flex select-none items-center justify-center rounded-md " +
     "font-medium whitespace-nowrap no-underline " +
     "cursor-pointer outline-none transition-colors " +
-    "hover:bg-surface-hover " +
+    "hover:bg-surface-hover active:bg-surface-sunken " +
+    // Block axis on purpose: a press pushes the cell INTO the page, and the
+    // block axis does not mirror. See the header for why there is no
+    // `not-aria-[haspopup]` carve-out here. Both disabled rules below already
+    // kill pointer events, so a disabled arrow cannot enter `:active`.
+    "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "aria-disabled:pointer-events-none aria-disabled:opacity-50",
   {
@@ -86,7 +125,12 @@ export const paginationItemVariants = cva(
         // The page you are on. `aria-current="page"` is what announces it; this
         // is only the visual half, which is why the announcement is not
         // optional in either spelling.
-        true: "bg-accent text-accent-fg hover:bg-accent-hover",
+        //
+        // `brightness-95` over the hover fill rather than a new token: there is
+        // no `--accent-active`, and adding one so a pager can dim 5% would be a
+        // theme change charged to one component. `button.variants.ts`'s solid
+        // variant declined the same token for the same reason.
+        true: "bg-accent text-accent-fg hover:bg-accent-hover active:bg-accent-hover active:brightness-95",
         false: "text-fg",
       },
     },

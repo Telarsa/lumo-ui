@@ -80,8 +80,11 @@ export type LumoPlacement = Exclude<
 >;
 
 /**
- * The shared overlay surface. UNCHANGED from the React Aria build, on purpose —
- * seven RAC components import it. See the gap note above.
+ * The shared overlay surface. Its class string is UNCHANGED from the React Aria
+ * build except for the state vocabulary above — deliberately, because the seven
+ * components that import it (menu, select, combobox, hover-card,
+ * navigation-menu, date-picker, date-range-picker) are all on Base UI now and
+ * all take their panel chrome from here. One surface, seven panels.
  */
 export const popoverVariants = cva(
   "z-50 rounded-md border border-border bg-surface text-fg shadow-lg outline-none " +
@@ -207,12 +210,13 @@ const PopoverNameContext = React.createContext<string | undefined>(undefined);
  * literal `<Popover.Trigger>` element, or a `render={<YourButton/>}`.
  *
  * Lumo's public API is `<PopoverTrigger><Button/><Popover/></PopoverTrigger>`
- * and may not change, so the first child is lifted into `render`. What that
- * cannot recover is that the child is a Lumo `Button`, i.e. an RAC `Button`:
- * Base UI merges `onClick` onto it and RAC's `Button` drives from `onPress`.
- * Whether the press survives that boundary is exactly the sort of thing this
- * experiment is meant to measure rather than assume — see
- * experiments/measurements/rebuild-overlays.json.
+ * and may not change, so the first child is lifted into `render`. The boundary
+ * that cost was measured while the trigger was still an RAC `Button` — Base UI
+ * merges `onClick` and RAC drove from `onPress` — and it is closed: `button.tsx`
+ * is Base UI's `Button`, so the merged `onClick` is the handler it already uses.
+ * Recorded in experiments/measurements/rebuild-overlays.json, and left here
+ * because the SHAPE of the difference is what makes this helper necessary at
+ * all, whatever the trigger turns out to be.
  */
 function splitTrigger(children: LumoNode): {
   trigger: React.ReactNode;
@@ -233,6 +237,35 @@ function splitTrigger(children: LumoNode): {
 export interface PopoverTriggerProps extends OverlayTriggerProps {
   /** The trigger control, then the `<Popover>`. In that order. */
   children: LumoNode;
+  /**
+   * Prevents Escape from closing the popover.
+   *
+   * ── IT MOVED HERE, AND THAT IS THE WHOLE FIX ──────────────────────────────
+   *
+   * This prop was declared on `<Popover>` — the surface — where it was accepted
+   * and INERT. `time-field.tsx` sets the precedent for what to do about that: it
+   * deleted `minValue`/`maxValue` rather than accept and ignore them, because a
+   * prop that silently does nothing is worse than an absent one — absent is a
+   * compile error at the call site, silent is a bug report six months later.
+   *
+   * But the reason it was inert is not that Base UI lacks the capability. It is
+   * that dismissal lives on `Popover.Root`, which THIS component renders and the
+   * surface does not, and a child cannot reach up into its parent's props.
+   * Measured on the installed 1.7.0: `Popover.Root`'s `onOpenChange` receives an
+   * event-details object carrying `reason` and `cancel()`, and popover's Escape
+   * path produces exactly one reason — `useDismiss.js` attaches a plain
+   * `keydown` listener, checks `event.key !== 'Escape'`, and creates
+   * `REASONS.escapeKey`. `close-watcher` is not on this path at all: the only
+   * emitter of it in the whole dist is `DrawerRoot.js`. So the cancel below is
+   * exact rather than approximate — it intercepts Escape and nothing else.
+   *
+   * So the prop is not removed, it is RELOCATED to the part that owns the
+   * state. Passing it to `<Popover>` is now a compile error, which is the
+   * outcome the precedent asks for, and the capability exists for the case that
+   * wanted it: a popover holding a half-filled form, where Escape discards
+   * typing the reader cannot get back.
+   */
+  isKeyboardDismissDisabled?: boolean | undefined;
 }
 
 export function PopoverTrigger({
@@ -240,16 +273,34 @@ export function PopoverTrigger({
   isOpen,
   defaultOpen,
   onOpenChange,
+  isKeyboardDismissDisabled,
 }: PopoverTriggerProps) {
   const { trigger, rest } = splitTrigger(children);
   const triggerId = React.useId();
+  /*
+   * One handler rather than two paths, because the two features overlap: a
+   * caller can set both, and a cancelled Escape must ALSO not reach the
+   * caller's `onOpenChange` — it did not happen. `attr()` still decides whether
+   * the prop is emitted at all, so a popover that sets neither passes nothing
+   * and Base UI's own default handling is untouched.
+   */
+  const handleOpenChange =
+    onOpenChange === undefined && isKeyboardDismissDisabled !== true
+      ? undefined
+      : (open: boolean, details: BasePopover.Root.ChangeEventDetails) => {
+          if (isKeyboardDismissDisabled === true && !open && details.reason === "escape-key") {
+            details.cancel();
+            return;
+          }
+          onOpenChange?.(open);
+        };
   return (
     // RAC spells the controlled prop `isOpen`; Base UI spells it `open`. The
     // public name stays RAC's because the API may not change.
     <BasePopover.Root
       {...attr("open", isOpen)}
       {...attr("defaultOpen", defaultOpen)}
-      {...attr("onOpenChange", onOpenChange)}
+      {...attr("onOpenChange", handleOpenChange)}
     >
       {React.isValidElement(trigger) ? (
         <BasePopover.Trigger
@@ -297,8 +348,6 @@ interface PopoverPropsBase
   getTargetRect?: (target: Element) => DOMRect | null | undefined;
   /** Whether the popover leaves the rest of the page interactive. */
   isNonModal?: boolean;
-  /** Whether Escape is prevented from closing the popover. */
-  isKeyboardDismissDisabled?: boolean;
   /** Decides, per element, whether an outside interaction should close it. */
   shouldCloseOnInteractOutside?: (element: Element) => boolean;
   /** The slot name of the trigger this popover belongs to. */
@@ -311,6 +360,72 @@ interface PopoverPropsBase
   shouldSkipAnimation?: boolean;
   /** The container the popover portals into. */
   UNSTABLE_portalContainer?: Element;
+}
+
+/**
+ * The popover's supporting prose, and — the point of the part — the string a
+ * screen reader reads AFTER the name when focus enters.
+ *
+ * ── THE SAME GAP `DialogDescription` CLOSED, ONE COMPONENT OVER ────────────
+ *
+ * `Popover.Popup` is `role="dialog"`, and the header above records the work
+ * already done on its NAME: Base UI leaves the popup unnamed, so this file
+ * points `aria-labelledby` at the trigger, reproducing what React Aria did.
+ * Nothing published `aria-describedby`. So a popover announced its trigger's
+ * text and then went silent, and every example in the workspace hand-rolled the
+ * body as `<p className="text-sm text-fg-muted">` — which looks identical, sits
+ * in the right place, and is announced to nobody. That is the shape that
+ * propagates: consumers copy what they can see.
+ *
+ * `Popover.Description` writes its id into the same root store the popup reads
+ * (`descriptionElementId` → `aria-describedby` in `PopoverPopup.js`), so the
+ * wiring costs one part and no prop. It does not collide with the trigger-name
+ * fallback: that fallback is on `aria-labelledby`, a different attribute, and
+ * the two are read in sequence rather than in competition.
+ *
+ * ── WHY THERE IS NO `PopoverTitle`, WHICH SHADCN HAS AND BASE UI SHIPS ─────
+ *
+ * Declined, and not for cost — `Popover.Title` is right there in the parts list.
+ * A popover's name is ALREADY solved here and solved better than a part can
+ * solve it: `aria-labelledby` points at the trigger, so a popover cannot be
+ * unnamed, because a trigger cannot be. `IconButton.label` is required, so even
+ * the ellipsis case has a real name. An optional `<PopoverTitle>` would replace
+ * a guarantee with a convention, and the failure would be silent — the popup
+ * still has a name, just the wrong one, in the one composition (icon trigger,
+ * headed panel) where the two differ. A visible heading is ordinary markup and
+ * needs no part; a NAME is the thing worth guaranteeing, and it already is.
+ *
+ * ── WHY IT TAKES `render` ─────────────────────────────────────────────────
+ *
+ * `DialogDescription`'s reason verbatim: Base UI renders a `<p>`, and block
+ * content inside a `<p>` is invalid HTML that browsers silently repair by
+ * splitting the paragraph. `<PopoverDescription render={<div />}>` is Base UI's
+ * own escape hatch, passed through rather than re-invented.
+ *
+ * Not required, for `DialogDescription`'s reason too: the text is visible, so
+ * its absence is a hole a reviewer can see, and requiring it would push callers
+ * toward filler written for an attribute's sake.
+ */
+export interface PopoverDescriptionProps
+  extends Omit<React.HTMLAttributes<HTMLParagraphElement>, "children" | "className"> {
+  /** Swap the rendered element, e.g. `render={<div />}` for block content. */
+  render?: React.ReactElement<Record<string, unknown>> | undefined;
+  children?: LumoNode;
+  className?: string | undefined;
+}
+
+export function PopoverDescription({
+  className,
+  render,
+  ...rest
+}: PopoverDescriptionProps) {
+  return (
+    <BasePopover.Description
+      className={cn("text-sm text-fg-muted", className)}
+      {...attr("render", render)}
+      {...rest}
+    />
+  );
 }
 
 export interface PopoverProps
@@ -340,14 +455,18 @@ export function Popover({
   // Destructured so they cannot reach the DOM as unknown attributes, and NOT
   // emulated. Each is a recorded gap in rebuild-overlays.json.
   //
-  //   isNonModal / isKeyboardDismissDisabled / shouldCloseOnInteractOutside
-  //     dismissal lives on Popover.Root under Base UI, not on the surface
+  //   isNonModal / shouldCloseOnInteractOutside
+  //     dismissal lives on Popover.Root under Base UI, not on the surface.
+  //     `isKeyboardDismissDisabled` was in this list and is GONE from the type:
+  //     it moved to `PopoverTrigger`, which renders the Root, and is implemented
+  //     there. See its docblock. Passing it here is now a compile error, which
+  //     is the point — `time-field.tsx` sets the precedent for preferring that
+  //     over accept-and-ignore.
   //   isEntering / isExiting / shouldSkipAnimation
   //     RAC animation flags; Base UI drives transitions off data-starting-style
   //   maxHeight / scrollRef
   //     RAC clamped the popover to the viewport itself; Base UI leaves it to CSS
   isNonModal: _isNonModal,
-  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
   shouldFlip: _shouldFlip,
   triggerRef: _triggerRef,
   isEntering: _isEntering,

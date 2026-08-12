@@ -20,7 +20,6 @@ export type { AspectRatioProps } from "./aspect-ratio.tsx";
 export {
   Description,
   FieldError,
-  FOCUS_RING,
   FOCUS_RING_SELF,
   Field,
   FieldInput,
@@ -248,8 +247,13 @@ export type { AlertDialogProps, AlertDialogTone } from "./alert-dialog.tsx";
 export { Drawer, DrawerOverlay, drawerOverlayVariants, drawerVariants } from "./drawer.tsx";
 export type { DrawerOverlayProps, DrawerProps } from "./drawer.tsx";
 
-export { Popover, PopoverTrigger, popoverVariants } from "./popover.tsx";
-export type { LumoPlacement, PopoverProps, PopoverTriggerProps } from "./popover.tsx";
+export { Popover, PopoverDescription, PopoverTrigger, popoverVariants } from "./popover.tsx";
+export type {
+  LumoPlacement,
+  PopoverDescriptionProps,
+  PopoverProps,
+  PopoverTriggerProps,
+} from "./popover.tsx";
 
 export { Tooltip, TooltipTrigger, tooltipVariants } from "./tooltip.tsx";
 export type { TooltipProps, TooltipTriggerProps } from "./tooltip.tsx";
@@ -261,9 +265,12 @@ export {
   MenuSection,
   MenuSeparator,
   MenuCheckboxItem,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuTrigger,
   SubmenuTrigger,
   menuCheckboxIndicatorVariants,
+  menuRadioIndicatorVariants,
   menuItemVariants,
   menuPopoverVariants,
   menuSectionHeaderVariants,
@@ -276,6 +283,8 @@ export type {
   MenuItemProps,
   MenuPopoverProps,
   MenuProps,
+  MenuRadioGroupProps,
+  MenuRadioItemProps,
   MenuSectionProps,
   MenuSeparatorProps,
   MenuTriggerProps,
@@ -313,22 +322,29 @@ export type { ContextMenuProps, ContextMenuTriggerProps } from "./context-menu.t
 
 export {
   Select,
+  SelectGroup,
   SelectItem,
   SelectPopover,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
+  selectGroupLabelVariants,
   selectItemVariants,
   selectListBoxVariants,
   selectPopoverVariants,
+  selectSeparatorVariants,
   selectTriggerVariants,
   selectValueVariants,
   selectVariants,
 } from "./select.tsx";
 export type {
+  SelectGroupProps,
   SelectItemProps,
   SelectPopoverProps,
   SelectProps,
+  SelectSeparatorProps,
   SelectTriggerProps,
+  SelectTriggerVariantProps,
   SelectValueProps,
 } from "./select.tsx";
 

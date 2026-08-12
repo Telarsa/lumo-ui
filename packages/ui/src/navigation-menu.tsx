@@ -128,7 +128,16 @@ export const navigationMenuTriggerVariants = cva(
     // is the engine's open state on a trigger — React Aria wrote `data-open`,
     // and this file previously read `aria-expanded` because a bare RAC Button
     // carried neither.
-    "hover:bg-surface-hover active:bg-surface-hover " +
+    // NO `active:`. It used to be `active:bg-surface-hover`, byte-identical to
+    // the hover beside it — the shape `button.variants.ts` was fixed for. Here
+    // the fix is DELETION rather than a new step, and for the same reason
+    // button carves overlay triggers out of its press nudge: pressing this
+    // control produces a whole panel. `data-popup-open` below is a genuinely
+    // different fill, it is the engine's own attribute, and it is the one state
+    // that survives on touch — where `:hover` never fires and the press is all
+    // there is. A press treatment underneath that would be a third fill
+    // competing to describe one moment.
+    "hover:bg-surface-hover " +
     "data-popup-open:bg-surface-sunken " +
     // WCAG 2.4.7. `data-focus-visible` does not exist in Base UI; this is the
     // row that gets missed, because a ring that stops rendering is invisible to
@@ -157,7 +166,13 @@ export const navigationMenuPopupVariants = cva(
 
 export const navigationMenuLinkVariants = cva(
   "flex flex-col items-start gap-0.5 rounded-md px-3 py-2 " +
-    "hover:bg-surface-hover " +
+    // A panel link owns no overlay, so the carve-out above does not apply to it
+    // and the press needs a step of its own: on touch the only feedback before
+    // the navigation commits is this fill, and a slow route makes that gap
+    // visible. `data-current` is the ANNOUNCED state — `Link` writes
+    // `aria-current` beside it — so the three fills are hover, press, and
+    // "you are here", each a different thing.
+    "hover:bg-surface-hover active:bg-surface-sunken " +
     "data-current:bg-surface-sunken",
 );
 

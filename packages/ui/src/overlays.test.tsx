@@ -23,7 +23,14 @@ import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { Dialog, DialogHeading, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Drawer, DrawerOverlay } from "./drawer.tsx";
 import { Menu, MenuItem, MenuPopover, MenuTrigger, SubmenuTrigger } from "./menu.tsx";
-import { Select, SelectItem, SelectPopover, SelectTrigger } from "./select.tsx";
+import {
+  Select,
+  SelectGroup,
+  SelectItem,
+  SelectPopover,
+  SelectSeparator,
+  SelectTrigger,
+} from "./select.tsx";
 import { Tab, TabList, TabPanel, Tabs } from "./tabs.tsx";
 import { Toolbar } from "./toolbar.tsx";
 
@@ -185,6 +192,48 @@ describe("server-rendered markup carries no English", () => {
 });
 
 describe("open-state English, counted rather than assumed", () => {
+  /*
+   * `SelectGroup` fuses Base UI's `Group` + `GroupLabel` into ONE part with a
+   * REQUIRED `label`, because a part cannot be required and an unnamed
+   * `role="group"` is worse than no group: every option inside it still reports
+   * membership of something with no name.
+   *
+   * The other half is the association. Base UI publishes the label's id to its
+   * group through a LAYOUT EFFECT (`SelectGroupLabel.mjs` → `setLabelId`), so
+   * the first render has `aria-labelledby={undefined}`. This component mints
+   * the id itself and passes it to both sides, and `SelectGroup.mjs` merges
+   * caller props after its own defaults — so the name lands on the first render
+   * rather than the second. The group is portalled and never served, so this
+   * asserts against a mounted open select rather than the markup.
+   */
+  it("Select's group is named on the render it first appears in", () => {
+    render(
+      <Select placeholder="یک شهر انتخاب کنید" aria-label="شهر" defaultOpen>
+        <SelectTrigger />
+        <SelectPopover>
+          <SelectGroup label="استان تهران">
+            <SelectItem id="thr">تهران</SelectItem>
+            <SelectItem id="krj">کرج</SelectItem>
+          </SelectGroup>
+          <SelectSeparator />
+        </SelectPopover>
+      </Select>,
+    );
+
+    const group = document.querySelector('[role="group"]');
+    expect(group, "no group was rendered at all").not.toBeNull();
+    const labelId = group?.getAttribute("aria-labelledby") ?? "";
+    expect(labelId, "the group is unnamed").not.toBe("");
+    expect(document.getElementById(labelId)?.textContent).toBe("استان تهران");
+
+    // The separator is DECORATION and must not become a counted listbox child.
+    // Base UI's own `ListboxSeparator` gives it `role="presentation"`; the
+    // assertion is here so a future swap to a `<Separator>` — which would emit
+    // `role="separator"` — fails loudly rather than quietly changing the count
+    // a screen reader reads out.
+    expect(document.querySelectorAll('[role="separator"]').length).toBe(0);
+  });
+
   it("a plain modal dialog is clean; isDismissable on the OVERLAY adds one 'Dismiss'", () => {
     render(
       <DialogTrigger defaultOpen>

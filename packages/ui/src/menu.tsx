@@ -1,6 +1,13 @@
 "use client";
 
-import { Children, createContext, isValidElement, useContext, type ReactElement } from "react";
+import {
+  Children,
+  createContext,
+  isValidElement,
+  useContext,
+  useId,
+  type ReactElement,
+} from "react";
 import { cva } from "class-variance-authority";
 import { Menu as BaseMenu } from "@base-ui/react/menu";
 import { cn, type LumoNode } from "@lumo-ui/core";
@@ -42,8 +49,10 @@ import { placementToSideAlign, popoverVariants, type LumoPlacement } from "./pop
  * positionally: `[0]` becomes `<Menu.Trigger render={…}>`, the rest sit inside
  * `<Menu.Root>` untouched. The API survives; what does not survive is any
  * trigger whose component filters unknown DOM props — see
- * `menu.trigger-prop-forwarding` in the measurements file for what that costs
- * with Lumo's own RAC-based `<Button>`.
+ * `menu.trigger-prop-forwarding` in the measurements file, which measured it
+ * against Lumo's own `<Button>` while that was still React Aria's. The cost is
+ * gone for that trigger and the constraint is not: any component put here has to
+ * forward what it does not recognise.
  *
  * ── PLACEMENT IS NO LONGER FREE ─────────────────────────────────────────────
  *
@@ -570,5 +579,188 @@ export function MenuCheckboxItem({
       </span>
       <span className="flex-1 truncate">{children}</span>
     </BaseMenu.CheckboxItem>
+  );
+}
+
+/* ─────────────────────────────────────────────────── one of these ── */
+
+/**
+ * Byte-identical to `menuCheckboxIndicatorVariants`, and deliberately a second
+ * name rather than a reuse of the first. A settings menu commonly holds BOTH —
+ * a radio group for the sort order above a checkbox group for which columns
+ * show — and the two gutters must be the same width or the labels of the two
+ * groups sit at different insets inside one panel. Naming it twice is what
+ * makes that a stated invariant instead of an accident; naming it once, as
+ * `menuCheckboxIndicatorVariants`, would put the word "checkbox" in a radio
+ * item's class expression and invite the next editor to change one of them.
+ */
+export const menuRadioIndicatorVariants = cva(
+  "grid size-4 shrink-0 place-items-center text-accent",
+);
+
+export interface MenuRadioGroupProps {
+  /**
+   * Announced AND visible name of the group, e.g. «مرتب‌سازی بر اساس».
+   *
+   * REQUIRED, and this is the prop that distinguishes a radio group from the
+   * checkbox items above it. A group of toggles describes itself: each item is
+   * an independent yes/no and a reader who hears «ستون تاریخ، تیک‌خورده» knows
+   * what was answered. A radio group does NOT — «جدیدترین» and «قدیمی‌ترین»
+   * are answers to a question that is nowhere in the item text, and a reader
+   * arriving on the third item hears an adjective with no subject.
+   *
+   * `MenuSection.title` is optional for the opposite reason: a section is a
+   * visual grouping whose absence costs nothing announced. This is a
+   * `role="group"` whose `aria-labelledby` is the only thing naming it.
+   */
+  label: string;
+  /**
+   * The selected item's value. CONTROLLED — there is no uncontrolled mode, for
+   * `MenuCheckboxItem`'s reason: a menu is a VIEW of state that lives in the
+   * thing being sorted or filtered, and an item that could hold its own answer
+   * is an item that can disagree with the list below it.
+   */
+  value: string;
+  /** Called with the newly selected value. */
+  onChange: (value: string) => void;
+  /** Disables every item in the group at once. */
+  isDisabled?: boolean | undefined;
+  children?: LumoNode;
+  className?: string | undefined;
+}
+
+/**
+ * A `role="group"` of mutually exclusive menu items.
+ *
+ * ── WHY THE LABEL IS WIRED BY HAND ─────────────────────────────────────────
+ *
+ * Base UI's `Menu.RadioGroup` DOES adopt a `Menu.GroupLabel` automatically, by
+ * the same context handshake `MenuSection` relies on — but it adopts it in a
+ * layout effect: `MenuGroupLabel` calls `setLabelId(id)` inside
+ * `useIsoLayoutEffect`, so the group's `aria-labelledby` is `undefined` until
+ * the component has mounted. That is fine for a menu, whose panel only exists
+ * after a click, and it is not fine as a habit in this library — so the id is
+ * generated here, written onto both elements in the same render, and passed
+ * explicitly. Base UI prefers a caller's `aria-labelledby` over its own
+ * (`ariaLabelledByProp ?? labelId` in `MenuRadioGroup.js`), so the explicit one
+ * wins and the handshake below it becomes a no-op rather than a conflict.
+ */
+export function MenuRadioGroup({
+  label,
+  value,
+  onChange,
+  isDisabled,
+  children,
+  className,
+}: MenuRadioGroupProps) {
+  const labelId = useId();
+  return (
+    <BaseMenu.RadioGroup
+      className={cn(menuSectionVariants(), className)}
+      value={value}
+      onValueChange={(next: unknown) => onChange(next as string)}
+      aria-labelledby={labelId}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+    >
+      {/*
+       * The same element and the same classes `MenuSection` uses for its title,
+       * so a radio group and a titled section are visually one idea. It is a
+       * real `Menu.GroupLabel` rather than a styled div because the fallback
+       * handshake is worth keeping intact underneath the explicit id.
+       */}
+      <BaseMenu.GroupLabel id={labelId} className={menuSectionHeaderVariants()}>
+        {label}
+      </BaseMenu.GroupLabel>
+      {children}
+    </BaseMenu.RadioGroup>
+  );
+}
+
+export interface MenuRadioItemProps {
+  /** The value this item selects, compared against `MenuRadioGroup`'s `value`. */
+  value: string;
+  /**
+   * Typeahead string, and the accessible name when `children` is not a plain
+   * string. Same contract as `MenuItem.textValue` and `MenuCheckboxItem`'s, and
+   * the same reason: a server render has no DOM for Base UI to read text
+   * content out of.
+   */
+  textValue?: string | undefined;
+  isDisabled?: boolean | undefined;
+  /**
+   * Closes the menu after a choice. `true` HERE and `false` on
+   * `MenuCheckboxItem`, and the asymmetry is the point: picking a sort order
+   * ANSWERS the question the group asked, so leaving the panel open makes the
+   * reader dismiss a menu that has nothing left to say. Toggling columns does
+   * not — that is three decisions, and closing after the first would mean
+   * reopening the menu twice.
+   */
+  closeOnClick?: boolean | undefined;
+  children?: LumoNode;
+  className?: string | undefined;
+}
+
+/**
+ * One `role="menuitemradio"` — an exclusive choice that lives inside a menu.
+ *
+ * ── WHY THIS COULD NOT BE REBUILT OUT OF `MenuCheckboxItem` ─────────────────
+ *
+ * It is the composition a consumer reaches for when this part is missing, and
+ * it is wrong in a way that looks right: three `menuitemcheckbox`es wired to one
+ * piece of state render identically to three `menuitemradio`s, and announce
+ * something else entirely. A checkbox says "this one is on, and the others are
+ * a separate question"; every item in the group reads as independently
+ * settable, so a reader hears three switches where the product has one dial. It
+ * also loses the group itself — `aria-checked` on a checkbox implies no
+ * siblings, so nothing tells a reader that choosing here unchooses there.
+ * `role="menuitemradio"` inside a `role="group"` is the single construction
+ * that carries both facts, and Base UI's `Menu.RadioItem` is what emits it with
+ * `aria-checked` attached (`role: 'menuitemradio'`, `'aria-checked': checked`
+ * in `MenuRadioItem.js`).
+ *
+ * The dot is `Menu.RadioItemIndicator`, not a `::before` — browsers fold
+ * pseudo-element content into an accessible name, so a CSS glyph would append a
+ * stray character to every selected item's announcement. Same call `MenuItem`
+ * makes for its submenu chevron and `MenuCheckboxItem` for its tick.
+ *
+ * The gutter is reserved whether or not the dot is drawn, so choosing an item
+ * does not shove its own label sideways — and it is the same width as the
+ * checkbox gutter, so a menu holding both kinds has one text inset. See
+ * `menuRadioIndicatorVariants`.
+ */
+export function MenuRadioItem({
+  value,
+  textValue,
+  isDisabled,
+  closeOnClick = true,
+  children,
+  className,
+}: MenuRadioItemProps) {
+  const resolvedTextValue = textValue ?? (typeof children === "string" ? children : undefined);
+  return (
+    <BaseMenu.RadioItem
+      data-lumo=""
+      value={value}
+      closeOnClick={closeOnClick}
+      {...(resolvedTextValue === undefined ? {} : { label: resolvedTextValue })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+      className={cn(menuItemVariants(), className)}
+    >
+      <span aria-hidden="true" className={menuRadioIndicatorVariants()}>
+        <BaseMenu.RadioItemIndicator>
+          {/*
+           * Inline rather than a lucide import, for `MenuCheckboxItem`'s
+           * reason: this file is copied into a consumer's repo by `shadcn add`,
+           * and a new icon import is a new dependency edge for them to resolve.
+           * A filled disc rather than a tick, because the two indicators sit in
+           * the same panel and must not be mistaken for each other.
+           */}
+          <svg viewBox="0 0 16 16" className="size-2.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="8" fill="currentColor" />
+          </svg>
+        </BaseMenu.RadioItemIndicator>
+      </span>
+      <span className="flex-1 truncate">{children}</span>
+    </BaseMenu.RadioItem>
   );
 }

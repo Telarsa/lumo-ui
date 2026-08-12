@@ -1,4 +1,5 @@
 import type { Locale } from "@lumo-ui/core";
+import { MenuChoiceIsland } from "@/components/demo-islands";
 import {
   Button,
   Kbd,
@@ -35,6 +36,15 @@ const t = {
   print: { "fa-IR": "چاپ", "en-US": "Print" },
   publish: { "fa-IR": "انتشار", "en-US": "Publish" },
   awaitingReview: { "fa-IR": "در انتظار بازبینی", "en-US": "Awaiting review" },
+  view: { "fa-IR": "نمایش", "en-US": "View" },
+  sortBy: { "fa-IR": "ترتیب نمایش", "en-US": "Sort order" },
+  newest: { "fa-IR": "جدیدترین", "en-US": "Newest first" },
+  oldest: { "fa-IR": "قدیمی‌ترین", "en-US": "Oldest first" },
+  byName: { "fa-IR": "بر پایهٔ نام", "en-US": "By name" },
+  columns: { "fa-IR": "ستون‌ها", "en-US": "Columns" },
+  columnDate: { "fa-IR": "تاریخ", "en-US": "Date" },
+  columnOwner: { "fa-IR": "مالک", "en-US": "Owner" },
+  columnSize: { "fa-IR": "اندازه", "en-US": "Size" },
 } satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
@@ -141,6 +151,31 @@ function DisabledItemExample(l: Locale) {
   );
 }
 
+/**
+ * The two selectable item kinds together, because telling them apart is the
+ * lesson. Both are controlled-only, so the state lives in an island.
+ */
+function SelectionExample(l: Locale) {
+  return (
+    <MenuChoiceIsland
+      menuLabel={t.view[l]}
+      triggerText={t.view[l]}
+      sortLabel={t.sortBy[l]}
+      sortOptions={[
+        { value: "newest", text: t.newest[l] },
+        { value: "oldest", text: t.oldest[l] },
+        { value: "name", text: t.byName[l] },
+      ]}
+      columnsLabel={t.columns[l]}
+      columns={[
+        { value: "date", text: t.columnDate[l] },
+        { value: "owner", text: t.columnOwner[l] },
+        { value: "size", text: t.columnSize[l] },
+      ]}
+    />
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
     composition: [
@@ -152,6 +187,10 @@ export const EXAMPLES: ComponentExamples = {
       `        <MenuItem id="…">…</MenuItem>`,
       `      </MenuSection>`,
       `      <MenuSeparator />`,
+      `      <MenuRadioGroup label="…" value="…">`,
+      `        <MenuRadioItem value="…">…</MenuRadioItem>`,
+      `      </MenuRadioGroup>`,
+      `      <MenuCheckboxItem isSelected>…</MenuCheckboxItem>`,
       `      <SubmenuTrigger>`,
       `        <MenuItem id="…">…</MenuItem>`,
       `        <MenuPopover>`,
@@ -180,8 +219,8 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "Menu",
         description: {
-          "fa-IR": "خود فهرست؛ ناوبری پیکانی و تایپ‌یاب فارسی از ری‌اکت‌آریا اجاره می‌شود.",
-          "en-US": "The list itself; arrow navigation and Persian typeahead are rented from React Aria.",
+          "fa-IR": "خود فهرست؛ ناوبری پیکانی و تایپ‌یاب فارسی را موتور بیس‌یوآی می‌دهد.",
+          "en-US": "The list itself; arrow navigation and Persian typeahead come from the Base UI engine.",
         },
       },
       {
@@ -203,6 +242,30 @@ export const EXAMPLES: ComponentExamples = {
         description: {
           "fa-IR": "جداکنندهٔ میان گروه‌ها.",
           "en-US": "The rule between groups.",
+        },
+      },
+      {
+        name: "MenuRadioGroup",
+        description: {
+          "fa-IR":
+            "«یکی از این‌ها»؛ نامش الزامی است چون گزینه‌ها به‌تنهایی نمی‌گویند پاسخ کدام پرسش‌اند.",
+          "en-US":
+            "The one-of-these group; its name is required because the options alone never say which question they answer.",
+        },
+      },
+      {
+        name: "MenuRadioItem",
+        description: {
+          "fa-IR": "یک انتخاب انحصاری با نقش menuitemradio؛ نشانگرش عنصر است، نه شبه‌عنصر.",
+          "en-US":
+            "One exclusive choice with role menuitemradio; its indicator is an element, not a pseudo-element.",
+        },
+      },
+      {
+        name: "MenuCheckboxItem",
+        description: {
+          "fa-IR": "کلید دو‌حالته درون منو با نقش menuitemcheckbox؛ فقط کنترل‌شده.",
+          "en-US": "A toggle inside the menu with role menuitemcheckbox; controlled only.",
         },
       },
       {
@@ -250,6 +313,17 @@ export const EXAMPLES: ComponentExamples = {
         "en-US": "The shortcut sits at the inline end via Kbd; children are no longer a string, so textValue appears.",
       },
       render: ShortcutsExample,
+    },
+    {
+      id: "selection",
+      title: { "fa-IR": "انتخاب در منو", "en-US": "Selection in a menu" },
+      description: {
+        "fa-IR":
+          "بالا یک پرسش با یک پاسخ، پایین چند کلید مستقل؛ هر دو یک تورفتگی دارند و دو چیز متفاوت اعلام می‌کنند.",
+        "en-US":
+          "One question with one answer above, independent switches below; the two share an inset and announce different things.",
+      },
+      render: SelectionExample,
     },
     {
       id: "disabled-item",

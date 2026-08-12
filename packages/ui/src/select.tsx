@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext } from "react";
-import { cva } from "class-variance-authority";
+import { createContext, useContext, useId } from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
 import { cn, type LumoNode } from "@lumo-ui/core";
@@ -63,8 +63,25 @@ import { useFieldWiring } from "@lumo-ui/base-ui-ssr";
 
 export const selectVariants = cva("group flex w-full flex-col gap-1.5");
 
+/**
+ * The collapsed control.
+ *
+ * ── WHY IT GREW A `size`, AND WHY THE SIZE IS NOT SHADCN'S ─────────────────
+ *
+ * The height was a hardcoded `h-control-md`, which made this the only field
+ * control in the library without one: `inputVariants`, `searchInputVariants`,
+ * `toggleVariants` and `buttonVariants` all take sm/md/lg from the same
+ * density-scaled tokens. A `<TextField size="sm">` beside a `<Select>` in one
+ * form row therefore rendered two different heights with no prop to reconcile
+ * them — a gap in Lumo's own system rather than a feature copied from anyone.
+ *
+ * shadcn's select takes `"sm" | "default"` and emits it as `data-size`. The
+ * three-value scale is taken instead because that is what every other control
+ * here already answers to, and `lg` is the one that meets the 44px touch floor
+ * Khroos specifies — a two-value scale topping out at 36px cannot.
+ */
 export const selectTriggerVariants = cva(
-  "flex h-control-md w-full cursor-pointer items-center justify-between gap-2 " +
+  "flex w-full cursor-pointer items-center justify-between gap-2 " +
     "rounded-md border border-border-control bg-surface ps-3 pe-2 text-sm text-fg " +
     // Logical padding, asymmetric on purpose: the value needs breathing room at
     // the reading edge, the chevron sits tight against the trailing edge. In
@@ -80,7 +97,22 @@ export const selectTriggerVariants = cva(
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     // RAC wrote `data-open`; Base UI writes `data-popup-open`.
     "data-popup-open:border-border-strong",
+  {
+    variants: {
+      size: {
+        // The same three the rest of the field family uses, from the same
+        // density-scaled control tokens rather than literal rems. `text-*`
+        // moves with them: a 44px control holding 14px text reads as a mistake.
+        sm: "h-control-sm text-sm",
+        md: "h-control-md text-sm",
+        lg: "h-control-lg text-base",
+      },
+    },
+    defaultVariants: { size: "md" },
+  },
 );
+
+export type SelectTriggerVariantProps = VariantProps<typeof selectTriggerVariants>;
 
 export const selectValueVariants = cva(
   // `text-start`, never `text-left`. This is the single most copied physical
@@ -97,6 +129,20 @@ export const selectPopoverVariants = cva(
 );
 
 export const selectListBoxVariants = cva("max-h-[inherit] overflow-auto p-1 outline-none");
+
+export const selectGroupLabelVariants = cva(
+  // `px-2` matches the item's inline padding so the heading's first glyph lines
+  // up with the option text under it, in both scripts — `px-*` is
+  // `padding-inline`. `pt-1.5 pb-1` is asymmetric on the BLOCK axis on purpose:
+  // a heading belongs closer to what it heads than to what precedes it.
+  "px-2 pt-1.5 pb-1 text-xs font-medium text-fg-subtle",
+);
+
+export const selectSeparatorVariants = cva(
+  // `-mx-1` bleeds the rule through the list's own `p-1` so it spans the full
+  // popup width. Logical, so it bleeds the same amount on each side either way.
+  "-mx-1 my-1 h-px bg-border",
+);
 
 export const selectItemVariants = cva(
   "flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 " +
@@ -260,12 +306,12 @@ export function Select<T extends object>({
  * affordance is an icon here while the submenu affordance in menu.tsx has to be
  * a bidi-mirrored character.
  */
-export interface SelectTriggerProps {
+export interface SelectTriggerProps extends SelectTriggerVariantProps {
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function SelectTrigger({ className, children }: SelectTriggerProps) {
+export function SelectTrigger({ className, size, children }: SelectTriggerProps) {
   const field = useContext(SelectFieldContext);
   /*
    * `id` is the other end of the `htmlFor` the consumer's `<Label>` is carrying
@@ -277,7 +323,7 @@ export function SelectTrigger({ className, children }: SelectTriggerProps) {
       data-lumo=""
       {...(field?.label === undefined ? {} : { "aria-label": field.label })}
       {...(field?.triggerId === undefined ? {} : { id: field.triggerId })}
-      className={cn(selectTriggerVariants(), className)}
+      className={cn(selectTriggerVariants({ size }), className)}
     >
       {children ?? <SelectValue />}
       <ChevronDown aria-hidden="true" className="shrink-0 text-fg-muted" />
@@ -414,4 +460,103 @@ export function SelectItem<T extends object = object>({
       </BaseSelect.ItemIndicator>
     </BaseSelect.Item>
   );
+}
+
+/**
+ * A named block of related options.
+ *
+ * ── THE GAP, WHICH IS SEMANTIC AND NOT VISUAL ──────────────────────────────
+ *
+ * A flat list of forty cities is a list of forty cities. Grouped by province it
+ * is eight groups a reader can skip through — and the skipping is the point: an
+ * option inside a `role="group"` with an `aria-labelledby` is announced as
+ * «تهران، گروه استان تهران», so a listener who has arrowed past the province
+ * boundary is told, rather than having to remember. There is no way to build
+ * that out of `SelectItem`s, which is what makes it a gap rather than a
+ * convenience.
+ *
+ * ── ONE PART WITH A REQUIRED `label`, NOT TWO PARTS ────────────────────────
+ *
+ * shadcn splits this into `<SelectGroup>` + `<SelectLabel>`, and Base UI ships
+ * the matching `Select.Group` / `Select.GroupLabel` pair. Lumo fuses them for
+ * the reason the `Empty` decision records: **a part cannot be required.** A
+ * `<SelectGroup>` written without its label compiles, renders an unnamed
+ * `role="group"`, and announces every option inside it as a member of nothing —
+ * which is worse than no group at all, because the group node is still in the
+ * tree. `label: string` does not compile when it is missing.
+ *
+ * There is also nothing for the split to buy here. A group label is a flat
+ * string to a screen reader whichever way it is written, and the one thing
+ * separate parts would allow — arbitrary markup in the heading — is markup
+ * inside a name, which is the trade `TextField.label` already refuses.
+ *
+ * ── THE ASSOCIATION IS MINTED HERE, NOT WAITED FOR ─────────────────────────
+ *
+ * MEASURED, in `select/group-label/SelectGroupLabel.mjs`: Base UI publishes the
+ * label's id to its group through `useIsoLayoutEffect` → `setLabelId`, so
+ * `Select.Group` renders `aria-labelledby={undefined}` on its FIRST pass and
+ * acquires the name on a second one. That is harmless on this component today
+ * — the popup lives in a portal that is `null` while closed, so no unnamed
+ * group is ever served or painted — but it makes the naming depend on an effect
+ * for a relationship that is knowable at render time.
+ *
+ * `Select.Group` merges caller props AFTER its own defaults
+ * (`props: [{role, 'aria-labelledby': labelId}, elementProps]`, verified in
+ * `SelectGroup.mjs`), so an explicit `aria-labelledby` from a `useId` wins
+ * outright and the group is named on the first render it ever has. The engine's
+ * own effect still runs and still agrees; it is simply no longer load-bearing.
+ */
+export interface SelectGroupProps {
+  /**
+   * Announced name of the group, e.g. «استان تهران».
+   *
+   * REQUIRED — see the header. Neither engine supplies one, and an unnamed
+   * `role="group"` is a node every option inside it reports membership of.
+   */
+  label: string;
+  children?: LumoNode;
+  className?: string | undefined;
+  /** Classes for the visible heading, when the group box is not what you mean. */
+  labelClassName?: string | undefined;
+}
+
+export function SelectGroup({ label, className, labelClassName, children }: SelectGroupProps) {
+  const labelId = useId();
+  return (
+    <BaseSelect.Group
+      data-lumo=""
+      aria-labelledby={labelId}
+      {...(className === undefined ? {} : { className })}
+    >
+      <BaseSelect.GroupLabel
+        id={labelId}
+        className={cn(selectGroupLabelVariants(), labelClassName)}
+      >
+        {label}
+      </BaseSelect.GroupLabel>
+      {children}
+    </BaseSelect.Group>
+  );
+}
+
+export interface SelectSeparatorProps {
+  className?: string | undefined;
+}
+
+/**
+ * A rule between two groups.
+ *
+ * DECORATION ONLY, and that is why it takes no props and announces nothing.
+ * Base UI's `Select.Separator` is `ListboxSeparator`, which renders a `<div>`
+ * with `role="presentation"` — deliberately NOT `role="separator"`, because a
+ * separator node inside a listbox is a child that is not an option, and screen
+ * readers count listbox children. The boundary a reader actually needs is the
+ * one `SelectGroup` announces; this draws the same boundary for the eye.
+ *
+ * It is therefore not a substitute for a group, and a list that uses only
+ * separators is a list whose structure is visible and unannounced — the shape
+ * `breadcrumbs`' `data-current` had.
+ */
+export function SelectSeparator({ className }: SelectSeparatorProps) {
+  return <BaseSelect.Separator className={cn(selectSeparatorVariants(), className)} />;
 }

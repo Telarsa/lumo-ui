@@ -18,6 +18,7 @@ import {
   SidebarHeader,
   SidebarItem,
   SidebarTrigger,
+  sidebarItemVariants,
 } from "./sidebar.tsx";
 
 afterEach(cleanup);
@@ -129,5 +130,60 @@ describe("Sidebar — a named landmark whose names survive the rail", () => {
     expect(html).toContain("داشبورد");
     expect(html).toContain("سفارش‌ها");
     expect(html).toContain('aria-label="بازکردن نوار کناری"');
+  });
+
+  /*
+   * ── THE TWO DEFECTS THIS BLOCK EXISTS FOR ──────────────────────────────────
+   *
+   * A row's hover treatment was written as `data-hovered:`, which is React
+   * Aria's vocabulary. `link.tsx` gave up its React Aria runtime and nothing
+   * else writes the attribute, so the classes styled nothing while reading as a
+   * hover state to every grep and every reviewer — and `Link`'s own
+   * `hover:underline` was left uncancelled, so the ONE hover effect that fired
+   * was the one being suppressed.
+   *
+   * And the current row's fill collided with the hover it was meant to be
+   * distinguishable from: `--lumo-sys-surface-sunken` and
+   * `--lumo-sys-surface-hover` are the SAME `--lumo-ref-neutral-100` on the
+   * light theme, so fixing the attribute alone would have made every hovered
+   * row look like the current one.
+   *
+   * Both are class-string facts, so both are asserted against the class string.
+   * jsdom models no pointer (see state-vocabulary.test.tsx), which is exactly
+   * why a rendered-state test could never have caught either one.
+   */
+  describe("the row's hover and current treatments are real, and are different", () => {
+    it("styles :hover, never an attribute nothing writes", () => {
+      const classes = sidebarItemVariants();
+      expect(classes).not.toContain("data-hovered");
+      expect(classes).toContain("hover:bg-surface-hover");
+      // The cancel for `Link`'s `quiet` variant, which underlines on hover.
+      expect(classes).toContain("hover:no-underline");
+    });
+
+    it("and the served row carries no dead attribute selector either", () => {
+      expect(renderToStaticMarkup(app())).not.toContain("data-hovered");
+    });
+
+    it("the current row does not resolve to the hover fill", () => {
+      /*
+       * The comparison, not a presence check — presence is what let this ship.
+       * `bg-surface-hover` and `bg-surface-sunken` are literally different
+       * strings and resolved to the same colour, so the assertion is on the
+       * TOKEN FAMILY: the current state must not be another step on the neutral
+       * surface ramp, because that ramp is where the collision lives.
+       */
+      const classes = sidebarItemVariants();
+      const current = classes
+        .split(/\s+/)
+        .filter((c) => c.startsWith("data-current:"))
+        .join(" ");
+      expect(current, "the current row has no treatment at all").not.toBe("");
+      expect(current, "the current row is painted from the ramp its hover sits on").not.toMatch(
+        /bg-surface/,
+      );
+      // Two channels, not one — WCAG 1.4.1. Colour alone is not a difference.
+      expect(current).toContain("data-current:font-medium");
+    });
   });
 });

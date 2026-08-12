@@ -48,6 +48,7 @@
  * component — and weakening it to green would delete the measurement.
  */
 
+import { readFileSync, readdirSync } from "node:fs";
 import { afterEach, describe, expect, it } from "vitest";
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
 
@@ -806,11 +807,132 @@ describe("hover and press — structural only, and the reason is measured", () =
     }
   });
 
+  it("a toggle's ON treatment is DIFFERENT from its hover treatment", () => {
+    /*
+     * The same defect SHAPE as the button comparison above, one component over
+     * and one layer deeper: the strings differed and the COLOURS did not.
+     * Measured in tokens.css, `:root, [data-theme="light"]` —
+     *
+     *     --lumo-sys-surface-hover:  var(--lumo-ref-neutral-100)
+     *     --lumo-sys-surface-sunken: var(--lumo-ref-neutral-100)
+     *
+     * — so `hover:bg-surface-hover` (OFF, hovered) and
+     * `data-pressed:bg-surface-sunken` (ON) painted the same pixel on the light
+     * theme, and a hovered off toggle was indistinguishable from an on one. On
+     * dark the two tokens differ, and the state was lost the other way instead:
+     * `data-pressed:hover:bg-surface-hover` is specificity (0,3,0) against
+     * (0,2,0), verified in a built 4.3.3 stylesheet, so an ON toggle under the
+     * cursor took EXACTLY the OFF-hover fill.
+     *
+     * A same-string comparison would have passed in both cases. So the
+     * assertion is on the token FAMILY: the ON state must not be another step
+     * on the neutral surface ramp, because that ramp is where the collision
+     * lives and where the next theme edit can recreate it.
+     */
+    const utilities = (classes: string, prefix: string) =>
+      classes
+        .split(/\s+/)
+        .filter((c) => c.startsWith(prefix))
+        .map((c) => c.slice(prefix.length))
+        .sort()
+        .join(" ");
+
+    for (const variant of ["ghost", "outline"] as const) {
+      const classes = toggleVariants({ variant });
+      const hover = utilities(classes, "hover:");
+      const on = utilities(classes, "data-pressed:");
+      expect(hover, `${variant} has no hover treatment`).not.toBe("");
+      expect(on, `${variant} has no ON treatment`).not.toBe("");
+      expect(on, `${variant}'s ON state is a copy of its hover`).not.toBe(hover);
+      // The part a string comparison cannot see. `bg-surface-*` IS the ramp the
+      // hover fill comes from; an ON state anywhere on it is one theme edit
+      // away from being invisible again.
+      expect(on, `${variant}'s ON fill is on the same ramp as its hover`).not.toMatch(
+        /bg-surface/,
+      );
+      // And the ON state must survive the pointer arriving. Without an explicit
+      // `data-pressed:hover:` the neutral hover fill wins by source order.
+      expect(classes, `${variant} loses its ON fill on hover`).toContain(
+        "data-pressed:hover:bg-",
+      );
+    }
+  });
+
   it("the press nudge is on the block axis and skips overlay triggers", () => {
     // `translate-y-px`, not a logical utility: a press pushes the control INTO
     // the page and the block axis does not mirror. The `not-aria-[haspopup]`
     // exemption keeps an opening menu from moving with the trigger it is
     // anchored to.
     expect(buttonVariants()).toContain("active:not-aria-[haspopup]:translate-y-px");
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE SWEEP THE SPECIMEN LIST COULD NOT DO
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+describe("no dead React Aria selector survives anywhere in the source", () => {
+  /**
+   * ── WHY THIS EXISTS BESIDE THE TWO CHECKS ABOVE, WHICH LOOK LIKE IT ────────
+   *
+   * Both of those enumerate. One renders a hand-kept `specimens` list; the
+   * other calls two named cva functions. They are precise about what they
+   * cover and silent about everything else — and on 12 Aug 2026 that silence
+   * had two live defects in it:
+   *
+   *   sidebar.variants.ts   `data-hovered:no-underline` and
+   *                         `data-hovered:bg-surface-hover` on the row. Nothing
+   *                         writes that attribute since `link.tsx` left React
+   *                         Aria, so sidebar rows had NO hover at all — and the
+   *                         one hover that did fire was `Link`'s own underline,
+   *                         which the dead rule existed to suppress.
+   *   bubble.tsx:207        `data-hovered:text-current data-hovered:underline`
+   *                         on the collapse trigger. Same cause, same silence.
+   *
+   * Neither component was a specimen, so neither was ever looked at. That is
+   * the failure mode `coverage.test.ts` names in its own header: a suite that
+   * checks what someone remembered to add to a list checks the components
+   * nobody forgot.
+   *
+   * So this one reads the DIRECTORY. A component added tomorrow is covered
+   * without anyone adding it here, which is the only property that makes a
+   * rule like this hold.
+   *
+   * ── WHY IT MATCHES A UTILITY AND NOT THE BARE WORD ────────────────────────
+   *
+   * `data-hovered:` with the colon is a Tailwind VARIANT — a rule addressed to
+   * an attribute Base UI never writes. The bare word appears all over this
+   * library in prose, recording what React Aria used to emit and why the
+   * migration changed it, and that prose is evidence worth keeping. Matching
+   * the colon separates the dead rule from its own obituary.
+   */
+  const DEAD_UTILITIES = [
+    "data-hovered:",
+    "data-focus-visible:",
+    "data-entering:",
+    "data-exiting:",
+  ];
+
+  /** Strips block and line comments so prose about the past cannot fail this. */
+  function code(source: string): string {
+    return source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  }
+
+  const SRC = import.meta.dirname;
+  const sources = readdirSync(SRC).filter(
+    (f) => (f.endsWith(".tsx") || f.endsWith(".ts")) && !f.includes(".test."),
+  );
+
+  it("has sources to sweep (guards against a vacuous pass)", () => {
+    // If the filter or the directory ever changes shape, every assertion below
+    // would iterate nothing and report green.
+    expect(sources.length).toBeGreaterThan(80);
+  });
+
+  it.each(sources.map((f) => [f] as const))("%s carries no dead state utility", (file) => {
+    const source = code(readFileSync(`${SRC}/${file}`, "utf8"));
+    for (const dead of DEAD_UTILITIES) {
+      expect(source, `${file} styles ${dead}, which Base UI never writes`).not.toContain(dead);
+    }
   });
 });

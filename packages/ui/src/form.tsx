@@ -96,9 +96,9 @@ import { useFieldWiring, type FieldWiring, type FieldWiringMode } from "@lumo-ui
  *      delegated to any layout effect on either engine. The ids arrive as props
  *      from `useFieldWiring`, already resolved during render.
  *
- * `FOCUS_RING` and `FOCUS_RING_SELF` below are still the shape of a library
- * mid-swap — `rating.tsx` needs the first, the form family needs the second —
- * and they say which is which.
+ * `FOCUS_RING_SELF` below is the one focus-ring constant this file exports, and
+ * its docblock records the second one that used to stand beside it and why it
+ * could not render.
  */
 
 /**
@@ -128,34 +128,23 @@ export const fieldErrorVariants = cva("text-sm text-critical");
 export const formVariants = cva("flex flex-col gap-4");
 
 /**
- * The focus ring, restated for controls that cannot use the shared one.
+ * The focus ring, for a control that IS its own focusable element.
  *
- * `theme.css` defines the ring once as `:where([data-lumo]):focus-visible`, which
- * covers every control that is itself focusable — a text input, a button. It does
- * NOT cover a React Aria Checkbox, Radio or Switch: their focusable element is a
- * visually hidden `<input>` clipped to a 1px box, and an outline on a clipped
- * element is invisible. React Aria surfaces the state on the visible wrapper
- * instead, as `data-focus-visible`, so the ring is re-derived here — from the
- * SAME tokens, so a brand that changes `--lumo-sys-focus` still moves it, and via
- * an arbitrary property so the declaration is character-for-character what
- * theme.css emits.
+ * `theme.css` defines the ring once as `:where([data-lumo]):focus-visible`,
+ * which covers every control whose `data-lumo` marker sits on the element that
+ * takes focus. This constant is the same two declarations, from the same
+ * tokens, in the same arbitrary-property spelling, for the controls that have
+ * to state it themselves — so a brand that changes `--lumo-sys-focus` moves
+ * both together.
  *
- * Uses the `group-*` form because the attribute lands on the wrapping `<label>`
- * while the ring belongs on the indicator inside it.
- */
-export const FOCUS_RING =
-  "group-data-focus-visible:[outline:var(--lumo-sys-focus-width)_solid_var(--lumo-sys-focus)] " +
-  "group-data-focus-visible:[outline-offset:var(--lumo-sys-focus-offset)]";
-
-/**
- * The same ring, for a control that IS its own focusable element.
+ * ── THERE USED TO BE TWO OF THESE, AND THE OTHER ONE COULD NOT RENDER ──────
  *
- * ── WHY THE ENGINE SWAP NEEDS A SECOND SPELLING (WCAG 2.4.7) ────────────────
- *
- * `FOCUS_RING` above is built on two facts that are both React Aria's, not the
- * platform's: that the focusable element of a Checkbox/Radio/Switch is a
- * visually hidden `<input>`, and that the modality-filtered state is published
- * as an attribute on the wrapping `<label>`. Base UI inverts BOTH:
+ * A `FOCUS_RING` constant stood above this one, spelled
+ * `group-data-focus-visible:`. It was built on two facts that were React
+ * Aria's rather than the platform's: that the focusable element of a
+ * Checkbox/Radio/Switch is a visually hidden `<input>` clipped to a 1px box —
+ * where an outline is invisible — and that the modality-filtered state is
+ * published as an attribute on the wrapping `<label>`. Base UI inverts BOTH:
  *
  *     Checkbox.Root / Radio.Root /  `tabindex="0"`, `role="checkbox"` /
  *     Switch.Root                   `role="radio"` / `role="switch"` — the
@@ -180,10 +169,16 @@ export const FOCUS_RING =
  * same tokens, same arbitrary-property spelling as theme.css — only the
  * selector moves.
  *
- * `FOCUS_RING` is kept and unchanged: `rating.tsx` is still React Aria and
- * still needs the `group-*` form. `radio-group.tsx` moved to this one with the
- * rest of the form family. The two constants are the shape of the migration
- * itself — a library mid-swap needs both.
+ * The second constant was kept through the migration for one stated consumer:
+ * "`rating.tsx` is still React Aria and still needs the `group-*` form". That
+ * stopped being true. `rating.tsx` imports `@base-ui/react/radio-group`, and its
+ * own line 180 records that "the `group` marker is gone" — so the selector had
+ * no group to hop from and the attribute had no engine to publish it. Measured
+ * across the package: ZERO call sites, and a grep of the installed Base UI dist
+ * finds `data-focus-visible` in zero files. A focus ring that is exported,
+ * documented and cannot render is worse than an absent one, because the name a
+ * docblock recommends is the name a consumer reaches for. Deleted rather than
+ * shimmed, so there is exactly one constant to reach for.
  */
 export const FOCUS_RING_SELF =
   "focus-visible:[outline:var(--lumo-sys-focus-width)_solid_var(--lumo-sys-focus)] " +

@@ -98,7 +98,12 @@ export const messageScrollerJumpVariants = cva(
   // `end-`, never `right-`. See the header.
   "absolute bottom-4 end-4 inline-flex items-center gap-1.5 rounded-full " +
     "border border-border bg-surface px-3 py-1.5 text-xs font-medium text-fg " +
-    "shadow-md transition-colors hover:bg-surface-hover",
+    // `active:` beside the hover because this pill is tapped, not hovered: it
+    // appears on a phone in a scrolled conversation, and `:hover` never fires
+    // there. The scroll it triggers is smooth and takes ~300ms, so without a
+    // press fill the tap looks unregistered for exactly as long as it takes to
+    // tap again.
+    "shadow-md transition-colors hover:bg-surface-hover active:bg-surface-sunken",
 );
 
 export interface MessageScrollerProps {

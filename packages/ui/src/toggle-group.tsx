@@ -130,6 +130,32 @@ export const toggleButtonVariants = cva(
     "hover:bg-surface-hover " +
     "data-pressed:bg-accent data-pressed:text-accent-fg " +
     "data-pressed:hover:bg-accent-hover " +
+    /*
+     * ── THE ONE PRESS IN THIS FAMILY THAT CAN PRODUCE NOTHING ────────────────
+     *
+     * `toggle.variants.ts` DECLINES an `active:` rule, and the reason is that a
+     * toggle's press changes its state — the tap answers itself, so there is no
+     * feedback missing the way there was on `button`.
+     *
+     * That reasoning does not survive here. `disallowEmptySelection` cancels the
+     * un-press through `details.cancel()` (see the file header), and a cancelled
+     * press is exactly the `button` case: the user presses the pressed item, the
+     * engine refuses, and nothing on screen moves. On a pointer that is merely
+     * confusing; on TOUCH, where `:hover` never fires, the control is
+     * indistinguishable from a dead one — which is the whole weight of the
+     * finding `button.variants.ts` records.
+     *
+     * `:active` fires on pointer-DOWN and ends on release, i.e. strictly before
+     * the cancel is observable, so the flash-and-revert is the honest answer:
+     * "the press was received, and the answer is no."
+     *
+     * `brightness-95` over whichever fill is showing rather than a fifth colour
+     * — one rule covers pressed and unpressed, and no token is invented for it.
+     * No `translate-y-px`: these items are welded into one bordered strip with
+     * `overflow-hidden` on the group, so nudging one would clip it against the
+     * group's own edge and open a gap beside its neighbours.
+     */
+    "active:brightness-95 " +
     // WCAG 2.4.7. Base UI's Toggle IS the focusable element — a real `<button>`
     // — so the ring goes on it directly and the `group-` hop React Aria forced
     // disappears. `:focus-visible` because Base UI ships no

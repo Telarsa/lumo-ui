@@ -1,5 +1,12 @@
 import type { Locale } from "@lumo-ui/core";
-import { Button, IconButton, Popover, PopoverTrigger, Separator } from "@lumo-ui/ui";
+import {
+  Button,
+  IconButton,
+  Popover,
+  PopoverDescription,
+  PopoverTrigger,
+  Separator,
+} from "@lumo-ui/ui";
 import { InfoIcon } from "lucide-react";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
@@ -85,7 +92,7 @@ function BasicExample(l: Locale) {
     <PopoverTrigger>
       <Button variant="outline">{t.moreOptions[l]}</Button>
       <Popover className="max-w-xs">
-        <p className="text-sm text-fg-muted">{t.optionsBody[l]}</p>
+        <PopoverDescription>{t.optionsBody[l]}</PopoverDescription>
       </Popover>
     </PopoverTrigger>
   );
@@ -97,19 +104,19 @@ function PlacementExample(l: Locale) {
       <PopoverTrigger>
         <Button variant="outline">{t.columns[l]}</Button>
         <Popover placement="bottom start" className="max-w-xs">
-          <p className="text-sm text-fg-muted">{t.columnsBody[l]}</p>
+          <PopoverDescription>{t.columnsBody[l]}</PopoverDescription>
         </Popover>
       </PopoverTrigger>
       <PopoverTrigger>
         <Button variant="outline">{t.topEnd[l]}</Button>
         <Popover placement="top end" className="max-w-xs">
-          <p className="text-sm text-fg-muted">{t.topEndBody[l]}</p>
+          <PopoverDescription>{t.topEndBody[l]}</PopoverDescription>
         </Popover>
       </PopoverTrigger>
       <PopoverTrigger>
         <Button variant="outline">{t.inlineStart[l]}</Button>
         <Popover placement="start" className="max-w-xs">
-          <p className="text-sm text-fg-muted">{t.inlineStartBody[l]}</p>
+          <PopoverDescription>{t.inlineStartBody[l]}</PopoverDescription>
         </Popover>
       </PopoverTrigger>
     </div>
@@ -123,7 +130,7 @@ function NamedExample(l: Locale) {
         <InfoIcon aria-hidden="true" />
       </IconButton>
       <Popover aria-label={t.glossaryName[l]} className="max-w-xs">
-        <p className="text-sm text-fg-muted">{t.glossaryBody[l]}</p>
+        <PopoverDescription>{t.glossaryBody[l]}</PopoverDescription>
       </Popover>
     </PopoverTrigger>
   );
@@ -134,9 +141,9 @@ function UnpaddedExample(l: Locale) {
     <PopoverTrigger>
       <Button variant="outline">{t.share[l]}</Button>
       <Popover padded={false} className="w-56">
-        <p className="px-4 pt-3 pb-2 text-xs font-medium text-fg-muted">
+        <PopoverDescription className="px-4 pt-3 pb-2 text-xs font-medium">
           {t.shareHeading[l]}
-        </p>
+        </PopoverDescription>
         <Separator />
         <div className="flex flex-col p-1">
           <button
@@ -180,7 +187,9 @@ export const EXAMPLES: ComponentExamples = {
       `    placement="bottom start"             ← logical ONLY. No left, no right.`,
       `    padded={false}                       ← for a panel that owns its own layout`,
       `    aria-label="…"                       ← wins over the trigger's text`,
-      `    offset crossOffset>…</Popover>`,
+      `    offset crossOffset>`,
+      `    <PopoverDescription>…</PopoverDescription>   ← the string read AFTER the name`,
+      `  </Popover>`,
       `</PopoverTrigger>`,
     ].join("\n"),
     parts: [
@@ -200,6 +209,15 @@ export const EXAMPLES: ComponentExamples = {
             "خودِ سطح. placement تنها ویژگیِ جهت‌دارِ آن است و منطقی است؛ offset و crossOffset روی محورِ بلوکی و درون‌خطی می‌نشینند و هر دو به موتور پاس داده می‌شوند. padded={false} بالشتک را برمی‌دارد برای پنلی که خودش چیدمانش را دارد.",
           "en-US":
             "The surface itself. `placement` is its only directional prop and it is logical; `offset` and `crossOffset` land on the block and inline axes and are both handed to the engine. `padded={false}` removes the padding for a panel that owns its own layout.",
+        },
+      },
+      {
+        name: "PopoverDescription",
+        description: {
+          "fa-IR":
+            "متنِ همراهِ پنل، و رشته‌ای که صفحه‌خوان پس از نام می‌خواند. پنل aria-describedby را از همین جزء می‌گیرد؛ یک <p> دست‌ساز با همان ظاهر برای هیچ‌کس خوانده نمی‌شود. برای محتوای بلوکی render={<div />} بدهید.",
+          "en-US":
+            "The panel's supporting prose, and the string a screen reader reads after the name. The panel takes its `aria-describedby` from this part; a hand-rolled <p> that looks identical is announced to nobody. Pass `render={<div />}` for block content.",
         },
       },
       {

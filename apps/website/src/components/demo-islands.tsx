@@ -8,6 +8,14 @@ import {
   ChartContainer,
   ChartLegend,
   LumoForm,
+  Menu,
+  MenuCheckboxItem,
+  MenuPopover,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSection,
+  MenuSeparator,
+  MenuTrigger,
   Pagination,
   Rating,
   TextField,
@@ -2723,5 +2731,83 @@ export function AlertDismissIsland({
         </Button>
       )}
     </div>
+  );
+}
+
+/* ───────────────────────────────────────────────────────────── menu choice ── */
+
+/**
+ * The two selectable menu item kinds, which cannot be demonstrated any other
+ * way: both are CONTROLLED-ONLY by design, so a demo of either needs state on
+ * this side of the boundary. `MenuCheckboxItem` shipped with no example at all
+ * for exactly that reason; `MenuRadioItem` arrives with one.
+ *
+ * Both kinds in ONE island rather than two, because the pairing is the point.
+ * A settings menu normally holds a question with one answer above a set of
+ * independent switches, and the thing worth seeing on the page is that the two
+ * are told apart by their ANNOUNCEMENT — `menuitemradio` inside a named group
+ * versus `menuitemcheckbox` — while their gutters line up to the same inset.
+ *
+ * No copy here: every string is a prop the caller supplies per locale, which is
+ * the rule this whole file obeys.
+ */
+export interface MenuChoiceIslandProps {
+  /** Announced name of the menu, e.g. «نمایش». */
+  menuLabel: string;
+  /** Visible label of the trigger button. */
+  triggerText: string;
+  /** Visible AND announced name of the radio group, e.g. «ترتیب نمایش». */
+  sortLabel: string;
+  /** The three sort options, in order. */
+  sortOptions: readonly { value: string; text: string }[];
+  /** Visible title of the checkbox section, e.g. «ستون‌ها». */
+  columnsLabel: string;
+  /** The toggleable columns. */
+  columns: readonly { value: string; text: string }[];
+}
+
+export function MenuChoiceIsland({
+  menuLabel,
+  triggerText,
+  sortLabel,
+  sortOptions,
+  columnsLabel,
+  columns,
+}: MenuChoiceIslandProps) {
+  const [sort, setSort] = useState(sortOptions[0]?.value ?? "");
+  const [hidden, setHidden] = useState<readonly string[]>([]);
+  return (
+    <MenuTrigger>
+      <Button variant="outline">{triggerText}</Button>
+      <MenuPopover>
+        <Menu aria-label={menuLabel}>
+          <MenuRadioGroup label={sortLabel} value={sort} onChange={setSort}>
+            {sortOptions.map((option) => (
+              <MenuRadioItem key={option.value} value={option.value}>
+                {option.text}
+              </MenuRadioItem>
+            ))}
+          </MenuRadioGroup>
+          <MenuSeparator />
+          <MenuSection title={columnsLabel}>
+            {columns.map((column) => (
+              <MenuCheckboxItem
+                key={column.value}
+                isSelected={!hidden.includes(column.value)}
+                onChange={(isSelected) =>
+                  setHidden((current) =>
+                    isSelected
+                      ? current.filter((value) => value !== column.value)
+                      : [...current, column.value],
+                  )
+                }
+              >
+                {column.text}
+              </MenuCheckboxItem>
+            ))}
+          </MenuSection>
+        </Menu>
+      </MenuPopover>
+    </MenuTrigger>
   );
 }
