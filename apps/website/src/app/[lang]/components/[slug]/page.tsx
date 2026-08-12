@@ -53,6 +53,12 @@ interface PageCopy {
     installation: string;
     directions: string;
   };
+  /**
+   * Names the narrow-viewport component list. REQUIRED copy, not decoration:
+   * below 1024px this `<summary>` is the only navigation to the other 93
+   * components, so an unnamed one is an unreachable library.
+   */
+  browseComponents: string;
   copyPage: string;
   copied: string;
   /** The header pager's landmark name and its two per-neighbour labels. */
@@ -90,6 +96,7 @@ const COPY = {
       installation: "نصب",
       directions: "هر دو جهت",
     },
+    browseComponents: "همهٔ کامپوننت‌ها",
     copyPage: "کپی صفحه",
     copied: "کپی شد",
     pagerNav: "کامپوننت قبلی و بعدی",
@@ -124,6 +131,7 @@ const COPY = {
       installation: "Installation",
       directions: "Both directions",
     },
+    browseComponents: "All components",
     copyPage: "Copy page",
     copied: "Copied",
     pagerNav: "Previous and next component",
@@ -170,7 +178,23 @@ function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
   const c = COPY[lang];
   // Annotated, not inferred: COPY is `as const`, so an inferred element type
   // would narrow to the first entry's literal and reject every later push.
-  const list: Array<{ id: string; label: string }> = [{ id: "preview", label: c.rail.preview }];
+  const list: Array<{ id: string; label: string }> = [
+    { id: "preview", label: c.rail.preview },
+    /*
+     * ── INSTALLATION IS SECOND, AND WAS SECOND-TO-LAST ──────────────────────
+     *
+     * Both ui.shadcn.com and reui.io put it directly under the preview, and
+     * they are right for a reason this library has more of than either: these
+     * components are COPIED, not imported. The page's job is not to admire the
+     * component — it is to get the file into somebody's project. Everything
+     * below (examples, composition, the parts table, the accessibility
+     * evidence, the two-direction render) is what you read AFTER you have it.
+     *
+     * It sat between "evidence" and "directions", which is where a section
+     * lands when it is added late rather than placed.
+     */
+    { id: "installation", label: c.rail.installation },
+  ];
   if (loaded !== undefined) {
     for (const example of loaded.examples) {
       list.push({ id: `example-${example.id}`, label: example.title[lang] });
@@ -184,7 +208,6 @@ function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
   }
   list.push(
     { id: "evidence", label: c.rail.evidence },
-    { id: "installation", label: c.rail.installation },
     { id: "directions", label: c.rail.directions },
   );
   return list;
@@ -417,6 +440,52 @@ export default async function ComponentPage({
           </div>
         </aside>
 
+        {/*
+         * ── THE NARROW-VIEWPORT PATH, WHICH DID NOT EXIST ────────────────────
+         *
+         * The sidebar above is `hidden lg:block` with nothing in its place, so
+         * below 1024px the entire 94-component list was reachable only through
+         * search or by typing a URL. The prose docs pages have had a mobile
+         * strip since their own review found the same hole
+         * (`docs/docs-shell.tsx`); the component pages never got one.
+         *
+         * NOT that strip, though. Six doc pages fit in a horizontal scroll;
+         * ninety-four do not — it would be a 94-chip rail nobody can find
+         * anything in, which is a worse answer than none because it looks like
+         * navigation. So it is a native `<details>` holding the SAME
+         * `DocsSidebar`, tier-grouped and counted exactly as on desktop.
+         *
+         * `<details>` and not a client disclosure on purpose: it needs no
+         * JavaScript, it is open-able before hydration, and the summary is a
+         * real button to assistive tech without a single ARIA attribute. The
+         * one behaviour it does not get is closing on navigation — and there
+         * is nothing to close, because following a link leaves the page.
+         */}
+        <details className="group -mx-6 border-be border-border px-6 pbe-4 lg:hidden">
+          <summary
+            className="flex cursor-pointer list-none items-center justify-between gap-2 rounded-md py-2 text-sm font-medium text-fg [&::-webkit-details-marker]:hidden"
+          >
+            {c.browseComponents}
+            {/*
+             * `›` is U+203A, a Bidi_Mirrored character — the text engine draws
+             * it as `‹` under RTL, so the affordance points the correct way in
+             * both directions with no `rtl:` variant. The same technique the
+             * pager and the submenu arrow use. `aria-hidden` because the
+             * summary's own text already names the control, and `<details>`
+             * announces its own expanded state.
+             */}
+            <span
+              aria-hidden="true"
+              className="text-fg-muted transition-transform group-open:rotate-90"
+            >
+              ›
+            </span>
+          </summary>
+          <div className="mt-2 max-h-[60vh] overflow-y-auto">
+            <DocsSidebar lang={lang} active={slug} />
+          </div>
+        </details>
+
         <article className="min-w-0">
           <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
             <div className="min-w-0">
@@ -503,6 +572,23 @@ export default async function ComponentPage({
             </Tabs>
           </section>
 
+          <section id="installation" className="mt-8 scroll-mt-24">
+            <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
+              {c.rail.installation}
+            </h2>
+            <div className="mt-3">
+              <InstallTabs
+                locale={lang}
+                registryName={item.name}
+                dependencies={item.dependencies ?? []}
+                registryComponents={registryComponents}
+                files={installFiles}
+                commandHtml={commandHtml}
+                depsHtml={depsHtml}
+              />
+            </div>
+          </section>
+
           {/*
            * The worked examples, between Preview and Evidence — each one a
            * titled, anchored section the rail lists, in the same order, from
@@ -579,23 +665,6 @@ export default async function ComponentPage({
                 header for why this cannot be computed here in React.
               */}
               <EvidencePanel locale={lang} />
-            </div>
-          </section>
-
-          <section id="installation" className="mt-10 scroll-mt-24">
-            <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
-              {c.rail.installation}
-            </h2>
-            <div className="mt-3">
-              <InstallTabs
-                locale={lang}
-                registryName={item.name}
-                dependencies={item.dependencies ?? []}
-                registryComponents={registryComponents}
-                files={installFiles}
-                commandHtml={commandHtml}
-                depsHtml={depsHtml}
-              />
             </div>
           </section>
 
