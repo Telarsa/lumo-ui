@@ -942,3 +942,194 @@ the directory so a verdict without poison fails the suite.
 
 The rule deliberately does **not** grade whether the omit list is right, and
 could not: that is the same asymmetry that decided against the allow-list.
+
+---
+
+## §18 — One press, one ring, one dimming, three elevations: the variance is the defect
+
+**Date:** 12 August 2026 · **Phase:** AUDIT §5 items 2.2 and 2.3 ·
+**Files:** `packages/theme/src/{tokens.css,theme.css}`, every
+`packages/ui/src/*.variants.ts`, the style strings in `packages/ui/src/*.tsx`
+
+### The problem is not in any one component
+
+Measured across the 94 components, with comments stripped so prose about a
+retired spelling was not counted:
+
+```
+press       5 spellings   active:bg-surface-sunken ×13 · active:brightness-95 ×4
+                          active:translate-y-px ×4 · active:bg-accent/10 ×5
+                          active:opacity-90/80 ×2      — on ~15 of ~45 pressables
+focus       5 mechanisms  the global rule · FOCUS_RING_SELF · 3 re-typed copies
+                          of it · hardcoded outline-accent ×3 · focus-as-fill ×3
+                          (+ a has-[select:…] ring in calendar nobody had counted)
+disabled    3 opacities   opacity-50 ×39 · opacity-60 ×1 · opacity-40 ×4
+elevation   5 rungs       shadow-xs/sm/md/lg/xl/2xl — and ZERO shadow tokens, so
+                          100% of it was Tailwind's constant ramp
+scrim       0 tokens      bg-black/50, twice, the library's only untokenised colour
+```
+
+Every one of those lines is defensible in the file it is written in, on the day
+it is written. That is the whole difficulty: there is no defect to find, and the
+sum is what a designer reads as **grown, not designed**. It is also the thing
+`gate:props`, `gate:lint` and both existing vocabulary suites are structurally
+unable to see, because each of them grades one rule at a time.
+
+### THE PRESS IS `active:translate-y-px`
+
+A one-pixel block-axis nudge, everywhere, with one composed exemption. The other
+three candidates were measured against the surfaces this library actually ships,
+and each fails on one of them:
+
+| candidate | where it fails, measured |
+| --- | --- |
+| a FILL (`active:bg-surface-sunken`) | light `--lumo-sys-surface-sunken` and `--lumo-sys-surface-hover` are both `neutral-100`, so most of those 13 painted the pixel the hover had already painted |
+| a FILTER (`active:brightness-95`) | needs something bright to dim. A light-theme ghost has no fill and `text-fg` at #171717: `brightness(0.95)` moves channel 23 → 22 of 255 — invisible, in exactly the touch case a press exists for |
+| OPACITY (`active:opacity-80`) | dims the LABEL with the fill. On the critical button, light theme, `text-bg` on `bg-critical` goes 4.86:1 → **2.82:1** while held: the one candidate that can take a control below AA at the moment it is used |
+
+The nudge wins on four properties, and the second is the structural one:
+
+1. It is independent of the surface, so one spelling covers solid, outline,
+   ghost, link, row, cell and a 4px bar.
+2. **It never competes for a declaration.** A fill press has to out-specify its
+   own fill hover at equal specificity, and three components had each invented a
+   different workaround for that — `hover:active:bg-`, `data-pressed:hover:bg-`,
+   `aria-pressed:hover:bg-`. `translate` is a property no hover, selected,
+   current or highlighted rule writes, so composition is free and there is
+   nothing left to get wrong. Five vocabularies partly EXISTED because of this.
+3. It is theme-neutral. `brightness-95` darkens: a press on light, a fade on dark.
+4. It costs no contrast, and it is visible on touch.
+
+**What does not get it** is a taxonomy, not taste, and the audit's warning not to
+flatten it is honoured:
+
+- **ANCHORED** — `active:not-aria-[haspopup]:translate-y-px`. Base UI anchors a
+  panel to its trigger's box, so a held trigger drags the panel with it.
+- **SELF-ANSWERING** — the pressed element's own box takes a persistent new
+  appearance: toggle, checkbox, radio, switch, tab, segmented item, listbox
+  option, calendar day. The tap answers itself.
+- **THE EXCEPTION THAT LOOKS LIKE THE RULE** — `toggle-group` under
+  `disallowEmptySelection` CANCELS the un-press (`details.cancel()`), so the one
+  gesture that produces *nothing at all* is on a control that appears
+  self-answering. It keeps a press. `toggle.variants.ts` still declines one.
+
+Two written arguments were **reversed** rather than overwritten, and both are
+recorded in place. `link.tsx` declined the nudge because "a link is a run of text
+inside a paragraph" — but `translate` reflows nothing and `linkVariants` is
+`inline-flex`, so the layout claim was false and only a taste claim remained,
+bought with a third vocabulary. `toggle-group.variants.ts` declined it because
+`overflow-hidden` clips the item — which is true, and the clipped pixel is the
+group's own `bg-surface` on an unpressed item and a 1px band above the fill on a
+pressed one, i.e. the press.
+
+### THE RING IS `theme.css`, AND FOUR OF THE FIVE MECHANISMS WERE ALREADY DEAD
+
+`:where([data-lumo]):focus-visible`, plus `FOCUS_RING_SELF` for controls whose
+visible box is not the focus stop, plus the proxy rule for controls painted at
+zero alpha. No component writes a `focus-visible:` class; `system-vocabulary.test.ts`
+asserts the string appears in exactly one file.
+
+The finding that made this cheap is in the **built stylesheet**, and it is why
+this repo's rule is to read the export rather than reason about emission order.
+Layers land as `properties · theme · base · components · utilities · lumo.reset
+… lumo.components` — byte offsets 1354 / 3782 / 6175 / 9844 / 9862 / 94299 /
+102592 on the 12 Aug export. `@layer` order beats specificity outright, so
+`lumo.components` wins over every `focus-visible:` utility in the library:
+
+- the three re-typed copies of `FOCUS_RING_SELF` were unreachable, not merely
+  redundant;
+- `focus-visible:outline-accent` in `disclosure`, `navigation-menu` and
+  `calendar` never painted — which is the only reason a brand that moved
+  `--lumo-sys-focus` without moving `--color-accent` had not already shipped two
+  ring colours on one page;
+- **toggle-group's inset ring was never inset.** It is the library's only
+  negative offset, written because the group clips with `overflow-hidden`, and
+  the global rule overrode it. The intent was right and the mechanism could not
+  work.
+
+The inset is now expressed as the variable the one rule already reads —
+`[--lumo-sys-focus-offset:calc(var(--lumo-sys-focus-width)*-1)]` on the item, the
+same move the density island makes for `--lumo-ref-control-*`. A per-element
+knob is not a second mechanism; a second rule is.
+
+`drawer.tsx` was the real defect and not a style inconsistency: the string
+`data-lumo` appeared zero times in the file, and `drawerVariants` sets
+`outline-none` on the `role="dialog" tabindex="-1"` element that IS the focus
+stop. No indicator from the platform, none from the library. It is guarded now by
+an INVARIANT rather than by naming the component — *a focusable element that
+cancels the UA outline must carry the marker* — because naming it would be the
+hand-kept list this repository keeps proving wrong.
+
+### THE DIMMING IS `opacity-50`
+
+The other two values were each a local judgement about how dim one control
+looked (`opacity-60` on the field wrapper, `opacity-40` on the steppers and three
+calendar strings), which is an argument for moving the value everywhere or
+nowhere. Disabled text is outside SC 1.4.3, so no contrast floor applies.
+
+`cursor-not-allowed` is dead wherever `pointer-events-none` is on the same
+element, because nothing hit-tests to it. **The audit put that at 13 of 18 sites;
+measured per CLASS STRING it is 2** — eleven of the thirteen were two utilities
+on two different elements in one file. The looser reading would have deleted
+eleven live rules, which is why the enforcement's unit is a class string.
+
+### THREE ELEVATION TIERS, NAMED FOR THE JOB
+
+`--lumo-sys-shadow-{raised,overlay,modal}`, bridged as `--shadow-*`. The tier is
+not "how big" — it is **what the element has to be separated from**, which is
+decidable without taste:
+
+- **raised** — one plane above the same surface, still in flow, usually bordered
+  too. The shadow only has to say "not flat".
+- **overlay** — covers page content it does not know, with no scrim to help, and
+  is dismissible. The shadow carries the whole separation alone. This is why
+  `tooltip` and the chart tooltip cannot be three rungs apart: same problem.
+- **modal** — covers a page the scrim has already dimmed, and is the only thing
+  interactable. It says which object to look at.
+
+**A black shadow on the dark page is arithmetically close to a no-op**, and the
+number is kept as an assertion because the wrong fix is cheap to reach for. The
+dark page is Y 0.00305, so black at alpha a leaves 0.00305·(1−a): α 0.10 → 1.006:1,
+α 0.40 → 1.024:1, α 0.60 → 1.036:1, against a hairline this theme ships at
+1.15:1. Dark elevation is carried by the lighter surface and by `border-border`;
+the dark ramp is raised because it works over `surface-hover`, imagery and accent
+fills, not over the page. Geometry is shared between themes — a shadow that
+changes shape with the theme is two elevation systems wearing one set of names.
+
+Tailwind's own rungs are deliberately **not** reset to `initial`: the site and
+`packages/blocks` still use them, and blanking the namespace would break a build
+rather than improve it. What holds the three tiers is the directory sweep.
+
+### THE SCRIM IS `--lumo-sys-scrim`, AND ITS DARK VALUE IS NOT FOR THE MODAL
+
+`bg-scrim`, replacing the library's only two untokenised colours. **The light
+alpha does not move** — 0.5, exactly what `bg-black/50` was — so no light pixel
+changed and only the dark value needs judging.
+
+The dark value is 0.72, and the reason is counter-intuitive enough to be a test.
+It is *not* to separate the modal from the page: the dark page is already almost
+black, so 0.50 → 0.80 alpha moves the modal-vs-page ratio from 1.138:1 to
+1.158:1 — twenty-two points of alpha for fifteen thousandths of contrast. What a
+dark scrim is for is the page's *bright* content, which is the only thing left to
+suppress: a dark accent fill (`brand-400`, Y 0.7838) reads 7.54:1 against the
+modal at 0.5 and 4.60:1 at 0.72.
+
+### The enforcement, and why it enumerates the directory
+
+`packages/ui/src/system-vocabulary.test.ts` — 22 assertions, every one of them
+over `readdirSync(src)`. A vocabulary rule is the most list-vulnerable kind there
+is: the defect *is* a component that did its own thing, which is by definition
+the component nobody put on the list. `state-vocabulary.test.tsx` learned this
+the expensive way — both dead `data-hovered:` rules it eventually caught were in
+components no specimen list contained.
+
+Its unit is a **class string** (a run of literals joined by `+` or `,`), not a
+line and not a file, because two of the rules are about two utilities landing on
+the same element. `packages/theme/src/tokens.test.ts` gained nine assertions for
+the halves a component sweep cannot reach: the elevation ladder, the shared
+geometry, the dark-shadow ceiling, and the scrim composited by hand — the
+contrast matrix cannot see through alpha, so the scrim is `EXCLUDED` from it with
+a reason and measured separately.
+
+All of it was proved by reverting each fix and naming the assertion that goes
+red; the table is in the Phase 2.2/2.3 outcome in AUDIT.md §9.

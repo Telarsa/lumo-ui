@@ -1265,7 +1265,7 @@ const BLOCKS: BlockDemo[] = [
             ? "کولهٔ ضدآب با بند قابل تنظیم و جای مخصوص لپ‌تاپ."
             : "A water-resistant backpack with adjustable straps and a dedicated laptop sleeve."
         }
-        images={[{ src: PLACEHOLDER_IMAGE, alt: "" }]}
+        images={[{ src: PLACEHOLDER_IMAGE, alt: "", label: "نمای محصول" }]}
         badge={l === "fa-IR" ? "پرفروش" : "Bestseller"}
         price={2450000}
         compareAtPrice={2890000}

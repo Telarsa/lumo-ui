@@ -66,6 +66,7 @@ import { Menu, MenuItem, MenuPopover, MenuTrigger } from "./menu.tsx";
 import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { Dialog, DialogHeading, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Popover, PopoverTrigger } from "./popover.tsx";
+import { Drawer, DrawerOverlay } from "./drawer.tsx";
 import { Tooltip, TooltipTrigger } from "./tooltip.tsx";
 import { dialogOverlayVariants, dialogModalVariants } from "./dialog.tsx";
 import { popoverVariants } from "./popover.tsx";
@@ -172,6 +173,96 @@ describe("focus ring — WCAG 2.4.7", () => {
     cleanup();
     const t = render(<Toggle>پررنگ</Toggle>).container.querySelector("button") as HTMLElement;
     expect(t.hasAttribute("data-lumo")).toBe(true);
+  });
+
+  /**
+   * ── AN ELEMENT THAT SUPPRESSES ITS OUTLINE MUST HAVE OPTED INTO THE RING ───
+   *
+   * The defect this catches shipped for months and was found by grep, not by a
+   * test: `drawer.tsx` contained the string `data-lumo` ZERO times, and
+   * `drawerVariants` sets `outline-none`. That panel is
+   * `<div role="dialog" tabindex="-1" data-base-ui-focusable>` — measured — so
+   * it IS the focus stop whenever the drawer holds nothing focusable of its own,
+   * and a keyboard reader entering it got no indicator from the platform and
+   * none from the library. WCAG 2.4.7, on the component whose entire job is to
+   * take over the screen. `dialog.tsx` had the same hole, disguised: its INNER
+   * `Dialog` div has always carried `data-lumo`, and that div is not focusable.
+   *
+   * The assertion is deliberately not "the drawer has data-lumo" — that is the
+   * hand-kept list this suite's own footer argues against. It is the INVARIANT:
+   * an element that can receive focus and cancels the UA outline has to state
+   * that the library ring covers it. Anything matching the first two conditions
+   * and not the third has, by construction, no focus indicator at all.
+   *
+   * Rendered rather than swept from source, because both halves — "is
+   * focusable" and "the class landed on that element" — are properties of the
+   * DOM and neither is decidable from a cva string.
+   */
+  it("no focusable element cancels its outline without carrying the marker", () => {
+    const overlays = [
+      <DialogTrigger key="dialog" defaultOpen>
+        <Button>باز</Button>
+        <DialogOverlay>
+          <DialogModal>
+            <Dialog closeLabel="بستن">
+              <DialogHeading>عنوان</DialogHeading>
+            </Dialog>
+          </DialogModal>
+        </DialogOverlay>
+      </DialogTrigger>,
+      <DialogTrigger key="drawer" defaultOpen>
+        <Button>منو</Button>
+        <DrawerOverlay>
+          <Drawer side="start">
+            <Dialog closeLabel="بستن">
+              <DialogHeading>عنوان</DialogHeading>
+            </Dialog>
+          </Drawer>
+        </DrawerOverlay>
+      </DialogTrigger>,
+      <PopoverTrigger key="popover" defaultOpen>
+        <Button>باز</Button>
+        <Popover>محتوا</Popover>
+      </PopoverTrigger>,
+    ];
+
+    const offenders: string[] = [];
+    let checked = 0;
+    for (const ui of overlays) {
+      render(ui);
+      for (const el of document.body.querySelectorAll("[class]")) {
+        const classes = (el.getAttribute("class") ?? "").split(/\s+/);
+        if (!classes.includes("outline-none")) continue;
+        // Focusable: a real tabindex, or a role the engine moves focus to.
+        const focusable =
+          el.hasAttribute("tabindex") || el.hasAttribute("data-base-ui-focusable");
+        if (!focusable) continue;
+        checked++;
+        if (!el.hasAttribute("data-lumo") && !el.hasAttribute("data-lumo-proxy-focus")) {
+          offenders.push(
+            `<${el.tagName.toLowerCase()} role="${el.getAttribute("role") ?? ""}" ` +
+              `tabindex="${el.getAttribute("tabindex") ?? ""}">`,
+          );
+        }
+      }
+      cleanup();
+    }
+
+    // Anti-vacuity: if Base UI ever stops emitting a focusable popup, or the
+    // `outline-none` moves off these class strings, the loop above inspects
+    // nothing and the assertion below passes for free. Two is the measured
+    // count on this engine — the dialog popup and the drawer popup, which are
+    // the two `role="dialog"` focus stops. The popover's popup carries
+    // `outline-none` too but is not focusable, so it is correctly not graded.
+    expect(checked, "no focusable outline-none element was found to grade").toBeGreaterThanOrEqual(
+      2,
+    );
+    expect(
+      [...new Set(offenders)],
+      "a focusable element cancels the UA outline and has not opted into " +
+        "theme.css's `:where([data-lumo]):focus-visible` — so it has no focus " +
+        "indicator at all",
+    ).toEqual([]);
   });
 
   it("no component still asks for React Aria's focus attribute", () => {
@@ -814,8 +905,15 @@ describe("hover and press — structural only, and the reason is measured", () =
     // `:active` is not `data-pressed`: the platform drops it when the pointer
     // leaves the element, React Aria did not. Partial mapping, recorded in
     // experiments/measurements/state-vocabulary.json.
+    //
+    // The treatment is the nudge, not `active:bg-accent-hover`. It is on the
+    // BASE string rather than in the `solid` variant, which is the change:
+    // four variants each carrying their own press is where the library's five
+    // press vocabularies started. `button.variants.ts` measures the three
+    // candidates the nudge beat.
     const b = render(<Button>سلام</Button>).container.querySelector("button")!;
-    expect(b.getAttribute("class")).toContain("active:bg-accent-hover");
+    expect(b.getAttribute("class")).toContain("active:not-aria-[haspopup]:translate-y-px");
+    expect(b.getAttribute("class")).not.toContain("active:bg-");
   });
 
   it("the press treatment is DIFFERENT from the hover treatment, in every variant", () => {
@@ -908,6 +1006,28 @@ describe("hover and press — structural only, and the reason is measured", () =
     // exemption keeps an opening menu from moving with the trigger it is
     // anchored to.
     expect(buttonVariants()).toContain("active:not-aria-[haspopup]:translate-y-px");
+  });
+
+  it("the press is stated ONCE, not once per variant", () => {
+    /*
+     * The shape the library's five press vocabularies grew out of, pinned in the
+     * file they grew out of. Four variants each choosing their own press is four
+     * decisions where there should be one, and this component is the exemplar
+     * every other copies from — `pagination.variants.ts`'s header says in as
+     * many words that it took its steps "token for token" from here.
+     *
+     * So: the base string carries the press, and no variant adds one.
+     */
+    const base = buttonVariants({ variant: "solid" });
+    for (const variant of ["solid", "outline", "ghost", "critical"] as const) {
+      const own = buttonVariants({ variant })
+        .split(/\s+/)
+        .filter((c) => c.startsWith("active:"));
+      expect(own, `${variant} carries its own press`).toEqual([
+        "active:not-aria-[haspopup]:translate-y-px",
+      ]);
+    }
+    expect(base).toContain("active:not-aria-[haspopup]:translate-y-px");
   });
 });
 

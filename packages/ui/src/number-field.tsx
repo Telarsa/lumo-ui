@@ -101,16 +101,35 @@ export const numberInputVariants = cva(
  * button. The value above it changes, which is why this reads as acceptable; but
  * the value also changes when the field is typed into, so a reader cannot tell a
  * registered tap from a missed one, and the recovery from a missed tap is
- * another tap. `active:` closes it with the ghost-button step
- * `button.variants.ts` uses, and with no nudge: two stacked steppers moving
- * independently by a pixel would shear the pair.
+ * another tap. `active:` closes it.
+ *
+ * It closed it with a `surface-sunken` fill until Phase 2.2, and the note here
+ * said explicitly that the nudge was declined because "two stacked steppers
+ * moving independently by a pixel would shear the pair". That is REVERSED, and
+ * the reversal is worth stating rather than quietly overwriting:
+ *
+ *   - the fill was the wrong instrument for this control in particular. The
+ *     stepper's hover is `bg-surface-hover`; on the light theme
+ *     `surface-sunken` resolves to the same `neutral-100`, so a mouse user
+ *     pressing a stepper saw no change at all, and the repeated-tap case the
+ *     note above is about is a TOUCH case, where the fill arrives with nothing
+ *     before it and reads as a hover that got stuck.
+ *   - the shear is not a defect, it is the affordance. Only the pressed
+ *     stepper moves, and a pair of arrows where the one under the thumb sits a
+ *     pixel lower than its neighbour is what a physically pressed key looks
+ *     like. The pair is not a single object; the two buttons have separate
+ *     names, separate disabled states and separate hit areas.
  */
 export const stepperVariants = cva(
   "flex flex-1 cursor-pointer items-center justify-center rounded-sm px-1 text-fg-muted " +
     // `data-disabled` is unchanged — Base UI puts it on both stepper buttons.
     "transition-colors hover:bg-surface-hover hover:text-fg " +
-    "active:bg-surface-sunken active:text-fg " +
-    "data-disabled:pointer-events-none data-disabled:opacity-40 " +
+    "active:translate-y-px " +
+    // `opacity-50`, the library's one disabled dimming. It was 40 here and in
+    // three calendar strings — a third value, chosen because a stepper looked
+    // "not dim enough" beside its own input, which is an argument for changing
+    // the token everywhere or not at all.
+    "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:size-3.5",
 );
 

@@ -104,20 +104,60 @@ export const toggleButtonVariants = cva(
      * the cancel is observable, so the flash-and-revert is the honest answer:
      * "the press was received, and the answer is no."
      *
-     * `brightness-95` over whichever fill is showing rather than a fifth colour
-     * — one rule covers pressed and unpressed, and no token is invented for it.
-     * No `translate-y-px`: these items are welded into one bordered strip with
+     * It was `brightness-95`, and the nudge was declined here on the grounds
+     * that "these items are welded into one bordered strip with
      * `overflow-hidden` on the group, so nudging one would clip it against the
-     * group's own edge and open a gap beside its neighbours.
+     * group's own edge and open a gap beside its neighbours". Phase 2.2 took
+     * the nudge anyway, and the clip is worth describing exactly rather than
+     * asserting it away, because the objection was not wrong — it was measured
+     * against the wrong thing.
+     *
+     * What is clipped on an UNPRESSED item: nothing visible. The item has no
+     * fill of its own and the group behind it is `bg-surface`, so the 1px that
+     * appears at the block-start edge is the same colour as the pixel it
+     * replaced, and the 1px lost at the block-end edge is empty padding. The
+     * label moves; that is the entire effect.
+     *
+     * What is clipped on a PRESSED (ON) item, which does carry a fill: a 1px
+     * band of the group's own surface appears above it and 1px of its fill is
+     * cut off below. That IS the press — a filled chip sinking into the strip
+     * it sits in — and the `border-s` dividers belong to the group rather than
+     * to the item, so they do not move and no gap opens beside a neighbour.
+     *
+     * The reason it is worth the trade is the paragraph above: this is the one
+     * control in the library where a press can be CANCELLED, and
+     * `brightness(0.95)` on an unfilled item moves `text-fg` from 23 to 22 out
+     * of 255. The cancelled press had a rule and no pixels.
      */
-    "active:brightness-95 " +
-    // WCAG 2.4.7. Base UI's Toggle IS the focusable element — a real `<button>`
-    // — so the ring goes on it directly and the `group-` hop React Aria forced
-    // disappears. `:focus-visible` because Base UI ships no
-    // `data-focus-visible` (grep of the dist: 0 files) and its `data-focused`
-    // is unfiltered plain focus, which would ring on a mouse click.
-    "focus-visible:[outline:var(--lumo-sys-focus-width)_solid_var(--lumo-sys-focus)] " +
-    "focus-visible:[outline-offset:calc(var(--lumo-sys-focus-offset)*-1)] " +
+    "active:translate-y-px " +
+    /*
+     * WCAG 2.4.7 — and NOT a ring rule. Base UI's Toggle IS the focusable
+     * element (a real `<button>`), it carries `data-lumo`, and theme.css's
+     * `:where([data-lumo]):focus-visible` is the library's one ring.
+     *
+     * ── THE INSET RING WAS NEVER INSET, AND THAT IS THE FINDING ──────────────
+     *
+     * Two lines stood here: a re-typed copy of `FOCUS_RING_SELF`, plus
+     * `focus-visible:[outline-offset:calc(var(--lumo-sys-focus-offset)*-1)]` —
+     * the only NEGATIVE offset anywhere in the library, written because the
+     * group clips its items with `overflow-hidden` (see the rounding note
+     * above) and an outset ring is therefore cut off on the two end caps.
+     *
+     * The intent was right and the mechanism could not work. Both lines compile
+     * into `@layer utilities`, and the built export orders `utilities` BEFORE
+     * `lumo.components`: measured on the 12 Aug 2026 stylesheet, `utilities`
+     * opens at byte 9862 and `lumo.components` at 102592. Layer order beats
+     * specificity outright, so the global rule's `outline-offset:
+     * var(--lumo-sys-focus-offset)` won and the ring was drawn OUTSET, clipped,
+     * exactly as if the workaround had never been written.
+     *
+     * The fix is not a third rule. It is the variable the one rule already
+     * reads, set on this element — the same move the density island makes for
+     * `--lumo-ref-control-*`. `-2px` expressed as `calc(width * -1)` so the ring
+     * lands flush inside the item's edge whatever a brand sets the width to,
+     * and the group can go on clipping.
+     */
+    "[--lumo-sys-focus-offset:calc(var(--lumo-sys-focus-width)*-1)] " +
     "disabled:pointer-events-none disabled:opacity-50 " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",

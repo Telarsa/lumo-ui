@@ -127,7 +127,7 @@ export const tooltipVariants = cva(
   //
   // Measured on a rendered tooltip in
   // `probe2.state-vocabulary.json → tooltip.parts`.
-  "z-50 max-w-xs rounded-md bg-fg px-2 py-1 text-xs leading-relaxed text-bg shadow-md " +
+  "z-50 max-w-xs rounded-md bg-fg px-2 py-1 text-xs leading-relaxed text-bg shadow-overlay " +
     "transition duration-150 ease-out " +
     "data-starting-style:opacity-0 data-starting-style:scale-95 " +
     "data-ending-style:opacity-0 data-ending-style:scale-95 " +

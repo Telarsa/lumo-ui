@@ -112,7 +112,7 @@ const RIAL: Intl.NumberFormatOptions = {
  * title that already names the product, and an empty alt is the way to say so.
  * `namedControls` does not grade `<img>`, which is not an interactive control.
  */
-const IMAGE = { src: "/media/backpack.avif", alt: "" };
+const IMAGE = { src: "/media/backpack.avif", alt: "", label: "نمای جلو" };
 
 const SIGN_IN_STRINGS: SignInStrings = {
   title: "ورود به حساب",

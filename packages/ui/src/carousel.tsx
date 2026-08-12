@@ -243,11 +243,34 @@ export function CarouselContent({ className, ...props }: CarouselContentProps) {
   );
 }
 
-export interface CarouselItemProps extends Omit<React.ComponentProps<"div">, "className"> {
+export interface CarouselItemProps
+  extends Omit<React.ComponentProps<"div">, "className" | "aria-label"> {
   className?: string | undefined;
+  /**
+   * Announced name of this slide, e.g. «کفش ورزشی مدل آلفا». REQUIRED.
+   *
+   * ── A ROLEDESCRIPTION WITHOUT A NAME ANNOUNCES ONE WORD ──────────────────
+   *
+   * `aria-roledescription` REPLACES the role in the announcement. With no
+   * accessible name, this element is read out as «اسلاید» and nothing else —
+   * so a reader arrowing through a carousel hears the same word once per
+   * slide and learns nothing. Measured on the built export before this prop
+   * existed: 18 of 23 roledescribed elements on the carousel page computed an
+   * EMPTY name, and `named-roledescription` fires on exactly that.
+   *
+   * A heading inside the slide does NOT fix it, which is the trap. `group` is
+   * not a name-from-content role, so its content is not consulted — the name
+   * has to be on this element. There is a test pinning that, because the
+   * obvious fix is the wrong one.
+   *
+   * Required rather than defaulted, like every announced string here: a
+   * default would be English, and «اسلاید ۱» invented by the library is a
+   * position, not a name. The caller knows what is on the slide.
+   */
+  label: string;
 }
 
-export function CarouselItem({ className, ...props }: CarouselItemProps) {
+export function CarouselItem({ className, label, ...props }: CarouselItemProps) {
   const { orientation, slideRoleDescription } = useCarousel();
 
   return (
@@ -255,6 +278,7 @@ export function CarouselItem({ className, ...props }: CarouselItemProps) {
       role="group"
       // Persian, from the one prop on <Carousel>. Upstream hardcodes "slide".
       aria-roledescription={slideRoleDescription}
+      aria-label={label}
       data-slot="carousel-item"
       className={cn(
         "min-w-0 shrink-0 grow-0 basis-full",

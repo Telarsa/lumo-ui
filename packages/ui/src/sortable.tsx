@@ -106,7 +106,7 @@ export const sortableItemVariants = cva(
     // The held state is on the ITEM and driven by a data attribute the
     // component writes, so a consumer restyling it never has to reach into
     // this file's state.
-    "data-held:border-accent data-held:shadow-lg",
+    "data-held:border-accent data-held:shadow-overlay",
 );
 
 /**

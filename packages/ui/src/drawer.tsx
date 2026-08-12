@@ -136,7 +136,10 @@ import {
  * to the slide's duration.
  */
 export const drawerOverlayVariants = cva(
-  "fixed inset-0 z-50 bg-black/50 " +
+  // `bg-scrim`, not `bg-black/50`. See dialog.tsx: these two literals were the
+  // library's only untokenised colours, and a per-call-site alpha is how they
+  // would have drifted apart.
+  "fixed inset-0 z-50 bg-scrim " +
     "transition-opacity duration-300 ease-out " +
     "data-starting-style:opacity-0 data-ending-style:opacity-0 " +
     "motion-reduce:transition-none",
@@ -154,7 +157,7 @@ export const drawerOverlayVariants = cva(
  */
 export const drawerVariants = cva(
   "fixed inset-y-0 z-50 flex w-[var(--lumo-drawer-size)] max-w-full flex-col " +
-    "bg-surface text-fg shadow-2xl outline-none " +
+    "bg-surface text-fg shadow-modal outline-none " +
     "[--lumo-drawer-offset:calc(-1*var(--lumo-drawer-size))] " +
     "transition-[inset-inline-start,inset-inline-end,opacity] duration-300 ease-out " +
     "motion-reduce:transition-none",
@@ -286,7 +289,31 @@ export function Drawer({
   ...rest
 }: DrawerProps) {
   return (
-    <BaseDialog.Popup className={cn(drawerVariants({ side, size }), className)} {...rest}>
+    <BaseDialog.Popup
+      /*
+       * ── THE ONE INTERACTIVE SURFACE THE GLOBAL FOCUS RULE COULD NOT REACH ──
+       *
+       * Before 12 Aug 2026 the string `data-lumo` did not appear anywhere in
+       * this file. Measured on a rendered drawer, this element is
+       * `<div role="dialog" tabindex="-1" data-base-ui-focusable>` — it IS the
+       * focus stop, the one Base UI moves focus to when the panel holds nothing
+       * focusable of its own, and `drawerVariants` sets `outline-none` on it.
+       * So a keyboard reader entering the drawer got no indicator from the
+       * platform and none from the library. WCAG 2.4.7, on the component whose
+       * whole job is to take over the screen.
+       *
+       * It is one attribute rather than a ring class because there is one ring:
+       * theme.css `:where([data-lumo]):focus-visible`. `outline-none` STAYS and
+       * is not a contradiction — it lives in `@layer utilities`, which the built
+       * stylesheet orders before `lumo.components`, so it suppresses the UA
+       * outline when the panel is focused by a mouse-driven open and loses to
+       * the library ring under `:focus-visible`. Verified in the export:
+       * `utilities` at byte 9862, `lumo.components` at 102592.
+       */
+      data-lumo=""
+      className={cn(drawerVariants({ side, size }), className)}
+      {...rest}
+    >
       {children as React.ReactNode}
     </BaseDialog.Popup>
   );

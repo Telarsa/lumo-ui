@@ -67,6 +67,10 @@ import { cn, type LumoNode } from "@lumo-ui/core";
 export const linkVariants = cva(
   "inline-flex items-center gap-1 rounded-sm underline-offset-4 " +
     "transition-colors cursor-pointer " +
+    // THE press treatment, stated once for all three variants rather than in
+    // each of them. `button.variants.ts` carries the argument and the
+    // measurements; the variants below carry what this file gave up for it.
+    "active:translate-y-px " +
     // `data-disabled` is still an ATTRIBUTE rather than `:disabled`, because an
     // `<a>` has no disabled state in the platform at all — the component writes
     // it, so the component may as well keep styling it.
@@ -94,28 +98,31 @@ export const linkVariants = cva(
         // coloured the text and left the affordance off. `quiet` had no press
         // rule at all.
         //
-        // Colour is already spent on the hover in all three, so the press steps
-        // on THICKNESS instead: `decoration-2` is a genuinely different axis, it
-        // is legible against the `underline-offset-4` these links already carry
-        // for Persian descenders, and text-decoration thickness does not
-        // participate in layout — so no line reflows under a finger.
+        // The second fix stepped on THICKNESS — `active:decoration-2` on all
+        // three variants, plus `active:text-fg`/`active:underline` on two of
+        // them — because colour was already spent on the hover. It is gone, and
+        // this file is where the trade is worth naming, because the note it
+        // replaces argued AGAINST the nudge and the argument was aesthetic
+        // rather than measured:
         //
-        // No `active:translate-y-px` here, which button and pagination both
-        // carry. Those are boxes with their own bounds; a link is usually a run
-        // of text INSIDE a paragraph, and nudging it by a pixel moves the words
-        // relative to the sentence around them. A control that is part of a line
-        // of prose has no depth to be pushed into.
-        accent:
-          "text-accent underline decoration-accent/40 hover:decoration-accent " +
-          "active:decoration-accent active:decoration-2",
+        //   "a link is usually a run of text INSIDE a paragraph, and nudging it
+        //    by a pixel moves the words relative to the sentence around them."
+        //
+        // Two things are true and only one of them was checked. `translate` does
+        // not participate in layout any more than `text-decoration-thickness`
+        // does, so nothing reflows and no line rewraps — that half is
+        // measurable and it is fine. The other half is that a word dropping a
+        // pixel inside a sentence is unusual, which is a taste claim, and it was
+        // bought at the price of a THIRD press vocabulary in a library that had
+        // five. `linkVariants` is `inline-flex`, so the transform applies; the
+        // press now reads the same here as everywhere else.
+        accent: "text-accent underline decoration-accent/40 hover:decoration-accent",
         // For dense secondary navigation, where an underline on every item is
         // noise. The underline appears on hover so the affordance is not lost.
-        subtle:
-          "text-fg-muted no-underline hover:text-fg hover:underline " +
-          "active:text-fg active:underline active:decoration-2",
+        subtle: "text-fg-muted no-underline hover:text-fg hover:underline",
         // Inherits the surrounding colour. For a link wrapping a whole card or
         // a heading, where the target is obvious from the layout.
-        quiet: "text-current no-underline hover:underline active:underline active:decoration-2",
+        quiet: "text-current no-underline hover:underline",
       },
       size: {
         sm: "text-sm",

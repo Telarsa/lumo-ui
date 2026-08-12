@@ -102,24 +102,24 @@ export const calendarHeadingVariants = cva(
  * a state written, reviewed and shipped that renders nothing. The same collision
  * `toggle.variants.ts` and `sidebar.variants.ts` record, in a third place.
  *
- * The fix is a different HUE rather than another step on the neutral ramp —
- * `bg-accent/10` + `text-accent`, the pairing `sidebar.variants.ts`,
- * `date-selector.variants.ts` and `badge.tsx` already use — because that ramp is
- * where the collision lives and where the next theme edit can recreate it.
+ * The first fix was a different HUE on the same property — `bg-accent/10` +
+ * `text-accent`, plus a `hover:active:` restatement at (0,3,0) so a mouse press
+ * would beat the (0,2,0) hover fill it was competing with. It worked, and it is
+ * gone, because it was the fourth of five press vocabularies and the
+ * specificity dance is what a fill press always costs.
  *
- * `hover:active:` is stated as well as `active:`. A mouse press arrives WITH the
- * pointer, so `hover:bg-surface-hover` (0,2,0) and `active:bg-accent/10` (0,2,0)
- * are the same specificity and which one paints would be decided by the order
- * Tailwind emits its variants in. `.x:hover:active` is (0,3,0) and decides it.
- * The bare `active:` is what a touch press gets, where `:hover` never fires.
+ * The press is now the library's one treatment, `active:translate-y-px`, and
+ * the whole competition disappears with it: `translate` is not a property any
+ * hover, selected or highlighted rule in this file writes, so there is nothing
+ * to out-specify and no `hover:active:` restatement to keep in step. The
+ * argument in full is in `button.variants.ts`.
  */
 export const calendarNavButtonVariants = cva(
   "flex h-control-sm w-control-sm shrink-0 cursor-pointer items-center justify-center " +
     "rounded-md text-fg-muted transition-colors " +
     "hover:bg-surface-hover hover:text-fg " +
-    "active:bg-accent/10 active:text-accent " +
-    "hover:active:bg-accent/10 hover:active:text-accent " +
-    "disabled:pointer-events-none disabled:opacity-40 " +
+    "active:translate-y-px " +
+    "disabled:pointer-events-none disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4",
 );
 
@@ -181,10 +181,24 @@ export const calendarDropdownsVariants = cva("flex items-center gap-1");
  *
  * Focus lands on the `<select>`, and the `<select>` is `opacity-0` — an outline
  * on it is drawn at zero alpha, so a keyboard reader tabbing into the caption
- * would see NOTHING move. `has-[select:focus-visible]:` puts the ring on the
- * parent that is actually painted. This is the same reasoning
- * `calendarDayButtonVariants` states in the other direction: whichever element
- * is painted owns the appearance, and here that is never the focused one.
+ * would see NOTHING move. The ring has to go on the parent that is actually
+ * painted. Same reasoning `calendarDayButtonVariants` states in the other
+ * direction: whichever element is painted owns the appearance, and here that is
+ * never the focused one.
+ *
+ * The MECHANISM is not this file's, and that is the change. It was
+ * `has-[select:focus-visible]:outline-2 has-[select:focus-visible]:outline-offset-2
+ * has-[select:focus-visible]:outline-accent` — a locally invented ring reading
+ * `--color-accent` instead of `--lumo-sys-focus`, so a brand that moved its
+ * focus colour without moving accent would have found two ring colours on one
+ * page. theme.css has had a rule for exactly this shape since the slider needed
+ * it: `:where([data-lumo-proxy-focus]):has(> :is(input, select):focus-visible)`,
+ * opt-in by marker so it cannot fire on structure. `select` was added to it for
+ * this component, and so was the marker's CLASS spelling: react-day-picker's
+ * `classNames` map takes class strings and nothing else, so `data-lumo-proxy-focus`
+ * has no seam to arrive through on a span this file does not render. That is
+ * what `lumo-proxy-focus` in the string below is — a marker, not a utility. It
+ * styles nothing; theme.css selects it.
  *
  * `[&>span]:` reaches the caption span because it is react-day-picker's element,
  * not ours — it carries `caption_label`, which is shared with the label layout,
@@ -193,12 +207,11 @@ export const calendarDropdownsVariants = cva("flex items-center gap-1");
  * a calendar that has no dropdowns at all.
  */
 export const calendarDropdownRootVariants = cva(
-  "relative inline-flex h-control-sm items-center rounded-md px-2 " +
+  "lumo-proxy-focus " +
+    "relative inline-flex h-control-sm items-center rounded-md px-2 " +
     "cursor-pointer text-sm font-medium text-fg transition-colors " +
     "hover:bg-surface-hover " +
-    "has-[select:focus-visible]:outline-2 has-[select:focus-visible]:outline-offset-2 " +
-    "has-[select:focus-visible]:outline-accent " +
-    "data-disabled:pointer-events-none data-disabled:opacity-40 " +
+    "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&>span]:inline-flex [&>span]:items-center [&>span]:gap-1 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:text-fg-muted",
 );
@@ -308,7 +321,12 @@ export const calendarCellVariants = cva(
  */
 export const calendarDayButtonVariants = cva(
   "h-full w-full cursor-pointer rounded-md bg-transparent text-inherit " +
-    "outline-none disabled:pointer-events-none disabled:cursor-not-allowed",
+    // No `disabled:cursor-not-allowed`. `pointer-events-none` on the same
+    // element means the cursor never resolves against it at all, so the rule
+    // was a declaration the compositor could not reach — one of two such
+    // sites in the library out of eighteen. The other fifteen sit on labels
+    // and inputs that stay hit-testable and keep it.
+    "outline-none disabled:pointer-events-none",
 );
 
 /**
@@ -466,17 +484,19 @@ export const datePickerGroupVariants = cva(
 /**
  * The button that opens the calendar.
  *
- * Same press fix, same measurement, as `calendarNavButtonVariants` above: the
- * `active:bg-surface-sunken` this used to carry was the light theme's
- * `hover:bg-surface-hover` fill exactly, so the press painted nothing.
+ * Same press treatment, same measurement, as `calendarNavButtonVariants` above.
+ * It carries button's `not-aria-[haspopup]` carve-out and the nav buttons do
+ * not, and that difference is the taxonomy rather than an inconsistency: this
+ * one OPENS the calendar popover, which Base UI anchors to this element's box,
+ * so nudging it while held would jitter the panel at the instant it appears.
+ * The nav buttons inside the open calendar own no overlay.
  */
 export const datePickerTriggerVariants = cva(
   "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm " +
     "text-fg-muted transition-colors " +
     "hover:bg-surface-hover hover:text-fg " +
-    "active:bg-accent/10 active:text-accent " +
-    "hover:active:bg-accent/10 hover:active:text-accent " +
-    "disabled:pointer-events-none disabled:opacity-40 " +
+    "active:not-aria-[haspopup]:translate-y-px " +
+    "disabled:pointer-events-none disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4",
 );
 

@@ -60,7 +60,7 @@ export const itemVariants = cva(
        * painting them on the third invites a click that goes nowhere.
        */
       interactive: {
-        true: "hover:bg-surface-hover active:bg-surface-sunken",
+        true: "hover:bg-surface-hover active:translate-y-px",
         false: "",
       },
       variant: {

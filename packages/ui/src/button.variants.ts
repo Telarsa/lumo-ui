@@ -67,34 +67,72 @@ import { cva, type VariantProps } from "class-variance-authority";
  * a tap was spent on a state a touch device never enters. That is the finding's
  * whole weight, and it is why the fix below is not a taste adjustment.
  *
- * Each variant now steps somewhere hover did not, using tokens that already
- * exist — no new colour was invented for a press:
+ * The first fix gave each variant its own step — `brightness-95` on solid,
+ * `surface-sunken` on outline and ghost, `opacity-80` on critical — plus the
+ * 1px nudge below. Four presses for four variants of ONE component, in the file
+ * every other component copies from. That is where the library's five press
+ * vocabularies came from, and Phase 2.2 removed them.
  *
- *     solid     brightness-95 over the hover fill (there is no --accent-active
- *               token, and adding one for a 5% dim would be a theme change
- *               charged to a component)
- *     outline   surface-sunken — the next real step past surface-hover
- *     ghost     surface-sunken — same
- *     critical  opacity-80, one step past hover's 90
+ * ═══ THE PRESS IS A ONE-PIXEL BLOCK-AXIS NUDGE. NOTHING ELSE, ANYWHERE. ═════
  *
- * And the 1px block-axis nudge, which is the part that works on touch. It is
- * `translate-y-px` and NOT a logical utility on purpose: a press pushes the
+ * `active:translate-y-px`, on every pressable surface in the library, in one
+ * spelling that `system-vocabulary.test.ts` sweeps the directory for. The four
+ * candidates were measured against the surfaces that actually exist, and each
+ * of the other three fails on a surface this library ships:
+ *
+ *   a FILL (`active:bg-surface-sunken`, 13 sites) has to know what is
+ *     underneath it, and it has to beat its own hover for the same declaration.
+ *     On the light theme `--lumo-sys-surface-sunken` and
+ *     `--lumo-sys-surface-hover` are BOTH `neutral-100` — measured in
+ *     tokens.css, asserted in theme-vocabulary.test.tsx — so most of those 13
+ *     painted nothing at all under a pointer. It is also why three different
+ *     components had to invent `hover:active:bg-`, `data-pressed:hover:bg-` and
+ *     `aria-pressed:hover:bg-`: a fill press competes with a fill hover at
+ *     equal specificity, so the winner is Tailwind's emission order unless
+ *     somebody notices.
+ *   a FILTER (`active:brightness-95`, 4 sites) needs something bright to dim.
+ *     A light-theme ghost button has a transparent fill and `text-fg` at
+ *     #171717; `brightness(0.95)` takes channel 23 to 22 out of 255. Invisible
+ *     — and invisible in exactly the case the press exists for, because on
+ *     touch there is no hover fill to dim.
+ *   OPACITY (`active:opacity-80`, this file's own `critical`) dims the LABEL
+ *     with the fill. Measured on this variant, light theme: `text-bg` on
+ *     `bg-critical` is 4.86:1 at rest and 2.82:1 while held. It is the one
+ *     candidate that can take a control below AA at the moment it is being
+ *     used.
+ *
+ * The nudge is the only one that is independent of the surface, independent of
+ * the theme, and orthogonal to every other declaration — `translate` is not a
+ * property any hover, selected or highlighted rule writes, so it composes for
+ * free and there is nothing left to out-specify. It costs no contrast, and it
+ * is visible on touch, which is the whole point.
+ *
+ * `translate-y-px` and NOT a logical utility, on purpose: a press pushes the
  * control INTO the page, the block axis is unaffected by `direction` in a
  * horizontal writing mode, and the same rule is written down for the shadow in
  * `card.tsx` and the transform in `search-field.tsx`.
  *
- * `not-aria-[haspopup]` exempts triggers that OWN an overlay. Base UI anchors a
- * menu, select or popover to its trigger's box, so nudging the trigger while it
- * is held nudges the panel with it — a 1px jitter at exactly the moment the
- * panel appears. A control whose press already produces a whole overlay is not
- * short of feedback.
+ * WHAT DOES NOT GET IT, and why the two exemptions are not taste:
+ *
+ *   ANCHORED — `not-aria-[haspopup]` below. Base UI anchors a menu, select or
+ *     popover to its trigger's box, so nudging a held trigger nudges the panel
+ *     with it: a 1px jitter at exactly the moment the panel appears. A control
+ *     whose press produces a whole overlay is not short of feedback.
+ *   SELF-ANSWERING — a control whose own box takes a persistent new appearance
+ *     as the direct result of the press: toggle, checkbox, radio, switch, tab,
+ *     segmented item. `toggle.variants.ts` states this and it survives.
+ *     It is NOT the same as "looks like a toggle": `toggle-group` under
+ *     `disallowEmptySelection` CANCELS the un-press, so the one gesture that
+ *     produces nothing at all is the one on a control that appears to answer
+ *     itself. That component keeps a press. See its own file.
  */
 export const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 rounded-md font-medium " +
     "whitespace-nowrap transition-colors cursor-pointer select-none " +
-    // The press nudge. See the header: block axis, so it does not mirror, and
-    // exempted on overlay triggers so a menu does not jitter as it opens.
-    // `data-disabled:pointer-events-none` already keeps `:active` off a
+    // THE press treatment for the whole library. See the header for the three
+    // candidates it beat and the measurements. Block axis, so it does not
+    // mirror; exempted on overlay triggers so a menu does not jitter as it
+    // opens. `data-disabled:pointer-events-none` already keeps `:active` off a
     // disabled button, so there is no disabled carve-out to write here.
     "active:not-aria-[haspopup]:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
@@ -102,17 +140,28 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        solid: "bg-accent text-accent-fg hover:bg-accent-hover active:bg-accent-hover active:brightness-95",
-        outline:
-          "border border-border-control bg-surface text-fg hover:bg-surface-hover active:bg-surface-sunken",
-        ghost: "text-fg hover:bg-surface-hover active:bg-surface-sunken",
+        // No `active:` on any variant. The press lives once, in the base string
+        // above, and a variant that restated it would be the first of the next
+        // five vocabularies.
+        solid: "bg-accent text-accent-fg hover:bg-accent-hover",
+        outline: "border border-border-control bg-surface text-fg hover:bg-surface-hover",
+        ghost: "text-fg hover:bg-surface-hover",
         // `text-bg`, not `text-white`. The status tokens swap lightness between
         // themes — --lumo-sys-critical is L 0.520 on light and L 0.700 on dark —
         // so white text passes on the light fill and fails on the dark one. That
         // is a contrast bug visible in exactly one theme, which is the kind
         // nobody catches in review. `--color-bg` swaps with the fill and stays
         // legible against both.
-        critical: "bg-critical text-bg hover:opacity-90 active:opacity-80",
+        //
+        // The hover moved off `opacity-90` when the press stopped being
+        // `opacity-80`: two rules on one property at equal specificity is the
+        // shape this whole pass exists to remove, and there is no
+        // `--lumo-sys-critical-hover` to reach for. `brightness-95` is a filter
+        // rather than a fill, so it composes with the nudge and needs no token.
+        // Measured on the committed ramp: light 4.86:1 → 5.30:1 (the fill
+        // darkens under near-white text, so hover GAINS contrast), dark
+        // 6.84:1 → 6.21:1, both comfortably over AA.
+        critical: "bg-critical text-bg hover:brightness-95",
       },
       size: {
         // Padding is logical so it mirrors; height comes from the density-scaled

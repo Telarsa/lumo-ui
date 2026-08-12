@@ -130,12 +130,18 @@ export const disclosureTriggerVariants = cva(
     // grep over the whole 1.7.0 dist returns 0 files. Keeping the old selector
     // would have left a class that styles nothing and reviews as if it did.
     "hover:text-accent " +
-    // WCAG 2.4.7. `data-focus-visible` does not exist in Base UI either, and
-    // this is the row that gets missed — a ring that silently stops rendering is
-    // invisible to everyone who navigates with a pointer, i.e. to every
-    // reviewer. `:focus-visible` keeps its unit tier: jsdom DOES match it on a
-    // focused element, unlike `:hover` and `:active`.
-    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
+    // WCAG 2.4.7, and NO ring class here. `DisclosureTrigger` carries
+    // `data-lumo`, so theme.css's one rule already draws it.
+    //
+    // What stood here was `focus-visible:outline-2 outline-offset-2
+    // outline-accent`, and it was INERT — measured in the built export, not
+    // inferred. `outline-accent` compiles inside `@layer utilities`, which the
+    // export orders BEFORE `lumo.components`, so the global rule's `outline`
+    // shorthand reset the colour and won. It never painted a single pixel.
+    // Worth stating because it was also the most dangerous of the four
+    // mechanisms on paper: `--color-accent` is not `--lumo-sys-focus`, so a
+    // brand moving its focus colour alone would have got two ring colours on
+    // one page — except that it could not, because the rule was dead.
     "data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 

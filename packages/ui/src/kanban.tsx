@@ -181,7 +181,7 @@ export const kanbanColumnHeaderVariants = cva(
 
 export const kanbanCardVariants = cva(
   "flex items-start gap-2 rounded-lg border border-border bg-surface p-3 text-sm " +
-    "transition-shadow data-held:border-accent data-held:shadow-lg",
+    "transition-shadow data-held:border-accent data-held:shadow-overlay",
 );
 
 /**

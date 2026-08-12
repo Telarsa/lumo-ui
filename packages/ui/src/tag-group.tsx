@@ -199,12 +199,14 @@ export const tagRemoveVariants = cva(
   "relative -me-1 ms-0.5 inline-flex size-5 shrink-0 cursor-pointer " +
     "items-center justify-center rounded-sm text-fg-muted outline-none " +
     "transition-colors hover:bg-surface-hover hover:text-fg " +
-    // WCAG 2.4.7. This IS the focusable element now — React Aria's roving
-    // tabindex sat on the row and the ring had to be mirrored down to it — so
-    // `:focus-visible` applies directly. Not `data-focused`: Base UI's is
-    // unfiltered plain focus and would ring on a mouse click.
-    "focus-visible:[outline:var(--lumo-sys-focus-width)_solid_var(--lumo-sys-focus)] " +
-    "focus-visible:[outline-offset:var(--lumo-sys-focus-offset)] " +
+    // The press. Same reasoning as `tag.tsx`: the chip is removed, so there is
+    // no element left to carry a state change.
+    "active:translate-y-px " +
+    // WCAG 2.4.7, and NO ring class. This IS the focusable element now — React
+    // Aria's roving tabindex sat on the row and the ring had to be mirrored down
+    // to it — and it carries `data-lumo`, so theme.css's one rule reaches it.
+    // The two lines that re-typed `FOCUS_RING_SELF` here were dead for the layer
+    // reason `segmented-control.tsx` records.
     // The glyph is 20px, under the 44px touch floor. Inflating the chip would
     // make a row of filters unusable, so the HIT AREA grows via a transparent
     // pseudo-element: the target changes, the layout does not.

@@ -165,6 +165,139 @@
     --lumo-ref-caution: oklch(0.545 0.120 75);
     --lumo-ref-caution-dark: oklch(0.780 0.140 75);
 
+    /* ---- elevation, and the scrim -------------------------------------- *
+     *
+     * ── WHY THESE EXIST AT ALL ────────────────────────────────────────────
+     *
+     * Before 12 Aug 2026 this file declared no shadow of any kind, so 100% of
+     * the library's elevation came from Tailwind's default `--shadow-*` ramp
+     * and a brand could not rescale one pixel of it. Measured across
+     * `packages/ui/src` on that date: twelve overlay surfaces spread over FIVE
+     * rungs of that ramp — `shadow-lg` on popover/menu/select/combobox/
+     * hover-card/nav-menu/toast, `shadow-2xl` on dialog/drawer, `shadow-md` on
+     * tooltip, `shadow-xl` on the chart tooltip. Two tooltips at two
+     * elevations, which is the whole finding in one line: nobody chose five
+     * rungs, five rungs is what you get when each component picks the number
+     * that looked right on the day it was written.
+     *
+     * ── WHY THREE TIERS, AND WHAT DECIDES WHICH ONE ───────────────────────
+     *
+     * The tier is NOT "how big". It is what the shadow has to separate the
+     * element from, which is a property of the element's job and therefore
+     * decidable without taste:
+     *
+     *   raised   The element is one plane above the SAME surface and stays in
+     *            flow. Its neighbours are its own siblings, drawn from the same
+     *            palette, and a border usually separates it as well. A card, a
+     *            chat bubble, a switch thumb, the checked chip in a segmented
+     *            track. The shadow only has to say "not flat".
+     *   overlay  The element covers page content it does not know, with NO
+     *            scrim to help it, and it is dismissible — so the reader has to
+     *            be able to tell at a glance what is the layer and what is the
+     *            page underneath it. This is the tier that carries the whole
+     *            separation job alone, and it is why tooltip and popover cannot
+     *            be two rungs apart: they are the same problem.
+     *   modal    The element covers a page that is ALREADY dimmed by the scrim
+     *            below, and it is the only thing on screen that can be
+     *            interacted with. The scrim does the separating; the shadow
+     *            says which object the reader is meant to be looking at.
+     *
+     * A dragged card (`data-held:` in kanban/sortable/gantt) is `overlay`: it
+     * is lifted out of its column and travels across content that is not its
+     * own, which is the overlay problem and not the card problem.
+     *
+     * ── THE DARK RAMP IS NOT A DARKER LIGHT RAMP, AND THE NUMBER SAYS WHY ─
+     *
+     * A black shadow on the dark page is arithmetically close to a no-op, and
+     * this is worth writing down because the instinct on seeing a flat dark
+     * overlay is to raise the alpha, which does not work. The dark page is
+     * `neutral-950`, L 0.145, relative luminance 0.00305. Black at alpha a
+     * leaves 0.00305·(1−a), so the shadowed pixel against the unshadowed page
+     * measures:
+     *
+     *     a = 0.10  1.006:1     a = 0.40  1.024:1
+     *     a = 0.25  1.015:1     a = 0.60  1.036:1
+     *
+     * For comparison, the quietest hairline this theme ships on purpose —
+     * light `border` on `bg-subtle` — is 1.15:1. So even at 60% black the dark
+     * shadow is seven times quieter than a rule that was already chosen for
+     * being nearly invisible. Elevation on the dark theme is carried by the
+     * LIGHTER SURFACE (`surface` 0.205 over `bg` 0.145) and by
+     * `border-border`, and every overlay in this library already sets both.
+     * The dark ramp below is therefore raised — it does real work where the
+     * page is not near-black, which is over `surface-hover` (0.269), over an
+     * image, and over an accent fill — and it is deliberately NOT raised to
+     * the point where it turns into a dark halo around every popover on a page
+     * that has no bright content on it.
+     *
+     * Geometry is shared between the themes on purpose: a shadow that changes
+     * SHAPE with the theme reads as two different elevation systems, and the
+     * only thing the ground legitimately changes is how much of the shadow
+     * survives it.
+     */
+    --lumo-ref-shadow-raised:
+      0 1px 2px 0 oklch(0 0 0 / 0.06),
+      0 1px 3px 0 oklch(0 0 0 / 0.10);
+    --lumo-ref-shadow-overlay:
+      0 4px 8px -2px oklch(0 0 0 / 0.10),
+      0 12px 24px -6px oklch(0 0 0 / 0.14);
+    --lumo-ref-shadow-modal:
+      0 8px 16px -4px oklch(0 0 0 / 0.12),
+      0 32px 64px -16px oklch(0 0 0 / 0.28);
+
+    --lumo-ref-shadow-raised-dark:
+      0 1px 2px 0 oklch(0 0 0 / 0.30),
+      0 1px 3px 0 oklch(0 0 0 / 0.40);
+    --lumo-ref-shadow-overlay-dark:
+      0 4px 8px -2px oklch(0 0 0 / 0.40),
+      0 12px 24px -6px oklch(0 0 0 / 0.52);
+    --lumo-ref-shadow-modal-dark:
+      0 8px 16px -4px oklch(0 0 0 / 0.44),
+      0 32px 64px -16px oklch(0 0 0 / 0.64);
+
+    /* ---- the scrim ------------------------------------------------------
+     *
+     * `dialog.tsx` and `drawer.tsx` painted `bg-black/50`. Those were the only
+     * two untokenised colours in the entire library — an exhaustive sweep for
+     * hex, `rgb()`, `hsl()`, `oklch()` and all 22 Tailwind palette names across
+     * the 94 components returns them and nothing else.
+     *
+     * ── THE LIGHT VALUE DOES NOT MOVE, AND THAT IS THE POINT ──────────────
+     *
+     * 0.5 is exactly what `bg-black/50` was, so tokenising it changes no light
+     * pixel and needs no re-review. Measured: the page (`bg`, Y 0.9557) drops
+     * to 0.4778, and the modal surface (literal white, Y 1) then reads 1.99:1
+     * against the dimmed page behind it.
+     *
+     * ── THE DARK VALUE MOVES, AND THE REASON IS NOT THE ONE YOU EXPECT ────
+     *
+     * On dark, a black scrim has almost nothing left to remove. The page is
+     * already Y 0.00305, so:
+     *
+     *     alpha   dimmed page   modal (surface, Y 0.00862) vs it
+     *     0.50    0.00152       1.138:1
+     *     0.72    0.00085       1.153:1
+     *     0.80    0.00061       1.158:1
+     *
+     * Twenty-two points of alpha buy fifteen THOUSANDTHS of contrast ratio.
+     * So the scrim is not what separates a dark modal from its page — the
+     * modal's own `border-border` and `--lumo-sys-shadow-modal` are, exactly
+     * as the elevation note above says. What the dark scrim IS for is the
+     * bright content: the only loud things on a dark page are accent fills,
+     * imagery and media, and those the scrim genuinely suppresses. Measured on
+     * `--lumo-sys-accent` at dark (`brand-400`, Y 0.7838), against the modal
+     * surface it now sits behind:
+     *
+     *     alpha 0.50  →  Y 0.3919, 7.54:1   the fill still shouts over the modal
+     *     alpha 0.72  →  Y 0.2195, 4.60:1
+     *
+     * 0.72 halves it. Higher than 0.8 was rejected: past that the scrim starts
+     * to read as a solid black sheet on a page that had nothing bright on it,
+     * and the modal's own drop shadow disappears into it.
+     */
+    --lumo-ref-scrim: oklch(0 0 0 / 0.5);
+    --lumo-ref-scrim-dark: oklch(0 0 0 / 0.72);
+
     /* ---- spacing, scaled by density ------------------------------------- */
     --lumo-ref-space-1: calc(0.25rem * var(--lumo-ref-density));
     --lumo-ref-space-2: calc(0.5rem  * var(--lumo-ref-density));
@@ -368,6 +501,16 @@
     --lumo-sys-radius-sm: var(--lumo-ref-radius-sm);
     --lumo-sys-radius-md: var(--lumo-ref-radius-md);
     --lumo-sys-radius-lg: var(--lumo-ref-radius-lg);
+
+    /* Three tiers, and the ref block above argues which is which. Named for
+       the JOB — what the element has to be separated from — rather than for a
+       size, because a size name is what let twelve overlays land on five
+       rungs without anybody making a decision. */
+    --lumo-sys-shadow-raised: var(--lumo-ref-shadow-raised);
+    --lumo-sys-shadow-overlay: var(--lumo-ref-shadow-overlay);
+    --lumo-sys-shadow-modal: var(--lumo-ref-shadow-modal);
+
+    --lumo-sys-scrim: var(--lumo-ref-scrim);
   }
 
   /* ── THE DARK LADDER ────────────────────────────────────────────────────────
@@ -452,6 +595,16 @@
       --lumo-sys-critical: var(--lumo-ref-critical-dark);
       --lumo-sys-caution: var(--lumo-ref-caution-dark);
       --lumo-sys-focus: var(--lumo-ref-brand-400);
+
+      /* Raised, not merely restated — see the elevation note in the ref block.
+         A black shadow measures 1.006:1 to 1.036:1 against this page whatever
+         the alpha, so these earn their keep over `surface-hover`, imagery and
+         accent fills rather than over the page itself. */
+      --lumo-sys-shadow-raised: var(--lumo-ref-shadow-raised-dark);
+      --lumo-sys-shadow-overlay: var(--lumo-ref-shadow-overlay-dark);
+      --lumo-sys-shadow-modal: var(--lumo-ref-shadow-modal-dark);
+
+      --lumo-sys-scrim: var(--lumo-ref-scrim-dark);
     }
   }
 
@@ -481,6 +634,10 @@
     --lumo-sys-critical: var(--lumo-ref-critical-dark);
     --lumo-sys-caution: var(--lumo-ref-caution-dark);
     --lumo-sys-focus: var(--lumo-ref-brand-400);
+    --lumo-sys-shadow-raised: var(--lumo-ref-shadow-raised-dark);
+    --lumo-sys-shadow-overlay: var(--lumo-ref-shadow-overlay-dark);
+    --lumo-sys-shadow-modal: var(--lumo-ref-shadow-modal-dark);
+    --lumo-sys-scrim: var(--lumo-ref-scrim-dark);
   }
 }
 

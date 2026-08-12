@@ -83,13 +83,17 @@ export const resizableHandleVariants = cva(
   // transparent pseudo-element, exactly the tag-group remove-button technique:
   // the target changes, the layout does not. `cursor-col-resize` names the
   // inline axis, which is the same axis in both scripts (see table.tsx).
-  // Plain CSS `hover:`/`focus-visible:` rather than RAC's `data-hovered`
-  // family: this element is a hand-owned div, so the DOM's own states are the
-  // truth here — there is no RAC layer publishing data attributes to mirror.
+  // Plain CSS `hover:` rather than RAC's `data-hovered` family: this element is
+  // a hand-owned div, so the DOM's own states are the truth here — there is no
+  // RAC layer publishing data attributes to mirror.
   "relative shrink-0 rounded-full bg-border outline-none transition-colors " +
     "touch-none select-none " +
     "hover:bg-border-strong " +
-    "data-resizing:bg-accent focus-visible:bg-accent " +
+    // No `focus-visible:bg-accent`. The handle carries `data-lumo` and
+    // theme.css rings it; the fill was the same `bg-accent` as `data-resizing`,
+    // so a focused divider and a dragging one looked identical — see
+    // `table.variants.ts`, which had the same pair for the same reason.
+    "data-resizing:bg-accent " +
     "after:absolute after:content-['']",
   {
     variants: {

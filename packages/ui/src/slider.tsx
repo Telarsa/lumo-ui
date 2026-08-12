@@ -174,7 +174,7 @@ export const sliderThumbVariants = cva(
    * said the focus rule "has to be able to reach it" was false at runtime; it
    * has been corrected.
    */
-  "top-1/2 rounded-full border-2 border-accent bg-surface shadow-sm " +
+  "top-1/2 rounded-full border-2 border-accent bg-surface shadow-raised " +
     "data-dragging:scale-110 " +
     "data-disabled:border-border-control data-disabled:bg-surface-sunken",
   {

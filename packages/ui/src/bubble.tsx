@@ -137,7 +137,7 @@ export function BubbleGroup({ variant, className, ...props }: BubbleGroupProps) 
 export const bubbleReactionsVariants = cva(
   "absolute bottom-0 z-10 flex w-fit translate-y-2/3 items-center gap-1 " +
     "rounded-full border border-border bg-surface px-1.5 py-0.5 text-xs " +
-    "text-fg shadow-sm",
+    "text-fg shadow-raised",
   {
     variants: {
       align: {

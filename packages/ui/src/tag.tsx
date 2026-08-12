@@ -116,6 +116,9 @@ export function Tag(props: TagProps) {
             "relative -me-1 ms-0.5 inline-flex size-5 shrink-0 items-center justify-center",
             "rounded-sm text-fg-muted transition-colors cursor-pointer",
             "hover:bg-surface-hover hover:text-fg",
+            // The press. Not self-answering: the chip is REMOVED, so the
+            // element that would have shown a new state is gone.
+            "active:translate-y-px",
             // The visible glyph is 20px, which is below the 44px touch floor
             // Khroos specifies. Inflating the chip to 44px would make a row of
             // filters unusable, so the HIT AREA is expanded with a transparent

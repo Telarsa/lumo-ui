@@ -114,7 +114,7 @@ export const segmentedControlItemVariants = cva(
     "rounded-sm font-medium whitespace-nowrap text-fg-muted outline-none " +
     "transition-colors " +
     "hover:text-fg " +
-    "data-checked:bg-surface data-checked:text-fg data-checked:shadow-sm " +
+    "data-checked:bg-surface data-checked:text-fg data-checked:shadow-raised " +
     /*
      * ── A PRESS HERE CAN PERMANENTLY PRODUCE NOTHING, BY CONSTRUCTION ────────
      *
@@ -131,21 +131,36 @@ export const segmentedControlItemVariants = cva(
      * event the device can produce, spent on nothing. That is why this rule is
      * an adoption of the FINDING rather than of the shape.
      *
-     * `brightness-95` over whichever fill is showing, so one rule covers checked
-     * and unchecked and no token is invented. No `translate-y-px`: the checked
-     * option is already raised out of the track with `shadow-sm`, and nudging it
-     * on the block axis fights the elevation the component's whole visual model
-     * rests on.
+     * It was `brightness-95` — "over whichever fill is showing, so one rule
+     * covers checked and unchecked" — and the note here declined the nudge on
+     * the grounds that "the checked option is already raised out of the track
+     * with `shadow-sm`, and nudging it on the block axis fights the elevation".
+     * Phase 2.2 reverses both halves:
+     *
+     *   - `brightness(0.95)` needs something bright to dim, and an UNCHECKED
+     *     option has no fill at all. On the light theme its mark is `text-fg-muted`
+     *     at L 0.500; the filter moves it by a twentieth of an already-dark
+     *     value. So the rule covered checked and unchecked in the string and
+     *     only checked on the screen — and the option that most needs a press
+     *     is the unchecked one, because the checked one is the case this
+     *     docblock says can never answer.
+     *   - the nudge does not fight the elevation, it uses it. An element with a
+     *     drop shadow that moves a pixel toward the surface it is raised off is
+     *     the shape of a physical press; that is what `shadow-raised` is for.
      */
-    "active:brightness-95 " +
-    // WCAG 2.4.7. Base UI inverts React Aria's arrangement: the `role="radio"`
-    // element is itself focusable (the `<input>` beside it is tabindex="-1" and
-    // aria-hidden), so the ring goes here directly and the `group-` hop
-    // `FOCUS_RING` was built for disappears. `:focus-visible` and not
-    // `data-focused` — the latter is unfiltered plain focus and would ring on a
-    // mouse click, which is the defect `:focus-visible` was standardised to fix.
-    "focus-visible:[outline:var(--lumo-sys-focus-width)_solid_var(--lumo-sys-focus)] " +
-    "focus-visible:[outline-offset:var(--lumo-sys-focus-offset)] " +
+    "active:translate-y-px " +
+    // WCAG 2.4.7, and NO ring class. Base UI inverts React Aria's arrangement:
+    // the `role="radio"` element is itself focusable (the `<input>` beside it is
+    // tabindex="-1" and aria-hidden), which is exactly the case theme.css's
+    // `:where([data-lumo]):focus-visible` already covers — and `SegmentedControlItem`
+    // carries `data-lumo`.
+    //
+    // Two lines re-typing `FOCUS_RING_SELF` character for character stood here.
+    // They were not merely redundant, they were unreachable: `@layer utilities`
+    // is ordered before `lumo.components` in the built stylesheet, so the global
+    // rule won both declarations. Three components had that same copy, which is
+    // how a constant that exists to be imported turns into a fourth focus
+    // mechanism.
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {

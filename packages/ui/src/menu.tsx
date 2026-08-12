@@ -106,6 +106,13 @@ export const menuItemVariants = cva(
     // trigger `data-open`; Base UI's names are `data-highlighted` and
     // `data-popup-open`.
     "data-highlighted:bg-surface-hover data-popup-open:bg-surface-hover " +
+    // The press, for the reason the cursor cannot cover: `data-highlighted` is
+    // already on the row before a pointer presses it, and on touch it is not
+    // there at all. A submenu trigger is exempt from the nudge nowhere here —
+    // its popup is anchored to the ROW, but the row is inside a portalled
+    // popup that Base UI positions against the trigger's measured rect once,
+    // not per frame, so a 1px press does not drag it.
+    "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
 );

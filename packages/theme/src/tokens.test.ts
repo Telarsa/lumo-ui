@@ -296,6 +296,17 @@ const GROUND_ONLY = new Set<string>([
 ]);
 
 const EXCLUDED: Record<string, string> = {
+  /* The scrim is a translucent BLACK, and this matrix's arithmetic cannot see
+     through alpha — the same limitation tokens.css states about Nova's
+     10%/15%-white dark borders. Crossing it with the five grounds would either
+     throw in `refColour` (which parses `oklch(L C H)` and not `oklch(L C H / A)`)
+     or, worse, quietly grade the un-composited black and report a comfortable
+     21:1 for a colour nobody ever sees at full strength.
+     It is not unmeasured, it is measured somewhere the sweep cannot go: the
+     `the scrim` block below composites it onto each theme's page ground by hand
+     and asserts the resulting ratios. Deleting this line is how a future reader
+     is forced to notice that. */
+  "--lumo-sys-scrim": "translucent; composited and measured in `the scrim` below",
   /* Swept across ui/, blocks/ and the site on 12 Aug 2026: one usage,
      `bg-accent-mark` on a 16px decorative square, no text on or beside it.
      Neither 4.5:1 nor 3:1 applies to it and inventing a floor would be a number
@@ -375,8 +386,16 @@ describe("tokens — every sys colour is classified", () => {
    * three reviews.
    */
   it("no sys colour escapes the matrix", () => {
+    /*
+     * `shadow` joins radius/focus-width/focus-offset/font in the filter because
+     * a `--lumo-sys-shadow-*` is not a colour: its value is a box-shadow LIST,
+     * so `resolvesTo` cannot resolve it and there is no single mark to grade
+     * against a ground. Its own assertions are in `the elevation ramp` below,
+     * and they are about alpha ordering and about the one number that decides
+     * how the dark ramp is built.
+     */
     const colours = Object.keys(LIGHT).filter(
-      (k) => !/radius|focus-width|focus-offset|font/.test(k),
+      (k) => !/radius|focus-width|focus-offset|font|shadow/.test(k),
     );
     expect(colours.length).toBeGreaterThan(15);
     for (const c of colours) {
@@ -505,6 +524,222 @@ describe("tokens — the three theme states stay in step", () => {
   });
 });
 
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THE SCRIM AND THE ELEVATION RAMP
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Both are new on 12 Aug 2026 and both replace something that was NOT a token:
+ * `bg-black/50`, written twice, the only two untokenised colours in the
+ * library; and twelve overlays spread across five rungs of Tailwind's default
+ * shadow ramp, which a brand cannot reach at all.
+ *
+ * They get their own block rather than a row in the matrix above because the
+ * matrix grades an opaque mark against an opaque ground, and neither of these
+ * is that. A scrim is translucent by definition — its whole job is to change
+ * what is behind it — and a shadow is a list of four numbers and a colour. So
+ * the arithmetic is done here, explicitly, on the composite.
+ */
+describe("the scrim", () => {
+  /** Alpha out of `oklch(L C H / A)`, from the committed CSS. */
+  function scrimAlpha(ref: string): number {
+    const decl = new RegExp(`--${ref}:\\s*([^;]+);`).exec(CSS)?.[1]?.trim();
+    if (decl === undefined) throw new Error(`--${ref} not found`);
+    const a = /oklch\(\s*0\s+0\s+0\s*\/\s*([\d.]+)\s*\)/.exec(decl)?.[1];
+    if (a === undefined) throw new Error(`--${ref} is not a black with an alpha: ${decl}`);
+    return Number(a);
+  }
+
+  /** Black at `alpha` over a linear-light colour. Black contributes nothing. */
+  function dim(c: [number, number, number], alpha: number): [number, number, number] {
+    return [c[0] * (1 - alpha), c[1] * (1 - alpha), c[2] * (1 - alpha)];
+  }
+
+  const LIGHT_ALPHA = scrimAlpha("lumo-ref-scrim");
+  const DARK_ALPHA = scrimAlpha("lumo-ref-scrim-dark");
+
+  it("is a token at all — no component may paint its own", () => {
+    // The defect this replaces, named so a revert fails by name: `bg-black/50`
+    // in dialog.tsx and drawer.tsx. `system-vocabulary.test.ts` holds the
+    // component half; this holds the theme half.
+    expect(LIGHT).toHaveProperty("--lumo-sys-scrim");
+    expect(DARK_MEDIA["--lumo-sys-scrim"]).not.toBe(LIGHT["--lumo-sys-scrim"]);
+  });
+
+  it("light keeps exactly the alpha `bg-black/50` had, so no light pixel moved", () => {
+    /*
+     * This is the assertion that makes the change reviewable. Tokenising a
+     * value and CHANGING it in the same edit means every reviewer has to take
+     * the new number on trust; keeping 0.5 means the light theme is provably
+     * byte-identical and only the dark theme needs judging.
+     */
+    expect(LIGHT_ALPHA).toBe(0.5);
+  });
+
+  it("light: the modal reads clearly off the page it dims", () => {
+    const page = colourOf(LIGHT, "--lumo-sys-bg");
+    const modal = colourOf(LIGHT, "--lumo-sys-surface");
+    const r = ratio(modal, dim(page, LIGHT_ALPHA));
+    // 1.99:1 as committed. A floor rather than an equality, so a brand that
+    // darkens its page cannot silently collapse the modal into it.
+    expect(r, `modal on the dimmed page is ${r.toFixed(3)}:1`).toBeGreaterThan(1.8);
+  });
+
+  it("dark: raising the alpha CANNOT separate the modal from the page, and the number says so", () => {
+    /*
+     * The measurement that decided the dark value, kept as an assertion because
+     * it is counter-intuitive and the wrong fix is very cheap to reach for. The
+     * dark page is already Y 0.00305, so a black scrim has nothing to remove:
+     * going from 0.50 to 0.80 alpha moves the modal-vs-page ratio from 1.138:1
+     * to 1.158:1. Two hundredths.
+     *
+     * If someone later "fixes" a flat-looking dark modal by pushing the alpha
+     * up, this test does not fail — it is not a floor. It is here so the next
+     * reader finds the number before spending the alpha. The floor that DOES
+     * fail is the next test.
+     */
+    const page = colourOf(DARK_MEDIA, "--lumo-sys-bg");
+    const modal = colourOf(DARK_MEDIA, "--lumo-sys-surface");
+    const at = (a: number) => ratio(modal, dim(page, a));
+    expect(at(0.8) - at(0.5), "the alpha bought more than 0.05 of ratio").toBeLessThan(0.05);
+    // And the separation that actually does the work is the surface step, which
+    // exists with no scrim at all.
+    expect(ratio(modal, page), "dark surface no longer steps off dark bg").toBeGreaterThan(1.1);
+  });
+
+  it("dark: the scrim is sized to suppress the brightest thing on the page", () => {
+    /*
+     * What the dark alpha IS for. The only loud things on a dark page are
+     * accent fills, imagery and media; the accent is the one this file can
+     * measure. At `brand-400` (Y 0.7838) an unscrimmed accent button reads
+     * 8.9:1 against the modal that is supposed to have taken over the screen.
+     * 0.72 brings it to 4.60:1 — still visible, no longer competing.
+     */
+    const accent = colourOf(DARK_MEDIA, "--lumo-sys-accent");
+    const modal = colourOf(DARK_MEDIA, "--lumo-sys-surface");
+    const behind = ratio(modal, dim(accent, DARK_ALPHA));
+    expect(
+      behind,
+      `a dark accent fill behind the scrim reads ${behind.toFixed(2)}:1 against the modal`,
+    ).toBeLessThan(5.5);
+    // Not so dark that the page stops existing: a scrim that hides the context
+    // entirely is a page transition, not a modal.
+    expect(DARK_ALPHA).toBeLessThan(0.85);
+    expect(DARK_ALPHA).toBeGreaterThan(LIGHT_ALPHA);
+  });
+});
+
+describe("the elevation ramp", () => {
+  /** Every alpha in a shadow list, in order. */
+  function alphas(ref: string): number[] {
+    const decl = new RegExp(`--${ref}:\\s*([^;]+);`).exec(CSS)?.[1];
+    if (decl === undefined) throw new Error(`--${ref} not found in tokens.css`);
+    const found = [...decl.matchAll(/oklch\(\s*0\s+0\s+0\s*\/\s*([\d.]+)\s*\)/g)].map((m) =>
+      Number(m[1]),
+    );
+    if (found.length === 0) throw new Error(`--${ref} declares no shadow colour: ${decl}`);
+    return found;
+  }
+
+  /** The geometry of a shadow list, with the colours removed. */
+  function geometry(ref: string): string {
+    const decl = new RegExp(`--${ref}:\\s*([^;]+);`).exec(CSS)?.[1];
+    if (decl === undefined) throw new Error(`--${ref} not found in tokens.css`);
+    return decl.replace(/oklch\([^)]*\)/g, "").replace(/\s+/g, " ").trim();
+  }
+
+  const TIERS = ["raised", "overlay", "modal"] as const;
+
+  it("there are three tiers and each is published to Tailwind", () => {
+    // Three, not five. The count IS the fix: twelve overlays sat on five rungs
+    // of Tailwind's ramp because no rung meant anything.
+    for (const tier of TIERS) {
+      expect(TOKENS, `--lumo-sys-shadow-${tier} is missing`).toContain(
+        `--lumo-sys-shadow-${tier}:`,
+      );
+      expect(THEME, `--shadow-${tier} is not bridged`).toContain(
+        `--shadow-${tier}: var(--lumo-sys-shadow-${tier})`,
+      );
+    }
+    // And no fourth appears without this test being read.
+    const declared = [...CSS.matchAll(/--lumo-sys-shadow-([\w-]+):/g)].map((m) => m[1]);
+    expect([...new Set(declared)].sort()).toEqual(["modal", "overlay", "raised"]);
+  });
+
+  it("is a ladder: each tier is strictly heavier than the one below", () => {
+    /*
+     * The property a set of names cannot carry on its own. `md` sat above `lg`
+     * for the chart tooltip and below it for the popover in the ramp this
+     * replaces, and nothing could have reported that, because "md" and "lg" do
+     * not claim an order relative to which SURFACE they are on.
+     */
+    for (const theme of ["", "-dark"]) {
+      const total = TIERS.map(
+        (t) => [t, alphas(`lumo-ref-shadow-${t}${theme}`).reduce((a, b) => a + b, 0)] as const,
+      );
+      for (let i = 1; i < total.length; i++) {
+        const [name, a] = total[i]!;
+        const [prev, pa] = total[i - 1]!;
+        expect(
+          a,
+          `${name}${theme} (Σα ${a.toFixed(2)}) is not heavier than ${prev}${theme} (Σα ${pa.toFixed(2)})`,
+        ).toBeGreaterThan(pa);
+      }
+    }
+  });
+
+  it("light and dark share GEOMETRY and differ only in alpha", () => {
+    /*
+     * A shadow that changes shape with the theme is two elevation systems
+     * wearing one set of names. The only thing the ground legitimately changes
+     * is how much of the shadow survives it, which is the alpha.
+     */
+    for (const tier of TIERS) {
+      expect(geometry(`lumo-ref-shadow-${tier}`), `${tier} changes shape on dark`).toBe(
+        geometry(`lumo-ref-shadow-${tier}-dark`),
+      );
+    }
+  });
+
+  it("the dark ramp is heavier, and the reason it cannot simply be heavier still", () => {
+    /*
+     * ── THE NUMBER THAT SHAPED THE DARK RAMP ─────────────────────────────────
+     *
+     * A black shadow on the dark page is close to a no-op, and the instinct on
+     * seeing a flat dark overlay is to raise the alpha. Measured against
+     * `--lumo-sys-bg` (L 0.145, Y 0.00305):
+     *
+     *     α 0.10 → 1.006:1     α 0.40 → 1.024:1     α 0.60 → 1.036:1
+     *
+     * The quietest hairline this theme ships ON PURPOSE is 1.15:1. So even at
+     * 60% black the shadow is several times quieter than a rule chosen for
+     * being nearly invisible, and no alpha under 1.0 reaches it. Dark elevation
+     * is carried by the lighter surface and by `border-border`; the ramp below
+     * is raised because it does real work over `surface-hover`, imagery and
+     * accent fills, not over the page.
+     *
+     * This assertion pins the finding rather than the ramp: if the ceiling ever
+     * stops being a ceiling, the whole dark design decision is worth re-opening.
+     */
+    const page = colourOf(DARK_MEDIA, "--lumo-sys-bg");
+    const ceiling = ratio(page, [page[0] * 0.4, page[1] * 0.4, page[2] * 0.4]); // α = 0.6
+    expect(
+      ceiling,
+      `60% black over the dark page reaches ${ceiling.toFixed(3)}:1 — if this ever exceeds ` +
+        `the 1.15:1 hairline, dark elevation can be a shadow after all`,
+    ).toBeLessThan(1.15);
+
+    for (const tier of TIERS) {
+      const light = alphas(`lumo-ref-shadow-${tier}`).reduce((a, b) => a + b, 0);
+      const dark = alphas(`lumo-ref-shadow-${tier}-dark`).reduce((a, b) => a + b, 0);
+      expect(dark, `${tier} is no heavier on dark`).toBeGreaterThan(light);
+      // Not opaque: past ~0.7 per layer the shadow reads as a black halo on a
+      // page that had nothing bright on it, and it swallows the modal's own edge.
+      for (const a of alphas(`lumo-ref-shadow-${tier}-dark`)) expect(a).toBeLessThanOrEqual(0.7);
+    }
+  });
+});
+
 describe("theme — the Tailwind bridge stays in sync", () => {
   it("every mapped colour resolves to a token that exists", () => {
     const mapped = [...THEME.matchAll(/--color-[\w-]+:\s*var\((--lumo-sys-[\w-]+)\)/g)].map(
@@ -630,7 +865,22 @@ describe("the proxy-focus ring", () => {
     const rules = THEME.replace(/\/\*[\s\S]*?\*\//g, "");
     // The broad form is the bug. Naming it here means a revert to it fails.
     expect(rules).not.toContain(":where([data-lumo]):has(> input:focus-visible)");
-    expect(rules).toContain(":where([data-lumo-proxy-focus]):has(> input:focus-visible)");
+    expect(rules).toMatch(
+      /:where\(\[data-lumo-proxy-focus\], \.lumo-proxy-focus\):has\(\s*> :is\(input, select\):focus-visible\s*\)/,
+    );
+    /*
+     * `select` joined `input` on 12 Aug 2026, when the calendar's caption
+     * dropdown turned out to be the same defect in a different element — a
+     * real `<select class="opacity-0">` over a painted `aria-hidden` span. It
+     * had solved it locally with `has-[select:focus-visible]:outline-accent`,
+     * which was a fifth focus mechanism reading the wrong token.
+     *
+     * Widening the CHILD cannot recreate the double-ring bug, and this is the
+     * assertion that says why: what made the broken rule structural was the
+     * `[data-lumo]` subject, which every field root carries. No `:has()` rule
+     * may hang off it, whatever the child.
+     */
+    expect(rules).not.toMatch(/:where\(\[data-lumo\]\):has\(/);
   });
 
   it("still draws the same ring as the ordinary rule", () => {

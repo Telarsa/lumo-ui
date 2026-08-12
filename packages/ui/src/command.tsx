@@ -164,6 +164,9 @@ export const commandItemVariants = cva(
   "group/command-item relative flex cursor-pointer select-none items-center gap-2 " +
     "rounded-sm px-2 py-1.5 text-sm text-fg outline-none " +
     "data-highlighted:bg-surface-hover " +
+    // The press. See `combobox.tsx`: the highlight is a cursor rather than an
+    // answer to a touch, and a command palette commits into a route change.
+    "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4",
 );

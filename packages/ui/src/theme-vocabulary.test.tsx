@@ -218,12 +218,35 @@ describe("the neutral surface ramp", () => {
     expect(press, "the press fill is on the ramp the hover comes from").not.toMatch(
       /bg-surface/,
     );
-    // A mouse press arrives WITH the pointer, and `hover:` and `active:` are the
-    // same specificity — so without this the winner is whatever order Tailwind
-    // emits, which is not a decision anybody made.
-    expect(classes, "the press loses to its own hover under a mouse").toContain(
-      "hover:active:bg-",
-    );
+    /*
+     * ── WHAT REPLACED THE `hover:active:` REQUIREMENT, AND WHY IT IS BETTER ──
+     *
+     * This used to demand `hover:active:bg-` on both strings. The reasoning was
+     * exactly right for the press these components then had: a mouse press
+     * arrives WITH the pointer, `hover:bg-surface-hover` and
+     * `active:bg-accent/10` are both (0,2,0), and which one paints would have
+     * been decided by the order Tailwind emits its variants in. `.x:hover:active`
+     * is (0,3,0) and settled it.
+     *
+     * The requirement is gone because the CONFLICT is gone. The library's press
+     * is `active:translate-y-px`, and `translate` is not a property any hover,
+     * selected, current or highlighted rule in this library writes — so the two
+     * compose and there is nothing left to out-specify. That orthogonality is
+     * one of the three reasons the nudge won; `button.variants.ts` has the other
+     * two and the measurements.
+     *
+     * The assertion therefore becomes the general form of what the old one was
+     * defending: the press must not write a declaration the hover also writes.
+     */
+    const property = (utility: string) => utility.replace(/-.*$/, "");
+    const hoverProperties = new Set(hover.split(" ").filter(Boolean).map(property));
+    for (const utility of press.split(" ").filter(Boolean)) {
+      expect(
+        hoverProperties.has(property(utility)),
+        `the press and the hover both write \`${property(utility)}\`, so at equal ` +
+          `specificity the winner is Tailwind's emission order`,
+      ).toBe(false);
+    }
   });
 
   it("a selected range's middle is not the day-cell hover fill", () => {

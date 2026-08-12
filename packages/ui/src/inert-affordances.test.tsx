@@ -130,8 +130,22 @@ describe("link — the press was a copy of the hover in every variant", () => {
     }
   });
 
-  it("does not nudge, because a link is a run of text inside a sentence", () => {
-    expect(linkVariants()).not.toContain("translate-y");
+  it("takes the library's one press, which is the nudge", () => {
+    /*
+     * REVERSED on 12 Aug 2026, and the old assertion is worth quoting because
+     * the reversal is the point: "does not nudge, because a link is a run of
+     * text inside a sentence". Two claims were bundled there. That a nudge
+     * would reflow the sentence is false — `translate` participates in layout
+     * no more than `text-decoration-thickness` does, and `linkVariants` is
+     * `inline-flex`, so the transform applies to a box. That a word dropping a
+     * pixel is unusual is a taste claim, and it was being paid for with a third
+     * press vocabulary in a library that had five.
+     */
+    expect(linkVariants()).toContain("active:translate-y-px");
+    // And the thickness press is gone from every variant, or there are two.
+    for (const variant of ["accent", "subtle", "quiet"] as const) {
+      expect(linkVariants({ variant })).not.toContain("active:decoration");
+    }
   });
 });
 
@@ -147,7 +161,9 @@ describe("item — the row had no pointer states, under two dead attribute names
 
   it("paints the pointer states only on a row that is really a control", () => {
     expect(itemVariants({ interactive: true })).toContain("hover:bg-surface-hover");
-    expect(itemVariants({ interactive: true })).toContain("active:bg-surface-sunken");
+    // The press was `active:bg-surface-sunken`, which on the light theme is the
+    // same `neutral-100` as the hover beside it. See `button.variants.ts`.
+    expect(itemVariants({ interactive: true })).toContain("active:translate-y-px");
     expect(itemVariants({ interactive: false })).not.toContain("hover:");
     expect(itemVariants({ interactive: false })).not.toContain("active:");
   });
@@ -482,10 +498,43 @@ describe("toggle-group — the one press in the toggle family that answers nothi
     expect(active, "the press is a copy of the hover").not.toBe(utilities(classes, "hover:"));
   });
 
-  it("does not nudge, because the items are welded into one clipped strip", () => {
-    // The group is `overflow-hidden`, so a `translate-y-px` on one item clips
-    // against the group's own edge and opens a gap beside its neighbours.
-    expect(toggleButtonVariants()).not.toContain("translate-y");
+  it("nudges, and the clipped strip is what the nudge shows", () => {
+    /*
+     * REVERSED on 12 Aug 2026. The old assertion read "does not nudge, because
+     * the items are welded into one clipped strip" — the group IS
+     * `overflow-hidden`, and that is still true. What changed is the reading of
+     * it. On an unpressed item the clipped pixel is the group's own
+     * `bg-surface`, so nothing visible is lost; on a pressed one a 1px band of
+     * the strip appears above the fill, which is what a chip sinking into its
+     * track looks like. The dividers belong to the group, so no gap opens
+     * beside a neighbour. `toggle-group.variants.ts` states this at length.
+     *
+     * The reason it was worth reversing is this describe block's own subject:
+     * `brightness(0.95)` on an item with NO fill moves `text-fg` from 23 to 22
+     * out of 255, so the one press in the library that the engine cancels had a
+     * rule and no pixels.
+     */
+    expect(toggleButtonVariants()).toContain("active:translate-y-px");
+  });
+
+  it("rings INSIDE its own edge, through the variable rather than a second rule", () => {
+    /*
+     * The clipping that the nudge lives with does genuinely eat an OUTSET focus
+     * ring on the two end caps, and this component knew: it carried
+     * `focus-visible:[outline-offset:calc(var(--lumo-sys-focus-offset)*-1)]`,
+     * the only negative offset in the library.
+     *
+     * It never applied. That utility compiles into `@layer utilities`, and the
+     * built stylesheet orders `utilities` (byte 9862) before `lumo.components`
+     * (102592), so theme.css's `outline-offset: var(--lumo-sys-focus-offset)`
+     * won and the ring was drawn outset and clipped. Layer order beats
+     * specificity, which is why `:where()`'s zero specificity did not save it.
+     *
+     * The fix sets the variable the one rule reads, on this element.
+     */
+    const classes = toggleButtonVariants();
+    expect(classes).toContain("[--lumo-sys-focus-offset:calc(var(--lumo-sys-focus-width)*-1)]");
+    expect(classes, "a second focus rule is back").not.toContain("focus-visible:");
   });
 });
 

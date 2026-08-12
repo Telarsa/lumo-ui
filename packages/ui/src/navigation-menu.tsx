@@ -139,10 +139,10 @@ export const navigationMenuTriggerVariants = cva(
     // competing to describe one moment.
     "hover:bg-surface-hover " +
     "data-popup-open:bg-surface-sunken " +
-    // WCAG 2.4.7. `data-focus-visible` does not exist in Base UI; this is the
-    // row that gets missed, because a ring that stops rendering is invisible to
-    // anyone reviewing with a pointer.
-    "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent " +
+    // WCAG 2.4.7, and NO ring class here: `NavigationMenuTrigger` carries
+    // `data-lumo` and theme.css's one rule draws it. The hardcoded
+    // `outline-accent` that stood here was inert for the layer-order reason
+    // `disclosure.tsx` sets out.
     "data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 
@@ -155,7 +155,7 @@ export const navigationMenuChevronVariants = cva(
 export const navigationMenuPanelVariants = cva("min-w-[16rem] p-2");
 
 export const navigationMenuPopupVariants = cva(
-  "z-50 rounded-md border border-border bg-surface text-fg shadow-lg outline-none " +
+  "z-50 rounded-md border border-border bg-surface text-fg shadow-overlay outline-none " +
     "transition duration-150 ease-out " +
     "data-starting-style:opacity-0 data-starting-style:scale-95 " +
     "data-ending-style:opacity-0 data-ending-style:scale-95 " +
@@ -167,12 +167,14 @@ export const navigationMenuPopupVariants = cva(
 export const navigationMenuLinkVariants = cva(
   "flex flex-col items-start gap-0.5 rounded-md px-3 py-2 " +
     // A panel link owns no overlay, so the carve-out above does not apply to it
-    // and the press needs a step of its own: on touch the only feedback before
-    // the navigation commits is this fill, and a slow route makes that gap
+    // and it takes the library's press: on touch the only feedback before the
+    // navigation commits is this nudge, and a slow route makes that gap
     // visible. `data-current` is the ANNOUNCED state — `Link` writes
-    // `aria-current` beside it — so the three fills are hover, press, and
-    // "you are here", each a different thing.
-    "hover:bg-surface-hover active:bg-surface-sunken " +
+    // `aria-current` beside it — so hover and "you are here" are the only two
+    // FILLS here, and the press is on `translate`, which neither of them
+    // touches. That orthogonality is the reason the press is a nudge; see
+    // `button.variants.ts`.
+    "hover:bg-surface-hover active:translate-y-px " +
     "data-current:bg-surface-sunken",
 );
 

@@ -890,8 +890,20 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
     expect(select?.className).toContain("absolute");
     expect(select?.className).toContain("opacity-0");
     expect(select?.parentElement?.className).toContain("relative");
-    // The ring is on the painted parent, because the focused element is invisible.
-    expect(select?.parentElement?.className).toContain("has-[select:focus-visible]:outline-2");
+    /*
+     * The ring is on the painted parent, because the focused element is
+     * invisible — and the parent says so with a MARKER rather than a ring.
+     *
+     * It used to carry `has-[select:focus-visible]:outline-2 …:outline-accent`,
+     * which was a fifth focus mechanism and read `--color-accent` instead of
+     * `--lumo-sys-focus`. theme.css has had a rule for exactly this shape since
+     * the slider needed it; `select` was added to its child selector and this
+     * span opts in. The marker is a bare class rather than
+     * `data-lumo-proxy-focus` because react-day-picker's `classNames` map takes
+     * class strings and nothing else.
+     */
+    expect(select?.parentElement?.className).toContain("lumo-proxy-focus");
+    expect(select?.parentElement?.className).not.toContain("outline-accent");
   });
 
   it("a BOUNDED year list is the same list tomorrow — and an unbounded one is not", () => {

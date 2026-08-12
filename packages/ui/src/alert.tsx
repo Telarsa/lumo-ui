@@ -124,7 +124,7 @@ export const alertCloseVariants = cva(
   "mbs-0.5 -me-1 inline-flex h-control-sm w-control-sm shrink-0 cursor-pointer " +
     "items-center justify-center rounded-md border-0 bg-transparent p-0 " +
     "text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg " +
-    "active:bg-surface-sunken active:translate-y-px " +
+    "active:translate-y-px " +
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
 );
 

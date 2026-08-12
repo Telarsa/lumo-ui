@@ -141,7 +141,7 @@ export const chartContainerVariants = cva(
 
 export const chartTooltipVariants = cva(
   "grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 " +
-    "bg-surface px-2.5 py-1.5 text-xs text-fg shadow-xl",
+    "bg-surface px-2.5 py-1.5 text-xs text-fg shadow-overlay",
 );
 
 /**

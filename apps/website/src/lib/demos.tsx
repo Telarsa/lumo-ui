@@ -1891,19 +1891,19 @@ const DEMOS: Demo[] = [
           className="mx-auto w-full max-w-xs"
         >
           <CarouselContent>
-            <CarouselItem>
+            <CarouselItem label={copy.offerOne[l]}>
               <div className="flex h-28 flex-col justify-between rounded-md border border-border bg-surface-sunken p-4">
                 <span className="text-sm font-medium text-fg">{copy.offerOne[l]}</span>
                 <span className="text-sm text-fg-muted">{formatNumber(4200000, l)}</span>
               </div>
             </CarouselItem>
-            <CarouselItem>
+            <CarouselItem label={copy.offerTwo[l]}>
               <div className="flex h-28 flex-col justify-between rounded-md border border-border bg-surface-sunken p-4">
                 <span className="text-sm font-medium text-fg">{copy.offerTwo[l]}</span>
                 <span className="text-sm text-fg-muted">{formatNumber(1850000, l)}</span>
               </div>
             </CarouselItem>
-            <CarouselItem>
+            <CarouselItem label={copy.offerThree[l]}>
               <div className="flex h-28 flex-col justify-between rounded-md border border-border bg-surface-sunken p-4">
                 <span className="text-sm font-medium text-fg">{copy.offerThree[l]}</span>
                 <span className="text-sm text-fg-muted">{formatNumber(6900000, l)}</span>

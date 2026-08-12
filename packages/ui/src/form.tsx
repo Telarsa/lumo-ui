@@ -122,7 +122,7 @@ import { useFieldWiring, type FieldWiring, type FieldWiringMode } from "@lumo-ui
  * state in Base UI and reaches `Field.Root`, the label, the control and the
  * description alike (`experiments/measurements/state-vocabulary.json`).
  */
-export const fieldVariants = cva("flex flex-col gap-1.5 data-disabled:opacity-60");
+export const fieldVariants = cva("flex flex-col gap-1.5 data-disabled:opacity-50");
 
 export const labelVariants = cva("w-fit text-sm font-medium text-fg select-none");
 

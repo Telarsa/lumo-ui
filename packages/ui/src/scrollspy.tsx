@@ -78,6 +78,10 @@ export const scrollspyLinkVariants = cva(
   // `border-s` and `ps-3`: the marker rail is on the reader's leading edge.
   "border-s border-transparent ps-3 py-1 text-fg-muted transition-colors " +
     "hover:text-fg " +
+    // The press. The anchor is a flex item of `scrollspyVariants`, so it is
+    // blockified and the transform applies — an inline `<a>` would take the
+    // rule and ignore it.
+    "active:translate-y-px " +
     "aria-current:border-accent aria-current:font-medium aria-current:text-fg",
 );
 

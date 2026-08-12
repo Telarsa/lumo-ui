@@ -91,7 +91,7 @@ function BasicExample(l: Locale) {
       >
         <CarouselContent>
           {offerRows(l).map((offer) => (
-            <CarouselItem key={offer}>
+            <CarouselItem key={offer} label={offer}>
               <div className="flex h-32 items-center justify-center rounded-lg border border-border bg-surface p-4 text-sm font-medium text-fg">
                 {offer}
               </div>
@@ -117,7 +117,7 @@ function KeyboardExample(l: Locale) {
       >
         <CarouselContent>
           {steps.map((step, index) => (
-            <CarouselItem key={step}>
+            <CarouselItem key={step} label={step}>
               <div className="flex h-32 flex-col justify-center gap-2 rounded-lg border border-border bg-surface p-4">
                 <span className="text-xs font-medium text-fg-muted">
                   {formatNumber(index + 1, l)}
@@ -146,7 +146,7 @@ function MultipleExample(l: Locale) {
       >
         <CarouselContent>
           {offerRows(l).map((offer) => (
-            <CarouselItem key={offer} className="basis-1/2">
+            <CarouselItem key={offer} label={offer} className="basis-1/2">
               <div className="flex h-24 items-center justify-center rounded-lg border border-border bg-surface-sunken p-3 text-xs text-fg-muted">
                 {offer}
               </div>
@@ -172,7 +172,7 @@ function VerticalExample(l: Locale) {
       >
         <CarouselContent className="h-40">
           {offerRows(l).map((offer, index) => (
-            <CarouselItem key={offer} className="basis-1/2">
+            <CarouselItem key={offer} label={offer} className="basis-1/2">
               <div className="flex h-full items-center gap-3 rounded-lg border border-border bg-surface p-3 text-sm text-fg">
                 <span className="text-xs text-fg-muted">
                   {t.photo[l]} {formatNumber(index + 1, l)}
@@ -203,7 +203,8 @@ export const EXAMPLES: ComponentExamples = {
       `<Carousel locale label roleDescription slideRoleDescription`,
       `          orientation opts plugins setApi>`,
       `  <CarouselContent>`,
-      `    <CarouselItem>…</CarouselItem>       ← gets its roledescription from context`,
+      `    <CarouselItem label>…</CarouselItem> ← label REQUIRED: a roledescription`,
+      `                                           with no name announces one word`,
       `  </CarouselContent>`,
       `  <CarouselPrevious label="…" />         ← sits at the reading START`,
       `  <CarouselNext label="…" />`,

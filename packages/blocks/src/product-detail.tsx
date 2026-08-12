@@ -57,6 +57,23 @@ export interface ProductImage {
   /** `""` is legitimate when the gallery sits beside a title that already
    * names the product — see `avatar.tsx` for the general argument. */
   alt: string;
+  /**
+   * Names this image's SLIDE, e.g. «نمای جلو». REQUIRED, and deliberately not
+   * the same field as `alt`.
+   *
+   * ── WHY TWO STRINGS FOR ONE PICTURE ──────────────────────────────────────
+   *
+   * They answer different questions. `alt` asks "what does this image add
+   * beyond the surrounding text", and `""` is the right answer for a gallery
+   * beside a heading that already names the product. `label` asks "which slide
+   * is this", and there is no gallery for which the right answer is nothing —
+   * a carousel of four unnamed slides is four identical announcements.
+   *
+   * This block derived one from the other and shipped `aria-label=""` on the
+   * slide for exactly the image whose `alt` was correctly empty. Caught by
+   * `named-roledescription` on the built export, not by review.
+   */
+  label: string;
 }
 
 export interface ProductVariantOption {
@@ -182,7 +199,7 @@ export function ProductDetail({
         >
           <CarouselContent>
             {images.map((image) => (
-              <CarouselItem key={image.src}>
+              <CarouselItem key={image.src} label={image.label}>
                 <img
                   src={image.src}
                   alt={image.alt}

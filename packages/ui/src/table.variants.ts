@@ -123,8 +123,13 @@ export const columnResizerVariants = cva(
   // scripts — a column boundary does not mirror, the columns either side of it
   // do.
   "ms-1 h-4 w-1 shrink-0 cursor-col-resize rounded-full border-0 bg-border p-0 " +
-    "hover:bg-border-strong data-resizing:bg-accent " +
-    "focus-visible:bg-accent",
+    "hover:bg-border-strong data-resizing:bg-accent",
+  // No `focus-visible:bg-accent`. `ColumnResizer` renders a `<button data-lumo>`,
+  // so theme.css rings it; the fill was a fourth focus mechanism AND it was the
+  // same `bg-accent` as `data-resizing`, so a focused handle was indistinguishable
+  // from a handle mid-drag. A 4px bar with a 2px ring at 2px offset paints a
+  // legible 12px box; the fill painted a 4px bar in a colour that already meant
+  // something else.
 );
 
 /* ════════════════════════════════════════════════════════════════════════════

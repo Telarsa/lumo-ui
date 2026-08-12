@@ -174,7 +174,7 @@ export const switchTrackVariants = cva(
  * derived from a mapping table, and that is the finding.
  */
 export const switchThumbVariants = cva(
-  "absolute top-0.25 start-0.25 rounded-full bg-surface shadow-sm " +
+  "absolute top-0.25 start-0.25 rounded-full bg-surface shadow-raised " +
     "transition-[inset-inline-start] duration-150 ease-out " +
     "data-checked:bg-accent-fg " +
     "motion-reduce:transition-none",

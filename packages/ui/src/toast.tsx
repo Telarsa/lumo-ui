@@ -224,7 +224,7 @@ export function createToastQueue(options?: {
  * The toast region is the exception because it is the only one that is NOT
  * opened on demand. It is mounted once, at the app root, before anything else
  * exists — so at `z-50` it is EARLIER in the document than a dialog that opens
- * later, and the dialog's `fixed inset-0 z-50 bg-black/50` scrim paints over
+ * later, and the dialog's `fixed inset-0 z-50 bg-scrim` scrim paints over
  * it. The stack is still there, still announced, and completely invisible
  * behind the dim layer.
  *
@@ -267,7 +267,7 @@ export const toastRegionVariants = cva(
  */
 export const toastVariants = cva(
   "pointer-events-auto flex items-start gap-3 rounded-md border border-border " +
-    "border-s-4 bg-surface p-4 text-sm text-fg shadow-lg outline-none " +
+    "border-s-4 bg-surface p-4 text-sm text-fg shadow-overlay outline-none " +
     // Transition vocabulary, same two renames as every other overlay in this
     // migration: data-entering → data-starting-style, data-exiting →
     // data-ending-style. The offset is on the BLOCK axis, which does not mirror.

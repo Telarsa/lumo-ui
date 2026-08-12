@@ -117,7 +117,7 @@ export const ganttRowVariants = cva("relative h-10 border-bs border-border");
  */
 export const ganttBarVariants = cva(
   "absolute inset-y-1 flex items-center overflow-hidden rounded-md bg-surface-sunken " +
-    "ring-1 ring-border transition-shadow data-held:ring-2 data-held:ring-accent data-held:shadow-lg",
+    "ring-1 ring-border transition-shadow data-held:ring-2 data-held:ring-accent data-held:shadow-overlay",
 );
 
 /**

@@ -163,7 +163,23 @@ import { IconButton } from "./button.tsx";
  * `probe.state-vocabulary.json`.
  */
 export const dialogOverlayVariants = cva(
-  "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 " +
+  /*
+   * `bg-scrim`, not `bg-black/50`.
+   *
+   * This literal and drawer.tsx's twin were the only two untokenised colours in
+   * the library — an exhaustive sweep for hex, `rgb()`, `hsl()`, `oklch()` and
+   * all 22 Tailwind palette names across the 94 components returns these two and
+   * nothing else. The alpha now lives in `--lumo-ref-scrim`, so the two overlays
+   * cannot drift apart and a brand can reach it.
+   *
+   * The light value did not move: `--lumo-ref-scrim` is 0.5, exactly what this
+   * was. The DARK value did, to 0.72, and the reason is measured in tokens.css
+   * — on a page that is already L 0.145 a black scrim has almost nothing left to
+   * remove (50% → 72% alpha buys fifteen thousandths of contrast against the
+   * modal), so its real job there is suppressing the page's bright content, and
+   * 0.72 halves an accent fill behind it.
+   */
+  "fixed inset-0 z-50 flex items-center justify-center bg-scrim p-4 " +
     "transition-opacity duration-200 ease-out " +
     "data-starting-style:opacity-0 data-ending-style:opacity-0 " +
     "motion-reduce:transition-none",
@@ -179,7 +195,7 @@ export const dialogOverlayVariants = cva(
  * RTL codemod to catch it.
  */
 export const dialogModalVariants = cva(
-  "w-full overflow-hidden rounded-lg border border-border bg-surface text-fg shadow-2xl " +
+  "w-full overflow-hidden rounded-lg border border-border bg-surface text-fg shadow-modal " +
     "transition duration-200 ease-out " +
     // Same two renames as the backdrop above.
     "data-starting-style:opacity-0 data-starting-style:scale-95 " +
@@ -391,6 +407,22 @@ export function DialogModal({
 }: DialogModalProps) {
   return (
     <BaseDialog.Popup
+      /*
+       * The same element drawer.tsx documents at length — the `role="dialog"`
+       * focus stop, `tabindex="-1" data-base-ui-focusable`, measured — and it
+       * carried no marker either. The inner `Dialog` div below has always had
+       * `data-lumo` and is not focusable, which is why the gap read as covered.
+       *
+       * It is a MILDER case than the drawer's and the difference is worth
+       * stating rather than being folded in. `dialogModalVariants` sets no
+       * `outline-none`, so a keyboard reader entering this panel did get the
+       * user agent's own focus ring; the drawer's variant DOES set it, so that
+       * one got nothing at all. Marking this element buys consistency — the
+       * library's ring, from `--lumo-sys-focus`, in both — rather than fixing a
+       * WCAG failure. `state-vocabulary.test.tsx`'s invariant is scoped to the
+       * failing shape and so does not fire on this line; it fires on the drawer.
+       */
+      data-lumo=""
       {...attr("role", popupRole(children))}
       className={cn("fixed inset-0 z-50 m-auto h-fit", dialogModalVariants({ size }), className)}
       {...rest}

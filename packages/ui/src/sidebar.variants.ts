@@ -98,6 +98,12 @@ export const sidebarItemVariants = cva(
     // paints the current row under the cursor would be decided by the order
     // Tailwind emits its variants in.
     "data-current:hover:bg-accent/20 " +
+    // The press. A sidebar row is a NAVIGATION, so the gap between the tap and
+    // the new route is the longest in the library, and it is the gap a reader
+    // fills by tapping again. The nudge needs no `data-current:` restatement
+    // the way the two fills above did: `translate` is not a property either of
+    // them writes.
+    "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     // In the rail, only the icon keeps a box; centre it so the column of
     // glyphs is optically one rail rather than a ragged start-aligned strip.

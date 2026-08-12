@@ -140,7 +140,12 @@ export const menubarButtonVariants = cva(
     // because it had no cross-trigger hover — this is a new state that only
     // exists because the menubar is real now.
     "data-highlighted:bg-surface-hover " +
-    "focus-visible:bg-surface-hover " +
+    // NO `focus-visible:bg-surface-hover`. A FILL is not a focus indicator in
+    // this system: `MenubarButton` carries `data-lumo`, so theme.css already
+    // rings it, and a second treatment on the same state meant a keyboard user
+    // saw a ring AND a fill while `data-highlighted` — which the engine sets
+    // under the pointer — painted the same fill for a mouse. Two states, one
+    // appearance, in a row whose whole job is telling you where you are.
     "data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 

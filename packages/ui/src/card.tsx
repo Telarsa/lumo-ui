@@ -27,7 +27,7 @@ export const cardVariants = cva(
         // Elevation, not a border. Shadows are cast straight down (block axis),
         // so they need no mirroring — an offset shadow with an inline-axis
         // component would.
-        elevated: "border border-border shadow-sm",
+        elevated: "border border-border shadow-raised",
         // For a card inside an already-bordered container, where a second
         // border would double up into a 2px seam.
         plain: "",

@@ -107,6 +107,12 @@ export const comboBoxItemVariants = cva(
     "text-sm text-fg outline-none " +
     // React Aria's `data-focused` is Base UI's `data-highlighted`.
     "data-highlighted:bg-surface-hover " +
+    // The press. `data-highlighted` is the CURSOR — Base UI moves it under the
+    // pointer and under the arrow keys alike — so it is already painted before
+    // the row is touched and says nothing about the touch. On a phone there is
+    // no cursor to have arrived first and the commit closes the whole popup,
+    // which can take a frame on a long list.
+    "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
 );

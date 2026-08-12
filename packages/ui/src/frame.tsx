@@ -47,9 +47,9 @@ export const frameVariants = cva("overflow-hidden border border-border bg-surfac
   variants: {
     device: {
       /** A browser window: a bar with dots and an address line. */
-      browser: "rounded-lg shadow-sm",
+      browser: "rounded-lg shadow-raised",
       /** A handset: a thick bezel and a speaker slot. */
-      phone: "mx-auto w-[min(22rem,100%)] rounded-[2rem] border-8 border-fg/85 shadow-lg",
+      phone: "mx-auto w-[min(22rem,100%)] rounded-[2rem] border-8 border-fg/85 shadow-raised",
       /** No chrome at all — just the bordered surface. */
       plain: "rounded-lg",
     },

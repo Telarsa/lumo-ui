@@ -80,8 +80,17 @@ import { cva, type VariantProps } from "class-variance-authority";
  * IS a button-shaped control and inventing a second press vocabulary for it
  * would be the drift that file's header exists to prevent:
  *
- *     resting   hover:bg-surface-hover   active:bg-surface-sunken
- *     current   hover:bg-accent-hover    active:bg-accent-hover + brightness-95
+ *     resting   hover:bg-surface-hover   active:translate-y-px
+ *     current   hover:bg-accent-hover    active:translate-y-px
+ *
+ * Both presses used to be FILLS as well — `surface-sunken` on a resting cell,
+ * `brightness-95` over the accent on the current one — and Phase 2.2 removed
+ * them for the reason `button.variants.ts` sets out at length: a fill press has
+ * to know what is under it and has to beat its own hover for the same
+ * declaration, and on the light theme `surface-sunken` IS `surface-hover`, so
+ * the resting cell's press painted nothing under a pointer. The nudge is the
+ * whole press now, in both states, which is also why `current` no longer
+ * restates one.
  *
  * The 1px nudge is here too, and WITHOUT button's `not-aria-[haspopup]`
  * carve-out. That exemption exists because Base UI anchors an overlay to its
@@ -104,7 +113,7 @@ export const paginationItemVariants = cva(
   "inline-flex select-none items-center justify-center rounded-md " +
     "font-medium whitespace-nowrap no-underline " +
     "cursor-pointer outline-none transition-colors " +
-    "hover:bg-surface-hover active:bg-surface-sunken " +
+    "hover:bg-surface-hover " +
     // Block axis on purpose: a press pushes the cell INTO the page, and the
     // block axis does not mirror. See the header for why there is no
     // `not-aria-[haspopup]` carve-out here. Both disabled rules below already
@@ -126,11 +135,11 @@ export const paginationItemVariants = cva(
         // is only the visual half, which is why the announcement is not
         // optional in either spelling.
         //
-        // `brightness-95` over the hover fill rather than a new token: there is
-        // no `--accent-active`, and adding one so a pager can dim 5% would be a
-        // theme change charged to one component. `button.variants.ts`'s solid
-        // variant declined the same token for the same reason.
-        true: "bg-accent text-accent-fg hover:bg-accent-hover active:bg-accent-hover active:brightness-95",
+        // No `active:` here. The press is stated once, in the base string
+        // above, and it is a nudge rather than a fill — so the current cell's
+        // accent fill and the press compose instead of competing, and no
+        // `--accent-active` token has to be invented for a 5% dim.
+        true: "bg-accent text-accent-fg hover:bg-accent-hover",
         false: "text-fg",
       },
     },

@@ -347,8 +347,8 @@ Nothing new gets built until these are done. Each one either ships to users toda
 | # | Goal | Exit criterion |
 | --- | --- | --- |
 | 2.1 | **Decide the `ref` + `id` contract once, in `core`.** Either "omit what you own, spread the rest" (the `Spinner` model) or an explicit `attr()`-forwarded allow-list on every root. | **DONE** — "omit what you own, spread the rest", with `ComponentProps<E>` as the base and `ref`/`id` as a floor that may be OWNED or WIDENED but never cut. Written in `packages/core/src/props.ts`, restated on `button.tsx`, argued in DECISIONS §17, and enforced by a second rule inside 1.1's gate (`gradeRootContract`, three verdicts, four fixtures). What decided it is a React 19 fact this document did not have: `ref` is now an ordinary prop, so `ComponentProps<E>` carries it and `HTMLAttributes<T>` does not — the whole `ref` story is one token, which prices the allow-list out. **Swept: 21 files / 49 declaration sites off `HTMLAttributes`, and 20 closed surfaces opened.** Two claims in §4.2 below were corrected on measurement; see §8. |
-| 2.2 | **One press treatment, one disabled opacity, one focus mechanism.** | A test enumerating the directory (not a list) asserts each vocabulary has exactly one spelling. |
-| 2.3 | **Shadow and scrim tokens.** Collapse 5 overlay elevations onto `raised`/`overlay`/`modal`. | `--lumo-sys-shadow-*` and `--lumo-sys-scrim` exist; zero untokenised colours in the library. |
+| 2.2 | **One press treatment, one disabled opacity, one focus mechanism.** | **DONE** — press is `active:translate-y-px` on 21 class strings across 20 components (the other three candidates each fail on a surface this library ships; measurements in DECISIONS §18 and `button.variants.ts`). Focus is `theme.css` alone: the string `focus-visible:` now appears in exactly one file, and **four of the five mechanisms were already inert** — `@layer utilities` is ordered before `lumo.components` in the built export, so every per-component ring lost to the global rule, including the library's one "inset" ring, which was never inset. Disabled is `opacity-50`. `packages/ui/src/system-vocabulary.test.ts`, 22 assertions, all over `readdirSync(src)`. |
+| 2.3 | **Shadow and scrim tokens.** Collapse 5 overlay elevations onto `raised`/`overlay`/`modal`. | **DONE** — `--lumo-sys-shadow-{raised,overlay,modal}` and `--lumo-sys-scrim`, both theme-aware, bridged through `@theme inline`. 20 shadow sites on 3 tiers; zero untokenised colours. The tier is decided by what the element has to be separated from, not by size. Two findings the collapse produced: a black shadow on the dark page cannot exceed **1.036:1 at 60% alpha** against a hairline this theme ships at 1.15:1, so dark elevation is the lighter surface plus the border and the ramp is sized for content rather than for the page; and the dark scrim's alpha does almost nothing for the modal (0.50→0.80 buys 0.02 of ratio) and everything for a bright accent behind it (7.54:1 → 4.60:1). |
 | 2.4 | **`extendTailwindMerge` for the `control-*` namespace.** | `cn("h-control-md","h-control-lg") === "h-control-lg"`, with a test. |
 | 2.5 | **Respell the 7 `& never` carriers as `?: undefined`.** | Spreading a props bag compiles everywhere. |
 | 2.6 | **Close the remaining inert props** surfaced by 1.1, in one commit while the gate is fresh. | Gate returns 0. |
@@ -457,3 +457,46 @@ surface, it cannot then drop it, and it cannot subtract `ref` or `id` without
 writing down why.** Closing the remaining 81 is a judgement call per component,
 and the ones that are genuinely deliberate — `LumoProvider`, `Kbd`,
 `ChartData` — should stay closed.
+
+---
+
+## 9. Phase 2.2 + 2.3 outcome — the variance, and what measuring it changed
+
+The decision is DECISIONS §18. This section records only what this document got
+wrong and what the work found that no audit pass had reached, in §7's format.
+
+| Claim in this audit | What measurement showed |
+| --- | --- |
+| "4 focus mechanisms despite `theme.css` defining one" | **Five, and four of them could not fire.** The uncounted fifth is `calendar.variants.ts`'s `has-[select:focus-visible]:outline-accent`, which no sweep for `focus-visible:` at the start of a class token finds. And the built export orders `@layer utilities` (byte 9862) before `lumo.components` (102592), so layer order — not specificity — decided every one of them: the three re-typed `FOCUS_RING_SELF` copies, the three `outline-accent` rings and the negative-offset "inset" ring were all overridden by the global rule. They were a second vocabulary in the SOURCE, which is where a vocabulary does its damage, but not one pixel of it ever painted. |
+| "the only inset ring in the system" (`toggle-group`) | **It was never inset.** Same cause. The intent was right — the group clips its items with `overflow-hidden`, so an outset ring is cut off — and the mechanism could not work. It is now the variable the one rule already reads, set on the element. |
+| "13 `cursor-not-allowed` sites that are dead wherever `pointer-events-none` also applies" | **2.** Graded per CLASS STRING rather than per file: eleven of the thirteen are two utilities on two different elements in one file (`autocomplete`'s input and its list row, `command`'s input and its item, `number-field`'s input and its stepper). Acting on the file-level reading would have deleted eleven live rules. |
+| `active:bg-surface-sunken` ×13 · `bg-accent/10` ×5 · `brightness-95` ×4 | **8 · 2 · 4** in code. The gap is comments: this repository's house style quotes the retired spelling while explaining why it went, so a grep counts each obituary as an instance. Every sweep behind this work strips comments first, and so does the enforcement test — which has its own assertion that it does, because `button.variants.ts` names all four rejected press candidates in prose and would otherwise be the file that breaks the rule it explains. |
+| "press feedback exists on only ~15 of ~45 interactive components" | **15 of 79 class strings that carry a pointer state**, and the honest post-state is **21**, not 45. The gap is not unfinished work, it is the taxonomy: 79 counts every hovering surface, and a text input, a drag handle, a listbox option and an overlay trigger are each excluded for a stated reason. Extending to all 79 would mean nudging a `<textarea>` on click and jittering a menu as it opens. What is enforceable — and enforced — is that there is ONE spelling; the coverage number is a floor in the same test, so "one spelling" cannot be satisfied by deleting the press from everything but `button`. |
+
+**What the work found that no audit pass had reached.**
+
+**`drawer.tsx` was a WCAG 2.4.7 failure, not a style inconsistency**, and the
+audit was right to separate it. The string `data-lumo` appeared zero times in the
+file while `drawerVariants` sets `outline-none` on the element that IS the focus
+stop (`role="dialog" tabindex="-1" data-base-ui-focusable`, measured on a
+render). A keyboard reader entering a drawer got no indicator from the platform
+and none from the library. `dialog.tsx` had the same missing marker on the same
+element and was NOT the same defect — its variant sets no `outline-none`, so it
+fell back to the user agent's ring. Both carry the marker now; only one of them
+was broken, and the test that guards it is scoped to the broken shape.
+
+**The five press vocabularies were partly caused by a cascade problem, not only
+by taste.** A fill press has to out-specify its own fill hover at equal
+specificity, and three components had each independently invented a different
+workaround: `hover:active:bg-`, `data-pressed:hover:bg-`, `aria-pressed:hover:bg-`.
+Choosing a press on a property no hover writes deletes that whole class of
+requirement — `theme-vocabulary.test.tsx`'s `hover:active:bg-` assertion was
+replaced by the general form it was a special case of.
+
+**Two written arguments were reversed.** `link.tsx` and
+`toggle-group.variants.ts` each carried a reasoned paragraph declining the nudge.
+`link.tsx`'s rested on a layout claim that is false (`translate` reflows nothing,
+and `linkVariants` is `inline-flex`); `toggle-group`'s rested on a clipping claim
+that is true and describes the press rather than a defect. Both reversals are
+written in place, quoting what they replace, because a docblock that silently
+changes its mind is the failure mode §3.1 is about.

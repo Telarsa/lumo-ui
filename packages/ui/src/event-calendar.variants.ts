@@ -81,6 +81,9 @@ export const eventCalendarNavButtonVariants = cva(
   "inline-flex size-8 cursor-pointer items-center justify-center rounded-md " +
     "border border-border-control bg-surface text-fg transition-colors " +
     "hover:border-border-strong hover:bg-surface-hover " +
+    // The press. Arrows are the one control on a calendar toolbar a reader
+    // taps repeatedly, and on touch the hover above never fires.
+    "active:translate-y-px " +
     "disabled:pointer-events-none disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4",
 );
@@ -100,7 +103,7 @@ export const eventCalendarViewButtonVariants = cva(
       // Driven from the same boolean that writes `aria-pressed`, so what a
       // screen reader hears and what a sighted reader sees cannot come apart.
       active: {
-        true: "bg-surface font-medium text-fg shadow-xs",
+        true: "bg-surface font-medium text-fg shadow-raised",
         false: "",
       },
     },

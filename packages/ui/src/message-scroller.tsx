@@ -101,9 +101,11 @@ export const messageScrollerJumpVariants = cva(
     // `active:` beside the hover because this pill is tapped, not hovered: it
     // appears on a phone in a scrolled conversation, and `:hover` never fires
     // there. The scroll it triggers is smooth and takes ~300ms, so without a
-    // press fill the tap looks unregistered for exactly as long as it takes to
-    // tap again.
-    "shadow-md transition-colors hover:bg-surface-hover active:bg-surface-sunken",
+    // press treatment the tap looks unregistered for exactly as long as it
+    // takes to tap again. It was a `surface-sunken` fill until Phase 2.2; the
+    // fill was one of five press vocabularies and, on the light theme, was the
+    // same colour as the hover beside it. See `button.variants.ts`.
+    "shadow-overlay transition-colors hover:bg-surface-hover active:translate-y-px",
 );
 
 export interface MessageScrollerProps {

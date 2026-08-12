@@ -168,7 +168,10 @@ export const ratingStarVariants = cva(
     // `<input>` — see `FOCUS_RING_SELF` in form.tsx.
     "rounded-sm " +
     FOCUS_RING_SELF +
-    " data-disabled:pointer-events-none data-disabled:cursor-not-allowed data-disabled:opacity-50",
+    // No `data-disabled:cursor-not-allowed`: `pointer-events-none` on the same
+    // element means nothing ever hit-tests to it, so the cursor rule cannot
+    // fire. See `calendar.variants.ts` for the other of the two.
+    " data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 
 export const ratingButtonVariants = cva(

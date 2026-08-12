@@ -87,7 +87,7 @@ export type LumoPlacement = Exclude<
  * all take their panel chrome from here. One surface, seven panels.
  */
 export const popoverVariants = cva(
-  "z-50 rounded-md border border-border bg-surface text-fg shadow-lg outline-none " +
+  "z-50 rounded-md border border-border bg-surface text-fg shadow-overlay outline-none " +
     "transition duration-150 ease-out " +
     // ── THE TRANSITION AND PLACEMENT VOCABULARY ────────────────────────────
     //
