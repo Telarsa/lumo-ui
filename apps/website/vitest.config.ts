@@ -22,6 +22,8 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    // See vitest.setup.ts.
+    setupFiles: ["./vitest.setup.ts"],
     env: { TZ: "Asia/Tehran" },
   },
 });
