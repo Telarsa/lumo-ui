@@ -547,3 +547,244 @@ export const chartPieCenterVariants = cva("select-none", {
   },
   defaultVariants: { tone: "value" },
 });
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * MOTION — THE HALF THE ENGINE WILL NOT DO, AND WHY IT IS CSS
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * The FIRST-PAINT animation, as a stylesheet.
+ *
+ * ── WHY THIS IS NOT `svgAnimation`, WHICH IS THE OBVIOUS ANSWER ─────────────
+ *
+ * `@tanstack/charts` 0.9.0 refuses to animate a chart's first paint, and it
+ * does so twice, on two independent code paths. Both were read in the installed
+ * dist and both were driven under jsdom:
+ *
+ *   `renderer.js:91`  passes `animation: hasRendered ? resolveAnimation(…) :
+ *                     undefined`. `hasRendered` is false until the first
+ *                     `surface.render()` returns, so the first render is
+ *                     unconditionally un-animated. This is the path `<Chart>`
+ *                     takes, since `react/Chart.js` is `RendererChartImplementation`
+ *                     with `createSvgChartRenderer(renderSvg)`.
+ *
+ *   `motion.js:243`   the optional motion renderer computes
+ *                     `animate = initial ? motion.initial && !adoptedRoot : …`,
+ *                     and `adoptedRoot` is
+ *                     `container.firstElementChild?.matches("svg.ts-chart")`.
+ *                     In React that is ALWAYS true: `RendererChart.js` does
+ *                     `initialMarkupRef.current ??= adapter.prerender()` during
+ *                     render and drops the markup into the container with
+ *                     `dangerouslySetInnerHTML` BEFORE the layout effect calls
+ *                     `adapter.mount(container)`. Its own doc comment says so —
+ *                     "Server-rendered SVG is always adopted."
+ *
+ * Measured, not inferred: a `<Chart>` mounted under jsdom with
+ * `svgAnimation: {duration: 1000}` paints its bars at their FINAL heights
+ * (`67, 117.25, 44.67, 167.5` for 1200/2100/800/3000) with zero animation
+ * frames scheduled. See `chart.test.tsx`, "the first paint is never animated".
+ *
+ * ── AND THAT REFUSAL IS RIGHT, WHICH IS WHY THE FIX IS CSS AND NOT A FORK ───
+ *
+ * This library chose TanStack over recharts on ONE measurement: the plot is in
+ * the SERVED BYTES (4,717 of them against recharts' 127), so `lumo-gate` can
+ * grade it. A JS enter animation that grows bars from zero would have to REWRITE
+ * that served DOM to a zero state on hydration and animate up — throwing away
+ * the thing the renderer was chosen for, and putting a window on every page in
+ * which the chart the gate graded is not the chart on screen.
+ *
+ * CSS animates the PRESENTATION of markup that is already final. The served
+ * bytes are byte-identical with motion on and off (asserted in `chart.test.tsx`),
+ * the gate grades the same text either way, a no-JS reader still sees the
+ * animation, and there is no hydration window at all. `recharts`' mount
+ * animation is, read this way, a symptom: it animates in from nothing because it
+ * HAD nothing — its first paint is genuinely empty.
+ *
+ * ── WHAT THE CASCADE BUYS THAT THE ENGINE COULD NOT ────────────────────────
+ *
+ *  · **Stagger.** `:nth-child()` gives a per-datum delay. Upstream's equivalent
+ *    is `ChartMotionContext.datumIndex`, which only the motion renderer reads —
+ *    and that renderer is unusable here (see `chartRenderSvg`'s note and
+ *    chart.tsx's header: `RendererChartCommonProps` has no `renderSvg`, so
+ *    adopting it re-introduces `aria-roledescription="chart"` in English).
+ *  · **Per-part motion.** Marks, grid and tick labels get three different
+ *    curves and three different delays, from three selectors. `svgAnimation` is
+ *    one `ChartAnimationOptions` for the whole scene and cannot express it.
+ *  · **Reduced motion that cannot be bypassed.** A media query is evaluated by
+ *    the browser, not by our code, so there is no flag to forget and no boolean
+ *    a caller can set to `false`. See `CHART_MOTION_REDUCED_MOTION_IS_TOTAL`.
+ *
+ * ── WHAT IT DOES NOT BUY, STATED SO NOBODY LOOKS FOR IT ────────────────────
+ *
+ * Springs. `ChartMotionSpringTransition` (`{stiffness, damping, mass}`) exists
+ * in the types and is consumed ONLY by `motion.js`. Neither the reconcile tween
+ * nor CSS `animation` can express one. There is no spring in a Lumo chart.
+ */
+
+/** Enter duration for the marks themselves, in ms. */
+export const CHART_MOTION_MARK_DURATION = 460;
+/** Per-datum delay, in ms. `:nth-child(n)` × this. */
+export const CHART_MOTION_STAGGER = 45;
+/**
+ * How many `:nth-child()` rules are emitted.
+ *
+ * A bounded stagger, not an unbounded one: past this index every remaining
+ * datum shares the last delay. A 200-point series must not take nine seconds to
+ * appear, and a stylesheet with 200 rules in it is a page-weight defect of its
+ * own. Twelve is a quarter's worth of months, which is the shape most of these
+ * charts have.
+ */
+export const CHART_MOTION_STAGGER_STEPS = 12;
+/** Grid and tick-label duration, in ms. Deliberately not the marks' duration. */
+export const CHART_MOTION_GUIDE_DURATION = 300;
+
+/**
+ * The attribute the motion stylesheet is keyed on.
+ *
+ * An attribute rather than a class because it is a STATE with two values that a
+ * reader may need to see in devtools — `on` and `off` — and because `off` must
+ * be a thing the markup SAYS rather than the absence of something.
+ */
+export const CHART_MOTION_ATTRIBUTE = "data-lumo-chart-motion";
+
+/**
+ * Under `prefers-reduced-motion: reduce`, a Lumo chart has NO motion at all.
+ *
+ * Not a shorter animation, not a cross-fade, not a "subtle" variant: the final
+ * state, immediately, on both paths. The constant exists so the decision has a
+ * name a test can assert and a reader can grep, and so the two halves cannot
+ * drift apart — the CSS half is the `@media` block below, the JS half is
+ * `respectReducedMotion: true` pinned by `defineChart` in chart.tsx.
+ *
+ * The argument is this library's whole thesis restated: a user who has asked
+ * their operating system for less motion has already answered the question, and
+ * an answer a component can override is not an answer. It is the same shape as
+ * every required-string rule here — the accessible behaviour is the one you get
+ * by default, and there is no prop that turns it off.
+ */
+export const CHART_MOTION_REDUCED_MOTION_IS_TOTAL = true as const;
+
+/**
+ * Builds the per-chart motion stylesheet.
+ *
+ * Scoped by the chart's own `[data-chart]` id for the same reason
+ * `chartStyleSheet` is: a chart page renders several of these and a global rule
+ * would reach into components that never asked for it.
+ *
+ * ── THE TRANSFORMS ARE BLOCK-AXIS ONLY, ON PURPOSE ──────────────────────────
+ *
+ * `scaleY` and `translateY` and nothing else. CSS transforms have no logical
+ * form — there is no `scale-inline` — so an X transform in here would be a
+ * physical direction baked into a library that mirrors. The block axis is the
+ * axis this repository allows to stay physical, and a bar growing from its
+ * baseline is a block-axis motion in both directions.
+ *
+ * `transform-box: fill-box` is what makes `transform-origin: 50% 100%` mean
+ * "the bottom of this rect" rather than "the bottom of the viewBox". Without
+ * it, every bar scales about the SVG's origin and the whole plot slides.
+ */
+export function chartMotionStyleSheet(id: string): string {
+  const scope = `[data-chart="${id}"][${CHART_MOTION_ATTRIBUTE}="on"]`;
+  const marks = `${scope} .ts-chart__marks > g > *`;
+  const grid = `${scope} .ts-chart__grid > *`;
+  const guides = `${scope} .ts-chart__axes > *`;
+
+  const stagger = Array.from({ length: CHART_MOTION_STAGGER_STEPS }, (_, index) => {
+    const nth = index + 1;
+    // The last rule uses `:nth-child(n + STEPS)` so datum 13 and beyond share
+    // datum 12's delay rather than falling off the end with no delay at all,
+    // which would make a long series enter in two visibly different waves.
+    const selector =
+      nth === CHART_MOTION_STAGGER_STEPS
+        ? `${marks}:nth-child(n + ${nth})`
+        : `${marks}:nth-child(${nth})`;
+    return `${selector} { animation-delay: ${index * CHART_MOTION_STAGGER}ms; }`;
+  }).join("\n");
+
+  return (
+    `@keyframes lumo-chart-mark-enter {\n` +
+    `  from { opacity: 0; transform: scaleY(0); }\n` +
+    `  to { opacity: 1; transform: scaleY(1); }\n` +
+    `}\n` +
+    `@keyframes lumo-chart-guide-enter {\n` +
+    `  from { opacity: 0; transform: translateY(6px); }\n` +
+    `  to { opacity: 1; transform: translateY(0); }\n` +
+    `}\n` +
+    `${marks} {\n` +
+    `  transform-box: fill-box;\n` +
+    `  transform-origin: 50% 100%;\n` +
+    `  animation: lumo-chart-mark-enter ${CHART_MOTION_MARK_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1) both;\n` +
+    `}\n` +
+    `${stagger}\n` +
+    // The grid arrives FIRST and the tick labels LAST, so the plot reads as
+    // "here is the frame, here are the bars, here is what they say" rather than
+    // as everything appearing at once. That ordering is the per-part motion
+    // `svgAnimation` cannot express; three selectors, three delays.
+    `${grid} {\n` +
+    `  animation: lumo-chart-guide-enter ${CHART_MOTION_GUIDE_DURATION}ms ease-out both;\n` +
+    `  transform-box: fill-box;\n` +
+    `}\n` +
+    `${guides} {\n` +
+    `  animation: lumo-chart-guide-enter ${CHART_MOTION_GUIDE_DURATION}ms ease-out both;\n` +
+    `  animation-delay: ${CHART_MOTION_MARK_DURATION - CHART_MOTION_GUIDE_DURATION}ms;\n` +
+    `  transform-box: fill-box;\n` +
+    `}\n` +
+    // `CHART_MOTION_REDUCED_MOTION_IS_TOTAL`, as CSS. `animation: none` removes
+    // the whole thing including its `both` fill, so the element is painted in
+    // its final state on the first frame; `transform: none` undoes the origin
+    // work with it. There is no shorter variant and no fade.
+    `@media (prefers-reduced-motion: reduce) {\n` +
+    `  ${marks}, ${grid}, ${guides} {\n` +
+    `    animation: none;\n` +
+    `    transform: none;\n` +
+    `  }\n` +
+    `}\n`
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE SECOND THING NO LEVER REACHES — KEYBOARD ORDER
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * **`Home`/`End` and the keyboard ENTRY POINT are physical, not logical, and at
+ * 0.9.0 that cannot be fixed without breaking the arrow keys.**
+ *
+ * A named constant on exactly the pattern `CHART_VALUE_AXIS_TRAILING_EDGE` set:
+ * the day upstream separates the two orders, this is the one line that changes
+ * and the test pinning today's behaviour goes red on purpose.
+ *
+ * ── WHAT WAS MEASURED ──────────────────────────────────────────────────────
+ *
+ * Four monthly datums, `m1…m4` in data order, driven through the shipped
+ * renderer under jsdom. `focusin`, then ArrowRight ×2, ArrowLeft, Home, End:
+ *
+ *     en-US    m1 · m2 m3 · m2 · m1 · m4      every one correct
+ *     fa-IR    m4 · m3 m2 · m3 · m4 · m1
+ *              ▲                    ▲    ▲
+ *              entry is the LAST    Home is last, End is first
+ *
+ * The ARROWS are right in both directions and that is worth stating, because it
+ * is the half a reader will check first: in an RTL widget ArrowRight moves to
+ * the PREVIOUS item, and m4 → m3 is exactly that. What is wrong is the two keys
+ * that name an end of the sequence, and the point focus lands on when the chart
+ * is Tabbed into: all three answer "leftmost", and under RTL the leftmost datum
+ * is the last one a Persian reader would call first.
+ *
+ * ── WHY THE OBVIOUS FIX IS NOT ONE ─────────────────────────────────────────
+ *
+ * `renderer.js:540` resolves every one of these five keys from a SINGLE array,
+ * `focus.navigation(points)`, and `interaction.js:48` indexes it:
+ * `ArrowRight → +1`, `ArrowLeft → −1`, `Home → 0`, `End → length−1`. The entry
+ * point is `focus.navigation(points)[0]` (`renderer.js:566`). `navigation` is
+ * part of `ChartFocusStrategy`, so Lumo COULD supply a reversed one — and then
+ * `Home`, `End` and the entry point would all be right and BOTH ARROWS WOULD
+ * INVERT, because `ArrowRight` is welded to `+1` in that same array.
+ *
+ * Two keys wrong is better than two keys wrong plus the two that are pressed
+ * most, so the physical order is kept and the gap is recorded here rather than
+ * traded for a different one. The information is not lost either way:
+ * `<ChartData>` carries every figure in a real table, in reading order, and a
+ * screen-reader user reaches it without touching the plot at all.
+ */
+export const CHART_KEYBOARD_READING_ORDER = false as const;

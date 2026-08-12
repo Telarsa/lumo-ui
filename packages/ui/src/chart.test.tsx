@@ -47,10 +47,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { Chart as BareTanstackChart } from "@tanstack/charts/react";
 
 import {
+  CHART_MOTION_UPDATE_DURATION,
   ChartContainer,
   ChartData,
   ChartLegend,
   barY,
+  chartMotion,
   chartTooltip,
   defineChart,
   scaleBand,
@@ -58,6 +60,13 @@ import {
 } from "./chart.tsx";
 import { focusGroupX, focusNearestX } from "@tanstack/charts/focus";
 import {
+  CHART_KEYBOARD_READING_ORDER,
+  CHART_MOTION_ATTRIBUTE,
+  CHART_MOTION_GUIDE_DURATION,
+  CHART_MOTION_MARK_DURATION,
+  CHART_MOTION_REDUCED_MOTION_IS_TOTAL,
+  CHART_MOTION_STAGGER,
+  CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
   CHART_ROLE_DESCRIPTION,
@@ -66,6 +75,7 @@ import {
   chartCategoryAxis,
   chartColorVar,
   chartMirror,
+  chartMotionStyleSheet,
   chartStyleSheet,
   chartTickFormatter,
   chartValueAxis,
@@ -748,5 +758,670 @@ describe("chart — the tooltip appears AT the pointer, and follows it", () => {
     // resolves to `pointer ?? datum` in `tooltip-model.js:36`, so a KEYBOARD
     // focus — which nulls `pointerPosition` — still anchors on the datum.
     expect(chartTooltip("fa-IR", CONFIG).anchor).toBe("pointer");
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * MOTION
+ *
+ * ── WHAT THIS HARNESS PROVES, AND WHAT IT DOES NOT ──────────────────────────
+ *
+ * It drives the SHIPPED renderer, not a model of it, on the same argument the
+ * pointer block above makes: `reconcile.js` is arithmetic over attribute
+ * strings and `runTweens` asks the document only for `requestAnimationFrame`.
+ * So `requestAnimationFrame` is REPLACED here with a queue this file drains at
+ * timestamps it chooses, which makes every frame deterministic — no timers, no
+ * flake, and an exact expected value at every sample.
+ *
+ * What that PROVES: which attribute is written, on which element, at which
+ * progress; that the first render schedules no frame at all; that a reduced
+ * -motion window schedules none either and lands on the final value in the same
+ * tick; that an exiting element survives until its tween finishes and is then
+ * removed.
+ *
+ * What it does NOT prove, stated plainly rather than left to be discovered:
+ *
+ *  1. **Nothing about the CSS half.** jsdom parses `<style>` but implements no
+ *     `@keyframes`, no `animation-delay` and no `prefers-reduced-motion`
+ *     evaluation. The first-paint animation is therefore asserted as TEXT — the
+ *     stylesheet the component serves — and as an ABSENCE of anything else. A
+ *     test that claimed to have watched a bar grow in jsdom would be the same
+ *     false claim about untestability this file already carries a correction
+ *     for, pointed the other way.
+ *  2. **Nothing about pixels, paint order or whether motion looks right.** Per
+ *     DECISIONS §15 a green suite here is not evidence about `apps/website/out`;
+ *     what the built export is checked for is the served TEXT being unchanged
+ *     by motion, which is the property the gate depends on and which IS
+ *     mechanically checkable — see "the served bytes are motion-blind" below.
+ *  3. **Nothing about `window.matchMedia` in a real browser.** jsdom's own
+ *     `matchMedia` always reports `matches: false`, so the reduced-motion cases
+ *     replace it. That proves TanStack reads the query and honours the answer;
+ *     it does not prove the OS setting reaches the browser, which is not this
+ *     library's code.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/** A frame queue, drained at timestamps the test picks. */
+interface FrameDriver {
+  run: (timestamp: number) => void;
+  pending: () => number;
+}
+
+let restoreMotion: (() => void) | undefined;
+let frames: FrameDriver;
+
+afterEach(() => {
+  restoreMotion?.();
+  restoreMotion = undefined;
+});
+
+function stubMotionEnvironment(options: { reducedMotion: boolean }) {
+  const view = globalThis as unknown as { ResizeObserver?: unknown };
+  const previousObserver = view.ResizeObserver;
+  const previousRect = Element.prototype.getBoundingClientRect;
+  const previousMatchMedia = window.matchMedia;
+  const previousRequest = window.requestAnimationFrame;
+  const previousCancel = window.cancelAnimationFrame;
+
+  view.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+  Element.prototype.getBoundingClientRect = function getBoundingClientRect() {
+    return {
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      width: SURFACE_WIDTH,
+      height: SURFACE_HEIGHT,
+      right: SURFACE_WIDTH,
+      bottom: SURFACE_HEIGHT,
+      toJSON() {},
+    } as DOMRect;
+  };
+  // jsdom's own implementation answers `false` to everything, so the reduced
+  // -motion cases would be indistinguishable from the ordinary ones without
+  // this. `renderer.js:873` calls `matchMedia("(prefers-reduced-motion: reduce)")`
+  // on `container.ownerDocument.defaultView`, which is this `window`.
+  window.matchMedia = ((query: string) => ({
+    matches: options.reducedMotion && query.includes("reduce"),
+    media: query,
+    onchange: null,
+    addListener() {},
+    removeListener() {},
+    addEventListener() {},
+    removeEventListener() {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+
+  const queue = new Map<number, FrameRequestCallback>();
+  let handle = 0;
+  window.requestAnimationFrame = ((callback: FrameRequestCallback) => {
+    handle += 1;
+    queue.set(handle, callback);
+    return handle;
+  }) as typeof window.requestAnimationFrame;
+  window.cancelAnimationFrame = ((id: number) => {
+    queue.delete(id);
+  }) as typeof window.cancelAnimationFrame;
+
+  frames = {
+    run(timestamp) {
+      const due = [...queue.values()];
+      queue.clear();
+      act(() => {
+        for (const callback of due) callback(timestamp);
+      });
+    },
+    pending: () => queue.size,
+  };
+
+  restoreMotion = () => {
+    view.ResizeObserver = previousObserver;
+    Element.prototype.getBoundingClientRect = previousRect;
+    window.matchMedia = previousMatchMedia;
+    window.requestAnimationFrame = previousRequest;
+    window.cancelAnimationFrame = previousCancel;
+  };
+}
+
+const LATER = [
+  { month: "فروردین", sales: 300 },
+  { month: "اردیبهشت", sales: 900 },
+  { month: "خرداد", sales: 2600 },
+  { month: "تیر", sales: 1400 },
+];
+
+/** The bar heights, as numbers, in document order. */
+function barHeights(container: HTMLElement): number[] {
+  return [...container.querySelectorAll("rect")].map((rect) =>
+    Number(rect.getAttribute("height")),
+  );
+}
+
+/** The concrete row shape these cases plot; `ChartRow` is too wide for `barY`. */
+type MotionRow = { month: string; sales: number };
+
+function motionDefinition(
+  rows: MotionRow[],
+  locale: Locale,
+  options: Record<string, unknown> = {},
+  extraSeries = false,
+) {
+  const marks = [barY(rows, { id: "sales", x: "month", y: "sales", fill: "#3b82f6" })];
+  if (extraSeries) {
+    marks.push(barY(rows, { id: "target", x: "month", y: "sales", fill: "#f43f5e" }));
+  }
+  return defineChart({
+    marks,
+    x: chartCategoryAxis(locale, {
+      scale: () => scaleBand<string>().padding(0.2),
+    }) as never,
+    y: chartValueAxis(locale, { scale: scaleLinear, grid: true }) as never,
+    ...options,
+  } as never);
+}
+
+/** Mounts an animated chart and hands back a "swap the data" control. */
+function mountAnimatedChart(options?: {
+  reducedMotion?: boolean;
+  animate?: boolean;
+  chartMotionOptions?: Parameters<typeof chartMotion>[0];
+}) {
+  stubMotionEnvironment({ reducedMotion: options?.reducedMotion ?? false });
+  const animate = options?.animate ?? true;
+
+  const element = (rows: MotionRow[], extraSeries: boolean) => (
+    <ChartContainer
+      config={CONFIG}
+      locale="fa-IR"
+      label="فروش ماهانه"
+      animate={animate}
+      definition={
+        motionDefinition(
+          rows,
+          "fa-IR",
+          options?.chartMotionOptions ? { svgAnimation: chartMotion(options.chartMotionOptions) } : {},
+          extraSeries,
+        ) as never
+      }
+      data={rows}
+      categoryKey="month"
+      dataCaption="داده‌های نمودار فروش ماهانه"
+      height={SURFACE_HEIGHT}
+      initialWidth={SURFACE_WIDTH}
+    />
+  );
+
+  const { container, rerender } = render(element(DATA, false));
+  return {
+    container,
+    swap(rows: MotionRow[], extraSeries = false) {
+      act(() => {
+        rerender(element(rows, extraSeries));
+      });
+    },
+  };
+}
+
+describe("chart motion — the defaults, and the one that is not negotiable", () => {
+  it("defineChart turns motion ON, with no option passed", () => {
+    const definition = defineChart({ marks: [], x: null, y: null } as never) as unknown as Record<
+      string,
+      unknown
+    >;
+    expect(definition["svgAnimation"]).toEqual({
+      duration: CHART_MOTION_UPDATE_DURATION,
+      easing: "ease-out",
+      respectReducedMotion: true,
+    });
+  });
+
+  it("a caller can turn motion OFF — less motion is never the unsafe direction", () => {
+    const definition = defineChart({
+      marks: [],
+      x: null,
+      y: null,
+      svgAnimation: false,
+    } as never) as unknown as Record<string, unknown>;
+    expect(definition["svgAnimation"]).toBe(false);
+  });
+
+  it("a caller CANNOT turn reduced-motion respect off — it is re-pinned after the spread", () => {
+    /*
+     * The whole point of `CHART_MOTION_REDUCED_MOTION_IS_TOTAL`. Upstream's
+     * `resolveAnimation` reads `configured.respectReducedMotion ?? true`, so
+     * upstream's DEFAULT is already right — and a default is exactly what a
+     * caller spreading their own options object drops without noticing. This is
+     * the line that makes it not theirs to drop.
+     */
+    const definition = defineChart({
+      marks: [],
+      x: null,
+      y: null,
+      svgAnimation: { duration: 900, easing: "linear", respectReducedMotion: false },
+    } as never) as unknown as Record<string, unknown>;
+    expect(definition["svgAnimation"]).toEqual({
+      duration: 900,
+      easing: "linear",
+      respectReducedMotion: true,
+    });
+    expect(CHART_MOTION_REDUCED_MOTION_IS_TOTAL).toBe(true);
+  });
+
+  it("chartMotion carries duration and easing, and nothing that could weaken it", () => {
+    expect(chartMotion()).toEqual({
+      duration: CHART_MOTION_UPDATE_DURATION,
+      easing: "ease-out",
+      respectReducedMotion: true,
+    });
+    const custom = (progress: number) => progress * progress;
+    expect(chartMotion({ duration: 900, easing: custom })).toEqual({
+      duration: 900,
+      easing: custom,
+      respectReducedMotion: true,
+    });
+    // `resize` is absent on purpose: `resolveAnimation` returns undefined for a
+    // resize unless `configured.resize === true`, so leaving it out means a plot
+    // does not re-animate while the reader drags their window.
+    expect(Object.keys(chartMotion()).sort()).toEqual([
+      "duration",
+      "easing",
+      "respectReducedMotion",
+    ]);
+  });
+});
+
+describe("chart motion — the first paint is never animated by the ENGINE", () => {
+  it("paints final geometry and schedules no frame", () => {
+    /*
+     * `renderer.js:91` — `animation: hasRendered ? resolveAnimation(…) :
+     * undefined`. This is the measurement chart.tsx's header cites, and it is
+     * the reason the enter animation is CSS: the engine will not do it, and the
+     * served bytes must stay the finished plot regardless.
+     */
+    const { container } = mountAnimatedChart();
+    expect(barHeights(container)).toEqual([67, 117.25, 44.67, 167.5]);
+    expect(frames.pending()).toBe(0);
+  });
+});
+
+describe("chart motion — a data change tweens, and lands exactly", () => {
+  it("passes through the midpoint under a linear curve", () => {
+    const { container, swap } = mountAnimatedChart({
+      chartMotionOptions: { duration: 1000, easing: "linear" },
+    });
+    const before = barHeights(container);
+    swap(LATER);
+
+    // The rerender alone changes nothing on screen: the tween owns the
+    // attribute until a frame runs. Without `svgAnimation` this line would
+    // already read the new heights — that is what the `animate={false}` case
+    // below asserts.
+    expect(barHeights(container)).toEqual(before);
+
+    frames.run(0);
+    frames.run(500);
+    const halfway = barHeights(container);
+    frames.run(1000);
+    const after = barHeights(container);
+
+    expect(after).toEqual([16.75, 50.25, 145.17, 78.17]);
+    for (const [index, value] of halfway.entries()) {
+      expect(value).toBeCloseTo(((before[index] as number) + (after[index] as number)) / 2, 5);
+    }
+    // It ends. A tween that keeps requesting frames is a battery defect.
+    expect(frames.pending()).toBe(0);
+  });
+
+  it("honours a custom easing FUNCTION, which is a thing recharts has no form of", () => {
+    const { container, swap } = mountAnimatedChart({
+      chartMotionOptions: { duration: 1000, easing: (progress) => progress * progress },
+    });
+    const before = barHeights(container)[0] as number;
+    swap(LATER);
+    frames.run(0);
+    frames.run(500);
+    // Quadratic: progress 0.5 eases to 0.25, so the first bar is a QUARTER of
+    // the way from 67 to 16.75 — 54.44 — not the 41.88 a linear curve gives.
+    // Precision 2, not 5: `reconcile.js`'s own `formatNumber` rounds every
+    // interpolated value to three decimals before it reaches the attribute.
+    expect(barHeights(container)[0]).toBeCloseTo(before + (16.75 - before) * 0.25, 2);
+  });
+
+  it("fades a series IN when it appears and OUT before removing it", () => {
+    const { container, swap } = mountAnimatedChart({
+      chartMotionOptions: { duration: 1000, easing: "linear" },
+    });
+    const seriesGroups = () =>
+      [...container.querySelectorAll("g.ts-chart__bar")].map((group) =>
+        group.getAttribute("opacity"),
+      );
+
+    expect(container.querySelectorAll("rect")).toHaveLength(4);
+
+    swap(DATA, true);
+    frames.run(0);
+    frames.run(500);
+    // `addEnterTween` sets the NEW group's opacity to 0 and interpolates to its
+    // target, so at the halfway frame of a linear tween it reads 0.5. The
+    // retained group has no opacity attribute at all, which is how a
+    // never-animated element differs from one at full opacity.
+    expect(seriesGroups()).toEqual([null, "0.5"]);
+    frames.run(1000);
+    expect(seriesGroups()).toEqual([null, null]);
+
+    swap(DATA, false);
+    // The exiting group is STILL IN THE DOM — `addExitTween` marks it
+    // `removeOnFinish`, so removal is the tween's last act rather than its
+    // first. This is the assertion that distinguishes an exit animation from a
+    // deletion followed by nothing.
+    expect(container.querySelectorAll("rect")).toHaveLength(8);
+    frames.run(0);
+    frames.run(500);
+    expect(seriesGroups()).toEqual([null, "0.5"]);
+    frames.run(1000);
+    expect(container.querySelectorAll("rect")).toHaveLength(4);
+  });
+});
+
+describe("chart motion — prefers-reduced-motion means NO motion, not less", () => {
+  it("lands on the final value in the same tick, with no frame scheduled", () => {
+    /*
+     * Not a shorter tween, not a cross-fade: `resolveAnimation` returns
+     * `undefined` and `reconcileChartSvg` is called with no animation at all, so
+     * `syncAttributes` writes the target straight onto the element.
+     * `frames.pending() === 0` is the assertion that says "nothing was even
+     * scheduled" — a reduced-duration animation would still queue a frame here.
+     */
+    const { container, swap } = mountAnimatedChart({
+      reducedMotion: true,
+      chartMotionOptions: { duration: 1000, easing: "linear" },
+    });
+    swap(LATER);
+    expect(barHeights(container)).toEqual([16.75, 50.25, 145.17, 78.17]);
+    expect(frames.pending()).toBe(0);
+  });
+
+  it("the CSS half says the same thing, in a query no prop can reach", () => {
+    // The JS half above is enforced by `defineChart`. This is the other half —
+    // and it is the stronger one, because a media query is evaluated by the
+    // browser and there is no flag in Lumo's code to forget.
+    const css = chartMotionStyleSheet("chart-x");
+    expect(css).toContain("@media (prefers-reduced-motion: reduce)");
+    const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce)"));
+    expect(reduced).toContain("animation: none;");
+    expect(reduced).toContain("transform: none;");
+    // Every selector the motion sheet animates is named in the reduce block. A
+    // block that silences two of three rules is the defect this asserts against.
+    for (const part of [".ts-chart__marks", ".ts-chart__grid", ".ts-chart__axes"]) {
+      expect(reduced).toContain(part);
+    }
+  });
+});
+
+describe("chart motion — the first paint IS animated, in CSS, and only in CSS", () => {
+  it("the served stylesheet staggers the marks and moves the guides separately", () => {
+    const css = chartMotionStyleSheet("chart-x");
+    // Scoped to this chart alone, and to the `on` state.
+    expect(css).toContain(`[data-chart="chart-x"][${CHART_MOTION_ATTRIBUTE}="on"]`);
+    expect(css).toContain("@keyframes lumo-chart-mark-enter");
+    expect(css).toContain("@keyframes lumo-chart-guide-enter");
+    // The stagger: one rule per datum position, the second one delayed by
+    // exactly one step, and the last one open-ended so a long series does not
+    // enter in two waves.
+    expect(css).toContain(`:nth-child(2) { animation-delay: ${CHART_MOTION_STAGGER}ms; }`);
+    expect(css).toContain(`:nth-child(n + ${CHART_MOTION_STAGGER_STEPS})`);
+    expect(css.match(/animation-delay:/g)).toHaveLength(CHART_MOTION_STAGGER_STEPS + 1);
+    // Per-part motion — the thing `svgAnimation` cannot express, because it is
+    // ONE options object for the whole scene. Three selectors, two keyframes,
+    // and the guides deliberately arrive after the marks.
+    expect(css).toContain(`${CHART_MOTION_MARK_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`);
+    expect(css).toContain(`${CHART_MOTION_GUIDE_DURATION}ms ease-out`);
+  });
+
+  it("moves on the BLOCK axis only — a transform has no logical form", () => {
+    const css = chartMotionStyleSheet("chart-x");
+    expect(css).toContain("scaleY(");
+    expect(css).toContain("translateY(");
+    // The inline axis is where this library's whole thesis lives. A `scaleX` or
+    // `translateX` here would be a physical direction baked into a component
+    // that mirrors, and nothing else in the build would catch it.
+    expect(css).not.toContain("scaleX(");
+    expect(css).not.toContain("translateX(");
+    // Without `fill-box` every bar scales about the SVG origin and the plot
+    // slides across the canvas instead of growing in place.
+    expect(css).toContain("transform-box: fill-box;");
+  });
+
+  it("is served, and marks the container, only when animation is on", () => {
+    const on = renderToStaticMarkup(
+      <ChartContainer
+        config={CONFIG}
+        locale="fa-IR"
+        label="فروش ماهانه"
+        definition={definitionFor("fa-IR") as never}
+        data={DATA}
+        categoryKey="month"
+        dataCaption="داده‌های نمودار فروش ماهانه"
+      />,
+    );
+    const off = renderToStaticMarkup(
+      <ChartContainer
+        config={CONFIG}
+        locale="fa-IR"
+        label="فروش ماهانه"
+        animate={false}
+        definition={definitionFor("fa-IR") as never}
+        data={DATA}
+        categoryKey="month"
+        dataCaption="داده‌های نمودار فروش ماهانه"
+      />,
+    );
+    expect(on).toContain(`${CHART_MOTION_ATTRIBUTE}="on"`);
+    expect(on).toContain("@keyframes lumo-chart-mark-enter");
+    expect(off).toContain(`${CHART_MOTION_ATTRIBUTE}="off"`);
+    expect(off).not.toContain("@keyframes");
+  });
+});
+
+describe("chart motion — the served bytes are motion-BLIND", () => {
+  it("every text node and every plotted coordinate is identical with motion on and off", () => {
+    /*
+     * THE PROPERTY THE GATE DEPENDS ON, and the reason a CSS enter animation is
+     * admissible at all in this library. `lumo-gate` grades the SERVED HTML: if
+     * turning motion on changed one tick, one figure or one bar, the thing the
+     * gate graded would not be the thing on screen.
+     *
+     * The `<style>` element differs — that is the animation — and `<style>` is
+     * one of the two subtrees `rules.ts` skips outright, so it is invisible to
+     * every rule including `no-latin-digits`. Everything the gate DOES read is
+     * compared here byte for byte.
+     */
+    const strip = (html: string) =>
+      html
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/g, "")
+        .replace(new RegExp(`\\s${CHART_MOTION_ATTRIBUTE}="(on|off)"`, "g"), "");
+
+    const on = renderToStaticMarkup(
+      <ChartContainer
+        config={CONFIG}
+        locale="fa-IR"
+        label="فروش ماهانه"
+        id="fixed"
+        definition={definitionFor("fa-IR") as never}
+        data={DATA}
+        categoryKey="month"
+        dataCaption="داده‌های نمودار فروش ماهانه"
+      />,
+    );
+    const off = renderToStaticMarkup(
+      <ChartContainer
+        config={CONFIG}
+        locale="fa-IR"
+        label="فروش ماهانه"
+        id="fixed"
+        animate={false}
+        definition={definitionFor("fa-IR") as never}
+        data={DATA}
+        categoryKey="month"
+        dataCaption="داده‌های نمودار فروش ماهانه"
+      />,
+    );
+    expect(strip(on)).toBe(strip(off));
+    // And the plot really is in there — a pair of empty strings would satisfy
+    // the line above.
+    expect(texts(strip(on)).length).toBeGreaterThan(4);
+  });
+});
+
+describe("chart motion — animate={false} is ONE switch that reaches both halves", () => {
+  it("strips svgAnimation from the definition, so a data change jumps", () => {
+    /*
+     * The CSS half is asserted above (no `@keyframes` served). This is the
+     * ENGINE half: `animate={false}` copies the definition with
+     * `svgAnimation: false`, so `resolveAnimation` returns undefined and
+     * `reconcileChartSvg` writes the target attributes synchronously. A caller
+     * who turns motion off and still gets a 320ms tween on every data change is
+     * worse served than one with no switch at all.
+     */
+    const { container, swap } = mountAnimatedChart({ animate: false });
+    swap(LATER);
+    expect(barHeights(container)).toEqual([16.75, 50.25, 145.17, 78.17]);
+    expect(frames.pending()).toBe(0);
+  });
+
+  it("does not mutate the definition it was handed", () => {
+    // The caller may be memoising it. A wrapper that writes into its own props
+    // is a bug that surfaces three components away.
+    const definition = motionDefinition(DATA, "fa-IR") as unknown as Record<string, unknown>;
+    const before = definition["svgAnimation"];
+    stubMotionEnvironment({ reducedMotion: false });
+    render(
+      <ChartContainer
+        config={CONFIG}
+        locale="fa-IR"
+        label="فروش ماهانه"
+        animate={false}
+        definition={definition as never}
+        data={DATA}
+        categoryKey="month"
+        dataCaption="داده‌های نمودار فروش ماهانه"
+      />,
+    );
+    expect(definition["svgAnimation"]).toBe(before);
+  });
+});
+
+describe("chart interaction — keyboard, which recharts has no equivalent of", () => {
+  /**
+   * Walks a mounted chart with the keyboard and reports the ROWS it visited.
+   *
+   * `focusin`, then whichever keys the case names. Every value it collects came
+   * back through `onActiveDatum`/`onSelectDatum`, so this is also the assertion
+   * that those two hand back the caller's own row rather than a `ChartPoint`.
+   */
+  function walkWithKeyboard(locale: Locale, keys: readonly string[]) {
+    stubMotionEnvironment({ reducedMotion: false });
+    const active: (string | undefined)[] = [];
+    const selected: (string | undefined)[] = [];
+    const { container } = render(
+      <ChartContainer
+        config={CONFIG}
+        locale={locale}
+        label="فروش ماهانه"
+        definition={motionDefinition(DATA, locale) as never}
+        data={DATA}
+        categoryKey="month"
+        dataCaption="داده‌های نمودار فروش ماهانه"
+        height={SURFACE_HEIGHT}
+        initialWidth={SURFACE_WIDTH}
+        onActiveDatum={(row) => active.push(row?.["month"] as string | undefined)}
+        onSelectDatum={(row) => selected.push(row?.["month"] as string | undefined)}
+      />,
+    );
+    const plot = container.querySelector("svg");
+    if (!plot) throw new Error("no plot mounted");
+    act(() => {
+      plot.dispatchEvent(new window.FocusEvent("focusin", { bubbles: true }));
+    });
+    for (const key of keys) {
+      act(() => {
+        plot.dispatchEvent(new window.KeyboardEvent("keydown", { key, bubbles: true }));
+      });
+    }
+    return { plot, active, selected };
+  }
+
+  it("is a Tab stop that answers its arrow keys — recharts' tooltip is pointer-only", () => {
+    const { plot, active, selected } = walkWithKeyboard("en-US", ["ArrowRight", "Enter"]);
+    expect(plot.getAttribute("tabindex")).toBe("0");
+    expect(active).toEqual(["فروردین", "اردیبهشت"]);
+    // Enter reports a SELECTION, separately from the focus that moved to it.
+    expect(selected).toEqual(["اردیبهشت"]);
+  });
+
+  it("moves the ARROWS the right way under RTL, which is the half that is correct", () => {
+    /*
+     * In an RTL horizontal widget ArrowRight moves to the PREVIOUS item, and
+     * that is exactly what happens: focus enters on تیر at the physical left and
+     * ArrowRight walks rightwards — خرداد, اردیبهشت — which is backwards through
+     * the data, i.e. towards the start of the reading order. Asserted before the
+     * inverted case below so that a regression in the half that WORKS cannot
+     * hide behind the half that does not.
+     */
+    const { active } = walkWithKeyboard("fa-IR", ["ArrowRight", "ArrowRight", "ArrowLeft"]);
+    expect(active).toEqual(["تیر", "خرداد", "اردیبهشت", "خرداد"]);
+  });
+
+  it("INVERTED: Home, End and the entry point are physical under RTL, and pin the gap", () => {
+    /*
+     * `CHART_KEYBOARD_READING_ORDER` — see chart.variants.ts for the evidence and
+     * for why reversing `focus.navigation()` trades this defect for a worse one.
+     * This case asserts the WRONG behaviour on purpose, exactly as the value-axis
+     * case above it does: the day upstream separates arrow order from Home/End
+     * order, this goes red and says so.
+     *
+     * Read it against the en-US line below, which is right in every position.
+     */
+    expect(CHART_KEYBOARD_READING_ORDER).toBe(false);
+
+    const rtl = walkWithKeyboard("fa-IR", ["Home", "End"]);
+    // Entry lands on the LAST month; Home is already there so nothing is
+    // reported, and End goes to the FIRST. Both keys name the wrong end.
+    expect(rtl.active).toEqual(["تیر", "فروردین"]);
+
+    // The same three keys in en-US, where every one of them is right.
+    const ltr = walkWithKeyboard("en-US", ["Home", "End"]);
+    expect(ltr.active).toEqual(["فروردین", "تیر"]);
+  });
+
+  it("does not attach a listener at all when no callback is given", () => {
+    // `exactOptionalPropertyTypes` makes this a real distinction rather than a
+    // stylistic one: the props are spread in conditionally, so an absent
+    // callback means TanStack is never handed `undefined` to call.
+    stubMotionEnvironment({ reducedMotion: false });
+    const { container } = render(
+      <ChartContainer
+        config={CONFIG}
+        locale="fa-IR"
+        label="فروش ماهانه"
+        definition={motionDefinition(DATA, "fa-IR") as never}
+        data={DATA}
+        categoryKey="month"
+        dataCaption="داده‌های نمودار فروش ماهانه"
+        height={SURFACE_HEIGHT}
+        initialWidth={SURFACE_WIDTH}
+      />,
+    );
+    const plot = container.querySelector("svg");
+    expect(() => {
+      act(() => {
+        plot?.dispatchEvent(
+          new window.KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }),
+        );
+      });
+    }).not.toThrow();
   });
 });

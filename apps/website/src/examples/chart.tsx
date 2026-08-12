@@ -3,6 +3,7 @@ import {
   ChartAreaIsland,
   ChartIsland,
   ChartLineIsland,
+  ChartMotionIsland,
 } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
@@ -62,6 +63,29 @@ const t = {
   weekTwo: { "fa-IR": "هفتهٔ دوم", "en-US": "Week two" },
   weekThree: { "fa-IR": "هفتهٔ سوم", "en-US": "Week three" },
   weekFour: { "fa-IR": "هفتهٔ چهارم", "en-US": "Week four" },
+
+  // ── motion ───────────────────────────────────────────────────────────────
+  motionLabel: { "fa-IR": "نمودار فروش و هدف فصلی", "en-US": "Quarterly sales and target chart" },
+  motionCaption: { "fa-IR": "داده‌های فروش و هدف فصلی", "en-US": "Quarterly sales and target data" },
+  target: { "fa-IR": "هدف", "en-US": "Target" },
+  controls: { "fa-IR": "کنترل‌های نمودار", "en-US": "Chart controls" },
+  firstRange: { "fa-IR": "نیمهٔ نخست", "en-US": "First half" },
+  secondRange: { "fa-IR": "نیمهٔ دوم", "en-US": "Second half" },
+  addSeries: { "fa-IR": "افزودن سری هدف", "en-US": "Add the target series" },
+  removeSeries: { "fa-IR": "حذف سری هدف", "en-US": "Remove the target series" },
+  namedEasing: { "fa-IR": "منحنی استاندارد", "en-US": "Standard curve" },
+  customEasing: { "fa-IR": "منحنی سفارشی", "en-US": "Authored curve" },
+  motionOff: { "fa-IR": "خاموش‌کردن حرکت", "en-US": "Turn motion off" },
+  motionOn: { "fa-IR": "روشن‌کردن حرکت", "en-US": "Turn motion on" },
+  selectedWord: { "fa-IR": "انتخاب‌شده", "en-US": "Selected" },
+  nothingSelected: {
+    "fa-IR": "هنوز چیزی انتخاب نشده. با کلیک یا با Enter روی نقطهٔ فعال انتخاب کنید.",
+    "en-US": "Nothing selected yet. Click a bar, or press Enter on the focused one.",
+  },
+  shahrivar: { "fa-IR": "شهریور", "en-US": "Shahrivar" },
+  mehr: { "fa-IR": "مهر", "en-US": "Mehr" },
+  aban: { "fa-IR": "آبان", "en-US": "Aban" },
+  azar: { "fa-IR": "آذر", "en-US": "Azar" },
 } satisfies Record<string, LocalizedText>;
 
 function BarExample(l: Locale) {
@@ -115,6 +139,48 @@ function AreaExample(l: Locale) {
         { category: t.weekTwo[l], value: 5200 },
         { category: t.weekThree[l], value: 4750 },
         { category: t.weekFour[l], value: 7300 },
+      ]}
+    />
+  );
+}
+
+function MotionExample(l: Locale) {
+  return (
+    <ChartMotionIsland
+      locale={l}
+      strings={{
+        label: t.motionLabel[l],
+        dataCaption: t.motionCaption[l],
+        categoryLabel: t.month[l],
+        seriesLabel: t.sales[l],
+        targetLabel: t.target[l],
+        controlsLabel: t.controls[l],
+        firstRangeLabel: t.firstRange[l],
+        secondRangeLabel: t.secondRange[l],
+        addSeriesLabel: t.addSeries[l],
+        removeSeriesLabel: t.removeSeries[l],
+        namedEasingLabel: t.namedEasing[l],
+        customEasingLabel: t.customEasing[l],
+        motionOffLabel: t.motionOff[l],
+        motionOnLabel: t.motionOn[l],
+        selectedWord: t.selectedWord[l],
+        nothingSelectedWord: t.nothingSelected[l],
+      }}
+      firstRange={[
+        { month: t.farvardin[l], sales: 1200, target: 1500 },
+        { month: t.ordibehesht[l], sales: 2400, target: 1800 },
+        { month: t.khordad[l], sales: 1800, target: 2100 },
+        { month: t.tir[l], sales: 3100, target: 2400 },
+        { month: t.mordad[l], sales: 2650, target: 2700 },
+        { month: t.shahrivar[l], sales: 3400, target: 3000 },
+      ]}
+      secondRange={[
+        { month: t.farvardin[l], sales: 900, target: 1500 },
+        { month: t.ordibehesht[l], sales: 1400, target: 1800 },
+        { month: t.khordad[l], sales: 3300, target: 2100 },
+        { month: t.tir[l], sales: 2200, target: 2400 },
+        { month: t.mordad[l], sales: 4100, target: 2700 },
+        { month: t.shahrivar[l], sales: 3050, target: 3000 },
       ]}
     />
   );
@@ -189,6 +255,15 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
+        name: "chartMotion",
+        description: {
+          "fa-IR":
+            "زمان و منحنیِ گذارِ داده‌ها. احترام به کاهش حرکت عمداً در ورودی‌هایش نیست، چون چیزی نیست که فراخوان بتواند خاموشش کند.",
+          "en-US":
+            "The duration and curve of a data transition. Respecting reduced motion is deliberately not one of its inputs, because it is not a caller's to switch off.",
+        },
+      },
+      {
         name: "ChartLegend",
         description: {
           "fa-IR": "راهنمای رنگ‌ها، از روی ChartConfig. نامِ سری از پیکربندی می‌آید، نه از کلیدِ انگلیسی داده.",
@@ -230,6 +305,17 @@ export const EXAMPLES: ComponentExamples = {
           "The same line with a filled region. The data table is built as for the others — but now the plot itself is server-rendered too.",
       },
       render: AreaExample,
+    },
+    {
+      id: "motion",
+      title: { "fa-IR": "حرکت و تعامل", "en-US": "Motion and interaction" },
+      description: {
+        "fa-IR":
+          "همه‌چیزِ متحرک و تعاملیِ این موتور در یک نمونه. نمودار در نخستین رسم، ستون‌به‌ستون و با تأخیر پلکانی، بالا می‌آید؛ شبکه پیش از ستون‌ها و برچسب‌های محور پس از آن‌ها می‌رسند. هر کنترل بالای نمودار یک رفتار را نشان می‌دهد: تعویض بازه، داده‌ها را طی ۷۰۰ میلی‌ثانیه به مقدار تازه می‌کشاند؛ افزودن سری هدف آن را با محو ورودی می‌آورد و حذفش پیش از برداشتن، محو می‌کند؛ منحنی سفارشی یک تابع نوشته‌شده است که از مقصد کمی می‌گذرد و برمی‌گردد، و هیچ‌کدام از پنج منحنیِ نام‌دار چنین شکلی ندارند؛ و دکمهٔ آخر هر دو نیمهٔ حرکت را با هم خاموش می‌کند. با اشاره‌گر، راهنمای شناور به مکان‌نمای شما می‌چسبد و کل ستون فعال است، نه فقط نزدیکیِ نقطه. نمودار یک ایستگاه Tab است: با کلیدهای جهت روی داده‌ها حرکت می‌کنید و با Enter یکی را انتخاب می‌کنید، و انتخاب در همان سطرِ زیرِ نمودار خوانده می‌شود. اگر در سیستم‌عاملِ خود کاهش حرکت را روشن کرده باشید، هیچ حرکتی رخ نمی‌دهد — نه کوتاه‌تر و نه ملایم‌تر، بلکه هیچ — و این رفتار پیش‌فرض است و هیچ ویژگی‌ای آن را برنمی‌گرداند. سه چیز را این موتور ندارد و پنهانشان نمی‌کنیم: حرکت فنری، ریخت‌گردانیِ مسیر، و کلیدهای Home و End که در فارسی سرِ اشتباهِ داده‌ها را نشانه می‌روند.",
+        "en-US":
+          "Everything this engine can animate and everything it responds to, in one demo. The plot rises bar by bar on first paint with a staggered delay; the grid arrives before the bars and the tick labels after them. Each control above the chart shows one behaviour: switching the range tweens every bar to its new value over seven hundred milliseconds; adding the target series fades it in, and removing it fades it out before the elements leave; the authored curve is a real function that overshoots and settles, a shape none of the five named easings can express; and the last button turns both halves of motion off together. With a pointer the tooltip follows the cursor and the whole column is live, not just the neighbourhood of a datum. The plot is a Tab stop: arrow keys walk the data, Enter selects, and the selection is read out in the line below. If you have asked your operating system for reduced motion, nothing moves at all — not shorter, not gentler, nothing — and that is the default, with no prop that undoes it. Three things this engine does not have, stated rather than hidden: spring transitions, path morphing, and Home/End, which under RTL name the wrong end of the data.",
+      },
+      render: MotionExample,
     },
   ],
 };

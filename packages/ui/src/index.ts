@@ -724,6 +724,8 @@ export {
   ChartData,
   ChartLegend,
   ChartStyle,
+  CHART_MOTION_UPDATE_DURATION,
+  chartMotion,
   chartTooltip,
   // TanStack's own marks and scales, re-exported so a chart is composed from a
   // single import. Deliberately unwrapped — see chart.tsx.
@@ -737,9 +739,12 @@ export {
   scalePoint,
 } from "./chart.tsx";
 export type {
+  ChartAnimation,
   ChartContainerProps,
   ChartDataProps,
+  ChartEasing,
   ChartLegendProps,
+  ChartMotionOptions,
   ChartRow,
 } from "./chart.tsx";
 
@@ -752,6 +757,13 @@ export type {
  * would make them client references and fail that page's prerender.
  */
 export {
+  CHART_KEYBOARD_READING_ORDER,
+  CHART_MOTION_ATTRIBUTE,
+  CHART_MOTION_GUIDE_DURATION,
+  CHART_MOTION_MARK_DURATION,
+  CHART_MOTION_REDUCED_MOTION_IS_TOTAL,
+  CHART_MOTION_STAGGER,
+  CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
   CHART_ROLE_DESCRIPTION,
@@ -764,6 +776,7 @@ export {
   chartLegendItemVariants,
   chartLegendVariants,
   chartMirror,
+  chartMotionStyleSheet,
   chartPieCenterVariants,
   chartRenderSvg,
   chartStyleSheet,

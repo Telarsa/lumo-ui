@@ -18,6 +18,13 @@ import { cn, formatNumber, type Locale } from "@lumo-ui/core";
 // the variants, the direction arithmetic AND — new on this renderer — the axis
 // builders. See chart.variants.ts's header.
 import {
+  CHART_KEYBOARD_READING_ORDER,
+  CHART_MOTION_ATTRIBUTE,
+  CHART_MOTION_GUIDE_DURATION,
+  CHART_MOTION_MARK_DURATION,
+  CHART_MOTION_REDUCED_MOTION_IS_TOTAL,
+  CHART_MOTION_STAGGER,
+  CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
   CHART_ROLE_DESCRIPTION,
@@ -30,6 +37,7 @@ import {
   chartLegendItemVariants,
   chartLegendVariants,
   chartMirror,
+  chartMotionStyleSheet,
   chartPieCenterVariants,
   chartRenderSvg,
   chartStyleSheet,
@@ -44,6 +52,13 @@ import {
 } from "./chart.variants.ts";
 
 export {
+  CHART_KEYBOARD_READING_ORDER,
+  CHART_MOTION_ATTRIBUTE,
+  CHART_MOTION_GUIDE_DURATION,
+  CHART_MOTION_MARK_DURATION,
+  CHART_MOTION_REDUCED_MOTION_IS_TOTAL,
+  CHART_MOTION_STAGGER,
+  CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
   CHART_ROLE_DESCRIPTION,
@@ -56,6 +71,7 @@ export {
   chartLegendItemVariants,
   chartLegendVariants,
   chartMirror,
+  chartMotionStyleSheet,
   chartPieCenterVariants,
   chartRenderSvg,
   chartStyleSheet,
@@ -194,6 +210,86 @@ export { areaY, barY, dot, lineY, scaleBand, scaleLinear, scalePoint };
  * value axis cannot be moved to the reading edge at 0.9.0 and states how that
  * is handled.
  *
+ * ═══ MOTION AND INTERACTION, AGAINST WHAT A RECHARTS READER EXPECTS ═════════
+ *
+ * The question this section answers is "can it animate and be interactive the
+ * way recharts is". The short answer is **yes for interaction, mostly yes for
+ * motion, and no in three named places** — and every row below was read in the
+ * installed `dist/*.d.ts` and then driven under jsdom, because a type that
+ * exists is not a behaviour that runs.
+ *
+ *     WHAT                        RECHARTS 3.8   TANSTACK 0.9   LUMO SHIPS
+ *     ────────────────────────────────────────────────────────────────────────
+ *     animate on first paint      yes (default)  NO             yes, in CSS
+ *     stagger per datum           no             renderer only  yes, in CSS
+ *     animate on data change      yes            yes            yes, default on
+ *     enter/exit of a series      yes            yes            yes, default on
+ *     named easings               yes            yes            yes
+ *     custom easing fn            no             yes            yes
+ *     per-part curves             no             renderer only  yes, in CSS
+ *     SPRING transitions          no             renderer only  **NO**
+ *     morph / rolling paths       no             renderer only  **NO**
+ *     hover tooltip + focus ring  yes            yes            yes
+ *     KEYBOARD datum navigation   **no**         yes            yes
+ *     select a datum              yes            yes            yes
+ *     respects reduced motion     no             opt-out flag   **not optional**
+ *
+ * ── THE TYPE-LEVEL EVIDENCE FOR EACH "NO" ──────────────────────────────────
+ *
+ *  1. **First paint is not animatable through the React bindings, at all.**
+ *     `renderer.js:91` is `animation: hasRendered ? resolveAnimation(…) :
+ *     undefined`, so the SVG host's first render is unconditionally un-animated.
+ *     The optional motion renderer has its own gate — `motion.js:243` computes
+ *     `initial ? motion.initial && !adoptedRoot : …`, and `adoptedRoot` is
+ *     `container.firstElementChild?.matches("svg.ts-chart")`, which
+ *     `RendererChart.js` makes true on EVERY mount by writing
+ *     `adapter.prerender()` into the container before the layout effect calls
+ *     `mount`. Its own doc comment concedes it: "Server-rendered SVG is always
+ *     adopted." Measured under jsdom with `svgAnimation: {duration: 1000}`: the
+ *     bars paint at their final heights with zero frames scheduled.
+ *
+ *     Lumo animates the first paint in CSS instead, and `chartMotionStyleSheet`
+ *     carries the long argument for why that is the RIGHT answer here and not a
+ *     workaround: the served bytes already contain the finished plot — that is
+ *     the entire reason this library left recharts — so the only honest enter
+ *     animation is one that animates markup which is already correct.
+ *
+ *  2. **Springs, path morphing and per-datum `motion` are unreachable, and the
+ *     reason is an accessible name.** All three live behind
+ *     `motion()` from `@tanstack/charts/motion`, which returns a `ChartRenderer`
+ *     usable only with `RendererChart` — and `RendererChartCommonProps` in
+ *     `react/RendererChart.d.ts` **has no `renderSvg`**. `motion()` hardcodes
+ *     `createMotionSvgChartRenderer(driver, renderChartSvgWithResources)` and
+ *     exports nothing else, so the renderer cannot be handed a localised
+ *     serializer either. Adopting it therefore re-introduces
+ *     `aria-roledescription="chart"` — English, spoken on every focus of every
+ *     Persian chart, the single defect `chartRenderSvg` exists to close.
+ *     VERIFIED, not assumed: rendering `<RendererChart renderer={motion()}>`
+ *     emits `aria-roledescription="chart"` in the served markup.
+ *
+ *     A spring is not worth an English accessible name. The trade is declined,
+ *     and `ChartMotionDefinition`/`ChartMotionTiming`/`ChartMotionSpringTransition`
+ *     are therefore NOT exposed by this wrapper — exposing a type whose only
+ *     consumer we refuse to mount would be documentation for a lie.
+ *
+ *  3. **There is no `onActiveChange`.** A reader coming from a charting library
+ *     that has one will look for it; 0.9.0's callbacks are exactly
+ *     `onFocusChange`, `onFocusGroupChange`, `onSelect` and `onRender`
+ *     (`react/Chart.d.ts`). Lumo surfaces the first and third as
+ *     `onActiveDatum` / `onSelectDatum`, in Lumo's own vocabulary and handing
+ *     back the caller's ROW rather than a `ChartPoint`.
+ *
+ * ── THE ONE PLACE TANSTACK IS AHEAD, AND IT IS THE ONE THAT MATTERS HERE ────
+ *
+ * **Keyboard.** The plot is `tabindex="0"` and `renderer.js:513` wires a
+ * `keydown` handler behind `definition.keyboard !== false`: arrow keys walk the
+ * datums, Enter/Space fire `onSelect`, Escape clears. Measured under jsdom —
+ * focusin selects the first datum and paints the tooltip, two ArrowRights walk
+ * to the third, Enter reports it. recharts has no equivalent; its tooltip is
+ * pointer-only. A chart that is a Tab stop and does nothing when you press an
+ * arrow key is the defect §13 of DECISIONS.md is about, and this engine does
+ * not have it.
+ *
  * ═══ WHAT THIS COSTS ═══════════════════════════════════════════════════════
  *
  * The upstream repo was 13 days old with 19 releases at adoption, self-describes
@@ -277,6 +373,40 @@ export interface ChartContainerProps
    * output"; this is what puts real ticks in the first byte.
    */
   initialWidth?: number | undefined;
+  /**
+   * Motion. **On by default**, and this is the ONE switch that turns it off.
+   *
+   * `true` (the default) means: the plot animates in on first paint, staggered
+   * per datum, with the grid arriving before the marks and the tick labels
+   * after them; and every later change of `data` tweens rather than jumping.
+   *
+   * `false` means neither happens — the attribute the motion stylesheet is keyed
+   * on is written `"off"`, AND `svgAnimation` is stripped from the definition on
+   * its way to the renderer. Two mechanisms, one prop, because a caller who
+   * turns motion off and gets half of it is worse served than one who has no
+   * switch at all.
+   *
+   * It is NOT how you honour `prefers-reduced-motion`. That needs no prop and
+   * cannot be undone by one — see `CHART_MOTION_REDUCED_MOTION_IS_TOTAL`. This
+   * prop is for the cases motion is wrong for reasons the OS cannot know: a
+   * plot inside a virtualised list that mounts as the reader scrolls, a chart
+   * repainting on a socket, a print stylesheet.
+   */
+  animate?: boolean | undefined;
+  /**
+   * The ACTIVE datum changed — hover moved to another band, or an arrow key did.
+   *
+   * Receives the caller's own row, not a `ChartPoint`: `point.datum` is the
+   * object that went into the mark, so this hands back the same shape `data`
+   * holds, and `undefined` when nothing is active. Named `…Datum` rather than
+   * `onActiveChange` for two reasons — 0.9.0 HAS no `onActiveChange` (its
+   * callback is `onFocusChange`), and `React.ComponentProps<"div">` already has
+   * a real DOM `onSelect`, so a prop called `onSelect` here would be a silent
+   * collision with an attribute that lands on the wrapper element.
+   */
+  onActiveDatum?: ((row: ChartRow | undefined) => void) | undefined;
+  /** The reader PICKED a datum: a click, or Enter/Space on the focused one. */
+  onSelectDatum?: ((row: ChartRow | undefined) => void) | undefined;
   className?: string | undefined;
 }
 
@@ -296,10 +426,62 @@ export function ChartContainer({
   dataCaption,
   height = HEIGHT,
   initialWidth = INITIAL_WIDTH,
+  animate = true,
+  onActiveDatum,
+  onSelectDatum,
   ...props
 }: ChartContainerProps) {
   const uniqueId = React.useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
+
+  /*
+   * `animate={false}` reaches the ENGINE half of motion here, because
+   * `svgAnimation` is a field of the definition and the definition is the
+   * caller's object. `defineChart` returns a plain object in all five of its
+   * overloads (`scene.js:24` — it either returns the argument, wraps a function
+   * as `{chart: fn}`, or merges two objects), and host options live at the top
+   * level in every one of them, so a shallow copy with one key overwritten is
+   * safe for the responsive form too.
+   *
+   * Copied rather than mutated: the caller may be memoising it, and a wrapper
+   * that writes into its own props is a bug that shows up three components away.
+   */
+  /*
+   * ── THIS `useMemo` IS NOT AN OPTIMISATION. IT IS THE ANIMATION. ───────────
+   *
+   * `chartRenderSvg(locale)` returns a NEW closure on every call, and it used
+   * to be called inline in the JSX below — so `renderSvg` had a new identity on
+   * every render of this component. Three things followed, and none of them was
+   * visible until motion was turned on:
+   *
+   *  1. `react/Chart.js` does `useMemo(() => createSvgChartRenderer(renderSvg),
+   *     [renderSvg])`, so the RENDERER was rebuilt every time too.
+   *  2. `renderer.js:594` folds `options.renderer !== nextOptions.renderer` into
+   *     `layoutChanged`, and `render(…, layoutChanged ? "layout" : …)` reaches
+   *     `resolveAnimation`, whose FIRST line is `if (reason === "layout") return
+   *     undefined`. Every update was classified as a layout change, so no data
+   *     change could ever animate — `svgAnimation` was inert no matter what it
+   *     was set to.
+   *  3. Worse than the animation: `renderer.js:68` sees `surface.renderer !==
+   *     options.renderer` and DESTROYS the surface, calls
+   *     `container.replaceChildren()` and mounts a new one. Every re-render of
+   *     this component tore down and rebuilt the entire `<svg>`.
+   *
+   * MEASURED: with the inline call, a data swap wrote the new bar heights
+   * synchronously and scheduled zero animation frames — identical to
+   * `animate={false}`. With the memo, the same swap tweens. The revert of this
+   * one line is what "passes through the midpoint under a linear curve" in
+   * chart.test.tsx fails on.
+   */
+  const renderSvg = React.useMemo(() => chartRenderSvg(locale), [locale]);
+
+  const plotted = React.useMemo(
+    () =>
+      animate
+        ? definition
+        : ({ ...(definition as object), svgAnimation: false } as typeof definition),
+    [animate, definition],
+  );
 
   return (
     <ChartContext.Provider value={{ config, locale }}>
@@ -307,10 +489,11 @@ export function ChartContainer({
         data-lumo=""
         data-slot="chart"
         data-chart={chartId}
+        {...{ [CHART_MOTION_ATTRIBUTE]: animate ? "on" : "off" }}
         className={cn(chartContainerVariants(), className)}
         {...props}
       >
-        <ChartStyle id={chartId} config={config} />
+        <ChartStyle id={chartId} config={config} motion={animate} />
         <ChartData
           config={config}
           locale={locale}
@@ -319,18 +502,38 @@ export function ChartContainer({
           caption={dataCaption}
         />
         <TanstackChart
-          definition={definition}
+          definition={plotted}
           // Required by TanStack's own types. See `label`'s doc comment.
           ariaLabel={label}
           height={height}
           initialWidth={initialWidth}
+          /*
+           * `point.datum` is the caller's ORIGINAL row — TanStack keeps the
+           * object it was given rather than a projection of it, which is the
+           * same fact `chartTooltip`'s `format` relies on. So these two hand
+           * back a `ChartRow`, and the caller never learns what a `ChartPoint`
+           * is. `undefined` when focus or selection is cleared, which happens on
+           * pointer-leave and on Escape.
+           */
+          {...(onActiveDatum === undefined
+            ? {}
+            : {
+                onFocusChange: (point: { datum?: unknown } | null) =>
+                  onActiveDatum(point?.datum as ChartRow | undefined),
+              })}
+          {...(onSelectDatum === undefined
+            ? {}
+            : {
+                onSelect: (point: { datum?: unknown } | null) =>
+                  onSelectDatum(point?.datum as ChartRow | undefined),
+              })}
           /*
            * The library's own renderer with its one English literal localised.
            * A prop-level fix: `renderSvg` is public and typed, `renderChartSvg`
            * is a public export, and nothing here imports an internal path or
            * patches node_modules. See `chartRenderSvg`.
            */
-          renderSvg={chartRenderSvg(locale) as never}
+          renderSvg={renderSvg as never}
         />
         {children}
       </div>
@@ -423,11 +626,38 @@ export function ChartData({ config, locale, data, categoryKey, caption }: ChartD
   );
 }
 
-export function ChartStyle({ id, config }: { id: string; config: ChartConfig }) {
-  const css = chartStyleSheet(id, config);
+/**
+ * The chart's own stylesheet: series colours, and — when `motion` — the
+ * first-paint animation.
+ *
+ * Both halves are scoped by `[data-chart="<id>"]`, so a page with four charts
+ * gets four independent sheets and no rule reaches a component that did not ask
+ * for one. That does mean the motion block is repeated per chart; it is ~2.8KB
+ * of `<style>` each (measured in the built export), it is not graded by `lumo-gate` (`rules.ts` skips `<style>`
+ * subtrees entirely), and the alternative — one document-level sheet — has no
+ * de-duplication seam in a static export where each island renders alone.
+ *
+ * `motion={false}` omits the block rather than emitting it and switching it off
+ * with the attribute. Both would work; not emitting it means `animate={false}`
+ * costs nothing at all in the served bytes, which is what a caller who turned
+ * motion off is asking for.
+ */
+export function ChartStyle({
+  id,
+  config,
+  motion = false,
+}: {
+  id: string;
+  config: ChartConfig;
+  motion?: boolean;
+}) {
+  const css = chartStyleSheet(id, config) + (motion ? chartMotionStyleSheet(id) : "");
   if (!css) return null;
   // The CSS text is built in chart.variants.ts, where config keys are filtered
   // against /^[A-Za-z0-9_-]+$/ before they reach a selector or a property name.
+  // `id` is built by `ChartContainer` from `React.useId()` or a caller `id` that
+  // has already been through the same `data-chart` attribute, and the motion
+  // sheet interpolates only that one value.
   return <style dangerouslySetInnerHTML={{ __html: css }} />;
 }
 
@@ -485,7 +715,9 @@ export function chartTooltip(locale: Locale, config: ChartConfig) {
      * fixes nothing.
      *
      * MEASURED, driving the real renderer under jsdom with a stubbed 400×200
-     * `getBoundingClientRect` (`chart-pointer.test.tsx`). Two `pointermove`s
+     * `getBoundingClientRect` (`chart.test.tsx`, "the tooltip appears AT the
+     * pointer"; the docblock here named a `chart-pointer.test.tsx` that was
+     * never committed). Two `pointermove`s
      * 140px apart vertically, same band, fa-IR:
      *
      *     without `anchor`   left 341.14px  top 100px   ← both events, identical
@@ -679,11 +911,144 @@ export function ChartLegend({
  * the shape they were using. The body genuinely produces what `defineChart`
  * produces, with two defaults merged in ahead of the caller's own.
  */
-export const defineChart = ((definition: Record<string, unknown>) =>
-  (defineChartBase as (d: unknown) => unknown)({
+export const defineChart = ((definition: Record<string, unknown>) => {
+  const merged: Record<string, unknown> = {
     focus: focusGroupX,
     // A band hit test has no radius; 48px would re-impose one on the axis the
     // strategy above deliberately stopped measuring.
     maxFocusDistance: Number.POSITIVE_INFINITY,
     ...definition,
-  })) as unknown as typeof defineChartBase;
+  };
+  /*
+   * ── MOTION IS ON, AND ONE OF ITS TERMS IS NOT THE CALLER'S TO SET ────────
+   *
+   * `focus` and `maxFocusDistance` sit BEFORE the spread, so a caller's value
+   * wins — they are opinions, and the docblock above says so. Motion is handled
+   * AFTER it instead, because its default and its one non-negotiable term are
+   * the same line and separating them is how they drift apart:
+   *
+   *   absent / true         → `chartMotion()`. **Motion is on by default**, for
+   *                           every chart in the library, with no prop passed.
+   *   false                 → stays false. Turning motion OFF is always allowed;
+   *                           less motion is never the unsafe direction.
+   *   an options object     → `respectReducedMotion` is forced to `true`,
+   *                           overwriting a caller's `false`.
+   *
+   * Upstream already defaults reduced-motion respect to true (`renderer.js:873`,
+   * `resolveAnimation`'s `configured.respectReducedMotion ?? true`), which is
+   * exactly why the third line is here: a DEFAULT is a promise the next person
+   * drops by spreading their own options object over it, and this one is not
+   * theirs to drop. `CHART_MOTION_REDUCED_MOTION_IS_TOTAL` names the decision;
+   * this is the JS half of enforcing it, and the `@media` block in
+   * `chartMotionStyleSheet` is the CSS half.
+   *
+   * It is deliberately not expressible through `chartMotion()` either — that
+   * options type has no `respectReducedMotion` field — so writing it at all
+   * means hand-authoring an object, and this line then undoes it.
+   */
+  merged["svgAnimation"] = chartAnimation(merged["svgAnimation"]);
+  return (defineChartBase as (d: unknown) => unknown)(merged);
+}) as unknown as typeof defineChartBase;
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * MOTION
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * The easing curves a Lumo chart's UPDATE animation may use.
+ *
+ * The five names are `ChartAnimationOptions['easing']`'s own union, and the
+ * function form is upstream's too — `reconcile.js`'s `easing(name)` returns
+ * `name` unchanged when it is a function, so `(progress) => number` is honoured
+ * verbatim. Restated here rather than re-exported because this is the ONE
+ * animation type Lumo actually mounts; the motion-renderer types next to it in
+ * `dist/types.d.ts` are not, and re-exporting the lot would advertise a spring
+ * this wrapper cannot produce.
+ */
+export type ChartEasing =
+  | "linear"
+  | "ease"
+  | "ease-in"
+  | "ease-out"
+  | "ease-in-out"
+  | ((progress: number) => number);
+
+/** What `chartMotion` accepts. Two fields, and neither of them is an escape. */
+export interface ChartMotionOptions {
+  /** How long an UPDATE takes, in ms. Not the first-paint animation, which is CSS. */
+  duration?: number | undefined;
+  /** The curve. A function is genuinely honoured — see `ChartEasing`. */
+  easing?: ChartEasing | undefined;
+}
+
+/**
+ * What a Lumo chart's `svgAnimation` is. Deliberately not `ChartAnimationOptions`.
+ *
+ * `respectReducedMotion` is `true` — the literal type, not `boolean` — so a
+ * caller who writes `{...chartMotion(), respectReducedMotion: false}` gets a
+ * type error at the call site as well as being overwritten at runtime by
+ * `defineChart`. `resize` is absent, which is upstream's own switch for "animate
+ * when the chart is merely RESIZED": `resolveAnimation` returns undefined for a
+ * resize unless `configured.resize === true`, and a plot that re-animates while
+ * the reader drags their window is motion nobody asked for.
+ */
+export interface ChartAnimation {
+  duration: number;
+  easing: ChartEasing;
+  respectReducedMotion: true;
+}
+
+/** The default UPDATE duration, in ms. */
+export const CHART_MOTION_UPDATE_DURATION = 320;
+
+/**
+ * The UPDATE animation, as a definition fragment.
+ *
+ *     defineChart({ marks: […], x: …, y: …, svgAnimation: chartMotion({ duration: 600 }) })
+ *
+ * `defineChart` already installs `chartMotion()`, so this is only written when
+ * the defaults are not wanted. It is the same shape as `chartTooltip(locale,
+ * config)`: a small typed function returning ONE option of the definition
+ * object, not a parallel API and not a pass-through.
+ *
+ * ── WHAT IT ANIMATES, MEASURED ──────────────────────────────────────────────
+ *
+ * `reconcile.js` interpolates a fixed set of SVG attributes — `d`, `height`,
+ * `width`, `x`, `y`, `cx`, `cy`, `r`, `opacity`, `transform` and seven more —
+ * between the previous scene's markup and the next. So a bar's height tweens, a
+ * line's `d` tweens, and an element with no counterpart in the other scene gets
+ * an opacity ENTER or EXIT tween instead (`addEnterTween`/`addExitTween`), with
+ * the exiting node removed only when its tween finishes.
+ *
+ * Driven under jsdom with a stubbed `requestAnimationFrame` and
+ * `{duration: 1000, easing: "linear"}`, 1200→300 on the first bar:
+ *
+ *     frame 0ms      height 67        ← the OLD value; the tween has not run
+ *     frame 500ms    height 43.48     ← exactly the midpoint of 67 and 19.96
+ *     frame 1000ms   height 19.96     ← the new value, exactly, and no frame left
+ *
+ * and with `easing: (p) => p * p`, the same 500ms frame reads 55.24 — which is
+ * 67 + (19.96 − 67) × 0.25. The custom easing is not decorative.
+ */
+export function chartMotion(options?: ChartMotionOptions): ChartAnimation {
+  return {
+    duration: options?.duration ?? CHART_MOTION_UPDATE_DURATION,
+    easing: options?.easing ?? "ease-out",
+    respectReducedMotion: true,
+  };
+}
+
+/**
+ * The default AND the pin, in one function — see the long note in `defineChart`.
+ *
+ * One function rather than a default in the object literal plus a separate
+ * normaliser, because the literal's default would be dead code: this already
+ * turns `undefined` into `chartMotion()`, so a second default is a line that can
+ * be deleted with no test going red. Verified by deleting it.
+ */
+function chartAnimation(value: unknown): unknown {
+  if (value === false) return false;
+  if (value === true || value === undefined || value === null) return chartMotion();
+  if (typeof value !== "object") return chartMotion();
+  return { ...(value as Record<string, unknown>), respectReducedMotion: true };
+}

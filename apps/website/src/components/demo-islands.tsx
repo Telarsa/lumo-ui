@@ -3017,3 +3017,226 @@ export function DatePickerDropdownIsland({
     />
   );
 }
+
+/* ────────────────────────────────────────────────────── chart: motion ── */
+
+/*
+ * Appended by the motion pass, same append-only contract as the blocks above:
+ * import declarations are hoisted, so `useState`, `Locale`, `Button`,
+ * `ChartConfig`, `ChartContainer`, `ChartLegend`, `barY`, `chartCategoryAxis`,
+ * `chartColor`, `chartTooltip`, `chartValueAxis`, `defineChart`, `scaleBand`
+ * and `scaleLinear` are already imported at the top of this file. Only the
+ * genuinely new names are here.
+ */
+import { chartMotion } from "@lumo-ui/ui";
+
+/**
+ * ONE demo of everything `@tanstack/charts` 0.9.0 can be made to do in Lumo,
+ * and — by its own copy — of the four things it cannot.
+ *
+ * It is deliberately one island rather than five, because the interesting part
+ * is how the behaviours COMBINE: a series that enters while the value axis is
+ * rescaling, a custom curve applied to a transition the reader triggered, a
+ * tooltip that keeps following the pointer through all of it.
+ *
+ * ── WHY EVERY STRING IS A REQUIRED PROP, INCLUDING THE BUTTON LABELS ────────
+ *
+ * The whole rule, applied to a component that has more announced strings than
+ * any other demo on the site: four controls, a live region and a legend. A
+ * default for any of them would be English, and English on a Persian page is
+ * the defect this library exists to prevent. They arrive as ONE required
+ * `strings` object rather than fifteen loose props — the `ChartPanelStrings`
+ * shape from `@lumo-ui/blocks`, for its reason: a group of strings that are
+ * always written together should be missable together, at one compile error.
+ *
+ * ── THE FIGURES IN THE LIVE REGION GO THROUGH `formatNumber` ────────────────
+ *
+ * A selected datum's value is a `number` off the caller's row. It reaches the
+ * DOM as text in a `role="status"`, which is neither a JSX child `LumoNode`
+ * could refuse nor a tick the axis formatter could catch. This is the third
+ * seam where a Latin digit could enter a chart, after the axis and the tooltip.
+ */
+export interface ChartMotionStrings {
+  /** The plot's announced name — it is `role="img"` and a Tab stop. */
+  label: string;
+  /** The data table's caption. Distinct from `label`; a reader meets both. */
+  dataCaption: string;
+  /** Names the category column, e.g. «ماه». */
+  categoryLabel: string;
+  /** The first series, e.g. «فروش». Legend and tooltip both use it. */
+  seriesLabel: string;
+  /** The second series, e.g. «هدف». Shown only while it is switched on. */
+  targetLabel: string;
+  /** Names the control group, e.g. «کنترل‌های نمودار». */
+  controlsLabel: string;
+  /** Picks the first dataset, e.g. «نیمهٔ نخست». */
+  firstRangeLabel: string;
+  /** Picks the second dataset, e.g. «نیمهٔ دوم». */
+  secondRangeLabel: string;
+  /** Adds the second series, e.g. «افزودن سری هدف». */
+  addSeriesLabel: string;
+  /** Removes it again, e.g. «حذف سری هدف». */
+  removeSeriesLabel: string;
+  /** Selects the named curve, e.g. «منحنی استاندارد». */
+  namedEasingLabel: string;
+  /** Selects the authored curve, e.g. «منحنی سفارشی». */
+  customEasingLabel: string;
+  /** Turns motion off, e.g. «خاموش‌کردن حرکت». */
+  motionOffLabel: string;
+  /** Turns it back on, e.g. «روشن‌کردن حرکت». */
+  motionOnLabel: string;
+  /** Prefixes the live region, e.g. «انتخاب‌شده». */
+  selectedWord: string;
+  /** Stands in when nothing is selected yet, e.g. «هنوز چیزی انتخاب نشده». */
+  nothingSelectedWord: string;
+}
+
+/** One plotted month: the figure, and the figure it was measured against. */
+export type MotionRow = {
+  readonly month: string;
+  readonly sales: number;
+  readonly target: number;
+};
+
+export interface ChartMotionIslandProps {
+  locale: Locale;
+  strings: ChartMotionStrings;
+  /** The two datasets the reader switches between. Plain data, so it crosses. */
+  firstRange: readonly MotionRow[];
+  secondRange: readonly MotionRow[];
+}
+
+/**
+ * An authored easing curve.
+ *
+ * `ChartAnimationOptions['easing']` accepts `(progress: number) => number`, and
+ * `reconcile.js`'s `easing(name)` returns a function argument unchanged — so
+ * this runs verbatim on every interpolated attribute. It is a "back" curve:
+ * it overshoots past 1 and settles, which is a shape none of the five named
+ * easings can express and which recharts has no form of at all.
+ *
+ * Declared at module scope, not inside the component: a new function identity
+ * on every render would make the definition a new object every render too, and
+ * the definition's identity is what tells the renderer whether anything
+ * changed.
+ */
+const chartBackOut = (progress: number): number => {
+  const overshoot = 1.70158;
+  const t = progress - 1;
+  return t * t * ((overshoot + 1) * t + overshoot) + 1;
+};
+
+export function ChartMotionIsland({
+  locale,
+  strings,
+  firstRange,
+  secondRange,
+}: ChartMotionIslandProps) {
+  const [isSecondRange, setIsSecondRange] = useState(false);
+  const [hasTarget, setHasTarget] = useState(false);
+  const [isCustomEasing, setIsCustomEasing] = useState(false);
+  const [animate, setAnimate] = useState(true);
+  const [selected, setSelected] = useState<MotionRow | undefined>(undefined);
+
+  const rows = [...(isSecondRange ? secondRange : firstRange)];
+
+  const config: ChartConfig = {
+    month: { label: strings.categoryLabel },
+    sales: { label: strings.seriesLabel, color: "oklch(0.62 0.16 255)" },
+    ...(hasTarget ? { target: { label: strings.targetLabel, color: "oklch(0.66 0.15 25)" } } : {}),
+  };
+
+  const marks = [
+    barY(rows, { id: "sales", x: "month", y: "sales", fill: chartColor("sales") }),
+    ...(hasTarget
+      ? [barY(rows, { id: "target", x: "month", y: "target", fill: chartColor("target") })]
+      : []),
+  ];
+
+  return (
+    <div className="flex w-full flex-col gap-4">
+      {/*
+       * `role="group"` with a name, not a bare `<div>`: four controls that all
+       * act on one plot are a unit, and a screen-reader user arriving at the
+       * third button otherwise has no way to learn what it belongs to.
+       */}
+      <div role="group" aria-label={strings.controlsLabel} className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          variant={isSecondRange ? "outline" : "solid"}
+          onPress={() => setIsSecondRange(false)}
+        >
+          {strings.firstRangeLabel}
+        </Button>
+        <Button
+          size="sm"
+          variant={isSecondRange ? "solid" : "outline"}
+          onPress={() => setIsSecondRange(true)}
+        >
+          {strings.secondRangeLabel}
+        </Button>
+        <Button size="sm" variant="outline" onPress={() => setHasTarget((on) => !on)}>
+          {hasTarget ? strings.removeSeriesLabel : strings.addSeriesLabel}
+        </Button>
+        <Button size="sm" variant="outline" onPress={() => setIsCustomEasing((on) => !on)}>
+          {isCustomEasing ? strings.namedEasingLabel : strings.customEasingLabel}
+        </Button>
+        <Button size="sm" variant="outline" onPress={() => setAnimate((on) => !on)}>
+          {animate ? strings.motionOffLabel : strings.motionOnLabel}
+        </Button>
+      </div>
+
+      <ChartContainer
+        config={config}
+        locale={locale}
+        label={strings.label}
+        /*
+         * `animate` is the ONE switch. It writes the attribute the enter
+         * stylesheet is keyed on AND strips `svgAnimation` from the definition,
+         * so the button above turns off both halves of motion rather than the
+         * half a reader happens to be looking at.
+         */
+        animate={animate}
+        definition={
+          defineChart({
+            marks,
+            x: chartCategoryAxis(locale, {
+              scale: () => scaleBand<string>().padding(0.2),
+            }) as never,
+            y: chartValueAxis(locale, { scale: scaleLinear, grid: true }) as never,
+            tooltip: chartTooltip(locale, config),
+            /*
+             * 700ms rather than the 320ms default, because this is a
+             * DEMONSTRATION of the transition and the default is tuned to be
+             * felt rather than watched.
+             */
+            svgAnimation: chartMotion({
+              duration: 700,
+              easing: isCustomEasing ? chartBackOut : "ease-out",
+            }),
+          }) as never
+        }
+        data={rows}
+        categoryKey="month"
+        dataCaption={strings.dataCaption}
+        onSelectDatum={(row) => setSelected(row as MotionRow | undefined)}
+        className="w-full"
+      >
+        <ChartLegend hiddenSeries={["month"]} />
+      </ChartContainer>
+
+      {/*
+       * `role="status"` — polite, so it does not interrupt, and announced only
+       * when the reader has actually picked a datum. Selection is the right
+       * event to announce; the ACTIVE datum changes on every pixel of pointer
+       * movement, and a live region wired to that is a component nobody can
+       * use with a screen reader on.
+       */}
+      <p role="status" className="text-sm text-fg-muted">
+        {selected === undefined
+          ? strings.nothingSelectedWord
+          : `${strings.selectedWord}: ${selected.month} — ${formatNumber(selected.sales, locale)}`}
+      </p>
+    </div>
+  );
+}
