@@ -285,8 +285,56 @@ export interface MenuProps<T extends object> {
    * Static children. React Aria's render-function form is driven by its
    * collection builder, which Base UI has no equivalent of — recorded as
    * `menu.dynamic-collections` in the measurements file.
+   *
+   * ── THE DOCBLOCK SAID THAT AND THE TYPE SAID OTHERWISE ────────────────────
+   *
+   * Until 12 Aug 2026 this was `LumoNode | ((item: T) => LumoNode)`: the two
+   * lines above denied the form and the line below offered it. There is no
+   * collection here to drive it and nothing that would call the function —
+   * `Menu` renders `{children}` into a plain `<div role="none">`, and React
+   * cannot render a function.
+   *
+   * Measured rather than reasoned. `<Menu>{(c) => <div>{c.name}</div>}</Menu>`
+   * through `renderToStaticMarkup` produced
+   * `<div role="none" data-lumo="" class="…"></div>` — the container and
+   * nothing inside it — plus one `console.error`: *"Functions are not valid as
+   * a React child. This may happen if you return … instead of <… /> from
+   * render."* So the shape this type advertised compiled, rendered an empty
+   * menu, and reported the problem only to a console nobody reads on a server.
+   *
+   * `select.tsx`'s `SelectPopoverProps` had the identical defect and the
+   * identical measurement. The form is NOT dropped from `ComboBox`,
+   * `AutocompleteListBox`, `CommandList` or `ListBox`, and the difference is
+   * real rather than editorial: the first three hand their children to Base
+   * UI's `Combobox.List` — `<Autocomplete.List>` in the two autocomplete files
+   * is the SAME component, re-exported under an alias, which
+   * `autocomplete/index.d.ts` states as `ComboboxListProps as
+   * AutocompleteListProps` — whose `.d.ts` in `@base-ui/react@1.7.0` declares
+   * `children?: React.ReactNode | ((item: any, index: number) => ReactNode)`
+   * and renders it per item — a function child there produced two
+   * `role="option"` elements and zero console errors — and `ListBox` is Lumo's
+   * own collection walk, which calls the function itself at `list-box.tsx:405`.
+   * Base UI's `Select.List` declares no such arm (`SelectListProps extends
+   * BaseUIComponentProps<'div', SelectListState>`, whose `children` is a
+   * `<div>`'s), and this menu's container is a literal `<div>`.
    */
-  children?: LumoNode | ((item: T) => LumoNode);
+  children?: LumoNode;
+  /**
+   * TYPE CARRIER, NOT A PROP — see `MenuSectionProps.items`, and see `children`
+   * above for why this field is what keeps `<T>` on this interface.
+   *
+   * React Aria's `MenuProps<T>` extended `AriaMenuProps<T>`, whose `items` fed
+   * the collection builder that drove the render-function form. Removing that
+   * form left `T` naming nothing, and `noUnusedLocals` says so — measured:
+   * dropping the arm and nothing else produced
+   * `menu.tsx(283,27): error TS6133: 'T' is declared but its value is never
+   * read.` Deleting `<T>` instead would break every `MenuProps<Action>` and
+   * `ContextMenuProps<Action>` annotation a consumer has already written, which
+   * is the API break every `value`/`items` carrier in this collection family
+   * exists to prevent — so the carrier that USED to drive the form keeps the
+   * parameter alive. It names the right thing for the right reason.
+   */
+  items?: (Iterable<T> & never) | undefined;
   /** Called with the activated item's `id`. */
   onAction?: ((key: string) => void) | undefined;
   /**
@@ -334,8 +382,10 @@ export function Menu<T extends object>({ className, onAction, children }: MenuPr
        * and its menuitems is exactly the kind of thing that reads fine and
        * quietly makes the tree non-conforming.
        */}
+      {/* No cast. `children` is `LumoNode` now that the function arm is gone,
+          and the cast was what let the two disagree in the first place. */}
       <div role="none" data-lumo="" className={cn(menuVariants(), className)}>
-        {children as LumoNode}
+        {children}
       </div>
     </MenuActionContext.Provider>
   );
@@ -343,14 +393,22 @@ export function Menu<T extends object>({ className, onAction, children }: MenuPr
 
 export interface MenuItemProps<T extends object = object> {
   /**
-   * TYPE CARRIER, NOT A PROP — and typed `never` on purpose. React Aria's
-   * `ItemProps<T>` used `T` for the object an item stands for; Base UI has no
-   * collection and no such prop. Keeping the field is what keeps the type
-   * PARAMETER, so a `MenuItemProps<Action>` annotation a consumer already
-   * wrote still compiles; typing it `never` makes passing a value a compile
-   * error rather than a prop that is accepted and silently dropped.
+   * TYPE CARRIER, NOT A PROP. React Aria's `ItemProps<T>` used `T` for the
+   * object an item stands for; Base UI has no collection and no such prop.
+   * Keeping the field is what keeps the type PARAMETER, so a
+   * `MenuItemProps<Action>` annotation a consumer already wrote still compiles,
+   * and the carrier makes passing a value a compile error rather than a prop
+   * that is accepted and silently dropped.
+   *
+   * Spelled `(T & never) | undefined`, not `T & never`. It was the second
+   * spelling until 12 Aug 2026, and that resolves to `never`, which under
+   * `exactOptionalPropertyTypes` rejects an explicit `undefined` as well as a
+   * value: `<MenuItem {...bag} />` with `value: undefined` in the bag was a
+   * `TS2375`. One of seven such sites, all measured together — the full
+   * reproduction and the control are on `SelectProps.items` in `select.tsx`.
+   * The `| undefined` arm keeps `T` read, which `noUnusedLocals` requires.
    */
-  value?: T & never;
+  value?: (T & never) | undefined;
   /** The item's key, handed to `Menu`'s `onAction`. */
   id?: string | undefined;
   /** Typeahead string. Required for non-string children. */
@@ -520,8 +578,10 @@ export interface MenuSectionProps<T extends object> {
    * TYPE CARRIER, NOT A PROP — see `MenuItemProps.value`. React Aria's
    * `SectionProps<T>` carried `items?: Iterable<T>` for a dynamic section;
    * Base UI has no collection to feed it (`menu.dynamic-collections`).
+   * Spelled `(Iterable<T> & never) | undefined` for the reason that entry
+   * gives.
    */
-  items?: Iterable<T> & never;
+  items?: (Iterable<T> & never) | undefined;
   /** Static children only. */
   children?: LumoNode;
   className?: string | undefined;

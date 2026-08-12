@@ -146,21 +146,45 @@ export function ChartPanel({
           </dl>
         ) : null}
 
-        {isEmpty ? (
-          /*
-           * `role="status"`: the panel usually empties because a filter changed,
-           * and a sighted reader sees the plot vanish while a screen reader
-           * user gets nothing. Announcing it is the only way the two agree.
-           */
-          <p
-            role="status"
-            className="grid min-h-40 place-items-center rounded-md border border-dashed border-border p-6 text-center text-sm text-fg-muted"
-          >
-            {strings.emptyLabel}
-          </p>
-        ) : (
-          chart
-        )}
+        {/*
+         * `role="status"`: the panel usually empties because a filter changed,
+         * and a sighted reader sees the plot vanish while a screen reader user
+         * gets nothing. Announcing it is the only way the two agree.
+         *
+         * ── THE REGION IS MOUNTED ALWAYS; ITS CHILDREN ARE THE CONDITIONAL ──
+         *
+         * Until 12 Aug 2026 this was `isEmpty ? <p role="status"> : chart`, so
+         * the live region came into existence at the same moment it acquired
+         * its sentence. That is the arrangement least likely to be heard: a
+         * live region is a promise about mutations to a node the reader's
+         * software is ALREADY watching, and a node that arrives with its text
+         * in it is a mutation of its parent instead. Base UI states the rule in
+         * `combobox/empty/ComboboxEmpty.mjs:11-15` — the root "must remain
+         * mounted… Avoid… conditional rendering. Prefer… conditionally
+         * rendering its children instead" — and implements exactly that.
+         *
+         * `sr-only` rather than `hidden` for the populated case: content inside
+         * `display: none` is not announced at all, so that would be the same
+         * defect with a different attribute. `sr-only` is `position: absolute`,
+         * which also means the node is NOT a flex item of the `gap-4` column
+         * around it — a panel with a chart in it gains no stray 16px gap.
+         *
+         * `data-grid.tsx`'s `DataGridEmpty` carries the long version of this
+         * argument, including the residue neither fix addresses: a panel that
+         * is empty in its FIRST byte still mounts with its text already there,
+         * and a live region present at load is not announced.
+         */}
+        <p
+          role="status"
+          className={
+            isEmpty
+              ? "grid min-h-40 place-items-center rounded-md border border-dashed border-border p-6 text-center text-sm text-fg-muted"
+              : "sr-only"
+          }
+        >
+          {isEmpty ? strings.emptyLabel : null}
+        </p>
+        {isEmpty ? null : chart}
       </CardBody>
 
       {footer ? <CardFooter>{footer}</CardFooter> : null}

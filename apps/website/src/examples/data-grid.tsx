@@ -181,7 +181,7 @@ export const EXAMPLES: ComponentExamples = {
       `  </DataGridToolbar>`,
       ``,
       `  <Table …>…</Table>                ← the grid itself, unchanged`,
-      `  <DataGridEmpty>…</DataGridEmpty>  ← role="status"; renders nothing when there are rows`,
+      `  <DataGridEmpty>…</DataGridEmpty>  ← role="status", always mounted; only its text is conditional`,
       ``,
       `  <DataGridPagination`,
       `    label previousLabel nextLabel`,

@@ -2821,7 +2821,7 @@ export function AlertDismissIsland({
     <div className="flex w-full max-w-lg flex-col gap-3">
       {open ? (
         <Alert
-          tone="info"
+          tone="accent"
           title={title}
           onClose={() => setOpen(false)}
           closeLabel={closeLabel}

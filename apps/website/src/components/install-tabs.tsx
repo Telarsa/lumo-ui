@@ -1,22 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import type { Locale } from "@lumo-ui/core";
+import type { Locale, LumoNode } from "@lumo-ui/core";
 import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
-import { CodeBlock } from "./code-block";
 
 /**
  * Installation: a Command tab (package-manager sub-tabs, pnpm first) and a
  * Manual tab (dependencies to install, then the source to copy).
  *
- * Every piece of data here — the registry name, `dependencies`,
- * `registryComponents`, `files` — is DERIVED from `registry.json` by the
- * caller (`page.tsx`, a server component that can read the filesystem at
- * build time). This component never hardcodes a package name or a file path;
- * it only lays out whatever the registry says. See `page.tsx`'s
+ * Every piece of data here — `registryComponents`, `files`, and the commands
+ * inside `commandPanels` — is DERIVED from `registry.json` by the caller
+ * (`page.tsx`, a server component that can read the filesystem at build time).
+ * This component never hardcodes a package name or a file path; it only lays
+ * out whatever the registry says. See `page.tsx`'s
  * `resolveRegistryItem` for how a page's slug is matched to a registry item —
  * most match by name, but `icon-button` shares `button.tsx` with `button` and
  * is matched by content rather than by a hardcoded exception.
+ *
+ * ── THE LISTINGS ARRIVE RENDERED, NOT AS STRINGS ────────────────────────────
+ *
+ * This module is `"use client"` because `Tabs` is, and every prop of a client
+ * component is serialized into the RSC flight payload. It used to take the
+ * command text, the dependency command and each file's full source as strings
+ * plus a parallel bag of shiki HTML, and render `CodeBlock` itself — so the
+ * component source shipped in the payload a second time even though React
+ * Aria's `Tabs` never mounts the Manual panel that would display it. Measured
+ * at 3f46039 on `fa/components/event-calendar`: a 336,371-char shiki row and a
+ * 58,715-char source row, neither of which was ever in the DOM.
+ *
+ * The panels are now built by `page.tsx` (a server component) and handed over
+ * already rendered. This file lays out tabs and nothing else; it holds no code
+ * text, and the copy buttons inside those panels read the DOM.
  *
  * PACKAGE-MANAGER NAMES ARE NEVER PLACED IN AN ARIA-LABEL.
  * "pnpm" and "npm" both satisfy `/[A-Za-z]{3,}/`, the exact pattern
@@ -31,111 +45,41 @@ export interface InstallFile {
   /** Where a consumer's copy lands, e.g. "components/ui/button.tsx" — read
    *  verbatim from the registry item's own `files[].target`. */
   target: string;
-  code: string;
-  /** Build-time shiki output for `code`. See `commandHtml` on the props. */
-  html?: string | undefined;
+  /** The file's listing, server rendered by `page.tsx` as a `CodePanel`. */
+  panel: LumoNode;
 }
 
 export interface InstallTabsProps {
   locale: Locale;
-  /** The registry item name actually resolved for this page, e.g. "button". */
-  registryName: string;
-  /** External npm packages the registry entry lists in `dependencies`. */
-  dependencies: string[];
   /** Sibling Lumo registry items this one depends on — real registry item
    *  names only; a companion `*.variants.ts` file is filtered out upstream. */
   registryComponents: string[];
   /** The file(s) to copy: the component itself, and its companion
    *  `*.variants.ts` when the registry lists one. */
   files: InstallFile[];
-  /** Shiki output per command/file, produced by the SERVER page via
-   *  `lib/highlight.ts` — this client module must not import the highlighter
-   *  (see code-block.tsx's `html` prop for the whole argument). */
-  commandHtml?: Partial<Record<PM, string>> | undefined;
-  depsHtml?: string | undefined;
+  /**
+   * One rendered listing per package manager, keyed by the same `PMS` order the
+   * pill row iterates — a `Record`, not a `Partial`, because a missing panel is
+   * a tab that selects into nothing and nobody would notice until they tried it.
+   */
+  commandPanels: Record<PM, LumoNode>;
+  /** The dependency-install listing, absent when the registry entry has no
+   *  external dependencies — the same condition that renders `noDeps` instead. */
+  depsPanel?: LumoNode | undefined;
 }
 
-import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
+import { PMS, type PM } from "@/lib/install-commands";
+import { INSTALL_COPY } from "@/lib/install-copy";
 import { segmentFor } from "@/lib/locale";
 
-const COPY: Record<
-  Locale,
-  {
-    installMethod: string;
-    command: string;
-    manual: string;
-    pmGroup: string;
-    copyCommand: string;
-    copyCommandDone: string;
-    depsHeading: string;
-    noDeps: string;
-    copyDeps: string;
-    copyDepsDone: string;
-    alsoUses: string;
-    sourceHeading: string;
-    copyMain: string;
-    copyMainDone: string;
-    copyCompanion: string;
-    copyCompanionDone: string;
-    /**
-     * What goes between two names in a run-on list. Persian uses U+060C, not a
-     * comma — the last string on this page that was still picked with a binary
-     * conditional on `locale`, which would have silently handed a third locale
-     * the Latin comma inside otherwise-correct prose.
-     */
-    listSeparator: string;
-  }
-> = {
-  "fa-IR": {
-    installMethod: "روش نصب",
-    command: "دستور",
-    manual: "دستی",
-    pmGroup: "مدیر بستهٔ ترجیحی",
-    copyCommand: "کپی دستور نصب",
-    copyCommandDone: "دستور نصب در کلیپ‌بورد کپی شد",
-    depsHeading: "نصب وابستگی‌ها",
-    noDeps: "این کامپوننت به بستهٔ بیرونی نیاز ندارد.",
-    copyDeps: "کپی دستور وابستگی‌ها",
-    copyDepsDone: "دستور وابستگی‌ها کپی شد",
-    alsoUses: "همچنین به این کامپوننت‌های لومو نیاز دارد:",
-    sourceHeading: "کد را کپی و در پروژه جای‌گذاری کنید",
-    copyMain: "کپی کد اصلی",
-    copyMainDone: "کد اصلی کپی شد",
-    copyCompanion: "کپی کد کمکی",
-    copyCompanionDone: "کد کمکی کپی شد",
-    listSeparator: "، ",
-  },
-  "en-US": {
-    installMethod: "Install method",
-    command: "Command",
-    manual: "Manual",
-    pmGroup: "Package manager",
-    copyCommand: "Copy the install command",
-    copyCommandDone: "Install command copied to clipboard",
-    depsHeading: "Install the dependencies",
-    noDeps: "This component has no external dependencies.",
-    copyDeps: "Copy the dependency command",
-    copyDepsDone: "Dependency command copied",
-    alsoUses: "Also requires these Lumo components:",
-    sourceHeading: "Copy and paste the code into your project",
-    copyMain: "Copy the main file",
-    copyMainDone: "Main file copied",
-    copyCompanion: "Copy the companion file",
-    copyCompanionDone: "Companion file copied",
-    listSeparator: ", ",
-  },
-};
-
 export function InstallTabs({
-  commandHtml,
-  depsHtml,
+  commandPanels,
+  depsPanel,
   locale,
-  registryName,
-  dependencies,
   registryComponents,
   files,
 }: InstallTabsProps) {
-  const t = COPY[locale];
+  const t = INSTALL_COPY[locale];
 
   return (
     <Tabs>
@@ -194,12 +138,7 @@ export function InstallTabs({
           </TabList>
           {PMS.map((pm) => (
             <TabPanel key={pm} id={pm} className="mt-3">
-              <CodeBlock
-                code={CLI_COMMAND[pm](registryName)}
-                html={commandHtml?.[pm]}
-                label={t.copyCommand}
-                copiedLabel={t.copyCommandDone}
-              />
+              {commandPanels[pm]}
             </TabPanel>
           ))}
         </Tabs>
@@ -209,13 +148,8 @@ export function InstallTabs({
         <div>
           <h3 className="text-sm font-medium text-fg">{t.depsHeading}</h3>
           <div className="mt-2">
-            {dependencies.length > 0 ? (
-              <CodeBlock
-                code={depsCommand(dependencies)}
-                html={depsHtml}
-                label={t.copyDeps}
-                copiedLabel={t.copyDepsDone}
-              />
+            {depsPanel !== undefined ? (
+              depsPanel
             ) : (
               <p className="text-sm text-fg-muted">{t.noDeps}</p>
             )}
@@ -248,7 +182,7 @@ export function InstallTabs({
         <div>
           <h3 className="text-sm font-medium text-fg">{t.sourceHeading}</h3>
           <div className="mt-2 flex flex-col gap-4">
-            {files.map((file, i) => (
+            {files.map((file) => (
               <div key={file.target}>
                 <p
                   dir="ltr"
@@ -258,12 +192,7 @@ export function InstallTabs({
                 >
                   {file.target}
                 </p>
-                <CodeBlock
-                  code={file.code}
-                  html={file.html}
-                  label={i === 0 ? t.copyMain : t.copyCompanion}
-                  copiedLabel={i === 0 ? t.copyMainDone : t.copyCompanionDone}
-                />
+                {file.panel}
               </div>
             ))}
           </div>

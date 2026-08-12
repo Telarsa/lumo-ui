@@ -929,8 +929,46 @@ interface TreeItemPropsBase<T extends object>
     Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
   /** The row's collection key. */
   id?: Key;
-  /** The item object this row was rendered from. */
-  value?: T;
+  /**
+   * TYPE CARRIER, NOT A PROP — React Aria's `TreeItemProps<T>` used `T` for the
+   * item object a dynamic collection rendered a row from. This file has no
+   * collection: `TreeItem` destructures `title`/`children`/`className`, binds
+   * `...props`, reads seven names off it — `id`, `hasChildItems`, `isDisabled`,
+   * `style`, `onAction`, `aria-label`, `textValue` — and SPREADS IT NOWHERE, so
+   * an item object handed to this prop was held by nothing and read by nobody.
+   *
+   * Keeping the field keeps the type PARAMETER, so a `TreeItemProps<FileNode>`
+   * annotation a consumer already wrote still compiles — the argument
+   * `menu.tsx`, `combobox.tsx`, `select.tsx` and `list-box.tsx` all make for
+   * their own `value`, which is now spelled the same way in all five.
+   *
+   * ── IT WAS `value?: T`, AND THE GATE COULD NOT SEE IT ──────────────────────
+   *
+   * Until 12 Aug 2026 this was typed LIVE while being just as dead as the four
+   * above, which is the worse of the two ways to be wrong: `<TreeItem
+   * value={node}>` compiled, rendered, announced nothing new, and errored
+   * never. `gate:props` did not catch it, and the reason is worth recording
+   * because it is a property of the gate rather than an accident:
+   * `inert-props.ts` matches mentions BY NAME and counts anything at module
+   * scope for every component in the file. `renderLevel` — a module-scope
+   * helper four hundred lines up, with nothing to do with an item object —
+   * writes `<TreePositionContext.Provider value={{…}}>`,
+   * and that JSX attribute is an identifier named `value`, so every prop named
+   * `value` in this file was cleared as *"referenced at module scope"*.
+   *
+   * Measured, not inferred: renaming this field to `zzprobe` and changing
+   * nothing else turned the same run from `0 violations` into
+   * `inert-prop/unverified — TreeItemPropsBase.zzprobe`. The gate's own header
+   * calls this imprecision one-directional and deliberate — it can only make
+   * the gate quieter — and this is what quieter looks like on a real file.
+   *
+   * Spelled `(T & never) | undefined`, not `T & never`: the second resolves to
+   * `never`, which under `exactOptionalPropertyTypes` rejects an explicit
+   * `undefined` too and so breaks a spread that passed no value. Seven sites in
+   * four sibling files carried that spelling and were respelled the same day;
+   * the reproduction is on `SelectProps.items` in `select.tsx`.
+   */
+  value?: (T & never) | undefined;
   /** The row's accessible name, when `title` is not a plain string. */
   "aria-label"?: string;
   /** Whether this row is disabled. */
@@ -942,8 +980,11 @@ interface TreeItemPropsBase<T extends object>
   /*
    * Two more type carriers, for the reason the five on `TreePropsBase` are.
    * `TreeItem` reads `props.id`, `props.hasChildItems`, `props.isDisabled`,
-   * `props.value`, `props.onAction` and `props["aria-label"]` by name and
-   * spreads nothing, so these two were read by nobody. Focus lands on the row —
+   * `props.style`, `props.onAction`, `props.textValue` and `props["aria-label"]`
+   * by name and spreads nothing, so these two were read by nobody. (This list used to name
+   * `props.value` as well. It was wrong: there is no `props.value` anywhere in
+   * this file, which is the whole reason `value` above is now a carrier too.)
+   * Focus lands on the row —
    * that is what the roving tab stop in the header describes — and the arrow
    * keys move BETWEEN rows, which is the treegrid contract this file tests.
    */

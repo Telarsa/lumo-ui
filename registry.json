@@ -35,7 +35,7 @@
       "name": "alert",
       "type": "registry:ui",
       "title": "Alert",
-      "description": "An inline message: information, success, failure, warning.",
+      "description": "An inline message: plain, informational, success, failure, warning.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",

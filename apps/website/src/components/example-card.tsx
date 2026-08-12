@@ -1,4 +1,5 @@
 import type { LumoNode } from "@lumo-ui/core";
+import { CodePanel } from "./code-panel";
 import { ViewCode } from "./view-code";
 
 /**
@@ -27,9 +28,15 @@ export interface ExampleCardProps {
   description?: string | undefined;
   /** The rendered example. */
   children: LumoNode;
-  /** The example's exact source, as sliced by the loader. */
-  code: string;
-  /** Shiki output for the same source. */
+  /**
+   * Shiki output for the example's source.
+   *
+   * There is no companion `code` prop any more, and that is the point: the card
+   * renders the listing HERE, on the server, and `ViewCode` receives it as
+   * children rather than as two strings it would carry across the client
+   * boundary. The copy button reads the rendered `<pre>` (see `code-block.tsx`),
+   * so the raw source is not needed by anything on this path.
+   */
   html: string;
   viewLabel: string;
   hideLabel: string;
@@ -42,7 +49,6 @@ export function ExampleCard({
   title,
   description,
   children,
-  code,
   html,
   viewLabel,
   hideLabel,
@@ -73,14 +79,9 @@ export function ExampleCard({
            */}
           <div className="flex w-full min-w-0 max-w-2xl flex-col items-center">{children}</div>
         </div>
-        <ViewCode
-          code={code}
-          html={html}
-          label={viewLabel}
-          expandedLabel={hideLabel}
-          copyLabel={copyLabel}
-          copiedLabel={copiedLabel}
-        />
+        <ViewCode label={viewLabel} expandedLabel={hideLabel}>
+          <CodePanel html={html} label={copyLabel} copiedLabel={copiedLabel} />
+        </ViewCode>
       </div>
     </section>
   );

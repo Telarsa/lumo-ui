@@ -133,7 +133,7 @@ export function SettingsForm({
          */}
         <CardFooter>
           {isPending ? (
-            <Spinner label={strings.pending} showLabel size="sm" tone="muted" className="me-auto" />
+            <Spinner label={strings.pending} showLabel size="sm" color="muted" className="me-auto" />
           ) : null}
 
           {onCancel !== undefined ? (

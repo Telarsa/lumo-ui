@@ -1,25 +1,27 @@
 "use client";
 
 import { useId, useState } from "react";
-import { cn } from "@lumo-ui/core";
+import { cn, type LumoNode } from "@lumo-ui/core";
 import { Button } from "@lumo-ui/ui";
-import { CodeBlock } from "./code-block";
 
 /**
  * The collapsed-code affordance under every example card: a few grayed lines
  * of the source behind a gradient fade, with one centred button that expands
  * to the full highlighted listing.
  *
- * Expansion is CLIENT state; highlighting is not. `html` arrives from the
- * server pass via `lib/highlight.ts`, for the reason that file's header gives —
- * shiki must never reach a browser bundle. This component only decides how
- * much of the already-highlighted block is visible.
+ * Expansion is CLIENT state; the listing is not — and it is no longer even a
+ * prop. This component used to take `code` and `html` and render `CodeBlock`
+ * itself, which put both strings into the RSC flight payload for every example
+ * on the page. It now takes the already-rendered panel as `children` from
+ * `example-card.tsx`, a SERVER component, so this island is exactly the two
+ * things that need a browser: a boolean and a button. See `code-panel.tsx`'s
+ * header for what that saved and what it did not.
  *
  * The full source is in the served bytes either way — collapsed is a
  * max-height clip, not a conditional render — so view-source and reader modes
  * see the whole listing, and expanding cannot cause a fetch or a reflow of
  * highlight work. While collapsed the clipped region is `inert`: it contains
- * CodeBlock's copy button, and a focusable control inside an invisible
+ * the panel's copy button, and a focusable control inside an invisible
  * three-line strip is a keyboard trap wearing a gradient.
  *
  * ONE toggle button, kept mounted in both states rather than swapped for a
@@ -31,30 +33,17 @@ import { CodeBlock } from "./code-block";
  * itself is announced from `aria-expanded`, in the reader's own language.
  */
 export interface ViewCodeProps {
-  /** The exact text the copy button copies. */
-  code: string;
-  /** Shiki output for the same code, produced by the server caller. */
-  html: string;
+  /** The code panel this toggle clips and reveals — server rendered by the
+   *  caller, never highlighted or serialized here. */
+  children: LumoNode;
   /** The toggle's name while collapsed, e.g. «نمایش کد». Required. */
   label: string;
   /** The toggle's name while expanded, e.g. «پنهان کردن کد». Required. */
   expandedLabel: string;
-  /** CodeBlock's copy-button name. Required. */
-  copyLabel: string;
-  /** CodeBlock's copied announcement. Required. */
-  copiedLabel: string;
   className?: string | undefined;
 }
 
-export function ViewCode({
-  code,
-  html,
-  label,
-  expandedLabel,
-  copyLabel,
-  copiedLabel,
-  className,
-}: ViewCodeProps) {
+export function ViewCode({ children, label, expandedLabel, className }: ViewCodeProps) {
   const [expanded, setExpanded] = useState(false);
   const regionId = useId();
 
@@ -63,15 +52,19 @@ export function ViewCode({
       <div
         id={regionId}
         inert={!expanded}
-        className={cn(!expanded && "max-h-24 overflow-hidden")}
+        className={cn(
+          !expanded && "max-h-24 overflow-hidden",
+          /*
+           * The dimming used to be a `className` passed down into CodeBlock and
+           * applied to the panel's own root. With the panel rendered by the
+           * server it cannot take a state-dependent class, so the clip region
+           * carries the treatment for its subtree instead — same two utilities,
+           * one level up, and `[&_*]` is not needed because both inherit.
+           */
+          !expanded && "select-none opacity-60",
+        )}
       >
-        <CodeBlock
-          code={code}
-          html={html}
-          label={copyLabel}
-          copiedLabel={copiedLabel}
-          className={cn(!expanded && "select-none opacity-60")}
-        />
+        {children}
       </div>
       {!expanded ? (
         /*

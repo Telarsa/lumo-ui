@@ -103,7 +103,7 @@ function TonesExample(_l: Locale) {
       <IconTile tone="critical">
         <XIcon aria-hidden="true" />
       </IconTile>
-      <IconTile tone="solid">
+      <IconTile tone="accent" variant="solid">
         <ShieldCheckIcon aria-hidden="true" />
       </IconTile>
     </div>
@@ -164,7 +164,7 @@ export const EXAMPLES: ComponentExamples = {
         "An icon in a tinted square — the thing at the top of a feature card. Against the usual convention the tile is aria-hidden by default, and that is the correct default: it sits directly above a heading that already says what it means, so naming it makes every feature in a grid announce its subject twice. tone is a background and foreground PAIR rather than a colour, so nobody can change half of it.",
     },
     composition: [
-      `<IconTile tone size label>     ← no label → aria-hidden; label → role="img" with a name`,
+      `<IconTile tone variant size label>  ← no label → aria-hidden; label → role="img" with a name`,
       `  the icon, aria-hidden        ← sized by the tile, at half its width`,
       `</IconTile>`,
     ].join("\n"),

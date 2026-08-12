@@ -300,6 +300,41 @@ export function gradeSource(path: string, text: string): PropViolation[] {
   };
   const consumerNodes = new Map<ts.Node, Consumer[]>();
   for (const c of consumers) consumerNodes.set(c.fn, [...(consumerNodes.get(c.fn) ?? []), c]);
+  /*
+   * ── WHAT NAME-MATCHING CANNOT DO, MEASURED RATHER THAN ASSUMED ────────────
+   *
+   * This gate matches by NAME. It has no binder and no checker — that is what
+   * lets it grade 124 files in 0.4s and run on a tree mid-edit — and the cost
+   * is that it cannot tell a component's prop `value` from an unrelated local
+   * called `value`.
+   *
+   * The live instance, found by an agent and not by the gate: `tree.tsx`
+   * declared `TreeItemProps.value?: T`, read it nowhere and spread nothing, and
+   * this rule reported CLEAN. Two things were clearing it — a
+   * `<Ctx.Provider value={…}>` attribute name, and a module-scope helper
+   * `function toSelection(value: …)`. Both are skipped now. The helper's BODY
+   * still says `value === "all"` twice, and those are genuine references to a
+   * genuine local, so the prop is still cleared.
+   *
+   * The honest statement of scope: this rule catches a prop no identifier of
+   * that name touches anywhere in its file. A prop whose name collides with a
+   * local, a parameter's uses, or an unrelated field elsewhere in the file is
+   * OUTSIDE it. That is a real hole and it is why `tree.tsx`'s prop is now a
+   * `never` carrier — a type that cannot be passed does not need a gate.
+   *
+   * Closing it properly means scope resolution, which means a `ts.Program` and
+   * a checker, which means seconds per run instead of milliseconds and a tree
+   * that must typecheck before it can be graded. That is a different tool, and
+   * a slow gate that only runs on a clean tree is one people stop running.
+   *
+   * ── AND WHY BOTH NARROWINGS STAYED ANYWAY ────────────────────────────────
+   *
+   * Neither closes the hole, and both are strictly correct: a JSX attribute
+   * name sets something on another element, and a parameter name declares a
+   * binding. Removing false CLEARINGS is worth doing on its own — the gate
+   * fails closed by design, so every name it stops accepting as evidence is
+   * one more prop it can actually see.
+   */
   const mentions = new Map<ts.Node | null, Set<string>>();
   const mention = (owner: ts.Node | null, name: string) => {
     const set = mentions.get(owner) ?? new Set<string>();
@@ -308,7 +343,56 @@ export function gradeSource(path: string, text: string): PropViolation[] {
   };
   const collect = (n: ts.Node, owner: ts.Node | null) => {
     const here = consumerNodes.has(n) ? n : owner;
-    if ((ts.isIdentifier(n) || ts.isStringLiteral(n)) && !inPropDecl(n)) mention(here, n.text);
+    /*
+     * ── A JSX ATTRIBUTE NAME IS NOT A REFERENCE TO THIS COMPONENT'S PROP ────
+     *
+     * `<Ctx.Provider value={…}>` SETS something called `value` on another
+     * element. It says nothing about whether this component reads a prop of
+     * its own by that name — and counting it cleared every prop named `value`
+     * in the file.
+     *
+     * MEASURED, and it was a live false negative: `tree.tsx` declared
+     * `TreeItemProps.value?: T`, read it nowhere, spread `...props` nowhere,
+     * and this gate reported CLEAN — because a helper 400 lines away writes
+     * `<TreePositionContext.Provider value={{…}}>`. Renaming the field to
+     * `zzprobe` and changing nothing else turned 0 violations into one.
+     *
+     * The attribute's VALUE is still collected by the recursion below, so a
+     * genuine delivery — `<BaseInput value={value} />`, or `value={props.value}`
+     * — still counts. Only the name half is skipped, and only where it is a
+     * name.
+     */
+    const isJsxAttrName =
+      n.parent !== undefined && ts.isJsxAttribute(n.parent) && n.parent.name === n;
+    /*
+     * ── AND A DECLARATION IS NOT A REFERENCE EITHER ─────────────────────────
+     *
+     * This was the other half, and the one that actually hid `tree.tsx`:
+     * `function toSelection(value: AriaSelection | undefined)` is a PARAMETER
+     * NAMED `value`, at module scope — and module scope clears every component
+     * in the file (see `mentions`). So one unrelated helper's parameter name
+     * silenced the gate for every prop called `value` in `tree.tsx`, which
+     * declared `TreeItemProps.value?: T`, read it nowhere, and spread nothing.
+     *
+     * Destructured props are NOT lost by this: `classify` tracks them
+     * separately through `bound`, which is how `const { label } = props` counts
+     * as consumption. What is skipped here is only the name half of a
+     * declaration — `const value = props.value` still counts on the right.
+     */
+    if (
+      (ts.isIdentifier(n) || ts.isStringLiteral(n)) &&
+      !inPropDecl(n) &&
+      !isJsxAttrName &&
+      // PARAMETER names only, not binding elements. A binding element IS how a
+      // prop is consumed — `toggle.tsx` destructures `preventFocusOnPress` in a
+      // HELPER to discard it, and `bound` only tracks consumer components, so
+      // skipping binding elements here reported that correct discard as a
+      // violation. Measured: it was the single false positive this narrowing
+      // produced, and narrowing to parameters removes it.
+      !(ts.isIdentifier(n) && n.parent !== undefined && ts.isParameter(n.parent) && n.parent.name === n)
+    ) {
+      mention(here, n.text);
+    }
     n.forEachChild((c) => { collect(c, here); });
   };
   collect(sf, null);

@@ -410,15 +410,42 @@ export interface SelectProps<T extends object> {
   /** Form field name for the hidden input Base UI renders. */
   name?: string | undefined;
   /**
-   * TYPE CARRIER, NOT A PROP — and typed `never` on purpose. React Aria's
-   * `SelectProps<T>` fed `T` to `AriaSelectProps<T>`'s `items?: Iterable<T>`.
-   * Base UI has no collection builder, so nothing is left for `T` to type.
-   * Keeping the field keeps the type PARAMETER, so a `SelectProps<City>`
-   * annotation a consumer already wrote still compiles; typing it `never`
-   * makes passing a value a compile error rather than a prop that is accepted
-   * and silently dropped.
+   * TYPE CARRIER, NOT A PROP. React Aria's `SelectProps<T>` fed `T` to
+   * `AriaSelectProps<T>`'s `items?: Iterable<T>`. Base UI has no collection
+   * builder, so nothing is left for `T` to type. Keeping the field keeps the
+   * type PARAMETER, so a `SelectProps<City>` annotation a consumer already
+   * wrote still compiles, and the carrier makes passing a value a compile
+   * error rather than a prop that is accepted and silently dropped.
+   *
+   * ── THIS FIELD WAS `Iterable<T> & never`, AND THAT SPELLING HAD A COST ────
+   *
+   * The three carriers in this file, the two in `menu.tsx`, one in
+   * `combobox.tsx` and one in `breadcrumbs.tsx` were all spelled `& never`.
+   * That resolves to `never`, and under this repo's
+   * `exactOptionalPropertyTypes: true` a `never` field rejects an explicit
+   * `undefined` as well as a value — which is a different thing and is not the
+   * carrier's job. `props.ts:1090` states the rule and spells `isPending`
+   * `?: undefined` for exactly this reason; these seven sites predated it.
+   *
+   * Measured 12 Aug 2026 with this repo's own `tsc`, before touching any of
+   * them: seven bags of the shape `{ items: undefined, placeholder: "شهر" }` —
+   * no value passed, the key present and holding nothing — spread onto the
+   * seven components produced SEVEN `TS2375`, one per site, every one of them
+   * *"Type 'undefined' is not assignable to type 'never'"*. That is a caller
+   * whose spread was already correct being told to stop. `ListBoxItem.value`,
+   * already `(T & never) | undefined`, took the identical bag and compiled —
+   * the control that says the seven failures were the spelling and not the
+   * spread.
+   *
+   * Written `(Iterable<T> & never) | undefined` rather than a bare `undefined`
+   * for the mechanical reason `list-box.tsx:754` gives: `T` has to stay READ or
+   * `noUnusedLocals` rejects the file, and dropping `<T>` is the API break this
+   * field exists to prevent. `Iterable<T> & never` collapses to `never` and
+   * `never | undefined` collapses to `undefined`, so the resolved type IS the
+   * carrier, `T` keeps its job, and an explicit `items: undefined` in a spread
+   * compiles again.
    */
-  items?: Iterable<T> & never;
+  items?: (Iterable<T> & never) | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -589,8 +616,9 @@ export function SelectTrigger({ className, size, children }: SelectTriggerProps)
 }
 
 export interface SelectValueProps<T extends object> {
-  /** TYPE CARRIER, NOT A PROP — see `SelectProps.items`. */
-  selectedItem?: T & never;
+  /** TYPE CARRIER, NOT A PROP — see `SelectProps.items`, including why the
+   *  spelling is `(T & never) | undefined` and not `T & never`. */
+  selectedItem?: (T & never) | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -624,7 +652,51 @@ export function SelectValue<T extends object>({ className, children }: SelectVal
  * control exactly as before.
  */
 export interface SelectPopoverProps<T extends object> {
-  children?: LumoNode | ((item: T) => LumoNode);
+  /**
+   * The options. STATIC ONLY.
+   *
+   * ── IT ADVERTISED A RENDER FUNCTION AND RENDERED NOTHING ──────────────────
+   *
+   * Until 12 Aug 2026 this was `LumoNode | ((item: T) => LumoNode)`, and the
+   * body below has always written `{children}` straight into
+   * `<BaseSelect.List>`. React cannot render a function child, and Base UI's
+   * `Select.List` has no arm for one: in `@base-ui/react@1.7.0`,
+   * `SelectListProps extends BaseUIComponentProps<'div', SelectListState>` and
+   * adds nothing, so its `children` is a `<div>`'s `children`, i.e. `ReactNode`.
+   *
+   * Measured on a `defaultOpen` select, rendered into jsdom so the portal
+   * actually mounts:
+   *
+   *     function child   0 × role="option", console.error:
+   *                      "Functions are not valid as a React child."
+   *     static children  2 × role="option", 0 console.error
+   *
+   * So the form this type offered compiled, opened an EMPTY listbox, and said
+   * so only on a console. `menu.tsx`'s `MenuProps.children` had the identical
+   * defect — and its own docblock denied the form on the line above the one
+   * that declared it.
+   *
+   * The form survives on `ComboBox`, `AutocompleteListBox` and `CommandList`
+   * because Base UI's `Combobox.List` genuinely declares
+   * `children?: ReactNode | ((item: any, index: number) => ReactNode)` and
+   * calls it per item — the same probe put two options on screen with no
+   * error — and on `ListBox`, which is Lumo's own collection walk and calls the
+   * function itself (`list-box.tsx:405`). The asymmetry is Base UI's, not a
+   * style choice, which is why it is recorded here instead of being smoothed
+   * over by making all five alike.
+   */
+  children?: LumoNode;
+  /**
+   * TYPE CARRIER, NOT A PROP — see `SelectProps.items`.
+   *
+   * This is the field that keeps `<T>` on this interface. React Aria composed
+   * a select's panel as `<Popover><ListBox items={…}>{item => …}</ListBox>`,
+   * and this component is that fusion, so `items` is precisely the prop the
+   * removed render function was driven by. Without it `T` names nothing and
+   * `noUnusedLocals` rejects the file (`TS6133`, measured); deleting `<T>`
+   * instead would break a consumer's existing `SelectPopoverProps<City>`.
+   */
+  items?: (Iterable<T> & never) | undefined;
   /** Class for the popover surface. */
   className?: string | undefined;
   /** Class for the scrolling list inside it. */
@@ -652,7 +724,9 @@ export function SelectPopover<T extends object>({
             data-lumo=""
             className={cn(selectListBoxVariants(), listBoxClassName)}
           >
-            {children as LumoNode}
+            {/* No cast. `children` is `LumoNode` now that the function arm is
+                gone, and the cast was what let the two disagree. */}
+            {children}
           </BaseSelect.List>
         </BaseSelect.Popup>
       </BaseSelect.Positioner>
@@ -677,8 +751,9 @@ export function SelectPopover<T extends object>({
  * read text content from.
  */
 interface SelectItemBaseProps<T extends object = object> {
-  /** TYPE CARRIER, NOT A PROP — see `SelectProps.items`. */
-  value?: T & never;
+  /** TYPE CARRIER, NOT A PROP — see `SelectProps.items`, including why the
+   *  spelling is `(T & never) | undefined` and not `T & never`. */
+  value?: (T & never) | undefined;
   /** The item's key. Maps to Base UI's `value`. */
   id?: string | undefined;
   isDisabled?: boolean | undefined;

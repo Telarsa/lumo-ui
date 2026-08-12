@@ -29,6 +29,32 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  * accessible-looking background and a foreground nobody adjusted — the pairs
  * here are the ones `theme.css` guarantees contrast for.
  *
+ * ═══ `solid` WAS A FILL STYLE WEARING A TONE'S NAME ═════════════════════════
+ *
+ * Until 12 Aug 2026 the tone axis read `neutral | accent | positive | critical |
+ * caution | solid`. Five of those answer "which meaning"; the sixth answers
+ * "how filled", and it is `badge.tsx`'s `variant` — the same library, the same
+ * question, a different prop. Its classes were `bg-accent text-accent-fg`,
+ * character for character `badge.tsx`'s `{ tone: "accent", variant: "solid" }`.
+ *
+ * A category error inside an enum is not a cosmetic problem, and the cost is
+ * countable: with `solid` occupying a slot in the tone axis, the OTHER four
+ * meanings had no solid form at all. A tile could be a critical tint or an
+ * accent fill, and never a critical fill. Splitting the axes turns 6 reachable
+ * appearances into 10 without a single new token.
+ *
+ * `tone="solid"` is now a compile error, which is the point: the values are a
+ * union, so `VariantProps` rejects it at the call site and names the axis it
+ * belonged to. The alternative — keeping it as an alias — is the "two names,
+ * one value" pattern AUDIT §3.4 catalogues, and this file already carries the
+ * `warning`/`caution` postmortem below about what an unresolvable variant key
+ * costs. The migration is mechanical and total:
+ *
+ *     <IconTile tone="solid">   →   <IconTile tone="accent" variant="solid">
+ *
+ * The one call site in this repository (`apps/website/src/examples/icon-tile.tsx`)
+ * was migrated in the same commit.
+ *
  * ── AND ONE OF THEM WAS NOT A THEME TOKEN AT ALL ────────────────────────────
  *
  * The fourth tone was spelled `warning`, and `bg-warning/10 text-warning` are
@@ -51,13 +77,24 @@ export const iconTileVariants = cva(
   "grid shrink-0 place-items-center rounded-lg [&>svg]:size-1/2",
   {
     variants: {
+      /** WHICH MEANING. Five values, the library's one status ramp. */
       tone: {
-        neutral: "bg-surface-sunken text-fg-muted",
-        accent: "bg-accent/10 text-accent",
-        positive: "bg-positive/10 text-positive",
-        critical: "bg-critical/10 text-critical",
-        caution: "bg-caution/10 text-caution",
-        solid: "bg-accent text-accent-fg",
+        neutral: "",
+        accent: "",
+        positive: "",
+        critical: "",
+        caution: "",
+      },
+      /**
+       * HOW FILLED. The axis `solid` used to hide inside `tone`.
+       *
+       * Same two names and the same two treatments as `badge.tsx`, because a
+       * tile and a badge are the same picture at two sizes and a consumer who
+       * has learnt one should not have to learn the other.
+       */
+      variant: {
+        subtle: "",
+        solid: "",
       },
       size: {
         sm: "size-8",
@@ -65,7 +102,31 @@ export const iconTileVariants = cva(
         lg: "size-12",
       },
     },
-    defaultVariants: { tone: "neutral", size: "md" },
+    /*
+     * Lifted verbatim from `badgeVariants` — including `text-bg` on the four
+     * non-accent solids rather than `text-white`, for the reason set out at
+     * length there: the status tokens swap lightness between themes, so white
+     * is correct on light and roughly 2.4:1 on dark — a contrast failure that
+     * appears only when the reader's OS is in dark mode. `--color-bg` swaps
+     * with them, so one pair stays legible in both themes.
+     *
+     * `bg-accent text-accent-fg` for the accent solid is the old `tone="solid"`
+     * unchanged, so the migrated call site renders identical bytes.
+     */
+    compoundVariants: [
+      { tone: "neutral", variant: "solid", class: "bg-fg-muted text-bg" },
+      { tone: "accent", variant: "solid", class: "bg-accent text-accent-fg" },
+      { tone: "positive", variant: "solid", class: "bg-positive text-bg" },
+      { tone: "critical", variant: "solid", class: "bg-critical text-bg" },
+      { tone: "caution", variant: "solid", class: "bg-caution text-bg" },
+
+      { tone: "neutral", variant: "subtle", class: "bg-surface-sunken text-fg-muted" },
+      { tone: "accent", variant: "subtle", class: "bg-accent/10 text-accent" },
+      { tone: "positive", variant: "subtle", class: "bg-positive/10 text-positive" },
+      { tone: "critical", variant: "subtle", class: "bg-critical/10 text-critical" },
+      { tone: "caution", variant: "subtle", class: "bg-caution/10 text-caution" },
+    ],
+    defaultVariants: { tone: "neutral", variant: "subtle", size: "md" },
   },
 );
 
@@ -86,7 +147,15 @@ export interface IconTileProps
   className?: string | undefined;
 }
 
-export function IconTile({ tone, size, label, className, children, ...props }: IconTileProps) {
+export function IconTile({
+  tone,
+  variant,
+  size,
+  label,
+  className,
+  children,
+  ...props
+}: IconTileProps) {
   return (
     <span
       data-lumo=""
@@ -97,7 +166,7 @@ export function IconTile({ tone, size, label, className, children, ...props }: I
       {...(label === undefined
         ? { "aria-hidden": "true" as const }
         : { role: "img" as const, "aria-label": label })}
-      className={cn(iconTileVariants({ tone, size }), className)}
+      className={cn(iconTileVariants({ tone, variant, size }), className)}
       {...props}
     >
       {children as React.ReactNode}

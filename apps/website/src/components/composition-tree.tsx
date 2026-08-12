@@ -1,6 +1,6 @@
 import type { Locale } from "@lumo-ui/core";
 import type { ExamplePart } from "@/examples/_system/types";
-import { CodeBlock } from "./code-block";
+import { CodePanel } from "./code-panel";
 
 /**
  * The two "what is this made of" surfaces on a component page. Both are SERVER
@@ -15,13 +15,18 @@ import { CodeBlock } from "./code-block";
  *
  * `PartsTable` is the hand-authored API reference: one row per part. Part
  * names are code — genuinely Latin — so they render as LTR islands under
- * `data-lumo-latn`, the same escape hatch `code-block.tsx` documents; the
+ * `data-lumo-latn`, the same escape hatch `code-panel.tsx` documents; the
  * descriptions are in the page's locale.
  */
 export interface CompositionTreeProps {
-  /** The pseudo-JSX tree, exactly as authored in the example file's meta. */
-  composition: string;
-  /** Shiki output for the same tree. */
+  /**
+   * Shiki output for the pseudo-JSX tree authored in the example file's meta.
+   *
+   * The raw `composition` string is no longer a prop. It existed only to feed
+   * the copy button, which now reads the rendered `<pre>` — and since this is a
+   * server component the panel it renders never crosses a client boundary, so
+   * the tree ships once instead of twice. See `code-panel.tsx`.
+   */
   html: string;
   /** The copy button's name. Required. */
   copyLabel: string;
@@ -34,7 +39,6 @@ export interface CompositionTreeProps {
 }
 
 export function CompositionTree({
-  composition,
   html,
   copyLabel,
   copiedLabel,
@@ -43,7 +47,7 @@ export function CompositionTree({
 }: CompositionTreeProps) {
   return (
     <div className="flex flex-col gap-4">
-      <CodeBlock code={composition} html={html} label={copyLabel} copiedLabel={copiedLabel} />
+      <CodePanel html={html} label={copyLabel} copiedLabel={copiedLabel} />
       {parts.length > 0 ? (
         <div>
           <h3 className="text-xs font-medium uppercase tracking-wide text-fg-subtle">

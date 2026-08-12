@@ -412,6 +412,19 @@ export function Sortable<T extends SortableItem>({
        */
       const insertion = slot === -1 ? rows.length : slot;
       const to = insertion > from ? insertion - 1 : insertion;
+      /*
+       * `reorder` and NO `announce`, deliberately — the one line in this file
+       * whose correctness is invisible, because it is a call that is absent.
+       *
+       * The keyboard's `moveBy` announces every step and must; a `pointermove`
+       * is a sample of one continuous gesture, not an act, and the row is under
+       * the finger the whole time. `aria-live="polite"` defers rather than
+       * drops, so a sentence written here is spoken after the drag has ended,
+       * about a position the item has left. `kanban.tsx` shipped that version:
+       * a ten-card drag queued ELEVEN sentences where this route queues two,
+       * and the asymmetry between these two files is how it was found. Do not
+       * make them symmetric by adding a call here.
+       */
       if (to !== from) reorder(moveItem(live, from, to));
     };
 

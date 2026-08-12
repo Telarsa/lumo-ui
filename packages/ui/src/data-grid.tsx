@@ -333,17 +333,71 @@ export interface DataGridEmptyProps {
  * becomes blank and a screen reader user is given no reason for it — the same
  * argument `sortable.tsx` makes about a move with no visible affordance.
  *
- * It renders NOTHING when there are rows, rather than rendering hidden: an
- * empty live region that exists on every page is a region that announces the
- * moment it is filled, which is what makes this useful, and a `hidden` node
- * with text in it is a string some screen readers will still reach.
+ * ── THE ROOT IS ALWAYS MOUNTED. ONLY ITS CHILDREN ARE CONDITIONAL ───────────
+ *
+ * This docblock used to say the opposite, in these words:
+ *
+ *     "It renders NOTHING when there are rows, rather than rendering hidden:
+ *      an empty live region that exists on every page is a region that
+ *      announces the moment it is filled, which is what makes this useful, and
+ *      a `hidden` node with text in it is a string some screen readers will
+ *      still reach."
+ *
+ * It is kept rather than deleted because it is instructive: the second clause
+ * is TRUE, the third clause is TRUE, and the conclusion does not follow from
+ * either. It conflates three arrangements and rules out only one of them.
+ *
+ *   (a) unmount the root when there is nothing to say   ← what it did
+ *   (b) keep the root, render its children conditionally
+ *   (c) keep the root with its text in it and `hidden`  ← what it argues against
+ *
+ * The third clause disposes of (c), correctly. The second clause — "an empty
+ * live region that exists on every page is a region that announces the moment
+ * it is filled" — is a description of (b) and is the argument FOR it, written
+ * inside a paragraph justifying (a). Under (a) there is no region on the page
+ * to be filled: the node arrives already containing its text, and a live region
+ * is a promise about MUTATIONS to a node the reader's software is already
+ * watching. A node inserted with its content is a mutation of the node ABOVE
+ * it, and screen readers do not agree on whether that counts.
+ *
+ * The engine this library runs on states the same rule in its own source, which
+ * is stronger evidence than this file asserting it. `@base-ui/react`'s
+ * `combobox/empty/ComboboxEmpty.mjs:11-15`:
+ *
+ *     "This component's root element must remain mounted in the DOM to announce
+ *      changes consistently across screen readers. Avoid hiding or removing the
+ *      component itself with `display: none`, `hidden`, `aria-hidden`, or
+ *      conditional rendering. Prefer updating or conditionally rendering its
+ *      children instead."
+ *
+ * and its implementation is exactly (b) — `const children = filteredItems.length
+ * === 0 ? childrenProp : null`, on a root that is unconditionally rendered.
+ *
+ * `sr-only` and not `hidden` for the populated case, for the reason
+ * `spinner.tsx` gives about its own label: `display: none` inside a live region
+ * is not announced at all, so hiding this one that way would be (c) with extra
+ * steps. `sr-only` is `position: absolute` with a 1px clip — the node is out of
+ * flow, so a populated grid grows no dashed box, and it is still in the
+ * accessibility tree, which is the whole point.
+ *
+ * ── THE RESIDUE THIS DOES NOT FIX, STATED SO IT IS NOT MISTAKEN FOR FIXED ───
+ *
+ * A grid that is ALREADY empty in the first byte mounts this region with its
+ * text in it, and a live region present at load is not announced — that is
+ * `alert.tsx`'s argument for defaulting to `live="off"`, and it is true here
+ * too. Base UI's answer is `useInitialLiveRegionTextMutation`, which appends
+ * U+2060 (word joiner: invisible, zero-width, so it shifts no layout) to the
+ * last text node on mount and removes it 200ms later, having measured that
+ * Safari VoiceOver needs roughly that long to notice. That is a real fix for a
+ * real case and it is NOT implemented here. What is fixed is the common one:
+ * the grid that had rows and then did not.
  */
 export function DataGridEmpty({ children, className }: DataGridEmptyProps) {
   const { table } = useDataGrid();
-  if (table.getRowCount() > 0) return null;
+  const isEmpty = table.getRowCount() === 0;
   return (
-    <div role="status" className={cn(dataGridEmptyVariants(), className)}>
-      {children as ReactNode}
+    <div role="status" className={cn(isEmpty ? dataGridEmptyVariants() : "sr-only", className)}>
+      {isEmpty ? (children as ReactNode) : null}
     </div>
   );
 }

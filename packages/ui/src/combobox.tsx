@@ -332,13 +332,20 @@ export function ComboBox<T extends object>({
  */
 export interface ComboBoxItemProps<T extends object = object> {
   /**
-   * TYPE CARRIER, NOT A PROP — and typed `never` on purpose. React Aria's
-   * `ListBoxItemProps<T>` used `T` for the object an option stands for. Base
-   * UI's `Combobox.Item` takes an untyped `value`, so nothing is left for `T`
-   * to type; keeping the field keeps the type PARAMETER so an existing
-   * `ComboBoxItemProps<City>` annotation still compiles.
+   * TYPE CARRIER, NOT A PROP. React Aria's `ListBoxItemProps<T>` used `T` for
+   * the object an option stands for. Base UI's `Combobox.Item` takes an untyped
+   * `value`, so nothing is left for `T` to type; keeping the field keeps the
+   * type PARAMETER so an existing `ComboBoxItemProps<City>` annotation still
+   * compiles.
+   *
+   * Spelled `(T & never) | undefined`, not `T & never` — the latter resolves to
+   * `never`, which under `exactOptionalPropertyTypes` rejects an explicit
+   * `undefined` and so breaks a spread that passed no value at all. One of
+   * seven sites respelled together on 12 Aug 2026; the reproduction and its
+   * control are on `SelectProps.items` in `select.tsx`. `textValue` below is
+   * the same idea already spelled the right way.
    */
-  value?: T & never;
+  value?: (T & never) | undefined;
   /** The item's key. Maps to Base UI's `value`. */
   id?: string | undefined;
   /**

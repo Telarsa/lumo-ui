@@ -64,6 +64,8 @@ import { kanbanHandleVariants } from "./kanban.tsx";
 import { treeChevronVariants } from "./tree.variants.ts";
 import { dateSelectorPresetVariants } from "./date-selector.variants.ts";
 import { timelineItemVariants, timelineRailVariants } from "./timeline.tsx";
+import { alertIconVariants, alertVariants } from "./alert.tsx";
+import { badgeVariants } from "./badge.tsx";
 
 const SRC = import.meta.dirname;
 // Through the filesystem, not through an import: these are CSS files with no
@@ -355,14 +357,95 @@ describe("Timeline's tone reaches the rail, not only the dot", () => {
 });
 
 describe("IconTile's tones are all real", () => {
-  it.each(["neutral", "accent", "positive", "critical", "caution", "solid"] as const)(
-    "%s paints a background and a foreground",
-    (tone) => {
-      const classes = iconTileVariants({ tone });
+  const TONES = ["neutral", "accent", "positive", "critical", "caution"] as const;
+  const VARIANTS = ["subtle", "solid"] as const;
+
+  it.each(TONES.flatMap((tone) => VARIANTS.map((variant) => [tone, variant] as const)))(
+    "%s/%s paints a background and a foreground",
+    (tone, variant) => {
+      const classes = iconTileVariants({ tone, variant });
       // Both, always: a tone that sets one is how a tile ends up with an
       // accessible-looking background and a foreground nobody adjusted.
-      expect(classes, `${tone} has no background`).toMatch(/\bbg-/);
-      expect(classes, `${tone} has no foreground`).toMatch(/\btext-/);
+      expect(classes, `${tone}/${variant} has no background`).toMatch(/\bbg-/);
+      expect(classes, `${tone}/${variant} has no foreground`).toMatch(/\btext-/);
     },
   );
+
+  it("has ten reachable appearances, where it used to have six", () => {
+    /*
+     * The arithmetic of the split, asserted rather than claimed. `solid` sat in
+     * the tone axis until 12 Aug 2026, so it consumed one of six slots and the
+     * other five meanings had no solid form: a tile could be a critical TINT or
+     * an accent FILL, never a critical fill. Crossing the two axes is 5 × 2.
+     */
+    const painted = new Set(
+      TONES.flatMap((tone) => VARIANTS.map((variant) => iconTileVariants({ tone, variant }))),
+    );
+    expect(painted.size).toBe(10);
+  });
+
+  it("paints the migrated call site exactly as `tone=\"solid\"` did", () => {
+    // The old value's classes, character for character. A rename that changes
+    // pixels is a behaviour change hiding inside a compile error.
+    const classes = iconTileVariants({ tone: "accent", variant: "solid" });
+    expect(classes).toContain("bg-accent");
+    expect(classes).toContain("text-accent-fg");
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * Alert's ramp — the one that was spelled differently from every other
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * `alert.tsx` was the only file in the library calling the accent tone `info`,
+ * and it had no `neutral` at all — so an untinted alert was unrepresentable and
+ * `<Alert tone="accent">` was a type error naming a tone the library plainly
+ * has. Both are fixed; these are the assertions that keep them fixed.
+ *
+ * The class-level checks below sit here rather than in `composition-gaps.test.tsx`
+ * because that file's header states it asserts no colours — which is right for
+ * it and wrong for this question, where the colour IS the fact.
+ */
+describe("Alert speaks the library's ramp", () => {
+  const RAMP = ["neutral", "accent", "positive", "critical", "caution"] as const;
+
+  it.each(RAMP)("%s paints an edge, a leading bar and a fill", (tone) => {
+    const classes = alertVariants({ tone });
+    // All three, always. The hairline is what stops the alert dissolving into a
+    // surface that is not the default page ground; the bar is the tone marker
+    // on the reader's leading edge; the fill is the tint.
+    expect(classes, `${tone} has no hairline`).toMatch(/\bborder-(?!s-)[a-z]/);
+    expect(classes, `${tone} has no leading bar`).toMatch(/\bborder-s-[a-z]/);
+    expect(classes, `${tone} has no fill`).toMatch(/\bbg-/);
+    expect(alertIconVariants({ tone }), `${tone} icon has no colour`).toMatch(/\btext-/);
+  });
+
+  it("gives `neutral` no status colour at all, which is the point of it", () => {
+    /*
+     * The tone that exists so a message with nothing to claim does not have to
+     * borrow a claim. If any status hue appears here, `neutral` has become a
+     * sixth flavour of accent and the untinted alert is unrepresentable again.
+     */
+    const classes = `${alertVariants({ tone: "neutral" })} ${alertIconVariants({ tone: "neutral" })}`;
+    expect(classes).not.toMatch(/\b(bg|text|border|border-s)-(accent|positive|critical|caution)/);
+  });
+
+  it("tints at the same alpha as the badge it sits beside", () => {
+    /*
+     * The variance this pass closed: both files carried the same four tones
+     * with the same `/25` hairline and DIFFERENT fills — badge at 10%, alert at
+     * 8% — which is roughly half a percent of lightness and was chosen by
+     * nobody. Asserted as a RELATIONSHIP rather than as the literal `/10`, so
+     * moving the tint later moves both or fails here.
+     */
+    const alpha = (classes: string, prefix: string) =>
+      new RegExp(`${prefix}-accent/(\\d+)`).exec(classes)?.[1];
+    expect(alpha(alertVariants({ tone: "accent" }), "bg")).toBe(
+      alpha(badgeVariants({ tone: "accent", variant: "subtle" }), "bg"),
+    );
+    expect(alpha(alertVariants({ tone: "accent" }), "border")).toBe(
+      alpha(badgeVariants({ tone: "accent", variant: "subtle" }), "border"),
+    );
+  });
 });

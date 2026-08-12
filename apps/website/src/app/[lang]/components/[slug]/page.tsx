@@ -2,14 +2,16 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { LOCALES, type Locale } from "@lumo-ui/core";
+import { LOCALES, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { OnThisPage } from "@/components/on-this-page";
 import { DemoFrame, DirectionCompare } from "@/components/demo-frame";
-import { CodeBlock, CopyButton } from "@/components/code-block";
+import { CopyButton } from "@/components/code-block";
+import { CodePanel } from "@/components/code-panel";
 import { InstallTabs, type InstallFile } from "@/components/install-tabs";
+import { INSTALL_COPY } from "@/lib/install-copy";
 import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
 import { highlight } from "@/lib/highlight";
 import { PreviewToolbar } from "@/components/preview-toolbar";
@@ -376,24 +378,91 @@ export default async function ComponentPage({
     (d) => d !== item.name && uiNames.has(d),
   );
   /*
-   * Every code surface on the page is highlighted HERE, in the server pass,
-   * because both consumers of the output are "use client" modules that must
-   * not import the tokenizer. Sequential awaits, deliberately: the highlighter
-   * is one shared instance and the export builds ~100 of these pages — a
-   * Promise.all per page just interleaves the same single-threaded work.
+   * ── EVERY LISTING ON THE PAGE IS BUILT HERE, AND THAT IS A BYTE DECISION ────
+   *
+   * Highlighting has always happened in this server pass, because shiki plus
+   * two grammars must not reach a browser bundle. What is new is that the
+   * PANELS are built here too, as `CodePanel` elements, instead of the markup
+   * being handed to `"use client"` modules as `html` and `code` strings.
+   *
+   * Measured at 3f46039 on the largest page, `fa/components/event-calendar`
+   * (2,217,379 chars): the RSC flight payload was 1,678,774 of them, 76%, and
+   * React outlines every string over 1024 chars into its own row. Fifteen such
+   * rows held 1,102,417 chars — nine shiki (885,280) and six raw source
+   * (217,137) — against 364,509 chars of `<pre>` actually in the DOM. The raw
+   * source was there only to feed copy buttons, and it is gone entirely: the
+   * buttons read the rendered listing (see `code-block.tsx`'s `CopyCode`).
+   *
+   * `sourcePanel` is ONE ELEMENT, placed twice. The Preview → Code tab and
+   * Installation → Manual show the same file whenever `resolveRegistryItem`
+   * matched by content, which is the normal case — and as two `html` props they
+   * shipped as two byte-identical 336,371-char rows. React's flight writer
+   * deduplicates objects by reference (`writtenObjects`) and never strings
+   * (`serializeLargeTextString` emits a fresh row per call), so the saving is
+   * available to an element and not to a string, however carefully the string
+   * is shared. `isPageSource` marks it for the header's "Copy page" — and yes,
+   * the marker rides along to the second placement, so a reader who opens the
+   * Manual tab has two elements carrying it. `document.querySelector` takes the
+   * first, which is the force-mounted Code tab; and the reuse only happens when
+   * the two listings are the SAME BYTES, so the copy is identical either way.
+   * The alternative — a third highlight of a file already highlighted twice —
+   * would cost 336,371 characters to remove a distinction nobody can observe.
+   *
+   * Sequential awaits, deliberately: the highlighter is one shared instance and
+   * the export builds ~100 of these pages — a `Promise.all` per page just
+   * interleaves the same single-threaded work.
    */
+  const ic = INSTALL_COPY[lang];
+  const sourceHtml = await highlight(demo.source, "tsx");
+  const sourcePanel = (
+    <CodePanel
+      html={sourceHtml}
+      label={c.copySource}
+      copiedLabel={c.sourceCopied}
+      isPageSource
+    />
+  );
+
   const installFiles: InstallFile[] = [];
-  for (const f of item.files) {
+  for (const [i, f] of item.files.entries()) {
     const code = readFileSync(join(REPO_ROOT, f.path), "utf8");
-    installFiles.push({ target: f.target, code, html: await highlight(code, "tsx") });
+    const panel =
+      code === demo.source ? (
+        sourcePanel
+      ) : (
+        <CodePanel
+          html={await highlight(code, "tsx")}
+          label={i === 0 ? ic.copyMain : ic.copyCompanion}
+          copiedLabel={i === 0 ? ic.copyMainDone : ic.copyCompanionDone}
+        />
+      );
+    installFiles.push({ target: f.target, panel });
   }
-  const commandHtml: Partial<Record<PM, string>> = {};
+  /*
+   * A full `Record<PM, …>`, built by iterating `PMS` — the props type asks for
+   * every manager because a missing panel is a tab that selects into an empty
+   * region, which nobody notices until they click it. `Object.fromEntries`
+   * would type as a `Partial`, so this accumulates into an explicit record.
+   */
+  const commandPanels = {} as Record<PM, LumoNode>;
   for (const pm of PMS) {
-    commandHtml[pm] = await highlight(CLI_COMMAND[pm](item.name), "bash");
+    commandPanels[pm] = (
+      <CodePanel
+        html={await highlight(CLI_COMMAND[pm](item.name), "bash")}
+        label={ic.copyCommand}
+        copiedLabel={ic.copyCommandDone}
+      />
+    );
   }
   const deps = item.dependencies ?? [];
-  const depsHtml = deps.length > 0 ? await highlight(depsCommand(deps), "bash") : undefined;
-  const sourceHtml = await highlight(demo.source, "tsx");
+  const depsPanel =
+    deps.length > 0 ? (
+      <CodePanel
+        html={await highlight(depsCommand(deps), "bash")}
+        label={ic.copyDeps}
+        copiedLabel={ic.copyDepsDone}
+      />
+    ) : undefined;
 
   /*
    * The component's worked examples, when an examples file exists — discovery
@@ -438,15 +507,19 @@ export default async function ComponentPage({
 
   /*
    * The header toolbar's data. The pager walks `(await allCatalog())` — the SAME
-   * alphabetical order the sidebar shows — and "Copy page" carries the install
-   * command plus the component's source, the two things a reader would
-   * otherwise copy one at a time.
+   * alphabetical order the sidebar shows — and "Copy page" still yields the
+   * install command plus the component's source, the two things a reader would
+   * otherwise copy one at a time. It is no longer CONCATENATED here: that put a
+   * third copy of the source (58,715 chars on event-calendar) into the flight
+   * payload beside the two the listings already carried. The button now carries
+   * the ~50-character command and appends the source's own `<pre>` at press
+   * time, from the force-mounted Code tab that is unconditionally in the served
+   * bytes. Same string, one copy of it.
    */
   const demos = (await allCatalog());
   const index = demos.findIndex((d) => d.id === slug);
   const prevDemo = index > 0 ? demos[index - 1] : undefined;
   const nextDemo = index >= 0 && index < demos.length - 1 ? demos[index + 1] : undefined;
-  const copyPageText = `${CLI_COMMAND.pnpm(item.name)}\n\n${demo.source}`;
 
   return (
     <SiteShell lang={lang} path={`components/${slug}/`} wide>
@@ -519,7 +592,8 @@ export default async function ComponentPage({
             {/* The toolbar row, on the end side: copy the page, then the pager. */}
             <div className="ms-auto flex shrink-0 items-center gap-2">
               <CopyButton
-                text={copyPageText}
+                text={CLI_COMMAND.pnpm(item.name)}
+                appendFrom="[data-lumo-code-source] pre"
                 label={c.copyPage}
                 copiedLabel={c.copied}
               />
@@ -584,12 +658,7 @@ export default async function ComponentPage({
                * served it.
                */}
               <TabPanel id="code" shouldForceMount className="mt-4 data-inert:hidden">
-                <CodeBlock
-                  code={demo.source}
-                  html={sourceHtml}
-                  label={c.copySource}
-                  copiedLabel={c.sourceCopied}
-                />
+                {sourcePanel}
               </TabPanel>
             </Tabs>
           </section>
@@ -601,12 +670,10 @@ export default async function ComponentPage({
             <div className="mt-3">
               <InstallTabs
                 locale={lang}
-                registryName={item.name}
-                dependencies={item.dependencies ?? []}
                 registryComponents={registryComponents}
                 files={installFiles}
-                commandHtml={commandHtml}
-                depsHtml={depsHtml}
+                commandPanels={commandPanels}
+                depsPanel={depsPanel}
               />
             </div>
           </section>
@@ -624,7 +691,6 @@ export default async function ComponentPage({
               id={`example-${example.id}`}
               title={example.title[lang]}
               description={example.description?.[lang]}
-              code={example.source}
               html={html}
               viewLabel={c.exampleView}
               hideLabel={c.exampleHide}
@@ -647,7 +713,6 @@ export default async function ComponentPage({
               </p>
               <div className="mt-3">
                 <CompositionTree
-                  composition={loaded.composition}
                   html={compositionHtml}
                   copyLabel={c.copyComposition}
                   copiedLabel={c.compositionCopied}

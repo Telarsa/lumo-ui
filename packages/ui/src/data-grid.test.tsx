@@ -470,17 +470,51 @@ describe("DataGridColumnsMenu", () => {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 describe("DataGridEmpty", () => {
-  it("renders nothing at all while there are rows", () => {
+  it("keeps the region MOUNTED while there are rows, and empties its children", () => {
+    /*
+     * The inverse of what this test asserted until 12 Aug 2026, when it read
+     * "renders nothing at all while there are rows" and pinned the defect.
+     *
+     * A live region is a promise about mutations to a node the reader's
+     * software is already watching. A node that arrives with its text already
+     * in it is a mutation of its PARENT, and screen readers do not agree on
+     * whether that counts — so the arrangement that only ever renders the
+     * region when it has something to say is the arrangement least likely to
+     * have it heard. Base UI says so in `ComboboxEmpty.mjs`: the root "must
+     * remain mounted… Prefer… conditionally rendering its children instead."
+     */
     const table = stubTable({ rowCount: 3 });
-    const { container } = render(
+    render(
       <DataGrid locale="fa-IR" table={table}>
         <DataGridEmpty>هیچ سفارشی پیدا نشد.</DataGridEmpty>
       </DataGrid>,
     );
-    // Not `hidden`: a hidden node with text in it is a string some screen
-    // readers still reach, and a live region that exists on every page is one
-    // that cannot announce its own arrival.
-    expect(container.querySelector("[role='status']")).toBeNull();
+    const status = screen.getByRole("status");
+    expect(status.textContent).toBe("");
+    // Not `hidden`, not `display:none`: content inside either is not announced
+    // at all, which would be the same defect wearing a different attribute.
+    // `sr-only` is out of flow — so no dashed box on a populated grid — and
+    // still in the accessibility tree.
+    expect(status.className).toContain("sr-only");
+    expect(status.hasAttribute("hidden")).toBe(false);
+    expect(status.getAttribute("aria-hidden")).toBeNull();
+  });
+
+  it("is in the FIRST BYTE, before the filter that will empty it has run", () => {
+    /*
+     * The half a client-side test cannot see. `render()` proves the node exists
+     * after React has committed; this proves it is in the served HTML, which is
+     * where a reader on a slow connection — and `lumo-gate` — meets it.
+     */
+    const table = stubTable({ rowCount: 3 });
+    const html = renderToStaticMarkup(
+      <DataGrid locale="fa-IR" table={table}>
+        <DataGridEmpty>هیچ سفارشی پیدا نشد.</DataGridEmpty>
+      </DataGrid>,
+    );
+    expect(html).toContain('role="status"');
+    // Mounted but silent: the region is there, its sentence is not.
+    expect(html).not.toContain("هیچ سفارشی پیدا نشد.");
   });
 
   it("announces itself when the filter matched nothing", () => {

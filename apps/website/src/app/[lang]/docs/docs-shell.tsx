@@ -6,7 +6,7 @@ import { DOCS_PAGES } from "@/lib/docs-pages";
 import Link from "next/link";
 import { cn } from "@lumo-ui/core";
 import { OnThisPage } from "@/components/on-this-page";
-import { CodeBlock } from "@/components/code-block";
+import { CodePanel } from "@/components/code-panel";
 
 /**
  * The shared scaffold for the prose docs pages — introduction, installation,
@@ -250,9 +250,16 @@ export function Term({ children }: { children?: LumoNode }) {
 }
 
 /**
- * A code listing with the standard copy affordance. The labels `CodeBlock`
+ * A code listing with the standard copy affordance. The labels `CodePanel`
  * requires are supplied here once, per locale, so every docs page gets the
  * same announced names for the same control.
+ *
+ * `code` is still a prop, and only on this path: the CSS snippets on the
+ * theming and typography pages ship no `html` because `lib/highlight.ts` loads
+ * no CSS grammar, and the unhighlighted fallback has to render the text from
+ * somewhere. It renders on the SERVER, so it is a text child rather than a
+ * client prop — the highlighted pages pass it too and it costs nothing there,
+ * because `CodePanel` ignores it whenever `html` is present.
  */
 export function Snippet({
   lang,
@@ -266,7 +273,7 @@ export function Snippet({
   const t = COPY[lang];
   return (
     <div className="max-w-2xl">
-      <CodeBlock
+      <CodePanel
         code={code}
         html={html}
         label={t.copyCode}

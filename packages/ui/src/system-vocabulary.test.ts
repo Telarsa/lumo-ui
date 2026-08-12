@@ -494,3 +494,146 @@ describe("the scrim, and the colours nothing publishes", () => {
     expect([...found.keys()], `a literal colour in a class string${report(found)}`).toEqual([]);
   });
 });
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * `tone` MEANS ONE THING
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * The word was carrying three different axes, which is the same failure as the
+ * five presses above with one difference that makes it worse: press variance is
+ * only ugly, and a prop name that means three things is something a consumer
+ * has to LEARN THREE TIMES. Measured 12 Aug 2026, before this pass:
+ *
+ *     status ramp       badge · avatar · timeline · progress · toast ·
+ *                       event-calendar · icon-tile · alert     (8 files)
+ *     colour source     spinner.tsx:55            current | accent | muted
+ *     typographic role  chart.variants.ts:543     value | caption
+ *
+ * Plus two defects inside the ramp itself: `icon-tile` smuggled `solid` — a
+ * FILL STYLE — into the tone axis that `badge` correctly calls `variant`, and
+ * `alert` was the only file spelling the accent tone `info`, with no `neutral`
+ * at all, so an untinted alert could not be expressed.
+ *
+ * The other two axes were renamed rather than documented as exceptions, because
+ * an exception in a vocabulary is how the vocabulary stops being one:
+ * `spinner`'s is `color` (the name every peer library gives that axis) and the
+ * pie centre's is `slot` (which of the donut's two text slots this is).
+ *
+ * ── WHAT THIS SWEEP CAN AND CANNOT SEE ─────────────────────────────────────
+ *
+ * It reads two forms: a `tone: { … }` axis inside a `cva()` call, and a
+ * hand-written `type …Tone = "a" | "b"` union. Between them they cover every
+ * spelling in the library today. What it CANNOT see is a tone computed into a
+ * variable or re-exported through a generic, so this is a floor rather than a
+ * proof — the same limit `gate:lint` states about class names assembled through
+ * a variable.
+ */
+const TONE_RAMP = ["neutral", "accent", "positive", "critical", "caution"];
+
+interface ToneAxis {
+  readonly file: string;
+  readonly line: number;
+  readonly values: readonly string[];
+}
+
+/** Every `tone: { … }` axis and every `type …Tone = …` union, with its values. */
+function toneAxes(file: string, source: string): ToneAxis[] {
+  const out: ToneAxis[] = [];
+  const lineOf = (index: number) => source.slice(0, index).split("\n").length;
+
+  const axis = /(?:^|[\s{,(])tone:\s*\{/g;
+  let match: RegExpExecArray | null;
+  while ((match = axis.exec(source)) !== null) {
+    const open = axis.lastIndex;
+    let index = open;
+    let depth = 1;
+    while (index < source.length && depth > 0) {
+      const char = source[index];
+      if (char === "{") depth += 1;
+      else if (char === "}") depth -= 1;
+      index += 1;
+    }
+    // Top-level keys only: a value's class string may itself contain braces.
+    const values: string[] = [];
+    let nested = 0;
+    for (const line of source.slice(open, index - 1).split("\n")) {
+      const key = /^\s*([A-Za-z_][\w]*|"[^"]+")\s*:/.exec(line);
+      if (nested === 0 && key) values.push((key[1] as string).replace(/"/g, ""));
+      for (const char of line) {
+        if (char === "{" || char === "[") nested += 1;
+        else if (char === "}" || char === "]") nested -= 1;
+      }
+    }
+    out.push({ file, line: lineOf(match.index), values });
+  }
+
+  const union = /type\s+\w*Tone\w*\s*=\s*([^;]+);/g;
+  while ((match = union.exec(source)) !== null) {
+    const values = [...(match[1] as string).matchAll(/"([^"]+)"/g)].map((m) => m[1] as string);
+    if (values.length > 0) out.push({ file, line: lineOf(match.index), values });
+  }
+  return out;
+}
+
+const TONE_AXES: ToneAxis[] = FILES.flatMap((f) =>
+  toneAxes(f, code(readFileSync(`${SRC}/${f}`, "utf8"))),
+);
+
+describe("`tone` is one axis with one set of values", () => {
+  it("finds the tone axes at all", () => {
+    // The anti-vacuity partner. Every assertion below is "no axis does X", and
+    // a broken parser satisfies all of them with an empty list.
+    expect(TONE_AXES.length).toBeGreaterThan(8);
+    expect(new Set(TONE_AXES.map((a) => a.file)).size).toBeGreaterThan(6);
+  });
+
+  it("draws every value from the status ramp, in every component", () => {
+    const strays = TONE_AXES.flatMap((axis) =>
+      axis.values
+        .filter((value) => !TONE_RAMP.includes(value))
+        .map((value) => `\n    ${axis.file}:${axis.line}  tone="${value}"`),
+    );
+    expect(
+      strays,
+      `a tone value outside the ramp {${TONE_RAMP.join(" | ")}}. Three axes were ` +
+        `wearing this one word: a status ramp, a colour source (spinner, now ` +
+        `\`color\`) and a typographic role (the pie centre, now \`slot\`). If the ` +
+        `new value is a MEANING, add it to the ramp here and to every component ` +
+        `that has one. If it is anything else — a fill, a size, a text role — it ` +
+        `is a different axis and needs its own name.${strays.join("")}`,
+    ).toEqual([]);
+  });
+
+  it("keeps a fill style out of it, which is what `solid` was", () => {
+    /*
+     * The specific defect, kept as its own assertion because the general rule
+     * above would pass the moment someone added `solid` to TONE_RAMP. These
+     * four are the words this library uses for HOW FILLED, and none of them
+     * describes a meaning.
+     */
+    const fills = ["solid", "subtle", "outline", "ghost"];
+    const strays = TONE_AXES.flatMap((axis) =>
+      axis.values.filter((v) => fills.includes(v)).map((v) => `\n    ${axis.file}:${axis.line}  ${v}`),
+    );
+    expect(
+      strays,
+      `a FILL STYLE inside the tone axis. \`icon-tile.tsx\` shipped ` +
+        `tone="solid" — bg-accent text-accent-fg, character for character ` +
+        `badge.tsx's { tone: "accent", variant: "solid" } — which also meant the ` +
+        `other four meanings had no solid form at all. It belongs in ` +
+        `\`variant\`.${strays.join("")}`,
+    ).toEqual([]);
+  });
+
+  it("spells the accent tone `accent`, never `info`", () => {
+    // `alert.tsx` was the only file saying `info`, which made
+    // `<Alert tone="accent">` a type error naming a tone the library plainly
+    // has. Covered by the ramp rule above; asserted separately because the
+    // failure message is the whole value of it.
+    const strays = TONE_AXES.filter((a) => a.values.includes("info")).map(
+      (a) => `\n    ${a.file}:${a.line}`,
+    );
+    expect(strays, `\`info\` is this library's \`accent\`${strays.join("")}`).toEqual([]);
+  });
+});

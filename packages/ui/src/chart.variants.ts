@@ -540,12 +540,33 @@ export const CHART_PIE_SWEEP_HALF: ChartPieSweep = { startAngle: 180, endAngle: 
  */
 export const chartPieCenterVariants = cva("select-none", {
   variants: {
-    tone: {
+    /*
+     * ── THIS AXIS WAS CALLED `tone` UNTIL 12 AUG 2026 ──────────────────────
+     *
+     * It was the third thing that word was doing in this library, and the
+     * furthest from the other two: `badge` and seven siblings use `tone` for a
+     * status ramp and `spinner` used it for a colour source, while these two
+     * values are neither — `value` and `caption` are the two TEXT ROLES a donut
+     * centre has, and they differ in size and weight as much as in colour.
+     *
+     * `slot` because that is what they are: a donut centre is a two-slot
+     * composition, the figure and the line under it, and a caller hand-building
+     * one (this export exists precisely because `ChartPie` is not ported — see
+     * `chart.tsx` note 5) is choosing which slot they are rendering. It is not
+     * `variant`, which this library already spends on how-filled, and not
+     * `role`, which is an ARIA word and would read as an attribute name in a
+     * file full of SVG.
+     *
+     * This rename cost nothing: measured across `packages`, `apps` and the
+     * registry, `chartPieCenterVariants` has ZERO call sites — it is published
+     * for the consumer who builds the pie the engine will not.
+     */
+    slot: {
       value: "fill-fg text-2xl font-semibold",
       caption: "fill-fg-muted text-xs font-normal",
     },
   },
-  defaultVariants: { tone: "value" },
+  defaultVariants: { slot: "value" },
 });
 
 /* ════════════════════════════════════════════════════════════════════════════

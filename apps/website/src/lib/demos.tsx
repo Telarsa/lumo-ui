@@ -668,15 +668,15 @@ const DEMOS: Demo[] = [
     id: "alert",
     title: { "fa-IR": "هشدار", "en-US": "Alert" },
     intro: {
-      "fa-IR": "پیام درون‌صفحه‌ای با چهار لحن. نوار رنگی روی لبهٔ خواندن می‌نشیند و در راست‌چین خودبه‌خود قرینه می‌شود.",
-      "en-US": "An inline message in four tones. The accent bar sits on the reading edge and mirrors itself under RTL.",
+      "fa-IR": "پیام درون‌صفحه‌ای با پنج لحن. نوار رنگی روی لبهٔ خواندن می‌نشیند و در راست‌چین خودبه‌خود قرینه می‌شود.",
+      "en-US": "An inline message in five tones. The accent bar sits on the reading edge and mirrors itself under RTL.",
     },
     tier: "feedback",
     behaviour: false,
     source: source("alert.tsx"),
     render: (l) => (
       <div className="flex w-full max-w-lg flex-col gap-3">
-        <Alert tone="info" title={copy.alertInfoTitle[l]}>
+        <Alert tone="accent" title={copy.alertInfoTitle[l]}>
           {copy.alertInfoBody[l]}
         </Alert>
         <Alert tone="positive" title={copy.alertOkTitle[l]}>
@@ -1216,8 +1216,8 @@ const DEMOS: Demo[] = [
     render: (l) => (
       <div className="flex items-center gap-6">
         <Spinner label={copy.loading[l]} />
-        <Spinner label={copy.loading[l]} size="lg" tone="accent" />
-        <Spinner label={copy.saving[l]} tone="muted" showLabel />
+        <Spinner label={copy.loading[l]} size="lg" color="accent" />
+        <Spinner label={copy.saving[l]} color="muted" showLabel />
       </div>
     ),
   },

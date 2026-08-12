@@ -79,7 +79,7 @@ const REFERENCE = 9081440225712345;
 function TonesExample(l: Locale) {
   return (
     <div className="flex w-full max-w-lg flex-col gap-3">
-      <Alert tone="info" icon={<InfoIcon aria-hidden="true" />} title={t.infoTitle[l]}>
+      <Alert tone="accent" icon={<InfoIcon aria-hidden="true" />} title={t.infoTitle[l]}>
         {t.infoBody[l]}
       </Alert>
       <Alert tone="positive" icon={<CheckCircleIcon aria-hidden="true" />} title={t.okTitle[l]}>
@@ -117,7 +117,7 @@ function LiveExample(l: Locale) {
 function OverflowExample(l: Locale) {
   return (
     <div className="flex w-full max-w-xs flex-col gap-3">
-      <Alert tone="info" icon={<InfoIcon aria-hidden="true" />} title={t.refTitle[l]}>
+      <Alert tone="accent" icon={<InfoIcon aria-hidden="true" />} title={t.refTitle[l]}>
         <p className="m-0">{t.refBody[l]}</p>
         <p className="m-0 font-mono">{formatNumber(REFERENCE, l, { useGrouping: false })}</p>
       </Alert>
@@ -139,7 +139,7 @@ function BoundaryExample(l: Locale) {
   // against `--lumo-sys-surface-sunken` very nearly does not.
   return (
     <div className="flex w-full max-w-lg flex-col gap-3 rounded-lg bg-surface-sunken p-4">
-      <Alert tone="info" icon={<InfoIcon aria-hidden="true" />} title={t.infoTitle[l]}>
+      <Alert tone="accent" icon={<InfoIcon aria-hidden="true" />} title={t.infoTitle[l]}>
         {t.infoBody[l]}
       </Alert>
       <Alert tone="caution" icon={<TriangleAlertIcon aria-hidden="true" />}>
@@ -173,9 +173,9 @@ export const EXAMPLES: ComponentExamples = {
     title: { "fa-IR": "هشدار", "en-US": "Alert" },
     intro: {
       "fa-IR":
-        "پیام درون‌صفحه‌ای در چهار لحن. دو تصمیم این جزء را می‌سازد: نوار رنگی با border-s روی لبهٔ خواندن می‌نشیند و بدون هیچ قاعدهٔ rtl قرینه می‌شود، و ناحیهٔ زنده به‌طور پیش‌فرض خاموش است. لحن و فوریت دو چیز جدا هستند — هشداری با لحن critical که از اول در صفحه بوده فوری نیست، و پیامی با لحن info که همین حالا ساخته شده ممکن است باشد.",
+        "پیام درون‌صفحه‌ای در پنج لحن. دو تصمیم این جزء را می‌سازد: نوار رنگی با border-s روی لبهٔ خواندن می‌نشیند و بدون هیچ قاعدهٔ rtl قرینه می‌شود، و ناحیهٔ زنده به‌طور پیش‌فرض خاموش است. لحن و فوریت دو چیز جدا هستند — هشداری با لحن critical که از اول در صفحه بوده فوری نیست، و پیامی با لحن neutral که همین حالا ساخته شده ممکن است باشد.",
       "en-US":
-        "An inline message in four tones. Two decisions make the component: the coloured bar is a border-s, so it sits on the reader's leading edge with no rtl rule anywhere, and the live region is OFF by default. Tone and urgency are separate facts — a critical alert that has always been on the page is not urgent, and an info alert that just appeared may be.",
+        "An inline message in five tones. Two decisions make the component: the coloured bar is a border-s, so it sits on the reader's leading edge with no rtl rule anywhere, and the live region is OFF by default. Tone and urgency are separate facts — a critical alert that has always been on the page is not urgent, and a neutral alert that just appeared may be.",
     },
     composition: [
       `<Alert tone live icon title>   ← live defaults to "off": no role, read in document order`,

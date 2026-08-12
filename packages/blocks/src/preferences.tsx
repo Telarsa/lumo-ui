@@ -189,7 +189,7 @@ function PreferenceRow({ item, pendingLabel }: { item: PreferenceItem; pendingLa
             </Radio>
           ))}
         </RadioGroup>
-        {item.isPending ? <Spinner label={pendingLabel} showLabel size="sm" tone="muted" /> : null}
+        {item.isPending ? <Spinner label={pendingLabel} showLabel size="sm" color="muted" /> : null}
       </div>
     );
   }
@@ -207,7 +207,7 @@ function PreferenceRow({ item, pendingLabel }: { item: PreferenceItem; pendingLa
           {item.label}
         </Switch>
         {item.isPending ? (
-          <Spinner label={pendingLabel} showLabel size="sm" tone="muted" className="ps-13" />
+          <Spinner label={pendingLabel} showLabel size="sm" color="muted" className="ps-13" />
         ) : null}
       </div>
     );
@@ -225,7 +225,7 @@ function PreferenceRow({ item, pendingLabel }: { item: PreferenceItem; pendingLa
         ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        {item.isPending ? <Spinner label={pendingLabel} size="sm" tone="muted" /> : null}
+        {item.isPending ? <Spinner label={pendingLabel} size="sm" color="muted" /> : null}
         <Select
           aria-label={item.label}
           placeholder={control.placeholder}

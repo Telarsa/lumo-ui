@@ -14,6 +14,7 @@
 import * as React from "react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { formatNumber } from "@lumo-ui/core";
 
 import {
   Kanban,
@@ -584,5 +585,131 @@ describe("the pointer drag reaches the same state machine", () => {
     press("ArrowLeft");
     expect(focused()).toBe(grip("الف"));
     expect(onChange).toHaveBeenLastCalledWith([["2"], ["1", "3"], []]);
+  });
+});
+
+/* ───────────────────────────────────────────────────── the live region ── */
+
+/**
+ * A ten-card column, which is the length at which the defect below is loud.
+ *
+ * The board's other tests use a two-card column because two is enough to prove
+ * an index. It is not enough to prove an ANNOUNCEMENT defect: a drag across two
+ * cards queues two sentences, which reads as noisy rather than as broken.
+ */
+function tallHarness() {
+  const onChange = vi.fn();
+  const board: Array<KanbanColumn> = [
+    {
+      id: "todo",
+      label: "در صف",
+      // Through `formatNumber`: a bare `${index + 1}` in a Persian label is a
+      // Latin digit, which is the defect this whole library is arranged around
+      // — and a test fixture is served bytes too, once it is quoted in docs.
+      cards: Array.from({ length: 10 }, (_, index) => ({
+        id: String(index + 1),
+        label: `کارت ${formatNumber(index + 1, "fa-IR")}`,
+      })),
+    },
+    { id: "done", label: "انجام‌شده", cards: [] },
+  ];
+  function Host() {
+    const [columns, setColumns] = React.useState(board);
+    return (
+      <Kanban
+        label="تخته"
+        locale="fa-IR"
+        columns={columns}
+        strings={fa}
+        onColumnsChange={(next) => {
+          onChange();
+          setColumns(next);
+        }}
+      >
+        {(card) => <span>{card.label}</span>}
+      </Kanban>
+    );
+  }
+  render(<Host />);
+  return { onChange };
+}
+
+/**
+ * Every distinct string the polite region has held, in order.
+ *
+ * The unit is a CHANGE of the region's text, not a call to any internal
+ * function, because that is what a screen reader queues: `aria-live="polite"`
+ * defers until the reader pauses, so N changes during a drag are N sentences
+ * spoken AFTER the drag has finished, describing positions the card no longer
+ * occupies.
+ */
+function announcementLog() {
+  const seen: string[] = [];
+  return {
+    seen,
+    record() {
+      const text = screen.getByRole("status").textContent ?? "";
+      if (seen.at(-1) !== text) seen.push(text);
+    },
+  };
+}
+
+describe("a pointer drag announces its ENDPOINTS, not its path", () => {
+  it("queues two sentences across a ten-card drag, not one per pointermove", () => {
+    /*
+     * MEASURED on this exact drag, 12 Aug 2026.
+     *
+     *   before   11 announcements — «برداشته شد» on pointerdown, NINE more as
+     *            the card crossed nine midpoints, «رها شد» on pointerup
+     *   after     2 — the two endpoints
+     *
+     * Nine of the eleven described a position that had already been left by the
+     * time the region was read out. `sortable.tsx` is the sibling that had this
+     * right: its `pointermove` calls `reorder()` and announces nothing.
+     */
+    const log = announcementLog();
+    tallHarness();
+    grab("کارت ۱");
+    log.record();
+    for (let y = 150; y <= 950; y += 100) {
+      drag(150, y);
+      log.record();
+    }
+    act(() => {
+      window.dispatchEvent(pointerEvent("pointerup"));
+    });
+    log.record();
+
+    expect(log.seen).toEqual([
+      "برداشته شد در صف، مورد ۱ از ۱۰",
+      "رها شد در صف، مورد ۱۰ از ۱۰",
+    ]);
+  });
+
+  it("still announces every KEYBOARD step, because each one is a separate act", () => {
+    /*
+     * The half a blanket "announce on drop only" would have broken, and the
+     * reason the route is a parameter rather than a deletion.
+     *
+     * A pointermove is not an act by the reader — the finger is one continuous
+     * gesture and the card is visibly under it. An arrow key IS an act, one per
+     * press, and the pressing reader cannot see where the card went. Silence
+     * there is the defect this component's header was written about.
+     */
+    const log = announcementLog();
+    harness();
+    grip("الف").focus();
+    press(" ");
+    log.record();
+    press("ArrowDown");
+    log.record();
+    press("ArrowLeft");
+    log.record();
+
+    expect(log.seen).toEqual([
+      "برداشته شد در صف، مورد ۱ از ۲",
+      "برداشته شد در صف، مورد ۲ از ۲",
+      "برداشته شد در حال انجام، مورد ۲ از ۲",
+    ]);
   });
 });

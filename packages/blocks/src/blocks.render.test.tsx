@@ -992,3 +992,62 @@ describe("blocks — the render checks can fail", () => {
     expect(violations.join("\n")).toContain("named-controls");
   });
 });
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * ChartPanel's live region, which has to exist BEFORE it has anything to say
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * The one block in this package that owns a `role="status"`.
+ *
+ * It was rendered conditionally until 12 Aug 2026 — `isEmpty ? <p role="status">
+ * : chart` — so the region was created at the moment it acquired its sentence,
+ * which is the moment a screen reader is least likely to announce it. Base UI
+ * documents the rule in `combobox/empty/ComboboxEmpty.mjs:11-15`: the root
+ * "must remain mounted… Prefer… conditionally rendering its children instead."
+ *
+ * Asserted on `renderToStaticMarkup` rather than on a mounted tree, because
+ * "mounted at the first byte" is the claim, and a client-side render cannot
+ * tell the difference between a node that was served and one that appeared.
+ */
+describe("ChartPanel's status region is mounted before it is needed", () => {
+  const panel = (isEmpty: boolean) =>
+    renderToStaticMarkup(
+      <ChartPanel
+        locale={FA}
+        strings={{ title: "فروش ماهانه", emptyLabel: "داده‌ای برای این بازه نیست" }}
+        isEmpty={isEmpty}
+        chart={<div>نمودار</div>}
+      />,
+    );
+
+  it("serves the region in the FIRST BYTE while the chart is still showing", () => {
+    const html = panel(false);
+    expect(html).toContain('role="status"');
+    // Mounted and silent. The sentence is the thing that arrives later; the
+    // node it arrives INTO is already being watched.
+    expect(html).not.toContain("داده‌ای برای این بازه نیست");
+    expect(html).toContain("نمودار");
+  });
+
+  it("hides it with sr-only, never with hidden or aria-hidden", () => {
+    // Content inside `display: none` is not announced at all, so `hidden` here
+    // would be the same defect wearing a different attribute. `sr-only` is
+    // `position: absolute`, so it is also not a flex item of the `gap-4`
+    // column — a populated panel gains no stray gap.
+    const html = panel(false);
+    expect(html).toMatch(/role="status"[^>]*class="sr-only"|class="sr-only"[^>]*role="status"/);
+    expect(html).not.toMatch(/role="status"[^>]*(hidden|aria-hidden)/);
+  });
+
+  it("fills the SAME region rather than swapping in another one", () => {
+    const html = panel(true);
+    expect(html).toContain('role="status"');
+    expect(html).toContain("داده‌ای برای این بازه نیست");
+    expect(html).not.toContain("نمودار");
+    // Exactly one, in both states: two regions would mean the reader's software
+    // is watching the one that never speaks.
+    expect(panel(true).match(/role="status"/g)).toHaveLength(1);
+    expect(panel(false).match(/role="status"/g)).toHaveLength(1);
+  });
+});

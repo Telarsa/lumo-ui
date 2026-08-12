@@ -97,15 +97,20 @@ export interface BreadcrumbsProps<T extends object> {
    */
   label: string;
   /**
-   * TYPE CARRIER, NOT A PROP — and typed `never` on purpose. React Aria's
-   * `BreadcrumbsProps<T>` fed `T` to a collection builder's `items`. There is no
-   * collection here, so nothing is left for `T` to type. Keeping the field keeps
-   * the type PARAMETER, so a `BreadcrumbsProps<Crumb>` annotation a consumer
-   * already wrote still compiles; typing it `never` makes passing a value a
-   * compile error rather than a prop that is accepted and silently dropped.
-   * (`select.tsx` does the same for the same reason.)
+   * TYPE CARRIER, NOT A PROP. React Aria's `BreadcrumbsProps<T>` fed `T` to a
+   * collection builder's `items`. There is no collection here, so nothing is
+   * left for `T` to type. Keeping the field keeps the type PARAMETER, so a
+   * `BreadcrumbsProps<Crumb>` annotation a consumer already wrote still
+   * compiles, and the carrier makes passing a value a compile error rather than
+   * a prop that is accepted and silently dropped. (`select.tsx` does the same
+   * for the same reason.)
+   *
+   * Spelled `(Iterable<T> & never) | undefined`, not `Iterable<T> & never` — the
+   * latter resolves to `never`, which under `exactOptionalPropertyTypes` also
+   * rejects an explicit `undefined`, i.e. a spread that passed no value.
+   * `SelectProps.items` carries the measurement for all seven sites.
    */
-  items?: Iterable<T> & never;
+  items?: (Iterable<T> & never) | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }

@@ -38,8 +38,8 @@ function AnnouncedExample(l: Locale) {
     <div className="flex items-center gap-6">
       {/* Nothing visible says what is happening. The label still does. */}
       <Spinner label={t.loading[l]} />
-      <Spinner label={t.saving[l]} tone="accent" />
-      <Spinner label={t.verifying[l]} tone="muted" />
+      <Spinner label={t.saving[l]} color="accent" />
+      <Spinner label={t.verifying[l]} color="muted" />
     </div>
   );
 }
@@ -47,8 +47,8 @@ function AnnouncedExample(l: Locale) {
 function VisibleExample(l: Locale) {
   return (
     <div className="flex w-full max-w-md flex-col gap-4">
-      <Spinner label={t.saving[l]} showLabel tone="muted" />
-      <Spinner label={t.importing[l]} showLabel tone="accent" />
+      <Spinner label={t.saving[l]} showLabel color="muted" />
+      <Spinner label={t.importing[l]} showLabel color="accent" />
     </div>
   );
 }
@@ -65,9 +65,9 @@ function InButtonExample(l: Locale) {
 function SizesExample(l: Locale) {
   return (
     <div className="flex items-center gap-6">
-      <Spinner size="sm" label={t.loading[l]} tone="accent" />
-      <Spinner size="md" label={t.loading[l]} tone="accent" />
-      <Spinner size="lg" label={t.loading[l]} tone="accent" />
+      <Spinner size="sm" label={t.loading[l]} color="accent" />
+      <Spinner size="md" label={t.loading[l]} color="accent" />
+      <Spinner size="lg" label={t.loading[l]} color="accent" />
     </div>
   );
 }
@@ -83,7 +83,7 @@ export const EXAMPLES: ComponentExamples = {
         "A busy indicator that says out loud what is being waited for. label is a required string and this is the component that proves why: a spinner has no text, so a screen-reader user gets not a wrong name but silence while the page appears frozen. It cannot be defaulted either, because the default would be English handed to a Persian voice. Under reduced motion the rotation becomes a PULSE rather than nothing: a static ring says nothing and reads as a rendering fault.",
     },
     composition: [
-      `<Spinner label showLabel size tone />`,
+      `<Spinner label showLabel size color />`,
       `                     ← role="status" wraps a decorative ring and REAL text`,
       `                     ← showLabel off → the text is sr-only, never display:none,`,
       `                        because a hidden live region is not announced at all`,
@@ -93,9 +93,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "Spinner",
         description: {
           "fa-IR":
-            "کل جزء. حلقه aria-hidden است و متن حاملِ خبر؛ نقش status ویژگی aria-live مؤدبانه را در خود دارد، پس جداگانه نوشته نمی‌شود. tone سه مقدار دارد و current رنگ متن پیرامون را به ارث می‌برد — همان چیزی که درون یک دکمه لازم است.",
+            "کل جزء. حلقه aria-hidden است و متن حاملِ خبر؛ نقش status ویژگی aria-live مؤدبانه را در خود دارد، پس جداگانه نوشته نمی‌شود. color سه مقدار دارد و current رنگ متن پیرامون را به ارث می‌برد — همان چیزی که درون یک دکمه لازم است.",
           "en-US":
-            "The whole component. The ring is aria-hidden and the text carries the fact; role status already implies a polite live region, so aria-live is not restated. tone has three values, and current inherits the surrounding text colour — which is what a spinner inside a button needs.",
+            "The whole component. The ring is aria-hidden and the text carries the fact; role status already implies a polite live region, so aria-live is not restated. color has three values, and current inherits the surrounding text colour — which is what a spinner inside a button needs.",
         },
       },
     ],
@@ -128,9 +128,9 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "درون یک دکمه", "en-US": "Inside a button" },
       description: {
         "fa-IR":
-          "لحن current است، پس حلقه رنگ متن دکمه را به ارث می‌برد و روی هر گونه‌ای درست در می‌آید بدون آنکه فراخوان رنگی انتخاب کند. دکمه غیرفعال است اما برچسبش سر جایش می‌ماند: دکمه‌ای که در حال کار متنش را با یک حلقه عوض کند، نامش را برای مدت انتظار از دست می‌دهد.",
+          "مقدار color برابر current است، پس حلقه رنگ متن دکمه را به ارث می‌برد و روی هر گونه‌ای درست در می‌آید بدون آنکه فراخوان رنگی انتخاب کند. دکمه غیرفعال است اما برچسبش سر جایش می‌ماند: دکمه‌ای که در حال کار متنش را با یک حلقه عوض کند، نامش را برای مدت انتظار از دست می‌دهد.",
         "en-US":
-          "The tone is current, so the ring inherits the button's text colour and comes out right on every variant without the caller picking one. The button is disabled but keeps its label: a button that swaps its text for a ring while it works loses its accessible name for the duration of the wait.",
+          "The color is current, so the ring inherits the button's text colour and comes out right on every variant without the caller picking one. The button is disabled but keeps its label: a button that swaps its text for a ring while it works loses its accessible name for the duration of the wait.",
       },
       render: InButtonExample,
     },

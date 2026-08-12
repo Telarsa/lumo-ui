@@ -52,19 +52,49 @@ export const spinnerVariants = cva(
         md: "size-5",
         lg: "size-8",
       },
-      tone: {
+      /*
+       * ── THIS AXIS WAS CALLED `tone` UNTIL 12 AUG 2026 ────────────────────
+       *
+       * It is not the library's tone. Eight components spell `tone` as a
+       * STATUS RAMP — `neutral | accent | positive | critical | caution`, a
+       * claim about what a thing MEANS — and this one spells it as a colour
+       * source: inherit, brand, or de-emphasised. A spinner has no status to
+       * report; the whole point of `current` is that it has no opinion at all.
+       *
+       * One word for two axes is not a tidiness complaint. It is a thing a
+       * consumer has to learn twice, and the two lessons contradict: `accent`
+       * appears in both sets and means "the brand hue" here and "informational"
+       * there, while `muted` and `current` have no status reading whatsoever.
+       *
+       * `color` is the name Radix Themes, MUI and Chakra all give this exact
+       * axis, which matters for a library distributed by copying source into
+       * other projects — the reader arriving from any of them already knows it.
+       * The cost is that `color` is also a legacy HTML attribute React types on
+       * `HTMLAttributes`, so it has to be `Omit`ted below; `badge.tsx` already
+       * `Omit`s the same name for the same reason, so this is the house
+       * precedent rather than a new exception.
+       *
+       * `system-vocabulary.test.ts` sweeps the directory for tone values
+       * outside the ramp, so this cannot come back under the old name.
+       */
+      color: {
         /** Inherits the surrounding text colour — right inside a Button. */
         current: "text-current",
         accent: "text-accent",
         muted: "text-fg-muted",
       },
     },
-    defaultVariants: { size: "md", tone: "current" },
+    defaultVariants: { size: "md", color: "current" },
   },
 );
 
 export interface SpinnerProps
-  extends Omit<ComponentProps<"span">, "children" | "className" | "role">,
+  /* `color` is OWNED: it is this component's colour-source variant, and React
+   * types a legacy HTML `color` attribute of the same name on every element.
+   * Both accepted would mean a caller's string silently reaching the DOM while
+   * the variant read `undefined`. `badge.tsx` omits the same name for the same
+   * reason. `ref` and `id` are untouched — they land on the root via `...props`. */
+  extends Omit<ComponentProps<"span">, "children" | "className" | "role" | "color">,
     VariantProps<typeof spinnerVariants> {
   /**
    * What is being waited for, in the reader's language, e.g. «در حال بارگذاری…».
@@ -88,7 +118,7 @@ export function Spinner({
   label,
   showLabel = false,
   size,
-  tone,
+  color,
   className,
   ...props
 }: SpinnerProps) {
@@ -103,7 +133,7 @@ export function Spinner({
       className={cn("inline-flex items-center gap-2 align-middle", className)}
       {...props}
     >
-      <span aria-hidden="true" className={cn(spinnerVariants({ size, tone }))} />
+      <span aria-hidden="true" className={cn(spinnerVariants({ size, color }))} />
       {/*
        * `sr-only` when hidden — not `hidden`, not `display: none`. A live region
        * whose content is `display: none` is not announced at all, which would

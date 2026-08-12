@@ -52,6 +52,12 @@ import { cn, direction, formatNumber, type Locale, type LumoNode } from "@lumo-u
  * a function rather than a three-hole template, for the reason
  * `core/src/strings.ts` gives about clause order.
  *
+ * WHEN it is announced is a separate question and the two routes answer it
+ * differently: every arrow key, and only the two ENDPOINTS of a pointer drag.
+ * A polite region defers rather than drops, so announcing each `pointermove`
+ * queues a description of every position the card passed through, to be read
+ * out after the drag has finished. The measurement is on `commit`.
+ *
  * ═══ CROSSING INTO AN EMPTY COLUMN ══════════════════════════════════════════
  *
  * The card lands at index 0 and the column is no longer empty, which sounds
@@ -395,14 +401,47 @@ export function Kanban<T extends KanbanCard>({
    * keyboard's `move` below computes deltas, the pointer's hit-test computes
    * coordinates, and both arrive here with an absolute destination.
    *
-   * `refocus` is what separates them. A keyboard move MUST put focus back:
-   * the handle the reader is holding is unmounted by the move and their next
-   * key would otherwise land on `<body>`. A pointer move must not — the finger
-   * is the reader's place on the board, the browser has already focused the
-   * handle at pointerdown, and stealing focus back on every `pointermove`
-   * would fight the keyboard's restore for no gain.
+   * `route` is what separates them, and it separates TWO things rather than
+   * one. It was a `refocus: boolean` until 12 Aug 2026, which named half of
+   * what it decides and let the other half — whether the step is spoken — be
+   * decided for both routes at once, wrongly.
+   *
+   * ── FOCUS ───────────────────────────────────────────────────────────────
+   * A keyboard move MUST put focus back: the handle the reader is holding is
+   * unmounted by the move and their next key would otherwise land on `<body>`.
+   * A pointer move must not — the finger is the reader's place on the board,
+   * the browser has already focused the handle at pointerdown, and stealing
+   * focus back on every `pointermove` would fight the keyboard's restore for no
+   * gain.
+   *
+   * ── SPEECH, AND WHY THE POINTER ROUTE IS SILENT ─────────────────────────
+   * An arrow key is one discrete act by a reader who cannot see where the card
+   * went, so each press is announced. A `pointermove` is not an act at all: it
+   * is a sample of one continuous gesture, fired as fast as the hardware
+   * reports, and the card is visibly under the finger the whole time.
+   *
+   * `aria-live="polite"` does not drop the surplus, it DEFERS it. Every string
+   * written here waits for the reader to pause, which on a drag means after the
+   * drag has ended — so a board that announces each sample reads out a queue of
+   * positions the card has already left.
+   *
+   * Measured on a ten-card column, one drag from the top of the column to the
+   * bottom (`kanban.test.tsx`, "a pointer drag announces its ENDPOINTS"):
+   * ELEVEN sentences were queued — «برداشته شد» at pointerdown, nine more as
+   * the card crossed nine midpoints, «رها شد» at pointerup — of which nine
+   * described a position that no longer existed by the time it was spoken. It
+   * is TWO now, the endpoints, which is the count `sortable.tsx` has always
+   * had: its `pointermove` calls `reorder()` and announces nothing at all.
+   *
+   * The asymmetry between the two files WAS the proof, and it is now the
+   * assertion instead.
    */
-  const commit = (cardId: string, toColumn: number, toIndex: number, refocus: boolean) => {
+  const commit = (
+    cardId: string,
+    toColumn: number,
+    toIndex: number,
+    route: "keyboard" | "pointer",
+  ) => {
     const board = latest.current.columns;
     const at = locate(board, cardId);
     if (at === null || toColumn < 0 || toColumn >= board.length) return;
@@ -412,8 +451,10 @@ export function Kanban<T extends KanbanCard>({
     if (at.column === toColumn && at.index === toIndex) return;
     const next = moveCard(board, cardId, toColumn, toIndex);
     latest.current.onColumnsChange(next);
-    if (refocus) refocusRef.current = cardId;
-    announce(strings.pickedUp, next, cardId);
+    if (route === "keyboard") {
+      refocusRef.current = cardId;
+      announce(strings.pickedUp, next, cardId);
+    }
   };
 
   const move = (cardId: string, deltaColumn: number, deltaIndex: number) => {
@@ -431,7 +472,7 @@ export function Kanban<T extends KanbanCard>({
     if (deltaColumn === 0 && (toIndex < 0 || toIndex > (board[at.column]?.cards.length ?? 0) - 1)) {
       return;
     }
-    commit(cardId, toColumn, toIndex, true);
+    commit(cardId, toColumn, toIndex, "keyboard");
   };
 
   const onHandleKeyDown = (event: React.KeyboardEvent, cardId: string) => {
@@ -568,7 +609,7 @@ export function Kanban<T extends KanbanCard>({
        */
       const toIndex =
         at.column === toColumn && insertion > at.index ? insertion - 1 : insertion;
-      commit(cardId, toColumn, toIndex, false);
+      commit(cardId, toColumn, toIndex, "pointer");
     };
 
     const stop = () => {

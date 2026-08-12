@@ -3,7 +3,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
- * An inline message: information, success, failure, warning.
+ * An inline message: plain, informational, success, failure, warning.
  *
  * No `"use client"` — it is a `<div>` with tokens. See badge.tsx.
  *
@@ -30,7 +30,7 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  * `role="status"` for the non-urgent case, which waits for a pause instead of
  * interrupting. The prop is named after the ARIA concept rather than after the
  * visual tone precisely so that tone and urgency stay independent — a `critical`
- * alert that has always been on the page is not urgent, and an `info` alert
+ * alert that has always been on the page is not urgent, and a `neutral` alert
  * that just appeared may be.
  */
 /**
@@ -45,14 +45,16 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  * correct and the reading of it is not.
  *
  * The conclusion survives anyway, because the three UNBORDERED edges are the
- * ones the finding is really about. On the default page background an 8% tone
- * tint is a lightness shift of roughly 0.06 and reads fine; on a sunken surface
- * or inside another tinted block it collapses, and the alert stops being a
- * delimited region and becomes a paragraph with a wash. A status region is the
- * last component that should depend on what is behind it.
+ * ones the finding is really about. On the default page background a tone tint
+ * at that alpha is a lightness shift of roughly 0.06 and reads fine (the fill
+ * was 8% when this was measured and is 10% now — see the next section, which
+ * is where that changed and why); on a sunken surface or inside another tinted
+ * block either value collapses, and the alert stops being a delimited region
+ * and becomes a paragraph with a wash. A status region is the last component
+ * that should depend on what is behind it.
  *
  * So: a 1px hairline in the tone colour on all four edges, at 25% against the
- * fill's 8% so the edge is the crisp part, with the 4px bar left exactly as it
+ * fill's 10% so the edge is the crisp part, with the 4px bar left exactly as it
  * was on the leading edge. `border` first and `border-s-4` after in the same
  * string, because Tailwind emits per-side widths after the all-sides one and
  * the same ordering makes `border-<tone>/25 border-s-<tone>` resolve the way it
@@ -63,6 +65,42 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  * `tokens.css` — moving one component's corner to 10px would leave the alert
  * disagreeing with every other surface in the library, which is a worse
  * outcome than agreeing with all of them at 8.
+ *
+ * ── THE FILL WAS 8% AND IS NOW 10%, AND THAT IS A VOCABULARY FIX ────────────
+ *
+ * Not a visual decision — 8% and 10% of one hue over one ground differ by about
+ * half a percent of lightness, which is why nobody chose between them. It is a
+ * vocabulary fix, and the census is the argument. Every accent tint in
+ * `packages/ui` and `packages/blocks`, measured 12 Aug 2026:
+ *
+ *     fill    /5 ×3   /8 ×4   /10 ×28   /15 ×5   /20 ×4   /25 ×1
+ *     edge    /25 ×9  /30 ×1  /40 ×1
+ *
+ * There is no tint TOKEN behind any of it. Two of those distributions are
+ * nearly settled and one is not, and they are not the same axis:
+ *
+ *   • A STATUS TINT ON A SURFACE — a badge, a tile, an alert. `badge.tsx` and
+ *     this file carried the same four tones with the same `/25` edge and
+ *     DIFFERENT fills, 10 against 8, which is variance with nothing behind it.
+ *     They agree at /10 now, and `icon-tile.tsx` already did.
+ *   • A STATE LADDER — `calendar`, `date-selector`, `sidebar`, `toggle` use
+ *     /5 and /10 for rest and /15 and /20 for selected. Those numbers are
+ *     RELATIVE to each other and collapsing them would delete the state.
+ *   • `event-calendar.variants.ts`'s chip stays at /15, and this is the one
+ *     number below recorded as taste rather than measurement: a chip is a
+ *     filled block in a dense grid rather than a tint in prose. If that turns
+ *     out to be unfounded it is a one-character change to /10.
+ *
+ * ── SO: DOES IT WANT A TOKEN? NOT YET, AND THE REASON IS THE SPLIT ──────────
+ *
+ * A `--lumo-sys-tint-fill` / `--lumo-sys-tint-edge` pair is the obvious answer
+ * and it is premature, because a token defined over the three files above while
+ * six others carry the state ladder would be a SIXTH spelling rather than one
+ * fewer — the exact failure `system-vocabulary.test.ts` was built to catch. The
+ * precondition for the token is that each of the two roles has one number
+ * first. The status-tint role has one now (/10 fill, /25 edge, three files).
+ * The state-ladder role has four numbers across six files nobody has yet owned
+ * in a single pass, and that pass is where the token belongs.
  */
 export const alertVariants = cva(
   // Flex, not grid: the icon and the text column mirror for free because
@@ -72,14 +110,51 @@ export const alertVariants = cva(
   "flex w-full items-start gap-3 rounded-md border border-s-4 p-4 text-sm text-fg",
   {
     variants: {
+      /*
+       * ── THE RAMP IS THE LIBRARY'S, AND IT WAS NOT UNTIL 12 AUG 2026 ───────
+       *
+       * Two changes, both about vocabulary rather than about pixels.
+       *
+       * `info` → `accent`. This was the ONLY file in the library spelling the
+       * accent tone `info`; `badge`, `icon-tile`, `timeline`, `progress`,
+       * `event-calendar` and `alert-dialog` all say `accent`, and all of them
+       * resolve it to the same `--color-accent`. Two names for one value is
+       * AUDIT §3.4's pattern, and this instance had the nastier failure mode of
+       * the two: `<Alert tone="accent">` was a TYPE ERROR naming a tone that
+       * plainly exists in the library, so the compiler taught a consumer that
+       * Lumo has no accent alert rather than that this file spells it oddly.
+       *
+       * `neutral` is NEW, and its absence made an untinted alert
+       * unrepresentable. Every value in the old set claimed something — this is
+       * information, this went well, this went wrong, be careful — so a message
+       * with no colour to claim had to borrow one, and `info` was the one it
+       * borrowed. A shipping notice, a quota line, a "last synced" note are not
+       * informational-blue; they are prose in a box. `border-border` with a
+       * `border-strong` bar and a `surface-sunken` fill is `badge.tsx`'s own
+       * neutral subtle, so the two agree by construction rather than by
+       * coincidence.
+       *
+       * Ordered neutral-first, matching `badge.tsx`, so the two enums read as
+       * one ramp when they are seen side by side in an editor's completion.
+       */
       tone: {
-        info: "border-accent/25 border-s-accent bg-accent/8",
-        positive: "border-positive/25 border-s-positive bg-positive/8",
-        critical: "border-critical/25 border-s-critical bg-critical/8",
-        caution: "border-caution/25 border-s-caution bg-caution/8",
+        neutral: "border-border border-s-border-strong bg-surface-sunken",
+        accent: "border-accent/25 border-s-accent bg-accent/10",
+        positive: "border-positive/25 border-s-positive bg-positive/10",
+        critical: "border-critical/25 border-s-critical bg-critical/10",
+        caution: "border-caution/25 border-s-caution bg-caution/10",
       },
     },
-    defaultVariants: { tone: "info" },
+    /*
+     * The default stays the accent tone rather than moving to `neutral` with
+     * the rename. A default is a behaviour, and `tone="info"` and no `tone` at
+     * all rendered the same box before this commit; they still do. Changing the
+     * name and the default in one edit would have made a rename that is
+     * supposed to be pixel-neutral repaint every undecorated alert in every
+     * consumer, which is precisely the silent behaviour change a compile error
+     * is preferred over.
+     */
+    defaultVariants: { tone: "accent" },
   },
 );
 
@@ -94,13 +169,17 @@ export const alertVariants = cva(
 export const alertIconVariants = cva("mbs-0.5 flex size-5 shrink-0 items-center justify-center", {
   variants: {
     tone: {
-      info: "text-accent",
+      // `text-fg-muted` and not `text-fg`: the icon is decorative here (it is
+      // `aria-hidden` at the call site) and a full-strength glyph beside a
+      // neutral box reads as the loudest thing in it.
+      neutral: "text-fg-muted",
+      accent: "text-accent",
       positive: "text-positive",
       critical: "text-critical",
       caution: "text-caution",
     },
   },
-  defaultVariants: { tone: "info" },
+  defaultVariants: { tone: "accent" },
 });
 
 /**
@@ -210,7 +289,7 @@ export type AlertDismissProps = DismissibleAlertProps | StaticAlertProps;
 export type AlertProps = AlertBaseProps & AlertDismissProps;
 
 export function Alert({
-  tone = "info",
+  tone = "accent",
   icon,
   title,
   children,
