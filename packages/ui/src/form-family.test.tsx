@@ -32,6 +32,7 @@ import { act, cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { gradeHtml, namedControls, resolvedIdrefs } from "../../gate/src/index.ts";
+import { Description, Field, Label } from "./form.tsx";
 import { InputGroup } from "./input-group.tsx";
 import { Link } from "./link.tsx";
 import { Radio, RadioGroup } from "./radio-group.tsx";
@@ -505,5 +506,50 @@ describe("hover moved from an attribute to a pseudo-class, everywhere", () => {
      */
     expect(html).toContain("hover:border-border-strong");
     expect(html).not.toContain("data-hovered");
+  });
+});
+
+/**
+ * `elementType` — the inert prop that produced WRONG BYTES rather than none.
+ *
+ * `LabelProps`, `DescriptionProps` and `FieldErrorProps` each declared
+ * `elementType?: string` and documented it as "the element type to render".
+ * Nothing read it. `Label` and `Description` let it ride `...props` onto a real
+ * element, so before the 12 Aug 2026 fix this rendered, verbatim:
+ *
+ *     <label class="…" elementType="div">نام</label>          (outside a Field)
+ *     <p id="…" elementType="div" class="…">توضیح</p>          (inside one)
+ *
+ * with React 19 logging "React does not recognize the `elementType` prop on a
+ * DOM element". The type is now `?: undefined`, so the call below is a compile
+ * error — which is why it goes through a cast. The cast is the point: the type
+ * protects a caller who compiles, and these two lines protect the bytes from a
+ * caller who does not.
+ */
+describe("form.tsx serves no elementType attribute, however it is passed", () => {
+  const inert = { elementType: "div" } as Record<string, unknown>;
+
+  it("Label and Description drop it instead of spreading it", () => {
+    const html = renderToStaticMarkup(
+      <>
+        <Label {...inert}>نام</Label>
+        <Description {...inert}>توضیح</Description>
+      </>,
+    );
+    expect(html).toContain("نام");
+    expect(html).toContain("توضیح");
+    expect(html).not.toContain("elementType");
+  });
+
+  it("and inside a Field, where the props reach a Base UI part", () => {
+    const html = renderToStaticMarkup(
+      <Field label="نام">
+        <Label {...inert}>نام</Label>
+        <Description {...inert}>توضیح</Description>
+      </Field>,
+    );
+    expect(html).not.toContain("elementType");
+    // The wiring the file exists for is untouched by the discard.
+    expect(html).toMatch(/<label [^>]*for="/);
   });
 });

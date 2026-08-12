@@ -89,16 +89,27 @@ const TooltipNameContext = React.createContext<string | undefined>(undefined);
  * The default stays `'top'`, which is on the block axis and therefore identical
  * in both scripts.
  *
- * ── `delay` AND `closeDelay` ARE ACCEPTED AND INERT ─────────────────────────
+ * ── `delay`, `closeDelay` AND `shouldCloseOnPress` ARE TRANSLATED ───────────
  *
- * MEASURED GAP. React Aria put both on `TooltipTrigger`, per tooltip. Base UI
- * has no delay prop on `Tooltip.Root` at all: `delay` exists only on
- * `Tooltip.Provider`, which is an APP-LEVEL grouping component whose whole
- * purpose is that a set of tooltips share one delay. Honouring a per-tooltip
- * `delay` would mean wrapping each `TooltipTrigger` in its own Provider, which
- * defeats the grouping the Provider exists for and would change hover-out
- * behaviour between neighbouring tooltips. So the props are destructured out and
- * dropped, and the tooltip uses Base UI's default timing.
+ * THIS BLOCK USED TO SAY THEY WERE INERT, and the reason it gave was right
+ * about the wrong component. It said Base UI *"has no delay prop on
+ * `Tooltip.Root` at all: `delay` exists only on `Tooltip.Provider`"*, which is
+ * an app-level grouping component — so honouring a per-tooltip delay would have
+ * meant one Provider per tooltip, defeating the grouping. All true, and all
+ * about `Root` and `Provider`. The props live on `Tooltip.TRIGGER`, which this
+ * file already renders:
+ *
+ *     @base-ui/react@1.7.0/tooltip/trigger/TooltipTrigger.d.ts
+ *       delay?: number        (line 33, default 600)
+ *       closeOnClick?: boolean (line 38, default true)
+ *       closeDelay?: number   (line 43, default 0)
+ *
+ * So all three are handed to `Tooltip.Trigger` below, and the third is the
+ * translation `shouldCloseOnPress` never had: React Aria's name, Base UI's
+ * `closeOnClick`, same behaviour and the same default. Found by the inert-prop
+ * gate, which flagged `shouldCloseOnPress` as dropped and made someone read the
+ * engine's current types rather than the note about the previous version — the
+ * failure mode of a measurement is that it is true on the day it is taken.
  */
 export const tooltipVariants = cva(
   // Inverted surface: `bg-fg` / `text-bg` rather than a hardcoded slate, so the
@@ -138,11 +149,11 @@ interface TooltipTriggerPropsBase extends OverlayTriggerProps {
   isDisabled?: boolean;
   /** What opens the tooltip. */
   trigger?: "hover" | "focus";
-  /** The delay before the tooltip opens, in milliseconds. */
+  /** The delay before the tooltip opens, in milliseconds. Base UI's `delay`. */
   delay?: number;
-  /** The delay before the tooltip closes, in milliseconds. */
+  /** The delay before the tooltip closes, in milliseconds. Base UI's `closeDelay`. */
   closeDelay?: number;
-  /** Whether pressing the trigger closes the tooltip. */
+  /** Whether pressing the trigger closes the tooltip. Base UI's `closeOnClick`. */
   shouldCloseOnPress?: boolean;
 }
 
@@ -157,9 +168,13 @@ export function TooltipTrigger({
   defaultOpen,
   onOpenChange,
   isDisabled,
-  // — accepted by the API, unreachable in Base UI. See the file header. —
-  delay: _delay,
-  closeDelay: _closeDelay,
+  // — translated onto Tooltip.Trigger. See the file header. —
+  delay,
+  closeDelay,
+  shouldCloseOnPress,
+  // `trigger` stays unreachable: React Aria's `"focus"` value meant "focus
+  // only, no hover", and Base UI's trigger has no switch that turns hover off
+  // while leaving focus on — `disabled` turns off both.
   trigger: _trigger,
 }: TooltipTriggerProps) {
   const items = React.Children.toArray(children as React.ReactNode);
@@ -180,6 +195,9 @@ export function TooltipTrigger({
       {React.isValidElement(trigger) ? (
         <BaseTooltip.Trigger
           {...attr("aria-describedby", described)}
+          {...attr("delay", delay)}
+          {...attr("closeDelay", closeDelay)}
+          {...attr("closeOnClick", shouldCloseOnPress)}
           render={trigger as React.ReactElement<Record<string, unknown>>}
         />
       ) : (
@@ -215,6 +233,12 @@ interface TooltipPropsBase
 export interface TooltipProps extends TooltipPropsBase {
   /** Logical only — see `LumoPlacement` in popover.tsx. */
   placement?: LumoPlacement;
+  /**
+   * @forwarded `...rest` → `Tooltip.Popup` → the `role="tooltip"` element's
+   * content. This is the tooltip's entire visible text, so a drop here would be
+   * an empty tooltip rather than a subtle one; it is claimed anyway, because
+   * "obviously it works" is what the four historical inert props also had.
+   */
   children?: LumoNode;
   className?: string | undefined;
 }

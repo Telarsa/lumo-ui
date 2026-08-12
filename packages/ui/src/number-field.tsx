@@ -204,11 +204,41 @@ interface NumberFieldPropsBase
   minValue?: number;
   /** The largest value allowed. */
   maxValue?: number;
-  /** The amount the value changes with each increment or decrement tick. */
+  /**
+   * The amount the value changes with each increment or decrement tick.
+   *
+   * Translated onto `NumberField.Root`'s own `step` below rather than left to
+   * ride `...rest`. The name happens to be identical in both engines — Base UI
+   * types it `step?: number | 'any'` — so this one was arriving; it is spelled
+   * out because "it happens to match" is not something a reader of this file
+   * could tell from a spread, and the two props below prove the assumption is
+   * not safe in general.
+   */
   step?: number;
-  /** Whether the field ignores the scroll wheel. */
+  /**
+   * Whether the field ignores the scroll wheel.
+   *
+   * ── TRANSLATED, NOT DROPPED: BASE UI SPELLS IT `allowWheelScrub` ───────────
+   *
+   * This is React Aria's name and Base UI 1.7.0 has the same capability under
+   * the opposite polarity (`allowWheelScrub`, read from
+   * `@base-ui/react/number-field/root/NumberFieldRoot.d.ts:92`). Riding `...rest`
+   * it reached `NumberField.Root` as a name nothing there reads, so the wheel
+   * behaved however the engine's default said and the prop was scenery.
+   *
+   * The translation is `!isWheelDisabled`, applied only when the caller set it:
+   * the two defaults do NOT correspond — React Aria's wheel was on unless
+   * disabled, Base UI's scrub is off unless allowed — so translating an absent
+   * prop would silently turn a behaviour ON for every existing caller.
+   */
   isWheelDisabled?: boolean;
-  /** Whether an out-of-range value snaps or is reported invalid. */
+  /**
+   * Whether an out-of-range value snaps or is reported invalid.
+   *
+   * Base UI 1.7.0's `snapOnStep` (`NumberFieldRoot.d.ts:97`), translated below:
+   * `"snap"` → `true`, `"validate"` → `false`, absent → absent. Same story as
+   * `isWheelDisabled` — the capability exists, only the spelling was lost.
+   */
   commitBehavior?: "snap" | "validate";
 }
 
@@ -249,6 +279,9 @@ export function NumberField({
   // — translated onto NumberField.Root —
   minValue,
   maxValue,
+  step,
+  isWheelDisabled,
+  commitBehavior,
   formatOptions,
   isDisabled,
   isReadOnly,
@@ -309,6 +342,13 @@ export function NumberField({
       className={cn("group/field", fieldVariants(), className)}
       {...attr("min", minValue)}
       {...attr("max", maxValue)}
+      {...attr("step", step)}
+      // Polarity flip, and only when the caller asked — see `isWheelDisabled`.
+      {...attr("allowWheelScrub", isWheelDisabled === undefined ? undefined : !isWheelDisabled)}
+      {...attr(
+        "snapOnStep",
+        commitBehavior === undefined ? undefined : commitBehavior === "snap",
+      )}
       {...attr("format", formatOptions)}
       {...attr("disabled", isDisabled)}
       {...attr("readOnly", isReadOnly)}

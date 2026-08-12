@@ -208,18 +208,35 @@ interface DateFieldPropsBase<T extends DateValue>
     SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
-  /** Describes the type of autocomplete functionality the input should provide. */
-  autoComplete?: string;
+  /*
+   * ── FIVE TYPE CARRIERS: THE HEADER'S OWN LIST, MOVED INTO THE TYPE ────────
+   *
+   * The block below this interface has enumerated these as accepted-and-ignored
+   * since the rebuild, and opens by saying exactly why that was not enough:
+   * *"`DateFieldProps` above is UNCHANGED — the experiment freezes the public
+   * API, and `tsc` is therefore silent about everything below. That silence is
+   * the problem."* `DateField` destructures a closed list and binds no rest, so
+   * each of these was accepted by the signature and discarded at the brace.
+   *
+   * These five are the ones this FILE declares, so they are the five it can fix.
+   * The rest of that list (`name`, `form`, `validate`, `isRequired`, `minValue`,
+   * `autoFocus`, …) arrives from `@lumo-ui/core`'s shared shapes, which are
+   * shared with components that DO implement them — narrowing them here would
+   * mean forking the vocabulary, and the gate that found these deliberately does
+   * not grade inherited props for that reason.
+   *
+   * `hourCycle`, `granularity` and `hideTimeZone` are the ones with teeth: the
+   * engine emits year/month/day only, so a `CalendarDateTime` loses its time
+   * half whatever these say. A compile error naming the prop is a better way to
+   * learn that than a field that silently edits three segments.
+   */
+  autoComplete?: undefined;
   /** A date that sets the field's granularity and era before a value exists. */
   placeholderValue?: T | null;
-  /** Whether the hour is shown on a 12- or 24-hour clock. */
-  hourCycle?: 12 | 24;
-  /** The smallest unit the field edits. */
-  granularity?: "day" | "hour" | "minute" | "second";
-  /** Whether the time zone segment is hidden. */
-  hideTimeZone?: boolean;
-  /** Whether single-digit segments are padded with a leading zero. */
-  shouldForceLeadingZeros?: boolean;
+  hourCycle?: undefined;
+  granularity?: undefined;
+  hideTimeZone?: undefined;
+  shouldForceLeadingZeros?: undefined;
 }
 
 export interface DateFieldProps<T extends DateValue> extends DateFieldPropsBase<T> {
@@ -268,6 +285,20 @@ export interface DateFieldProps<T extends DateValue> extends DateFieldPropsBase<
  * also dropped. That is roughly 90 more names, which is why the count in
  * `date-field-cost.json` is given as "props accepted and ignored" rather than
  * as a line delta: the line delta understates it.
+ *
+ * ── FIVE OF THEM ARE NO LONGER SILENT ─────────────────────────────────────
+ *
+ * `autoComplete`, `hourCycle`, `granularity`, `hideTimeZone` and
+ * `shouldForceLeadingZeros` are `?: undefined` type carriers as of 12 Aug 2026 —
+ * passing one is a compile error naming the prop, so the paragraph above is no
+ * longer the only thing between a caller and a no-op. They are the five this
+ * file DECLARES; everything else in the list is inherited from `@lumo-ui/core`
+ * shapes that other components implement, and narrowing a shared shape here
+ * would break the components that honour it.
+ *
+ * That distinction is the whole reason the list is still here. What changed is
+ * that the part of it this file owns is now enforced by `tsc` rather than by
+ * whether the reader got this far.
  */
 export function DateField<T extends DateValue>({
   label,

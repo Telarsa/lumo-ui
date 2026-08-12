@@ -710,8 +710,29 @@ export function ListBox<T extends object>({
 export interface ListBoxItemProps<T extends object = object> {
   /** The option's collection key. */
   id?: Key;
-  /** The item object this option was rendered from. */
-  value?: T;
+  /**
+   * TYPE CARRIER, NOT A PROP — React Aria's `value` was the item OBJECT a
+   * dynamic collection rendered an option from, and this component has no
+   * collection: `ListBoxItem` destructures six named props and binds no rest, so
+   * the object was accepted, held by nothing and read by nobody.
+   *
+   * The field survives so that a consumer's existing `ListBoxItemProps<City>`
+   * annotation keeps compiling and the type PARAMETER keeps its meaning — the
+   * argument `menu.tsx` and `combobox.tsx` both make for their own `value`.
+   * Those two spell it `T & never`; this one is `?: undefined`, which is the
+   * spelling AUDIT §2.5 asks for and `props.ts:882-889` explains: under
+   * `exactOptionalPropertyTypes` a `never` field rejects an explicit
+   * `undefined`, so `<ListBoxItem {...props}>` would stop compiling for a caller
+   * whose bag happens to carry `value: undefined`.
+   *
+   * Written `(T & never) | undefined` rather than a bare `undefined` for one
+   * mechanical reason: the type parameter has to stay READ or `noUnusedLocals`
+   * rejects the file, and dropping `<T>` is the API break this field exists to
+   * avoid. `T & never` collapses to `never`, `never | undefined` collapses to
+   * `undefined` — so the resolved type is exactly the carrier, an explicit
+   * `value: undefined` in a spread still compiles, and `T` keeps its job.
+   */
+  value?: (T & never) | undefined;
   /** The option's typeahead text, when its children are not a bare string. */
   textValue?: string;
   /** Whether this option is disabled. */

@@ -108,11 +108,20 @@ A rule that has never been seen to fail is not a rule. This caught a real one:
 | gate | what it proves |
 | --- | --- |
 | `gate:types` | `LumoNode`, the closed `Locale` union, and every required string prop |
+| `gate:props` | no prop is typed, accepted and then never delivered |
 | `gate:no-css-modules` | the styling decision is real, not a comment |
 | `gate:test` | 604 tests, including each gate's own poison fixtures |
 | `gate:registry` | the manifest is derivable from the code, not hand-kept |
 | `gate:smoke` | every item compiles as a **consumer** receives it, outside the workspace |
 | `gate:html` | the bytes actually served are correct |
+
+`gate:props` is the only one that reads SOURCE rather than output, because the
+defect it catches produces no output: a prop that is declared, accepted and
+dropped renders nothing, throws nothing and type-checks. Its first run found 45
+of them, including three that were worse than silent — `form.tsx` served
+`<label elementType="div">`, `number-field.tsx` served `commitBehavior="snap"`,
+and `disclosure.tsx` let a caller replace the `role="region"` the component
+exists for.
 
 Each proves something the one before it cannot. The smoke test in particular
 found a real distribution bug — a companion module missing from a registry item

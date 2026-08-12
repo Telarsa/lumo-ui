@@ -186,6 +186,14 @@ Others found: `isWheelDisabled`, `commitBehavior`, `arrowRef`, `getTargetRect`, 
 
 **The single highest-leverage fix in this document is the gate that makes this class stop recurring.**
 
+**Built, 12 Aug 2026** (§5 item 1.1). First run: **45 violations in 16 files**, all closed. What the sweep in this section could not see, and the gate did:
+
+- `disclosure.tsx`'s `role` was not merely inert — it was **delivered**, and it overwrote the `role="region"` the component exists for. Measured before the fix: `<div … aria-labelledby="…" role="group" label="برچسب" labelElementType="h4">`. An accepted-and-DELIVERED prop can be worse than an accepted-and-dropped one.
+- `number-field.tsx`'s pair leaked too: `<div data-lumo="" commitBehavior="snap" …>` in served bytes, with React 19 warning on both names. Base UI 1.7.0 has both capabilities under `allowWheelScrub` / `snapOnStep`, so the fix was a translation, not a removal.
+- `tooltip.tsx`'s `shouldCloseOnPress` is `Tooltip.Trigger`'s `closeOnClick`, and `delay`/`closeDelay` are on the same part. The file's header said all three were unreachable and cited `Tooltip.Root` and `Tooltip.Provider` — true when it was written, false against the installed 1.7.0. **A measurement is true on the day it is taken**, which is the argument for the gate rather than for a better comment.
+- `product-detail.tsx`'s `ratingCount` (listed above) is destructured and used at `:155`/`:212`. It is not a defect and was not one at `e7988b8` either.
+- `chart.tsx`'s `id` is read at `:417` to build `chartId`. The claim that `<ChartContainer id="sales">` emits no `id` **attribute** is separate and still stands; it is out of this gate's class, which grades delivery, not destination.
+
 ### 3.3 A rule that is described rather than running
 
 Three of this repository's own named failure modes are live simultaneously, and they are the same shape: **the difference between a gate that runs and a gate that is documented.**
@@ -306,7 +314,7 @@ Nothing new gets built until these are done. Each one either ships to users toda
 
 | # | Goal | Exit criterion |
 | --- | --- | --- |
-| 1.1 | **The inert-prop gate.** ~30 lines: fail on a prop declared in an exported `*Props` interface and referenced nowhere in its file. | Wired into `verify` between `gate:types` and `gate:test`. The three historical props are its fixtures. Returns 0 candidates. |
+| 1.1 | **The inert-prop gate.** ~30 lines: fail on a prop declared in an exported `*Props` interface and referenced nowhere in its file. | **DONE** — `packages/gate/src/inert-props.ts`, wired as `gate:props` between `gate:types` and `gate:test` and into CI, with a self-test that asserts the wiring. Returns 0. Three notes on the specification. (a) *"exported"* was too narrow: it finds 16 of 45, because `NumberFieldPropsBase`, `PopoverPropsBase`, `TreePropsBase`, `DisclosurePanelPropsBase` and `TooltipTriggerPropsBase` are module-private and hold most of the defects — the gate follows `extends`/`&`/`\|` from an exported root instead. (b) "referenced nowhere" is scoped per COMPONENT, not per file: `form.tsx` declares `elementType` on three interfaces, and one component's fix would otherwise silence the other two. (c) It is 400 lines, not 30, and the extra is entirely the difference between the three reasons a prop is unreferenced — `carrier` and `forwarded` pass, `dropped`/`dom-leak`/`unverified`/`orphan` fail. **First run: 45 violations across 16 files.** The four historical props are its poison fixtures, and `mute-attempt.bad.tsx` proves the one escape hatch cannot be used as a mute button. |
 | 1.2 | **Run the ESLint policy that already exists.** Add `eslint.config.js`, a `lint` script, and `react-hooks`. | `pnpm lint` in `verify`; the three `inset-x-` sites fixed or deliberately exempted; CONTRIBUTING.md's claim becomes true. |
 | 1.3 | **Fix the conditional hook** (§2.4). | Hoisted; `rules-of-hooks` green. |
 | 1.4 | **Fix the three Persian-route defects** (§2.1, §2.2, §2.3). | `thr`/`newest` gone from the export; 0 duplicate ids; `pageSizeLabel` required. |

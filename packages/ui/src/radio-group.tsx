@@ -335,7 +335,15 @@ interface RadioFieldPropsBase
   value: string;
   /** Whether this option is disabled. */
   isDisabled?: boolean;
-  /** A ref for the hidden `<input>` element. */
+  /**
+   * A ref for the hidden `<input>` element.
+   *
+   * @forwarded `...rest` → `Radio.Root`, which declares `inputRef` itself
+   * (`@base-ui/react/radio/root/RadioRoot.d.ts:71`) and points it at the hidden
+   * input it renders. One of the few React Aria names Base UI kept verbatim.
+   * Verified by rendering a `<Radio inputRef={ref}>` and reading `ref.current`:
+   * an `INPUT` with `type="radio"`, not the visible span.
+   */
   inputRef?: React.RefObject<HTMLInputElement | null>;
 }
 

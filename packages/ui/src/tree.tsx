@@ -33,11 +33,9 @@ import {
   cn,
   type CollectionStateBase,
   direction,
-  type DisabledBehavior,
   type DOMProps,
   type Expandable,
   type HoverEvents,
-  type FocusStrategy,
   type GlobalDOMAttributes,
   type Key,
   type LinkDOMProps,
@@ -45,7 +43,6 @@ import {
   type MultipleSelection,
   type PressEvents,
   type Selection as AriaSelection,
-  type SelectionBehavior,
   type SlotProps,
   type StyleProps,
 } from "@lumo-ui/core";
@@ -289,6 +286,25 @@ export {
  *     be toggled OUT of, because the component cannot enumerate keys it has not
  *     rendered. React Aria could, from its collection.
  *
+ * ═══ AND WHAT "LISTED AS LOST" NOW MEANS IN THE TYPE ════════════════════════
+ *
+ * This list used to end the discussion, and it was the only thing standing
+ * between a caller and a prop that did nothing: `selectionBehavior="replace"`
+ * compiled, rendered, and was read by nothing. `Tree` does not spread its rest
+ * anywhere — it casts it to the ten-name `TreeEngineProps` above and reads
+ * exactly those ten — so every OTHER name in the shape was accepted and
+ * discarded at the cast, with no attribute, no warning and no test to notice.
+ *
+ * Seven of them (items 3 and 5, plus `autoFocus`) and two on `TreeItem`
+ * (`focusMode`, `allowsArrowNavigation`) are now `?: undefined` type carriers.
+ * Passing one is a compile error naming the prop, which is the difference
+ * between a caller learning this in a paragraph they did not read and learning
+ * it from `tsc`. The fields survive rather than being deleted for
+ * `props.ts`'s `isPending` reason: a copied-in consumer's own
+ * `TreeProps`-derived annotation keeps compiling, and only passing a VALUE
+ * breaks. Found by `packages/gate/src/inert-props.ts`, which is what this list
+ * would have needed a human to do for it every time the code moved.
+ *
  * ═══ THE THREE THINGS THIS FILE STILL DECIDES ═══════════════════════════════
  *
  *  1. **`label` is required.** An unnamed `role="treegrid"` is announced as bare
@@ -530,8 +546,13 @@ interface TreePropsBase<T extends object>
     SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
-  /** Whether a row receives focus on mount, and from which end. */
-  autoFocus?: boolean | FocusStrategy;
+  /**
+   * TYPE CARRIER — this treegrid's tab stop starts `null` and the first byte
+   * carries `tabindex="0"` on the CONTAINER with no effect involved (see the
+   * header). Nothing here focuses a row on mount, and React Aria's
+   * `FocusStrategy` ("first" / "last") had a collection to pick that row from.
+   */
+  autoFocus?: undefined;
   /** Handler that is called when a row is activated. */
   onAction?: (key: Key) => void;
   /*
@@ -543,26 +564,36 @@ interface TreePropsBase<T extends object>
    * meant either keeping the dependency or inventing a shape nothing builds.
    * Recorded in "WHAT WAS LOST" rather than faked.
    */
-  /** How selection responds to a plain click. */
-  selectionBehavior?: SelectionBehavior;
-  /** Whether selection happens on press-up rather than press-down. */
-  shouldSelectOnPressUp?: boolean;
-  /** What Escape does inside the tree. */
-  escapeKeyBehavior?: "clearSelection" | "none";
-  /** Whether arrow keys or Tab move between rows. */
-  keyboardNavigationBehavior?: "arrow" | "tab";
-  /** Whether a disabled row is merely unselectable, or wholly inert. */
-  disabledBehavior?: DisabledBehavior;
-  /**
-   * What to draw when the tree has no rows.
+  /*
+   * ── FIVE TYPE CARRIERS: HEADER ITEM 5, MOVED OUT OF THE PROSE ─────────────
    *
-   * ACCEPTED AND UNREACHABLE — this engine has no collection layer, so it never
-   * calls the function. The argument is narrowed to the two flags a caller
-   * could have read here; React Aria also handed over its own `TreeState`
-   * object, which does not exist any more and could not be typed honestly.
-   * Recorded in the header's "WHAT WAS LOST" list.
+   * Selection here is `toggle`, a disabled row is skipped by navigation and by
+   * selection both, Escape clears nothing, and the arrows are the only way
+   * between rows. Those are the behaviours, they are not switchable, and each of
+   * these five props named a switch. Every one reached `props as
+   * TreeEngineProps` and stopped there.
+   *
+   * `keyboardNavigationBehavior="tab"` is the one worth naming: it promised the
+   * Tab key would move between rows, which is a materially different keyboard
+   * contract for a treegrid, and it changed nothing at all.
    */
-  renderEmptyState?: (props: { isFocused: boolean; isFocusVisible: boolean }) => LumoNode;
+  selectionBehavior?: undefined;
+  shouldSelectOnPressUp?: undefined;
+  escapeKeyBehavior?: undefined;
+  keyboardNavigationBehavior?: undefined;
+  disabledBehavior?: undefined;
+  /**
+   * TYPE CARRIER — what to draw when the tree has no rows, which this engine
+   * never draws.
+   *
+   * The docblock this replaces said "ACCEPTED AND UNREACHABLE" in prose and then
+   * typed a callable signature, so the honest sentence and the type disagreed
+   * and the type won: `renderEmptyState={() => <Empty/>}` compiled and was never
+   * called. There is no collection layer to call it. `data-empty` is still
+   * emitted on the container, so the empty case remains STYLEABLE — that is the
+   * replacement, and `treeVariants` already centres its content.
+   */
+  renderEmptyState?: undefined;
 }
 
 export interface TreeProps<T extends object> extends TreePropsBase<T> {
@@ -841,10 +872,16 @@ interface TreeItemPropsBase<T extends object>
   onAction?: () => void;
   /** Whether the row has children even before they are rendered. */
   hasChildItems?: boolean;
-  /** Whether focus lands on the row or on a child of it. */
-  focusMode?: "child" | "row";
-  /** Whether arrow keys navigate within the row. */
-  allowsArrowNavigation?: boolean;
+  /*
+   * Two more type carriers, for the reason the five on `TreePropsBase` are.
+   * `TreeItem` reads `props.id`, `props.hasChildItems`, `props.isDisabled`,
+   * `props.value`, `props.onAction` and `props["aria-label"]` by name and
+   * spreads nothing, so these two were read by nobody. Focus lands on the row —
+   * that is what the roving tab stop in the header describes — and the arrow
+   * keys move BETWEEN rows, which is the treegrid contract this file tests.
+   */
+  focusMode?: undefined;
+  allowsArrowNavigation?: undefined;
 }
 
 export interface TreeItemProps<T extends object = object> extends TreeItemPropsBase<T> {

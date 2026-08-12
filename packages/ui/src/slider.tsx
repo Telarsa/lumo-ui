@@ -211,7 +211,17 @@ interface SliderPropsBase
   minValue?: number;
   /** The largest value allowed. */
   maxValue?: number;
-  /** The amount the value changes with each tick. */
+  /**
+   * The amount the value changes with each tick.
+   *
+   * @forwarded `...rest` → `Slider.Root` → the hidden `<input type="range">`.
+   *
+   * Verified rather than assumed: `<Slider step={5}>` serves
+   * `<input … min="0" max="100" step="5" type="range">` and the same slider with
+   * no `step` serves `step="1"`, Base UI's default. The name survives the engine
+   * swap unchanged (`SliderRoot.d.ts:52`), unlike `number-field.tsx`'s
+   * `isWheelDisabled`, which is why that one is translated and this one is not.
+   */
   step?: number;
 }
 

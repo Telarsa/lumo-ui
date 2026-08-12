@@ -328,7 +328,22 @@ interface PopoverPropsBase
     GlobalDOMAttributes<HTMLDivElement> {
   "aria-label"?: string;
   "aria-labelledby"?: string;
+  /**
+   * @forwarded `...rest` → `Popover.Popup` → the `role="dialog"` element.
+   *
+   * Verified by rendering rather than assumed, which is the whole point of the
+   * tag: `<Popover aria-describedby="d1" aria-details="d2">` opened under
+   * Testing Library produces
+   * `<div role="dialog" aria-labelledby="_r_0_" aria-describedby="d1" …
+   * aria-details="d2">`. The two neighbours above are read out of `rest` by
+   * name in the component (the trigger-name fallback checks them), so only these
+   * two needed a claim — and the four props below this pair, declared in the
+   * same style and equally unread, turned out to reach the same `<div>` as
+   * INVALID attributes. Same spread, opposite outcome: that is why a spread is
+   * not evidence.
+   */
   "aria-describedby"?: string;
+  /** @forwarded `...rest` → `Popover.Popup`. See `aria-describedby`. */
   "aria-details"?: string;
   /** A ref to the element the popover is positioned against. */
   triggerRef?: React.RefObject<Element | null>;
@@ -466,6 +481,20 @@ export function Popover({
   //     RAC animation flags; Base UI drives transitions off data-starting-style
   //   maxHeight / scrollRef
   //     RAC clamped the popover to the viewport itself; Base UI leaves it to CSS
+  //   arrowRef / getTargetRect
+  //     ADDED 12 Aug 2026 by the inert-prop gate, and they are the argument for
+  //     having one. This block's comment said these props "cannot reach the
+  //     DOM", and it was true of the eleven names in it and false of these two,
+  //     which were declared six lines apart from `triggerRef` and `scrollRef`
+  //     and were never destructured — so they rode `...rest` onto
+  //     `Popover.Popup`, which forwards what it does not recognise to a real
+  //     `<div>`. `AUDIT.md` §3.1 predicted exactly this: the hand-maintained
+  //     banner listed five of eleven, because a list in a comment does not move
+  //     when the code does. Base UI positions the arrow with a `Popover.Arrow`
+  //     PART and the target rect with `Popover.Positioner`'s own anchor, so
+  //     neither has a prop to translate to here.
+  arrowRef: _arrowRef,
+  getTargetRect: _getTargetRect,
   isNonModal: _isNonModal,
   shouldFlip: _shouldFlip,
   triggerRef: _triggerRef,

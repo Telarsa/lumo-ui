@@ -20,10 +20,23 @@ import { formatDate, formatNumber, type Locale } from "@lumo-ui/core";
 export interface NumProps {
   value: number;
   locale: Locale;
-  /** Passed through to `Intl.NumberFormat`. */
+  /**
+   * @forwarded `...options` → `formatNumber(value, locale, options)` → `Intl.NumberFormat`.
+   *
+   * The four below are one rest binding, and the claim is measured rather than
+   * assumed — `<Num value={1234.5} locale="fa-IR" style="currency"
+   * currency="IRR" maximumFractionDigits={1} />` renders «‎ریال ۱٬۲۳۴٫۵» where
+   * the same value with no options renders «۱٬۲۳۴٫۵». The component names
+   * `value`, `locale` and `className` and lets everything else through, which is
+   * what keeps this shape a thin window onto `Intl.NumberFormatOptions` instead
+   * of a re-typed subset that drifts from it.
+   */
   style?: Intl.NumberFormatOptions["style"] | undefined;
+  /** @forwarded `...options` → `Intl.NumberFormat`. See `style`. */
   currency?: string | undefined;
+  /** @forwarded `...options` → `Intl.NumberFormat`. See `style`. */
   minimumFractionDigits?: number | undefined;
+  /** @forwarded `...options` → `Intl.NumberFormat`. See `style`. */
   maximumFractionDigits?: number | undefined;
   className?: string | undefined;
 }
@@ -39,9 +52,19 @@ export function Num({ value, locale, className, ...options }: NumProps) {
 export interface DateTextProps {
   value: Date;
   locale: Locale;
+  /**
+   * @forwarded `...options` → `formatDate(value, locale, options)` → `Intl.DateTimeFormat`.
+   *
+   * Measured the same way as `NumProps.style`: with `month="long" day="numeric"`
+   * a `fa-IR` date renders «۲۱ مرداد», and with no options «۱۴۰۵/۵/۲۱» — the
+   * Jalali calendar in both, which is the property this component exists for.
+   */
   dateStyle?: Intl.DateTimeFormatOptions["dateStyle"] | undefined;
+  /** @forwarded `...options` → `Intl.DateTimeFormat`. See `dateStyle`. */
   year?: Intl.DateTimeFormatOptions["year"] | undefined;
+  /** @forwarded `...options` → `Intl.DateTimeFormat`. See `dateStyle`. */
   month?: Intl.DateTimeFormatOptions["month"] | undefined;
+  /** @forwarded `...options` → `Intl.DateTimeFormat`. See `dateStyle`. */
   day?: Intl.DateTimeFormatOptions["day"] | undefined;
   className?: string | undefined;
 }

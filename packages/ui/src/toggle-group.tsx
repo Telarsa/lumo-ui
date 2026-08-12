@@ -204,6 +204,12 @@ export interface ToggleButtonProps extends VariantProps<typeof toggleButtonVaria
    * `data-orientation` and the composite's handlers all arrive here. This
    * function used to destructure a CLOSED list and spread nothing, so every one
    * of them was dropped on the floor. See the header.
+   *
+   * @forwarded `...rest` → `Toggle` → the `<button>`, spread LAST so a composite
+   * beats this component. Verified: `<ToggleButton tabIndex={-1}>` inside a
+   * `<ToggleButtonGroup>` serves `<button … tabindex="-1" aria-pressed="false">`
+   * — the injected value winning over the group's own tab stop, which is the
+   * whole reason the prop is declared.
    */
   tabIndex?: number | undefined;
 }

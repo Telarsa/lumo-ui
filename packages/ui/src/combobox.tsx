@@ -335,8 +335,20 @@ export interface ComboBoxItemProps<T extends object = object> {
   value?: T & never;
   /** The item's key. Maps to Base UI's `value`. */
   id?: string | undefined;
-  /** Typeahead string. Has no Base UI equivalent — see above. */
-  textValue?: string | undefined;
+  /**
+   * TYPE CARRIER, NOT A PROP — the typeahead string, which has no Base UI
+   * equivalent for the reason the docblock above sets out at length.
+   *
+   * It was typed `string | undefined` and read by nothing, which is the shape
+   * the docblock above described honestly and the type described wrongly:
+   * `<ComboBoxItem textValue="تهران">` compiled and changed nothing a keyboard
+   * could notice. The prose stays because the REASON is still the interesting
+   * part — `Combobox.Item` takes no per-item label, matching happens on the Root
+   * through `filter` and `itemToStringLabel` — and the type now says the same
+   * thing in the one place a caller cannot skip. Spelled `?: undefined` rather
+   * than deleted, per `props.ts`'s `isPending`.
+   */
+  textValue?: undefined;
   isDisabled?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;

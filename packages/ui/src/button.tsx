@@ -64,6 +64,15 @@ export type { ButtonVariantProps };
  */
 
 export interface ButtonProps extends ButtonPropsBase, ButtonVariantProps {
+  /**
+   * @forwarded `...rest` → `BaseButton` → the `<button>`'s content.
+   *
+   * React's own children, riding the same spread as every global DOM attribute
+   * this component does not translate. Verified: `<Button>ثبت</Button>` serves
+   * `<button …>ثبت</button>`. It is spelled out because the gate cannot tell a
+   * spread that delivers from one that leaks — `form.tsx` spread `elementType`
+   * exactly like this and served an invalid attribute.
+   */
   children?: LumoNode;
   className?: string | undefined;
 }

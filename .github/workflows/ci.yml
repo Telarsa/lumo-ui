@@ -81,6 +81,14 @@ jobs:
       - name: Types
         run: pnpm run gate:types
 
+      # A prop that is typed, accepted and never delivered. It renders nothing,
+      # throws nothing and type-checks, so it is invisible to every step below
+      # this one — the tests it breaks are tests nobody wrote. Runs straight
+      # after Types because a file that does not compile has a better error
+      # waiting for it, and before Tests because an inert prop makes tests PASS.
+      - name: Inert props
+        run: pnpm run gate:props
+
       # The mechanical form of the styling decision. Without it, "we use
       # Tailwind" is a comment.
       - name: No CSS Modules

@@ -165,6 +165,13 @@ interface ToggleButtonPropsBase
 export interface ToggleProps
   extends ToggleButtonPropsBase,
     Omit<ToggleVariantProps, "iconOnly"> {
+  /**
+   * @forwarded `...props` → `toBaseToggleProps` → `BaseToggle` → the `<button>`.
+   *
+   * The one hop more than `button.tsx`: the rest bag goes through the shared
+   * translator, which spreads `...(rest as object)` into what it returns.
+   * Verified: `<Toggle>پررنگ</Toggle>` serves `<button … aria-pressed="false">پررنگ</button>`.
+   */
   children?: LumoNode;
   className?: string | undefined;
 }

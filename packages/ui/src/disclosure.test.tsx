@@ -145,3 +145,49 @@ describe("Disclosure — an expanded panel is a NAMED region", () => {
     expect(html).toContain("هزینه ارسال");
   });
 });
+
+/**
+ * `role`, `label` and `labelElementType` — three props that reached the panel's
+ * `<div>` and one of them undid this component's reason to exist.
+ *
+ * They were React Aria's `DisclosurePanel` props, kept in the type through the
+ * Base UI migration and destructured by nobody, so they rode `...rest` into
+ * `Accordion.Panel`, which forwards what it does not recognise. Measured before
+ * the 12 Aug 2026 fix, one expanded panel with all three set:
+ *
+ *     <div … aria-labelledby="…" role="group" label="برچسب"
+ *            labelElementType="h4" class="pb-4 …">متن</div>
+ *
+ * `role="group"` is the one that matters. The first test in this file says the
+ * choice of `Accordion` over `Collapsible` "rests entirely on the panel carrying
+ * `role="region"` and a name" — and a public prop, documented with
+ * `@default 'group'`, removed exactly that.
+ *
+ * All three are `?: undefined` carriers now, so the props below are a compile
+ * error and reach the component through a cast. As in `form-family.test.tsx`,
+ * the cast is deliberate: it is the JavaScript caller the type cannot reach.
+ */
+describe("the panel keeps its region, whatever a caller passes", () => {
+  const inert = {
+    role: "group",
+    label: "برچسب",
+    labelElementType: "h4",
+  } as Record<string, unknown>;
+
+  it("still serves role=region, and none of the three as attributes", () => {
+    const html = renderToStaticMarkup(
+      <DisclosureGroup defaultExpandedKeys={["a"]}>
+        <Disclosure id="a">
+          <DisclosureTrigger>عنوان</DisclosureTrigger>
+          <DisclosurePanel {...inert}>متن</DisclosurePanel>
+        </Disclosure>
+      </DisclosureGroup>,
+    );
+    expect(html).toContain('role="region"');
+    expect(html).not.toContain('role="group"');
+    expect(html).not.toContain("labelElementType");
+    expect(html).not.toContain('label="برچسب"');
+    // The panel's own name still comes from its trigger.
+    expect(html).toMatch(/aria-labelledby="[^"]+"/);
+  });
+});

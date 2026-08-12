@@ -303,6 +303,15 @@ export interface MenuProps<T extends object> {
    * It is declared here, on the part the caller writes it on, and LIFTED to the
    * popup by `MenuPopover` — because `Menu` renders INSIDE `Menu.Popup`, and
    * the element that carries `role="menu"` is the popup, one level up.
+   *
+   * @forwarded `MenuPopover` reads it off this component's element with
+   * `findChildProp(children, "aria-label")` and spreads it onto `Menu.Popup`.
+   *
+   * The tag is here because `Menu` itself destructures `className`, `onAction`
+   * and `children` and binds no rest, so from inside this component the prop is
+   * shaped exactly like a dropped one — the delivery is a string literal in a
+   * sibling component seventy lines down. That is a real delivery path and an
+   * unusually invisible one, which is the case the tag exists for.
    */
   "aria-label"?: string | undefined;
   className?: string | undefined;

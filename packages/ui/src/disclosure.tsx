@@ -398,16 +398,37 @@ interface DisclosurePanelPropsBase
     StyleProps,
     AriaLabelingProps,
     GlobalDOMAttributes<HTMLDivElement> {
-  /** The content to display as the panel's label. */
-  label?: React.ReactNode;
-  /** The element type of the label. */
-  labelElementType?: React.ElementType;
-  /**
-   * The landmark role for the panel.
+  /*
+   * ── THREE TYPE CARRIERS, AND THE MARKUP THAT MADE THEM ONE ─────────────────
    *
-   * @default 'group'
+   * These are React Aria's `DisclosurePanel` props. All three survived the Base
+   * UI migration in the type and in the docblock only: `DisclosurePanel`
+   * destructures `className`, `children`, `keepMounted` and `style`, and
+   * everything else rides `...rest` into `Accordion.Panel`, which forwards what
+   * it does not recognise straight to its `<div>`. Measured with
+   * `renderToStaticMarkup` before this fix — one expanded panel, all three props
+   * set, the served attributes verbatim:
+   *
+   *     <div … aria-labelledby="base-ui-_R_0H2_" role="group"
+   *            label="برچسب" labelElementType="h4" class="pb-4 …">متن</div>
+   *
+   * So `label` and `labelElementType` are invalid attributes on a real element
+   * — `form.tsx`'s `elementType` defect, one component over — and `role` is
+   * WORSE than inert: it is delivered, and what it delivers is the removal of
+   * the `role="region"` this component exists for. `disclosure.test.tsx` opens
+   * by saying so: *"the choice of `Accordion` over `Collapsible` rests entirely
+   * on the panel carrying `role="region"` and a name"*. A public prop whose
+   * documented default (`'group'`) undoes the component's reason to exist is not
+   * an escape hatch; the panel's name comes from its own trigger through
+   * `aria-labelledby`, which is visible in the same bytes above.
+   *
+   * Spelled `?: undefined`, not deleted and not `?: never` — `props.ts`'s
+   * `isPending` argument, unchanged. They are also destructured out below, so a
+   * JavaScript caller who never sees the type cannot serve the attribute either.
    */
-  role?: "group" | "region";
+  label?: undefined;
+  labelElementType?: undefined;
+  role?: undefined;
 }
 
 export interface DisclosurePanelProps extends DisclosurePanelPropsBase {
@@ -428,6 +449,11 @@ export function DisclosurePanel({
   children,
   keepMounted,
   style: _style,
+  // Destructured for the sole purpose of not spreading them; the type carriers
+  // above carry the evidence and the reason.
+  label: _label,
+  labelElementType: _labelElementType,
+  role: _role,
   ...rest
 }: DisclosurePanelProps) {
   return (

@@ -542,3 +542,55 @@ describe("server and client agree", () => {
     expect(control.getAttribute("aria-invalid")).toBe("true");
   });
 });
+
+/**
+ * `step`, `isWheelDisabled` and `commitBehavior` — TRANSLATED, not dropped.
+ *
+ * All three were declared on `NumberFieldPropsBase` and read by nothing; they
+ * rode `...rest` onto `NumberField.Root` under React Aria's spelling, which the
+ * engine does not know. Base UI 1.7.0 has all three capabilities under two
+ * different names (`NumberFieldRoot.d.ts`): `step` (line 46), `allowWheelScrub`
+ * (92) and `snapOnStep` (97) — so this was a translation gap, not a missing
+ * feature, which is the best outcome available for an inert prop and the reason
+ * these two are not type carriers.
+ *
+ * `step` is the one with a served receipt: it reaches the hidden
+ * `<input type="number">` Base UI renders for form submission. The other two are
+ * behavioural — the wheel and the snap — and have no attribute to assert on, so
+ * what is pinned here is the other half of the defect: neither name may appear
+ * in the bytes, because that is what "the engine did not recognise it" looked
+ * like.
+ */
+describe("NumberField translates the three props it used to accept and ignore", () => {
+  it("step reaches the engine's hidden input", () => {
+    const withStep = renderToStaticMarkup(
+      <NumberField
+        label="تعداد" decrementLabel="کاهش" incrementLabel="افزایش"
+        roleDescription="فیلد عدد" step={5} defaultValue={3}
+      />,
+    );
+    const without = renderToStaticMarkup(
+      <NumberField
+        label="تعداد" decrementLabel="کاهش" incrementLabel="افزایش"
+        roleDescription="فیلد عدد" defaultValue={3}
+      />,
+    );
+    expect(withStep).toContain('step="5"');
+    expect(without).not.toContain('step="5"');
+  });
+
+  it("and the two React Aria names never reach the DOM", () => {
+    const html = renderToStaticMarkup(
+      <NumberField
+        label="تعداد" decrementLabel="کاهش" incrementLabel="افزایش"
+        roleDescription="فیلد عدد" isWheelDisabled commitBehavior="snap"
+      />,
+    );
+    expect(html).not.toContain("isWheelDisabled");
+    expect(html).not.toContain("commitBehavior");
+    // Base UI's own names are behavioural props, not attributes — neither is a
+    // thing the DOM should carry either.
+    expect(html).not.toContain("allowWheelScrub");
+    expect(html).not.toContain("snapOnStep");
+  });
+});

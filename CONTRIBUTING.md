@@ -6,7 +6,7 @@ comment states the rules; this file is the procedure around it.
 ## The loop
 
 ```bash
-pnpm verify          # types → no-CSS-Modules → tests → build → gate
+pnpm verify          # types → inert props → no-CSS-Modules → tests → build → gate
 ```
 
 If `verify` is green the change is shippable. Nothing else is a gate.
@@ -114,6 +114,45 @@ Then check the rule can actually fail — break it deliberately and watch the
 suite go red. A rule that has never been observed failing is decoration. One
 shipped in this repo that swallowed an exception and reported green forever; the
 fixture caught it within a minute.
+
+## The other gate: props that are accepted and never delivered
+
+`pnpm gate:props` grades SOURCE, not HTML, because this defect usually produces
+no bytes at all. It fails on a prop a component file declares and does not
+deliver — the class that has already cost this repository four postmortems
+(`isPending`, `preventFocusOnPress`, `isKeyboardDismissDisabled`, `form.tsx`'s
+`elementType`, which served `<label elementType="div">` to every reader).
+
+Three answers when it fires, in order of preference:
+
+```tsx
+{...attr("allowWheelScrub", …)}   // TRANSLATE — the engine has it under another name
+isKeyboardDismissDisabled          // RELOCATE — to the part that owns the state
+elementType?: undefined;           // MAKE IT UNREPRESENTABLE — a type carrier
+```
+
+**Never `?: never`.** Under `exactOptionalPropertyTypes` a `never` field rejects
+an explicit `undefined`, so it breaks a spread that was already correct;
+`packages/core/src/props.ts` sets this out at length. And destructure the field
+out of the component as well as narrowing the type — the type protects a caller
+who compiles, the destructure protects the bytes from one who does not.
+
+The fourth answer is a claim, and it is checked:
+
+```tsx
+/** @forwarded `...rest` → `Slider.Root` → the hidden `<input type="range">`. */
+step?: number;
+```
+
+`@forwarded` clears a prop that rides a rest spread the gate cannot follow. It is
+admissible only when the gate can independently see a delivery path, so it cannot
+be used on a prop that is simply dropped — `fixtures/inert-props/mute-attempt.bad.tsx`
+is the test that keeps it that way. Write the destination and the evidence you
+measured, not "forwarded".
+
+Fixtures live in `packages/gate/fixtures/inert-props/`, one per failing verdict
+plus `good.tsx`, which holds the three legitimate reasons a prop can be
+unreferenced and must stay clean.
 
 ## Adding a locale
 
