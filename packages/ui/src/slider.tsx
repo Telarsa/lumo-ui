@@ -339,6 +339,21 @@ export function Slider({
              */}
             <BaseSlider.Thumb
               data-lumo=""
+              /*
+               * The opt-in for `theme.css`'s proxy-focus ring. This thumb is
+               * the box a reader looks at, and the focus stop is an
+               * `<input type="range">` clipped to nothing INSIDE it — so the
+               * ordinary `[data-lumo]:focus-visible` rule matches something
+               * with no painted area and the thumb never rings.
+               *
+               * Stated here rather than inferred from structure. The rule was
+               * once written to fire on any marked element containing a focused
+               * input, which also described every text field on the site and
+               * drew a second ring around the label and description. A
+               * component that hides its control knows it does; nothing else
+               * can tell.
+               */
+              data-lumo-proxy-focus=""
               aria-label={label}
               // No explicit `index`: a single thumb resolves to 0 on its own,
               // and pinning it would change the generated ids the existing

@@ -56,6 +56,7 @@ export interface InstallTabsProps {
 }
 
 import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
+import { segmentFor } from "@/lib/locale";
 
 const COPY: Record<
   Locale,
@@ -230,7 +231,7 @@ export function InstallTabs({
                    * noun, not prose, so it is an LTR island like the file
                    * paths above rather than something to translate. */}
                   <Link
-                    href={`/${locale}/components/${name}/`}
+                    href={`/${segmentFor(locale)}/components/${name}/`}
                     dir="ltr"
                     lang="en"
                     data-lumo-latn=""

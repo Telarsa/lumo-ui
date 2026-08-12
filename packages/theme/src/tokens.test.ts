@@ -161,3 +161,51 @@ describe("theme — Persian typography is scoped to language, not direction", ()
     expect(scriptBlock).toContain("font-synthesis: none");
   });
 });
+
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * THE FOCUS RING, AND THE ONE TIME IT PAINTED THE WRONG BOX
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * `theme.css` carries a second focus rule for controls whose real focus stop is
+ * hidden inside the box you actually see — Base UI's `Slider.Thumb` holds an
+ * `<input type="range">` clipped to nothing, so the ordinary
+ * `[data-lumo]:focus-visible` rule matches something with no painted area.
+ *
+ * That rule shipped as `:where([data-lumo]):has(> input:focus-visible)`, which
+ * ALSO describes every text field on the site: `BaseField.Root` carries
+ * `data-lumo` and the `<input>` is its direct child, so focusing one drew a
+ * second ring around the label, the control and the description together. It
+ * was reported from the built site — "black lines all around it" — and no test
+ * saw it, because no test existed. This is that test.
+ *
+ * It is a SOURCE assertion rather than a rendered one on purpose: `:has()`
+ * support in jsdom is a moving target, and a test that silently stops
+ * evaluating the selector would report green for the same reason the rule
+ * shipped. Asserting the selector's SHAPE cannot go quiet.
+ */
+describe("the proxy-focus ring", () => {
+  it("is opt-in, never structural", () => {
+    /*
+     * Comments stripped first. Without that, this fails on the docblock in
+     * `theme.css` that QUOTES the broken selector while explaining it — the
+     * assertion matching its own explanation. That is the second time this
+     * session a source-shape check caught its own reflection (the first was
+     * the landing page's `formatNumber` guard), which is worth noting as a
+     * property of the technique rather than a one-off: a check that forbids a
+     * string also forbids describing it, and the description is the thing
+     * that stops the bug coming back.
+     */
+    const rules = THEME.replace(/\/\*[\s\S]*?\*\//g, "");
+    // The broad form is the bug. Naming it here means a revert to it fails.
+    expect(rules).not.toContain(":where([data-lumo]):has(> input:focus-visible)");
+    expect(rules).toContain(":where([data-lumo-proxy-focus]):has(> input:focus-visible)");
+  });
+
+  it("still draws the same ring as the ordinary rule", () => {
+    // Two rules, one appearance. A separate treatment for hidden-control
+    // components would make focus mean two different things on one page.
+    const rings = THEME.match(/outline: var\(--lumo-sys-focus-width\) solid var\(--lumo-sys-focus\)/g);
+    expect(rings?.length).toBe(2);
+  });
+});

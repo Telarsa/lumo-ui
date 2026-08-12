@@ -72,12 +72,30 @@
    * class of defect this library exists to catch.
    *
    * `:has()` fixes it where the component cannot: the visible element rings
-   * when it CONTAINS the focused input. Scoped to `[data-lumo]` like everything
-   * else here, and using `:focus-visible` on the input so it still stays quiet
-   * for a mouse. Any future primitive that hides its real control behind a
-   * painted one is covered by the same rule rather than needing its own.
+   * when it CONTAINS the focused input, and `:focus-visible` on that input
+   * keeps it quiet for a mouse.
+   *
+   * ── WHY THIS IS OPT-IN, AND NOT `[data-lumo]` ────────────────────────────
+   *
+   * It was written as `:where([data-lumo]):has(> input:focus-visible)` — any
+   * marked element holding a focused input — on the theory that a future
+   * primitive hiding its control behind a painted one would be covered for
+   * free. That was wrong in a way a screenshot shows instantly and no test
+   * caught: `BaseField.Root` carries `data-lumo` and the `<input>` is its
+   * DIRECT CHILD, so focusing any ordinary text field drew TWO rings — the
+   * input's own, plus a second one boxing the label, the control and the
+   * description together. Reported from the built site as "black lines all
+   * around it… this happens almost everywhere", and it did.
+   *
+   * The generality was the defect. A rule that fires on structure fires on
+   * every structure that happens to match, and "an input inside a marked
+   * element" describes the normal case, not the exceptional one. So the marker
+   * is explicit: a component states that its visible box stands in for a
+   * control it hides. Same shape as `data-lumo-widget-cell` in `table.tsx`,
+   * and for the same reason — the components that delegate KNOW they delegate,
+   * and inference cannot tell them from the ones that do not.
    */
-  :where([data-lumo]):has(> input:focus-visible) {
+  :where([data-lumo-proxy-focus]):has(> input:focus-visible) {
     outline: var(--lumo-sys-focus-width) solid var(--lumo-sys-focus);
     outline-offset: var(--lumo-sys-focus-offset);
   }

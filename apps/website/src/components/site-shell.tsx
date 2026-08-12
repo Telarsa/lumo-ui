@@ -187,7 +187,7 @@ export async function SiteShell({
                       <MenuItem
                         key={locale}
                         id={locale}
-                        href={`/${locale}/${path}`}
+                        href={`/${segmentFor(locale)}/${path}`}
                         hrefLang={locale}
                         textValue={LOCALE_NAMES[locale]}
                         // Draws the tick AND emits `aria-current` — one prop,

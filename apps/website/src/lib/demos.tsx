@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { formatNumber, stringsFor } from "@lumo-ui/core";
+import { segmentFor } from "./locale";
 import {
   Alert,
   AlertDialog,
@@ -977,8 +978,8 @@ const DEMOS: Demo[] = [
     source: source("link.tsx"),
     render: (l) => (
       <div className="flex flex-wrap items-center gap-5">
-        <Link href={`/${l}/components/`}>{copy.componentGuide[l]}</Link>
-        <Link href={`/${l}/`} variant="subtle">
+        <Link href={`/${segmentFor(l)}/components/`}>{copy.componentGuide[l]}</Link>
+        <Link href={`/${segmentFor(l)}/`} variant="subtle">
           {copy.changelog[l]}
         </Link>
         <Link
@@ -1762,7 +1763,7 @@ const DEMOS: Demo[] = [
         {copy.maintainedBy[l]}{" "}
         <HoverCard
           label={copy.profilePreview[l]}
-          trigger={<Link href={`/${l}/components/`}>{copy.authorName[l]}</Link>}
+          trigger={<Link href={`/${segmentFor(l)}/components/`}>{copy.authorName[l]}</Link>}
         >
           <span className="font-medium text-fg">{copy.authorName[l]}</span>
           <span className="text-fg-muted">{copy.authorBio[l]}</span>
