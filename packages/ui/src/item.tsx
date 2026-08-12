@@ -1,6 +1,6 @@
 "use client";
 
-import type { AnchorHTMLAttributes, HTMLAttributes, MouseEvent as ReactMouseEvent } from "react";
+import type { ComponentProps, MouseEvent as ReactMouseEvent } from "react";
 import { Button as BaseButton } from "@base-ui/react/button";
 // `onPress` hands back a `PressEvent`, the shape the frozen public API promises
 // and `base-ui-adapter.ts` builds from a real click.
@@ -109,14 +109,14 @@ interface ItemCommonProps extends Omit<ItemVariantProps, "interactive"> {
 
 export interface ItemLinkProps
   extends ItemCommonProps,
-    Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "children" | "className" | "target" | "rel"> {
+    Omit<ComponentProps<"a">, "children" | "className" | "target" | "rel"> {
   /** Renders the row as a real anchor. */
   href: string;
 }
 
 export interface ItemButtonProps
   extends ItemCommonProps,
-    Omit<HTMLAttributes<HTMLButtonElement>, "children" | "className" | "onClick"> {
+    Omit<ComponentProps<"button">, "children" | "className" | "onClick"> {
   href?: undefined;
   /** Renders the row as a button. Required — a handler-less button is a static row. */
   onPress: (e: PressEvent) => void;
@@ -124,7 +124,7 @@ export interface ItemButtonProps
 
 export interface ItemStaticProps
   extends ItemCommonProps,
-    Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+    Omit<ComponentProps<"div">, "children" | "className"> {
   href?: undefined;
   onPress?: undefined;
 }
@@ -163,7 +163,7 @@ export function Item(props: ItemProps) {
 }
 
 export interface ItemSectionProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -203,7 +203,7 @@ export function ItemTitle({ className, ...props }: ItemSectionProps) {
 }
 
 export interface ItemDescriptionProps
-  extends Omit<HTMLAttributes<HTMLParagraphElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"p">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }

@@ -320,8 +320,17 @@ export function PopoverTrigger({
  * the last is redeclared below as the logical-only `LumoPlacement`.
  */
 interface PopoverPropsBase
-  extends Omit<PositionProps, "placement">,
-    OverlayTriggerProps,
+  /*
+   * `isOpen` goes with `placement`, and `OverlayTriggerProps` is gone from this
+   * list entirely — see `OverlayOpenStateKeys` in `props.ts`. Open state under
+   * Base UI belongs to `Popover.Root`, which `PopoverTrigger` renders and this
+   * SURFACE is rendered inside; all three props were destructured into `_`
+   * discards below and did nothing. `PositionProps` carries a fourth spelling
+   * of the same idea (`isOpen`, "whether the overlay is currently open") and it
+   * was equally inert, so it is subtracted here rather than left as the one
+   * survivor of a removed set.
+   */
+  extends Omit<PositionProps, "placement" | "isOpen">,
     FocusWithinEvents,
     SlotProps,
     StyleProps,
@@ -422,7 +431,7 @@ interface PopoverPropsBase
  * toward filler written for an attribute's sake.
  */
 export interface PopoverDescriptionProps
-  extends Omit<React.HTMLAttributes<HTMLParagraphElement>, "children" | "className"> {
+  extends Omit<React.ComponentProps<"p">, "children" | "className"> {
   /** Swap the rendered element, e.g. `render={<div />}` for block content. */
   render?: React.ReactElement<Record<string, unknown>> | undefined;
   children?: LumoNode;
@@ -509,9 +518,6 @@ export function Popover({
   arrowBoundaryOffset: _arrowBoundaryOffset,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
   UNSTABLE_portalContainer: _portalContainer,
-  isOpen: _isOpen,
-  defaultOpen: _defaultOpen,
-  onOpenChange: _onOpenChange,
   trigger: _trigger,
   // `render`, `slot` and `style` are RAC-shaped and collide with Base UI's own
   // props of the same name — the spread below does not type-check without them.

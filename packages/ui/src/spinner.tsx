@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@lumo-ui/core";
 
@@ -64,7 +64,7 @@ export const spinnerVariants = cva(
 );
 
 export interface SpinnerProps
-  extends Omit<HTMLAttributes<HTMLSpanElement>, "children" | "className" | "role">,
+  extends Omit<ComponentProps<"span">, "children" | "className" | "role">,
     VariantProps<typeof spinnerVariants> {
   /**
    * What is being waited for, in the reader's language, e.g. «در حال بارگذاری…».

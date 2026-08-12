@@ -12,7 +12,14 @@
  */
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { formatPropViolations, gradeSource, type PropViolation } from "./inert-props.ts";
+import {
+  formatPropViolations,
+  formatRootViolations,
+  gradeRootContract,
+  gradeSource,
+  type PropViolation,
+  type RootViolation,
+} from "./inert-props.ts";
 
 const roots = process.argv.slice(2);
 if (roots.length === 0) {
@@ -49,11 +56,27 @@ if (files.length === 0) {
   process.exit(2);
 }
 
+/*
+ * TWO RULES, ONE PASS. `gradeSource` grades the props a file DECLARES;
+ * `gradeRootContract` grades the DOM surface it INHERITS — the `ref`/`id`
+ * contract decided in `@lumo-ui/core`'s props.ts. They are reported separately
+ * because they fail for different reasons and are fixed by different edits, and
+ * they exit together because a build is one answer.
+ */
 const violations: PropViolation[] = [];
+const roots_: RootViolation[] = [];
 for (const file of files) {
-  violations.push(...gradeSource(relative(process.cwd(), file), await readFile(file, "utf8")));
+  const path = relative(process.cwd(), file);
+  const text = await readFile(file, "utf8");
+  violations.push(...gradeSource(path, text));
+  roots_.push(...gradeRootContract(path, text));
 }
 
 console.log(formatPropViolations(violations));
-console.log(`  ${String(files.length)} component file(s) graded, ${String(violations.length)} violation(s)`);
-process.exit(violations.length ? 1 : 0);
+console.log(formatRootViolations(roots_));
+const total = violations.length + roots_.length;
+console.log(
+  `  ${String(files.length)} component file(s) graded, ${String(violations.length)} inert-prop ` +
+    `violation(s), ${String(roots_.length)} root-contract violation(s)`,
+);
+process.exit(total ? 1 : 0);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type ComponentProps } from "react";
 import { DayPicker } from "react-day-picker";
 import type { CalendarDate } from "@internationalized/date";
 import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
@@ -74,7 +74,20 @@ export interface CalendarDateRange {
   to?: CalendarDate | undefined;
 }
 
-export interface RangeCalendarBaseProps {
+export interface RangeCalendarBaseProps
+  /*
+   * The root DOM surface. `aria-describedby` is declared BELOW and delivered by
+   * name rather than inherited, because it is merged with the id of the
+   * component's own `description` node — two sources, one attribute — so it
+   * cannot ride the passthrough. See the contract in `props.ts`.
+   */
+  extends Omit<
+    ComponentProps<"div">,
+    /* `onChange` is the library's own vocabulary — `(value) => void`, not
+     * React's `ChangeEventHandler`. Subtracting the DOM spelling is what lets
+     * the Lumo one be declared below; the two cannot coexist under one name. */
+    "children" | "className" | "aria-describedby" | "onChange"
+  > {
   /** Announced name of the calendar. Required. */
   label: string;
   /** Selects the calendar system, the digits, the week start and the direction. */
@@ -118,6 +131,7 @@ export function RangeCalendar({
   errorMessage,
   className,
   "aria-describedby": describedBy,
+  ...props
 }: RangeCalendarProps) {
   const descriptionId = useId();
   const config = lumoCalendar(locale);
@@ -141,6 +155,7 @@ export function RangeCalendar({
 
   return (
     <div
+      {...props}
       data-lumo=""
       className={cn("flex w-fit flex-col gap-2", className)}
       {...describedByWith(describedBy, description != null ? descriptionId : undefined)}

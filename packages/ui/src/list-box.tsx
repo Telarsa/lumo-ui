@@ -9,6 +9,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ComponentProps,
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
   type ReactElement,
@@ -289,7 +290,30 @@ function startsWithFolded(text: string, query: string, collator: Intl.Collator):
  * does not implement, so passing it is a compile error naming the call site.
  * See the header for the list and the argument.
  */
-export interface ListBoxProps<T extends object> {
+export interface ListBoxProps<T extends object>
+  /*
+   * `ref` and `onKeyDown` are owned for `TableProps`' reason and with the same
+   * consequence: `ref` below is what the roving tab stop reads the option
+   * elements out of, and `onKeyDown` IS the navigation model. `role`,
+   * `aria-label`, `aria-orientation` and `aria-multiselectable` are written by
+   * the component from props that are already required or defaulted.
+   *
+   * `id` stays declared BELOW rather than inherited, because it is delivered
+   * through `optional("id", id)` and read by the option elements' `aria-*`
+   * wiring — it is not a passthrough.
+   */
+  extends Omit<
+    ComponentProps<"div">,
+    | "children"
+    | "className"
+    | "id"
+    | "ref"
+    | "onKeyDown"
+    | "role"
+    | "aria-label"
+    | "aria-orientation"
+    | "aria-multiselectable"
+  > {
   /** The list's DOM id. */
   id?: string;
   /** Item objects for the collection render form. */
@@ -334,6 +358,7 @@ export function ListBox<T extends object>({
   onAction,
   orientation = "vertical",
   shouldFocusWrap,
+  ...props
 }: ListBoxProps<T>) {
   const locale = useLumoLocale();
   const ref = useRef<HTMLDivElement>(null);
@@ -647,6 +672,7 @@ export function ListBox<T extends object>({
   return (
     <ListBoxContext.Provider value={context}>
       <div
+        {...props}
         ref={ref}
         data-lumo=""
         role="listbox"

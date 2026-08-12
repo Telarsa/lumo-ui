@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { cn } from "./cn";
@@ -106,5 +106,45 @@ describe("the control-* namespace", () => {
     for (const size of published) {
       expect(cn(`h-control-${size}`, `h-control-${size}`)).toBe(`h-control-${size}`);
     }
+  });
+});
+
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * CORE'S SHIPPED MODULES STAY NODE-FREE
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * `packages/core/tsconfig.json` used to say `"types": []`, and that was not an
+ * oversight — core is imported by every component and travels to consumers as a
+ * pinned git dependency, so a `node:*` import in a shipped module would break a
+ * browser bundle for everyone who copied a component in.
+ *
+ * The test above broke that guard by needing Node's types to read `theme.css`,
+ * so `"types"` became `["node"]` and the property stopped being enforced by
+ * anything. This is the property, enforced directly — which is the better
+ * instrument anyway: an empty `types` array forbade the IMPORT by making the
+ * whole suite typeless, where what anyone actually cares about is that the
+ * SHIPPED files stay clean. Tests may read the disk; `index.ts` may not.
+ */
+describe("core ships nothing that needs Node", () => {
+  it("has no node: import outside a test file", () => {
+    const dir = join(import.meta.dirname);
+    const offenders: string[] = [];
+    const walk = (d: string): void => {
+      for (const entry of readdirSync(d, { withFileTypes: true })) {
+        const path = join(d, entry.name);
+        if (entry.isDirectory()) {
+          walk(path);
+        } else if (/\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name)) {
+          // Comments stripped: this file's own prose says `node:*` while
+          // explaining the rule, and a check that forbids describing itself is
+          // one this repository has now written twice by accident.
+          const text = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+          if (/from\s+["']node:/.test(text)) offenders.push(entry.name);
+        }
+      }
+    };
+    walk(dir);
+    expect(offenders).toEqual([]);
   });
 });

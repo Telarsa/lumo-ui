@@ -739,3 +739,306 @@ function isCarrier(typeText: string): boolean {
 function isDomProp(name: string): boolean {
   return DOM_PATTERN.test(name) || DOM_PROPS.has(name);
 }
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE ROOT CONTRACT — SECOND RULE, SAME FILE, SAME PARSE
+ *
+ * `props.ts` decided on 12 Aug 2026 that a component's props extend the DOM
+ * surface of the element it renders, minus what it owns: "omit what you own,
+ * spread the rest". A written contract decays — this is the part that does not.
+ * AUDIT.md §5 item 2.1 asks for exactly this ("enforced by 1.1's gate").
+ *
+ * It lives beside `gradeSource` rather than in a file of its own because it
+ * needs the same three things and would otherwise fork them: which local shapes
+ * an exported `*Props` reaches, which function consumes each shape, and what
+ * that function does with the props it does not name. One `createSourceFile`
+ * per file serves both rules.
+ *
+ * ── THE THREE VERDICTS ─────────────────────────────────────────────────────
+ *
+ *   no-ref-story     The shape's DOM base is `HTMLAttributes<T>` (or one of its
+ *                    element-specific siblings). Under React 19 `ref` is an
+ *                    ordinary prop and `ComponentProps<E>` carries it while
+ *                    `HTMLAttributes<T>` does not — verified against this repo's
+ *                    `@types/react@19.2.18`, both directions, in `props.ts`'s
+ *                    header. So this base is the 21-file half of the coin flip
+ *                    the contract exists to end, and it is now a build failure
+ *                    rather than a preference. Twenty-one files, forty-nine
+ *                    declaration sites, converted the day the rule landed.
+ *
+ *   undelivered-root A shape that DOES carry the DOM surface, consumed by a
+ *                    component that binds no rest — or binds one and never uses
+ *                    it. This is the literal wording of the exit criterion: a
+ *                    root that accepts `id`/`ref` and does not deliver them.
+ *                    `gradeSource` above cannot see it, because it grades props
+ *                    a file DECLARES and this defect is entirely in props a file
+ *                    INHERITS.
+ *
+ *   unexplained-own  `ref` or `id` subtracted with no comment saying why. These
+ *                    two are the contract's floor: they may be OWNED (`Table`,
+ *                    `ListBox`, `VirtualList` all read their own ref to drive a
+ *                    roving tab stop, and a consumer's would replace it) or
+ *                    WIDENED (`Stack`, `Separator`, `MessageTime` render more
+ *                    than one element), but never merely dropped. Requiring a
+ *                    comment in the heritage clause is the cheapest check that
+ *                    is not a judgement call: it does not grade the reasoning,
+ *                    it grades that reasoning was written down where the next
+ *                    reader will meet it.
+ *
+ * ── WHAT IT DELIBERATELY DOES NOT CHECK ────────────────────────────────────
+ *
+ * Whether the omit LIST is right. No syntactic pass can know that `aria-current`
+ * belongs on a `MenuItem` or that `onScroll` belongs on a `ScrollArea` — the
+ * answer lives on a page nobody has built yet. That asymmetry is the whole
+ * argument in `props.ts` for "omit what you own" over an allow-list: the
+ * complete default is checkable and the curated list is not.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface RootViolation {
+  rule: "root-contract";
+  /** `<file>:<line>` of the interface declaration. */
+  path: string;
+  /** The shape, e.g. `CardProps`. */
+  shape: string;
+  verdict: RootVerdict;
+  detail: string;
+}
+
+export type RootVerdict = "no-ref-story" | "undelivered-root" | "unexplained-own";
+
+/** `ref` and `id`: the two names a component may own or widen but never simply
+ *  drop. See the contract's "hybrid clause" in `props.ts`. */
+const FLOOR: readonly string[] = ["ref", "id"];
+
+/** `HTMLAttributes` and every element-specific sibling React ships. */
+const HTML_ATTRIBUTES = /^(?:React\.)?[A-Za-z]*HTMLAttributes$/;
+const COMPONENT_PROPS = /^(?:React\.)?ComponentProps(?:WithRef)?$/;
+
+/** What a heritage clause turns out to be, once `Omit`/`Pick` are unwrapped. */
+interface DomBase {
+  kind: "component-props" | "html-attributes";
+  /** The key literals subtracted by any enclosing `Omit`. */
+  omitted: Set<string>;
+}
+
+/**
+ * Grades one component file against the root contract.
+ *
+ * Same signature and same purity as `gradeSource` — nothing is read from disk,
+ * so the self-test grades strings and the fixtures are live rather than prose.
+ */
+export function gradeRootContract(path: string, text: string): RootViolation[] {
+  const sf = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+
+  const local = new Map<string, ts.InterfaceDeclaration | ts.TypeAliasDeclaration>();
+  sf.forEachChild((n) => {
+    if (ts.isInterfaceDeclaration(n) || ts.isTypeAliasDeclaration(n)) local.set(n.name.text, n);
+  });
+  const isExported = (n: ts.Node) =>
+    (ts.getCombinedModifierFlags(n as ts.Declaration) & ts.ModifierFlags.Export) !== 0;
+
+  /* Same reachability as `gradeSource`: an exported `*Props` and everything it
+   * pulls in through `extends` / `&` / `|`, following LOCAL names only. A
+   * module-private base is where most of this repository's defects live. */
+  const shapesOf = new Map<string, Set<string>>();
+  const shapesFor = (name: string): Set<string> => {
+    const cached = shapesOf.get(name);
+    if (cached) return cached;
+    const out = new Set<string>([name]);
+    shapesOf.set(name, out);
+    const decl = local.get(name);
+    if (decl) {
+      for (const nm of heritageNames(decl, sf)) {
+        if (!local.has(nm) || out.has(nm)) continue;
+        for (const s of shapesFor(nm)) out.add(s);
+      }
+    }
+    return out;
+  };
+  for (const name of local.keys()) shapesFor(name);
+
+  const inScope = new Set<string>();
+  for (const root of [...local.values()].filter(
+    (n) => isExported(n) && n.name.text.endsWith("Props"),
+  )) {
+    for (const s of shapesFor(root.name.text)) inScope.add(s);
+  }
+
+  const consumers = findConsumers(sf, local, shapesOf);
+  const violations: RootViolation[] = [];
+
+  for (const name of inScope) {
+    const decl = local.get(name);
+    if (decl === undefined || !ts.isInterfaceDeclaration(decl)) continue;
+    const line = sf.getLineAndCharacterOfPosition(decl.getStart(sf)).line + 1;
+
+    for (const clause of decl.heritageClauses ?? []) {
+      for (const typeNode of clause.types) {
+        const base = domBaseOf(typeNode, sf);
+        if (base === undefined) continue;
+
+        if (base.kind === "html-attributes") {
+          violations.push({
+            rule: "root-contract",
+            path: `${path}:${String(line)}`,
+            shape: name,
+            verdict: "no-ref-story",
+            detail:
+              `${name} builds its DOM surface out of \`HTMLAttributes\`, which under React 19 ` +
+              `does NOT include \`ref\` — so \`<${name.replace(/Props$/, "")} ref={r}>\` does not ` +
+              `compile, and whether it does is an accident of which base type this file reached ` +
+              `for. Use \`ComponentProps<"tag">\` for the element this component actually ` +
+              `renders. See the root contract in \`@lumo-ui/core\`'s props.ts.`,
+          });
+          continue;
+        }
+
+        /* THE FLOOR: `ref`/`id` may be owned or widened, never silently cut. */
+        const cut = FLOOR.filter((k) => base.omitted.has(k) && !isExplained(decl, sf, k));
+        if (cut.length > 0) {
+          violations.push({
+            rule: "root-contract",
+            path: `${path}:${String(line)}`,
+            shape: name,
+            verdict: "unexplained-own",
+            detail:
+              `${name} subtracts ${cut.map((k) => `\`${k}\``).join(" and ")} from its DOM ` +
+              `surface with no comment saying why. Those two are the contract's floor: a ` +
+              `component may OWN one (it reads or writes it, and a caller's value would ` +
+              `replace the component's own — \`TableProps\` is the worked example) or WIDEN ` +
+              `it (\`Stack\` renders more than one element), but a bare subtraction is the ` +
+              `closed surface the contract exists to stop. Say which, on the line.`,
+          });
+        }
+
+        /* DELIVERY. A DOM surface that no component spreads is 300 accepted
+         * attributes going nowhere — the same defect `gradeSource` catches for
+         * declared props, one level up the inheritance chain. */
+        const takers = consumers.filter((c) => shapesOf.get(c.paramType)?.has(name) === true);
+        if (takers.length === 0) continue; // `orphan` is gradeSource's verdict, not this one.
+        const deliverer = takers.find(
+          (c) =>
+            c.restName !== undefined &&
+            (c.intrinsicSpreads.length > 0 || c.componentSpreads.length > 0 || c.otherUses > 0),
+        );
+        if (deliverer === undefined) {
+          const c = takers[0];
+          violations.push({
+            rule: "root-contract",
+            path: `${path}:${String(line)}`,
+            shape: name,
+            verdict: "undelivered-root",
+            detail:
+              `${name} inherits the DOM surface of an element — \`id\`, \`ref\`, every ` +
+              `\`aria-*\`, every \`data-*\` — and ${c?.fnName ?? "its component"}() ` +
+              (c?.restName === undefined
+                ? `destructures its props and binds no rest, so all of it is discarded.`
+                : `binds \`...${c.restName}\` and never uses it.`) +
+              ` A consumer's \`id\` or \`data-testid\` compiles and reaches nothing. Bind a rest ` +
+              `and spread it at the root, or Omit what this component owns and say why.`,
+          });
+        }
+      }
+    }
+  }
+  return violations;
+}
+
+/**
+ * The DOM base a heritage type resolves to, seeing through `Omit`.
+ *
+ * `Omit<ComponentProps<"div">, "children" | "className">` is the shape the whole
+ * library is written in, so the unwrap is not an edge case — it is the normal
+ * form. Keys are collected from the second type argument, which is a union of
+ * string literals in every real occurrence and is read as such; a computed key
+ * type contributes nothing rather than throwing, which can only make this rule
+ * quieter, never make it accuse.
+ */
+function domBaseOf(node: ts.Node, sf: ts.SourceFile): DomBase | undefined {
+  const expr = ts.isExpressionWithTypeArguments(node) ? node : undefined;
+  const nameOf = (n: ts.Node): string =>
+    expr === n && ts.isExpressionWithTypeArguments(n)
+      ? n.expression.getText(sf)
+      : ts.isTypeReferenceNode(n)
+        ? n.typeName.getText(sf)
+        : "";
+  const args = ts.isExpressionWithTypeArguments(node)
+    ? node.typeArguments
+    : ts.isTypeReferenceNode(node)
+      ? node.typeArguments
+      : undefined;
+  const name = nameOf(node);
+
+  if (name === "Omit" && args && args.length === 2 && args[0] && args[1]) {
+    const inner = domBaseOf(args[0], sf);
+    if (inner === undefined) return undefined;
+    for (const key of literalKeys(args[1])) inner.omitted.add(key);
+    return inner;
+  }
+  if (COMPONENT_PROPS.test(name)) return { kind: "component-props", omitted: new Set() };
+  if (HTML_ATTRIBUTES.test(name)) return { kind: "html-attributes", omitted: new Set() };
+  return undefined;
+}
+
+/** The string literals in `"a" | "b"`, flattened. */
+function literalKeys(node: ts.TypeNode): string[] {
+  if (ts.isUnionTypeNode(node)) return node.types.flatMap(literalKeys);
+  if (ts.isParenthesizedTypeNode(node)) return literalKeys(node.type);
+  if (ts.isLiteralTypeNode(node) && ts.isStringLiteral(node.literal)) return [node.literal.text];
+  return [];
+}
+
+/**
+ * Was the subtraction of `key` explained where the next reader will meet it?
+ *
+ * Two places count, because the two legal answers land in different places:
+ *
+ *   OWNED    the note goes with the `Omit`. Anywhere between the interface's
+ *            name and the end of its heritage clauses — inside the key union
+ *            (`table.tsx`) or just before `extends` (`gantt.tsx`) — because
+ *            insisting on one of the two would be grading formatting.
+ *
+ *   WIDENED  the note goes on the REDECLARATION. `Stack` omits `ref` from
+ *            `ComponentProps<"div">` and declares `ref?: Ref<HTMLElement>`
+ *            immediately below with the reason attached; that comment is on the
+ *            line a reader actually lands on when they ask what `ref` is here,
+ *            and demanding a second copy up in the heritage would be asking for
+ *            the duplicated banner this repository keeps deleting.
+ *
+ * It does NOT grade the reasoning, and could not. It grades that reasoning was
+ * written down — the same standard `@forwarded` is held to one rule up.
+ */
+function isExplained(decl: ts.InterfaceDeclaration, sf: ts.SourceFile, key: string): boolean {
+  const clauses = decl.heritageClauses;
+  if (clauses !== undefined && clauses.length > 0) {
+    const from = (decl.typeParameters ?? decl.name).end;
+    const to = clauses[clauses.length - 1]?.end ?? from;
+    const span = sf.text.slice(from, to);
+    if (span.includes("/*") || span.includes("//")) return true;
+  }
+  for (const m of decl.members) {
+    if (!ts.isPropertySignature(m) || !m.name) continue;
+    if (m.name.getText(sf).replace(/^["']|["']$/g, "") !== key) continue;
+    if ((ts.getLeadingCommentRanges(sf.text, m.getFullStart()) ?? []).length > 0) return true;
+  }
+  return false;
+}
+
+/** One line per violation, grouped by verdict — `formatPropViolations`' shape. */
+export function formatRootViolations(violations: RootViolation[]): string {
+  if (violations.length === 0) return "  lumo-root-contract — clean";
+  const byVerdict = new Map<RootVerdict, RootViolation[]>();
+  for (const v of violations) byVerdict.set(v.verdict, [...(byVerdict.get(v.verdict) ?? []), v]);
+  const lines: string[] = [""];
+  for (const [verdict, vs] of byVerdict) {
+    lines.push(
+      `  root-contract/${verdict} — ${String(vs.length)} violation${vs.length === 1 ? "" : "s"}`,
+    );
+    for (const v of vs) {
+      lines.push(`      ${v.path}  ${v.shape}`);
+      lines.push(`        ${v.detail}`);
+    }
+    lines.push("");
+  }
+  return lines.join("\n");
+}

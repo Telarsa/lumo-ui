@@ -2,7 +2,7 @@
  * No "use client": these are layout primitives with no interaction, so they
  * render on the server and cost a consumer no hydration.
  */
-import type { ElementType, HTMLAttributes } from "react";
+import type { ComponentProps, ElementType, Ref } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -118,8 +118,18 @@ export const stackVariants = cva("flex", {
 });
 
 export interface StackProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className">,
+  extends Omit<ComponentProps<"div">, "children" | "className" | "ref">,
     VariantProps<typeof stackVariants> {
+  /**
+   * The root element, at the widest type that is true of every branch.
+   *
+   * `ComponentProps<"div">` carries `Ref<HTMLDivElement>`, which is a LIE here:
+   * `tag` picks the element, and its values include
+   * `section`, `main`, `nav`, `ul` and `li`. `HTMLElement` is what every branch has in
+   * common. `ref` is never simply dropped under this library's contract — only
+   * ever widened, and the widening is stated. See `props.ts`.
+   */
+  ref?: Ref<HTMLElement> | undefined;
   children?: LumoNode;
   /** Which element to render. Default `"div"`. */
   tag?: BoxTag | undefined;
@@ -137,14 +147,28 @@ export function Stack({
   children,
   ...props
 }: StackProps) {
-  // Widened to `ElementType` so JSX accepts a variable tag. The prop type is
-  // what constrains the value; this local only exists to satisfy the JSX
-  // element-type check without a cast at the call site.
-  const Element: ElementType = tag;
+  // Widened so JSX accepts a variable tag. The prop type is what constrains the
+  // VALUE; this local only exists to satisfy the JSX element-type check without
+  // a cast at every call site.
+  //
+  // Parameterised on `ComponentProps<"div">` rather than left bare, because a
+  // bare `ElementType` makes JSX check the attribute bag against EVERY
+  // intrinsic at once — and `<form>`'s `ref` is `Ref<HTMLFormElement>`, which
+  // no single ref type can satisfy alongside `<div>`'s. Pinning the check to
+  // the default tag is what keeps the one cast below to one line.
+  const Element = tag as ElementType<ComponentProps<"div">>;
   return (
     <Element
       className={cn(stackVariants({ direction, gap, align, justify, wrap }), className)}
-      {...props}
+      /*
+       * The one cast the widened `ref` costs, and it is contained to this line.
+       * The element is chosen at RUN time, so no static type can be right for
+       * every branch; the ref itself is passed through untouched and React
+       * assigns whatever element it actually created. Widening the prop and
+       * narrowing here is the only arrangement in which a consumer is never
+       * handed a ref typed as an element this component may not render.
+       */
+      {...(props as ComponentProps<"div">)}
     >
       {children}
     </Element>
@@ -190,17 +214,38 @@ export const gridVariants = cva("grid", {
 });
 
 export interface GridProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className">,
+  extends Omit<ComponentProps<"div">, "children" | "className" | "ref">,
     VariantProps<typeof gridVariants> {
+  /**
+   * The root element, at the widest type that is true of every branch.
+   *
+   * `ComponentProps<"div">` carries `Ref<HTMLDivElement>`, which is a LIE here:
+   * `tag` picks the element, and its values include
+   * `section`, `main`, `nav`, `ul` and `li`. `HTMLElement` is what every branch has in
+   * common. `ref` is never simply dropped under this library's contract — only
+   * ever widened, and the widening is stated. See `props.ts`.
+   */
+  ref?: Ref<HTMLElement> | undefined;
   children?: LumoNode;
   tag?: BoxTag | undefined;
   className?: string | undefined;
 }
 
 export function Grid({ tag = "div", cols, gap, align, className, children, ...props }: GridProps) {
-  const Element: ElementType = tag;
+  const Element = tag as ElementType<ComponentProps<"div">>;
   return (
-    <Element className={cn(gridVariants({ cols, gap, align }), className)} {...props}>
+    <Element
+      className={cn(gridVariants({ cols, gap, align }), className)}
+      /*
+       * The one cast the widened `ref` costs, and it is contained to this line.
+       * The element is chosen at RUN time, so no static type can be right for
+       * every branch; the ref itself is passed through untouched and React
+       * assigns whatever element it actually created. Widening the prop and
+       * narrowing here is the only arrangement in which a consumer is never
+       * handed a ref typed as an element this component may not render.
+       */
+      {...(props as ComponentProps<"div">)}
+    >
       {children}
     </Element>
   );
@@ -231,8 +276,18 @@ export const containerVariants = cva(
 );
 
 export interface ContainerProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className">,
+  extends Omit<ComponentProps<"div">, "children" | "className" | "ref">,
     VariantProps<typeof containerVariants> {
+  /**
+   * The root element, at the widest type that is true of every branch.
+   *
+   * `ComponentProps<"div">` carries `Ref<HTMLDivElement>`, which is a LIE here:
+   * `tag` picks the element, and `tag="main"` is the case the
+   * prop's own docblock recommends. `HTMLElement` is what every branch has in
+   * common. `ref` is never simply dropped under this library's contract — only
+   * ever widened, and the widening is stated. See `props.ts`.
+   */
+  ref?: Ref<HTMLElement> | undefined;
   children?: LumoNode;
   /**
    * Which element to render. Default `"div"` — but a page's main content
@@ -251,9 +306,20 @@ export function Container({
   children,
   ...props
 }: ContainerProps) {
-  const Element: ElementType = tag;
+  const Element = tag as ElementType<ComponentProps<"div">>;
   return (
-    <Element className={cn(containerVariants({ size, padded }), className)} {...props}>
+    <Element
+      className={cn(containerVariants({ size, padded }), className)}
+      /*
+       * The one cast the widened `ref` costs, and it is contained to this line.
+       * The element is chosen at RUN time, so no static type can be right for
+       * every branch; the ref itself is passed through untouched and React
+       * assigns whatever element it actually created. Widening the prop and
+       * narrowing here is the only arrangement in which a consumer is never
+       * handed a ref typed as an element this component may not render.
+       */
+      {...(props as ComponentProps<"div">)}
+    >
       {children}
     </Element>
   );

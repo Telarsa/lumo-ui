@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties } from "react";
+import { useRef, type ComponentProps, type CSSProperties } from "react";
 import { useVirtualWindow } from "./virtualizer.ts";
 import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 import {
@@ -114,7 +114,21 @@ export type { VirtualListOrientation };
  * one input and there is no `isRtl` or `dir` prop to disagree with it.
  */
 
-export interface VirtualListProps {
+export interface VirtualListProps
+  /*
+   * `ref` is owned, and this is the component AUDIT §4.2 used as the example of
+   * what the missing ref story cost — "a consumer cannot … scroll a
+   * `VirtualList` to an index". The ref is not the answer to that: `scrollRef`
+   * below is the virtualiser's own scroll container and replacing it empties
+   * the window. The answer is a scroll METHOD, which this component does not
+   * have yet and which is recorded in ROADMAP.md rather than faked with a ref
+   * that would break the list. `role`, `aria-label` and `tabIndex` are owned
+   * together for `ScrollArea`'s reason: the three of them ARE the tab stop.
+   */
+  extends Omit<
+    ComponentProps<"div">,
+    "children" | "className" | "ref" | "role" | "aria-label" | "tabIndex"
+  > {
   /**
    * The list's announced name, e.g. «فهرست سفارش‌ها».
    *
@@ -175,6 +189,7 @@ export function VirtualList({
   children,
   className,
   itemClassName,
+  ...props
 }: VirtualListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const mirror = virtualMirror(locale, orientation);
@@ -204,6 +219,7 @@ export function VirtualList({
 
   return (
     <div
+      {...props}
       ref={scrollRef}
       data-lumo=""
       // See the header: one tab stop for the whole list, on the element that

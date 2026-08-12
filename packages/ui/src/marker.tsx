@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -60,7 +60,7 @@ export const markerVariants = cva(
 );
 
 export interface MarkerProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   variant?: "status" | "separator" | "border" | undefined;
   children?: LumoNode;
   className?: string | undefined;
@@ -77,7 +77,7 @@ export function Marker({ variant = "status", className, ...props }: MarkerProps)
 }
 
 export interface MarkerIconProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"span">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }

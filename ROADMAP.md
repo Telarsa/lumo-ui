@@ -185,6 +185,14 @@ post-launch, behind the provider tier.
       Closed with recharts plus a server-rendered `<ChartData>` table; seven
       libraries were measured first and the comparison is above.
 - [ ] Keyboard-accessible drag and drop, or a "Move to…" affordance instead
+- [ ] **`VirtualList` scroll-to-index.** AUDIT §4.2 named "a consumer cannot …
+      scroll a `VirtualList` to an index" as one cost of having no `ref` story.
+      The root contract (DECISIONS §17) did NOT fix this one, and saying so is
+      the point: `VirtualList` OWNS its `ref`, because that element is the
+      virtualiser's scroll container and a consumer's ref replacing it empties
+      the window. The answer is an imperative handle — `DateInput` already sets
+      the precedent by handing back a `DateInputHandle` rather than a `<div>` —
+      not a passthrough ref that would look like it worked.
 
 ## v0.9 — Hardening
 

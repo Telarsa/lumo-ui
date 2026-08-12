@@ -536,6 +536,21 @@ function renderLevel(children: LumoNode, level: number, parentKey: string): Reac
 /**
  * The tree's own props, minus its children, class and `aria-label` — the name
  * arrives as a REQUIRED `label` below.
+ *
+ * This shape predates the root contract in `props.ts` and is the one place in
+ * the library that assembles its DOM surface out of `@lumo-ui/core`'s vocabulary
+ * interfaces rather than out of `ComponentProps<E>`. It is left that way
+ * deliberately: `DOMProps` + `AriaLabelingProps` + `StyleProps` +
+ * `GlobalDOMAttributes` is the surface a React Aria `Tree` published, and this
+ * component's API is frozen against that. What CHANGED is that those props are
+ * now delivered — see the rest binding in `Tree` below, which used to be
+ * consumed whole by a cast.
+ *
+ * `ref` is OWNED and therefore absent, which under React 19 is already a
+ * compile error at the call site. `gridRef` is what rescues the tab stop out of
+ * a subtree a pointer is about to collapse; a consumer's ref would replace it
+ * and the rescue would stop happening with nothing thrown. Same class as
+ * `TableProps` — see the contract in `props.ts`.
  */
 interface TreePropsBase<T extends object>
   extends MultipleSelection,
@@ -635,8 +650,59 @@ function toSelection(value: AriaSelection | undefined): AriaSelection {
   return new Set<Key>(value ?? []);
 }
 
-export function Tree<T extends object>({ label, className, children, ...props }: TreeProps<T>) {
-  const engine = props as TreeEngineProps;
+export function Tree<T extends object>({
+  label,
+  className,
+  children,
+  /*
+   * ── THE ENGINE'S PROPS, NAMED RATHER THAN CAST OUT OF A REST ──────────────
+   *
+   * This used to be `const engine = props as TreeEngineProps` over the WHOLE
+   * rest binding, and the cost was recorded in AUDIT §4.2: the DOM props this
+   * shape declares — `id`, `style`, `aria-describedby`, every global event —
+   * had nowhere to go, because the rest they rode was consumed by the cast and
+   * never spread. A treegrid could not be pointed at by a visible heading.
+   *
+   * Naming them here separates the two populations at the only place that can
+   * tell them apart. Whatever is left in `...rest` is DOM, and it is spread on
+   * the container below. The cast is gone with it.
+   */
+  expandedKeys,
+  defaultExpandedKeys,
+  onExpandedChange,
+  selectionMode: selectionModeProp,
+  selectedKeys,
+  defaultSelectedKeys,
+  onSelectionChange,
+  disabledKeys,
+  disallowEmptySelection,
+  onAction,
+  // — accepted by the API, unreachable here. Each is documented on its
+  //   declaration in `TreePropsBase`; destructured so none reaches the DOM. —
+  items: _items,
+  dependencies: _dependencies,
+  slot: _slot,
+  autoFocus: _autoFocus,
+  selectionBehavior: _selectionBehavior,
+  shouldSelectOnPressUp: _shouldSelectOnPressUp,
+  escapeKeyBehavior: _escapeKeyBehavior,
+  keyboardNavigationBehavior: _keyboardNavigationBehavior,
+  disabledBehavior: _disabledBehavior,
+  renderEmptyState: _renderEmptyState,
+  ...rest
+}: TreeProps<T>) {
+  const engine: TreeEngineProps = {
+    expandedKeys,
+    defaultExpandedKeys,
+    onExpandedChange,
+    selectionMode: selectionModeProp,
+    selectedKeys: selectedKeys as TreeEngineProps["selectedKeys"],
+    defaultSelectedKeys: defaultSelectedKeys as TreeEngineProps["defaultSelectedKeys"],
+    onSelectionChange,
+    disabledKeys,
+    disallowEmptySelection,
+    onAction,
+  };
   const locale = useLumoLocale();
   const turn = treeChevronTurn(direction(locale));
   const strings = treeStringsFor(locale);
@@ -824,6 +890,7 @@ export function Tree<T extends object>({ label, className, children, ...props }:
 
   return (
     <div
+      {...rest}
       data-lumo=""
       ref={gridRef}
       role="treegrid"

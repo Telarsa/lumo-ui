@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@lumo-ui/core";
 
@@ -57,7 +57,7 @@ export const skeletonVariants = cva(
 );
 
 export interface SkeletonProps
-  extends Omit<HTMLAttributes<HTMLSpanElement>, "children" | "className">,
+  extends Omit<ComponentProps<"span">, "children" | "className">,
     VariantProps<typeof skeletonVariants> {
   className?: string | undefined;
 }

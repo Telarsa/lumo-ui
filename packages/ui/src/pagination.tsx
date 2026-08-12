@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { Button as BaseButton } from "@base-ui/react/button";
 import { cn, formatNumber, type Locale } from "@lumo-ui/core";
 import {
@@ -122,7 +123,15 @@ export type { PaginationItemVariantProps, PaginationSlot };
  * an angle bracket read aloud between them is noise.
  */
 
-export interface PaginationProps {
+export interface PaginationProps
+  /*
+   * `aria-label` is owned: it is built from the REQUIRED `label` prop, and a
+   * second one on the same `<nav>` would be the "two names, one value" defect
+   * AUDIT §3.4 names. Everything else the element accepts is the caller's —
+   * `id` above all, which is what a page with a top AND a bottom pager needs to
+   * point `aria-controls` at the right one.
+   */
+  extends Omit<ComponentProps<"nav">, "children" | "className" | "aria-label"> {
   /** The locale every page number is formatted in. Required — see the header. */
   locale: Locale;
   /** The current page, 1-based. */
@@ -166,13 +175,14 @@ export function Pagination({
   siblingCount = 1,
   size = "md",
   className,
+  ...props
 }: PaginationProps) {
   const total = Math.max(1, Math.floor(count));
   const current = Math.min(Math.max(1, Math.floor(page)), total);
   const slots = paginationRange(current, total, siblingCount);
 
   return (
-    <nav aria-label={label} className={cn(paginationVariants(), className)}>
+    <nav aria-label={label} className={cn(paginationVariants(), className)} {...props}>
       {/*
        * A real `<ul>`. The pager is a list of destinations, and a screen reader
        * announcing "list, 7 items" before walking them is the difference between

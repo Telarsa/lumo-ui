@@ -4,7 +4,12 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
 
-import { cn, type LumoNode, type ModalOverlayPropsBase } from "@lumo-ui/core";
+import {
+  cn,
+  type LumoNode,
+  type ModalOverlayPropsBase,
+  type OverlayOpenStateKeys,
+} from "@lumo-ui/core";
 
 /**
  * A modal that slides in from an INLINE edge. **BASE UI ENGINE.**
@@ -182,7 +187,8 @@ export const drawerVariants = cva(
   },
 );
 
-export interface DrawerOverlayProps extends ModalOverlayPropsBase {
+export interface DrawerOverlayProps
+  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -227,9 +233,6 @@ export function DrawerOverlay({
   children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
-  isOpen: _isOpen,
-  defaultOpen: _defaultOpen,
-  onOpenChange: _onOpenChange,
   isEntering: _isEntering,
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
@@ -250,7 +253,7 @@ export function DrawerOverlay({
 }
 
 export interface DrawerProps
-  extends ModalOverlayPropsBase,
+  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys>,
     VariantProps<typeof drawerVariants> {
   children?: LumoNode;
   className?: string | undefined;
@@ -274,9 +277,6 @@ export function Drawer({
   children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
-  isOpen: _isOpen,
-  defaultOpen: _defaultOpen,
-  onOpenChange: _onOpenChange,
   isEntering: _isEntering,
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,

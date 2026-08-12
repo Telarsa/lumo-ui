@@ -17,7 +17,12 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { gradeSource, type Verdict } from "./inert-props.ts";
+import {
+  gradeRootContract,
+  gradeSource,
+  type RootVerdict,
+  type Verdict,
+} from "./inert-props.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "fixtures", "inert-props");
 const grade = (name: string) =>
@@ -264,5 +269,114 @@ export function X({ label, tone }: XProps) { return <div data-tone={tone}>{label
       .replace("{ label, tone }", "{ label }")
       .replace("data-tone={tone}", 'data-tone="a"');
     expect(gradeSource("x.tsx", broken).map((v) => v.prop)).toEqual(["XProps.tone"]);
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE ROOT CONTRACT
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * Same shape of self-test as the one above, and for the same reasons: the
+ * fixture set is enumerated from the directory rather than listed, so a verdict
+ * with no poison and a poison with no verdict both fail here; and `good.tsx`
+ * carries every legal shape, because a rule that accuses correct code gets
+ * switched off rather than loosened.
+ */
+const ROOT_FIXTURES = join(import.meta.dirname, "..", "fixtures", "root-contract");
+const gradeRoot = (name: string) =>
+  gradeRootContract(name, readFileSync(join(ROOT_FIXTURES, name), "utf8"));
+
+const ROOT_FAILING: RootVerdict[] = ["no-ref-story", "undelivered-root", "unexplained-own"];
+
+describe("root contract — self-test", () => {
+  it("there is one poison fixture per verdict, and no orphans", () => {
+    const files = readdirSync(ROOT_FIXTURES).filter((f) => f.endsWith(".bad.tsx"));
+    expect(files.sort()).toEqual(ROOT_FAILING.map((v) => `${v}.bad.tsx`).sort());
+  });
+
+  for (const verdict of ROOT_FAILING) {
+    it(`${verdict} fires on its poison`, () => {
+      const v = gradeRoot(`${verdict}.bad.tsx`);
+      expect(v.length).toBeGreaterThan(0);
+      expect(v.map((x) => x.verdict)).toContain(verdict);
+    });
+  }
+
+  it("the good fixture is clean", () => {
+    expect(gradeRoot("good.tsx")).toEqual([]);
+  });
+});
+
+describe("root contract — the distinctions that make it usable", () => {
+  it("fires on BOTH ways of not delivering", () => {
+    // No rest at all, and a rest that is bound and abandoned. They are the same
+    // defect to a consumer, and only the first is visible in a diff.
+    expect(gradeRoot("undelivered-root.bad.tsx").map((v) => v.shape).sort()).toEqual([
+      "PaginationProps",
+      "ScrollAreaProps",
+    ]);
+  });
+
+  it("fires on the element-specific `*HTMLAttributes` siblings too", () => {
+    // `AnchorHTMLAttributes` was `link.tsx`'s and `item.tsx`'s base. A rule that
+    // matched only the bare name would have cleared both.
+    expect(gradeRoot("no-ref-story.bad.tsx").map((v) => v.shape).sort()).toEqual([
+      "CardLinkProps",
+      "CardProps",
+    ]);
+  });
+
+  it("accepts an explanation in EITHER of the two places the house puts it", () => {
+    // Inside the `Omit`'s key union (`table.tsx`), before `extends`
+    // (`gantt.tsx`), and on the redeclared member (`stack.tsx`). All three are
+    // in `good.tsx` and all three are clean; the assertion here is that
+    // stripping the comment is what makes them fire, so the pass is about the
+    // comment rather than about the shape.
+    const good = readFileSync(join(ROOT_FIXTURES, "good.tsx"), "utf8");
+    const stripped = good
+      .replace(/\/\* `ref` and `onKeyDown` are the grid's own machinery[\s\S]*?\*\/\n/, "")
+      .replace(/\/\* `ref` is owned: the pointer route hit-tests against it\. \*\/\n/, "")
+      .replace(/ {2}\/\*\*\n {3}\* The root at the widest type[\s\S]*?\*\/\n/, "");
+    expect(gradeRootContract("good.tsx", stripped).map((v) => v.shape).sort()).toEqual([
+      "GanttProps",
+      "StackProps",
+      "TableProps",
+    ]);
+  });
+
+  it("says nothing about a props type with no DOM base", () => {
+    // The over-fire this rule is most likely to commit. Half the library's
+    // props types are pure vocabulary — a `useLumoTable` options bag, a
+    // `LumoStrings` slice — and none of them has a root to deliver anything to.
+    const src = `
+export interface OptionsProps { locale: string; count: number }
+export function use(o: OptionsProps) { return o.locale + String(o.count); }
+`;
+    expect(gradeRootContract("o.tsx", src)).toEqual([]);
+  });
+});
+
+/**
+ * The wiring assertion, matching the one the inert-prop rule already has.
+ *
+ * Both rules run from one binary. A second rule that is written, tested, and
+ * never invoked is the fourth incident in this repository's ledger of
+ * "exists, self-tests, grades nothing" — three of which were only found later.
+ */
+describe("the root contract is actually invoked", () => {
+  it("the CLI calls it and reports it", () => {
+    const cli = readFileSync(join(import.meta.dirname, "inert-props-cli.ts"), "utf8");
+    expect(cli).toContain("gradeRootContract");
+    expect(cli).toContain("formatRootViolations");
+  });
+
+  it("and its violations decide the exit code", () => {
+    const cli = readFileSync(join(import.meta.dirname, "inert-props-cli.ts"), "utf8");
+    // Not `process.exit(violations.length …)` — that spelling would print the
+    // root violations and exit 0, which is the exact shape of the three dead
+    // rules AUDIT §7 records.
+    expect(cli).toMatch(/const total = violations\.length \+ roots_\.length/);
+    expect(cli).toContain("process.exit(total ? 1 : 0)");
   });
 });

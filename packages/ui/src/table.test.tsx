@@ -16,6 +16,7 @@
  * `gridArrow` lives in a directive-free module with no DOM in its signature.
  */
 
+import { createElement, type FunctionComponent, type ReactElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -173,6 +174,41 @@ function People({ locale = "fa-IR" }: { locale?: Locale }) {
   );
 }
 
+/**
+ * A two-column grid built the way a consumer who does NOT read the types builds
+ * one — a copied JS file, a `{...props}` bag from a wrapper, a bundle whose
+ * declarations were stripped.
+ *
+ * The cast is the point, not an accident. `TableProps` `Omit`s `ref` and
+ * `onKeyDown` so a TypeScript consumer cannot pass them at all; this library is
+ * distributed by COPYING SOURCE INTO OTHER PROJECTS, several of which are not
+ * TypeScript, so "the type forbids it" is not evidence that the runtime is
+ * safe. Everything below therefore grades the spread ORDER inside `table.tsx`,
+ * which is the half of the fix that protects that consumer.
+ */
+function untypedTable(extra: Record<string, unknown>): ReactElement {
+  return createElement(
+    Table as unknown as FunctionComponent<Record<string, unknown>>,
+    { label: "افراد", locale: "fa-IR", ...extra },
+    createElement(
+      TableHeader,
+      null,
+      createElement(Column, { id: "name", isRowHeader: true }, "نام"),
+      createElement(Column, { id: "city" }, "شهر"),
+    ),
+    createElement(
+      TableBody,
+      null,
+      createElement(
+        Row,
+        { key: "r" },
+        createElement(Cell, null, "یاسمن"),
+        createElement(Cell, null, "تهران"),
+      ),
+    ),
+  );
+}
+
 describe("Table — the grid the two libraries build together", () => {
   it("sorts through the collator, so the two spellings of ی stay together", () => {
     const html = renderToStaticMarkup(<People />);
@@ -245,6 +281,88 @@ describe("Table — the grid the two libraries build together", () => {
     expect(
       grid.querySelector('[data-row-index="0"][data-col-index="1"]')?.getAttribute("tabindex"),
     ).toBe("0");
+  });
+
+  /*
+   * ── AUDIT §4.2's TABLE DEFECT, PROVED BEFORE IT WAS FIXED ─────────────────
+   *
+   * `TableProps` was `Omit<ComponentProps<"table">, "children" | "className" |
+   * "aria-label" | "role">`. Under React 19 `ref` is an ORDINARY PROP, so
+   * `ComponentProps<"table">` contains it — and `onKeyDown` was never omitted
+   * either. `Table` then spread `{...props}` LAST, after its own `ref={ref}`
+   * and `onKeyDown={onKeyDown}`, so a consumer's value REPLACED the internal
+   * one. `ref.current` stayed null, `if (!grid) return;` short-circuited, and
+   * every arrow key silently stopped working. Nothing threw and nothing warned.
+   *
+   * The fix has two halves and each needs its own test, because each half is
+   * defeated by a different consumer:
+   *
+   *   `Omit`ting the two names       stops a TYPED consumer, at compile time.
+   *   spreading `{...props}` FIRST   stops an UNTYPED one — the JS copy-paste
+   *                                  consumer this library is distributed to —
+   *                                  at run time.
+   *
+   * Only the second is observable from a test that runs, which is why the
+   * grid below is built through `untypedTable`.
+   */
+  it("a consumer `ref` cannot silently disable the arrow keys", () => {
+    const outer = { current: null } as { current: HTMLTableElement | null };
+    const { container } = render(untypedTable({ ref: outer }));
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+
+    // The ref is IGNORED, not honoured, and that is the contract: `Table` is
+    // one of the few roots that OWNS its ref, so an untyped consumer gets a
+    // no-op instead of a grid whose keyboard is dead. A typed consumer gets a
+    // compile error, which is the test below.
+    expect(outer.current).toBeNull();
+
+    // And the grid still navigates. Before the fix the stop never left {0,0}:
+    // the internal ref was overwritten, so `grid` inside the handler was null.
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+    expect(
+      grid.querySelector('[data-row-index="0"][data-col-index="1"]')?.getAttribute("tabindex"),
+    ).toBe("0");
+  });
+
+  it("a consumer `onKeyDown` cannot silently disable them either", () => {
+    const seen: string[] = [];
+    const { container } = render(
+      untypedTable({ onKeyDown: (e: { key: string }) => seen.push(e.key) }),
+    );
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+    // Dropped, like the ref, and for the same reason: the grid's `onKeyDown`
+    // IS its arrow-key model, so there is no order in which both can be the
+    // element's handler. A key the grid does not claim is still reachable — put
+    // the handler on a wrapper and it arrives by bubbling.
+    expect(seen).toEqual([]);
+    expect(
+      grid.querySelector('[data-row-index="0"][data-col-index="1"]')?.getAttribute("tabindex"),
+    ).toBe("0");
+  });
+
+  it("and both are compile errors for a consumer who reads the types", () => {
+    // The other half of the fix, asserted the only way a type can be: these two
+    // lines must NOT compile. `gate:types` fails if either `@ts-expect-error`
+    // becomes unused, which is exactly what un-`Omit`ting the props would do.
+    const outer = { current: null } as { current: HTMLTableElement | null };
+    void (
+      <Table
+        label="افراد"
+        locale="fa-IR"
+        // @ts-expect-error `ref` is Omitted: the grid owns it — see TableProps.
+        ref={outer}
+      />
+    );
+    void (
+      <Table
+        label="افراد"
+        locale="fa-IR"
+        // @ts-expect-error `onKeyDown` is Omitted: the grid owns the arrow keys.
+        onKeyDown={() => undefined}
+      />
+    );
   });
 
   it("nothing TanStack returns is spread onto an element", () => {

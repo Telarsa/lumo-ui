@@ -1,5 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { Separator, type SeparatorProps } from "./separator.tsx";
 
@@ -79,7 +79,7 @@ export const buttonGroupTextVariants = cva(
 
 export interface ButtonGroupProps
   extends Omit<
-      HTMLAttributes<HTMLDivElement>,
+      ComponentProps<"div">,
       "children" | "className" | "role" | "aria-label"
     >,
     VariantProps<typeof buttonGroupVariants> {
@@ -106,7 +106,7 @@ export function ButtonGroup({ label, orientation, className, ...props }: ButtonG
 }
 
 export interface ButtonGroupTextProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }

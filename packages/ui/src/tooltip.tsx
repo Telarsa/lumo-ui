@@ -213,8 +213,9 @@ export function TooltipTrigger({
  * the last is redeclared below as the logical-only `LumoPlacement`.
  */
 interface TooltipPropsBase
-  extends Omit<PositionProps, "placement">,
-    OverlayTriggerProps,
+  /* Same subtraction as `PopoverPropsBase`, same reason: open state belongs to
+   * `Tooltip.Root`, which `TooltipTrigger` renders. See `OverlayOpenStateKeys`. */
+  extends Omit<PositionProps, "placement" | "isOpen">,
     AriaLabelingProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
@@ -250,9 +251,6 @@ export function Tooltip({
   offset,
   crossOffset,
   // — accepted by the API, unreachable in Base UI —
-  isOpen: _isOpen,
-  defaultOpen: _defaultOpen,
-  onOpenChange: _onOpenChange,
   isEntering: _isEntering,
   isExiting: _isExiting,
   triggerRef: _triggerRef,

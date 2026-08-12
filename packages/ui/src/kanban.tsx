@@ -233,7 +233,13 @@ export interface KanbanStrings {
   movedTo: (column: string, index: string, total: string) => string;
 }
 
-export interface KanbanProps<T extends KanbanCard> {
+export interface KanbanProps<T extends KanbanCard>
+  /* `ref` and `aria-label` are owned — see `GanttProps` and `PaginationProps`
+   * respectively. The board's outer element takes everything else. */
+  extends Omit<
+    React.ComponentProps<"div">,
+    "children" | "className" | "ref" | "role" | "aria-label"
+  > {
   /** Names the board. Required. */
   label: string;
   locale: Locale;
@@ -291,6 +297,7 @@ export function Kanban<T extends KanbanCard>({
   strings,
   children,
   className,
+  ...props
 }: KanbanProps<T>) {
   const [heldId, setHeldId] = React.useState<string | null>(null);
   const originRef = React.useRef<ReadonlyArray<KanbanColumn<T>> | null>(null);
@@ -596,6 +603,7 @@ export function Kanban<T extends KanbanCard>({
        * lets a screen reader's list navigation jump between columns.
        */}
       <div
+        {...props}
         ref={rootRef}
         role="group"
         aria-label={label}

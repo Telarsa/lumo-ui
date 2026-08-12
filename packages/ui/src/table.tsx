@@ -505,7 +505,28 @@ function withColumnIndexes(children: ReactNode): ReactNode {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 export interface TableProps
-  extends Omit<ComponentProps<"table">, "children" | "className" | "aria-label" | "role"> {
+  extends Omit<
+    ComponentProps<"table">,
+    /* ── OWNED BY THE GRID. See `props.ts`'s contract: omit what you own. ────
+     *
+     * `ref` and `onKeyDown` are here because of a measured defect, not out of
+     * caution. Under React 19 `ref` is an ordinary prop, so
+     * `ComponentProps<"table">` carries it; `Table` needs its own ref to read
+     * the cell coordinates out of the DOM, and its own `onKeyDown` IS the
+     * arrow-key model. With both accepted and `{...props}` spread last, a
+     * consumer passing either replaced the internal one — `ref.current` stayed
+     * null, `if (!grid) return;` short-circuited, and every arrow key stopped
+     * working with nothing thrown and nothing warned. `table.test.tsx` proves
+     * both halves: these `Omit`s stop a typed consumer, and the spread order
+     * below (`{...props}` FIRST) stops an untyped one.
+     *
+     * A consumer who needs to measure the table can wrap it in an element of
+     * their own; a consumer who needs a key the grid does not claim can put the
+     * handler on that wrapper, where it will see the event by bubbling and
+     * cannot displace the grid's.
+     */
+    "ref" | "onKeyDown" | "children" | "className" | "aria-label" | "role"
+  > {
   /**
    * Announced name of the grid. REQUIRED.
    *
@@ -615,6 +636,19 @@ export function Table({ label, locale, table, className, ...props }: TableProps)
   return (
     <TableContext.Provider value={value}>
       <table
+        /*
+         * `{...props}` FIRST, and everything the grid owns after it.
+         *
+         * This is the reverse of the house order, and it is deliberate on this
+         * one element. Everywhere else a caller's value SHOULD win — that is
+         * what an escape hatch is for. Here the last four attributes are the
+         * grid's own machinery: displace `ref` or `onKeyDown` and arrow
+         * navigation dies silently (see `TableProps` above and the two tests in
+         * `table.test.tsx` that failed before this line moved). The `Omit` is
+         * the compile-time half of that fix; this order is the half that also
+         * holds for a consumer who copied this file into a JavaScript project.
+         */
+        {...props}
         ref={ref}
         data-lumo=""
         role="grid"
@@ -638,7 +672,6 @@ export function Table({ label, locale, table, className, ...props }: TableProps)
         {...(multiselectable ? { "aria-multiselectable": true } : {})}
         onKeyDown={onKeyDown}
         className={cn(tableVariants(), className)}
-        {...props}
       />
     </TableContext.Provider>
   );

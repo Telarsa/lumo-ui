@@ -1,4 +1,4 @@
-import type { HTMLAttributes, TimeHTMLAttributes } from "react";
+import type { ComponentProps, Ref } from "react";
 import { cva } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -66,7 +66,7 @@ import { cn, type LumoNode } from "@lumo-ui/core";
 export const messageGroupVariants = cva("flex w-full min-w-0 flex-col gap-4");
 
 export interface MessageSectionProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -93,7 +93,7 @@ export const messageVariants = cva(
 export type MessageVariant = "sent" | "received";
 
 export interface MessageProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /** Whose row this is. REQUIRED, for the reason bubble.tsx gives. */
   variant: MessageVariant;
   children?: LumoNode;
@@ -145,7 +145,13 @@ export function MessageHeader({ className, ...props }: MessageSectionProps) {
 }
 
 export interface MessageTimeProps
-  extends Omit<TimeHTMLAttributes<HTMLElement>, "children" | "className" | "dateTime"> {
+  extends Omit<ComponentProps<"time">, "children" | "className" | "dateTime" | "ref"> {
+  /**
+   * The root, at the widest type both branches satisfy — `<time>` when
+   * `dateTime` is supplied and `<span>` when it is not. Widened rather than
+   * dropped; see `props.ts`'s contract.
+   */
+  ref?: Ref<HTMLElement> | undefined;
   /**
    * The ALREADY-FORMATTED timestamp, e.g. `formatDate(at, locale, …)` —
    * «۱۴:۰۵» under fa-IR, in Jalali when the options ask for a date. A string
@@ -160,11 +166,11 @@ export interface MessageTimeProps
 export function MessageTime({ value, dateTime, className, ...props }: MessageTimeProps) {
   const classes = cn("px-1 text-xs text-fg-subtle", className);
   return dateTime !== undefined ? (
-    <time dateTime={dateTime} className={classes} {...props}>
+    <time dateTime={dateTime} className={classes} {...(props as ComponentProps<"time">)}>
       {value}
     </time>
   ) : (
-    <span className={classes} {...props}>
+    <span className={classes} {...(props as ComponentProps<"span">)}>
       {value}
     </span>
   );

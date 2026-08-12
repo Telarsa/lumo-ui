@@ -102,6 +102,56 @@ variants. Do not mirror state React already tracks:
 const [hovered, setHovered] = useState(false)
 ```
 
+## The root contract: `ref`, `id`, and what a component owns
+
+**Extend the DOM surface of the element you render, `Omit` what you own, and
+spread the rest.** The decision and the argument are in
+`packages/core/src/props.ts`; `button.tsx` restates it at the exemplar. The rule
+in one line:
+
+```tsx
+export interface CardProps
+  extends Omit<ComponentProps<"div">, "children" | "className">, VariantProps<typeof cardVariants> {
+  children?: LumoNode;              // narrowed — never ReactNode
+  className?: string | undefined;   // merged last by cn(), never replaced
+}
+```
+
+**`ComponentProps<E>`, never `HTMLAttributes<T>`.** Under React 19 `ref` is an
+ordinary prop and the first carries it while the second does not. That single
+token is the entire `ref` story — no `forwardRef`, no ceremony — and it is why
+this shape was chosen over a hand-listed `attr()` allow-list. It was a coin flip
+until 12 Aug 2026: 21 files reached for one base and 10 for the other, so whether
+`<Card ref={r}>` compiled was an accident nobody had chosen.
+
+**`ref` and `id` are the floor.** They may be OWNED — the component reads or
+writes them, so a caller's value would *replace* its own — or WIDENED, when the
+root is chosen at run time. They may never be quietly cut. Say which, on the
+line; the gate fails an unexplained subtraction.
+
+```tsx
+// OWNED. `table.tsx`: the grid reads cell coordinates out of its own ref, and
+// its onKeyDown IS the arrow-key model. Both accepted plus `{...props}` last is
+// how every arrow key silently stopped working.
+extends Omit<ComponentProps<"table">, /* why */ "ref" | "onKeyDown" | …>
+
+// WIDENED. `stack.tsx`: `tag` picks the element, so Ref<HTMLDivElement> would
+// type-check and be wrong.
+ref?: Ref<HTMLElement> | undefined;
+```
+
+**Where a displaced attribute fails silently, spread `{...props}` FIRST** and
+write what you own after it. This is the reverse of the house order and is
+deliberate on every root that writes an attribute its own behaviour then reads
+back — `Table`, `ListBox`, `VirtualList`, `Tree`, `Gantt`, `Kanban`, `Sortable`,
+`FileUpload`. `Omit` protects a TypeScript consumer; this library is distributed
+by copying source into other projects, several of which are not TypeScript.
+
+`pnpm gate:props` runs both source rules. The second one, `root-contract`, fails
+on `HTMLAttributes` as a base, on a DOM surface that is inherited and never
+spread, and on an unexplained `ref`/`id` subtraction. Fixtures are in
+`packages/gate/fixtures/root-contract/`, one per verdict plus `good.tsx`.
+
 ## When React Aria leaks English
 
 It leaks 8 strings on a Persian page; 5 are reachable by prop and are already

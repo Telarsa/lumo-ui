@@ -832,3 +832,113 @@ The remaining cost is honest and unfixed: five identical regexes that can drift
 from the one in `lumo.mjs`, and already differ from it (they carry no `ltr:`/
 `rtl:` escape, which makes them stricter, and they predate the two entries the
 Tailwind compile removed).
+
+---
+
+## §17 — The root contract: `ref` and `id` are decided once, and the decision is `ComponentProps<E>`
+
+Decided 12 Aug 2026. AUDIT.md §5 item 2.1. It went first in Phase 2 because it is
+the only item whose cost is **quadratic** — every component added before the
+decision has to be revisited after it — and doing it for 244 components later is
+a week's work against a day's now.
+
+### The state it replaced
+
+There was no `ref` story and no `id` story. Whether `<Card ref={r}>` compiled was
+an accident of which base type a file's author had reached for:
+
+```
+HTMLAttributes<T>     21 files, 49 declaration sites   NO ref
+ComponentProps<E>     10 files                         ref
+```
+
+Nothing documented the difference, because nobody had chosen it. Downstream, no
+collection, no overlay and no date component forwarded a ref at all, and **108 of
+244 exported components (44%) declared no rest parameter** — so they accepted no
+`id`, no `data-testid`, and no `aria-*` the component had not thought of.
+`MenuItem` could not take `aria-current` for exactly that reason, and it cost a
+new prop to fix one instance of it.
+
+### The decision
+
+**Omit what you own, spread the rest** — the `spinner.tsx` model, with two
+clauses and a floor.
+
+1. **The base is `ComponentProps<E>`, never `HTMLAttributes<T>`**, where `E` is
+   the tag the component renders.
+2. **`Omit` what the component owns, and say why on the line.** Ownership is one
+   of three facts, not a matter of taste: the component *writes* the attribute
+   (`role` on `Spinner`), *reads* it (`ref` on `Table`), or the state lives
+   elsewhere (the open-state trio on an overlay surface).
+3. **Floor:** `ref` and `id` are never subtracted, only ever OWNED or WIDENED.
+
+### What decided it, and it is a React 19 fact
+
+React 19 made `ref` an ordinary prop. Verified against this repo's own
+`@types/react@19.2.18` with its own `tsc`, **both directions asserted** so the
+probe could not pass vacuously:
+
+```ts
+type HasRef<P> = "ref" extends keyof P ? true : false;
+const a: HasRef<ComponentProps<"div">>          = true;   // compiles
+const b: HasRef<HTMLAttributes<HTMLDivElement>> = false;  // compiles
+// …and the inverted pair produces TS2322 on both lines.
+```
+
+So the entire `ref` question is answered by a **base type**, not by a mechanism.
+No `forwardRef`, no `ref` prop to declare, no element bookkeeping, no runtime
+cost. Also verified under `exactOptionalPropertyTypes: true`: `{ id: undefined,
+ref: undefined, onClick: undefined }` is assignable to `ComponentProps<"div">`,
+because React spells every optional DOM field `T | undefined` — so a props bag
+carrying an explicit `undefined` keeps spreading.
+
+### The shape that was rejected
+
+An explicit `attr()`-forwarded allow-list — `id` / `ref` / `aria-labelledby` /
+`aria-describedby` / `data-*`, hand-listed and hand-delivered on every root. It
+buys the promise that nothing arrives the component has not considered, and it
+loses on four counts:
+
+1. It is 244 hand-maintained lists. The 21-vs-10 split is what a per-file
+   judgement call already produced at this scale.
+2. Every field has to be redeclared **by hand** with `| undefined`, or
+   `exactOptionalPropertyTypes` turns a correct spread into an error — the
+   mistake `props.ts` already records once under "ONE MEASURED WIDENING".
+3. React 19 removed its reason. Under React 18 the list at least bought an
+   explicit `ref` story that `forwardRef` otherwise made per-component ceremony.
+4. **It is not mechanically checkable, and that is the deciding one.** A gate can
+   ask *"you accept `id` — do you deliver it?"* and answer it from syntax. No
+   gate can ask *"should you also have accepted `aria-keyshortcuts`?"* — the
+   answer lives on a page nobody has built yet. An allow-list's guarantee is
+   therefore exactly as strong as the diligence of whoever wrote each list, which
+   is the property that produced the state being replaced. "Omit what you own"
+   inverts that: the default is complete, and each subtraction is a reviewed line.
+
+### What it costs, stated plainly
+
+**A wider surface accepts wider mistakes.** A consumer can now pass `role="button"`
+to a `Card` and break its semantics, where before the type refused. That trade is
+taken deliberately: the same passthrough is what lets a `Card` carry the `id`
+that a `aria-labelledby` on a landmark points at, and the refusal was never a
+considered protection — it was the absence of a base type.
+
+**And `Omit` protects only a TypeScript consumer.** This library is distributed by
+copying source into other projects, several of which are not TypeScript. So on
+the roots where a displaced attribute fails silently — `Table`, `ListBox`,
+`VirtualList`, `Gantt`, `Kanban`, `Sortable`, `FileUpload` — the component ALSO
+spreads `{...props}` **first** and writes what it owns after it. That is the
+reverse of the house order, it is stated on each of those lines, and
+`table.test.tsx` holds the two tests that failed before the first one moved.
+
+### The enforcement
+
+`gradeRootContract` in `packages/gate/src/inert-props.ts`, run by `gate:props`
+alongside the inert-prop rule and sharing its parse. Three verdicts —
+`no-ref-story` (an `HTMLAttributes` base), `undelivered-root` (a DOM surface
+inherited and never spread), `unexplained-own` (a `ref`/`id` subtraction with no
+comment). Fixtures in `packages/gate/fixtures/root-contract/`, one per verdict
+plus a `good.tsx` carrying all four legal shapes, and the self-test enumerates
+the directory so a verdict without poison fails the suite.
+
+The rule deliberately does **not** grade whether the omit list is right, and
+could not: that is the same asymmetry that decided against the allow-list.

@@ -15,8 +15,9 @@ import { Form as BaseForm } from "@base-ui/react/form";
 // AND WHAT REPLACED IT" below. The three PROP TYPES that outlasted them are
 // gone too: `Label`, `Text` and `FieldError` were thin wrappers over React's
 // own `LabelHTMLAttributes` / `HTMLAttributes`, so the shapes below say that
-// directly instead of routing through a package this file no longer uses.
-import type { HTMLAttributes, LabelHTMLAttributes } from "react";
+// directly instead of routing through a package this file no longer uses — and
+// as `ComponentProps<"label">` / `ComponentProps<"p">` rather than as the
+// attribute types, which is what carries `ref` under React 19. See `props.ts`.
 import {
   cn,
   type DOMProps,
@@ -440,7 +441,7 @@ export function Form({ className, validationBehavior = "aria", ...props }: FormP
  * renders a box instead of throwing.
  */
 export interface LabelProps
-  extends Omit<LabelHTMLAttributes<HTMLLabelElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"label">, "children" | "className"> {
   /**
    * TYPE CARRIER, NOT A PROP — `undefined`, so passing a value is a compile
    * error.
@@ -542,7 +543,7 @@ export function Label({
  * / 4.1.2) and it is the half nobody was counting.
  */
 export interface DescriptionProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"p">, "children" | "className"> {
   /**
    * TYPE CARRIER, NOT A PROP — see `LabelProps.elementType` for the full
    * evidence. Same defect, same file, same `...props` spread: before this fix

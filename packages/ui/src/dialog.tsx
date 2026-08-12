@@ -12,6 +12,7 @@ import {
   type DialogPropsBase,
   type LumoNode,
   type ModalOverlayPropsBase,
+  type OverlayOpenStateKeys,
   type OverlayTriggerProps,
 } from "@lumo-ui/core";
 import { attr, findChildProp } from "@lumo-ui/base-ui-ssr";
@@ -296,7 +297,8 @@ export function DialogTrigger({
  * `isKeyboardDismissDisabled` is NOT accepted here any more — it lives on
  * `DialogTrigger`, which renders the Root that owns dismissal. See the header.
  */
-export interface DialogOverlayProps extends ModalOverlayPropsBase {
+export interface DialogOverlayProps
+  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -306,9 +308,6 @@ export function DialogOverlay({
   children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
-  isOpen: _isOpen,
-  defaultOpen: _defaultOpen,
-  onOpenChange: _onOpenChange,
   isEntering: _isEntering,
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
@@ -338,7 +337,7 @@ export function DialogOverlay({
  * change rather than a restyle.
  */
 export interface DialogModalProps
-  extends ModalOverlayPropsBase,
+  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys>,
     VariantProps<typeof dialogModalVariants> {
   children?: LumoNode;
   className?: string | undefined;
@@ -382,9 +381,6 @@ export function DialogModal({
   children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
-  isOpen: _isOpen,
-  defaultOpen: _defaultOpen,
-  onOpenChange: _onOpenChange,
   isEntering: _isEntering,
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
@@ -497,10 +493,16 @@ export function Dialog({
  */
 /**
  * The heading is a plain `<h*>`: React Aria's `HeadingProps` were React's own
- * `HTMLAttributes` plus a `level`, so this says that directly.
+ * `HTMLAttributes` plus a `level`, so this says that directly — as
+ * `ComponentProps<"h2">` rather than `HTMLAttributes<HTMLElement>`, which is
+ * what carries `ref` under React 19. See the root contract in `props.ts`.
+ *
+ * `"h2"` and not the rendered level: `level` picks h1–h6 and every one of them
+ * is an `HTMLHeadingElement`, so the ref type is right for all six and the tag
+ * here is only choosing which member of that family names it.
  */
 export interface DialogHeadingProps
-  extends Omit<React.HTMLAttributes<HTMLElement>, "children" | "className"> {
+  extends Omit<React.ComponentProps<"h2">, "children" | "className"> {
   /** The heading level. Defaults to 2. */
   level?: number;
   children?: LumoNode;
@@ -559,7 +561,7 @@ export function DialogHeading({
  * attribute's absence.
  */
 export interface DialogDescriptionProps
-  extends Omit<React.HTMLAttributes<HTMLParagraphElement>, "children" | "className"> {
+  extends Omit<React.ComponentProps<"p">, "children" | "className"> {
   /** Swap the rendered element, e.g. `render={<div />}` for block content. */
   render?: React.ReactElement<Record<string, unknown>> | undefined;
   children?: LumoNode;

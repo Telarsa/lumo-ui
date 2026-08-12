@@ -1,6 +1,6 @@
 "use client";
 
-import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, Ref } from "react";
 import { Button as BaseButton } from "@base-ui/react/button";
 // The prop SHAPE the public API is pinned to. It was `AriaButtonProps` until
 // the type-only React Aria imports were removed; it is the same surface, owned
@@ -64,6 +64,21 @@ export type { ButtonVariantProps };
  */
 
 export interface ButtonProps extends ButtonPropsBase, ButtonVariantProps {
+  /**
+   * @forwarded `...rest` → `BaseButton` → the `<button>` element.
+   *
+   * The root contract's floor, on the exemplar. `ButtonPropsBase` is the frozen
+   * React Aria surface and React Aria had no `ref` prop — it had `forwardRef` —
+   * so the base cannot carry one without becoming a different thing. It is
+   * declared HERE instead, at the component, which is where the element type is
+   * known: this component renders exactly one element and it is a `<button>`.
+   *
+   * Verified by rendering rather than assumed: a `useRef<HTMLButtonElement>`
+   * passed to `<Button>` lands on the `<button>` — Base UI's `Button` spreads
+   * what it does not recognise straight through, and under React 19 `ref` is
+   * one of the props it passes rather than a slot it has to be given.
+   */
+  ref?: Ref<HTMLButtonElement> | undefined;
   /**
    * @forwarded `...rest` → `BaseButton` → the `<button>`'s content.
    *

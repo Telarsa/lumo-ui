@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { Disclosure, DisclosurePanel, DisclosureTrigger } from "./disclosure.tsx";
@@ -78,7 +78,7 @@ export type BubbleVariant = "sent" | "received";
 export type BubbleGrouping = "single" | "first" | "middle" | "last";
 
 export interface BubbleProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /**
    * Whose message this is. REQUIRED rather than defaulted: a bubble that
    * guesses its sender renders confidently on the wrong side, and the wrong
@@ -116,7 +116,7 @@ export const bubbleGroupVariants = cva("flex w-full min-w-0 flex-col gap-0.5", {
 });
 
 export interface BubbleGroupProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   variant: BubbleVariant;
   children?: LumoNode;
   className?: string | undefined;
@@ -150,7 +150,7 @@ export const bubbleReactionsVariants = cva(
 );
 
 export interface BubbleReactionsProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /** Which inline corner to hug. Defaults to the trailing (end) corner. */
   align?: "start" | "end" | undefined;
   children?: LumoNode;

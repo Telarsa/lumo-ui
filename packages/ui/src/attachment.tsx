@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva } from "class-variance-authority";
 import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 import { IconButton, type IconButtonProps } from "./button.tsx";
@@ -84,7 +84,7 @@ export const attachmentVariants = cva(
 export type AttachmentState = "uploading" | "error" | "done";
 
 export interface AttachmentProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
   /** `row` is the composer chip; `card` is the thumbnail for image-led media. */
@@ -132,7 +132,7 @@ export const attachmentMediaVariants = cva(
 );
 
 export interface AttachmentMediaProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
   /** `image` crops a child img to the box; `icon` sizes a child svg. */
@@ -144,7 +144,7 @@ export function AttachmentMedia({ media = "icon", className, ...props }: Attachm
 }
 
 export interface AttachmentSectionProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -159,7 +159,7 @@ export function AttachmentContent({ className, ...props }: AttachmentSectionProp
 }
 
 export interface AttachmentNameProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"span">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -182,7 +182,7 @@ export function AttachmentName({ className, ...props }: AttachmentNameProps) {
 }
 
 export interface AttachmentMetaProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"span">, "children" | "className"> {
   locale: Locale;
   /**
    * Raw byte count. Formatted through `formatFileSize`, so a Persian page gets

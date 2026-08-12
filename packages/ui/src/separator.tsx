@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps, Ref } from "react";
 import { cva } from "class-variance-authority";
 import { cn } from "@lumo-ui/core";
 
@@ -73,7 +73,16 @@ export const separatorVariants = cva(
  * element choice below. One source of truth, and it is the stricter one.
  */
 export interface SeparatorProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"hr">, "children" | "className" | "ref"> {
+  /**
+   * The root, at the widest type both branches satisfy.
+   *
+   * A horizontal separator is an `<hr>` and a vertical one is a
+   * `<div role="separator">`, so neither `HTMLHRElement` nor `HTMLDivElement`
+   * is true of this component — `HTMLElement` is. Widened rather than dropped:
+   * see `props.ts`'s contract.
+   */
+  ref?: Ref<HTMLElement> | undefined;
   orientation?: "horizontal" | "vertical" | undefined;
   className?: string | undefined;
 }
@@ -90,8 +99,13 @@ export function Separator({
     // `<hr>` has an implicit `role="separator"` and an implicit horizontal
     // orientation, so neither is restated — an explicit role on a semantic
     // element is noise that eventually contradicts the element.
-    <hr className={classes} {...props} />
+    <hr className={classes} {...(props as ComponentProps<"hr">)} />
   ) : (
-    <div role="separator" aria-orientation="vertical" className={classes} {...props} />
+    <div
+      role="separator"
+      aria-orientation="vertical"
+      className={classes}
+      {...(props as ComponentProps<"div">)}
+    />
   );
 }

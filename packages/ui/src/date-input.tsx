@@ -4,6 +4,7 @@ import {
   useCallback,
   useImperativeHandle,
   useRef,
+  type ComponentProps,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
   type Ref,
@@ -109,7 +110,18 @@ export interface DateInputHandle {
   focus: () => void;
 }
 
-export interface DateInputProps {
+export interface DateInputProps
+  /*
+   * `ref` is OWNED and is a richer thing than the DOM node: it is a
+   * `DateInputHandle`, declared below, because what a caller needs from this
+   * component is "focus the first segment", not the `<div>`. `role` and
+   * `aria-labelledby` are written from required props; `aria-describedby` is
+   * merged with the field's own description node.
+   */
+  extends Omit<
+    ComponentProps<"div">,
+    "children" | "className" | "ref" | "role" | "aria-labelledby" | "aria-describedby"
+  > {
   /** The engine. `useDateFieldState` or `useTimeFieldState` — either. */
   state: DateFieldState;
   /**
@@ -157,6 +169,7 @@ export function DateInput({
   bare,
   className,
   ref,
+  ...props
 }: DateInputProps) {
   const strings = stringsFor(locale);
   const dir = direction(locale);
@@ -289,6 +302,7 @@ export function DateInput({
 
   return (
     <div
+      {...props}
       data-lumo=""
       role="group"
       aria-labelledby={labelId}

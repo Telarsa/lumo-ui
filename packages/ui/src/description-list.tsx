@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -74,7 +74,7 @@ export const descriptionTermVariants = cva("min-w-0 text-fg-muted");
 export const descriptionDetailVariants = cva("m-0 min-w-0 text-fg");
 
 export interface DescriptionListProps
-  extends Omit<HTMLAttributes<HTMLDListElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"dl">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -93,7 +93,7 @@ export function DescriptionList({ className, ...props }: DescriptionListProps) {
  * siblings in a single run.
  */
 export interface DescriptionGroupProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">,
+  extends Omit<ComponentProps<"div">, "children" | "className">,
     VariantProps<typeof descriptionGroupVariants> {
   children?: LumoNode;
   className?: string | undefined;
@@ -104,7 +104,7 @@ export function DescriptionGroup({ layout, className, ...props }: DescriptionGro
 }
 
 export interface DescriptionTermProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"dt">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -114,7 +114,7 @@ export function DescriptionTerm({ className, ...props }: DescriptionTermProps) {
 }
 
 export interface DescriptionDetailProps
-  extends Omit<HTMLAttributes<HTMLElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"dd">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }

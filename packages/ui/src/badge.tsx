@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -103,7 +103,7 @@ export const badgeVariants = cva(
 );
 
 export interface BadgeProps
-  extends Omit<HTMLAttributes<HTMLSpanElement>, "children" | "className" | "color">,
+  extends Omit<ComponentProps<"span">, "children" | "className" | "color">,
     VariantProps<typeof badgeVariants> {
   children?: LumoNode;
   className?: string | undefined;

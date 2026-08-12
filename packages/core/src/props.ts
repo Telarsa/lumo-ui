@@ -76,6 +76,187 @@ import type {
  */
 
 /* ════════════════════════════════════════════════════════════════════════════
+ * THE ROOT CONTRACT — WHAT `ref`, `id` AND EVERY OTHER DOM ATTRIBUTE DO
+ *
+ * Decided 12 Aug 2026. AUDIT.md §5 item 2.1. This is the file the decision
+ * lives in; `button.tsx`'s header states it again at the exemplar, and
+ * `packages/gate/src/inert-props.ts` enforces it.
+ *
+ * ── THE STATE IT REPLACES ───────────────────────────────────────────────────
+ *
+ * There was no `ref` story and no `id` story. Whether `<Card ref={r}>` compiled
+ * was an accident of which base type a file's author had reached for:
+ *
+ *     HTMLAttributes<T>     21 files, 49 sites   NO ref  (card, alert, item, …)
+ *     ComponentProps<E>     10 files             ref     (frame, chart, table, …)
+ *
+ * Nothing documented the difference, and nothing could: it is not a difference
+ * anybody chose. AUDIT §4.2 counted the FILES; the sweep found 49 declaration
+ * sites in them, because the shape repeats per part — five in
+ * `skeleton-presets.tsx`, five in `attachment.tsx`, four in `card.tsx`.
+ *
+ * Downstream, no collection, no overlay and no date component forwarded a ref at
+ * all, so a consumer could not focus a drawer panel, measure a popover, or
+ * scroll a `VirtualList` to an index. Separately, 96 of 243 exported components
+ * (39.5%) declared no rest parameter, so they accepted no `id`, no
+ * `data-testid`, and no `aria-*` the component had not thought of. `MenuItem`
+ * could not take `aria-current` for exactly that reason, and it cost a new prop
+ * to fix one instance of it.
+ *
+ * (The audit's figure was "108 of 244 (44%)". The denominators differ — this one
+ * counts exported `function` components whose first parameter is annotated with
+ * a `*Props` type — so it is a method difference rather than a contradiction,
+ * recorded in AUDIT §8 with both methods stated. After the sweep: 81 of 243.)
+ *
+ * This item went first in Phase 2 because it is the only one whose cost is
+ * QUADRATIC: every component added before the decision has to be revisited
+ * after it.
+ *
+ * ── THE DECISION: OMIT WHAT YOU OWN, SPREAD THE REST ────────────────────────
+ *
+ * A component's props interface extends the DOM surface of the element it
+ * actually renders, minus the names the component owns:
+ *
+ *     export interface CardProps
+ *       extends Omit<ComponentProps<"div">, "children" | "className">,
+ *         VariantProps<typeof cardVariants> {
+ *       children?: LumoNode;              // narrowed: never `ReactNode`
+ *       className?: string | undefined;   // merged last by `cn`, never replaced
+ *     }
+ *
+ * and the component binds a rest and spreads it at that element. `spinner.tsx`
+ * is the model the audit named: `:67` omits `role` from the accepted surface
+ * and `:102` hardcodes it, so `role="status"` is not a convention the component
+ * hopes callers respect — it is unrepresentable to override.
+ *
+ * Two clauses, and the second is the one that has actually shipped defects:
+ *
+ *   1. THE BASE IS `ComponentProps<E>`, NEVER `HTMLAttributes<T>`, where `E` is
+ *      the root's tag. This is the entire `ref` story and it costs nothing.
+ *   2. `Omit` WHAT THE COMPONENT OWNS, AND SAY WHY ON THE LINE. A component
+ *      that both accepts an attribute and writes it has a defect waiting on
+ *      whichever spread happens to be last.
+ *
+ * ── WHY, SPECIFICALLY, UNDER REACT 19 ───────────────────────────────────────
+ *
+ * React 19 made `ref` an ORDINARY PROP. Verified against this repo's own
+ * `@types/react@19.2.18` with its own `tsc`, both directions asserted so the
+ * probe could not pass vacuously:
+ *
+ *     type HasRef<P> = "ref" extends keyof P ? true : false;
+ *     const a: HasRef<ComponentProps<"div">>     = true;   // compiles
+ *     const b: HasRef<HTMLAttributes<HTMLDivElement>> = false;  // compiles
+ *     …and the inverted pair produces TS2322 on both lines.
+ *
+ * So the whole `ref` question is answered by a BASE TYPE, not by a mechanism.
+ * No `forwardRef`, no `ref` prop to declare, no element bookkeeping, no runtime
+ * cost. That is what makes clause 1 a one-token edit per interface rather than
+ * a refactor, and it is the fact that decides between the two shapes below.
+ *
+ * Also verified under this repo's `exactOptionalPropertyTypes: true`:
+ * `const p: ComponentProps<"div"> = { id: undefined, ref: undefined, onClick:
+ * undefined }` compiles. React's DOM types spell every optional field
+ * `T | undefined`, so spreading a props bag that carries an explicit
+ * `undefined` — the shape `props.ts` already protects under "ONE MEASURED
+ * WIDENING" and the shape `?: never` breaks — keeps working untouched.
+ *
+ * ── THE SHAPE THAT WAS REJECTED, AND WHY ────────────────────────────────────
+ *
+ * The alternative on the table was an explicit `attr()`-forwarded allow-list —
+ * `id` / `ref` / `aria-labelledby` / `aria-describedby` / `data-*`, hand-listed
+ * and hand-delivered on every root. It is more ceremony in exchange for the
+ * promise that nothing arrives the component has not considered. It loses on
+ * four counts, in ascending order of importance:
+ *
+ *   1. It is 244 hand-maintained lists. The current 21-vs-10 split is what a
+ *      per-file judgement call produces at this scale; a per-file list is the
+ *      same bet with more surface.
+ *
+ *   2. It cannot be typed as cheaply as it can be written. Every field on the
+ *      list has to be redeclared BY HAND with `| undefined` on it, or
+ *      `exactOptionalPropertyTypes` turns a correct spread into an error. That
+ *      is the mistake this file already records once.
+ *
+ *   3. React 19 removed the reason it existed. Under React 18 an allow-list at
+ *      least bought an explicit `ref` story that `forwardRef` otherwise made
+ *      per-component ceremony. Under React 19 `ComponentProps<E>` gives the same
+ *      thing for free, so the allow-list is paying its full price for what is
+ *      now a rounding error.
+ *
+ *   4. IT IS NOT MECHANICALLY CHECKABLE, AND THAT IS THE DECIDING ONE. A gate
+ *      can ask "you accept `id` — do you deliver it?" and answer it from
+ *      syntax. No gate can ask "should you ALSO have accepted
+ *      `aria-keyshortcuts`?" — the answer lives in a component nobody has
+ *      written yet, on a page nobody has built yet. An allow-list's guarantee
+ *      is therefore exactly as strong as the diligence of whoever wrote each
+ *      list, which is the property that produced the state this decision
+ *      replaces. "Omit what you own" inverts that: the DEFAULT is complete, and
+ *      each subtraction is a reviewed line the gate can see.
+ *
+ * ── THE HYBRID CLAUSE: A FLOOR, SO A CLOSED SURFACE IS A DECISION ───────────
+ *
+ * "Omit what you own" alone would let a component omit everything and still be
+ * within the letter of the rule. So:
+ *
+ *   `ref` AND `id` ARE NEVER SUBTRACTED, only ever OWNED or WIDENED, and either
+ *   one is a comment on the `Omit` line naming what breaks otherwise.
+ *
+ * The components that OWN their `ref` all read the DOM out of it, and that is
+ * what earns it: `Table`, `ListBox`, `Tree` and `VirtualList` drive a roving tab
+ * stop or a virtual window from the element; `Gantt`, `Kanban` and `Sortable`
+ * hit-test a drag against it. A consumer's ref does not coexist with theirs — it
+ * REPLACES it. `table.tsx` shipped exactly that: `ref` and `onKeyDown` accepted,
+ * `{...props}` spread last, and every arrow key silently dead the moment a
+ * consumer measured the table. See `TableProps`.
+ *
+ * `DateInput` owns its `ref` for a different and better reason: it hands back a
+ * `DateInputHandle` instead. What a caller needs from that component is "focus
+ * the first segment", not the `<div>`.
+ *
+ * WIDENING is the other legal answer and is not a subtraction. A component
+ * whose root varies at run time — `Stack`'s `tag`, `Separator`'s `<hr>`/`<div>`
+ * pair, `MessageTime`'s `<time>`/`<span>` — declares `ref?: Ref<HTMLElement>`,
+ * the widest type true of every branch, and casts once at the element. Handing
+ * back `Ref<HTMLDivElement>` for a `<section>` would be worse than handing back
+ * nothing, because it type-checks.
+ *
+ * ── WHAT THE COMPONENT STILL OWNS, AND HOW IT SAYS SO ──────────────────────
+ *
+ * Ownership is not a judgement call about taste; it is one of three facts:
+ *
+ *   the component WRITES it        `role` on `Spinner`, `aria-label` on `Table`
+ *                                  (it is built from a REQUIRED `label` prop)
+ *   the component READS it         `ref` on `Table`/`ListBox`/`VirtualList`
+ *   the state lives elsewhere      the open-state trio on an overlay SURFACE;
+ *                                  see `OverlayOpenStateKeys` below
+ *
+ * Everything else is the consumer's. `id`, `data-testid`, `aria-describedby`,
+ * `aria-keyshortcuts`, `aria-current`, `onScroll`, `dir` on a bidi island —
+ * this library cannot enumerate what a page needs, and 44% of it was
+ * previously answering "no" to all of them by default.
+ *
+ * ── ONE THING THIS CONTRACT DOES NOT BUY ───────────────────────────────────
+ *
+ * `Omit` protects a TypeScript consumer. It does nothing for the one who copied
+ * a file into a JavaScript project, which is how this library is distributed.
+ * So where a displaced attribute is a SILENT failure rather than a visible one,
+ * the component ALSO spreads `{...props}` FIRST and writes what it owns after
+ * it. That is the reverse of the house order — everywhere else a caller's value
+ * should win, because that is what an escape hatch is for — and it applies to
+ * every root that writes an attribute its own behaviour then reads back:
+ * `Table`, `ListBox`, `VirtualList`, `Tree`, `Gantt`, `Kanban`, `Sortable` and
+ * `FileUpload`. `table.tsx` explains it on the line, and the two tests in
+ * `table.test.tsx` that failed before it moved are the evidence it is needed
+ * rather than a precaution.
+ *
+ * `Calendar`, `RangeCalendar`, `EventCalendar` and `DateInput` are spread the
+ * same way, and for a weaker reason that is worth stating rather than dressing
+ * up: they own nothing a caller can kill, and the order is uniformity inside a
+ * family whose four roots are read side by side. If that turns out to be the
+ * wrong call, it is four lines.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════════════════
  * KEYS, SELECTION, ORIENTATION
  * ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -617,6 +798,33 @@ export interface OverlayTriggerProps {
   /** Handler that is called when the overlay's open state changes. */
   onOpenChange?: (isOpen: boolean) => void;
 }
+
+/**
+ * The three keys above, as a union, so a SURFACE can subtract them in one line.
+ *
+ * ── WHY A SURFACE MUST NOT ACCEPT THEM ─────────────────────────────────────
+ *
+ * Open state under Base UI belongs to the ROOT — `Dialog.Root`, `Popover.Root`,
+ * `Tooltip.Root` — and in Lumo the part that renders the Root is the TRIGGER:
+ * `DialogTrigger`, `PopoverTrigger`, `TooltipTrigger`. A backdrop, a panel or a
+ * popup is rendered INSIDE that Root and has no access to it.
+ *
+ * Six surfaces declared the trio anyway and destructured all three into `_`
+ * discards — `DialogOverlay`, `DialogModal`, `DrawerOverlay`, `Drawer`,
+ * `Popover`, `Tooltip`. So
+ *
+ *     <DialogModal isOpen={open} onOpenChange={setOpen}>
+ *
+ * reads perfectly, compiles, and does nothing at all: the dialog neither opens
+ * nor reports. That is the same shape as `isKeyboardDismissDisabled`, which was
+ * removed from `ModalOverlayPropsBase` for the same reason and RELOCATED to
+ * `DialogTrigger` — and it gets the same answer, minus the relocation, because
+ * these three are already on the trigger and always have been.
+ *
+ * `time-field.tsx` set the precedent this rests on: absent is a failure at the
+ * call site, accepted-and-ignored is a bug report six months on.
+ */
+export type OverlayOpenStateKeys = "isOpen" | "defaultOpen" | "onOpenChange";
 
 /**
  * A dialog's own props — `dialog.tsx` and `alert-dialog.tsx`, which differ only

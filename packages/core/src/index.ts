@@ -38,6 +38,7 @@ export type {
   ModalOverlayPropsBase,
   MultipleSelection,
   Orientation,
+  OverlayOpenStateKeys,
   OverlayTriggerProps,
   Placement,
   PlacementAxis,

@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@lumo-ui/core";
 
@@ -144,7 +145,21 @@ export const avatarStatusVariants = cva(
   },
 );
 
-interface AvatarBaseProps extends VariantProps<typeof avatarVariants> {
+interface AvatarBaseProps
+  /*
+   * The rest lands on the OUTERMOST element, which is the same element
+   * `className` lands on and for the same reason — see the comment on `circle`
+   * in `Avatar`. That element is a `<span>` in both branches (with a status the
+   * wrapper is one, without a status the circle is), so `Ref<HTMLSpanElement>`
+   * is true either way and needs no widening.
+   *
+   * `children` is Omitted and not redeclared: an avatar's content is `src`/
+   * `alt` or `initials`, both of which are already props, and a third way to
+   * put something inside the circle is a way for the accessible name and the
+   * visible content to disagree.
+   */
+  extends Omit<ComponentProps<"span">, "children" | "className">,
+    VariantProps<typeof avatarVariants> {
   className?: string | undefined;
   /**
    * Fallback glyphs, e.g. `"س م"` or `"KN"`.
@@ -195,7 +210,13 @@ interface AvatarInitialsProps extends AvatarBaseProps {
 export type AvatarProps = AvatarImageProps | AvatarInitialsProps;
 
 export function Avatar(props: AvatarProps) {
-  const { size, className, initials, statusLabel, statusTone } = props;
+  const { size, className, initials, statusLabel, statusTone, ...rest } = props;
+  /*
+   * `src` and `alt` are read off `props` further down rather than destructured
+   * here, because narrowing the discriminated union is what tells the two
+   * arms apart — so they have to be removed from the passthrough by name.
+   */
+  const { src: _src, alt: _alt, ...dom } = rest;
 
   /*
    * The wrapper is CONDITIONAL, and that is a compatibility decision rather
@@ -213,6 +234,7 @@ export function Avatar(props: AvatarProps) {
    */
   const circle = (
     <span
+      {...(statusLabel === undefined ? dom : {})}
       className={cn(avatarVariants({ size }), statusLabel === undefined ? className : undefined)}
     >
       {/*
@@ -243,7 +265,7 @@ export function Avatar(props: AvatarProps) {
   if (statusLabel === undefined) return circle;
 
   return (
-    <span className={cn(avatarStatusWrapperVariants({ size }), className)}>
+    <span {...dom} className={cn(avatarStatusWrapperVariants({ size }), className)}>
       {circle}
       <span className={cn(avatarStatusVariants({ size, tone: statusTone ?? "neutral" }))}>
         {/*

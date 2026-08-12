@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type ComponentProps } from "react";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import type { CalendarDate } from "@internationalized/date";
@@ -246,7 +246,20 @@ export type CalendarNavigation =
       maxValue: CalendarDate;
     };
 
-export interface CalendarBaseProps {
+export interface CalendarBaseProps
+  /*
+   * The root DOM surface. `aria-describedby` is declared BELOW and delivered by
+   * name rather than inherited, because it is merged with the id of the
+   * component's own `description` node — two sources, one attribute — so it
+   * cannot ride the passthrough. See the contract in `props.ts`.
+   */
+  extends Omit<
+    ComponentProps<"div">,
+    /* `onChange` is the library's own vocabulary — `(value) => void`, not
+     * React's `ChangeEventHandler`. Subtracting the DOM spelling is what lets
+     * the Lumo one be declared below; the two cannot coexist under one name. */
+    "children" | "className" | "aria-describedby" | "onChange"
+  > {
   /** Announced name of the calendar. Required: a 42-cell grid needs a name. */
   label: string;
   /**
@@ -513,6 +526,7 @@ export function Calendar({
   errorMessage,
   className,
   "aria-describedby": describedBy,
+  ...props
 }: CalendarProps) {
   const descriptionId = useId();
   const config = lumoCalendar(locale);
@@ -527,6 +541,7 @@ export function Calendar({
 
   return (
     <div
+      {...props}
       data-lumo=""
       className={cn("flex w-fit flex-col gap-2", className)}
       {...describedByWith(describedBy, description != null ? descriptionId : undefined)}

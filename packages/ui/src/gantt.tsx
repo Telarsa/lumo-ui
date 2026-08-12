@@ -572,7 +572,14 @@ export interface GanttStrings {
   movedTo: (label: string, from: string, to: string) => string;
 }
 
-export interface GanttProps<T extends GanttTask> {
+export interface GanttProps<T extends GanttTask>
+  /*
+   * `ref` is owned: `rootRef` below is what the pointer route hit-tests against
+   * and what the keyboard route measures. A consumer's ref would replace it and
+   * the drag would stop working with nothing thrown — the `table.tsx` defect,
+   * one component over. Everything else the `<div>` accepts is the caller's.
+   */
+  extends Omit<React.ComponentProps<"div">, "children" | "className" | "ref"> {
   /** Names the whole chart, e.g. «برنامهٔ انتشار». REQUIRED. */
   label: string;
   /**
@@ -623,6 +630,7 @@ export function Gantt<T extends GanttTask>({
   dateFormatOptions,
   description,
   className,
+  ...props
 }: GanttProps<T>) {
   const [uncontrolledScale, setUncontrolledScale] = React.useState<GanttScale>(
     defaultScale ?? "day",
@@ -765,7 +773,7 @@ export function Gantt<T extends GanttTask>({
   };
 
   return (
-    <div data-lumo="" ref={rootRef} className={cn(ganttVariants(), className)}>
+    <div {...props} data-lumo="" ref={rootRef} className={cn(ganttVariants(), className)}>
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>

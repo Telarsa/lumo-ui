@@ -1,4 +1,4 @@
-import type { ElementType, HTMLAttributes } from "react";
+import type { ComponentProps, ElementType } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -74,7 +74,7 @@ export const emptyStateMediaVariants = cva("flex items-center justify-center", {
 const HEADING_TAGS = { 2: "h2", 3: "h3", 4: "h4", 5: "h5", 6: "h6" } as const;
 
 export interface EmptyStateProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className" | "title">,
+  extends Omit<ComponentProps<"div">, "children" | "className" | "title">,
     VariantProps<typeof emptyStateVariants>,
     VariantProps<typeof emptyStateMediaVariants> {
   /**

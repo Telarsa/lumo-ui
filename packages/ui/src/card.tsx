@@ -1,4 +1,4 @@
-import type { ElementType, HTMLAttributes } from "react";
+import type { ComponentProps, ElementType } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -38,7 +38,7 @@ export const cardVariants = cva(
 );
 
 export interface CardProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">,
+  extends Omit<ComponentProps<"div">, "children" | "className">,
     VariantProps<typeof cardVariants> {
   children?: LumoNode;
   className?: string | undefined;
@@ -49,7 +49,7 @@ export function Card({ variant, className, ...props }: CardProps) {
 }
 
 export interface CardSectionProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -141,7 +141,14 @@ export function CardAction({ className, ...props }: CardSectionProps) {
 const HEADING_TAGS = { 2: "h2", 3: "h3", 4: "h4", 5: "h5", 6: "h6" } as const;
 
 export interface CardTitleProps
-  extends Omit<HTMLAttributes<HTMLHeadingElement>, "children" | "className"> {
+  /*
+   * `"h3"` is the DEFAULT level, not a claim about which element renders —
+   * `level` picks h2–h6 below. It is not a widening case even so: all five are
+   * `HTMLHeadingElement`, so the `ref` this base carries is correct for every
+   * value the prop admits. Contrast `StackProps`, where the tags genuinely
+   * differ and the ref has to be widened by hand.
+   */
+  extends Omit<ComponentProps<"h3">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
   /**
@@ -176,7 +183,7 @@ export function CardTitle({ level = 3, className, ...props }: CardTitleProps) {
 }
 
 export interface CardDescriptionProps
-  extends Omit<HTMLAttributes<HTMLParagraphElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"p">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }

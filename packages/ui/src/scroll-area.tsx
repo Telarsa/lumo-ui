@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -67,7 +68,19 @@ export const scrollAreaVariants = cva(
   },
 );
 
-export interface ScrollAreaProps extends VariantProps<typeof scrollAreaVariants> {
+export interface ScrollAreaProps
+  /*
+   * `role`, `aria-label` and `tabIndex` are owned: the region IS the tab stop
+   * (see the header), and all three together are what make it one. `onScroll`
+   * is deliberately NOT owned — a consumer restoring a scroll position or
+   * driving a scrollspy needs it, and this component writes no scroll handler
+   * of its own for it to displace.
+   */
+  extends Omit<
+      ComponentProps<"div">,
+      "children" | "className" | "role" | "aria-label" | "tabIndex"
+    >,
+    VariantProps<typeof scrollAreaVariants> {
   /**
    * Announced name of the scrollable region, e.g. «فهرست تراکنش‌ها».
    * REQUIRED: the container is a Tab stop (see the header), and an unnamed
@@ -78,7 +91,13 @@ export interface ScrollAreaProps extends VariantProps<typeof scrollAreaVariants>
   className?: string | undefined;
 }
 
-export function ScrollArea({ label, orientation, className, children }: ScrollAreaProps) {
+export function ScrollArea({
+  label,
+  orientation,
+  className,
+  children,
+  ...props
+}: ScrollAreaProps) {
   return (
     <div
       data-lumo=""
@@ -86,6 +105,7 @@ export function ScrollArea({ label, orientation, className, children }: ScrollAr
       aria-label={label}
       tabIndex={0}
       className={cn(scrollAreaVariants({ orientation }), className)}
+      {...props}
     >
       {children}
     </div>

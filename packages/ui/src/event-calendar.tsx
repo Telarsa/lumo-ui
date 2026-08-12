@@ -4,6 +4,7 @@ import {
   useEffect,
   useRef,
   useState,
+  type ComponentProps,
   type CSSProperties,
   type FocusEvent as ReactFocusEvent,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -765,7 +766,8 @@ function weekdayText(date: CalendarDate, locale: Locale): string {
  * THE COMPONENT
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export interface EventCalendarProps {
+export interface EventCalendarProps
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /**
    * Names the grid, e.g. «تقویم تیم». REQUIRED.
    *
@@ -820,6 +822,7 @@ export function EventCalendar({
   onDaySelect,
   maxEventsPerDay,
   className,
+  ...props
 }: EventCalendarProps): LumoNode {
   const locale = useLumoLocale();
   const calendar = lumoCalendar(locale).calendar;
@@ -1329,7 +1332,7 @@ export function EventCalendar({
   ];
 
   return (
-    <div data-lumo="" className={cn(eventCalendarVariants(), className)}>
+    <div {...props} data-lumo="" className={cn(eventCalendarVariants(), className)}>
       <div className={eventCalendarToolbarVariants()}>
         <div className={eventCalendarNavVariants()}>
           <button

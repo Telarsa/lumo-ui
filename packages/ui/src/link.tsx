@@ -1,4 +1,4 @@
-import type { AnchorHTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -138,7 +138,7 @@ export type LinkCurrent = true | "page" | "step" | "location" | "date" | "time";
 
 interface LinkBaseProps
   extends Omit<
-      AnchorHTMLAttributes<HTMLAnchorElement>,
+      ComponentProps<"a">,
       "children" | "className" | "target" | "rel" | "aria-current"
     >,
     VariantProps<typeof linkVariants> {

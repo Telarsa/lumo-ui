@@ -171,7 +171,11 @@ export interface SortableItem {
   label: string;
 }
 
-export interface SortableProps<T extends SortableItem> {
+export interface SortableProps<T extends SortableItem>
+  /* `ref` and `aria-label` are owned — see `GanttProps` and `PaginationProps`.
+   * The props land on the `<ul>` that IS the list, not on the wrapper that
+   * exists only to hold the live region beside it. */
+  extends Omit<React.ComponentProps<"ul">, "children" | "className" | "ref" | "aria-label"> {
   /** Names the list. Required — a reorderable list needs a name. */
   label: string;
   locale: Locale;
@@ -203,6 +207,7 @@ export function Sortable<T extends SortableItem>({
   strings,
   children,
   className,
+  ...props
 }: SortableProps<T>) {
   /** The id being held, by keyboard OR by pointer. One state for both routes. */
   const [heldId, setHeldId] = React.useState<string | null>(null);
@@ -442,6 +447,7 @@ export function Sortable<T extends SortableItem>({
         {announcement}
       </div>
       <ul
+        {...props}
         ref={listRef}
         aria-label={label}
         className={cn(sortableVariants({ orientation }), className)}

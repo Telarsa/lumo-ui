@@ -3,6 +3,7 @@
 import {
   useRef,
   useState,
+  type ComponentProps,
   type ClipboardEvent as ReactClipboardEvent,
   type DragEvent as ReactDragEvent,
 } from "react";
@@ -124,7 +125,27 @@ import {
  * because it grades digits. Read that file before changing the call below.
  */
 
-export interface FileUploadProps {
+export interface FileUploadProps
+  /*
+   * `role` and `aria-label` are owned — the drop zone IS the `role="group"`,
+   * named from the REQUIRED `label`. The four drag handlers are owned because
+   * they carry the depth counter this component is built around (see
+   * `dragDepth`); a consumer's `onDrop` replacing the internal one would leave
+   * a highlighted box that swallows files, which is why `{...props}` is spread
+   * FIRST below as well as Omitted here. `onDragEnd` is NOT owned — nothing
+   * here writes one, and a caller tidying up after their own drag needs it.
+   */
+  extends Omit<
+    ComponentProps<"div">,
+    | "children"
+    | "className"
+    | "role"
+    | "aria-label"
+    | "onDragEnter"
+    | "onDragLeave"
+    | "onDragOver"
+    | "onDrop"
+  > {
   /**
    * Announced name of the drop area, e.g. «کشیدن و رها کردن پرونده‌ها».
    *
@@ -159,6 +180,7 @@ export function FileUpload({
   isDisabled,
   children,
   className,
+  ...props
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   /*
@@ -184,6 +206,7 @@ export function FileUpload({
 
   return (
     <div
+      {...props}
       data-lumo=""
       // `role="group"` and not a hidden button — see the file header.
       role="group"
@@ -301,7 +324,8 @@ export function FileUpload({
   );
 }
 
-export interface FileUploadListProps {
+export interface FileUploadListProps
+  extends Omit<ComponentProps<"ul">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -315,11 +339,16 @@ export interface FileUploadListProps {
  * That is the cheapest correct answer to "how many files did I attach", and it
  * is the reason this is not a `<div>` with `gap`.
  */
-export function FileUploadList({ children, className }: FileUploadListProps) {
-  return <ul className={cn(fileUploadListVariants(), className)}>{children}</ul>;
+export function FileUploadList({ children, className, ...props }: FileUploadListProps) {
+  return (
+    <ul className={cn(fileUploadListVariants(), className)} {...props}>
+      {children}
+    </ul>
+  );
 }
 
-export interface FileUploadItemProps {
+export interface FileUploadItemProps
+  extends Omit<ComponentProps<"li">, "children" | "className"> {
   /** The file's own name, exactly as the file system reports it. */
   name: string;
   /** Size in BYTES. A number — formatted here, never interpolated. */
@@ -351,9 +380,10 @@ export function FileUploadItem({
   onRemove,
   formatOptions,
   className,
+  ...props
 }: FileUploadItemProps) {
   return (
-    <li className={cn(fileUploadItemVariants(), className)}>
+    <li className={cn(fileUploadItemVariants(), className)} {...props}>
       <Paperclip aria-hidden="true" className="size-4 shrink-0 text-fg-muted" />
 
       {/*

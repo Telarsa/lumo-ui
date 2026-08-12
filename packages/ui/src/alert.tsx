@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
@@ -138,7 +138,7 @@ const ROLE_FOR_LIVE = {
 } as const;
 
 interface AlertBaseProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className" | "title" | "role">,
+  extends Omit<ComponentProps<"div">, "children" | "className" | "title" | "role">,
     VariantProps<typeof alertVariants> {
   /**
    * Optional leading icon. A slot rather than a per-tone default, because a

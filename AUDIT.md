@@ -270,16 +270,18 @@ The exemptions are legitimate — the dominant one is shiki code listings, which
 | Inert props | 4 | See §3.2 |
 | Type safety | 6 | Discriminated unions used well and repeatedly; `as object` / `as never` sit at exactly the seams that would have caught the inert props |
 
-**There is no `ref` story.** Whether `<Card ref={r}>` compiles is decided by whether that file's author reached for `HTMLAttributes<T>` (21 files, no ref) or `ComponentProps<E>` (10 files, ref). No collection, overlay or date component forwards a ref at all — a consumer cannot focus a drawer panel, measure a popover, or scroll a `VirtualList` to an index.
+**There was no `ref` story.** Whether `<Card ref={r}>` compiled was decided by whether that file's author reached for `HTMLAttributes<T>` (21 files, no ref) or `ComponentProps<E>` (10 files, ref). No collection, overlay or date component forwarded a ref at all — a consumer could not focus a drawer panel, measure a popover, or scroll a `VirtualList` to an index.
+
+**CLOSED 12 Aug 2026 by Phase 2.1** — "omit what you own, spread the rest", argued in DECISIONS §17, written in `packages/core/src/props.ts`, enforced by `gate:props`' second rule. The two corrections measurement forced are in §8. The remaining items in this list are unchanged except where marked.
 
 **Other structural findings:**
 
 - `& never` type carriers at 7 sites break prop spreading under `exactOptionalPropertyTypes` — the exact regression `props.ts:882-889` was written to avoid and correctly avoids with `?: undefined`. Reproduced with the repo's own tsc.
 - `SelectPopover` and `Menu` declare a function-child form and render `{children as LumoNode}`; the engine cannot render it. The identical signature works in `ComboBox`/`Autocomplete`/`Command` because Base UI's `ComboboxList` genuinely accepts it — so the docs teach a shape that silently renders nothing in two of five.
 - `Disclosure`'s `isExpanded`/`defaultExpanded`/`onExpandedChange` are **completely inert inside a `DisclosureGroup`**, and undocumented.
-- `Tree` casts `props as TreeEngineProps` against a hand-written subset nothing keeps in sync, dropping `id`, `style` and all labelling. `aria-label` is `Omit`ted in favour of the required `label`, so a treegrid named by a visible heading is unexpressible.
-- `TableProps = Omit<ComponentProps<"table">, …>` includes `ref` and `onKeyDown`, spread **after** the internal ones. A consumer passing either silently disables every arrow key on the grid.
-- The open-state trio (`isOpen`/`defaultOpen`/`onOpenChange`) is declared and dropped on six overlay *surfaces*; only the three triggers honour them. `<DialogModal isOpen={open} onOpenChange={setOpen}>` reads perfectly, compiles, and does nothing.
+- ~~`Tree` casts `props as TreeEngineProps` against a hand-written subset nothing keeps in sync, dropping `id`, `style` and all labelling.~~ **HALF FIXED (2.1).** The cast is gone — the engine's props are destructured by name, so whatever is left in the rest is DOM and is spread on the container; `root-contract.test.tsx` asserts `id`, `data-*` and `aria-describedby` arrive. `aria-label` is still `Omit`ted in favour of the required `label`, so a treegrid named by a visible heading is still unexpressible.
+- ~~`TableProps = Omit<ComponentProps<"table">, …>` includes `ref` and `onKeyDown`, spread **after** the internal ones. A consumer passing either silently disables every arrow key on the grid.~~ **FIXED (2.1).** Proved with a failing test before the fix; both names are now `Omit`ted and `{...props}` is spread FIRST, because `Omit` alone protects only a TypeScript consumer.
+- ~~The open-state trio (`isOpen`/`defaultOpen`/`onOpenChange`) is declared and dropped on six overlay *surfaces*; only the three triggers honour them. `<DialogModal isOpen={open} onOpenChange={setOpen}>` reads perfectly, compiles, and does nothing.~~ **FIXED (2.1/2.7).** `Omit`ted on all six via `OverlayOpenStateKeys`, together with `PositionProps.isOpen` — a seventh spelling of the same fact that this list had not counted.
 - `UNSTABLE_portalContainer` is dropped on all four overlays, and all four render `<Base*.Portal>` with no props — the one dropped prop with no workaround.
 
 ### 4.3 Design system & docs — 6/10
@@ -344,13 +346,13 @@ Nothing new gets built until these are done. Each one either ships to users toda
 
 | # | Goal | Exit criterion |
 | --- | --- | --- |
-| 2.1 | **Decide the `ref` + `id` contract once, in `core`.** Either "omit what you own, spread the rest" (the `Spinner` model) or an explicit `attr()`-forwarded allow-list on every root. | Written into `button.tsx`'s header; enforced by 1.1's gate. This is the only item whose cost is *quadratic* — every component added before the decision must be revisited after it. |
+| 2.1 | **Decide the `ref` + `id` contract once, in `core`.** Either "omit what you own, spread the rest" (the `Spinner` model) or an explicit `attr()`-forwarded allow-list on every root. | **DONE** — "omit what you own, spread the rest", with `ComponentProps<E>` as the base and `ref`/`id` as a floor that may be OWNED or WIDENED but never cut. Written in `packages/core/src/props.ts`, restated on `button.tsx`, argued in DECISIONS §17, and enforced by a second rule inside 1.1's gate (`gradeRootContract`, three verdicts, four fixtures). What decided it is a React 19 fact this document did not have: `ref` is now an ordinary prop, so `ComponentProps<E>` carries it and `HTMLAttributes<T>` does not — the whole `ref` story is one token, which prices the allow-list out. **Swept: 21 files / 49 declaration sites off `HTMLAttributes`, and 20 closed surfaces opened.** Two claims in §4.2 below were corrected on measurement; see §8. |
 | 2.2 | **One press treatment, one disabled opacity, one focus mechanism.** | A test enumerating the directory (not a list) asserts each vocabulary has exactly one spelling. |
 | 2.3 | **Shadow and scrim tokens.** Collapse 5 overlay elevations onto `raised`/`overlay`/`modal`. | `--lumo-sys-shadow-*` and `--lumo-sys-scrim` exist; zero untokenised colours in the library. |
 | 2.4 | **`extendTailwindMerge` for the `control-*` namespace.** | `cn("h-control-md","h-control-lg") === "h-control-lg"`, with a test. |
 | 2.5 | **Respell the 7 `& never` carriers as `?: undefined`.** | Spreading a props bag compiles everywhere. |
 | 2.6 | **Close the remaining inert props** surfaced by 1.1, in one commit while the gate is fresh. | Gate returns 0. |
-| 2.7 | **`Omit` the open-state trio off the six overlay surfaces**; `Omit` `ref`/`onKeyDown` from `TableProps`; drop the function-child arm from `Select`/`Menu`. | Each becomes a compile error rather than a silent no-op. |
+| 2.7 | **`Omit` the open-state trio off the six overlay surfaces**; `Omit` `ref`/`onKeyDown` from `TableProps`; drop the function-child arm from `Select`/`Menu`. | **PARTLY DONE** with 2.1, because both halves were the same edit. The trio is `Omit`ted on all six surfaces (`OverlayOpenStateKeys` in props.ts; `PositionProps.isOpen`, a fourth spelling of the same idea, went with it) and `ref`/`onKeyDown` are `Omit`ted from `TableProps` — each now a compile error, asserted by `@ts-expect-error` in `overlays.test.tsx` and `table.test.tsx`. The `Select`/`Menu` function-child arm is NOT done and is still open. |
 
 ### Phase 3 — Grade what review currently catches (est. 2–4 days)
 
@@ -427,3 +429,31 @@ That makes **four** "exists, self-tests, grades nothing" incidents in this repos
 The first version passed every unit test and still shipped the defect. It matched children with `child.type === SelectItem` — true in a client component, **false across the RSC boundary**, where a revived element keeps `$$typeof`, `props` and nesting but its `type` is a client-reference object. It was caught only by re-reading the built export and finding one surviving `thr` after the other two routes had gone clean.
 
 DECISIONS §15 says a green unit suite is not evidence about a static export. This is the same lesson one layer deeper: a *partially* clean export is not evidence either.
+
+---
+
+## 8. Phase 2.1 outcome — the `ref`/`id` contract, and what measuring it changed
+
+The decision is DECISIONS §17 and the contract text is `packages/core/src/props.ts`.
+This section records only what this document got wrong, in §7's format, because
+the pattern matters more than the individual errors.
+
+| Claim in this audit | What measurement showed |
+| --- | --- |
+| "`HTMLAttributes<T>` (21 files, no ref) or `ComponentProps<E>` (10 files, ref)" | **21 files, but 49 declaration sites.** The file count understated the sweep by 2.3×, because the shape repeats per part: `skeleton-presets.tsx` has five, `attachment.tsx` five, `card.tsx` four. The new gate rule run against the tree as it stood reports exactly 49. |
+| "108 of 244 (44%) declare no rest param" | **96 of 243 (39.5%)**, counting exported `function` components whose first parameter is annotated with a `*Props` type. The audit's denominator was a different one (it counted every exported component, including the `const` forms), so this is a method difference rather than a contradiction — but the headline percentage moves four points and it is the number the decision was priced against. After the sweep: **81 of 243 (33%)**. |
+| "`TableProps` … includes `ref` and `onKeyDown`, spread after the internal ones. A consumer passing either silently disables every arrow key" | **Confirmed, and worse than stated.** Written as a failing test first: with a consumer ref the roving stop never leaves `{0,0}`, and the consumer's ref IS assigned — so the grid looks wired up from the outside while `ref.current` inside the component is null. The fix needed two halves, because `Omit` alone protects only a TypeScript consumer and this library is distributed by copying source. |
+| "the open-state trio … on six overlay *surfaces*" | **Confirmed, plus a seventh spelling nobody had counted.** `PositionProps.isOpen` — "whether the overlay is currently open" — is a fourth name for the same fact and was equally inert on `Popover` and `Tooltip`. Removing the trio and leaving that one would have left the defect with a smaller surface and a better disguise. |
+
+**What the new rule cannot see, stated because it is the honest half.**
+`root-contract/undelivered-root` fires on a shape that *inherits* a DOM surface
+and never spreads it. It finds **zero** violations on the tree as it stood
+before this work — not because there were none, but because the 96 closed
+components did not extend a DOM base at all. A props type that never mentions an
+element is invisible to the rule, and no syntactic pass can tell "deliberately
+closed" from "nobody thought about it" there. What the rule guarantees is
+narrower and worth stating exactly: **once a component opts into an element's
+surface, it cannot then drop it, and it cannot subtract `ref` or `id` without
+writing down why.** Closing the remaining 81 is a judgement call per component,
+and the ones that are genuinely deliberate — `LumoProvider`, `Kbd`,
+`ChartData` — should stay closed.

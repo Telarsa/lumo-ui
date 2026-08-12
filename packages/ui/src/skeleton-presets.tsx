@@ -1,4 +1,4 @@
-import type { CSSProperties, HTMLAttributes } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@lumo-ui/core";
 import { Skeleton } from "./skeleton.tsx";
@@ -44,7 +44,7 @@ import { Skeleton } from "./skeleton.tsx";
  */
 
 export interface SkeletonTextProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /** How many lines of body copy to stand in for. Default `3`. */
   lines?: number | undefined;
   className?: string | undefined;
@@ -78,7 +78,7 @@ export const skeletonAvatarVariants = cva("rounded-full", {
 });
 
 export interface SkeletonAvatarProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className">,
+  extends Omit<ComponentProps<"div">, "children" | "className">,
     VariantProps<typeof skeletonAvatarVariants> {
   /**
    * Text lines beside the circle — a name and a caption, the classic feed row.
@@ -109,7 +109,7 @@ export function SkeletonAvatar({ size, lines = 2, className, ...props }: Skeleto
 }
 
 export interface SkeletonCardProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /** A media rectangle above the text, as a thumbnail card has. Default `true`. */
   hasMedia?: boolean | undefined;
   /** Body lines under the heading line. Default `2`. */
@@ -140,7 +140,7 @@ export function SkeletonCard({ hasMedia = true, lines = 2, className, ...props }
 }
 
 export interface SkeletonFormProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /** Label-and-input pairs. Default `3`. */
   fields?: number | undefined;
   /** A submit-shaped bar at the reading start of the last row. Default `true`. */
@@ -170,7 +170,7 @@ export function SkeletonForm({ fields = 3, hasAction = true, className, ...props
 }
 
 export interface SkeletonTableProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /** Body rows under the header band. Default `4`. */
   rows?: number | undefined;
   /** Columns across. Default `4`. */

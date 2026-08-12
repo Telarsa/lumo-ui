@@ -22,6 +22,8 @@ import { Breadcrumb, BreadcrumbEllipsis, Breadcrumbs } from "./breadcrumbs.tsx";
 import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { Dialog, DialogHeading, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Drawer, DrawerOverlay } from "./drawer.tsx";
+import { Popover } from "./popover.tsx";
+import { Tooltip } from "./tooltip.tsx";
 import { Menu, MenuItem, MenuPopover, MenuTrigger, SubmenuTrigger } from "./menu.tsx";
 import {
   Select,
@@ -410,5 +412,51 @@ describe("open-state English, counted rather than assumed", () => {
       </MenuTrigger>,
     );
     expect(getAllByRole("menuitem")[0]?.getAttribute("aria-current")).toBe("true");
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE OPEN-STATE TRIO IS THE TRIGGER'S, AND SAYING SO IS THE FIX
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * `isOpen` / `defaultOpen` / `onOpenChange` were declared on six overlay
+ * SURFACES and destructured into `_` discards on all six. `<DialogModal
+ * isOpen={open} onOpenChange={setOpen}>` read perfectly, compiled, and did
+ * nothing — the dialog neither opened nor reported.
+ *
+ * There is nothing to assert at RUN time about a prop that no longer exists, so
+ * this block is deliberately all `@ts-expect-error`: `gate:types` fails if any
+ * one of them becomes unused, which is exactly what re-declaring the trio on a
+ * surface would do. Same instrument as `table.test.tsx`'s owned-prop test, and
+ * the same reason — the defect's whole signature is that it produces no bytes.
+ *
+ * The positive half is already covered above and in `dialog.tsx`: the TRIGGERS
+ * honour all three, and they are where Base UI's Root — the thing that actually
+ * holds open state — is rendered.
+ */
+describe("the open-state trio is a compile error on a surface", () => {
+  it("on all six of them", () => {
+    // @ts-expect-error open state belongs to `DialogTrigger`, which renders the Root.
+    void (<DialogOverlay isOpen />);
+    // @ts-expect-error idem.
+    void (<DialogModal defaultOpen />);
+    // @ts-expect-error idem — a drawer's state owner is `DialogTrigger` too.
+    void (<DrawerOverlay onOpenChange={() => undefined} />);
+    // @ts-expect-error idem.
+    void (<Drawer isOpen />);
+    // @ts-expect-error open state belongs to `PopoverTrigger`.
+    void (<Popover defaultOpen />);
+    // @ts-expect-error open state belongs to `TooltipTrigger`.
+    void (<Tooltip onOpenChange={() => undefined} />);
+
+    // …and the triggers still take them, which is what keeps the removal from
+    // being a capability loss rather than a relocation.
+    void (
+      <DialogTrigger isOpen defaultOpen onOpenChange={() => undefined}>
+        <Button>باز کن</Button>
+      </DialogTrigger>
+    );
+    expect(true).toBe(true);
   });
 });

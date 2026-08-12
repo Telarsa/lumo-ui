@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 
@@ -177,7 +178,18 @@ export interface StepItem {
   description?: LumoNode | undefined;
 }
 
-export interface StepsProps extends VariantProps<typeof stepsListVariants> {
+export interface StepsProps
+  /*
+   * `aria-label` is owned — built from the REQUIRED `label`. The rest of the
+   * `<nav>` is the caller's, and `id` is the one that was missed: a step list
+   * that a heading or a form points at with `aria-describedby` needs a target.
+   *
+   * `aria-current` is deliberately NOT reachable here and does not need to be:
+   * it belongs on the current STEP, and `Steps` writes it from `current` on the
+   * item it computes. A prop on this root would name the wrong element.
+   */
+  extends Omit<ComponentProps<"nav">, "children" | "className" | "aria-label">,
+    VariantProps<typeof stepsListVariants> {
   /** The locale every step number is formatted in. Required — see the header. */
   locale: Locale;
   /**
@@ -212,6 +224,7 @@ export function Steps({
   upcomingLabel,
   orientation = "horizontal",
   className,
+  ...props
 }: StepsProps) {
   const statusWords: Record<StepStatus, string> = {
     complete: completeLabel,
@@ -220,7 +233,7 @@ export function Steps({
   };
 
   return (
-    <nav aria-label={label} className={cn(stepsVariants(), className)}>
+    <nav aria-label={label} className={cn(stepsVariants(), className)} {...props}>
       {/*
        * `role="list"` on an `<ol>` is not redundant. Safari strips list
        * semantics from a list whose `list-style` is `none`, which is exactly

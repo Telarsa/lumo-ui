@@ -1,5 +1,5 @@
 import { cva } from "class-variance-authority";
-import type { CSSProperties, HTMLAttributes } from "react";
+import type { ComponentProps, CSSProperties } from "react";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
@@ -28,7 +28,7 @@ import { cn, type LumoNode } from "@lumo-ui/core";
 export const aspectRatioVariants = cva("relative aspect-[var(--lumo-aspect-ratio)]");
 
 export interface AspectRatioProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className" | "style"> {
+  extends Omit<ComponentProps<"div">, "children" | "className" | "style"> {
   /** Width divided by height: `16 / 9`, `1`, `4 / 3`. */
   ratio: number;
   children?: LumoNode;
