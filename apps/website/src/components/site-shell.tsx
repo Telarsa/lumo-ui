@@ -215,7 +215,16 @@ export async function SiteShell({
 
       <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-6 py-6 text-xs text-fg-muted">
-          <span>Telarsa · Lumo UI</span>
+          {/*
+           * `data-lumo-latn`: two proper nouns. `native-script-text` fires on a
+           * visible run carrying no character of the reader's script, which is
+           * exactly right — «thr» shipped to Persian readers by that route — and
+           * a company name is the legitimate exception the hatch exists for.
+           * Marked rather than translated: "Telarsa" is the name of the
+           * organisation in every language, and transliterating it into Persian
+           * script would invent a second name for one thing.
+           */}
+          <span data-lumo-latn="">Telarsa · Lumo UI</span>
           <span className="tabular-nums">{t.footerNote}</span>
         </div>
       </footer>

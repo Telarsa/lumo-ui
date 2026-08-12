@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <!--
+      POISON: three slides, all announced as the same single word.
+
+      `aria-roledescription` REPLACES the spoken role, so each of these is
+      announced as «اسلاید» — and nothing else. Not «اسلاید ۱ از ۳», not the
+      product name inside it: one word, three times, with no way to tell the
+      slides apart and no sense of how many there are. The attribute has made
+      the element sound more described while making it less navigable.
+
+      Every existing rule is green. `named-controls` does not look at
+      `role="group"`, and correctly so — it is not an interactive role.
+      `no-latin-aria` sees perfectly good Persian. There is no idref to dangle
+      and no digit to be wrong. Measured on the export, 12 Aug 2026: 44 of 216
+      elements carrying `aria-roledescription` compute an empty name, all of
+      them `Carousel.Item`, split 22 Persian / 22 English.
+    -->
+    <div role="group" aria-roledescription="اسلاید"><img src="/p-1.avif" alt="" /></div>
+    <div role="group" aria-roledescription="اسلاید"><img src="/p-2.avif" alt="" /></div>
+    <div role="group" aria-roledescription="اسلاید"><img src="/p-3.avif" alt="" /></div>
+
+    <!--
+      NOT a violation, and it is the same markup one attribute later. This is
+      what the fix looks like, so the fixture carries the answer beside the
+      defect: the roledescription still replaces the role, and now there is a
+      name for it to attach to.
+    -->
+    <div role="group" aria-roledescription="اسلاید" aria-label="کفش دویدن، ۴ از ۴">
+      <img src="/p-4.avif" alt="" />
+    </div>
+  </body>
+</html>

@@ -350,7 +350,22 @@ describe("rules do not fire where they should not", () => {
     // name, so resolved-idrefs necessarily drags named-controls with it. Any
     // other co-firing means a fixture is testing more than one thing and the
     // suite has stopped isolating defects.
-    const IMPLIES: Record<string, string[]> = { "resolved-idrefs": ["named-controls"] };
+    /*
+     * The second implication, added 12 Aug 2026 with `native-script-name`, and
+     * as real as the first: a Latin `aria-label` on an interactive control IS
+     * that control's computed accessible name, so the rule that grades the
+     * attribute and the rule that grades the name are two true statements about
+     * one string. `no-latin-aria.bad.html`'s first line is
+     * `<button aria-label="Show suggestions">`, which is exactly that shape.
+     *
+     * It is declared rather than designed around because designing around it
+     * would mean poisoning `no-latin-aria` with a NON-interactive element,
+     * which is not where that defect happens.
+     */
+    const IMPLIES: Record<string, string[]> = {
+      "resolved-idrefs": ["named-controls"],
+      "no-latin-aria": ["native-script-name"],
+    };
 
     for (const file of readdirSync(FIXTURES).filter((f) => f.endsWith(".bad.html") && !f.startsWith("persian-digit"))) {
       const ruleId = file.replace(".bad.html", "");
@@ -484,6 +499,10 @@ describe("fa-IR grading is unchanged by the parametrisation", () => {
       "composite-tab-stop",
       "composite-single-tab-stop",
       "native-calendar",
+      "unique-ids",
+      "native-script-text",
+      "native-script-name",
+      "named-roledescription",
     ]);
     expect(persianDigitFloor({}).id).toBe("persian-digit-floor");
   });
@@ -625,6 +644,260 @@ describe("composite-single-tab-stop — the ceiling", () => {
     );
     expect(v).toHaveLength(1);
     expect(v[0]!.detail).toContain("serves 2 tab stops");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE FOUR RULES ADDED FOR AUDIT PHASE 3, AND THEIR NARROWINGS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Each of these grades something the first nine structurally could not see, and
+ * each carries its negative twins here for the reason DECISIONS §13 gives: an
+ * exemption without a test against it is an exemption that widens into a skip
+ * on the next tidy-up.
+ *
+ * Three of the four have LIVE findings on the export as they land — 14 duplicate
+ * ids, 138 pure-Latin text runs, 44 unnamed roledescriptions. That is the
+ * intended state and it is recorded here rather than smoothed away: a rule
+ * narrowed until the export is green is a rule that has stopped grading.
+ */
+const fa = (body: string) =>
+  `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+const fired = (body: string, rules?: Parameters<typeof gradeHtml>[2]) =>
+  [...new Set(gradeHtml("fa-IR/index.html", fa(body), rules).map((v) => v.rule))].sort();
+
+describe("unique-ids — a reference that resolves to the WRONG element", () => {
+  it("fires on a duplicate, where resolved-idrefs is green", () => {
+    const html = fa('<p id="x">الف</p><p id="x">ب</p><input aria-labelledby="x" />');
+    const v = gradeHtml("fa-IR/index.html", html);
+    expect(v.filter((r) => r.rule === "resolved-idrefs")).toEqual([]);
+    const dup = v.filter((r) => r.rule === "unique-ids");
+    expect(dup).toHaveLength(1);
+    expect(dup[0]?.detail).toContain("is carried by 2 elements");
+  });
+
+  it("reports one violation per duplicated id, not one per element", () => {
+    // Five rows sharing `id="a"` is ONE defect to fix. Reporting five would
+    // make the export's 44 elements read as 44 problems and bury the 14.
+    const v = gradeHtml("fa-IR/index.html", fa('<i id="a">۱</i><i id="a">۲</i><i id="a">۳</i>'));
+    expect(v.filter((r) => r.rule === "unique-ids")).toHaveLength(1);
+  });
+
+  it("does not group empty ids together", () => {
+    // `id=""` matches no reference at all, so two of them are not a collision.
+    // Grouping on it would report every such element as a duplicate of every
+    // other — a fabricated defect, which is worse than a missed one.
+    expect(fired('<p id="">الف</p><p id="">ب</p>')).toEqual([]);
+  });
+
+  it("grades ids inside <pre> and <code>, because the export has none there", () => {
+    /*
+     * The carve-out this rule was specified with. Measured before it was
+     * written: 8,846 elements carry an `id` in the export and ZERO of them are
+     * inside a `<pre>` or `<code>` — a shiki listing renders `id="…"` as
+     * escaped TEXT, never as an attribute, so the exclusion is a no-op on every
+     * byte this project ships and a hole the day someone embeds live markup in
+     * a code block.
+     */
+    expect(fired('<pre><code><span id="d">۱</span><span id="d">۲</span></code></pre>')).toEqual([
+      "unique-ids",
+    ]);
+  });
+});
+
+describe("native-script-text — the rule that would have caught «thr»", () => {
+  it("fires on a pure-Latin run on a Persian page", () => {
+    expect(fired("<p>مرتب‌سازی</p><span>thr</span>")).toEqual(["native-script-text"]);
+  });
+
+  it("does NOT fire on an inline technical term inside Persian prose", () => {
+    // The scope decision, from the side that matters: hundreds of these exist
+    // in the documentation and every one is correct prose. A rule that flagged
+    // them would be switched off within a day.
+    expect(fired('<p>با orientation="vertical" پشته می‌نشیند.</p>')).toEqual([]);
+  });
+
+  it("merges a run split by ENTITIES, which is how linkedom parses the export", () => {
+    /*
+     * `&quot;` splits a text node in linkedom, so this ONE Persian sentence
+     * arrives as five nodes and two of them hold no Persian at all. Asked per
+     * node the rule reports two false positives here; measured over the export,
+     * 40 of 178 findings were exactly this and nothing else. The rule grades
+     * an element's own text, merged.
+     */
+    expect(fired("<p>با orientation=&quot;vertical&quot; پشته می‌نشیند.</p>")).toEqual([]);
+  });
+
+  it("honours data-lumo-latn and NOT a bare lang attribute", () => {
+    /*
+     * `lang` was considered as a second hatch — the root 404 documents carry
+     * `lang="en-US" dir="ltr"` on a deliberate English line — and refused. The
+     * natural wrong fix for «thr» being read in a Persian voice is to add
+     * `lang="en"` to it, which would silence this rule on the exact defect it
+     * exists for. `data-lumo-latn` cannot be reached by accident.
+     */
+    expect(fired('<span data-lumo-latn dir="ltr">KH-4825</span>')).toEqual([]);
+    expect(fired('<p lang="en-US" dir="ltr">This page could not be found.</p>')).toEqual([
+      "native-script-text",
+    ]);
+  });
+
+  it("is vacuous on a Latin-script locale rather than pretending to grade it", () => {
+    const html = '<!doctype html><html lang="en-US" dir="ltr"><body><p>Sort by</p></body></html>';
+    expect(gradeHtml("en-US/index.html", html)).toEqual([]);
+  });
+
+  it("grades ARABIC through the same script, not a second hardwired one", () => {
+    // The parametrisation, proven with a second locale — the standard this
+    // suite already holds the digit rules to.
+    const bad = '<!doctype html><html lang="ar-SA" dir="rtl"><body><span>newest</span></body></html>';
+    const good = '<!doctype html><html lang="ar-SA" dir="rtl"><body><span>الأحدث</span></body></html>';
+    expect(gradeHtml("ar-SA/index.html", bad).map((v) => v.rule)).toContain("native-script-text");
+    expect(gradeHtml("ar-SA/index.html", good)).toEqual([]);
+  });
+
+  it("ignores a run with no WORD in it — a bullet, a unit, a symbol", () => {
+    // Three letters, not one: «۵ kg» and «▼» are not untranslated strings.
+    expect(fired("<p>۵ kg</p><span>▼</span><span>x</span>")).toEqual([]);
+  });
+});
+
+describe("native-script-name — what is ANNOUNCED, not what is in an attribute", () => {
+  it("fires on a name that no attribute carries", () => {
+    // `<input type=submit>` is named by its `value`: not an ARIA attribute, not
+    // a text node. This is the gap `no-latin-aria` structurally cannot reach.
+    const v = gradeHtml("fa-IR/index.html", fa('<input type="submit" value="Send order" />'));
+    expect(v.map((r) => r.rule)).toEqual(["native-script-name"]);
+    expect(v[0]?.detail).toContain('"Send order"');
+  });
+
+  it("fires on a control named by a <label for> across the document", () => {
+    expect(fired('<label for="q">Search orders</label><input id="q" />')).toEqual([
+      "native-script-name",
+      "native-script-text",
+    ]);
+  });
+
+  it("subtracts a MARKED DESCENDANT, which is where a name comes from", () => {
+    /*
+     * The 474 pure-Latin names in the export are all proper nouns and all
+     * already marked — but the mark is one level DOWN, on the `<code>` or
+     * `<span>` inside the control. `closest()`, which every other rule in
+     * rules.ts uses for this hatch, looks UP and would report all 474.
+     */
+    expect(fired('<a href="/x/"><code data-lumo-latn dir="ltr" lang="en">pnpm</code></a>')).toEqual([]);
+  });
+
+  it("but subtraction is not silence: unmarked Latin beside marked Latin fires", () => {
+    // The negative twin. The mark buys the string it wraps, not the control.
+    const v = gradeHtml(
+      "fa-IR/index.html",
+      fa('<button><code data-lumo-latn dir="ltr" lang="en">pnpm</code> Install</button>'),
+    );
+    expect(v.filter((r) => r.rule === "native-script-name")).toHaveLength(1);
+  });
+
+  it("leaves an UNNAMED control to named-controls", () => {
+    // Two rules reporting one element teaches people to read neither.
+    expect(fired("<button></button>")).toEqual(["named-controls"]);
+  });
+
+  it("passes a control named in the reader's own script", () => {
+    expect(fired('<button aria-label="افزودن سفارش">+</button>')).toEqual([]);
+  });
+
+  it("is vacuous on a Latin-script locale", () => {
+    const html =
+      '<!doctype html><html lang="en-US" dir="ltr"><body><button>Save</button></body></html>';
+    expect(gradeHtml("en-US/index.html", html)).toEqual([]);
+  });
+});
+
+describe("named-roledescription — a word announced with nothing attached", () => {
+  it("fires on a roledescription with no accessible name", () => {
+    const v = gradeHtml("fa-IR/index.html", fa('<div role="group" aria-roledescription="اسلاید"></div>'));
+    expect(v.map((r) => r.rule)).toEqual(["named-roledescription"]);
+    expect(v[0]?.detail).toContain("announced as that word and nothing else");
+  });
+
+  it("passes once the element has a name — the one-attribute fix", () => {
+    expect(
+      fired('<div role="group" aria-roledescription="اسلاید" aria-label="کفش، ۱ از ۴"></div>'),
+    ).toEqual([]);
+  });
+
+  it("still fires when the slide merely CONTAINS a heading — the obvious wrong fix", () => {
+    /*
+     * `group` takes its name from the author only: ARIA does not list it among
+     * the name-from-content roles, so a heading inside the slide is not a name
+     * and a reader announcing this element still says «اسلاید» and stops.
+     * This is worth a test rather than a comment, because "put a title in the
+     * slide" is what anyone would try first when told the carousel is unnamed —
+     * and the page would look completely correct afterwards.
+     */
+    expect(fired('<div role="group" aria-roledescription="اسلاید"><h3>کفش دویدن</h3></div>')).toEqual(
+      ["named-roledescription"],
+    );
+  });
+
+  it("accepts a name from CONTENT where the role takes one", () => {
+    // The counterpart, so the rule is not mistaken for "aria-label or nothing":
+    // `button` IS a name-from-content role, so its text is its name.
+    expect(fired('<button aria-roledescription="کلید میان‌بر">ذخیره</button>')).toEqual([]);
+  });
+
+  it("skips an aria-hidden subtree, which is never announced at all", () => {
+    expect(
+      fired('<div aria-hidden="true"><div role="group" aria-roledescription="اسلاید"></div></div>'),
+    ).toEqual([]);
+  });
+
+  it("grades an ENGLISH page too — the export's finding is 22 and 22", () => {
+    // Deliberately no locale early return. An unnamed slide is exactly as
+    // unnavigable in English, and a rule that graded only the Persian half
+    // would have called the English carousel correct.
+    const html =
+      '<!doctype html><html lang="en-US" dir="ltr"><body>' +
+      '<div role="group" aria-roledescription="slide"></div></body></html>';
+    expect(gradeHtml("en-US/index.html", html).map((v) => v.rule)).toEqual([
+      "named-roledescription",
+    ]);
+  });
+});
+
+describe("no-latin-aria grades the two PLATFORM attributes as well", () => {
+  /*
+   * `SPOKEN` held seven attributes, five of them `aria-*`. `alt` IS the
+   * accessible name of an image and a native `placeholder` is announced; that
+   * `aria-placeholder` was graded and `placeholder` was not is the tell. The
+   * export has 12 `alt` and 40 `placeholder` attributes on Persian routes with
+   * zero Latin words among them, so this costs nothing — which is exactly why
+   * it needs tests that watch it fire rather than a note saying it is clean.
+   */
+  it("grades alt on an image", () => {
+    const v = gradeHtml("fa-IR/index.html", fa('<img src="/l.svg" alt="Company logo" />'));
+    expect(v.map((r) => r.rule)).toEqual(["no-latin-aria"]);
+    expect(v[0]?.detail).toContain("alt=");
+  });
+
+  it("grades a native placeholder", () => {
+    const v = gradeHtml(
+      "fa-IR/index.html",
+      fa('<input type="search" aria-label="جست‌وجو" placeholder="Search orders" />'),
+    );
+    expect(v.map((r) => r.rule)).toEqual(["no-latin-aria"]);
+    expect(v[0]?.detail).toContain("placeholder=");
+  });
+
+  it("does NOT grade either on an element the platform never speaks them on", () => {
+    // `<div alt>` and `<div placeholder>` are author errors no reader hears. A
+    // rule whose findings cannot reach a user is one people learn to ignore.
+    expect(fired('<div alt="Save" placeholder="Search">متن</div>')).toEqual([]);
+  });
+
+  it("does not fire on an empty decorative alt", () => {
+    expect(fired('<img src="/d.svg" alt="" />')).toEqual([]);
   });
 });
 

@@ -196,7 +196,10 @@ function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
     { id: "installation", label: c.rail.installation },
   ];
   if (loaded !== undefined) {
-    for (const example of loaded.examples) {
+    // `.slice(1)` for the same reason the page body does it: the first example
+    // IS the preview, so it has no card of its own and a rail entry for it
+    // would scroll to nothing. The two slices are the one definition.
+    for (const example of loaded.examples.slice(1)) {
       list.push({ id: `example-${example.id}`, label: example.title[lang] });
     }
     if (loaded.composition !== undefined) {
@@ -406,7 +409,26 @@ export default async function ComponentPage({
     html: string;
   }> = [];
   if (loaded !== undefined) {
-    for (const example of loaded.examples) {
+    /*
+     * ── THE FIRST EXAMPLE IS THE PREVIEW, SO IT IS NOT ALSO A CARD ───────────
+     *
+     * `catalog.ts` builds a component's demo as `render: first.render` — the
+     * preview at the top of this page IS the first example. Rendering the full
+     * list below it therefore drew that example twice, which was redundant to
+     * a reader and, less visibly, DUPLICATED EVERY ID IN IT.
+     *
+     * That is not hypothetical: `unique-ids` found `spy-usage` twice on the
+     * scrollspy page (once under `#preview`, once under `#example-contents`)
+     * and the table page's row ids five times over. A duplicated id breaks
+     * `<label for>` and `aria-labelledby`, which resolve by document order —
+     * so the second copy of a control was labelled by the first copy's label.
+     * `resolved-idrefs` cannot see it, because a duplicate still resolves.
+     *
+     * `slice(1)` and not a filter on identity: the preview is defined as the
+     * FIRST example, so the card list is defined the same way. If that
+     * definition ever moves, both move together.
+     */
+    for (const example of loaded.examples.slice(1)) {
       exampleCards.push({ example, html: await highlight(example.source, "tsx") });
     }
   }

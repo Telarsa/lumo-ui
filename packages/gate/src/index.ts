@@ -1,5 +1,5 @@
 import { parseHTML } from "linkedom";
-import { RULES, digitSystem, type DigitSystem, type Doc, type Rule, type Violation } from "./rules.ts";
+import { RULES, digitSystem, scriptSystem, type DigitSystem, type Doc, type Rule, type ScriptSystem, type Violation } from "./rules.ts";
 
 export * from "./rules.ts";
 
@@ -14,6 +14,19 @@ export * from "./rules.ts";
 const ARABEXT = digitSystem("Persian", "arabext", "۰"); // U+06F0–U+06F9
 const ARAB = digitSystem("Arabic-Indic", "arab", "٠"); //  U+0660–U+0669
 const LATN = digitSystem("Latin", "latn", "0"); //         U+0030–U+0039
+
+/**
+ * The scripts, one per writing system. `\p{Script=Arabic}` covers Persian and
+ * Arabic alike — they are one script with different letter repertoires, which
+ * is precisely why the property is script and not language: a rule asking "can
+ * this reader read these letters?" gets the same answer for both.
+ *
+ * The message name is the SCRIPT's name, not the language's: a violation on a
+ * `fa-IR` page reads "no Arabic character at all", because that is the true
+ * statement — «سلام» is Persian written in the Arabic script.
+ */
+const ARABIC_SCRIPT = scriptSystem("Arabic", "Arabic");
+const LATIN_SCRIPT = scriptSystem("Latin", "Latin");
 
 /** Everything the gate needs to know about a locale to grade a page in it. */
 export interface LocaleGrading {
@@ -33,6 +46,15 @@ export interface LocaleGrading {
    * something a gate can rely on, and it can differ between a laptop and CI.
    */
   calendar: string;
+  /**
+   * The writing system its readers read. A FOURTH independent property, and it
+   * is independent of all three others: Persian and Arabic share this one while
+   * differing in digits and calendar, and Urdu shares it while numbering in
+   * `latn`. Nothing about `rtl` implies Arabic script — deriving it from
+   * direction would be the proxy that made the digit rules silently
+   * Persian-only, in a new place.
+   */
+  script: ScriptSystem;
 }
 
 /**
@@ -53,9 +75,9 @@ export interface LocaleGrading {
  * `fixtures/locales/` grades real Arabic bytes through it.
  */
 const KNOWN: Record<string, LocaleGrading> = {
-  "fa-IR": { direction: "rtl", digits: ARABEXT, calendar: "persian" },
-  "ar-SA": { direction: "rtl", digits: ARAB, calendar: "islamic-umalqura" },
-  "en-US": { direction: "ltr", digits: LATN, calendar: "gregory" },
+  "fa-IR": { direction: "rtl", digits: ARABEXT, calendar: "persian", script: ARABIC_SCRIPT },
+  "ar-SA": { direction: "rtl", digits: ARAB, calendar: "islamic-umalqura", script: ARABIC_SCRIPT },
+  "en-US": { direction: "ltr", digits: LATN, calendar: "gregory", script: LATIN_SCRIPT },
 };
 
 /** The locales `localeForPath` will accept. Used by the gate's own self-test. */
@@ -142,6 +164,7 @@ export function gradeHtml(path: string, html: string, rules: Rule[] = RULES): Vi
     direction,
     digits: gradingFor(locale).digits,
     calendar: gradingFor(locale).calendar,
+    script: gradingFor(locale).script,
   };
   return rules.flatMap((r) => r.run(doc));
 }
@@ -204,6 +227,23 @@ const EMPTY_COVERAGE: Coverage = {
  * `closest("[data-lumo-latn]")` is the same test the rules themselves apply
  * (`rules.ts`, twice), deliberately: a census that used a different definition
  * of "exempt" would report a coverage the gate does not actually have.
+ *
+ * ═══ WHAT THIS NUMBER DOES AND DOES NOT DESCRIBE, AFTER PHASE 3 ════════════
+ *
+ * `native-script-text` joined the rules that read this census's corpus, so the
+ * printed fraction now covers three rules rather than two and the scope line
+ * says "visible-text rules" rather than naming only digits.
+ *
+ * `native-script-name` is deliberately NOT described by it, and that is worth
+ * stating because the two look like they should agree. That rule grades a
+ * COMPUTED ACCESSIBLE NAME, which is assembled from descendants, attributes and
+ * elements elsewhere in the document — it is not a text-node census at all —
+ * and its exemption therefore reads the hatch DOWNWARD (subtracting the text of
+ * marked descendants) where everything counted here reads it upward. A census
+ * of text nodes cannot state that rule's coverage without inventing a
+ * denominator, so it does not try. The number it publishes instead is the one
+ * in that rule's own header: 17,342 named controls on non-`latn` routes, 474
+ * pure-Latin names, 0 unaccounted for.
  */
 export function addCoverage(into: Coverage, path: string, html: string): Coverage {
   const { locale } = localeForPath(path);
@@ -259,7 +299,7 @@ export function formatCoverage(c: Coverage, flooredRoutes: number): string {
     `  scope — of ${String(c.gradedLocaleDocs)} document(s) in a non-latn locale:`,
     `    ${pct(c.exemptTextNodes, c.textNodes)}% of text nodes and ` +
       `${pct(c.exemptCharacters, c.characters)}% of characters are exempt ` +
-      `(data-lumo-latn), so the digit and script rules did not read them`,
+      `(data-lumo-latn), so the digit and visible-text rules did not read them`,
     `    persian-digit-floor armed on ${String(flooredRoutes)} of ` +
       `${String(c.gradedLocaleDocs)} route(s)`,
   ].join("\n");

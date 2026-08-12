@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <!--
+      POISON: two elements, one id — and every existing rule is green on it.
+
+      This is the shape the export serves today. `Scrollspy`'s section ids are
+      duplicated because the page renders the same example twice, and `Table`'s
+      row ids (`a`, `b`, `c`) are duplicated because the demo appears five
+      times; 14 duplicated ids over 44 elements in 4 documents, measured 12 Aug
+      2026. `Combobox` shipped the same defect inside a SINGLE instance until
+      Phase 1.4 — its input and its trigger shared one id while disagreeing
+      about their own `aria-haspopup`.
+
+      The `aria-labelledby` below is deliberate and it is the whole lesson:
+      `resolved-idrefs` grades it GREEN, because the reference does resolve. It
+      resolves to the FIRST «spy-usage» in document order, so the field is
+      named «استفاده» and never «استفادهٔ پیشرفته», and no rule in this
+      directory could tell the difference before this one.
+    -->
+    <section id="spy-usage"><h2>استفاده</h2></section>
+    <section id="spy-usage"><h2>استفادهٔ پیشرفته</h2></section>
+    <input aria-labelledby="spy-usage" />
+
+    <!-- Not a violation: an id used once, which is the whole contract. -->
+    <p id="spy-faq">پرسش‌های پرتکرار</p>
+  </body>
+</html>

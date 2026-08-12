@@ -71,6 +71,38 @@ export function digitSystem(name: string, numberingSystem: string, zero: string)
   };
 }
 
+/**
+ * A locale's NATIVE SCRIPT — the writing system its readers read.
+ *
+ * A FOURTH independent property, added for the same reason the third was.
+ * Direction, numbering system and calendar are already three facts that do not
+ * follow from one another; script is a fourth. Persian and Arabic share a
+ * script and differ in digits AND calendar; Urdu is rtl and Arabic-script;
+ * Serbian is ltr and can be Cyrillic. Deriving "the reader's script" from
+ * `direction === "rtl"` would be the same proxy that made `no-latin-digits`
+ * silently Persian-only, one property later, so it is stated rather than
+ * inferred.
+ *
+ * The membership test is `\p{Script=…}` rather than a hand-typed code-point
+ * range, for the reason `digitSystem` derives nine digits from one: Unicode
+ * owns the answer, a hand-typed range is correct until it is not, and the
+ * Arabic block alone (U+0600–U+06FF) misses Arabic Presentation Forms and the
+ * Supplement, both of which appear in real Persian bytes.
+ */
+export interface ScriptSystem {
+  /** How the script is named in a violation message. */
+  name: string;
+  /** The Unicode script property value, as `\p{Script=…}` spells it. */
+  property: string;
+  /** Matches any one character written in this script. */
+  pattern: RegExp;
+}
+
+/** Builds a script system from its Unicode script property value. */
+export function scriptSystem(name: string, property: string): ScriptSystem {
+  return { name, property, pattern: new RegExp(`\\p{Script=${property}}`, "u") };
+}
+
 export interface Doc {
   /** Route path, used to derive the expected locale. e.g. "fa/admin/index.html" */
   path: string;
@@ -80,6 +112,8 @@ export interface Doc {
   direction: "rtl" | "ltr";
   /** The digits this locale's readers expect. See `DigitSystem`. */
   digits: DigitSystem;
+  /** The writing system this locale's readers read. See `ScriptSystem`. */
+  script: ScriptSystem;
   /**
    * The Unicode calendar this locale's readers count years in — `"persian"`,
    * `"islamic-umalqura"`, `"gregory"`. See `nativeCalendar`.
@@ -110,6 +144,24 @@ const ASCII_DIGIT = /[0-9]/;
 const LATIN_WORD = /[A-Za-z]{3,}/;
 
 /**
+ * A WORD in some script, whichever script that is.
+ *
+ * `LATIN_WORD` above is spelled `[A-Za-z]` because `no-latin-aria` asks a
+ * question about Latin specifically. The two script rules below ask a different
+ * question — "is there a word here in a script this reader does not read?" —
+ * and they ask it of text that has ALREADY been shown to contain no character
+ * of the reader's own script. At that point any run of three letters is
+ * foreign by construction, so the test does not need to name Latin, and not
+ * naming it is what makes the rules work for a Cyrillic leak on an Arabic page
+ * or a Greek one on a Persian page without a second constant.
+ *
+ * Three, not one: a single stray letter is a bullet, an initial or a unit
+ * («۵ kg»), and flagging those would make the rule noise. Three is the same
+ * threshold `LATIN_WORD` has used since the first rule in this file.
+ */
+const FOREIGN_WORD = /\p{L}{3,}/u;
+
+/**
  * A locale that numbers in `latn` has nothing for the digit rules to catch —
  * its readers expect the same code points the rule would flag. This is the one
  * place that decides it, so both digit rules agree by construction.
@@ -121,15 +173,62 @@ function numbersInLatin(digits: DigitSystem): boolean {
 /** Elements whose text is not user-visible prose. */
 const NON_TEXT = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT"]);
 
-/** Attributes a screen reader speaks. */
-const SPOKEN = [
-  "aria-label",
-  "aria-roledescription",
-  "aria-valuetext",
-  "aria-description",
-  "aria-placeholder",
-  "aria-keyshortcuts",
-  "title",
+/**
+ * Attributes a screen reader speaks.
+ *
+ * ── `alt` AND `placeholder` WERE MISSING, AND BOTH ARE SPOKEN ───────────────
+ *
+ * The list held seven attributes, five of them `aria-*`, and it had a hole with
+ * a shape: it graded the attributes an ARIA audit thinks about and not the two
+ * ordinary HTML attributes that reach a reader by exactly the same route.
+ * `alt` IS the accessible name of an image — it is not a fallback, it is the
+ * name — and a native `placeholder` is announced when a field has no other
+ * name and is read out alongside the name when it has one. `aria-placeholder`
+ * was already here, which is the tell: the ARIA spelling of a thing was graded
+ * and the platform spelling of the same thing was not.
+ *
+ * Measured on the 524-document export before this widening, on the 264
+ * documents in a non-`latn` locale:
+ *
+ *     alt attributes         12   with a Latin word   0
+ *     placeholder attributes 40   with a Latin word   0
+ *
+ * So it costs nothing today, which is the entire argument for doing it now:
+ * the cheapest moment to grade a property is while it already holds. It is not
+ * VACUOUS — the attributes exist in the export in quantity, they are simply
+ * all correct — and the `no-latin-aria` fixture carries one of each so the
+ * widening is observed failing rather than assumed to work.
+ *
+ * ── WHY EACH CARRIES A SELECTOR ────────────────────────────────────────────
+ *
+ * `alt` and `placeholder` are only announced on the elements the platform
+ * defines them for. `<div alt="Save">` is an author error that no reader ever
+ * hears, and `<div placeholder="Search">` likewise; grading them would report a
+ * defect that cannot reach a user, and a rule whose findings a reader cannot
+ * hear is a rule people learn to ignore. The `aria-*` attributes and `title`
+ * apply to any element, so their selector is the attribute alone.
+ */
+interface SpokenAttribute {
+  attr: string;
+  /**
+   * Which elements this attribute is actually spoken on. `undefined` means
+   * "any element carrying it".
+   */
+  on?: string;
+}
+
+const SPOKEN: SpokenAttribute[] = [
+  { attr: "aria-label" },
+  { attr: "aria-roledescription" },
+  { attr: "aria-valuetext" },
+  { attr: "aria-description" },
+  { attr: "aria-placeholder" },
+  { attr: "aria-keyshortcuts" },
+  { attr: "title" },
+  // The two platform spellings. `input[type=image]` is in the list because its
+  // `alt` is the name of a real submit button, not decoration.
+  { attr: "alt", on: "img,area,input[type=image]" },
+  { attr: "placeholder", on: "input,textarea" },
 ];
 
 /** Controls that must have an accessible name to be operable. */
@@ -156,6 +255,67 @@ function visibleTextNodes(doc: Document): Text[] {
     }
   };
   walk(doc.body ?? doc);
+  return out;
+}
+
+/**
+ * One element's OWN text — its direct child text nodes, concatenated.
+ *
+ * ── WHY THIS EXISTS AND `visibleTextNodes` DOES NOT ANSWER IT ──────────────
+ *
+ * `native-script-text` below asks whether a run of visible text is PURELY
+ * foreign, which is a question about a whole run and not about a node. Asked
+ * per text NODE it is answered wrongly, and the reason is a parser detail
+ * nobody would predict: **linkedom splits a text node at every character
+ * entity.** A perfectly ordinary Persian sentence in the export —
+ *
+ *     <p>tone=&quot;critical&quot; فقط دکمهٔ تأیید را قرمز می‌کند …</p>
+ *
+ * — arrives as five text nodes, and two of them («tone=» and «critical») hold
+ * no Arabic character at all. They are fragments of a Persian sentence that
+ * happens to quote a prop value, which is exactly the legitimate inline
+ * technical term the scope of this rule was chosen to avoid.
+ *
+ * Measured on the 524-document export, 12 Aug 2026:
+ *
+ *     pure-foreign TEXT NODES   178
+ *     pure-foreign TEXT RUNS    138   ← the same corpus, merged per element
+ *     phantom findings           40   every one of them an entity boundary
+ *
+ * So the merge is not a softening of the rule; it is the difference between
+ * grading sentences and grading the parser. It deliberately merges no further
+ * than the element: a `<code>` inside a Persian paragraph is still its own run,
+ * because an inline foreign term IS its own run to a reader — it is announced
+ * in its own voice — and that is what `data-lumo-latn` is for.
+ */
+interface TextRun {
+  element: Element;
+  text: string;
+}
+
+function visibleTextRuns(doc: Document): TextRun[] {
+  const out: TextRun[] = [];
+  const walk = (el: Element | Document) => {
+    let own = "";
+    for (const child of Array.from(el.childNodes)) {
+      if (child.nodeType === 3) {
+        own += (child as Text).data;
+      } else if (child.nodeType === 1) {
+        const kid = child as Element;
+        if (NON_TEXT.has(kid.tagName)) continue;
+        // The same sanctioned escape hatch `visibleTextNodes` honours, and the
+        // same spelling of it, so the two agree about what is graded.
+        if (kid.closest?.("[data-lumo-latn]")) continue;
+        walk(kid);
+      }
+    }
+    if (own.trim() && (el as Element).tagName !== undefined) {
+      out.push({ element: el as Element, text: own });
+    }
+  };
+  const body = doc.body ?? doc;
+  if ((body as Element).closest?.("[data-lumo-latn]")) return out;
+  walk(body);
   return out;
 }
 
@@ -255,8 +415,9 @@ export const noLatinAria: Rule = {
   run: (doc) => {
     if (doc.direction !== "rtl") return [];
     const v: Violation[] = [];
-    for (const attr of SPOKEN) {
-      for (const el of Array.from(doc.document.querySelectorAll(`[${attr}]`))) {
+    for (const { attr, on } of SPOKEN) {
+      const selector = on === undefined ? `[${attr}]` : on.split(",").map((s) => `${s}[${attr}]`).join(",");
+      for (const el of Array.from(doc.document.querySelectorAll(selector))) {
         if (el.closest?.("[data-lumo-latn]")) continue;
         const value = el.getAttribute(attr) ?? "";
         if (LATIN_WORD.test(value)) {
@@ -964,4 +1125,349 @@ export const nativeCalendar: Rule = {
   },
 };
 
-export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop, compositeSingleTabStop, nativeCalendar];
+/**
+ * Rule 9 — an `id` must be unique in the document.
+ *
+ * ── WHY `resolvedIdrefs` STRUCTURALLY CANNOT SEE THIS ──────────────────────
+ *
+ * `resolved-idrefs` proves an idref RESOLVES. It cannot prove it resolves to
+ * the INTENDED element, because a duplicate satisfies it: `getElementById` and
+ * `<label for>` both return the FIRST match in document order, so a page with
+ * two `id="a"` is a page where half the wiring is decided by which element the
+ * renderer happened to emit first. Every existing rule is green on it. The
+ * markup reads as fully wired, the label points at something, the name computes
+ * — and it is the wrong element.
+ *
+ * This is not hypothetical. It shipped: `combobox.tsx` gave its input and its
+ * trigger the SAME id within one instance, and the two elements disagreed about
+ * their own semantics (`aria-haspopup="listbox"` against `dialog`), so which
+ * one a `<label for>` named was luck. That was found by hand and fixed under
+ * Phase 1.4; this rule is what would have found it.
+ *
+ * ── WHAT IT CATCHES ON THE EXPORT TODAY, AND WHAT IT DOES NOT ──────────────
+ *
+ * Measured, 12 Aug 2026, across 524 documents and 8,846 elements carrying an
+ * `id`: **14 duplicated ids over 44 elements in 4 documents** — 30 elements
+ * more than there should be. The two components are `Table` (ids `a`/`b`/`c`,
+ * the demo row keys, repeated once per example on the page: 5+5+4 elements per
+ * locale) and `Scrollspy` (`spy-install`, `spy-usage`, `spy-theming`,
+ * `spy-faq`, twice each per locale). Both are per-page duplicates produced by
+ * rendering the same example more than once, which is the ordinary way this
+ * defect is born.
+ *
+ * ── THE `<pre>`/`<code>` EXCLUSION THAT IS NOT HERE, AND WHY ───────────────
+ *
+ * This rule was specified with a carve-out for `<pre>`/`<code>` subtrees, on
+ * the reasoning that a documentation site full of shiki-highlighted source
+ * listings would be full of `id="…"` that is source code rather than markup —
+ * the same methodological trap that inflated three counts in this project's
+ * audit, where grep hits turned out to be RSC payload or code samples.
+ *
+ * It was measured before it was written, and the premise is false HERE:
+ *
+ *     elements carrying an id, whole export      8,846
+ *     …inside a <pre> or <code>                      0
+ *     duplicate groups with the exclusion            14
+ *     duplicate groups without it                    14
+ *
+ * A highlighted listing renders `id="…"` as escaped TEXT inside `<span>`s; it
+ * never produces an `id` ATTRIBUTE, so a DOM query for `[id]` cannot see it and
+ * the carve-out is a no-op on every byte this project ships. An exemption that
+ * grades nothing is not free: it is a hole waiting for the day someone embeds
+ * live markup inside a `<code>` block, and DECISIONS §13 is explicit that an
+ * exemption needs evidence rather than plausibility. So the rule grades every
+ * `id` in the document and this note is the measurement, kept because the
+ * reasoning is right in general and only wrong about these bytes.
+ */
+export const uniqueIds: Rule = {
+  id: "unique-ids",
+  because:
+    "resolved-idrefs proves an idref RESOLVES; a duplicate id satisfies it while " +
+    "resolving to the wrong element. <label for> and getElementById both take the " +
+    "FIRST match, so the wiring is decided by document order — that is, by luck.",
+  run: (doc) => {
+    const byId = new Map<string, Element[]>();
+    for (const el of Array.from(doc.document.querySelectorAll("[id]"))) {
+      const id = el.getAttribute("id");
+      // An empty id is a different defect and matches nothing, so grouping on
+      // it would report every such element as a duplicate of every other.
+      if (id === null || id === "") continue;
+      byId.set(id, [...(byId.get(id) ?? []), el]);
+    }
+    const v: Violation[] = [];
+    for (const [id, els] of byId) {
+      if (els.length < 2) continue;
+      v.push({
+        rule: "unique-ids",
+        path: doc.path,
+        detail:
+          `id ${JSON.stringify(id)} is carried by ${els.length} elements. An idref to it ` +
+          `RESOLVES — which is why resolved-idrefs is green — and resolves to the first in ` +
+          `document order, so which element is named, described or controlled is luck.`,
+        snippet: els[0]?.outerHTML.slice(0, 120),
+      });
+    }
+    return v;
+  },
+};
+
+/**
+ * Rule 10 — visible text must be in the reader's own script.
+ *
+ * ── THE DEFECT THIS EXISTS FOR, WHICH WAS GREEN ON ALL NINE RULES ──────────
+ *
+ * A `Select` with a selected key and no `items` renders THE KEY. Three Persian
+ * routes shipped `<span>thr</span>` and `newest` to Persian readers, in the
+ * place where a product name belongs. It self-heals on hydration, so no jsdom
+ * test and no axe run can see it; the RSC payload two lines below carried the
+ * correct Persian label. It was green on every rule this file had, because
+ * `no-latin-digits` grades DIGITS and nothing graded WORDS.
+ *
+ * ── THE SCOPE, AND WHY IT IS NARROW ON PURPOSE ─────────────────────────────
+ *
+ * Only a run of visible text with NO character of the reader's script is
+ * graded. That is a deliberate under-reach. A Persian documentation site is
+ * full of legitimate inline technical terms — prop names, values, package
+ * names — inside Persian sentences, and a rule that flagged «با
+ * orientation="vertical" پشته روی محور بلند می‌نشیند» would be reporting
+ * correct prose. The purity test says: a run that is ENTIRELY foreign is not a
+ * technical term inside a sentence, it is a string that should have been
+ * translated and was not. `<span>thr</span>` is exactly that shape.
+ *
+ * The under-reach is real and worth naming: a Latin word inside an otherwise
+ * Persian run is invisible to this rule. That case belongs to a translator, not
+ * to a grader — and `data-lumo-latn` is how a run that IS deliberately foreign
+ * says so, which is the same hatch the digit rules have used since the first
+ * commit.
+ *
+ * ── THE FALSE-POSITIVE RATE, MEASURED BEFORE THE SCOPE WAS SETTLED ─────────
+ *
+ * On the 524-document export, 12 Aug 2026, over the 264 documents in a
+ * non-Latin-script locale — TWO distinct strings, 138 occurrences:
+ *
+ *     135  «Telarsa · Lumo UI»            the footer brand, apps/website/src/
+ *                                         components/site-shell.tsx
+ *       3  «This page could not be found.» the root 404 documents
+ *
+ * Neither is a rule that grades nothing and neither is a hundred exemptions:
+ * they are two elements, and the fix for both is the one attribute this
+ * repository already uses for genuinely-Latin content. The brand is a proper
+ * noun; the 404 line is a deliberate second-language sentence for a visitor who
+ * does not read Persian, already carrying `lang="en-US" dir="ltr"`.
+ *
+ * **`lang` is deliberately NOT an escape hatch.** It was considered, because
+ * the 404 line already carries it and `lang` is the correct accessibility
+ * mechanism for a foreign-language run — it is what picks the voice. It is
+ * refused because it is reachable by accident and by the wrong fix: the natural
+ * "repair" for a reader who sees `thr` announced in a Persian voice is to add
+ * `lang="en"` to it, which would make this rule silent on the exact defect it
+ * was written for. `data-lumo-latn` cannot be arrived at accidentally, it is
+ * greppable, and it is already what the digit rules mean by "deliberately
+ * foreign". Measured, the two mechanisms are not in competition: every element
+ * in the export that carries `data-lumo-latn` on a Persian route also carries
+ * `lang`, so honouring only the house attribute loses nothing that exists.
+ */
+export const nativeScriptText: Rule = {
+  id: "native-script-text",
+  because:
+    "A Select shipped the raw key «thr» to Persian readers on three routes and was " +
+    "green on all nine rules, because no rule graded WORDS in visible text — only " +
+    "digits. It self-heals on hydration, so only the served bytes can see it.",
+  run: (doc) => {
+    // A Latin-script locale has nothing here to catch: a foreign word on an
+    // English page is the same word its readers read. Same shape as the digit
+    // rules' `numbersInLatin` early return, asked about script.
+    if (doc.script.property === "Latin") return [];
+    const v: Violation[] = [];
+    for (const { element, text } of visibleTextRuns(doc.document)) {
+      if (doc.script.pattern.test(text)) continue;
+      if (!FOREIGN_WORD.test(text)) continue;
+      v.push({
+        rule: "native-script-text",
+        path: doc.path,
+        detail:
+          `visible text with no ${doc.script.name} character at all: ` +
+          `${JSON.stringify(text.trim().slice(0, 60))}. A ${doc.locale} reader is shown a ` +
+          `word in a script they may not read. If it is deliberately foreign — a brand, a ` +
+          `package name, an order id — mark it data-lumo-latn.`,
+        snippet: element.outerHTML.slice(0, 120),
+      });
+    }
+    return v;
+  },
+};
+
+/**
+ * Rule 11 — grade the COMPUTED accessible name, not the `aria-label` attribute.
+ *
+ * ── THE HOLE IN `no-latin-aria`, WHICH IS THE COMMON CASE ─────────────────
+ *
+ * `no-latin-aria` reads nine ATTRIBUTES. But most controls in this library are
+ * not named by an attribute at all — they are named by their CONTENT, or by a
+ * `<label for>`, or by `aria-labelledby`, or by an `<img alt>` nested inside a
+ * button, or by an `<input type="submit">`'s `value`. Every one of those is
+ * announced, and every one of them was ungraded for language: the rule that
+ * exists to stop English reaching a Persian reader could not see the name most
+ * of this library's controls actually have.
+ *
+ * This rule computes the name the way a reader's software does — through
+ * `dom-accessibility-api`, which the gate already depends on and which
+ * `named-controls` already uses to ask the adjacent question ("is there a name
+ * at all?"). The two rules are the pair: one grades that a name EXISTS, this
+ * one grades what LANGUAGE it is in.
+ *
+ * ── IT PASSES TODAY, WHICH IS THE ARGUMENT FOR ADOPTING IT NOW ────────────
+ *
+ * Measured on the export, 12 Aug 2026, over documents in a non-Latin-script
+ * locale:
+ *
+ *     controls with an accessible name        17,342
+ *     …whose name holds no Persian character     474
+ *     …not accounted for by data-lumo-latn         0
+ *
+ * All 474 are proper nouns: 380 are the four package-manager tabs
+ * (`pnpm`/`npm`/`yarn`/`bun`, on 95 component pages) and 94 are component
+ * slugs on the coverage page. Every one is already wrapped in
+ * `<span dir="ltr" lang="en" data-lumo-latn="">`. The library holds this
+ * property today; the cheapest moment to make a property enforceable is while
+ * it holds, because there is no backlog to argue about.
+ *
+ * ── THE EXEMPTION MUST LOOK DOWN, NOT UP ──────────────────────────────────
+ *
+ * Every other rule in this file spells the hatch `el.closest("[data-lumo-latn]")`,
+ * which asks about ANCESTORS. That spelling is wrong here and measurably so: a
+ * name is composed from DESCENDANTS. The 94 coverage-page links are
+ * `<a><code data-lumo-latn>alert</code></a>` — the mark is one level DOWN from
+ * the named element, so `closest` reports 474 violations where there are none.
+ *
+ * So the test is: compute the name, then subtract the text of every marked
+ * descendant. If what is left holds no foreign word, the foreign part of this
+ * name is exactly the part somebody marked as deliberately foreign. It is a
+ * subtraction rather than a skip for the same reason
+ * `data-lumo-extra-tab-stop` discounts one stop rather than silencing a
+ * widget: a button reading «Save پرونده» must still fire on `Save` when only
+ * a sibling was marked, and the negative twin for that is in `gate.test.ts`.
+ *
+ * ── WHAT IT OVERLAPS, STATED RATHER THAN HIDDEN ───────────────────────────
+ *
+ * A control named by its own visible text also trips `native-script-text`,
+ * because that text IS visible text. The overlap is real and is not a reason to
+ * drop either: the rules disagree on everything that is not that case. This one
+ * sees `value`, a nested `alt`, a `<label for>` across the document and a name
+ * assembled from several elements; that one sees a heading, a cell or a
+ * paragraph, which is not a control at all. When both fire, they are two true
+ * statements about one defect — the text is wrong, and so is what is announced.
+ */
+function foreignResidue(el: Element, name: string): string {
+  let residue = name;
+  for (const marked of Array.from(el.querySelectorAll("[data-lumo-latn]"))) {
+    const text = (marked.textContent ?? "").trim();
+    if (text) residue = residue.split(text).join(" ");
+  }
+  return residue;
+}
+
+export const nativeScriptName: Rule = {
+  id: "native-script-name",
+  because:
+    "no-latin-aria reads attributes, and most controls are named by their CONTENT, " +
+    "a <label for>, a nested <img alt> or an <input value> — all announced, none " +
+    "graded for language until this rule.",
+  run: (doc) => {
+    if (doc.script.property === "Latin") return [];
+    const v: Violation[] = [];
+    for (const el of Array.from(doc.document.querySelectorAll(INTERACTIVE))) {
+      // Same inherited-hiding skip as `named-controls`, and for the same
+      // reason: a control inside an aria-hidden subtree is never announced, so
+      // the language of its name cannot reach a reader.
+      if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
+      if (el.closest?.("[data-lumo-latn]")) continue;
+      // Deliberately NOT wrapped in try/catch — see `namedControls`, whose
+      // first version swallowed a throw here and reported green forever.
+      const name = computeAccessibleName(el as unknown as HTMLElement, COMPUTED_STYLE_SHIM).trim();
+      // An unnamed control is `named-controls`' finding, not this one. Two
+      // rules reporting one element teaches people to read neither.
+      if (!name) continue;
+      if (doc.script.pattern.test(name)) continue;
+      if (!FOREIGN_WORD.test(foreignResidue(el, name))) continue;
+      v.push({
+        rule: "native-script-name",
+        path: doc.path,
+        detail:
+          `<${el.tagName.toLowerCase()}> computes the accessible name ${JSON.stringify(name)}, ` +
+          `which holds no ${doc.script.name} character. That is the string a ${doc.locale} ` +
+          `reader hears announced.`,
+        snippet: el.outerHTML.slice(0, 120),
+      });
+    }
+    return v;
+  },
+};
+
+/**
+ * Rule 12 — an `aria-roledescription` needs an accessible name to attach to.
+ *
+ * ── WHAT A READER ACTUALLY HEARS ──────────────────────────────────────────
+ *
+ * `aria-roledescription` REPLACES the spoken role: a `role="group"` carrying
+ * `aria-roledescription="اسلاید"` is announced as «اسلاید» instead of «group».
+ * That is its whole purpose and it is a good one — until the element has no
+ * accessible name, at which point the announcement is the roledescription and
+ * NOTHING ELSE. Ten slides in a carousel are announced as «اسلاید»,
+ * «اسلاید», «اسلاید» … with nothing to tell them apart and no count. The
+ * attribute has made the element sound MORE described while making it less
+ * navigable, and ARIA's own guidance is explicit that a roledescription
+ * requires a name.
+ *
+ * Nothing else in this file can see it. `named-controls` cannot: `role="group"`
+ * is not an interactive role and is correctly absent from `INTERACTIVE`.
+ * `no-latin-aria` cannot: the value is perfectly good Persian. `resolved-idrefs`
+ * cannot: there is no idref. The markup is valid and the defect is audible.
+ *
+ * ── WHAT IT CATCHES TODAY ─────────────────────────────────────────────────
+ *
+ * Measured on the export, 12 Aug 2026, all locales:
+ *
+ *     elements with aria-roledescription        216
+ *     …that compute an empty accessible name     44   (22 fa, 22 en)
+ *
+ * All of them are `Carousel.Item` — 18 on `fa/components/carousel`, 18 on the
+ * English twin, plus the two preview routes and `product-detail`. The
+ * component's own `aria-roledescription` is right; what is missing is the slide
+ * name, and AUDIT §4.2 already has "every slide computes a non-empty name" as a
+ * Phase 4 exit criterion. This rule is that criterion, made checkable.
+ *
+ * ── IT GRADES EVERY LOCALE, DELIBERATELY ──────────────────────────────────
+ *
+ * Unlike the script and digit rules, this one has no early return for `en-US`.
+ * An unnamed slide is exactly as unnavigable in English, and the export proves
+ * the point: the finding is 22 and 22, a perfect mirror. A rule that graded
+ * only the Persian half would have called the English carousel correct.
+ */
+export const namedRoledescription: Rule = {
+  id: "named-roledescription",
+  because:
+    "aria-roledescription REPLACES the spoken role, so an element with one and no " +
+    "accessible name is announced as the roledescription and nothing else — ten " +
+    "slides all called «اسلاید», with nothing to tell them apart.",
+  run: (doc) => {
+    const v: Violation[] = [];
+    for (const el of Array.from(doc.document.querySelectorAll("[aria-roledescription]"))) {
+      if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
+      const name = computeAccessibleName(el as unknown as HTMLElement, COMPUTED_STYLE_SHIM).trim();
+      if (name) continue;
+      v.push({
+        rule: "named-roledescription",
+        path: doc.path,
+        detail:
+          `aria-roledescription=${JSON.stringify(el.getAttribute("aria-roledescription") ?? "")} ` +
+          `on a <${el.tagName.toLowerCase()}> with no accessible name. The roledescription ` +
+          `replaces the role, so this element is announced as that word and nothing else.`,
+        snippet: el.outerHTML.slice(0, 140),
+      });
+    }
+    return v;
+  },
+};
+
+export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop, compositeSingleTabStop, nativeCalendar, uniqueIds, nativeScriptText, nativeScriptName, namedRoledescription];

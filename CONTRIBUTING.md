@@ -181,6 +181,35 @@ suite go red. A rule that has never been observed failing is decoration. One
 shipped in this repo that swallowed an exception and reported green forever; the
 fixture caught it within a minute.
 
+Three more things the Phase 3 rules made explicit, each of which cost a rewrite
+to learn:
+
+**Measure the rule against the real export before settling its scope, not
+after.** The scope you would write from the description is usually wrong about
+the bytes. `native-script-text` was specified per text NODE and reported 178
+findings, 40 of which were phantoms: linkedom splits a text node at every
+`&quot;`, so one Persian sentence quoting a prop value arrives as five nodes and
+two of them hold no Persian at all. Grading an element's own text instead gives
+138, of which every single one is a real string. `unique-ids` was specified with
+a `<pre>`/`<code>` carve-out that turned out to be a no-op — 0 of 8,846 elements
+carrying an `id` are inside one, because a highlighted listing renders `id="…"`
+as text and never as an attribute — so the carve-out was not written, and the
+measurement was written into the rule's header instead. An exemption needs
+evidence, not plausibility (DECISIONS §13).
+
+**A rule that would need many exemptions to be usable grades nothing — say so
+and do not ship it.** The bar is not "the export is green". Three of the four
+Phase 3 rules landed with live findings and that is correct. The bar is that the
+findings are *fixable defects* rather than a standing tax: 138 `native-script-text`
+violations sound like a lot until you see they are two strings, a footer brand
+and one 404 line, each fixed by one attribute.
+
+**When two rules genuinely overlap, declare it rather than design around it.**
+`gate.test.ts`'s `IMPLIES` table names the pairs where one poison legitimately
+trips two rules — a dangling `aria-labelledby` means the control has no name, a
+Latin `aria-label` on a control IS that control's computed name. Everything not
+in that table is a fixture testing more than one thing.
+
 ## The other gate: props that are accepted and never delivered
 
 `pnpm gate:props` grades SOURCE, not HTML, because this defect usually produces

@@ -72,17 +72,17 @@ function BasicExample(l: Locale) {
         <Column id="total">{t.amount[l]}</Column>
       </TableHeader>
       <TableBody>
-        <Row id="a">
+        <Row id="basic-a">
           <Cell>{t.customerOne[l]}</Cell>
           <Cell>{t.isfahan[l]}</Cell>
           <Cell>{formatNumber(1250000, l)}</Cell>
         </Row>
-        <Row id="b">
+        <Row id="basic-b">
           <Cell>{t.customerTwo[l]}</Cell>
           <Cell>{t.tabriz[l]}</Cell>
           <Cell>{formatNumber(890000, l)}</Cell>
         </Row>
-        <Row id="c">
+        <Row id="basic-c">
           <Cell>{t.customerThree[l]}</Cell>
           <Cell>{t.tehran[l]}</Cell>
           <Cell>{formatNumber(2340000, l)}</Cell>
@@ -112,17 +112,17 @@ function FooterExample(l: Locale) {
           <Column id="total">{t.amount[l]}</Column>
         </TableHeader>
         <TableBody>
-          <Row id="a">
+          <Row id="footer-a">
             <Cell>{t.customerOne[l]}</Cell>
             <Cell>{t.isfahan[l]}</Cell>
             <Cell>{formatNumber(1250000, l)}</Cell>
           </Row>
-          <Row id="b">
+          <Row id="footer-b">
             <Cell>{t.customerTwo[l]}</Cell>
             <Cell>{t.tabriz[l]}</Cell>
             <Cell>{formatNumber(890000, l)}</Cell>
           </Row>
-          <Row id="c">
+          <Row id="footer-c">
             <Cell>{t.customerThree[l]}</Cell>
             <Cell>{t.tehran[l]}</Cell>
             <Cell>{formatNumber(2340000, l)}</Cell>
@@ -154,9 +154,9 @@ function SelectionExample(l: Locale) {
       selectAllLabel={t.selectAllOrders[l]}
       selectRowLabel={t.selectOrder[l]}
       rows={[
-        { id: "a", customer: t.customerOne[l], city: t.isfahan[l] },
-        { id: "b", customer: t.customerTwo[l], city: t.tabriz[l] },
-        { id: "c", customer: t.customerThree[l], city: t.tehran[l] },
+        { id: "selection-a", customer: t.customerOne[l], city: t.isfahan[l] },
+        { id: "selection-b", customer: t.customerTwo[l], city: t.tabriz[l] },
+        { id: "selection-c", customer: t.customerThree[l], city: t.tehran[l] },
       ]}
     />
   );
@@ -172,8 +172,8 @@ function SortingExample(l: Locale) {
       sortAscendingLabel={t.sortedAscending[l]}
       sortDescendingLabel={t.sortedDescending[l]}
       rows={[
-        { id: "a", customer: t.customerOne[l], city: t.isfahan[l] },
-        { id: "b", customer: t.customerTwo[l], city: t.tabriz[l] },
+        { id: "sorting-a", customer: t.customerOne[l], city: t.isfahan[l] },
+        { id: "sorting-b", customer: t.customerTwo[l], city: t.tabriz[l] },
       ]}
     />
   );
@@ -200,12 +200,12 @@ function ResizingExample(l: Locale) {
           </Column>
         </TableHeader>
         <TableBody>
-          <Row id="a">
+          <Row id="resizing-a">
             <Cell>{t.customerOne[l]}</Cell>
             <Cell>{t.isfahan[l]}</Cell>
             <Cell>{formatNumber(1250000, l)}</Cell>
           </Row>
-          <Row id="b">
+          <Row id="resizing-b">
             <Cell>{t.customerThree[l]}</Cell>
             <Cell>{t.tehran[l]}</Cell>
             <Cell>{formatNumber(2340000, l)}</Cell>
@@ -241,7 +241,7 @@ function StatusCellsExample(l: Locale) {
           <Column id="total">{t.amount[l]}</Column>
         </TableHeader>
         <TableBody>
-          <Row id="a">
+          <Row id="status-cells-a">
             <Cell>{t.customerOne[l]}</Cell>
             <Cell>
               <Badge tone="positive" variant="subtle">
@@ -250,7 +250,7 @@ function StatusCellsExample(l: Locale) {
             </Cell>
             <Cell>{formatNumber(1250000, l)}</Cell>
           </Row>
-          <Row id="b">
+          <Row id="status-cells-b">
             <Cell>{t.customerTwo[l]}</Cell>
             <Cell>
               <Badge tone="caution" variant="subtle">
@@ -259,7 +259,7 @@ function StatusCellsExample(l: Locale) {
             </Cell>
             <Cell>{formatNumber(890000, l)}</Cell>
           </Row>
-          <Row id="c">
+          <Row id="status-cells-c">
             <Cell>{t.customerThree[l]}</Cell>
             <Cell>
               <Badge tone="critical" variant="subtle">
@@ -299,9 +299,9 @@ function ActionsExample(l: Locale) {
       actionsHeader={t.actions[l]}
       editLabel={t.editOrder[l]}
       rows={[
-        { id: "a", customer: t.customerOne[l], city: t.isfahan[l] },
-        { id: "b", customer: t.customerTwo[l], city: t.tabriz[l] },
-        { id: "c", customer: t.customerThree[l], city: t.tehran[l] },
+        { id: "actions-a", customer: t.customerOne[l], city: t.isfahan[l] },
+        { id: "actions-b", customer: t.customerTwo[l], city: t.tabriz[l] },
+        { id: "actions-c", customer: t.customerThree[l], city: t.tehran[l] },
       ]}
     />
   );

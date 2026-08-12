@@ -110,7 +110,7 @@ A rule that has never been seen to fail is not a rule. This caught a real one:
 | `gate:types` | `LumoNode`, the closed `Locale` union, and every required string prop |
 | `gate:props` | no prop is typed, accepted and then never delivered |
 | `gate:no-css-modules` | the styling decision is real, not a comment |
-| `gate:test` | 604 tests, including each gate's own poison fixtures |
+| `gate:test` | every package's suite — including the gate's own 134, which are its poison fixtures and the negative twin of every exemption |
 | `gate:registry` | the manifest is derivable from the code, not hand-kept |
 | `gate:smoke` | every item compiles as a **consumer** receives it, outside the workspace |
 | `gate:html` | the bytes actually served are correct |
@@ -132,13 +132,26 @@ found a real distribution bug — a companion module missing from a registry ite
 `lumo-gate` parses the built HTML — the bytes a crawler, a JS-disabled reader
 and the first paint receive. No browser, so it runs anywhere.
 
-- `<html lang>` and `dir` match the route's locale
-- no Latin digits in visible text on Persian routes
-- **a minimum count of Persian digits** — because "zero Latin digits" passes
-  trivially on a page that renders no data
-- no Latin-script `aria-label` / `aria-roledescription` / `aria-valuetext`
-- every interactive control has an accessible name
-- no dangling `aria-labelledby` / `aria-controls`
+| rule | what it catches |
+| --- | --- |
+| `lang-dir` | `<html lang>` and `dir` do not match the route's locale |
+| `no-latin-digits` | Latin digits in visible text on a locale that numbers in its own |
+| `persian-digit-floor` | a page that renders no native digits at all — because "zero Latin digits" passes trivially on a page with no data |
+| `no-latin-aria` | a Latin word in any of the nine attributes a reader speaks, including `alt` and a native `placeholder` |
+| `named-controls` | an interactive control with no accessible name |
+| `resolved-idrefs` | a dangling `aria-labelledby` / `controls` / `describedby` / `errormessage` |
+| `composite-tab-stop` | a roving-tabindex widget with NO tab stop — unreachable by keyboard in the served bytes |
+| `composite-single-tab-stop` | the same widget with more than one, which is the role telling the reader a lie |
+| `native-calendar` | a date in the reader's language and the WRONG CALENDAR — «۲۲ ژوئیه ۲۰۲۴» for a day Iran calls «۱ مرداد ۱۴۰۳» |
+| `unique-ids` | a duplicated `id`, where an idref resolves — to whichever element came first |
+| `native-script-text` | a run of visible text with no character of the reader's script in it, which is how `thr` reached three Persian routes |
+| `native-script-name` | the COMPUTED accessible name is in a script the reader does not read — the name most controls actually have, which no attribute carries |
+| `named-roledescription` | an `aria-roledescription` with no accessible name, so the element is announced as that one word and nothing else |
+
+The last four landed together in Phase 3 and three of them had live findings on
+the export the day they shipped: 14 duplicated ids, 138 pure-foreign text runs
+and 44 unnamed roledescriptions. That is the intended state — a rule narrowed
+until the build is green is a rule that has stopped grading.
 
 It refuses to report success on an empty directory, and it **throws** on a route
 whose locale it cannot derive rather than skipping it. An ungraded page is an
@@ -152,6 +165,18 @@ excused:
 ```tsx
 <span data-lumo-latn dir="ltr">KH-4825</span>
 ```
+
+It exempts the subtree from the digit and visible-text rules, and it is also
+what clears a genuinely-foreign accessible NAME — `native-script-name`
+subtracts the text of marked descendants from the computed name and grades what
+is left, because a name is assembled from descendants and `closest()` looks the
+wrong way. The 474 pure-Latin control names in the export are all proper nouns
+(`pnpm`, `npm`, `yarn`, `bun`, component slugs) and all already marked this way.
+
+`lang="en"` is **not** a hatch, deliberately. It is the right thing to write —
+it picks the voice — but it is also the first thing anyone reaches for when a
+stray English string is read aloud in a Persian voice, and honouring it would
+make the rules silent on the exact defect they exist for.
 
 ## Where to look next
 
