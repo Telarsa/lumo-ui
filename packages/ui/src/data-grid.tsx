@@ -43,7 +43,7 @@ export {
  *       <DataGridPagination
  *         label="صفحه‌بندی" previousLabel="قبلی" nextLabel="بعدی"
  *         pageLabel={(n) => `صفحه ${n}`}
- *         pageSizeLabel="تعداد در هر صفحه"
+ *         pageSizes={[10, 25, 50]} pageSizeLabel="تعداد در هر صفحه"
  *         rangeLabel={(from, to, total) => `${from}–${to} از ${total}`}
  *       />
  *     </DataGrid>
@@ -352,7 +352,7 @@ export function DataGridEmpty({ children, className }: DataGridEmptyProps) {
  * PAGING
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-export interface DataGridPaginationProps {
+interface DataGridPaginationBaseProps {
   /** Names the pager's `<nav>` landmark, e.g. «صفحه‌بندی سفارش‌ها». REQUIRED. */
   label: string;
   /** Names the previous-page control. REQUIRED. */
@@ -390,18 +390,48 @@ export interface DataGridPaginationProps {
    * records the same class of failure for a dial code.
    */
   rangeLabel: (from: string, to: string, total: string) => string;
-  /**
-   * Names the rows-per-page control, e.g. «تعداد در هر صفحه». REQUIRED.
-   *
-   * Omitting `pageSizes` removes the control; omitting this while supplying
-   * sizes would leave a `<select>` with no name, which is the quietest form of
-   * the `named-controls` defect.
-   */
-  pageSizeLabel?: string | undefined;
-  /** The rows-per-page choices. Omit to render no size control. */
-  pageSizes?: readonly number[] | undefined;
   className?: string | undefined;
 }
+
+/** No rows-per-page control, so there is nothing to name. */
+interface NoPageSizesProps {
+  pageSizes?: undefined;
+  pageSizeLabel?: undefined;
+}
+
+/** A rows-per-page control, which is a control and therefore has a name. */
+interface WithPageSizesProps {
+  /** The rows-per-page choices, e.g. `[10, 25, 50]`. */
+  pageSizes: readonly number[];
+  /** Names the rows-per-page control, e.g. «تعداد در هر صفحه». */
+  pageSizeLabel: string;
+}
+
+/**
+ * ── WHY THESE TWO PROPS ARE A PAIR AND NOT TWO OPTIONALS ───────────────────
+ *
+ * `pageSizeLabel` was documented "REQUIRED" and typed `string | undefined`, and
+ * the render guard below read `pageSizeLabel !== undefined`. So a caller who
+ * offered sizes and forgot the name got neither an unnamed `<select>` nor an
+ * error — the rows-per-page control SILENTLY DISAPPEARED. AUDIT §2.3, and §3.1
+ * names the class: a comment doing the type system's job.
+ *
+ * No runtime assertion can state this rule, which is why it survived a suite
+ * that renders this pager thirteen times. "The control is missing" is also what a
+ * caller who deliberately passed no `pageSizes` correctly gets, so the two
+ * cases are indistinguishable after the fact by construction. The type is the
+ * only place the pairing can live.
+ *
+ * The union rather than the one-keystroke `pageSizeLabel: string`, because a
+ * grid with no size control would then have to invent a Persian name for a
+ * `<select>` that never renders — and CONTRIBUTING's rule is that an announced
+ * string is required, not that an unannounced one is. `link.tsx`'s
+ * `newTab`/`newTabLabel` and `alert.tsx` are the same construction; the guard
+ * below now tests `pageSizes` alone, because the label's presence is no longer
+ * a thing that can vary independently of it.
+ */
+export type DataGridPaginationProps = DataGridPaginationBaseProps &
+  (NoPageSizesProps | WithPageSizesProps);
 
 /**
  * The footer: how many rows you are looking at, and how to move.
@@ -412,16 +442,14 @@ export interface DataGridPaginationProps {
  * for, and an `<option>` is one of the few places it can still hide, because
  * option text is not JSX children that `LumoNode` can refuse.
  */
-export function DataGridPagination({
-  label,
-  previousLabel,
-  nextLabel,
-  pageLabel,
-  rangeLabel,
-  pageSizeLabel,
-  pageSizes,
-  className,
-}: DataGridPaginationProps) {
+export function DataGridPagination(props: DataGridPaginationProps) {
+  /*
+   * `props` is kept whole rather than destructured, and that is forced by the
+   * union above: destructuring collapses `pageSizes`/`pageSizeLabel` into two
+   * independent `T | undefined` locals and throws away the very relationship
+   * the type exists to state. Narrowing has to be done on the object.
+   */
+  const { label, previousLabel, nextLabel, pageLabel, rangeLabel, className } = props;
   const { locale, table } = useDataGrid();
   const pageIndex = table.state.pagination?.pageIndex ?? 0;
   const pageSize = table.state.pagination?.pageSize ?? 10;
@@ -450,10 +478,17 @@ export function DataGridPagination({
           )}
         </span>
 
-        {pageSizes !== undefined && pageSizes.length > 0 && pageSizeLabel !== undefined ? (
+        {/*
+         * `props.pageSizes` and not a destructured local: the narrowing this
+         * test performs is what makes `props.pageSizeLabel` a `string` two
+         * lines down. The `length > 0` half is still a runtime concern — an
+         * empty array is a legal `readonly number[]` and a `<select>` with no
+         * options is a control that answers nothing.
+         */}
+        {props.pageSizes !== undefined && props.pageSizes.length > 0 ? (
           <div className={dataGridPageSizeVariants()}>
             <NativeSelect
-              label={pageSizeLabel}
+              label={props.pageSizeLabel}
               // Hidden, not absent: the footer already reads as one row and a
               // second visible label would read as a second question. The name
               // still has to exist — see `phone-input.tsx`, same call.
@@ -468,7 +503,7 @@ export function DataGridPagination({
               }}
               className="w-auto"
             >
-              {pageSizes.map((size) => (
+              {props.pageSizes.map((size) => (
                 // Through `formatNumber`. The VALUE stays ASCII because it is
                 // parsed straight back by `Number()` — the same in/out split
                 // `input-otp.tsx` and `phone-input.tsx` draw.

@@ -47,11 +47,46 @@ describe("blocks — no user-facing English", () => {
       .replace(/\/\*[\s\S]*?\*\//g, "")
       .replace(/^\s*\/\/.*$/gm, "");
 
+    /*
+     * ── WHAT THESE THREE PATTERNS COVER, AND WHY THERE ARE THREE ──────────────
+     *
+     * The first two spellings of this check anchored on `[A-Z]` and on a literal
+     * `=`, and eight probes appended to `footer.tsx` one at a time showed that
+     * five of them walked straight through (AUDIT.md §2.9). The misses were not
+     * exotic:
+     *
+     *     const DEFAULT_TITLE = "Sign in to continue";   assignment, not attribute
+     *     placeholder={"Search everything"}              brace-wrapped JSX string
+     *     const COPY = { title: "Get started today" };   object key, colon not equals
+     *     <div>OK</div>                                  no lowercase tail after the capital
+     *     <div>sign in now</div>                         no leading capital at all
+     *
+     * The object-literal miss is the one that matters. CONTRIBUTING is explicit
+     * that "there is no partial locale and no fallback — a fallback is what puts
+     * an English word in a Persian sentence", and an English `DEFAULT_STRINGS =
+     * { … }` is the single most natural way to introduce exactly that fallback.
+     * It was invisible here.
+     *
+     * The `[A-Z]`-anchored JSX pattern is KEPT rather than replaced, because it
+     * is the only one of the three that catches text followed by a nested
+     * element (`<p>Sign in <b>now</b>`). The lowercase pattern requires a
+     * closing `</` on purpose: without that anchor it matches TypeScript, not
+     * JSX — `interface X<T> extends Base<T>` reads as ">" text "<" and fired on
+     * `table-view.tsx` while this widening was being written. A check that
+     * fires on the package's own type declarations is a check somebody deletes.
+     */
     const literals = [
-      // JSX text: >Sign in<
+      // JSX text with a leading capital, before a closing tag OR a nested one:
+      // >Sign in<
       /*[^{<>]*/ />[ \t]*[A-Z][a-z]{2,}(?:[ \t]+[A-Za-z]{2,})*[ \t]*</g,
-      // an English default for a string prop
-      /\b\w*(?:[Ll]abel|[Tt]itle|[Tt]ext|[Pp]laceholder)\s*=\s*"[A-Za-z][^"]{2,}"/g,
+      // JSX text of ANY case, immediately before a closing tag: >OK</, >sign in</
+      />[ \t]*[A-Za-z]{2,}(?:[ \t]+[A-Za-z]{2,})*[ \t]*<\//g,
+      // An English string bound to a text-bearing name, however it is bound:
+      // attribute (label="x"), object key (label: "x"), assignment (LABEL = "x"),
+      // and the brace-wrapped JSX form (label={"x"}). Case-insensitive, so
+      // SCREAMING_CASE constants — where a hardcoded default actually lives —
+      // are not a hole.
+      /\b\w*(?:label|title|text|placeholder|description|message|heading|caption|hint|prompt|copy|action|content)\s*[:=]\s*\{?\s*"[A-Za-z][^"]*"/gi,
     ];
 
     const found: string[] = [];

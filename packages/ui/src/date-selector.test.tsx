@@ -34,6 +34,8 @@ import {
   toCalendar,
   type Calendar,
 } from "@internationalized/date";
+import { FORMAT_LOCALE } from "@lumo-ui/core";
+import { toPickerDate } from "./calendar-datelib.ts";
 import {
   DateSelector,
   resolveDateRangePreset,
@@ -611,5 +613,71 @@ describe("the panel: a named dialog over a real list of controls", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: new RegExp(STRINGS.label) }));
     expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
+
+/**
+ * THE GRID'S BOUNDS ARE DAYS HERE TOO.
+ *
+ * `DateSelector` forwards `minValue`/`maxValue` straight into `RangeCalendar`,
+ * so it inherits whatever those props mean — which is the point of testing it:
+ * until 12 Aug 2026 they meant MONTHS, because they reached react-day-picker as
+ * `startMonth`/`endMonth` alone and `getNavMonth.js` rounds those with
+ * `startOfMonth`. A dashboard bounded at «۱۵ مرداد» would let a reader anchor a
+ * report range on ۱۴ مرداد, and the committed range would look ordinary.
+ *
+ * Item 4 of the component's header still holds and is unaffected: a PRESET is
+ * not clamped to the bounds. What is fixed is the grid a reader clicks in.
+ */
+describe("minValue bounds the grid by DAY, not by month", () => {
+  afterEach(cleanup);
+
+  /** ۱۵ مرداد ۱۴۰۳ — mid-month, in a 31-day Jalali month. */
+  const MIN = new CalendarDate(PERSIAN, 1403, 5, 15);
+
+  /**
+   * A day cell's announced name, computed from `Intl` under the persian
+   * calendar rather than tabled — the same handle `dates.test.tsx` uses, and for
+   * the same reason: react-day-picker's `data-day` is a GREGORIAN ISO string,
+   * so looking a Jalali day up by it would mean the test performing the very
+   * conversion the component is being tested for.
+   */
+  const longDate = (date: CalendarDate) =>
+    new Intl.DateTimeFormat(FORMAT_LOCALE["fa-IR"], {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(toPickerDate(date));
+
+  it("a day before the bound, in the bound's own month, cannot be pressed", async () => {
+    render(
+      <DateSelector
+        label={STRINGS.label}
+        panelLabel={STRINGS.panelLabel}
+        presetsLabel={STRINGS.presetsLabel}
+        calendarLabel={STRINGS.calendarLabel}
+        placeholder={STRINGS.placeholder}
+        formatRange={joinRange}
+        presets={PRESETS}
+        minValue={MIN}
+        // The grid opens on `value.from`'s month, so the month under test is
+        // stated rather than left to `today()` — the fixed-anchor rule this
+        // file's header sets out.
+        value={{ from: new CalendarDate(PERSIAN, 1403, 5, 16), to: new CalendarDate(PERSIAN, 1403, 5, 18) }}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: new RegExp(STRINGS.label) }));
+    await screen.findByRole("dialog");
+
+    const before = screen.getByRole("button", {
+      name: longDate(new CalendarDate(PERSIAN, 1403, 5, 14)),
+    }) as HTMLButtonElement;
+    // `getByRole("button")` finds it only because it is RENDERED — a month
+    // bound would have hidden it, and this assertion would then be vacuous.
+    expect(before.hasAttribute("disabled")).toBe(true);
+
+    const bound = screen.getByRole("button", { name: longDate(MIN) }) as HTMLButtonElement;
+    expect(bound.hasAttribute("disabled")).toBe(false);
   });
 });

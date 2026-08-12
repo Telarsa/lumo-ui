@@ -169,6 +169,45 @@ export function ComboBox<T extends object>({
   // `<label>` below. `useId` is SSR-stable, so the pairing exists in the first
   // byte rather than after a layout effect.
   const inputId = useId();
+  /*
+   * ── THE TRIGGER'S OWN ID, AND WHY IT HAS TO BE MINTED HERE ───────────────
+   *
+   * Without this, the `<input role="combobox">` and the trigger `<button
+   * role="combobox">` INSIDE ONE INSTANCE served the same id — 6 duplicates on
+   * the fa combobox page of the export at `10a08dc`, 44 across 8 documents.
+   * AUDIT §2.2.
+   *
+   * The mechanism is a store field only an effect can correct.
+   * `ComboboxTrigger.mjs:78` reads
+   *
+   *     const id = inputInsidePopup ? idProp ?? rootId : idProp;
+   *
+   * `inputInsidePopup` is initialised `true` (`AriaCombobox.mjs:333`) and set
+   * to its real value by `ComboboxInput.mjs:94` — from a layout effect, which
+   * does not run on the server. So the SERVER render takes the `?? rootId`
+   * branch and copies the root's id (the input's, passed above) onto the
+   * button, and hydration silently removes it again. Every jsdom test in this
+   * repository therefore saw a document that was already correct.
+   *
+   * It is a NAMING defect, not a validator nit: `<label for=…>` resolves to the
+   * first match in document order, so the field's visible name was attached to
+   * whichever of the two React happened to emit first. The gate's
+   * `resolvedIdrefs` rule cannot see it either — it asserts that an idref
+   * RESOLVES, and a duplicate satisfies that.
+   *
+   * Passing an explicit `id` takes the `idProp` side of that ternary in BOTH
+   * phases, so the trigger's id is the same string before and after hydration
+   * rather than appearing and vanishing. It is minted here rather than exposed
+   * as a prop for the reason this component takes no parts: a collision a
+   * caller cannot cause is one nobody has to remember.
+   *
+   * The two elements still disagree about their own semantics — the input says
+   * `aria-haspopup="listbox"`, the server-rendered button says `dialog`, from
+   * the same uncorrected `inputInsidePopup`. That is engine-owned, has no prop
+   * that reaches it, and also heals on hydration; it is recorded in AUDIT §2.2
+   * and is NOT fixed here.
+   */
+  const triggerId = useId();
   return (
     <BaseCombobox.Root
       id={inputId}
@@ -235,6 +274,7 @@ export function ComboBox<T extends object>({
           {/* An icon-only button. Named because Base UI names nothing. */}
           <BaseCombobox.Trigger
             data-lumo=""
+            id={triggerId}
             aria-label={showSuggestionsLabel}
             className={comboBoxButtonVariants()}
           >

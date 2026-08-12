@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useId } from "react";
+import { Children, createContext, isValidElement, useContext, useId, useMemo } from "react";
+import type { ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
@@ -43,21 +44,64 @@ import { Description, Field, FieldError, optional, useFieldControl } from "./for
  * rather than a missing string. The prop stays required, and the argument for
  * requiring it is now stronger, not weaker.
  *
- * ── ONE CAPABILITY GAP, NOT PAPERED OVER ────────────────────────────────────
+ * ── THE CAPABILITY GAP THAT SHIPPED A LATIN KEY TO PERSIAN READERS ──────────
  *
  * React Aria resolves a selected KEY to that item's rendered text, because the
  * collection is built before render. Base UI's `<Select.Value>` resolves the
  * label only from the Root's `items` prop (`resolveSelectedLabel` in
  * `internals/resolveValueLabel.mjs` — it never consults mounted items), and the
  * items live inside a portal that is `null` while closed. With
- * `defaultSelectedKey="thr"` and no `items`, this component therefore renders
- * the raw key `thr` where React Aria rendered `تهران`.
+ * `defaultSelectedKey="thr"` and no `items`, this component rendered the raw
+ * key `thr` where React Aria rendered `تهران`.
  *
- * That is left HONEST rather than patched: the obvious workaround — walking
- * `children` for a matching `id` and pulling its text out — would reimplement a
+ * That was documented here as "left HONEST rather than patched" and SHIPPED for
+ * two weeks. Measured in the built export at `10a08dc`:
+ *
+ *     fa/components/select/index.html        <span …>thr</span>
+ *     view-block/fa/data-toolbar/index.html  newest
+ *     view-block/fa/table-view/index.html    newest
+ *
+ * with the RSC payload immediately below each carrying `label:"تازه‌ترین"`. It
+ * SELF-HEALS on hydration — `Select.Item` publishes its text to the store from
+ * an effect — so 1782 tests and nine gate rules were green over it: a `render()`
+ * under jsdom sees the Persian a tick later, and no rule grades Latin WORDS in
+ * visible text, only digits and `aria-*`. The comment was true, and being true
+ * bought nothing. AUDIT §2.1.
+ *
+ * ── WHY THE FIX IS A LABEL MAP AND NOT A COLLECTION BUILDER ─────────────────
+ *
+ * The old argument against walking `children` was that it "would reimplement a
  * collection builder inside a wrapper, which is the exact thing renting a
- * headless library is supposed to buy. Recorded as
- * `select.selected-key-label-resolution` in the measurements file.
+ * headless library is supposed to buy." That argument mis-states what is being
+ * built. `collectItemLabels` below derives ONE thing — a `value → label`
+ * record — and hands it to `Select.Root`'s own `items` prop, which is the
+ * documented input Base UI asks for and which `resolveSelectedLabel` reads
+ * directly (`items[value] ?? fallback()`). Everything a collection actually is
+ * — highlight, typeahead, selection, keyboard order, the `aria-activedescendant`
+ * chain — stays the engine's, unread and untouched by this file.
+ *
+ * The alternative the audit offered — make `items` a REQUIRED public prop when
+ * a key is selected — was declined. It makes the defect a compile error, but it
+ * buys that by asking every caller to write each option's label TWICE, once in
+ * the array and once as the `SelectItem`'s child, with nothing checking that
+ * the two agree. That is a new silent-divergence class traded for an old one,
+ * and in a Persian-first library the string that would drift is the announced
+ * one. The children are already the single source of truth; the fix reads them.
+ *
+ * ── THE HALF A DERIVATION CANNOT REACH, WHICH IS THEREFORE A TYPE ───────────
+ *
+ * A derivation can only take a label an item HAS. `<SelectItem id="ent">` whose
+ * child is a flex row holding a city and a «تکمیل ظرفیت» note has no string to
+ * take, and would fall straight back to the raw key. `textValue` was the prop
+ * for that and was optional, with the requirement written in prose — the same
+ * shape as the defect above, one line down.
+ *
+ * `SelectItemProps` is now a discriminated union: a plain string child needs
+ * nothing, and any other child requires `textValue`. `link.tsx`'s
+ * `newTab`/`newTabLabel` pair is the same construction for the same reason.
+ * With both halves in place there is no `SelectItem` this file can compile that
+ * it cannot name, and `select.test.tsx` asserts each half — the strings against
+ * `renderToStaticMarkup`, the type against `@ts-expect-error`.
  *
  * ── THE FIELD THIS COMPONENT DID NOT HAVE ──────────────────────────────────
  *
@@ -233,6 +277,101 @@ interface SelectFieldContextValue {
 
 const SelectFieldContext = createContext<SelectFieldContextValue | null>(null);
 
+/**
+ * Every `SelectItem` reachable from `node`, as `{ [id]: label }`.
+ *
+ * ── WHAT THIS IS AND IS NOT ────────────────────────────────────────────────
+ *
+ * It is the argument `Select.Root`'s `items` prop wants, in the RECORD form
+ * `resolveSelectedLabel` reads with a single lookup (`items[value] ??
+ * fallback()`, `internals/resolveValueLabel.mjs`). It is not a collection: it
+ * carries no order, no disabled state, no element identity, and nothing reads
+ * it except the collapsed `<Select.Value>`. The engine's own item registry
+ * still runs, still wins after mount, and still agrees.
+ *
+ * ── WHY IT RECURSES RATHER THAN SCANNING ONE LEVEL ─────────────────────────
+ *
+ * The items a real Persian form uses are inside `<SelectPopover>`, and grouped
+ * ones are inside a `<SelectGroup>` inside that — two and three levels down
+ * from `Select`'s own children. A one-level scan passes the flat exemplar in
+ * this file's header and ships the grouped case broken, which is why
+ * `select.test.tsx` asserts the grouped case separately.
+ *
+ * `Children.forEach` is used rather than a bare array walk because it flattens
+ * fragments and nested arrays, which is what `{items.map(…)}` at a call site
+ * produces. Elements that are not items are descended into rather than skipped,
+ * so a caller's own wrapper component's CHILDREN are still seen — but a wrapper
+ * that renders its items from its own props rather than from `children` is
+ * invisible here, exactly as it is to any pre-render walk. That is the residue,
+ * and it is bounded: such an item resolves to the raw key, the same as before,
+ * and `SelectValue` accepts `children` for callers who need to take the label
+ * into their own hands.
+ *
+ * ── WHY THE TEST IS `props`-SHAPED AND NOT `child.type === SelectItem` ─────
+ *
+ * That identity check is the obvious one, it is what the first version of this
+ * function used, it passes every test in `select.test.tsx`, AND IT SHIPS THE
+ * DEFECT ANYWAY. Measured by instrumenting `next build` on 12 Aug 2026 and
+ * reading the export: the label map came out `{}` for every `<Select>` written
+ * in a SERVER component, and non-empty only for the ones inside `"use client"`
+ * blocks. Exactly one `thr` survived in `fa/components/select/index.html` — the
+ * disabled example — while `view-block/fa/data-toolbar` and
+ * `view-block/fa/table-view` were fixed. One page's worth of the original
+ * defect, hidden behind a green suite, is precisely the shape this repository's
+ * ledger is made of, so the mechanism is recorded rather than the symptom.
+ *
+ * The cause is the RSC boundary. `Select` and `SelectItem` are both `"use
+ * client"`. When a Server Component writes `<Select><SelectPopover><SelectItem
+ * id="thr">تهران</SelectItem>…`, those elements are created in the SERVER graph,
+ * serialised into the flight payload, and revived for SSR. The revived elements
+ * are real elements — `$$typeof: Symbol(react.transitional.element)`, `props`
+ * intact, nesting intact, dumped and read — but `element.type` is a CLIENT
+ * REFERENCE object standing in for the module export, not the `SelectItem`
+ * function this module holds. `===` against a function is therefore false for
+ * every item, on every server-rendered page, and true only when the caller is
+ * itself a client component and no boundary was crossed.
+ *
+ * So the identity test is not a stricter version of this one. It is a test that
+ * silently answers "no" on exactly the tier this library is measured at, and
+ * that is why it is gone rather than kept as a fast path — a fast path whose
+ * slow path must be correct anyway is two things to maintain and one of them is
+ * never exercised where it matters.
+ *
+ * What survives the boundary is `props`, so the predicate reads `props`: an
+ * `id` to key the map by, and a string to put in it. The false-positive surface
+ * is the exact set of elements inside a `<Select>` that carry an `id` AND
+ * either a string child or a `textValue`, and inside this component's own parts
+ * that set is empty — `SelectGroup` takes `label` and element children,
+ * `SelectTrigger` and `SelectSeparator` take no `id`, and a `<Label>` written
+ * as a child carries neither. A stray `<div id="…">متن</div>` would register,
+ * and would change what the collapsed control reads only if `selectedKey` were
+ * equal to that `id` — at which point the caller has two things claiming one
+ * key and the ambiguity is theirs.
+ */
+function isItemProps(props: unknown): props is SelectItemProps & { id: string } {
+  if (props === null || typeof props !== "object") return false;
+  const p = props as { id?: unknown; textValue?: unknown; children?: unknown };
+  if (typeof p.id !== "string") return false;
+  return typeof p.textValue === "string" || typeof p.children === "string";
+}
+
+function collectItemLabels(node: LumoNode, into: Record<string, string>): void {
+  Children.forEach(node as ReactNode, (child) => {
+    if (!isValidElement(child)) return;
+    if (isItemProps(child.props)) {
+      const props = child.props;
+      // `textValue` first: an item that carries one has said outright what the
+      // collapsed control should read, and a string child is only the shortcut
+      // for the case where those two are the same sentence.
+      into[props.id] =
+        typeof props.textValue === "string" ? props.textValue : (props.children as string);
+      return;
+    }
+    const inner = (child.props as { children?: LumoNode }).children;
+    if (inner !== undefined) collectItemLabels(inner, into);
+  });
+}
+
 export interface SelectProps<T extends object> {
   /**
    * Visible text shown when nothing is selected. REQUIRED — see the file
@@ -302,6 +441,24 @@ export function Select<T extends object>({
   className,
   children,
 }: SelectProps<T>) {
+  /*
+   * The `value → label` record `Select.Value` resolves the collapsed text
+   * from. Derived from `children` on EVERY render path including the server's,
+   * which is the whole point: the defect this replaces was visible only in the
+   * first byte and healed before any effect-based instrument could see it.
+   *
+   * `useMemo` is not a micro-optimisation here. `SelectRoot` writes `items`
+   * into its store from a `useIsoLayoutEffect` whose dependency list includes
+   * it, so a fresh object identity every render would queue a store write every
+   * render. Keyed on `children`, which is a new object exactly when the item
+   * set can have changed.
+   */
+  const itemLabels = useMemo(() => {
+    const labels: Record<string, string> = {};
+    collectItemLabels(children, labels);
+    return labels;
+  }, [children]);
+
   return (
     /*
      * ── THE TWELVE, AND THE SEAM PHASE A SAID DID NOT EXIST ─────────────────
@@ -355,6 +512,7 @@ export function Select<T extends object>({
        * server error back onto this control.
        */}
       <BaseSelect.Root
+        items={itemLabels}
         {...(selectedKey === undefined ? {} : { value: selectedKey })}
         {...(defaultSelectedKey === undefined ? {} : { defaultValue: defaultSelectedKey })}
         {...(onSelectionChange === undefined
@@ -518,17 +676,42 @@ export function SelectPopover<T extends object>({
  * anyway, because it also feeds the SERVER-rendered markup, which has no DOM to
  * read text content from.
  */
-export interface SelectItemProps<T extends object = object> {
+interface SelectItemBaseProps<T extends object = object> {
   /** TYPE CARRIER, NOT A PROP — see `SelectProps.items`. */
   value?: T & never;
   /** The item's key. Maps to Base UI's `value`. */
   id?: string | undefined;
-  /** Typeahead string. Required for non-string children. */
-  textValue?: string | undefined;
   isDisabled?: boolean | undefined;
-  children?: LumoNode;
   className?: string | undefined;
 }
+
+/** The ordinary option: its visible text IS its label. */
+interface StringChildProps {
+  children: string;
+  textValue?: undefined;
+}
+
+/**
+ * An option whose row is markup — a city beside a «تکمیل ظرفیت» note, a flag
+ * beside a country.
+ */
+interface RichChildProps {
+  children?: LumoNode;
+  /**
+   * Typeahead string, AND the text the collapsed control reads when this item
+   * is the selected one.
+   *
+   * REQUIRED in this arm, and required by the type rather than by a comment:
+   * `collectItemLabels` can only take a label an item HAS, and markup children
+   * offer none. Before the union this was optional with "Required for
+   * non-string children" written in prose, and forgetting it served the raw key
+   * — `thr` — into a Persian page's first byte. See the file header.
+   */
+  textValue: string;
+}
+
+export type SelectItemProps<T extends object = object> = SelectItemBaseProps<T> &
+  (StringChildProps | RichChildProps);
 
 export function SelectItem<T extends object = object>({
   className,

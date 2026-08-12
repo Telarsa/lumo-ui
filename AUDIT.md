@@ -268,8 +268,8 @@ The exemptions are legitimate — the dominant one is shiki code listings, which
 | B1 | `tokens.css:240`, `:288`, `:317` | `fg-subtle` fails WCAG AA on every ground in both themes | 4.15:1 light on `bg`; 3.49:1 dark on `surface-hover`. **5,178 occurrences**, 51 component sites. Not in the contrast test's sample. |
 | B2 | `tokens.css:239` | `fg-muted` passes only on the page ground | 4.34:1 on `bg-subtle`/`surface-hover`/`surface-sunken`; 4.49:1 dark on `surface-hover` |
 | B3 | `tokens.css:313`/`:319` | dark `border` ≡ `surface-hover` | 1.00:1. **1,888 elements** combine `border-border` with `hover:bg-surface-hover`, including the landing page's own secondary CTA |
-| B4 | `tokens.css:350` | Persian leading is inert | `line-height:1.75` is inherited; Tailwind's `.text-sm` sets line-height **on the element** and always wins (1.4286). `text-sm` ×8,893 and `text-xs` ×6,187 across 135 fa pages |
-| B5 | `globals.css` guard | `tracking-tight` (−0.025em) on Persian | **540 occurrences** across all 135 fa pages, including the `<h1>`. The guard neutralises `tracking-wide`/`widest` and misses `tracking-tight`. Negative letter-spacing severs Arabic joins |
+| B4 | `tokens.css:350` | Persian leading is inert | `line-height:1.75` is inherited; Tailwind's `.text-sm` sets line-height **on the element** and always wins (1.4286). **Corrected on fix:** the counts above are inflated by Next's RSC flight payload, where class names are inert JSON. Real figure — 9,642 elements carry a `text-<size>` utility, 788 also carry an explicit `leading-*`, so **8,854 were shipping Latin leading** |
+| B5 | `globals.css` guard | `tracking-tight` (−0.025em) on Persian | **Corrected on fix: 270 real elements, not 540** — half the grep hits were RSC flight payload. And the 135 `<h1>` were *already* covered by a separate `:is(h1…h6):lang(fa)` rule. The true defect was 135 `<a>` plus 68 other elements = **203 newly neutralised**. Coverage is still strictly larger than before |
 
 **`cn()` does not deduplicate Lumo's own namespace.** `twMerge` is unconfigured, so `h-control-md` + `h-control-lg` both survive:
 
@@ -312,7 +312,7 @@ Nothing new gets built until these are done. Each one either ships to users toda
 | 1.4 | **Fix the three Persian-route defects** (§2.1, §2.2, §2.3). | `thr`/`newest` gone from the export; 0 duplicate ids; `pageSizeLabel` required. |
 | 1.5 | **Fix `Calendar` bounds** (§2.6). | A day-level bound rejects days in the same month; test asserts it in Jalali. |
 | 1.6 | **The two contrast failures and the dark collision** (B1, B2, B3). | Contrast test swept over the **full ground × text-token matrix**, both themes, instead of 7 sampled pairs. |
-| 1.7 | **Persian leading and tracking** (B4, B5). | `--tw-leading` set per size in the `:lang(fa)` block; tracking guard inverted to a whitelist. |
+| 1.7 | **Persian leading and tracking** (B4, B5). | **DONE.** Note the fix in this row was WRONG as originally written: `--tw-leading` is registered `@property … inherits:false`, so setting it on `:root:lang(fa)` reaches no descendant — same defect, new variable. The mechanism that works is `--text-*--line-height`, an ordinary inheriting `@theme` variable that is the *fallback arm* of the utility's own `var()`, so an explicit `leading-*` still wins. Guard inverted to a `[class*="tracking-"]` whitelist and moved into the theme's `lumo.script` layer. |
 | 1.8 | **Arm the digit floor in `gate:html`** (§2.7). | One line, plus a self-test on the root script string so it cannot un-arm a third time. |
 | 1.9 | **Make green reproducible** (§2.8). | `testTimeout` raised; three consecutive clean-tree runs pass; the jsdom mount cost measured and recorded. |
 | 1.10 | **Widen the blocks English guard and render each block once** (§2.9). | The object-literal and brace-string probes fail; 31 smoke renders assert a non-empty `fa-IR` tree with no Latin digits. |

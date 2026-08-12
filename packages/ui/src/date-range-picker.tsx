@@ -83,6 +83,15 @@ export interface DateRangePickerProps {
   defaultValue?: CalendarDateRange | null | undefined;
   onChange?: ((value: CalendarDateRange | null) => void) | undefined;
   placeholderValue?: CalendarDate | undefined;
+  /**
+   * Earliest and latest selectable DAY, forwarded to the grid unchanged.
+   *
+   * Days, not months — `calendar.tsx`'s header records the month they used to
+   * mean and the click that fired `onChange` with an out-of-range date. Neither
+   * bound is enforced on TYPED entry: the segments accept any date the calendar
+   * system admits, and telling the reader a typed date is out of range is what
+   * `errorMessage` is for. `date-field.tsx`'s `DateBounds` carries that split.
+   */
   minValue?: CalendarDate | undefined;
   maxValue?: CalendarDate | undefined;
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;

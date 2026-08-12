@@ -144,7 +144,9 @@ export {
  *     third state (pending) that a controlled caller cannot see, and two more
  *     required strings for the buttons.
  *  4. **Presets are not clamped to `minValue`/`maxValue`.** Those bound the
- *     GRID, as they do on `RangeCalendar`. «۹۰ روز گذشته» against a `minValue`
+ *     GRID — every day the reader can press in it, since 12 Aug 2026; before
+ *     that only the months it could page to, which is the defect
+ *     `calendar.tsx`'s header records. «۹۰ روز گذشته» against a `minValue`
  *     of last week produces a range that starts before the minimum, and this
  *     component does not silently truncate the reader's request — a caller who
  *     needs that clamps in `onChange`, where it is visible.
@@ -377,7 +379,13 @@ export interface DateSelectorProps {
   value?: CalendarDateRange | null | undefined;
   defaultValue?: CalendarDateRange | null | undefined;
   onChange?: ((value: CalendarDateRange | null) => void) | undefined;
-  /** Bounds the GRID. Presets are not clamped to it — see the header, item 4. */
+  /**
+   * Earliest and latest selectable DAY in the grid, forwarded to `RangeCalendar`.
+   *
+   * Days, not months — see `calendar.tsx`'s header for the version of these
+   * props that rounded to a month and let a reader anchor a range on an
+   * out-of-range day. PRESETS are still not clamped to them: see item 4.
+   */
   minValue?: CalendarDate | undefined;
   maxValue?: CalendarDate | undefined;
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;

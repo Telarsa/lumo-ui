@@ -171,12 +171,22 @@ written out rather than left to be rediscovered.
    the `:root` default, which leads with the Latin face. That is right for
    German and wrong for any Arabic-script locale, where it means OS-substituted
    glyphs on a page that ships a designed face.
-8. **If the locale is Arabic-script, extend the letter-spacing neutralisation in
-   the same file.** It is currently keyed to `html[lang="fa-IR"]` alone. Letter
-   spacing severs the joins between Arabic-script letters — spaced-out text is
-   not a word, it is disconnected letters — so an Arabic page would inherit the
-   defect the Persian rule exists to fix, with nothing on screen that a reviewer
-   who does not read the script would notice.
+8. **If the locale is Arabic-script, extend the script rules in
+   `packages/theme/src/tokens.css`** — the `lumo.script` layer, not this app.
+   Letter spacing severs the joins between Arabic-script letters — spaced-out
+   text is not a word, it is disconnected letters — so an Arabic page would
+   inherit the defect the Persian rule exists to fix, with nothing on screen
+   that a reviewer who does not read the script would notice. The same layer
+   carries the per-size leading ramp, for the same reason: Arabic script needs
+   more leading than Latin, and a locale added without it ships Latin leading.
+
+   This step used to say "the same file", meaning `globals.css`, and pointed at
+   a guard keyed to two utility names. Both facts changed on 12 Aug 2026: the
+   guard is now a `[class*="tracking-"]` whitelist so it fails CLOSED for
+   utilities that do not exist yet, and it moved into the theme because a
+   site-only guard leaves every other consumer of the library shipping the
+   defect. Splitting the Persian script rules across two files is what let the
+   gap hide in the first place.
 9. Extend `normalize()` in `apps/website/src/lib/search-index.ts` if the locale
    needs folding the current steps do not cover. It already folds ZWNJ, Arabic
    combining diacritics, the two Arabic/Persian letter pairs, and BOTH digit

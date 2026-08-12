@@ -8,6 +8,7 @@ import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.t
 import {
   calendarChevron,
   calendarClassNames,
+  calendarDisabled,
   describedByWith,
   type CalendarNavigation,
 } from "./calendar.tsx";
@@ -121,6 +122,22 @@ export function RangeCalendar({
   const descriptionId = useId();
   const config = lumoCalendar(locale);
   const dir = direction(locale);
+  /*
+   * The bounds as SELECTION matchers, from `calendar.tsx` — shared rather than
+   * restated, for the same reason `calendarClassNames` is. This is the file the
+   * defect would most easily survive in: a range grid takes two clicks, so a
+   * bound that only bounds navigation lets a reader anchor a range on an
+   * out-of-range day and then extend it inward, and the resulting value looks
+   * ordinary in `onChange`. Two copies of the composition is how one of the two
+   * grids comes to enforce a different rule from the other.
+   */
+  const disabled = calendarDisabled({
+    locale,
+    isDisabled,
+    isDateUnavailable,
+    minValue,
+    maxValue,
+  });
 
   return (
     <div
@@ -177,13 +194,11 @@ export function RangeCalendar({
             }
           : {})}
         {...(defaultMonth ? { defaultMonth: toPickerDate(defaultMonth) } : {})}
+        // Navigation bounds, beside the selection matchers above. `calendar.tsx`
+        // carries the argument for keeping both; it applies here unchanged.
         {...(minValue ? { startMonth: toPickerDate(minValue) } : {})}
         {...(maxValue ? { endMonth: toPickerDate(maxValue) } : {})}
-        {...(isDisabled === true
-          ? { disabled: true }
-          : isDateUnavailable
-            ? { disabled: (date: Date) => isDateUnavailable(fromPickerDate(date, locale)) }
-            : {})}
+        {...(disabled !== undefined ? { disabled } : {})}
         {...(onChange
           ? {
               onSelect: (selected: { from?: Date | undefined; to?: Date | undefined } | undefined) => {

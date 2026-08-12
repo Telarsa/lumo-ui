@@ -267,6 +267,38 @@ describe("DataGridPagination — rows per page", () => {
     );
     expect(container.querySelector("select")).toBeNull();
   });
+
+  /**
+   * COMPILE-ENFORCED — AUDIT §2.3.
+   *
+   * `pageSizeLabel` was documented "REQUIRED" and typed `string | undefined`,
+   * and the render guard read `pageSizeLabel !== undefined`. So a caller who
+   * offered sizes and forgot the name did not get an unnamed `<select>` and did
+   * not get an error: the rows-per-page control SILENTLY DISAPPEARED, and every
+   * assertion in this file above still passed because each one supplies both.
+   *
+   * A runtime test cannot state this rule. "The control is missing" is also
+   * what a caller who passed no `pageSizes` correctly gets, so the two cases
+   * are indistinguishable at runtime by construction. The type is the only
+   * place the pairing can live, and `@ts-expect-error` is the only assertion
+   * that fails when it stops being a pair — `tsc --noEmit` over `src/**` is
+   * `gate:types`, so this file is checked and not merely run.
+   */
+  it("offering sizes without naming the control does not compile", () => {
+    const SIZES_ONLY = (
+      // @ts-expect-error `pageSizes` without `pageSizeLabel` used to delete the control.
+      <DataGridPagination {...PAGER} pageSizes={SIZES} />
+    );
+    expect(SIZES_ONLY).toBeTruthy();
+  });
+
+  it("naming a control that is never offered does not compile either", () => {
+    const LABEL_ONLY = (
+      // @ts-expect-error a name for a control no `pageSizes` will ever render.
+      <DataGridPagination {...PAGER} pageSizeLabel="تعداد در هر صفحه" />
+    );
+    expect(LABEL_ONLY).toBeTruthy();
+  });
 });
 
 /* ════════════════════════════════════════════════════════════════════════════

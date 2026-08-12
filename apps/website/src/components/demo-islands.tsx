@@ -1726,8 +1726,17 @@ export function DataGridIsland({
         rangeLabel={(from: string, to: string, total: string) =>
           `${from}–${to} ${ofWord} ${total}`
         }
-        pageSizeLabel={pageSizeLabel}
-        {...(pageSizes === undefined ? {} : { pageSizes })}
+        {...(
+          /*
+           * The two travel TOGETHER, because `DataGridPaginationProps` is now a
+           * union that says so: sizes without a name used to compile and
+           * silently delete the control (AUDIT §2.3). Splitting them across a
+           * plain prop and a conditional spread happens to type-check — TS is
+           * lenient about which union arm a spread lands in — so the pairing is
+           * written out here rather than left to that leniency.
+           */
+          pageSizes === undefined ? {} : { pageSizes, pageSizeLabel }
+        )}
       />
     </DataGrid>
   );

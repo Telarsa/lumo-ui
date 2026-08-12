@@ -971,3 +971,272 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
     expect([unbounded, half, range, picker, bounded, months]).toHaveLength(6);
   });
 });
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * `minValue`/`maxValue` ARE DAY BOUNDS, AND THE DAY IS WHAT IS MEASURED HERE.
+ *
+ * The props have always been documented as days — *"Earliest selectable day"* —
+ * and until 12 Aug 2026 they reached react-day-picker as `startMonth`/`endMonth`
+ * alone. Read out of `helpers/getNavMonth.js` (v10.0.1):
+ *
+ *     if (startMonth) { startMonth = startOfMonth(startMonth); }
+ *
+ * So a `minValue` of ۱۵ مرداد was a bound of ۱ مرداد, and the fourteen days
+ * before it rendered enabled, took a click and fired `onChange`. That is the
+ * one defect a date picker may not have: it accepted a date the caller had
+ * already said was out of range, and it did so in the ONE month where a
+ * screenshot of the grid looks completely correct — the bound's own month.
+ *
+ * Every assertion below is on the BOUND'S OWN MONTH for exactly that reason. A
+ * test that only checked ۳۱ تیر would have passed the whole time, because a
+ * month bound does hide the neighbouring month.
+ *
+ * The dates are Jalali and chosen against real Jalali month lengths — Mordad
+ * has 31 days, Aban 30, and Esfand 29 or 30 by the leap rule this file's first
+ * block exercises. They sit in ۱۴۰۳/۱۴۰۴ rather than near the present so that
+ * no cell under test can also be today, whose announced name carries «امروز، »
+ * and would not match the label a bound test looks it up by.
+ */
+describe("the bounds are DAYS, and a day before one cannot be selected", () => {
+  /**
+   * A day cell's announced name, computed from `Intl` under the persian
+   * calendar rather than written out — this file's rule, and here it is also
+   * the only stable handle: react-day-picker's `data-day` is a GREGORIAN ISO
+   * string, so looking a Jalali day up by it would mean the test doing the very
+   * conversion the component is being tested for.
+   */
+  const longDate = (date: CalendarDate) =>
+    new Intl.DateTimeFormat(FA, {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(toPickerDate(date));
+
+  /**
+   * The `<button>` for one Jalali day, or a thrown error.
+   *
+   * It THROWS when the cell is absent rather than returning null, because
+   * "absent" and "present but disabled" are different outcomes and only one of
+   * them is what these tests are about: a day hidden by a month bound would
+   * make every `.disabled` assertion below vacuously true.
+   */
+  const dayButton = (root: ParentNode, date: CalendarDate): HTMLButtonElement => {
+    const el = root.querySelector(`button[aria-label="${longDate(date)}"]`);
+    if (!el) throw new Error(`no day cell rendered for ${longDate(date)}`);
+    return el as HTMLButtonElement;
+  };
+
+  /** ۱۵ مرداد ۱۴۰۳ — mid-month, in a 31-day Jalali month. */
+  const MIN = jalali(1403, 5, 15);
+  /** ۱۰ آبان ۱۴۰۳ — mid-month, in a 30-day Jalali month. */
+  const MAX = jalali(1403, 8, 10);
+
+  it("a day BEFORE minValue, in minValue's own month, is disabled and fires no onChange", () => {
+    cleanup();
+    const onChange = vi.fn();
+    const { container } = live(
+      <Calendar {...CAL} minValue={MIN} defaultMonth={jalali(1403, 5, 1)} onChange={onChange} />,
+    );
+
+    // The grid really is showing Mordad — a bound that navigated somewhere else
+    // would make everything below a statement about the wrong month.
+    expect(caption(container)).toContain(
+      new Intl.DateTimeFormat(FA, { month: "long" }).format(toPickerDate(MIN)),
+    );
+
+    const before = dayButton(container, jalali(1403, 5, 14));
+    expect(before.disabled).toBe(true);
+    expect(before.closest("td")?.getAttribute("data-disabled")).toBe("true");
+
+    fireEvent.click(before);
+    expect(onChange).not.toHaveBeenCalled();
+
+    // …and the bound itself is selectable. Without this the fix "disable
+    // everything" would pass.
+    const bound = dayButton(container, MIN);
+    expect(bound.disabled).toBe(false);
+    fireEvent.click(bound);
+    expect(onChange).toHaveBeenCalledTimes(1);
+    const picked = onChange.mock.calls[0]![0] as CalendarDate;
+    expect([picked.calendar.identifier, picked.year, picked.month, picked.day]).toEqual([
+      "persian",
+      1403,
+      5,
+      15,
+    ]);
+  });
+
+  it("a day AFTER maxValue, in maxValue's own month, is disabled and fires no onChange", () => {
+    cleanup();
+    const onChange = vi.fn();
+    const { container } = live(
+      <Calendar {...CAL} maxValue={MAX} defaultMonth={jalali(1403, 8, 1)} onChange={onChange} />,
+    );
+
+    const after = dayButton(container, jalali(1403, 8, 11));
+    expect(after.disabled).toBe(true);
+    fireEvent.click(after);
+    expect(onChange).not.toHaveBeenCalled();
+
+    expect(dayButton(container, MAX).disabled).toBe(false);
+  });
+
+  it("the LAST day of a non-leap Esfand is disabled by a bound earlier in that month", () => {
+    /*
+     * ۱۴۰۴ is not a leap year, so its Esfand has 29 days — the first block of
+     * this file measures that through segment entry. A `maxValue` of ۲۰ اسفند
+     * therefore has to disable ۲۱…۲۹ and nothing beyond, and the last of those
+     * is the cell a month bound is furthest from reaching.
+     */
+    cleanup();
+    const { container } = live(
+      <Calendar {...CAL} maxValue={jalali(1404, 12, 20)} defaultMonth={jalali(1404, 12, 1)} />,
+    );
+    expect(dayButton(container, jalali(1404, 12, 29)).disabled).toBe(true);
+    expect(dayButton(container, jalali(1404, 12, 21)).disabled).toBe(true);
+    expect(dayButton(container, jalali(1404, 12, 20)).disabled).toBe(false);
+  });
+
+  it("a bound COMPOSES with isDateUnavailable — a caller using both keeps both", () => {
+    /*
+     * The regression this pins is the obvious wrong fix: writing the bound into
+     * the `disabled` prop by REPLACING the `isDateUnavailable` branch that was
+     * already there. That renders a grid where the caller's own unavailable
+     * days come back to life, which is the same class of defect as the one
+     * being fixed and would be invisible to a test that only checked bounds.
+     */
+    cleanup();
+    const { container } = live(
+      <Calendar
+        {...CAL}
+        minValue={MIN}
+        maxValue={MAX}
+        defaultMonth={jalali(1403, 5, 1)}
+        // ۲۰ مرداد ۱۴۰۳ — inside the bounds, and the caller's own to refuse.
+        isDateUnavailable={(date) => date.month === 5 && date.day === 20}
+      />,
+    );
+
+    expect(dayButton(container, jalali(1403, 5, 14)).disabled).toBe(true); // the bound
+    expect(dayButton(container, jalali(1403, 5, 20)).disabled).toBe(true); // the caller
+    expect(dayButton(container, jalali(1403, 5, 21)).disabled).toBe(false); // neither
+  });
+
+  it("the range grid enforces the same day bounds", () => {
+    cleanup();
+    const onChange = vi.fn();
+    const { container } = live(
+      <RangeCalendar
+        {...CAL}
+        minValue={MIN}
+        defaultMonth={jalali(1403, 5, 1)}
+        onChange={onChange}
+      />,
+    );
+    const before = dayButton(container, jalali(1403, 5, 14));
+    expect(before.disabled).toBe(true);
+    fireEvent.click(before);
+    expect(onChange).not.toHaveBeenCalled();
+    expect(dayButton(container, MIN).disabled).toBe(false);
+  });
+
+  it("the picker's popover grid enforces them too", () => {
+    cleanup();
+    /*
+     * `placeholderValue` is what opens the panel on Mordad ۱۴۰۳: `DatePicker`
+     * passes `selected ?? placeholderValue` as the grid's `defaultMonth`, and
+     * with neither, `getInitialMonth` opens on TODAY's month — which is
+     * ۱۴۰۵ and holds no cell under test at all. It is stated rather than left
+     * to the clock for the reason this file's header gives.
+     */
+    const { container, baseElement } = live(
+      <DatePicker {...LABELS} minValue={MIN} placeholderValue={jalali(1403, 5, 1)} />,
+    );
+    fireEvent.click(
+      container.querySelector(`button[aria-label="${LABELS.openCalendarLabel}"]`) as HTMLElement,
+    );
+    expect(dayButton(baseElement, jalali(1403, 5, 14)).disabled).toBe(true);
+    expect(dayButton(baseElement, MIN).disabled).toBe(false);
+  });
+
+  it("the range picker's popover grid enforces them too", () => {
+    cleanup();
+    const { container, baseElement } = live(
+      <DateRangePicker {...RANGE_LABELS} minValue={MIN} placeholderValue={jalali(1403, 5, 1)} />,
+    );
+    fireEvent.click(
+      container.querySelector(`button[aria-label="${LABELS.openCalendarLabel}"]`) as HTMLElement,
+    );
+    expect(dayButton(baseElement, jalali(1403, 5, 14)).disabled).toBe(true);
+    expect(dayButton(baseElement, MIN).disabled).toBe(false);
+  });
+
+  it("isDisabled still disables the whole grid, bounds or no bounds", () => {
+    cleanup();
+    const { container } = live(
+      <Calendar {...CAL} isDisabled minValue={MIN} defaultMonth={jalali(1403, 5, 1)} />,
+    );
+    // Including days INSIDE the bounds: a bound may not re-enable a grid its
+    // caller switched off.
+    expect(dayButton(container, MIN).disabled).toBe(true);
+    expect(dayButton(container, jalali(1403, 5, 25)).disabled).toBe(true);
+  });
+
+  it("bounds the wrong way round select NOTHING, rather than everything", () => {
+    /*
+     * `minValue` after `maxValue` is an EMPTY range, and the honest rendering of
+     * an empty range is a grid with nothing pressable. It is also the case that
+     * decides the SHAPE of the matchers: `utils/dateMatchModifiers.js` reads a
+     * single `{ before, after }` object as a `DateInterval`, and
+     *
+     *     const isClosedInterval = isAfter(matcher.before, matcher.after);
+     *     if (isClosedInterval) return isDayAfter && isDayBefore;
+     *     else                  return isDayBefore || isDayAfter;
+     *
+     * so the one object is EQUIVALENT to two entries while the bounds are the
+     * right way round, and INVERTS the moment they are not: it would disable
+     * only the ten days between them and enable all 21 outside. Two separate
+     * entries go through `isDateBeforeType`/`isDateAfterType` and stay a union
+     * in both cases. Measured, not assumed — the equivalence is why this test
+     * has to use inverted bounds to see any difference at all.
+     */
+    cleanup();
+    const { container } = live(
+      <Calendar
+        {...CAL}
+        minValue={jalali(1403, 5, 20)}
+        maxValue={jalali(1403, 5, 10)}
+        defaultMonth={jalali(1403, 5, 1)}
+      />,
+    );
+    // Mordad has 31 days. Every one of them is out of range, on one side or the
+    // other, and the days BETWEEN the two bounds are the ones an interval
+    // matcher would have got backwards.
+    for (const day of [1, 10, 11, 15, 19, 20, 21, 31]) {
+      expect(dayButton(container, jalali(1403, 5, day)).disabled).toBe(true);
+    }
+  });
+
+  it("navigation still stops at the bound's own month, and that month is reachable", () => {
+    /*
+     * Selectability and navigation are different questions, and both are
+     * answered: `startMonth` is `startOfMonth(minValue)`, so the month that
+     * CONTAINS the bound is reachable — it holds selectable days — and the one
+     * before it is not, because it holds none. A reader who could page into
+     * Tir would see 31 cells with nothing to press and no explanation.
+     */
+    cleanup();
+    const { container } = live(
+      <Calendar {...CAL} minValue={MIN} defaultMonth={jalali(1403, 5, 1)} />,
+    );
+    const previous = container.querySelector('button[aria-label="ماه پیش"]') as HTMLButtonElement;
+    expect(previous.getAttribute("aria-disabled")).toBe("true");
+    expect(previous.getAttribute("tabindex")).toBe("-1");
+
+    const next = container.querySelector('button[aria-label="ماه بعد"]') as HTMLButtonElement;
+    expect(next.getAttribute("aria-disabled")).toBeNull();
+  });
+});

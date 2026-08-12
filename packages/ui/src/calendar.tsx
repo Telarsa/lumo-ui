@@ -119,6 +119,41 @@ export {
  * disagree with it — the rule `virtual-list.tsx` and `LumoProvider` already
  * follow.
  *
+ * ═══ `minValue`/`maxValue` ARE DAYS, AND WERE MONTHS UNTIL 12 AUG 2026 ══════
+ *
+ * The props are documented as days and now behave as days. Between the
+ * migration on 11 Aug 2026 and this change on the 12th they did not: they
+ * reached the engine ONLY as `startMonth`/`endMonth`, and
+ * `helpers/getNavMonth.js` (v10.0.1) opens with
+ *
+ *     if (startMonth) { startMonth = startOfMonth(startMonth); }
+ *
+ * so a `minValue` of ۱۵ مرداد was a bound of ۱ مرداد. The fourteen days before
+ * it rendered, were enabled, took a click and fired `onChange`. A Persian date
+ * picker that accepts dates you told it not to — and it did so in the one month
+ * where a screenshot of the grid is indistinguishable from a correct one, which
+ * is why it took an audit rather than a review to find. It survived only a day
+ * here; the same shape in a consumer's copy would survive indefinitely, because
+ * a copy-in library's defects do not get re-reviewed.
+ *
+ * The bounds are now passed TWICE, because they answer two different questions:
+ *
+ *   startMonth/endMonth   NAVIGATION. Which months a reader can page to.
+ *   disabled matchers     SELECTION. Which days a reader can press.
+ *
+ * `calendarDisabled` below composes the second, and its docblock carries the
+ * upstream reading behind the array shape. Keeping the first is a decision and
+ * not inertia: `getNavMonth` rounds to the bound's own month, which is exactly
+ * the set of months holding at least one selectable day, so navigation stops
+ * where selection stops. Without it a `minValue` of ۱۵ مرداد would let a reader
+ * page back through Tir, Khordad, Ordibehesht and on — grid after grid of 31
+ * grey cells with nothing pressable and no explanation, which is a worse
+ * failure than the one being fixed and is the whole of the argument.
+ *
+ * Note also that `startMonth`/`endMonth` are what `getYearOptions` reads: the
+ * year `<select>` derives its option list from `navStart`/`navEnd` alone, so
+ * dropping them would empty the dropdowns the union below requires bounds FOR.
+ *
  * ═══ THE CAPTION DROPDOWNS, AND WHY A YEAR LIST NEEDS BOUNDS IN THE TYPE ════
  *
  * `captionLayout` turns the month/year caption into two real `<select>`s. It
@@ -197,17 +232,17 @@ export type CalendarNavigation =
   | {
       /** Paging chevrons only, or a month `<select>` — neither reads a clock. */
       captionLayout?: "label" | "dropdown-months" | undefined;
-      /** Earliest selectable day. */
+      /** Earliest selectable DAY. Itself selectable; the day before it is not. */
       minValue?: CalendarDate | undefined;
-      /** Latest selectable day. */
+      /** Latest selectable DAY. Itself selectable; the day after it is not. */
       maxValue?: CalendarDate | undefined;
     }
   | {
       /** A year `<select>`. Both bounds are REQUIRED — see the header. */
       captionLayout: "dropdown" | "dropdown-years";
-      /** Earliest selectable day, and the first year in the list. */
+      /** Earliest selectable DAY, and the first year in the list. */
       minValue: CalendarDate;
-      /** Latest selectable day, and the last year in the list. */
+      /** Latest selectable DAY, and the last year in the list. */
       maxValue: CalendarDate;
     };
 
@@ -358,6 +393,111 @@ export function calendarChevron(locale: Locale) {
   };
 }
 
+/**
+ * One matcher in react-day-picker's `disabled` prop, as this file uses it.
+ *
+ * Three shapes and no more: a predicate (the caller's `isDateUnavailable`), and
+ * the two half-open intervals `dateMatchModifiers` understands. Deliberately
+ * NOT `Matcher` imported from upstream — the union there is eight cases wide
+ * and includes `{ before, after }`, which is the one this file must never
+ * construct. See `calendarDisabled` below.
+ */
+export type CalendarDisabledMatcher = ((date: Date) => boolean) | { before: Date } | { after: Date };
+
+/**
+ * The `disabled` prop for the grid: the caller's unavailable days AND the bounds.
+ *
+ * ═══ THE DEFECT THIS FUNCTION EXISTS TO CLOSE ═══════════════════════════════
+ *
+ * `minValue`/`maxValue` have always been documented as DAYS — *"Earliest
+ * selectable day"* — and before 12 Aug 2026 they reached react-day-picker as
+ * `startMonth`/`endMonth` and nothing else. Read out of the installed
+ * `helpers/getNavMonth.js` (v10.0.1):
+ *
+ *     if (startMonth) { startMonth = startOfMonth(startMonth); }
+ *     …
+ *     if (endMonth)   { endMonth   = endOfMonth(endMonth); }
+ *
+ * So a `minValue` of ۱۵ مرداد was a bound of ۱ مرداد. The fourteen days before
+ * it rendered, were enabled, took a click and fired `onChange` — a date picker
+ * that accepts a date the caller has already said is out of range, in the ONE
+ * month where a screenshot of the grid looks entirely correct. It is the same
+ * shape as every other defect in this repository's ledger: the wrong thing and
+ * the right thing are pixel-identical.
+ *
+ * ═══ WHY AN ARRAY, AND WHY NOT ONE `{ before, after }` OBJECT ═══════════════
+ *
+ * `utils/dateMatchModifiers.js` reduces with `.some()` over an array, so a day
+ * is disabled if ANY matcher claims it — which is exactly the composition
+ * wanted: the caller's holidays UNION the out-of-range days. That is verified
+ * against the installed source rather than assumed, and it is the reason the
+ * bounds are added BESIDE `isDateUnavailable` and never in place of it. A
+ * caller who passes both keeps both; replacing would silently bring their own
+ * refused days back to life.
+ *
+ * The two bounds are two SEPARATE entries and never one `{ before, after }`
+ * object. That distinction is real but NARROWER than it first looks, and the
+ * narrow version is the one worth writing down, because the wide version was
+ * written here first and measured false. `utils/typeguards.js`:
+ *
+ *     isDateInterval = "before" in matcher && "after" in matcher
+ *
+ * and `dateMatchModifiers` then branches on whether the interval is CLOSED:
+ *
+ *     const isClosedInterval = isAfter(matcher.before, matcher.after);
+ *     if (isClosedInterval) return isDayAfter && isDayBefore;
+ *     else                  return isDayBefore || isDayAfter;
+ *
+ * With `minValue` before `maxValue` — every sane call — the `else` branch runs
+ * and the single object is EXACTLY equivalent to the two entries. Reverting to
+ * it broke no test until one was written with the bounds the wrong way round;
+ * that is the whole difference and «bounds the wrong way round select NOTHING,
+ * rather than everything» in `dates.test.tsx` is it. Inverted bounds are an
+ * empty range, and an empty range must render a grid with nothing pressable;
+ * the interval form flips to `&&` and disables only the days BETWEEN them,
+ * enabling every day outside — a calendar where the only pressable days are
+ * the out-of-range ones.
+ *
+ * Two entries also keep the min-only and max-only cases from needing a shape of
+ * their own. Each hits `isDateBeforeType`/`isDateAfterType`, both strict —
+ * `differenceInCalendarDays(matcher.before, date) > 0` — so `minValue` and
+ * `maxValue` are themselves selectable.
+ *
+ * ═══ `isDisabled` SHORT-CIRCUITS, AND STAYS FIRST ═══════════════════════════
+ *
+ * A grid the caller switched off is `disabled: true` — a boolean matcher, which
+ * `dateMatchModifiers` answers `true` for on every day. Bounds beneath it would
+ * be dead weight, and an array that somehow re-enabled a day would be a bound
+ * overriding an explicit `isDisabled`.
+ *
+ * Returns `undefined` — not an empty array — when there is nothing to disable,
+ * so the prop is OMITTED rather than passed empty. `createGetModifiers.js`
+ * guards with `Boolean(disabled && …)` and `[]` is truthy, so an empty array
+ * costs a `dateMatchModifiers` call per cell, 42 per month, for a question
+ * whose answer is already known.
+ */
+export function calendarDisabled(options: {
+  locale: Locale;
+  isDisabled?: boolean | undefined;
+  isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
+  minValue?: CalendarDate | undefined;
+  maxValue?: CalendarDate | undefined;
+}): true | CalendarDisabledMatcher[] | undefined {
+  const { locale, isDisabled, isDateUnavailable, minValue, maxValue } = options;
+  if (isDisabled === true) return true;
+
+  const matchers: CalendarDisabledMatcher[] = [];
+  if (isDateUnavailable) {
+    // Back into the reader's own calendar before the caller's predicate sees
+    // it, exactly as `onChange` does: a caller asking `date.month === 5` means
+    // مرداد, and a JS `Date` would answer May.
+    matchers.push((date: Date) => isDateUnavailable(fromPickerDate(date, locale)));
+  }
+  if (minValue) matchers.push({ before: toPickerDate(minValue) });
+  if (maxValue) matchers.push({ after: toPickerDate(maxValue) });
+  return matchers.length > 0 ? matchers : undefined;
+}
+
 export function Calendar({
   label,
   locale,
@@ -377,6 +517,13 @@ export function Calendar({
   const descriptionId = useId();
   const config = lumoCalendar(locale);
   const dir = direction(locale);
+  const disabled = calendarDisabled({
+    locale,
+    isDisabled,
+    isDateUnavailable,
+    minValue,
+    maxValue,
+  });
 
   return (
     <div
@@ -425,13 +572,32 @@ export function Calendar({
         {...(captionLayout ? { captionLayout } : {})}
         {...(value ? { selected: toPickerDate(value) } : {})}
         {...(defaultMonth ? { defaultMonth: toPickerDate(defaultMonth) } : {})}
+        /*
+         * ═══ THE BOUNDS ARE PASSED TWICE, ON PURPOSE ══════════════════════
+         *
+         * `startMonth`/`endMonth` bound NAVIGATION; the `disabled` matchers
+         * below bound SELECTION. They are different questions and both need
+         * answering, which is why the fix for the day/month defect ADDS to
+         * this pair rather than replacing it.
+         *
+         * Kept because `getNavMonth.js` rounds them to `startOfMonth` /
+         * `endOfMonth`, and that rounding is exactly right for navigation:
+         * the month CONTAINING the bound holds selectable days and stays
+         * reachable, and the month before it holds none and does not. Drop
+         * these and a reader with a `minValue` of ۱۵ مرداد could page back
+         * through Tir, Khordad, Ordibehesht — an unbounded run of grids where
+         * all 31 cells are grey and nothing says why. Paging is also how a
+         * keyboard reader moves, so it would be an unbounded run for them too.
+         *
+         * They are also load-bearing for `captionLayout`: `getYearOptions`
+         * derives the year `<select>`'s options from `navStart`/`navEnd`
+         * alone, so removing them would empty the dropdowns the union in
+         * `CalendarNavigation` requires bounds FOR. `dates.test.tsx` pins
+         * both halves — the ۱۳۰۰…۱۴۰۵ option list, and the disabled ۱۴ مرداد.
+         */
         {...(minValue ? { startMonth: toPickerDate(minValue) } : {})}
         {...(maxValue ? { endMonth: toPickerDate(maxValue) } : {})}
-        {...(isDisabled === true
-          ? { disabled: true }
-          : isDateUnavailable
-            ? { disabled: (date: Date) => isDateUnavailable(fromPickerDate(date, locale)) }
-            : {})}
+        {...(disabled !== undefined ? { disabled } : {})}
         {...(onChange
           ? {
               // Back into the reader's calendar before it leaves this file, so a
