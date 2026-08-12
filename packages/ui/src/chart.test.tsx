@@ -40,7 +40,9 @@
  *     same treatment `@lumo-ui/base-ui-ssr` gives Base UI's seven.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
+import { render } from "@testing-library/react";
+import { act } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { Chart as BareTanstackChart } from "@tanstack/charts/react";
 
@@ -489,12 +491,18 @@ describe("chart — the colour stylesheet fits Lumo's theme rather than shadcn's
 /**
  * The pointer hit test — the one thing a reader touches on every chart.
  *
- * These assert a DEFAULT rather than a behaviour, which is unusual here and
- * deliberate: the behaviour lives in TanStack's renderer and is not reachable
- * from jsdom, since it needs a laid-out plot and real pointer coordinates.
- * What IS reachable, and what actually regressed, is whether the definition
- * carries the strategy at all — the failure was never "the hit test is subtly
- * wrong", it was "nobody passed `focus`, so it stayed radial".
+ * These assert a DEFAULT rather than a behaviour: the failure this closed was
+ * never "the hit test is subtly wrong", it was "nobody passed `focus`, so it
+ * stayed radial", and that is visible in the definition object alone.
+ *
+ * **The reason originally given for stopping there was wrong, and it cost a
+ * round trip.** It said the behaviour "is not reachable from jsdom, since it
+ * needs a laid-out plot and real pointer coordinates". A laid-out plot is not
+ * needed — `clientToScene` reads ONE `getBoundingClientRect` and divides — and
+ * the block below drives the shipped renderer end to end on a stub of exactly
+ * that. Had this file done so at the time, it would have caught the tooltip
+ * sitting on the datum in the same run that made the whole band live, which is
+ * what the reader actually reported next. The block below is that measurement.
  */
 describe("charts hit-test by band, the way every dashboard does", () => {
   it("defaults to grouped-by-x with no radius", () => {
@@ -526,5 +534,219 @@ describe("charts hit-test by band, the way every dashboard does", () => {
     } as never) as unknown as Record<string, unknown>;
     expect(definition["focus"]).toBe(focusNearestX);
     expect(definition["maxFocusDistance"]).toBe(12);
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE TOOLTIP FOLLOWS THE POINTER
+ *
+ * ── WHAT THIS HARNESS PROVES, AND WHAT IT DOES NOT ──────────────────────────
+ *
+ * The block above this one asserts a DEFAULT — that `defineChart` carries
+ * `focus` — and its own docblock says the behaviour "is not reachable from
+ * jsdom". That claim was TOO STRONG, and believing it is why the reported
+ * defect survived a fix: a chart shipped with the right hit-test strategy and
+ * a tooltip that still would not move.
+ *
+ * jsdom has no layout, but `@tanstack/charts` does not ask it for any. Every
+ * step from a pointer event to a placed tooltip is arithmetic over ONE
+ * measurement:
+ *
+ *   `clientToScene` (`canvas.js:140`, `svg-surface.js:75`) is
+ *   `(clientX - rect.left) / rect.width * scene.width` — one
+ *   `getBoundingClientRect`, then division.
+ *   `resolveChartTooltipAnchor` (`tooltip-model.js:34`) picks a coordinate.
+ *   `placeTooltip` (`tooltip-position.js`) writes `style.left`/`style.top`.
+ *
+ * So stubbing `getBoundingClientRect` to a fixed 400×200 box makes the whole
+ * chain deterministic and REAL — this drives TanStack's shipped renderer, not
+ * a model of it.
+ *
+ * What it does NOT prove: anything about pixels. `offsetWidth`/`offsetHeight`
+ * are 0 in jsdom, so the tooltip's own size contributes nothing to the
+ * placement arithmetic and the candidate-flipping near an edge is untested.
+ * It also cannot see z-order, clipping, or whether the box is visible at all.
+ * Per DECISIONS §15, a green suite here is not evidence about `apps/website/out`
+ * — what it IS evidence of is that the anchor coordinate equals the pointer
+ * coordinate and that a repaint happens on every move, which are exactly the
+ * two things that were wrong.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+const SURFACE_WIDTH = 400;
+const SURFACE_HEIGHT = 200;
+
+let restoreLayout: (() => void) | undefined;
+
+afterEach(() => {
+  restoreLayout?.();
+  restoreLayout = undefined;
+});
+
+/**
+ * Give jsdom the ONE measurement TanStack asks it for, and a `ResizeObserver`
+ * so the responsive path does not take its no-op branch.
+ */
+function stubLayout() {
+  const view = globalThis as unknown as { ResizeObserver?: unknown };
+  const previousObserver = view.ResizeObserver;
+  const previousRect = Element.prototype.getBoundingClientRect;
+
+  view.ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+  Element.prototype.getBoundingClientRect = function getBoundingClientRect() {
+    return {
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      width: SURFACE_WIDTH,
+      height: SURFACE_HEIGHT,
+      right: SURFACE_WIDTH,
+      bottom: SURFACE_HEIGHT,
+      toJSON() {},
+    } as DOMRect;
+  };
+
+  restoreLayout = () => {
+    view.ResizeObserver = previousObserver;
+    Element.prototype.getBoundingClientRect = previousRect;
+  };
+}
+
+interface Placement {
+  left: number;
+  top: number;
+  text: string;
+}
+
+/** Mounts a live chart and returns a "move the pointer here, read the box" probe. */
+function mountLiveChart(locale: Locale) {
+  stubLayout();
+
+  const definition = defineChart({
+    marks: [barY(DATA, { id: "sales", x: "month", y: "sales", fill: "#3b82f6" })],
+    x: chartCategoryAxis(locale, {
+      scale: () => scaleBand<string>().padding(0.2),
+    }) as never,
+    y: chartValueAxis(locale, { scale: scaleLinear, grid: true }) as never,
+    tooltip: chartTooltip(locale, CONFIG),
+  });
+
+  const { container } = render(
+    <ChartContainer
+      config={CONFIG}
+      locale={locale}
+      label="فروش ماهانه"
+      definition={definition as never}
+      data={DATA}
+      categoryKey="month"
+      dataCaption="داده‌های نمودار فروش ماهانه"
+      height={SURFACE_HEIGHT}
+      initialWidth={SURFACE_WIDTH}
+    />,
+  );
+
+  const surface = container.querySelector("svg");
+  if (!surface) throw new Error("no plot mounted");
+
+  return function pointerAt(clientX: number, clientY: number): Placement {
+    // `MouseEvent`, not `PointerEvent`: jsdom 30 has no `PointerEvent`
+    // constructor, and the renderer only ever reads `clientX`/`clientY` and
+    // `target` off the event. `bubbles` matters — the listener is on the
+    // renderer's container `<div>`, not on the `<svg>`.
+    const event = new window.MouseEvent("pointermove", { bubbles: true });
+    Object.defineProperty(event, "clientX", { value: clientX });
+    Object.defineProperty(event, "clientY", { value: clientY });
+    act(() => {
+      surface.dispatchEvent(event);
+    });
+
+    const tip = container.querySelector<HTMLElement>(".ts-chart-tooltip");
+    if (!tip) throw new Error("no tooltip painted");
+    return {
+      left: Number.parseFloat(tip.style.left),
+      top: Number.parseFloat(tip.style.top),
+      text: tip.textContent ?? "",
+    };
+  };
+}
+
+describe("chart — the tooltip appears AT the pointer, and follows it", () => {
+  /*
+   * The reported defect, twice, and the second report is the one that matters:
+   * "the charts still are not, they don't follow the mouse. It doesn't pop up
+   * where the mouse is."
+   *
+   * MEASURED before `anchor: "pointer"`, fa-IR, two moves 140px apart in the
+   * SAME band:
+   *
+   *     pointer (300, 40)    left 341.14px   top 100px
+   *     pointer (300,180)    left 341.14px   top 100px      ← byte-identical
+   *
+   * 341.14 is the bar's own x. The tooltip was nailed to the datum, and no
+   * repaint was even scheduled: `renderer.js:422` passes
+   * `tooltipTracksPointer()` as `forcePaint`, and `updateFocus` returns early
+   * when the focused point has not changed.
+   */
+  const OFFSET = 10; // `tooltip-placement.js`: the default gap, and `top` wins here.
+
+  it("tracks the pointer on the BLOCK axis inside one band — fa-IR", () => {
+    const pointerAt = mountLiveChart("fa-IR");
+    const high = pointerAt(300, 40);
+    const low = pointerAt(300, 180);
+
+    // The datum did not change — same band, same series, same figure. Only the
+    // pointer moved, and before the fix that was precisely the case in which
+    // nothing was repainted.
+    expect(high.text).toBe(low.text);
+    expect(high.top).not.toBe(low.top);
+    expect(high.top).toBeCloseTo(40 - OFFSET, 5);
+    expect(low.top).toBeCloseTo(180 - OFFSET, 5);
+  });
+
+  it("tracks the pointer on the INLINE axis — fa-IR", () => {
+    const pointerAt = mountLiveChart("fa-IR");
+    expect(pointerAt(300, 100).left).toBeCloseTo(300, 5);
+    expect(pointerAt(310, 100).left).toBeCloseTo(310, 5);
+    expect(pointerAt(100, 100).left).toBeCloseTo(100, 5);
+  });
+
+  it("tracks the pointer in BOTH directions — this was never an RTL defect", () => {
+    /*
+     * Stated explicitly because this library's usual finding is the opposite,
+     * and a reader who knows the thesis will assume RTL. It is not: the anchor
+     * default is `"point"` in `tooltip-model.js` with no direction in it, scene
+     * coordinates are measured from the rect's PHYSICAL left in
+     * `clientToScene`, and `placeTooltip` writes the PHYSICAL `left`. Three
+     * physical quantities that agree with each other, so the mirror never
+     * enters the arithmetic. Measured identical in both locales.
+     */
+    const rtl = mountLiveChart("fa-IR")(300, 40);
+    const ltr = mountLiveChart("en-US")(300, 40);
+    expect(rtl.left).toBeCloseTo(300, 5);
+    expect(ltr.left).toBeCloseTo(300, 5);
+    expect(rtl.top).toBeCloseTo(ltr.top, 5);
+  });
+
+  it("mirrors WHICH datum is reported, which is the part that is direction-aware", () => {
+    // The companion assertion to the one above: placement is physical and
+    // identical, but the band under a given x is mirrored — so the same
+    // physical pointer meets the FIRST month under RTL and the LAST under LTR.
+    // If these two ever agree, `chartCategoryAxis`'s `reverse` has stopped
+    // working and the previous case would not notice.
+    const rtl = mountLiveChart("fa-IR")(340, 100).text;
+    const ltr = mountLiveChart("en-US")(340, 100).text;
+    expect(rtl).toContain(formatNumber(1200, "fa-IR"));
+    expect(ltr).toContain(formatNumber(3000, "en-US"));
+  });
+
+  it("carries the anchor as an ordinary, overridable option", () => {
+    // The switch itself, asserted where a reader greps for it. `"pointer"`
+    // resolves to `pointer ?? datum` in `tooltip-model.js:36`, so a KEYBOARD
+    // focus — which nulls `pointerPosition` — still anchors on the datum.
+    expect(chartTooltip("fa-IR", CONFIG).anchor).toBe("pointer");
   });
 });

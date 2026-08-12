@@ -153,11 +153,17 @@ export { areaY, barY, dot, lineY, scaleBand, scaleLinear, scalePoint };
  *     formatters — and hand it to the client island as data.
  *
  *  3. **`ChartTooltip` / `ChartTooltipContent` are `chartTooltip(locale)`**, one
- *     function returning the tooltip extension plus a Persian `format`. The old
- *     pair existed to (a) reverse recharts' preferred side under RTL and (b)
- *     replace its content renderer. Neither is needed: TanStack's tooltip
- *     placement is `'auto'` with a mirrored candidate list, and its `format` hook
- *     is a documented option rather than a component slot.
+ *     function returning the tooltip extension plus a Persian `format` and an
+ *     `anchor`. The old pair existed to (a) reverse recharts' preferred side
+ *     under RTL and (b) replace its content renderer. Neither is needed:
+ *     TanStack's tooltip placement is `'auto'` over a candidate list rather than
+ *     a physical side, and its `format` hook is a documented option rather than
+ *     a component slot.
+ *
+ *     `anchor` is NOT one of those two, and it is the option this wrapper was
+ *     shipped without: TanStack anchors a tooltip on the DATUM by default, so
+ *     the box did not follow the pointer in either direction. See
+ *     `chartTooltip` for the measurement.
  *
  *  4. **`ChartLegend` + `ChartLegendContent` are one `<ChartLegend>`** taking
  *     `config` directly. Under recharts the pair existed because recharts OWNED
@@ -460,6 +466,55 @@ export function chartTooltip(locale: Locale, config: ChartConfig) {
   return {
     use: tooltipExtension,
     /*
+     * ── THE TOOLTIP FOLLOWS THE POINTER, AND THIS ONE WORD IS WHY ────────────
+     *
+     * `resolveChartTooltipAnchor` (`tooltip-model.js:34`) reads
+     * `options?.anchor ?? "point"`, and `"point"` returns `{ x: point.x, y:
+     * point.y }` — the DATUM's scene coordinates. Without this option the
+     * tooltip is pinned to the top of a bar and never moves while the pointer
+     * does.
+     *
+     * That is only half of it. `renderer.js:422` calls
+     * `updateFocus(pointsAtPointer(…), tooltipTracksPointer())`, and
+     * `tooltipTracksPointer()` (`renderer.js:819`) is TRUE only when `anchor`
+     * is `"pointer"`, a function, or an object naming `"pointer"` on an axis.
+     * When it is false, `updateFocus` takes its early return the moment
+     * `sameChartPointIdentity(point, focusedPoint)` holds — so no repaint at
+     * all is scheduled while the pointer moves inside one datum's catchment.
+     * The anchor and the repaint are the same switch; setting either alone
+     * fixes nothing.
+     *
+     * MEASURED, driving the real renderer under jsdom with a stubbed 400×200
+     * `getBoundingClientRect` (`chart-pointer.test.tsx`). Two `pointermove`s
+     * 140px apart vertically, same band, fa-IR:
+     *
+     *     without `anchor`   left 341.14px  top 100px   ← both events, identical
+     *     with    `anchor`   left 300px     top  30px   then  top 170px
+     *
+     * en-US measured the same run and was identical apart from the mirrored
+     * band, so this was NEVER an RTL defect — it was broken in both directions,
+     * which is worth stating because this library's usual finding is the
+     * opposite.
+     *
+     * ── WHY THE FALLBACK IS THE RIGHT ONE, NOT A LEAK ───────────────────────
+     *
+     * `"pointer"` resolves to `pointer ?? fallback`, and `pointer` is null for
+     * a KEYBOARD focus (`renderer.js` nulls `pointerPosition` in
+     * `clearKeyboardFocus`). So an arrow-key reader still gets the tooltip on
+     * the datum, which is the only place it could sensibly be — there is no
+     * cursor to follow. One option covers both input modes.
+     *
+     * ── AND WHY THIS IS NOT WHAT THE PREVIOUS ATTEMPT FIXED ─────────────────
+     *
+     * `defineChart`'s `focusGroupX` + `maxFocusDistance: Infinity` (below)
+     * decided WHEN a tooltip appears. It did not touch WHERE, and it made the
+     * placement defect strictly more visible: with the old 48px radial cap the
+     * datum was never more than 48px from the pointer, so the mis-anchoring
+     * read as a small offset. Making the whole band live means the pointer can
+     * now sit 150px from the datum the tooltip is nailed to.
+     */
+    anchor: "pointer" as const,
+    /*
      * `point.datum` is the caller's original row — TanStack keeps it, which is
      * what makes a series LABEL reachable at all. The series key falls back to
      * the mark id, and `ChartConfig.label` is what turns that English identifier
@@ -599,6 +654,15 @@ export function ChartLegend({
  * `focusGroupX` and not `focusNearestX`: grouped reports every series at that
  * x, which is the whole value of a shared tooltip on a multi-series chart. The
  * ungrouped variant exists for the single-series case and is one prop away.
+ *
+ * ── THIS DECIDES *WHEN* A TOOLTIP APPEARS. IT DOES NOT DECIDE *WHERE* ───────
+ *
+ * Worth stating because the two were confused once, in this file. A reader
+ * whose tooltip does not appear at all in the middle of a column wants the
+ * options here; a reader whose tooltip appears but stays put while the mouse
+ * moves wants `chartTooltip`'s `anchor`. Widening the band without the anchor
+ * makes the second symptom WORSE, because the datum the box is nailed to can
+ * now be the full height of the plot away from the pointer.
  *
  * ── THE SIGNATURE IS BORROWED, NOT RESTATED ────────────────────────────────
  *
