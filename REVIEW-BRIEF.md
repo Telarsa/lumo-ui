@@ -18,6 +18,7 @@ The thesis: **RTL and i18n defects hide from ordinary review.** A mirrored layou
 - Repo: `/Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui`
 - Branch: `experiment/base-ui`. Remote `https://github.com/Telarsa/lumo-ui.git`, private, protected branches. **Nothing has ever been pushed.**
 - 94 `registry:ui` components · 30 blocks · 8 packages · 524 built documents · 365 worked examples
+- HEAD at handoff: **`f249d70`**. `pnpm run verify` exits 0: **2,464 tests**, 417 files linted, 124 component files prop-graded, 524 documents, 0 violations across 13 gate rules, 12 routes floored.
 
 ---
 

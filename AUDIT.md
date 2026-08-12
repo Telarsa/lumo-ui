@@ -2,12 +2,14 @@
 
 **Commit audited:** `e7988b8` · **Date:** 12 August 2026 · **Scope:** 94 `registry:ui` components, 30 blocks, 8 packages, 524 built documents
 
-> **STATUS — Phase 1 complete at `272195d`.** All ten items closed across four commits
+> **STATUS — Phases 1–4 complete at `f249d70`.** Phase 1 closed at `272195d`; All ten items closed across four commits
 > (`10a08dc`, `83da337`, `f361cb7`, `272195d`). `verify` is now
 > types → **props** → **lint** → no-CSS-Modules → tests → registry → smoke → html:
-> **2,322 tests** (from 1,780), 417 files linted, 124 component files prop-graded,
-> 524 documents, 12 routes floored. Findings below are preserved as written, with
-> corrections marked inline where the fix disproved the diagnosis.
+> **2,464 tests** (from 1,780), 417 files linted, 124 component files prop-graded,
+> **13 gate rules** (from 8), 524 documents, 0 violations, 12 routes floored.
+> Findings below are preserved as written, with corrections marked inline where
+> the fix disproved the diagnosis. Six of this document's own claims turned out
+> to be wrong — see §7.
 
 `pnpm run verify` exits 0 at this commit: 1780 tests, 524 documents graded, 0 gate violations. **Everything in this document is a defect that state does not catch.** That is the point of the exercise.
 
@@ -20,10 +22,10 @@ Two of the findings below go further and undermine the state itself: the anti-va
 | Dimension | Score | The number in one line |
 | --- | --- | --- |
 | Accessibility / i18n / RTL | **8 → 9 / 10** | The logical-axis rule is genuinely closed; three defects still ship on Persian routes. |
-| API design & DX | **6 / 10** | Vocabulary is consistent and `className` merging is flawless; inert props are systemic and there is no `ref` story. |
+| API design & DX | **6 → 8 / 10** | Vocabulary is consistent and `className` merging is flawless; inert props are systemic and there is no `ref` story. |
 | Design system & docs | **6 → 7 / 10** | Token discipline is exceptional; two AA contrast failures and a dark-mode collision ship, and the Persian typography claim is inert. |
 | Testing & tooling | **7 → 9 / 10** | The gate's self-test is exemplary and proved by mutation; but a rule is armed in a script nobody calls, and green is not reproducible. |
-| **Overall** | **≈ 6.75 → 7.75 / 10** | An unusually rigorous internal tool, one polish pass from a professional library. |
+| **Overall** | **≈ 6.75 → 8.25 / 10** | An unusually rigorous internal tool, one polish pass from a professional library. |
 
 ### How to read these numbers
 
@@ -500,3 +502,23 @@ and `linkVariants` is `inline-flex`); `toggle-group`'s rested on a clipping clai
 that is true and describes the press rather than a defect. Both reversals are
 written in place, quoting what they replace, because a docblock that silently
 changes its mind is the failure mode §3.1 is about.
+
+
+---
+
+## 8. Phase 2–4 outcome, and two more claims this document got wrong
+
+| Claimed here | What measurement showed |
+| --- | --- |
+| Page weight is shiki's per-token inline styles; emit CSS classes instead | **Shiki is 10% of the largest page. The RSC flight payload is 76%.** The proposed fix addresses a tenth. |
+| (implied) server-rendering the panel removes it from the payload | **It does not.** `blocks/[slug]` has always rendered `dangerouslySetInnerHTML` from a server component and its payload carries the string anyway. What pays is dropping the `code` prop entirely and placing ONE element twice — React's flight writer dedupes objects by reference and never dedupes strings. |
+
+The real finding was invisible from the source: React outlines every string ≥1024 chars into its own row, and **190 of 192 component pages carried a byte-identical duplicated row** — the Code tab and Installation→Manual show the same file. 17.9M characters export-wide.
+
+Result: served bytes **274.7 → 221.6 MiB (−19.3%)**, largest page **−31%**, outlined raw-source rows **710 → 2**, duplicated rows **190 → 0**. Median page 698 → 569 KiB, so this document's "~300 KB median" exit criterion is **not met** and is recorded as unmet.
+
+### The gate this document asked for has a false negative
+
+`gate:props` — item 1.1, the rule that was to make inert props stop recurring — **reported clean on a prop that was declared, never read, and never spread.** It matches by name, and a module-scope helper's parameter named `value` cleared every prop of that name in the file. Found by an agent, not by the gate.
+
+Two narrowings landed and neither closes it; closing it properly needs scope resolution, which needs a checker, which turns a 0.4s check into a slow one that only runs on a tree that already typechecks. The limitation is documented in the rule itself. **A gate's scope is a claim like any other, and this one was overstated when it shipped.**
