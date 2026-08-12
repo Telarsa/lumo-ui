@@ -19,6 +19,7 @@ import { SiteShell } from "@/components/site-shell";
 import { assertLocale, localeParams, site, segmentFor} from "@/lib/locale";
 import { demoById } from "@/lib/demos";
 import { allCatalog } from "@/lib/catalog";
+import { allBlocks } from "@/lib/blocks";
 
 export function generateStaticParams() {
   return localeParams;
@@ -291,13 +292,27 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   const h = home[lang];
   const demos = await allCatalog();
   const behaviour = demos.filter((d) => d.behaviour).length;
+  /*
+   * ── THE ONE FIGURE THAT WAS A LITERAL, AND WAS WRONG ──────────────────────
+   *
+   * This read `formatNumber(28, lang)` while the two figures beside it came
+   * from `allCatalog()`. The registry holds THIRTY blocks, so the landing page
+   * under-reported its own inventory by two — and it did so directly above a
+   * section arguing that a claim and its test should be the same bytes.
+   *
+   * A hand-kept number next to derived ones is the worst version of both: it
+   * looks as authoritative as its neighbours and nothing fails when it drifts.
+   * `allBlocks()` is already imported and already read by the search index, so
+   * this costs nothing.
+   */
+  const blocks = allBlocks().length;
   // A fixed date: a rolling "today" would churn the committed gate fixtures daily.
   const stamp = new Date("2026-08-10T12:00:00Z");
 
   const figures: Array<{ value: string; label: string }> = [
     { value: formatNumber(demos.length, lang), label: h.componentsLabel },
     { value: formatNumber(behaviour, lang), label: h.behaviourLabel },
-    { value: formatNumber(28, lang), label: h.blocksLabel },
+    { value: formatNumber(blocks, lang), label: h.blocksLabel },
     {
       value: formatDate(stamp, lang, { month: "short", day: "numeric" }),
       label: h.reviewedLabel,

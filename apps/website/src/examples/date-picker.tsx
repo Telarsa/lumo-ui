@@ -1,9 +1,17 @@
 import type { Locale } from "@lumo-ui/core";
 import { DatePicker } from "@lumo-ui/ui";
+import { DatePickerDropdownIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
  * Worked examples for the date-picker page.
+ *
+ * The date-of-birth example is the one that needs VALUES, and it goes through an
+ * island for it: the caption dropdowns make `minValue`/`maxValue` required at
+ * the type level — an unbounded year list is built from `today()` during render
+ * and is a different list tomorrow — and a `CalendarDate` is a class instance,
+ * which cannot cross into a client component from this server module. The bounds
+ * travel as ISO strings; `demo-islands.tsx` builds them with `calendarDay`.
  *
  * `meta.composition` and `meta.parts` landed with the `index.ts` merge: the
  * loader checks every capitalised name in them against the real exports of
@@ -31,6 +39,13 @@ const t = {
     "en-US": "The delivery date must be at least two days from today.",
   },
   archive: { "fa-IR": "تاریخ بایگانی", "en-US": "Archive date" },
+  birth: { "fa-IR": "تاریخ تولد", "en-US": "Date of birth" },
+  birthHelp: {
+    "fa-IR":
+      "تایپ کنید، یا تقویم را باز کنید و سال را از فهرست بردارید. بازهٔ مجاز از ۱ فروردین ۱۳۰۰ تا ۲۹ اسفند ۱۴۰۴ است و فهرست سال‌ها دقیقاً همین است.",
+    "en-US":
+      "Type it, or open the calendar and take the year from a list. The permitted span runs from the first day of 1300 to the last day of 1404, and the year list is exactly that.",
+  },
 } satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
@@ -91,6 +106,19 @@ function SizesExample(l: Locale) {
         openCalendarLabel={t.open[l]}
       />
     </div>
+  );
+}
+
+function BirthDateExample(l: Locale) {
+  return (
+    <DatePickerDropdownIsland
+      label={t.birth[l]}
+      openCalendarLabel={t.open[l]}
+      minDay="1921-03-21"
+      maxDay="2026-03-20"
+      openOn="1981-07-23"
+      description={t.birthHelp[l]}
+    />
   );
 }
 
@@ -162,6 +190,17 @@ export const EXAMPLES: ComponentExamples = {
         "en-US": "The description sits under the group and is announced through aria-describedby — after the name, not as part of it.",
       },
       render: DescriptionExample,
+    },
+    {
+      id: "birth-date",
+      title: { "fa-IR": "تاریخ تولد", "en-US": "Date of birth" },
+      description: {
+        "fa-IR":
+          "همان اتحادِ نوعِ تقویم، از راه انتخابگر: هر چیدمانی که فهرست سال بسازد، هر دو کران را اجباری می‌کند. این تنها تاریخی است که چند دهه با ماه جاری فاصله دارد، و بدون فهرست سال، تنها راهش صفحه‌زدن است.",
+        "en-US":
+          "The calendar's type union, reached through the picker: any layout that builds a year list makes both bounds required. This is the one date a form asks for that is decades from the current month, and without a year list the only route to it is paging.",
+      },
+      render: BirthDateExample,
     },
     {
       id: "invalid",

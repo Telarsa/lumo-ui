@@ -2820,3 +2820,115 @@ export function MenuChoiceIsland({
     </MenuTrigger>
   );
 }
+
+/* ─────────────────────────────────────── calendar: the caption dropdowns ── */
+
+/*
+ * Appended by the caption-dropdown pass, same append-only contract.
+ *
+ * ── WHY A BOUNDED CALENDAR NEEDS AN ISLAND, MEASURED ────────────────────────
+ *
+ * `captionLayout="dropdown"` makes `minValue`/`maxValue` REQUIRED at the type
+ * level — an unbounded year list is derived from `today()` during render, which
+ * is a hydration hazard and a nondeterministic build, and `calendar.tsx`'s
+ * header carries the measurement. So the examples file has to produce two dates,
+ * and a date here is the SECOND kind of prop that cannot cross the RSC boundary:
+ *
+ *     Error occurred prerendering page "/fa/components/calendar"
+ *     Only plain objects, and a few built-ins, can be passed to Client
+ *     Components from Server Components. Classes or null prototypes are not
+ *     supported.
+ *       {label: …, minValue: {calendar: …, era: "AD", year: 1921, …}}
+ *
+ * — the build failing on exactly this, before the island existed. A
+ * `CalendarDate` is a class instance carrying a `Calendar` implementation, which
+ * is the same reason `ToastRegion.queue`, `GanttTask.start` and
+ * `EventCalendarEvent.start` are all on this side of the line.
+ *
+ * The dates therefore arrive as ISO STRINGS and are constructed here by
+ * `calendarDay`, exactly as `EventCalendarIsland` does with `eventCalendarDay`.
+ * Every user-visible string is still a prop, in both locales, from the examples
+ * file.
+ */
+import { calendarDay, DatePicker } from "@lumo-ui/ui";
+
+export interface CalendarDropdownIslandProps {
+  /** Announced name of the calendar. */
+  label: string;
+  /** Selects the calendar system, the digits, the week start and the direction. */
+  locale: Locale;
+  /** Help text under the grid. */
+  description: string;
+  /**
+   * The earliest selectable day, ISO `YYYY-MM-DD`, and the first year in the
+   * list. A STRING — see the header for the prerender error a value produces.
+   */
+  minDay: string;
+  /** The latest selectable day, and the last year in the list. */
+  maxDay: string;
+  /** The month the grid opens on. Stated, so no clock decides it. */
+  openOn: string;
+}
+
+export function CalendarDropdownIsland({
+  label,
+  locale,
+  description,
+  minDay,
+  maxDay,
+  openOn,
+}: CalendarDropdownIslandProps) {
+  return (
+    <Calendar
+      label={label}
+      locale={locale}
+      description={description}
+      captionLayout="dropdown"
+      minValue={calendarDay(minDay)}
+      maxValue={calendarDay(maxDay)}
+      defaultMonth={calendarDay(openOn)}
+    />
+  );
+}
+
+/**
+ * The picker's version, and it takes NO `locale`.
+ *
+ * `DatePicker` reads the locale from `LumoProvider` rather than from a prop —
+ * `Calendar` is the one that requires it explicitly, because it can be rendered
+ * outside a provider. `Omit` states that difference instead of carrying a prop
+ * this island would have nowhere to put.
+ */
+export interface DatePickerDropdownIslandProps
+  extends Omit<CalendarDropdownIslandProps, "locale"> {
+  /** Name of the button that opens the calendar. An icon has no name of its own. */
+  openCalendarLabel: string;
+}
+
+export function DatePickerDropdownIsland({
+  label,
+  openCalendarLabel,
+  description,
+  minDay,
+  maxDay,
+  openOn,
+}: DatePickerDropdownIslandProps) {
+  return (
+    <DatePicker
+      className="w-full max-w-sm"
+      label={label}
+      openCalendarLabel={openCalendarLabel}
+      description={description}
+      captionLayout="dropdown"
+      minValue={calendarDay(minDay)}
+      maxValue={calendarDay(maxDay)}
+      /*
+       * `placeholderValue` and not `defaultValue`: the field stays EMPTY, which
+       * is what a date-of-birth field looks like before it is filled, while the
+       * segments and the grid both start from a month a reader born in ۱۳۶۰ is
+       * near — rather than from today, which is the wrong end of eighty years.
+       */
+      placeholderValue={calendarDay(openOn)}
+    />
+  );
+}

@@ -1,6 +1,7 @@
 import type { Locale } from "@lumo-ui/core";
 import { formatNumber } from "@lumo-ui/core";
 import {
+  Badge,
   Cell,
   Column,
   ColumnResizer,
@@ -47,6 +48,15 @@ const t = {
   sortedDescending: { "fa-IR": "مرتب‌شده نزولی", "en-US": "Sorted descending" },
   resizeColumn: { "fa-IR": "تغییر پهنای ستون", "en-US": "Resize the column" },
   total: { "fa-IR": "جمع", "en-US": "Total" },
+  status: { "fa-IR": "وضعیت", "en-US": "Status" },
+  paid: { "fa-IR": "پرداخت‌شده", "en-US": "Paid" },
+  awaitingPayment: { "fa-IR": "در انتظار پرداخت", "en-US": "Awaiting payment" },
+  refunded: { "fa-IR": "بازگردانده‌شده", "en-US": "Refunded" },
+  noOrders: { "fa-IR": "هنوز سفارشی ثبت نشده است", "en-US": "No orders yet" },
+  noOrdersHint: {
+    "fa-IR": "سفارش‌های این بازه اینجا فهرست می‌شوند.",
+    "en-US": "Orders placed in this period will be listed here.",
+  },
 } satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
@@ -204,6 +214,101 @@ function ResizingExample(l: Locale) {
   );
 }
 
+function StatusCellsExample(l: Locale) {
+  /*
+   * Every other example on this page puts a bare string in every cell, which is
+   * not what a real orders table looks like — and the difference is not
+   * decoration. A status column written as coloured text alone encodes its
+   * meaning in hue, and hue is the one channel a third of readers of this table
+   * do not receive the same way. `Badge` carries the WORD, so the state is
+   * legible in greyscale, under a colour filter, and read aloud in document
+   * order — `Badge` deliberately has no `role="status"`, so three badges at
+   * first paint are three announcements in place, not three interruptions.
+   *
+   * The amount column stays plain: a number is not a state, and every digit
+   * here goes through `formatNumber`.
+   */
+  return (
+    <ResizableTableContainer className="max-w-xl">
+      <Table label={t.ordersGrid[l]} locale={l}>
+        <TableHeader>
+          <Column id="name" isRowHeader>
+            {t.customer[l]}
+          </Column>
+          <Column id="status">{t.status[l]}</Column>
+          <Column id="total">{t.amount[l]}</Column>
+        </TableHeader>
+        <TableBody>
+          <Row id="a">
+            <Cell>{t.customerOne[l]}</Cell>
+            <Cell>
+              <Badge tone="positive" variant="subtle">
+                {t.paid[l]}
+              </Badge>
+            </Cell>
+            <Cell>{formatNumber(1250000, l)}</Cell>
+          </Row>
+          <Row id="b">
+            <Cell>{t.customerTwo[l]}</Cell>
+            <Cell>
+              <Badge tone="caution" variant="subtle">
+                {t.awaitingPayment[l]}
+              </Badge>
+            </Cell>
+            <Cell>{formatNumber(890000, l)}</Cell>
+          </Row>
+          <Row id="c">
+            <Cell>{t.customerThree[l]}</Cell>
+            <Cell>
+              <Badge tone="critical" variant="subtle">
+                {t.refunded[l]}
+              </Badge>
+            </Cell>
+            <Cell>{formatNumber(2340000, l)}</Cell>
+          </Row>
+        </TableBody>
+      </Table>
+    </ResizableTableContainer>
+  );
+}
+
+function EmptyExample(l: Locale) {
+  /*
+   * `TableBody` counts its children, and zero of them is a STATE rather than a
+   * missing render: the tbody gains `data-empty` and swaps in `renderEmptyState`.
+   * The header stays — a table that erases its columns when the filter matches
+   * nothing has told the reader nothing about WHAT is empty.
+   *
+   * The empty row is raw `tr`/`td` on purpose. `Row` and `Cell` read the row
+   * context `TableBody` provides per data row, and an empty body provides none;
+   * a spanning cell has no column index to sit at either, which is exactly why
+   * this markup is not made of the collection parts.
+   */
+  return (
+    <ResizableTableContainer className="max-w-xl">
+      <Table label={t.ordersGrid[l]} locale={l}>
+        <TableHeader>
+          <Column id="name" isRowHeader>
+            {t.customer[l]}
+          </Column>
+          <Column id="city">{t.city[l]}</Column>
+          <Column id="total">{t.amount[l]}</Column>
+        </TableHeader>
+        <TableBody
+          renderEmptyState={
+            <tr>
+              <td colSpan={3} className="p-8 text-center">
+                <p className="m-0 text-sm font-medium text-fg">{t.noOrders[l]}</p>
+                <p className="m-0 pbs-1 text-sm text-fg-muted">{t.noOrdersHint[l]}</p>
+              </td>
+            </tr>
+          }
+        />
+      </Table>
+    </ResizableTableContainer>
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
     composition: [
@@ -329,6 +434,28 @@ export const EXAMPLES: ComponentExamples = {
         "en-US": "Three columns, three rows; the first column is the row header so every row has a name.",
       },
       render: BasicExample,
+    },
+    {
+      id: "status-cells",
+      title: { "fa-IR": "خانه‌ای که فقط متن نیست", "en-US": "A cell that is not just text" },
+      description: {
+        "fa-IR":
+          "جدول واقعی، خانه‌های رشته‌ایِ خالی ندارد. ستون وضعیت با Badge نوشته شده و نه با متن رنگی: رنگ‌کردنِ تنها، معنا را در کانالی رمزگذاری می‌کند که بخش بزرگی از خوانندگان آن را یکسان دریافت نمی‌کنند، در حالی که نشان، خودِ واژه را حمل می‌کند — در خاکستری، زیر فیلتر رنگ، و در ترتیب سند خوانده می‌شود. Badge عمداً role=status ندارد، پس سه نشان در نخستین رنگ‌آمیزی سه اعلام در جای خود هستند، نه سه وقفه. ستون مبلغ ساده می‌ماند: عدد یک وضعیت نیست، و هر رقمش از formatNumber می‌گذرد.",
+        "en-US":
+          "A real table does not have bare-string cells. The status column is written with Badge rather than coloured text: colour alone encodes the meaning in a channel a substantial share of readers do not receive the same way, while a badge carries the WORD — legible in greyscale, under a colour filter, and read aloud in document order. Badge deliberately carries no role=status, so three badges at first paint are three announcements in place rather than three interruptions. The amount column stays plain: a number is not a state, and every digit in it goes through formatNumber.",
+      },
+      render: StatusCellsExample,
+    },
+    {
+      id: "empty",
+      title: { "fa-IR": "بدون ردیف", "en-US": "No rows" },
+      description: {
+        "fa-IR":
+          "بدنه فرزندانش را می‌شمارد، و صفر یک حالت است نه یک رندرِ جاافتاده: tbody ویژگی data-empty می‌گیرد و به‌جای ردیف‌ها renderEmptyState را می‌گذارد. سربرگ سر جایش می‌ماند — جدولی که با خالی‌شدن، ستون‌هایش را هم پاک کند به خواننده نگفته چه چیزی خالی است. ردیف خالی از tr و td خام ساخته شده و این عمدی است: Row و Cell به بافتِ ردیف تکیه دارند که بدنه برای هر ردیف داده می‌سازد و بدنهٔ خالی هیچ‌کدام را ندارد، و خانه‌ای که چند ستون را می‌پوشاند اصلاً شمارهٔ ستونی ندارد که در آن بنشیند.",
+        "en-US":
+          "The body counts its children, and zero of them is a STATE rather than a render that failed: the tbody gains data-empty and swaps in renderEmptyState. The header stays — a table that erases its columns when nothing matches has not told the reader WHAT is empty. The empty row is raw tr/td on purpose: Row and Cell rely on the per-row context the body provides for each data row, an empty body provides none, and a cell spanning the columns has no column index to sit at in the first place.",
+      },
+      render: EmptyExample,
     },
     {
       id: "footer",

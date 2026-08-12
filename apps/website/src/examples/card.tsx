@@ -1,6 +1,7 @@
 import type { Locale } from "@lumo-ui/core";
 import { formatNumber } from "@lumo-ui/core";
 import {
+  Badge,
   Button,
   Card,
   CardAction,
@@ -73,6 +74,16 @@ const t = {
     "en-US": "Twelve gigabytes of your eighteen-gigabyte plan are in use.",
   },
   manage: { "fa-IR": "مدیریت", "en-US": "Manage" },
+  metricTitle: { "fa-IR": "فروش این ماه", "en-US": "Sales this month" },
+  metricDescription: {
+    "fa-IR": "از آغاز مهر تا امروز، به تومان.",
+    "en-US": "From the start of the month to today, in toman.",
+  },
+  metricTrend: { "fa-IR": "رشد نسبت به ماه پیش", "en-US": "up on last month" },
+  metricFooter: {
+    "fa-IR": "ارقام هر شب بازخوانی می‌شوند و سفارش‌های بازگردانده‌شده از جمع کم شده‌اند.",
+    "en-US": "The figures are recomputed nightly, with refunded orders already deducted.",
+  },
   actionBody: {
     "fa-IR": "پرونده‌های حذف‌شده تا سی روز در سطل بازیافت می‌مانند و همچنان فضا اشغال می‌کنند.",
     "en-US": "Deleted files stay in the bin for thirty days and keep taking up room.",
@@ -184,6 +195,47 @@ function NestedExample(l: Locale) {
   );
 }
 
+function MetricExample(l: Locale) {
+  /*
+   * The commonest card in any dashboard, and the commonest way to build it
+   * wrong: the usual version makes the FIGURE the card's heading, because the
+   * figure is the biggest text. That reverses the outline — a screen-reader
+   * user jumping by heading then hears a bare number and has to read on to find
+   * out what it counts. Here the heading stays the LABEL and the figure is body
+   * text set large, so the drawn hierarchy and the announced hierarchy point
+   * the same way. `CardTitle`'s `level` is a number precisely so a wall of
+   * these cards can sit in a grid under one section heading without stepping
+   * on it — see the heading-level example for that arrangement.
+   *
+   * The trend is a `Badge` with its direction spelled out beside the
+   * percentage, not an arrow glyph alone: an arrow is a shape with no name, and
+   * up is not a word. Both the figure and the percentage go through
+   * `formatNumber`, which is also what places the percent sign correctly for
+   * the script.
+   */
+  return (
+    <Card variant="elevated" className="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle>{t.metricTitle[l]}</CardTitle>
+        <CardDescription>{t.metricDescription[l]}</CardDescription>
+      </CardHeader>
+      <CardBody>
+        <p className="m-0 flex flex-wrap items-baseline gap-3">
+          <span className="text-3xl font-semibold text-fg tabular-nums">
+            {formatNumber(48200000, l)}
+          </span>
+          <Badge tone="positive" variant="subtle">
+            {formatNumber(0.18, l, { style: "percent" })} {t.metricTrend[l]}
+          </Badge>
+        </p>
+      </CardBody>
+      <CardFooter>
+        <p className="m-0 w-full text-xs text-fg-muted">{t.metricFooter[l]}</p>
+      </CardFooter>
+    </Card>
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
     tier: "layout",
@@ -291,6 +343,17 @@ export const EXAMPLES: ComponentExamples = {
           "The header is a grid rather than a flex column, and this is where the difference shows: the button stays level with the first line instead of centring against the two-line title-and-description block. Its place is a column NUMBER, and grid columns are laid along the inline axis — so it moves to the left in Persian with no new rule.",
       },
       render: ActionExample,
+    },
+    {
+      id: "metric",
+      title: { "fa-IR": "کارت سنجه", "en-US": "The metric card" },
+      description: {
+        "fa-IR":
+          "رایج‌ترین کارت هر داشبورد، و رایج‌ترین راه اشتباه ساختنش: نسخهٔ معمول، خودِ عدد را سرفصل کارت می‌کند چون بزرگ‌ترین متن است. این کار فهرست سرفصل‌ها را وارونه می‌کند — کاربری که با کلید سرفصل در صفحه می‌پرد، عددی برهنه می‌شنود و باید ادامه بخواند تا بفهمد شمارِ چیست. اینجا سرفصل همان برچسب می‌ماند و رقم، متنِ بدنه‌ای است که بزرگ چیده شده، پس سلسله‌مراتب دیداری و سلسله‌مراتب اعلام‌شده یک‌سو می‌شوند. روند، یک Badge است که جهتش کنار درصد نوشته شده و نه یک پیکان تنها: پیکان شکلی بی‌نام است و «بالا» واژه نیست. هم رقم و هم درصد از formatNumber می‌گذرند، و همان است که نشانهٔ درصد را برای این خط سر جای درست می‌گذارد.",
+        "en-US":
+          "The commonest card in any dashboard, and the commonest way to get it wrong: the usual version makes the FIGURE the heading, because the figure is the biggest text. That reverses the outline — a reader jumping by heading hears a bare number and has to read on to learn what it counts. Here the heading stays the label and the figure is body text set large, so the drawn hierarchy and the announced hierarchy point the same way. The trend is a Badge with its direction spelled out beside the percentage rather than an arrow alone: an arrow is a shape with no name, and up is not a word. Both the figure and the percentage go through formatNumber, which is also what places the percent sign correctly for the script.",
+      },
+      render: MetricExample,
     },
     {
       id: "heading-level",

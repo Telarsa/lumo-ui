@@ -1,5 +1,5 @@
 import type { Locale } from "@lumo-ui/core";
-import { Button, IconButton } from "@lumo-ui/ui";
+import { Button, IconButton, Spinner } from "@lumo-ui/ui";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
@@ -16,6 +16,10 @@ const t = {
   edit: { "fa-IR": "ویرایش", "en-US": "Edit" },
   more: { "fa-IR": "گزینه‌های بیشتر", "en-US": "More options" },
   submitted: { "fa-IR": "ارسال شد", "en-US": "Submitted" },
+  saving: { "fa-IR": "در حال ذخیره", "en-US": "Saving" },
+  savingBusy: { "fa-IR": "در حال ذخیرهٔ تغییرها…", "en-US": "Saving your changes…" },
+  publishing: { "fa-IR": "در حال انتشار", "en-US": "Publishing" },
+  publishingBusy: { "fa-IR": "در حال انتشار نوشته…", "en-US": "Publishing the post…" },
 } satisfies Record<string, LocalizedText>;
 
 function VariantsExample(l: Locale) {
@@ -109,6 +113,40 @@ function DisabledExample(l: Locale) {
   );
 }
 
+function BusyExample(l: Locale) {
+  /*
+   * There is no `isPending` here, and that is not an omission. The prop is
+   * TYPED on ButtonProps — the React Aria API this one is frozen against had it
+   * — but Base UI has no pending state to forward it to, so it is inert: set it
+   * and nothing renders, nothing is announced, and no error tells you. A busy
+   * button is therefore something you COMPOSE, and this is the composition.
+   *
+   * Three parts, each load-bearing:
+   *   - `isDisabled` stops a second submit. It also switches pointer events
+   *     off, so the pressed state cannot fire during the wait.
+   *   - `<Spinner>` carries the announcement. Its `label` is real text inside
+   *     role="status", so the wait is spoken, not merely drawn.
+   *   - the button KEEPS its own label. Swapping the text for a ring would
+   *     leave the control nameless for exactly as long as the request runs.
+   *
+   * The cancel button beside it stays live on purpose: the action is busy, the
+   * escape route is not.
+   */
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button isDisabled>
+        <Spinner size="sm" label={t.savingBusy[l]} />
+        {t.saving[l]}
+      </Button>
+      <Button variant="outline">{t.cancel[l]}</Button>
+      <Button variant="critical" isDisabled>
+        <Spinner size="sm" label={t.publishingBusy[l]} />
+        {t.publishing[l]}
+      </Button>
+    </div>
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
     composition: [
@@ -117,6 +155,11 @@ export const EXAMPLES: ComponentExamples = {
       `<IconButton label="…">`,
       `  <svg aria-hidden="true" />`,
       `</IconButton>`,
+      ``,
+      `<Button isDisabled>                 ← busy is a COMPOSITION; isPending is inert`,
+      `  <Spinner size="sm" label="…" />   ← the announcement`,
+      `  …                                 ← the label STAYS`,
+      `</Button>`,
     ].join("\n"),
     parts: [
       {
@@ -191,6 +234,17 @@ export const EXAMPLES: ComponentExamples = {
         "en-US": "The disabled state styles from the engine's own data-disabled, not from mirrored state. That same attribute switches pointer events off, so a disabled button never enters the pressed state and needs no separate carve-out.",
       },
       render: DisabledExample,
+    },
+    {
+      id: "busy",
+      title: { "fa-IR": "در حال کار", "en-US": "Busy" },
+      description: {
+        "fa-IR":
+          "دکمهٔ مشغول در این کتابخانه یک ویژگی نیست، یک ترکیب است. isPending روی ButtonProps تایپ شده — چون API فریزشده‌ی ری‌اکت‌آریا آن را داشت — اما Base UI حالت pending ندارد که به آن پاس داده شود، پس بی‌اثر است: می‌گذاریدش و هیچ چیز رندر نمی‌شود، هیچ چیز اعلام نمی‌شود، و هیچ خطایی هم به شما نمی‌گوید. آنچه واقعاً می‌نویسید همین است: isDisabled جلوی ارسال دوم را می‌گیرد، Spinner انتظار را با متن واقعی درون role=status اعلام می‌کند، و دکمه برچسب خودش را نگه می‌دارد — دکمه‌ای که متنش را با یک حلقه عوض کند، درست به‌اندازهٔ طول همان درخواست بی‌نام می‌ماند. دکمهٔ انصراف عمداً فعال مانده: کنش مشغول است، راه خروج نه.",
+        "en-US":
+          "A busy button is a composition here, not a prop. isPending IS typed on ButtonProps — the frozen React Aria API had it — but Base UI has no pending state to forward it to, so it is inert: set it and nothing renders, nothing is announced, and nothing errors. What you actually write is this: isDisabled blocks a second submit, Spinner announces the wait as real text inside role=status, and the button keeps its own label — a button that swaps its text for a ring is nameless for exactly as long as the request runs. The cancel button stays live on purpose: the action is busy, the escape route is not.",
+      },
+      render: BusyExample,
     },
   ],
 };

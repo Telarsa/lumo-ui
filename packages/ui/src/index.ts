@@ -1032,8 +1032,21 @@ export type {
   SidebarTriggerProps,
 } from "./sidebar.tsx";
 
+/*
+ * `calendarDay` comes from the directive-free adapter DIRECTLY, never through
+ * `calendar.tsx` — same rule as the variants below. It is what a caller without
+ * `@internationalized/date` uses to write the bounds a caption dropdown
+ * requires, and a server component must be able to call it.
+ */
+export { calendarDay } from "./calendar-datelib.ts";
+
 export { Calendar, calendarChevron, calendarClassNames, describedByWith } from "./calendar.tsx";
-export type { CalendarProps } from "./calendar.tsx";
+export type {
+  CalendarBaseProps,
+  CalendarCaptionLayout,
+  CalendarNavigation,
+  CalendarProps,
+} from "./calendar.tsx";
 
 /*
  * The whole date family's classes come from ONE directive-free module, and they
@@ -1046,6 +1059,9 @@ export type { CalendarProps } from "./calendar.tsx";
 export {
   calendarCellVariants,
   calendarDayButtonVariants,
+  calendarDropdownRootVariants,
+  calendarDropdownsVariants,
+  calendarDropdownVariants,
   calendarFooterVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
@@ -1090,13 +1106,17 @@ export type {
 } from "./date-field-state.ts";
 
 export { DatePicker } from "./date-picker.tsx";
-export type { DatePickerProps } from "./date-picker.tsx";
+export type { DatePickerBaseProps, DatePickerProps } from "./date-picker.tsx";
 
 export { DateRangePicker } from "./date-range-picker.tsx";
 export type { DateRangePickerProps } from "./date-range-picker.tsx";
 
 export { RangeCalendar } from "./range-calendar.tsx";
-export type { CalendarDateRange, RangeCalendarProps } from "./range-calendar.tsx";
+export type {
+  CalendarDateRange,
+  RangeCalendarBaseProps,
+  RangeCalendarProps,
+} from "./range-calendar.tsx";
 
 /*
  * The preset-driven range picker. `resolveDateRangePreset` and `todayIn` are

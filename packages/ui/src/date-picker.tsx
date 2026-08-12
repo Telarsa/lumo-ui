@@ -6,7 +6,7 @@ import { Field } from "@base-ui/react/field";
 import type { CalendarDate } from "@internationalized/date";
 import { attr } from "@lumo-ui/base-ui-ssr";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { Calendar } from "./calendar.tsx";
+import { Calendar, type CalendarNavigation } from "./calendar.tsx";
 import {
   datePickerGroupVariants,
   datePickerTriggerVariants,
@@ -71,7 +71,7 @@ export { datePickerGroupVariants, datePickerTriggerVariants };
  * edge in both directions. `popover.tsx` explains why the physical spellings are
  * subtracted from the type rather than merely discouraged.
  */
-export interface DatePickerProps {
+export interface DatePickerBaseProps {
   /** Announced and displayed name. Required. */
   label: string;
   /** Name of the button that opens the calendar. Required — the trigger is an icon. */
@@ -81,8 +81,6 @@ export interface DatePickerProps {
   onChange?: ((value: CalendarDate | null) => void) | undefined;
   /** The date an empty field cycles from. Defaults to today. */
   placeholderValue?: CalendarDate | undefined;
-  minValue?: CalendarDate | undefined;
-  maxValue?: CalendarDate | undefined;
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
   description?: LumoNode;
   /** Shown under the field. Supplying one marks it invalid. */
@@ -95,24 +93,61 @@ export interface DatePickerProps {
   className?: string | undefined;
 }
 
-export function DatePicker({
-  label,
-  openCalendarLabel,
-  value,
-  defaultValue,
-  onChange,
-  placeholderValue,
-  minValue,
-  maxValue,
-  isDateUnavailable,
-  description,
-  errorMessage,
-  isInvalid,
-  isDisabled,
-  isReadOnly,
-  size,
-  className,
-}: DatePickerProps) {
+/**
+ * The picker's props, carrying `Calendar`'s caption-layout union unchanged.
+ *
+ * A date of birth is the case this exists for — the one date a reader is asked
+ * for that is decades from the month the grid opens on — so the picker had to
+ * reach `captionLayout` or the feature would be available everywhere except the
+ * component that needs it. The union comes from `calendar.tsx` rather than being
+ * restated, so the bounds a year `<select>` requires are required here too, at
+ * compile time, and for the same measured reason.
+ */
+export type DatePickerProps = DatePickerBaseProps & CalendarNavigation;
+
+export function DatePicker(props: DatePickerProps) {
+  const {
+    label,
+    openCalendarLabel,
+    value,
+    defaultValue,
+    onChange,
+    placeholderValue,
+    isDateUnavailable,
+    description,
+    errorMessage,
+    isInvalid,
+    isDisabled,
+    isReadOnly,
+    size,
+    className,
+  } = props;
+
+  /*
+   * The caption layout and its bounds, rebuilt as ONE value.
+   *
+   * Not three spreads of three optional props: `Calendar`'s type says the three
+   * are related — `captionLayout="dropdown"` REQUIRES both bounds — and three
+   * independent `optional()` spreads present them to the compiler as three
+   * unrelated maybes, so this component could construct a call `Calendar`
+   * refuses. Narrowing on `captionLayout` and rebuilding is what carries the
+   * caller's guarantee across the boundary with no cast: in the first branch the
+   * discriminant has already made both bounds non-optional.
+   *
+   * It is REBUILT and not `props` widened to `CalendarNavigation`: that also
+   * type-checks, and at runtime would spread this component's whole props object
+   * — `onChange`, `value`, `className` and all — onto the grid, where `onChange`
+   * has a different signature entirely.
+   */
+  const navigation: CalendarNavigation =
+    props.captionLayout === "dropdown" || props.captionLayout === "dropdown-years"
+      ? { captionLayout: props.captionLayout, minValue: props.minValue, maxValue: props.maxValue }
+      : {
+          ...optional("captionLayout", props.captionLayout),
+          ...optional("minValue", props.minValue),
+          ...optional("maxValue", props.maxValue),
+        };
+
   const locale = useLumoLocale();
 
   /*
@@ -209,8 +244,7 @@ export function DatePicker({
               locale={locale}
               {...optional("value", selected ?? undefined)}
               {...optional("defaultMonth", selected ?? placeholderValue)}
-              {...optional("minValue", minValue)}
-              {...optional("maxValue", maxValue)}
+              {...navigation}
               {...optional("isDateUnavailable", isDateUnavailable)}
               onChange={(next) => {
                 commit(next ?? null);

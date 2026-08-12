@@ -1,6 +1,7 @@
 import {
   CalendarDate,
   createCalendar,
+  parseDate,
   endOfMonth as icuEndOfMonth,
   endOfWeek as icuEndOfWeek,
   endOfYear as icuEndOfYear,
@@ -154,6 +155,42 @@ export function toPickerDate(date: CalendarDate): Date {
  */
 export function fromPickerDate(date: Date, locale: Locale): CalendarDate {
   return toCalendar(fromJsDate(date), createCalendar(CALENDAR_FOR[locale]));
+}
+
+/**
+ * A day from an ISO `YYYY-MM-DD` string — CALENDAR FIELDS, never an instant.
+ *
+ * The third of these in the library, after `ganttDate` and `eventCalendarDay`,
+ * and it exists for the reason `ganttDate`'s docblock already sets out: a caller
+ * may not have `@internationalized/date` as a direct dependency and still has to
+ * express a date. This repository's own site is the proof — `apps/website`
+ * depends on `@lumo-ui/ui` alone, and `examples/calendar.tsx` recorded that it
+ * could not write a `CalendarDate` literal at all.
+ *
+ * That was survivable while every calendar prop was optional. It stopped being
+ * survivable when `captionLayout="dropdown"` made `minValue`/`maxValue`
+ * REQUIRED: the site could not demonstrate the dropdowns without a way to say
+ * «۱ فروردین ۱۳۰۰», so the type-level rule would have been enforced on every
+ * caller and shown to none of them.
+ *
+ * Note WHERE it is called from, because it is not where one would guess: a
+ * `CalendarDate` is a class instance and cannot cross from a server component
+ * into a client one at all — the site's build fails with «Only plain objects,
+ * and a few built-ins, can be passed to Client Components», measured on
+ * `/fa/components/calendar`. So the ISO string is what travels, and this
+ * function runs on the far side of that boundary, in `demo-islands.tsx`.
+ *
+ * The string is Gregorian because ISO 8601 is, and that loses nothing: the value
+ * carries its calendar with it and `toPickerDate` converts at the seam, so
+ * `calendarDay("1921-03-21")` bounds a Jalali grid at ۱ فروردین ۱۳۰۰ exactly.
+ * There is no time zone in the signature because there is no instant here —
+ * `parseDate` reads the three fields straight out of the string.
+ *
+ * It lives in THIS module, which has no `"use client"`, so a server component
+ * can construct a bound without pulling a client reference in with it.
+ */
+export function calendarDay(iso: string): CalendarDate {
+  return parseDate(iso);
 }
 
 /**

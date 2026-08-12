@@ -1,6 +1,6 @@
 import type { Locale } from "@lumo-ui/core";
 import { Calendar } from "@lumo-ui/ui";
-import { CalendarClosedDaysIsland } from "@/components/demo-islands";
+import { CalendarClosedDaysIsland, CalendarDropdownIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -10,6 +10,18 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * does not depend on `@internationalized/date` (only `@lumo-ui/ui` does), so a
  * `CalendarDate` literal here would not resolve. It costs nothing — an unset
  * calendar opens on the current Jalali month, which is the thing worth showing.
+ *
+ * The year-dropdown example is the SECOND thing here that needs an island, for a
+ * new reason: `captionLayout="dropdown"` makes `minValue`/`maxValue` required at
+ * the type level, and a `CalendarDate` is a class instance, which React refuses
+ * to serialise into the RSC payload. The prerender failed on exactly that before
+ * the island existed — «Only plain objects, and a few built-ins, can be passed
+ * to Client Components». So the bounds cross as ISO strings and
+ * `CalendarDropdownIsland` builds them with `calendarDay`; on a Persian page
+ * they read ۱ فروردین ۱۳۰۰ and ۲۹ اسفند ۱۴۰۴.
+ *
+ * `dropdown-months` needs no island at all, which is the honest way to show
+ * that it needs no bounds either.
  *
  * The one example that needs a RULE rather than a value goes through an island.
  * `isDateUnavailable` is a function and this is a server module, so passing it
@@ -40,6 +52,20 @@ const t = {
     "en-US": "A read-only calendar; the months are still browsable.",
   },
   closed: { "fa-IR": "تقویم غیرفعال", "en-US": "Disabled calendar" },
+  birth: { "fa-IR": "تاریخ تولد", "en-US": "Date of birth" },
+  birthHelp: {
+    "fa-IR":
+      "سال و ماه از دو فهرست انتخاب می‌شوند. فهرست سال‌ها از همان دو کرانی ساخته می‌شود که نوشته شده‌اند — از ۱۳۰۰ تا ۱۴۰۴ — نه از ساعتِ لحظهٔ رندر.",
+    "en-US":
+      "The year and the month are chosen from two lists. The year list is built from the two bounds written above it, not from the clock at render time.",
+  },
+  deadline: { "fa-IR": "مهلت ارسال", "en-US": "Submission deadline" },
+  deadlineHelp: {
+    "fa-IR":
+      "فقط ماه فهرست می‌شود و سال متن می‌ماند؛ این چیدمان هیچ کرانی لازم ندارد، چون دوازده ماهِ همان سالِ نمایش‌داده‌شده را نشان می‌دهد.",
+    "en-US":
+      "Only the month becomes a list and the year stays as text. This layout needs no bounds: it lists the twelve months of the year already on screen.",
+  },
 } satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
@@ -84,6 +110,30 @@ function DisabledExample(l: Locale) {
   );
 }
 
+function BirthDateExample(l: Locale) {
+  return (
+    <CalendarDropdownIsland
+      label={t.birth[l]}
+      locale={l}
+      minDay="1921-03-21"
+      maxDay="2026-03-20"
+      openOn="1981-07-23"
+      description={t.birthHelp[l]}
+    />
+  );
+}
+
+function MonthDropdownExample(l: Locale) {
+  return (
+    <Calendar
+      label={t.deadline[l]}
+      locale={l}
+      captionLayout="dropdown-months"
+      description={t.deadlineHelp[l]}
+    />
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
     tier: "form",
@@ -114,6 +164,15 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
+        name: "calendarDay",
+        description: {
+          "fa-IR":
+            "یک روز از رشتهٔ ISO، برای فراخوانی که @internationalized/date را مستقیم ندارد — همین سایت. کران‌هایی که فهرست سال‌ها را می‌سازند با همین ساخته می‌شوند، و مقدارِ برگشتی تقویم خودش را همراه دارد، پس روی صفحهٔ فارسی جلالی خوانده می‌شود.",
+          "en-US":
+            "A day from an ISO string, for a caller without @internationalized/date — this very site. The bounds that build the year list are built with it, and the value carries its own calendar, so it reads as Jalali on a Persian page.",
+        },
+      },
+      {
         name: "calendarClassNames",
         description: {
           "fa-IR":
@@ -135,6 +194,28 @@ export const EXAMPLES: ComponentExamples = {
           "Three announced strings are required: the calendar's name and both nav buttons. Forty-two focusable cells with no name is the unnamed-control defect at its worst.",
       },
       render: BasicExample,
+    },
+    {
+      id: "birth-date",
+      title: { "fa-IR": "تاریخ تولد", "en-US": "Date of birth" },
+      description: {
+        "fa-IR":
+          "دورترین تاریخی که از کاربر پرسیده می‌شود. بدون فهرست سال، رسیدن از ماه جاری به سال ۱۳۶۰ پانصد و چهل بار فشردن «ماه پیش» است؛ با آن، دو انتخاب. کران‌ها اجباری‌اند و این را کامپایلر نگه می‌دارد: فهرستی که کران نداشته باشد از today() ساخته می‌شود و فردا فهرست دیگری است.",
+        "en-US":
+          "The most distant date a form ever asks for. With no year list, reaching 1360 from the current Jalali month is 540 presses of the previous-month button; with one, it is two choices. The bounds are required and the compiler holds that: a list with no bounds is derived from today() and is a different list tomorrow.",
+      },
+      render: BirthDateExample,
+    },
+    {
+      id: "month-dropdown",
+      title: { "fa-IR": "فهرست ماه", "en-US": "Month list" },
+      description: {
+        "fa-IR":
+          "چیدمان میانی: ماه فهرست می‌شود، سال نه. تنها چیدمانی که هیچ کرانی نمی‌خواهد، چون هیچ ساعتی نمی‌خواند.",
+        "en-US":
+          "The middle layout: the month becomes a list and the year does not. It is the one layout that needs no bounds, because it reads no clock.",
+      },
+      render: MonthDropdownExample,
     },
     {
       id: "unavailable",

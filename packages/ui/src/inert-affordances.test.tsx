@@ -488,3 +488,50 @@ describe("toggle-group — the one press in the toggle family that answers nothi
     expect(toggleButtonVariants()).not.toContain("translate-y");
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The prop that compiled, rendered nothing, and announced nothing
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe("ButtonPropsBase — the two props that never reached the element", () => {
+  /*
+   * `isPending` and `preventFocusOnPress` came from the frozen React Aria API
+   * and have no Base UI equivalent, so `button.tsx` destructured both for the
+   * sole purpose of NOT spreading them. Set either and nothing rendered,
+   * nothing was announced, and nothing errored — while `props.ts` documented
+   * `isPending` in the present tense as "whether the button is in a pending
+   * state".
+   *
+   * Both are `?: undefined` now, which turns the silence into a compile error.
+   * THE TYPES ARE THE ASSERTION: `@ts-expect-error` fails the build if either
+   * prop ever becomes settable again, so this cannot regress quietly the way it
+   * originally arrived.
+   *
+   * `?: undefined` and not `?: never`, which was the first cut here: under this
+   * repo's `exactOptionalPropertyTypes: true`, a `never` field rejects an
+   * EXPLICIT `undefined` as well, so `<Button {...props}>` stopped compiling for
+   * any caller whose object carried `isPending: undefined`. The second test
+   * below is what caught that — it is the spread case, not a formality.
+   */
+  it("cannot be passed a value", () => {
+    const { getByRole } = render(
+      <>
+        {/* @ts-expect-error a busy button is a composition; see the busy example */}
+        <Button isPending>ذخیره</Button>
+        {/* @ts-expect-error focus on press is the browser's here, not the library's */}
+        <Button preventFocusOnPress>انصراف</Button>
+      </>,
+    );
+    // Rendered, not just typechecked: the props must be absent from the DOM
+    // too, or a future spread would put `ispending="true"` in the markup.
+    const busy = getByRole("button", { name: "ذخیره" });
+    expect(busy.getAttribute("ispending")).toBeNull();
+    expect(busy.getAttribute("aria-busy")).toBeNull();
+  });
+
+  it("still accepts undefined, so optional annotations keep compiling", () => {
+    const maybe: { isPending?: undefined } = {};
+    const { getByRole } = render(<Button {...maybe}>ذخیره</Button>);
+    expect(getByRole("button", { name: "ذخیره" })).toBeDefined();
+  });
+});

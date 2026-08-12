@@ -123,6 +123,112 @@ export const calendarNavButtonVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:size-4",
 );
 
+/*
+ * ════════════════════════════════════════════════════════════════════════════
+ * THE CAPTION DROPDOWNS
+ *
+ * ── THE MARKUP THESE THREE CLASSES LAND ON, READ OUT OF `Dropdown.js` ───────
+ *
+ * react-day-picker does NOT render a styled listbox. It renders a real native
+ * `<select>` and a separate visible `<span>`, one on top of the other
+ * (`dist/esm/components/Dropdown.js`, v10.0.1, reformatted from the emitted
+ * `createElement` calls):
+ *
+ *     <span class={dropdown_root} data-disabled=…>
+ *       <select class={dropdown} aria-label=… value=…>…options…</select>
+ *       <span class={caption_label} aria-hidden="true">
+ *         «مرداد»<Chevron orientation="down" />
+ *       </span>
+ *     </span>
+ *
+ * and the pair of them sits inside `<div class={dropdowns}>` (`DropdownNav`),
+ * beside a visually-hidden `<span role="status">` carrying the full caption.
+ *
+ * Two consequences drive every class below, and both are about the two elements
+ * AGREEING:
+ *
+ *  1. The `<span>` is `aria-hidden` and the `<select>` is the only thing a
+ *     screen reader or a keyboard ever reaches. So the `<select>` must be
+ *     transparent rather than `display:none`/`visibility:hidden`/`w-0` —
+ *     each of which removes it from the accessibility tree or from hit
+ *     testing, which is the whole control.
+ *  2. A `<select>` in flow is as wide as its WIDEST option. Left in flow the
+ *     year control would size itself to the longest year string and the month
+ *     control to «اردیبهشت», so the box a reader clicks would be wider than
+ *     the caption they see, in both scripts and worse in the RTL one where
+ *     the overflow lands on the leading edge. Taking it out of flow with
+ *     `absolute inset-0` makes the hit area EXACTLY the visible label, with
+ *     no width to keep in sync.
+ *
+ * ── WHY THERE IS NOTHING TO MIRROR HERE ─────────────────────────────────────
+ *
+ * `inset-0` is symmetric and `gap` names no side, so nothing in this block has
+ * a direction to get wrong. The one direction-sensitive part of a dropdown is
+ * its chevron, and that is a GLYPH — `calendarChevron` in `calendar.tsx` picks
+ * it, because no utility can flip one.
+ */
+
+/** The row that holds the month and year controls. */
+export const calendarDropdownsVariants = cva("flex items-center gap-1");
+
+/**
+ * The box one control occupies: the visible caption, with the `<select>` over it.
+ *
+ * `relative` is load-bearing — it is what `calendarDropdownVariants`' `inset-0`
+ * resolves against; without it the `<select>` would stretch over the page.
+ *
+ * ── THE FOCUS RING IS ON THIS ELEMENT, NOT ON THE THING THAT HAS FOCUS ──────
+ *
+ * Focus lands on the `<select>`, and the `<select>` is `opacity-0` — an outline
+ * on it is drawn at zero alpha, so a keyboard reader tabbing into the caption
+ * would see NOTHING move. `has-[select:focus-visible]:` puts the ring on the
+ * parent that is actually painted. This is the same reasoning
+ * `calendarDayButtonVariants` states in the other direction: whichever element
+ * is painted owns the appearance, and here that is never the focused one.
+ *
+ * `[&>span]:` reaches the caption span because it is react-day-picker's element,
+ * not ours — it carries `caption_label`, which is shared with the label layout,
+ * where `inline-flex` would be wrong. Scoping it to a direct child of a dropdown
+ * root keeps the chevron on the text's baseline without changing the caption of
+ * a calendar that has no dropdowns at all.
+ */
+export const calendarDropdownRootVariants = cva(
+  "relative inline-flex h-control-sm items-center rounded-md px-2 " +
+    "cursor-pointer text-sm font-medium text-fg transition-colors " +
+    "hover:bg-surface-hover " +
+    "has-[select:focus-visible]:outline-2 has-[select:focus-visible]:outline-offset-2 " +
+    "has-[select:focus-visible]:outline-accent " +
+    "data-disabled:pointer-events-none data-disabled:opacity-40 " +
+    "[&>span]:inline-flex [&>span]:items-center [&>span]:gap-1 " +
+    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:text-fg-muted",
+);
+
+/**
+ * The real `<select>`, transparent and exactly the size of the caption.
+ *
+ * `opacity-0` and NOT `sr-only`, `hidden` or `w-0`: this element is the control.
+ * `appearance-none` removes the platform arrow, which would otherwise widen the
+ * intrinsic box the browser reserves inside a control the reader cannot see.
+ *
+ * ── THE ONE RULE THAT COULD HAVE WON INSTEAD, CHECKED IN THE BUILT CSS ──────
+ *
+ * Tailwind's preflight resets form controls with a TYPE selector that names
+ * `opacity` explicitly — measured in the site's emitted stylesheet
+ * (`apps/website/out/_next/static/chunks/*.css`, byte 7891):
+ *
+ *     button,input,select,optgroup,textarea { … opacity:1; … }
+ *
+ * `.opacity-0` is (0,1,0) against that rule's (0,0,1) and is emitted 38KB later
+ * besides, so it wins on specificity and again on order. This is checked rather
+ * than assumed because "a utility beats a reset" is a habit, not a rule: a
+ * selector this repo authored on the element itself would tie, and then emission
+ * order — which nothing here controls — would decide whether the control is
+ * invisible or painted over its own caption.
+ */
+export const calendarDropdownVariants = cva(
+  "absolute inset-0 h-full w-full cursor-pointer appearance-none opacity-0",
+);
+
 export const calendarGridVariants = cva("border-collapse");
 
 /**

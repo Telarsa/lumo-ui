@@ -1,7 +1,7 @@
 "use client";
 
 import { useId } from "react";
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import type { CalendarDate } from "@internationalized/date";
 import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
@@ -9,6 +9,9 @@ import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.t
 import {
   calendarCellVariants,
   calendarDayButtonVariants,
+  calendarDropdownRootVariants,
+  calendarDropdownsVariants,
+  calendarDropdownVariants,
   calendarFooterVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
@@ -24,6 +27,9 @@ import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
 export {
   calendarCellVariants,
   calendarDayButtonVariants,
+  calendarDropdownRootVariants,
+  calendarDropdownsVariants,
+  calendarDropdownVariants,
   calendarFooterVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
@@ -112,9 +118,100 @@ export {
  * the chevron glyphs and `dir`. There is deliberately no second input that could
  * disagree with it — the rule `virtual-list.tsx` and `LumoProvider` already
  * follow.
+ *
+ * ═══ THE CAPTION DROPDOWNS, AND WHY A YEAR LIST NEEDS BOUNDS IN THE TYPE ════
+ *
+ * `captionLayout` turns the month/year caption into two real `<select>`s. It
+ * exists because paging is the only other way to move, and paging is counted in
+ * MONTHS: a reader born in ۱۳۶۰ is 540 of them from ۱۴۰۵/۵, so a date of birth
+ * was 540 presses of «ماه پیش» and is now two choices. The apparatus to do it —
+ * `formatMonthDropdown`, `formatYearDropdown`, `labelMonthDropdown`,
+ * `labelYearDropdown`, `eachYearOfInterval` — has been sitting complete and
+ * unreachable in `calendar-datelib.ts` since the migration.
+ *
+ * The prop is a UNION rather than a plain optional, and that is the whole design
+ * decision in this change. Read out of `helpers/getNavMonth.js` (v10.0.1):
+ *
+ *     const hasYearDropdown = props.captionLayout === "dropdown" ||
+ *                             props.captionLayout === "dropdown-years";
+ *     …
+ *     else if (!startMonth && hasYearDropdown) {
+ *       startMonth = startOfYear(addYears(props.today ?? today(), -100));
+ *     }
+ *     …
+ *     else if (!endMonth && hasYearDropdown) {
+ *       endMonth = endOfYear(props.today ?? today());
+ *     }
+ *
+ * A year dropdown with no bounds therefore derives its OPTION LIST from the
+ * clock, during render. That is a hydration hazard of the kind
+ * `event-calendar.tsx` and `date-selector.tsx` both made a required prop of
+ * (`defaultFocusedDate`, and presets resolved on press): the server that renders
+ * at 23:59 on ۲۹ اسفند and the client that hydrates a minute later disagree, and
+ * the disagreement is not a highlight this time but the CONTENTS of a `<select>`.
+ * It is also a nondeterministic build — the same source produces a different
+ * static page tomorrow. Measured, in `dates.test.tsx` («a year list with no
+ * bounds is a different list tomorrow»): under two fake clocks a year apart, an
+ * unbounded `captionLayout="dropdown"` renders 101 years ending ۱۴۰۵ and then
+ * 101 years ending ۱۴۰۶ — 100 of 101 options shared, one silently different.
+ *
+ * So the two layouts that read the clock cannot be selected without bounds AT
+ * ALL, and it is a compile error rather than a warning nobody reads:
+ *
+ *     <Calendar captionLayout="dropdown" />                    // does not compile
+ *     <Calendar captionLayout="dropdown" minValue={…} maxValue={…} />
+ *
+ * `"dropdown-months"` is deliberately NOT in that half of the union. It renders
+ * one `<select>` of the twelve months of the DISPLAYED year — `getMonthOptions`
+ * takes `navStart`/`navEnd` only to disable options, and `hasYearDropdown` above
+ * excludes it — so it reads no clock, and requiring bounds for it would be a
+ * required prop the code cannot justify.
+ *
+ * ── WHAT THE BOUNDS DO NOT FIX, STATED BECAUSE IT IS STILL TRUE ─────────────
+ *
+ * `DayPicker.js` opens with `if (!props.today) props = { …props, today:
+ * dateLib.today() }`, unconditionally, for the `data-today` modifier. Every
+ * calendar in this library has always paid that clock read and still does; what
+ * bounds remove is its reach into the SERVED OPTION LIST. Closing the rest means
+ * a `today` prop on this component, which is a separate change with a separate
+ * argument, and it is not made here.
  */
 
-export interface CalendarProps {
+/**
+ * How the month and year are shown in the caption.
+ *
+ * The names are react-day-picker's own, unrenamed: they are what `captionLayout`
+ * accepts upstream, and a Lumo synonym would be a second vocabulary to keep in
+ * step with a library whose docs the reader will also be reading.
+ */
+export type CalendarCaptionLayout = "label" | "dropdown" | "dropdown-months" | "dropdown-years";
+
+/**
+ * The caption layout together with the bounds it requires. See the header.
+ *
+ * Shared by `Calendar`, `RangeCalendar` and `DatePicker` so that the rule is
+ * stated once — three copies of a discriminated union is how one of them comes
+ * to permit the unbounded case.
+ */
+export type CalendarNavigation =
+  | {
+      /** Paging chevrons only, or a month `<select>` — neither reads a clock. */
+      captionLayout?: "label" | "dropdown-months" | undefined;
+      /** Earliest selectable day. */
+      minValue?: CalendarDate | undefined;
+      /** Latest selectable day. */
+      maxValue?: CalendarDate | undefined;
+    }
+  | {
+      /** A year `<select>`. Both bounds are REQUIRED — see the header. */
+      captionLayout: "dropdown" | "dropdown-years";
+      /** Earliest selectable day, and the first year in the list. */
+      minValue: CalendarDate;
+      /** Latest selectable day, and the last year in the list. */
+      maxValue: CalendarDate;
+    };
+
+export interface CalendarBaseProps {
   /** Announced name of the calendar. Required: a 42-cell grid needs a name. */
   label: string;
   /**
@@ -128,10 +225,6 @@ export interface CalendarProps {
   onChange?: ((value: CalendarDate | undefined) => void) | undefined;
   /** The month to show when uncontrolled. */
   defaultMonth?: CalendarDate | undefined;
-  /** Earliest selectable day. */
-  minValue?: CalendarDate | undefined;
-  /** Latest selectable day. */
-  maxValue?: CalendarDate | undefined;
   /** Marks individual days unselectable — holidays, booked days. */
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
   isDisabled?: boolean | undefined;
@@ -150,6 +243,17 @@ export interface CalendarProps {
   className?: string | undefined;
   "aria-describedby"?: string | undefined;
 }
+
+/**
+ * The grid's props: everything above, plus the caption layout and its bounds.
+ *
+ * An intersection with a UNION, so `minValue`/`maxValue` are optional for the
+ * two layouts that do not read a clock and REQUIRED for the two that would.
+ * TypeScript distributes the intersection, so the error names the missing
+ * properties rather than the union: *"is missing the following properties …
+ * minValue, maxValue"*.
+ */
+export type CalendarProps = CalendarBaseProps & CalendarNavigation;
 
 /**
  * Joins a caller's `aria-describedby` with one this component owns.
@@ -196,6 +300,16 @@ export function calendarClassNames(): Record<string, string> {
     nav: calendarNavVariants(),
     button_previous: calendarNavButtonVariants(),
     button_next: calendarNavButtonVariants(),
+    /*
+     * The caption dropdowns. Present unconditionally, because this map is
+     * built once and shared: a calendar rendered with `captionLayout="label"`
+     * emits none of these elements, so an entry for one costs nothing, while
+     * a map that varied by layout would be a second copy to keep in step.
+     * `calendar.variants.ts` documents the markup all three land on.
+     */
+    dropdowns: calendarDropdownsVariants(),
+    dropdown_root: calendarDropdownRootVariants(),
+    dropdown: calendarDropdownVariants(),
     month_grid: calendarGridVariants(),
     weekdays: "flex",
     weekday: calendarHeaderCellVariants(),
@@ -215,13 +329,31 @@ export function calendarClassNames(): Record<string, string> {
  * makes for its arrow keys and `table.variants.ts` for its grid.
  *
  * Exported so both pickers build their grids the same way.
+ *
+ * ── "down" IS NOT A DIRECTION THIS FUNCTION MAY MIRROR ──────────────────────
+ *
+ * This used to be `orientation === "left" ? Previous : Next`, i.e. every
+ * orientation that was not "left" got the Next glyph. That was true of the
+ * only two react-day-picker emitted while there were no dropdowns, and it
+ * became wrong the moment `captionLayout` was reachable: `Dropdown.js` renders
+ * `<Chevron orientation="down" size={18} />` beside the caption, so a Persian
+ * calendar's month `<select>` was marked with «‹» — the PREVIOUS-month glyph in
+ * an RTL script, on a control that opens a list. A chevron on a select is the
+ * one that is not direction-sensitive at all: a list opens downward in every
+ * script, so `down` is a third case and not a side.
+ *
+ * v10.0.1 emits exactly three orientations — "left" and "right" from
+ * `Nav.js`/`DayPicker.js`, "down" from `Dropdown.js`. Its own `Chevron.js` also
+ * draws an "up", which nothing in the library passes; if that changes it lands
+ * on `Next` here, which is visible rather than silent.
  */
 export function calendarChevron(locale: Locale) {
   const rtl = direction(locale) === "rtl";
   const Previous = rtl ? ChevronRightIcon : ChevronLeftIcon;
   const Next = rtl ? ChevronLeftIcon : ChevronRightIcon;
   return function Chevron({ orientation }: { orientation?: string }) {
-    const Icon = orientation === "left" ? Previous : Next;
+    const Icon =
+      orientation === "down" ? ChevronDownIcon : orientation === "left" ? Previous : Next;
     return <Icon aria-hidden="true" className="size-4" />;
   };
 }
@@ -232,6 +364,7 @@ export function Calendar({
   value,
   onChange,
   defaultMonth,
+  captionLayout,
   minValue,
   maxValue,
   isDateUnavailable,
@@ -282,6 +415,14 @@ export function Calendar({
         weekStartsOn={config.weekStartsOn as never}
         classNames={calendarClassNames()}
         components={{ Chevron: calendarChevron(locale) }}
+        /*
+         * Omitted entirely when absent rather than passed as `"label"`:
+         * `captionLayout?.startsWith("dropdown")` is what upstream branches on,
+         * so `undefined` and `"label"` render the same caption, and forwarding
+         * only what the caller stated keeps the served markup identical to what
+         * every existing calendar in the library already emits.
+         */
+        {...(captionLayout ? { captionLayout } : {})}
         {...(value ? { selected: toPickerDate(value) } : {})}
         {...(defaultMonth ? { defaultMonth: toPickerDate(defaultMonth) } : {})}
         {...(minValue ? { startMonth: toPickerDate(minValue) } : {})}

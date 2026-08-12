@@ -816,8 +816,48 @@ export interface ButtonPropsBase
     Omit<GlobalDOMAttributes<HTMLButtonElement>, "onClick"> {
   /** Whether the button is disabled. */
   isDisabled?: boolean;
-  /** Whether the button is in a pending state. */
-  isPending?: boolean;
-  /** Whether to prevent focus from moving to the button on press. */
-  preventFocusOnPress?: boolean;
+  /**
+   * TYPE CARRIER, NOT A PROP — `never`, so passing a value is a compile error.
+   *
+   * ── IT READ "WHETHER THE BUTTON IS IN A PENDING STATE" AND DID NOTHING ────
+   *
+   * React Aria's `Button` had a real pending state: it rendered a busy
+   * affordance and set `aria-disabled` while keeping the button focusable. Base
+   * UI has no equivalent, so `button.tsx` destructures this prop for the sole
+   * purpose of NOT spreading it onto the element. The result was the worst of
+   * the three possible behaviours: set it and nothing renders, nothing is
+   * announced, and nothing errors.
+   *
+   * That is the same defect as `isKeyboardDismissDisabled` on the overlay
+   * surfaces, and it gets the same answer — except that this one has nowhere
+   * correct to be relocated to, because the replacement is a COMPOSITION rather
+   * than a prop. See the `busy` example on the button page: `isDisabled` blocks
+   * the second submit, a `<Spinner>` announces the wait as real text inside
+   * `role="status"`, and the button keeps its own label.
+   *
+   * The field survives rather than being deleted, following
+   * `MenuItemProps.value`: keeping it is what keeps a consumer's existing
+   * `ButtonPropsBase` annotation compiling, while `never` makes the one thing
+   * that never worked into an error instead of a silence. Nothing in this
+   * repository passed it — the blocks all declare an `isPending` of their own
+   * and forward it as `isDisabled`, which is the composition above.
+   *
+   * SPELLED `?: undefined`, NOT `?: never`. Under this repo's
+   * `exactOptionalPropertyTypes: true` a `never` field rejects an EXPLICIT
+   * `undefined` too, so `<Button {...props}>` would stop compiling for any
+   * caller whose object carries `isPending: undefined` — punishing a spread
+   * that was already correct. `undefined` is the honest spelling anyway: the
+   * only value this field may hold is no value.
+   */
+  isPending?: undefined;
+  /**
+   * TYPE CARRIER, NOT A PROP — same reason as `isPending`, same evidence.
+   *
+   * React Aria's press layer could suppress the focus move; Base UI's button is
+   * a plain `<button>` and focus on press is the browser's. `button.tsx`,
+   * `menubar.tsx` and `disclosure.tsx` all destructure it purely to keep it off
+   * the element. `toggle.tsx` declares a `preventFocusOnPress` of its OWN and is
+   * not affected by this.
+   */
+  preventFocusOnPress?: undefined;
 }

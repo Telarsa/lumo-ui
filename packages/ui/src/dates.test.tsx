@@ -1,6 +1,6 @@
-import { fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   Button as AriaButton,
   DateInput as AriaDateInput,
@@ -20,7 +20,9 @@ import {
   toCalendar,
   today,
 } from "@internationalized/date";
+import { DayPicker } from "react-day-picker";
 import { FORMAT_LOCALE, formatNumber } from "@lumo-ui/core";
+import { lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
 import { Calendar } from "./calendar.tsx";
 import { RangeCalendar } from "./range-calendar.tsx";
 import { DateField } from "./date-field.tsx";
@@ -642,5 +644,330 @@ describe("the English no patch can reach, pinned in both directions", () => {
     // Nothing for React Aria to fill. The absence IS the mechanism.
     const html = ssr(<DateField label="تاریخ" />);
     expect(html).not.toContain("react-aria-FieldError");
+  });
+});
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * THE CAPTION DROPDOWNS.
+ *
+ * The apparatus for these — `formatMonthDropdown`, `formatYearDropdown`,
+ * `labelMonthDropdown`, `labelYearDropdown`, `eachYearOfInterval` — has been
+ * complete in `calendar-datelib.ts` since the react-day-picker migration and
+ * unreachable, because no component passed `captionLayout`. A Jalali date of
+ * birth was therefore forty to eighty presses of «ماه پیش».
+ *
+ * Two claims are measured here and they pull in opposite directions, which is
+ * the shape this file already uses for the React Aria block at the end:
+ *
+ *   the guard working    a BOUNDED dropdown renders the same list whatever the
+ *                        clock says, in Persian, and moves the grid.
+ *   the poison fixture   RAW react-day-picker, dropdown, no bounds — a
+ *                        different year list on a different day. That is the
+ *                        defect `CalendarNavigation` makes unrepresentable, and
+ *                        if it ever goes green upstream has changed and the
+ *                        union can be relaxed.
+ */
+describe("the caption dropdowns, and the bounds they are not allowed to guess", () => {
+  /**
+   * A date-of-birth range: ۱۳۰۰ to ۱۴۰۵, stated by the caller.
+   *
+   * `as const` so `captionLayout` stays a literal and lands in the half of
+   * `CalendarNavigation` that requires both bounds — which is the half being
+   * exercised.
+   */
+  const DOB = {
+    captionLayout: "dropdown",
+    minValue: jalali(1300, 1, 1),
+    maxValue: jalali(1405, 12, 29),
+  } as const;
+
+  const MONTH_DROPDOWN = "انتخاب ماه";
+  const YEAR_DROPDOWN = "انتخاب سال";
+
+  /** Server markup as a queryable tree, so nothing here parses HTML with a regex. */
+  const parse = (html: string): HTMLElement => {
+    const host = document.createElement("div");
+    host.innerHTML = html;
+    return host;
+  };
+
+  /**
+   * The option TEXT of one dropdown, found by its announced name.
+   *
+   * By `aria-label` rather than by class, deliberately: it is the only handle
+   * that is the same on a Lumo calendar and on the raw `DayPicker` in the
+   * poison fixture below, and a helper that silently found nothing would make
+   * every assertion in this block vacuous — so it throws instead.
+   */
+  const optionsOf = (root: ParentNode, name: string): string[] => {
+    const select = root.querySelector(`select[aria-label="${name}"]`);
+    if (!select) throw new Error(`no <select> named ${name} rendered`);
+    return [...select.querySelectorAll("option")].map((o) => o.textContent ?? "");
+  };
+
+  /** «مرداد» from `Intl`, computed rather than tabled — see this file's header. */
+  const monthName = (month: number) =>
+    new Intl.DateTimeFormat(FA, { month: "long" }).format(toPickerDate(jalali(1405, month, 15)));
+
+  const persianYear = (year: number) => formatNumber(year, "fa-IR", { useGrouping: false });
+
+  it("renders two real <select>s: twelve Jalali months, and years in Persian digits", () => {
+    const root = parse(ssr(<Calendar {...CAL} {...DOB} defaultMonth={jalali(1360, 5, 1)} />));
+
+    expect(root.querySelectorAll("select")).toHaveLength(2);
+
+    /*
+     * Every month, in order, EQUAL to what `Intl` says under the persian
+     * calendar. `toContain("مرداد")` would also pass on a Gregorian grid
+     * wearing Persian month names in the wrong order — the `native-calendar`
+     * defect — so the whole sequence is compared.
+     */
+    expect(optionsOf(root, MONTH_DROPDOWN)).toEqual(
+      Array.from({ length: 12 }, (_, i) => monthName(i + 1)),
+    );
+
+    const years = optionsOf(root, YEAR_DROPDOWN);
+    // The list is the CALLER'S range, exactly: 1300…1405 inclusive.
+    expect(years).toHaveLength(1405 - 1300 + 1);
+    expect(years[0]).toBe(persianYear(1300));
+    expect(years.at(-1)).toBe(persianYear(1405));
+    expect(years.filter((y) => LATIN_DIGIT.test(y))).toEqual([]);
+    expect(years.filter((y) => LATIN_WORD.test(y))).toEqual([]);
+  });
+
+  it("adds no announced string that was not already a required Persian label", () => {
+    const html = ssr(<Calendar {...CAL} {...DOB} />);
+
+    // The two names both come from `labels` in `calendar-datelib.ts`, which is
+    // where every announced string in this family lives.
+    expect(html).toContain(`aria-label="${MONTH_DROPDOWN}"`);
+    expect(html).toContain(`aria-label="${YEAR_DROPDOWN}"`);
+    expect(announcedEnglish(html)).toEqual([]);
+
+    /*
+     * And the VISIBLE caption beside each select is `aria-hidden`, so it is not
+     * a second name that would need translating: the control is named once, by
+     * a prop-reachable label, and read out by its own option text.
+     */
+    const root = parse(html);
+    for (const select of root.querySelectorAll("select")) {
+      const painted = select.parentElement?.querySelector('span[aria-hidden="true"]');
+      expect(painted?.textContent?.trim()).toBeTruthy();
+      expect(painted?.textContent).not.toMatch(LATIN_WORD);
+    }
+  });
+
+  it("the selects are focusable and each one MOVES the grid", () => {
+    /*
+     * A native `<select>`: the keyboard model is the platform's, and jsdom
+     * cannot open a platform popup. What is measurable — and what was broken
+     * before, because the element did not exist — is that the control is
+     * reachable (focusable, not disabled) and that operating it navigates.
+     * `fireEvent.change` is exactly the event a keyboard selection dispatches.
+     */
+    const { container } = live(<Calendar {...CAL} {...DOB} defaultMonth={jalali(1405, 5, 1)} />);
+    const year = container.querySelector(
+      `select[aria-label="${YEAR_DROPDOWN}"]`,
+    ) as HTMLSelectElement;
+    const month = container.querySelector(
+      `select[aria-label="${MONTH_DROPDOWN}"]`,
+    ) as HTMLSelectElement;
+
+    expect(year.disabled).toBe(false);
+    expect(year.getAttribute("tabindex")).not.toBe("-1");
+    year.focus();
+    expect(document.activeElement).toBe(year);
+
+    // Forty-five years, in one change. This is the whole point of the feature.
+    fireEvent.change(year, { target: { value: "1360" } });
+    expect(caption(container as HTMLElement)).toContain(persianYear(1360));
+
+    // Month values are ZERO-BASED — `getMonth` in `calendar-datelib.ts` says so
+    // — hence 9 for دی, the tenth month.
+    fireEvent.change(month, { target: { value: "9" } });
+    const heading = caption(container as HTMLElement);
+    expect(heading).toContain(monthName(10));
+    expect(heading).toContain(persianYear(1360));
+  });
+
+  it("the range grid gets the same two selects, from the same union", () => {
+    const root = parse(
+      ssr(
+        <RangeCalendar
+          {...CAL}
+          {...DOB}
+          value={{ from: jalali(1360, 5, 10), to: jalali(1360, 5, 15) }}
+        />,
+      ),
+    );
+    expect(root.querySelectorAll("select")).toHaveLength(2);
+    expect(optionsOf(root, MONTH_DROPDOWN)).toHaveLength(12);
+    expect(optionsOf(root, YEAR_DROPDOWN)).toHaveLength(1405 - 1300 + 1);
+  });
+
+  it("the picker forwards the layout AND its bounds into the popover's grid", () => {
+    /*
+     * A date of birth is the case the dropdowns exist for, and `DatePicker` is
+     * where one is typed — so the union has to survive the hop through this
+     * component. It is rebuilt there rather than spread from `props`, which is
+     * the kind of plumbing that type-checks while forwarding nothing.
+     *
+     * The panel is CLOSED in the first byte, so this has to be driven: the
+     * grid's strings are absent from server output whether they are right or
+     * wrong, which is the measurement error `date-picker.tsx`'s header records.
+     */
+    /*
+     * `cleanup()` first, and it is not decoration: this package runs vitest
+     * WITHOUT `globals`, so `@testing-library/react` never installs its
+     * automatic `afterEach` and every earlier `live()` in this file is still
+     * mounted in `document.body`. The popover portals OUT of `container`, so
+     * `baseElement` is the only handle on it — and without this line the query
+     * below counted four selects, two of them another test's calendar.
+     */
+    cleanup();
+    const { container, baseElement } = live(<DatePicker {...LABELS} {...DOB} />);
+    fireEvent.click(
+      container.querySelector(`button[aria-label="${LABELS.openCalendarLabel}"]`) as HTMLElement,
+    );
+
+    expect(baseElement.querySelectorAll("select")).toHaveLength(2);
+    expect(optionsOf(baseElement, MONTH_DROPDOWN)).toHaveLength(12);
+    expect(optionsOf(baseElement, YEAR_DROPDOWN)).toHaveLength(1405 - 1300 + 1);
+  });
+
+  it("«dropdown-months» needs no bounds, because it reads no clock", () => {
+    /*
+     * `getNavMonth.js` computes `hasYearDropdown` from `"dropdown"` and
+     * `"dropdown-years"` only, and `getMonthOptions` takes the twelve months of
+     * the DISPLAYED year. So this layout is deliberately in the half of
+     * `CalendarNavigation` where the bounds stay optional — requiring them
+     * would be a required prop with nothing behind it.
+     */
+    const root = parse(
+      ssr(<Calendar {...CAL} captionLayout="dropdown-months" defaultMonth={jalali(1405, 5, 1)} />),
+    );
+    expect(root.querySelectorAll("select")).toHaveLength(1);
+    expect(optionsOf(root, MONTH_DROPDOWN)).toHaveLength(12);
+    expect(root.querySelector(`select[aria-label="${YEAR_DROPDOWN}"]`)).toBeNull();
+    // …and the year beside it is still Persian text rather than a control.
+    expect(root.textContent).toContain(persianYear(1405));
+  });
+
+  it("the dropdown's chevron points DOWN; the nav's still points at the reader's past", () => {
+    const root = parse(ssr(<Calendar {...CAL} {...DOB} />));
+
+    /*
+     * `Dropdown.js` renders `<Chevron orientation="down" />`, and every
+     * orientation that was not "left" used to resolve to the NEXT-month glyph —
+     * «‹» in an RTL script, on a control that opens a list.
+     */
+    const roots = [...root.querySelectorAll("select")].map((s) => s.parentElement);
+    expect(roots).toHaveLength(2);
+    for (const box of roots) {
+      expect(box?.querySelector("svg.lucide-chevron-down")).not.toBeNull();
+      expect(box?.querySelector("svg.lucide-chevron-left")).toBeNull();
+      expect(box?.querySelector("svg.lucide-chevron-right")).toBeNull();
+    }
+
+    // Unchanged, and asserted here so the fix cannot be "make them all down":
+    // «ماه پیش» points at the reader's past, which is the RIGHT in Persian.
+    const previous = root.querySelector('button[aria-label="ماه پیش"]');
+    expect(previous?.querySelector("svg.lucide-chevron-right")).not.toBeNull();
+  });
+
+  it("the <select> is transparent and OVER the caption, not beside it", () => {
+    /*
+     * The two elements have to agree, and only the class map can make them: a
+     * `<select>` left in flow is as wide as its widest option, so the box a
+     * reader clicks would not be the caption they see. Asserting the classes
+     * reach the element is the jsdom-visible half of that; `calendar.variants.ts`
+     * carries the argument and the built stylesheet carries the pixels.
+     */
+    const root = parse(ssr(<Calendar {...CAL} {...DOB} />));
+    const select = root.querySelector("select");
+    expect(select?.className).toContain("absolute");
+    expect(select?.className).toContain("opacity-0");
+    expect(select?.parentElement?.className).toContain("relative");
+    // The ring is on the painted parent, because the focused element is invisible.
+    expect(select?.parentElement?.className).toContain("has-[select:focus-visible]:outline-2");
+  });
+
+  it("a BOUNDED year list is the same list tomorrow — and an unbounded one is not", () => {
+    const config = lumoCalendar("fa-IR");
+
+    /** The same element, rendered with the system clock set to `iso`. */
+    const yearsAt = (iso: string, el: React.ReactElement) => {
+      vi.setSystemTime(new Date(iso));
+      return optionsOf(parse(ssr(el)), YEAR_DROPDOWN);
+    };
+
+    vi.useFakeTimers();
+    try {
+      const bounded = <Calendar {...CAL} {...DOB} />;
+      // 23:59 on one day and 00:01 a year later: the two ends of the hydration
+      // hazard `event-calendar.tsx` names, at their furthest apart.
+      const boundedNow = yearsAt("2026-08-11T23:59:00", bounded);
+      const boundedLater = yearsAt("2027-08-11T00:01:00", bounded);
+      expect(boundedNow).toEqual(boundedLater);
+      expect(boundedNow.at(-1)).toBe(persianYear(1405));
+
+      /*
+       * THE POISON FIXTURE — raw `DayPicker` with Lumo's own calendar config,
+       * `captionLayout="dropdown"` and NO bounds. This is precisely the call
+       * `CalendarNavigation` refuses to compile, and it is here to show what it
+       * refuses: 101 years derived from `today()` during render.
+       */
+      const unbounded = (
+        <DayPicker
+          mode="single"
+          dir="rtl"
+          lang="fa-IR"
+          captionLayout="dropdown"
+          dateLib={config.dateLib as never}
+          formatters={config.formatters as never}
+          labels={config.labels as never}
+          weekStartsOn={config.weekStartsOn as never}
+        />
+      );
+      const rawNow = yearsAt("2026-08-11T23:59:00", unbounded);
+      const rawLater = yearsAt("2027-08-11T00:01:00", unbounded);
+
+      expect(rawNow).toHaveLength(101);
+      expect(rawLater).toHaveLength(101);
+      expect(rawNow).not.toEqual(rawLater);
+      // One year apart, in the served bytes, from the same source.
+      expect(rawNow.at(-1)).toBe(persianYear(1405));
+      expect(rawLater.at(-1)).toBe(persianYear(1406));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  /**
+   * COMPILE-ENFORCED, which is the only enforcement worth having for this rule.
+   *
+   * A runtime warning is satisfied by a component that renders a wrong list and
+   * logs about it; `@ts-expect-error` fails `pnpm verify` the moment the bounds
+   * become optional again, because `tsc --noEmit` over `src/**` is part of it.
+   * `event-calendar.test.tsx` states the same argument for its required strings.
+   */
+  it("selecting a year dropdown without bounds does not COMPILE", () => {
+    // @ts-expect-error a year list with no bounds is 101 years around today().
+    const unbounded = <Calendar {...CAL} captionLayout="dropdown" />;
+    // @ts-expect-error one bound is not bounds: `getYearOptions` needs both.
+    const half = <Calendar {...CAL} captionLayout="dropdown-years" minValue={jalali(1300, 1, 1)} />;
+    // @ts-expect-error the range grid shares the union, so it shares the rule.
+    const range = <RangeCalendar {...CAL} captionLayout="dropdown" />;
+    // @ts-expect-error and so does the picker, which is where a date of birth is typed.
+    const picker = <DatePicker {...LABELS} captionLayout="dropdown" />;
+
+    // The bounded forms, and the month-only layout, compile. Both are here so
+    // that a union which rejected EVERYTHING would fail this test too.
+    const bounded = <Calendar {...CAL} {...DOB} />;
+    const months = <Calendar {...CAL} captionLayout="dropdown-months" />;
+
+    expect([unbounded, half, range, picker, bounded, months]).toHaveLength(6);
   });
 });

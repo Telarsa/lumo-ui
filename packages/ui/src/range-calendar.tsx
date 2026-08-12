@@ -5,7 +5,12 @@ import { DayPicker } from "react-day-picker";
 import type { CalendarDate } from "@internationalized/date";
 import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
-import { calendarChevron, calendarClassNames, describedByWith } from "./calendar.tsx";
+import {
+  calendarChevron,
+  calendarClassNames,
+  describedByWith,
+  type CalendarNavigation,
+} from "./calendar.tsx";
 import {
   calendarFooterVariants,
   rangeCalendarCellVariants,
@@ -68,7 +73,7 @@ export interface CalendarDateRange {
   to?: CalendarDate | undefined;
 }
 
-export interface RangeCalendarProps {
+export interface RangeCalendarBaseProps {
   /** Announced name of the calendar. Required. */
   label: string;
   /** Selects the calendar system, the digits, the week start and the direction. */
@@ -77,8 +82,6 @@ export interface RangeCalendarProps {
   /** Fires with both ends, or `undefined` once the selection is cleared. */
   onChange?: ((value: CalendarDateRange | undefined) => void) | undefined;
   defaultMonth?: CalendarDate | undefined;
-  minValue?: CalendarDate | undefined;
-  maxValue?: CalendarDate | undefined;
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
   isDisabled?: boolean | undefined;
   description?: LumoNode;
@@ -88,12 +91,24 @@ export interface RangeCalendarProps {
   "aria-describedby"?: string | undefined;
 }
 
+/**
+ * The range grid's props, with the SAME caption-layout union `Calendar` uses.
+ *
+ * Imported rather than restated: a year `<select>` derives its options from the
+ * clock unless both bounds are given, and that argument does not change because
+ * the grid selects two days instead of one. `calendar.tsx`'s header has the
+ * measurement; a second copy of the union here is how one of the two components
+ * would come to permit the unbounded case.
+ */
+export type RangeCalendarProps = RangeCalendarBaseProps & CalendarNavigation;
+
 export function RangeCalendar({
   label,
   locale,
   value,
   onChange,
   defaultMonth,
+  captionLayout,
   minValue,
   maxValue,
   isDateUnavailable,
@@ -150,6 +165,9 @@ export function RangeCalendar({
           ...rangeCalendarSelectionVariants(),
         }}
         components={{ Chevron: calendarChevron(locale) }}
+        // Forwarded only when stated, exactly as `Calendar` does — see the
+        // comment there for why `undefined` is not spelled `"label"`.
+        {...(captionLayout ? { captionLayout } : {})}
         {...(value
           ? {
               selected: {
