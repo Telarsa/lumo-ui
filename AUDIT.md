@@ -2,6 +2,13 @@
 
 **Commit audited:** `e7988b8` · **Date:** 12 August 2026 · **Scope:** 94 `registry:ui` components, 30 blocks, 8 packages, 524 built documents
 
+> **STATUS — Phase 1 complete at `272195d`.** All ten items closed across four commits
+> (`10a08dc`, `83da337`, `f361cb7`, `272195d`). `verify` is now
+> types → **props** → **lint** → no-CSS-Modules → tests → registry → smoke → html:
+> **2,322 tests** (from 1,780), 417 files linted, 124 component files prop-graded,
+> 524 documents, 12 routes floored. Findings below are preserved as written, with
+> corrections marked inline where the fix disproved the diagnosis.
+
 `pnpm run verify` exits 0 at this commit: 1780 tests, 524 documents graded, 0 gate violations. **Everything in this document is a defect that state does not catch.** That is the point of the exercise.
 
 Two of the findings below go further and undermine the state itself: the anti-vacuity gate rule is **not armed** in either `verify` or CI (§2.7), and the test suite is **not deterministic** — it fails on a clean tree at this commit (§2.8). "Verify exits 0" is a sample, not a property.
@@ -12,11 +19,11 @@ Two of the findings below go further and undermine the state itself: the anti-va
 
 | Dimension | Score | The number in one line |
 | --- | --- | --- |
-| Accessibility / i18n / RTL | **8 / 10** | The logical-axis rule is genuinely closed; three defects still ship on Persian routes. |
+| Accessibility / i18n / RTL | **8 → 9 / 10** | The logical-axis rule is genuinely closed; three defects still ship on Persian routes. |
 | API design & DX | **6 / 10** | Vocabulary is consistent and `className` merging is flawless; inert props are systemic and there is no `ref` story. |
-| Design system & docs | **6 / 10** | Token discipline is exceptional; two AA contrast failures and a dark-mode collision ship, and the Persian typography claim is inert. |
-| Testing & tooling | **7 / 10** | The gate's self-test is exemplary and proved by mutation; but a rule is armed in a script nobody calls, and green is not reproducible. |
-| **Overall** | **≈ 6.75 / 10** | An unusually rigorous internal tool, one polish pass from a professional library. |
+| Design system & docs | **6 → 7 / 10** | Token discipline is exceptional; two AA contrast failures and a dark-mode collision ship, and the Persian typography claim is inert. |
+| Testing & tooling | **7 → 9 / 10** | The gate's self-test is exemplary and proved by mutation; but a rule is armed in a script nobody calls, and green is not reproducible. |
+| **Overall** | **≈ 6.75 → 7.75 / 10** | An unusually rigorous internal tool, one polish pass from a professional library. |
 
 ### How to read these numbers
 
@@ -392,3 +399,31 @@ The honest summary: this library's engineering is above shadcn's bar in several 
 - **Two process incidents.** An audit agent wrote a poison probe into `packages/core/src/types.ts` (`nu-arabext` → `nu-latn`, which would turn every Persian digit Latin) and did not revert it; it was caught on a routine `git status` and reverted. A second agent self-reported the same in `packages/blocks/src/footer.tsx` and reverted it. Read-only instructions are not self-enforcing when agents share a checkout.
 - The testing audit verified the gate's self-test by mutation rather than by reading: inserting `return [];` at the head of all nine rules' `run` functions killed 2/3/4/2/2/3/10/6/3 tests respectively. **All nine rules genuinely fire**, and `rules.ts` was restored byte-identical (md5 verified). It also confirmed the Persian-digit claim is load-bearing: changing `FORMAT_LOCALE` from `nu-arabext` to `nu-latn` killed **94 tests** across two packages.
 - **No vacuous test was found.** The hunt was specific — every `it` whose assertions are all weak, every `toContain` on a short literal, every `toBeGreaterThan(0)`. The weak-looking ones are `getByRole(<exact Persian string>)`, where the *query* carries the assertion and throws on miss; the `length > 0` ones are deliberate anti-vacuity guards, several carrying a comment saying so.
+
+
+---
+
+## 7. Phase 1 outcome — what the fixes disproved
+
+Four items in this document were **wrong**, and each was disproved by the work of fixing it. They are corrected in place above; collected here because the pattern matters more than the individual errors.
+
+| Claim in this audit | What measurement showed |
+| --- | --- |
+| Persian leading: "set `--tw-leading`" | **Would not have worked.** `--tw-leading` is a registered `@property` with `inherits:false`, so setting it on `:root:lang(fa)` reaches no descendant — same defect, new variable. The working mechanism is `--text-*--line-height`, the *fallback arm* of the utility's own `var()`. |
+| `tracking-tight`: 540 occurrences | **270 real elements.** Half the grep hits were RSC flight payload, where class names are inert JSON. And the 135 `<h1>` were already covered by a separate heading rule; the true defect was 203 elements. |
+| `inset-x-` sites are "arguably false positives" | **The rule was wrong, not the sites.** Compiled against the pinned Tailwind: `inset-x-0` → `inset-inline`, `space-x-4` → `margin-inline-*`. No physical side, and no logical utility to migrate to. Removed from the rule. |
+| ~35 inert-prop candidates | **45, across 16 files.** This document's literal wording ("exported `*Props`") finds 16 of them; the rest live on module-private base interfaces. |
+
+Two further findings emerged that no audit pass had reached:
+
+**The physical-utility lint rule was inverted.** Of 43 first-run errors, **34 were prose** — including doc sentences written to teach the rule. Meanwhile it could not see `md:ml-4` at all: the token boundary was literal whitespace, so any variant prefix hid the utility behind it. It was simultaneously noisy and blind.
+
+**A fourth dead rule.** The raw-digit selector had never matched anything, for three independent reasons (esquery applies regexes only to string attributes and a numeric literal's `value` is a number; `NumericLiteral` is a Babel type ESTree lacks; only the left operand was checked). Its comment claimed to be "the mechanical cure for `{day.day}`" — no selector can be.
+
+That makes **four** "exists, self-tests, grades nothing" incidents in this repository's history. Three are now closed, and each is guarded by an assertion that reads the manifest which has to invoke it — because in every case the rule itself was correct and only its *wiring* was absent.
+
+### The Select fix, and why it needed the export to catch it
+
+The first version passed every unit test and still shipped the defect. It matched children with `child.type === SelectItem` — true in a client component, **false across the RSC boundary**, where a revived element keeps `$$typeof`, `props` and nesting but its `type` is a client-reference object. It was caught only by re-reading the built export and finding one surviving `thr` after the other two routes had gone clean.
+
+DECISIONS §15 says a green unit suite is not evidence about a static export. This is the same lesson one layer deeper: a *partially* clean export is not evidence either.
