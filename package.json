@@ -17,7 +17,7 @@
     "typecheck": "pnpm run gate:types",
     "test": "pnpm -r --if-present test",
     "gate:test": "pnpm -r --if-present run test",
-    "gate:html": "pnpm --filter @lumo-ui/website build && node --experimental-strip-types packages/gate/src/cli.ts apps/website/out",
+    "gate:html": "pnpm --filter @lumo-ui/website build && node --experimental-strip-types packages/gate/src/cli.ts apps/website/out apps/website/gate.floors.json",
     "gate:registry": "node scripts/build-registry.mjs && git diff --exit-code registry.json",
     "gate:smoke": "node scripts/smoke-consumer.mjs"
   },

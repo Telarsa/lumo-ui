@@ -627,3 +627,57 @@ describe("composite-single-tab-stop — the ceiling", () => {
     expect(v[0]!.detail).toContain("serves 2 tab stops");
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE RULE THAT IS ARMED BY AN ARGUMENT, NOT BY THE ARRAY
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * `persian-digit-floor` is deliberately NOT in `RULES` — it needs per-route
+ * floors, so `cli.ts` constructs it only when handed a floors file. That design
+ * is right, and it has now un-armed the rule TWICE by two different routes.
+ *
+ * The first time is memorialised in `cli.ts`'s own header: the rule had "a
+ * factory, a poison fixture, a passing self-test, a README paragraph … and was
+ * never in the RULES array this CLI runs."
+ *
+ * The second time is what this test exists for. The arming moved out of the
+ * array and into an ARGUMENT — and the argument was missing from `gate:html`,
+ * which is the only gate command `verify` and CI actually run. The floors file
+ * was passed by `apps/website`'s own `gate` script, which nothing invokes. So
+ * the rule was fully built, fully tested, documented, and grading nothing.
+ *
+ * Measured at the time: the real landing page with every Persian digit replaced
+ * by an en-dash — the exact defect the rule exists for — graded CLEAN, exit 0.
+ *
+ * Every other rule is protected from this by being in `RULES`, which the
+ * one-fixture-per-rule test enumerates. This one cannot be, so it is protected
+ * by reading the script that has to arm it. A string assertion on a package
+ * manifest is a blunt instrument; it is also the only thing standing between
+ * this rule and a third disappearance.
+ */
+describe("persian-digit-floor is actually armed where it matters", () => {
+  const root = JSON.parse(
+    readFileSync(join(import.meta.dirname, "..", "..", "..", "package.json"), "utf8"),
+  ) as { scripts: Record<string, string> };
+
+  it("gate:html passes a floors file", () => {
+    const script = root.scripts["gate:html"] ?? "";
+    expect(script, "gate:html does not exist").not.toBe("");
+    // Not a path equality check: the point is that SOME floors argument reaches
+    // the CLI, because `cli.ts` builds the rule from `argv[3]` and from nothing
+    // else. A renamed floors file should not fail this test; a missing argument
+    // must.
+    expect(script, "gate:html runs the CLI with no floors argument, so the rule is not constructed").toMatch(
+      /cli\.ts\s+\S+\s+\S*floors\S*\.json/,
+    );
+  });
+
+  it("is the rule that verify depends on, and it is still absent from RULES", () => {
+    // Both halves of the design, pinned. If someone "fixes" the arming by
+    // pushing it into RULES, the rule would run with no floors on every
+    // document and the fixture suite would go red — this states why it is out.
+    expect(RULES.map((r) => r.id)).not.toContain("persian-digit-floor");
+    expect(persianDigitFloor({ "fa/index.html": 1 }).id).toBe("persian-digit-floor");
+  });
+});

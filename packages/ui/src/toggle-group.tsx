@@ -267,9 +267,24 @@ export function ToggleButton({
    * this toggle is the group's designated holder, so the standalone case is
    * untouched and cannot acquire a second stop.
    */
-  const tabStop = useCompositeTabStop(
-    id !== undefined && useContext(ToggleTabStopContext) === String(id),
-  );
+  /*
+   * ── BOTH HOOKS UNCONDITIONAL. THIS WAS A REAL BUG, NOT A TIDY-UP ──────────
+   *
+   * This read `useCompositeTabStop(id !== undefined && useContext(…) === …)`.
+   * `&&` short-circuits, so `useContext` was NOT CALLED when `id` was
+   * undefined — a conditional hook call. A `<ToggleButton>` that gains or
+   * loses `id` between renders changes the hook count and React throws
+   * "Rendered fewer hooks than expected."
+   *
+   * `radio-group.tsx` names this exact hazard in a comment and avoids it;
+   * `segmented-control.tsx` and `rating.tsx` are correct too. This file was
+   * the one that did the forbidden thing, and it survived because
+   * `react-hooks/rules-of-hooks` was not configured — the ESLint policy at
+   * `packages/config/eslint/lumo.mjs` was a package export that nothing in the
+   * repository ran. Found by audit, not by tooling.
+   */
+  const groupTabStopId = useContext(ToggleTabStopContext);
+  const tabStop = useCompositeTabStop(id !== undefined && groupTabStopId === String(id));
   return (
     <BaseToggle
       data-lumo=""
