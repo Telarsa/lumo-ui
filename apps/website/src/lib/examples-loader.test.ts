@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   assertKnownParts,
@@ -5,7 +7,7 @@ import {
   extractExampleSource,
   parseExportedNames,
 } from "@/examples/_system/extract";
-import { exampleSlugs, loadExamplesFor, newExampleSlugs } from "./examples-loader";
+import { exampleSlugs, loadExamplesFor, newExampleSlugs, sourceOf } from "./examples-loader";
 
 /**
  * The example system's contract, exercised from both ends: the pure text
@@ -119,6 +121,53 @@ describe("parseExportedNames", () => {
   it("ignores type-only export blocks", () => {
     const parsed = parseExportedNames(index);
     expect(parsed.all.has("ButtonProps")).toBe(false);
+  });
+
+  /*
+   * ── THE PARSER'S BLIND SPOT, PINNED RATHER THAN PATCHED ───────────────────
+   *
+   * `parseExportedNames` matches `export { … } from "./module"` and nothing
+   * else. That is a deliberate and reasonable limit — the barrel is a flat
+   * re-export file — but it is a limit the whole parts system rests on, and it
+   * was silent: an `export *` in the barrel would have produced an empty parts
+   * list for that component's page, and the page would have rendered as though
+   * the component simply had no parts.
+   *
+   * `examples-loader.ts` now throws on the empty case. This is the other half:
+   * it asserts the ASSUMPTION, so the blind spot cannot open underneath it. The
+   * check is against the REAL barrel, not a fixture, because a fixture would
+   * only prove the regex works on text chosen to make it work.
+   *
+   * If this ever fails, the fix is a decision, not a patch: either keep the
+   * barrel flat, or teach the parser the new form. Both are fine; silently
+   * having neither is not.
+   */
+  it("the real barrel uses only the form this parser can read", () => {
+    const source = readFileSync(
+      join(process.cwd(), "..", "..", "packages", "ui", "src", "index.ts"),
+      "utf8",
+    );
+    // `export * from "./x"` — re-exports names this parser cannot enumerate
+    // without reading the target module.
+    expect(source.match(/^export \*.*$/gm) ?? []).toEqual([]);
+    // `export const Foo = …` directly in the barrel — a value that belongs to
+    // no module key, so `byModule` could never carry it.
+    expect(source.match(/^export (?:const|function|class) \w+/gm) ?? []).toEqual([]);
+  });
+
+  it("every component page's module is actually in the barrel", () => {
+    /*
+     * The invariant `examples-loader.ts` now enforces per page, asserted once
+     * here so a break is reported as one failure naming every offender rather
+     * than as whichever page happened to build first.
+     */
+    const parsed = parseExportedNames(
+      readFileSync(join(process.cwd(), "..", "..", "packages", "ui", "src", "index.ts"), "utf8"),
+    );
+    const missing = exampleSlugs().filter(
+      (slug) => !parsed.byModule.has(`${slug}.tsx`) && sourceOf(slug) !== undefined,
+    );
+    expect(missing).toEqual([]);
   });
 });
 

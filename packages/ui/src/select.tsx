@@ -6,8 +6,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
-import { FieldLabelContext } from "./form.tsx";
-import { useFieldWiring } from "@lumo-ui/base-ui-ssr";
+import { Description, Field, FieldError, optional, useFieldControl } from "./form.tsx";
 
 /**
  * EXPERIMENT — this file is the React Aria Select rebuilt on Base UI 1.7.0.
@@ -59,6 +58,50 @@ import { useFieldWiring } from "@lumo-ui/base-ui-ssr";
  * collection builder inside a wrapper, which is the exact thing renting a
  * headless library is supposed to buy. Recorded as
  * `select.selected-key-label-resolution` in the measurements file.
+ *
+ * ── THE FIELD THIS COMPONENT DID NOT HAVE ──────────────────────────────────
+ *
+ * Until 12 Aug 2026 `<Select>` rendered no `Field.Root`, and the three things a
+ * field says other than its name were therefore not sayable. Measured at that
+ * commit with `renderToStaticMarkup`, and pinned as the poison twins at the top
+ * of `ssr-field-wiring.test.tsx`:
+ *
+ *     description   no prop, no element, no `aria-describedby` on the trigger.
+ *     errorMessage  no prop — so a REQUIRED Select that failed validation had
+ *                   nothing to render and nothing to announce.
+ *     isInvalid     no prop, and neither `data-invalid` nor `aria-invalid` in
+ *                   the served bytes, because BOTH reach `Select.Trigger` from
+ *                   `useFieldRootContext` and there was no root to read.
+ *
+ * All three were GENUINELY ABSENT from `SelectProps` rather than typed and
+ * inert — `SelectProps` declares no index signature and `Select` spreads no
+ * rest, so `<Select isInvalid>` was a compile error, verified by running `tsc`
+ * against exactly that call site before the fix. That is the better of the two
+ * failure modes (contrast `isPending`, `isKeyboardDismissDisabled` and
+ * `preventFocusOnPress`, which this repository shipped as accepted-and-dropped)
+ * and it is why the fix could be purely additive: no call site was relying on a
+ * spelling that did nothing.
+ *
+ * The fix is `form.tsx`'s `<Field>`, wrapped around `Select.Root` rather than
+ * inside it, and the direction is forced rather than chosen: `SelectRoot.mjs`
+ * reads `name`, `disabled`, `validation` and `validationMode` out of
+ * `useFieldRootContext()`, so a `Field.Root` BELOW the Select root reaches
+ * nothing. Base UI's own `Select.Root` renders no DOM, so putting the field
+ * above it costs no element — `Field.Root`'s `<div>` simply becomes the box
+ * `selectVariants` and `className` were already being attached to.
+ *
+ * Two consequences that had to be measured rather than assumed:
+ *
+ *   1. `aria-invalid="true"` DOES reach `Select.Trigger` in the first byte once
+ *      a `Field.Root` is above it, from `useFieldValidation`'s
+ *      `getValidationProps`. It is not one of the layout-effect relationships
+ *      `@lumo-ui/base-ui-ssr` exists for, so nothing here works around it.
+ *   2. `aria-describedby` does NOT — the description and error register their
+ *      ids from a layout effect, exactly as they do for Checkbox and Switch. So
+ *      the trigger takes its describedby from `useFieldControl()`, resolved
+ *      during render. A `Field.Root` alone would have fixed the validity half
+ *      and left the announcement half silently missing, which is the shape of
+ *      defect this repository's ledger is full of.
  */
 
 export const selectVariants = cva("group flex w-full flex-col gap-1.5");
@@ -94,7 +137,19 @@ export const selectTriggerVariants = cva(
     // data-focused / data-placeholder. Keeping `data-hovered:` would have left
     // a class that styles nothing and reviews as if it did.
     "hover:bg-surface-hover " +
-    "data-disabled:pointer-events-none data-disabled:opacity-50 " +
+    // `data-invalid` on the TRIGGER, not on a wrapper: `Select.Trigger` spreads
+    // the field's state into its own, so the attribute is on the button whose
+    // border this colours. Same declaration as `inputVariants`, so an invalid
+    // Select and an invalid TextField in one form row read alike.
+    "data-invalid:border-critical " +
+    // `pointer-events-none` only. The DIMMING lives on the `Field.Root` wrapper
+    // (`fieldVariants`' `data-disabled:opacity-60`), and Base UI writes
+    // `data-disabled` on BOTH — measured, `renderToStaticMarkup` of a disabled
+    // Select carries it on the wrapper `<div>` and on the `<button>`. Restating
+    // `opacity-50` here would multiply to 0.30, which reads as broken rather
+    // than as disabled; form.tsx's header states the same rule for the same
+    // reason.
+    "data-disabled:pointer-events-none " +
     // RAC wrote `data-open`; Base UI writes `data-popup-open`.
     "data-popup-open:border-border-strong",
   {
@@ -165,15 +220,15 @@ export const selectItemVariants = cva(
  * §0.1 rules out — that section is about RAC's `LocalizedStringProvider`, which
  * renders no children and only sets a `window` global. A plain React context
  * renders on the server, which is the tier this library is measured at.
+ *
+ * It no longer carries the trigger's id. That pairing now comes from the
+ * `<Field>` above, through `useFieldControl()`, which is the same seam every
+ * other control in the library reads — and it delivers `aria-describedby` in
+ * the same object, so there is nothing left for a second channel to carry.
  */
 interface SelectFieldContextValue {
   placeholder: string;
   label: string | undefined;
-  /**
-   * The id the consumer's `<Label>` is pointing its `htmlFor` at. See the
-   * header section on the twelve.
-   */
-  triggerId: string | undefined;
 }
 
 const SelectFieldContext = createContext<SelectFieldContextValue | null>(null);
@@ -187,6 +242,21 @@ export interface SelectProps<T extends object> {
   placeholder: string;
   /** Announced name, when no visible `<Label>` names the control. */
   "aria-label"?: string | undefined;
+  /**
+   * Help text under the control, wired into the trigger's `aria-describedby`
+   * during RENDER — not after hydration. Rendered by this component, below
+   * `children`, so a consumer composing `<Label>`/`<SelectTrigger>` by hand
+   * cannot put it in the wrong place or forget it.
+   */
+  description?: LumoNode;
+  /**
+   * An error to display. Supplying one marks the field invalid, because a field
+   * carrying an error message and reporting itself valid is a contradiction the
+   * caller should not have to resolve by hand. Same rule as `TextField`.
+   */
+  errorMessage?: LumoNode;
+  /** Overrides the invalid state derived from `errorMessage`. */
+  isInvalid?: boolean | undefined;
   /** The selected key. Maps to Base UI's `value`. */
   selectedKey?: string | null | undefined;
   /** The initially selected key. Maps to Base UI's `defaultValue`. */
@@ -217,6 +287,9 @@ export interface SelectProps<T extends object> {
 export function Select<T extends object>({
   placeholder,
   "aria-label": ariaLabel,
+  description,
+  errorMessage,
+  isInvalid,
   selectedKey,
   defaultSelectedKey,
   onSelectionChange,
@@ -229,71 +302,88 @@ export function Select<T extends object>({
   className,
   children,
 }: SelectProps<T>) {
-  const wiring = useFieldWiring({ mode: "native", explicit: { "aria-label": ariaLabel } });
   return (
-    <BaseSelect.Root
-      {...(selectedKey === undefined ? {} : { value: selectedKey })}
-      {...(defaultSelectedKey === undefined ? {} : { defaultValue: defaultSelectedKey })}
-      {...(onSelectionChange === undefined
-        ? {}
-        : { onValueChange: (value: string | null) => onSelectionChange(value) })}
-      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
-      {...(isRequired === undefined ? {} : { required: isRequired })}
-      {...(isOpen === undefined ? {} : { open: isOpen })}
-      {...(defaultOpen === undefined ? {} : { defaultOpen })}
-      {...(onOpenChange === undefined ? {} : { onOpenChange: (open: boolean) => onOpenChange(open) })}
-      {...(name === undefined ? {} : { name })}
+    /*
+     * ── THE TWELVE, AND THE SEAM PHASE A SAID DID NOT EXIST ─────────────────
+     *
+     * Every one of `gate:html`'s twelve remaining `named-controls` violations
+     * was this component: `<button role="combobox">` with no accessible name,
+     * on the six Select instances across the docs site that use a visible
+     * `<Label>` instead of `aria-label`, in two locales.
+     *
+     * `phase-a-result.json` recorded the cause as STRUCTURAL — "the CONSUMER
+     * renders the Label, so there is no seam to inject through without either
+     * cloning children or making form.tsx's Label context-aware". The second
+     * half of that sentence is the answer, and it is what happens here: the
+     * `<Label>` a consumer writes as a child sits inside this `<Field>`, reads
+     * the chrome context it publishes, and emits the `htmlFor` whose other end
+     * `SelectTrigger` carries as its `id`.
+     *
+     * That association used to be threaded through a second, Select-only
+     * context (`FieldLabelContext`) because there was no `Field` here to read.
+     * There is one now, so the special case is gone: this component's label,
+     * description and error all travel the same seam every other Lumo control
+     * uses, and there is one fewer mechanism to get wrong.
+     *
+     * The DIRECTION is unchanged and is still argued in `FieldWiringMode`: the
+     * LABEL points at the control with `htmlFor`, not the reverse — hence
+     * `mode="native"`. This component cannot know whether the consumer rendered
+     * a `<Label>`, and an `aria-labelledby` minted on that guess would dangle.
+     * `htmlFor` on an element that does not exist emits nothing.
+     *
+     * `<Field>` is ABOVE `Select.Root` and not inside it, which is forced
+     * rather than chosen — see the file header. Base UI's Root renders no DOM,
+     * so `Field.Root`'s `<div>` is the field box, carrying `data-lumo` and
+     * `className` exactly as the hand-rolled `<div>` here used to.
+     */
+    <Field
+      mode="native"
+      description={description}
+      errorMessage={errorMessage}
+      explicit={{ "aria-label": ariaLabel }}
+      className={cn(selectVariants(), className)}
+      {...optional("isDisabled", isDisabled)}
+      {...optional("isInvalid", isInvalid)}
+      {...optional("name", name)}
     >
-      <SelectFieldContext.Provider
-        value={{ placeholder, label: ariaLabel, triggerId: wiring.controlProps.id }}
+      {/*
+       * `name` goes to BOTH roots, and the duplication is deliberate. Base UI
+       * resolves the submitted name as `fieldName ?? nameProp`
+       * (`SelectRoot.mjs`), so the hidden input is byte-identical either way;
+       * what the second copy buys is `useRegisterFieldControl`, which is handed
+       * `nameProp` and not the field's, and which is how a `<Form>` maps a
+       * server error back onto this control.
+       */}
+      <BaseSelect.Root
+        {...(selectedKey === undefined ? {} : { value: selectedKey })}
+        {...(defaultSelectedKey === undefined ? {} : { defaultValue: defaultSelectedKey })}
+        {...(onSelectionChange === undefined
+          ? {}
+          : { onValueChange: (value: string | null) => onSelectionChange(value) })}
+        {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+        {...(isRequired === undefined ? {} : { required: isRequired })}
+        {...(isOpen === undefined ? {} : { open: isOpen })}
+        {...(defaultOpen === undefined ? {} : { defaultOpen })}
+        {...(onOpenChange === undefined
+          ? {}
+          : { onOpenChange: (open: boolean) => onOpenChange(open) })}
+        {...(name === undefined ? {} : { name })}
       >
-        {/*
-         * ── THE TWELVE, AND THE SEAM PHASE A SAID DID NOT EXIST ─────────────
-         *
-         * Every one of `gate:html`'s twelve remaining `named-controls`
-         * violations was this component: `<button role="combobox">` with no
-         * accessible name, on the six Select instances across the docs site
-         * that use a visible `<Label>` instead of `aria-label`, in two locales.
-         *
-         * `phase-a-result.json` recorded the cause as STRUCTURAL — "the
-         * CONSUMER renders the Label, so there is no seam to inject through
-         * without either cloning children or making form.tsx's Label
-         * context-aware". The second half of that sentence is the answer, and
-         * it is now literally what happens: `form.tsx`'s `<Label>` reads
-         * `FieldLabelContext`, and this is the only thing that provides it.
-         *
-         * The FIRST version of the fix did it through React Aria instead —
-         * RAC's `Label` already read RAC's `LabelContext`, which is a public
-         * export, so providing it here worked without touching `form.tsx`.
-         * That was the cheaper edit and it is why it was written first, but it
-         * left a RUNTIME `react-aria-components` import in a SHIPPED component
-         * for a wiring concern that has nothing to do with React Aria, on a
-         * branch whose whole purpose is to delete that dependency. The context
-         * is Lumo's now. The mechanism and the served bytes are unchanged —
-         * a `<Label>` under a provider carrying `{id, htmlFor}` emits both
-         * attributes at the first byte, and an explicit `id` on the element
-         * still wins, because the caller's own props are spread last.
-         *
-         * So the fix is still a PUBLIC-API prop-level fix, with one engine
-         * fewer in it. No node_modules, no internal module path.
-         *
-         * The direction is deliberate and is argued in `FieldWiringMode`: the
-         * LABEL points at the control with `htmlFor`, not the reverse. This
-         * component cannot know whether the consumer rendered a `<Label>`, and
-         * an `aria-labelledby` minted on that guess would dangle. `htmlFor` on
-         * an element that does not exist emits nothing.
-         *
-         * Base UI's Root renders no DOM at all, so the field box React Aria's
-         * `<Select>` provided — the thing `className` and `data-lumo` were
-         * attached to — has to be a real element here.
-         */}
-        <FieldLabelContext.Provider value={wiring.labelProps}>
-          <div data-lumo="" className={cn(selectVariants(), className)}>
-            {children}
-          </div>
-        </FieldLabelContext.Provider>
-      </SelectFieldContext.Provider>
-    </BaseSelect.Root>
+        <SelectFieldContext.Provider value={{ placeholder, label: ariaLabel }}>
+          {children}
+          {/*
+           * Rendered HERE rather than left to the consumer, and it is the same
+           * argument `SelectGroup`'s fused label makes: a part cannot be
+           * required, and a `<Description>` a consumer forgets to place is help
+           * text that exists in the props and not on the page. Order matters —
+           * `useFieldWiring` lists the description's id before the error's, so
+           * the DOM order and the announced order agree.
+           */}
+          {description != null ? <Description>{description}</Description> : null}
+          <FieldError>{errorMessage}</FieldError>
+        </SelectFieldContext.Provider>
+      </BaseSelect.Root>
+    </Field>
   );
 }
 
@@ -314,15 +404,24 @@ export interface SelectTriggerProps extends SelectTriggerVariantProps {
 export function SelectTrigger({ className, size, children }: SelectTriggerProps) {
   const field = useContext(SelectFieldContext);
   /*
-   * `id` is the other end of the `htmlFor` the consumer's `<Label>` is carrying
-   * — see the block in `Select`. Overriding Base UI's own generated trigger id
-   * is safe: nothing else in the server output references it.
+   * `id` is the other end of the `htmlFor` the consumer's `<Label>` is carrying,
+   * and `aria-describedby` is the reference to the description and error
+   * `<Select>` renders — both minted during render by the `<Field>` above, both
+   * arriving in one object. Overriding Base UI's own generated trigger id is
+   * safe: nothing else in the server output references it.
+   *
+   * `aria-invalid` is NOT here, and that is a measurement rather than an
+   * omission: `Select.Trigger` reads the field's validity out of
+   * `useFieldRootContext` during its own render, so the attribute is already in
+   * the first byte. `ssr-field-wiring.test.tsx` asserts it, and a poison twin
+   * there shows what is missing without the `Field.Root`.
    */
+  const control = useFieldControl();
   return (
     <BaseSelect.Trigger
       data-lumo=""
+      {...control}
       {...(field?.label === undefined ? {} : { "aria-label": field.label })}
-      {...(field?.triggerId === undefined ? {} : { id: field.triggerId })}
       className={cn(selectTriggerVariants({ size }), className)}
     >
       {children ?? <SelectValue />}

@@ -289,6 +289,193 @@ describe("descriptions at the first byte — the half nobody had measured", () =
 });
 
 /*
+ * SELECT'S FIELD, WHICH DID NOT EXIST.
+ *
+ * The naming block above proves the trigger gets a NAME at the first byte. It
+ * proves nothing about the other two things a field says, and until this block
+ * was written `<Select>` rendered no `Field.Root` at all — so it could say
+ * neither. The consequences, measured at HEAD before the fix and reproduced by
+ * the poison twin below:
+ *
+ *     description   no prop, no element, no `aria-describedby` on the trigger.
+ *     errorMessage  no prop, so a required Select that fails validation has
+ *                   nothing to announce and nothing to render.
+ *     isInvalid     no prop, and — this is the part that had to be measured
+ *                   rather than assumed — no `data-invalid` and no
+ *                   `aria-invalid` on the trigger either, because BOTH come
+ *                   from `Field.Root`'s context and there was no `Field.Root`.
+ *
+ * The three props were GENUINELY ABSENT from `SelectProps`, not typed-and-inert
+ * the way `isPending` / `isKeyboardDismissDisabled` / `preventFocusOnPress` were
+ * elsewhere in this repository. `SelectProps` declares no index signature and
+ * `Select` spreads no rest, so `<Select isInvalid>` was a compile error rather
+ * than a silently dropped prop. That is the better of the two failures and it
+ * is why this fix is additive: no call site was relying on the inert spelling.
+ */
+describe("poison — a Select outside a Field.Root", () => {
+  /*
+   * Base UI composed the way its own Select documentation composes it, WITHOUT
+   * a `Field.Root`: there is nowhere for a description or an error to live, and
+   * `Field.Description` cannot even be rendered here — it throws. So the poison
+   * is the honest shape a consumer would reach for instead, a plain `<p>`, and
+   * the finding is that nothing connects it to the control and no rule notices.
+   */
+  it("a Select with help text but no Field.Root announces none of it", () => {
+    const html = renderToStaticMarkup(
+      <BaseSelect.Root>
+        <Label>شهر</Label>
+        <BaseSelect.Trigger aria-label="انتخاب شهر">
+          <BaseSelect.Value placeholder="یک شهر انتخاب کنید" />
+        </BaseSelect.Trigger>
+        <p id="D">شهر محل سکونت شما</p>
+      </BaseSelect.Root>,
+    );
+    expect(attrOn(html, "combobox", "aria-describedby")).toBeUndefined();
+    expect(attrOn(html, "combobox", "aria-invalid")).toBeUndefined();
+    // Named, so the gate is clean — while the help text is announced by
+    // nothing and the invalid state is not in the bytes at all.
+    expect(gate(html)).toEqual([]);
+  });
+
+  /*
+   * And the same shape WITH a `Field.Root` but without the wiring, which is the
+   * defect `useFieldWiring` exists for, reproduced on Select rather than on
+   * Checkbox. `aria-invalid` arrives (it is a render-time prop on Base UI's
+   * side); `aria-describedby` does not, because the description registers its
+   * id from a layout effect.
+   */
+  it("a Field.Root around a Select still loses the description on the server", () => {
+    const html = renderToStaticMarkup(
+      <Field.Root invalid>
+        <BaseSelect.Root>
+          <Field.Label id="L">شهر</Field.Label>
+          <BaseSelect.Trigger aria-labelledby="L">
+            <BaseSelect.Value placeholder="یک شهر انتخاب کنید" />
+          </BaseSelect.Trigger>
+          <Field.Description>شهر محل سکونت شما</Field.Description>
+          <Field.Error match>یک شهر انتخاب کنید</Field.Error>
+        </BaseSelect.Root>
+      </Field.Root>,
+    );
+    expect(attrOn(html, "combobox", "aria-invalid")).toBe("true");
+    expect(attrOn(html, "combobox", "aria-describedby")).toBeUndefined();
+    expect(gate(html)).toEqual([]);
+  });
+});
+
+describe("Select's description, error and validity at the first byte", () => {
+  it("the description reaches the trigger, resolving to real text", () => {
+    const html = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید" description="شهر محل سکونت شما">
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>,
+    );
+    const ref = attrOn(html, "combobox", "aria-describedby");
+    expect(ref, "the trigger carries no aria-describedby").toBeDefined();
+    expect(textOfId(html, ref ?? "")).toBe("شهر محل سکونت شما");
+    expect(gate(html)).toEqual([]);
+  });
+
+  it("a description AND an error are both announced, in that order", () => {
+    const html = renderToStaticMarkup(
+      <Select
+        placeholder="یک شهر انتخاب کنید"
+        description="شهر محل سکونت شما"
+        errorMessage="یک شهر انتخاب کنید"
+      >
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>,
+    );
+    const refs = (attrOn(html, "combobox", "aria-describedby") ?? "").split(" ").filter(Boolean);
+    expect(refs).toHaveLength(2);
+    expect(refs.map((id) => textOfId(html, id))).toEqual([
+      "شهر محل سکونت شما",
+      "یک شهر انتخاب کنید",
+    ]);
+    expect(gate(html)).toEqual([]);
+  });
+
+  /*
+   * The headline consequence from the brief: a required Select that fails
+   * validation. `errorMessage` alone must mark it invalid — a control carrying
+   * an error message and reporting itself valid is the contradiction
+   * `FieldProps.isInvalid` refuses to make the caller resolve.
+   */
+  it("a required Select that fails validation announces both the state and the message", () => {
+    const html = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید" isRequired errorMessage="یک شهر انتخاب کنید">
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>,
+    );
+    expect(attrOn(html, "combobox", "aria-required")).toBe("true");
+    expect(attrOn(html, "combobox", "aria-invalid")).toBe("true");
+    expect(textOfId(html, attrOn(html, "combobox", "aria-describedby") ?? "")).toBe(
+      "یک شهر انتخاب کنید",
+    );
+  });
+
+  it("isInvalid alone puts the state in the bytes, with no message to render", () => {
+    const html = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید" isInvalid>
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>,
+    );
+    expect(attrOn(html, "combobox", "aria-invalid")).toBe("true");
+    // `data-invalid` too, because that is what `selectTriggerVariants` styles.
+    expect(/<button[^>]*data-invalid=""/.test(html)).toBe(true);
+    expect(attrOn(html, "combobox", "aria-describedby")).toBeUndefined();
+    expect(gate(html)).toEqual([]);
+  });
+
+  it("isInvalid={false} overrides the validity an errorMessage would imply", () => {
+    const html = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید" isInvalid={false} errorMessage="پیام">
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>,
+    );
+    expect(attrOn(html, "combobox", "aria-invalid")).toBeUndefined();
+  });
+
+  it("no description and no error means no reference — nothing dangling", () => {
+    const html = renderToStaticMarkup(
+      <Select placeholder="یک شهر انتخاب کنید">
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>,
+    );
+    expect(attrOn(html, "combobox", "aria-describedby")).toBeUndefined();
+    expect(attrOn(html, "combobox", "aria-invalid")).toBeUndefined();
+    expect(gate(html)).toEqual([]);
+  });
+
+  /*
+   * The name arrives through `aria-label` instead, so the wiring must not mint
+   * an `id`/`htmlFor` pair — and must still describe the control.
+   */
+  it("an explicit aria-label still gets a description", () => {
+    const html = renderToStaticMarkup(
+      <Select
+        placeholder="یک شهر انتخاب کنید"
+        aria-label="انتخاب شهر"
+        description="شهر محل سکونت شما"
+      >
+        <SelectTrigger />
+      </Select>,
+    );
+    expect(attrOn(html, "combobox", "aria-labelledby")).toBeUndefined();
+    expect(textOfId(html, attrOn(html, "combobox", "aria-describedby") ?? "")).toBe(
+      "شهر محل سکونت شما",
+    );
+    expect(gate(html)).toEqual([]);
+  });
+});
+
+/*
  * The other half of the promise. Hand-minted ids are only a fix if Base UI's
  * own hydrated wiring lands on the SAME elements — an id that changes after
  * hydration would move the name and the description out from under a screen
@@ -313,5 +500,45 @@ describe("server and client agree", () => {
 
     expect(byId("aria-labelledby")).toBe(serverName);
     expect(byId("aria-describedby")).toBe(serverDesc);
+  });
+
+  /*
+   * The same promise for Select, and it needs its own arm because Select names
+   * itself the OTHER way round — `htmlFor` on the label, `id` on the trigger —
+   * and because Base UI's own `Field.Label` registration lands on the trigger
+   * only after effects run. If the two disagreed, a reader who had already been
+   * told the name would be re-told a different one.
+   */
+  it("Select's name, description and error survive hydration unchanged", () => {
+    const tree = (
+      <Select
+        placeholder="یک شهر انتخاب کنید"
+        description="شهر محل سکونت شما"
+        errorMessage="یک شهر انتخاب کنید"
+      >
+        <Label>شهر</Label>
+        <SelectTrigger />
+      </Select>
+    );
+    const server = renderToStaticMarkup(tree);
+    const serverDesc = (attrOn(server, "combobox", "aria-describedby") ?? "")
+      .split(" ")
+      .filter(Boolean)
+      .map((id) => textOfId(server, id))
+      .join(" ");
+    expect(serverDesc).toBe("شهر محل سکونت شما یک شهر انتخاب کنید");
+
+    const { container } = render(tree);
+    const control = container.querySelector('[role="combobox"]')!;
+    const clientDesc = (control.getAttribute("aria-describedby") ?? "")
+      .split(" ")
+      .filter(Boolean)
+      .map((id) => container.ownerDocument.getElementById(id)?.textContent?.trim())
+      .join(" ");
+
+    // The label still points at the trigger, and at the same trigger.
+    expect(container.querySelector("label")?.getAttribute("for")).toBe(control.id);
+    expect(clientDesc).toBe(serverDesc);
+    expect(control.getAttribute("aria-invalid")).toBe("true");
   });
 });

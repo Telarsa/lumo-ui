@@ -445,6 +445,7 @@ export {
   TableHeader,
   TableSelectAllColumn,
   TableSelectionCell,
+  TableWidgetCell,
   localeSortFn,
   lumoTableFeatures,
   useLumoTable,
@@ -461,6 +462,7 @@ export type {
   TableProps,
   TableSelectAllColumnProps,
   TableSelectionCellProps,
+  TableWidgetCellProps,
   // The structural seam the grid reads TanStack through. Exported because a
   // consumer wiring their own state layer needs to know what `Table` asks for —
   // and because the interfaces ARE the statement that TanStack owns no ARIA.

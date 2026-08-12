@@ -205,6 +205,15 @@ const RovingCheckbox = Checkbox as (
  * `dir="rtl"` and a hand-rolled `switch (e.key)` gets that backwards silently,
  * in Persian only.
  *
+ * **A cell that holds a CONTROL does not take the stop itself.** ARIA calls
+ * that the widget-focus model: the `<td>` stays at `-1` and the roving `0`
+ * moves onto the control inside it, so Tab reaches the button rather than the
+ * box around it. `TableSelectionCell` and `TableSelectAllColumn` do this for
+ * their checkboxes, and `TableWidgetCell` is the same carve-out for a control
+ * this file does not own — an actions column, a row link, a per-row switch.
+ * Without it the natural composition `<Cell><IconButton/></Cell>` serves one
+ * extra Tab stop PER ROW; the measurement is on `TableWidgetCell`.
+ *
  * ═══ SORTING PERSIAN IS NOT `a > b`, AND TANSTACK'S DEFAULT IS ═════════════
  *
  * Measured in the installed dist,
@@ -550,7 +559,37 @@ export function Table({ label, locale, table, className, ...props }: TableProps)
 
     event.preventDefault();
     setActive(next);
-    target.focus();
+
+    /*
+     * ── WHERE FOCUS ACTUALLY LANDS, WHICH IS NOT ALWAYS THE CELL ────────────
+     *
+     * The coordinates live on the CELL, always — that is what the query above
+     * searches and it must stay true of every part, or the arrow keys walk off
+     * the end of a column. But a cell that holds a control is not itself the
+     * thing focus belongs on: `TableSelectionCell`, `TableSelectAllColumn` and
+     * `TableWidgetCell` are permanently `tabindex="-1"` and hand their roving
+     * `0` to the widget inside (ARIA's widget-focus model). Calling `.focus()`
+     * on the `<td>` in that case succeeds — a `tabindex="-1"` element is
+     * programmatically focusable — and leaves the reader standing on a cell
+     * while the tab stop is on a checkbox they cannot press. Space does
+     * nothing, and nothing anywhere errors.
+     *
+     * So the hop is: the cell if the cell is the focusable thing, the control
+     * if it is not. The opt-in is `data-lumo-widget-cell`, written by the three
+     * parts that KNOW they delegate, rather than inferred by looking for a
+     * control inside any cell — inference would also fire on a `<Column>`
+     * carrying a `<ColumnResizer>`, whose header cell is legitimately focusable
+     * itself (Enter and Space toggle its sort) and must not surrender its
+     * focus to the drag handle beside it.
+     *
+     * `[tabindex="0"]` is deliberately NOT the selector: `setActive` above has
+     * not re-rendered yet, so at this instant the target cell's control is
+     * still at `-1`. The query is for the control, not for the stop.
+     */
+    const widget = target.hasAttribute("data-lumo-widget-cell")
+      ? target.querySelector<HTMLElement>("button,a[href],input,select,textarea")
+      : null;
+    (widget ?? target).focus();
   }
 
   const value = useMemo<TableContextValue>(
@@ -1063,6 +1102,9 @@ export function TableSelectAllColumn({
       aria-colindex={col + 1}
       data-row-index={0}
       data-col-index={col}
+      // Read by `Table`'s arrow-key handler, which must land focus on the
+      // checkbox rather than on this `<th>`. See the note there.
+      data-lumo-widget-cell=""
       /*
        * ── A CELL CONTAINING A WIDGET IS NOT ITSELF THE TAB STOP ────────────
        *
@@ -1121,6 +1163,8 @@ export function TableSelectionCell({ label, className, ...props }: TableSelectio
       aria-colindex={col + 1}
       data-row-index={rowIndex}
       data-col-index={col}
+      // See `TableSelectAllColumn`.
+      data-lumo-widget-cell=""
       // Permanently -1; the roving stop is on the checkbox. See
       // `TableSelectAllColumn` for the argument.
       tabIndex={-1}
@@ -1134,6 +1178,176 @@ export function TableSelectionCell({ label, className, ...props }: TableSelectio
         onChange={() => row?.toggleSelected()}
         {...(row?.getCanSelect() === false ? { isDisabled: true as boolean } : {})}
       />
+    </td>
+  );
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * A CELL WHOSE CONTENT IS A CONTROL
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * A `gridcell` that hands the grid's roving Tab stop to the control inside it.
+ *
+ *     <TableWidgetCell>
+ *       {(tabIndex) => <IconButton label="ویرایش" tabIndex={tabIndex} />}
+ *     </TableWidgetCell>
+ *
+ * ═══ THE DEFECT THIS CLOSES, MEASURED AT THE COMMIT BEFORE THIS ONE ═════════
+ *
+ * An actions column — one icon button per row, the most-copied table pattern
+ * there is — could not be written correctly with the parts this file exported.
+ * `TableSelectionCell` had the carve-out and nothing generic did, so the
+ * obvious composition was a plain `<Cell>` with a button in it:
+ *
+ *     <Cell><IconButton label="ویرایش" /></Cell>
+ *
+ * Rendered through `renderToStaticMarkup` on a three-row grid, that serves
+ * **four** `tabindex="0"`: the active cell, plus one per button. Base UI's
+ * `Button` writes an explicit `tabindex="0"` rather than leaning on a
+ * `<button>`'s default, so the count is visible in the bytes — and it grows
+ * with the data. A twenty-row table is twenty-one Tab presses to get past,
+ * which is the precise failure `role="grid"` exists to prevent, restated in the
+ * file header as "a 20×8 grid with a stop per cell is 160 Tab presses".
+ *
+ * **The gate could not have caught it, and that is not a hole in the gate.**
+ * `composite-tab-stop` grades a FLOOR: it fires when a composite has NO stop.
+ * A grid with N+1 stops passes it, correctly — the rule's subject is "the
+ * widget is unreachable by keyboard", and this one is over-reachable. Nothing
+ * in the repository grades the ceiling. That is recorded here rather than
+ * fixed by widening a rule whose header is careful about what it means.
+ *
+ * ═══ WHY A RENDER PROP, AND WHAT WAS REJECTED ══════════════════════════════
+ *
+ * The tab stop has to be written ONTO the caller's control, and this component
+ * cannot reach it. Three other designs were considered:
+ *
+ *  1. **Automatic detection of focusable children.** Seductive and WRONG, and
+ *     wrong for the same structural reason `composite-tab-stop` exists at all.
+ *     React cannot inspect what a child will render to before rendering it, so
+ *     "does this cell contain a button" is a DOM question, answerable only by
+ *     `querySelector` in an effect — and effects do not run on the server. The
+ *     first byte would carry the defect and hydration would repair it, which is
+ *     exactly the self-healing shape that made 132 unreachable tabs invisible
+ *     to jsdom, Testing Library and axe alike. A mechanism that is correct only
+ *     after hydration fails this library's own gate by construction.
+ *
+ *  2. **A boolean prop on `Cell`**, e.g. `<Cell hasWidget>`. It solves half the
+ *     problem — the `<td>` pins itself to `-1` — and leaves the other half
+ *     exactly as broken, because every button in the column still serves its
+ *     own `tabindex="0"`. Three rows would go from four stops to three. Half a
+ *     fix that reads like a whole one is worse than none.
+ *
+ *  3. **A part that owns its buttons**, `<TableActionCell actions={[…]} />`,
+ *     mirroring `TableSelectionCell` most literally: the component constructs
+ *     the controls, so it can write the tabindex and require every label. It
+ *     was rejected on what it cannot express — the shadcn/ReUI actions column
+ *     is usually a `<MenuTrigger>` wrapping the icon button, and a data array
+ *     cannot carry a popover, a `<Link>`, or a `<Switch>`. Naming the part for
+ *     one use case would also invite a second part for the next one.
+ *
+ * The render prop is the smallest thing that is honest: the tab index is a
+ * value the caller cannot receive without asking for it, it is computed during
+ * RENDER so it is in the first byte, and it composes with anything.
+ *
+ * ═══ THE PRICE, MEASURED: THE CALL SITE MUST BE A CLIENT MODULE ════════════
+ *
+ * A render prop is a FUNCTION PROP, and a function cannot be handed from a
+ * React Server Component into a `"use client"` one — which every part in this
+ * file is. The site's own examples file is a server module, and writing this
+ * example there as plain markup failed the export build outright:
+ *
+ *     Error occurred prerendering page "/en/components/table"
+ *     Error: Functions cannot be passed directly to Client Components unless
+ *     you explicitly expose it by marking it with "use server".
+ *       {children: function children}
+ *
+ * So an actions column costs a `"use client"` at the top of the file that
+ * writes it. That is a real cost and it is not hidden: it is stated here, and
+ * the site pays it visibly by rendering this one example through
+ * `demo-islands.tsx` even though it holds no state at all.
+ *
+ * It is also the strongest argument against the fourth design, `cloneElement`
+ * on `Children.only(children)` — which needs no function, crosses the boundary
+ * happily, and requires nothing of the caller. It was rejected because the prop
+ * lands on whatever element is directly there: `<MenuTrigger><IconButton/>` is
+ * the shadcn actions column, and `MenuTrigger` would swallow the `tabIndex` and
+ * serve the old defect back with no error anywhere. The file header already
+ * refuses cloning for `withColumnIndexes` on the same ground. **A loud build
+ * error beats a silent extra Tab stop per row**, and that is the whole trade.
+ *
+ * **What it does not do is force the caller to use the argument.** A caller who
+ * writes `{() => <IconButton label="…" />}` gets the old defect back, one stop
+ * per row. There is no type that prevents this and no runtime check that would
+ * see it — so it is stated here, tested in `table.test.tsx`, and the honest
+ * summary is that this part makes the correct composition WRITEABLE and
+ * documented rather than unrepresentable.
+ *
+ * ═══ EXACTLY ONE CONTROL PER CELL ══════════════════════════════════════════
+ *
+ * The argument is one number, not a list, and that is a decision. ARIA gives a
+ * cell holding SEVERAL widgets a different model: the cell keeps the stop and
+ * Enter (or F2) enters it, arrow keys then move between the widgets inside, and
+ * Escape leaves. None of that is implemented here — `gridArrow.step` returns a
+ * `{row, col}` for the grid and knows nothing about an inner mode — so a cell
+ * with two buttons under this part gives them one stop between them and strands
+ * the second. Put a menu behind one trigger instead; that is what the pattern
+ * this closes actually looks like.
+ *
+ * ═══ NO `label` PROP, DELIBERATELY ═════════════════════════════════════════
+ *
+ * Every other part in this file that announces something takes a required
+ * string. This one announces nothing: the `<td>` is structure, and the name
+ * belongs to the control the caller renders — where `IconButton` already makes
+ * it required and an icon-only button without one does not compile. A `label`
+ * here would be a SECOND name inside the same cell, which is the argument
+ * `Column`'s `resizer` slot already makes about not putting the handle in
+ * `children`.
+ */
+export interface TableWidgetCellProps
+  extends Omit<ComponentProps<"td">, "children" | "className" | "role"> {
+  /**
+   * Renders the cell's single control, given the tab index it must carry.
+   *
+   * `0` when this is the active cell of the grid, `-1` otherwise. Pass it
+   * straight through: `(tabIndex) => <IconButton label="…" tabIndex={tabIndex} />`.
+   */
+  children: (tabIndex: 0 | -1) => LumoNode;
+  className?: string | undefined;
+}
+
+export function TableWidgetCell({ className, children, ...props }: TableWidgetCellProps) {
+  const { active } = useTableContext();
+  const rowContext = useContext(RowContext);
+  const col = useContext(ColContext);
+  const rowIndex = rowContext?.index ?? 1;
+  const isActive = active.row === rowIndex && active.col === col;
+
+  return (
+    <td
+      data-lumo=""
+      role="gridcell"
+      aria-colindex={col + 1}
+      data-row-index={rowIndex}
+      data-col-index={col}
+      // See `TableSelectAllColumn` — this is what makes the arrow keys land on
+      // the control rather than on the `<td>` around it.
+      data-lumo-widget-cell=""
+      /*
+       * Permanently `-1`, exactly as `TableSelectionCell` is, and for the
+       * argument written out there: the cell holding a widget is not itself the
+       * tab stop. The coordinates stay on the `<td>` because that is what the
+       * arrow keys search for.
+       */
+      tabIndex={-1}
+      // `w-0` + `whitespace-nowrap` shrink-wraps an actions column to its
+      // buttons, on either side of the grid — the same pair the selection
+      // column uses, and it is `w-0` rather than a physical width for the same
+      // reason: it states a size, not a side.
+      className={cn(cellVariants(), "w-0 whitespace-nowrap", className)}
+      {...props}
+    >
+      {children(isActive ? 0 : -1)}
     </td>
   );
 }

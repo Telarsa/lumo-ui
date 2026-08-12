@@ -75,26 +75,30 @@ import { useFieldWiring, type FieldWiring, type FieldWiringMode } from "@lumo-ui
  * That expiry has arrived. The date family migrated (see
  * `experiments/in-flight/README.md`), and all four now compose
  * `Field.Root`/`Field.Label`/`Field.Description` by hand out of the cva strings
- * below rather than out of these components. Grepped, not assumed: the ONLY
- * caller of `<Label>` outside a Lumo `<Field>` left in the whole repository is
- * `<Select>`, in `select.tsx` and in the site's select examples. There are no
- * callers of `<Description>` or `<FieldError>` outside a `<Field>` at all.
+ * below rather than out of these components.
  *
- * So the fallback is no longer React Aria's — it is a PLAIN ELEMENT plus a
- * Lumo-owned context, `FieldLabelContext`, that a non-`<Field>` wrapper uses to
- * hand `<Label>` the `id`/`htmlFor` pair it minted. Two measurements forced that
- * shape rather than "just use Base UI's part everywhere":
+ * `<Select>` was the last holdout and it stopped being one on 12 Aug 2026: it
+ * had no `Field.Root`, so a `<Label>` written as its child took the null-chrome
+ * branch, and it needed a second Lumo context (`FieldLabelContext`) purely to
+ * hand that branch the `id`/`htmlFor` pair. It renders a `<Field>` now — see
+ * select.tsx's header for what that bought and what it cost — so the extra
+ * context has no provider and is deleted rather than left exported and inert.
  *
- *   1. Base UI's Field parts THROW outside a `Field.Root` — verified by
- *      rendering, not by reading source: `renderToStaticMarkup(<Field.Label/>)`
- *      raises "Base UI: FieldRootContext is missing. Field parts must be placed
- *      within <Field.Root>." Same for `Field.Description` and `Field.Error`. A
- *      `<Select>` has no `Field.Root` — Base UI's Select is its own root — so
- *      the null-chrome branch cannot be a Base UI part.
+ * Grepped, not assumed, after that change: there is NO caller of `<Label>`,
+ * `<Description>` or `<FieldError>` outside a Lumo `<Field>` anywhere in this
+ * repository or in the site's examples. The null-chrome branches below are
+ * therefore unreachable from here, and they are kept rather than deleted for
+ * the reason `<Description>`'s already gives: a registry consumer who composes
+ * these by hand should get a plain box, not a crash. What they are NOT is a
+ * naming mechanism — nothing publishes ids to them any more, so a caller
+ * outside a `<Field>` owns the association itself.
  *
- *   2. The association still has to be in the SERVED BYTES, so it cannot be
- *      delegated to any layout effect on either engine. The ids arrive as props
- *      from `useFieldWiring`, already resolved during render.
+ * The measurement that shaped those branches still stands and is why they are
+ * plain elements rather than Base UI parts: Base UI's Field parts THROW outside
+ * a `Field.Root` — verified by rendering, not by reading source:
+ * `renderToStaticMarkup(<Field.Label/>)` raises "Base UI: FieldRootContext is
+ * missing. Field parts must be placed within <Field.Root>." Same for
+ * `Field.Description` and `Field.Error`.
  *
  * `FOCUS_RING_SELF` below is the one focus-ring constant this file exports, and
  * its docblock records the second one that used to stand beside it and why it
@@ -219,29 +223,26 @@ interface FieldChrome extends FieldWiring {
 
 const FieldChromeContext = createContext<FieldChrome | null>(null);
 
-/**
- * The label wiring published by a wrapper that is NOT a Lumo `<Field>`.
+/*
+ * A SECOND context stood here, `FieldLabelContext`, and it is gone rather than
+ * kept.
  *
- * One consumer today, `<Select>`, and the direction of its arrow is the reason
- * this is a second context rather than a second `FieldChrome`. A `<Field>` wires
- * `"aria"` mode — the control points at the label — and can do that because it
- * is given the label's CONTENT and therefore knows one will render. A `<Select>`
- * wires `"native"` mode: the CONSUMER renders the `<Label>` as a sibling the
- * wrapper never sees, so the label carries `htmlFor` and the trigger carries the
- * matching `id`, and nothing dangles when no label is rendered at all. See
- * `FieldWiringMode` in `@lumo-ui/base-ui-ssr` for the full argument.
+ * It existed for exactly one caller: `<Select>`, which had no `Field.Root`, so
+ * a `<Label>` written as its child could not read `FieldChromeContext` and had
+ * to be handed its `id`/`htmlFor` pair some other way. `<Select>` renders a
+ * `<Field>` now (12 Aug 2026), which means the pair arrives on the same context
+ * every other control reads and the second channel has no provider left. An
+ * exported context nothing provides is the shape `FOCUS_RING` had before it was
+ * deleted below: a name a docblock recommends and a mechanism that cannot fire.
  *
- * Reusing `FieldChromeContext` for this would be worse than verbose, it would be
- * wrong: `<Description>` and `<FieldError>` branch on that context to decide
- * whether to render a Base UI `Field` part, and a Base UI `Field` part inside a
- * `<Select>` throws — there is no `Field.Root` above it. This context carries the
- * label pair and nothing else, so it cannot be mistaken for a field.
- *
- * It is deliberately NOT re-exported from the package barrel. It is the seam
- * between two files that already travel together in the registry, not a public
- * extension point; a consumer wanting this shape composes `useFieldWiring`.
+ * What did NOT change is the DIRECTION, which is the part worth keeping in
+ * writing. A `<Field>` normally wires `"aria"` mode — the control points at the
+ * label — and can, because it is given the label's CONTENT and therefore knows
+ * one will render. `<Select>` passes `mode="native"`: the CONSUMER renders the
+ * `<Label>` as a child this wrapper never inspects, so the label carries
+ * `htmlFor` and the trigger carries the matching `id`, and nothing dangles when
+ * no label is rendered at all. See `FieldWiringMode` in `@lumo-ui/base-ui-ssr`.
  */
-export const FieldLabelContext = createContext<FieldWiring["labelProps"] | null>(null);
 
 /**
  * The props a control must spread to be named and described in the FIRST BYTE.
@@ -427,11 +428,16 @@ export function Form({ className, validationBehavior = "aria", ...props }: FormP
  * is the LEFT side of the field. Shrinking it to its text keeps the hit area on
  * the words in both directions.
  *
- * Inside a `<Field>` this is Base UI's `Field.Label` carrying the id the control
- * points at, so the name is in the served HTML. Outside one it is a plain
- * `<label>` carrying whatever `FieldLabelContext` published — see the file
- * header for why it cannot be a Base UI part there, and which one component
- * that branch is for.
+ * Inside a `<Field>` this is Base UI's `Field.Label` carrying the wiring that
+ * pairs it with the control, so the name is in the served HTML — either an `id`
+ * the control points at (`"aria"` mode) or an `htmlFor` pointing at the control
+ * (`"native"` mode, which is what `<Select>` asks for).
+ *
+ * Outside a `<Field>` it is a bare `<label>` with no wiring at all: nothing
+ * publishes ids to it any more, and minting one here would produce a `for`
+ * naming an element this component cannot see. That branch has no caller in
+ * this repository — see the file header — and exists so a copied-in composition
+ * renders a box instead of throwing.
  */
 export interface LabelProps
   extends Omit<LabelHTMLAttributes<HTMLLabelElement>, "children" | "className"> {
@@ -451,33 +457,21 @@ export interface LabelProps
 
 export function Label({ className, nativeLabel, ...props }: LabelProps) {
   const chrome = useContext(FieldChromeContext);
-  const external = useContext(FieldLabelContext);
   if (chrome === null) {
     /*
      * A plain element, not a Base UI part: `Field.Label` outside a `Field.Root`
-     * throws (measured — see the file header), and a `<Select>` has no
-     * `Field.Root` above it.
+     * throws, measured by rendering one — the message is quoted in the file
+     * header.
      *
-     * `htmlFor` is dropped on the `<span>` arm. `nativeLabel={false}` is the
-     * "there is no single labelable control" case, and `for` is only valid on a
-     * `<label>`; emitting it on a span would be an attribute the parser drops
-     * and a reader of the source would believe.
-     *
-     * The caller's own props go LAST so an explicit `id`/`htmlFor` still wins,
-     * which is the behaviour RAC's `LabelContext` had through `useContextProps`.
+     * The caller's own props are the ONLY source of an `id` or an `htmlFor` on
+     * this arm. `nativeLabel={false}` is the "there is no single labelable
+     * control" case, and `for` is only valid on a `<label>`, so the `<span>` it
+     * renders would drop one anyway.
      */
-    const { htmlFor, ...idOnly } = external ?? {};
     if (nativeLabel === false) {
-      return <span className={cn(labelVariants(), className)} {...idOnly} {...props} />;
+      return <span className={cn(labelVariants(), className)} {...props} />;
     }
-    return (
-      <label
-        className={cn(labelVariants(), className)}
-        {...idOnly}
-        {...optional("htmlFor", htmlFor)}
-        {...props}
-      />
-    );
+    return <label className={cn(labelVariants(), className)} {...props} />;
   }
   return (
     <BaseField.Label

@@ -12,7 +12,7 @@ import {
   TableFooter,
   TableHeader,
 } from "@lumo-ui/ui";
-import { TableSelectionIsland, TableSortingIsland } from "@/components/demo-islands";
+import { TableActionsIsland, TableSelectionIsland, TableSortingIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -52,6 +52,8 @@ const t = {
   paid: { "fa-IR": "پرداخت‌شده", "en-US": "Paid" },
   awaitingPayment: { "fa-IR": "در انتظار پرداخت", "en-US": "Awaiting payment" },
   refunded: { "fa-IR": "بازگردانده‌شده", "en-US": "Refunded" },
+  actions: { "fa-IR": "کنش‌ها", "en-US": "Actions" },
+  editOrder: { "fa-IR": "ویرایش این سفارش", "en-US": "Edit this order" },
   noOrders: { "fa-IR": "هنوز سفارشی ثبت نشده است", "en-US": "No orders yet" },
   noOrdersHint: {
     "fa-IR": "سفارش‌های این بازه اینجا فهرست می‌شوند.",
@@ -272,6 +274,39 @@ function StatusCellsExample(l: Locale) {
   );
 }
 
+function ActionsExample(l: Locale) {
+  /*
+   * The column this page could not show until `TableWidgetCell` existed.
+   *
+   * A grid is ONE Tab stop from the outside, and a button carries one of its
+   * own — so the obvious spelling, a plain `Cell` with an `IconButton` in it,
+   * serves an extra stop per row. Measured on three rows: four tab stops in the
+   * static markup instead of one, and the count grows with the data. Nothing in
+   * the gate reports it, because `composite-tab-stop` grades a FLOOR — it fires
+   * on a composite with NO stop, and this one has too many.
+   *
+   * An ISLAND despite holding no state, which is the second thing this example
+   * is here to say: `TableWidgetCell` takes a render prop, and a function
+   * cannot be passed from a server module into a `"use client"` component. See
+   * `demo-islands.tsx`, which quotes the build error.
+   */
+  return (
+    <TableActionsIsland
+      locale={l}
+      label={t.ordersGrid[l]}
+      customerHeader={t.customer[l]}
+      cityHeader={t.city[l]}
+      actionsHeader={t.actions[l]}
+      editLabel={t.editOrder[l]}
+      rows={[
+        { id: "a", customer: t.customerOne[l], city: t.isfahan[l] },
+        { id: "b", customer: t.customerTwo[l], city: t.tabriz[l] },
+        { id: "c", customer: t.customerThree[l], city: t.tehran[l] },
+      ]}
+    />
+  );
+}
+
 function EmptyExample(l: Locale) {
   /*
    * `TableBody` counts its children, and zero of them is a STATE rather than a
@@ -324,6 +359,7 @@ export const EXAMPLES: ComponentExamples = {
       `      <Row row={row}>`,
       `        <TableSelectionCell label="…" />`,
       `        <Cell>…</Cell>`,
+      `        <TableWidgetCell>{(tabIndex) => <IconButton label="…" tabIndex={tabIndex} />}</TableWidgetCell>`,
       `      </Row>`,
       `    </TableBody>`,
       `    <TableFooter>            ← one summary row, in the same coordinate space`,
@@ -406,6 +442,15 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
+        name: "TableWidgetCell",
+        description: {
+          "fa-IR":
+            "خانه‌ای که محتوایش یک کنترل است — ستون کنش‌ها. گرید از بیرون یک ایست «Tab» دارد و دکمه ایستِ خودش را می‌آورد، پس «Cell» ساده با یک دکمه در آن، به ازای هر ردیف یک ایست اضافه سرو می‌کند. این جزء مدل «widget focus» را می‌نویسد: خودِ «td» همیشه منفی‌یک می‌ماند و صفرِ گردان از راه «render prop» به کنترل می‌رسد، پس در نخستین بایتِ سرو‌شده درست است نه پس از hydration. یک کنترل در هر خانه: خانه‌ای با چند ابزارک به حالتِ ورود و خروج نیاز دارد که این گرید ندارد.",
+          "en-US":
+            "A cell whose content is a control — the actions column. A grid is one Tab stop from the outside and a button brings its own, so a plain «Cell» with a button in it serves one extra stop PER ROW. This part writes ARIA's widget-focus model: the «td» stays at minus one permanently and the roving zero reaches the control through a render prop, so it is right in the first served byte rather than after hydration. One control per cell: a cell with several widgets needs an enter-and-leave mode this grid does not implement.",
+        },
+      },
+      {
         name: "ResizableTableContainer",
         description: {
           "fa-IR":
@@ -445,6 +490,17 @@ export const EXAMPLES: ComponentExamples = {
           "A real table does not have bare-string cells. The status column is written with Badge rather than coloured text: colour alone encodes the meaning in a channel a substantial share of readers do not receive the same way, while a badge carries the WORD — legible in greyscale, under a colour filter, and read aloud in document order. Badge deliberately carries no role=status, so three badges at first paint are three announcements in place rather than three interruptions. The amount column stays plain: a number is not a state, and every digit in it goes through formatNumber.",
       },
       render: StatusCellsExample,
+    },
+    {
+      id: "actions",
+      title: { "fa-IR": "ستون کنش‌ها", "en-US": "An actions column" },
+      description: {
+        "fa-IR":
+          "پرتکرارترین ستون هر جدول، و تا پیش از «TableWidgetCell» نمی‌شد درست نوشتش. گرید از بیرون یک ایست «Tab» است و دکمه ایستِ خودش را می‌آورد، پس «Cell» ساده با یک «IconButton» در آن، روی سه ردیف چهار ایستِ صفر در بایت‌های سرو‌شده می‌گذارد و این عدد با داده بزرگ می‌شود. دروازه هم آن را گزارش نمی‌کند: «composite-tab-stop» کف را می‌سنجد، یعنی وقتی هیچ ایستی نباشد شلیک می‌کند، و اینجا ایست‌ها زیادند نه کم. این جزء مدل «widget focus» را می‌نویسد — خانه منفی‌یک می‌ماند و صفرِ گردان از راه «render prop» به دکمه می‌رسد.",
+        "en-US":
+          "The most-copied column in any table, and until «TableWidgetCell» it could not be written correctly. A grid is one Tab stop from the outside and a button brings its own, so a plain «Cell» holding an «IconButton» serves four «tabindex=0» across three rows in the static markup — and that count grows with the data. The gate does not report it either: «composite-tab-stop» grades a FLOOR, firing when a composite has NO stop, and this one has too many. This part writes ARIA's widget-focus model — the cell stays at minus one and the roving zero reaches the button through a render prop.",
+      },
+      render: ActionsExample,
     },
     {
       id: "empty",

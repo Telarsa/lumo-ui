@@ -384,6 +384,32 @@ describe("disabled", () => {
     expect(disabled).toBeDefined();
     expect(disabled!.getAttribute("class")).toContain("data-disabled:");
   });
+
+  /**
+   * Select gained a `Field.Root` on 12 Aug 2026, and with it the wrapper's
+   * `data-disabled:opacity-60`. Base UI writes `data-disabled` on BOTH the
+   * field root and the trigger, so the trigger's own `data-disabled:opacity-50`
+   * — correct while there was no wrapper above it — became a SECOND dimming
+   * multiplying to 0.30. form.tsx's header states the rule; this is the
+   * assertion that keeps it, and it is written as a COUNT rather than as a
+   * check on one element, because restating the opacity anywhere else in the
+   * subtree would fail it the same way.
+   */
+  it("select: the disabled dimming is stated exactly once in the subtree", () => {
+    const { container } = render(
+      <Select placeholder="یک شهر انتخاب کنید" isDisabled>
+        <SelectTrigger />
+      </Select>,
+    );
+    const trigger = container.querySelector('[role="combobox"]')!;
+    expect(trigger.hasAttribute("data-disabled")).toBe(true);
+    expectStyledBy(trigger, "data-disabled");
+
+    const dimmed = [...container.querySelectorAll("[class]")].filter((el) =>
+      (el.getAttribute("class") ?? "").split(/\s+/).some((t) => /^data-disabled:opacity-/.test(t)),
+    );
+    expect(dimmed.map((el) => el.tagName.toLowerCase())).toEqual(["div"]);
+  });
 });
 
 describe("invalid", () => {
@@ -418,6 +444,24 @@ describe("invalid", () => {
     // So the hop: named group on the root, group rule on the input.
     expect(root.getAttribute("class")).toContain("group/field");
     expect(input.getAttribute("class")).toContain("group-data-invalid/field:border-critical");
+  });
+
+  /**
+   * Select, which had NO `Field.Root` until 12 Aug 2026 and therefore no
+   * validity of any kind — neither the attribute nor a rule keyed to it. Unlike
+   * NumberField above, no group hop is needed: `Select.Trigger` spreads the
+   * field's state into its own, so the attribute lands on the button the rule
+   * styles and the spelling matches `inputVariants`.
+   */
+  it("select: validity reaches the trigger itself, no group hop", () => {
+    const { container } = render(
+      <Select placeholder="یک شهر انتخاب کنید" errorMessage="خطا">
+        <SelectTrigger />
+      </Select>,
+    );
+    const trigger = container.querySelector('[role="combobox"]')!;
+    expectStyledBy(trigger, "data-invalid");
+    expect(trigger.getAttribute("class")).toContain("data-invalid:border-critical");
   });
 });
 

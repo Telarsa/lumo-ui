@@ -40,6 +40,14 @@ const t = {
   shahriar: { "fa-IR": "شهریار", "en-US": "Shahriar" },
   kashan: { "fa-IR": "کاشان", "en-US": "Kashan" },
   najafabad: { "fa-IR": "نجف‌آباد", "en-US": "Najafabad" },
+  cityHelp: {
+    "fa-IR": "شهری که سفارش به آن ارسال می‌شود.",
+    "en-US": "The city the order ships to.",
+  },
+  cityRequired: {
+    "fa-IR": "برای ادامه یک شهر انتخاب کنید.",
+    "en-US": "Choose a city to continue.",
+  },
 } satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
@@ -74,6 +82,40 @@ function GroupedExample(l: Locale) {
           <SelectItem id="ksh">{t.kashan[l]}</SelectItem>
           <SelectItem id="njf">{t.najafabad[l]}</SelectItem>
         </SelectGroup>
+      </SelectPopover>
+    </Select>
+  );
+}
+
+function DescriptionExample(l: Locale) {
+  return (
+    <Select className="max-w-xs" placeholder={t.selectCity[l]} description={t.cityHelp[l]}>
+      <Label>{t.city[l]}</Label>
+      <SelectTrigger />
+      <SelectPopover>
+        <SelectItem id="thr">{t.tehran[l]}</SelectItem>
+        <SelectItem id="isf">{t.isfahan[l]}</SelectItem>
+        <SelectItem id="yzd">{t.yazd[l]}</SelectItem>
+      </SelectPopover>
+    </Select>
+  );
+}
+
+function InvalidExample(l: Locale) {
+  return (
+    <Select
+      className="max-w-xs"
+      placeholder={t.selectCity[l]}
+      description={t.cityHelp[l]}
+      errorMessage={t.cityRequired[l]}
+      isRequired
+    >
+      <Label>{t.city[l]}</Label>
+      <SelectTrigger />
+      <SelectPopover>
+        <SelectItem id="thr">{t.tehran[l]}</SelectItem>
+        <SelectItem id="isf">{t.isfahan[l]}</SelectItem>
+        <SelectItem id="yzd">{t.yazd[l]}</SelectItem>
       </SelectPopover>
     </Select>
   );
@@ -146,8 +188,10 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "Select",
         description: {
-          "fa-IR": "ریشهٔ فیلد؛ جای‌نما اجباری است چون موتور هیچ رشته‌ای ندارد و کنترل بدون آن خالی می‌ماند.",
-          "en-US": "The field root; the placeholder is required because the engine ships no string and the control renders empty without one.",
+          "fa-IR":
+            "ریشهٔ فیلد؛ جای‌نما اجباری است چون موتور هیچ رشته‌ای ندارد و کنترل بدون آن خالی می‌ماند. متن راهنما و پیام خطا را هم همین بخش می‌سازد و به کنترل وصل می‌کند.",
+          "en-US":
+            "The field root; the placeholder is required because the engine ships no string and the control renders empty without one. It also renders the description and the error, and wires both to the control.",
         },
       },
       {
@@ -214,6 +258,28 @@ export const EXAMPLES: ComponentExamples = {
           "Each group carries an announced name, so a listener is told when they arrow past a province boundary; the rule between them is visual only.",
       },
       render: GroupedExample,
+    },
+    {
+      id: "description",
+      title: { "fa-IR": "متن راهنما", "en-US": "Help text" },
+      description: {
+        "fa-IR":
+          "متن راهنما هنگام رندر به aria-describedby کنترل وصل می‌شود، نه پس از هیدریت شدن؛ پس خوانندهٔ صفحهٔ ایستا هم آن را می‌شنود.",
+        "en-US":
+          "The help text is wired into the control's aria-describedby during render, not after hydration — so a reader of the static page hears it too.",
+      },
+      render: DescriptionExample,
+    },
+    {
+      id: "invalid",
+      title: { "fa-IR": "خطای اعتبارسنجی", "en-US": "Validation error" },
+      description: {
+        "fa-IR":
+          "دادن errorMessage خودِ فیلد را نامعتبر می‌کند؛ کنترل در همان بایت نخست aria-invalid می‌گیرد و پیام و متن راهنما به همان ترتیب خوانده می‌شوند. برای وارونه کردن این استنتاج، isInvalid را صریح بدهید.",
+        "en-US":
+          "Supplying errorMessage marks the field invalid on its own; the control carries aria-invalid in the first byte, and the message and the help text are announced in that order. Pass isInvalid to override the inference.",
+      },
+      render: InvalidExample,
     },
     {
       id: "disabled-option",

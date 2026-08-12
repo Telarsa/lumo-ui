@@ -310,9 +310,43 @@ async function loadAndValidate(
   }
 
   const moduleName = spec.meta.sourceFile ?? `${slug}.tsx`;
-  const moduleParts = (exported.byModule.get(moduleName) ?? []).filter((n) =>
-    /^[A-Z]/.test(n),
-  );
+  /*
+   * ── THE ONE BRANCH HERE THAT USED TO FAIL QUIETLY ─────────────────────────
+   *
+   * This read `?? []`. Two lines above, `assertKnownParts` THROWS when a tree
+   * names a part the barrel does not export — "a tree that lies is worse than
+   * no tree". This did the opposite for the same class of problem: a module the
+   * barrel never mentions produced an empty parts list, and the component page
+   * rendered as though the component genuinely had no exported parts.
+   *
+   * Both causes are worth failing on:
+   *
+   *   · The component is not re-exported from `index.ts` at all — it is
+   *     unreachable to anyone importing `@lumo-ui/ui`, which is a real defect
+   *     and not a documentation gap.
+   *
+   *   · The barrel exports it in a form `parseExportedNames` cannot read. That
+   *     parser matches `export { … } from "./module"` and nothing else; an
+   *     `export *` or a direct `export const` in the barrel is invisible to it.
+   *     Measured at the time of writing: the barrel contains ZERO of either, and
+   *     `examples-loader.test.ts` now pins that, so the blind spot cannot open
+   *     silently underneath this.
+   *
+   * Distinguishing the two from here is not possible and not necessary — the
+   * message names both, because the fix for either is in the same file.
+   */
+  const moduleExports = exported.byModule.get(moduleName);
+  if (moduleExports === undefined) {
+    throw new Error(
+      `[examples] ${file}: nothing in packages/ui/src/index.ts re-exports ` +
+        `"./${moduleName}". Either the component is not exported from the ` +
+        `barrel — in which case no consumer can import it — or the barrel ` +
+        `exports it in a form parseExportedNames cannot read (it matches ` +
+        `\`export { … } from "./module"\` and nothing else). Fix the barrel, or ` +
+        `set meta.sourceFile if the parts live in a differently-named module.`,
+    );
+  }
+  const moduleParts = moduleExports.filter((n) => /^[A-Z]/.test(n));
 
   return {
     slug,

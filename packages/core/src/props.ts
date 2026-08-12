@@ -817,6 +817,43 @@ export interface ButtonPropsBase
   /** Whether the button is disabled. */
   isDisabled?: boolean;
   /**
+   * The button's position in the sequential tab order.
+   *
+   * ── WHY A PROP THE REACT ARIA API NEVER DECLARED IS ADDED HERE ────────────
+   *
+   * `FocusableDOMProps` above offers `excludeFromTabOrder`, and its own comment
+   * records the finding that under Base UI it is unreachable — `tabIndex={-1}`
+   * reaches the element directly and is what the flag ever meant. That covers
+   * REMOVING a button from the tab order. It cannot express the other half of a
+   * roving tabindex, which is putting the `0` BACK on exactly one member.
+   *
+   * A `role="grid"` needs both halves on the same control. `table.tsx` puts the
+   * grid's single Tab stop on the widget inside a cell rather than on the cell
+   * (ARIA's widget-focus model, and the reason `TableSelectionCell` exists), so
+   * the control in the active cell must serve `tabindex="0"` and the same
+   * control in every other row must serve `-1` — in the FIRST BYTE, because a
+   * stop elected in a layout effect does not exist on the server. Measured
+   * 12 Aug 2026 on a three-row grid with one `IconButton` per row: the served
+   * bytes carried FOUR `tabindex="0"` — the active cell plus one per button,
+   * since Base UI's `Button` writes an explicit `tabindex="0"` of its own
+   * rather than relying on a `<button>`'s default tabbability.
+   *
+   * The value reaches the element: `button.tsx` leaves `tabIndex` in `...rest`
+   * and spreads `rest` AFTER its own `attr("tabIndex", …)`, so a caller's value
+   * wins over `excludeFromTabOrder`, and Base UI resolves a conflict with its
+   * own default in the caller's favour. Verified by rendering — `<IconButton
+   * tabIndex={-1}>` emits `tabindex="-1"` and no `tabindex="0"`.
+   *
+   * Declared on the BUTTON shape alone and not on `FocusableDOMProps`, which
+   * would hand it to every focusable control in the library at once. Several of
+   * those destructure their props rather than spreading them, so a blanket
+   * declaration would mint accepted-and-unreachable props — the exact defect
+   * `isPending` below exists to document. `CheckboxProps` still needs the same
+   * one-line fix and still has the cast in `table.tsx` recording that it does;
+   * widening this shape is not evidence about that one.
+   */
+  tabIndex?: number | undefined;
+  /**
    * TYPE CARRIER, NOT A PROP — `never`, so passing a value is a compile error.
    *
    * ── IT READ "WHETHER THE BUTTON IS IN A PENDING STATE" AND DID NOTHING ────

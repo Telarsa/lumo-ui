@@ -695,10 +695,12 @@ export function CalendarClosedDaysIsland({
  *
  * Every user-visible string still arrives as a prop, in both locales.
  */
+import { Pencil } from "lucide-react";
 import {
   Cell,
   Column,
   ColumnResizer,
+  IconButton,
   ResizableTableContainer,
   Row,
   Table,
@@ -706,6 +708,7 @@ import {
   TableHeader,
   TableSelectAllColumn,
   TableSelectionCell,
+  TableWidgetCell,
   useLumoTable,
 } from "@lumo-ui/ui";
 
@@ -767,6 +770,88 @@ export function TableSelectionIsland({
             <TableSelectionCell label={selectRowLabel} />
             <Cell isRowHeader>{row.original.customer}</Cell>
             <Cell>{row.original.city}</Cell>
+          </Row>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+/**
+ * The actions column, and the ONLY reason it is an island.
+ *
+ * Nothing here holds state — no `useLumoTable`, no selection, no sorting. It is
+ * an island because `TableWidgetCell` takes a RENDER PROP, and a function
+ * cannot cross the RSC boundary into a `"use client"` component. Measured on
+ * this repository's own build, with the example written as plain markup in
+ * `examples/table.tsx`:
+ *
+ *     Error occurred prerendering page "/en/components/table"
+ *     Error: Functions cannot be passed directly to Client Components unless
+ *     you explicitly expose it by marking it with "use server".
+ *       {children: function children}
+ *
+ * That is the cost of the design and it is worth stating where someone will
+ * meet it: an actions column puts its call site in a client module. The failure
+ * is a BUILD ERROR naming the prop, not a wrong render — which is the trade the
+ * component header argues for against `cloneElement`, whose failure on a
+ * wrapped control would have been silent.
+ *
+ * The buttons carry no handler on purpose: this page is a static export, and a
+ * function prop is exactly what this island exists to keep out of the server
+ * module. The SHAPE is the subject — one Tab stop for the whole grid, with the
+ * stop on the button rather than on the cell around it.
+ */
+export interface TableActionsIslandProps {
+  locale: Locale;
+  /** Announced name of the grid. */
+  label: string;
+  customerHeader: string;
+  cityHeader: string;
+  /** Announced name of the actions COLUMN — a header, not a control. */
+  actionsHeader: string;
+  /** Announced name of ONE row's edit button. Required: an icon is not a name. */
+  editLabel: string;
+  rows: readonly OrderDemoRow[];
+}
+
+export function TableActionsIsland({
+  locale,
+  label,
+  customerHeader,
+  cityHeader,
+  actionsHeader,
+  editLabel,
+  rows,
+}: TableActionsIslandProps) {
+  return (
+    <Table label={label} locale={locale} className="max-w-xl">
+      <TableHeader>
+        <Column id="customer" isRowHeader>
+          {customerHeader}
+        </Column>
+        <Column id="city">{cityHeader}</Column>
+        <Column id="actions">{actionsHeader}</Column>
+      </TableHeader>
+      <TableBody>
+        {rows.map((row) => (
+          <Row key={row.id} id={row.id}>
+            <Cell isRowHeader>{row.customer}</Cell>
+            <Cell>{row.city}</Cell>
+            {/*
+             * ONE control, and the tab index comes from the cell. A second
+             * button here would share the one stop and strand itself: a cell
+             * holding several widgets needs an enter-and-leave mode this grid
+             * does not implement, so a second action belongs behind a menu on
+             * this same trigger.
+             */}
+            <TableWidgetCell>
+              {(tabIndex) => (
+                <IconButton variant="ghost" size="sm" label={editLabel} tabIndex={tabIndex}>
+                  <Pencil aria-hidden="true" />
+                </IconButton>
+              )}
+            </TableWidgetCell>
           </Row>
         ))}
       </TableBody>

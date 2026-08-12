@@ -19,7 +19,18 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { Cell, Column, Row, Table, TableBody, TableHeader, localeSortFn, useLumoTable } from "./table.tsx";
+import {
+  Cell,
+  Column,
+  Row,
+  Table,
+  TableBody,
+  TableHeader,
+  TableWidgetCell,
+  localeSortFn,
+  useLumoTable,
+} from "./table.tsx";
+import { IconButton } from "./button.tsx";
 import { gridArrow } from "./table.variants.ts";
 import type { Locale } from "@lumo-ui/core";
 
@@ -315,5 +326,214 @@ describe("a column that renders nothing does not consume index 0", () => {
     expect(renderToStaticMarkup(<Conditional withSelection />)).toContain(
       'data-col-index="0"',
     );
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * A CONTROL INSIDE A CELL
+ *
+ * The actions column — one icon button per row — is the most-copied table
+ * pattern there is, and until `TableWidgetCell` shipped it could not be written
+ * correctly with the parts this file exports. The defect is graded on the
+ * SERVED BYTES because that is the only tier it exists in: `role="grid"` is one
+ * Tab stop from the outside, a button carries its own, and nothing in the gate
+ * grades a CEILING — `composite-tab-stop` fires on a composite with NO stop and
+ * a grid with N+1 passes it correctly.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function WithActions({
+  widget,
+  locale = "fa-IR",
+}: {
+  /** `false` reproduces the composition that was available before this part. */
+  widget: boolean;
+  locale?: Locale;
+}) {
+  const table = useLumoTable({
+    locale,
+    data: PEOPLE,
+    columns: [
+      { id: "name", accessorKey: "name" },
+      { id: "city", accessorKey: "city" },
+    ],
+  });
+  return (
+    <Table label="افراد" locale={locale} table={table}>
+      <TableHeader>
+        <Column id="name" isRowHeader>
+          نام
+        </Column>
+        <Column id="city">شهر</Column>
+        <Column id="actions">کنش‌ها</Column>
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <Row key={row.id} row={row}>
+            <Cell>{String(row.getValue("name"))}</Cell>
+            <Cell>{String(row.getValue("city"))}</Cell>
+            {widget ? (
+              <TableWidgetCell>
+                {(tabIndex) => <IconButton label="ویرایش" tabIndex={tabIndex} />}
+              </TableWidgetCell>
+            ) : (
+              <Cell>
+                <IconButton label="ویرایش" />
+              </Cell>
+            )}
+          </Row>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+/**
+ * Everything a browser would stop on when Tab is pressed.
+ *
+ * Both halves are load-bearing. `tabindex="0"` is the explicit stop, and Base
+ * UI's `Button` writes one of its own — but a `<button>` with NO tabindex is
+ * tabbable by default, so counting only the attribute would score a bare button
+ * as zero and report a broken grid as perfect.
+ */
+function tabStops(html: string) {
+  return (
+    [...html.matchAll(/tabindex="0"/g)].length +
+    [...html.matchAll(/<button(?![^>]*tabindex)[^>]*>/g)].length
+  );
+}
+
+describe("TableWidgetCell — the actions column that could not be written", () => {
+  it("REPRODUCES the defect: a plain Cell with a button is one stop PER ROW", () => {
+    // Not a regression guard on `Cell` — `Cell` is correct, it is the cell-focus
+    // model and a cell with text in it is the thing that takes focus. This is
+    // the measurement that says why the other part has to exist, kept next to
+    // the fix so the number cannot quietly become 1 and make the fix look
+    // unnecessary.
+    const html = renderToStaticMarkup(<WithActions widget={false} />);
+    expect(tabStops(html)).toBe(1 + PEOPLE.length);
+  });
+
+  it("serves EXACTLY ONE tab stop for the whole grid", () => {
+    const html = renderToStaticMarkup(<WithActions widget />);
+    expect(tabStops(html)).toBe(1);
+  });
+
+  it("pins every widget cell to -1 and gives the stop to the control", () => {
+    // Row 1, column 2 is the actions cell of the first row. The grid's stop
+    // starts at {0,0}, so this cell and its button are both -1 here — the point
+    // is that the CELL is -1 unconditionally.
+    const html = renderToStaticMarkup(<WithActions widget />);
+    expect([...html.matchAll(/<td[^>]*data-lumo-widget-cell[^>]*>/g)]).toHaveLength(
+      PEOPLE.length,
+    );
+    for (const [cell] of html.matchAll(/<td[^>]*data-lumo-widget-cell[^>]*>/g)) {
+      expect(cell).toContain('tabindex="-1"');
+    }
+    // The button is written by the caller and gets its index from the render
+    // prop, so every one of them carries the attribute EXPLICITLY. A button
+    // with no tabindex would be the defect above wearing the new part's name.
+    expect([...html.matchAll(/<button[^>]*tabindex="-1"[^>]*>/g)]).toHaveLength(
+      PEOPLE.length,
+    );
+  });
+
+  it("keeps the coordinates on the CELL, so the arrows still find it", () => {
+    const html = renderToStaticMarkup(<WithActions widget />);
+    // Row 1 of the body, third column. If the coordinates moved to the button
+    // the arrow keys would walk off the end of the column instead.
+    expect(html).toMatch(/<td[^>]*data-row-index="1"[^>]*data-col-index="2"/);
+  });
+});
+
+describe("TableWidgetCell — the keyboard", () => {
+  it("Tab reaches the control exactly once, and it is the CONTROL", () => {
+    const { container } = render(<WithActions widget />);
+    const stops = container.querySelectorAll('[tabindex="0"]');
+    expect(stops).toHaveLength(1);
+    // {0,0} is the first column header, before any arrow key.
+    expect(stops[0]?.getAttribute("data-col-index")).toBe("0");
+
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    // Down into the body, then ArrowLeft twice — which on a Persian page is
+    // "two columns forward" — lands on the actions cell of row 1.
+    fireEvent.keyDown(grid, { key: "ArrowDown" });
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+
+    const after = container.querySelectorAll('[tabindex="0"]');
+    expect(after).toHaveLength(1);
+    expect(after[0]?.tagName).toBe("BUTTON");
+    expect(after[0]?.getAttribute("aria-label")).toBe("ویرایش");
+  });
+
+  it("the CELL stays -1 even when it is the active cell", () => {
+    // The pin is unconditional, and this is the assertion that says so. Every
+    // other keyboard test here would still pass with a cell that roved to 0
+    // alongside its button, because the grid opens on {0,0} — the first column
+    // header — so no widget cell is ever active in the served bytes.
+    const { container } = render(<WithActions widget />);
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    fireEvent.keyDown(grid, { key: "ArrowDown" });
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+    const cell = grid.querySelector('[data-row-index="1"][data-col-index="2"]');
+    expect(cell?.tagName).toBe("TD");
+    expect(cell?.getAttribute("tabindex")).toBe("-1");
+    expect(cell?.querySelector("button")?.getAttribute("tabindex")).toBe("0");
+  });
+
+  it("and the arrow keys are still direction-correct in RTL", () => {
+    const { container } = render(<WithActions widget />);
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    const at = (row: number, col: number) =>
+      grid.querySelector(`[data-row-index="${row}"][data-col-index="${col}"]`);
+
+    fireEvent.keyDown(grid, { key: "ArrowDown" });
+    expect(at(1, 0)?.getAttribute("tabindex")).toBe("0");
+    // ArrowRight RETREATS under rtl, so from column 0 it does nothing.
+    fireEvent.keyDown(grid, { key: "ArrowRight" });
+    expect(at(1, 0)?.getAttribute("tabindex")).toBe("0");
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+    expect(at(1, 1)?.getAttribute("tabindex")).toBe("0");
+  });
+
+  it("the LTR mirror, so the assertion above is not vacuous", () => {
+    const { container } = render(<WithActions widget locale="en-US" />);
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    fireEvent.keyDown(grid, { key: "ArrowDown" });
+    fireEvent.keyDown(grid, { key: "ArrowRight" });
+    fireEvent.keyDown(grid, { key: "ArrowRight" });
+    const stop = container.querySelector('[tabindex="0"]') as HTMLElement;
+    expect(stop.tagName).toBe("BUTTON");
+    expect(stop.closest("td")?.getAttribute("data-col-index")).toBe("2");
+  });
+
+  it("arrow navigation puts DOM FOCUS on the control, not on the cell", () => {
+    // The half a `tabindex` alone does not buy: `.focus()` on a `tabindex="-1"`
+    // cell succeeds, and leaves the reader standing on a `<td>` while the tab
+    // stop sits on a button they cannot press.
+    const { container } = render(<WithActions widget />);
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    fireEvent.keyDown(grid, { key: "ArrowDown" });
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+    fireEvent.keyDown(grid, { key: "ArrowLeft" });
+    expect(document.activeElement?.tagName).toBe("BUTTON");
+    expect(document.activeElement?.getAttribute("aria-label")).toBe("ویرایش");
+  });
+
+  it("and on the CELL for an ordinary cell, which is the other focus model", () => {
+    const { container } = render(<WithActions widget />);
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    fireEvent.keyDown(grid, { key: "ArrowDown" });
+    expect(document.activeElement?.tagName).toBe("TH");
+  });
+
+  it("does not swallow Enter or Space, so the control stays operable", () => {
+    // `gridArrow.step` returns null for both, so `Table` never calls
+    // `preventDefault` — which is what would stop a native button activating.
+    const { container } = render(<WithActions widget />);
+    const button = container.querySelector("button") as HTMLElement;
+    expect(fireEvent.keyDown(button, { key: "Enter" })).toBe(true);
+    expect(fireEvent.keyDown(button, { key: " " })).toBe(true);
   });
 });
