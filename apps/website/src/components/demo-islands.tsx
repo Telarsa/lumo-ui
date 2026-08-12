@@ -2614,6 +2614,13 @@ export interface EventCalendarIslandProps {
   eventsWord: string;
   /** The word after a count in the overflow chip — «رویداد دیگر», "more". */
   moreWord: string;
+  /**
+   * The word marking `todayDay` — «امروز», "Today".
+   *
+   * Today is painted three ways in the grid and, until this string existed, was
+   * announced in none of them. See `EventCalendarStrings.todayLabel`.
+   */
+  todayWord: string;
   /** Plain data all the way down. `YYYY-MM-DD` or `YYYY-MM-DDTHH:mm`. */
   events: readonly EventCalendarEventInput[];
   /** `YYYY-MM-DD`. FIXED — a prerendered grid must not depend on a clock. */
@@ -2646,6 +2653,7 @@ export function EventCalendarIsland({
   separator,
   eventsWord,
   moreWord,
+  todayWord,
   events,
   focusedDay,
   todayDay,
@@ -2671,6 +2679,7 @@ export function EventCalendarIsland({
         empty,
         continued,
         dayLabel: (date, count) => `${date}${separator}${count} ${eventsWord}`,
+        todayLabel: (day) => `${todayWord}${separator}${day}`,
         eventLabel: (title, when) => `${title}${separator}${when}`,
         range: (from, to) => `${from} ${joinWord} ${to}`,
         moreEvents: (count) => `${count} ${moreWord}`,

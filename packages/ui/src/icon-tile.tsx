@@ -28,6 +28,23 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  * tokens. Splitting them into two props is how a tile ends up with an
  * accessible-looking background and a foreground nobody adjusted — the pairs
  * here are the ones `theme.css` guarantees contrast for.
+ *
+ * ── AND ONE OF THEM WAS NOT A THEME TOKEN AT ALL ────────────────────────────
+ *
+ * The fourth tone was spelled `warning`, and `bg-warning/10 text-warning` are
+ * classes Tailwind cannot resolve: `theme.css` publishes `--color-caution` and
+ * there is no `--color-warning` anywhere in `packages/theme`, which is why every
+ * other component in the library — `alert.tsx`, `toast.tsx`, `avatar.tsx`,
+ * `progress.tsx`, `event-calendar.variants.ts` — spells it `caution`. So
+ * `<IconTile tone="warning">` rendered an UNSTYLED tile: no tint, no colour,
+ * the icon inheriting whatever was around it. It type-checked (the variant key
+ * is just a string), it rendered, and it shipped to the docs site, where
+ * `apps/website/src/examples/icon-tile.tsx` demonstrates it beside three tones
+ * that do work.
+ *
+ * Renamed rather than given a new token, because a fifth semantic colour is not
+ * what was wanted here — the caution ramp already exists and is already
+ * contrast-checked.
  */
 
 export const iconTileVariants = cva(
@@ -39,7 +56,7 @@ export const iconTileVariants = cva(
         accent: "bg-accent/10 text-accent",
         positive: "bg-positive/10 text-positive",
         critical: "bg-critical/10 text-critical",
-        warning: "bg-warning/10 text-warning",
+        caution: "bg-caution/10 text-caution",
         solid: "bg-accent text-accent-fg",
       },
       size: {

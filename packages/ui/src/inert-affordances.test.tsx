@@ -35,16 +35,19 @@
  *     `menuitemradio` inside a named `role="group"`.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 
 import { Button } from "./button.tsx";
+import { Dialog, DialogHeading, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
+import { Drawer, DrawerOverlay } from "./drawer.tsx";
 import { Item, ItemTitle } from "./item.tsx";
 import { itemVariants } from "./item.variants.ts";
 import { linkVariants } from "./link.tsx";
 import { Menu, MenuPopover, MenuRadioGroup, MenuRadioItem, MenuTrigger } from "./menu.tsx";
 import { paginationItemVariants } from "./pagination.variants.ts";
 import { Popover, PopoverDescription, PopoverTrigger } from "./popover.tsx";
+import { toggleButtonVariants } from "./toggle-group.variants.ts";
 
 afterEach(cleanup);
 
@@ -317,5 +320,171 @@ describe("Popover's isKeyboardDismissDisabled", () => {
       </PopoverTrigger>,
     );
     expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The same prop, on the two overlays that still swallowed it
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * `dialog.tsx` and `drawer.tsx` carried the identical defect one batch longer:
+ * the prop was declared on `ModalOverlayPropsBase`, i.e. on FOUR parts —
+ * `DialogOverlay`, `DialogModal`, `DrawerOverlay`, `Drawer` — and none of them
+ * renders the `Dialog.Root` that owns dismissal. It is now on `DialogTrigger`,
+ * which is the state owner for dialogs and drawers alike.
+ *
+ * Unlike the popover pair above, these assertions are BEHAVIOURAL rather than
+ * structural: Escape is a keydown, and jsdom dispatches keydowns faithfully —
+ * unlike `:active`, which it can never model. So each case is a comparison
+ * against the same tree WITHOUT the prop, which is the arm that has to keep
+ * closing. A test that only asserted "still open with the prop" would pass
+ * against a dialog that Escape had never closed in the first place.
+ */
+function DialogUnderTest(props: { isKeyboardDismissDisabled?: boolean; onOpenChange?: () => void }) {
+  return (
+    <DialogTrigger defaultOpen {...props}>
+      <Button>ویرایش</Button>
+      <DialogOverlay>
+        <DialogModal>
+          <Dialog closeLabel="بستن">
+            <DialogHeading>ویرایش پروفایل</DialogHeading>
+          </Dialog>
+        </DialogModal>
+      </DialogOverlay>
+    </DialogTrigger>
+  );
+}
+
+function DrawerUnderTest(props: { isKeyboardDismissDisabled?: boolean }) {
+  return (
+    <DialogTrigger defaultOpen {...props}>
+      <Button>منو</Button>
+      <DrawerOverlay>
+        <Drawer side="start">
+          <Dialog closeLabel="بستن">
+            <DialogHeading>فهرست</DialogHeading>
+          </Dialog>
+        </Drawer>
+      </DrawerOverlay>
+    </DialogTrigger>
+  );
+}
+
+const pressEscape = () => fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
+
+describe("Dialog and Drawer's isKeyboardDismissDisabled", () => {
+  it("is gone from all four overlay parts, so passing it there does not compile", () => {
+    /*
+     * The types are the assertions. `@ts-expect-error` FAILS the build if any
+     * of these becomes assignable again — which is what makes this a test and
+     * not a comment. The body only pins that the runtime still renders.
+     */
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>ویرایش</Button>
+        {/* @ts-expect-error dismissal lives on DialogTrigger, not on the overlay */}
+        <DialogOverlay isKeyboardDismissDisabled>
+          {/* @ts-expect-error dismissal lives on DialogTrigger, not on the panel */}
+          <DialogModal isKeyboardDismissDisabled>
+            <Dialog closeLabel="بستن">
+              <DialogHeading>عنوان</DialogHeading>
+            </Dialog>
+          </DialogModal>
+        </DialogOverlay>
+      </DialogTrigger>,
+    );
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    cleanup();
+
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>منو</Button>
+        {/* @ts-expect-error dismissal lives on DialogTrigger, not on the overlay */}
+        <DrawerOverlay isKeyboardDismissDisabled>
+          {/* @ts-expect-error dismissal lives on DialogTrigger, not on the panel */}
+          <Drawer side="start" isKeyboardDismissDisabled>
+            <Dialog closeLabel="بستن">
+              <DialogHeading>فهرست</DialogHeading>
+            </Dialog>
+          </Drawer>
+        </DrawerOverlay>
+      </DialogTrigger>,
+    );
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+
+  it("a dialog without it still closes on Escape — the arm that proves the other one", () => {
+    render(<DialogUnderTest />);
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    pressEscape();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+
+  it("a dialog with it survives Escape", () => {
+    render(<DialogUnderTest isKeyboardDismissDisabled />);
+    pressEscape();
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+
+  it("a drawer behaves the same, because its state owner is the same component", () => {
+    // And `close-watcher` — the Android back gesture reason — cannot arrive on
+    // this path: `CloseWatcher` is constructed only in `drawer/root/DrawerRoot`,
+    // which this component deliberately does not render. See drawer.tsx.
+    render(<DrawerUnderTest />);
+    pressEscape();
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    cleanup();
+
+    render(<DrawerUnderTest isKeyboardDismissDisabled />);
+    pressEscape();
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+
+  it("does not tell a controlled caller it closed when it did not", () => {
+    /*
+     * The half-fix worth guarding: cancelling Base UI's own handling while
+     * still forwarding `onOpenChange(false)` would leave a controlled dialog
+     * with `isOpen={false}` in the caller's state and an open dialog on screen.
+     */
+    const onOpenChange = vi.fn();
+    render(<DialogUnderTest isKeyboardDismissDisabled onOpenChange={onOpenChange} />);
+    pressEscape();
+    expect(onOpenChange).not.toHaveBeenCalled();
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+  });
+
+  it("intercepts Escape only — the ✕ closes a dialog that refuses the key", () => {
+    // The reason is `close-press`, a different member of the union measured in
+    // dialog.tsx's header, so the cancel above must not touch it.
+    const { getByRole } = render(<DialogUnderTest isKeyboardDismissDisabled />);
+    fireEvent.click(getByRole("button", { name: "بستن" }));
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// The press that the engine cancels
+// ═══════════════════════════════════════════════════════════════════════════
+
+describe("toggle-group — the one press in the toggle family that answers nothing", () => {
+  it("has a press treatment that is not a copy of its hover", () => {
+    /*
+     * `toggle.variants.ts` declines `active:` because a toggle's press changes
+     * its state. Inside a group with `disallowEmptySelection` the un-press is
+     * CANCELLED (`details.cancel()`), so the state does not change and on touch
+     * — no `:hover` — the item reads as dead. jsdom models no pointer, so this
+     * is structural for the reason `state-vocabulary.test.tsx` states.
+     */
+    const classes = toggleButtonVariants();
+    const active = utilities(classes, "active:");
+    expect(active, "the cancelled press produces nothing at all").not.toBe("");
+    expect(active, "the press is a copy of the hover").not.toBe(utilities(classes, "hover:"));
+  });
+
+  it("does not nudge, because the items are welded into one clipped strip", () => {
+    // The group is `overflow-hidden`, so a `translate-y-px` on one item clips
+    // against the group's own edge and opens a gap beside its neighbours.
+    expect(toggleButtonVariants()).not.toContain("translate-y");
   });
 });

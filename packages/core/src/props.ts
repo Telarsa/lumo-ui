@@ -643,6 +643,21 @@ export interface DialogPropsBase
  * Several of these are ACCEPTED AND UNREACHABLE under Base UI and each
  * component's header names which; they are kept because removing a prop is an
  * API change.
+ *
+ * ── ONE OF THEM LEFT, AND IT LEFT BECAUSE IT WORKS SOMEWHERE ELSE ───────────
+ *
+ * `isKeyboardDismissDisabled` was declared here and was inert on all four
+ * consumers of this type — `DialogOverlay`, `DialogModal`, `DrawerOverlay`,
+ * `Drawer`. It is gone rather than kept, and the reason is the one
+ * `PopoverTrigger` records: dismissal under Base UI lives on the ROOT, and none
+ * of those four parts renders it. `DialogTrigger` does, and that is where the
+ * prop now is — for dialogs and drawers alike, since a drawer's state owner is
+ * `DialogTrigger` too. Passing it to an overlay or a panel is now a compile
+ * error, which is what `time-field.tsx` set the precedent for: absent is a
+ * failure at the call site, accepted-and-ignored is a bug report six months on.
+ *
+ * Those four are the ONLY consumers of this interface — checked before the
+ * removal, not after.
  */
 export interface ModalOverlayPropsBase
   extends OverlayTriggerProps,
@@ -651,8 +666,6 @@ export interface ModalOverlayPropsBase
     GlobalDOMAttributes<HTMLDivElement> {
   /** Whether pressing outside the overlay closes it. */
   isDismissable?: boolean;
-  /** Whether Escape is prevented from closing the overlay. */
-  isKeyboardDismissDisabled?: boolean;
   /** Decides, per element, whether an outside interaction should close it. */
   shouldCloseOnInteractOutside?: (element: Element) => boolean;
   /** Whether the overlay is currently performing an entry animation. */

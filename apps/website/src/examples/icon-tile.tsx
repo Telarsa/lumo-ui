@@ -97,7 +97,7 @@ function TonesExample(_l: Locale) {
       <IconTile tone="positive">
         <CheckIcon aria-hidden="true" />
       </IconTile>
-      <IconTile tone="warning">
+      <IconTile tone="caution">
         <AlertTriangleIcon aria-hidden="true" />
       </IconTile>
       <IconTile tone="critical">

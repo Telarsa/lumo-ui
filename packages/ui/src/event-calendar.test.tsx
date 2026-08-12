@@ -37,6 +37,7 @@ import {
   toCalendar,
   type Calendar,
 } from "@internationalized/date";
+import { formatNumber } from "@lumo-ui/core";
 import type { Locale } from "@lumo-ui/core";
 import { lumoCalendar } from "./calendar-datelib.ts";
 import { LumoLocaleContext } from "./locale.ts";
@@ -75,6 +76,7 @@ const FA: EventCalendarStrings = {
   allDay: "تمام‌روز",
   empty: "رویدادی نیست",
   dayLabel: (date, count) => `${date}، ${count} رویداد`,
+  todayLabel: (day) => `امروز، ${day}`,
   eventLabel: (title, when) => `${title}، ${when}`,
   range: (from, to) => `${from} تا ${to}`,
   moreEvents: (count) => `${count} رویداد دیگر`,
@@ -91,6 +93,7 @@ const EN: EventCalendarStrings = {
   allDay: "All day",
   empty: "Nothing scheduled",
   dayLabel: (date, count) => `${date}, ${count} events`,
+  todayLabel: (day) => `Today, ${day}`,
   eventLabel: (title, when) => `${title}, ${when}`,
   range: (from, to) => `${from} to ${to}`,
   moreEvents: (count) => `${count} more`,
@@ -400,6 +403,58 @@ describe("every announced string is a required prop", () => {
     const partialToo: EventCalendarStrings = withoutMore;
 
     expect([allDay, moreEvents, partial, partialToo]).toHaveLength(4);
+  });
+
+  it("today is announced, not only painted", () => {
+    /*
+     * THE DEFECT THIS PINS, MEASURED ON THIS BRANCH.
+     *
+     * `todayDate` is painted three times — `bg-accent/5` on the month cell, a
+     * filled accent disc with `font-medium` for its number, `text-accent` in
+     * the week head — and `dayLabel(date, count)` composed the SAME sentence
+     * for it as for every other day in the grid. Colour and weight as the sole
+     * carriers of a state, which is WCAG 1.4.1, and the one fact about a day
+     * that cannot be recovered from the date itself.
+     *
+     * A COMPARISON, not a presence check: asserting that today's name contains
+     * «امروز» would also pass on a build that put the word on all 42 cells, and
+     * asserting the name is non-empty passes on the defect itself. The claim is
+     * that today's name DIFFERS from its neighbour's by exactly the prefix.
+     */
+    const yesterday = ANCHOR.subtract({ days: 1 });
+    mount("fa-IR", calendarFor("fa-IR", [], { todayDate: ANCHOR }));
+
+    const cells = screen.getAllByRole("gridcell");
+    const nameOf = (day: CalendarDate) => {
+      const wanted = toCalendar(day, PERSIAN).day;
+      const label = cells
+        .map((cell) => cell.getAttribute("aria-label") ?? "")
+        .find((text) => text.includes(formatNumber(wanted, "fa-IR")));
+      return label ?? "";
+    };
+
+    const todayName = nameOf(ANCHOR);
+    const otherName = nameOf(yesterday);
+    expect(todayName, "no cell named for today").not.toBe("");
+    expect(otherName, "no cell named for the day before").not.toBe("");
+    // The marked day says something the unmarked one does not …
+    expect(todayName).toContain("امروز");
+    expect(otherName).not.toContain("امروز");
+    // … and it is the caller's sentence, so no Latin digit rides in with it.
+    expect(/[0-9]/.test(todayName)).toBe(false);
+  });
+
+  it("today's word is a required member, and a FUNCTION so the comma is the caller's", () => {
+    const { todayLabel, ...withoutToday } = FA;
+    // @ts-expect-error «امروز» is a word this library cannot invent for a locale.
+    const partial: EventCalendarStrings = withoutToday;
+    // A bare word would need a separator chosen here, and `calendar-datelib.ts`
+    // shipped exactly that defect: one hardcoded U+060C put an ARABIC comma in
+    // the middle of the English announcement.
+    // @ts-expect-error a bare string cannot carry the punctuation of two languages.
+    const templated: EventCalendarStrings = { ...FA, todayLabel: "امروز، " };
+    expect(typeof todayLabel).toBe("function");
+    expect([partial, templated]).toHaveLength(2);
   });
 
   it("the announced sentences are FUNCTIONS, so clause order belongs to the caller", () => {

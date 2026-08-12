@@ -102,8 +102,18 @@ export const dateSelectorPresetVariants = cva(
       // screen reader hears and what the sighted reader sees cannot come apart.
       // That is CONTRIBUTING's "state comes from the attribute" rule applied to
       // a control whose state is authored rather than published by an engine.
+      //
+      // The hover rule is keyed to `aria-pressed` rather than added to this
+      // branch, and that is deliberate. A `hover:bg-accent/20` written here
+      // would be (0,2,0) against the base string's `hover:bg-surface-hover`,
+      // also (0,2,0), and which one painted the chosen preset under the cursor
+      // would be settled by the order Tailwind emits its variants in.
+      // `aria-pressed:hover:` is (0,3,0) and settles it — and it reads off the
+      // ATTRIBUTE this component already writes, so the tint cannot survive a
+      // future edit that stops announcing the state. Same fix, same reasoning,
+      // as `sidebar.variants.ts`'s `data-current:hover:`.
       active: {
-        true: "bg-accent/10 font-medium text-accent",
+        true: "bg-accent/10 font-medium text-accent aria-pressed:hover:bg-accent/20",
         false: "",
       },
     },

@@ -90,12 +90,35 @@ export const calendarHeadingVariants = cva(
   "text-sm font-medium text-fg",
 );
 
-/** A previous/next month button. Sized to the touch floor at every breakpoint. */
+/**
+ * A previous/next month button. Sized to the touch floor at every breakpoint.
+ *
+ * ── THE PRESS USED TO BE INVISIBLE ON THE LIGHT THEME ───────────────────────
+ *
+ * This string carried `hover:bg-surface-hover` beside `active:bg-surface-sunken`,
+ * and on the light theme `tokens.css` resolves BOTH `--lumo-sys-surface-hover`
+ * and `--lumo-sys-surface-sunken` to the same `--lumo-ref-neutral-100`
+ * (oklch 0.970). So a pressed chevron painted the pixel it was already painting:
+ * a state written, reviewed and shipped that renders nothing. The same collision
+ * `toggle.variants.ts` and `sidebar.variants.ts` record, in a third place.
+ *
+ * The fix is a different HUE rather than another step on the neutral ramp —
+ * `bg-accent/10` + `text-accent`, the pairing `sidebar.variants.ts`,
+ * `date-selector.variants.ts` and `badge.tsx` already use — because that ramp is
+ * where the collision lives and where the next theme edit can recreate it.
+ *
+ * `hover:active:` is stated as well as `active:`. A mouse press arrives WITH the
+ * pointer, so `hover:bg-surface-hover` (0,2,0) and `active:bg-accent/10` (0,2,0)
+ * are the same specificity and which one paints would be decided by the order
+ * Tailwind emits its variants in. `.x:hover:active` is (0,3,0) and decides it.
+ * The bare `active:` is what a touch press gets, where `:hover` never fires.
+ */
 export const calendarNavButtonVariants = cva(
   "flex h-control-sm w-control-sm shrink-0 cursor-pointer items-center justify-center " +
     "rounded-md text-fg-muted transition-colors " +
     "hover:bg-surface-hover hover:text-fg " +
-    "active:bg-surface-sunken " +
+    "active:bg-accent/10 active:text-accent " +
+    "hover:active:bg-accent/10 hover:active:text-accent " +
     "disabled:pointer-events-none disabled:opacity-40 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4",
 );
@@ -216,7 +239,23 @@ export const rangeCalendarCellVariants = cva(
  */
 export function rangeCalendarSelectionVariants(): Record<string, string> {
   return {
-    range_middle: "bg-surface-sunken",
+    /*
+     * ── THE BAND WAS THE HOVER FILL, MEASURED ─────────────────────────────
+     *
+     * This was `bg-surface-sunken`, and `rangeCalendarCellVariants` above
+     * carries `hover:bg-surface-hover`. On the light theme `tokens.css`
+     * resolves both tokens to `--lumo-ref-neutral-100` — so every day inside a
+     * selected range wore exactly the fill an UNSELECTED day wears under the
+     * cursor. A reader could not tell a chosen span from the day their mouse
+     * happened to be over, and hovering a middle day changed nothing at all.
+     *
+     * The middle of an accent range is now a tint of the accent its two ends
+     * are drawn in, which is a different hue rather than another step on the
+     * neutral ramp — the fix `sidebar.variants.ts` and `toggle.variants.ts`
+     * record for the identical collision. `hover:bg-accent/15` holds the band
+     * under the pointer, the same way the two ends already hold theirs.
+     */
+    range_middle: "bg-accent/15 hover:bg-accent/15",
     range_start:
       "bg-accent text-accent-fg rounded-ss-md rounded-es-md " +
       "hover:bg-accent",
@@ -237,14 +276,14 @@ export function rangeCalendarSelectionVariants(): Record<string, string> {
  * is one or two, and the Persian digits are narrower than the Latin ones, so a
  * width tuned on an English page leaves a visible gap on a Persian one.
  *
- * Hover and focus here are CSS pseudo-classes, NOT React Aria attributes, and
- * that is a measured exception to the house rule rather than a lapse. RAC's
- * `DateInput` renders exactly four state attributes — invalid, disabled,
- * readonly, required — and no hover or focus attribute at all (verified in
- * `DateField.mjs` and in rendered output). `Group`, which the pickers use, does
- * emit both, so `datePickerGroupVariants` below is written the normal way. The
- * rule is "do not mirror state React already tracks"; where React Aria tracks
- * nothing, the browser's own pseudo-class is the honest source.
+ * Hover and focus here are CSS pseudo-classes, and there is no longer any engine
+ * they could be attributes of: `date-input.tsx` renders this element itself and
+ * writes only the four states it owns — `data-invalid`, `data-disabled`,
+ * `data-placeholder`, `data-focused`. The rule is "do not mirror state the
+ * engine already tracks"; where nothing tracks it, the browser's own
+ * pseudo-class is the honest source, and it needs no JavaScript to be correct
+ * before hydration. `datePickerGroupVariants` below says the same thing about
+ * the element that used to be React Aria's `<Group>`.
  */
 export const dateInputVariants = cva(
   "flex w-fit min-w-0 items-center rounded-md border border-border-control bg-surface " +
@@ -318,12 +357,19 @@ export const datePickerGroupVariants = cva(
   },
 );
 
-/** The button that opens the calendar. */
+/**
+ * The button that opens the calendar.
+ *
+ * Same press fix, same measurement, as `calendarNavButtonVariants` above: the
+ * `active:bg-surface-sunken` this used to carry was the light theme's
+ * `hover:bg-surface-hover` fill exactly, so the press painted nothing.
+ */
 export const datePickerTriggerVariants = cva(
   "flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-sm " +
     "text-fg-muted transition-colors " +
     "hover:bg-surface-hover hover:text-fg " +
-    "active:bg-surface-sunken " +
+    "active:bg-accent/10 active:text-accent " +
+    "hover:active:bg-accent/10 hover:active:text-accent " +
     "disabled:pointer-events-none disabled:opacity-40 " +
     "[&_svg]:pointer-events-none [&_svg]:size-4",
 );

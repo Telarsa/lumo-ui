@@ -206,9 +206,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "DrawerOverlay",
         description: {
           "fa-IR":
-            "پس‌زمینهٔ تیره، و زیرِ موتورِ فعلی مرزِ پورتال هم هست. جدا از پنل است چون هر دو حالت‌های ورود و خروج خودشان را منتشر می‌کنند و پس‌زمینه باید محو شود در حالی که پنل سفر می‌کند — یک انیمیشنِ مشترک، محو را به مدتِ سُرش گره می‌زد. isDismissable از همین‌جا خوانده می‌شود.",
+            "پس‌زمینهٔ تیره، و زیرِ موتورِ فعلی مرزِ پورتال هم هست. جدا از پنل است چون هر دو حالت‌های ورود و خروج خودشان را منتشر می‌کنند و پس‌زمینه باید محو شود در حالی که پنل سفر می‌کند — یک انیمیشنِ مشترک، محو را به مدتِ سُرش گره می‌زد. isDismissable از همین‌جا خوانده می‌شود؛ ولی جلوگیری از بستن با کلید گریز روی DialogTrigger است، چون صاحبِ وضعیت اوست.",
           "en-US":
-            "The scrim, and — under the current engine — the portal boundary too. Separate from the panel because both publish their own enter and exit states and the scrim should cross-fade while the panel travels; one shared animation would tie the fade to the slide's duration. `isDismissable` is read from here.",
+            "The scrim, and — under the current engine — the portal boundary too. Separate from the panel because both publish their own enter and exit states and the scrim should cross-fade while the panel travels; one shared animation would tie the fade to the slide's duration. `isDismissable` is read from here — but holding Escape is `DialogTrigger`'s, because that is the state owner.",
         },
       },
       {

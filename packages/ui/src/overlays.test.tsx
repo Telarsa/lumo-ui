@@ -342,4 +342,73 @@ describe("open-state English, counted rather than assumed", () => {
     // this component adds would otherwise destroy it. See menu.tsx.
     expect(items[0]?.textContent).toBe("کپی");
   });
+
+  /*
+   * ── THE MARK AND THE ANNOUNCEMENT ARE ONE PROP ────────────────────────────
+   *
+   * The site header's language menu marked its current locale with `font-medium`
+   * and an `aria-hidden` tick, and told assistive tech nothing at all — two
+   * drawings, zero announcements. It was possible because marking and
+   * announcing were two separate things a caller had to remember to pair.
+   *
+   * These assert the pairing itself, not just the attribute: the tick is drawn
+   * ONLY on the current item, `aria-current` is on the SAME item, and neither
+   * appears on an item that did not ask for it. A regression that reverts to
+   * paint-only fails on the second expect; one that announces without drawing
+   * fails on the third.
+   */
+  it("MenuItem.isCurrent both draws the tick and announces aria-current", () => {
+    const { getAllByRole } = render(
+      <MenuTrigger defaultOpen>
+        <Button>زبان</Button>
+        <MenuPopover>
+          <Menu>
+            <MenuItem href="/fa/" hrefLang="fa-IR" isCurrent>
+              فارسی
+            </MenuItem>
+            <MenuItem href="/en/" hrefLang="en-US" isCurrent={false}>
+              English
+            </MenuItem>
+            <MenuItem id="other">چیز دیگر</MenuItem>
+          </Menu>
+        </MenuPopover>
+      </MenuTrigger>,
+    );
+    const items = getAllByRole("menuitem");
+    const [current, sibling, plain] = items;
+
+    // `"page"` and not `"true"`, because this item navigates.
+    expect(current?.getAttribute("aria-current")).toBe("page");
+    expect(current?.querySelector("svg")).not.toBeNull();
+
+    // The sibling reserves the gutter — that is what keeps the two labels at
+    // the same inset — but draws nothing and claims nothing.
+    expect(sibling?.getAttribute("aria-current")).toBeNull();
+    expect(sibling?.querySelector("svg")).toBeNull();
+
+    // An item that never mentions `isCurrent` gets no gutter at all, so menus
+    // of plain actions are unchanged by this prop existing.
+    expect(plain?.getAttribute("aria-current")).toBeNull();
+    expect(plain?.querySelector("[aria-hidden]")).toBeNull();
+  });
+
+  it("MenuItem.isCurrent falls back to aria-current=true without an href", () => {
+    // A non-navigating item is current in some other sense; `"page"` would be a
+    // lie, and dropping the state is the defect this prop exists to prevent.
+    // (The honest shape for most of these is `MenuRadioItem` — the point is
+    // that the announcement survives the wrong choice rather than vanishing.)
+    const { getAllByRole } = render(
+      <MenuTrigger defaultOpen>
+        <Button>نما</Button>
+        <MenuPopover>
+          <Menu>
+            <MenuItem id="grid" isCurrent>
+              شبکه‌ای
+            </MenuItem>
+          </Menu>
+        </MenuPopover>
+      </MenuTrigger>,
+    );
+    expect(getAllByRole("menuitem")[0]?.getAttribute("aria-current")).toBe("true");
+  });
 });

@@ -459,6 +459,31 @@ export interface EventCalendarStrings {
    */
   dayLabel: (date: string, count: string) => string;
   /**
+   * Marks the day `todayDate` names, e.g. ``(d) => `امروز، ${d}` ``.
+   *
+   * ── WHY THIS HAD TO BE ADDED ─────────────────────────────────────────────
+   *
+   * "Today" was painted three times and announced zero times. The month cell
+   * takes `bg-accent/5`, its number becomes a filled accent disc with
+   * `font-medium`, and the week head's date turns `text-accent` — and
+   * `dayLabel(date, count)` composed the same sentence for today as for every
+   * other day in the grid. Colour and weight as the sole carriers of a state,
+   * which is WCAG 1.4.1 and the exact shape `breadcrumbs.tsx` was caught on.
+   *
+   * It is also the one fact about a day that a reader CANNOT recover from the
+   * date itself: knowing «۱۹ مرداد» is today requires knowing what today is,
+   * which is precisely what someone navigating a grid by keyboard does not have
+   * in front of them. `calendar-datelib.ts` reached this conclusion first and
+   * prefixes «امروز» onto every cell name react-day-picker asks it for; this
+   * component paints the same state from the same kind of prop and said
+   * nothing.
+   *
+   * A FUNCTION of the already-composed day name, not a bare word this file
+   * glues on with a separator: «امروز، …» and "Today, …" do not share a comma,
+   * and the library does not own either language's punctuation.
+   */
+  todayLabel: (dayLabel: string) => string;
+  /**
    * An event's accessible name. `when` is either `allDay` or a `range()`.
    *
    * A function rather than a two-hole template: «جلسه، ۹:۰۰ تا ۱۰:۰۰» and
@@ -843,12 +868,21 @@ export function EventCalendar({
   const isToday = (day: CalendarDate): boolean =>
     todayDate !== undefined && dayKey(toCalendar(todayDate, calendar)) === dayKey(day);
 
-  /** The label a cell wears and the sentence the live region speaks. One string. */
-  const dayName = (day: CalendarDate): string =>
-    strings.dayLabel(
+  /**
+   * The label a cell wears and the sentence the live region speaks. One string.
+   *
+   * Today is marked HERE rather than only on the cell's own `aria-label`, which
+   * is the point of there being one function: the live region reads this too, so
+   * arrowing onto today announces it, and the three ways today is PAINTED now
+   * all have a spoken counterpart. See `EventCalendarStrings.todayLabel`.
+   */
+  const dayName = (day: CalendarDate): string => {
+    const named = strings.dayLabel(
       dateText(day, locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
       formatNumber(segmentsOn(day).length, locale),
     );
+    return isToday(day) ? strings.todayLabel(named) : named;
+  };
 
   const moveFocusTo = (day: CalendarDate) => {
     const next = toCalendar(day, calendar);

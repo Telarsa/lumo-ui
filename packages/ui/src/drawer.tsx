@@ -195,15 +195,38 @@ export interface DrawerOverlayProps extends ModalOverlayPropsBase {
  * `findChildProp`'s docblock). It is destructured out below so it cannot reach
  * the DOM as an unknown attribute; nothing in this component acts on it.
  *
- * `isKeyboardDismissDisabled` remains INERT: Base UI's Dialog.Root has no
- * counterpart — Escape always closes — so there is nothing to translate it onto.
+ * `isKeyboardDismissDisabled` is NOT accepted here any more. It works, and it
+ * works on `DialogTrigger` — which is this component's state owner too, since
+ * the engine is `Dialog` (see the header). dialog.tsx measures the reasons.
+ *
+ * ── THE `close-watcher` QUESTION, AND WHY IT DOES NOT ARISE HERE ────────────
+ *
+ * The obvious worry is that a drawer has a SECOND close path a dialog does not:
+ * the Android back gesture, which Base UI serves with a `CloseWatcher` and
+ * reports as the reason `close-watcher` rather than `escape-key`. Intercepting
+ * only `escape-key` would then be half a fix — Escape held and the back gesture
+ * still closing.
+ *
+ * Measured on the installed 1.7.0: `CloseWatcher` is constructed in exactly two
+ * files, `drawer/root/DrawerRoot.mjs` and its CJS twin, guarded by
+ * `platform.os.android` — and `close-watcher` is in `DrawerRootChangeEventReason`
+ * (`DrawerRoot.d.ts:111`) and NOT in `DialogRootChangeEventReason`
+ * (`DialogRoot.d.ts:87`). This component does not render `Drawer.Root`; the
+ * header above says at length why — `swipeDirection` is `'up'|'down'|'left'|
+ * 'right'` with no logical member and no `useDirection` anywhere in `drawer/`.
+ *
+ * So the engine underneath is `Dialog.Root`, which mounts no `CloseWatcher` at
+ * all, and the reason can never be emitted on this path. The one-reason
+ * interception is complete here rather than partial — for the same structural
+ * reason the drawer gives up swipe-to-dismiss. If this file ever moves onto
+ * `Drawer.Root` (it wants a logical `swipeDirection` first), `close-watcher`
+ * has to be added to the cancel in `DialogTrigger` at the same time.
  */
 export function DrawerOverlay({
   className,
   children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
-  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
   isOpen: _isOpen,
   defaultOpen: _defaultOpen,
   onOpenChange: _onOpenChange,
@@ -251,7 +274,6 @@ export function Drawer({
   children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
-  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
   isOpen: _isOpen,
   defaultOpen: _defaultOpen,
   onOpenChange: _onOpenChange,

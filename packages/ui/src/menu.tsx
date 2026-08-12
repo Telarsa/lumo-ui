@@ -344,6 +344,33 @@ export interface MenuItemProps<T extends object = object> {
   href?: string | undefined;
   hrefLang?: string | undefined;
   target?: string | undefined;
+  /**
+   * Marks the item the user is already on — the entry in a menu of
+   * alternatives that is the CURRENT one.
+   *
+   * ── WHY THIS IS A PROP AND NOT A CLASS NAME ────────────────────────────
+   *
+   * The site's language menu marked its current locale twice — `font-medium`
+   * and a hand-rolled `<Check aria-hidden>` — and a screen reader was told
+   * NEITHER. Both markers were paint. The comment defending it argued the
+   * meaning was already carried by the document being in that language, which
+   * is true of the PAGE and false of the MENU: the menu is the moment the
+   * choice is offered, and a sighted user learns which arm they are on while
+   * everyone else guesses.
+   *
+   * That defect was only possible because the mark and the announcement were
+   * two separate things a caller had to remember to do together. Here they are
+   * one prop: setting it draws the tick AND emits `aria-current`, and there is
+   * no way to get one without the other.
+   *
+   * `aria-current` rather than a Lumo string prop, deliberately — this is the
+   * rare announced state that is NOT required copy, because it is a token the
+   * AT renders in the USER's language, not text we would have to ship a
+   * translation of. `"page"` on a link, `"true"` otherwise; a menu item that is
+   * "current" without navigating anywhere is usually a `MenuCheckboxItem` or a
+   * `MenuRadioItem`, but the state is announced either way rather than dropped.
+   */
+  isCurrent?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -374,6 +401,7 @@ export function MenuItem<T extends object = object>({
   href,
   hrefLang,
   target,
+  isCurrent,
 }: MenuItemProps<T>) {
   const onAction = useContext(MenuActionContext);
   const isSubmenuTrigger = useContext(SubmenuLevelContext);
@@ -392,10 +420,42 @@ export function MenuItem<T extends object = object>({
     ...(resolvedTextValue === undefined ? {} : { label: resolvedTextValue }),
     ...(isDisabled === undefined ? {} : { disabled: isDisabled }),
     ...(onAction === null || id === undefined ? {} : { onClick: () => onAction(id) }),
+    // See `MenuItemProps.isCurrent`. `"page"` is only truthful when the item
+    // actually navigates; without an href the item is current in some other
+    // sense, and `"true"` is the value ARIA defines for exactly that.
+    // `as const` on both arms, not on the object: a bare ternary of two string
+    // literals widens to `string`, which React's `AriaAttributes` rejects
+    // because `aria-current` is a closed union.
+    ...(isCurrent === true
+      ? { "aria-current": href === undefined ? ("true" as const) : ("page" as const) }
+      : {}),
   };
 
   const content = (
     <>
+      {/*
+       * The tick, and the alignment slot it sits in, are drawn whenever the
+       * item CAN be current — so a menu mixing current links with checkbox
+       * items keeps one label column instead of two. `aria-hidden` is correct
+       * here and was not correct at the call site this replaced: the state is
+       * now genuinely in the tree via `aria-current`, so announcing the glyph
+       * too would say it twice.
+       */}
+      {isCurrent === undefined ? null : (
+        <span aria-hidden="true" className={menuCurrentIndicatorVariants()}>
+          {isCurrent ? (
+            <svg viewBox="0 0 16 16" fill="none" className="size-3.5">
+              <path
+                d="M3.5 8.5l3 3 6-6"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          ) : null}
+        </span>
+      )}
       <span className="flex-1 truncate">{children}</span>
       {isSubmenuTrigger ? (
         // `aria-hidden` because the submenu relationship is already in the tree
@@ -595,6 +655,20 @@ export function MenuCheckboxItem({
  * item's class expression and invite the next editor to change one of them.
  */
 export const menuRadioIndicatorVariants = cva(
+  "grid size-4 shrink-0 place-items-center text-accent",
+);
+
+/**
+ * The third of the three, for `MenuItem.isCurrent` — same width, same reason,
+ * same argument as the comment above: the language menu in a site header sits
+ * in the same panel shape as a settings menu's toggles, and a current-link tick
+ * that is drawn in a different gutter than a checkbox tick is a gutter that
+ * will drift. The first cut of `isCurrent` reused
+ * `menuCheckboxIndicatorVariants` directly, which is the exact reuse that
+ * comment forbids — a link item is not a checkbox item, and borrowing the name
+ * is how the two stop being deliberately equal and start being accidentally so.
+ */
+export const menuCurrentIndicatorVariants = cva(
   "grid size-4 shrink-0 place-items-center text-accent",
 );
 

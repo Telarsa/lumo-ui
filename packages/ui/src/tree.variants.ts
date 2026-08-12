@@ -135,11 +135,32 @@ export const treeItemVariants = cva(
  * never a click handler on the row: a row that both selects and expands on one
  * press has no way to do either alone, and the keyboard needs them separate
  * anyway.
+ *
+ * ── ITS HOVER ERASED THE MARKER ON A SELECTED ROW ───────────────────────────
+ *
+ * The neutral hover pair was unconditional, and a SELECTED row is
+ * `bg-accent text-accent-fg`. Measured on the light theme:
+ * `--lumo-sys-accent-fg` is `--lumo-ref-neutral-50` and
+ * `--lumo-sys-surface-hover` is `--lumo-ref-neutral-100` (oklch 0.985 on 0.970)
+ * — so hovering the marker of a selected row painted a near-white square, and
+ * `group-data-selected/…:text-accent-fg` kept the glyph near-white on top of
+ * it. Which of `hover:text-fg` and the group rule actually won was itself
+ * undecided: both are (0,2,0), so it came down to the order Tailwind emits
+ * them. One ordering hides the chevron entirely; the other leaves a bright
+ * rectangle punched out of a blue row. Neither is a hover state.
+ *
+ * The selected-row pair below is `.group[data-selected] &:hover` — (0,3,0),
+ * which settles it — and reaches for `accent-hover`, the token `button.variants`
+ * uses to darken a solid accent surface under the pointer. Same idea as
+ * `sidebar.variants.ts`'s `data-current:hover:`, addressed through a group
+ * because here the state lives on the row and the hover on its child.
  */
 export const treeChevronVariants = cva(
   "grid size-5 shrink-0 place-items-center rounded-sm text-fg-muted outline-none " +
     "hover:bg-surface-hover hover:text-fg " +
-    "group-data-selected/lumo-tree-item:text-accent-fg",
+    "group-data-selected/lumo-tree-item:text-accent-fg " +
+    "group-data-selected/lumo-tree-item:hover:bg-accent-hover " +
+    "group-data-selected/lumo-tree-item:hover:text-accent-fg",
 );
 
 /** The spacer a LEAF row gets where a parent row has its chevron. */

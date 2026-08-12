@@ -378,8 +378,29 @@ export function lumoCalendar(locale: Locale): LumoCalendarConfig {
     yearDropdown: { "fa-IR": "انتخاب سال", "en-US": "Choose the year" },
     weekNumberHeader: { "fa-IR": "شمارهٔ هفته", "en-US": "Week number" },
     week: { "fa-IR": "هفتهٔ", "en-US": "Week" },
-    today: { "fa-IR": "امروز", "en-US": "Today" },
   } as const satisfies Record<string, Record<Locale, string>>;
+
+  /**
+   * "Today, <the full date>" — a whole SENTENCE per locale, not a word this
+   * file glues on with a separator.
+   *
+   * It was the latter, and the separator was hardcoded: `${CHROME.today[locale]}،
+   * ${longDate(date)}` put U+060C, the ARABIC comma, into the English
+   * announcement, so an `en-US` calendar's today cell was named
+   * "Today، Monday, 22 July 2024" — one Arabic character in the middle of an
+   * English sentence, spoken by a screen reader and visible in no screenshot.
+   * The same class of defect as an English string on a Persian page, in the
+   * other direction, and it survived because punctuation is the part of a
+   * translation nobody re-reads.
+   *
+   * A per-locale composer has no separator to get wrong: each language writes
+   * its own, punctuation included. Same shape as `SortableStrings.position` and
+   * `EventCalendarStrings.todayLabel`.
+   */
+  const todayName = {
+    "fa-IR": (date: string) => `امروز، ${date}`,
+    "en-US": (date: string) => `Today, ${date}`,
+  } as const satisfies Record<Locale, (date: string) => string>;
 
   const longDate = (date: Date) =>
     formatter(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(
@@ -405,14 +426,16 @@ export function lumoCalendar(locale: Locale): LumoCalendarConfig {
      * fact about a day cell that a reader cannot get from the date itself — it
      * requires knowing what today is, which is exactly what a screen-reader
      * user navigating a grid does not. React Aria composed the same prefix from
-     * its patched bundle; here it is a word in a file, in both languages.
+     * its patched bundle; here it is a sentence in a file, in both languages —
+     * see `todayName` above for the comma that used to be shared and should
+     * never have been.
      *
      * `modifiers` is react-day-picker's second argument to both labels.
      */
     labelGridcell: (date: Date, modifiers?: { today?: boolean }) =>
-      modifiers?.today === true ? `${CHROME.today[locale]}، ${longDate(date)}` : longDate(date),
+      modifiers?.today === true ? todayName[locale](longDate(date)) : longDate(date),
     labelDayButton: (date: Date, modifiers?: { today?: boolean }) =>
-      modifiers?.today === true ? `${CHROME.today[locale]}، ${longDate(date)}` : longDate(date),
+      modifiers?.today === true ? todayName[locale](longDate(date)) : longDate(date),
   };
 
   return { calendar, dateLib, formatters: formattersProp, labels, weekStartsOn };

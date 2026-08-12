@@ -69,12 +69,37 @@ export const timelineItemVariants = cva(
        * only assignment that lets a timeline show progress: everything up to
        * the current step is drawn in its own tone and everything after is
        * neutral, from per-item classes alone with no index arithmetic.
+       *
+       * ── THE RAIL HALF OF THAT SENTENCE DID NOT RENDER ────────────────────
+       *
+       * It was one custom property, `--lumo-timeline-dot`, and
+       * `timelineRailVariants` below read none of it — the rail was a flat
+       * `bg-border` on every item. So `tone="positive"` painted the dot and
+       * left the segment beneath it neutral, and the progress reading this
+       * docblock describes was never available from any prop. A comment true in
+       * intention and false in the present tense, which is exactly the shape
+       * that survives review: the dot DOES change, so the tone looks wired.
+       *
+       * Two properties rather than one, because the neutral tone wants two
+       * different greys: `border-strong` (neutral-300 on light) is what makes a
+       * 7px dot read as a marker, and it is too heavy for a 1px line, where
+       * `border` (neutral-200) is the library's hairline everywhere else.
+       * Collapsing them would have changed every existing neutral timeline's
+       * rail as the price of fixing the toned one.
        */
       tone: {
-        neutral: "[--lumo-timeline-dot:var(--color-border-strong)]",
-        accent: "[--lumo-timeline-dot:var(--color-accent)]",
-        positive: "[--lumo-timeline-dot:var(--color-positive)]",
-        critical: "[--lumo-timeline-dot:var(--color-critical)]",
+        neutral:
+          "[--lumo-timeline-dot:var(--color-border-strong)] " +
+          "[--lumo-timeline-rail:var(--color-border)]",
+        accent:
+          "[--lumo-timeline-dot:var(--color-accent)] " +
+          "[--lumo-timeline-rail:var(--color-accent)]",
+        positive:
+          "[--lumo-timeline-dot:var(--color-positive)] " +
+          "[--lumo-timeline-rail:var(--color-positive)]",
+        critical:
+          "[--lumo-timeline-dot:var(--color-critical)] " +
+          "[--lumo-timeline-rail:var(--color-critical)]",
       },
     },
     defaultVariants: { tone: "neutral" },
@@ -91,7 +116,14 @@ export const timelineMarkerVariants = cva(
 export const timelineRailVariants = cva(
   // Inset by half the dot so the line runs through their centres. `start-3.5`
   // is size-7 / 2; if the dot's size changes, this changes with it.
-  "absolute start-3.5 top-7 bottom-0 w-px -ms-px bg-border",
+  //
+  // The colour comes from the ITEM's `tone`, through the custom property
+  // `timelineItemVariants` sets — see its docblock for what this used to be and
+  // why a flat `bg-border` made half of that variant unreachable. The fallback
+  // is the same hairline, so a rail drawn outside a toned item (a consumer who
+  // composed one by hand from the exported cvas) is unchanged.
+  "absolute start-3.5 top-7 bottom-0 w-px -ms-px " +
+    "bg-[var(--lumo-timeline-rail,var(--color-border))]",
 );
 
 export const timelineTitleVariants = cva("text-sm font-medium text-fg");

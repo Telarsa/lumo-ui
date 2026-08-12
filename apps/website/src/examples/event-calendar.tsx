@@ -54,6 +54,7 @@ const t = {
   separator: { "fa-IR": "، ", "en-US": ", " },
   events: { "fa-IR": "رویداد", "en-US": "events" },
   more: { "fa-IR": "رویداد دیگر", "en-US": "more" },
+  today: { "fa-IR": "امروز", "en-US": "Today" },
 
   standup: { "fa-IR": "جلسهٔ روزانه", "en-US": "Standup" },
   review: { "fa-IR": "بازبینی طراحی", "en-US": "Design review" },
@@ -133,6 +134,7 @@ function MonthExample(l: Locale) {
       separator={t.separator[l]}
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
+      todayWord={t.today[l]}
       focusedDay={ANCHOR}
       todayDay={ANCHOR}
       events={workWeek(l)}
@@ -157,6 +159,7 @@ function WeekExample(l: Locale) {
       separator={t.separator[l]}
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
+      todayWord={t.today[l]}
       focusedDay={ANCHOR}
       todayDay={ANCHOR}
       defaultView="week"
@@ -182,6 +185,7 @@ function AgendaExample(l: Locale) {
       separator={t.separator[l]}
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
+      todayWord={t.today[l]}
       focusedDay={ANCHOR}
       defaultView="agenda"
       events={[
@@ -216,6 +220,7 @@ function AllDayExample(l: Locale) {
       separator={t.separator[l]}
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
+      todayWord={t.today[l]}
       focusedDay={ANCHOR}
       todayDay={ANCHOR}
       maxEventsPerDay={2}

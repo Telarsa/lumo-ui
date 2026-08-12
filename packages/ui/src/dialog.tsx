@@ -104,9 +104,32 @@ import { IconButton } from "./button.tsx";
  * consumer has been writing against. `<DialogOverlay isDismissable>` opts back
  * in, exactly as before.
  *
- * WHAT IS STILL INERT: `isKeyboardDismissDisabled`. Base UI has no counterpart
- * anywhere on `Dialog.Root` — Escape always closes — so there is nothing to
- * translate it onto. Recorded, not emulated.
+ * ── `isKeyboardDismissDisabled` WAS THE SAME MISTAKE, ONE PROP OVER ─────────
+ *
+ * This header used to say Base UI "has no counterpart anywhere on `Dialog.Root`
+ * — Escape always closes". That was wrong, and wrong in the same way
+ * `isDismissable` was: the prop was declared on the OVERLAY, and there is
+ * nothing on the overlay to translate it onto because dismissal is the ROOT's.
+ *
+ * Measured on the installed 1.7.0 rather than assumed. `Dialog.Root`'s
+ * `onOpenChange` takes `(open, eventDetails)`, and `DialogRoot.d.ts:87` names
+ * every reason it can carry:
+ *
+ *     trigger-press | outside-press | escape-key | close-press |
+ *     focus-out | imperative-action | none
+ *
+ * `useDialogRoot.mjs:71` hands `useDismiss` `escapeKey: isTopmost`, so Escape
+ * produces exactly ONE of those — `escape-key` — and the details object carries
+ * `cancel()` (`internals/createBaseUIEventDetails.d.ts:54`), which the store
+ * checks before it writes the new open state. So intercepting Escape here is
+ * exact rather than approximate: it drops that one reason and leaves the ✕
+ * (`close-press`) and the scrim (`outside-press`) alone.
+ *
+ * The prop is therefore RELOCATED to `DialogTrigger`, which renders the Root —
+ * see its docblock. It is gone from `ModalOverlayPropsBase`, so passing it to
+ * `DialogOverlay` or `DialogModal` is a compile error. `drawer.tsx` gets the
+ * capability from the same place, because a drawer's state owner is this file's
+ * `DialogTrigger` too.
  */
 
 /**
@@ -195,6 +218,23 @@ export const dialogVariants = cva(
 export interface DialogTriggerProps extends OverlayTriggerProps {
   /** The trigger control, then the overlay. In that order. */
   children: LumoNode;
+  /**
+   * Prevents Escape from closing the dialog — or the drawer, since this is the
+   * state owner for both.
+   *
+   * ── IT MOVED HERE, AND THAT IS THE WHOLE FIX ──────────────────────────────
+   *
+   * It was declared on `DialogOverlay`, `DialogModal`, `DrawerOverlay` and
+   * `Drawer` — four parts, none of which renders the Root — where it was
+   * accepted and INERT. `PopoverTrigger` reached the same conclusion one
+   * component over and this is the same relocation; the reasons Base UI can
+   * carry and the exactness of the interception are measured in the file
+   * header. Passing it to any of those four parts is now a compile error.
+   *
+   * The case that wanted it: a dialog holding a half-filled form, where Escape
+   * discards typing the reader cannot get back.
+   */
+  isKeyboardDismissDisabled?: boolean | undefined;
 }
 
 export function DialogTrigger({
@@ -202,19 +242,38 @@ export function DialogTrigger({
   isOpen,
   defaultOpen,
   onOpenChange,
+  isKeyboardDismissDisabled,
 }: DialogTriggerProps) {
   const items = React.Children.toArray(children as React.ReactNode);
   const [trigger, ...rest] = items;
   // See the file header. RAC's default is opt-in, so anything other than an
   // explicit `isDismissable` means "do not dismiss on outside press".
   const dismissable = findChildProp(children, "isDismissable") === true;
+  /*
+   * One handler rather than two paths, because the two features overlap: a
+   * caller can set both, and a cancelled Escape must ALSO not reach the
+   * caller's `onOpenChange` — the dialog is still open, so telling the caller
+   * it closed would desynchronise a controlled one. `attr()` still decides
+   * whether the prop is emitted at all, so a dialog that sets neither passes
+   * nothing and Base UI's own handling is untouched.
+   */
+  const handleOpenChange =
+    onOpenChange === undefined && isKeyboardDismissDisabled !== true
+      ? undefined
+      : (open: boolean, details: BaseDialog.Root.ChangeEventDetails) => {
+          if (isKeyboardDismissDisabled === true && !open && details.reason === "escape-key") {
+            details.cancel();
+            return;
+          }
+          onOpenChange?.(open);
+        };
   return (
     // RAC spells the controlled prop `isOpen`; Base UI spells it `open`.
     <BaseDialog.Root
       disablePointerDismissal={!dismissable}
       {...attr("open", isOpen)}
       {...attr("defaultOpen", defaultOpen)}
-      {...attr("onOpenChange", onOpenChange)}
+      {...attr("onOpenChange", handleOpenChange)}
     >
       {React.isValidElement(trigger) ? (
         <BaseDialog.Trigger render={trigger as React.ReactElement<Record<string, unknown>>} />
@@ -234,7 +293,8 @@ export function DialogTrigger({
  * an unknown attribute; the prop's value travels by `DialogTrigger` inspecting
  * this element's props, not by this component doing anything with it.
  *
- * `isKeyboardDismissDisabled` remains INERT: Base UI has no counterpart.
+ * `isKeyboardDismissDisabled` is NOT accepted here any more — it lives on
+ * `DialogTrigger`, which renders the Root that owns dismissal. See the header.
  */
 export interface DialogOverlayProps extends ModalOverlayPropsBase {
   children?: LumoNode;
@@ -246,7 +306,6 @@ export function DialogOverlay({
   children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
-  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
   isOpen: _isOpen,
   defaultOpen: _defaultOpen,
   onOpenChange: _onOpenChange,
@@ -323,7 +382,6 @@ export function DialogModal({
   children,
   // — accepted by the API, unreachable in Base UI —
   isDismissable: _isDismissable,
-  isKeyboardDismissDisabled: _isKeyboardDismissDisabled,
   isOpen: _isOpen,
   defaultOpen: _defaultOpen,
   onOpenChange: _onOpenChange,

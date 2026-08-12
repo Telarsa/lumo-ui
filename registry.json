@@ -2045,6 +2045,11 @@
           "path": "packages/ui/src/toggle-group.tsx",
           "type": "registry:ui",
           "target": "components/ui/toggle-group.tsx"
+        },
+        {
+          "path": "packages/ui/src/toggle-group.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/toggle-group.variants.ts"
         }
       ]
     },

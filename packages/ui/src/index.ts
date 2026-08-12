@@ -270,6 +270,7 @@ export {
   MenuTrigger,
   SubmenuTrigger,
   menuCheckboxIndicatorVariants,
+  menuCurrentIndicatorVariants,
   menuRadioIndicatorVariants,
   menuItemVariants,
   menuPopoverVariants,
@@ -417,13 +418,17 @@ export {
 } from "./toolbar.tsx";
 export type { ToolbarItemProps, ToolbarProps, ToolbarSeparatorProps } from "./toolbar.tsx";
 
-export {
-  ToggleButton,
-  ToggleButtonGroup,
-  toggleButtonGroupVariants,
-  toggleButtonVariants,
-} from "./toggle-group.tsx";
+export { ToggleButton, ToggleButtonGroup } from "./toggle-group.tsx";
 export type { ToggleButtonGroupProps, ToggleButtonProps } from "./toggle-group.tsx";
+// The classes come from the directive-free module, alongside `toggleVariants`
+// and `buttonVariants` further down and for the reason `button.variants.ts`
+// records: a cva exported from a `"use client"` file cannot be called by a
+// server component, and `shadcn migrate rtl` only walks `cva()` arguments.
+export { toggleButtonGroupVariants, toggleButtonVariants } from "./toggle-group.variants.ts";
+export type {
+  ToggleButtonGroupVariantProps,
+  ToggleButtonVariantProps,
+} from "./toggle-group.variants.ts";
 
 export { Num, DateText } from "./num.tsx";
 export type { NumProps, DateTextProps } from "./num.tsx";

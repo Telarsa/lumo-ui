@@ -109,6 +109,32 @@ export const sortableItemVariants = cva(
     "data-held:border-accent data-held:shadow-lg",
 );
 
+/**
+ * The grip.
+ *
+ * ── THE HELD STATE WAS A CHARACTER-FOR-CHARACTER COPY OF THE HOVER ──────────
+ *
+ * `data-held:bg-surface-hover data-held:text-fg` beside
+ * `hover:bg-surface-hover hover:text-fg`: the same two tokens, so a handle the
+ * reader is HOLDING looked exactly like one the pointer was merely resting on.
+ * That is the defect `toggle.variants.ts` measured — an ON state drawn from the
+ * neutral surface ramp the hover fill comes from — and here it is stronger than
+ * a token collision, because the two strings are literally identical on both
+ * themes rather than only on the light one.
+ *
+ * It also mattered most exactly when it was least visible. A pointer drag keeps
+ * the cursor ON the handle for its whole duration, so the one state a dragging
+ * reader could see was the one the drag could not change; and with equal
+ * specificity between `hover:` and `data-held:` (both (0,2,0)) which of the two
+ * painted was decided by the order Tailwind emits its variants in.
+ *
+ * So the held state moves to the accent tint — the hue the HELD ROW already
+ * moves to (`data-held:border-accent` on `sortableItemVariants`), so the grip
+ * and the card it belongs to now say the same thing. `data-held:hover:` is
+ * stated explicitly, at (0,3,0), for the reason `sidebar.variants.ts` gives
+ * about `data-current:hover:`: the pointer arriving must not repaint a state it
+ * has nothing to do with.
+ */
 export const sortableHandleVariants = cva(
   "grid size-7 shrink-0 cursor-grab place-items-center rounded-md text-fg-subtle " +
     // `touch-none` is load-bearing, not polish: without it a finger that starts
@@ -117,7 +143,8 @@ export const sortableHandleVariants = cva(
     // route exists because `draggable` fires nothing for a finger — losing it
     // to the default scroll gesture would put it back where it started.
     "touch-none transition-colors hover:bg-surface-hover hover:text-fg " +
-    "data-held:cursor-grabbing data-held:bg-surface-hover data-held:text-fg",
+    "data-held:cursor-grabbing data-held:bg-accent/10 data-held:text-accent " +
+    "data-held:hover:bg-accent/10 data-held:hover:text-accent",
 );
 
 export interface SortableStrings {

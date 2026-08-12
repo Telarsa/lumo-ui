@@ -184,6 +184,13 @@ export const kanbanCardVariants = cva(
     "transition-shadow data-held:border-accent data-held:shadow-lg",
 );
 
+/**
+ * The grip. Same held-state fix, same measurement, as `sortableHandleVariants`
+ * — read that docblock: `data-held:bg-surface-hover data-held:text-fg` was a
+ * character-for-character copy of this element's own hover treatment, so a card
+ * being dragged and a card under an idle pointer were the same picture. The
+ * accent tint matches `data-held:border-accent` on the card above it.
+ */
 export const kanbanHandleVariants = cva(
   "grid size-7 shrink-0 cursor-grab place-items-center rounded-md text-fg-subtle " +
     // `touch-none` is load-bearing, not polish. Without it a finger that starts
@@ -194,7 +201,8 @@ export const kanbanHandleVariants = cva(
     // fires nothing for a finger; losing it to the default scroll gesture would
     // put touch back where it started.
     "touch-none transition-colors hover:bg-surface-hover hover:text-fg " +
-    "data-held:cursor-grabbing data-held:bg-surface-hover data-held:text-fg",
+    "data-held:cursor-grabbing data-held:bg-accent/10 data-held:text-accent " +
+    "data-held:hover:bg-accent/10 data-held:hover:text-accent",
 );
 
 export interface KanbanCard {

@@ -185,9 +185,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "toggleButtonVariants",
         description: {
           "fa-IR":
-            "شکلِ یک دکمه. حالتِ روشن از data-pressed خوانده می‌شود، که دقیقاً واژه‌ای است که موتور قبلی برای حالتِ گذرای فشردنِ انگشت به کار می‌برد — خطرناک‌ترین تغییرِ نامِ کلِ مهاجرت، چون در هر دو جهت بی‌صدا شکست می‌خورد.",
+            "شکلِ یک دکمه. حالتِ روشن از data-pressed خوانده می‌شود، که دقیقاً واژه‌ای است که موتور قبلی برای حالتِ گذرای فشردنِ انگشت به کار می‌برد — خطرناک‌ترین تغییرِ نامِ کلِ مهاجرت، چون در هر دو جهت بی‌صدا شکست می‌خورد. از پرونده‌ای بدون «use client» می‌آید (toggle-group.variants.ts)، پس یک مؤلفهٔ سروری هم می‌تواند صدایش کند.",
           "en-US":
-            "One button's shape. The ON state is read from `data-pressed`, which is exactly the word the previous engine spent on the TRANSIENT pointer-down state — the most dangerous rename in the whole migration, because it fails quietly in both directions.",
+            "One button's shape. The ON state is read from `data-pressed`, which is exactly the word the previous engine spent on the TRANSIENT pointer-down state — the most dangerous rename in the whole migration, because it fails quietly in both directions. It comes from a directive-free module (`toggle-group.variants.ts`), so a server component can call it.",
         },
       },
       {

@@ -76,7 +76,6 @@ import { FOCUS_RING_SELF } from "./form.tsx";
  * the same defect shape `tabs.tsx` records, and it is a regression against React
  * Aria rather than a limitation both engines share.
  *
-
  * ── AND WHY READ-ONLY IS NOT `isReadOnly` ON THAT RadioGroup ────────────────
  *
  * RAC's read-only radio group is still a control: it takes a Tab stop and

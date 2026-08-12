@@ -80,7 +80,16 @@ function BasicExample(l: Locale) {
 
 function FormExample(l: Locale) {
   return (
-    <DialogTrigger>
+    /*
+     * `isKeyboardDismissDisabled` sits on the TRIGGER, because the trigger is
+     * the state owner — the overlay and the panel cannot reach the dismissal
+     * machinery and used to accept this prop and do nothing with it.
+     *
+     * It is on the FORM example specifically: this is the dialog where Escape
+     * throws away typing the reader cannot get back. The ✕ and «انصراف» still
+     * close it, so the exit is never blocked, only made deliberate.
+     */
+    <DialogTrigger isKeyboardDismissDisabled>
       <Button variant="outline">{t.editProfile[l]}</Button>
       <DialogOverlay>
         <DialogModal size="md">
@@ -179,8 +188,10 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "DialogTrigger",
         description: {
-          "fa-IR": "جفت‌کنندهٔ دکمه و پنجره؛ تنها چیزی که در نخستین بایت هست خود دکمه است.",
-          "en-US": "Pairs the button with the window; the button is all that exists in the first byte.",
+          "fa-IR":
+            "جفت‌کنندهٔ دکمه و پنجره؛ تنها چیزی که در نخستین بایت هست خود دکمه است. صاحبِ وضعیت هم همین است، پس isKeyboardDismissDisabled اینجاست و نه روی پس‌زمینه یا قاب — همان دلیلی که PopoverTrigger دارد. کشو هم از همین‌جا آن را می‌گیرد.",
+          "en-US":
+            "Pairs the button with the window; the button is all that exists in the first byte. It is also the state owner, so `isKeyboardDismissDisabled` lives here rather than on the backdrop or the frame — `PopoverTrigger`'s reason exactly. The drawer takes it from here too.",
         },
       },
       {
@@ -238,8 +249,10 @@ export const EXAMPLES: ComponentExamples = {
       id: "form",
       title: { "fa-IR": "با فرم", "en-US": "With a form" },
       description: {
-        "fa-IR": "فیلدها درون گفت‌وگو همان فیلدهای همیشگی‌اند؛ برچسب هر کدام همچنان اجباری است.",
-        "en-US": "Fields inside a dialog are the ordinary fields; each label is still required.",
+        "fa-IR":
+          "فیلدها درون گفت‌وگو همان فیلدهای همیشگی‌اند؛ برچسب هر کدام همچنان اجباری است. اینجا isKeyboardDismissDisabled روی DialogTrigger نشسته است — کلید گریز نوشته‌های نیمه‌تمام را دور نمی‌ریزد، ولی ✕ و انصراف همچنان می‌بندند.",
+        "en-US":
+          "Fields inside a dialog are the ordinary fields; each label is still required. `isKeyboardDismissDisabled` sits on `DialogTrigger` here — Escape no longer throws away half-finished typing, while the ✕ and Cancel still close it.",
       },
       render: FormExample,
     },

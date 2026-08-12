@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, Languages } from "lucide-react";
+import { Languages } from "lucide-react";
 import type { Locale } from "@lumo-ui/core";
 import { cn, LOCALES } from "@lumo-ui/core";
 import { IconButton, Menu, MenuItem, MenuPopover, MenuTrigger } from "@lumo-ui/ui";
@@ -190,15 +190,13 @@ export async function SiteShell({
                         href={`/${locale}/${path}`}
                         hrefLang={locale}
                         textValue={LOCALE_NAMES[locale]}
+                        // Draws the tick AND emits `aria-current` — one prop,
+                        // because they used to be two things here and only the
+                        // drawing ever got done. See `MenuItemProps.isCurrent`.
+                        isCurrent={locale === lang}
                         className={locale === lang ? "font-medium" : undefined}
                       >
                         {LOCALE_NAMES[locale]}
-                        {/* The current locale, marked. Decorative: the mark's
-                            meaning is already carried by the document you are
-                            reading being IN this language. */}
-                        {locale === lang ? (
-                          <Check aria-hidden="true" className="ms-2 inline-block size-4 text-fg-muted" />
-                        ) : null}
                       </MenuItem>
                     ))}
                   </Menu>
