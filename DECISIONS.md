@@ -702,3 +702,133 @@ demonstration of an unregistered child, whose extra Tab stop is the lesson. It
 discounts one CONTROL, not the container, and not the widget — a marked control
 beside a real second stop still fires, and the attribute on the container does
 nothing at all. Both narrowings carry negative twins, per §13.
+
+## §16 — Lint runs, and the policy it runs is narrower than the one it replaced
+
+`packages/config/eslint/lumo.mjs` was written, argued, exported and documented,
+and nothing in this repository executed it: no `eslint.config.*` at the root, no
+`lint` script, `eslint` not a dependency of any package, no step in `verify` and
+none in CI. CONTRIBUTING.md meanwhile told contributors *"a physical utility is
+caught by lint. There is no exception."*
+
+This is the third instance of one shape in this repository. `cli.ts`'s header
+memorialises the first (`persian-digit-floor` had a factory, a fixture, a
+self-test and a README paragraph, and was not in the `RULES` array). §2.7 of the
+audit found the second (the same rule re-armed by an argument, and the argument
+missing from the only caller that gates anything). This is the third, and it is
+the largest: an entire policy file rather than one rule.
+
+### The shape
+
+One `eslint.config.js` at the ROOT, spreading `lumo.mjs` rather than restating
+it, plus a `lint` script and a `gate:lint` step in `verify` between `gate:props`
+and `gate:no-css-modules`.
+
+Root rather than per-package, because the policy is a property of the CONTRACT
+and not of a package: a per-package config is a place for a package to quietly
+not have one, and `packages/native` and `packages/config` — neither of which
+builds — are exactly the two that would have missed out. It lints 417 files
+across every package and the site.
+
+Beside `gate:props` rather than after the tests, because both grade SOURCE and
+because of the asymmetry that makes this class of defect expensive: a conditional
+hook makes tests fail for a reason that does not name itself, and a physical
+utility makes tests **pass** while the Persian page mirrors wrong. Neither is
+worth discovering after a full suite.
+
+Three devDependencies, all root-only, none reaching the registry or a consumer:
+`eslint` (the runner), `typescript-eslint` (**parser only** — the policy stays
+plugin-free, but espree cannot read `.tsx`; no typed-lint program is configured,
+so there is no type-check pass), and `eslint-plugin-react-hooks`
+(`rules-of-hooks`, which is not expressible as a syntax selector and whose
+absence is why a conditional `useContext` shipped in `toggle-group.tsx`). No
+formatter. Both existing catalog entries for eslint were **unsatisfiable** —
+`^9.40.0` and `^9.0.0` against published maxima of `9.39.5` and `8.67.0` — which
+is independent evidence that nothing had ever installed them.
+
+### What the first real run found, and why the rule changed rather than the code
+
+Thirty-seven physical-utility errors. **Thirty-four were prose**: sentences
+containing "right-click", "right-to-left", "bottom-right", and a dozen doc lines
+that say *"text-start rather than text-left"* precisely to teach the rule. Three
+were class strings, and all three were false positives as well.
+
+It also missed the dangerous direction entirely. The token boundary was
+`(?:.*\s)?` — literal whitespace — so **any** Tailwind variant prefix hid the
+utility behind it: `md:ml-4` and `after:-inset-x-2` did not match. And the
+`ltr:`/`rtl:` escape was a lookahead over the WHOLE string, so one `rtl:` class
+excused every other class beside it.
+
+A rule that fires on English prose and stays silent on `md:ml-4` is inverted, and
+inverted is worse than absent, because its output teaches people that lint output
+is noise. Two narrowings:
+
+1. **Context.** These are CLASS rules, so they now only look inside class
+   positions — a `className`/`classNames` JSX attribute, or an argument to
+   `cva`/`cn`/`clsx`/`cx`/`tv`/`twMerge`/`twJoin`. That is where classes live
+   here: three hundred and sixty `cn(` call sites and three hundred and fifty
+   nine `cva(`. Stated cost: a class string parked in a bare `const` is now
+   unseen. Every string literal in `packages/ui/src` and `packages/blocks/src`
+   was scanned to confirm there are none.
+2. **Tokens.** The pattern matches a whitespace-delimited class token and steps
+   over its variant prefixes, so `md:ml-4`, `after:-ml-2` and
+   `group-hover:text-right` are caught, and the sanctioned escape applies to the
+   token carrying it rather than to the whole string.
+
+### Two entries left the list, and the reason is a compiler, not an opinion
+
+Every entry in `PHYSICAL` was compiled against the pinned tailwindcss 4.3.3 and
+kept only if its output names a physical side. Two do not:
+
+```
+inset-x-0   →  inset-inline: 0px                     not left/right
+space-x-4   →  margin-inline-start / -end            not margin-left
+```
+
+`inset-x-` produced all three class-string hits in the first run —
+`calendar.variants.ts:75` and `resizable.tsx:97-98`, which the audit called
+"arguably false positives since `inset-x-0` is symmetric". The compiler says
+something stronger than symmetric: on this Tailwind the utility emits no
+physical side at all, and there is no logical utility to migrate those sites TO.
+So the rule changed and the three call sites did not. (`space-x-` WAS
+`margin-left` on Tailwind 3. If this repo ever moves back, both entries return
+with it.)
+
+### A fourth dead rule, found by wiring up the third
+
+The raw-digit selector matched nothing, ever. Three faults in one line:
+`Literal[value=/…/]` — esquery only applies a regex to a STRING attribute, and a
+numeric literal's `value` is a number, so the test was never attempted;
+`NumericLiteral` — a Babel node type that ESTree does not have; and `.left` —
+only the left operand of a `+`, so `{n + 1}` was invisible. It is now
+`Literal[raw=…]`, both operands, and scoped to a JSX CHILD rather than any
+expression container, because `maxLength={6}` is an attribute and is correct.
+
+Its old comment claimed to be "the mechanical cure for `{day.day}`". No selector
+can be: `day.day` is an identifier and nothing syntactic knows it holds a number.
+That case is cured by the TYPE — `children?: LumoNode`, which does not accept
+`number` — and the comment now says so.
+
+### The five duplicated test regexes stay
+
+`message`, `bubble`, `item`, `attachment` and `marker` each carry an identical
+copy-pasted `PHYSICAL` regex, and until now they were the only physical-utility
+enforcement that existed anywhere. They are kept, because they are not a weaker
+copy of the lint rule — they grade a different artifact. Lint reads SOURCE
+literals in class positions. Those tests read the RENDERED `class` attribute
+after `cn`/`cva` resolution, so they see a class that arrived through a variable,
+through a shared variants module, or from a dependency's own default — none of
+which any selector can follow. They also assert something lint cannot express at
+all: that the rtl and ltr renders produce the IDENTICAL class set.
+
+That is the same relationship this policy's header already describes between
+lint and the HTML gate — fast filter, then proof — one tier further in. The
+audit's real complaint was coverage: five of the lowest-risk components out of a
+hundred and twenty-four. Lint now covers all of `packages/ui/src` and
+`packages/blocks/src` at the source tier, so the gap those five left is closed by
+the tier that can close it, and they keep the job only they can do.
+
+The remaining cost is honest and unfixed: five identical regexes that can drift
+from the one in `lumo.mjs`, and already differ from it (they carry no `ltr:`/
+`rtl:` escape, which makes them stricter, and they predate the two entries the
+Tailwind compile removed).

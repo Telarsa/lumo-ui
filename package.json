@@ -11,9 +11,11 @@
     "build": "pnpm -r --if-present run build",
     "start": "node scripts/serve-static.mjs",
     "preview": "pnpm run build && pnpm run start",
-    "verify": "pnpm run gate:types && pnpm run gate:props && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:smoke && pnpm run gate:html",
+    "verify": "pnpm run gate:types && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:smoke && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
     "gate:props": "node --experimental-strip-types packages/gate/src/inert-props-cli.ts packages/ui/src packages/blocks/src",
+    "lint": "eslint .",
+    "gate:lint": "eslint .",
     "gate:no-css-modules": "node scripts/no-css-modules.mjs",
     "typecheck": "pnpm run gate:types",
     "test": "pnpm -r --if-present test",
@@ -23,7 +25,11 @@
     "gate:smoke": "node scripts/smoke-consumer.mjs"
   },
   "devDependencies": {
+    "@lumo-ui/config": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
   }
 }

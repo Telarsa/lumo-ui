@@ -38,6 +38,10 @@ export interface LumoHtmlProps {
  */
 export function LumoHtml({ lang, children, className }: LumoHtmlProps) {
   return (
+    // THE one sanctioned `<html>`. The rule says "use LumoHtml instead"; this IS
+    // LumoHtml, so it has nowhere to redirect to. Exempted here and nowhere else,
+    // which is what keeps `dir` derived from `lang` in exactly one place.
+    // eslint-disable-next-line no-restricted-syntax -- this is LumoHtml itself
     <html lang={lang} dir={direction(lang)} className={className}>
       {children}
     </html>

@@ -6,7 +6,8 @@ comment states the rules; this file is the procedure around it.
 ## The loop
 
 ```bash
-pnpm verify          # types → inert props → no-CSS-Modules → tests → build → gate
+pnpm verify          # types → inert props → lint → no-CSS-Modules → tests → build → gate
+pnpm lint            # just the source policy, on its own
 ```
 
 If `verify` is green the change is shippable. Nothing else is a gate.
@@ -52,6 +53,21 @@ manual merge.
 `rounded-ss`/`text-start`. A physical utility is caught by lint. There is no
 exception for "it's only used in LTR" — a component is copied into projects you
 will not see.
+
+That sentence was **false until 12 Aug 2026**: the policy in
+`packages/config/eslint/lumo.mjs` was real and nothing ran it. It runs now, over
+every package and the site, as `pnpm lint` and as `gate:lint` inside `verify`.
+Read DECISIONS.md §16 before adding a rule to it — the first real run was 34
+parts prose to 3 parts false positive, and what it MISSED (`md:ml-4`) mattered
+more than what it found.
+
+Two limits, stated so you do not trust the rule further than it goes. Lint sees
+class strings in a `className` attribute or in a `cva`/`cn`/`clsx`/`tv`/
+`twMerge` argument, and nowhere else — a class assembled through a variable is
+invisible to it, and to `shadcn migrate rtl`. And `inset-x-*` and `space-x-*` are
+NOT flagged, because on the pinned tailwindcss they compile to `inset-inline` and
+`margin-inline-start`/`-end`: they are already logical, and there is nothing to
+migrate them to.
 
 **`children?: LumoNode`, never `ReactNode`.** A bare number renders Latin digits.
 If you need to show one, format it:

@@ -89,6 +89,15 @@ jobs:
       - name: Inert props
         run: pnpm run gate:props
 
+      # The RTL contract's mechanical half, and the only step that can see a
+      # conditional hook. Sits beside Inert props because both grade SOURCE, and
+      # BEFORE Tests for the reason that makes this class of defect expensive: a
+      # physical utility does not make a test fail, it makes tests PASS while the
+      # Persian page mirrors wrong. Wired in on 12 Aug 2026; before that the
+      # policy existed and nothing executed it.
+      - name: Lint
+        run: pnpm run gate:lint
+
       # The mechanical form of the styling decision. Without it, "we use
       # Tailwind" is a comment.
       - name: No CSS Modules

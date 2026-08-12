@@ -96,6 +96,14 @@ const tabStop = useCompositeTabStop(
 
 CONTRIBUTING.md tells contributors *"the rules that will fail your build — a physical utility is caught by lint."* That is not true today. It also means `react-hooks/rules-of-hooks` is unconfigured, which is why §2.4 survived.
 
+**RESOLVED 12 Aug 2026 — and the policy was narrowed, not just wired.** Root `eslint.config.js` spreading the shared fragment, `lint` script, `gate:lint` in `verify` between `gate:props` and `gate:no-css-modules`, and a `Lint` step in CI. Three root devDependencies: `eslint`, `typescript-eslint` (parser only), `eslint-plugin-react-hooks`. Both pre-existing catalog pins were unsatisfiable (`eslint@^9.40.0` vs. a published maximum of `9.39.5`; `typescript-eslint@^9.0.0` vs. `8.67.0`), which is independent proof nothing had installed them.
+
+The first run over 417 files produced 43 errors, and the physical-utility rule was **inverted**: 34 of its 37 hits were English and Persian PROSE, the other 3 were false positives, and it could not see `md:ml-4` or `after:-inset-x-2` at all because its token boundary was literal whitespace. It is now scoped to class positions and matches per token. `inset-x-` and `space-x-` were removed from the list after compiling them against the pinned tailwindcss 4.3.3 — they emit `inset-inline` and `margin-inline-*`, so the three sites this audit flagged (`calendar.variants.ts:75`, `resizable.tsx:97-98`) were right and the rule was wrong.
+
+Wiring it also exposed a FOURTH dead rule inside the same file: the raw-digit selector tested a regex against a numeric `value`, which esquery skips, named a Babel node type ESTree does not have, and looked only at the left operand of a `+`. It had never matched anything. Repaired and given a poison fixture.
+
+Proven by re-injection, the way §2.7 was: `className="ml-2 text-left"` plus a conditional `useContext` in `rating.tsx` → `gate:lint` exits 1 naming both, restored → exits 0. Held in place by `packages/config/eslint/lumo.test.mjs`, which lints poison fixtures and asserts the root `verify` string contains `gate:lint`. Full reasoning in DECISIONS.md §16.
+
 ### 2.6 `Calendar` bounds are documented as days and implemented as months · CRITICAL
 
 `packages/ui/src/calendar.tsx:200-211` → `:428`, and the same at `range-calendar.tsx:180`, `date-picker.tsx:142`, `date-range-picker.tsx:267`, `date-selector.tsx:533`.

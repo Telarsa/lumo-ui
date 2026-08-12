@@ -200,6 +200,9 @@ function finish(checks: ProbeCheck[]): ProbeResult {
  * nobody can run by accident is a gate nobody runs.
  */
 if (typeof process !== "undefined" && process.argv?.[1]?.includes("icu-probe")) {
-  // eslint-disable-next-line no-console
+  // Printing is the whole point of this branch. `no-console` is deliberately not
+  // configured (measured 12 Aug 2026: 34 hits, every one in a CLI or build script
+  // whose job is to print), so the suppression that used to sit here named a rule
+  // nothing ran — the same shape this file's own repository keeps tripping over.
   console.log(probeIcu().report);
 }

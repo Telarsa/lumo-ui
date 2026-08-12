@@ -4,5 +4,13 @@
   "description": "Shared lint policy. Zero plugin dependencies so a consumer installs one file and gets the whole contract.",
   "license": "MIT",
   "type": "module",
-  "exports": { "./eslint": "./eslint/lumo.mjs" }
+  "exports": { "./eslint": "./eslint/lumo.mjs" },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "eslint": "catalog:",
+    "typescript-eslint": "catalog:",
+    "vitest": "catalog:"
+  }
 }

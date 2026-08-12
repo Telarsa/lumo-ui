@@ -265,8 +265,27 @@ catalog:
   '@vitejs/plugin-react': ^6.0.5
 
   # --- lint ------------------------------------------------------------------
-  eslint: ^9.40.0
-  typescript-eslint: ^9.0.0
+  # These two entries were unsatisfiable until 12 Aug 2026, which is itself
+  # evidence that nothing ever installed them: the newest published eslint 9 is
+  # 9.39.5 (^9.40.0 matches nothing) and the newest typescript-eslint is 8.67.0
+  # (^9.0.0 matches nothing). A catalog pin that cannot resolve is a pin nobody
+  # has run.
+  #
+  # eslint             — the runner. Held at 9.x: typescript-eslint 8 and the
+  #                      flat-config shape below are what this repo is written
+  #                      against, and 10 is a config-schema change, not a bump.
+  # typescript-eslint  — PARSER ONLY. `packages/config/eslint/lumo.mjs` is
+  #                      deliberately plugin-free, but its selectors have to see
+  #                      .tsx; espree cannot parse it. No typed-lint program is
+  #                      configured, so this costs no type-check pass.
+  #                      Peer range is >=4.8.4 <6.1.0, which the pinned
+  #                      typescript 6.0.3 satisfies.
+  eslint: ^9.39.5
+  typescript-eslint: ^8.67.0
+  # The one real plugin. `rules-of-hooks` is not expressible as a syntax
+  # selector — it needs the plugin's control-flow analysis — and its absence is
+  # exactly what let a conditional `useContext` ship in toggle-group.tsx.
+  eslint-plugin-react-hooks: ^7.1.1
   stylelint: ^17.14.1
 
   # --- distribution ----------------------------------------------------------

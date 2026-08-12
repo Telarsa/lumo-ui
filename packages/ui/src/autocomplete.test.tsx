@@ -126,6 +126,13 @@ function setup(items: readonly string[]) {
 
 /** The bare engine, same locale, no Lumo folding. Used as every case's twin. */
 function bareContains(item: string, query: string): boolean {
+  // `useFilter` IS NOT A HOOK. Read from the installed @base-ui/react@1.7.0:
+  // `combobox/root/utils/useFilter.mjs` is `export const useCoreFilter = getFilter`,
+  // and `internals/filter.mjs`'s `getFilter` touches no React API at all — it builds
+  // an `Intl.Collator` and memoises it in a module-level Map. The `use` prefix is
+  // upstream naming and the plugin has only the name to go on. These POISON TWIN
+  // cases need it OUTSIDE a render, to compare the bare engine against Lumo's folding.
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- upstream names a pure function `use*`
   const filter = BaseAutocomplete.useFilter({ locale: "fa-IR" });
   return filter.contains(item, query);
 }
