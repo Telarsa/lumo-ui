@@ -8,7 +8,6 @@ import {
   cn,
   type FocusableProps,
   type GlobalDOMAttributes,
-  type HoverEvents,
   type Key,
   type LumoNode,
   type PressEvents,
@@ -129,9 +128,8 @@ export type { ToggleVariantProps };
  * the other's props. This is the same split React Aria drew, kept.
  */
 interface ToggleButtonPropsBase
-  extends FocusableProps,
-    PressEvents,
-    HoverEvents,
+  extends Omit<FocusableProps, "onFocusChange">,
+    Omit<PressEvents, "onPressStart" | "onPressEnd" | "onPressUp" | "onPressChange">,
     AriaLabelingProps,
     Omit<ButtonAriaProps, "aria-current">,
     SlotProps,
@@ -147,7 +145,7 @@ interface ToggleButtonPropsBase
   /**
    * Whether to exclude the toggle from the sequential tab order.
    *
-   * ACCEPTED AND UNREACHABLE; `tabIndex={-1}` is what this ever meant.
+   * Translated to `tabIndex={-1}` by `toBaseToggleProps`.
    */
   excludeFromTabOrder?: boolean;
   /** Whether the toggle is disabled. */
@@ -158,8 +156,6 @@ interface ToggleButtonPropsBase
   defaultSelected?: boolean;
   /** Handler that is called when the toggle's state changes. */
   onChange?: (isSelected: boolean) => void;
-  /** Whether to prevent focus from moving to the toggle on press. */
-  preventFocusOnPress?: boolean;
 }
 
 export interface ToggleProps
@@ -207,15 +203,6 @@ function toBaseToggleProps({
   slot,
   style,
   // — accepted by the API, unreachable in Base UI. See button.tsx's header. —
-  preventFocusOnPress,
-  onPressStart,
-  onPressEnd,
-  onPressUp,
-  onPressChange,
-  onHoverStart,
-  onHoverEnd,
-  onHoverChange,
-  onFocusChange,
   ...rest
 }: Omit<ToggleProps, "className" | "variant" | "size">) {
   return {

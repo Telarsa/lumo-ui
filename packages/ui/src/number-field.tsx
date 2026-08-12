@@ -1,6 +1,6 @@
 "use client";
 
-import type * as React from "react";
+import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { NumberField as BaseNumberField } from "@base-ui/react/number-field";
@@ -24,8 +24,8 @@ import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
 import { asAriaKeyboardEvent } from "./base-ui-adapter.ts";
 import {
   Description,
-  FieldError,
   Label,
+  fieldErrorVariants,
   fieldVariants,
   optional,
 } from "./form.tsx";
@@ -320,7 +320,7 @@ export function NumberField({
   //                       base-ui-adapter.ts exists for exactly this, and is
   //                       used here.
   validationBehavior: _validationBehavior,
-  validate: _validate,
+  validate,
   onKeyDown,
   // Same incompatibility as `onKeyDown`, but nothing in Lumo's API needs to
   // deliver it, so it is dropped rather than translated.
@@ -329,18 +329,21 @@ export function NumberField({
   style: _style,
   ...rest
 }: NumberFieldProps) {
-  /*
-   * `errorMessage` is deliberately NOT handed to the wiring hook here, and the
-   * reason is a defect in this file rather than a choice: `FieldError` below is
-   * still React Aria's, and RAC's `FieldError` renders NOTHING without a
-   * `FieldErrorContext` — measured, `renderToStaticMarkup(<FieldError>خطا
-   * </FieldError>)` is the empty string. Nothing provides that context inside a
-   * Base UI `NumberField.Root`, so the error element does not exist and an
-   * `aria-describedby` pointing at it would be a dangling idref. The message
-   * being dropped is recorded in `ssr-naming-complete.json`; it is the same
-   * unported-`form.tsx` root cause, one component further along.
-   */
-  const wiring = useFieldWiring({ label, description, explicit: rest });
+  const [uncontrolledValue, setUncontrolledValue] = React.useState(
+    () => (rest.defaultValue as number | undefined) ?? Number.NaN,
+  );
+  const validationValue = (rest.value as number | undefined) ?? uncontrolledValue;
+  const validationResult = validate?.(validationValue);
+  const validationMessage =
+    validationResult === true || validationResult == null
+      ? undefined
+      : Array.isArray(validationResult)
+        ? validationResult[0]
+        : validationResult;
+  const effectiveError = errorMessage ?? validationMessage;
+  // NumberField.Root is not a Lumo Field provider, so the component renders its
+  // own error root with the ids minted by the shared wiring hook.
+  const wiring = useFieldWiring({ label, description, errorMessage: effectiveError, explicit: rest });
   /*
    * The spread below is `as unknown as`, and the reason is worth stating:
    * React Aria types this component's global DOM handlers against
@@ -374,9 +377,12 @@ export function NumberField({
       {...attr("required", isRequired)}
       {...attr(
         "onValueChange",
-        onChange === undefined
-          ? undefined
-          : (value: number | null) => onChange(value ?? Number.NaN),
+          onChange === undefined
+          ? (next: number | null) => setUncontrolledValue(next ?? Number.NaN)
+          : (next: number | null) => {
+              setUncontrolledValue(next ?? Number.NaN);
+              onChange(next ?? Number.NaN);
+            },
       )}
       {...attr(
         "onKeyDown",
@@ -385,18 +391,10 @@ export function NumberField({
           : (event: React.KeyboardEvent<HTMLDivElement>) =>
               onKeyDown(asAriaKeyboardEvent(event)),
       )}
-      {...optional("data-invalid", isInvalid ?? (errorMessage != null ? true : undefined))}
+      {...optional("data-invalid", isInvalid ?? (effectiveError != null ? true : undefined))}
       {...(rest as unknown as BaseNumberField.Root.Props)}
     >
-      {/*
-       * HALF-MIGRATED, and the `id` is what holds it together for now. `Label`
-       * is still `form.tsx`'s React Aria one, which wires `htmlFor` through
-       * RAC's LabelContext — a context nothing provides here, because the
-       * control beside it is `NumberField.Input` from Base UI. The served HTML
-       * was a `<label>` with no `for` next to an `<input>` with no name, and
-       * `gate:html` counted it. Naming it explicitly is the fix that does not
-       * require porting `form.tsx` for all 77 components first.
-       */}
+      {/* Explicit first-byte wiring because NumberField.Root is not Field.Root. */}
       <Label {...wiring.labelProps}>{label}</Label>
       {/*
        * `Group` earns its place: Base UI feeds it `role="group"` and ties the
@@ -432,7 +430,15 @@ export function NumberField({
       {description != null ? (
         <Description {...wiring.descriptionProps}>{description}</Description>
       ) : null}
-      <FieldError>{errorMessage}</FieldError>
+      {effectiveError != null ? (
+        <div
+          role="alert"
+          {...wiring.errorProps}
+          className={fieldErrorVariants()}
+        >
+          {effectiveError}
+        </div>
+      ) : null}
     </BaseNumberField.Root>
   );
 }

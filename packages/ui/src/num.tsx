@@ -17,7 +17,7 @@ import { formatDate, formatNumber, type Locale } from "@lumo-ui/core";
  * No "use client": these are pure formatters over Intl, so they render on the
  * server and a consumer pays no hydration for a number.
  */
-export interface NumProps {
+export interface NumProps extends Intl.NumberFormatOptions {
   value: number;
   locale: Locale;
   /**
@@ -31,13 +31,6 @@ export interface NumProps {
    * what keeps this shape a thin window onto `Intl.NumberFormatOptions` instead
    * of a re-typed subset that drifts from it.
    */
-  style?: Intl.NumberFormatOptions["style"] | undefined;
-  /** @forwarded `...options` → `Intl.NumberFormat`. See `style`. */
-  currency?: string | undefined;
-  /** @forwarded `...options` → `Intl.NumberFormat`. See `style`. */
-  minimumFractionDigits?: number | undefined;
-  /** @forwarded `...options` → `Intl.NumberFormat`. See `style`. */
-  maximumFractionDigits?: number | undefined;
   className?: string | undefined;
 }
 
@@ -49,7 +42,7 @@ export function Num({ value, locale, className, ...options }: NumProps) {
   return <span className={className}>{formatNumber(value, locale, options)}</span>;
 }
 
-export interface DateTextProps {
+export interface DateTextProps extends Intl.DateTimeFormatOptions {
   value: Date;
   locale: Locale;
   /**
@@ -59,13 +52,6 @@ export interface DateTextProps {
    * a `fa-IR` date renders «۲۱ مرداد», and with no options «۱۴۰۵/۵/۲۱» — the
    * Jalali calendar in both, which is the property this component exists for.
    */
-  dateStyle?: Intl.DateTimeFormatOptions["dateStyle"] | undefined;
-  /** @forwarded `...options` → `Intl.DateTimeFormat`. See `dateStyle`. */
-  year?: Intl.DateTimeFormatOptions["year"] | undefined;
-  /** @forwarded `...options` → `Intl.DateTimeFormat`. See `dateStyle`. */
-  month?: Intl.DateTimeFormatOptions["month"] | undefined;
-  /** @forwarded `...options` → `Intl.DateTimeFormat`. See `dateStyle`. */
-  day?: Intl.DateTimeFormatOptions["day"] | undefined;
   className?: string | undefined;
 }
 

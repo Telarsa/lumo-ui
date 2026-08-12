@@ -131,7 +131,10 @@ export const iconTileVariants = cva(
 );
 
 export interface IconTileProps
-  extends Omit<React.ComponentProps<"span">, "children">,
+  extends Omit<
+      React.ComponentProps<"span">,
+      "children" | "role" | "aria-label" | "aria-labelledby" | "aria-hidden"
+    >,
     VariantProps<typeof iconTileVariants> {
   /** The icon. Sized by the tile — see `[&>svg]:size-1/2`. */
   children?: LumoNode;
@@ -158,16 +161,26 @@ export function IconTile({
 }: IconTileProps) {
   return (
     <span
+      {...props}
       data-lumo=""
       // Named → a real image with a name. Unnamed → gone from the tree
       // entirely. There is deliberately no third state: an unnamed
       // `role="img"` is worse than no role, because it announces "image" and
       // then has nothing to say.
       {...(label === undefined
-        ? { "aria-hidden": "true" as const }
-        : { role: "img" as const, "aria-label": label })}
+        ? {
+            "aria-hidden": "true" as const,
+            role: undefined,
+            "aria-label": undefined,
+            "aria-labelledby": undefined,
+          }
+        : {
+            "aria-hidden": undefined,
+            role: "img" as const,
+            "aria-label": label,
+            "aria-labelledby": undefined,
+          })}
       className={cn(iconTileVariants({ tone, variant, size }), className)}
-      {...props}
     >
       {children as React.ReactNode}
     </span>

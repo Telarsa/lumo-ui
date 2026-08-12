@@ -79,6 +79,8 @@ export interface DatePickerBaseProps {
   value?: CalendarDate | null | undefined;
   defaultValue?: CalendarDate | null | undefined;
   onChange?: ((value: CalendarDate | null) => void) | undefined;
+  /** The day the grid marks as today. Required for deterministic SSR/hydration. */
+  today: CalendarDate;
   /** The date an empty field cycles from. Defaults to today. */
   placeholderValue?: CalendarDate | undefined;
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
@@ -112,6 +114,7 @@ export function DatePicker(props: DatePickerProps) {
     value,
     defaultValue,
     onChange,
+    today,
     placeholderValue,
     isDateUnavailable,
     description,
@@ -174,6 +177,9 @@ export function DatePicker(props: DatePickerProps) {
     },
     ...optional("isDisabled", isDisabled),
     ...optional("isReadOnly", isReadOnly),
+    ...optional("minValue", props.minValue),
+    ...optional("maxValue", props.maxValue),
+    ...optional("isDateUnavailable", isDateUnavailable),
   });
 
   const labelId = useId();
@@ -242,6 +248,7 @@ export function DatePicker(props: DatePickerProps) {
             <Calendar
               label={label}
               locale={locale}
+              today={today}
               {...optional("value", selected ?? undefined)}
               {...optional("defaultMonth", selected ?? placeholderValue)}
               {...navigation}

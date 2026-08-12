@@ -14,7 +14,7 @@ Private to Telarsa. See `DECISIONS.md §0.2`.
 
 | | |
 | --- | --- |
-| Behaviour | [React Aria Components](https://react-spectrum.adobe.com/react-aria/) — rented, not rebuilt |
+| Behaviour | [Base UI](https://base-ui.com/) — adapted where its public contract differs from Lumo's |
 | Styling | Tailwind v4, CSS-first, no config file |
 | Distribution | copy-in components, packaged invariants |
 | Locales | `fa-IR`, `en-US` — complete or the build fails |
@@ -28,30 +28,32 @@ to them is a bug, not a customisation.
 ```
 packages/core     the invariants — LumoNode, direction(), formatters, strings
 packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
-packages/ui       68 components
-packages/blocks   28 whole-screen compositions
+packages/ui       94 registry components
+packages/blocks   30 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
+packages/native   the unstarted React Native feasibility probe
 apps/website      the showcase, and the first thing the gate runs against
 ```
 
-**Current state.** 68 components, 30 blocks, 99 registry items, 604 tests,
-410 documents graded at 0 violations. See `ROADMAP.md` for what is still open.
+**Current state.** 94 components, 30 blocks and 124 generated registry items.
+The exact test and document totals are printed by `pnpm run verify`; they are not
+hand-copied here because they change whenever a regression test or example is
+added. See `ROADMAP.md` for what is still open.
 
 ## Getting started
 
 ```bash
 pnpm install
-pnpm verify      # types → no-CSS-Modules → tests → build → gate
+pnpm run verify  # types → props → lint → no-CSS-Modules → tests → registry → smoke → HTML
 pnpm dev         # the showcase site, live
 ```
 
 `pnpm verify` is the whole contract. If it is green, the thing is shippable.
 
-There is no `pnpm start` — the site is a static export, so there is no server
-to start. To view the real built output (the bytes the gate graded), run
-`pnpm --filter website build && pnpm --filter website preview` and open
-`http://localhost:4173/fa-IR/`.
+The site is a static export, not a Next production server. To view the real
+built output (the bytes the gate graded), run `pnpm run preview` and open
+`http://localhost:4173/fa/`.
 
 If `next dev` once logged errors about `/sw.js`: that was a service worker some
 OTHER project registered on `localhost:3000`, still phoning home.
@@ -79,13 +81,10 @@ Aria leaks 8 English strings on a Persian page, 5 of them reachable by prop —
 those 5 are typed in `packages/core/src/strings.ts`.
 
 **3. `LumoProvider` is not optional.**
-React Aria resolves its locale from `navigator.language`, falling back to
-`en-US` — and during server rendering there is no `navigator`. Without a provider
-every React Aria component renders `en-US`/`ltr` regardless of `<html lang dir>`.
-Measured: a slider thumb at value 40 sits at `left: 40%` instead of `left: 60%`,
-the mirror image of where it belongs. No gate catches this — it is valid HTML
-with plausible inline styles — which is why it is a component with a required
-prop rather than a line of documentation.
+Lumo derives direction from its required locale and supplies Base UI's direction
+context. A document-level `dir` attribute is necessary but does not configure a
+headless component engine's first-byte positioning and keyboard model. The
+provider makes those two sources agree before hydration.
 
 **4. There is no `dir` prop.**
 Direction is derived from the locale via `Intl.Locale.getTextInfo()`. A wrong
@@ -108,17 +107,18 @@ A rule that has never been seen to fail is not a rule. This caught a real one:
 | gate | what it proves |
 | --- | --- |
 | `gate:types` | `LumoNode`, the closed `Locale` union, and every required string prop |
-| `gate:props` | no prop is typed, accepted and then never delivered |
+| `gate:props` | locally declared and selected inherited behaviour props are delivered; owned root semantics cannot be overwritten |
 | `gate:no-css-modules` | the styling decision is real, not a comment |
 | `gate:test` | every package's suite — including the gate's own 134, which are its poison fixtures and the negative twin of every exemption |
 | `gate:registry` | the manifest is derivable from the code, not hand-kept |
-| `gate:smoke` | every item compiles as a **consumer** receives it, outside the workspace |
+| `gate:smoke` | every item's declared sibling/package closure is complete, and the copied payloads compile outside the workspace |
 | `gate:html` | the bytes actually served are correct |
 
-`gate:props` is the only one that reads SOURCE rather than output, because the
-defect it catches produces no output: a prop that is declared, accepted and
-dropped renders nothing, throws nothing and type-checks. Its first run found 45
-of them, including three that were worse than silent — `form.tsx` served
+`gate:props` reads source and uses the TypeScript checker for inherited behaviour
+contracts, because a prop that is declared, accepted and dropped renders
+nothing, throws nothing and type-checks. It also checks semantic attributes a
+component owns at its DOM root. Its first run found 45 locally declared defects,
+including three that were worse than silent — `form.tsx` served
 `<label elementType="div">`, `number-field.tsx` served `commitBehavior="snap"`,
 and `disclosure.tsx` let a caller replace the `role="region"` the component
 exists for.

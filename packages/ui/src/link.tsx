@@ -146,7 +146,13 @@ export type LinkCurrent = true | "page" | "step" | "location" | "date" | "time";
 interface LinkBaseProps
   extends Omit<
       ComponentProps<"a">,
-      "children" | "className" | "target" | "rel" | "aria-current"
+      | "children"
+      | "className"
+      | "target"
+      | "rel"
+      | "role"
+      | "aria-disabled"
+      | "aria-current"
     >,
     VariantProps<typeof linkVariants> {
   children?: LumoNode;
@@ -219,7 +225,9 @@ export function Link({
   const content = (
     <>
       {children}
-      {newTabLabel !== undefined ? <span className="sr-only">{newTabLabel}</span> : null}
+      {href !== undefined && isDisabled !== true && newTabLabel !== undefined ? (
+        <span className="sr-only">{newTabLabel}</span>
+      ) : null}
     </>
   );
 
@@ -234,6 +242,7 @@ export function Link({
   if (href === undefined || isDisabled === true) {
     return (
       <span
+        {...props}
         data-lumo=""
         role="link"
         className={classes}
@@ -241,7 +250,6 @@ export function Link({
           ? { "aria-disabled": true, "data-disabled": "" }
           : { tabIndex: 0 })}
         {...current}
-        {...props}
       >
         {content}
       </span>
@@ -250,7 +258,10 @@ export function Link({
 
   return (
     <a
+      {...props}
       data-lumo=""
+      role={undefined}
+      aria-disabled={undefined}
       href={href}
       className={classes}
       {...current}
@@ -258,7 +269,6 @@ export function Link({
       // closes the reverse-`window.opener` hole; `noreferrer` is included
       // because the two are only jointly honoured by older engines.
       {...(newTab === true ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {})}
-      {...props}
     >
       {content}
     </a>

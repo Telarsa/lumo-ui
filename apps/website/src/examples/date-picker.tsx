@@ -1,17 +1,14 @@
 import type { Locale } from "@lumo-ui/core";
-import { DatePicker } from "@lumo-ui/ui";
-import { DatePickerDropdownIsland } from "@/components/demo-islands";
+import { DatePickerDropdownIsland, DatePickerIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
  * Worked examples for the date-picker page.
  *
- * The date-of-birth example is the one that needs VALUES, and it goes through an
- * island for it: the caption dropdowns make `minValue`/`maxValue` required at
- * the type level — an unbounded year list is built from `today()` during render
- * and is a different list tomorrow — and a `CalendarDate` is a class instance,
- * which cannot cross into a client component from this server module. The bounds
- * travel as ISO strings; `demo-islands.tsx` builds them with `calendarDay`.
+ * Every picker goes through a narrow island because `today` is required and a
+ * `CalendarDate` class instance cannot cross into a client component from this
+ * server module. The documentation clock and the date-of-birth bounds travel as
+ * ISO strings; `demo-islands.tsx` builds them with `calendarDay`.
  *
  * `meta.composition` and `meta.parts` landed with the `index.ts` merge: the
  * loader checks every capitalised name in them against the real exports of
@@ -50,8 +47,7 @@ const t = {
 
 function BasicExample(l: Locale) {
   return (
-    <DatePicker
-      className="w-full max-w-sm"
+    <DatePickerIsland
       label={t.travel[l]}
       openCalendarLabel={t.open[l]}
       description={t.travelHelp[l]}
@@ -61,8 +57,7 @@ function BasicExample(l: Locale) {
 
 function DescriptionExample(l: Locale) {
   return (
-    <DatePicker
-      className="w-full max-w-sm"
+    <DatePickerIsland
       label={t.booking[l]}
       openCalendarLabel={t.open[l]}
       description={t.bookingHelp[l]}
@@ -72,8 +67,7 @@ function DescriptionExample(l: Locale) {
 
 function InvalidExample(l: Locale) {
   return (
-    <DatePicker
-      className="w-full max-w-sm"
+    <DatePickerIsland
       label={t.delivery[l]}
       openCalendarLabel={t.open[l]}
       errorMessage={t.deliveryError[l]}
@@ -83,8 +77,7 @@ function InvalidExample(l: Locale) {
 
 function DisabledExample(l: Locale) {
   return (
-    <DatePicker
-      className="w-full max-w-sm"
+    <DatePickerIsland
       label={t.archive[l]}
       openCalendarLabel={t.open[l]}
       isDisabled
@@ -95,12 +88,12 @@ function DisabledExample(l: Locale) {
 function SizesExample(l: Locale) {
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
-      <DatePicker
+      <DatePickerIsland
         size="sm"
         label={t.travel[l]}
         openCalendarLabel={t.open[l]}
       />
-      <DatePicker
+      <DatePickerIsland
         size="lg"
         label={t.travel[l]}
         openCalendarLabel={t.open[l]}

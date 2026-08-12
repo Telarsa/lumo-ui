@@ -59,6 +59,15 @@ const app = (defaultCollapsed = false) => (
 );
 
 describe("Sidebar — a named landmark whose names survive the rail", () => {
+  it("requires the icon that keeps an item visible in collapsed mode", () => {
+    void (
+      <Sidebar label="ناوبری">
+        {/* @ts-expect-error every SidebarItem can be rendered in collapsed mode */}
+        <SidebarItem href="/text-only">فقط متن</SidebarItem>
+      </Sidebar>
+    );
+  });
+
   it("names the nav, the group, and the current page", () => {
     render(app());
 

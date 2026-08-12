@@ -26,12 +26,6 @@ export interface ListBoxItemProps<T extends object = object> {
   children?: unknown;
   /* CARRIER that keeps its type PARAMETER — resolves to `undefined`. */
   value?: (T & never) | undefined;
-  /*
-   * A no-op the caller has no choice about: the only admissible value is the
-   * behaviour the component already has. `segmented-control.tsx`'s
-   * `disallowEmptySelection`.
-   */
-  disallowEmptySelection?: true | undefined;
 }
 
 export function ListBoxItem<T extends object = object>({ children }: ListBoxItemProps<T>) {

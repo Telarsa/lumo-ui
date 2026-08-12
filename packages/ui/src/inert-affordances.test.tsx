@@ -282,6 +282,13 @@ describe("MenuRadioItem — the role a checkbox rebuild cannot produce", () => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe("Popover's isKeyboardDismissDisabled", () => {
+  it("rejects legacy surface props that the popup cannot implement", () => {
+    // @ts-expect-error modal state belongs to PopoverTrigger/Root, not the popup.
+    const modal = <Popover isNonModal />;
+    // @ts-expect-error a discarded boundaryElement must not compile.
+    const boundary = <Popover boundaryElement={document.body} />;
+    expect([modal, boundary]).toHaveLength(2);
+  });
   it("is gone from the surface, so passing it there does not compile", () => {
     /*
      * The type is the assertion — this body only pins that the runtime no

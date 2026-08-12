@@ -236,7 +236,8 @@ export type SwitchVariantProps = VariantProps<typeof switchVariants>;
  * with no visible label must pass `aria-label`, and the `named-controls` gate rule
  * is what catches the omission in the prerendered HTML.
  */
-export interface SwitchProps extends ToggleFieldPropsBase {
+export interface SwitchProps
+  extends Omit<ToggleFieldPropsBase, "validationBehavior" | "onFocusChange"> {
   children?: LumoNode;
   /**
    * `md` is shadcn's current compact scale; `lg` keeps the row at the 44px
@@ -293,11 +294,8 @@ export function Switch({
    * off, so the Persian-page-with-an-English-error defect form.tsx exists to
    * prevent has no switch to flip here. Recorded as a capability gap.
    */
-  validationBehavior,
-  // — accepted by the API, unreachable in Base UI —
   autoFocus,
   excludeFromTabOrder,
-  onFocusChange,
   slot,
   style,
   ...rest
@@ -350,8 +348,11 @@ export function Switch({
           {...attr("form", form)}
           {...attr("id", id)}
           {...attr("inputRef", inputRef)}
+          {...attr("autoFocus", autoFocus)}
+          {...attr("slot", slot ?? undefined)}
           {...attr("style", style)}
           {...(rest as object)}
+          {...attr("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
         >
           <BaseSwitch.Thumb aria-hidden="true" className={switchThumbVariants({ size })} />
         </BaseSwitch.Root>

@@ -16,15 +16,16 @@ import {
   CalendarDate,
   PersianCalendar,
   Time,
-  getLocalTimeZone,
-  toCalendar,
-  today,
 } from "@internationalized/date";
 import { DayPicker } from "react-day-picker";
 import { FORMAT_LOCALE, formatNumber } from "@lumo-ui/core";
 import { lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
 import { Calendar } from "./calendar.tsx";
-import { RangeCalendar } from "./range-calendar.tsx";
+import {
+  RangeCalendar,
+  type CalendarDateRange,
+  type RangeCalendarProps,
+} from "./range-calendar.tsx";
 import { DateField } from "./date-field.tsx";
 import { TimeField } from "./time-field.tsx";
 import { DatePicker } from "./date-picker.tsx";
@@ -134,17 +135,20 @@ function segment(container: HTMLElement, type: string): HTMLElement {
  * no other way. `locale` is now required and explicit, because there is no
  * `I18nProvider` to read it from.
  */
-const CAL = { label: "تاریخ سفر", locale: "fa-IR" } as const;
+const RANGE_TODAY = jalali(1405, 5, 21);
+const CAL = { label: "تاریخ سفر", locale: "fa-IR", today: RANGE_TODAY } as const;
 
 const LABELS = {
   label: "تاریخ سفر",
   openCalendarLabel: "باز کردن تقویم",
+  today: RANGE_TODAY,
 } as const;
 
 const RANGE_LABELS = {
   ...LABELS,
   startLabel: "تاریخ شروع",
   endLabel: "تاریخ پایان",
+  today: RANGE_TODAY,
 } as const;
 
 /* ══════════════════════════════════════════════════════════════════════════ */
@@ -333,27 +337,65 @@ describe("segment entry across month boundaries", () => {
 });
 
 describe("today is derived from the persian calendar, not from Gregorian", () => {
+  it("requires a deterministic today input throughout the calendar family", () => {
+    // @ts-expect-error Calendar must not read the clock during render
+    void <Calendar label="تاریخ" locale="fa-IR" />;
+    // @ts-expect-error RangeCalendar must not read the clock during render
+    void <RangeCalendar label="بازه" locale="fa-IR" />;
+    // @ts-expect-error DatePicker must pass an explicit today to its grid
+    void <DatePicker label="تاریخ" openCalendarLabel="باز کردن" />;
+    void (
+      // @ts-expect-error DateRangePicker must pass an explicit today to its grid
+      <DateRangePicker
+        label="بازه"
+        startLabel="شروع"
+        endLabel="پایان"
+        openCalendarLabel="باز کردن"
+      />
+    );
+  });
+
+  it("does not silently recover to the system clock from an untyped missing today", () => {
+    const invalid = { label: "بازه", locale: "fa-IR", today: undefined } as unknown as RangeCalendarProps;
+    expect(() => ssr(<RangeCalendar {...invalid} />)).toThrow();
+  });
+  it("an explicit today keeps the highlighted day deterministic across clocks", () => {
+    vi.useFakeTimers();
+    try {
+      const highlighted = (iso: string) => {
+        vi.setSystemTime(new Date(iso));
+        const { container, unmount } = live(
+          <Calendar {...CAL} defaultMonth={RANGE_TODAY} today={RANGE_TODAY} />,
+        );
+        const text = container.querySelector("[data-today]")?.textContent;
+        unmount();
+        return text;
+      };
+
+      expect(highlighted("2026-08-12T12:00:00Z")).toBe("۲۱");
+      expect(highlighted("2026-08-13T12:00:00Z")).toBe("۲۱");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("the today cell shows the Jalali day-of-month, in Persian digits", () => {
     /*
-     * Computed, never literal: a hard-coded ۱۹ would pass today and rot
-     * tomorrow, which is the same class of defect as a hard-coded month length.
-     *
-     * The guard that makes this bite: the Jalali YEAR can never equal the
-     * Gregorian year, so asserting the heading carries the Jalali year proves
-     * the grid is not Gregorian-with-Persian-digits — the failure mode that
-     * looks entirely correct and is off by 621 years.
+     * Computed from the explicit clock input, never from the machine clock.
+     * The Jalali year cannot equal the Gregorian year of the ISO date this
+     * fixture represents, so the heading also proves the grid is not
+     * Gregorian-with-Persian-digits — the failure mode that looks correct and
+     * is off by 621 years.
      */
-    const gregorianToday = today(getLocalTimeZone());
-    const jalaliToday = toCalendar(gregorianToday, persianCalendar());
-
     const { container } = live(<Calendar {...CAL} />);
     const todayCell = container.querySelector("[data-today]");
     expect(todayCell).not.toBeNull();
-    expect(todayCell?.textContent).toBe(formatNumber(jalaliToday.day, "fa-IR"));
+    expect(todayCell?.textContent).toBe(formatNumber(RANGE_TODAY.day, "fa-IR"));
 
     const heading = caption(container as HTMLElement);
-    expect(heading).toContain(formatNumber(jalaliToday.year, "fa-IR", { useGrouping: false }));
-    expect(jalaliToday.year).not.toBe(gregorianToday.year);
+    expect(heading).toContain(formatNumber(RANGE_TODAY.year, "fa-IR", { useGrouping: false }));
+    expect(RANGE_TODAY.calendar.identifier).toBe("persian");
+    expect(RANGE_TODAY.year).not.toBe(2026);
   });
 
   it("the today cell announces itself in Persian, starting with «امروز»", () => {
@@ -396,6 +438,7 @@ describe("every visible digit is ارقام فارسی", () => {
     const html = ssr(
       <RangeCalendar
         {...CAL}
+        today={RANGE_TODAY}
         value={{ from: jalali(1405, 5, 10), to: jalali(1405, 5, 15) }}
       />,
     );
@@ -438,7 +481,7 @@ describe("no component in the family announces English", () => {
    */
   const cases: [string, React.ReactElement][] = [
     ["Calendar", <Calendar {...CAL} />],
-    ["RangeCalendar", <RangeCalendar {...CAL} />],
+    ["RangeCalendar", <RangeCalendar {...CAL} today={RANGE_TODAY} />],
     ["DateField", <DateField label="تاریخ" />],
     ["TimeField", <TimeField label="ساعت" />],
     ["DatePicker", <DatePicker {...LABELS} />],
@@ -474,7 +517,7 @@ describe("no component in the family announces English", () => {
    */
   const described: [string, React.ReactElement][] = [
     ["Calendar", <Calendar {...CAL} description="راهنمای تقویم" />],
-    ["RangeCalendar", <RangeCalendar {...CAL} description="راهنمای بازه" />],
+    ["RangeCalendar", <RangeCalendar {...CAL} today={RANGE_TODAY} description="راهنمای بازه" />],
     ["DateField", <DateField label="تاریخ" description="راهنمای فیلد" />],
     ["TimeField", <TimeField label="ساعت" description="راهنمای ساعت" />],
     ["DatePicker", <DatePicker {...LABELS} description="راهنمای انتخابگر" />],
@@ -502,6 +545,24 @@ describe("no component in the family announces English", () => {
       expect(announcedEnglish(html)).toEqual([]);
     });
   }
+
+  it("RangeCalendar associates its authored error as well as announcing it", () => {
+    const root = document.createElement("div");
+    root.innerHTML = ssr(
+        <RangeCalendar
+          {...CAL}
+          today={RANGE_TODAY}
+          description="راهنمای بازه"
+          errorMessage="بازه نامعتبر است"
+        />,
+    );
+    const wrapper = root.querySelector("[data-lumo]");
+    const ids = wrapper?.getAttribute("aria-describedby")?.split(/\s+/) ?? [];
+    const error = root.querySelector('[role="alert"]');
+    expect(error?.id).toBeTruthy();
+    expect(ids).toContain(error?.id);
+    expect(ids).toHaveLength(2);
+  });
 
   it("the empty-segment value is «خالی» and appears once per editable segment", () => {
     const html = ssr(<DateField label="تاریخ" />);
@@ -797,6 +858,7 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
       ssr(
         <RangeCalendar
           {...CAL}
+          today={RANGE_TODAY}
           {...DOB}
           value={{ from: jalali(1360, 5, 10), to: jalali(1360, 5, 15) }}
         />,
@@ -971,7 +1033,7 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
     // @ts-expect-error one bound is not bounds: `getYearOptions` needs both.
     const half = <Calendar {...CAL} captionLayout="dropdown-years" minValue={jalali(1300, 1, 1)} />;
     // @ts-expect-error the range grid shares the union, so it shares the rule.
-    const range = <RangeCalendar {...CAL} captionLayout="dropdown" />;
+    const range = <RangeCalendar {...CAL} today={RANGE_TODAY} captionLayout="dropdown" />;
     // @ts-expect-error and so does the picker, which is where a date of birth is typed.
     const picker = <DatePicker {...LABELS} captionLayout="dropdown" />;
 
@@ -1012,6 +1074,44 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
  * and would not match the label a bound test looks it up by.
  */
 describe("the bounds are DAYS, and a day before one cannot be selected", () => {
+  it("DatePicker applies maxValue to typed segment entry as well as the grid", () => {
+    const committed: (CalendarDate | null)[] = [];
+    const { container } = live(
+      <DatePicker
+        {...LABELS}
+        defaultValue={jalali(1405, 5, 19)}
+        maxValue={jalali(1405, 5, 20)}
+        errorMessage="تاریخ باید تا ۲۰ مرداد باشد"
+        onChange={(value) => committed.push(value)}
+      />,
+    );
+    const day = segment(container, "day");
+    day.focus();
+    fireEvent.keyDown(day, { key: "۲" });
+    fireEvent.keyDown(day, { key: "۱" });
+
+    expect(committed.at(-1)).toBeNull();
+  });
+
+  it("DateRangePicker applies maxValue to typed segment entry as well as the grid", () => {
+    const committed: (CalendarDateRange | null)[] = [];
+    const { container } = live(
+      <DateRangePicker
+        {...RANGE_LABELS}
+        defaultValue={{ from: jalali(1405, 5, 19), to: jalali(1405, 5, 20) }}
+        maxValue={jalali(1405, 5, 20)}
+        errorMessage="بازه باید تا ۲۰ مرداد باشد"
+        onChange={(value) => committed.push(value)}
+      />,
+    );
+    const day = container.querySelectorAll<HTMLElement>('[data-type="day"]')[1];
+    day!.focus();
+    fireEvent.keyDown(day!, { key: "۲" });
+    fireEvent.keyDown(day!, { key: "۱" });
+
+    expect(committed.at(-1)?.to).toBeUndefined();
+  });
+
   /**
    * A day cell's announced name, computed from `Intl` under the persian
    * calendar rather than written out — this file's rule, and here it is also
@@ -1143,6 +1243,7 @@ describe("the bounds are DAYS, and a day before one cannot be selected", () => {
     const { container } = live(
       <RangeCalendar
         {...CAL}
+        today={RANGE_TODAY}
         minValue={MIN}
         defaultMonth={jalali(1403, 5, 1)}
         onChange={onChange}

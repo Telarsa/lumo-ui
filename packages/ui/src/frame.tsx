@@ -72,7 +72,10 @@ export const frameNotchVariants = cva(
 );
 
 export interface FrameProps
-  extends Omit<React.ComponentProps<"div">, "children">,
+  extends Omit<
+      React.ComponentProps<"figure">,
+      "children" | "role" | "aria-label" | "aria-labelledby"
+    >,
     VariantProps<typeof frameVariants> {
   /**
    * Names what is INSIDE the frame, e.g. «پیش‌نمایش موبایل». Required.
@@ -92,10 +95,12 @@ export interface FrameProps
 export function Frame({ device = "browser", label, address, className, children, ...props }: FrameProps) {
   return (
     <figure
-      data-lumo=""
-      aria-label={label}
-      className={cn("m-0", frameVariants({ device }), className)}
       {...props}
+      data-lumo=""
+      role={undefined}
+      aria-label={label}
+      aria-labelledby={undefined}
+      className={cn("m-0", frameVariants({ device }), className)}
     >
       {device === "browser" ? (
         // Decoration, entirely. Real <button>s here would put three unnamed

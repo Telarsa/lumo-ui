@@ -1,5 +1,5 @@
 import type { Locale } from "@lumo-ui/core";
-import { DateRangePicker } from "@lumo-ui/ui";
+import { DateRangePickerIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -35,8 +35,7 @@ const t = {
 
 function BasicExample(l: Locale) {
   return (
-    <DateRangePicker
-      className="w-full max-w-md"
+    <DateRangePickerIsland
       label={t.trip[l]}
       openCalendarLabel={t.open[l]}
       startLabel={t.start[l]}
@@ -48,8 +47,7 @@ function BasicExample(l: Locale) {
 
 function LabelledHalvesExample(l: Locale) {
   return (
-    <DateRangePicker
-      className="w-full max-w-md"
+    <DateRangePickerIsland
       label={t.stay[l]}
       openCalendarLabel={t.open[l]}
       startLabel={t.start[l]}
@@ -61,8 +59,7 @@ function LabelledHalvesExample(l: Locale) {
 
 function InvalidExample(l: Locale) {
   return (
-    <DateRangePicker
-      className="w-full max-w-md"
+    <DateRangePickerIsland
       label={t.report[l]}
       openCalendarLabel={t.open[l]}
       startLabel={t.start[l]}
@@ -74,8 +71,7 @@ function InvalidExample(l: Locale) {
 
 function DisabledExample(l: Locale) {
   return (
-    <DateRangePicker
-      className="w-full max-w-md"
+    <DateRangePickerIsland
       label={t.archive[l]}
       openCalendarLabel={t.open[l]}
       startLabel={t.start[l]}

@@ -136,9 +136,18 @@ export interface TimelineProps extends React.ComponentProps<"ol"> {
 }
 
 export function Timeline({ className, children, ...props }: TimelineProps) {
+  const parts = React.Children.toArray(children);
+  const itemIndexes = parts.flatMap((child, index) =>
+    React.isValidElement(child) && child.type === TimelineItem ? [index] : [],
+  );
+  const lastItemIndex = itemIndexes.at(-1);
   return (
     <ol data-lumo="" className={cn(timelineVariants(), className)} {...props}>
-      {children as React.ReactNode}
+      {parts.map((child, index) =>
+        React.isValidElement<TimelineItemProps>(child) && child.type === TimelineItem
+          ? React.cloneElement(child, { isLast: index === lastItemIndex })
+          : child,
+      )}
     </ol>
   );
 }

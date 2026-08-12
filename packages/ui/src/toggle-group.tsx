@@ -3,7 +3,7 @@
 import { type VariantProps } from "class-variance-authority";
 import { ToggleGroup as BaseToggleGroup } from "@base-ui/react/toggle-group";
 import { Toggle as BaseToggle } from "@base-ui/react/toggle";
-import { Children, createContext, isValidElement, useContext } from "react";
+import { Children, createContext, Fragment, isValidElement, useContext } from "react";
 import { cn, type Key, type LumoNode } from "@lumo-ui/core";
 import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 import { toggleButtonGroupVariants, toggleButtonVariants } from "./toggle-group.variants.ts";
@@ -116,6 +116,38 @@ function toValues(keys: Iterable<Key> | undefined): string[] | undefined {
   return keys === undefined ? undefined : [...keys].map(String);
 }
 
+function firstToggleKey(children: LumoNode): string | undefined {
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    const props = child.props as { id?: Key; children?: LumoNode };
+    if (child.type === Fragment) {
+      const nested = firstToggleKey(props.children);
+      if (nested !== undefined) return nested;
+    } else if (props.id !== undefined) {
+      return String(props.id);
+    }
+  }
+  return undefined;
+}
+
+function toggleKeys(children: LumoNode, into = new Map<string, Key>()): Map<string, Key> {
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    const props = child.props as { id?: Key; children?: LumoNode };
+    if (child.type === Fragment) {
+      toggleKeys(props.children, into);
+    } else if (props.id !== undefined) {
+      const serialized = String(props.id);
+      const previous = into.get(serialized);
+      if (previous !== undefined && previous !== props.id) {
+        throw new Error(`ToggleButtonGroup keys ${String(previous)} and ${String(props.id)} collide.`);
+      }
+      into.set(serialized, props.id);
+    }
+  }
+  return into;
+}
+
 /**
  * The key that holds the tab stop until hydration — see `useCompositeTabStop`
  * in `@lumo-ui/base-ui-ssr`. A server-rendered `ToggleGroup` has no
@@ -139,13 +171,8 @@ export function ToggleButtonGroup({
 }: ToggleButtonGroupProps) {
   const value = toValues(selectedKeys);
   const defaultValue = toValues(defaultSelectedKeys);
-  const firstChild = Children.toArray(children).find(isValidElement) as
-    | { props?: { id?: unknown } }
-    | undefined;
-  const tabStopKey =
-    value?.[0] ??
-    defaultValue?.[0] ??
-    (firstChild?.props?.id === undefined ? undefined : String(firstChild.props.id));
+  const keyByValue = toggleKeys(children);
+  const tabStopKey = value?.[0] ?? defaultValue?.[0] ?? firstToggleKey(children);
 
   return (
     <BaseToggleGroup
@@ -164,7 +191,7 @@ export function ToggleButtonGroup({
           details.cancel();
           return;
         }
-        onSelectionChange?.(new Set(next));
+        onSelectionChange?.(new Set(next.map((key) => keyByValue.get(key) ?? key)));
       }}
       className={cn(toggleButtonGroupVariants(), className)}
     >

@@ -213,11 +213,11 @@ export {
  * attribute this component already writes. The container and the cell swap in
  * one render, so there is never a moment with two stops.
  *
- * One honest note, the same one `tree.tsx` records: `COMPOSITE_ROLES` in
- * `packages/gate/src/rules.ts` has no `grid → gridcell` entry, so this widget
- * is not currently GRADED by that rule. The shape above is correct because it
- * was measured with `renderToStaticMarkup` (see the test), not because the gate
- * would have caught it, and the missing entry is worth adding.
+ * `COMPOSITE_ROLES` in `packages/gate/src/rules.ts` now maps `grid` to
+ * `gridcell`, `columnheader`, and `rowheader`, so this component is graded by
+ * both the floor and ceiling rules. Its focused descendant may be the cell
+ * itself or an interactive element inside it; the gate's grid-specific tests
+ * cover both shapes.
  *
  * ═══ DIRECTION COMES FROM GEOMETRY OR FROM `direction(locale)`, NEVER FROM ══
  * ═══ A SIGNED DELTA ═════════════════════════════════════════════════════════

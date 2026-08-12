@@ -169,6 +169,17 @@ export function toE164(input: string, dial: string): string {
   return national === "" ? "" : `+${dial}${national}`;
 }
 
+function countryFromValue(
+  value: string | undefined,
+  countries: readonly PhoneCountry[],
+): PhoneCountry | undefined {
+  if (value === undefined || !value.trim().startsWith("+")) return undefined;
+  const digits = phoneDigits(value);
+  return [...countries]
+    .sort((a, b) => b.dial.length - a.dial.length)
+    .find((country) => digits.startsWith(country.dial));
+}
+
 export interface PhoneInputProps {
   /** Announced and displayed name. Required. */
   label: string;
@@ -209,8 +220,14 @@ export function PhoneInput({
 }: PhoneInputProps) {
   const fallback = countries[0];
   const [countryCode, setCountryCode] = React.useState(
-    () => defaultCountry ?? fallback?.code ?? "IR",
+    () => defaultCountry ?? countryFromValue(value, countries)?.code ?? fallback?.code ?? "IR",
   );
+  const [lastControlledValue, setLastControlledValue] = React.useState(value);
+  if (value !== lastControlledValue) {
+    setLastControlledValue(value);
+    const inferred = countryFromValue(value, countries);
+    if (inferred !== undefined) setCountryCode(inferred.code);
+  }
   const country = countries.find((c) => c.code === countryCode) ?? fallback;
   const dial = country?.dial ?? "98";
 
@@ -272,7 +289,7 @@ export function PhoneInput({
           // separate questions. The name still has to exist: this is a real
           // control and `named-controls` fails the build on an unnamed one.
           labelHidden
-          value={countryCode}
+          value={country?.code ?? countryCode}
           onChange={(event) => setCountryCode(event.target.value)}
           {...(isDisabled === true ? { disabled: true } : {})}
           className="w-auto shrink-0"

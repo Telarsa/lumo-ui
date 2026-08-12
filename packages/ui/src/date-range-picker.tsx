@@ -79,6 +79,8 @@ export interface DateRangePickerProps {
   endLabel: string;
   /** Name of the button that opens the calendar. Required — the trigger is an icon. */
   openCalendarLabel: string;
+  /** Clock input forwarded to the popup calendar for deterministic rendering. */
+  today: CalendarDate;
   value?: CalendarDateRange | null | undefined;
   defaultValue?: CalendarDateRange | null | undefined;
   onChange?: ((value: CalendarDateRange | null) => void) | undefined;
@@ -88,9 +90,8 @@ export interface DateRangePickerProps {
    *
    * Days, not months — `calendar.tsx`'s header records the month they used to
    * mean and the click that fired `onChange` with an out-of-range date. Neither
-   * bound is enforced on TYPED entry: the segments accept any date the calendar
-   * system admits, and telling the reader a typed date is out of range is what
-   * `errorMessage` is for. `date-field.tsx`'s `DateBounds` carries that split.
+   * bound is also enforced on typed entry, so the segments and grid cannot
+   * commit different answers for the same day.
    */
   minValue?: CalendarDate | undefined;
   maxValue?: CalendarDate | undefined;
@@ -111,6 +112,7 @@ export function DateRangePicker({
   startLabel,
   endLabel,
   openCalendarLabel,
+  today,
   value,
   defaultValue,
   onChange,
@@ -151,6 +153,9 @@ export function DateRangePicker({
     locale,
     value: selected?.from ?? null,
     ...optional("placeholderValue", placeholderValue),
+    ...optional("minValue", minValue),
+    ...optional("maxValue", maxValue),
+    ...optional("isDateUnavailable", isDateUnavailable),
     onChange: (next) => {
       const from = (next as CalendarDate | null) ?? null;
       if (from === null) {
@@ -167,6 +172,9 @@ export function DateRangePicker({
     locale,
     value: selected?.to ?? null,
     ...optional("placeholderValue", placeholderValue),
+    ...optional("minValue", minValue),
+    ...optional("maxValue", maxValue),
+    ...optional("isDateUnavailable", isDateUnavailable),
     onChange: (next) => {
       const to = (next as CalendarDate | null) ?? null;
       // An end with no start is not a range. Dropping it rather than inventing
@@ -271,6 +279,7 @@ export function DateRangePicker({
             <RangeCalendar
               label={label}
               locale={locale}
+              today={today}
               {...optional("value", selected ?? undefined)}
               {...optional("defaultMonth", selected?.from ?? placeholderValue)}
               {...optional("minValue", minValue)}

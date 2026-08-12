@@ -1,6 +1,6 @@
 "use client";
 
-import { Children, createContext, isValidElement, useContext } from "react";
+import { Children, createContext, Fragment, isValidElement, useContext } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Toolbar as BaseToolbar } from "@base-ui/react/toolbar";
 import { cn, type Key, type LumoNode } from "@lumo-ui/core";
@@ -298,6 +298,20 @@ export interface TagListProps {
   className?: string | undefined;
 }
 
+function firstTagKey(children: LumoNode): Key | undefined {
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    const props = child.props as { id?: Key; children?: LumoNode };
+    if (child.type === Fragment) {
+      const nested = firstTagKey(props.children);
+      if (nested !== undefined) return nested;
+    } else if (props.id !== undefined) {
+      return props.id;
+    }
+  }
+  return undefined;
+}
+
 export function TagList({ className, children }: TagListProps) {
   const listLabel = useContext(TagGroupLabelContext);
   const group = useContext(TagGroupContext);
@@ -317,16 +331,11 @@ export function TagList({ className, children }: TagListProps) {
   // controls. A plain flex box keeps the composite's children where the
   // composite expects them.
   //
-  // The first child's `id` is read here and republished, so exactly one chip
-  // carries the pre-hydration tab stop. `Children.toArray` rather than indexing
-  // `children` directly: it flattens fragments and drops nulls, so a caller
-  // mapping over data with a conditional row still gets a first chip.
-  const first = Children.toArray(children).find(isValidElement) as
-    | { props?: { id?: Key } }
-    | undefined;
+  // Descend through Fragments: React.Children flattens arrays, not Fragments.
+  const firstKey = firstTagKey(children);
   return (
     <TagGroupContext.Provider
-      value={group === null ? null : { ...group, firstKey: first?.props?.id }}
+      value={group === null ? null : { ...group, firstKey }}
     >
       <div className={cn(tagListVariants(), className)}>{children}</div>
     </TagGroupContext.Provider>

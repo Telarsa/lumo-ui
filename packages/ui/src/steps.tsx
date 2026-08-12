@@ -201,7 +201,8 @@ export interface StepsProps
   label: string;
   /**
    * The step in progress, 1-based. Steps before it are complete, steps after it
-   * are not started.
+   * are not started. Pass `items.length + 1` after the sequence is complete;
+   * every step is then complete and none is falsely marked current.
    */
   current: number;
   items: readonly StepItem[];
@@ -226,6 +227,12 @@ export function Steps({
   className,
   ...props
 }: StepsProps) {
+  const completedPosition = items.length + 1;
+  if (!Number.isInteger(current) || current < 1 || current > completedPosition) {
+    throw new RangeError(
+      `Steps current must be an integer from 1 through the completed position (${completedPosition}).`,
+    );
+  }
   const statusWords: Record<StepStatus, string> = {
     complete: completeLabel,
     current: currentLabel,

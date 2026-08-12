@@ -57,7 +57,7 @@ export const skeletonVariants = cva(
 );
 
 export interface SkeletonProps
-  extends Omit<ComponentProps<"span">, "children" | "className">,
+  extends Omit<ComponentProps<"span">, "children" | "className" | "aria-hidden">,
     VariantProps<typeof skeletonVariants> {
   className?: string | undefined;
 }
@@ -65,9 +65,9 @@ export interface SkeletonProps
 export function Skeleton({ shape, className, ...props }: SkeletonProps) {
   return (
     <span
+      {...props}
       aria-hidden="true"
       className={cn(skeletonVariants({ shape }), className)}
-      {...props}
     />
   );
 }

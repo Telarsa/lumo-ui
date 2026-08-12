@@ -5,8 +5,8 @@
  * RAC's expanded state rather than a mirrored useState.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
@@ -20,8 +20,8 @@ import {
 afterEach(cleanup);
 
 const nav = (defaultOpen = false) => (
-  <NavigationMenu label="ناوبری اصلی">
-    <NavigationMenuItem {...(defaultOpen ? { defaultOpen: true } : {})}>
+  <NavigationMenu label="ناوبری اصلی" {...(defaultOpen ? { defaultValue: "products" } : {})}>
+    <NavigationMenuItem value="products">
       <NavigationMenuTrigger>محصولات</NavigationMenuTrigger>
       <NavigationMenuPanel>
         <NavigationMenuLink href="/lumo" description="سیستم طراحی فارسی‌محور">
@@ -84,5 +84,32 @@ describe("NavigationMenu — a named landmark whose panels are popovers", () => 
     expect(html).not.toMatch(/aria-label="[^"]*[A-Za-z]{3,}/);
     expect(html).toContain("محصولات");
     expect(html).toContain("قیمت‌ها");
+  });
+
+  it("reports which item opened through the root value API", () => {
+    const onValueChange = vi.fn();
+    render(
+      <NavigationMenu label="ناوبری اصلی" onValueChange={onValueChange}>
+        <NavigationMenuItem value="products">
+          <NavigationMenuTrigger>محصولات</NavigationMenuTrigger>
+          <NavigationMenuPanel>پنل</NavigationMenuPanel>
+        </NavigationMenuItem>
+      </NavigationMenu>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "محصولات" }));
+    expect(onValueChange).toHaveBeenCalledWith("products");
+  });
+
+  it("takes placement on the state-owning root rather than discarding it on a panel", () => {
+    render(
+      <NavigationMenu label="ناوبری اصلی" placement="top end" defaultValue="products">
+        <NavigationMenuItem value="products">
+          <NavigationMenuTrigger>محصولات</NavigationMenuTrigger>
+          <NavigationMenuPanel>پنل</NavigationMenuPanel>
+        </NavigationMenuItem>
+      </NavigationMenu>,
+    );
+    expect(document.querySelector('[data-side="top"]')).toBeTruthy();
+    expect(document.querySelector('[data-align="end"]')).toBeTruthy();
   });
 });

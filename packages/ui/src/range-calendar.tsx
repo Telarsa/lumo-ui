@@ -92,6 +92,8 @@ export interface RangeCalendarBaseProps
   label: string;
   /** Selects the calendar system, the digits, the week start and the direction. */
   locale: Locale;
+  /** Clock input for deterministic SSR and hydration. */
+  today: CalendarDate;
   value?: CalendarDateRange | undefined;
   /** Fires with both ends, or `undefined` once the selection is cleared. */
   onChange?: ((value: CalendarDateRange | undefined) => void) | undefined;
@@ -119,6 +121,7 @@ export type RangeCalendarProps = RangeCalendarBaseProps & CalendarNavigation;
 export function RangeCalendar({
   label,
   locale,
+  today,
   value,
   onChange,
   defaultMonth,
@@ -134,6 +137,7 @@ export function RangeCalendar({
   ...props
 }: RangeCalendarProps) {
   const descriptionId = useId();
+  const errorId = useId();
   const config = lumoCalendar(locale);
   const dir = direction(locale);
   /*
@@ -158,7 +162,12 @@ export function RangeCalendar({
       {...props}
       data-lumo=""
       className={cn("flex w-fit flex-col gap-2", className)}
-      {...describedByWith(describedBy, description != null ? descriptionId : undefined)}
+      {...describedByWith(
+        describedByWith(describedBy, description != null ? descriptionId : undefined)[
+          "aria-describedby"
+        ],
+        errorMessage != null ? errorId : undefined,
+      )}
     >
       <DayPicker
         mode="range"
@@ -171,6 +180,7 @@ export function RangeCalendar({
          * nested wrong `lang` is the version of that defect it cannot see.
          */
         lang={locale}
+        today={toPickerDate(today)}
         /*
          * The neighbouring months' days are SHOWN, greyed, rather than blanked.
          *
@@ -239,7 +249,7 @@ export function RangeCalendar({
         </div>
       ) : null}
       {errorMessage != null ? (
-        <div role="alert" className={cn(calendarFooterVariants(), fieldErrorVariants())}>
+        <div id={errorId} role="alert" className={cn(calendarFooterVariants(), fieldErrorVariants())}>
           {errorMessage}
         </div>
       ) : null}

@@ -14,7 +14,7 @@
  */
 
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { Button } from "./button.tsx";
@@ -156,6 +156,28 @@ describe("server-rendered markup carries no English", () => {
     expect(html).toContain("data-current");
   });
 
+  it("Breadcrumb keeps its collection id as data without creating DOM-id collisions", () => {
+    const html = renderToStaticMarkup(
+      <Breadcrumbs label="مسیر صفحه">
+        <Breadcrumb id="home">خانه</Breadcrumb>
+        <Breadcrumb id="home">تنظیمات</Breadcrumb>
+      </Breadcrumbs>,
+    );
+    expect(html.match(/data-key="home"/g)).toHaveLength(2);
+    expect(html).not.toContain('id="home"');
+  });
+
+  it("a final BreadcrumbEllipsis receives current-page semantics and no separator", () => {
+    const html = renderToStaticMarkup(
+      <Breadcrumbs label="مسیر صفحه">
+        <Breadcrumb id="home">خانه</Breadcrumb>
+        <BreadcrumbEllipsis label="صفحهٔ جاری حذف‌شده" />
+      </Breadcrumbs>,
+    );
+    expect(html).toContain('aria-current="page"');
+    expect(html.match(/class="px-1 text-fg-subtle"/g)).toHaveLength(1);
+  });
+
   it("BreadcrumbEllipsis cannot render as an unnamed punctuation mark", () => {
     const html = renderToStaticMarkup(
       <Breadcrumbs label="مسیر صفحه">
@@ -273,6 +295,24 @@ describe("open-state English, counted rather than assumed", () => {
     // empty set: this is the stronger form of the same rule, and it still fails
     // loudly if any engine reintroduces an announced English string here.
     expect(englishIn(spokenAttributes())).toEqual([]);
+  });
+
+  it("DialogHeading renders the requested heading level", () => {
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>باز</Button>
+        <DialogOverlay>
+          <DialogModal>
+            <Dialog closeLabel="بستن">
+              <DialogHeading level={4}>عنوان</DialogHeading>
+            </Dialog>
+          </DialogModal>
+        </DialogOverlay>
+      </DialogTrigger>,
+    );
+
+    expect(document.querySelector("h4")?.textContent).toBe("عنوان");
+    expect(document.querySelector("h2")).toBeNull();
   });
 
   it("an open drawer is clean", () => {
@@ -412,6 +452,24 @@ describe("open-state English, counted rather than assumed", () => {
       </MenuTrigger>,
     );
     expect(getAllByRole("menuitem")[0]?.getAttribute("aria-current")).toBe("true");
+  });
+
+  it("MenuItem new-tab links require and render a warning with a safe rel", () => {
+    render(
+      <MenuTrigger defaultOpen>
+        <button>باز کردن</button>
+        <MenuPopover>
+          <Menu>
+            <MenuItem href="https://example.com" newTab newTabLabel="در برگه جدید باز می‌شود">
+              مستندات
+            </MenuItem>
+          </Menu>
+        </MenuPopover>
+      </MenuTrigger>,
+    );
+    const link = screen.getByRole("menuitem", { name: /مستندات.*در برگه جدید/ });
+    expect(link.getAttribute("target")).toBe("_blank");
+    expect(link.getAttribute("rel")).toBe("noopener noreferrer");
   });
 });
 

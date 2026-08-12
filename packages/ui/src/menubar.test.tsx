@@ -75,6 +75,12 @@ const bar = (defaultOpen = false) => (
 );
 
 describe("Menubar — a real, named role=menubar", () => {
+  it("keeps the undefined orientation carrier and rejects inert button behavior props", () => {
+    const carrier = <Menubar label="نوار منو" orientation={undefined} />;
+    // @ts-expect-error MenubarButton cannot implement React Aria's press callback.
+    const inert = <MenubarButton onPress={() => {}}>پرونده</MenubarButton>;
+    expect([carrier, inert]).toHaveLength(2);
+  });
   it("is ONE named menubar stop whose triggers are menuitems", () => {
     render(bar());
 

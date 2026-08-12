@@ -146,7 +146,7 @@ describe("Slider — the value is a number, twice", () => {
 
 // ────────────────────────────────────────────────────────────────── toast ──
 
-describe("Toast — the portal no longer writes its own dir", () => {
+describe("Toast — the portal carries the requested direction", () => {
   /**
    * RESTATED FOR THE BASE UI ENGINE, and restated STRONGER.
    *
@@ -170,7 +170,7 @@ describe("Toast — the portal no longer writes its own dir", () => {
    * assumed — and the day Base UI regresses into stamping a `dir`, the
    * assertion below goes red.
    */
-  it("writes no dir of its own, and takes its Persian name from `label`", async () => {
+  it("uses locale for its portalled direction and takes its Persian name from `label`", async () => {
     const queue = createToastQueue();
     render(
       <ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />,
@@ -186,11 +186,26 @@ describe("Toast — the portal no longer writes its own dir", () => {
 
     // The engine must not overwrite the inherited direction. See the block
     // above for why this is the stronger form of the old `toBe("rtl")`.
-    expect(region?.getAttribute("dir")).toBeNull();
+    expect(region?.getAttribute("dir")).toBe("rtl");
     expect(region?.getAttribute("aria-label")).toBe("اعلان‌ها");
     expect(screen.getByText("ذخیره شد")).toBeTruthy();
     expect(spokenAttributes().filter((v) => LATIN_WORD.test(v))).toEqual([]);
     expect(danglingIdrefs()).toEqual([]);
+  });
+
+  it("renders and invokes a queued action", async () => {
+    const queue = createToastQueue();
+    let invoked = 0;
+    render(<ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />);
+    await act(async () => {
+      queue.add({
+        title: "ذخیره نشد",
+        action: { label: "تلاش دوباره", onAction: () => invoked++ },
+      });
+    });
+    const action = screen.getByRole("button", { name: "تلاش دوباره" });
+    act(() => action.click());
+    expect(invoked).toBe(1);
   });
 
   /*
@@ -397,6 +412,22 @@ describe("Pagination — every page is a number and every name is too", () => {
     expect(screen.getByLabelText("صفحه قبل").hasAttribute("disabled")).toBe(true);
     expect(screen.getByLabelText("صفحه بعد").hasAttribute("disabled")).toBe(false);
   });
+
+  it("renders no navigation when there are no pages", () => {
+    render(
+      <Pagination
+        locale="fa-IR"
+        page={1}
+        count={0}
+        onPageChange={() => {}}
+        label="صفحه‌بندی"
+        previousLabel="صفحه قبل"
+        nextLabel="صفحه بعد"
+        pageLabel={(n) => `صفحه ${n}`}
+      />,
+    );
+    expect(screen.queryByRole("navigation")).toBeNull();
+  });
 });
 
 // ────────────────────────────────────────────────────────────────── steps ──
@@ -418,6 +449,56 @@ describe("Steps — server-rendered, numbered and stated in words", () => {
         ]}
       />,
     );
+
+  it("rejects a current position outside the sequence and completed state", () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <Steps
+          locale="fa-IR"
+          label="مراحل"
+          current={0}
+          completeLabel="کامل"
+          currentLabel="فعلی"
+          upcomingLabel="بعدی"
+          items={[{ id: "one", title: "یک" }]}
+        />,
+      ),
+    ).toThrow(/current.*1.*completed/i);
+
+    expect(() =>
+      renderToStaticMarkup(
+        <Steps
+          locale="fa-IR"
+          label="مراحل"
+          current={3}
+          completeLabel="کامل"
+          currentLabel="فعلی"
+          upcomingLabel="بعدی"
+          items={[{ id: "one", title: "یک" }]}
+        />,
+      ),
+    ).toThrow(/current.*1.*completed/i);
+  });
+
+  it("represents a completed sequence one position past its final step", () => {
+    const html = renderToStaticMarkup(
+      <Steps
+        locale="fa-IR"
+        label="مراحل"
+        current={3}
+        completeLabel="کامل"
+        currentLabel="فعلی"
+        upcomingLabel="بعدی"
+        items={[
+          { id: "one", title: "یک" },
+          { id: "two", title: "دو" },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('data-status="complete"');
+    expect(html).not.toContain('aria-current="step"');
+  });
 
   it("is in the FIRST BYTE — no client directive, no hydration", () => {
     const html = markup();
@@ -455,6 +536,18 @@ describe("Steps — server-rendered, numbered and stated in words", () => {
 // ────────────────────────────────────────────────── segmented control ──
 
 describe("SegmentedControl — a radio group, not a row of toggles", () => {
+  it("serves one tab stop when its options are grouped in a Fragment", () => {
+    const html = renderToStaticMarkup(
+      <SegmentedControl label="نمای نتایج">
+        <>
+          <SegmentedControlItem id="list">فهرست</SegmentedControlItem>
+          <SegmentedControlItem id="grid">شبکه</SegmentedControlItem>
+        </>
+      </SegmentedControl>,
+    );
+    expect(html.split('tabindex="0"').length - 1).toBe(1);
+  });
+
   it("has radiogroup semantics and a name", () => {
     render(
       <SegmentedControl label="نمای نتایج" defaultSelectedKeys={["list"]}>

@@ -11,6 +11,14 @@
 > the fix disproved the diagnosis. Six of this document's own claims turned out
 > to be wrong — see §7.
 
+> **POST-FIX ADVERSARIAL RESULT — 12 Aug 2026.** A second review found additional
+> component, test, gate, registry, and audit failures, then repaired every
+> actionable proved finding without committing. The rerating, literal baseline
+> reversion evidence, full verification totals, and explicit declines are in
+> [`review/POST-FIX-EVALUATION.md`](review/POST-FIX-EVALUATION.md). The historical
+> counts and findings below describe earlier snapshots; they are not the final
+> worktree result.
+
 `pnpm run verify` exits 0 at this commit: 1780 tests, 524 documents graded, 0 gate violations. **Everything in this document is a defect that state does not catch.** That is the point of the exercise.
 
 Two of the findings below go further and undermine the state itself: the anti-vacuity gate rule is **not armed** in either `verify` or CI (§2.7), and the test suite is **not deterministic** — it fails on a clean tree at this commit (§2.8). "Verify exits 0" is a sample, not a property.
@@ -217,7 +225,7 @@ Three of this repository's own named failure modes are live simultaneously, and 
 
 - The digit floor is armed in a script nobody calls (§2.7).
 - The ESLint policy is a package export nothing consumes (§2.5). Measured: injecting `className="ml-2 text-left"` plus `String(5)` into `rating.tsx` produced **zero** failures across 1512 tests. The only physical-utility enforcement that exists is a `PHYSICAL` regex copy-pasted identically into five test files — covering five of the *lowest-risk* components in the library. `table`, `kanban`, `chart`, `calendar`, `gantt`, `tree`, `data-grid` have no such check.
-- `gate:registry` uses `git diff --exit-code registry.json`, which compares the worktree to the **index** — so staged drift passes.
+- ~~`gate:registry` uses `git diff --exit-code registry.json`, which compares the worktree to the **index** — so staged drift passes.~~ **CORRECTED AFTER ADVERSARIAL REVIEW:** that claim was proved false by staging a corrupted dependency list and observing the old gate exit 1. The gate now has a clearer contract: `build-registry.mjs --check` derives canonical content in memory and compares it with the requested manifest, independent of index/worktree state. A poison test supplies a stale temporary manifest and requires a nonzero exit.
 
 ### 3.4 "Two names, one value"
 
@@ -317,7 +325,7 @@ Emission order is `lg`(17556) → `md`(17604) → `sm`(17652), so **sm beats md 
 - **No scrim token** — `bg-black/50` in `dialog.tsx:165` and `drawer.tsx:134` are the only two untokenised colours in the library
 - `border-strong` is **weaker** than `border-control` (1.54:1 vs 3.22:1) — the name promises a ladder the values invert
 
-**Docs site:** Installation is second-to-*last* on a component page; both shadcn and ReUI put it directly under the preview. There is **no mobile navigation for the 94-component list** — below 1024px the sidebar is `hidden` with no replacement, while the docs *prose* pages ship a `lg:hidden` strip that could be copied. Component pages are enormous: `fa/components/event-calendar` is **2.19 MB**, `table` 2.05 MB, total **167 MB of HTML** across 524 documents.
+**Docs site:** Installation is second-to-*last* on a component page; both shadcn and ReUI put it directly under the preview. There is **no mobile navigation for the 94-component list** — below 1024px the sidebar is `hidden` with no replacement, while the docs *prose* pages ship a `lg:hidden` strip that could be copied. Component pages are enormous: `fa/components/event-calendar` is **2.19 MB**, `table` 2.05 MB, total **167 MB of HTML** across 524 documents. **[CORRECTED ON FIX — see §8.]** This paragraph went on to attribute the weight to shiki's per-token inline styles. Measured: shiki is **10%** of that page and the RSC flight payload is **76%**, so the diagnosis was wrong and the fix it implied would have addressed a tenth.
 
 **What is genuinely excellent:** an exhaustive sweep for hex/`rgb()`/`hsl()`/`oklch()` and all 22 Tailwind palette names across 94 components returned **zero** component usages — every palette-name hit is a comment explaining why it is not used. Font handling is textbook: self-hosted variable WOFF2, OFL licences committed, per-`html[lang]` stacks, `font-synthesis: none` because synthesised bold destroys Arabic letterforms. And the component page template beats both competitors — neither shadcn nor ReUI ships a per-component **accessibility evidence** section or a **Persian/English side-by-side**. That is the differentiating slot, and Lumo already stands in it.
 
@@ -374,7 +382,7 @@ Nothing new gets built until these are done. Each one either ships to users toda
 | 4.1 | Live-region correctness: announce on drop, keep `role="status"` mounted. | Kanban announces once per drag; status regions mounted at first byte. |
 | 4.2 | Carousel slide names, `aria-posinset`/`setsize`, `aria-hidden` off-screen. | Every slide computes a non-empty name. |
 | 4.3 | Move Installation to second on component pages; add mobile component nav. | Component list reachable below 1024px. |
-| 4.4 | Cut page weight — lazy-load the code panel, or emit shiki with CSS classes rather than inline styles. | Median component page under ~300 KB. |
+| 4.4 | ~~Cut page weight — lazy-load the code panel, or emit shiki with CSS classes rather than inline styles.~~ **Both halves of this were wrong.** Lazy-loading contradicts DECISIONS §14 (a panel that arrives after JS is a panel the gate cannot grade, and a JS-disabled reader loses the source); CSS classes address 10%. **DONE** by dropping the `code` prop entirely and placing one element twice. | ~~Median component page under ~300 KB.~~ **NOT MET: 569 KiB.** Served bytes fell 274.7 → 221.6 MiB and the largest page −31%, but the median target stands unmet and is recorded as such. |
 | 4.5 | Reconcile the `tone` vocabulary before the next toned component. | `tone` means one thing; `icon-tile`'s `solid` moves to `variant`; `alert` gains `neutral`. |
 
 ### Phase 5 — The claim the library has not yet earned
@@ -388,7 +396,7 @@ Nothing new gets built until these are done. Each one either ships to users toda
 ### What 10/10 actually means here
 
 - **Accessibility/i18n/RTL → 10:** every defect in §4.1 closed, the six Phase-3 rules shipped, and the gate publishing its own coverage so the headline number states its scope. The residue that remains is only what needs a real browser — and the CDP tier `rules.ts` already names is where that goes.
-- **API/DX → 10:** the inert-prop gate returns zero and stays zero; the `ref`/`id` contract is written down and enforced; no exported prop is accepted and dropped; every "REQUIRED" in prose is required in the type.
+- **API/DX → 10:** the inert-prop gate returns zero and stays zero; the `ref`/`id` contract is written down and enforced; no exported prop is accepted and dropped; every "REQUIRED" in prose is required in the type. **CORRECTED AFTER ADVERSARIAL REVIEW:** at the audited HEAD this was an exit criterion presented as if the clean gate established it. The gate excluded inherited core props and treated underscore-discard as delivery, while components still accepted proved no-ops. The repaired gate resolves selected inherited behaviour contracts, rejects underscore-discard, and checks owned root semantics; zero is evidence only within that stated scope.
 - **Design/docs → 10:** the contrast matrix is swept, not sampled; one press/focus/disabled/elevation vocabulary each; Persian typography visibly different from Latin typography on a Persian page; and a component page that loads fast on a phone.
 
 The honest summary: this library's engineering is above shadcn's bar in several places, and its remaining defects are almost all of one kind — **something true was written in a comment instead of being made unrepresentable.** Phases 1 and 2 convert that habit into machinery. Everything after is polish.
@@ -402,7 +410,7 @@ The honest summary: this library's engineering is above shadcn's bar in several 
 - **Claims that collapsed on measurement are recorded, not hidden.** Three findings were withdrawn: "event-calendar paints `today` with no spoken counterpart" (false — `dayName()` folds `todayLabel` in); "Persian aria-labels leak onto English pages" (16 of 18 hits were RSC `<script>` payloads); "634 Persian digits on English pages" (all inside shiki source listings). The `h-control-*` severity was also corrected downward from "871 broken" to "2 wrong, 1,766 fragile."
 - **Two process incidents.** An audit agent wrote a poison probe into `packages/core/src/types.ts` (`nu-arabext` → `nu-latn`, which would turn every Persian digit Latin) and did not revert it; it was caught on a routine `git status` and reverted. A second agent self-reported the same in `packages/blocks/src/footer.tsx` and reverted it. Read-only instructions are not self-enforcing when agents share a checkout.
 - The testing audit verified the gate's self-test by mutation rather than by reading: inserting `return [];` at the head of all nine rules' `run` functions killed 2/3/4/2/2/3/10/6/3 tests respectively. **All nine rules genuinely fire**, and `rules.ts` was restored byte-identical (md5 verified). It also confirmed the Persian-digit claim is load-bearing: changing `FORMAT_LOCALE` from `nu-arabext` to `nu-latn` killed **94 tests** across two packages.
-- **No vacuous test was found.** The hunt was specific — every `it` whose assertions are all weak, every `toContain` on a short literal, every `toBeGreaterThan(0)`. The weak-looking ones are `getByRole(<exact Persian string>)`, where the *query* carries the assertion and throws on miss; the `length > 0` ones are deliberate anti-vacuity guards, several carrying a comment saying so.
+- ~~**No vacuous test was found.**~~ **CORRECTED AFTER ADVERSARIAL REVIEW:** mutation found three. MessageScroller's logical-end test graded a button absent from its initial render and survived `end-4` → `right-4`; IconStack's test said “fragments” but passed an array; InputOtp never exercised a second full-length edit despite claiming completion fires once. Focused regression tests now force each claimed path.
 
 
 ---

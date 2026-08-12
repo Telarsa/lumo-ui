@@ -207,11 +207,10 @@ export function ComboBox<T extends object>({
    * as a prop for the reason this component takes no parts: a collision a
    * caller cannot cause is one nobody has to remember.
    *
-   * The two elements still disagree about their own semantics — the input says
-   * `aria-haspopup="listbox"`, the server-rendered button says `dialog`, from
-   * the same uncorrected `inputInsidePopup`. That is engine-owned, has no prop
-   * that reaches it, and also heals on hydration; it is recorded in AUDIT §2.2
-   * and is NOT fixed here.
+   * The same stale `inputInsidePopup` state makes Base UI serve
+   * `aria-haspopup="dialog"` on the trigger even though this composition opens
+   * a listbox. The explicit ARIA prop below is stable in both phases and keeps
+   * the trigger aligned with the input before hydration.
    */
   const triggerId = useId();
   return (
@@ -282,6 +281,7 @@ export function ComboBox<T extends object>({
             data-lumo=""
             id={triggerId}
             aria-label={showSuggestionsLabel}
+            aria-haspopup="listbox"
             className={comboBoxButtonVariants()}
           >
             <ChevronDown aria-hidden="true" />

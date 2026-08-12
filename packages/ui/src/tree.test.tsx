@@ -436,3 +436,40 @@ describe("tree — the marker's verbs come from a Lumo file, not from the patch"
     }
   });
 });
+
+describe("tree — collection contracts", () => {
+  it("renders an items collection through its function child", () => {
+    const items = [
+      { id: "one", name: "یک" },
+      { id: "two", name: "دو" },
+    ];
+    render(
+      <LumoProvider locale="fa-IR">
+        <Tree label="شماره‌ها" items={items}>
+          {(item) => <TreeItem id={item.id} textValue={item.name} title={item.name} />}
+        </Tree>
+      </LumoProvider>,
+    );
+    expect(screen.getByRole("row", { name: "یک" })).toBeTruthy();
+    expect(screen.getByRole("row", { name: "دو" })).toBeTruthy();
+  });
+
+  it("converts selectedKeys=all to concrete keys when one row is toggled", () => {
+    const onSelectionChange = vi.fn();
+    render(
+      <LumoProvider locale="fa-IR">
+        <Tree
+          label="شماره‌ها"
+          selectionMode="multiple"
+          selectedKeys="all"
+          onSelectionChange={onSelectionChange}
+        >
+          <TreeItem id="one" textValue="یک" title="یک" />
+          <TreeItem id="two" textValue="دو" title="دو" />
+        </Tree>
+      </LumoProvider>,
+    );
+    fireEvent.keyDown(screen.getByRole("row", { name: "یک" }), { key: " " });
+    expect(onSelectionChange).toHaveBeenCalledWith(new Set(["two"]));
+  });
+});

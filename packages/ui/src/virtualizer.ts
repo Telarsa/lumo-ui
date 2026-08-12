@@ -109,6 +109,8 @@ export interface VirtualWindowOptions {
   overscan?: number | undefined;
   /** Which axis scrolls. */
   horizontal?: boolean | undefined;
+  /** Whether horizontal offsets use the RTL negative scroll model. Derived by the caller. */
+  rtl?: boolean | undefined;
   /** Gap between rows in pixels. Part of the arithmetic, so not a CSS gap. */
   gap?: number | undefined;
   /** Stable identity per row. Defaults to the index. See the header on caching. */
@@ -127,6 +129,13 @@ export interface VirtualWindow {
    * forever, which is correct only if the estimate was.
    */
   measureElement: (element: HTMLElement | null) => void;
+  /** Scroll the owned viewport to a logical offset from the reading start. */
+  scrollToOffset: (offset: number, behavior?: ScrollBehavior) => void;
+  /** Scroll the owned viewport until the requested item is aligned. */
+  scrollToIndex: (
+    index: number,
+    options?: { align?: "start" | "center" | "end" | "auto"; behavior?: ScrollBehavior },
+  ) => void;
 }
 
 /**
@@ -182,6 +191,7 @@ export function useVirtualWindow(options: VirtualWindowOptions): VirtualWindow {
     initialSize,
     overscan = 8,
     horizontal = false,
+    rtl = false,
     gap = 0,
     getItemKey,
   } = options;
@@ -316,6 +326,51 @@ export function useVirtualWindow(options: VirtualWindowOptions): VirtualWindow {
     [record],
   );
 
+  const scrollToOffset = useCallback(
+    (requested: number, behavior: ScrollBehavior = "auto") => {
+      const element = scrollRef.current;
+      if (!element) return;
+      const maximum = Math.max(0, layout.total - viewport);
+      const logical = Math.min(maximum, Math.max(0, requested));
+      const physical = horizontal && rtl ? -logical : logical;
+      if (typeof element.scrollTo === "function") {
+        element.scrollTo(horizontal ? { left: physical, behavior } : { top: physical, behavior });
+      } else if (horizontal) {
+        element.scrollLeft = physical;
+      } else {
+        element.scrollTop = physical;
+      }
+    },
+    [horizontal, layout.total, rtl, scrollRef, viewport],
+  );
+
+  const scrollToIndex = useCallback(
+    (
+      requested: number,
+      options: { align?: "start" | "center" | "end" | "auto"; behavior?: ScrollBehavior } = {},
+    ) => {
+      if (count === 0) return;
+      const index = Math.min(count - 1, Math.max(0, Math.trunc(requested)));
+      const start = layout.starts[index] ?? 0;
+      const size = layout.sizes[index] ?? 0;
+      const end = start + size;
+      let target = start;
+      switch (options.align ?? "start") {
+        case "center":
+          target = start - (viewport - size) / 2;
+          break;
+        case "end":
+          target = end - viewport;
+          break;
+        case "auto":
+          target = start < offset ? start : end > offset + viewport ? end - viewport : offset;
+          break;
+      }
+      scrollToOffset(target, options.behavior);
+    },
+    [count, layout.sizes, layout.starts, offset, scrollToOffset, viewport],
+  );
+
   const items = useMemo(() => {
     if (count === 0) return [];
     const firstVisible = indexAt(layout.starts, offset);
@@ -338,5 +393,5 @@ export function useVirtualWindow(options: VirtualWindowOptions): VirtualWindow {
     return window;
   }, [count, layout, offset, viewport, overscan, keyOf]);
 
-  return { items, totalSize: layout.total, measureElement };
+  return { items, totalSize: layout.total, measureElement, scrollToIndex, scrollToOffset };
 }

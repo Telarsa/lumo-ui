@@ -1,5 +1,5 @@
 import type { Locale } from "@lumo-ui/core";
-import { RangeCalendar } from "@lumo-ui/ui";
+import { RangeCalendarIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -38,7 +38,7 @@ const t = {
 
 function BasicExample(l: Locale) {
   return (
-    <RangeCalendar
+    <RangeCalendarIsland
       label={t.trip[l]}
       locale={l}
       description={t.tripHelp[l]}
@@ -48,7 +48,7 @@ function BasicExample(l: Locale) {
 
 function MonthLengthExample(l: Locale) {
   return (
-    <RangeCalendar
+    <RangeCalendarIsland
       label={t.stay[l]}
       locale={l}
       description={t.stayHelp[l]}
@@ -58,7 +58,7 @@ function MonthLengthExample(l: Locale) {
 
 function ReadOnlyExample(l: Locale) {
   return (
-    <RangeCalendar
+    <RangeCalendarIsland
       label={t.audit[l]}
       locale={l}
       description={t.auditHelp[l]}
@@ -69,7 +69,7 @@ function ReadOnlyExample(l: Locale) {
 
 function DisabledExample(l: Locale) {
   return (
-    <RangeCalendar
+    <RangeCalendarIsland
       label={t.closed[l]}
       locale={l}
       isDisabled

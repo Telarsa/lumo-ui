@@ -63,7 +63,28 @@ export type { ButtonVariantProps };
  * "not dead" cannot be satisfied by deleting the rule.
  */
 
-export interface ButtonProps extends ButtonPropsBase, ButtonVariantProps {
+type UnsupportedButtonInteraction =
+  | "onPressStart"
+  | "onPressEnd"
+  | "onPressUp"
+  | "onPressChange"
+  | "onHoverStart"
+  | "onHoverEnd"
+  | "onHoverChange"
+  | "onFocusChange";
+
+export interface ButtonProps
+  extends Omit<ButtonPropsBase, UnsupportedButtonInteraction>,
+    ButtonVariantProps {
+  /** Unsupported React Aria lifecycle callbacks are carriers, not silent props. */
+  onPressStart?: undefined;
+  onPressEnd?: undefined;
+  onPressUp?: undefined;
+  onPressChange?: undefined;
+  onHoverStart?: undefined;
+  onHoverEnd?: undefined;
+  onHoverChange?: undefined;
+  onFocusChange?: undefined;
   /**
    * @forwarded `...rest` → `BaseButton` → the `<button>` element.
    *
@@ -114,6 +135,7 @@ export function Button({
   // — translated —
   isDisabled,
   onPress,
+  onClick,
   excludeFromTabOrder,
   onKeyDown,
   onKeyUp,
@@ -155,9 +177,12 @@ export function Button({
       {...attr("slot", slot ?? undefined)}
       {...attr(
         "onClick",
-        onPress === undefined
+        onPress === undefined && onClick === undefined
           ? undefined
-          : (event: ReactMouseEvent<HTMLButtonElement>) => onPress(pressFromClick(event)),
+          : (event: ReactMouseEvent<HTMLButtonElement>) => {
+              onPress?.(pressFromClick(event));
+              onClick?.(event);
+            },
       )}
       {...attr(
         "onKeyDown",

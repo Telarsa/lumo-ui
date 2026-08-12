@@ -180,6 +180,17 @@ describe("Carousel — the geometry is logical, and the arrowheads mirror themse
  * bytes. These are the unit tier: they pin WHY the obvious fix does not work.
  */
 describe("every slide is named", () => {
+  it("does not let passthrough props replace owned carousel semantics", () => {
+    // @ts-expect-error the root role is always region
+    void <Carousel locale="fa-IR" label="پیشنهادها" roleDescription="چرخ‌فلک" slideRoleDescription="اسلاید" role="group" />;
+    // @ts-expect-error the root roledescription comes from the required localized prop
+    void <Carousel locale="fa-IR" label="پیشنهادها" roleDescription="چرخ‌فلک" slideRoleDescription="اسلاید" aria-roledescription="carousel" />;
+    // @ts-expect-error a slide is always a group
+    void <CarouselItem label="پیشنهاد" role="region" />;
+    // @ts-expect-error a slide roledescription comes from Carousel context
+    void <CarouselItem label="پیشنهاد" aria-roledescription="slide" />;
+  });
+
   it("puts the label on the element that carries the roledescription", () => {
     const { container } = render(<Deck locale="fa-IR" />);
     /*

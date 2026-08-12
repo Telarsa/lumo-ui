@@ -15,6 +15,7 @@
 
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+import { render, screen } from "@testing-library/react";
 import { Progress as BaseProgress } from "@base-ui/react/progress";
 import { formatNumber } from "@lumo-ui/core";
 import { baseUiStringsFor } from "@lumo-ui/base-ui-ssr";
@@ -84,6 +85,31 @@ describe("ProgressBar — the accessible name is in the first byte", () => {
 });
 
 describe("ProgressBar — the announced number is Persian", () => {
+  it("clamps one value for geometry, visible text, and ARIA", () => {
+    render(
+      <ProgressBar
+        label="بارگذاری"
+        locale="fa-IR"
+        value={150}
+        maxValue={100}
+        formatOptions={{ style: "decimal" }}
+        showValue
+      />,
+    );
+    const progress = screen.getByRole("progressbar");
+    expect(progress.getAttribute("aria-valuenow")).toBe("100");
+    expect(progress.getAttribute("aria-valuetext")).toContain("۱۰۰");
+    expect(progress.textContent).toContain("۱۰۰");
+    expect(progress.textContent).not.toContain("۱۵۰");
+  });
+
+  it("rejects an inverted range instead of rendering contradictory semantics", () => {
+    expect(() =>
+      render(
+        <ProgressBar label="بارگذاری" locale="fa-IR" minValue={100} maxValue={0} />,
+      ),
+    ).toThrow(RangeError);
+  });
   it("aria-valuetext carries arabext digits, not Latin ones", () => {
     const html = renderToStaticMarkup(
       <ProgressBar label="بارگذاری" locale="fa-IR" value={45} />,
@@ -165,6 +191,30 @@ describe("ProgressBar — the indeterminate phrase comes from the catalogue", ()
 });
 
 describe("Meter", () => {
+  it("clamps one value for geometry, visible text, and ARIA", () => {
+    render(
+      <Meter
+        label="فضای مصرف‌شده"
+        locale="fa-IR"
+        value={150}
+        maxValue={100}
+        formatOptions={{ style: "decimal" }}
+        showValue
+      />,
+    );
+    const meter = screen.getByRole("meter");
+    expect(meter.getAttribute("aria-valuenow")).toBe("100");
+    expect(meter.getAttribute("aria-valuetext")).toContain("۱۰۰");
+    expect(meter.textContent).toContain("۱۰۰");
+    expect(meter.textContent).not.toContain("۱۵۰");
+  });
+
+  it("rejects an inverted range instead of rendering contradictory semantics", () => {
+    expect(() =>
+      render(<Meter label="فضا" locale="fa-IR" minValue={100} maxValue={0} />),
+    ).toThrow(RangeError);
+  });
+
   it("is a role=meter with a first-byte name and a Persian value", () => {
     const html = renderToStaticMarkup(
       <Meter label="فضای مصرف‌شده" locale="fa-IR" value={92} showValue />,

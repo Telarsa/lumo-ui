@@ -195,7 +195,7 @@ export interface MenubarProps {
    * menu.tsx already is one. Declared so that `Omit<ToolbarProps,"orientation">`
    * — the old shape of this interface — keeps compiling for anyone who wrote it.
    */
-  orientation?: never;
+  orientation?: undefined;
   /** Whether the whole row is disabled. */
   isDisabled?: boolean | undefined;
 }
@@ -227,7 +227,37 @@ export function Menubar({ label, className, children, isDisabled }: MenubarProps
   );
 }
 
-export interface MenubarButtonProps extends ButtonPropsBase {
+type MenubarButtonInertProps =
+  | "onPress"
+  | "onPressStart"
+  | "onPressEnd"
+  | "onPressUp"
+  | "onPressChange"
+  | "onHoverStart"
+  | "onHoverEnd"
+  | "onHoverChange"
+  | "onFocusChange"
+  | "isPending"
+  | "preventFocusOnPress"
+  | "excludeFromTabOrder"
+  | "slot"
+  | "style";
+
+export interface MenubarButtonProps extends Omit<ButtonPropsBase, MenubarButtonInertProps> {
+  onPress?: undefined;
+  onPressStart?: undefined;
+  onPressEnd?: undefined;
+  onPressUp?: undefined;
+  onPressChange?: undefined;
+  onHoverStart?: undefined;
+  onHoverEnd?: undefined;
+  onHoverChange?: undefined;
+  onFocusChange?: undefined;
+  isPending?: undefined;
+  preventFocusOnPress?: undefined;
+  excludeFromTabOrder?: undefined;
+  slot?: undefined;
+  style?: undefined;
   children?: LumoNode;
   className?: string | undefined;
   /**

@@ -231,7 +231,7 @@ export function InputOtp({
     const digits = otpDigits(next, length);
     if (value === undefined) setUncontrolled(digits);
     onChange?.(digits);
-    if (digits.length === length) onComplete?.(digits);
+    if (code.length < length && digits.length === length) onComplete?.(digits);
   };
 
   return (

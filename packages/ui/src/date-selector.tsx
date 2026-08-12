@@ -377,6 +377,8 @@ export interface DateSelectorProps {
    */
   dateFormatOptions?: Intl.DateTimeFormatOptions | undefined;
   value?: CalendarDateRange | null | undefined;
+  /** Clock input for the popup calendar. Required for deterministic rendering. */
+  today: CalendarDate;
   defaultValue?: CalendarDateRange | null | undefined;
   onChange?: ((value: CalendarDateRange | null) => void) | undefined;
   /**
@@ -408,6 +410,7 @@ export function DateSelector({
   presets,
   dateFormatOptions,
   value,
+  today,
   defaultValue,
   onChange,
   minValue,
@@ -536,6 +539,7 @@ export function DateSelector({
           <RangeCalendar
             label={calendarLabel}
             locale={locale}
+            today={today}
             {...(selected ? { value: selected } : {})}
             {...(selected?.from ? { defaultMonth: selected.from } : {})}
             {...(minValue ? { minValue } : {})}

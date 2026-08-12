@@ -3,7 +3,7 @@
 import { cva, type VariantProps } from "class-variance-authority";
 import { RadioGroup as BaseRadioGroup } from "@base-ui/react/radio-group";
 import { Radio as BaseRadio } from "@base-ui/react/radio";
-import { Children, createContext, isValidElement, useContext } from "react";
+import { Children, createContext, Fragment, isValidElement, useContext } from "react";
 import { cn, type Key, type LumoNode } from "@lumo-ui/core";
 import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 
@@ -190,17 +190,6 @@ export interface SegmentedControlProps {
   /** The initially selected key, as a one-element iterable. */
   defaultSelectedKeys?: Iterable<Key> | undefined;
   onSelectionChange?: ((keys: Set<Key>) => void) | undefined;
-  /**
-   * KEPT FOR API STABILITY, AND IT IS NOW A NO-OP THAT CANNOT LIE.
-   *
-   * Base UI's `RadioGroup` has no path to an empty selection at all — pressing
-   * the checked radio re-checks it. So `true` (the default) is what the
-   * component does, and `false` cannot be honoured: there is no un-check to
-   * allow. Typed `true | undefined` rather than `boolean` so asking for the
-   * behaviour Base UI cannot provide is a COMPILE ERROR instead of a prop that
-   * is accepted and silently ignored. Recorded as an API change.
-   */
-  disallowEmptySelection?: true | undefined;
   isDisabled?: boolean | undefined;
   /** Form field name for the proxy `<input type="radio">` Base UI renders. */
   name?: string | undefined;
@@ -212,6 +201,20 @@ export interface SegmentedControlProps {
 function firstKey(keys: Iterable<Key> | undefined): string | undefined {
   if (keys === undefined) return undefined;
   for (const key of keys) return String(key);
+  return undefined;
+}
+
+function firstChildKey(children: LumoNode): string | undefined {
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    const props = child.props as { id?: Key; children?: LumoNode };
+    if (child.type === Fragment) {
+      const nested = firstChildKey(props.children);
+      if (nested !== undefined) return nested;
+    } else if (props.id !== undefined) {
+      return String(props.id);
+    }
+  }
   return undefined;
 }
 
@@ -241,13 +244,7 @@ export function SegmentedControl({
   const defaultValue = firstKey(defaultSelectedKeys);
   // The checked option if there is one, otherwise the first — a group with no
   // selection still has to be reachable.
-  const firstChild = Children.toArray(children).find(isValidElement) as
-    | { props?: { id?: unknown } }
-    | undefined;
-  const tabStopKey =
-    value ??
-    defaultValue ??
-    (firstChild?.props?.id === undefined ? undefined : String(firstChild.props.id));
+  const tabStopKey = value ?? defaultValue ?? firstChildKey(children);
 
   return (
     <BaseRadioGroup

@@ -55,8 +55,30 @@ function fakeField<T>(
   };
 }
 
-const fa = lumoValidators("fa-IR");
-const en = lumoValidators("en-US");
+const fa = lumoValidators("fa-IR", {
+  required: "این فیلد الزامی است",
+  minLength: (n) => `دست‌کم ${n} نویسه لازم است`,
+  maxLength: (n) => `حداکثر ${n} نویسه مجاز است`,
+  min: (n) => `نباید کمتر از ${n} باشد`,
+  max: (n) => `نباید بیشتر از ${n} باشد`,
+  number: "یک عدد معتبر بنویسید",
+  email: "نشانی ایمیل معتبر نیست",
+  pattern: "قالب واردشده معتبر نیست",
+  nationalId: "کد ملی معتبر نیست",
+  mobile: "شماره موبایل معتبر نیست",
+});
+const en = lumoValidators("en-US", {
+  required: "This field is required",
+  minLength: (n) => `At least ${n} characters`,
+  maxLength: (n) => `At most ${n} characters`,
+  min: (n) => `Must be at least ${n}`,
+  max: (n) => `Must be at most ${n}`,
+  number: "Enter a valid number",
+  email: "Enter a valid email address",
+  pattern: "The format is not valid",
+  nationalId: "Not a valid Iranian national ID",
+  mobile: "Not a valid Iranian mobile number",
+});
 
 describe("the served bytes", () => {
   /**

@@ -32,6 +32,22 @@ const t = {
     "fa-IR": "لطفاً نام خود را بنویسید",
     "en-US": "Please enter your name",
   },
+  required: { "fa-IR": "این فیلد الزامی است", "en-US": "This field is required" },
+  minLength: {
+    "fa-IR": "باید دست‌کم {n} نویسه باشد",
+    "en-US": "Must contain at least {n} characters",
+  },
+  maxLength: {
+    "fa-IR": "باید حداکثر {n} نویسه باشد",
+    "en-US": "Must contain at most {n} characters",
+  },
+  min: { "fa-IR": "نباید کمتر از {n} باشد", "en-US": "Must be at least {n}" },
+  max: { "fa-IR": "نباید بیشتر از {n} باشد", "en-US": "Must be at most {n}" },
+  number: { "fa-IR": "یک عدد معتبر وارد کنید", "en-US": "Enter a valid number" },
+  email: { "fa-IR": "یک ایمیل معتبر وارد کنید", "en-US": "Enter a valid email address" },
+  pattern: { "fa-IR": "قالب واردشده معتبر نیست", "en-US": "The entered format is invalid" },
+  nationalIdError: { "fa-IR": "کد ملی معتبر نیست", "en-US": "Enter a valid national ID" },
+  mobileError: { "fa-IR": "شمارهٔ موبایل معتبر نیست", "en-US": "Enter a valid mobile number" },
 } satisfies Record<string, LocalizedText>;
 
 function ValidatingFormExample(l: Locale) {
@@ -45,6 +61,18 @@ function ValidatingFormExample(l: Locale) {
       submitLabel={t.submit[l]}
       successMessage={t.saved[l]}
       nameRequiredMessage={t.nameRequired[l]}
+      validatorMessages={{
+        required: t.required[l],
+        minLength: t.minLength[l],
+        maxLength: t.maxLength[l],
+        min: t.min[l],
+        max: t.max[l],
+        number: t.number[l],
+        email: t.email[l],
+        pattern: t.pattern[l],
+        nationalId: t.nationalIdError[l],
+        mobile: t.mobileError[l],
+      }}
     />
   );
 }

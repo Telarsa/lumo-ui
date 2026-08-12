@@ -313,8 +313,20 @@ export function DialogTrigger({
  * `isKeyboardDismissDisabled` is NOT accepted here any more — it lives on
  * `DialogTrigger`, which renders the Root that owns dismissal. See the header.
  */
+type UnsupportedDialogOverlayProp =
+  | "isEntering"
+  | "isExiting"
+  | "shouldCloseOnInteractOutside"
+  | "UNSTABLE_portalContainer"
+  | "slot";
+
 export interface DialogOverlayProps
-  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys> {
+  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys | UnsupportedDialogOverlayProp> {
+  isEntering?: undefined;
+  isExiting?: undefined;
+  shouldCloseOnInteractOutside?: undefined;
+  UNSTABLE_portalContainer?: undefined;
+  slot?: undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -322,14 +334,13 @@ export interface DialogOverlayProps
 export function DialogOverlay({
   className,
   children,
-  // — accepted by the API, unreachable in Base UI —
+  // — `?: undefined` carriers: rejected for typed callers —
   isDismissable: _isDismissable,
   isEntering: _isEntering,
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
   UNSTABLE_portalContainer: _portalContainer,
   slot: _slot,
-  style: _style,
   ...rest
 }: DialogOverlayProps) {
   return (
@@ -352,9 +363,23 @@ export function DialogOverlay({
  * byte-identical to the React Aria build and a diff of the two shows the engine
  * change rather than a restyle.
  */
+type UnsupportedDialogModalProp =
+  | "isDismissable"
+  | "isEntering"
+  | "isExiting"
+  | "shouldCloseOnInteractOutside"
+  | "UNSTABLE_portalContainer"
+  | "slot";
+
 export interface DialogModalProps
-  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys>,
+  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys | UnsupportedDialogModalProp>,
     VariantProps<typeof dialogModalVariants> {
+  isDismissable?: undefined;
+  isEntering?: undefined;
+  isExiting?: undefined;
+  shouldCloseOnInteractOutside?: undefined;
+  UNSTABLE_portalContainer?: undefined;
+  slot?: undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -387,7 +412,9 @@ export interface DialogModalProps
  * `AlertDialogProps` and appears on nothing else in the library — for the
  * reason `findChildProp`'s docblock gives at length.
  */
-function popupRole(children: unknown): "alertdialog" | undefined {
+function popupRole(children: unknown): "dialog" | "alertdialog" | undefined {
+  const authored = findChildProp(children, "role");
+  if (authored === "dialog" || authored === "alertdialog") return authored;
   return findChildProp(children, "confirmLabel") === undefined ? undefined : "alertdialog";
 }
 
@@ -395,14 +422,13 @@ export function DialogModal({
   className,
   size,
   children,
-  // — accepted by the API, unreachable in Base UI —
+  // — `?: undefined` carriers: rejected for typed callers —
   isDismissable: _isDismissable,
   isEntering: _isEntering,
   isExiting: _isExiting,
   shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
   UNSTABLE_portalContainer: _portalContainer,
   slot: _slot,
-  style: _style,
   ...rest
 }: DialogModalProps) {
   return (
@@ -451,7 +477,10 @@ export function DialogModal({
  * `onClick` survives that boundary is measured rather than assumed — see
  * experiments/measurements/rebuild-overlays.json.
  */
-export interface DialogProps extends DialogPropsBase {
+interface DialogSupportedProps extends Omit<DialogPropsBase, "slot"> {}
+
+export interface DialogProps extends DialogSupportedProps {
+  slot?: undefined;
   /** Announced name of the ✕ button. Required: an icon is not a name. */
   closeLabel: string;
   children?: LumoNode;
@@ -462,10 +491,9 @@ export function Dialog({
   closeLabel,
   className,
   children,
-  // — accepted by the API, unreachable on a plain <div> —
+  // `role` is lifted by DialogModal; `slot` is a rejected type carrier.
   role: _role,
   slot: _slot,
-  style: _style,
   ...rest
 }: DialogProps) {
   return (
@@ -517,8 +545,8 @@ export function Dialog({
  *
  * `level` defaults to 2 rather than RAC's 3: a dialog is a new document context
  * and starting at h3 implies an h2 above it that does not exist. Base UI's Title
- * renders `<h2>` unconditionally and takes no `level`, so the prop is accepted
- * and only honoured when it is 2 — another recorded gap.
+ * takes a `render` element, so non-default levels replace its native `<h2>`
+ * while retaining the title-store wiring.
  *
  * `pe-8` reserves the trailing gutter for the ✕. Logical, so the reserved space
  * moves to the left edge in Persian along with the button.
@@ -542,14 +570,15 @@ export interface DialogHeadingProps
 }
 
 export function DialogHeading({
-  level: _level = 2,
+  level = 2,
   className,
-  slot: _slot,
-  style: _style,
   ...rest
 }: DialogHeadingProps) {
+  const heading =
+    level === 2 ? undefined : React.createElement(`h${String(Math.min(Math.max(level, 1), 6))}`);
   return (
     <BaseDialog.Title
+      {...attr("render", heading)}
       className={cn("pe-8 text-lg font-semibold text-fg", className)}
       {...rest}
     />

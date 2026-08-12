@@ -30,9 +30,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { ComponentProps } from "react";
 
 import { gradeHtml, namedControls, resolvedIdrefs } from "../../gate/src/index.ts";
-import { Description, Field, Label } from "./form.tsx";
+import { Description, Field, FieldError, Label } from "./form.tsx";
 import { InputGroup } from "./input-group.tsx";
 import { Link } from "./link.tsx";
 import { Radio, RadioGroup } from "./radio-group.tsx";
@@ -73,6 +74,23 @@ function attrOf(html: string, selector: string, attribute: string): string | und
 // ──────────────────────────────────────────────── names at the first byte ──
 
 describe("every field in the family is named and described in the SERVED HTML", () => {
+  it("rejects radio props the Base UI composition cannot implement", () => {
+    // @ts-expect-error validationBehavior is owned by the form/field layer.
+    const group = <RadioGroup label="روش" validationBehavior="native" />;
+    // @ts-expect-error slot was accepted and discarded by an option.
+    const option = <Radio value="x" slot="option">گزینه</Radio>;
+    expect([group, option]).toHaveLength(2);
+  });
+  it("FieldError delivers caller DOM props to its rendered root", () => {
+    render(
+      <Field errorMessage="خطا">
+        <FieldError data-testid="field-error">
+          خطا
+        </FieldError>
+      </Field>,
+    );
+    expect(screen.getByTestId("field-error").textContent).toBe("خطا");
+  });
   /*
    * The poison twin for this whole block lives in ssr-field-wiring.test.tsx:
    * bare Base UI, composed exactly as its own documentation composes it,
@@ -249,23 +267,30 @@ describe("SearchField — the clear button this component had to re-author", () 
     expect(root?.hasAttribute("data-filled")).toBe(true);
   });
 
-  it("GAP: data-filled is absent from the first byte, even with a defaultValue", () => {
-    /*
-     * `Field.Root` initialises filled as `React.useState(false)`
-     * (field/root/FieldRoot.mjs:45) and `FieldRootProps` exposes controlled
-     * overrides for `dirty` and `touched` and NONE for `filled`. So a
-     * server-rendered SearchField with a value serves its clear button hidden,
-     * and it appears on hydration.
-     *
-     * The adapter cannot close this: every fix in `@lumo-ui/base-ui-ssr` is a
-     * value passed INTO Base UI through a public prop, and there is no prop to
-     * pass. Asserted rather than commented so that a Base UI release which adds
-     * one turns this red instead of leaving the workaround in place forever.
-     */
+  it("serves the clear button visible when defaultValue is already filled", () => {
     const html = renderToStaticMarkup(
       <SearchField label="جستجو" clearLabel="پاک کردن" defaultValue="تهران" />,
     );
-    expect(attrOf(html, "[data-lumo]", "data-filled")).toBeUndefined();
+    const button = html.match(/<button[^>]*aria-label="پاک کردن"[^>]*>/)?.[0] ?? "";
+    expect(button).toContain("inline-flex");
+    expect(button).toContain("group-data-empty/search:hidden");
+  });
+});
+
+describe("Text controls — supported focus props reach the control", () => {
+  it("TextField excludes its input from sequential focus", () => {
+    render(<TextField label="نام" excludeFromTabOrder />);
+    expect(screen.getByRole("textbox").getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("TextArea excludes its control from sequential focus", () => {
+    render(<TextArea label="شرح" excludeFromTabOrder />);
+    expect(screen.getByRole("textbox").getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("SearchField excludes its input from sequential focus", () => {
+    render(<SearchField label="جستجو" clearLabel="پاک کردن" excludeFromTabOrder />);
+    expect(screen.getByRole("searchbox").getAttribute("tabindex")).toBe("-1");
   });
 });
 
@@ -434,6 +459,19 @@ describe("Separator and Link need no engine, and prove it in the served bytes", 
     expect(vertical).not.toContain("<hr");
   });
 
+  it("Separator keeps its owned vertical semantics", () => {
+    const html = renderToStaticMarkup(
+      <Separator
+        orientation="vertical"
+        {...({ role: "presentation", "aria-orientation": "horizontal" } as unknown as ComponentProps<
+          typeof Separator
+        >)}
+      />,
+    );
+    expect(attrOf(html, "*", "role")).toBe("separator");
+    expect(attrOf(html, "*", "aria-orientation")).toBe("vertical");
+  });
+
   it("Link emits aria-current AND data-current, which the nav components style", () => {
     const html = renderToStaticMarkup(
       <Link href="/dashboard" isCurrent="page">
@@ -458,6 +496,34 @@ describe("Separator and Link need no engine, and prove it in the served bytes", 
     // Document order, which the bidi algorithm never reorders — so the name
     // reads "مستندات, در برگه جدید باز می‌شود" in both scripts.
     expect(html.indexOf("مستندات")).toBeLessThan(html.indexOf("در برگه جدید"));
+  });
+
+  it("a disabled link does not announce a new-tab action it cannot perform", () => {
+    const html = renderToStaticMarkup(
+      <Link href="https://example.com" newTab newTabLabel="در برگه جدید باز می‌شود" isDisabled>
+        مستندات
+      </Link>,
+    );
+    expect(html).not.toContain("در برگه جدید باز می‌شود");
+    expect(html).not.toContain('target="_blank"');
+  });
+
+  it("Link keeps its owned role and disabled state against an untyped props bag", () => {
+    const disabled = renderToStaticMarkup(
+      <Link href="/x" isDisabled {...({ role: "button", "aria-disabled": false } as object)}>
+        بسته
+      </Link>,
+    );
+    expect(attrOf(disabled, "span", "role")).toBe("link");
+    expect(attrOf(disabled, "span", "aria-disabled")).toBe("true");
+
+    const active = renderToStaticMarkup(
+      <Link href="/x" {...({ role: "button", "aria-disabled": true } as object)}>
+        باز
+      </Link>,
+    );
+    expect(attrOf(active, "a", "role")).toBeUndefined();
+    expect(attrOf(active, "a", "aria-disabled")).toBeUndefined();
   });
 
   it("Link with no href is a span role=link, and a disabled one is not a tab stop", () => {

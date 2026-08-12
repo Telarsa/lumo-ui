@@ -44,7 +44,7 @@ import { Skeleton } from "./skeleton.tsx";
  */
 
 export interface SkeletonTextProps
-  extends Omit<ComponentProps<"div">, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className" | "aria-hidden"> {
   /** How many lines of body copy to stand in for. Default `3`. */
   lines?: number | undefined;
   className?: string | undefined;
@@ -56,7 +56,7 @@ export interface SkeletonTextProps
  */
 export function SkeletonText({ lines = 3, className, ...props }: SkeletonTextProps) {
   return (
-    <div aria-hidden="true" className={cn("flex w-full flex-col gap-2", className)} {...props}>
+    <div {...props} aria-hidden="true" className={cn("flex w-full flex-col gap-2", className)}>
       {Array.from({ length: lines }, (_, i) => (
         <Skeleton key={i} shape="text" className={i === lines - 1 ? "w-3/5" : undefined} />
       ))}
@@ -78,7 +78,7 @@ export const skeletonAvatarVariants = cva("rounded-full", {
 });
 
 export interface SkeletonAvatarProps
-  extends Omit<ComponentProps<"div">, "children" | "className">,
+  extends Omit<ComponentProps<"div">, "children" | "className" | "aria-hidden">,
     VariantProps<typeof skeletonAvatarVariants> {
   /**
    * Text lines beside the circle — a name and a caption, the classic feed row.
@@ -95,7 +95,7 @@ export interface SkeletonAvatarProps
  */
 export function SkeletonAvatar({ size, lines = 2, className, ...props }: SkeletonAvatarProps) {
   return (
-    <div aria-hidden="true" className={cn("flex w-full items-center gap-3", className)} {...props}>
+    <div {...props} aria-hidden="true" className={cn("flex w-full items-center gap-3", className)}>
       <Skeleton shape="circle" className={cn("shrink-0", skeletonAvatarVariants({ size }))} />
       {lines > 0 ? (
         <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -109,7 +109,7 @@ export function SkeletonAvatar({ size, lines = 2, className, ...props }: Skeleto
 }
 
 export interface SkeletonCardProps
-  extends Omit<ComponentProps<"div">, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className" | "aria-hidden"> {
   /** A media rectangle above the text, as a thumbnail card has. Default `true`. */
   hasMedia?: boolean | undefined;
   /** Body lines under the heading line. Default `2`. */
@@ -126,9 +126,9 @@ export interface SkeletonCardProps
 export function SkeletonCard({ hasMedia = true, lines = 2, className, ...props }: SkeletonCardProps) {
   return (
     <div
+      {...props}
       aria-hidden="true"
       className={cn("flex w-full flex-col rounded-lg border border-border bg-surface", className)}
-      {...props}
     >
       <div className="flex flex-col gap-3 p-4">
         {hasMedia ? <Skeleton shape="rect" className="aspect-video w-full" /> : null}
@@ -140,7 +140,7 @@ export function SkeletonCard({ hasMedia = true, lines = 2, className, ...props }
 }
 
 export interface SkeletonFormProps
-  extends Omit<ComponentProps<"div">, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className" | "aria-hidden"> {
   /** Label-and-input pairs. Default `3`. */
   fields?: number | undefined;
   /** A submit-shaped bar at the reading start of the last row. Default `true`. */
@@ -157,7 +157,7 @@ export interface SkeletonFormProps
 export function SkeletonForm({ fields = 3, hasAction = true, className, ...props }: SkeletonFormProps) {
   const LABEL_WIDTHS = ["w-24", "w-16", "w-20"] as const;
   return (
-    <div aria-hidden="true" className={cn("flex w-full flex-col gap-4", className)} {...props}>
+    <div {...props} aria-hidden="true" className={cn("flex w-full flex-col gap-4", className)}>
       {Array.from({ length: fields }, (_, i) => (
         <div key={i} className="flex flex-col gap-1.5">
           <Skeleton shape="text" className={cn("h-4", LABEL_WIDTHS[i % LABEL_WIDTHS.length])} />
@@ -170,7 +170,7 @@ export function SkeletonForm({ fields = 3, hasAction = true, className, ...props
 }
 
 export interface SkeletonTableProps
-  extends Omit<ComponentProps<"div">, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className" | "aria-hidden"> {
   /** Body rows under the header band. Default `4`. */
   rows?: number | undefined;
   /** Columns across. Default `4`. */
@@ -193,7 +193,7 @@ export function SkeletonTable({ rows = 4, columns = 4, className, ...props }: Sk
   const CELL_WIDTHS = ["w-2/3", "w-1/2", "w-3/4", "w-1/3"] as const;
   const tracks: CSSProperties = { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` };
   return (
-    <div aria-hidden="true" className={cn("w-full text-sm", className)} {...props}>
+    <div {...props} aria-hidden="true" className={cn("w-full text-sm", className)}>
       <div className="grid border-be border-border bg-surface-sunken" style={tracks}>
         {Array.from({ length: columns }, (_, col) => (
           <div key={col} className="flex h-control-md items-center px-3">

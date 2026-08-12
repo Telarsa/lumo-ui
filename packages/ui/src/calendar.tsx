@@ -47,6 +47,7 @@ export {
  *     <Calendar
  *       label="تاریخ سفر"
  *       locale={locale}
+ *       today={todayDate}
  *       value={value}
  *       onChange={setValue}
  *     />
@@ -205,11 +206,9 @@ export {
  * ── WHAT THE BOUNDS DO NOT FIX, STATED BECAUSE IT IS STILL TRUE ─────────────
  *
  * `DayPicker.js` opens with `if (!props.today) props = { …props, today:
- * dateLib.today() }`, unconditionally, for the `data-today` modifier. Every
- * calendar in this library has always paid that clock read and still does; what
- * bounds remove is its reach into the SERVED OPTION LIST. Closing the rest means
- * a `today` prop on this component, which is a separate change with a separate
- * argument, and it is not made here.
+ * dateLib.today() }`, for the `data-today` modifier. `today` is therefore an
+ * explicit public input below: callers producing deterministic SSR can snapshot
+ * the day at their request boundary instead of letting render read the clock.
  */
 
 /**
@@ -273,6 +272,8 @@ export interface CalendarBaseProps
   onChange?: ((value: CalendarDate | undefined) => void) | undefined;
   /** The month to show when uncontrolled. */
   defaultMonth?: CalendarDate | undefined;
+  /** The day marked as today. Required so render never reads the clock. */
+  today: CalendarDate;
   /** Marks individual days unselectable — holidays, booked days. */
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
   isDisabled?: boolean | undefined;
@@ -517,6 +518,7 @@ export function Calendar({
   value,
   onChange,
   defaultMonth,
+  today,
   captionLayout,
   minValue,
   maxValue,
@@ -587,6 +589,7 @@ export function Calendar({
         {...(captionLayout ? { captionLayout } : {})}
         {...(value ? { selected: toPickerDate(value) } : {})}
         {...(defaultMonth ? { defaultMonth: toPickerDate(defaultMonth) } : {})}
+        today={toPickerDate(today)}
         /*
          * ═══ THE BOUNDS ARE PASSED TWICE, ON PURPOSE ══════════════════════
          *

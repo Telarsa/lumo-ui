@@ -128,6 +128,8 @@ describe("completion", () => {
     // The condition every caller would otherwise write, and one of them would
     // write `>=`.
     expect(onComplete).toHaveBeenCalledExactlyOnceWith("1234");
+    fireEvent.change(control(), { target: { value: "۱۲۳۵" } });
+    expect(onComplete).toHaveBeenCalledTimes(1);
   });
 });
 

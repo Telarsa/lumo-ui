@@ -182,6 +182,13 @@ function fractionOf(value: number, minValue: number, maxValue: number): number {
   return range === 0 ? 0 : (clamped - minValue) / range;
 }
 
+function boundedValue(value: number, minValue: number, maxValue: number, owner: string): number {
+  if (maxValue < minValue) {
+    throw new RangeError(`${owner} maxValue must be greater than or equal to minValue`);
+  }
+  return Math.min(Math.max(value, minValue), maxValue);
+}
+
 /**
  * `formatOptions.style === "percent"` formats the FRACTION (Intl multiplies by
  * 100); every other style formats the raw value. This mirrors React Aria's own
@@ -275,8 +282,9 @@ export function ProgressBar({
 }: ProgressBarProps) {
   const strings = baseUiStringsFor(locale);
   const wiring = useFieldWiring({ label, explicit: props });
-  const fraction = fractionOf(value, minValue, maxValue);
-  const formatted = formatValue(value, fraction, locale, formatOptions);
+  const normalizedValue = boundedValue(value, minValue, maxValue, "ProgressBar");
+  const fraction = fractionOf(normalizedValue, minValue, maxValue);
+  const formatted = formatValue(normalizedValue, fraction, locale, formatOptions);
 
   return (
     <BaseProgress.Root
@@ -286,7 +294,7 @@ export function ProgressBar({
       min={minValue}
       max={maxValue}
       // `null` IS the indeterminate state in Base UI — there is no boolean.
-      value={isIndeterminate ? null : value}
+      value={isIndeterminate ? null : normalizedValue}
       /*
        * The whole point of the file, twice over. Base UI's default would format
        * with its own `locale` prop (defaulting to the runtime's) and would emit
@@ -384,8 +392,9 @@ export function Meter({
   ...props
 }: MeterProps) {
   const wiring = useFieldWiring({ label, explicit: props });
-  const fraction = fractionOf(value, minValue, maxValue);
-  const formatted = formatValue(value, fraction, locale, formatOptions);
+  const normalizedValue = boundedValue(value, minValue, maxValue, "Meter");
+  const fraction = fractionOf(normalizedValue, minValue, maxValue);
+  const formatted = formatValue(normalizedValue, fraction, locale, formatOptions);
 
   /*
    * `MeterRoot` is a near-copy of `ProgressRoot` with `role="meter"` and no
@@ -401,7 +410,7 @@ export function Meter({
       {...wiring.controlProps}
       min={minValue}
       max={maxValue}
-      value={value}
+      value={normalizedValue}
       getAriaValueText={() => formatted}
       className={cn("flex w-full flex-col gap-1.5", className)}
     >

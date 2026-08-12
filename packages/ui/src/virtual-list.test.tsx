@@ -17,10 +17,12 @@
  * and is asserted in the bytes for consistency.
  */
 
+import { createRef } from "react";
+import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { formatNumber } from "@lumo-ui/core";
-import { VirtualList } from "./virtual-list.tsx";
+import { VirtualList, type VirtualListHandle } from "./virtual-list.tsx";
 import { virtualMirror } from "./virtual-list.variants.ts";
 
 function rows(html: string): number {
@@ -184,6 +186,29 @@ describe("VirtualList — direction", () => {
       </VirtualList>,
     );
     expect(transforms(html)[1]).toBe("translateX(44px)");
+  });
+});
+
+describe("VirtualList — imperative scrolling", () => {
+  it("scrolls its owned viewport to an item index", () => {
+    const ref = createRef<VirtualListHandle>();
+    const view = render(
+      <VirtualList
+        ref={ref}
+        label="Orders"
+        locale="en-US"
+        count={100}
+        estimateSize={40}
+        initialSize={200}
+      >
+        {(index) => <span>row {index}</span>}
+      </VirtualList>,
+    );
+
+    const viewport = view.getByRole("list");
+    ref.current?.scrollToIndex(25);
+
+    expect(viewport.scrollTop).toBe(1_000);
   });
 });
 

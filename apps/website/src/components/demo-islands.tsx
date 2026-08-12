@@ -33,6 +33,7 @@ import {
   scaleLinear,
   useLumoForm,
   type ChartConfig,
+  type LumoValidatorMessages,
 } from "@lumo-ui/ui";
 
 /**
@@ -667,6 +668,7 @@ export function CalendarClosedDaysIsland({
     <Calendar
       label={label}
       locale={locale}
+      today={calendarDay(DEMO_TODAY_ISO)}
       description={description}
       isDateUnavailable={isWeekendDate}
       errorMessage={errorMessage}
@@ -1226,8 +1228,24 @@ export interface FormStateIslandProps {
   submitLabel: string;
   /** Announced once the form has been accepted. */
   successMessage: string;
-  /** Overrides the default «این فیلد الزامی است» for the name field. */
+  /** Field-specific required copy for the name field. */
   nameRequiredMessage: string;
+  /**
+   * Required caller-authored validator copy. Numeric rules interpolate `{n}`
+   * on this client side because functions cannot cross the RSC boundary.
+   */
+  validatorMessages: {
+    required: string;
+    minLength: string;
+    maxLength: string;
+    min: string;
+    max: string;
+    number: string;
+    email: string;
+    pattern: string;
+    nationalId: string;
+    mobile: string;
+  };
 }
 
 /**
@@ -1256,9 +1274,19 @@ export function FormStateIsland({
   submitLabel,
   successMessage,
   nameRequiredMessage,
+  validatorMessages,
 }: FormStateIslandProps) {
   const [saved, setSaved] = useState(false);
-  const v = lumoValidators(locale);
+  const withNumber = (template: string) => (formattedNumber: string) =>
+    template.replace("{n}", formattedNumber);
+  const messages: LumoValidatorMessages = {
+    ...validatorMessages,
+    minLength: withNumber(validatorMessages.minLength),
+    maxLength: withNumber(validatorMessages.maxLength),
+    min: withNumber(validatorMessages.min),
+    max: withNumber(validatorMessages.max),
+  };
+  const v = lumoValidators(locale, messages);
 
   const form = useLumoForm({
     defaultValues: { fullName: "", nationalId: "", mobile: "" },
@@ -2481,6 +2509,7 @@ export function DateSelectorIsland({
       panelLabel={panelLabel}
       presetsLabel={presetsLabel}
       calendarLabel={calendarLabel}
+      today={calendarDay(DEMO_TODAY_ISO)}
       placeholder={placeholder}
       presets={presets}
       value={range}
@@ -2944,7 +2973,126 @@ export function MenuChoiceIsland({
  * Every user-visible string is still a prop, in both locales, from the examples
  * file.
  */
-import { calendarDay, DatePicker } from "@lumo-ui/ui";
+import { calendarDay, DatePicker, DateRangePicker, RangeCalendar } from "@lumo-ui/ui";
+
+/** Fixed documentation clock: 21 Mordad 1405 / 12 August 2026. */
+const DEMO_TODAY_ISO = "2026-08-12";
+
+export interface CalendarIslandProps {
+  label: string;
+  locale: Locale;
+  description?: string | undefined;
+  isDisabled?: boolean | undefined;
+  captionLayout?: "label" | "dropdown-months" | undefined;
+}
+
+export function CalendarIsland({
+  label,
+  locale,
+  description,
+  isDisabled,
+  captionLayout,
+}: CalendarIslandProps) {
+  return (
+    <Calendar
+      label={label}
+      locale={locale}
+      today={calendarDay(DEMO_TODAY_ISO)}
+      {...(description === undefined ? {} : { description })}
+      {...(isDisabled === undefined ? {} : { isDisabled })}
+      {...(captionLayout === undefined ? {} : { captionLayout })}
+    />
+  );
+}
+
+export interface RangeCalendarIslandProps {
+  label: string;
+  locale: Locale;
+  description?: string | undefined;
+  isDisabled?: boolean | undefined;
+}
+
+export function RangeCalendarIsland({
+  label,
+  locale,
+  description,
+  isDisabled,
+}: RangeCalendarIslandProps) {
+  return (
+    <RangeCalendar
+      label={label}
+      locale={locale}
+      today={calendarDay(DEMO_TODAY_ISO)}
+      {...(description === undefined ? {} : { description })}
+      {...(isDisabled === undefined ? {} : { isDisabled })}
+    />
+  );
+}
+
+export interface DatePickerIslandProps {
+  label: string;
+  openCalendarLabel: string;
+  description?: string | undefined;
+  errorMessage?: string | undefined;
+  isDisabled?: boolean | undefined;
+  size?: "sm" | "md" | "lg" | undefined;
+}
+
+export function DatePickerIsland({
+  label,
+  openCalendarLabel,
+  description,
+  errorMessage,
+  isDisabled,
+  size,
+}: DatePickerIslandProps) {
+  return (
+    <DatePicker
+      className="w-full max-w-sm"
+      label={label}
+      openCalendarLabel={openCalendarLabel}
+      today={calendarDay(DEMO_TODAY_ISO)}
+      {...(description === undefined ? {} : { description })}
+      {...(errorMessage === undefined ? {} : { errorMessage })}
+      {...(isDisabled === undefined ? {} : { isDisabled })}
+      {...(size === undefined ? {} : { size })}
+    />
+  );
+}
+
+export interface DateRangePickerIslandProps {
+  label: string;
+  openCalendarLabel: string;
+  startLabel: string;
+  endLabel: string;
+  description?: string | undefined;
+  errorMessage?: string | undefined;
+  isDisabled?: boolean | undefined;
+}
+
+export function DateRangePickerIsland({
+  label,
+  openCalendarLabel,
+  startLabel,
+  endLabel,
+  description,
+  errorMessage,
+  isDisabled,
+}: DateRangePickerIslandProps) {
+  return (
+    <DateRangePicker
+      className="w-full max-w-md"
+      label={label}
+      openCalendarLabel={openCalendarLabel}
+      startLabel={startLabel}
+      endLabel={endLabel}
+      today={calendarDay(DEMO_TODAY_ISO)}
+      {...(description === undefined ? {} : { description })}
+      {...(errorMessage === undefined ? {} : { errorMessage })}
+      {...(isDisabled === undefined ? {} : { isDisabled })}
+    />
+  );
+}
 
 export interface CalendarDropdownIslandProps {
   /** Announced name of the calendar. */
@@ -2976,6 +3124,7 @@ export function CalendarDropdownIsland({
     <Calendar
       label={label}
       locale={locale}
+      today={calendarDay(DEMO_TODAY_ISO)}
       description={description}
       captionLayout="dropdown"
       minValue={calendarDay(minDay)}
@@ -3013,6 +3162,7 @@ export function DatePickerDropdownIsland({
       label={label}
       openCalendarLabel={openCalendarLabel}
       description={description}
+      today={calendarDay(DEMO_TODAY_ISO)}
       captionLayout="dropdown"
       minValue={calendarDay(minDay)}
       maxValue={calendarDay(maxDay)}

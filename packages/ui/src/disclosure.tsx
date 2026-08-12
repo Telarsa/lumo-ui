@@ -332,7 +332,36 @@ export function Disclosure({
   );
 }
 
-export interface DisclosureTriggerProps extends Omit<ButtonPropsBase, "slot"> {
+type UnsupportedDisclosureTriggerProp =
+  | "onKeyDown"
+  | "onKeyUp"
+  | "onPress"
+  | "onPressStart"
+  | "onPressEnd"
+  | "onPressUp"
+  | "onPressChange"
+  | "onHoverStart"
+  | "onHoverEnd"
+  | "onHoverChange"
+  | "onFocusChange"
+  | "excludeFromTabOrder";
+
+interface DisclosureTriggerSupportedProps
+  extends Omit<ButtonPropsBase, "slot" | UnsupportedDisclosureTriggerProp> {}
+
+export interface DisclosureTriggerProps extends DisclosureTriggerSupportedProps {
+  onKeyDown?: undefined;
+  onKeyUp?: undefined;
+  onPress?: undefined;
+  onPressStart?: undefined;
+  onPressEnd?: undefined;
+  onPressUp?: undefined;
+  onPressChange?: undefined;
+  onHoverStart?: undefined;
+  onHoverEnd?: undefined;
+  onHoverChange?: undefined;
+  onFocusChange?: undefined;
+  excludeFromTabOrder?: undefined;
   children?: LumoNode;
   className?: string | undefined;
   /** Heading level for the outline entry. Defaults to 3. */
@@ -348,9 +377,8 @@ export function DisclosureTrigger({
   // `preventBaseUIHandler` escape hatch the handler shapes in `@lumo-ui/core`'s
   // props.ts do not — those restate the vocabulary this API was pinned to, so
   // they are not assignable and the spread does not compile with them in
-  // `rest`. Dropped rather than cast: a cast would let a caller pass a handler
-  // whose event object lacks `continuePropagation`, which is the shape it would
-  // be typed against.
+  // `rest`. These are `?: undefined` carriers on the component-specific type,
+  // so typed callers cannot mistake the destructuring below for delivery.
   onKeyDown: _onKeyDown,
   onKeyUp: _onKeyUp,
   onPress: _onPress,
@@ -365,7 +393,6 @@ export function DisclosureTrigger({
   isPending: _isPending,
   preventFocusOnPress: _preventFocusOnPress,
   excludeFromTabOrder: _excludeFromTabOrder,
-  style: _style,
   ...rest
 }: DisclosureTriggerProps) {
   /*

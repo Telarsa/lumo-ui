@@ -11,7 +11,7 @@ import { Form, type FormProps } from "./form.tsx";
  *       defaultValues: { email: "", age: "" },
  *       onSubmit: async ({ value }) => save(value),
  *     });
- *     const v = lumoValidators(locale);
+ *     const v = lumoValidators(locale, messages);
  *
  *     <LumoForm form={form}>
  *       <form.Field name="email" validators={{ onDynamic: v.required() }}>
@@ -79,7 +79,7 @@ import { Form, type FormProps } from "./form.tsx";
  *
  * Three things, and each closes a defect that is invisible in review:
  *
- *   1. `lumoValidators(locale)` — messages in the reader's language, and
+ *   1. `lumoValidators(locale, messages)` — caller-authored messages in the reader's language, and
  *      numeric comparison that survives Persian digits. `Number("۱۸")` is NaN,
  *      so a `min(18)` written the obvious way rejects every Persian user who
  *      typed their own numerals. See the validators' own docblock.
@@ -360,30 +360,22 @@ export function firstError(errors: readonly unknown[], locale: Locale): string |
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * The default messages, in both locales.
- *
- * These live HERE and not in `@lumo-ui/core`'s `strings.ts`, which is a
- * different kind of catalogue: that file exists to close leaks in strings a
- * COMPONENT would otherwise announce, and every key in it is required at a call
- * site so forgetting one is a compile error. A validation message is
- * application copy — it has a sensible default, it is frequently overridden per
- * field, and making it required would put eleven mandatory props on every form.
- *
- * Every validator takes a `message` argument that wins over the default, so
- * nothing here is a ceiling.
+ * Every entry is required because every returned error may be announced. The
+ * library supplies validation arithmetic, digit folding and formatted numeric
+ * inputs; the caller supplies all application prose.
  */
-const MESSAGES = {
-  required: { "fa-IR": "این فیلد الزامی است", "en-US": "This field is required" },
-  minLength: { "fa-IR": "دست‌کم {n} نویسه لازم است", "en-US": "At least {n} characters" },
-  maxLength: { "fa-IR": "حداکثر {n} نویسه مجاز است", "en-US": "At most {n} characters" },
-  min: { "fa-IR": "نباید کمتر از {n} باشد", "en-US": "Must be at least {n}" },
-  max: { "fa-IR": "نباید بیشتر از {n} باشد", "en-US": "Must be at most {n}" },
-  number: { "fa-IR": "یک عدد معتبر بنویسید", "en-US": "Enter a valid number" },
-  email: { "fa-IR": "نشانی ایمیل معتبر نیست", "en-US": "Enter a valid email address" },
-  pattern: { "fa-IR": "قالب واردشده معتبر نیست", "en-US": "The format is not valid" },
-  nationalId: { "fa-IR": "کد ملی معتبر نیست", "en-US": "Not a valid Iranian national ID" },
-  mobile: { "fa-IR": "شماره موبایل معتبر نیست", "en-US": "Not a valid Iranian mobile number" },
-} as const satisfies Record<string, Record<Locale, string>>;
+export interface LumoValidatorMessages {
+  required: string;
+  minLength: (formattedMinimum: string) => string;
+  maxLength: (formattedMaximum: string) => string;
+  min: (formattedMinimum: string) => string;
+  max: (formattedMaximum: string) => string;
+  number: string;
+  email: string;
+  pattern: string;
+  nationalId: string;
+  mobile: string;
+}
 
 /** A TanStack validator: given the field's value, a message or nothing. */
 export type LumoValidator<TValue = unknown> = (context: {
@@ -430,10 +422,6 @@ export function visibleLength(value: string): number {
  * Persian label — is exactly the kind that appears on one deployment target and
  * not another.
  */
-function fill(template: string, n: number, locale: Locale): string {
-  return template.replace("{n}", formatNumber(n, locale));
-}
-
 /**
  * Iranian national ID (کد ملی) check digit.
  *
@@ -484,9 +472,10 @@ export function isValidNationalId(digits: string): boolean {
  * handles in English and cannot handle for Persian at all: the digit folding
  * above, and the two national formats below.
  *
- * Each takes an optional `message` that wins over the default.
+ * Each takes an optional per-field override that wins over the required
+ * caller-authored catalogue.
  */
-export function lumoValidators(locale: Locale) {
+export function lumoValidators(locale: Locale, messages: LumoValidatorMessages) {
   const empty = (value: unknown) =>
     value == null ||
     value === false ||
@@ -534,19 +523,19 @@ export function lumoValidators(locale: Locale) {
     required:
       (message?: string): LumoValidator =>
       ({ value }) =>
-        empty(value) ? (message ?? MESSAGES.required[locale]) : undefined,
+        empty(value) ? (message ?? messages.required) : undefined,
 
     minLength: (n: number, message?: string) =>
       whenPresent((value) =>
         visibleLength(String(value)) < n
-          ? (message ?? fill(MESSAGES.minLength[locale], n, locale))
+          ? (message ?? messages.minLength(formatNumber(n, locale)))
           : undefined,
       ),
 
     maxLength: (n: number, message?: string) =>
       whenPresent((value) =>
         visibleLength(String(value)) > n
-          ? (message ?? fill(MESSAGES.maxLength[locale], n, locale))
+          ? (message ?? messages.maxLength(formatNumber(n, locale)))
           : undefined,
       ),
 
@@ -554,22 +543,22 @@ export function lumoValidators(locale: Locale) {
     number: (message?: string) =>
       whenPresent((value) =>
         Number.isNaN(parseNumber(String(value), locale))
-          ? (message ?? MESSAGES.number[locale])
+          ? (message ?? messages.number)
           : undefined,
       ),
 
     min: (n: number, message?: string) =>
       whenPresent((value) => {
         const parsed = parseNumber(String(value), locale);
-        if (Number.isNaN(parsed)) return MESSAGES.number[locale];
-        return parsed < n ? (message ?? fill(MESSAGES.min[locale], n, locale)) : undefined;
+        if (Number.isNaN(parsed)) return messages.number;
+        return parsed < n ? (message ?? messages.min(formatNumber(n, locale))) : undefined;
       }),
 
     max: (n: number, message?: string) =>
       whenPresent((value) => {
         const parsed = parseNumber(String(value), locale);
-        if (Number.isNaN(parsed)) return MESSAGES.number[locale];
-        return parsed > n ? (message ?? fill(MESSAGES.max[locale], n, locale)) : undefined;
+        if (Number.isNaN(parsed)) return messages.number;
+        return parsed > n ? (message ?? messages.max(formatNumber(n, locale))) : undefined;
       }),
 
     /**
@@ -586,12 +575,12 @@ export function lumoValidators(locale: Locale) {
       whenPresent((value) =>
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim())
           ? undefined
-          : (message ?? MESSAGES.email[locale]),
+          : (message ?? messages.email),
       ),
 
     pattern: (expression: RegExp, message?: string) =>
       whenPresent((value) =>
-        expression.test(String(value)) ? undefined : (message ?? MESSAGES.pattern[locale]),
+        expression.test(String(value)) ? undefined : (message ?? messages.pattern),
       ),
 
     /**
@@ -605,7 +594,7 @@ export function lumoValidators(locale: Locale) {
      */
     nationalId: (message?: string) =>
       whenPresent((value) =>
-        isValidNationalId(digits(value)) ? undefined : (message ?? MESSAGES.nationalId[locale]),
+        isValidNationalId(digits(value)) ? undefined : (message ?? messages.nationalId),
       ),
 
     /**
@@ -619,7 +608,7 @@ export function lumoValidators(locale: Locale) {
     mobile: (message?: string) =>
       whenPresent((value) => {
         const normalised = digits(value).replace(/^(98|0098)/, "0");
-        return /^09\d{9}$/.test(normalised) ? undefined : (message ?? MESSAGES.mobile[locale]);
+        return /^09\d{9}$/.test(normalised) ? undefined : (message ?? messages.mobile);
       }),
 
     /**

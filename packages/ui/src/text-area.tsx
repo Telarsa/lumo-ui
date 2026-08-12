@@ -62,7 +62,8 @@ export const textAreaVariants = cva(
  * them. Passing it to the wrong side is a compile error, which is the outcome
  * worth having.
  */
-export interface TextAreaProps extends Omit<TextFieldPropsBase, "isInvalid"> {
+export interface TextAreaProps
+  extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior" | "type"> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
   description?: LumoNode;
@@ -99,10 +100,7 @@ export function TextArea({
   isRequired,
   autoFocus,
   // — accepted by the API, unreachable in Base UI. See text-field.tsx. —
-  validationBehavior,
   excludeFromTabOrder,
-  type,
-  slot,
   ...rest
 }: TextAreaProps) {
   return (
@@ -140,6 +138,7 @@ export function TextArea({
         {...optional("required", isRequired)}
         {...optional("autoFocus", autoFocus)}
         {...(rest as object)}
+        {...optional("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
       />
       {description != null ? <Description>{description}</Description> : null}
       <FieldError>{errorMessage}</FieldError>

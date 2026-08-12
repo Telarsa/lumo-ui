@@ -18,7 +18,7 @@
 
 import { createElement, type FunctionComponent, type ReactElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   Cell,
@@ -718,5 +718,22 @@ describe("ColumnResizer — a grid with resizable columns is still ONE tab stop"
     for (const [tag] of html.matchAll(/<button[^>]*تغییر اندازهٔ ستون[^>]*>/g)) {
       expect(tag).toContain('tabindex="-1"');
     }
+  });
+
+  it("enters a resizer from its header and resizes with arrow keys", () => {
+    const { container } = render(<WithResizers />);
+    const header = container.querySelector<HTMLElement>('[role="columnheader"]')!;
+    const handle = header.querySelector<HTMLElement>('button[aria-label="تغییر اندازهٔ ستون"]')!;
+    const before = Number(handle.getAttribute("aria-valuenow"));
+
+    act(() => {
+      header.focus();
+      fireEvent.keyDown(header, { key: "F2" });
+    });
+    expect(document.activeElement).toBe(handle);
+    fireEvent.keyDown(handle, { key: "ArrowRight" });
+    expect(Number(handle.getAttribute("aria-valuenow"))).toBeGreaterThan(before);
+    fireEvent.keyDown(handle, { key: "Escape" });
+    expect(document.activeElement).toBe(header);
   });
 });

@@ -157,6 +157,11 @@ describe("focus ring — WCAG 2.4.7", () => {
     expectSelfFocusRing(track);
   });
 
+  it("switch: excludeFromTabOrder reaches the focusable track", () => {
+    const { container } = render(<Switch excludeFromTabOrder>اعلان</Switch>);
+    expect(container.querySelector('[role="switch"]')?.getAttribute("tabindex")).toBe("-1");
+  });
+
   it("button and toggle keep the system-wide ring, which was never engine-specific", () => {
     // theme.css styles `:where([data-lumo]):focus-visible`. Base UI's Button
     // renders a real <button>; the marker is what the rule needs and it is

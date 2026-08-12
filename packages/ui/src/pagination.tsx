@@ -177,6 +177,7 @@ export function Pagination({
   className,
   ...props
 }: PaginationProps) {
+  if (count <= 0) return null;
   const total = Math.max(1, Math.floor(count));
   const current = Math.min(Math.max(1, Math.floor(page)), total);
   const slots = paginationRange(current, total, siblingCount);

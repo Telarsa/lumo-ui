@@ -15,6 +15,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { LumoProvider } from "./provider.tsx";
 import { IconToggle, Toggle, toggleVariants } from "./toggle.tsx";
+import { ToggleButton, ToggleButtonGroup } from "./toggle-group.tsx";
 
 afterEach(cleanup);
 
@@ -135,5 +136,30 @@ describe("Toggle — the variants stay logical", () => {
     // WCAG 1.4.11 wants 3:1 for the edge of a control; `--lumo-sys-border` is
     // the decorative hairline and does not clear it. Two tokens, on purpose.
     expect(toggleVariants({ variant: "outline" })).toContain("border-border-control");
+  });
+});
+
+describe("ToggleButtonGroup — collection keys survive the public seam", () => {
+  it("serves one tab stop when its buttons are grouped in a Fragment", () => {
+    const html = renderToStaticMarkup(
+      <ToggleButtonGroup aria-label="چیدمان">
+        <>
+          <ToggleButton id="list">فهرست</ToggleButton>
+          <ToggleButton id="grid">شبکه</ToggleButton>
+        </>
+      </ToggleButtonGroup>,
+    );
+    expect(html.split('tabindex="0"').length - 1).toBe(1);
+  });
+
+  it("returns numeric keys as numbers", () => {
+    const seen: Set<string | number>[] = [];
+    render(
+      <ToggleButtonGroup aria-label="چیدمان" onSelectionChange={(keys) => seen.push(keys)}>
+        <ToggleButton id={3}>سه</ToggleButton>
+      </ToggleButtonGroup>,
+    );
+    screen.getByRole("button", { name: "سه" }).click();
+    expect([...seen.at(-1)!]).toEqual([3]);
   });
 });

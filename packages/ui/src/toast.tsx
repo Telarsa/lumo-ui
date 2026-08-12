@@ -4,7 +4,7 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Toast as BaseToast } from "@base-ui/react/toast";
 import type { ToastManager, ToastObject } from "@base-ui/react/toast";
-import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
+import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { IconButton } from "./button.tsx";
 
 /**
@@ -122,6 +122,8 @@ import { IconButton } from "./button.tsx";
 export interface LumoToastContent {
   title: LumoNode;
   description?: LumoNode | undefined;
+  /** Optional visible action, such as Undo or Retry. */
+  action?: { label: string; onAction: () => void } | undefined;
   /** Colour of the tone stripe. See `toastVariants` before relying on it. */
   tone?: ToastTone | undefined;
 }
@@ -131,6 +133,7 @@ export type ToastTone = "neutral" | "positive" | "critical" | "caution";
 /** Custom data Lumo attaches to a Base UI toast. Only the tone needs carrying. */
 interface LumoToastData extends Record<string, unknown> {
   tone: ToastTone;
+  action?: { label: string; onAction: () => void } | undefined;
 }
 
 /**
@@ -192,7 +195,10 @@ export function createToastQueue(options?: {
         ...(content.description === undefined
           ? {}
           : { description: content.description as React.ReactNode }),
-        data: { tone: content.tone ?? "neutral" },
+        data: {
+          tone: content.tone ?? "neutral",
+          ...(content.action === undefined ? {} : { action: content.action }),
+        },
         // See the file header. Base UI's own default is 5000; Lumo's is none,
         // and `0` is Base UI's spelling of "never auto-dismiss".
         timeout: addOptions?.timeout ?? 0,
@@ -347,6 +353,16 @@ export function Toast({ toast, closeLabel, className }: ToastProps) {
         )}
       </div>
 
+      {toast.data?.action === undefined ? null : (
+        <BaseToast.Action
+          type="button"
+          onClick={toast.data.action.onAction}
+          className="shrink-0 rounded-sm px-2 py-1 font-medium text-accent hover:bg-surface-hover"
+        >
+          {toast.data.action.label}
+        </BaseToast.Action>
+      )}
+
       {/*
        * `Toast.Close` merges its `onClick` onto the element it is given, which
        * replaces React Aria's `slot="close"` context wiring. `IconButton`'s
@@ -431,7 +447,7 @@ function ToastList({ closeLabel }: { closeLabel: string }) {
  */
 export function ToastRegion({
   queue,
-  locale: _locale,
+  locale,
   label,
   closeLabel,
   placement,
@@ -449,6 +465,7 @@ export function ToastRegion({
       <BaseToast.Portal>
         <BaseToast.Viewport
           data-lumo=""
+          dir={direction(locale)}
           aria-label={label}
           className={cn(toastRegionVariants({ placement }), className)}
         >

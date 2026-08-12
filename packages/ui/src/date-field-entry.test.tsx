@@ -1,6 +1,6 @@
 import { fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CalendarDate, PersianCalendar } from "@internationalized/date";
 import { DateField } from "./date-field.tsx";
 import { LumoLocaleContext } from "./locale.ts";
@@ -34,6 +34,57 @@ const text = (container: HTMLElement) =>
 const inLocale = (locale: "fa-IR" | "en-US", el: React.ReactElement) => (
   <LumoLocaleContext.Provider value={locale}>{el}</LumoLocaleContext.Provider>
 );
+
+describe("DateField public surface", () => {
+  it("forwards its public DOM, ARIA, focus, keyboard, and slot surface to the date group", () => {
+    const onFocus = vi.fn();
+    const onFocusChange = vi.fn();
+    const onKeyUp = vi.fn();
+    const { container } = render(
+      inLocale(
+        "fa-IR",
+        <DateField
+          label="تاریخ"
+          id="travel-date"
+          style={{ color: "red" }}
+          aria-details="date-details"
+          aria-labelledby="caller-label"
+          onFocus={onFocus}
+          onFocusChange={onFocusChange}
+          onKeyUp={onKeyUp}
+        />,
+      ),
+    );
+
+    const group = container.querySelector<HTMLElement>('[role="group"]');
+    const year = segments(container)[0]!;
+    expect(group?.id).toBe("travel-date");
+    expect(group?.style.color).toBe("red");
+    expect(group?.getAttribute("aria-details")).toBe("date-details");
+    expect(group?.getAttribute("aria-labelledby")).toContain("caller-label");
+
+    year.focus();
+    fireEvent.keyUp(year, { key: "Shift" });
+    expect(onFocus).toHaveBeenCalledOnce();
+    expect(onFocusChange).toHaveBeenCalledWith(true);
+    expect(typeof onKeyUp.mock.calls[0]?.[0]?.continuePropagation).toBe("function");
+  });
+
+  it("rejects field contracts that have no native form or validation engine", () => {
+    // @ts-expect-error no native control exists to submit this name
+    void <DateField label="تاریخ" name="travelDate" />;
+    // @ts-expect-error no native control exists to associate with a form
+    void <DateField label="تاریخ" form="travel" />;
+    // @ts-expect-error validation callbacks are not executed by this field
+    void <DateField label="تاریخ" validate={() => true} />;
+    // @ts-expect-error native/ARIA validation mode is not implemented
+    void <DateField label="تاریخ" validationBehavior="native" />;
+    // @ts-expect-error required form validation is not implemented
+    void <DateField label="تاریخ" isRequired />;
+    // @ts-expect-error React Aria context slots do not exist in this rebuild
+    void <DateField label="تاریخ" slot="date" />;
+  });
+});
 
 describe("segment order comes from the locale, not from a table", () => {
   it("fa-IR is year / month / day and en-US is month / day / year", () => {
@@ -115,6 +166,28 @@ describe("type-to-fill accepts the digits a Persian keyboard actually emits", ()
     const last = committed.at(-1);
     expect([last?.year, last?.month, last?.day]).toEqual([1405, 5, 19]);
     expect(text(container)).toBe("۱۴۰۵/۵/۱۹");
+  });
+
+  it("does not commit a typed date after maxValue", () => {
+    const committed: (CalendarDate | null)[] = [];
+    const { container } = render(
+      inLocale(
+        "fa-IR",
+        <DateField
+          label="تاریخ"
+          defaultValue={jalali(1405, 5, 19)}
+          maxValue={jalali(1405, 5, 20)}
+          errorMessage="تاریخ باید تا ۲۰ مرداد باشد"
+          onChange={(value) => committed.push(value as CalendarDate | null)}
+        />,
+      ),
+    );
+    const [, , day] = segments(container);
+    day!.focus();
+    fireEvent.keyDown(day!, { key: "۲" });
+    fireEvent.keyDown(day!, { key: "۱" });
+
+    expect(committed.at(-1)).toBeNull();
   });
 
   it("ASCII digits work too, so a Latin keyboard is not locked out", () => {

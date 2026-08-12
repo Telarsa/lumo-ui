@@ -391,7 +391,7 @@ export function Menu<T extends object>({ className, onAction, children }: MenuPr
   );
 }
 
-export interface MenuItemProps<T extends object = object> {
+interface MenuItemBaseProps<T extends object = object> {
   /**
    * TYPE CARRIER, NOT A PROP. React Aria's `ItemProps<T>` used `T` for the
    * object an item stands for; Base UI has no collection and no such prop.
@@ -417,7 +417,6 @@ export interface MenuItemProps<T extends object = object> {
   /** Renders the item as a link. */
   href?: string | undefined;
   hrefLang?: string | undefined;
-  target?: string | undefined;
   /**
    * Marks the item the user is already on — the entry in a menu of
    * alternatives that is the CURRENT one.
@@ -449,6 +448,19 @@ export interface MenuItemProps<T extends object = object> {
   className?: string | undefined;
 }
 
+interface MenuItemSameTabProps {
+  newTab?: false | undefined;
+  newTabLabel?: undefined;
+}
+
+interface MenuItemNewTabProps {
+  newTab: true;
+  newTabLabel: string;
+}
+
+export type MenuItemProps<T extends object = object> = MenuItemBaseProps<T> &
+  (MenuItemSameTabProps | MenuItemNewTabProps);
+
 /**
  * ── THE REACT ARIA TRAP THIS COMPONENT USED TO WORK AROUND IS GONE ──────────
  *
@@ -474,7 +486,8 @@ export function MenuItem<T extends object = object>({
   isDisabled,
   href,
   hrefLang,
-  target,
+  newTab,
+  newTabLabel,
   isCurrent,
 }: MenuItemProps<T>) {
   const onAction = useContext(MenuActionContext);
@@ -531,6 +544,9 @@ export function MenuItem<T extends object = object>({
         </span>
       )}
       <span className="flex-1 truncate">{children}</span>
+      {href !== undefined && isDisabled !== true && newTab === true ? (
+        <span className="sr-only">{newTabLabel}</span>
+      ) : null}
       {isSubmenuTrigger ? (
         // `aria-hidden` because the submenu relationship is already in the tree
         // via `aria-haspopup`; announcing the glyph would append a meaningless
@@ -554,7 +570,9 @@ export function MenuItem<T extends object = object>({
         {...shared}
         href={href}
         {...(hrefLang === undefined ? {} : { hrefLang })}
-        {...(target === undefined ? {} : { target })}
+        {...(isDisabled !== true && newTab === true
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
       >
         {content}
       </BaseMenu.LinkItem>

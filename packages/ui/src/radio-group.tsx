@@ -14,7 +14,6 @@ import {
   type GlobalDOMAttributes,
   type LumoNode,
   type PressEvents,
-  type SlotProps,
   type StyleProps,
 } from "@lumo-ui/core";
 import { useCompositeTabStop, useFieldWiring } from "@lumo-ui/base-ui-ssr";
@@ -133,7 +132,10 @@ export const radioIndicatorVariants = cva(
  * option on an RTL page.
  */
 export interface RadioGroupProps
-  extends Omit<FieldGroupPropsBase<string | null, string>, "isInvalid">,
+  extends Omit<
+      FieldGroupPropsBase<string | null, string>,
+      "isInvalid" | "validationBehavior" | "slot"
+    >,
     // `orientation` is taken from the cva rather than from React Aria so the two
     // cannot disagree about the literal union, and — since the engine swap —
     // because it is now a purely visual prop with no keyboard meaning to keep in
@@ -150,6 +152,8 @@ export interface RadioGroupProps
   className?: string | undefined;
   /** Classes for the options list — which IS the `role="radiogroup"` element. */
   listClassName?: string | undefined;
+  validationBehavior?: undefined;
+  slot?: undefined;
 }
 
 /**
@@ -327,7 +331,6 @@ interface RadioFieldPropsBase
     PressEvents,
     DOMProps,
     AriaLabelingProps,
-    SlotProps,
     StyleProps,
     // `onClick` is the press API's; see `@lumo-ui/core`'s `ButtonPropsBase`.
     Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
@@ -345,6 +348,7 @@ interface RadioFieldPropsBase
    * an `INPUT` with `type="radio"`, not the visible span.
    */
   inputRef?: React.RefObject<HTMLInputElement | null>;
+  slot?: undefined;
 }
 
 export interface RadioProps extends RadioFieldPropsBase {

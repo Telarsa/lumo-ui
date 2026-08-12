@@ -230,14 +230,14 @@
           "target": "components/ui/button.tsx"
         },
         {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
-        },
-        {
           "path": "packages/ui/src/button.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/button.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -264,14 +264,14 @@
           "target": "components/ui/calendar.tsx"
         },
         {
-          "path": "packages/ui/src/calendar-datelib.ts",
-          "type": "registry:ui",
-          "target": "components/ui/calendar-datelib.ts"
-        },
-        {
           "path": "packages/ui/src/calendar.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/calendar.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
         }
       ]
     },
@@ -492,19 +492,24 @@
           "target": "components/ui/date-field.tsx"
         },
         {
-          "path": "packages/ui/src/date-field-state.ts",
-          "type": "registry:ui",
-          "target": "components/ui/date-field-state.ts"
-        },
-        {
           "path": "packages/ui/src/date-input.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-input.tsx"
         },
         {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
+        },
+        {
           "path": "packages/ui/src/locale.ts",
           "type": "registry:ui",
           "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
         }
       ]
     },
@@ -515,6 +520,7 @@
       "description": "THE segmented input. The keyboard model, once, for every date surface.",
       "author": "Telarsa",
       "dependencies": [
+        "@internationalized/date",
         "@lumo-ui/core"
       ],
       "registryDependencies": [
@@ -560,14 +566,14 @@
           "target": "components/ui/date-picker.tsx"
         },
         {
-          "path": "packages/ui/src/date-field-state.ts",
-          "type": "registry:ui",
-          "target": "components/ui/date-field-state.ts"
-        },
-        {
           "path": "packages/ui/src/date-input.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
         },
         {
           "path": "packages/ui/src/locale.ts",
@@ -603,14 +609,14 @@
           "target": "components/ui/date-range-picker.tsx"
         },
         {
-          "path": "packages/ui/src/date-field-state.ts",
-          "type": "registry:ui",
-          "target": "components/ui/date-field-state.ts"
-        },
-        {
           "path": "packages/ui/src/date-input.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
         },
         {
           "path": "packages/ui/src/locale.ts",
@@ -627,6 +633,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react"
@@ -642,14 +649,14 @@
           "target": "components/ui/date-selector.tsx"
         },
         {
-          "path": "packages/ui/src/calendar-datelib.ts",
-          "type": "registry:ui",
-          "target": "components/ui/calendar-datelib.ts"
-        },
-        {
           "path": "packages/ui/src/date-selector.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/date-selector.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
         },
         {
           "path": "packages/ui/src/locale.ts",
@@ -766,6 +773,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react"
@@ -777,14 +785,14 @@
           "target": "components/ui/event-calendar.tsx"
         },
         {
-          "path": "packages/ui/src/calendar-datelib.ts",
-          "type": "registry:ui",
-          "target": "components/ui/calendar-datelib.ts"
-        },
-        {
           "path": "packages/ui/src/event-calendar.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/event-calendar.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
         },
         {
           "path": "packages/ui/src/locale.ts",
@@ -897,14 +905,14 @@
           "target": "components/ui/gantt.tsx"
         },
         {
-          "path": "packages/ui/src/calendar-datelib.ts",
-          "type": "registry:ui",
-          "target": "components/ui/calendar-datelib.ts"
-        },
-        {
           "path": "packages/ui/src/gantt.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/gantt.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
         }
       ]
     },
@@ -1035,14 +1043,14 @@
           "target": "components/ui/item.tsx"
         },
         {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
-        },
-        {
           "path": "packages/ui/src/item.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/item.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1108,6 +1116,7 @@
       "description": "A standalone selectable list — no popover, no trigger.",
       "author": "Telarsa",
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react"
@@ -1410,6 +1419,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core"
       ],
       "files": [
@@ -1957,6 +1967,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@internationalized/date",
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core"
       ],
@@ -1972,14 +1983,14 @@
           "target": "components/ui/time-field.tsx"
         },
         {
-          "path": "packages/ui/src/date-field-state.ts",
-          "type": "registry:ui",
-          "target": "components/ui/date-field-state.ts"
-        },
-        {
           "path": "packages/ui/src/date-input.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
         },
         {
           "path": "packages/ui/src/locale.ts",
@@ -2072,14 +2083,14 @@
           "target": "components/ui/toggle.tsx"
         },
         {
-          "path": "packages/ui/src/base-ui-adapter.ts",
-          "type": "registry:ui",
-          "target": "components/ui/base-ui-adapter.ts"
-        },
-        {
           "path": "packages/ui/src/toggle.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/toggle.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -2133,6 +2144,7 @@
       "description": "A nested outline: folders, a category hierarchy, an org chart's reporting line.",
       "author": "Telarsa",
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority"
       ],
@@ -2143,14 +2155,14 @@
           "target": "components/ui/tree.tsx"
         },
         {
-          "path": "packages/ui/src/locale.ts",
-          "type": "registry:ui",
-          "target": "components/ui/locale.ts"
-        },
-        {
           "path": "packages/ui/src/tree.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/tree.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },

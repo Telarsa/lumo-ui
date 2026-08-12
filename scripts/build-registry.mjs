@@ -22,8 +22,17 @@
 
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
+import ts from "typescript";
 
 const ROOT = new URL("..", import.meta.url).pathname;
+const registryFlag = process.argv.indexOf("--registry");
+const registryPath =
+  registryFlag === -1 ? join(ROOT, "registry.json") : process.argv[registryFlag + 1];
+if (registryPath === undefined) {
+  console.error("  registry: --registry requires a path");
+  process.exit(2);
+}
+const checkOnly = process.argv.includes("--check");
 const SOURCES = [
   { dir: join(ROOT, "packages/ui/src"), type: "registry:ui", target: "components/ui" },
   { dir: join(ROOT, "packages/blocks/src"), type: "registry:block", target: "components/blocks" },
@@ -136,8 +145,9 @@ const EXTERNAL = new Set([
   "clsx",
   "tailwind-merge",
   // Rendering dependencies, not behaviour ones. A consumer who copies chart.tsx
-  // or carousel.tsx without these gets an unresolved import, and the smoke test
-  // cannot see it: its node_modules symlink already has them.
+  // or carousel.tsx without these gets an unresolved import. The smoke test's
+  // metadata pass now catches that omission before its node_modules symlink can
+  // make the later payload compile look green.
   //
   // `recharts` WAS in this set and is gone with the pin (pnpm-workspace.yaml):
   // `chart.tsx` stopped importing it on the TanStack swap, so the entry was
@@ -160,8 +170,43 @@ const EXTERNAL = new Set([
   "@tanstack/react-form",
 ]);
 
+/**
+ * Parse real module specifiers. Prose and examples in comments are not imports.
+ * @param {string} source
+ * @param {string} fileName
+ * @returns {string[]}
+ */
+const importSpecifiers = (source, fileName) => {
+  const parsed = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, false);
+  /** @type {string[]} */
+  const specifiers = [];
+  /** @param {ts.Node} node */
+  const visit = (node) => {
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier !== undefined &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      specifiers.push(node.moduleSpecifier.text);
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments.length === 1
+    ) {
+      const argument = node.arguments[0];
+      if (argument !== undefined && ts.isStringLiteral(argument)) {
+        specifiers.push(argument.text);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  return specifiers;
+};
+
 const items = [];
 for (const { dir, type, target } of SOURCES) {
+  /** @type {string[]} */
   const all = await readdir(dir).catch(() => []);
   const files = all.filter(
     (f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx") && !f.endsWith(".type-test.tsx"),
@@ -183,16 +228,41 @@ for (const { dir, type, target } of SOURCES) {
    * Found when `cva()` moved out of table.tsx into table.variants.ts during the
    * TanStack migration: `class-variance-authority` silently left the item's
    * dependency list while the import stayed in the shipped files. chart.tsx had
-   * carried the same hole since its companion was introduced.
+   * carried the same hole since its companion was introduced. The smoke
+   * metadata pass now also proves this closure independently of generation.
    */
-  const companionSource = await readFile(
-    join(dir, file.replace(/\.tsx$/, ".variants.ts")),
-    "utf8",
-  ).catch(() => "");
+  /** @type {string[]} */
+  const shippedFileNames = [file];
+  const variantFile = file.replace(/\.tsx$/, ".variants.ts");
+  if (all.includes(variantFile)) shippedFileNames.push(variantFile);
 
-  const imports = [...`${source}\n${companionSource}`.matchAll(/from\s+["']([^"']+)["']/g)]
-    .map((m) => m[1])
-    .filter((i) => i !== undefined);
+  // Shared companions can have package imports of their own. Follow the
+  // carried-file closure so dependency metadata describes every byte shipped,
+  // not only the top-level component and variants file.
+  /** @type {Map<string, string>} */
+  const sourceByFile = new Map([[file, source]]);
+  for (let index = 0; index < shippedFileNames.length; index += 1) {
+    const shipped = shippedFileNames[index];
+    if (shipped === undefined) continue;
+    const shippedSource =
+      sourceByFile.get(shipped) ?? await readFile(join(dir, shipped), "utf8");
+    sourceByFile.set(shipped, shippedSource);
+    for (const specifier of importSpecifiers(shippedSource, shipped)) {
+      if (!specifier.startsWith("./")) continue;
+      const localFile = specifier.replace(/^\.\//, "");
+      if (
+        SHARED_COMPANIONS.has(localFile) &&
+        all.includes(localFile) &&
+        !shippedFileNames.includes(localFile)
+      ) {
+        shippedFileNames.push(localFile);
+      }
+    }
+  }
+
+  const imports = shippedFileNames.flatMap((shipped) =>
+    importSpecifiers(sourceByFile.get(shipped) ?? "", shipped),
+  );
   /*
    * Subpath-aware. `EXTERNAL` lists PACKAGE names, but a modern package is often
    * imported by subpath — `@base-ui/react/select`, not `@base-ui/react`. An
@@ -217,13 +287,13 @@ for (const { dir, type, target } of SOURCES) {
     ...new Set(
       imports
         .filter((i) => i.startsWith("./"))
-        .map((i) => i.replace(/^\.\//, "").replace(/\.tsx$/, ""))
+        .map((i) => i.replace(/^\.\//, "").replace(/\.(?:tsx?|jsx?)$/, ""))
         // A companion import names its OWNER: importing `file-upload.variants.ts`
         // depends on the `file-upload` registry item (which carries the
         // companion in its files array) — there is no item named
         // "file-upload.variants.ts", and the review found attachment shipping
         // exactly that unresolvable dependency.
-        .map((i) => i.replace(/\.variants\.ts$/, ""))
+        .map((i) => i.replace(/\.variants$/, ""))
         // A shared companion is carried as a FILE, never named as an item —
         // there is no registry item called "base-ui-adapter.ts".
         .filter((i) => !SHARED_COMPANIONS.has(`${i}.ts`) && !SHARED_COMPANIONS.has(i))
@@ -261,15 +331,8 @@ for (const { dir, type, target } of SOURCES) {
     // failure a workspace cannot see.
     files: [
       { path: `${relative(ROOT, dir)}/${file}`, type, target: `${target}/${file}` },
-      ...all
-        .filter(
-          (f) =>
-            f === `${name}.variants.ts` ||
-            // A shared companion rides only with the items that actually import
-            // it — attaching it to every item would ship 67 consumers a file
-            // they never reference.
-            (SHARED_COMPANIONS.has(f) && imports.some((i) => i === `./${f}`)),
-        )
+      ...shippedFileNames
+        .filter((shipped) => shipped !== file)
         .map((f) => ({ path: `${relative(ROOT, dir)}/${f}`, type, target: `${target}/${f}` })),
     ],
   });
@@ -283,7 +346,16 @@ const registry = {
   items,
 };
 
-await writeFile(join(ROOT, "registry.json"), JSON.stringify(registry, null, 2) + "\n");
+const serialized = JSON.stringify(registry, null, 2) + "\n";
+if (checkOnly) {
+  const current = await readFile(registryPath, "utf8").catch(() => "");
+  if (current !== serialized) {
+    console.error(`  registry: ${registryPath} is stale; run node scripts/build-registry.mjs`);
+    process.exit(1);
+  }
+} else {
+  await writeFile(registryPath, serialized);
+}
 
 // A registry that lists nothing would publish silently and break every consumer
 // on their next `add`. Refuse, the same way the gate refuses an empty build.

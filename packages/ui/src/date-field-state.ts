@@ -42,10 +42,9 @@
  *                      needs one and would get a wrong field here.
  *   shouldForceLeadingZeros
  *                      Not implemented; segments render their natural width.
- *   minValue/maxValue/isDateUnavailable
- *                      Accepted by the component's type and NOT enforced. React
- *                      Aria clamps cycling to the bounds and marks the field
- *                      invalid. See `date-field.tsx`.
+ *   built-in validation messages
+ *                      Bounds and unavailable dates are enforced before commit,
+ *                      but the engine does not invent a locale-specific error.
  *   text selection, drag, paste, IME
  *                      React Aria handles a paste into a segment and an IME
  *                      composition. This handles keydown and beforeinput-free
@@ -151,15 +150,18 @@ export function toValue(fields: Fields, calendar: Calendar): CalendarDate | null
   return new CalendarDate(calendar, year, month, day);
 }
 
-export interface DateFieldStateOptions {
+export interface DateFieldStateOptions<T extends DateValue = DateValue> {
   locale: Locale;
-  value?: DateValue | null | undefined;
-  defaultValue?: DateValue | null | undefined;
+  value?: T | null | undefined;
+  defaultValue?: T | null | undefined;
   /** `null` as well as `undefined`, because React Aria's own prop allows both. */
   placeholderValue?: DateValue | null | undefined;
-  onChange?: ((value: DateValue | null) => void) | undefined;
+  onChange?: ((value: T | null) => void) | undefined;
   isDisabled?: boolean | undefined;
   isReadOnly?: boolean | undefined;
+  minValue?: DateValue | null | undefined;
+  maxValue?: DateValue | null | undefined;
+  isDateUnavailable?: ((date: T) => boolean) | undefined;
 }
 
 export interface DateFieldState {
@@ -188,7 +190,9 @@ export interface DateFieldState {
   optionTexts?: ((type: EditableSegmentType) => readonly string[] | undefined) | undefined;
 }
 
-export function useDateFieldState(options: DateFieldStateOptions): DateFieldState {
+export function useDateFieldState<T extends DateValue = DateValue>(
+  options: DateFieldStateOptions<T>,
+): DateFieldState {
   const { locale, value, defaultValue, placeholderValue, onChange } = options;
   const formatLocale = FORMAT_LOCALE[locale];
   const strings = stringsFor(locale);
@@ -270,16 +274,30 @@ export function useDateFieldState(options: DateFieldStateOptions): DateFieldStat
   /** The last value handed to `onChange`, so a no-op edit stays silent. */
   const lastEmitted = useRef<string | null>(toValue(fieldsOf(initial, calendar), calendar)?.toString() ?? null);
 
+  const isAllowed = useCallback(
+    (date: CalendarDate) => {
+      const minimum =
+        options.minValue == null ? null : toCalendar(toPlainDate(options.minValue), calendar);
+      const maximum =
+        options.maxValue == null ? null : toCalendar(toPlainDate(options.maxValue), calendar);
+      if (minimum != null && date.compare(minimum) < 0) return false;
+      if (maximum != null && date.compare(maximum) > 0) return false;
+      return options.isDateUnavailable?.(date as T) !== true;
+    },
+    [calendar, options.isDateUnavailable, options.maxValue, options.minValue],
+  );
+
   const commit = useCallback(
     (next: Fields) => {
       setFields(next);
-      const nextValue = toValue(next, calendar);
+      const candidate = toValue(next, calendar);
+      const nextValue = candidate != null && isAllowed(candidate) ? candidate : null;
       const key = nextValue?.toString() ?? null;
       if (key === lastEmitted.current) return;
       lastEmitted.current = key;
-      onChange?.(nextValue);
+      onChange?.(nextValue as T | null);
     },
-    [calendar, onChange],
+    [calendar, isAllowed, onChange],
   );
 
   /**

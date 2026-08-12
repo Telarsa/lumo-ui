@@ -85,6 +85,16 @@ describe("NativeSelect — logical chrome over the platform widget", () => {
     expect(container.querySelector("select")?.hasAttribute("data-lumo")).toBe(true);
   });
 
+  it("lets callers style the select separately from its field wrapper", () => {
+    const { container } = render(
+      <NativeSelect label="شهر" className="outer" selectClassName="control">
+        <NativeSelectOption value="thr">تهران</NativeSelectOption>
+      </NativeSelect>,
+    );
+    expect(container.firstElementChild?.getAttribute("class")).toContain("outer");
+    expect(container.querySelector("select")?.getAttribute("class")).toContain("control");
+  });
+
   it("isInvalid marks the control for AT; without it no aria-invalid is emitted", () => {
     const { container } = render(
       <NativeSelect label="شهر" isInvalid>

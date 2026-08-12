@@ -84,6 +84,7 @@ export interface NativeSelectProps
   isInvalid?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;
+  selectClassName?: string | undefined;
 }
 
 export function NativeSelect({
@@ -93,6 +94,7 @@ export function NativeSelect({
   isInvalid,
   id,
   className,
+  selectClassName,
   children,
   ...props
 }: NativeSelectProps) {
@@ -116,7 +118,7 @@ export function NativeSelect({
           // `data-lumo` so theme.css's single focus-ring rule covers this
           // control too — a native select is itself focusable.
           data-lumo=""
-          className={nativeSelectVariants({ size })}
+          className={cn(nativeSelectVariants({ size }), selectClassName)}
           {...(isInvalid === true ? { "aria-invalid": true } : {})}
           {...props}
         >

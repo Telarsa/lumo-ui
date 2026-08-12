@@ -215,20 +215,13 @@ export function TooltipTrigger({
 interface TooltipPropsBase
   /* Same subtraction as `PopoverPropsBase`, same reason: open state belongs to
    * `Tooltip.Root`, which `TooltipTrigger` renders. See `OverlayOpenStateKeys`. */
-  extends Omit<PositionProps, "placement" | "isOpen">,
+  extends Omit<
+      PositionProps,
+      "placement" | "isOpen" | "shouldFlip" | "containerPadding"
+    >,
     AriaLabelingProps,
-    StyleProps,
+    Omit<StyleProps, "style">,
     GlobalDOMAttributes<HTMLDivElement> {
-  /** A ref to the element the tooltip is positioned against. */
-  triggerRef?: React.RefObject<Element | null>;
-  /** Offset applied to the arrow's own boundary. */
-  arrowBoundaryOffset?: number;
-  /** Whether the tooltip is currently performing an entry animation. */
-  isEntering?: boolean;
-  /** Whether the tooltip is currently performing an exit animation. */
-  isExiting?: boolean;
-  /** The container the tooltip portals into. */
-  UNSTABLE_portalContainer?: Element;
 }
 
 export interface TooltipProps extends TooltipPropsBase {
@@ -250,15 +243,6 @@ export function Tooltip({
   // — translated onto Tooltip.Positioner —
   offset,
   crossOffset,
-  // — accepted by the API, unreachable in Base UI —
-  isEntering: _isEntering,
-  isExiting: _isExiting,
-  triggerRef: _triggerRef,
-  shouldFlip: _shouldFlip,
-  containerPadding: _containerPadding,
-  arrowBoundaryOffset: _arrowBoundaryOffset,
-  UNSTABLE_portalContainer: _portalContainer,
-  style: _style,
   ...rest
 }: TooltipProps) {
   // RAC's default placement for a tooltip is `'top'`, not `'bottom'` — the block

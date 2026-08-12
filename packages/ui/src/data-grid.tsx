@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { ColumnsIcon } from "lucide-react";
 import { cn, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
@@ -380,24 +380,28 @@ export interface DataGridEmptyProps {
  * flow, so a populated grid grows no dashed box, and it is still in the
  * accessibility tree, which is the whole point.
  *
- * ── THE RESIDUE THIS DOES NOT FIX, STATED SO IT IS NOT MISTAKEN FOR FIXED ───
- *
- * A grid that is ALREADY empty in the first byte mounts this region with its
- * text in it, and a live region present at load is not announced — that is
- * `alert.tsx`'s argument for defaulting to `live="off"`, and it is true here
- * too. Base UI's answer is `useInitialLiveRegionTextMutation`, which appends
- * U+2060 (word joiner: invisible, zero-width, so it shifts no layout) to the
- * last text node on mount and removes it 200ms later, having measured that
- * Safari VoiceOver needs roughly that long to notice. That is a real fix for a
- * real case and it is NOT implemented here. What is fixed is the common one:
- * the grid that had rows and then did not.
+ * An initially empty grid also needs a mutation after assistive technology has
+ * begun observing the live region. The invisible U+2060 word joiner is appended
+ * on mount and removed after 200ms, matching Base UI's measured live-region
+ * technique without changing visible text or layout.
  */
 export function DataGridEmpty({ children, className }: DataGridEmptyProps) {
   const { table } = useDataGrid();
   const isEmpty = table.getRowCount() === 0;
+  const [mutationMarker, setMutationMarker] = useState(false);
+  useEffect(() => {
+    if (!isEmpty) {
+      setMutationMarker(false);
+      return;
+    }
+    setMutationMarker(true);
+    const timeout = globalThis.setTimeout(() => setMutationMarker(false), 200);
+    return () => globalThis.clearTimeout(timeout);
+  }, [isEmpty]);
   return (
     <div role="status" className={cn(isEmpty ? dataGridEmptyVariants() : "sr-only", className)}>
       {isEmpty ? (children as ReactNode) : null}
+      {isEmpty && mutationMarker ? "\u2060" : null}
     </div>
   );
 }

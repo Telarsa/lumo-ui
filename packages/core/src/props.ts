@@ -606,7 +606,8 @@ export interface LinkDOMProps {
   /** How much of the referrer to send when following the link. */
   referrerPolicy?: HTMLAttributeReferrerPolicy;
   /** Options for the configured client side router. */
-  routerOptions?: never;
+  /** Compatibility carrier: client-router integration is not implemented. */
+  routerOptions?: undefined;
 }
 
 /**

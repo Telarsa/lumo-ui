@@ -6,6 +6,7 @@
  * overlap that leans the wrong way, and a Latin digit.
  */
 
+import { Fragment } from "react";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -47,6 +48,19 @@ describe("IconTile — decorative unless told otherwise", () => {
       </IconTile>,
     );
     expect(html).not.toContain('role="img"');
+  });
+
+  it("keeps its owned semantics when an untyped props bag conflicts", () => {
+    const { container, rerender } = render(
+      <IconTile {...({ role: "img", "aria-hidden": false } as object)} />,
+    );
+    expect(container.firstElementChild?.getAttribute("aria-hidden")).toBe("true");
+    expect(container.firstElementChild?.getAttribute("role")).toBeNull();
+
+    rerender(
+      <IconTile label="ارسال شد" {...({ role: "presentation", "aria-label": "wrong" } as object)} />,
+    );
+    expect(screen.getByRole("img", { name: "ارسال شد" })).toBeTruthy();
   });
 });
 
@@ -99,13 +113,30 @@ describe("IconStack — the overlap leans the reader's way", () => {
   it("counts through Children.toArray, so fragments and nulls behave", () => {
     render(
       <IconStack label="۴ عضو" locale="fa-IR" max={2}>
-        {[<span key="a" />, <span key="b" />]}
+        <Fragment>
+          <span />
+          <span />
+        </Fragment>
         {null}
         <span />
         <span />
       </IconStack>,
     );
     expect(screen.getByText("+۲")).toBeTruthy();
+  });
+
+  it("keeps its required semantics when an untyped props bag conflicts", () => {
+    const { container } = render(
+      <IconStack
+        label="۵ عضو"
+        locale="fa-IR"
+        {...({ role: "presentation", "aria-label": "wrong" } as object)}
+      >
+        <span />
+      </IconStack>,
+    );
+    expect(container.firstElementChild?.getAttribute("role")).toBe("img");
+    expect(container.firstElementChild?.getAttribute("aria-label")).toBe("۵ عضو");
   });
 });
 
@@ -161,5 +192,10 @@ describe("Frame — the chrome is a drawing, not a control", () => {
     );
     expect(phone).not.toContain("data-lumo-latn");
     expect(browser).not.toContain("border-8");
+  });
+
+  it("keeps its required name when an untyped props bag conflicts", () => {
+    render(<Frame label="پیش‌نمایش" {...({ "aria-label": "wrong" } as object)} />);
+    expect(screen.getByLabelText("پیش‌نمایش")).toBeTruthy();
   });
 });

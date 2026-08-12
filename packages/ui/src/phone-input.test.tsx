@@ -163,6 +163,19 @@ describe("the draft, and the one keystroke it exists for", () => {
   });
 });
 
+describe("controlled country inference", () => {
+  it("selects the country encoded by a controlled E.164 value", () => {
+    const { rerender } = render(
+      <PhoneInput {...LABELS} locale="fa-IR" value="+4915112345678" />,
+    );
+    expect(screen.getByLabelText("کشور")).toHaveProperty("value", "DE");
+    expect(screen.getByLabelText("شمارهٔ موبایل")).toHaveProperty("value", "۱۵۱۱۲۳۴۵۶۷۸");
+
+    rerender(<PhoneInput {...LABELS} locale="fa-IR" value="+971501234567" />);
+    expect(screen.getByLabelText("کشور")).toHaveProperty("value", "AE");
+  });
+});
+
 describe("isValidPhone — weak on purpose, and honest about it", () => {
   it("accepts a well-formed Iranian mobile", () => {
     expect(isValidPhone("+989121234567")).toBe(true);

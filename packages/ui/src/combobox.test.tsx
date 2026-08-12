@@ -83,6 +83,12 @@ describe("ComboBox — ids are unique in the first byte", () => {
     expect(triggerId).not.toBe(inputId);
   });
 
+  it("the server-rendered trigger advertises the listbox it opens", () => {
+    const html = renderToStaticMarkup(COMBO);
+    const trigger = tagWithRole(html, "button", "combobox");
+    expect(attr(trigger, "aria-haspopup")).toBe("listbox");
+  });
+
   it("the visible label points at the INPUT, and at exactly one element", () => {
     // The reason a duplicate id is a naming defect and not a validator nit:
     // `<label for>` picks the first match in document order. With one id on two

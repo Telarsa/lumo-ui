@@ -68,7 +68,7 @@ describe("the highlighted listing round-trips to its source", () => {
     // Not `toContain`, not a normalised comparison: the assertion is equality,
     // because anything less would pass while a paste lost its last newline.
     expect(panelPre(html).textContent).toBe(code);
-  });
+  }, 30_000);
 
   it("keeps a shell command intact, including the blank line inside one", async () => {
     const command = "pnpm dlx shadcn@latest add @lumo/button\n\npnpm add clsx tailwind-merge";

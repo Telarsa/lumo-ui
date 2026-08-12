@@ -95,7 +95,7 @@ export const inputVariants = cva(
  *                         directly and is what this ever meant.
  */
 export interface TextFieldProps
-  extends Omit<TextFieldPropsBase, "isInvalid">,
+  extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior">,
     VariantProps<typeof inputVariants> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
@@ -137,9 +137,7 @@ export function TextField({
   isRequired,
   autoFocus,
   // — accepted by the API, unreachable in Base UI. See the header. —
-  validationBehavior,
   excludeFromTabOrder,
-  slot,
   ...rest
 }: TextFieldProps) {
   return (
@@ -177,6 +175,7 @@ export function TextField({
         {...optional("required", isRequired)}
         {...optional("autoFocus", autoFocus)}
         {...(rest as object)}
+        {...optional("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
       />
       {description != null ? <Description>{description}</Description> : null}
       <FieldError>{errorMessage}</FieldError>

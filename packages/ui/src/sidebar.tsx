@@ -202,7 +202,8 @@ export type SidebarItemProps = DistributiveOmit<LinkProps, "variant" | "size"> &
    * children — but load-bearing in the rail, where it is all that remains
    * visible. See the header: rail mode presumes icons.
    */
-  icon?: LumoNode;
+  /** Required because every item can be rendered in collapsed rail mode. */
+  icon: LumoNode;
   /**
    * Trailing count or state chip, ALREADY formatted — pass «۳», never 3,
    * which `LumoNode` makes uncompilable. Announced in both states; visually

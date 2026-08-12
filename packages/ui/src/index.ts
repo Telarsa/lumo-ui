@@ -66,6 +66,7 @@ export type {
   LumoFormInstance,
   LumoFormProps,
   LumoValidator,
+  LumoValidatorMessages,
 } from "./form-state.tsx";
 
 export { TextField, inputVariants } from "./text-field.tsx";
@@ -1192,7 +1193,7 @@ export {
 export type { TreeChevronTurn } from "./tree.variants.ts";
 
 export { VirtualList } from "./virtual-list.tsx";
-export type { VirtualListProps } from "./virtual-list.tsx";
+export type { VirtualListHandle, VirtualListProps } from "./virtual-list.tsx";
 
 /*
  * Same rule again — and here it is the RTL arithmetic that needs it. A server

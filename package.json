@@ -21,7 +21,7 @@
     "test": "pnpm -r --if-present test",
     "gate:test": "pnpm -r --if-present run test",
     "gate:html": "pnpm --filter @lumo-ui/website build && node --experimental-strip-types packages/gate/src/cli.ts apps/website/out apps/website/gate.floors.json",
-    "gate:registry": "node scripts/build-registry.mjs && git diff --exit-code registry.json",
+    "gate:registry": "node scripts/build-registry.mjs --check",
     "gate:smoke": "node scripts/smoke-consumer.mjs"
   },
   "devDependencies": {

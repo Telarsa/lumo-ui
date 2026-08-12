@@ -365,6 +365,8 @@ export interface LumoTableColumn {
   getToggleSortingHandler: () => ((event: unknown) => void) | undefined;
   toggleSorting: () => void;
   getIsResizing: () => boolean;
+  getSize: () => number;
+  columnDef: { minSize?: number | undefined; maxSize?: number | undefined };
   id: string;
 }
 
@@ -390,6 +392,9 @@ export interface LumoTableInstance {
   getIsAllRowsSelected: () => boolean;
   getIsSomeRowsSelected: () => boolean;
   toggleAllRowsSelected: () => void;
+  setColumnSizing: (
+    updater: (current: Record<string, number>) => Record<string, number>,
+  ) => void;
   options: { enableRowSelection?: unknown; enableMultiRowSelection?: unknown };
 }
 
@@ -450,6 +455,7 @@ const TableContext = createContext<TableContextValue | null>(null);
 /** Row 0 is the header row; body rows start at 1. */
 const RowContext = createContext<{ index: number; row: unknown } | null>(null);
 const ColContext = createContext<number>(0);
+const ColumnIdContext = createContext<string | undefined>(undefined);
 
 function useTableContext(): TableContextValue {
   const context = useContext(TableContext);
@@ -701,7 +707,10 @@ export function TableHeader({ className, children, ...props }: TableHeaderProps)
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 interface ColumnBaseProps
-  extends Omit<ComponentProps<"th">, "children" | "className" | "scope" | "role"> {
+  extends Omit<
+    ComponentProps<"th">,
+    "children" | "className" | "scope" | "role" | "aria-colindex" | "aria-sort"
+  > {
   /** The column's key. Matches a TanStack column `id` when there is a table. */
   id?: string | undefined;
   /**
@@ -814,6 +823,19 @@ export function Column({
   const column = id === undefined ? undefined : table?.getColumn(id);
   const sorted = column?.getIsSorted() ?? false;
   const sortable = allowsSorting === true;
+  const onHeaderKeyDown = (event: ReactKeyboardEvent<HTMLTableCellElement>) => {
+    if (event.key === "F2") {
+      const handle = event.currentTarget.querySelector<HTMLElement>("[data-column-resizer]");
+      if (handle !== null) {
+        event.preventDefault();
+        handle.focus();
+      }
+      return;
+    }
+    if (!sortable || column === undefined || (event.key !== "Enter" && event.key !== " ")) return;
+    event.preventDefault();
+    column.toggleSorting();
+  };
 
   /*
    * `aria-sort` is written from TanStack's `getIsSorted()` and the arrow glyph
@@ -831,6 +853,7 @@ export function Column({
 
   return (
     <th
+      {...props}
       data-lumo=""
       role="columnheader"
       scope="col"
@@ -844,21 +867,9 @@ export function Column({
       {...(ariaSort === undefined ? {} : { "aria-sort": ariaSort })}
       {...(sortable ? { "data-sortable": "" } : {})}
       {...(defaultWidth === undefined ? {} : { style: { inlineSize: defaultWidth } })}
-      {...(sortable && column !== undefined
-        ? {
-            onClick: column.getToggleSortingHandler(),
-            // A header that sorts on click must sort on Enter/Space too, and it
-            // is not a <button>: making it one would put a second name inside
-            // the columnheader and change what is announced.
-            onKeyDown: (event) => {
-              if (event.key !== "Enter" && event.key !== " ") return;
-              event.preventDefault();
-              column.toggleSorting();
-            },
-          }
-        : {})}
+      onKeyDown={onHeaderKeyDown}
+      {...(sortable && column !== undefined ? { onClick: column.getToggleSortingHandler() } : {})}
       className={cn(columnVariants(), className)}
-      {...props}
     >
       <span className="flex w-full items-center gap-1.5">
         <span className="min-w-0 flex-1 truncate">{children}</span>
@@ -884,7 +895,7 @@ export function Column({
             )}
           </>
         ) : null}
-        {resizer}
+        <ColumnIdContext.Provider value={id}>{resizer}</ColumnIdContext.Provider>
       </span>
     </th>
   );
@@ -1001,7 +1012,10 @@ export function TableFooter({ className, children, ...props }: TableFooterProps)
 }
 
 export interface RowProps
-  extends Omit<ComponentProps<"tr">, "children" | "className" | "role"> {
+  extends Omit<
+    ComponentProps<"tr">,
+    "children" | "className" | "role" | "aria-rowindex" | "aria-selected"
+  > {
   /**
    * The TanStack row this `<tr>` renders.
    *
@@ -1023,6 +1037,7 @@ export function Row({ row, isDisabled, className, children, ...props }: RowProps
   return (
     <RowContext.Provider value={{ index, row }}>
       <tr
+        {...props}
         data-lumo=""
         role="row"
         aria-rowindex={index + 1}
@@ -1036,7 +1051,6 @@ export function Row({ row, isDisabled, className, children, ...props }: RowProps
         {...(selectable ? { "aria-selected": row?.getIsSelected() ?? false } : {})}
         {...(isDisabled === true ? { "data-disabled": "" } : {})}
         className={cn(rowVariants(), className)}
-        {...props}
       >
         {withColumnIndexes(children)}
       </tr>
@@ -1109,7 +1123,10 @@ export function Cell({ isRowHeader, className, children, ...props }: CellProps) 
  * file header on why the second case is worse.
  */
 export interface TableSelectAllColumnProps
-  extends Omit<ComponentProps<"th">, "children" | "className" | "scope" | "role"> {
+  extends Omit<
+    ComponentProps<"th">,
+    "children" | "className" | "scope" | "role" | "aria-colindex"
+  > {
   /** Announced name of the select-all checkbox. Required. */
   label: string;
   /** See `ColumnProps.defaultWidth`. Rarely needed — the column shrink-wraps. */
@@ -1129,6 +1146,7 @@ export function TableSelectAllColumn({
 
   return (
     <th
+      {...props}
       data-lumo=""
       role="columnheader"
       scope="col"
@@ -1157,7 +1175,6 @@ export function TableSelectAllColumn({
       // `w-0` + `whitespace-nowrap` shrink-wraps the checkbox column to its
       // content in a `table-layout:auto` table, on either side of the grid.
       className={cn(columnVariants(), "w-0 whitespace-nowrap", className)}
-      {...props}
     >
       <RovingCheckbox
         aria-label={label}
@@ -1175,7 +1192,7 @@ export function TableSelectAllColumn({
 
 /** The per-row selection checkbox. See `TableSelectAllColumn`. */
 export interface TableSelectionCellProps
-  extends Omit<ComponentProps<"td">, "children" | "className" | "role"> {
+  extends Omit<ComponentProps<"td">, "children" | "className" | "role" | "aria-colindex"> {
   /** Announced name of the row checkbox. Required. */
   label: string;
   className?: string | undefined;
@@ -1191,6 +1208,7 @@ export function TableSelectionCell({ label, className, ...props }: TableSelectio
 
   return (
     <td
+      {...props}
       data-lumo=""
       role="gridcell"
       aria-colindex={col + 1}
@@ -1202,7 +1220,6 @@ export function TableSelectionCell({ label, className, ...props }: TableSelectio
       // `TableSelectAllColumn` for the argument.
       tabIndex={-1}
       className={cn(cellVariants(), "w-0 whitespace-nowrap", className)}
-      {...props}
     >
       <RovingCheckbox
         aria-label={label}
@@ -1338,7 +1355,7 @@ export function TableSelectionCell({ label, className, ...props }: TableSelectio
  * `children`.
  */
 export interface TableWidgetCellProps
-  extends Omit<ComponentProps<"td">, "children" | "className" | "role"> {
+  extends Omit<ComponentProps<"td">, "children" | "className" | "role" | "aria-colindex"> {
   /**
    * Renders the cell's single control, given the tab index it must carry.
    *
@@ -1358,6 +1375,7 @@ export function TableWidgetCell({ className, children, ...props }: TableWidgetCe
 
   return (
     <td
+      {...props}
       data-lumo=""
       role="gridcell"
       aria-colindex={col + 1}
@@ -1378,7 +1396,6 @@ export function TableWidgetCell({ className, children, ...props }: TableWidgetCe
       // column uses, and it is `w-0` rather than a physical width for the same
       // reason: it states a size, not a side.
       className={cn(cellVariants(), "w-0 whitespace-nowrap", className)}
-      {...props}
     >
       {children(isActive ? 0 : -1)}
     </td>
@@ -1454,12 +1471,8 @@ export function ResizableTableContainer({
  * all. `type="button"` because an unadorned `<button>` inside a `<form>`
  * submits it.
  *
- * ── WHAT IS NOT CLAIMED ─────────────────────────────────────────────────────
- *
- * The pointer drag is TanStack's `getResizeHandler()`; the keyboard resize
- * (arrow keys nudging a column's width) is NOT implemented, and is listed with
- * typeahead in the file header as a capability React Aria supplied and this
- * does not.
+ * Pointer drag uses TanStack's `getResizeHandler()`. F2 enters the handle from
+ * its column header; arrows/Home/End resize it and Escape returns to the header.
  *
  * ═══ `tabIndex={-1}`, AND IT IS A TRADE RATHER THAN A TIDY-UP ══════════════
  *
@@ -1480,27 +1493,26 @@ export function ResizableTableContainer({
  * whose Enter/Space toggle the sort. There is no shape in which both the cell
  * and the handle are Tab stops and the grid is still one.
  *
- * ARIA's answer for a widget inside a cell is inner navigation — Enter or F2
- * enters the cell, arrows move between its widgets, Escape leaves — and
- * `TableWidgetCell`'s header states plainly that this file does not implement
- * it. So the handle is `-1`: reachable by pointer, reachable programmatically,
- * and NOT a sequential stop.
+ * ARIA's answer for a widget inside a cell is inner navigation. F2 enters this
+ * handle, its resize keys operate it, and Escape returns focus to the header.
+ * The handle remains `-1`, preserving the grid's single sequential stop.
  *
- * **What that costs, stated rather than glossed:** the handle can no longer be
- * reached with the Tab key. It could not be USED from the keyboard either way —
- * no key does anything to it — so what is lost is discovery of a control that
- * announces «تغییر اندازهٔ ستون» and then answers no key at all. A stop that
- * makes a promise the component cannot keep is the same shape of defect as a
- * defaulted English label, which is the rule this library is built on.
- *
- * A caller who disagrees can pass `tabIndex={0}` — `props` is spread last — and
- * they will then own the extra stop knowingly, which is the difference.
- *
- * TRIPWIRE: implement keyboard resize, and this handle joins the grid's inner
- * navigation rather than reverting to a bare tabbable button.
+ * `tabIndex`, role and value semantics are owned and cannot be overridden by a
+ * consumer, keeping the keyboard and announced contracts in agreement.
  */
 export interface ColumnResizerProps
-  extends Omit<ComponentProps<"button">, "children" | "className" | "aria-label" | "type"> {
+  extends Omit<
+    ComponentProps<"button">,
+    | "children"
+    | "className"
+    | "aria-label"
+    | "type"
+    | "role"
+    | "aria-orientation"
+    | "aria-valuenow"
+    | "aria-valuemin"
+    | "aria-valuemax"
+  > {
   /** Announced name of the resize handle. Required. */
   label: string;
   /** The column this handle resizes. */
@@ -1510,19 +1522,40 @@ export interface ColumnResizerProps
 
 export function ColumnResizer({ label, columnId, className, ...props }: ColumnResizerProps) {
   const { table } = useTableContext();
-  const header = columnId === undefined
+  const contextualColumnId = useContext(ColumnIdContext);
+  const resolvedColumnId = columnId ?? contextualColumnId;
+  const header = resolvedColumnId === undefined
     ? undefined
     : table
         ?.getHeaderGroups()
         .flatMap((group) => group.headers)
-        .find((candidate) => candidate.column.id === columnId);
+        .find((candidate) => candidate.column.id === resolvedColumnId);
   const resizing = header?.column.getIsResizing() ?? false;
+  const size = header?.column.getSize();
+  const minSize = header?.column.columnDef.minSize ?? 20;
+  const maxSize = header?.column.columnDef.maxSize ?? Number.MAX_SAFE_INTEGER;
+  const resizeBy = (delta: number) => {
+    if (header === undefined || table === undefined) return;
+    const next = Math.min(maxSize, Math.max(minSize, header.column.getSize() + delta));
+    table.setColumnSizing((current) => ({ ...current, [header.column.id]: next }));
+  };
 
   return (
     <button
+      {...props}
       data-lumo=""
       type="button"
       aria-label={label}
+      data-column-resizer=""
+      {...(size === undefined
+        ? {}
+        : {
+            role: "separator" as const,
+            "aria-orientation": "vertical" as const,
+            "aria-valuenow": size,
+            "aria-valuemin": minSize,
+            "aria-valuemax": maxSize,
+          })}
       // Not a sequential tab stop — the grid is one stop and this handle sits
       // inside the cell that holds it. See the header for the trade and its
       // measurement; `props` below can still override it.
@@ -1534,8 +1567,25 @@ export function ColumnResizer({ label, columnId, className, ...props }: ColumnRe
             onMouseDown: header.getResizeHandler(),
             onTouchStart: header.getResizeHandler(),
           })}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          event.currentTarget.closest<HTMLElement>('[role="columnheader"]')?.focus();
+        } else if (event.key === "ArrowRight") {
+          event.preventDefault();
+          resizeBy(10);
+        } else if (event.key === "ArrowLeft") {
+          event.preventDefault();
+          resizeBy(-10);
+        } else if (event.key === "Home") {
+          event.preventDefault();
+          resizeBy(minSize - (size ?? minSize));
+        } else if (event.key === "End") {
+          event.preventDefault();
+          resizeBy(maxSize - (size ?? maxSize));
+        }
+      }}
       className={cn(columnResizerVariants(), className)}
-      {...props}
     />
   );
 }

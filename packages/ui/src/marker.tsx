@@ -77,7 +77,10 @@ export function Marker({ variant = "status", className, ...props }: MarkerProps)
 }
 
 export interface MarkerIconProps
-  extends Omit<ComponentProps<"span">, "children" | "className"> {
+  extends Omit<
+    ComponentProps<"span">,
+    "children" | "className" | "role" | "aria-label" | "aria-labelledby" | "aria-hidden"
+  > {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -91,9 +94,12 @@ export interface MarkerIconProps
 export function MarkerIcon({ className, ...props }: MarkerIconProps) {
   return (
     <span
-      aria-hidden="true"
-      className={cn("inline-flex shrink-0 items-center justify-center", className)}
       {...props}
+      aria-hidden="true"
+      role={undefined}
+      aria-label={undefined}
+      aria-labelledby={undefined}
+      className={cn("inline-flex shrink-0 items-center justify-center", className)}
     />
   );
 }

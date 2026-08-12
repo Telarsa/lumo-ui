@@ -21,14 +21,12 @@
  *
  * ── WHAT IT LOOKS AT ───────────────────────────────────────────────────────
  *
- * Only props a component file DECLARES ITSELF: the own property signatures of
- * every locally-declared interface reachable from an exported `*Props` type
- * (through `extends`, intersections and unions, following LOCAL names only). Props
- * inherited from `@lumo-ui/core`'s shared shapes — `DOMProps`, `StyleProps`,
- * `AriaLabelingProps` — are out of scope here and belong to whichever file
- * declares them; `props.ts` is a pure vocabulary module with no components in
- * it, so "unreferenced" is its normal condition and grading it would produce
- * hundreds of meaningless violations.
+ * `gradeSource` follows every locally-declared interface reachable from an
+ * exported `*Props` type. The CLI adds a checker-resolved second layer for the
+ * behavioral contracts inherited from `@lumo-ui/core` — validation, value,
+ * focus, press, overlay and collection state. Raw DOM/style vocabulary remains
+ * the root-contract rule's responsibility; grading it property by property
+ * would turn one legitimate `{...rest}` into hundreds of duplicate findings.
  *
  * The declaring interface does NOT have to be exported. `NumberFieldPropsBase`,
  * `PopoverPropsBase`, `TreePropsBase`, `DisclosurePanelPropsBase` and
@@ -41,17 +39,17 @@
  *
  * Two are fine and one is the defect, and telling them apart is the whole job:
  *
- *   carrier    `?: undefined` (or a type containing `never`). Deliberately
+ *   carrier    `?: undefined` (or a type reduced wholly to `never`). Deliberately
  *              unrepresentable — the field exists so a consumer's annotation
  *              keeps compiling while passing a value is a compile error. This
  *              is the shape `props.ts` gives `isPending`, and it must never
  *              fire. Spelled `?: undefined` and NOT `?: never`: under this
  *              repo's `exactOptionalPropertyTypes` a `never` field rejects an
  *              explicit `undefined`, which breaks a spread that was correct.
- *              The gate accepts both spellings because seven `& never` sites
- *              still exist (AUDIT §4.2) and this rule is not their owner. A
- *              SINGLE LITERAL (`?: true`) counts too — see `isCarrier`, which
- *              states the `segmented-control.tsx` case that earned it.
+ *              An intersection such as `T & never` is a carrier; a union such
+ *              as `boolean | never` is still `boolean` and is graded. Optional
+ *              single literals are graded too: `modal?: false` can request
+ *              behavior even though it admits only one value.
  *
  *   forwarded  Captured by a `...rest` that the component actually uses. This
  *              is REAL delivery — `num.tsx` binds `...options` and hands it to
@@ -93,13 +91,12 @@
  *
  * ── NO NEW DEPENDENCY ──────────────────────────────────────────────────────
  *
- * `typescript` is already a devDependency of every package in the workspace and
- * of this one. The analysis is purely SYNTACTIC — `createSourceFile`, no
- * `Program`, no checker, no `tsconfig` resolution — which is what makes it grade
- * all 124 component files in 0.4 s of wall clock, and what makes it work on a
- * file that does not currently compile. It is deliberately not a lint rule:
- * `eslint` is not installed here (AUDIT §2.5), and a gate that needs an
- * uninstalled tool is a gate that does not run.
+ * `typescript` is already a devDependency of this workspace. Local declarations
+ * and root contracts use the fast syntax pass in this file; the CLI builds one
+ * `Program` so it can add selected inherited behaviour contracts from
+ * `@lumo-ui/core`. That split keeps the poison-fixture API small while closing
+ * the inherited-prop blind spot found by adversarial review. It is deliberately
+ * a build gate rather than a hand-maintained comment convention.
  */
 
 import ts from "typescript";
@@ -188,7 +185,17 @@ interface DeclaredProp {
   typeText: string;
   line: number;
   forwardedClaim: string | undefined;
-  node: ts.PropertySignature;
+  resolvedInherited?: boolean;
+  node?: ts.PropertySignature;
+}
+
+export interface ResolvedInheritedProp {
+  /** Exported local props shape through which the external property is public. */
+  iface: string;
+  name: string;
+  typeText: string;
+  /** Line of the local exported shape, used for diagnostics. */
+  line: number;
 }
 
 /**
@@ -198,7 +205,11 @@ interface DeclaredProp {
  * disk here so the self-test can grade a string, which is how the four
  * historical props are kept as live fixtures rather than as prose.
  */
-export function gradeSource(path: string, text: string): PropViolation[] {
+export function gradeSource(
+  path: string,
+  text: string,
+  inherited: readonly ResolvedInheritedProp[] = [],
+): PropViolation[] {
   const sf = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
 
   /* Every top-level interface / type alias in the file, by name. Only local
@@ -270,6 +281,11 @@ export function gradeSource(path: string, text: string): PropViolation[] {
       });
     }
   }
+  const ownKeys = new Set(props.map((prop) => `${prop.iface}.${prop.name}`));
+  for (const prop of inherited) {
+    if (!inScope.has(prop.iface) || ownKeys.has(`${prop.iface}.${prop.name}`)) continue;
+    props.push({ ...prop, forwardedClaim: undefined, resolvedInherited: true });
+  }
   if (props.length === 0) return [];
 
   const consumers = findConsumers(sf, local, shapesOf);
@@ -289,10 +305,10 @@ export function gradeSource(path: string, text: string): PropViolation[] {
    * helper, an `Omit<…, "name">` at the top level really can be about any of
    * them, and guessing which would be a false accusation.
    *
-   * Matching is by NAME, not by symbol. A checker would be more precise and
-   * would also refuse to run on a file that does not compile, while this gate
-   * runs before `gate:test` on trees mid-edit. The imprecision is
-   * one-directional: it can only make the gate quieter, never make it accuse.
+   * Usage matching is by NAME, not by symbol. The CLI's checker resolves which
+   * external core properties are public, but the fast per-component delivery
+   * analysis remains syntactic. The imprecision is one-directional: it can only
+   * make the gate quieter, never make it accuse.
    */
   const inPropDecl = (node: ts.Node) => {
     for (let p: ts.Node | undefined = node; p; p = p.parent) if (propNodes.has(p)) return true;
@@ -303,10 +319,9 @@ export function gradeSource(path: string, text: string): PropViolation[] {
   /*
    * ── WHAT NAME-MATCHING CANNOT DO, MEASURED RATHER THAN ASSUMED ────────────
    *
-   * This gate matches by NAME. It has no binder and no checker — that is what
-   * lets it grade 124 files in 0.4s and run on a tree mid-edit — and the cost
-   * is that it cannot tell a component's prop `value` from an unrelated local
-   * called `value`.
+   * This delivery pass matches by NAME. The CLI uses a checker to materialize
+   * inherited core props, but it still cannot tell a component's prop `value`
+   * from an unrelated local called `value` inside the implementation.
    *
    * The live instance, found by an agent and not by the gate: `tree.tsx`
    * declared `TreeItemProps.value?: T`, read it nowhere and spread nothing, and
@@ -322,10 +337,10 @@ export function gradeSource(path: string, text: string): PropViolation[] {
    * OUTSIDE it. That is a real hole and it is why `tree.tsx`'s prop is now a
    * `never` carrier — a type that cannot be passed does not need a gate.
    *
-   * Closing it properly means scope resolution, which means a `ts.Program` and
-   * a checker, which means seconds per run instead of milliseconds and a tree
-   * that must typecheck before it can be graded. That is a different tool, and
-   * a slow gate that only runs on a clean tree is one people stop running.
+   * Closing this last collision properly requires symbol-resolved usage for
+   * every expression. The CLI now pays for a Program to resolve inherited
+   * contracts, but the delivery pass intentionally remains available as a pure
+   * source function for poison fixtures and mid-edit diagnostics.
    *
    * ── AND WHY BOTH NARROWINGS STAYED ANYWAY ────────────────────────────────
    *
@@ -389,7 +404,15 @@ export function gradeSource(path: string, text: string): PropViolation[] {
       // skipping binding elements here reported that correct discard as a
       // violation. Measured: it was the single false positive this narrowing
       // produced, and narrowing to parameters removes it.
-      !(ts.isIdentifier(n) && n.parent !== undefined && ts.isParameter(n.parent) && n.parent.name === n)
+      !(ts.isIdentifier(n) && n.parent !== undefined && ts.isParameter(n.parent) && n.parent.name === n) &&
+      // A binding name declares where a value goes; it does not use the value.
+      // Parameter destructuring is accounted for by `consumer.bound` below,
+      // which can distinguish a real local from an underscore discard.
+      !(
+        n.parent !== undefined &&
+        ts.isBindingElement(n.parent) &&
+        (n.parent.name === n || n.parent.propertyName === n)
+      )
     ) {
       mention(here, n.text);
     }
@@ -467,7 +490,7 @@ function forwardedClaim(node: ts.PropertySignature, text: string): string | unde
  *  props it does not name. */
 interface Consumer {
   /** The function itself, used to scope "does this component mention the prop". */
-  fn: ts.Node;
+  fn: ComponentFn;
   /** The props type its parameter is annotated with, verbatim. */
   paramType: string;
   fnName: string;
@@ -537,7 +560,13 @@ function consumerFor(
     for (const el of param.name.elements) {
       const key = (el.propertyName ?? el.name).getText(sf).replace(/^["']|["']$/g, "");
       if (el.dotDotDotToken) restName = el.name.getText(sf);
-      else bound.add(key);
+      else {
+        const localName = el.name.getText(sf).replace(/^['"]|['"]$/g, "");
+        // `prop: _prop` is this repository's explicit spelling for “accepted
+        // and discarded”. Counting it as delivery made the gate certify the
+        // exact no-op API it exists to reject.
+        if (!localName.startsWith("_")) bound.add(key);
+      }
     }
   } else if (ts.isIdentifier(param.name)) {
     /* `function X(props: XProps)` — the whole object is the rest binding. */
@@ -751,6 +780,17 @@ function classify(
           `Destructure it out, translate it, or make it unrepresentable.`,
       };
     }
+    if (
+      p.resolvedInherited === true &&
+      (c.intrinsicSpreads.length > 0 || c.componentSpreads.length > 0 || c.otherUses > 0)
+    ) {
+      // The checker proved this property is part of the external public base,
+      // and syntax proves the complete bag crosses the component boundary.
+      // The local declaration cannot carry an `@forwarded` annotation because
+      // it does not own the property; transport is the strongest claim this
+      // source gate can make. Explicit underscore discards were handled above.
+      continue;
+    }
     needsClaim = true;
   }
 
@@ -794,30 +834,42 @@ export function formatPropViolations(violations: PropViolation[]): string {
 /**
  * Is this type one the CALLER has no choice about?
  *
- * Three shapes, and all three mean "you cannot ask for behaviour that does not
- * exist", which is the property this gate is really enforcing:
+ * Two shapes mean "you cannot ask for behaviour that does not exist":
  *
  *   `?: undefined`     the type carrier. `props.ts`'s `isPending`.
- *   `… never …`        the older spelling of the same idea; seven sites remain
- *                      (AUDIT §4.2) and this rule is not their owner.
- *   `?: true`          a single literal, optionally with `| undefined`. The
- *                      value it admits is the behaviour the component already
- *                      has, so passing it changes nothing and passing anything
- *                      ELSE is a compile error.
+ *   `T & never`        an intersection reduced wholly to `never` (optionally
+ *                      unioned with `undefined`). A union merely containing
+ *                      never is not a carrier: `boolean | never` is boolean.
  *
- * The third exists because `segmented-control.tsx` got there first and got it
- * right: `disallowEmptySelection?: true | undefined`, with a docblock saying
- * Base UI's `RadioGroup` has no path to an empty selection, so `true` is what
- * the component does and `false` *"cannot be honoured: there is no un-check to
- * allow"*. Scoring that `dropped` would have pushed a correct API toward either
- * a lie or a needless break. A single literal is also how this repository writes
- * a discriminated-union tag (`isReadOnly: true` in `rating.tsx`), and a
- * discriminant is consumed by the branch, not by the arm.
+ * A single literal is not exempt. Optional literals can request behavior and
+ * discriminants are consumed by their branch, so ordinary delivery analysis
+ * can distinguish the two without a blanket false negative.
  */
 function isCarrier(typeText: string): boolean {
-  if (typeText === "undefined" || /\bnever\b/.test(typeText)) return true;
-  const arms = typeText.split("|").map((s) => s.trim()).filter((s) => s !== "undefined");
-  return arms.length === 1 && /^(true|false|-?\d+(\.\d+)?|"[^"]*"|'[^']*')$/.test(arms[0] ?? "");
+  const parsed = ts.createSourceFile(
+    "carrier.ts",
+    `type __Carrier = ${typeText};`,
+    ts.ScriptTarget.Latest,
+    false,
+    ts.ScriptKind.TS,
+  );
+  const alias = parsed.statements.find(ts.isTypeAliasDeclaration);
+  if (alias === undefined) return false;
+
+  const unrepresentable = (node: ts.TypeNode): boolean => {
+    if (
+      node.kind === ts.SyntaxKind.NeverKeyword ||
+      node.kind === ts.SyntaxKind.UndefinedKeyword
+    ) return true;
+    if (ts.isParenthesizedTypeNode(node)) return unrepresentable(node.type);
+    // An intersection with `never` has no inhabitant. A union is
+    // unrepresentable only when every arm is; `boolean | never` is boolean.
+    if (ts.isIntersectionTypeNode(node)) return node.types.some(unrepresentable);
+    if (ts.isUnionTypeNode(node)) return node.types.every(unrepresentable);
+    return false;
+  };
+
+  return unrepresentable(alias.type);
 }
 
 function isDomProp(name: string): boolean {
@@ -838,7 +890,7 @@ function isDomProp(name: string): boolean {
  * that function does with the props it does not name. One `createSourceFile`
  * per file serves both rules.
  *
- * ── THE THREE VERDICTS ─────────────────────────────────────────────────────
+ * ── THE FOUR VERDICTS ──────────────────────────────────────────────────────
  *
  *   no-ref-story     The shape's DOM base is `HTMLAttributes<T>` (or one of its
  *                    element-specific siblings). Under React 19 `ref` is an
@@ -869,13 +921,17 @@ function isDomProp(name: string): boolean {
  *                    it grades that reasoning was written down where the next
  *                    reader will meet it.
  *
+ *   overridable-owned A component writes `role`/`aria-*` before its consumer
+ *                    spread but leaves that same key in the inherited DOM
+ *                    type, so caller props can overwrite authored semantics.
+ *
  * ── WHAT IT DELIBERATELY DOES NOT CHECK ────────────────────────────────────
  *
- * Whether the omit LIST is right. No syntactic pass can know that `aria-current`
- * belongs on a `MenuItem` or that `onScroll` belongs on a `ScrollArea` — the
- * answer lives on a page nobody has built yet. That asymmetry is the whole
- * argument in `props.ts` for "omit what you own" over an allow-list: the
- * complete default is checkable and the curated list is not.
+ * The complete omit list. The rule can prove that a directly authored semantic
+ * attribute before a rest spread must be omitted. It cannot infer that
+ * `aria-current` belongs on a MenuItem or that `onScroll` belongs on a
+ * ScrollArea when the component never authors that key; those judgments still
+ * require the component-by-component review.
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 export interface RootViolation {
@@ -888,7 +944,11 @@ export interface RootViolation {
   detail: string;
 }
 
-export type RootVerdict = "no-ref-story" | "undelivered-root" | "unexplained-own";
+export type RootVerdict =
+  | "no-ref-story"
+  | "undelivered-root"
+  | "unexplained-own"
+  | "overridable-owned";
 
 /** `ref` and `id`: the two names a component may own or widen but never simply
  *  drop. See the contract's "hybrid clause" in `props.ts`. */
@@ -1022,10 +1082,98 @@ export function gradeRootContract(path: string, text: string): RootViolation[] {
               `and spread it at the root, or Omit what this component owns and say why.`,
           });
         }
+
+        const ownedButInherited = [
+          ...new Set(
+            takers
+              .flatMap((consumer) => semanticAttributesBeforeRest(consumer, sf))
+              .filter((attribute) => !base.omitted.has(attribute)),
+          ),
+        ].sort();
+        if (ownedButInherited.length > 0) {
+          violations.push({
+            rule: "root-contract",
+            path: `${path}:${String(line)}`,
+            shape: name,
+            verdict: "overridable-owned",
+            detail:
+              `${name} writes ${ownedButInherited.map((key) => `\`${key}\``).join(", ")} ` +
+              `before its consumer-prop spread, but does not Omit those attributes from the ` +
+              `inherited DOM surface. A caller can overwrite semantics the component claims to ` +
+              `own. Omit the attributes and keep the component's authored value authoritative.`,
+          });
+        }
       }
     }
   }
   return violations;
+}
+
+/** Semantic JSX attributes written before the consumer rest spread. */
+function semanticAttributesBeforeRest(consumer: Consumer, sf: ts.SourceFile): string[] {
+  if (consumer.restName === undefined || !consumer.fn.body) return [];
+  const found = new Set<string>();
+  const semantic = (name: string) => name === "role" || name.startsWith("aria-");
+
+  const unwrappedIdentifier = (expression: ts.Expression): string | undefined => {
+    let current = expression;
+    while (
+      ts.isAsExpression(current) ||
+      ts.isParenthesizedExpression(current) ||
+      ts.isSatisfiesExpression(current) ||
+      ts.isNonNullExpression(current) ||
+      ts.isTypeAssertionExpression(current)
+    ) current = current.expression;
+    return ts.isIdentifier(current) ? current.text : undefined;
+  };
+
+  const objectKeys = (expression: ts.Expression): string[] => {
+    if (
+      ts.isAsExpression(expression) ||
+      ts.isParenthesizedExpression(expression) ||
+      ts.isSatisfiesExpression(expression) ||
+      ts.isNonNullExpression(expression) ||
+      ts.isTypeAssertionExpression(expression)
+    ) return objectKeys(expression.expression);
+    if (ts.isConditionalExpression(expression)) {
+      return [...objectKeys(expression.whenTrue), ...objectKeys(expression.whenFalse)];
+    }
+    if (!ts.isObjectLiteralExpression(expression)) return [];
+    return expression.properties.flatMap((property) => {
+      if (
+        (ts.isPropertyAssignment(property) ||
+          ts.isShorthandPropertyAssignment(property) ||
+          ts.isMethodDeclaration(property)) &&
+        property.name !== undefined
+      ) return [property.name.getText(sf).replace(/^["']|["']$/g, "")];
+      return [];
+    });
+  };
+
+  const visit = (node: ts.Node) => {
+    if (ts.isJsxAttributes(node)) {
+      const restIndex = node.properties.findIndex(
+        (property) =>
+          ts.isJsxSpreadAttribute(property) &&
+          unwrappedIdentifier(property.expression) === consumer.restName,
+      );
+      if (restIndex >= 0) {
+        for (const property of node.properties.slice(0, restIndex)) {
+          if (ts.isJsxAttribute(property)) {
+            const name = property.name.getText(sf);
+            if (semantic(name)) found.add(name);
+          } else {
+            for (const name of objectKeys(property.expression)) {
+              if (semantic(name)) found.add(name);
+            }
+          }
+        }
+      }
+    }
+    node.forEachChild(visit);
+  };
+  visit(consumer.fn.body);
+  return [...found];
 }
 
 /**

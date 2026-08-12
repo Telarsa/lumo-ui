@@ -1,6 +1,6 @@
 "use client";
 
-import { Children, createContext, isValidElement, useContext, useId } from "react";
+import { Children, createContext, isValidElement, useContext, useId, type ReactNode } from "react";
 import { cva } from "class-variance-authority";
 import { Tabs as BaseTabs } from "@base-ui/react/tabs";
 import {
@@ -204,6 +204,9 @@ interface TabsContextValue {
    * until hydration. See `Tab`.
    */
   selected: unknown;
+  disabled: boolean;
+  disabledKeys: ReadonlySet<Key>;
+  activateOnFocus: boolean;
 }
 
 const TabsIdContext = createContext<TabsContextValue | undefined>(undefined);
@@ -301,11 +304,10 @@ export function Tabs({
   //                       not the root, and it is a boolean rather than
   //                       "automatic" | "manual"
   //   disabledKeys        no collection layer, so no key set to disable
-  isDisabled: _isDisabled,
-  keyboardActivation: _keyboardActivation,
-  disabledKeys: _disabledKeys,
-  slot: _slot,
-  style: _style,
+  isDisabled,
+  keyboardActivation,
+  disabledKeys,
+  slot,
   ...rest
 }: TabsProps) {
   // Only consulted when the caller supplied neither key — see `firstTabId`.
@@ -318,17 +320,27 @@ export function Tabs({
   // can read it. One source, so the served tab stop and the served selection
   // cannot land on different tabs.
   const selected = selectedKey ?? defaultSelectedKey ?? derivedDefault;
+  const disabledKeySet = new Set(disabledKeys ?? []);
 
   return (
     // The provider renders no DOM, so `Tabs.Root` is still the outer element and
     // `className` / `data-lumo` still land where they did.
-    <TabsIdContext.Provider value={{ base: idBase, selected }}>
+    <TabsIdContext.Provider
+      value={{
+        base: idBase,
+        selected,
+        disabled: isDisabled ?? false,
+        disabledKeys: disabledKeySet,
+        activateOnFocus: keyboardActivation === "automatic",
+      }}
+    >
       <BaseTabs.Root
         data-lumo=""
         className={cn(tabsVariants(), className)}
         {...attr("value", selectedKey)}
         {...attr("defaultValue", defaultSelectedKey ?? derivedDefault)}
         {...attr("orientation", orientation)}
+        {...attr("slot", slot ?? undefined)}
         {...attr(
           "onValueChange",
           onSelectionChange === undefined
@@ -351,16 +363,15 @@ export function Tabs({
  * `IconButton` takes: the name is a constructor argument, not something a
  * reviewer is expected to notice missing.
  *
- * The generic `<T extends object>` survives for API parity, but Base UI's List
- * has no collection-render form, so the `(item: T) => LumoNode` child shape is
- * accepted by the type and never invoked. Recorded as a gap.
+ * The generic `<T extends object>` backs the `items` + function-child form;
+ * Lumo materializes that collection before handing its tabs to Base UI.
  */
 /**
  * The tab list's own props, minus its children, class and `aria-label` — the
  * name arrives as a REQUIRED `label` below.
  */
 interface TabListPropsBase<T extends object>
-  extends CollectionStateBase<T>,
+  extends Omit<CollectionStateBase<T>, "dependencies">,
     Omit<AriaLabelingProps, "aria-label">,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {}
@@ -375,18 +386,24 @@ export interface TabListProps<T extends object> extends TabListPropsBase<T> {
 export function TabList<T extends object>({
   label,
   className,
-  // — accepted by the API, unreachable in Base UI: no collection layer —
-  items: _items,
-  dependencies: _dependencies,
-  style: _style,
+  items,
+  children,
   ...rest
 }: TabListProps<T>) {
+  const tabs = useContext(TabsIdContext);
+  const rendered =
+    typeof children === "function"
+      ? Array.from(items ?? [], (item) => children(item))
+      : children;
   return (
     <BaseTabs.List
       aria-label={label}
+      activateOnFocus={tabs?.activateOnFocus ?? false}
       className={cn(tabListVariants(), className)}
       {...(rest as BaseTabs.List.Props)}
-    />
+    >
+      {rendered as ReactNode}
+    </BaseTabs.List>
   );
 }
 
@@ -401,7 +418,7 @@ interface TabPropsBase
     // `onClick` is the press API's; see `@lumo-ui/core`'s `ButtonPropsBase`.
     Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
   /** The tab's collection key, which its panel is matched to. */
-  id?: Key;
+  id: Key;
   /** Whether this tab is disabled. */
   isDisabled?: boolean;
 }
@@ -483,7 +500,7 @@ export function Tab({
     className: cn(tabVariants(), className),
     ...attr("value", id),
     ...attr("id", partId(base, "tab", id)),
-    ...attr("disabled", isDisabled),
+    ...attr("disabled", isDisabled === true || tabs?.disabled === true || tabs?.disabledKeys.has(id)),
     ...tabStop,
     ...rest,
   } as unknown as BaseTabs.Tab.Props;
@@ -496,7 +513,7 @@ interface TabPanelPropsBase
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
   /** The panel's collection key, matched to its tab. */
-  id?: Key;
+  id: Key;
   /** Whether the panel renders while hidden rather than not at all. */
   shouldForceMount?: boolean;
 }

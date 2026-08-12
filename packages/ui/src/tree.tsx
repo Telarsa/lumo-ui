@@ -262,10 +262,8 @@ export {
  *
  * ═══ WHAT WAS LOST, LISTED AS LOST ══════════════════════════════════════════
  *
- *  1. **Dynamic collections.** `items` + a function child, `TreeLoadMoreItem`,
- *     `TreeSection`. The props stay in the TYPE (the API is frozen) and are
- *     ignored at runtime; children are static JSX. Every call site in this
- *     repository and every registry example already writes static children.
+ *  1. **Advanced dynamic collections.** `items` + a function child are
+ *     implemented; `TreeLoadMoreItem` and `TreeSection` remain absent.
  *  2. **Drag and drop** (`dragAndDropHooks`), which was `useDragAndDrop`'s whole
  *     surface and is a component of its own if it ever comes back.
  *  3. **`renderEmptyState`.** It receives a `TreeState<unknown>` that no longer
@@ -282,9 +280,8 @@ export {
  *  6. **`className` / `style` as functions of render state.** They stay in the
  *     type; a function is ignored. `data-*` attributes cover every state the
  *     variants need, which is how `treeItemVariants` was already written.
- *  7. **`selectedKeys="all"`.** It renders as "everything selected" and cannot
- *     be toggled OUT of, because the component cannot enumerate keys it has not
- *     rendered. React Aria could, from its collection.
+ *  7. **`selectedKeys="all"`.** Static and function-child collections are
+ *     enumerated, so toggling one row returns the remaining concrete keys.
  *
  * ═══ AND WHAT "LISTED AS LOST" NOW MEANS IN THE TYPE ════════════════════════
  *
@@ -529,6 +526,16 @@ function renderLevel(children: LumoNode, level: number, parentKey: string): Reac
   ));
 }
 
+/** Enumerate the same keys `TreeItem` will use, including collapsed descendants. */
+function treeKeys(children: LumoNode, parentKey = "lumo-tree"): Key[] {
+  const items = Children.toArray(children).filter(isValidElement);
+  return items.flatMap((child, index) => {
+    const props = child.props as { id?: Key; children?: LumoNode };
+    const key = props.id ?? `${parentKey}.${index}`;
+    return [key, ...treeKeys(props.children, String(key))];
+  });
+}
+
 /* ════════════════════════════════════════════════════════════════════════════
  * TREE
  * ═══════════════════════════════════════════════════════════════════════════ */
@@ -555,7 +562,7 @@ function renderLevel(children: LumoNode, level: number, parentKey: string): Reac
 interface TreePropsBase<T extends object>
   extends MultipleSelection,
     Expandable,
-    CollectionStateBase<T>,
+    Omit<CollectionStateBase<T>, "dependencies">,
     DOMProps,
     Omit<AriaLabelingProps, "aria-label">,
     SlotProps,
@@ -618,7 +625,7 @@ export interface TreeProps<T extends object> extends TreePropsBase<T> {
    * REQUIRED — see the file header. A treegrid names nothing by itself.
    */
   label: string;
-  children?: LumoNode;
+  children?: LumoNode | ((item: T) => ReactNode);
   className?: string | undefined;
 }
 
@@ -679,8 +686,7 @@ export function Tree<T extends object>({
   onAction,
   // — accepted by the API, unreachable here. Each is documented on its
   //   declaration in `TreePropsBase`; destructured so none reaches the DOM. —
-  items: _items,
-  dependencies: _dependencies,
+  items,
   slot: _slot,
   autoFocus: _autoFocus,
   selectionBehavior: _selectionBehavior,
@@ -691,6 +697,10 @@ export function Tree<T extends object>({
   renderEmptyState: _renderEmptyState,
   ...rest
 }: TreeProps<T>) {
+  const renderedChildren: LumoNode =
+    typeof children === "function"
+      ? (Array.from(items ?? [], (item) => children(item)) as LumoNode)
+      : children;
   const engine: TreeEngineProps = {
     expandedKeys,
     defaultExpandedKeys,
@@ -751,6 +761,7 @@ export function Tree<T extends object>({
     [engine.disabledKeys],
   );
   const selectionMode = engine.selectionMode ?? "none";
+  const collectionKeys = useMemo(() => treeKeys(renderedChildren), [renderedChildren]);
 
   const context: TreeContextValue = {
     strings,
@@ -787,16 +798,14 @@ export function Tree<T extends object>({
       onAction?.();
       engine.onAction?.(key);
       if (selectionMode === "none") return;
-      // `"all"` cannot be toggled out of — the component cannot enumerate keys
-      // it has not rendered. Listed as lost in the header rather than faked.
-      if (selected === "all") return;
-      const isOn = selected.has(key);
+      const concrete = selected === "all" ? new Set<Key>(collectionKeys) : selected;
+      const isOn = concrete.has(key);
       const replace = mode === "replace" || (mode === "press" && selectionMode === "single");
       let next: Set<Key>;
       if (selectionMode === "single") {
         next = replace ? new Set<Key>([key]) : new Set<Key>(isOn ? [] : [key]);
       } else {
-        next = new Set<Key>(selected);
+        next = new Set<Key>(concrete);
         if (isOn) next.delete(key);
         else next.add(key);
       }
@@ -886,7 +895,7 @@ export function Tree<T extends object>({
     navigableRows(event.currentTarget)[0]?.focus();
   }
 
-  const isEmpty = Children.toArray(children).filter(isValidElement).length === 0;
+  const isEmpty = Children.toArray(renderedChildren).filter(isValidElement).length === 0;
 
   return (
     <div
@@ -904,7 +913,7 @@ export function Tree<T extends object>({
       onFocus={onFocus}
     >
       <TreeContext.Provider value={context}>
-        {renderLevel(children, 1, "lumo-tree")}
+        {renderLevel(renderedChildren, 1, "lumo-tree")}
       </TreeContext.Provider>
     </div>
   );

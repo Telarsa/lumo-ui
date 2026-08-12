@@ -619,12 +619,15 @@ export interface FieldErrorProps
 }
 
 /*
- * No rest parameter, unlike `Label` and `Description`. The Base UI arm below
- * never forwarded one — `BaseField.Error` is given `match`, the class and the
- * wiring and nothing else — and the React Aria arm that did forward it is gone.
- * Binding a `...props` nobody spreads would read as forwarding.
+ * Caller DOM props are delivered before the owned error wiring, so consumers
+ * retain the declared root surface without being able to replace its id.
  */
-export function FieldError({ className, children }: FieldErrorProps) {
+export function FieldError({
+  className,
+  children,
+  elementType: _elementType,
+  ...props
+}: FieldErrorProps) {
   const chrome = useContext(FieldChromeContext);
   if (chrome === null) {
     /*
@@ -642,6 +645,7 @@ export function FieldError({ className, children }: FieldErrorProps) {
     <BaseField.Error
       match
       className={cn(fieldErrorVariants(), className)}
+      {...props}
       {...chrome.errorProps}
     >
       {children}

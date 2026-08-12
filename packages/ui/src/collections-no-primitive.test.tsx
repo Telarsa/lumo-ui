@@ -131,6 +131,20 @@ describe("TagGroup — the pinned React Aria defect is retired", () => {
     expect(html.split('tabindex="-1"').length - 1).toBe(1);
   });
 
+  it("serves one tab stop when removable tags are grouped in a Fragment", () => {
+    const html = renderToStaticMarkup(
+      <TagGroup label="فیلترها" onRemove={() => {}} removeLabel={(tag) => `حذف ${tag}`}>
+        <TagList>
+          <>
+            <TagItem id="thr" textValue="تهران" />
+            <TagItem id="isf" textValue="اصفهان" />
+          </>
+        </TagList>
+      </TagGroup>,
+    );
+    expect(html.split('tabindex="0"').length - 1).toBe(1);
+  });
+
   it("POISON TWIN: bare Base UI serves a toolbar with no tab stop at all", () => {
     // Asserted to be BROKEN. If this goes green, `CompositeRoot` learned to
     // resolve its initial index during render and `useCompositeTabStop` should
@@ -238,6 +252,30 @@ describe("FileUpload — both React Aria leaks are gone", () => {
     });
     expect(zone!.hasAttribute("data-lumo-drop-target")).toBe(false);
     expect(seen).toEqual([["گزارش.pdf"]]);
+  });
+
+  it("applies acceptedFileTypes to dropped files as well as the picker", () => {
+    const seen: string[][] = [];
+    const { container } = render(
+      <FileUpload
+        label="کشیدن پرونده"
+        triggerLabel="انتخاب"
+        acceptedFileTypes={["image/*", ".pdf"]}
+        onSelectFiles={(files) => seen.push(files.map((file) => file.name))}
+      />,
+    );
+    const zone = container.querySelector('[role="group"]');
+    fireEvent.drop(zone!, {
+      dataTransfer: {
+        types: ["Files"],
+        files: [
+          new File(["x"], "photo.png", { type: "image/png" }),
+          new File(["x"], "report.PDF", { type: "application/octet-stream" }),
+          new File(["x"], "notes.txt", { type: "text/plain" }),
+        ],
+      },
+    });
+    expect(seen).toEqual([["photo.png", "report.PDF"]]);
   });
 
   it("ignores a drag that carries no files", () => {

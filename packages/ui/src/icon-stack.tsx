@@ -65,7 +65,10 @@ export const iconStackOverflowVariants = cva(
 );
 
 export interface IconStackProps
-  extends Omit<React.ComponentProps<"div">, "children">,
+  extends Omit<
+      React.ComponentProps<"div">,
+      "children" | "role" | "aria-label" | "aria-labelledby"
+    >,
     VariantProps<typeof iconStackVariants> {
   /**
    * What the stack MEANS, e.g. «۵ عضو». Required.
@@ -92,21 +95,25 @@ export function IconStack({
   children,
   ...props
 }: IconStackProps) {
-  // `Children.toArray` and not `children as unknown[]`: it flattens fragments
-  // and drops nullish entries, so `{people.map(…)}{extra && <Avatar/>}` counts
-  // the way a reader would count it.
-  const all = React.Children.toArray(children as React.ReactNode);
+  const flatten = (nodes: React.ReactNode): React.ReactNode[] =>
+    React.Children.toArray(nodes).flatMap((node) =>
+      React.isValidElement(node) && node.type === React.Fragment
+        ? flatten((node.props as { children?: React.ReactNode }).children)
+        : [node],
+    );
+  const all = flatten(children as React.ReactNode);
   const shown = all.slice(0, max);
   const overflow = all.length - shown.length;
 
   return (
     <div
+      {...props}
       data-lumo=""
       // One fact, one name. The children carry no names of their own here.
       role="img"
       aria-label={label}
+      aria-labelledby={undefined}
       className={cn(iconStackVariants({ size }), className)}
-      {...props}
     >
       {shown}
       {overflow > 0 ? (

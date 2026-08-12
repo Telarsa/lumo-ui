@@ -180,7 +180,7 @@ export function Breadcrumb({
   separator = "›",
   isCurrent = false,
   isDisabled = false,
-  id: _id,
+  id,
 }: BreadcrumbProps) {
   return (
     <li
@@ -203,6 +203,7 @@ export function Breadcrumb({
        */
       {...(isCurrent ? { "data-current": "true", "aria-current": "page" as const } : {})}
       {...(isDisabled ? { "data-disabled": "true" } : {})}
+      {...(id === undefined ? {} : { "data-key": id })}
       className={cn(breadcrumbVariants(), className)}
     >
       {children as React.ReactNode}
@@ -259,9 +260,9 @@ export function Breadcrumb({
  * caller who wants the menu composes it themselves from `Menu`, around this
  * part or instead of it. The elision itself is markup and stays markup.
  *
- * `isCurrent` is accepted and ignored: `Breadcrumbs` clones the flag onto every
- * child by position, and an elision is never the page you are on even when it
- * lands last.
+ * `isCurrent` is written by `Breadcrumbs` from position just as it is for an
+ * ordinary crumb. When an omitted run includes the current page, the ellipsis
+ * receives current-page semantics and has no trailing separator.
  */
 export interface BreadcrumbEllipsisProps {
   /**
@@ -270,7 +271,7 @@ export interface BreadcrumbEllipsisProps {
   label: string;
   /** A mirrored character. See the file header before changing it. */
   separator?: LumoNode;
-  /** Written by `Breadcrumbs` from position, and ignored here. */
+  /** Written by `Breadcrumbs` from position. */
   isCurrent?: boolean;
   className?: string | undefined;
 }
@@ -278,11 +279,15 @@ export interface BreadcrumbEllipsisProps {
 export function BreadcrumbEllipsis({
   label,
   separator = "›",
-  isCurrent: _isCurrent,
+  isCurrent = false,
   className,
 }: BreadcrumbEllipsisProps) {
   return (
-    <li data-lumo="" className={cn(breadcrumbVariants(), className)}>
+    <li
+      data-lumo=""
+      {...(isCurrent ? { "data-current": "true", "aria-current": "page" as const } : {})}
+      className={cn(breadcrumbVariants(), className)}
+    >
       {/*
        * `aria-hidden` glyph plus `sr-only` text, rather than
        * `role="img" aria-label={label}` on the glyph. Both announce the same
@@ -294,9 +299,11 @@ export function BreadcrumbEllipsis({
         …
       </span>
       <span className="sr-only">{label}</span>
-      <span aria-hidden="true" className={breadcrumbSeparatorVariants()}>
-        {separator as React.ReactNode}
-      </span>
+      {isCurrent ? null : (
+        <span aria-hidden="true" className={breadcrumbSeparatorVariants()}>
+          {separator as React.ReactNode}
+        </span>
+      )}
     </li>
   );
 }

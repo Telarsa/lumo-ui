@@ -15,6 +15,7 @@
  */
 
 import { readFileSync, readdirSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
@@ -152,17 +153,38 @@ export function X({ children }: XProps) { return <div>{children}</div>; }
     expect(gradeSource("x.tsx", carrier("undefined"))).toEqual([]);
   });
 
-  it("a `never` type passes — the older spelling, still live at seven sites", () => {
+  it("an intersection reduced to `never` passes", () => {
     expect(gradeSource("x.tsx", carrier("T & never"))).toEqual([]);
   });
 
-  it("a single literal passes — a no-op the caller has no choice about", () => {
-    expect(gradeSource("x.tsx", carrier("true | undefined"))).toEqual([]);
+  it("a union containing `never` is still passable and must be delivered", () => {
+    const v = gradeSource("x.tsx", carrier("boolean | never"));
+    expect(v).toHaveLength(1);
+    expect(v[0]?.verdict).toBe("dropped");
+  });
+
+  it("an optional literal can request behavior and must be delivered", () => {
+    const v = gradeSource("x.tsx", carrier("true | undefined"));
+    expect(v).toHaveLength(1);
+    expect(v[0]?.verdict).toBe("dropped");
   });
 
   it("but a real type does NOT", () => {
     const v = gradeSource("x.tsx", carrier("boolean | undefined"));
     expect(v).toHaveLength(1);
+    expect(v[0]?.verdict).toBe("dropped");
+  });
+});
+
+describe("renamed destructuring is not delivery", () => {
+  it("reports a prop bound only to an underscore discard", () => {
+    const src = `
+export interface XProps { onOpenChange?: (open: boolean) => void; }
+export function X({ onOpenChange: _onOpenChange }: XProps) { return <button />; }
+`;
+    const v = gradeSource("x.tsx", src);
+    expect(v).toHaveLength(1);
+    expect(v[0]?.prop).toBe("XProps.onOpenChange");
     expect(v[0]?.verdict).toBe("dropped");
   });
 });
@@ -194,6 +216,20 @@ export interface XProps extends DOMProps { label: string; }
 export function X({ label }: XProps) { return <div>{label}</div>; }
 `;
     expect(gradeSource("x.tsx", src)).toEqual([]);
+  });
+
+  it("grades checker-resolved inherited behavior supplied by the CLI", () => {
+    const src = `
+import type { PressEvents } from "@lumo-ui/core";
+export interface XProps extends PressEvents { label: string; }
+export function X({ label }: XProps) { return <button>{label}</button>; }
+`;
+    const v = gradeSource("x.tsx", src, [
+      { iface: "XProps", name: "onPress", typeText: "((event: unknown) => void) | undefined", line: 3 },
+    ]);
+    expect(v).toHaveLength(1);
+    expect(v[0]?.prop).toBe("XProps.onPress");
+    expect(v[0]?.verdict).toBe("dropped");
   });
 
   it("follows a discriminated union into each arm", () => {
@@ -247,6 +283,22 @@ describe("the gate is wired into verify", () => {
     expect(script).toContain("packages/ui/src");
     expect(script).toContain("packages/blocks/src");
   });
+
+  it("the CLI resolves and rejects inherited core behavior", () => {
+    const repo = join(import.meta.dirname, "..", "..", "..");
+    const fixture = join(import.meta.dirname, "..", "fixtures", "inherited-props");
+    const result = spawnSync(
+      process.execPath,
+      [
+        "--experimental-strip-types",
+        join(import.meta.dirname, "inert-props-cli.ts"),
+        fixture,
+      ],
+      { cwd: repo, encoding: "utf8" },
+    );
+    expect(result.status).toBe(1);
+    expect(result.stdout).toContain("InheritedButtonProps.onPress");
+  }, 30_000);
 });
 
 /**
@@ -287,7 +339,12 @@ const ROOT_FIXTURES = join(import.meta.dirname, "..", "fixtures", "root-contract
 const gradeRoot = (name: string) =>
   gradeRootContract(name, readFileSync(join(ROOT_FIXTURES, name), "utf8"));
 
-const ROOT_FAILING: RootVerdict[] = ["no-ref-story", "undelivered-root", "unexplained-own"];
+const ROOT_FAILING: RootVerdict[] = [
+  "no-ref-story",
+  "undelivered-root",
+  "unexplained-own",
+  "overridable-owned",
+];
 
 describe("root contract — self-test", () => {
   it("there is one poison fixture per verdict, and no orphans", () => {

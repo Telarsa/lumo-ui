@@ -330,10 +330,13 @@ interface PopoverPropsBase
    * was equally inert, so it is subtracted here rather than left as the one
    * survivor of a removed set.
    */
-  extends Omit<PositionProps, "placement" | "isOpen">,
+  extends Omit<
+      PositionProps,
+      "placement" | "isOpen" | "shouldFlip" | "containerPadding"
+    >,
     FocusWithinEvents,
-    SlotProps,
-    StyleProps,
+    Omit<SlotProps, "slot">,
+    Omit<StyleProps, "style">,
     GlobalDOMAttributes<HTMLDivElement> {
   "aria-label"?: string;
   "aria-labelledby"?: string;
@@ -355,35 +358,39 @@ interface PopoverPropsBase
   /** @forwarded `...rest` → `Popover.Popup`. See `aria-describedby`. */
   "aria-details"?: string;
   /** A ref to the element the popover is positioned against. */
-  triggerRef?: React.RefObject<Element | null>;
+  triggerRef?: undefined;
   /** A ref to the arrow element, if there is one. */
-  arrowRef?: React.RefObject<Element | null>;
+  arrowRef?: undefined;
   /** A ref to the scrollable region the popover repositions inside. */
-  scrollRef?: React.RefObject<Element | null>;
+  scrollRef?: undefined;
   /** The element the popover is constrained to. */
-  boundaryElement?: Element;
+  boundaryElement?: undefined;
   /** Whether the popover keeps repositioning after it opens. */
-  shouldUpdatePosition?: boolean;
+  shouldUpdatePosition?: undefined;
   /** The largest height the popover may take. */
-  maxHeight?: number;
+  maxHeight?: undefined;
   /** Offset applied to the arrow's own boundary. */
-  arrowBoundaryOffset?: number;
+  arrowBoundaryOffset?: undefined;
   /** Overrides the rect the popover positions against. */
-  getTargetRect?: (target: Element) => DOMRect | null | undefined;
+  getTargetRect?: undefined;
   /** Whether the popover leaves the rest of the page interactive. */
-  isNonModal?: boolean;
+  isNonModal?: undefined;
   /** Decides, per element, whether an outside interaction should close it. */
-  shouldCloseOnInteractOutside?: (element: Element) => boolean;
+  shouldCloseOnInteractOutside?: undefined;
   /** The slot name of the trigger this popover belongs to. */
-  trigger?: string;
+  trigger?: undefined;
   /** Whether the popover is currently performing an entry animation. */
-  isEntering?: boolean;
+  isEntering?: undefined;
   /** Whether the popover is currently performing an exit animation. */
-  isExiting?: boolean;
+  isExiting?: undefined;
   /** Whether the open/close animation is skipped. */
-  shouldSkipAnimation?: boolean;
+  shouldSkipAnimation?: undefined;
   /** The container the popover portals into. */
-  UNSTABLE_portalContainer?: Element;
+  UNSTABLE_portalContainer?: undefined;
+  shouldFlip?: undefined;
+  containerPadding?: undefined;
+  slot?: undefined;
+  style?: undefined;
 }
 
 /**

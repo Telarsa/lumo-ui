@@ -5,7 +5,7 @@ import { cva } from "class-variance-authority";
 import { ChevronDown } from "lucide-react";
 import { NavigationMenu as BaseNav } from "@base-ui/react/navigation-menu";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { attr, findChildProp } from "@lumo-ui/base-ui-ssr";
+import { attr } from "@lumo-ui/base-ui-ssr";
 import { Link, type LinkProps } from "./link.tsx";
 import { placementToSideAlign, type LumoPlacement } from "./popover.tsx";
 
@@ -80,13 +80,8 @@ import { placementToSideAlign, type LumoPlacement } from "./popover.tsx";
  *     carries `'inline-start' | 'inline-end'` as first-class members, so the
  *     mirroring is the library's.
  *
- *     What moved is WHERE it is declared. There is one Positioner for the whole
- *     menu, on the Root, so a per-panel `placement` has nowhere to land.
- *     `NavigationMenu` reads it off the first `<NavigationMenuPanel>` in its
- *     subtree with `findChildProp` and applies it to the shared Positioner —
- *     prop-keyed rather than `child.type`-keyed, for the reason that helper's
- *     docblock gives at length. Two panels asking for different placements is
- *     not expressible; the first one wins and this says so.
+ *     There is one Positioner for the whole menu, so `placement` belongs on
+ *     `NavigationMenu` itself. A per-panel placement would have nowhere to land.
  *
  *  2. MOTION DIRECTION. The enter/exit motion is a uniform scale plus a
  *     BLOCK-axis nudge keyed on the resolved `data-side`. The block axis does
@@ -178,22 +173,6 @@ export const navigationMenuLinkVariants = cva(
     "data-current:bg-surface-sunken",
 );
 
-/**
- * The value the one item that asked to be open is given.
- *
- * React Aria's shape put open state on each trigger (`defaultOpen` on
- * `NavigationMenuItem`, which was a `PopoverTrigger`); Base UI puts ONE `value`
- * on the Root naming the open item. Bridging them needs the item and the root to
- * agree on a key without passing one, so the key is a constant: the item
- * carrying `defaultOpen`/`isOpen` uses this value, and the root — which finds
- * that prop with `findChildProp` — names the same one.
- *
- * A constant is enough because Base UI holds exactly one item open at a time, so
- * "the open one" needs no more identity than that. Two items declaring
- * themselves open is not expressible in the engine and is not expressible here.
- */
-const OPEN_ITEM = "lumo-open-item";
-
 export interface NavigationMenuProps {
   /**
    * Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی».
@@ -205,15 +184,26 @@ export interface NavigationMenuProps {
   label: string;
   children?: LumoNode;
   className?: string | undefined;
+  /** Controlled value of the open item; `null` closes the menu. */
+  value?: string | null | undefined;
+  /** Uncontrolled initial open item. */
+  defaultValue?: string | null | undefined;
+  /** Reports the identity of the open item, or `null` when all are closed. */
+  onValueChange?: ((value: string | null) => void) | undefined;
+  /** Logical placement of the one shared popup positioner. */
+  placement?: LumoPlacement | undefined;
 }
 
-export function NavigationMenu({ label, className, children }: NavigationMenuProps) {
-  // Both reads are prop-keyed and recursive, so they survive a server component
-  // composing the tree — see `findChildProp`'s docblock for the build that
-  // lesson cost. `placement` is lifted because there is one shared Positioner.
-  const defaultOpen = findChildProp(children, "defaultOpen") === true;
-  const controlledOpen = findChildProp(children, "isOpen");
-  const placement = findChildProp(children, "placement") as LumoPlacement | undefined;
+export function NavigationMenu({
+  label,
+  className,
+  children,
+  value,
+  defaultValue,
+  onValueChange,
+  placement,
+}: NavigationMenuProps) {
+  // The root owns both the open item's identity and the one shared Positioner.
   const { side, align } = placementToSideAlign(placement ?? "bottom start");
 
   return (
@@ -221,10 +211,11 @@ export function NavigationMenu({ label, className, children }: NavigationMenuPro
       data-lumo=""
       aria-label={label}
       orientation="horizontal"
-      {...attr("defaultValue", defaultOpen ? OPEN_ITEM : undefined)}
+      {...attr("defaultValue", defaultValue)}
+      {...attr("value", value)}
       {...attr(
-        "value",
-        controlledOpen === undefined ? undefined : controlledOpen === true ? OPEN_ITEM : null,
+        "onValueChange",
+        onValueChange === undefined ? undefined : (next: string | null) => onValueChange(next),
       )}
     >
       {/*
@@ -261,20 +252,8 @@ export function NavigationMenu({ label, className, children }: NavigationMenuPro
 export interface NavigationMenuItemProps {
   /** The `<NavigationMenuTrigger>`, then the `<NavigationMenuPanel>`. In that order. */
   children: LumoNode;
-  /** Open on first render. Read by `NavigationMenu` — see `OPEN_ITEM`. */
-  defaultOpen?: boolean | undefined;
-  /** Controlled open state. Read by `NavigationMenu` — see `OPEN_ITEM`. */
-  isOpen?: boolean | undefined;
-  /**
-   * Called when this item opens or closes.
-   *
-   * API GAP, recorded: Base UI fires `onValueChange` on the ROOT with the value
-   * of whichever item opened, so a per-item callback would have to be routed
-   * back down by the same constant `OPEN_ITEM` — which cannot distinguish two
-   * items. It is accepted and NOT called. Under React Aria it was
-   * `PopoverTrigger`'s own `onOpenChange` and worked per item.
-   */
-  onOpenChange?: ((isOpen: boolean) => void) | undefined;
+  /** Stable identity used by the root's value/defaultValue/onValueChange API. */
+  value: string;
   className?: string | undefined;
 }
 
@@ -288,17 +267,13 @@ export interface NavigationMenuItemProps {
  */
 export function NavigationMenuItem({
   children,
-  defaultOpen,
-  isOpen,
-  onOpenChange: _onOpenChange,
+  value,
   className,
 }: NavigationMenuItemProps) {
-  const generated = React.useId();
-  const declaredOpen = defaultOpen === true || isOpen !== undefined;
   return (
     <BaseNav.Item
       render={<div />}
-      value={declaredOpen ? OPEN_ITEM : generated}
+      value={value}
       {...(className === undefined ? {} : { className })}
     >
       {children as React.ReactNode}
@@ -336,13 +311,6 @@ export function NavigationMenuTrigger({
 }
 
 export interface NavigationMenuPanelProps {
-  /**
-   * Logical only — see `LumoPlacement`. Defaults to `'bottom start'`.
-   *
-   * READ BY `NavigationMenu`, not applied here: there is one Positioner for the
-   * whole menu. See the file header.
-   */
-  placement?: LumoPlacement;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -350,7 +318,6 @@ export interface NavigationMenuPanelProps {
 /** The content panel. */
 export function NavigationMenuPanel({
   className,
-  placement: _placement,
   children,
 }: NavigationMenuPanelProps) {
   return (

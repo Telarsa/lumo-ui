@@ -46,7 +46,7 @@ const t = {
 function BasicExample(l: Locale) {
   return (
     <NavigationMenu label={t.nav[l]}>
-      <NavigationMenuItem>
+      <NavigationMenuItem value="products">
         <NavigationMenuTrigger>{t.products[l]}</NavigationMenuTrigger>
         <NavigationMenuPanel>
           <NavigationMenuLink href="#lumo" description={t.lumoDesc[l]}>
@@ -57,7 +57,7 @@ function BasicExample(l: Locale) {
           </NavigationMenuLink>
         </NavigationMenuPanel>
       </NavigationMenuItem>
-      <NavigationMenuItem>
+      <NavigationMenuItem value="resources">
         <NavigationMenuTrigger>{t.resources[l]}</NavigationMenuTrigger>
         <NavigationMenuPanel>
           <NavigationMenuLink href="#docs" description={t.docsDesc[l]}>
@@ -85,7 +85,7 @@ export const EXAMPLES: ComponentExamples = {
     isNew: true,
     composition: [
       `<NavigationMenu label="…">`,
-      `  <NavigationMenuItem>`,
+      `  <NavigationMenuItem value="products">`,
       `    <NavigationMenuTrigger>…</NavigationMenuTrigger>`,
       `    <NavigationMenuPanel>`,
       `      <NavigationMenuLink href="…" description="…">…</NavigationMenuLink>`,

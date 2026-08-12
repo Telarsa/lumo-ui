@@ -28,7 +28,7 @@ const timeline = (
       <TimelineTitle>ثبت شد</TimelineTitle>
       <TimelineBody>سفارش در انبار ثبت شد.</TimelineBody>
     </TimelineItem>
-    <TimelineItem isLast>
+    <TimelineItem>
       <TimelineTitle>ارسال شد</TimelineTitle>
     </TimelineItem>
   </Timeline>

@@ -233,8 +233,8 @@ const ToolbarClaimContext = React.createContext<{ next: number } | null>(null);
  */
 interface ToolbarPropsBase
   extends Omit<AriaLabelingProps, "aria-label">,
-    SlotProps,
-    StyleProps,
+    Omit<SlotProps, "slot">,
+    Omit<StyleProps, "style">,
     GlobalDOMAttributes<HTMLDivElement> {
   /** The toolbar's layout axis. */
   orientation?: Orientation;
@@ -251,13 +251,6 @@ export function Toolbar({
   label,
   className,
   orientation,
-  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
-  // `Toolbar.Root` takes `orientation`, `disabled`, `loop` and the global DOM
-  // props. Lumo's `slot` and `style` collide with Base UI's own props of
-  // the same name, so they are destructured out rather than
-  // spread — the same treatment popover.tsx and dialog.tsx give it.
-  slot: _slot,
-  style: _style,
   children,
   ...rest
 }: ToolbarProps) {

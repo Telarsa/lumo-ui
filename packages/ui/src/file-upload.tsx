@@ -196,10 +196,23 @@ export function FileUpload({
    */
   const [dragDepth, setDragDepth] = useState(0);
 
+  const accepts = (file: File) =>
+    acceptedFileTypes === undefined ||
+    acceptedFileTypes.length === 0 ||
+    acceptedFileTypes.some((rule) => {
+      const candidate = rule.trim().toLowerCase();
+      if (candidate.startsWith(".")) return file.name.toLowerCase().endsWith(candidate);
+      if (candidate.endsWith("/*")) return file.type.toLowerCase().startsWith(candidate.slice(0, -1));
+      return file.type.toLowerCase() === candidate;
+    });
+
   const deliver = (files: FileList | null | undefined) => {
     // `FileList` is not an array. `Array.from` rather than a spread so the
     // conversion is explicit at the boundary where the DOM type ends.
-    if (files && files.length > 0) onSelectFiles?.(Array.from(files));
+    if (files && files.length > 0) {
+      const accepted = Array.from(files).filter(accepts);
+      if (accepted.length > 0) onSelectFiles?.(accepted);
+    }
   };
 
   const accept = acceptedFileTypes === undefined ? undefined : acceptedFileTypes.join(",");

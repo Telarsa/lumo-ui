@@ -136,7 +136,12 @@ export const checkboxIndicatorVariants = cva(
  * prerendered HTML. That is the tier the project already relies on for exactly
  * this class of defect, and it is engine-independent.
  */
-export interface CheckboxProps extends ToggleFieldPropsBase {
+interface CheckboxSupportedProps
+  extends Omit<ToggleFieldPropsBase, "validationBehavior" | "slot"> {}
+
+export interface CheckboxProps extends CheckboxSupportedProps {
+  validationBehavior?: undefined;
+  slot?: undefined;
   /**
    * Whether the checkbox is in a mixed state. The one field a switch does not
    * have, which is why it is declared here and not on `ToggleFieldPropsBase`.
@@ -183,11 +188,13 @@ export function Checkbox({
   isDisabled,
   isInvalid,
   validate,
-  // — accepted by the API, unreachable in Base UI. See the header. —
+  // — `?: undefined` carriers: rejected for typed callers —
   validationBehavior,
   autoFocus,
   excludeFromTabOrder,
   onFocusChange,
+  onFocus,
+  onBlur,
   slot,
   style,
   ...rest
@@ -228,6 +235,16 @@ export function Checkbox({
           {...attr("form", form)}
           {...attr("id", id)}
           {...attr("inputRef", inputRef)}
+          {...attr("autoFocus", autoFocus)}
+          {...attr("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
+          onFocus={(event) => {
+            onFocus?.(event);
+            onFocusChange?.(true);
+          }}
+          onBlur={(event) => {
+            onBlur?.(event);
+            onFocusChange?.(false);
+          }}
           {...attr("style", style)}
           {...(rest as object)}
         >
@@ -289,7 +306,14 @@ export function Checkbox({
  * read-only concept, and neither does `Field.Root`. Recorded as a capability gap.
  */
 export interface CheckboxGroupProps
-  extends Omit<FieldGroupPropsBase<string[]>, "isInvalid"> {
+  extends Omit<
+    FieldGroupPropsBase<string[]>,
+    "isInvalid" | "isReadOnly" | "isRequired" | "validationBehavior" | "slot"
+  > {
+  isReadOnly?: undefined;
+  isRequired?: undefined;
+  validationBehavior?: undefined;
+  slot?: undefined;
   /** Announced and displayed name for the whole group. Required. */
   label: string;
   children?: LumoNode;
@@ -316,7 +340,7 @@ export function CheckboxGroup({
   isDisabled,
   name,
   validate,
-  // — accepted by the API, unreachable in Base UI —
+  // — `?: undefined` carriers: rejected for typed callers —
   isReadOnly,
   isRequired,
   validationBehavior,

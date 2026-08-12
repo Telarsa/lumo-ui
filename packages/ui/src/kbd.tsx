@@ -2,7 +2,7 @@
  * No "use client": Kbd is presentational and renders on the server, so a
  * consumer pays no hydration for it.
  */
-import { Fragment } from "react";
+import { Fragment, type ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@lumo-ui/core";
 
@@ -65,7 +65,9 @@ export const kbdVariants = cva(
   },
 );
 
-export interface KbdProps extends VariantProps<typeof kbdVariants> {
+export interface KbdProps
+  extends Omit<ComponentProps<"span">, "children" | "className" | "dir">,
+    VariantProps<typeof kbdVariants> {
   /**
    * The chord, in press order: `["Ctrl", "K"]`, `["⌘", "⇧", "P"]`.
    *
@@ -86,9 +88,10 @@ export interface KbdProps extends VariantProps<typeof kbdVariants> {
   className?: string | undefined;
 }
 
-export function Kbd({ keys, separator = "+", size, className }: KbdProps) {
+export function Kbd({ keys, separator = "+", size, className, ...props }: KbdProps) {
   return (
     <span
+      {...props}
       data-lumo-latn=""
       dir="ltr"
       className={cn("inline-flex items-center gap-1 align-middle", className)}

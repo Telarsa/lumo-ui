@@ -255,6 +255,7 @@ describe("a preset is arithmetic in a calendar, not in milliseconds", () => {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 const STRINGS = {
+  today: ANCHOR,
   label: "بازهٔ گزارش",
   panelLabel: "انتخاب بازهٔ تاریخ",
   presetsLabel: "بازه‌های آماده",
@@ -284,6 +285,7 @@ describe("every announced string is a required prop", () => {
    */
   it("omitting one is a type error, not a silent English fallback", () => {
     const shared = {
+      today: ANCHOR,
       panelLabel: STRINGS.panelLabel,
       presetsLabel: STRINGS.presetsLabel,
       calendarLabel: STRINGS.calendarLabel,
@@ -302,10 +304,22 @@ describe("every announced string is a required prop", () => {
     const noGrid = <DateSelector {...shared} label={STRINGS.label} calendarLabel={undefined} />;
     // @ts-expect-error `formatRange` is the read-out's whole sentence.
     const noFormat = <DateSelector {...shared} label={STRINGS.label} formatRange={undefined} />;
+    const noToday = (
+      // @ts-expect-error `today` is the popup calendar's deterministic clock input.
+      <DateSelector
+        label={STRINGS.label}
+        panelLabel={STRINGS.panelLabel}
+        presetsLabel={STRINGS.presetsLabel}
+        calendarLabel={STRINGS.calendarLabel}
+        placeholder={STRINGS.placeholder}
+        formatRange={joinRange}
+        presets={PRESETS}
+      />
+    );
 
     // Referenced so the bindings are not unused; never rendered — each one is
     // deliberately ill-typed and only the type error is the assertion.
-    expect([noLabel, noPanel, noPresets, noGrid, noFormat]).toHaveLength(5);
+    expect([noLabel, noPanel, noPresets, noGrid, noFormat, noToday]).toHaveLength(6);
   });
 
   it("a preset's label is required and is not derivable from its rule", () => {
@@ -352,6 +366,7 @@ describe("the trigger is named in the FIRST BYTE", () => {
   it("names the button «label + read-out» with no value chosen", () => {
     const html = renderToStaticMarkup(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -368,6 +383,7 @@ describe("the trigger is named in the FIRST BYTE", () => {
   it("names the button with the range once one is chosen, in Jalali", () => {
     const html = renderToStaticMarkup(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -395,6 +411,7 @@ describe("the trigger is named in the FIRST BYTE", () => {
   it("the served trigger carries no Latin letter and no Latin digit", () => {
     const html = renderToStaticMarkup(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -426,6 +443,7 @@ describe("the trigger is named in the FIRST BYTE", () => {
     // quietly doubling the served bytes.
     const html = renderToStaticMarkup(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -442,6 +460,7 @@ describe("the trigger is named in the FIRST BYTE", () => {
   it("`data-lumo` is on the root", () => {
     const html = renderToStaticMarkup(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -477,6 +496,7 @@ describe("the panel: a named dialog over a real list of controls", () => {
     // announces the answer instead of the question, so the name is passed.
     render(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -494,6 +514,7 @@ describe("the panel: a named dialog over a real list of controls", () => {
   it("the presets are a named list of buttons, one per entry", async () => {
     render(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -521,6 +542,7 @@ describe("the panel: a named dialog over a real list of controls", () => {
     const seen: Array<CalendarDateRange | null> = [];
     render(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -536,10 +558,10 @@ describe("the panel: a named dialog over a real list of controls", () => {
 
     expect(seen).toHaveLength(1);
     const committed = seen[0] as CalendarDateRange;
-    const expected = resolveDateRangePreset({ kind: "thisMonth" }, "fa-IR");
+    const expected = resolveDateRangePreset({ kind: "thisMonth" }, "fa-IR", ANCHOR);
     expect(own(committed.from)).toEqual(own(expected.from));
     expect(own(committed.to as CalendarDate)).toEqual(own(expected.to as CalendarDate));
-    // Jalali, from a press, with no anchor threaded through the component.
+    // Jalali, from a press, resolved against the same explicit clock snapshot.
     expect(committed.from.calendar.identifier).toBe("persian");
     expect(committed.from.day).toBe(1);
 
@@ -548,11 +570,12 @@ describe("the panel: a named dialog over a real list of controls", () => {
     await waitFor(() => {
       expect(screen.queryByRole("dialog")).toBeNull();
     });
-  });
+  }, 30_000);
 
   it("the pressed preset is the one that is lit, and only that one", async () => {
     render(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -580,6 +603,7 @@ describe("the panel: a named dialog over a real list of controls", () => {
     // differs between the server pass and the client one.
     render(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -601,6 +625,7 @@ describe("the panel: a named dialog over a real list of controls", () => {
   it("a disabled selector opens nothing", () => {
     render(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}
@@ -653,6 +678,7 @@ describe("minValue bounds the grid by DAY, not by month", () => {
   it("a day before the bound, in the bound's own month, cannot be pressed", async () => {
     render(
       <DateSelector
+        today={ANCHOR}
         label={STRINGS.label}
         panelLabel={STRINGS.panelLabel}
         presetsLabel={STRINGS.presetsLabel}

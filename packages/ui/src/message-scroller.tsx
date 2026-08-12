@@ -91,7 +91,7 @@ export const messageScrollerVariants = cva(
 );
 
 export const messageScrollerViewportVariants = cva(
-  "flex-1 overflow-y-auto overscroll-contain scroll-smooth p-4",
+  "flex-1 overflow-y-auto overscroll-contain scroll-smooth motion-reduce:scroll-auto p-4",
 );
 
 export const messageScrollerJumpVariants = cva(

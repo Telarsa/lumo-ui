@@ -1,6 +1,12 @@
 "use client";
 
-import { useRef, type ComponentProps, type CSSProperties } from "react";
+import {
+  useImperativeHandle,
+  useRef,
+  type ComponentProps,
+  type CSSProperties,
+  type Ref,
+} from "react";
 import { useVirtualWindow } from "./virtualizer.ts";
 import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 import {
@@ -114,15 +120,23 @@ export type { VirtualListOrientation };
  * one input and there is no `isRtl` or `dir` prop to disagree with it.
  */
 
+export interface VirtualListHandle {
+  scrollToOffset(offset: number, behavior?: ScrollBehavior): void;
+  scrollToIndex(
+    index: number,
+    options?: { align?: "start" | "center" | "end" | "auto"; behavior?: ScrollBehavior },
+  ): void;
+}
+
 export interface VirtualListProps
   /*
    * `ref` is owned, and this is the component AUDIT §4.2 used as the example of
    * what the missing ref story cost — "a consumer cannot … scroll a
    * `VirtualList` to an index". The ref is not the answer to that: `scrollRef`
    * below is the virtualiser's own scroll container and replacing it empties
-   * the window. The answer is a scroll METHOD, which this component does not
-   * have yet and which is recorded in ROADMAP.md rather than faked with a ref
-   * that would break the list. `role`, `aria-label` and `tabIndex` are owned
+   * the window. The public ref therefore exposes only `scrollToIndex` and
+   * `scrollToOffset`; it never exposes or replaces the virtualizer's DOM ref.
+   * `role`, `aria-label` and `tabIndex` are owned
    * together for `ScrollArea`'s reason: the three of them ARE the tab stop.
    */
   extends Omit<
@@ -174,6 +188,8 @@ export interface VirtualListProps
   className?: string | undefined;
   /** Class for each row wrapper. */
   itemClassName?: string | undefined;
+  /** Imperative scrolling without replacing the ref owned by the virtualizer. */
+  ref?: Ref<VirtualListHandle> | undefined;
 }
 
 export function VirtualList({
@@ -189,19 +205,21 @@ export function VirtualList({
   children,
   className,
   itemClassName,
+  ref,
   ...props
 }: VirtualListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const mirror = virtualMirror(locale, orientation);
   const horizontal = orientation === "horizontal";
 
-  const { items, totalSize, measureElement } = useVirtualWindow({
+  const { items, totalSize, measureElement, scrollToIndex, scrollToOffset } = useVirtualWindow({
     count,
     // The ref itself, not a getter that closes over it — see `virtualizer.ts`.
     scrollRef,
     estimateSize: typeof estimateSize === "number" ? () => estimateSize : estimateSize,
     overscan,
     horizontal,
+    rtl: mirror.direction === "rtl",
     /*
      * The deterministic viewport the server render lays out against. Without it
      * the window is empty during `renderToStaticMarkup` and the served bytes
@@ -216,6 +234,8 @@ export function VirtualList({
     ...(getItemKey === undefined ? {} : { getItemKey }),
     ...(gap === undefined ? {} : { gap }),
   });
+
+  useImperativeHandle(ref, () => ({ scrollToIndex, scrollToOffset }), [scrollToIndex, scrollToOffset]);
 
   return (
     <div

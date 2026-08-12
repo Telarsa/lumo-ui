@@ -154,6 +154,9 @@ export function Resizable({
   onResize,
   className,
 }: ResizableProps) {
+  if (minSize > maxSize) {
+    throw new RangeError("Resizable minSize must be less than or equal to maxSize.");
+  }
   const [size, setSize] = useState(() => clamp(Math.round(defaultSize), minSize, maxSize));
   const [resizing, setResizing] = useState(false);
   const groupRef = useRef<HTMLDivElement | null>(null);

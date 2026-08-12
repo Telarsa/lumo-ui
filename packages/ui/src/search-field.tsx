@@ -105,7 +105,8 @@ export const searchInputVariants = cva(
  * of. Stated here rather than in `@lumo-ui/core` because they are this
  * component's, and only this component's.
  */
-interface SearchFieldPropsBase extends Omit<TextFieldPropsBase, "isInvalid"> {
+interface SearchFieldPropsBase
+  extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior" | "type"> {
   /** Handler that is called when the Enter key is pressed. */
   onSubmit?: (value: string) => void;
   /** Handler that is called when the clear button is pressed. */
@@ -157,10 +158,7 @@ export function SearchField({
   isRequired,
   autoFocus,
   // — accepted by the API, unreachable in Base UI. See text-field.tsx. —
-  validationBehavior,
   excludeFromTabOrder,
-  type,
-  slot,
   ...rest
 }: SearchFieldProps) {
   /*
@@ -171,6 +169,7 @@ export function SearchField({
    * nothing.
    */
   const inputRef = useRef<HTMLElement>(null);
+  const initiallyFilled = String(value ?? defaultValue ?? "").length > 0;
 
   /*
    * The native setter, and why it is not cleverness for its own sake. React
@@ -248,6 +247,7 @@ export function SearchField({
           {...optional("required", isRequired)}
           {...optional("autoFocus", autoFocus)}
           {...(rest as object)}
+          {...optional("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
         />
         {/*
          * `-translate-y-1/2` is a BLOCK-axis transform. It is not mirrored by
@@ -265,7 +265,12 @@ export function SearchField({
           variant="ghost"
           size="sm"
           onPress={clear}
-          className="absolute end-1 top-1/2 hidden -translate-y-1/2 rounded-full group-data-filled/search:inline-flex"
+          className={cn(
+            "absolute end-1 top-1/2 -translate-y-1/2 rounded-full",
+            initiallyFilled
+              ? "inline-flex group-data-empty/search:hidden"
+              : "hidden group-data-filled/search:inline-flex",
+          )}
         >
           <XIcon aria-hidden="true" />
         </IconButton>

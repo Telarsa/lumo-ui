@@ -9,6 +9,7 @@
  * the class of defect that renders correctly and reads wrong.
  */
 import type { LumoNode, Locale } from "./types";
+import type { LinkDOMProps } from "./props";
 
 declare function Cell(props: { children: LumoNode }): null;
 
@@ -39,5 +40,20 @@ const _badLocale: Locale = "de-DE";
 
 const _goodLocale: Locale = "fa-IR";
 
+// A compatibility carrier rejects values but accepts an explicitly absent key
+// in a spread under exactOptionalPropertyTypes.
+const _linkBagWithAbsentRouter: LinkDOMProps = { routerOptions: undefined };
+
 // Silence unused-local diagnostics without weakening the checks above.
-void [_rawNumber, _computed, _bigint, _formatted, _element, _nullish, _array, _badLocale, _goodLocale];
+void [
+  _rawNumber,
+  _computed,
+  _bigint,
+  _formatted,
+  _element,
+  _nullish,
+  _array,
+  _badLocale,
+  _goodLocale,
+  _linkBagWithAbsentRouter,
+];

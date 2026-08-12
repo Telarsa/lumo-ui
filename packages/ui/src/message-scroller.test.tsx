@@ -50,11 +50,19 @@ describe("MessageScroller — the transcript is named and announced", () => {
   });
 
   it("floats the jump button on the LOGICAL end, not the right", () => {
-    const html = renderToStaticMarkup(<MessageScroller {...LABELS}>پیام</MessageScroller>);
-    // The class is in the served bytes even though the button is not rendered
-    // yet — the cva is what is being graded here, and `right-4` on a Persian
-    // page puts the control on the wrong side of the transcript.
-    expect(html).not.toContain("right-4");
+    render(<MessageScroller {...LABELS}>پیام</MessageScroller>);
+    const log = viewport();
+    geometry(log, { scrollHeight: 1000, clientHeight: 400 });
+    log.scrollTop = 0;
+    fireEvent.scroll(log);
+    const button = screen.getByRole("button", { name: "رفتن به آخرین پیام" });
+    expect(button.getAttribute("class")).toContain("end-4");
+    expect(button.getAttribute("class")).not.toContain("right-4");
+  });
+
+  it("disables smooth scrolling when the reader requests reduced motion", () => {
+    render(<MessageScroller {...LABELS}>پیام</MessageScroller>);
+    expect(viewport().getAttribute("class")).toContain("motion-reduce:scroll-auto");
   });
 });
 

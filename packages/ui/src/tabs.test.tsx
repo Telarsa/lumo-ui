@@ -30,6 +30,32 @@ const uncontrolled = (
 );
 
 describe("Tabs — the default selection has to survive to the first byte", () => {
+  it("renders an items collection through its function child", () => {
+    const html = renderToStaticMarkup(
+      <Tabs defaultSelectedKey="profile">
+        <TabList items={[{ id: "profile", label: "پروفایل" }]} label="بخش‌ها">
+          {(item) => <Tab id={item.id}>{item.label}</Tab>}
+        </TabList>
+        <TabPanel id="profile">محتوا</TabPanel>
+      </Tabs>,
+    );
+    expect(html).toContain("پروفایل");
+    expect(html).toContain("محتوا");
+  });
+
+  it("derives the first selection from a function-child collection", () => {
+    const html = renderToStaticMarkup(
+      <Tabs>
+        <TabList items={[{ id: "profile", label: "پروفایل" }]} label="بخش‌ها">
+          {(item) => <Tab id={item.id}>{item.label}</Tab>}
+        </TabList>
+        <TabPanel id="profile">محتوا</TabPanel>
+      </Tabs>,
+    );
+    expect(html).toContain('aria-selected="true"');
+    expect(html).toContain("محتوا");
+  });
+
   it("selects the first tab with no selectedKey and no defaultSelectedKey", () => {
     const html = renderToStaticMarkup(uncontrolled);
 
@@ -180,6 +206,35 @@ function servedTabs(html: string): string[] {
 }
 
 describe("Tabs — the served tab list can be reached with the Tab key", () => {
+  it("honors root disabled and keyboard activation props", () => {
+    const { container } = render(
+      <Tabs defaultSelectedKey="profile" keyboardActivation="automatic" disabledKeys={["billing"]}>
+        <TabList label="بخش‌ها">
+          <Tab id="profile">پروفایل</Tab>
+          <Tab id="billing">صورت‌حساب</Tab>
+          <Tab id="security">امنیت</Tab>
+        </TabList>
+        <TabPanel id="profile">پروفایل</TabPanel>
+        <TabPanel id="security">امنیت</TabPanel>
+      </Tabs>,
+    );
+    const tabs = [...container.querySelectorAll<HTMLElement>('[role="tab"]')];
+    expect(tabs[1]?.getAttribute("aria-disabled")).toBe("true");
+    act(() => {
+      fireEvent.focus(tabs[2]!);
+    });
+    expect(tabs[2]?.getAttribute("aria-selected")).toBe("true");
+
+    cleanup();
+    const all = render(
+      <Tabs isDisabled>
+        <TabList label="بخش‌ها"><Tab id="only">تنها</Tab></TabList>
+        <TabPanel id="only">محتوا</TabPanel>
+      </Tabs>,
+    ).container.querySelector('[role="tab"]');
+    expect(all?.getAttribute("aria-disabled")).toBe("true");
+  });
+
   it("serves exactly one tabindex=0 among the tabs, on the selected one", () => {
     const tabs = servedTabs(renderToStaticMarkup(uncontrolled));
     expect(tabs).toHaveLength(2);

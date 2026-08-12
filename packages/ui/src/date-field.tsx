@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { Field } from "@base-ui/react/field";
 import type { DateValue } from "@internationalized/date";
 
@@ -32,6 +32,7 @@ import {
   optional,
 } from "./form.tsx";
 import { attr } from "@lumo-ui/base-ui-ssr";
+import { asAriaKeyboardEvent } from "./base-ui-adapter.ts";
 import { useLumoLocale } from "./locale.ts";
 import { useDateFieldState } from "./date-field-state.ts";
 
@@ -136,13 +137,10 @@ export { dateInputVariants, dateLiteralVariants, dateSegmentVariants };
  * resolves to `en-US` on every server render. `dates.test.tsx` pins that as a
  * poison fixture, still, against raw React Aria.
  *
- * This rebuild cannot produce that sentence, because it has no validation
- * engine at all: `minValue`, `maxValue` and `isDateUnavailable` are accepted by
- * the type and IGNORED by the implementation. That is not a fix. It is a
- * missing feature wearing a fix's clothes, and it is counted as one in
- * `date-field-cost.json`. The union below is kept unchanged anyway — the public
- * API is frozen for the experiment, and the day validation is implemented the
- * required message must already be there.
+ * This rebuild cannot produce that sentence because it owns no translated
+ * validation-message engine. It does enforce `minValue`, `maxValue` and
+ * `isDateUnavailable` before committing a typed value; the caller-authored
+ * message remains required whenever one of those constraints is supplied.
  */
 /**
  * The three props that make the message reachable. Named once, here, so the
@@ -239,7 +237,24 @@ interface DateFieldPropsBase<T extends DateValue>
   shouldForceLeadingZeros?: undefined;
 }
 
-export interface DateFieldProps<T extends DateValue> extends DateFieldPropsBase<T> {
+type UnsupportedDateFieldProps =
+  | "name"
+  | "form"
+  | "validate"
+  | "validationBehavior"
+  | "isRequired"
+  | "slot";
+
+interface SupportedDateFieldProps<T extends DateValue>
+  extends Omit<DateFieldPropsBase<T>, UnsupportedDateFieldProps> {}
+
+export interface DateFieldProps<T extends DateValue> extends SupportedDateFieldProps<T> {
+  name?: undefined;
+  form?: undefined;
+  validate?: undefined;
+  validationBehavior?: undefined;
+  isRequired?: undefined;
+  slot?: undefined;
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
   description?: LumoNode;
@@ -252,53 +267,12 @@ export interface DateFieldProps<T extends DateValue> extends DateFieldPropsBase<
 }
 
 /**
- * ═══ THE PROPS THIS REBUILD ACCEPTS AND IGNORES ═════════════════════════════
- *
- * `DateFieldProps` above is UNCHANGED — the experiment freezes the public API,
- * and `tsc` is therefore silent about everything below. That silence is the
- * problem, so the list is written out.
- *
- * The React Aria build ended in `{...props}`, so every prop it did not name
- * still reached `<AriaDateField>` and still worked. This build destructures the
- * seven it implements and drops the rest on the floor. Enumerated by asking the
- * compiler for `Exclude<keyof DateFieldProps, handled | DOM | ARIA>`:
- *
- *     name  form  autoComplete  validate  validationBehavior  isRequired
- *         → no form integration at all. The field submits nothing, and
- *           `<Form>` cannot see it. There is no hidden input.
- *     minValue  maxValue  isDateUnavailable
- *         → typed by `DateBounds`, enforced nowhere. Cycling is not clamped and
- *           the field never marks itself invalid. See `DateBounds`'s header:
- *           this is a missing feature, not a fixed defect.
- *     granularity  hourCycle  hideTimeZone
- *         → the engine emits year/month/day only. A `CalendarDateTime` loses
- *           its time half silently.
- *     shouldForceLeadingZeros
- *         → segments render their natural width.
- *     autoFocus  onFocusChange
- *         → not wired.
- *     render  hidden  inert  translate
- *         → RAC's own escape hatches, gone.
- *
- * And every DOM/ARIA prop the old rest-spread forwarded — `id`, `style`,
- * `onFocus`, `onBlur`, `onKeyDown`, `aria-describedby` and the rest — is now
- * also dropped. That is roughly 90 more names, which is why the count in
- * `date-field-cost.json` is given as "props accepted and ignored" rather than
- * as a line delta: the line delta understates it.
- *
- * ── FIVE OF THEM ARE NO LONGER SILENT ─────────────────────────────────────
- *
- * `autoComplete`, `hourCycle`, `granularity`, `hideTimeZone` and
- * `shouldForceLeadingZeros` are `?: undefined` type carriers as of 12 Aug 2026 —
- * passing one is a compile error naming the prop, so the paragraph above is no
- * longer the only thing between a caller and a no-op. They are the five this
- * file DECLARES; everything else in the list is inherited from `@lumo-ui/core`
- * shapes that other components implement, and narrowing a shared shape here
- * would break the components that honour it.
- *
- * That distinction is the whole reason the list is still here. What changed is
- * that the part of it this file owns is now enforced by `tsc` rather than by
- * whether the reader got this far.
+ * The public surface is intentionally honest after the Base UI rebuild.
+ * Bounds are enforced by the state engine. DOM/ARIA/style and focus/keyboard
+ * callbacks land on the segmented `role="group"`, and autofocus targets its
+ * first segment. Contracts requiring a native form control or validation
+ * engine (`name`, `form`, `validate`, `validationBehavior`, `isRequired`) are
+ * `?: undefined` type carriers, as are unsupported time/leading-zero options.
  */
 export function DateField<T extends DateValue>({
   label,
@@ -314,6 +288,18 @@ export function DateField<T extends DateValue>({
   placeholderValue,
   isDisabled,
   isReadOnly,
+  minValue,
+  maxValue,
+  isDateUnavailable,
+  autoFocus,
+  onFocus,
+  onBlur,
+  onFocusChange,
+  onKeyDown,
+  onKeyUp,
+  "aria-labelledby": callerLabelledBy,
+  "aria-describedby": callerDescribedBy,
+  ...inputProps
 }: DateFieldProps<T> & DateBounds<DateFieldBoundProps>) {
   const locale = useLumoLocale();
 
@@ -325,6 +311,9 @@ export function DateField<T extends DateValue>({
     ...optional("onChange", onChange as ((v: DateValue | null) => void) | undefined),
     ...optional("isDisabled", isDisabled),
     ...optional("isReadOnly", isReadOnly),
+    ...optional("minValue", minValue),
+    ...optional("maxValue", maxValue),
+    ...optional("isDateUnavailable", isDateUnavailable),
   });
 
   const labelId = useId();
@@ -337,7 +326,7 @@ export function DateField<T extends DateValue>({
    * and would be absent from the first byte. See the component's header.
    */
   const describedBy =
-    [description != null ? descriptionId : null, errorMessage != null ? errorId : null]
+    [callerDescribedBy, description != null ? descriptionId : null, errorMessage != null ? errorId : null]
       .filter((id): id is string => id != null)
       .join(" ") || undefined;
 
@@ -350,6 +339,9 @@ export function DateField<T extends DateValue>({
    * click on the label still lands on the first segment.
    */
   const inputRef = useRef<DateInputHandle>(null);
+  useEffect(() => {
+    if (autoFocus === true) inputRef.current?.focus();
+  }, [autoFocus]);
 
   return (
     <Field.Root
@@ -380,8 +372,21 @@ export function DateField<T extends DateValue>({
         ref={inputRef}
         state={state}
         locale={locale}
-        labelId={labelId}
+        labelId={[labelId, callerLabelledBy].filter(Boolean).join(" ")}
         {...optional("describedBy", describedBy)}
+        {...inputProps}
+        onFocus={(event) => {
+          onFocus?.(event);
+          if (!event.currentTarget.contains(event.relatedTarget)) onFocusChange?.(true);
+        }}
+        onBlur={(event) => {
+          onBlur?.(event);
+          if (!event.currentTarget.contains(event.relatedTarget)) onFocusChange?.(false);
+        }}
+        onKeyDown={
+          onKeyDown === undefined ? undefined : (event) => onKeyDown(asAriaKeyboardEvent(event))
+        }
+        onKeyUp={onKeyUp === undefined ? undefined : (event) => onKeyUp(asAriaKeyboardEvent(event))}
         {...optional("isDisabled", isDisabled)}
         {...optional("isReadOnly", isReadOnly)}
         {...optional("isInvalid", invalid)}

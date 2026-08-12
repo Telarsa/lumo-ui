@@ -11,7 +11,8 @@
  * has a better error waiting for it.
  */
 import { readdir, readFile } from "node:fs/promises";
-import { join, relative } from "node:path";
+import { join, relative, resolve } from "node:path";
+import ts from "typescript";
 import {
   formatPropViolations,
   formatRootViolations,
@@ -65,10 +66,89 @@ if (files.length === 0) {
  */
 const violations: PropViolation[] = [];
 const roots_: RootViolation[] = [];
+
+const configPath = join(process.cwd(), "tsconfig.base.json");
+const config = ts.readConfigFile(configPath, ts.sys.readFile);
+if (config.error !== undefined) {
+  console.error(ts.flattenDiagnosticMessageText(config.error.messageText, "\n"));
+  process.exit(2);
+}
+const parsedConfig = ts.parseJsonConfigFileContent(config.config, ts.sys, process.cwd());
+const program = ts.createProgram({
+  rootNames: files.map((file) => resolve(file)),
+  options: parsedConfig.options,
+});
+const checker = program.getTypeChecker();
+
+const GRADED_CORE_OWNERS = new Set([
+  "Validation",
+  "InputBase",
+  "ValueBase",
+  "HelpTextProps",
+  "KeyboardEvents",
+  "FocusEvents",
+  "FocusWithinEvents",
+  "HoverEvents",
+  "PressEvents",
+  "FocusableProps",
+  "FocusableDOMProps",
+  "AriaValidationProps",
+  "SlotProps",
+  "ToggleFieldPropsBase",
+  "OverlayTriggerProps",
+  "DialogPropsBase",
+  "ModalOverlayPropsBase",
+  "PositionProps",
+  "CollectionStateBase",
+  "MultipleSelection",
+  "Expandable",
+  "ButtonAriaProps",
+  "ButtonPropsBase",
+]);
+
+const resolvedInheritedProps = (source: ts.SourceFile) => {
+  const inherited: Array<{ iface: string; name: string; typeText: string; line: number }> = [];
+  const isExported = (node: ts.Node) =>
+    (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) !== 0;
+
+  for (const statement of source.statements) {
+    if (
+      (!ts.isInterfaceDeclaration(statement) && !ts.isTypeAliasDeclaration(statement)) ||
+      !isExported(statement) ||
+      !statement.name.text.endsWith("Props")
+    ) continue;
+
+    const publicType = checker.getTypeAtLocation(statement.name);
+    const line = source.getLineAndCharacterOfPosition(statement.getStart(source)).line + 1;
+    for (const property of checker.getPropertiesOfType(publicType)) {
+      const declarations = property.getDeclarations() ?? [];
+      const comesFromCoreContract = declarations.some((declaration) =>
+        declaration.getSourceFile().fileName.replaceAll("\\", "/").endsWith("/packages/core/src/props.ts") &&
+        declaration.parent !== undefined &&
+        (ts.isInterfaceDeclaration(declaration.parent) || ts.isTypeAliasDeclaration(declaration.parent)) &&
+        GRADED_CORE_OWNERS.has(declaration.parent.name.text),
+      );
+      if (!comesFromCoreContract) continue;
+      inherited.push({
+        iface: statement.name.text,
+        name: property.getName(),
+        typeText: checker.typeToString(
+          checker.getTypeOfSymbolAtLocation(property, statement),
+          statement,
+          ts.TypeFormatFlags.NoTruncation,
+        ),
+        line,
+      });
+    }
+  }
+  return inherited;
+};
+
 for (const file of files) {
   const path = relative(process.cwd(), file);
   const text = await readFile(file, "utf8");
-  violations.push(...gradeSource(path, text));
+  const source = program.getSourceFile(resolve(file));
+  violations.push(...gradeSource(path, text, source ? resolvedInheritedProps(source) : []));
   roots_.push(...gradeRootContract(path, text));
 }
 

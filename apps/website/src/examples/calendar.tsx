@@ -1,15 +1,18 @@
 import type { Locale } from "@lumo-ui/core";
-import { Calendar } from "@lumo-ui/ui";
-import { CalendarClosedDaysIsland, CalendarDropdownIsland } from "@/components/demo-islands";
+import {
+  CalendarClosedDaysIsland,
+  CalendarDropdownIsland,
+  CalendarIsland,
+} from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
  * Worked examples for the calendar page.
  *
- * The examples pass no date VALUES, and that is deliberate: the website package
- * does not depend on `@internationalized/date` (only `@lumo-ui/ui` does), so a
- * `CalendarDate` literal here would not resolve. It costs nothing — an unset
- * calendar opens on the current Jalali month, which is the thing worth showing.
+ * The examples pass their deterministic clock as an ISO string through client
+ * islands. The website package does not depend on `@internationalized/date`,
+ * and a `CalendarDate` class instance cannot cross the RSC boundary, so each
+ * island constructs the required `today` value with `calendarDay`.
  *
  * The year-dropdown example is the SECOND thing here that needs an island, for a
  * new reason: `captionLayout="dropdown"` makes `minValue`/`maxValue` required at
@@ -20,8 +23,8 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * `CalendarDropdownIsland` builds them with `calendarDay`; on a Persian page
  * they read ۱ فروردین ۱۳۰۰ and ۲۹ اسفند ۱۴۰۴.
  *
- * `dropdown-months` needs no island at all, which is the honest way to show
- * that it needs no bounds either.
+ * `dropdown-months` needs no bounds, but it still uses the small calendar island
+ * because every Calendar now requires an explicit clock snapshot.
  *
  * The one example that needs a RULE rather than a value goes through an island.
  * `isDateUnavailable` is a function and this is a server module, so passing it
@@ -70,7 +73,7 @@ const t = {
 
 function BasicExample(l: Locale) {
   return (
-    <Calendar
+    <CalendarIsland
       label={t.trip[l]}
       locale={l}
       description={t.tripHelp[l]}
@@ -91,7 +94,7 @@ function UnavailableExample(l: Locale) {
 
 function ReadOnlyExample(l: Locale) {
   return (
-    <Calendar
+    <CalendarIsland
       label={t.archive[l]}
       locale={l}
       description={t.archiveHelp[l]}
@@ -102,7 +105,7 @@ function ReadOnlyExample(l: Locale) {
 
 function DisabledExample(l: Locale) {
   return (
-    <Calendar
+    <CalendarIsland
       label={t.closed[l]}
       locale={l}
       isDisabled
@@ -125,7 +128,7 @@ function BirthDateExample(l: Locale) {
 
 function MonthDropdownExample(l: Locale) {
   return (
-    <Calendar
+    <CalendarIsland
       label={t.deadline[l]}
       locale={l}
       captionLayout="dropdown-months"

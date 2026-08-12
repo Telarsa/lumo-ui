@@ -88,9 +88,14 @@ export function useCarousel() {
 }
 
 export interface CarouselProps
-  extends Omit<React.ComponentProps<"div">, "children" | "className" | "aria-label"> {
+  extends Omit<
+    React.ComponentProps<"div">,
+    "children" | "className" | "aria-label" | "role" | "aria-roledescription"
+  > {
   /** Decides embla's scroll direction and the arrow-key mapping. Required. */
   locale: Locale;
+  /** Owned by `roleDescription`; cannot be overridden through the DOM surface. */
+  "aria-roledescription"?: undefined;
   /** The region's announced name, e.g. «پیشنهادهای ویژه». Required. */
   label: string;
   /**
@@ -244,8 +249,13 @@ export function CarouselContent({ className, ...props }: CarouselContentProps) {
 }
 
 export interface CarouselItemProps
-  extends Omit<React.ComponentProps<"div">, "className" | "aria-label"> {
+  extends Omit<
+    React.ComponentProps<"div">,
+    "className" | "aria-label" | "role" | "aria-roledescription"
+  > {
   className?: string | undefined;
+  /** Owned by Carousel context; cannot be overridden per slide. */
+  "aria-roledescription"?: undefined;
   /**
    * Announced name of this slide, e.g. «کفش ورزشی مدل آلفا». REQUIRED.
    *

@@ -22,7 +22,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   DataGrid,
@@ -525,7 +525,25 @@ describe("DataGridEmpty", () => {
       </DataGrid>,
     );
     const status = screen.getByRole("status");
-    expect(status.textContent).toBe("هیچ سفارشی پیدا نشد.");
+    expect(status.textContent?.replace("\u2060", "")).toBe("هیچ سفارشی پیدا نشد.");
+  });
+
+  it("mutates an initially empty status after mount so assistive tech observes it", () => {
+    vi.useFakeTimers();
+    try {
+      const table = stubTable({ rowCount: 0 });
+      render(
+        <DataGrid locale="fa-IR" table={table}>
+          <DataGridEmpty>هیچ سفارشی پیدا نشد.</DataGridEmpty>
+        </DataGrid>,
+      );
+      const status = screen.getByRole("status");
+      expect(status.textContent).toBe("هیچ سفارشی پیدا نشد.\u2060");
+      act(() => vi.advanceTimersByTime(200));
+      expect(status.textContent).toBe("هیچ سفارشی پیدا نشد.");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
 

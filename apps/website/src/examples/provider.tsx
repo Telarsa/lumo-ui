@@ -1,7 +1,6 @@
 import type { Locale } from "@lumo-ui/core";
 import {
   DateField,
-  DatePicker,
   LumoProvider,
   Tab,
   TabList,
@@ -9,6 +8,7 @@ import {
   Tabs,
   TimeField,
 } from "@lumo-ui/ui";
+import { DatePickerIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -129,8 +129,7 @@ function MountExample(l: Locale) {
 function PickerExample(l: Locale) {
   return (
     <LumoProvider locale={l}>
-      <DatePicker
-        className="w-full max-w-sm"
+      <DatePickerIsland
         label={t.issued[l]}
         openCalendarLabel={t.openCalendar[l]}
         description={t.issuedHelp[l]}

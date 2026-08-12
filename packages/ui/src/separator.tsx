@@ -73,7 +73,10 @@ export const separatorVariants = cva(
  * element choice below. One source of truth, and it is the stricter one.
  */
 export interface SeparatorProps
-  extends Omit<ComponentProps<"hr">, "children" | "className" | "ref"> {
+  extends Omit<
+    ComponentProps<"hr">,
+    "children" | "className" | "ref" | "role" | "aria-orientation"
+  > {
   /**
    * The root, at the widest type both branches satisfy.
    *
@@ -102,10 +105,10 @@ export function Separator({
     <hr className={classes} {...(props as ComponentProps<"hr">)} />
   ) : (
     <div
+      {...(props as ComponentProps<"div">)}
       role="separator"
       aria-orientation="vertical"
       className={classes}
-      {...(props as ComponentProps<"div">)}
     />
   );
 }
