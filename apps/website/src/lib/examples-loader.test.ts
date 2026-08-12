@@ -214,6 +214,7 @@ describe("the real example files on disk", () => {
       const loaded = await loadExamplesFor(slug);
       expect(loaded, slug).toBeDefined();
       if (loaded === undefined) continue;
+      expect(loaded.api.length, `${slug} has no generated prop reference`).toBeGreaterThan(0);
       expect(loaded.examples.length, slug).toBeGreaterThanOrEqual(4);
       for (const example of loaded.examples) {
         // The flagships all use the canonical shape: a named function whose
@@ -238,6 +239,13 @@ describe("the real example files on disk", () => {
      * rather than globally keeps the default tight for every other test, so a
      * genuinely slow unit test still shows up as one.
      */
+  }, 60_000);
+
+  it("derives required and optional Select props from the exported type", async () => {
+    const loaded = await loadExamplesFor("select");
+    const select = loaded?.api.find((group) => group.name === "SelectProps");
+    expect(select?.props.find((prop) => prop.name === "placeholder")?.required).toBe(true);
+    expect(select?.props.find((prop) => prop.name === "validate")?.required).toBe(false);
   }, 60_000);
 
   it(

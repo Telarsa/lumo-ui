@@ -45,6 +45,28 @@ import {
 
 const EXAMPLES_DIR = join(process.cwd(), "src", "examples");
 const UI_INDEX = join(process.cwd(), "..", "..", "packages", "ui", "src", "index.ts");
+const API_REFERENCE = join(process.cwd(), "..", "..", "api-reference.json");
+
+export interface GeneratedApiProp {
+  name: string;
+  type: string;
+  required: boolean;
+}
+
+export interface GeneratedApiGroup {
+  name: string;
+  props: readonly GeneratedApiProp[];
+}
+
+interface GeneratedApiReference {
+  version: number;
+  modules: Record<string, readonly GeneratedApiGroup[]>;
+}
+
+const generatedApi = JSON.parse(readFileSync(API_REFERENCE, "utf8")) as GeneratedApiReference;
+if (generatedApi.version !== 1) {
+  throw new Error(`[examples] unsupported api-reference.json version ${generatedApi.version}`);
+}
 
 export interface LoadedExample {
   id: string;
@@ -65,6 +87,8 @@ export interface LoadedComponentExamples {
   composition?: string | undefined;
   /** Value exports of the component's own module — the derived parts list. */
   moduleParts: readonly string[];
+  /** Exported props and their resolved types, generated from the TypeScript checker. */
+  api: readonly GeneratedApiGroup[];
   parts?: readonly ExamplePart[] | undefined;
   examples: readonly LoadedExample[];
 }
@@ -347,6 +371,14 @@ async function loadAndValidate(
     );
   }
   const moduleParts = moduleExports.filter((n) => /^[A-Z]/.test(n));
+  const api = generatedApi.modules[moduleName];
+  if (api === undefined || api.length === 0) {
+    throw new Error(
+      `[examples] ${file}: api-reference.json has no exported Props group for ` +
+        `${moduleName}. Run \`node scripts/build-api-reference.mjs\`; if it stays ` +
+        `empty, export the component's public Props type from packages/ui/src/index.ts.`,
+    );
+  }
 
   return {
     slug,
@@ -356,6 +388,7 @@ async function loadAndValidate(
     isNew: spec.meta.isNew === true,
     composition: spec.meta.composition,
     moduleParts,
+    api,
     parts: spec.meta.parts,
     examples,
   };

@@ -1,11 +1,11 @@
 "use client";
 
-import { Children, createContext, isValidElement, useContext, useId, useMemo } from "react";
+import { Children, createContext, isValidElement, useContext, useId, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, type LumoNode, type ValidationError } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
 import { Description, Field, FieldError, optional, useFieldControl } from "./form.tsx";
 
@@ -396,6 +396,8 @@ export interface SelectProps<T extends object> {
   errorMessage?: LumoNode;
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;
+  /** Returns a caller-authored error for the selected key, or `true` when valid. */
+  validate?: ((key: string | null) => ValidationError | true | null | undefined) | undefined;
   /** The selected key. Maps to Base UI's `value`. */
   selectedKey?: string | null | undefined;
   /** The initially selected key. Maps to Base UI's `defaultValue`. */
@@ -456,6 +458,7 @@ export function Select<T extends object>({
   description,
   errorMessage,
   isInvalid,
+  validate,
   selectedKey,
   defaultSelectedKey,
   onSelectionChange,
@@ -468,6 +471,18 @@ export function Select<T extends object>({
   className,
   children,
 }: SelectProps<T>) {
+  const [uncontrolledKey, setUncontrolledKey] = useState<string | null>(
+    defaultSelectedKey ?? null,
+  );
+  const validationKey = selectedKey !== undefined ? selectedKey : uncontrolledKey;
+  const validationResult = validate?.(validationKey);
+  const validationMessage =
+    validationResult === true || validationResult == null
+      ? undefined
+      : Array.isArray(validationResult)
+        ? validationResult[0]
+        : validationResult;
+  const effectiveError = errorMessage ?? validationMessage;
   /*
    * The `value → label` record `Select.Value` resolves the collapsed text
    * from. Derived from `children` on EVERY render path including the server's,
@@ -523,12 +538,22 @@ export function Select<T extends object>({
     <Field
       mode="native"
       description={description}
-      errorMessage={errorMessage}
+      errorMessage={effectiveError}
       explicit={{ "aria-label": ariaLabel }}
       className={cn(selectVariants(), className)}
       {...optional("isDisabled", isDisabled)}
       {...optional("isInvalid", isInvalid)}
       {...optional("name", name)}
+      {...optional(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const key = fieldValue == null || fieldValue === "" ? null : String(fieldValue);
+              const result = validate(key);
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
       {/*
        * `name` goes to BOTH roots, and the duplication is deliberate. Base UI
@@ -542,9 +567,14 @@ export function Select<T extends object>({
         items={itemLabels}
         {...(selectedKey === undefined ? {} : { value: selectedKey })}
         {...(defaultSelectedKey === undefined ? {} : { defaultValue: defaultSelectedKey })}
-        {...(onSelectionChange === undefined
+        {...(onSelectionChange === undefined && validate === undefined
           ? {}
-          : { onValueChange: (value: string | null) => onSelectionChange(value) })}
+          : {
+              onValueChange: (value: string | null) => {
+                setUncontrolledKey(value);
+                onSelectionChange?.(value);
+              },
+            })}
         {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
         {...(isRequired === undefined ? {} : { required: isRequired })}
         {...(isOpen === undefined ? {} : { open: isOpen })}
@@ -565,7 +595,7 @@ export function Select<T extends object>({
            * the DOM order and the announced order agree.
            */}
           {description != null ? <Description>{description}</Description> : null}
-          <FieldError>{errorMessage}</FieldError>
+          <FieldError>{effectiveError}</FieldError>
         </SelectFieldContext.Provider>
       </BaseSelect.Root>
     </Field>

@@ -494,6 +494,10 @@ export interface TimeFieldStateOptions {
   value?: TimeFields | null | undefined;
   defaultValue?: TimeFields | null | undefined;
   onChange?: ((value: TimeFields | null) => void) | undefined;
+  /** Earliest time that can be committed, inclusive. */
+  minValue?: TimeFields | undefined;
+  /** Latest time that can be committed, inclusive. */
+  maxValue?: TimeFields | undefined;
   isDisabled?: boolean | undefined;
   isReadOnly?: boolean | undefined;
   /**
@@ -503,6 +507,24 @@ export interface TimeFieldStateOptions {
   granularity?: "hour" | "minute" | "second" | undefined;
   /** Overrides the locale's own clock. See the block header before using it. */
   hourCycle?: 12 | 24 | undefined;
+}
+
+function timeScalar(value: TimeFields): number {
+  return value.hour * 3_600 + value.minute * 60 + value.second;
+}
+
+function isTimeShape(value: TimeFields): boolean {
+  return (
+    Number.isInteger(value.hour) &&
+    value.hour >= 0 &&
+    value.hour <= 23 &&
+    Number.isInteger(value.minute) &&
+    value.minute >= 0 &&
+    value.minute <= 59 &&
+    Number.isInteger(value.second) &&
+    value.second >= 0 &&
+    value.second <= 59
+  );
 }
 
 /** The two `dayPeriod` strings the locale actually uses, read from `Intl`. */
@@ -519,7 +541,20 @@ function dayPeriodsOf(formatLocale: string): [string, string] {
 }
 
 export function useTimeFieldState(options: TimeFieldStateOptions): DateFieldState {
-  const { locale, value, defaultValue, onChange, granularity = "minute" } = options;
+  const { locale, value, defaultValue, onChange, minValue, maxValue, granularity = "minute" } = options;
+  if (minValue !== undefined && !isTimeShape(minValue)) {
+    throw new RangeError("TimeField minValue must be a valid time");
+  }
+  if (maxValue !== undefined && !isTimeShape(maxValue)) {
+    throw new RangeError("TimeField maxValue must be a valid time");
+  }
+  if (
+    minValue !== undefined &&
+    maxValue !== undefined &&
+    timeScalar(minValue) > timeScalar(maxValue)
+  ) {
+    throw new RangeError("TimeField minValue must not be after maxValue");
+  }
   const formatLocale = FORMAT_LOCALE[locale];
   const strings = stringsFor(locale);
 
@@ -623,9 +658,21 @@ export function useTimeFieldState(options: TimeFieldStateOptions): DateFieldStat
     [granularity, resolved.is12],
   );
 
+  const withinBounds = useCallback(
+    (time: TimeFields): boolean => {
+      const scalar = timeScalar(time);
+      return (
+        (minValue === undefined || scalar >= timeScalar(minValue)) &&
+        (maxValue === undefined || scalar <= timeScalar(maxValue))
+      );
+    },
+    [maxValue, minValue],
+  );
+
   const lastEmitted = useRef<string | null>(
     (() => {
-      const t = toTime(toFields(initial));
+      const candidate = toTime(toFields(initial));
+      const t = candidate !== null && withinBounds(candidate) ? candidate : null;
       return t == null ? null : `${t.hour}:${t.minute}:${t.second}`;
     })(),
   );
@@ -633,13 +680,14 @@ export function useTimeFieldState(options: TimeFieldStateOptions): DateFieldStat
   const commit = useCallback(
     (next: Fields) => {
       setFields(next);
-      const t = toTime(next);
+      const candidate = toTime(next);
+      const t = candidate !== null && withinBounds(candidate) ? candidate : null;
       const key = t == null ? null : `${t.hour}:${t.minute}:${t.second}`;
       if (key === lastEmitted.current) return;
       lastEmitted.current = key;
       onChange?.(t);
     },
-    [onChange, toTime],
+    [onChange, toTime, withinBounds],
   );
 
   const guard = options.isDisabled === true || options.isReadOnly === true;

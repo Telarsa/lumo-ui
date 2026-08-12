@@ -6,7 +6,7 @@
  * scrollspy's failure mode is a heading that can never be marked.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -19,7 +19,10 @@ import {
 } from "./timeline.tsx";
 import { Scrollspy } from "./scrollspy.tsx";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 const timeline = (
   <Timeline>
@@ -138,5 +141,56 @@ describe("Scrollspy — the links work before any JavaScript does", () => {
     expect(html).toContain("border-s");
     expect(html).toContain("ps-3");
     expect(html).not.toMatch(/(^|["\s-])border-l/);
+  });
+
+  it("observes a nested scroll container and reports its active section", () => {
+    const root = document.createElement("div");
+    const install = document.createElement("section");
+    install.id = "install";
+    const usage = document.createElement("section");
+    usage.id = "usage";
+    root.append(install, usage);
+    document.body.append(root);
+    Object.defineProperties(root, {
+      clientHeight: { configurable: true, value: 400 },
+      scrollHeight: { configurable: true, value: 1_000 },
+      scrollTop: { configurable: true, value: 600, writable: true },
+    });
+    Object.defineProperties(document.documentElement, {
+      scrollHeight: { configurable: true, value: 2_000 },
+    });
+    vi.stubGlobal("innerHeight", 400);
+    vi.stubGlobal("scrollY", 0);
+
+    let observedRoot: Element | Document | null | undefined;
+    class Observer {
+      constructor(_callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
+        observedRoot = options?.root;
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+      takeRecords() { return []; }
+      root = null;
+      rootMargin = "";
+      thresholds = [];
+    }
+    vi.stubGlobal("IntersectionObserver", Observer);
+    const onActiveChange = vi.fn();
+
+    render(
+      <Scrollspy
+        label="در این صفحه"
+        items={items}
+        scrollRootRef={{ current: root }}
+        onActiveChange={onActiveChange}
+      />,
+    );
+
+    expect(observedRoot).toBe(root);
+    expect(screen.getByRole("link", { name: "استفاده" }).getAttribute("aria-current")).toBe(
+      "location",
+    );
+    expect(onActiveChange).toHaveBeenLastCalledWith("usage");
   });
 });

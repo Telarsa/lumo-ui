@@ -99,9 +99,11 @@ export const EXAMPLES: ComponentExamples = {
         "Types a time segment by segment. A time has no calendar, so none of the leap-year reasoning applies — but the digits are still Persian, and still come from the locale itself.",
     },
     composition: [
-      `<TimeField label description errorMessage granularity>`,
+      `<TimeField label description errorMessage granularity minValue maxValue validate name form>`,
       `  …the segments   ← rendered for you. granularity decides whether`,
       `                    seconds exist; the locale decides the clock.`,
+      `  bounds + validate  ← reject out-of-policy times with caller-authored copy`,
+      `  name + form        ← submit HH:mm:ss through native FormData`,
       `</TimeField>`,
     ].join("\n"),
     parts: [

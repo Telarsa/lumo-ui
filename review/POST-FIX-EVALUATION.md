@@ -1,5 +1,8 @@
 # Lumo UI post-fix evaluation
 
+> Historical 12 Aug checkpoint. Superseded by `review/FINAL-9-EVALUATION.md`,
+> which includes the browser-led hardening tranche and the final >9 rerating.
+
 Target source: `1ab37905ec488ba84f7ca17ebf023d44690a7f51` plus the uncommitted fixes in this worktree  
 Evaluation date: 2026-08-12  
 Disposition: implementation and verification complete; no commit or push

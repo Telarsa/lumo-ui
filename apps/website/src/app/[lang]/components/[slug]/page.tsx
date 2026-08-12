@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LOCALES, type Locale, type LumoNode } from "@lumo-ui/core";
@@ -20,7 +20,7 @@ import { assertLocale, oppositeDirectionLocale, site, segmentFor} from "@/lib/lo
 import { allCatalog, catalogById } from "@/lib/catalog";
 import { loadExamplesFor, type LoadedComponentExamples } from "@/lib/examples-loader";
 import { ExampleCard } from "@/components/example-card";
-import { CompositionTree, PartsTable } from "@/components/composition-tree";
+import { CompositionTree, PartsTable, PropsTable } from "@/components/composition-tree";
 
 export async function generateStaticParams() {
   // The CATALOG, not (await allCatalog()): round 3 shipped eleven components whose only
@@ -81,6 +81,12 @@ interface PageCopy {
   exportedParts: string;
   partHeader: string;
   descriptionHeader: string;
+  apiIntro: string;
+  propHeader: string;
+  typeHeader: string;
+  requirementHeader: string;
+  requiredLabel: string;
+  optionalLabel: string;
   /** The two-direction section: its `<h2>` differs from its short rail label. */
   directionsHeading: string;
   directionsIntro: string;
@@ -93,7 +99,7 @@ const COPY = {
     rail: {
       preview: "پیش‌نمایش",
       composition: "ترکیب اجزا",
-      api: "مرجع اجزا",
+      api: "مرجع API",
       evidence: "شواهد دسترس‌پذیری",
       installation: "نصب",
       directions: "هر دو جهت",
@@ -118,6 +124,13 @@ const COPY = {
     exportedParts: "اجزای صادرشده",
     partHeader: "جزء",
     descriptionHeader: "شرح",
+    apiIntro:
+      "نام، نوع و اجباری‌بودن ویژگی‌ها مستقیماً از API تایپ‌اسکریپتِ صادرشده ساخته شده‌اند؛ تغییر نوع بدون بازسازی این جدول، دروازهٔ تأیید را رد نمی‌کند.",
+    propHeader: "ویژگی",
+    typeHeader: "نوع",
+    requirementHeader: "الزام",
+    requiredLabel: "اجباری",
+    optionalLabel: "اختیاری",
     directionsHeading: "فارسی و انگلیسی، کنار هم",
     directionsIntro:
       "هر قاب یک سند مستقل با ‎lang‎ و ‎dir‎ واقعی خودش است — نه یک div که وانمود می‌کند. برای دیدن هر دو جهت کنار هم، مقایسه را باز کنید.",
@@ -153,6 +166,13 @@ const COPY = {
     exportedParts: "Exported parts",
     partHeader: "Part",
     descriptionHeader: "Description",
+    apiIntro:
+      "Prop names, resolved types, and requiredness are generated directly from the exported TypeScript API; changing a type without rebuilding this table fails verification.",
+    propHeader: "Prop",
+    typeHeader: "Type",
+    requirementHeader: "Requirement",
+    requiredLabel: "Required",
+    optionalLabel: "Optional",
     directionsHeading: "Persian and English, side by side",
     directionsIntro:
       "Each frame is a real document with its own lang and dir — not a div pretending to be one. Open the comparison to see both directions side by side.",
@@ -207,7 +227,7 @@ function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
     if (loaded.composition !== undefined) {
       list.push({ id: "composition", label: c.rail.composition });
     }
-    if (loaded.parts !== undefined && loaded.parts.length > 0) {
+    if (loaded.api.length > 0) {
       list.push({ id: "api", label: c.rail.api });
     }
   }
@@ -275,6 +295,26 @@ function Pager({
  * the registry unable to disagree.
  */
 const REPO_ROOT = join(process.cwd(), "..", "..");
+const UI_SOURCE_ROOT = join(REPO_ROOT, "packages", "ui", "src");
+const BLOCKS_SOURCE_ROOT = join(REPO_ROOT, "packages", "blocks", "src");
+
+/**
+ * Registry files are generated from exactly these two flat source folders.
+ * Keeping each dynamic read rooted there prevents Turbopack from treating a
+ * registry path as a pattern over the whole repository (11,000+ files in the
+ * warning that exposed this). The equality checks also fail closed if a future
+ * registry entry introduces a nested or out-of-tree path.
+ */
+function readRegistrySource(path: string): string {
+  const file = basename(path);
+  if (path === `packages/ui/src/${file}`) {
+    return readFileSync(join(UI_SOURCE_ROOT, file), "utf8");
+  }
+  if (path === `packages/blocks/src/${file}`) {
+    return readFileSync(join(BLOCKS_SOURCE_ROOT, file), "utf8");
+  }
+  throw new Error(`Registry source is outside the supported source roots: ${path}`);
+}
 
 interface RegistryFile {
   path: string;
@@ -337,7 +377,7 @@ function resolveRegistryItem(
     const main = mainFileOf(i);
     if (!main) return false;
     try {
-      return readFileSync(join(REPO_ROOT, main.path), "utf8") === source;
+      return readRegistrySource(main.path) === source;
     } catch {
       return false;
     }
@@ -425,7 +465,7 @@ export default async function ComponentPage({
 
   const installFiles: InstallFile[] = [];
   for (const [i, f] of item.files.entries()) {
-    const code = readFileSync(join(REPO_ROOT, f.path), "utf8");
+    const code = readRegistrySource(f.path);
     const panel =
       code === demo.source ? (
         sourcePanel
@@ -723,18 +763,29 @@ export default async function ComponentPage({
             </section>
           ) : null}
 
-          {loaded !== undefined && loaded.parts !== undefined && loaded.parts.length > 0 ? (
+          {loaded !== undefined && loaded.api.length > 0 ? (
             <section id="api" className="mt-10 scroll-mt-24">
               <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
                 {c.rail.api}
               </h2>
-              <div className="mt-3">
-                <PartsTable
-                  parts={loaded.parts}
-                  locale={lang}
-                  partHeader={c.partHeader}
-                  descriptionHeader={c.descriptionHeader}
+              <p className="mt-2 max-w-2xl text-sm text-fg-muted">{c.apiIntro}</p>
+              <div className="mt-3 flex flex-col gap-6">
+                <PropsTable
+                  groups={loaded.api}
+                  propHeader={c.propHeader}
+                  typeHeader={c.typeHeader}
+                  requirementHeader={c.requirementHeader}
+                  requiredLabel={c.requiredLabel}
+                  optionalLabel={c.optionalLabel}
                 />
+                {loaded.parts !== undefined && loaded.parts.length > 0 ? (
+                  <PartsTable
+                    parts={loaded.parts}
+                    locale={lang}
+                    partHeader={c.partHeader}
+                    descriptionHeader={c.descriptionHeader}
+                  />
+                ) : null}
               </div>
             </section>
           ) : null}

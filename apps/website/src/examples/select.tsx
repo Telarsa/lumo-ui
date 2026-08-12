@@ -173,7 +173,7 @@ function InFormExample(l: Locale) {
 export const EXAMPLES: ComponentExamples = {
   meta: {
     composition: [
-      `<Select placeholder="…">`,
+      `<Select placeholder="…" validate={key => …}>`,
       `  <Label>…</Label>`,
       `  <SelectTrigger />`,
       `  <SelectPopover>`,
@@ -189,9 +189,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "Select",
         description: {
           "fa-IR":
-            "ریشهٔ فیلد؛ جای‌نما اجباری است چون موتور هیچ رشته‌ای ندارد و کنترل بدون آن خالی می‌ماند. متن راهنما و پیام خطا را هم همین بخش می‌سازد و به کنترل وصل می‌کند.",
+            "ریشهٔ فیلد؛ جای‌نما اجباری است چون موتور هیچ رشته‌ای ندارد و کنترل بدون آن خالی می‌ماند. متن راهنما و پیام خطا را هم همین بخش می‌سازد و به کنترل وصل می‌کند؛ validate کلید انتخابی را می‌گیرد و فقط متنِ نوشته‌شدهٔ فراخوان را نمایش می‌دهد.",
           "en-US":
-            "The field root; the placeholder is required because the engine ships no string and the control renders empty without one. It also renders the description and the error, and wires both to the control.",
+            "The field root; the placeholder is required because the engine ships no string and the control renders empty without one. It renders and wires the description and error; validate receives the selected key and displays only caller-authored copy.",
         },
       },
       {

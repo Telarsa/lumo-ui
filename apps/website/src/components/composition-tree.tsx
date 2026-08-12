@@ -1,9 +1,10 @@
 import type { Locale } from "@lumo-ui/core";
 import type { ExamplePart } from "@/examples/_system/types";
+import type { GeneratedApiGroup } from "@/lib/examples-loader";
 import { CodePanel } from "./code-panel";
 
 /**
- * The two "what is this made of" surfaces on a component page. Both are SERVER
+ * The three "what is this made of" surfaces on a component page. All are SERVER
  * components rendering data the loader has already validated against
  * `packages/ui/src/index.ts` — by the time either mounts, every part name here
  * is a real export, so neither re-checks anything.
@@ -13,7 +14,8 @@ import { CodePanel } from "./code-panel";
  * listed under it — the derived list, straight from the barrel, so it cannot
  * name a part that does not ship.
  *
- * `PartsTable` is the hand-authored API reference: one row per part. Part
+ * `PropsTable` is generated from the exported TypeScript props; `PartsTable`
+ * supplies the hand-authored intent for each composable part. Part and prop
  * names are code — genuinely Latin — so they render as LTR islands under
  * `data-lumo-latn`, the same escape hatch `code-panel.tsx` documents; the
  * descriptions are in the page's locale.
@@ -120,6 +122,89 @@ export function PartsTable({ parts, locale, partHeader, descriptionHeader }: Par
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+export interface PropsTableProps {
+  groups: readonly GeneratedApiGroup[];
+  propHeader: string;
+  typeHeader: string;
+  requirementHeader: string;
+  requiredLabel: string;
+  optionalLabel: string;
+}
+
+/**
+ * Checker-generated public props. Each exported props type is a disclosure so
+ * a large compound component remains navigable rather than becoming one
+ * several-hundred-row table. Names and types are code/LTR islands; every piece
+ * of prose comes from required localized page copy.
+ */
+export function PropsTable({
+  groups,
+  propHeader,
+  typeHeader,
+  requirementHeader,
+  requiredLabel,
+  optionalLabel,
+}: PropsTableProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      {groups.map((group, index) => (
+        <details
+          key={group.name}
+          open={index === 0}
+          className="rounded-lg border border-border bg-surface"
+        >
+          <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-fg">
+            <code dir="ltr" lang="en" data-lumo-latn="">
+              {group.name}
+            </code>
+          </summary>
+          <div className="overflow-x-auto border-t border-border">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border bg-surface-sunken">
+                  <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
+                    {propHeader}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
+                    {typeHeader}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
+                    {requirementHeader}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.props.map((prop) => (
+                  <tr key={prop.name} className="border-b border-border last:border-b-0">
+                    <th scope="row" className="whitespace-nowrap px-3 py-2 text-start font-normal">
+                      <code dir="ltr" lang="en" data-lumo-latn="" className="text-xs text-fg">
+                        {prop.name}
+                      </code>
+                    </th>
+                    <td className="max-w-xl px-3 py-2 text-fg-muted">
+                      <code
+                        dir="ltr"
+                        lang="en"
+                        data-lumo-latn=""
+                        className="break-words text-xs text-fg-muted"
+                      >
+                        {prop.type}
+                      </code>
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-fg-muted">
+                      {prop.required ? requiredLabel : optionalLabel}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ))}
     </div>
   );
 }

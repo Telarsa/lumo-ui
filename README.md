@@ -45,7 +45,7 @@ added. See `ROADMAP.md` for what is still open.
 
 ```bash
 pnpm install
-pnpm run verify  # types → props → lint → no-CSS-Modules → tests → registry → smoke → HTML
+pnpm run verify  # types → props → lint → no-CSS-Modules → tests → registry → API → smoke → HTML
 pnpm dev         # the showcase site, live
 ```
 
@@ -111,6 +111,7 @@ A rule that has never been seen to fail is not a rule. This caught a real one:
 | `gate:no-css-modules` | the styling decision is real, not a comment |
 | `gate:test` | every package's suite — including the gate's own 134, which are its poison fixtures and the negative twin of every exemption |
 | `gate:registry` | the manifest is derivable from the code, not hand-kept |
+| `gate:api` | every component page's public prop tables are derived from the exported TypeScript contracts and are not stale |
 | `gate:smoke` | every item's declared sibling/package closure is complete, and the copied payloads compile outside the workspace |
 | `gate:html` | the bytes actually served are correct |
 
@@ -126,6 +127,11 @@ exists for.
 Each proves something the one before it cannot. The smoke test in particular
 found a real distribution bug — a companion module missing from a registry item
 — that is structurally invisible from inside the workspace.
+
+The component pages combine hand-authored examples and part intent with
+checker-generated API tables. Run `pnpm run build:api` after changing an
+exported props contract; `gate:api` rejects the change if the checked-in
+`api-reference.json` was not regenerated.
 
 ## What the HTML gate checks
 

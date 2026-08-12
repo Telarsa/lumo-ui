@@ -131,6 +131,7 @@ export const EXAMPLES: ComponentExamples = {
       `  label           ← REQUIRED: an unnamed range input announces as bare "slider"`,
       `  locale          ← REQUIRED: the output, the aria-valuetext AND the direction`,
       `  minValue maxValue step defaultValue`,
+      `  name form       ← native form submission, including an external owner`,
       `  formatOptions   ← feeds the visible output and aria-valuetext, so they cannot drift`,
       `  hideValue size isDisabled onChange onChangeEnd />`,
     ].join("\n"),

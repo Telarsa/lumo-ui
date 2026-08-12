@@ -12,14 +12,13 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * hydration, with JavaScript disabled, and in a printed page. The observer only
  * decides which link is MARKED.
  *
- * ── THE SECTIONS ARE REAL PAGE SECTIONS, NOT A SCROLLING BOX ────────────────
+ * ── THESE SECTIONS USE THE PAGE; NESTED ROOTS ARE ALSO SUPPORTED ────────────
  *
- * `Scrollspy` observes against the VIEWPORT — its `rootMargin` shrinks the
- * observation band to a strip near the top of the window — so a demo that put
- * the sections inside an `overflow-y-auto` card would never fire, and would be
- * a picture of the component rather than the component. The sections here are
- * ordinary page content and the thing to scroll is the page. Scroll it and
- * watch the rail move.
+ * These examples omit `scrollRootRef`, so `Scrollspy` observes the viewport
+ * and its `rootMargin` shrinks the observation band near the top of the page.
+ * A dialog or settings pane can instead pass its scrolling element through
+ * `scrollRootRef`; bottom detection and observation then use that element, and
+ * `onActiveChange` reports the same id that receives `aria-current`.
  *
  * `document.getElementById` is global, so ids are chosen page-wide rather than
  * per example: the first two examples own disjoint sets — `spy-*` and `steps-*`
@@ -170,11 +169,13 @@ export const EXAMPLES: ComponentExamples = {
         "A table of contents that knows where the reader is. Every link is a real href that works with JavaScript disabled; the observer only decides which one is MARKED, and it does that with aria-current=\"location\" rather than a class. The marked section is the TOPMOST visible one, not the most visible one — otherwise a short section between two long ones never gets its turn.",
     },
     composition: [
-      `<Scrollspy label items topOffset />`,
+      `<Scrollspy label items topOffset scrollRootRef onActiveChange />`,
       ``,
       `items      [{ id, label }] — id is the heading's own id, href becomes #id`,
       `label      names the <nav>; a page has several, and unnamed ones are indistinguishable`,
       `topOffset  how far down the viewport the reader's eye line sits`,
+      `scrollRootRef  optional nested scroll container; omit for the viewport`,
+      `onActiveChange receives the id that carries aria-current="location"`,
     ].join("\n"),
     parts: [
       {

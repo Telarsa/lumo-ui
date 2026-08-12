@@ -1,9 +1,9 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useId, useRef, useState } from "react";
 import { Field } from "@base-ui/react/field";
 import { attr } from "@lumo-ui/base-ui-ssr";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, type LumoNode, type ValidationError } from "@lumo-ui/core";
 import { dateInputVariants } from "./calendar.variants.ts";
 import { DateInput, type DateInputHandle, type DateInputSize } from "./date-input.tsx";
 import { useTimeFieldState, type TimeFields } from "./date-field-state.ts";
@@ -61,13 +61,11 @@ export { dateInputVariants };
  *
  * ═══ BOUNDS ════════════════════════════════════════════════════════════════
  *
- * `minValue`/`maxValue` are not accepted at all any more, rather than being
- * accepted and ignored. React Aria's bounds made an English, Latin-digited
- * `validationErrors` string reachable — the defect `strings.ts` documents at
- * length — and there is no validation engine here to replace it with. A prop
- * that silently does nothing is worse than an absent one: absent is a compile
- * error at the call site, and silent is a bug report six months later.
- * `errorMessage` remains, and it is the caller's own sentence.
+ * `minValue`/`maxValue` constrain committed values without inventing an error
+ * sentence. A typed value outside the inclusive range yields `null`; callers
+ * provide any visible/announced explanation through `errorMessage` or
+ * `validate`. The range is within one civil day—an overnight availability
+ * window is two ranges, not an inverted one.
  *
  * `"use client"`: the segment values are state.
  */
@@ -79,6 +77,18 @@ export interface TimeFieldProps {
   defaultValue?: TimeFields | null | undefined;
   /** Fires with three numbers, or `null` while any segment is empty. */
   onChange?: ((value: TimeFields | null) => void) | undefined;
+  /** Earliest time that may be committed, inclusive. */
+  minValue?: TimeFields | undefined;
+  /** Latest time that may be committed, inclusive. */
+  maxValue?: TimeFields | undefined;
+  /** Returns a caller-authored error for the current time, or `true` when valid. */
+  validate?: ((value: TimeFields | null) => ValidationError | true | null | undefined) | undefined;
+  /** Form field name. Values submit as `HH:mm:ss`. */
+  name?: string | undefined;
+  /** Associates the hidden form value with a form elsewhere in the document. */
+  form?: string | undefined;
+  /** Announces that the field needs a complete value. */
+  isRequired?: boolean | undefined;
   /**
    * How much of the time is editable. `minute` by default — a seconds segment
    * nobody asked for is a fourth tab stop on every time field.
@@ -104,6 +114,12 @@ export function TimeField({
   value,
   defaultValue,
   onChange,
+  minValue,
+  maxValue,
+  validate,
+  name,
+  form,
+  isRequired,
   granularity,
   hourCycle,
   description,
@@ -116,12 +132,40 @@ export function TimeField({
   inputClassName,
 }: TimeFieldProps) {
   const locale = useLumoLocale();
+  const [uncontrolledValue, setUncontrolledValue] = useState<TimeFields | null>(
+    defaultValue ?? null,
+  );
+  const validationValue = value !== undefined ? value : uncontrolledValue;
+  const validationResult = validate?.(validationValue);
+  const validationMessage =
+    validationResult === true || validationResult == null
+      ? undefined
+      : Array.isArray(validationResult)
+        ? validationResult[0]
+        : validationResult;
+  const effectiveError = errorMessage ?? validationMessage;
+  const scalar = (time: TimeFields) => time.hour * 3_600 + time.minute * 60 + time.second;
+  const outsideBounds =
+    validationValue !== null &&
+    ((minValue !== undefined && scalar(validationValue) < scalar(minValue)) ||
+      (maxValue !== undefined && scalar(validationValue) > scalar(maxValue)));
+  const submittedValue =
+    validationValue === null
+      ? ""
+      : [validationValue.hour, validationValue.minute, validationValue.second]
+          .map((part) => String(part).padStart(2, "0"))
+          .join(":");
 
   const state = useTimeFieldState({
     locale,
     ...optional("value", value),
     ...optional("defaultValue", defaultValue),
-    ...optional("onChange", onChange),
+    onChange: (next) => {
+      setUncontrolledValue(next);
+      onChange?.(next);
+    },
+    ...optional("minValue", minValue),
+    ...optional("maxValue", maxValue),
     ...optional("granularity", granularity),
     ...optional("hourCycle", hourCycle),
     ...optional("isDisabled", isDisabled),
@@ -131,7 +175,7 @@ export function TimeField({
   const labelId = useId();
   const descriptionId = useId();
   const errorId = useId();
-  const invalid = isInvalid ?? (errorMessage != null ? true : undefined);
+  const invalid = isInvalid ?? (effectiveError != null || outsideBounds ? true : undefined);
   const inputRef = useRef<DateInputHandle>(null);
 
   /*
@@ -140,7 +184,7 @@ export function TimeField({
    * bytes — measured on this branch and recorded in `date-field.tsx`'s header.
    */
   const describedBy =
-    [description != null ? descriptionId : null, errorMessage != null ? errorId : null]
+    [description != null ? descriptionId : null, effectiveError != null ? errorId : null]
       .filter((id): id is string => id != null)
       .join(" ") || undefined;
 
@@ -173,6 +217,8 @@ export function TimeField({
         state={state}
         locale={locale}
         labelId={labelId}
+        {...optional("aria-invalid", invalid === true ? true : undefined)}
+        {...optional("aria-required", isRequired === true ? true : undefined)}
         {...optional("describedBy", describedBy)}
         {...optional("isDisabled", isDisabled)}
         {...optional("isReadOnly", isReadOnly)}
@@ -180,6 +226,15 @@ export function TimeField({
         {...optional("size", size)}
         {...optional("className", inputClassName)}
       />
+
+      {name !== undefined ? (
+        <input
+          type="hidden"
+          name={name}
+          value={submittedValue}
+          {...optional("form", form)}
+        />
+      ) : null}
 
       {description != null ? (
         <Field.Description id={descriptionId} className={descriptionVariants()}>
@@ -192,9 +247,9 @@ export function TimeField({
        * against a native control's `ValidityState`, and there is no native
        * control here.
        */}
-      {errorMessage != null ? (
+      {effectiveError != null ? (
         <div id={errorId} className={fieldErrorVariants()}>
-          {errorMessage}
+          {effectiveError}
         </div>
       ) : null}
     </Field.Root>

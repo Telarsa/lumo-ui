@@ -50,8 +50,8 @@ import { cn, type LumoNode } from "@lumo-ui/core";
  *
  * The second is what this does, and the `rootMargin` is what implements it: a
  * large negative bottom inset shrinks the observation band to a strip near the
- * top of the viewport, so "intersecting" means "at the reader's eye line"
- * rather than "somewhere on screen".
+ * top of the viewport or supplied scroll root, so "intersecting" means "at the
+ * reader's eye line" rather than "somewhere on screen".
  *
  * ═══ THE LAST SECTION, WHICH EVERY SCROLLSPY GETS WRONG ═════════════════════
  *
@@ -101,13 +101,22 @@ export interface ScrollspyProps {
   label: string;
   items: readonly ScrollspyItem[];
   /**
-   * How far down the viewport the reader's eye line sits, as a CSS length.
+   * How far down the viewport or supplied scroll root the eye line sits.
    *
    * The default clears a typical sticky header. Raise it if yours is taller —
    * the symptom of getting this wrong is a contents list that marks the section
    * ABOVE the one on screen, because the strip is still behind the header.
    */
   topOffset?: string;
+  /**
+   * Scroll container to observe. Omit it for the document viewport.
+   *
+   * A ref keeps the contract usable when the container is created in the same
+   * render as the Scrollspy. The effect reads `current` after both have mounted.
+   */
+  scrollRootRef?: React.RefObject<HTMLElement | null> | undefined;
+  /** Called when the section carrying `aria-current="location"` changes. */
+  onActiveChange?: ((id: string | null) => void) | undefined;
   className?: string | undefined;
 }
 
@@ -115,17 +124,33 @@ export function Scrollspy({
   label,
   items,
   topOffset = "80px",
+  scrollRootRef,
+  onActiveChange,
   className,
 }: ScrollspyProps) {
   const [activeId, setActiveId] = React.useState<string | null>(null);
+  const activeIdRef = React.useRef<string | null>(null);
+  const commitActive = React.useCallback(
+    (id: string | null) => {
+      if (activeIdRef.current === id) return;
+      activeIdRef.current = id;
+      setActiveId(id);
+      onActiveChange?.(id);
+    },
+    [onActiveChange],
+  );
 
   React.useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
     if (items.length === 0) return;
 
+    const scrollRoot = scrollRootRef?.current ?? null;
     const elements = items
       .map((item) => document.getElementById(item.id))
-      .filter((el): el is HTMLElement => el !== null);
+      .filter(
+        (el): el is HTMLElement =>
+          el !== null && (scrollRoot === null || scrollRoot.contains(el)),
+      );
     if (elements.length === 0) return;
 
     /*
@@ -139,14 +164,15 @@ export function Scrollspy({
       // The last-section rule, which is not an optimisation: a short final
       // section never reaches the strip because the page runs out of scroll
       // first, so without this the last entry can never be marked.
-      const atBottom =
-        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+      const atBottom = scrollRoot
+        ? scrollRoot.scrollTop + scrollRoot.clientHeight >= scrollRoot.scrollHeight - 2
+        : window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
       if (atBottom) {
-        setActiveId(items.at(-1)?.id ?? null);
+        commitActive(elements.at(-1)?.id ?? null);
         return;
       }
       const topmost = elements.find((el) => inStrip.has(el.id));
-      if (topmost) setActiveId(topmost.id);
+      if (topmost) commitActive(topmost.id);
     };
 
     const observer = new IntersectionObserver(
@@ -158,6 +184,7 @@ export function Scrollspy({
         pick();
       },
       {
+        root: scrollRoot,
         // The strip. A large negative bottom inset means "intersecting" is
         // "at the reader's eye line", not "somewhere on screen".
         rootMargin: `-${topOffset} 0px -70% 0px`,
@@ -168,14 +195,15 @@ export function Scrollspy({
     // The bottom rule is a SCROLL fact, not an intersection one, so it needs
     // its own listener — the observer does not fire again once the last
     // section has settled.
-    window.addEventListener("scroll", pick, { passive: true });
+    const scrollTarget = scrollRoot ?? window;
+    scrollTarget.addEventListener("scroll", pick, { passive: true });
     pick();
 
     return () => {
       observer.disconnect();
-      window.removeEventListener("scroll", pick);
+      scrollTarget.removeEventListener("scroll", pick);
     };
-  }, [items, topOffset]);
+  }, [commitActive, items, scrollRootRef, topOffset]);
 
   return (
     <nav aria-label={label} data-lumo="" className={cn(scrollspyVariants(), className)}>

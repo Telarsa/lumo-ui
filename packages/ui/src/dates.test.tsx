@@ -334,6 +334,64 @@ describe("segment entry across month boundaries", () => {
     expect(committed.at(-1)?.hour).toBe(0);
     expect(committed.at(-1)?.minute).toBe(45);
   });
+
+  it("the TIME field does not commit a value after maxValue", () => {
+    const committed: (Time | null)[] = [];
+    const { container } = live(
+      <TimeField
+        label="ساعت"
+        defaultValue={new Time(22, 30)}
+        maxValue={new Time(22, 59)}
+        onChange={(v) => committed.push(v as Time | null)}
+      />,
+    );
+    const hour = segment(container as HTMLElement, "hour");
+    hour.focus();
+    fireEvent.keyDown(hour, { key: "ArrowUp" });
+    expect(committed.at(-1)).toBeNull();
+  });
+
+  it("the TIME field renders and associates its caller-authored validation result", () => {
+    const invalid = ssr(
+      <TimeField
+        label="ساعت"
+        value={new Time(23, 30)}
+        validate={(time) => (time !== null && time.hour >= 23 ? "خارج از ساعت کاری" : true)}
+      />,
+    );
+    const errorId = /id="([^"]+)"[^>]*>خارج از ساعت کاری<\/div>/.exec(invalid)?.[1];
+    expect(errorId).toBeDefined();
+    expect(invalid).toContain('aria-invalid="true"');
+    expect(invalid).toMatch(new RegExp(`aria-describedby="[^"]*${errorId ?? "missing"}`));
+
+    const valid = ssr(
+      <TimeField
+        label="ساعت"
+        value={new Time(9, 30)}
+        validate={(time) => (time !== null && time.hour >= 23 ? "خارج از ساعت کاری" : true)}
+      />,
+    );
+    expect(valid).not.toContain("خارج از ساعت کاری");
+    expect(valid).not.toContain('aria-invalid="true"');
+  });
+
+  it("the TIME field submits an ISO time and announces when it is required", () => {
+    const { container } = live(
+      <form>
+        <TimeField
+          label="ساعت"
+          name="appointment"
+          value={new Time(9, 5, 7)}
+          granularity="second"
+          isRequired
+        />
+      </form>,
+    );
+    const group = container.querySelector('[role="group"]');
+    expect(group?.getAttribute("aria-required")).toBe("true");
+    const data = new FormData(container.querySelector("form") as HTMLFormElement);
+    expect(data.get("appointment")).toBe("09:05:07");
+  });
 });
 
 describe("today is derived from the persian calendar, not from Gregorian", () => {

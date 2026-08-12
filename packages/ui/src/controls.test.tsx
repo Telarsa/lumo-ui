@@ -126,6 +126,22 @@ describe("Slider — the value is a number, twice", () => {
     expect(document.querySelector("output")?.textContent).toBe("40");
   });
 
+  it("submits through its owning form", () => {
+    render(
+      <form id="budget-form">
+        <Slider
+          label="بودجه"
+          locale="fa-IR"
+          name="budget"
+          form="budget-form"
+          defaultValue={40}
+        />
+      </form>,
+    );
+    const form = document.querySelector("form") as HTMLFormElement;
+    expect(new FormData(form).get("budget")).toBe("40");
+  });
+
   it("POISON: raw React Aria ships Latin digits and cannot be told otherwise", () => {
     render(
       <AriaSlider aria-label="بودجه" defaultValue={40}>

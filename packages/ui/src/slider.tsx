@@ -223,6 +223,10 @@ interface SliderPropsBase
    * `isWheelDisabled`, which is why that one is translated and this one is not.
    */
   step?: number;
+  /** Form field name for the range input. */
+  name?: string | undefined;
+  /** Associates the range input with a form elsewhere in the document. */
+  form?: string | undefined;
 }
 
 export interface SliderProps extends SliderPropsBase, SliderVariantProps {
@@ -264,10 +268,10 @@ export function Slider({
   minValue,
   maxValue,
   isDisabled,
+  name,
+  form,
   onChange,
   onChangeEnd,
-  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
-  //   isRequired  Base UI's required lives on Field.Root, not Slider.Root
   slot: _slot,
   style: _style,
   ...rest
@@ -286,6 +290,8 @@ export function Slider({
         {...attr("min", minValue)}
         {...attr("max", maxValue)}
         {...attr("disabled", isDisabled)}
+        {...attr("name", name)}
+        {...attr("form", form)}
         {...attr(
           "onValueChange",
           onChange === undefined

@@ -120,7 +120,7 @@ const COPY = {
     name: "نام دسترس‌پذیر",
     empty: "بدون نام دسترس‌پذیر",
     none: "این نمونه هیچ کنترل قابل‌تعاملی ندارد.",
-    count: (n) => `${n} کنترل بررسی شد`,
+    count: (n) => `${formatCount(n, "fa-IR")} کنترل بررسی شد`,
   },
   "en-US": {
     intro:
@@ -129,7 +129,7 @@ const COPY = {
     name: "Accessible name",
     empty: "No accessible name",
     none: "This demo has no interactive controls.",
-    count: (n) => `${n} controls checked`,
+    count: (n) => `${formatCount(n, "en-US")} control${n === 1 ? "" : "s"} checked`,
   },
 };
 
@@ -176,7 +176,7 @@ function renderPanel(controls, locale) {
     `<div class="overflow-hidden rounded-lg border border-border">` +
     `<div class="border-b border-border bg-surface-sunken px-4 py-3"><p class="text-sm text-fg-muted">${escapeHtml(t.intro)}</p></div>` +
     body +
-    `<p class="border-t border-border px-4 py-2 text-xs text-fg-subtle">${escapeHtml(t.count(formatCount(controls.length, locale)))}</p>` +
+    `<p class="border-t border-border px-4 py-2 text-xs text-fg-subtle">${escapeHtml(t.count(controls.length))}</p>` +
     `</div>`
   );
 }
@@ -191,7 +191,7 @@ async function htmlFiles(dir) {
   return out;
 }
 
-const SLOT_RE = /<div\b[^>]*\bdata-lumo-evidence-slot="[^"]*"[^>]*><\/div>/;
+const SLOT_RE = /(<div\b[^>]*\bdata-lumo-evidence-slot="[^"]*"[^>]*>)(<\/div>)/;
 const LOCALE_RE = /data-lumo-evidence-locale="([^"]*)"/;
 
 async function processFile(path) {
@@ -236,7 +236,11 @@ async function processFile(path) {
   }
 
   const panel = renderPanel(controls, locale);
-  const next = raw.slice(0, slotMatch.index) + panel + raw.slice(slotMatch.index + slotMatch[0].length);
+  const hydratedSlot = `${slotMatch[1]}${panel}${slotMatch[2]}`;
+  const next =
+    raw.slice(0, slotMatch.index) +
+    hydratedSlot +
+    raw.slice(slotMatch.index + slotMatch[0].length);
   await writeFile(path, next, "utf8");
   return true;
 }

@@ -143,6 +143,32 @@ describe("the collapsed value resolves the selected key to its item's label", ()
     );
     expect(collapsedValue(html)).not.toMatch(/[A-Za-z]/);
   });
+
+  it("validates the selected key and renders the caller's message", () => {
+    const renderCity = (selectedKey: string) =>
+      renderToStaticMarkup(
+        <Select
+          placeholder="یک شهر انتخاب کنید"
+          aria-label="شهر"
+          selectedKey={selectedKey}
+          validate={(key) => (key === "thr" ? "این شهر مجاز نیست" : true)}
+        >
+          <SelectTrigger />
+          <SelectPopover>
+            <SelectItem id="thr">تهران</SelectItem>
+            <SelectItem id="isf">اصفهان</SelectItem>
+          </SelectPopover>
+        </Select>,
+      );
+
+    const invalid = renderCity("thr");
+    expect(invalid).toContain('aria-invalid="true"');
+    expect(invalid).toContain("این شهر مجاز نیست");
+
+    const valid = renderCity("isf");
+    expect(valid).not.toContain("aria-invalid");
+    expect(valid).not.toContain("این شهر مجاز نیست");
+  });
 });
 
 describe("the RSC boundary, which is where the first fix silently did nothing", () => {

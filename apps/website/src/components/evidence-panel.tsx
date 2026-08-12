@@ -43,8 +43,11 @@ import type { Locale } from "@lumo-ui/core";
  *      reasons given there (see that script for the full account, including
  *      why the shim is required and why the computation is not wrapped in
  *      try/catch).
- *   4. Replaces the placeholder this component renders — `[data-lumo-evidence-
- *      slot]`, empty on purpose — with the real table.
+ *   4. Fills the placeholder this component renders — `[data-lumo-evidence-
+ *      slot]`, empty on purpose — with the real table. The slot itself stays
+ *      in the document: React hydrates it as an intentionally opaque HTML
+ *      boundary, so it neither reports a mismatch nor deletes the build-time
+ *      evidence.
  *
  * `next build && node inject-evidence.mjs` is a single `&&`-chained command in
  * `apps/website/package.json`'s `build` script: if the injector throws (the
@@ -63,7 +66,8 @@ export function EvidencePanel({ locale }: EvidencePanelProps) {
     <div
       data-lumo-evidence-slot=""
       data-lumo-evidence-locale={locale}
-      aria-hidden="true"
+      suppressHydrationWarning
+      dangerouslySetInnerHTML={{ __html: "" }}
     />
   );
 }
