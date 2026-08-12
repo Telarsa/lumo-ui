@@ -13,6 +13,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { Toolbar, ToolbarItem, ToolbarSeparator } from "./toolbar.tsx";
+import { ToggleButton } from "./toggle-group.tsx";
 
 afterEach(cleanup);
 
@@ -75,18 +76,97 @@ describe("Toolbar — one named stop, and membership is now explicit", () => {
     expect(items.map((i) => i.getAttribute("tabindex"))).toEqual(["0", "-1"]);
   });
 
-  it("every item is Tab-reachable in the FIRST BYTE, before any JavaScript", () => {
+  it("serves EXACTLY ONE tab stop in the FIRST BYTE, before any JavaScript", () => {
     /**
-     * The gap `ToolbarItem` closes. Base UI elects the tabbable member in an
-     * effect, so bare Base UI serves `tabindex="-1"` on EVERY item and the
-     * toolbar cannot be reached by Tab at all until hydration; React Aria served
-     * `tabindex="0"`. It self-heals, so the mounted assertion above passes
-     * either way — only the served bytes show it.
+     * The gap `ToolbarItem` closes, and the OVERSHOOT it used to close it with.
+     *
+     * Base UI elects the tabbable member in an effect, so bare Base UI serves
+     * `tabindex="-1"` on EVERY item and the toolbar cannot be reached by Tab at
+     * all until hydration; React Aria served `tabindex="0"`. It self-heals, so
+     * the mounted assertion above passes either way — only the served bytes
+     * show it.
+     *
+     * ── THIS ASSERTION WAS REVERSED, AND THAT IS THE POINT ─────────────────
+     *
+     * It used to read `tabindexes.every((t) => t === "0")`. That answered the
+     * TOTAL failure with the DEGRADED one — N stops for a widget whose role
+     * exists to collapse them — which is the React Aria TagGroup failure
+     * `useCompositeTabStop`'s header names and `tag-group.tsx` was written to
+     * fix. Measured on the export before this commit, the five toolbars in the
+     * build served 2, 3, 3, 4 and 5 stops.
+     *
+     * The claim is strictly stronger than the one it replaces: zero stops still
+     * fails it, and N stops now fails it too.
      */
     const html = renderToStaticMarkup(wrapped);
     const tabindexes = [...html.matchAll(/tabindex="(-?\d)"/g)].map((m) => m[1]);
-    expect(tabindexes.length).toBe(2);
-    expect(tabindexes.every((t) => t === "0")).toBe(true);
+    expect(tabindexes).toEqual(["0", "-1"]);
+  });
+
+  it("designates the FIRST ToolbarItem, not the first child", () => {
+    /**
+     * A separator ahead of the items must not swallow the designation — it is
+     * not a composite member and can never hold a stop. The `-1` fallback in
+     * `Toolbar` would be reached if the search were by child position, and the
+     * toolbar would then serve N stops again with nothing to say so.
+     */
+    const html = renderToStaticMarkup(
+      <Toolbar label="قالب‌بندی متن">
+        <ToolbarSeparator />
+        <ToolbarItem>
+          <button type="button">پررنگ</button>
+        </ToolbarItem>
+        <ToolbarItem>
+          <button type="button">مورب</button>
+        </ToolbarItem>
+      </Toolbar>,
+    );
+    expect([...html.matchAll(/tabindex="(-?\d)"/g)].map((m) => m[1])).toEqual(["0", "-1"]);
+  });
+
+  it("finds the first item through a caller's OWN component", () => {
+    /**
+     * A container-side designation could not do this — `Toolbar` cannot see
+     * through `<Pair/>` any more than it can see through an RSC boundary, and
+     * the version that tried served a stop on every item instead. The claim
+     * counter is read by the item, so nesting is transparent to it.
+     */
+    function Pair() {
+      return (
+        <>
+          <ToolbarItem>
+            <button type="button">پررنگ</button>
+          </ToolbarItem>
+          <ToolbarItem>
+            <button type="button">مورب</button>
+          </ToolbarItem>
+        </>
+      );
+    }
+    const html = renderToStaticMarkup(
+      <Toolbar label="قالب‌بندی متن">
+        <Pair />
+      </Toolbar>,
+    );
+    expect([...html.matchAll(/tabindex="(-?\d)"/g)].map((m) => m[1])).toEqual(["0", "-1"]);
+  });
+
+  it("a ToolbarItem outside a Toolbar THROWS — so the `null` claim is unreachable", () => {
+    /**
+     * `ToolbarItem` treats a missing claim counter as "I am the only member and
+     * I take the stop", which would be the degraded fallback. It is never
+     * reached: `Toolbar.Button` demands `ToolbarRootContext` and Base UI throws
+     * before this file's branch can run. Asserted so that the branch is known to
+     * be a belt rather than a road — and so that a future Base UI that stops
+     * throwing turns this red instead of quietly opening an ungraded shape.
+     */
+    expect(() =>
+      renderToStaticMarkup(
+        <ToolbarItem>
+          <button type="button">تنها</button>
+        </ToolbarItem>,
+      ),
+    ).toThrow(/ToolbarRootContext/);
   });
 
   it("the separator is not a focus stop and derives its own perpendicular", () => {
@@ -127,5 +207,55 @@ describe("Toolbar — one named stop, and membership is now explicit", () => {
     expect(html).toContain("lumo-child");
     // One <button>, not a button inside a button.
     expect(html.split("<button").length - 1).toBe(1);
+  });
+});
+
+describe("ToolbarItem reaches a COMPONENT child, not only an intrinsic one", () => {
+  /**
+   * The defect this pins was silent in both directions and shipped for a week.
+   *
+   * `ToolbarItem` hands its child to `Toolbar.Button`'s `render`, and
+   * `useRenderElement` gives a COMPONENT render target its merged props as
+   * ordinary React props. `ToggleButton` destructured a closed prop list and
+   * spread nothing, so `ref`, `tabIndex`, `data-focusable` and
+   * `data-orientation` were all dropped — no registration, no arrow-key reach,
+   * and a natively-tabbable `<button>` left over as a permanent extra stop.
+   *
+   * Measured on the export before the fix: `FormattingExample` served four Tab
+   * stops for four controls, three of which were toggles that the toolbar's
+   * composite had never heard of.
+   */
+  const withToggles = (
+    <Toolbar label="قالب‌بندی متن">
+      <ToolbarItem>
+        <ToggleButton size="sm" aria-label="پررنگ">
+          ب
+        </ToggleButton>
+      </ToolbarItem>
+      <ToolbarItem>
+        <ToggleButton size="sm" aria-label="کج">
+          ک
+        </ToggleButton>
+      </ToolbarItem>
+    </Toolbar>
+  );
+
+  it("registers a ToggleButton in the composite", () => {
+    const html = renderToStaticMarkup(withToggles);
+    expect(html.split("data-focusable").length - 1).toBe(2);
+  });
+
+  it("is ONE tab stop, and the toggles are the members", () => {
+    const html = renderToStaticMarkup(withToggles);
+    expect([...html.matchAll(/tabindex="(-?\d)"/g)].map((m) => m[1])).toEqual(["0", "-1"]);
+    // No `<button>` without a tabindex — that is what made the old shape a
+    // permanent stop rather than a first-byte one.
+    expect([...html.matchAll(/<button(?![^>]*tabindex)[^>]*>/g)]).toHaveLength(0);
+  });
+
+  it("moves the roving stop once mounted, which proves the ref landed too", () => {
+    render(withToggles);
+    const items = screen.getAllByRole("button");
+    expect(items.map((i) => i.getAttribute("tabindex"))).toEqual(["0", "-1"]);
   });
 });

@@ -194,6 +194,18 @@ export interface ToggleButtonProps extends VariantProps<typeof toggleButtonVaria
   "aria-label"?: string | undefined;
   children?: LumoNode;
   className?: string | undefined;
+  /**
+   * NOT for callers, and the reason it has to be declared is a measured defect.
+   *
+   * When a toggle is placed in an OUTER composite — `<ToolbarItem><ToggleButton/>`
+   * — `Toolbar.Button` adopts this component through `render`, and
+   * `useRenderElement` hands a COMPONENT render target its merged props as
+   * ordinary React props: `ref`, `tabIndex`, `data-focusable`,
+   * `data-orientation` and the composite's handlers all arrive here. This
+   * function used to destructure a CLOSED list and spread nothing, so every one
+   * of them was dropped on the floor. See the header.
+   */
+  tabIndex?: number | undefined;
 }
 
 /**
@@ -207,6 +219,35 @@ export interface ToggleButtonProps extends VariantProps<typeof toggleButtonVaria
  * here because the underlying `aria-label` is already required by the same rule
  * that gave button.tsx its `IconButton`, and inventing a second spelling of the
  * same prop would let the two drift.
+ *
+ * ═══ IT NOW FORWARDS WHAT AN OUTER COMPOSITE HANDS IT ══════════════════════
+ *
+ * Until 12 Aug 2026 this function destructured a closed prop list and spread
+ * NOTHING, which made `<ToolbarItem><ToggleButton/></ToolbarItem>` a silent
+ * no-op. Measured on the export of the commit before this one, on the library's
+ * own first toolbar example (`apps/website/src/examples/toolbar.tsx`,
+ * `FormattingExample`), all three toggles served:
+ *
+ *     <button type="button" data-pressed aria-disabled="false" aria-pressed …>
+ *
+ * — no `tabindex`, no `data-focusable`, no `data-orientation`. Compare the
+ * `IconButton` in the same toolbar, which spreads its rest and served
+ * `data-orientation="horizontal" data-focusable="" tabindex="0"`.
+ *
+ * Two consequences, and only the second is visible from inside a browser:
+ *
+ *  1. **No registration.** The composite's `ref` was dropped too, so
+ *     `useCompositeListItem` never registered the element and the arrow keys
+ *     could not reach it. This is precisely the failure `ToolbarItem` was added
+ *     to prevent, happening THROUGH `ToolbarItem`.
+ *  2. **A permanent extra Tab stop.** A `<button>` with no `tabindex` is
+ *     natively tabbable, forever — not a first-byte gap that hydration closes.
+ *     Five of the thirty over-stopped composites in that export were this.
+ *
+ * `rest` is spread LAST, after `tabStop`, on purpose: an outer composite's
+ * `tabIndex` must beat this component's own group-level pre-hydration stop.
+ * A toggle cannot be the designated stop of two composites at once, and the
+ * outer one is the one whose Tab order the reader actually walks.
  */
 export function ToggleButton({
   id,
@@ -218,6 +259,7 @@ export function ToggleButton({
   className,
   size,
   children,
+  ...rest
 }: ToggleButtonProps) {
   /*
    * A STANDALONE toggle already serves `tabindex="0"` — measured — because it is
@@ -239,6 +281,9 @@ export function ToggleButton({
       {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
       {...(ariaLabel === undefined ? {} : { "aria-label": ariaLabel })}
       className={cn(toggleButtonVariants({ size }), className)}
+      // LAST. See the header: this is what an outer composite injected, and it
+      // must beat both this component's own props and `tabStop` above.
+      {...rest}
     >
       {children}
     </BaseToggle>

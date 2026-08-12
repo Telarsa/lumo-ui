@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { Menubar as BaseMenubar } from "@base-ui/react/menubar";
+import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 // `MenubarButtonProps` keeps the prop names the public API froze; the shape is
 // Lumo's own now. See `@lumo-ui/core`'s `props.ts`.
 import { type ButtonPropsBase, cn, type LumoNode } from "@lumo-ui/core";
@@ -144,15 +145,33 @@ export const menubarButtonVariants = cva(
 );
 
 /**
- * True once mounted. See toolbar.tsx's `useHasMounted` for the argument; it is
- * duplicated rather than shared because the two files are COPIED into consuming
- * repos independently and a cross-import would drag a toolbar into a menubar.
+ * Which trigger holds the pre-hydration tab stop, decided by the `Menubar`.
+ *
+ * ── WHY THIS EXISTS, AND WHAT IT REPLACED ──────────────────────────────────
+ *
+ * `MenubarButton` used to serve `tabIndex={0}` on EVERY trigger until mount, on
+ * the argument written out in toolbar.tsx. Measured on the export of the commit
+ * before this one, all three triggers of the menubar demo served `tabindex="0"`
+ * in both locales and on both routes — six over-stopped menubars — so the row
+ * announced as ONE container and cost three Tab presses to walk past.
+ *
+ * The stop is now `useCompositeTabStop` from `@lumo-ui/base-ui-ssr`, the same
+ * primitive tabs, tag-group, segmented-control and toggle-group already use,
+ * and exactly one trigger is designated to hold it. toolbar.tsx's header
+ * carries the full argument — the measured table showing that BOTH "0 stops"
+ * and "N stops" are failures, why the choice is not a counter, and why the
+ * fallback when nothing can be designated is the old every-trigger behaviour
+ * rather than no stop at all.
+ *
+ * A menubar designates by CHILD rather than by trigger type, and it has to:
+ * `Menubar`'s children are `MenuTrigger`s, and the `MenubarButton` is a
+ * grandchild that the row cannot see. So the first valid element child is
+ * wrapped in a `true` provider and the rest in `false`, and the one
+ * `MenubarButton` inside each reads its own answer. There is exactly one
+ * `MenubarButton` per `MenuTrigger` — it is the trigger's first child by
+ * contract, and `MenuTrigger` hands only that child to `Menu.Trigger`.
  */
-function useHasMounted(): boolean {
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
-  return mounted;
-}
+const MenubarStopContext = React.createContext<boolean | null>(null);
 
 export interface MenubarProps {
   /**
@@ -177,6 +196,10 @@ export interface MenubarProps {
 }
 
 export function Menubar({ label, className, children, isDisabled }: MenubarProps) {
+  // Designate the one trigger that holds the served tab stop. See
+  // `MenubarStopContext`, and toolbar.tsx's header for the whole argument.
+  const parts = React.Children.toArray(children as React.ReactNode);
+  const designated = parts.findIndex((part) => React.isValidElement(part));
   return (
     <BaseMenubar
       data-lumo=""
@@ -185,7 +208,16 @@ export function Menubar({ label, className, children, isDisabled }: MenubarProps
       {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
       className={cn(menubarVariants(), className)}
     >
-      {children as React.ReactNode}
+      {designated === -1
+        ? // Nothing to designate — an empty menubar has no stop to give.
+          (children as React.ReactNode)
+        : parts.map((part, index) => (
+            // Renders no element: the composite's children stay where
+            // `CompositeRoot` expects them in the DOM.
+            <MenubarStopContext.Provider key={index} value={index === designated}>
+              {part}
+            </MenubarStopContext.Provider>
+          ))}
     </BaseMenubar>
   );
 }
@@ -239,7 +271,13 @@ export function MenubarButton({
   tabIndex: injectedTabIndex,
   ...rest
 }: MenubarButtonProps) {
-  const mounted = useHasMounted();
+  /*
+   * `null` — no menubar around this button — falls back to taking the stop: a
+   * `MenubarButton` outside a row is its own only member. See
+   * `MenubarStopContext` and toolbar.tsx's header.
+   */
+  const designated = React.useContext(MenubarStopContext);
+  const tabStop = useCompositeTabStop(designated !== false);
   return (
     <button
       type="button"
@@ -250,12 +288,19 @@ export function MenubarButton({
       /*
        * LAST, on purpose, and it is the whole fix.
        *
-       * Before mount: 0, so the row is Tab-reachable in the first byte — the
-       * engine serves -1 on every trigger and elects the tabbable one in an
-       * effect. After mount: whatever the composite injected, so the roving
-       * tabindex owns it and the menubar is one Tab stop rather than N.
+       * Before mount, on the ONE designated trigger: 0, so the row is
+       * Tab-reachable in the first byte and is still a single stop — the engine
+       * serves -1 on every trigger and elects the tabbable one in an effect.
+       * After mount, and on every other trigger: whatever the composite
+       * injected, so the roving tabindex owns it.
+       *
+       * `useCompositeTabStop` returns an EMPTY OBJECT rather than
+       * `{tabIndex: undefined}` when it is not the holder, which is why this is
+       * a spread with a fallback rather than a ternary — under
+       * `exactOptionalPropertyTypes` the absent key is what leaves the
+       * composite's own value alone.
        */
-      tabIndex={mounted ? injectedTabIndex : 0}
+      {...(tabStop.tabIndex === undefined ? { tabIndex: injectedTabIndex } : tabStop)}
     >
       {children as React.ReactNode}
     </button>

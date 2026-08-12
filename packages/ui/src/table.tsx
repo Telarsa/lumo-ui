@@ -1426,9 +1426,45 @@ export function ResizableTableContainer({
  * The pointer drag is TanStack's `getResizeHandler()`; the keyboard resize
  * (arrow keys nudging a column's width) is NOT implemented, and is listed with
  * typeahead in the file header as a capability React Aria supplied and this
- * does not. The handle is focusable and named, so it is discoverable and not
- * yet actionable from the keyboard — which is an honest partial rather than a
- * pretend-complete control.
+ * does not.
+ *
+ * ═══ `tabIndex={-1}`, AND IT IS A TRADE RATHER THAN A TIDY-UP ══════════════
+ *
+ * This handle used to carry no `tabindex` at all, which makes a `<button>`
+ * natively tabbable — so every resizable column added ONE Tab stop to a grid
+ * whose whole contract is that it is ONE. Measured on the export of the commit
+ * before this one, `view/fa/table` and `view/en/table`, and both
+ * `components/table` routes:
+ *
+ *     role="grid"  tabbable descendants  2   ← the select-all checkbox (the
+ *                                              grid's roving stop) and this
+ *                                              handle
+ *
+ * That is the same defect `TableWidgetCell` was added to close one commit
+ * earlier — `<Cell><IconButton/></Cell>` serving an extra stop per row — in the
+ * one place the carve-out did not reach, because the handle is not in a cell of
+ * its own: it lives INSIDE a `columnheader` that is itself the roving stop and
+ * whose Enter/Space toggle the sort. There is no shape in which both the cell
+ * and the handle are Tab stops and the grid is still one.
+ *
+ * ARIA's answer for a widget inside a cell is inner navigation — Enter or F2
+ * enters the cell, arrows move between its widgets, Escape leaves — and
+ * `TableWidgetCell`'s header states plainly that this file does not implement
+ * it. So the handle is `-1`: reachable by pointer, reachable programmatically,
+ * and NOT a sequential stop.
+ *
+ * **What that costs, stated rather than glossed:** the handle can no longer be
+ * reached with the Tab key. It could not be USED from the keyboard either way —
+ * no key does anything to it — so what is lost is discovery of a control that
+ * announces «تغییر اندازهٔ ستون» and then answers no key at all. A stop that
+ * makes a promise the component cannot keep is the same shape of defect as a
+ * defaulted English label, which is the rule this library is built on.
+ *
+ * A caller who disagrees can pass `tabIndex={0}` — `props` is spread last — and
+ * they will then own the extra stop knowingly, which is the difference.
+ *
+ * TRIPWIRE: implement keyboard resize, and this handle joins the grid's inner
+ * navigation rather than reverting to a bare tabbable button.
  */
 export interface ColumnResizerProps
   extends Omit<ComponentProps<"button">, "children" | "className" | "aria-label" | "type"> {
@@ -1454,6 +1490,10 @@ export function ColumnResizer({ label, columnId, className, ...props }: ColumnRe
       data-lumo=""
       type="button"
       aria-label={label}
+      // Not a sequential tab stop — the grid is one stop and this handle sits
+      // inside the cell that holds it. See the header for the trade and its
+      // measurement; `props` below can still override it.
+      tabIndex={-1}
       {...(resizing ? { "data-resizing": "" } : {})}
       {...(header === undefined
         ? {}

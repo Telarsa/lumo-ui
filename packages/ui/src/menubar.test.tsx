@@ -102,10 +102,10 @@ describe("Menubar — a real, named role=menubar", () => {
     expect(items.map((i) => i.getAttribute("tabindex"))).toEqual(["0", "-1"]);
   });
 
-  it("every trigger is Tab-reachable in the FIRST BYTE, before any JavaScript", () => {
+  it("serves EXACTLY ONE tab stop in the FIRST BYTE, before any JavaScript", () => {
     /**
-     * The gap `MenubarButton` exists to close, and the reason it needs a
-     * hydration flag rather than a constant.
+     * The gap `MenubarButton` exists to close — and, since 12 Aug 2026, the
+     * OVERSHOOT it used to answer that gap with.
      *
      * Base UI elects the one tabbable member of a roving tabindex in an effect,
      * and an effect does not run on the server — so bare Base UI serves
@@ -113,11 +113,26 @@ describe("Menubar — a real, named role=menubar", () => {
      * at all until hydration. React Aria's row served `tabindex="0"`. The defect
      * self-heals, so the mounted test above passes either way; only the served
      * bytes show it, which is why this assertion is on `renderToStaticMarkup`.
+     *
+     * ── THIS ASSERTION WAS REVERSED, AND THAT IS THE POINT ─────────────────
+     *
+     * It used to read `tabindexes.every((t) => t === "0")`, pinning a fix that
+     * gave EVERY trigger the stop. That closed the total failure by
+     * reproducing the degraded one — three Tab stops for a row that announces
+     * itself as one container — which `useCompositeTabStop`'s own header names
+     * as React Aria's TagGroup failure and which `tag-group.tsx` was written to
+     * fix. Measured on the export before that commit: three `tabindex="0"`
+     * triggers on every menubar in the build.
+     *
+     * The claim below is strictly stronger than the one it replaces: it still
+     * fails if the row is unreachable (zero stops) AND it now fails if the row
+     * is walked through (N stops).
      */
     const html = renderToStaticMarkup(bar());
     const tabindexes = [...html.matchAll(/tabindex="(-?\d)"/g)].map((m) => m[1]);
-    expect(tabindexes.length).toBeGreaterThan(0);
-    expect(tabindexes.every((t) => t === "0")).toBe(true);
+    expect(tabindexes.filter((t) => t === "0")).toHaveLength(1);
+    // …and it is the FIRST trigger, not an arbitrary one.
+    expect(tabindexes[0]).toBe("0");
   });
 
   it("each trigger advertises its menu — the engine's wiring, not restated locally", () => {

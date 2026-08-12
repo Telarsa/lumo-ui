@@ -625,7 +625,174 @@ export const compositeTabStop: Rule = {
 
 
 /**
- * Rule 7 — a date must be in the READER'S calendar, not merely their language.
+ * Rule 7 — a composite widget must have at MOST one tab stop in the served bytes.
+ *
+ * `composite-tab-stop` above grades a FLOOR: it fires when a roving-tabindex
+ * widget has NO tab stop and is therefore unreachable. This grades the CEILING,
+ * which is the same contract read the other way. A `role="toolbar"` exists to
+ * collapse N controls into ONE Tab stop; a toolbar that serves five is not
+ * unreachable, it is the role telling the reader a lie, and every other tier is
+ * green on it.
+ *
+ * ── WHY IT EXISTS, AND THE THIRTY IT WAS WRITTEN AGAINST ────────────────────
+ *
+ * Measured on the export of the commit before this one, counting the tabbable
+ * descendants of every roving-tabindex container in 524 documents:
+ *
+ *     toolbar        12   ← `ToolbarItem` served tabindex=0 on EVERY item, and
+ *                           `ToggleButton` dropped the composite props it was
+ *                           handed, so its toggles were never members at all
+ *     menubar         6   ← `MenubarButton` served tabindex=0 on EVERY trigger
+ *     grid            6   ← `ColumnResizer` carried no tabindex: one extra stop
+ *                           per resizable column, permanently
+ *     row (in grid)   6   ← the same two elements, counted again one level down
+ *
+ * All four are fixed at the component. Nothing was exempted to reach green, and
+ * three of the four were not first-byte gaps at all — they survived hydration.
+ *
+ * ── THE CASE FOR SHIPPING IT, WHICH IS THAT IT ALREADY GRADES ──────────────
+ *
+ * The honest question CONTRIBUTING.md forces is whether a rule needs so many
+ * exemptions that it grades nothing. It does not, and the evidence is that the
+ * library was ALREADY mostly compliant before anybody wrote this:
+ *
+ *     tablist, radiogroup, listbox, tree, treegrid, menu — 0 findings in 524
+ *     documents, across 470 tablists and 322 radiogroups
+ *
+ * Every one of those uses `useCompositeTabStop`, which serves the stop on ONE
+ * designated member. The thirty findings were exactly the components that
+ * rolled their own hydration bridge instead. So the rule is not a new standard
+ * imposed on the library — it is the standard four-fifths of the library
+ * already meets, made checkable.
+ *
+ * ── THE ONE EXEMPTION, JUSTIFIED INDIVIDUALLY ──────────────────────────────
+ *
+ * `[data-lumo-extra-tab-stop]` discounts ONE control from a container's count.
+ * It is used in exactly one place in this repository and could not be avoided
+ * there: `apps/website/src/examples/toolbar.tsx`'s `RegistrationExample` is a
+ * worked demonstration OF THIS DEFECT. Its third control is deliberately not a
+ * `ToolbarItem`, and the example's own copy is "you never reach the third —
+ * which still renders, still has a name, and still takes a Tab stop OF ITS
+ * OWN". The extra stop is the lesson. There is no way to teach it without
+ * serving it, and removing it would leave the library's one documented account
+ * of the failure describing something the page no longer does.
+ *
+ * It is an attribute on the markup rather than a path allow-list for the same
+ * reason `data-lumo-latn` and `data-lumo-gregory` are: the exemption then lives
+ * next to the thing it exempts, where the person changing it will see it.
+ *
+ * It is deliberately narrow in three ways. It discounts the CONTROL, not the
+ * container — so the rest of that toolbar is still graded, and it would still
+ * fire if a second unregistered control appeared. It is a discount of one stop
+ * rather than a skip, so a marked control beside a real extra stop still fires.
+ * And putting the attribute on the CONTAINER does nothing at all: `closest`
+ * would otherwise match the container from every descendant and turn one
+ * attribute into a blanket skip for the whole widget, which is the exact
+ * weakening DECISIONS §13 rejects. Both narrowings carry negative twins in
+ * `gate.test.ts`.
+ *
+ * ── WHAT IS NOT EXEMPTED, AND WAS CONSIDERED ───────────────────────────────
+ *
+ * A nested composite. A `<ToggleButtonGroup>` inside a `<Toolbar>` is two
+ * registries neither of which can take the other's stop away, so the pair is
+ * two stops however either behaves — that was one of the thirty, and it was
+ * fixed by removing the nesting from the demo rather than by teaching the rule
+ * about it. `Toolbar` exposes no `Toolbar.Group`, so there is no correct
+ * spelling of that nesting to protect.
+ *
+ * ── AND WHAT IT DELIBERATELY DOES NOT GRADE ────────────────────────────────
+ *
+ * `role="row"`. The crude sweep that found the thirty counted rows as
+ * composites and reported six, every one of them the same two elements its
+ * parent `grid` had already reported. A row inside a grid is not a tab stop of
+ * its own — the GRID is the one stop, and the row is a structural container —
+ * so grading it double-counts a real defect and would double-count a fix as
+ * well. `COMPOSITE_ROLES` never contained it and it is not added.
+ *
+ * `aria-hidden`, `hidden` and `inert` subtrees are skipped, but `aria-hidden`
+ * is skipped for the CONTAINER only and not for the count: an `aria-hidden`
+ * element is removed from the accessibility tree and is still FOCUSABLE — that
+ * is the whole of axe's `aria-hidden-focus` rule — so discounting one would
+ * hide a real stop a Tab key still lands on. `inert` and `hidden` do remove an
+ * element from sequential navigation, so those are discounted.
+ */
+const CEILING_EXEMPT = "[data-lumo-extra-tab-stop]";
+
+/** Elements the platform makes focusable with no `tabindex` of their own. */
+const NATIVELY_FOCUSABLE = new Set(["A", "BUTTON", "INPUT", "SELECT", "TEXTAREA", "SUMMARY"]);
+
+/**
+ * Is this element in the SEQUENTIAL focus order?
+ *
+ * `tabindex` is parsed rather than compared to `"0"`: a positive tabindex is
+ * also a stop, and a page that reaches for one is usually doing something worse
+ * than the defect this rule grades. `Number.parseInt` and not `Number`, because
+ * `tabindex` is defined as a valid-integer parse and browsers accept `"0x"`
+ * shaped junk the same lenient way.
+ */
+function isTabbable(el: Element): boolean {
+  if (el.hasAttribute("disabled") || el.getAttribute("aria-disabled") === "true") return false;
+  // `inert` and `hidden` remove a subtree from sequential navigation outright.
+  // `aria-hidden` does NOT — see the header.
+  if (el.closest?.("[inert],[hidden]")) return false;
+  const raw = el.getAttribute("tabindex");
+  if (raw !== null) {
+    const value = Number.parseInt(raw, 10);
+    return Number.isFinite(value) && value >= 0;
+  }
+  if (!NATIVELY_FOCUSABLE.has(el.tagName)) return false;
+  // A bare `<a>` with no `href` is not focusable, which is exactly the shape a
+  // "link" built out of a click handler has.
+  if (el.tagName === "A") return el.hasAttribute("href");
+  if (el.tagName === "INPUT") return el.getAttribute("type") !== "hidden";
+  return true;
+}
+
+export const compositeSingleTabStop: Rule = {
+  id: "composite-single-tab-stop",
+  because:
+    "A roving-tabindex widget exists to be ONE Tab stop — that is what the role " +
+    "means. Five toolbars in this export served 2, 3, 3, 4 and 5, on a page whose " +
+    "own copy says the whole strip is one stop. Nothing else can see it.",
+  run: (doc) => {
+    const v: Violation[] = [];
+    for (const containerRole of Object.keys(COMPOSITE_ROLES)) {
+      for (const el of Array.from(doc.document.querySelectorAll(`[role="${containerRole}"]`))) {
+        if (el.closest?.('[aria-hidden="true"],[hidden],[inert]')) continue;
+        const stops = Array.from(el.querySelectorAll("*")).filter((d) => {
+          if (!isTabbable(d)) return false;
+          /*
+           * The exemption is on a CONTROL. `closest` would also match the
+           * container itself, which would turn one attribute into a blanket
+           * skip for the whole widget — the shape DECISIONS §13 rejects — so
+           * the container is excluded from the match explicitly.
+           */
+          const marked = d.closest?.(CEILING_EXEMPT) ?? null;
+          return marked === null || marked === el;
+        });
+        // The container itself counts. `aria-activedescendant` widgets and
+        // React Aria's collections put the one stop THERE, which is correct and
+        // is exactly one.
+        const total = stops.length + (isTabbable(el) ? 1 : 0);
+        if (total > 1) {
+          v.push({
+            rule: "composite-single-tab-stop",
+            path: doc.path,
+            detail:
+              `role="${containerRole}" serves ${total} tab stops. A roving-tabindex widget is ` +
+              `ONE stop from the outside; the arrow keys move within it. A keyboard reader Tabs ` +
+              `through all ${total} instead.`,
+            snippet: el.outerHTML.slice(0, 140),
+          });
+        }
+      }
+    }
+    return v;
+  },
+};
+
+/**
+ * Rule 8 — a date must be in the READER'S calendar, not merely their language.
  *
  * ── THE DEFECT, WHICH EVERY OTHER RULE IN THIS FILE PASSES ──────────────────
  *
@@ -797,4 +964,4 @@ export const nativeCalendar: Rule = {
   },
 };
 
-export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop, nativeCalendar];
+export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop, compositeSingleTabStop, nativeCalendar];

@@ -93,7 +93,28 @@ function RegistrationExample(l: Locale) {
         </IconButton>
       </ToolbarItem>
       <ToolbarSeparator />
-      <IconButton label={`${t.remove[l]} — ${t.unregistered[l]}`} variant="ghost" size="sm">
+      {/*
+       * DELIBERATELY NOT a `ToolbarItem`, and deliberately exempted from
+       * `composite-single-tab-stop`.
+       *
+       * This example demonstrates the defect that rule grades: an unwrapped
+       * child renders, is named, is not in the composite, and takes a Tab stop
+       * of its own. The extra stop IS the lesson, so it cannot be removed — and
+       * it must not be left ungraded quietly either. `data-lumo-extra-tab-stop`
+       * discounts exactly ONE control from this toolbar's count: the rest of
+       * the strip is still graded, and a second unregistered control here would
+       * still fail the build. Verified by deleting the attribute and watching
+       * `gate:html` report this toolbar at 2 stops, in both locales.
+       *
+       * This is the rule's only exemption anywhere in the repository, and the
+       * rule's docblock in `packages/gate/src/rules.ts` justifies it by name.
+       */}
+      <IconButton
+        label={`${t.remove[l]} — ${t.unregistered[l]}`}
+        variant="ghost"
+        size="sm"
+        data-lumo-extra-tab-stop=""
+      >
         <Trash2 aria-hidden="true" />
       </IconButton>
     </Toolbar>

@@ -102,6 +102,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   Toolbar,
+  ToolbarItem,
   ToolbarSeparator,
   Tooltip,
   TooltipTrigger,
@@ -1387,18 +1388,42 @@ const DEMOS: Demo[] = [
     source: source("toolbar.tsx"),
     render: (l) => (
       <Toolbar label={copy.formatting[l]}>
-        <ToggleButtonGroup selectionMode="multiple" defaultSelectedKeys={["bold"]}>
-          <ToggleButton id="bold" size="sm">
+        {/*
+         * ── EVERY CONTROL IS A `ToolbarItem`, AND THE GROUP IS GONE ─────────
+         *
+         * This demo used to hold a `<ToggleButtonGroup>` and then a BARE
+         * `<IconButton>`. Both halves were wrong in the served bytes, and the
+         * page's own intro — «یک ایست تبی» — is what they contradicted.
+         * Measured on the export before this commit, this toolbar served TWO
+         * Tab stops.
+         *
+         *  · the bare `IconButton` never joined the composite, so it had no
+         *    arrow-key reach and, being a `<button>` with no `tabindex`, was a
+         *    permanent second stop;
+         *  · the group is a COMPOSITE OF ITS OWN with its own roving tabindex,
+         *    nested inside a composite that does not know about it. Neither
+         *    registry can take the other's stop away, so the pair is two stops
+         *    however either one behaves. Lumo's `Toolbar` exposes no
+         *    `Toolbar.Group`, so there is no correct spelling of the nesting —
+         *    and the toggles do not need one: a toolbar of toggles is what
+         *    `ToolbarItem` is for.
+         */}
+        <ToolbarItem>
+          <ToggleButton id="bold" size="sm" defaultSelected>
             {copy.bold[l]}
           </ToggleButton>
+        </ToolbarItem>
+        <ToolbarItem>
           <ToggleButton id="italic" size="sm">
             {copy.italic[l]}
           </ToggleButton>
-        </ToggleButtonGroup>
+        </ToolbarItem>
         <ToolbarSeparator />
-        <IconButton label={copy.insertLink[l]} variant="ghost" size="sm">
-          <LinkGlyph />
-        </IconButton>
+        <ToolbarItem>
+          <IconButton label={copy.insertLink[l]} variant="ghost" size="sm">
+            <LinkGlyph />
+          </IconButton>
+        </ToolbarItem>
       </Toolbar>
     ),
   },

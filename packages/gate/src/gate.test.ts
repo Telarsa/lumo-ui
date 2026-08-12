@@ -2,7 +2,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { gradeHtml, gradingFor, knownLocales, localeForPath } from "./index.ts";
-import { RULES, digitSystem, nativeCalendar, persianDigitFloor, resolvedIdrefs } from "./rules.ts";
+import { RULES, compositeSingleTabStop, digitSystem, nativeCalendar, persianDigitFloor, resolvedIdrefs } from "./rules.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "fixtures");
 const read = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -482,6 +482,7 @@ describe("fa-IR grading is unchanged by the parametrisation", () => {
       "named-controls",
       "resolved-idrefs",
       "composite-tab-stop",
+      "composite-single-tab-stop",
       "native-calendar",
     ]);
     expect(persianDigitFloor({}).id).toBe("persian-digit-floor");
@@ -494,5 +495,135 @@ describe("fa-IR grading is unchanged by the parametrisation", () => {
     const html = read("no-latin-digits.bad.html").replace('lang="fa-IR" dir="rtl"', 'lang="en-US" dir="ltr"');
     expect(gradeHtml("en-US/index.html", html).filter((x) => x.rule === "no-latin-digits")).toEqual([]);
     expect(gradingFor("en-US").digits.numberingSystem).toBe("latn");
+  });
+});
+
+/**
+ * The CEILING, and its one exemption from both sides.
+ *
+ * `composite-tab-stop` fires when a widget has NO stop; this one fires when it
+ * has more than one. The pair is the whole contract, and the two poison
+ * fixtures are inverses of each other — `composite-tab-stop.bad.html` is a
+ * tablist with zero, `composite-single-tab-stop.bad.html` a toolbar with three.
+ * The "each poison fires its own rule and nothing unexplained" block above is
+ * what stops either from quietly grading the other's file.
+ *
+ * DECISIONS §13's rule applies to the exemption below: it carries negative
+ * twins, or the next tidy-up widens it into a skip.
+ */
+const ceiling = (body: string) =>
+  gradeHtml("fa-IR/index.html", `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`, [
+    compositeSingleTabStop,
+  ]);
+
+describe("composite-single-tab-stop — the ceiling", () => {
+  it("passes a toolbar with exactly one stop", () => {
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار">' +
+          '<button tabindex="0">الف</button><button tabindex="-1">ب</button></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  it("passes a container that IS the stop — activedescendant and the RAC collection", () => {
+    // Both of `composite-tab-stop`'s first two exemptions are one stop, and the
+    // ceiling must agree with the floor about that or the two rules disagree
+    // about the same correct markup.
+    expect(
+      ceiling(
+        '<div role="listbox" tabindex="0" aria-activedescendant="o1" aria-label="شهرها">' +
+          '<div role="option" id="o1" tabindex="-1">تهران</div>' +
+          '<div role="option" tabindex="-1">شیراز</div></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a natively-focusable control with NO tabindex", () => {
+    // The half of the defect that does not self-heal. A `<button>` with no
+    // tabindex is tabbable forever, not until hydration — which is what made
+    // the toolbar demo and the grid's resize handle permanent extra stops.
+    const v = ceiling(
+      '<div role="toolbar" aria-label="ابزار">' +
+        '<button tabindex="0">الف</button><button aria-label="ب">ب</button></div>',
+    );
+    expect(v).toHaveLength(1);
+    expect(v[0]!.detail).toContain("serves 2 tab stops");
+  });
+
+  it("does not count a disabled control", () => {
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار">' +
+          '<button tabindex="0">الف</button><button disabled>ب</button>' +
+          '<button aria-disabled="true">پ</button></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  it("does not count an `inert` subtree, and DOES count an aria-hidden one", () => {
+    // `inert` removes an element from sequential navigation; `aria-hidden` does
+    // not — it removes it from the accessibility tree while leaving the Tab key
+    // landing on it, which is axe's own `aria-hidden-focus` rule. Discounting
+    // the second would hide a stop a reader really reaches.
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار"><button tabindex="0">الف</button>' +
+          '<span inert><button>ب</button></span></div>',
+      ),
+    ).toEqual([]);
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار"><button tabindex="0">الف</button>' +
+          '<span aria-hidden="true"><button>ب</button></span></div>',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("skips a container that is itself hidden", () => {
+    expect(
+      ceiling(
+        '<div hidden><div role="toolbar" aria-label="ابزار">' +
+          '<button tabindex="0">الف</button><button tabindex="0">ب</button></div></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  /* ── THE EXEMPTION, AND ITS NEGATIVE TWINS ──────────────────────────────── */
+
+  it("discounts a control marked data-lumo-extra-tab-stop", () => {
+    // The one use in the repository: `RegistrationExample` demonstrates the
+    // defect this rule grades, and its third control is the demonstration.
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار"><button tabindex="0">الف</button>' +
+          '<button data-lumo-extra-tab-stop aria-label="ب">ب</button></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  it("discounts ONE control, not the container", () => {
+    // The narrowing that matters. A marked control next to a SECOND unmarked
+    // extra stop still fails — the attribute buys one stop, not silence.
+    const v = ceiling(
+      '<div role="toolbar" aria-label="ابزار"><button tabindex="0">الف</button>' +
+        '<button data-lumo-extra-tab-stop aria-label="ب">ب</button>' +
+        '<button aria-label="پ">پ</button></div>',
+    );
+    expect(v).toHaveLength(1);
+    expect(v[0]!.detail).toContain("serves 2 tab stops");
+  });
+
+  it("does NOT let the attribute on the container excuse its children", () => {
+    // The weakening this exemption is deliberately not. `closest` from a
+    // descendant would match the container, so one attribute on the toolbar
+    // would silence the whole widget — DECISIONS §13's "blindness by adjacency"
+    // in a different spelling. The rule excludes the container from the match.
+    const v = ceiling(
+      '<div role="toolbar" data-lumo-extra-tab-stop aria-label="ابزار">' +
+        '<button tabindex="0">الف</button><button tabindex="0">ب</button></div>',
+    );
+    expect(v).toHaveLength(1);
+    expect(v[0]!.detail).toContain("serves 2 tab stops");
   });
 });

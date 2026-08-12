@@ -3,6 +3,7 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { Toolbar as BaseToolbar } from "@base-ui/react/toolbar";
+import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 import {
   type AriaLabelingProps,
   cn,
@@ -89,32 +90,101 @@ import {
  * `Toolbar.Button tabIndex={0}` serves `tabindex="0"` and its sibling still
  * serves `-1`.
  *
- * `ToolbarItem` therefore serves `tabIndex={0}` on every item and stops passing
- * it once mounted, at which point Base UI's roving takes over. Pre-hydration the
- * toolbar behaves exactly as the React Aria build's served HTML did — every
- * control tabbable — which is the behaviour every consumer has been shipping.
- * There is no hydration mismatch: the client's FIRST render also emits `0`, and
- * only the effect that follows it removes the prop.
- *
  * A CONSTANT `tabIndex={0}` would be the wrong fix for the same reason a
  * constant `aria-expanded` is: it survives onto the mounted element and destroys
  * the roving tabindex, turning one Tab stop into N. The value has to stop.
  *
- * ── THE SEPARATOR GOT MORE CORRECT BY LOSING A LINE ─────────────────────────
+ * ── AND IT HAS TO LAND ON ONE ITEM, NOT ON ALL OF THEM ─────────────────────
  *
- * The React Aria build wrote `aria-orientation="vertical"` by hand on a plain
- * `<div role="separator">`. That is right in a horizontal toolbar and WRONG in a
- * vertical one — a latent bug, invisible because the repo had no vertical
- * toolbar. `Toolbar.Separator` derives the orientation as the perpendicular of
- * its toolbar. Measured: a horizontal toolbar yields
- * `role="separator" aria-orientation="vertical"`, a vertical one yields
- * `aria-orientation="horizontal"`. The hand-written attribute is deleted rather
- * than kept, because a hand-written attribute that agrees with the engine in one
- * case is a coin flip in the other.
+ * Until 12 Aug 2026 `ToolbarItem` served `tabIndex={0}` on EVERY item and
+ * withdrew it on mount, on the argument that this reproduced the React Aria
+ * build's served HTML — "every control tabbable — which is the behaviour every
+ * consumer has been shipping".
  *
- * It also stays out of the composite registry — measured, no `tabindex` and no
- * `data-focusable` — which is the "must not be a focus stop" property the old
- * file asserted by not using RAC's `<Separator>`.
+ * **That argument copied a failure this repository had already diagnosed.**
+ * `useCompositeTabStop`'s own header, in `@lumo-ui/base-ui-ssr`, sets out the
+ * measured table and names both directions of wrong:
+ *
+ *     Base UI Toolbar        0 stops for 2 items   ← TOTAL failure
+ *     React Aria TagGroup    3 stops for 2 chips   ← "overshoots in the other
+ *                                                     direction, so a keyboard
+ *                                                     user Tabs through every
+ *                                                     item"
+ *
+ * `tag-group.tsx` was written to fix the second. This file was reproducing it.
+ * Measured on the export of the commit before this one, five toolbars served
+ * 2, 3, 3, 4 and 5 tab stops, on a page whose own copy says «کلِ نوار یک ایست
+ * است» — the whole strip is one stop.
+ *
+ * So the served stop is now `useCompositeTabStop` — the package primitive the
+ * rest of the library already uses (tabs, tag-group, segmented-control,
+ * toggle-group) — and exactly one item is designated to hold it.
+ *
+ * ── HOW THE ONE ITEM IS PICKED, AND THE APPROACH THAT DID NOT WORK ────────
+ *
+ * The obvious spelling — and the first one written — was `TagList`'s: the
+ * container reads its own children, finds the first `ToolbarItem` among them
+ * and publishes that decision on a context. It is deterministic, it has no
+ * claim on render order, and `tag-group.tsx` does exactly this.
+ *
+ * **It cannot work here, and the measurement is the reason.** `Toolbar` is a
+ * `"use client"` component; the worked examples in
+ * `apps/website/src/examples/toolbar.tsx` are a SERVER module. A client
+ * component's children that were written in a server module arrive as
+ * unresolved CLIENT REFERENCES — React resolves them when it renders them, not
+ * when it hands them over — so `Toolbar` cannot see what they are. Probed on
+ * the real build, `view/fa/toolbar`, four children:
+ *
+ *     designated = -1
+ *     typeof part.type      "object"      (not a function)
+ *     part.type.name        undefined
+ *     part.type.lumoToolbarItem  undefined  ← a static marker does not survive
+ *
+ * So neither `part.type === ToolbarItem` nor a marker property on it can
+ * identify a child. Both spellings were written, both passed every assertion in
+ * `toolbar.test.tsx` — where there is one module graph and no RSC boundary —
+ * and both left all five toolbars in the export serving a stop on every item,
+ * byte-identical to the defect they were meant to fix. A container-side
+ * designation is a fix that renders, type-checks, unit-tests green and grades
+ * as the original defect.
+ *
+ * `tag-group.tsx` is not wrong to use the same pattern: it designates by the
+ * chip's `id` PROP, and props cross the boundary as data. It is the component
+ * TYPE that does not.
+ *
+ * ── SO THE ITEM CLAIMS, AND BASE UI DOES THE SAME THING ────────────────────
+ *
+ * `Toolbar` publishes a counter that it resets in its own render body, and the
+ * first `ToolbarItem` to render takes the stop. This IS a claim on render
+ * order, which the discarded design avoided on principle — so the principle is
+ * restated as a bound rather than dropped:
+ *
+ *   · the claim is read through `useState`'s initialiser, so it is made ONCE
+ *     per mount. A later re-render of the toolbar resets the counter and the
+ *     already-mounted items keep the answer they had, so the holder does not
+ *     move;
+ *   · the server pass and the hydrating client pass render the same children
+ *     top-down in the same order, which is the only ordering the value is ever
+ *     read in. `useCompositeTabStop` discards it in the commit that follows;
+ *   · if a render is split or replayed so that two items both claim, the result
+ *     is two served stops — the state this file shipped before 12 Aug 2026 —
+ *     and never zero. The failure direction is the degraded one by
+ *     construction.
+ *
+ * Base UI's own `useCompositeListItem` does precisely this, in precisely this
+ * situation, and says so: "Guess the index from the render order. This avoids
+ * a re-render after mount for flat lists rendered in DOM order; when the guess
+ * is wrong … the commit flush corrects it before paint."
+ *
+ * ── THERE IS NO REACHABLE FALLBACK, AND THAT IS CHECKED ───────────────────
+ *
+ * `ToolbarItem` treats a missing counter as "I am the only member, I take the
+ * stop" — the degraded direction again. That branch is never reached: a
+ * `Toolbar.Button` outside a `Toolbar.Root` throws
+ * "ToolbarRootContext is missing" before this file runs at all, which
+ * `toolbar.test.tsx` asserts. So every `ToolbarItem` that renders has a
+ * counter, exactly one claims, and `composite-single-tab-stop` has no shape in
+ * this component it cannot grade.
  */
 export const toolbarVariants = cva(
   "flex items-center gap-1",
@@ -144,19 +214,17 @@ export const toolbarSeparatorVariants = cva(
 );
 
 /**
- * True once the component has mounted on the client.
+ * The toolbar's claim counter for the pre-hydration tab stop.
  *
- * The one legitimate use of a state mirror in this library, and it does not
- * mirror anything the DOM already says — it distinguishes the SERVED render from
- * every render after it, which is a fact no attribute carries. Rule 5's ban is on
- * duplicating engine state (`useState` for hover, for open, for selected); this
- * is the hydration boundary itself.
+ * `Toolbar` resets `next` in its own render body; the first `ToolbarItem` to
+ * render takes the stop. `null` — no toolbar above this item — means the item
+ * takes it. See the file header for why the container cannot make this decision
+ * itself, and for the bound on what a repeated render can do.
+ *
+ * The context value is a stable ref object, so publishing it does not re-render
+ * every item on every toolbar render.
  */
-function useHasMounted(): boolean {
-  const [mounted, setMounted] = React.useState(false);
-  React.useEffect(() => setMounted(true), []);
-  return mounted;
-}
+const ToolbarClaimContext = React.createContext<{ next: number } | null>(null);
 
 /**
  * The toolbar's own props, minus its children, class and `aria-label` — the
@@ -190,8 +258,17 @@ export function Toolbar({
   // spread — the same treatment popover.tsx and dialog.tsx give it.
   slot: _slot,
   style: _style,
+  children,
   ...rest
 }: ToolbarProps) {
+  /*
+   * Reset the claim before the children render. React renders a parent's body
+   * before its children's, so every pass that renders this toolbar hands its
+   * first item a counter at zero. See the file header for the whole argument,
+   * including why the toolbar cannot pick the item itself.
+   */
+  const claim = React.useRef({ next: 0 });
+  claim.current.next = 0;
   return (
     <BaseToolbar.Root
       data-lumo=""
@@ -206,7 +283,13 @@ export function Toolbar({
         className,
       )}
       {...rest}
-    />
+    >
+      {/* Renders no element, so the composite's children stay exactly where
+          `CompositeRoot` expects them in the DOM. */}
+      <ToolbarClaimContext.Provider value={claim.current}>
+        {children as React.ReactNode}
+      </ToolbarClaimContext.Provider>
+    </BaseToolbar.Root>
   );
 }
 
@@ -236,14 +319,23 @@ export interface ToolbarItemProps {
  * is the state every unwrapped child is in anyway.
  */
 export function ToolbarItem({ children, className }: ToolbarItemProps) {
-  const mounted = useHasMounted();
+  /*
+   * Claim the served stop, once per MOUNT. `useState`'s initialiser is what
+   * makes it once-per-mount rather than once-per-render, and that is the whole
+   * of why a later toolbar render cannot move the stop off a mounted item. A
+   * `null` counter — no `Toolbar` above this item — claims. See the header.
+   */
+  const claim = React.useContext(ToolbarClaimContext);
+  const [holdsStop] = React.useState(() => claim === null || claim.next++ === 0);
+  const tabStop = useCompositeTabStop(holdsStop);
   const child = children as React.ReactNode;
   if (!React.isValidElement(child)) return <>{child}</>;
   return (
     <BaseToolbar.Button
-      // See the file header: served as 0 so the toolbar is Tab-reachable before
-      // hydration, then withdrawn so Base UI's roving tabindex owns it.
-      {...(mounted ? {} : { tabIndex: 0 })}
+      // See the file header: served as 0 on the ONE claiming item so the
+      // toolbar is Tab-reachable before hydration and is still one stop, then
+      // withdrawn so Base UI's roving tabindex owns it.
+      {...tabStop}
       {...(className === undefined ? {} : { className })}
       render={child as React.ReactElement<Record<string, unknown>>}
     />

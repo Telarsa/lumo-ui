@@ -632,3 +632,73 @@ scale) or moving to a server build — and only the second changes this decision
 Two weaker signals that would also warrant a re-read: wanting search served
 rather than shipped as an index, and wanting real image optimisation on a page
 of screenshots. Neither is a reason on its own; both together, with auth, are.
+
+## §15 — The ceiling exists, and it is the same contract §13 wrote down
+
+Recorded 12 Aug 2026. §13 settled what "one Tab stop" means and produced
+`composite-tab-stop`, which grades a FLOOR: a widget with NO stop is
+unreachable. Nothing graded the other side, and a composite serving N+1 stops
+is the same contract broken the other way — the role promising a collapse that
+the markup does not perform.
+
+**Thirty over-stopped composites were in the export the day this was asked**,
+counted over 524 documents by tabbable descendants per roving container:
+
+```
+toolbar        12
+menubar         6
+grid            6
+row (in grid)   6   ← the grid's own two elements, counted again one level down
+```
+
+Triaged individually, they were **four component defects and one measurement
+artefact**, and not one of them needed an exemption:
+
+1. `ToolbarItem` served `tabIndex={0}` on EVERY item until mount. It closed the
+   total failure by reproducing the degraded one — the React Aria TagGroup
+   overshoot that `useCompositeTabStop`'s own header names and `tag-group.tsx`
+   was written to fix.
+2. `MenubarButton` did the same for every trigger.
+3. `ToggleButton` destructured a closed prop list and spread nothing, so a
+   `<ToolbarItem><ToggleButton/></ToolbarItem>` dropped the composite's `ref`,
+   `tabIndex` and `data-focusable` on the floor: no registration, no arrow-key
+   reach, and a natively-tabbable `<button>` left over. This one did NOT
+   self-heal on hydration.
+4. `ColumnResizer` carried no `tabindex`, so every resizable column added a stop
+   to a grid whose header opens "a `role="grid"` takes ONE Tab stop". The same
+   defect `TableWidgetCell` closed one commit earlier, in the one place the
+   carve-out could not reach.
+5. `role="row"` is not a composite. Grading it double-counts its grid.
+
+Three findings that generalise, in the order they cost time:
+
+**A rule's floor and its ceiling must be written together or the fix for one
+becomes the other.** Every one of the first two defects was a deliberate,
+argued, documented answer to `composite-tab-stop`. The docblocks were long and
+the reasoning was wrong in a way only the missing half could show.
+
+**A container cannot identify its own children across an RSC boundary.** The
+first fix had `Toolbar` designate the first `ToolbarItem` among its children —
+`TagList`'s pattern, deterministic, no claim on render order. It passed every
+unit test and changed nothing on the built site: `Toolbar` is `"use client"`,
+the worked examples are a server module, and the children arrive as unresolved
+client references. Probed on the real build, `part.type` is an `"object"` with
+no `name` and no marker property, so neither `===` nor a static marker can
+work. `tag-group.tsx` is not wrong to use the pattern — it designates by a
+`id` PROP, and props cross the boundary as data. Component TYPES do not.
+
+The working shape is the one Base UI itself uses: the ITEM claims, through a
+counter the container resets in its render body, read once per mount through
+`useState`'s initialiser. `useCompositeListItem` calls this "guess the index
+from the render order" in the same situation and for the same reason.
+
+**A green unit suite is not evidence about a static export.** Two fixes in a row
+were green in `packages/ui` and inert in `apps/website/out`. The gate is the
+only tier that could tell.
+
+`composite-single-tab-stop` ships with ONE exemption,
+`[data-lumo-extra-tab-stop]`, used once: the toolbar page's worked
+demonstration of an unregistered child, whose extra Tab stop is the lesson. It
+discounts one CONTROL, not the container, and not the widget — a marked control
+beside a real second stop still fires, and the attribute on the container does
+nothing at all. Both narrowings carry negative twins, per §13.

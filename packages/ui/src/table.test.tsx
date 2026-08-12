@@ -27,6 +27,7 @@ import {
   TableBody,
   TableHeader,
   TableWidgetCell,
+  ColumnResizer,
   localeSortFn,
   useLumoTable,
 } from "./table.tsx";
@@ -535,5 +536,69 @@ describe("TableWidgetCell — the keyboard", () => {
     const button = container.querySelector("button") as HTMLElement;
     expect(fireEvent.keyDown(button, { key: "Enter" })).toBe(true);
     expect(fireEvent.keyDown(button, { key: " " })).toBe(true);
+  });
+});
+
+/* ════════════════════════════════════════════════════════════════════════════
+ * THE RESIZE HANDLE, WHICH WAS THE SAME DEFECT IN THE ONE PLACE THE
+ * WIDGET-CELL CARVE-OUT COULD NOT REACH
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+function WithResizers() {
+  const table = useLumoTable({
+    locale: "fa-IR",
+    data: PEOPLE,
+    columns: [
+      { id: "name", accessorKey: "name" },
+      { id: "city", accessorKey: "city" },
+    ],
+  });
+  return (
+    <Table label="افراد" locale="fa-IR" table={table}>
+      <TableHeader>
+        <Column id="name" isRowHeader resizer={<ColumnResizer label="تغییر اندازهٔ ستون" />}>
+          نام
+        </Column>
+        <Column id="city" resizer={<ColumnResizer label="تغییر اندازهٔ ستون" />}>
+          شهر
+        </Column>
+      </TableHeader>
+      <TableBody>
+        {table.getRowModel().rows.map((row) => (
+          <Row key={row.id} row={row}>
+            <Cell>{String(row.getValue("name"))}</Cell>
+            <Cell>{String(row.getValue("city"))}</Cell>
+          </Row>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
+describe("ColumnResizer — a grid with resizable columns is still ONE tab stop", () => {
+  it("serves EXACTLY ONE tab stop, whatever the column count", () => {
+    /**
+     * Before 12 Aug 2026 the handle carried no `tabindex` at all, which makes a
+     * `<button>` natively tabbable — so this grid served THREE stops: the
+     * active cell and one per resizable column. Measured on the export of that
+     * commit, `view/fa/table` and `view/en/table` both served two, on a
+     * component whose header opens with "A `role="grid"` takes ONE Tab stop for
+     * the whole table".
+     *
+     * The count is asserted against the number of resizers rather than as a
+     * bare `1`, so a second resizer cannot quietly start adding a stop again.
+     */
+    const html = renderToStaticMarkup(<WithResizers />);
+    expect([...html.matchAll(/aria-label="تغییر اندازهٔ ستون"/g)]).toHaveLength(2);
+    expect(tabStops(html)).toBe(1);
+  });
+
+  it("is still focusable programmatically and by pointer — -1, not removed", () => {
+    // The trade the header states: reachable, named, and not a SEQUENTIAL stop.
+    // `-1` and not the absence of the attribute is the whole difference.
+    const html = renderToStaticMarkup(<WithResizers />);
+    for (const [tag] of html.matchAll(/<button[^>]*تغییر اندازهٔ ستون[^>]*>/g)) {
+      expect(tag).toContain('tabindex="-1"');
+    }
   });
 });
