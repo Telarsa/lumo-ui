@@ -829,6 +829,33 @@
       ]
     },
     {
+      "name": "filters",
+      "type": "registry:ui",
+      "title": "Filters",
+      "description": "",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "button",
+        "native-select",
+        "text-field"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/filters.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/filters.tsx"
+        },
+        {
+          "path": "packages/ui/src/filters.shared.ts",
+          "type": "registry:ui",
+          "target": "components/ui/filters.shared.ts"
+        }
+      ]
+    },
+    {
       "name": "form-state",
       "type": "registry:ui",
       "title": "Form State",
@@ -1432,6 +1459,26 @@
           "path": "packages/ui/src/locale.ts",
           "type": "registry:ui",
           "target": "components/ui/locale.ts"
+        }
+      ]
+    },
+    {
+      "name": "questionnaire",
+      "type": "registry:ui",
+      "title": "Questionnaire",
+      "description": "",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/questionnaire.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/questionnaire.tsx"
         }
       ]
     },

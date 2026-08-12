@@ -69,6 +69,19 @@ export type {
   LumoValidatorMessages,
 } from "./form-state.tsx";
 
+export { Filters } from "./filters.tsx";
+export { createFilter } from "./filters.shared.ts";
+export type {
+  FilterField,
+  FilterOperator,
+  FilterOption,
+  FilterSelectField,
+  FiltersProps,
+  FiltersStrings,
+  FilterTextField,
+} from "./filters.tsx";
+export type { FilterClause } from "./filters.shared.ts";
+
 export { TextField, inputVariants } from "./text-field.tsx";
 export type { TextFieldProps } from "./text-field.tsx";
 
@@ -569,6 +582,17 @@ export {
   stepsVariants,
 } from "./steps.tsx";
 export type { StepItem, StepStatus, StepsProps } from "./steps.tsx";
+
+export { Questionnaire } from "./questionnaire.tsx";
+export type {
+  QuestionnaireChoice,
+  QuestionnaireItem,
+  QuestionnaireOptionalItem,
+  QuestionnaireProps,
+  QuestionnaireRequiredItem,
+  QuestionnaireStrings,
+  QuestionnaireValue,
+} from "./questionnaire.tsx";
 
 export {
   SegmentedControl,

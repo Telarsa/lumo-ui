@@ -116,6 +116,13 @@ const SHARED_COMPANIONS = new Set([
    */
   "calendar-datelib.ts",
   "date-input.tsx",
+  /*
+   * Filters is interactive, but its clause factory is useful while rendering
+   * a server-owned default query. Keep that factory directive-free and copy it
+   * with the client component; otherwise the generated registry leaves a
+   * dangling `./filters.shared.ts` import in every consumer project.
+   */
+  "filters.shared.ts",
 ]);
 
 /** Packages a consumer must install; everything else is workspace-internal. */

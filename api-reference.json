@@ -4751,6 +4751,53 @@
         ]
       }
     ],
+    "filters.tsx": [
+      {
+        "name": "FiltersProps",
+        "props": [
+          {
+            "name": "fields",
+            "type": "readonly FilterField[]",
+            "required": true
+          },
+          {
+            "name": "strings",
+            "type": "FiltersStrings",
+            "required": true
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "defaultValue",
+            "type": "readonly FilterClause[] | undefined",
+            "required": false
+          },
+          {
+            "name": "form",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "name",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "onValueChange",
+            "type": "((value: readonly FilterClause[]) => void) | undefined",
+            "required": false
+          },
+          {
+            "name": "value",
+            "type": "readonly FilterClause[] | undefined",
+            "required": false
+          }
+        ]
+      }
+    ],
     "form-state.tsx": [
       {
         "name": "LumoFormProps",
@@ -7727,6 +7774,68 @@
             "name": "locale",
             "type": "Locale",
             "required": true
+          }
+        ]
+      }
+    ],
+    "questionnaire.tsx": [
+      {
+        "name": "QuestionnaireProps",
+        "props": [
+          {
+            "name": "items",
+            "type": "readonly QuestionnaireItem[]",
+            "required": true
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true
+          },
+          {
+            "name": "strings",
+            "type": "QuestionnaireStrings",
+            "required": true
+          },
+          {
+            "name": "activeId",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "defaultActiveId",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "defaultValue",
+            "type": "Readonly<Record<string, readonly string[]>> | undefined",
+            "required": false
+          },
+          {
+            "name": "onActiveIdChange",
+            "type": "((id: string) => void) | undefined",
+            "required": false
+          },
+          {
+            "name": "onSubmitAnswers",
+            "type": "((value: QuestionnaireValue) => void) | undefined",
+            "required": false
+          },
+          {
+            "name": "onValueChange",
+            "type": "((value: QuestionnaireValue) => void) | undefined",
+            "required": false
+          },
+          {
+            "name": "value",
+            "type": "Readonly<Record<string, readonly string[]>> | undefined",
+            "required": false
           }
         ]
       }
