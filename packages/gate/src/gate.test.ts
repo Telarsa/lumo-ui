@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { gradeHtml, gradingFor, knownLocales, localeForPath } from "./index.ts";
+import { addCoverage, EMPTY_COVERAGE, formatCoverage, gradeHtml, gradingFor, knownLocales, localeForPath } from "./index.ts";
 import { RULES, compositeSingleTabStop, digitSystem, nativeCalendar, persianDigitFloor, resolvedIdrefs } from "./rules.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "fixtures");
@@ -679,5 +679,67 @@ describe("persian-digit-floor is actually armed where it matters", () => {
     // document and the fixture suite would go red — this states why it is out.
     expect(RULES.map((r) => r.id)).not.toContain("persian-digit-floor");
     expect(persianDigitFloor({ "fa/index.html": 1 }).id).toBe("persian-digit-floor");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE GATE PRINTS ITS OWN SCOPE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * "524 documents graded, 0 violations" is true and invites a false conclusion.
+ * `data-lumo-latn` exempts whole subtrees — legitimately, since the dominant
+ * one is shiki code listings — but on a docs site made largely OF source code
+ * the exempt fraction is most of the text, and nothing said so.
+ *
+ * These grade the census itself. It never fails a build: there is no threshold
+ * to fail at, because 80% exempt is correct for a documentation site and would
+ * be alarming for a product. The number's job is to be seen by someone who
+ * knows which they are looking at.
+ */
+describe("coverage census", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+
+  it("counts an exempt subtree as exempt, using the rules' own test", () => {
+    const c = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa(
+      `<p>سلام</p><pre data-lumo-latn=""><code>const x = 1;</code></pre>`,
+    ));
+    expect(c.textNodes).toBe(2);
+    expect(c.exemptTextNodes).toBe(1);
+    // The exemption is inherited by descendants — `closest`, not an own-attribute
+    // check — because that is exactly what `no-latin-digits` does.
+    expect(c.exemptCharacters).toBe("const x = 1;".length);
+  });
+
+  it("ignores latn locales, so the fraction is over the corpus it describes", () => {
+    /*
+     * The first cut compared `gradingFor(locale).digits` — a DigitSystem object —
+     * to the string "latn", which is never true. Every English page counted as
+     * Persian and the printed fraction was computed over twice the real corpus.
+     * A scope line that is itself miscounted is worse than no scope line.
+     */
+    const before = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa("<p>سلام</p>"));
+    const after = addCoverage(before, "en/index.html",
+      `<!doctype html><html lang="en-US" dir="ltr"><body><p>hello</p></body></html>`);
+    expect(after).toEqual(before);
+    expect(after.gradedLocaleDocs).toBe(1);
+  });
+
+  it("does not credit itself for script and style it was never asked to read", () => {
+    const c = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa(
+      `<p>سلام</p><script>var a = 1;</script><style>.a{color:red}</style>`,
+    ));
+    expect(c.textNodes).toBe(1);
+  });
+
+  it("prints nothing when there is nothing in scope to describe", () => {
+    // An all-English export should not print a Persian coverage line at all,
+    // rather than printing 0.0% and implying it measured something.
+    expect(formatCoverage(EMPTY_COVERAGE, 0)).toBe("");
+  });
+
+  it("reports the floor's coverage against the same denominator", () => {
+    const c = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa("<p>سلام</p>"));
+    expect(formatCoverage(c, 12)).toContain("armed on 12 of 1 route(s)");
   });
 });

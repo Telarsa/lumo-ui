@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { format, gradeHtml } from "./index.ts";
+import { addCoverage, EMPTY_COVERAGE, format, formatCoverage, gradeHtml } from "./index.ts";
 import { RULES, persianDigitFloor } from "./rules.ts";
 
 const root = process.argv[2];
@@ -36,6 +36,7 @@ async function readFloors(path: string): Promise<Record<string, number>> {
 }
 
 const rules = [...RULES];
+let floorCount = 0;
 if (floorsPath) {
   const floors = await readFloors(floorsPath);
   const entries = Object.keys(floors).length;
@@ -45,6 +46,7 @@ if (floorsPath) {
     process.exit(2);
   }
   rules.push(persianDigitFloor(floors));
+  floorCount = entries;
   console.log(`  persian-digit-floor armed for ${entries} route(s)`);
 }
 
@@ -71,10 +73,15 @@ if (files.length === 0) {
 
 const violations = [];
 const graded = new Set<string>();
+let coverage = EMPTY_COVERAGE;
 for (const file of files) {
   const rel = relative(root, file);
   graded.add(rel);
-  violations.push(...gradeHtml(rel, await readFile(file, "utf8"), rules));
+  const html = await readFile(file, "utf8");
+  violations.push(...gradeHtml(rel, html, rules));
+  // Same read, second question: how much of it did the rules actually look at.
+  // See `addCoverage` — this prints, it never fails.
+  coverage = addCoverage(coverage, rel, html);
 }
 
 // A floor keyed to a path that no longer exists is a rule that silently
@@ -94,4 +101,6 @@ if (floorsPath) {
 
 console.log(format(violations));
 console.log(`  ${files.length} document(s) graded, ${violations.length} violation(s)`);
+const scope = formatCoverage(coverage, floorCount);
+if (scope) console.log(scope);
 process.exit(violations.length ? 1 : 0);

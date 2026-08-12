@@ -146,6 +146,125 @@ export function gradeHtml(path: string, html: string, rules: Rule[] = RULES): Vi
   return rules.flatMap((r) => r.run(doc));
 }
 
+/**
+ * WHAT FRACTION OF THIS DOCUMENT THE GATE ACTUALLY READ.
+ *
+ * ═══ WHY A GATE SHOULD PUBLISH ITS OWN SCOPE ════════════════════════════════
+ *
+ * "524 documents graded, 0 violations" is a true sentence that invites a false
+ * conclusion. `data-lumo-latn` exempts whole subtrees from the digit and script
+ * rules — legitimately, because the dominant one is shiki code listings, which
+ * really are Latin. But this is a documentation site made largely OF source
+ * code, so the exempt fraction is not small, and nothing in the output said so.
+ *
+ * Measured before this existed, across the 260 Persian documents:
+ *
+ *     text nodes   145,448 of 172,999   84.1% ungraded
+ *     characters 1,844,825 of 2,318,717  79.6% ungraded
+ *
+ * Neither number is wrong and neither is a defect. What was wrong is that a
+ * reader of the summary line could not have guessed either of them, and this
+ * repository's own standard is that an ungraded page is an unprotected page.
+ *
+ * ═══ WHY THIS IS NOT A RULE ═════════════════════════════════════════════════
+ *
+ * There is no threshold to fail at. An exempt fraction of 80% is correct for a
+ * docs site and would be alarming for a product; the number's job is to be SEEN
+ * by someone who knows which they are looking at, not to be compared against a
+ * constant nobody can justify. A rule here would either never fire or fire
+ * always, and both teach people to ignore the output.
+ *
+ * So it prints, and printing is the whole feature: it is the only line in this
+ * tool that can tell you about a defect nobody has thought of yet.
+ */
+export interface Coverage {
+  /** Documents whose locale the digit rules actually grade. */
+  gradedLocaleDocs: number;
+  textNodes: number;
+  exemptTextNodes: number;
+  characters: number;
+  exemptCharacters: number;
+}
+
+const EMPTY_COVERAGE: Coverage = {
+  gradedLocaleDocs: 0,
+  textNodes: 0,
+  exemptTextNodes: 0,
+  characters: 0,
+  exemptCharacters: 0,
+};
+
+/**
+ * Adds one document's text-node census to a running total.
+ *
+ * Counts only documents whose locale the digit rules grade — a `latn` locale
+ * has nothing to exempt, so folding English pages in would dilute the fraction
+ * toward zero and make the exemption look smaller than it is.
+ *
+ * `closest("[data-lumo-latn]")` is the same test the rules themselves apply
+ * (`rules.ts`, twice), deliberately: a census that used a different definition
+ * of "exempt" would report a coverage the gate does not actually have.
+ */
+export function addCoverage(into: Coverage, path: string, html: string): Coverage {
+  const { locale } = localeForPath(path);
+  // `.numberingSystem`, NOT the DigitSystem object. The first cut compared the
+  // object to the string "latn", which is never true — so every English page
+  // counted as Persian and the printed fraction was computed over twice the
+  // real corpus. A scope line that is itself miscounted is worse than none.
+  if (gradingFor(locale).digits.numberingSystem === "latn") return into;
+
+  const { document } = parseHTML(html);
+  const walker = (document as unknown as Document).createTreeWalker(
+    (document as unknown as Document).body ?? (document as unknown as Document),
+    // NodeFilter.SHOW_TEXT
+    4,
+  );
+  let nodes = 0;
+  let exemptNodes = 0;
+  let chars = 0;
+  let exemptChars = 0;
+  for (let n = walker.nextNode(); n !== null; n = walker.nextNode()) {
+    const text = n.nodeValue ?? "";
+    if (text.trim() === "") continue;
+    const parent = n.parentElement;
+    // `<script>` and `<style>` are not read by anyone, and counting them would
+    // credit the gate with ignoring bytes it was never asked to grade.
+    const tag = parent?.tagName?.toLowerCase();
+    if (tag === "script" || tag === "style") continue;
+    const exempt = parent?.closest?.("[data-lumo-latn]") != null;
+    nodes += 1;
+    chars += text.length;
+    if (exempt) {
+      exemptNodes += 1;
+      exemptChars += text.length;
+    }
+  }
+  return {
+    gradedLocaleDocs: into.gradedLocaleDocs + 1,
+    textNodes: into.textNodes + nodes,
+    exemptTextNodes: into.exemptTextNodes + exemptNodes,
+    characters: into.characters + chars,
+    exemptCharacters: into.exemptCharacters + exemptChars,
+  };
+}
+
+export { EMPTY_COVERAGE };
+
+/** The scope line, printed beside the violation count. */
+export function formatCoverage(c: Coverage, flooredRoutes: number): string {
+  if (c.gradedLocaleDocs === 0) return "";
+  const pct = (part: number, whole: number) =>
+    whole === 0 ? "0.0" : ((part / whole) * 100).toFixed(1);
+  return [
+    `  scope — of ${String(c.gradedLocaleDocs)} document(s) in a non-latn locale:`,
+    `    ${pct(c.exemptTextNodes, c.textNodes)}% of text nodes and ` +
+      `${pct(c.exemptCharacters, c.characters)}% of characters are exempt ` +
+      `(data-lumo-latn), so the digit and script rules did not read them`,
+    `    persian-digit-floor armed on ${String(flooredRoutes)} of ` +
+      `${String(c.gradedLocaleDocs)} route(s)`,
+  ].join("\n");
+}
+
 export function format(violations: Violation[]): string {
   if (!violations.length) return "  lumo-gate — clean";
   const byRule = new Map<string, Violation[]>();
