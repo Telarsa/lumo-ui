@@ -899,6 +899,16 @@ describe("no-latin-aria grades the two PLATFORM attributes as well", () => {
   it("does not fire on an empty decorative alt", () => {
     expect(fired('<img src="/d.svg" alt="" />')).toEqual([]);
   });
+
+  it("does not mistake the standards-defined aria-keyshortcuts grammar for English prose", () => {
+    const v = gradeHtml(
+      "fa-IR/index.html",
+      fa(
+        '<button aria-label="تغییر اندازه" aria-keyshortcuts="F2 ArrowLeft ArrowRight Escape Tab">تغییر</button>',
+      ),
+    );
+    expect(v.filter((result) => result.rule === "no-latin-aria")).toEqual([]);
+  });
 });
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -131,9 +131,9 @@ const COPY = {
           key: "dir",
           body: (
             <>
-              پراپ <Term>dir</Term> وجود ندارد. جهت از خودِ زبان و از راه{" "}
-              <Term>Intl.Locale.getTextInfo()</Term> استخراج می‌شود؛ جهتِ غلط به‌جای آن‌که
-              «توصیه به پرهیز» باشد، اصلاً قابل بیان نیست.
+              پراپ <Term>dir</Term> وجود ندارد. جهت از قرارداد بستهٔ زبان استخراج می‌شود؛
+              در موتورهای قدیمی اندروید نیز جدول کامل و کنترل‌شده در زمان کامپایل آن را
+              تعیین می‌کند. جهتِ غلط به‌جای آن‌که «توصیه به پرهیز» باشد، اصلاً قابل بیان نیست.
             </>
           ),
         },
@@ -264,9 +264,9 @@ const COPY = {
           key: "dir",
           body: (
             <>
-              There is no <Term>dir</Term> prop. Direction is derived from the locale via{" "}
-              <Term>Intl.Locale.getTextInfo()</Term> — a wrong direction is unrepresentable
-              rather than discouraged.
+              There is no <Term>dir</Term> prop. Direction is derived from the closed locale
+              contract, with an exhaustive compile-checked fallback on older Android engines
+              — a wrong direction is unrepresentable rather than discouraged.
             </>
           ),
         },

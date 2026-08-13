@@ -936,8 +936,19 @@ export function Gantt<T extends GanttTask>({
     next?.focus();
   };
 
-  const onBarKeyDown = (event: React.KeyboardEvent, id: string) => {
+  const onBarKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, id: string) => {
     const held = heldId === id;
+
+    if (event.key === "F2") {
+      const startHandle = event.currentTarget.parentElement?.querySelector<HTMLElement>(
+        '[data-gantt-resize="start"]',
+      );
+      if (startHandle !== undefined && startHandle !== null) {
+        event.preventDefault();
+        startHandle.focus();
+      }
+      return;
+    }
 
     if (event.key === " " || event.key === "Enter") {
       event.preventDefault();
@@ -1104,6 +1115,7 @@ export function Gantt<T extends GanttTask>({
                         )}
                         aria-roledescription={strings.barRoleDescription}
                         aria-pressed={held}
+                        aria-keyshortcuts="F2"
                         style={placement}
                         className={ganttBarVariants()}
                         onFocus={() => {
@@ -1129,6 +1141,8 @@ export function Gantt<T extends GanttTask>({
                           data-lumo=""
                           data-gantt-resize="start"
                           aria-label={strings.resizeStart(task.label)}
+                          aria-keyshortcuts="ArrowLeft ArrowRight Escape Tab"
+                          tabIndex={-1}
                           style={{
                             insetInlineStart: placement.insetInlineStart,
                             inlineSize: "0.5rem",
@@ -1139,6 +1153,20 @@ export function Gantt<T extends GanttTask>({
                           onPointerUp={endPointerResize}
                           onPointerCancel={endPointerResize}
                           onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              event.preventDefault();
+                              event.currentTarget.parentElement
+                                ?.querySelector<HTMLElement>("[data-gantt-bar]")
+                                ?.focus();
+                              return;
+                            }
+                            if (event.key === "Tab") {
+                              event.preventDefault();
+                              event.currentTarget.parentElement
+                                ?.querySelector<HTMLElement>('[data-gantt-resize="end"]')
+                                ?.focus();
+                              return;
+                            }
                             const laterKey = isRtl ? "ArrowLeft" : "ArrowRight";
                             const earlierKey = isRtl ? "ArrowRight" : "ArrowLeft";
                             if (event.key === laterKey || event.key === earlierKey) {
@@ -1152,6 +1180,8 @@ export function Gantt<T extends GanttTask>({
                           data-lumo=""
                           data-gantt-resize="end"
                           aria-label={strings.resizeEnd(task.label)}
+                          aria-keyshortcuts="ArrowLeft ArrowRight Escape Tab"
+                          tabIndex={-1}
                           style={{
                             insetInlineStart: `calc(${placement.insetInlineStart} + ${placement.inlineSize} - 0.5rem)`,
                             inlineSize: "0.5rem",
@@ -1162,6 +1192,20 @@ export function Gantt<T extends GanttTask>({
                           onPointerUp={endPointerResize}
                           onPointerCancel={endPointerResize}
                           onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              event.preventDefault();
+                              event.currentTarget.parentElement
+                                ?.querySelector<HTMLElement>("[data-gantt-bar]")
+                                ?.focus();
+                              return;
+                            }
+                            if (event.key === "Tab") {
+                              event.preventDefault();
+                              event.currentTarget.parentElement
+                                ?.querySelector<HTMLElement>('[data-gantt-resize="start"]')
+                                ?.focus();
+                              return;
+                            }
                             const laterKey = isRtl ? "ArrowLeft" : "ArrowRight";
                             const earlierKey = isRtl ? "ArrowRight" : "ArrowLeft";
                             if (event.key === laterKey || event.key === earlierKey) {

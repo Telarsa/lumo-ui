@@ -15,13 +15,28 @@ describe("environment — Intl capability", () => {
     expect(o.numberingSystem).toBe("arabext");
   });
 
-  it("derives direction from the platform, not a hand-kept table", () => {
+  it("derives direction from the platform when the capability exists", () => {
     expect(direction("fa-IR")).toBe("rtl");
     expect(direction("en-US")).toBe("ltr");
   });
 
   it("every declared locale resolves a direction", () => {
     for (const l of LOCALES) expect(["rtl", "ltr"]).toContain(direction(l));
+  });
+
+  it("keeps the closed locale catalogue usable on Android Chromium without getTextInfo", () => {
+    const descriptor = Object.getOwnPropertyDescriptor(Intl.Locale.prototype, "getTextInfo");
+    Object.defineProperty(Intl.Locale.prototype, "getTextInfo", {
+      configurable: true,
+      value: undefined,
+    });
+    try {
+      expect(direction("fa-IR")).toBe("rtl");
+      expect(direction("en-US")).toBe("ltr");
+    } finally {
+      if (descriptor === undefined) delete Intl.Locale.prototype.getTextInfo;
+      else Object.defineProperty(Intl.Locale.prototype, "getTextInfo", descriptor);
+    }
   });
 });
 

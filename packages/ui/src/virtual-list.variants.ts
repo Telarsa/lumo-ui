@@ -103,7 +103,7 @@ export const virtualListItemVariants = cva(
 export type VirtualListOrientation = "vertical" | "horizontal";
 
 export interface VirtualMirror {
-  /** Derived from the locale via `Intl.Locale.getTextInfo()`. Never passed in. */
+  /** Derived from the closed locale contract. Never passed in. */
   direction: Direction;
   /**
    * A row's offset, as a CSS `transform`.

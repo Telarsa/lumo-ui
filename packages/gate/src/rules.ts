@@ -174,11 +174,11 @@ function numbersInLatin(digits: DigitSystem): boolean {
 const NON_TEXT = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT"]);
 
 /**
- * Attributes a screen reader speaks.
+ * Localizable prose attributes a screen reader speaks.
  *
  * ── `alt` AND `placeholder` WERE MISSING, AND BOTH ARE SPOKEN ───────────────
  *
- * The list held seven attributes, five of them `aria-*`, and it had a hole with
+ * The list held localizable attributes and had a hole with
  * a shape: it graded the attributes an ARIA audit thinks about and not the two
  * ordinary HTML attributes that reach a reader by exactly the same route.
  * `alt` IS the accessible name of an image — it is not a fallback, it is the
@@ -200,6 +200,12 @@ const NON_TEXT = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT"]);
  * widening is observed failing rather than assumed to work.
  *
  * ── WHY EACH CARRIES A SELECTOR ────────────────────────────────────────────
+ *
+ * `aria-keyshortcuts` is deliberately absent. WAI-ARIA requires its key names
+ * to use UI Events `KeyboardEvent.key` tokens such as `ArrowRight`, `Escape`
+ * and `F1`; those are a machine grammar, not untranslated prose. Grading them
+ * for Latin words makes a conforming Persian control impossible. The visible
+ * shortcut instructions remain subject to the text/script rules.
  *
  * `alt` and `placeholder` are only announced on the elements the platform
  * defines them for. `<div alt="Save">` is an author error that no reader ever
@@ -223,7 +229,6 @@ const SPOKEN: SpokenAttribute[] = [
   { attr: "aria-valuetext" },
   { attr: "aria-description" },
   { attr: "aria-placeholder" },
-  { attr: "aria-keyshortcuts" },
   { attr: "title" },
   // The two platform spellings. `input[type=image]` is in the list because its
   // `alt` is the name of a real submit button, not decoration.

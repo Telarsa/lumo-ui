@@ -32,6 +32,8 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  *     Space / Enter    pick a bar up, or put it down
  *     Left / Right     move it earlier or later — MIRRORED, see below
  *     Up / Down        move between bars
+ *     F2                enter the start/end resize handles
+ *     Tab / Shift+Tab   switch resize edge; Escape returns to the bar
  *     Escape           put the dates back
  *
  * Switch the page between fa and en and drive it with the arrow keys. Time runs
@@ -207,9 +209,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "Gantt",
         description: {
           "fa-IR":
-            "خودِ نمودار: فهرست کارها کنار یک خط زمانِ پیمایش‌پذیر، با یک ایستگاه Tab و فوکوس چرخشی روی نوارها — و آن ایستگاه در همان بایت اول سرو می‌شود، نه بعد از هیدریت‌شدن. مقیاس روز، هفته و ماه؛ هر تغییر اعلام می‌شود.",
+            "خودِ نمودار: فهرست کارها کنار یک خط زمانِ پیمایش‌پذیر، با یک ایستگاه تب و فوکوس چرخشی روی نوارها — و آن ایستگاه در همان بایت اول سرو می‌شود، نه بعد از هیدریت‌شدن. کلید تابعی دوم دستگیره‌های تغییر ابتدا/انتها را باز می‌کند؛ کلید تب بین دو لبه می‌رود و کلید گریز به نوار برمی‌گردد. مقیاس روز، هفته، ماه، فصل و سال؛ هر تغییر اعلام می‌شود.",
           "en-US":
-            "The chart itself: a task list beside a scrollable timeline, with ONE tab stop and roving focus over the bars — and that stop is in the first byte, not added on hydration. Day, week and month scales; every change announced.",
+            "The chart itself: a task list beside a scrollable timeline, with ONE tab stop and roving focus over the bars — and that stop is in the first byte, not added on hydration. F2 enters the start/end resize handles; Tab switches edges and Escape returns to the bar. Day, week, month, quarter and year scales; every change announced.",
         },
       },
       {
@@ -256,9 +258,9 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "برنامه با صفحه‌کلید", "en-US": "The plan by keyboard" },
       description: {
         "fa-IR":
-          "با Tab به نوارها برسید — یک ایستگاه بیشتر نیست — و با بالا و پایین بین آن‌ها حرکت کنید. Space یک نوار را برمی‌دارد و کلیدهای چپ و راست تاریخش را جابه‌جا می‌کنند. روی مسیر فارسی ArrowLeft کار را دیرتر می‌برد، چون زمان به سمت لبهٔ پایانیِ خواننده جاری است؛ در انگلیسی دقیقاً برعکس. جای نوارها خودش آینه شده و برای این کار هیچ شاخه‌ای نوشته نشده است.",
+          "با کلید تب به نوارها برسید — یک ایستگاه بیشتر نیست — و با کلیدهای بالا و پایین بین آن‌ها حرکت کنید. کلید فاصله یک نوار را برمی‌دارد و کلیدهای چپ و راست تاریخش را جابه‌جا می‌کنند. کلید تابعی دوم به دستگیرهٔ آغاز می‌رود؛ تب میان آغاز و پایان جابه‌جا می‌شود و گریز به نوار برمی‌گردد. روی مسیر فارسی کلید چپ کار را دیرتر می‌برد، چون زمان به سمت لبهٔ پایانیِ خواننده جاری است؛ در انگلیسی دقیقاً برعکس.",
         "en-US":
-          "Tab to the bars — there is exactly one stop — and move between them with Up and Down. Space picks a bar up and Left and Right move its dates. On the fa route ArrowLeft moves a task LATER, because time runs toward the reader's end edge; in English it is the exact opposite. The bars' positions mirrored themselves, and no branch was written to do it.",
+          "Tab to the bars — there is exactly one stop — and move between them with Up and Down. Space picks a bar up and Left and Right move its dates. F2 enters the start handle; Tab switches between start and end, and Escape returns to the bar. On the fa route ArrowLeft moves a task LATER, because time runs toward the reader's end edge; in English it is the exact opposite.",
       },
       render: ReleaseExample,
     },

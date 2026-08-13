@@ -42,21 +42,27 @@ export const LOCALES = ["fa-IR", "en-US"] as const satisfies readonly Locale[];
 export type Direction = "rtl" | "ltr";
 
 /**
- * Resolves a locale's direction from the platform rather than a hand-kept table.
+ * Resolves a locale's direction from the platform when the engine supports it,
+ * with an exhaustive fallback for Lumo's closed locale catalogue.
  *
- * `Intl.Locale.prototype.getTextInfo()` is Baseline; asking the runtime removes
- * the failure mode where a new locale is added to the union and someone forgets
- * the direction map. There is intentionally no `dir` parameter anywhere in Lumo
- * — a wrong `dir` should be impossible to pass rather than merely discouraged.
+ * Android Chromium WebView 124 does not implement
+ * `Intl.Locale.prototype.getTextInfo()`. Throwing there made every Lumo page
+ * replace itself with Next's generic client-error screen during hydration. The
+ * fallback below is not a guess: `satisfies Record<Locale, Direction>` makes a
+ * newly added locale a compile error until its direction is deliberately
+ * authored. There is intentionally no `dir` parameter anywhere in Lumo — a
+ * wrong `dir` remains impossible to pass rather than merely discouraged.
  */
 declare global {
   namespace Intl {
     interface Locale {
       /**
-       * Shipped in every engine and in Node (verified: `fa-IR` → `{direction:"rtl"}`,
-       * `en-US` → `{direction:"ltr"}`), but not yet declared in TypeScript 6.0.3's
-       * lib. Declared here rather than cast at the call site so the runtime
-       * contract is stated once and deleted in one place when the lib catches up.
+       * Shipped in current desktop engines and Node (verified: `fa-IR` →
+       * `{direction:"rtl"}`, `en-US` → `{direction:"ltr"}`), but absent from
+       * Android Chromium WebView 124 and not yet declared in TypeScript 6.0.3's
+       * lib. Declared here rather than cast at the call site so the optional
+       * runtime contract is stated once and deleted in one place when the lib
+       * catches up.
        *
        * The older non-callable `textInfo` accessor is `undefined` on current
        * runtimes, so it is deliberately not part of the fallback path.
@@ -69,14 +75,13 @@ declare global {
 export function direction(locale: Locale): Direction {
   const info = new Intl.Locale(locale).getTextInfo?.();
   if (info) return info.direction;
-  // A runtime without getTextInfo would silently make every Persian page LTR,
-  // which is the exact class of defect this module exists to prevent. Fail loud.
-  throw new Error(
-    `Intl.Locale.getTextInfo is unavailable, so text direction for "${locale}" ` +
-      `cannot be resolved. Refusing to guess: a wrong dir renders Persian ` +
-      `left-to-right with no visible error.`,
-  );
+  return DIRECTION[locale];
 }
+
+const DIRECTION = {
+  "fa-IR": "rtl",
+  "en-US": "ltr",
+} as const satisfies Record<Locale, Direction>;
 
 /**
  * The BCP-47 tag used for FORMATTING, which is not the same as the tag used for

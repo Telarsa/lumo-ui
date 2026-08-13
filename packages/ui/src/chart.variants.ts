@@ -300,7 +300,7 @@ export interface ChartAxisMirror {
 }
 
 export interface ChartMirror {
-  /** Derived from the locale via `Intl.Locale.getTextInfo()`. Never passed in. */
+  /** Derived from the closed locale contract. Never passed in. */
   direction: Direction;
   /** Spread into the category axis's options object. */
   categoryAxis: { reverse?: boolean };

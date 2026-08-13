@@ -10,9 +10,9 @@ import "../globals.css";
  * The root layout, one per locale.
  *
  * `LumoHtml` is the only thing in the system that writes `<html>`, and it takes
- * no `dir` prop — direction is derived from the locale via
- * `Intl.Locale.getTextInfo()`, so a wrong direction cannot be passed. The gate
- * asserts the result against the prerendered output, not against a jsdom render.
+ * no `dir` prop — direction is derived from the closed locale contract, so a
+ * wrong direction cannot be passed. The gate asserts the result against the
+ * prerendered output, not against a jsdom render.
  */
 export function generateStaticParams() {
   return localeParams;

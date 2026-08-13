@@ -210,7 +210,7 @@ const COPY = {
       ),
       registryManifest: (
         <>
-          <Term>registry.json</Term> — 85 items today — is never hand-kept:{" "}
+          <Term>registry.json</Term> — 128 items today — is never hand-kept:{" "}
           <Term>scripts/build-registry.mjs</Term> generates it from the components that actually
           exist. <Term>gate:registry</Term> re-runs that generation and checks it with{" "}
           <Term>git diff --exit-code</Term>: if the manifest is not reproducible from the code,

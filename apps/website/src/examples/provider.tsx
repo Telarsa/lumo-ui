@@ -35,8 +35,9 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * nothing red anywhere. `direction(locale)` makes that unrepresentable: passing
  * a wrong direction is not discouraged here, it does not compile.
  *
- * `direction()` reads `Intl.Locale.getTextInfo()` rather than a table, so
- * adding a locale to `Locale` cannot forget to add its direction.
+ * `direction()` asks `Intl.Locale.getTextInfo()` where available and otherwise
+ * reads an exhaustive `Record<Locale, Direction>`, so adding a locale cannot
+ * forget to add its direction.
  *
  * ═══ AND WHY IT IS A COMPONENT WITH A REQUIRED PROP ═════════════════════════
  *

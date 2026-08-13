@@ -479,6 +479,37 @@ describe("task hierarchy", () => {
 });
 
 describe("task resizing", () => {
+  it("enters resize mode with F2 without adding sequential Tab stops", () => {
+    render(
+      <Gantt
+        label="برنامه"
+        locale="fa-IR"
+        tasks={[SPRINT]}
+        strings={STRINGS}
+        onTasksChange={() => undefined}
+      />,
+    );
+
+    const bar = screen.getByRole("button", { name: /^طراحی،/ });
+    const start = screen.getByRole("button", { name: "تغییر آغاز طراحی" });
+    const end = screen.getByRole("button", { name: "تغییر پایان طراحی" });
+
+    expect(start.tabIndex).toBe(-1);
+    expect(end.tabIndex).toBe(-1);
+
+    bar.focus();
+    fireEvent.keyDown(bar, { key: "F2" });
+    expect(document.activeElement).toBe(start);
+
+    fireEvent.keyDown(start, { key: "Tab" });
+    expect(document.activeElement).toBe(end);
+    fireEvent.keyDown(end, { key: "Tab", shiftKey: true });
+    expect(document.activeElement).toBe(start);
+
+    fireEvent.keyDown(start, { key: "Escape" });
+    expect(document.activeElement).toBe(bar);
+  });
+
   it("changes one edge and clamps it before the opposite edge", () => {
     const laterStart = resizeGanttTask([SPRINT], "sprint", "start", "day", 2, "fa-IR");
     expect(laterStart[0]?.start.toString()).toBe("2026-03-23");
@@ -614,6 +645,23 @@ describe("the served bytes carry the tab stop and the name", () => {
     expect(bars[0]).toContain('tabindex="0"');
     expect(bars[1]).toContain('tabindex="-1"');
     expect(bars[2]).toContain('tabindex="-1"');
+
+    const editableMarkup = renderToStaticMarkup(
+      <Gantt
+        label="برنامهٔ انتشار"
+        locale="fa-IR"
+        tasks={THREE}
+        strings={STRINGS}
+        onTasksChange={() => undefined}
+      />,
+    );
+    const resizeHandles = Array.from(
+      editableMarkup.matchAll(/<button[^>]*data-gantt-resize[^>]*>/g),
+    ).map((match) => match[0] ?? "");
+    expect(resizeHandles).toHaveLength(6);
+    for (const handle of resizeHandles) {
+      expect(handle).toContain('tabindex="-1"');
+    }
   });
 
   it("serves one tab stop when earlier rows have no bar in the requested range", () => {

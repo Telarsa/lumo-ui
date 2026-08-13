@@ -28,9 +28,9 @@ import { LumoLocaleContext } from "./locale.ts";
  * how Lumo makes it unrepresentable. Passing a wrong direction is not
  * discouraged here, it does not compile.
  *
- * `direction()` reads `Intl.Locale.getTextInfo()` rather than a table, so
- * adding a locale to `Locale` cannot forget to add its direction — the same
- * argument CONTRIBUTING.md's "Adding a locale" step 1 makes.
+ * `direction()` asks `Intl.Locale.getTextInfo()` where available and falls back
+ * to an exhaustive `Record<Locale, Direction>` on older Android engines. Adding
+ * a locale cannot forget its direction because that record then stops compiling.
  *
  * ═══ THE REACT ARIA BRIDGE IS GONE, AND THIS IS WHAT IT WAS FOR ════════════
  *

@@ -20,7 +20,7 @@ import { oppositeDirectionLocale, segmentFor } from "@/lib/locale";
  *     correctly and reads wrong — exactly the class of defect README.md rule 4
  *     exists to make unrepresentable, done here on the one page whose entire
  *     purpose is demonstrating that rule.
- *   - Every Lumo component derives `dir` from `Intl.Locale.getTextInfo()` via
+ *   - Every Lumo component derives `dir` from its closed locale contract via
  *     `LumoProvider`, never from a prop. There is no supported way to hand a
  *     rendered subtree a `dir` that disagrees with its own locale.
  *

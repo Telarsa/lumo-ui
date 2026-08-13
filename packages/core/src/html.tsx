@@ -26,8 +26,10 @@ export interface LumoHtmlProps {
  *     correct.
  *
  * Hence: a server component with no `"use client"`, and deliberately **no `dir`
- * prop**. Direction is derived from the locale via `Intl.Locale.getTextInfo()`,
- * which makes a wrong `dir` unrepresentable rather than merely discouraged.
+ * prop**. Direction is derived from the locale via `direction()`, which uses
+ * `Intl.Locale.getTextInfo()` when present and an exhaustive closed-catalogue
+ * fallback on older Android engines. A wrong `dir` is unrepresentable rather
+ * than merely discouraged.
  * `lang` is the plain language tag — the `-u-ca-persian-nu-arabext` extensions
  * belong on `Intl` formatters (see FORMAT_LOCALE), never on `<html lang>`, where
  * they would confuse voice selection.

@@ -28,7 +28,7 @@ to them is a bug, not a customisation.
 ```
 packages/core     the invariants — LumoNode, direction(), formatters, strings
 packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
-packages/ui       94 registry components
+packages/ui       98 registry components
 packages/blocks   30 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
@@ -36,7 +36,7 @@ packages/native   the unstarted React Native feasibility probe
 apps/website      the showcase, and the first thing the gate runs against
 ```
 
-**Current state.** 94 components, 30 blocks and 124 generated registry items.
+**Current state.** 98 components, 30 blocks and 128 generated registry items.
 The exact test and document totals are printed by `pnpm run verify`; they are not
 hand-copied here because they change whenever a regression test or example is
 added. See `ROADMAP.md` for what is still open.
@@ -87,8 +87,10 @@ headless component engine's first-byte positioning and keyboard model. The
 provider makes those two sources agree before hydration.
 
 **4. There is no `dir` prop.**
-Direction is derived from the locale via `Intl.Locale.getTextInfo()`. A wrong
-direction is unrepresentable rather than discouraged.
+Direction is derived from the closed locale contract. Lumo asks
+`Intl.Locale.getTextInfo()` when the engine has it and uses an exhaustive,
+compile-checked fallback on older Android engines. A wrong direction is
+unrepresentable rather than discouraged.
 
 **5. Logical utilities only.**
 `ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`. Physical utilities are banned by lint.
