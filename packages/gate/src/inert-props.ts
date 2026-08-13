@@ -301,9 +301,9 @@ export function gradeSource(
    * file, which is the shape of every hand-maintained banner in this repository.
    * So a mention only counts for the component it is in.
    *
-   * MODULE scope (`null` key) still counts for everything: a `cva` string, a
-   * helper, an `Omit<…, "name">` at the top level really can be about any of
-   * them, and guessing which would be a false accusation.
+   * MODULE scope (`null` key) still counts for references shared by every
+   * component in the file. Object-literal PROPERTY NAMES do not: a `cva`
+   * variant key named `size` cannot consume a component prop named `size`.
    *
    * Usage matching is by NAME, not by symbol. The CLI's checker resolves which
    * external core properties are public, but the fast per-component delivery
@@ -379,6 +379,10 @@ export function gradeSource(
      */
     const isJsxAttrName =
       n.parent !== undefined && ts.isJsxAttribute(n.parent) && n.parent.name === n;
+    const isObjectPropertyName =
+      n.parent !== undefined &&
+      (ts.isPropertyAssignment(n.parent) || ts.isMethodDeclaration(n.parent)) &&
+      n.parent.name === n;
     /*
      * ── AND A DECLARATION IS NOT A REFERENCE EITHER ─────────────────────────
      *
@@ -398,6 +402,7 @@ export function gradeSource(
       (ts.isIdentifier(n) || ts.isStringLiteral(n)) &&
       !inPropDecl(n) &&
       !isJsxAttrName &&
+      !isObjectPropertyName &&
       // PARAMETER names only, not binding elements. A binding element IS how a
       // prop is consumed — `toggle.tsx` destructures `preventFocusOnPress` in a
       // HELPER to discard it, and `bound` only tracks consumer components, so
@@ -657,11 +662,10 @@ function classify(
   if (isCarrier(p.typeText)) {
     return { verdict: "carrier", detail: "type carrier — unrepresentable on purpose" };
   }
-  /* Module scope counts for every component in the file — see `mentions`. */
+  /* A genuine module-scope reference can serve every component in the file. */
   if (mentions.get(null)?.has(p.name) === true) {
     return { verdict: "used", detail: "referenced at module scope" };
   }
-
   /* The functions that must deliver this prop: those whose parameter annotation
    * pulls in the interface that declares it. */
   const takers = consumers.filter((c) => shapesOf.get(c.paramType)?.has(p.iface) === true);
