@@ -4,7 +4,6 @@ import {
   Badge,
   Cell,
   Column,
-  ColumnResizer,
   ResizableTableContainer,
   Row,
   Table,
@@ -12,7 +11,12 @@ import {
   TableFooter,
   TableHeader,
 } from "@lumo-ui/ui";
-import { TableActionsIsland, TableSelectionIsland, TableSortingIsland } from "@/components/demo-islands";
+import {
+  TableActionsIsland,
+  TableResizingIsland,
+  TableSelectionIsland,
+  TableSortingIsland,
+} from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -22,13 +26,14 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * Amounts go through `formatNumber` — a bare number child would not compile,
  * and a Latin digit on the Persian route would not pass the gate.
  *
- * ── TWO OF THE FOUR EXAMPLES ARE ISLANDS NOW ────────────────────────────────
+ * ── STATEFUL EXAMPLES ARE ISLANDS NOW ──────────────────────────────────────
  *
  * Selection and sorting were element props on React Aria's `Table` and are
  * TanStack state on this one, which arrives from the `useLumoTable` HOOK — and
- * a hook cannot run in a server module. The two stateful examples therefore
- * render through `demo-islands.tsx`, which states the boundary once. The basic
- * and resizing examples need no state and stay right here, as markup.
+ * a hook cannot run in a server module. Those stateful examples therefore
+ * render through `demo-islands.tsx`, which states the boundary once. Column
+ * resizing is state too: without an instance, its handle has nothing to
+ * resize and deliberately exposes no separator value semantics.
  */
 
 const t = {
@@ -181,38 +186,28 @@ function SortingExample(l: Locale) {
 
 function ResizingExample(l: Locale) {
   return (
-    <ResizableTableContainer className="max-w-xl">
-      <Table label={t.ordersGrid[l]} locale={l}>
-        <TableHeader>
-          <Column
-            id="name"
-            isRowHeader
-            defaultWidth={200}
-            resizer={<ColumnResizer label={t.resizeColumn[l]} />}
-          >
-            {t.customer[l]}
-          </Column>
-          <Column id="city" defaultWidth={140}>
-            {t.city[l]}
-          </Column>
-          <Column id="total" defaultWidth={140}>
-            {t.amount[l]}
-          </Column>
-        </TableHeader>
-        <TableBody>
-          <Row id="resizing-a">
-            <Cell>{t.customerOne[l]}</Cell>
-            <Cell>{t.isfahan[l]}</Cell>
-            <Cell>{formatNumber(1250000, l)}</Cell>
-          </Row>
-          <Row id="resizing-b">
-            <Cell>{t.customerThree[l]}</Cell>
-            <Cell>{t.tehran[l]}</Cell>
-            <Cell>{formatNumber(2340000, l)}</Cell>
-          </Row>
-        </TableBody>
-      </Table>
-    </ResizableTableContainer>
+    <TableResizingIsland
+      locale={l}
+      label={t.ordersGrid[l]}
+      customerHeader={t.customer[l]}
+      cityHeader={t.city[l]}
+      amountHeader={t.amount[l]}
+      resizeLabel={t.resizeColumn[l]}
+      rows={[
+        {
+          id: "resizing-a",
+          customer: t.customerOne[l],
+          city: t.isfahan[l],
+          amountText: formatNumber(1250000, l),
+        },
+        {
+          id: "resizing-b",
+          customer: t.customerThree[l],
+          city: t.tehran[l],
+          amountText: formatNumber(2340000, l),
+        },
+      ]}
+    />
   );
 }
 

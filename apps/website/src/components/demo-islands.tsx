@@ -921,6 +921,77 @@ export function TableSortingIsland({
   );
 }
 
+export interface TableResizingIslandProps {
+  locale: Locale;
+  /** Announced name of the grid. */
+  label: string;
+  customerHeader: string;
+  cityHeader: string;
+  amountHeader: string;
+  /** Announced name of the resize handle. */
+  resizeLabel: string;
+  rows: readonly (OrderDemoRow & { readonly amountText: string })[];
+}
+
+/**
+ * A resize handle is stateful even when the surrounding rows are static.
+ * `ColumnResizer` intentionally exposes value semantics only when it can find
+ * its TanStack column; keeping that state here prevents the docs from showing
+ * a handle-shaped button that cannot resize anything.
+ */
+export function TableResizingIsland({
+  locale,
+  label,
+  customerHeader,
+  cityHeader,
+  amountHeader,
+  resizeLabel,
+  rows,
+}: TableResizingIslandProps) {
+  const table = useLumoTable({
+    locale,
+    data: [...rows],
+    columns: [
+      { id: "customer", accessorKey: "customer", size: 200 },
+      { id: "city", accessorKey: "city", size: 140 },
+      { id: "amountText", accessorKey: "amountText", size: 140 },
+    ],
+    getRowId: (row) => row.id,
+  });
+
+  return (
+    <ResizableTableContainer className="max-w-xl">
+      <Table label={label} locale={locale} table={table}>
+        <TableHeader>
+          <Column
+            id="customer"
+            isRowHeader
+            defaultWidth={200}
+            resizer={<ColumnResizer label={resizeLabel} columnId="customer" />}
+          >
+            {customerHeader}
+          </Column>
+          <Column id="city" defaultWidth={140}>
+            {cityHeader}
+          </Column>
+          <Column id="amountText" defaultWidth={140}>
+            {amountHeader}
+          </Column>
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <Row key={row.id} row={row}>
+              <Cell isRowHeader>{row.original.customer}</Cell>
+              <Cell>{row.original.city}</Cell>
+              <Cell>{row.original.amountText}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+    </ResizableTableContainer>
+  );
+}
+
 /**
  * The table demo on the home page's component list: four columns, a resizable
  * first column, a checkbox column and a sortable one.
