@@ -49,13 +49,20 @@ modules.
 7. TagsInput's native datalist could not expose Lumo option styling or a stable
    active-descendant contract. Its test now requires a named suggestion list,
    arrow highlight, Enter selection, and no datalist.
-8. The long-list scrollbar is now thin and transparent at rest, then uses the
-   strong-border token on pointer hover, keyboard navigation or active wheel /
-   touch scrolling. A first implementation combined this with Base UI scroll
-   arrows; the browser proved those arrows inject `base-ui-disable-scrollbar`
-   and made the custom styling vacuous. A DOM assertion now forbids that class,
-   while timed interaction assertions require the active state and its return
-   to rest.
+8. The first scrollbar polish reserved a stable gutter and revealed a thin
+   native rail during interaction. The 390 px Persian calendar pass proved the
+   reservation itself remained visible as an empty strip and made the popup
+   look wider than its content. The final treatment follows the Base UI /
+   Radix-style long-select pattern instead: the engine hides the native rail,
+   reserves no gutter, and exposes 20 px surface-backed edge scroll controls
+   only where more content exists. Calendar caption selects additionally use
+   an 80 px trigger/popup, 29 px options, and a 256 px cap.
+9. Select options no longer opt into the global standalone-control focus ring.
+   A listbox is a composite: its keyboard cursor is the highlighted row, while
+   the selected row already has `aria-selected` and the check indicator. The
+   old `data-lumo` marker drew the thick rounded outline seen around a year and
+   made that option look like a nested button. A DOM assertion now forbids the
+   marker on `role="option"` while preserving the highlighted background.
 
 The red state was observed before each fix. Re-applying the relevant old class,
 factory, native control, or duplicate error branch fails the named assertion;
@@ -70,10 +77,10 @@ the mutations were restored before verification.
 - Calendar's 105-option Persian year popup remains open, stays within the
   viewport and has one visible scrolling owner. The fresh final tab produced no
   console errors.
-- The polished scrollbar computes to `thin` with transparent track/thumb at
-  rest, changes to the border token during a real wheel scroll, and returns to
-  transparent after 650 ms idle. The same popup is 320 px tall and entirely
-  within a 390×844 viewport, with no horizontal overflow.
+- The final Persian year popup at 390×844 measures 80×256 px, with 29 px rows,
+  `scrollbar-gutter: auto`, `scrollbar-width: none`, equal `clientWidth` and
+  `offsetWidth`, and no option outline. Both 20 px edge controls are visible
+  around the selected middle year; they disappear independently at the ends.
 - A source-less MutationObserver error appeared only during the earlier rapid
   reuse loop and did not reproduce in the fresh final tab; it is rejected as
   browser-instrumentation teardown, consistent with the prior Wave 3 finding.

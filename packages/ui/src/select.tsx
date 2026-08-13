@@ -5,15 +5,13 @@ import {
   createContext,
   isValidElement,
   useContext,
-  useEffect,
   useId,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import type { ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, ChevronUp } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
 import { cn, type LumoNode, type ValidationError } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
@@ -240,17 +238,20 @@ export const selectPopoverVariants = cva(
 );
 
 export const selectListBoxVariants = cva(
-  "min-h-0 flex-1 max-h-[inherit] overflow-auto p-1 outline-none " +
-    "[scrollbar-width:thin] [scrollbar-gutter:stable] " +
-    "[scrollbar-color:transparent_transparent] " +
-    "hover:[scrollbar-color:var(--color-border-strong)_transparent] " +
-    "data-[scrolling]:[scrollbar-color:var(--color-border-strong)_transparent] " +
-    "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent " +
-    "[&::-webkit-scrollbar-thumb]:rounded-full " +
-    "[&::-webkit-scrollbar-thumb]:bg-transparent " +
-    "[&::-webkit-scrollbar-thumb]:transition-colors " +
-    "hover:[&::-webkit-scrollbar-thumb]:bg-border-strong " +
-    "data-[scrolling]:[&::-webkit-scrollbar-thumb]:bg-border-strong",
+  "min-h-0 flex-1 max-h-[inherit] overflow-auto p-1 outline-none scroll-py-5",
+);
+
+const selectScrollArrowVariants = cva(
+  "absolute inset-x-0 z-10 hidden h-5 cursor-default items-center justify-center " +
+    "bg-surface text-fg-subtle data-[visible]:flex [&_svg]:size-3 [&_svg]:shrink-0",
+  {
+    variants: {
+      direction: {
+        up: "top-0",
+        down: "bottom-0",
+      },
+    },
+  },
 );
 
 export const selectGroupLabelVariants = cva(
@@ -722,6 +723,9 @@ export interface SelectFieldProps extends SelectTriggerVariantProps {
   showLabel?: boolean | undefined;
   className?: string | undefined;
   triggerClassName?: string | undefined;
+  popoverClassName?: string | undefined;
+  listBoxClassName?: string | undefined;
+  itemClassName?: string | undefined;
 }
 
 /**
@@ -743,6 +747,9 @@ export function SelectField({
   size,
   className,
   triggerClassName,
+  popoverClassName,
+  listBoxClassName,
+  itemClassName,
 }: SelectFieldProps) {
   return (
     <Select<object>
@@ -759,11 +766,12 @@ export function SelectField({
     >
       {showLabel ? <Label>{label}</Label> : null}
       <SelectTrigger size={size} className={triggerClassName} />
-      <SelectPopover>
+      <SelectPopover className={popoverClassName} listBoxClassName={listBoxClassName}>
         {options.map((option) => (
           <SelectItem
             key={option.value}
             id={option.value}
+            className={itemClassName}
             {...(option.disabled === undefined ? {} : { isDisabled: option.disabled })}
           >
             {option.label}
@@ -848,22 +856,6 @@ export function SelectPopover<T extends object>({
   children,
 }: SelectPopoverProps<T>) {
   const field = useContext(SelectFieldContext);
-  const [isScrolling, setIsScrolling] = useState(false);
-  const scrollIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(
-    () => () => {
-      if (scrollIdleTimer.current !== null) clearTimeout(scrollIdleTimer.current);
-    },
-    [],
-  );
-  const revealScrollbar = () => {
-    setIsScrolling(true);
-    if (scrollIdleTimer.current !== null) clearTimeout(scrollIdleTimer.current);
-    scrollIdleTimer.current = setTimeout(() => {
-      setIsScrolling(false);
-      scrollIdleTimer.current = null;
-    }, 650);
-  };
   const stateText =
     field?.asyncState?.status === "loading" || field?.asyncState?.status === "error"
       ? field.asyncState.text
@@ -886,17 +878,22 @@ export function SelectPopover<T extends object>({
         <BaseSelect.Popup
           className={cn(popoverVariants({ padded: false }), selectPopoverVariants(), className)}
         >
+          <BaseSelect.ScrollUpArrow className={selectScrollArrowVariants({ direction: "up" })}>
+            <ChevronUp aria-hidden="true" />
+          </BaseSelect.ScrollUpArrow>
           <BaseSelect.List
             data-lumo=""
-            data-scrolling={isScrolling ? "" : undefined}
-            onKeyDown={revealScrollbar}
-            onScroll={revealScrollbar}
             className={cn(selectListBoxVariants(), listBoxClassName)}
           >
             {/* No cast. `children` is `LumoNode` now that the function arm is
                 gone, and the cast was what let the two disagree. */}
             {children}
           </BaseSelect.List>
+          <BaseSelect.ScrollDownArrow
+            className={selectScrollArrowVariants({ direction: "down" })}
+          >
+            <ChevronDown aria-hidden="true" />
+          </BaseSelect.ScrollDownArrow>
           {stateText === null && stateAction === undefined ? null : (
             <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-fg-muted">
               <span role="status" aria-live="polite">
@@ -979,7 +976,6 @@ export function SelectItem<T extends object = object>({
   const resolvedTextValue = textValue ?? (typeof children === "string" ? children : undefined);
   return (
     <BaseSelect.Item
-      data-lumo=""
       className={cn(selectItemVariants(), className)}
       {...(id === undefined ? {} : { value: id })}
       {...(resolvedTextValue === undefined ? {} : { label: resolvedTextValue })}

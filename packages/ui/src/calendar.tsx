@@ -428,7 +428,9 @@ export function CalendarDropdown({ options = [], value, onChange, disabled, "ari
       isDisabled={disabled}
       size="sm"
       className="relative z-[1] w-auto"
-      triggerClassName="w-auto min-w-24"
+      triggerClassName="w-auto min-w-20 px-2 text-xs"
+      popoverClassName="max-h-64"
+      itemClassName="gap-1.5 px-1.5 py-1 text-xs [&_svg]:size-3.5"
     />
   );
 }

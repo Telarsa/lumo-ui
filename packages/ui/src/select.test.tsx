@@ -22,7 +22,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   Select,
@@ -50,20 +50,13 @@ it("gives long dropdowns exactly one scrolling layer", () => {
   expect(selectListBoxVariants()).toContain("overflow-auto");
 });
 
-it("keeps the scrollbar quiet at rest and reveals it for interaction", () => {
+it("does not reserve a permanently visible scrollbar rail", () => {
   const classes = selectListBoxVariants();
-  expect(classes).toContain("[scrollbar-width:thin]");
-  expect(classes).toContain("[scrollbar-color:transparent_transparent]");
-  expect(classes).toContain(
-    "hover:[scrollbar-color:var(--color-border-strong)_transparent]",
-  );
-  expect(classes).not.toContain("focus-within:");
-  expect(classes).toContain(
-    "data-[scrolling]:[scrollbar-color:var(--color-border-strong)_transparent]",
-  );
+  expect(classes).not.toContain("[scrollbar-gutter:stable]");
+  expect(classes).not.toContain("[scrollbar-width:thin]");
 });
 
-it("marks active wheel or touch scrolling, then quiets the scrollbar", () => {
+it("uses the engine's gutter-free edge-scroll treatment for long lists", () => {
   render(
     <Select placeholder="سال را انتخاب کنید" aria-label="سال" defaultOpen>
       <SelectTrigger />
@@ -74,18 +67,20 @@ it("marks active wheel or touch scrolling, then quiets the scrollbar", () => {
     </Select>,
   );
   const list = screen.getByRole("listbox");
-  vi.useFakeTimers();
+  expect(list.classList.contains("base-ui-disable-scrollbar")).toBe(true);
+});
 
-  expect(list.classList.contains("base-ui-disable-scrollbar")).toBe(false);
-  expect(list.hasAttribute("data-scrolling")).toBe(false);
-  fireEvent.scroll(list);
-  expect(list.hasAttribute("data-scrolling")).toBe(true);
+it("keeps composite option focus inside the listbox instead of drawing a button ring", () => {
+  render(
+    <Select placeholder="سال را انتخاب کنید" aria-label="سال" defaultOpen>
+      <SelectTrigger />
+      <SelectPopover>
+        <SelectItem id="1403">۱۴۰۳</SelectItem>
+      </SelectPopover>
+    </Select>,
+  );
 
-  act(() => vi.advanceTimersByTime(700));
-  expect(list.hasAttribute("data-scrolling")).toBe(false);
-
-  fireEvent.keyDown(list, { key: "ArrowDown" });
-  expect(list.hasAttribute("data-scrolling")).toBe(true);
+  expect(screen.getByRole("option", { name: "۱۴۰۳" }).hasAttribute("data-lumo")).toBe(false);
 });
 
 /** The collapsed control's visible text: the `<span>` `SelectValue` renders. */

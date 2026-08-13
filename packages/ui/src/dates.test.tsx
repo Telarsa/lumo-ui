@@ -1040,6 +1040,8 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
     expect(dropdown?.className).toContain("border-border-control");
     expect(dropdown?.className).not.toContain("opacity-0");
     expect(dropdown?.parentElement?.className).toContain("relative");
+    expect(dropdown?.className).toContain("min-w-20");
+    expect(dropdown?.className).not.toContain("min-w-24");
     /*
      * The ring is on the painted parent, because the focused element is
      * invisible — and the parent says so with a MARKER rather than a ring.

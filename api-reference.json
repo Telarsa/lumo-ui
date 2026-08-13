@@ -11723,6 +11723,18 @@
             "description": "Inherited DOM or shared Lumo prop."
           },
           {
+            "name": "itemClassName",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "listBoxClassName",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
             "name": "name",
             "type": "string | undefined",
             "required": false,
@@ -11731,6 +11743,12 @@
           {
             "name": "onSelectionChange",
             "type": "((key: string | null) => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "popoverClassName",
+            "type": "string | undefined",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
           },
