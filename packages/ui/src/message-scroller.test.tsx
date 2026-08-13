@@ -9,10 +9,11 @@
  */
 
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { MessageScroller } from "./message-scroller.tsx";
+import { resizeObserverHarness } from "./resize-observer.test-utils.ts";
 
 afterEach(cleanup);
 
@@ -132,6 +133,28 @@ describe("the jump button appears only when the reader has scrolled away", () =>
 });
 
 describe("degradation", () => {
+  it("follows observed content growth only while the reader remains pinned", () => {
+    const observer = resizeObserverHarness();
+    const { unmount } = render(<MessageScroller {...LABELS}>پیام</MessageScroller>);
+    const log = viewport();
+    geometry(log, { scrollHeight: 1000, clientHeight: 400 });
+    log.scrollTop = 600;
+    fireEvent.scroll(log);
+
+    geometry(log, { scrollHeight: 1200, clientHeight: 400 });
+    act(() => observer.trigger(log.firstElementChild ?? undefined));
+    expect(log.scrollTop).toBe(1200);
+
+    log.scrollTop = 400;
+    fireEvent.scroll(log);
+    geometry(log, { scrollHeight: 1400, clientHeight: 400 });
+    act(() => observer.trigger(log.firstElementChild ?? undefined));
+    expect(log.scrollTop).toBe(400);
+
+    unmount();
+    observer.restore();
+  });
+
   it("renders where there is no ResizeObserver", () => {
     // jsdom has none. A hook that throws from inside an effect makes the
     // component unrenderable in every consumer's test suite — the measurement
