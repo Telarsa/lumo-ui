@@ -39,6 +39,7 @@ import { Pagination } from "./pagination.tsx";
 import { Separator } from "./separator.tsx";
 import { Stack } from "./stack.tsx";
 import { Tree, TreeItem } from "./tree.tsx";
+import { ListBox, ListBoxItem } from "./list-box.tsx";
 
 afterEach(cleanup);
 
@@ -111,6 +112,25 @@ describe("ref arrives on the element the component renders", () => {
 });
 
 describe("id and the attributes nobody thought of", () => {
+  it("ListBox keeps async status outside its composite while exposing one root", () => {
+    const { container } = render(
+      <ListBox<object>
+        label="شهرها"
+        asyncState={{ status: "loading", text: "در حال بارگیری" }}
+      >
+        <ListBoxItem id="tehran">تهران</ListBoxItem>
+      </ListBox>,
+    );
+    expect(container.children).toHaveLength(1);
+    expect(container.firstElementChild?.querySelector('[role="listbox"]')).not.toBeNull();
+    expect(
+      container.firstElementChild?.querySelector('[role="listbox"] [role="status"]'),
+    ).toBeNull();
+    expect(container.firstElementChild?.querySelector('[role="status"]')?.textContent).toBe(
+      "در حال بارگیری",
+    );
+  });
+
   it("Pagination takes an id — the two-pagers case that named this defect", () => {
     // AUDIT §4.2: "no `id` … on `Tree`, `ListBox`, `Pagination`, …". A page with
     // a pager above the results and one below has two `<nav>` landmarks, and
