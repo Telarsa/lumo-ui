@@ -23,6 +23,13 @@ The public surface includes:
 - read-only and disabled modes; and
 - optional native-form serialization.
 
+The same page now includes two working DataGrid integrations. The local recipe
+passes the clauses to `useLumoQueryTable`. The remote recipe serializes those
+clauses at an abortable request boundary, parses the untrusted bytes, executes
+them in the example adapter and returns the rows through `useAsyncLumoTable`.
+The delay is illustrative; a product can replace it with `fetch` without
+changing query bytes, cancellation or presentation state.
+
 No runtime dependency and no default English announcement were added.
 
 ## Proved behavior and mutation evidence
@@ -40,6 +47,13 @@ were broken one at a time:
 All mutations were restored. The component test also pins the closed first-byte
 combobox: it has a required accessible name, `aria-expanded="false"`, no
 dangling `aria-controls`, and no duplicate IDs.
+
+The DataGrid integrations have their own red/green proof:
+
+| Mutation | Assertion that failed |
+| --- | --- |
+| Replaced the local table query with an empty clause array | `executes PowerSearch's canonical clauses directly in a local DataGrid`: the filtered-out row `نیما` remained. |
+| Replaced the parsed remote query with an empty clause array | `sends the same query through an abortable remote adapter before filling the grid`: the filtered-out row `سارا` remained. |
 
 ## Browser findings
 
@@ -66,9 +80,8 @@ not attributed to PowerSearch.
 - PowerSearch edits the backwards-compatible implicit-AND clause array. The
   underlying engine already owns nested AND/OR groups, but a visual nested-group
   editor remains explicit roadmap work.
-- Remote transport remains caller-owned. The next roadmap item is a local
-  DataGrid recipe and one concrete abortable remote example using the exact same
-  serialized bytes.
+- Remote transport remains caller-owned. Lumo now demonstrates the adapter
+  boundary but intentionally does not bundle a fetch client, endpoint or cache.
 - Text/number/date token display uses the supplied transport values. Products
   needing domain-specific formatting can use the custom editor/formatter rather
   than having Lumo guess currencies, calendars or units.

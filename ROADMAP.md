@@ -88,7 +88,7 @@ checked individually so a partly integrated engine is not disguised as either
 - [ ] Add a visual editor for nested AND/OR groups. PowerSearch currently edits
       the backwards-compatible implicit-AND clause root; the shared query engine
       already executes, validates and serializes nested groups.
-- [ ] Connect the same query bytes to local DataGrid and one concrete remote
+- [x] Connect the same query bytes to local DataGrid and one concrete remote
       adapter/example. Remote transport stays caller-owned.
 - [ ] Add first-party form integration for nested/list values, async validation,
       dirty/touched/submitting state and schema adapters. Add hooks only when
@@ -127,9 +127,8 @@ checked individually so a partly integrated engine is not disguised as either
 
 ### Wave 4 — Astryx-class internal tools
 
-- [ ] **PowerSearch:** publish the Wave 1 local/remote DataGrid recipes and add
-      nested group editing. The typed token UI and shared query semantics are
-      already shipped.
+- [ ] **PowerSearch:** add nested group editing. The typed token UI, shared
+      query semantics and local/abortable-remote DataGrid recipes are shipped.
 - [ ] **LogStream:** virtual append-only data, follow/pause, filters, severity,
       timestamps, copy/export and accessible live-update policies.
 - [ ] **AI/chat:** composer, streaming states, citations, tool-call disclosure,

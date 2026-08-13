@@ -5,6 +5,10 @@ import {
   type PowerSearchField,
   type PowerSearchStrings,
 } from "@lumo-ui/ui";
+import {
+  PowerSearchDataGridIsland,
+  type PowerSearchDataGridRow,
+} from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 const t = {
@@ -58,6 +62,24 @@ const t = {
   openView: { "fa-IR": "سفارش‌های باز", "en-US": "Open orders" },
   reviewView: { "fa-IR": "نیازمند بررسی", "en-US": "Needs review" },
   remoteStatus: { "fa-IR": "نتیجه‌ها به‌روز هستند", "en-US": "Results are up to date" },
+  localGrid: { "fa-IR": "اجرای محلی در جدول داده", "en-US": "Local DataGrid execution" },
+  remoteGrid: { "fa-IR": "آداپتور راه دورِ لغوشدنی", "en-US": "Abortable remote adapter" },
+  gridLabel: { "fa-IR": "نتیجه‌های سفارش", "en-US": "Order results" },
+  customer: { "fa-IR": "مشتری", "en-US": "Customer" },
+  city: { "fa-IR": "شهر", "en-US": "City" },
+  loading: { "fa-IR": "در حال دریافت نتیجه‌ها", "en-US": "Loading results" },
+  refreshing: { "fa-IR": "در حال تازه‌سازی نتیجه‌ها", "en-US": "Refreshing results" },
+  loadingMore: { "fa-IR": "در حال دریافت نتیجه‌های بیشتر", "en-US": "Loading more results" },
+  noResults: { "fa-IR": "نتیجه‌ای پیدا نشد", "en-US": "No results found" },
+  retry: { "fa-IR": "تلاش دوباره", "en-US": "Retry" },
+  more: { "fa-IR": "نتیجه‌های بیشتر", "en-US": "More results" },
+  remoteError: { "fa-IR": "دریافت نتیجه‌ها ناموفق بود", "en-US": "Results could not be loaded" },
+  tehran: { "fa-IR": "تهران", "en-US": "Tehran" },
+  shiraz: { "fa-IR": "شیراز", "en-US": "Shiraz" },
+  tabriz: { "fa-IR": "تبریز", "en-US": "Tabriz" },
+  samira: { "fa-IR": "سمیرا", "en-US": "Samira" },
+  nima: { "fa-IR": "نیما", "en-US": "Nima" },
+  negar: { "fa-IR": "نگار", "en-US": "Negar" },
 } satisfies Record<string, LocalizedText>;
 
 function strings(l: Locale): PowerSearchStrings {
@@ -193,6 +215,62 @@ function ReadOnlyExample(l: Locale) {
   );
 }
 
+function gridFields(l: Locale): readonly PowerSearchField[] {
+  return fields(l).filter((field) => field.id === "status" || field.id === "total");
+}
+
+function gridRows(l: Locale): readonly PowerSearchDataGridRow[] {
+  return [
+    { id: "one", name: t.samira[l], city: t.tehran[l], total: 800, status: "open" },
+    { id: "two", name: t.nima[l], city: t.shiraz[l], total: 300, status: "closed" },
+    { id: "three", name: t.negar[l], city: t.tabriz[l], total: 1_200, status: "open" },
+  ];
+}
+
+function gridLabels(l: Locale) {
+  return {
+    gridLabel: t.gridLabel[l],
+    nameHeader: t.customer[l],
+    cityHeader: t.city[l],
+    totalHeader: t.total[l],
+    loadingText: t.loading[l],
+    refreshingText: t.refreshing[l],
+    loadingMoreText: t.loadingMore[l],
+    emptyText: t.noResults[l],
+    retryLabel: t.retry[l],
+    loadMoreLabel: t.more[l],
+    errorText: t.remoteError[l],
+  };
+}
+
+function LocalDataGridExample(l: Locale) {
+  return (
+    <PowerSearchDataGridIsland
+      mode="local"
+      locale={l}
+      fields={gridFields(l)}
+      strings={strings(l)}
+      rows={gridRows(l)}
+      labels={gridLabels(l)}
+      defaultQuery={[createFilter("status", "is", ["open"], "local-open")]}
+    />
+  );
+}
+
+function RemoteDataGridExample(l: Locale) {
+  return (
+    <PowerSearchDataGridIsland
+      mode="remote"
+      locale={l}
+      fields={gridFields(l)}
+      strings={strings(l)}
+      rows={gridRows(l)}
+      labels={gridLabels(l)}
+      defaultQuery={[createFilter("total", "gte", ["500"], "remote-total")]}
+    />
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
     title: t.title,
@@ -214,5 +292,7 @@ export const EXAMPLES: ComponentExamples = {
     { id: "typed-query", title: { "fa-IR": "بندهای نوع‌دار", "en-US": "Typed clauses" }, render: TypedQueryExample },
     { id: "saved-views", title: { "fa-IR": "نما و سرریز", "en-US": "Views and overflow" }, render: SavedViewsExample },
     { id: "read-only", title: { "fa-IR": "فقط‌خواندنی", "en-US": "Read only" }, render: ReadOnlyExample },
+    { id: "local-data-grid", title: t.localGrid, render: LocalDataGridExample },
+    { id: "remote-data-grid", title: t.remoteGrid, render: RemoteDataGridExample },
   ],
 };

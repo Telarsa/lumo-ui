@@ -1713,10 +1713,23 @@ import {
   DataGridPagination,
   DataGridSearch,
   DataGridToolbar,
+  PowerSearch,
+  executeQuery,
+  parseQuery,
+  serializeQuery,
   useAsyncLumoTable,
+  useLumoQueryTable,
   type AsyncCollectionPage,
   type AsyncCollectionRequest,
+  type DataGridAsyncState,
   type DataGridColumnLabel,
+  type DataGridTableInstance,
+  type FilterClause,
+  type LumoTableInstance,
+  type LumoTableRow,
+  type PowerSearchField,
+  type PowerSearchStrings,
+  type QueryExecutionField,
 } from "@lumo-ui/ui";
 import { formatNumber } from "@lumo-ui/core";
 
@@ -1741,6 +1754,239 @@ export interface DataGridAsyncIslandProps {
   retryLabel: string;
   loadMoreLabel: string;
   errorText: string;
+}
+
+export interface PowerSearchDataGridRow extends DataGridIslandRow {
+  status: string;
+}
+
+export interface PowerSearchDataGridLabels {
+  gridLabel: string;
+  nameHeader: string;
+  cityHeader: string;
+  totalHeader: string;
+  loadingText: string;
+  refreshingText: string;
+  loadingMoreText: string;
+  emptyText: string;
+  retryLabel: string;
+  loadMoreLabel: string;
+  errorText: string;
+}
+
+export interface PowerSearchDataGridIslandProps {
+  mode: "local" | "remote";
+  locale: Locale;
+  fields: readonly PowerSearchField[];
+  strings: PowerSearchStrings;
+  rows: readonly PowerSearchDataGridRow[];
+  labels: PowerSearchDataGridLabels;
+  defaultQuery?: readonly FilterClause[] | undefined;
+}
+
+function powerSearchExecutionFields(
+  fields: readonly PowerSearchField[],
+): readonly QueryExecutionField<PowerSearchDataGridRow>[] {
+  const read = (row: PowerSearchDataGridRow, fieldId: string): unknown => {
+    if (fieldId === "status") return row.status;
+    if (fieldId === "name") return row.name;
+    if (fieldId === "city") return row.city;
+    if (fieldId === "total") return row.total;
+    throw new RangeError(`PowerSearch DataGrid example has no row field "${fieldId}".`);
+  };
+  const test = (fieldId: string, operatorId: string, value: unknown, values: readonly string[]) => {
+    if (operatorId === "empty") return value === null || value === undefined || value === "";
+    if (operatorId === "is") return values.some((candidate) => String(value) === candidate);
+    if (operatorId === "is-not") return values.every((candidate) => String(value) !== candidate);
+    if (operatorId === "contains") {
+      return values.some((candidate) =>
+        String(value).toLocaleLowerCase().includes(candidate.toLocaleLowerCase()),
+      );
+    }
+    if (fieldId === "total" && operatorId === "gte") {
+      return values.length > 0 && Number(value) >= Number(values[0]);
+    }
+    if (fieldId === "total" && operatorId === "lte") {
+      return values.length > 0 && Number(value) <= Number(values[0]);
+    }
+    throw new RangeError(
+      `PowerSearch DataGrid example has no "${operatorId}" adapter for "${fieldId}".`,
+    );
+  };
+  return fields.map((field) => ({
+    id: field.id,
+    read: (row) => read(row, field.id),
+    operators: field.operators.map((operator) => ({
+      id: operator.id,
+      test: (value, values) => test(field.id, operator.id, value, values),
+    })),
+  }));
+}
+
+interface PowerSearchResultsProps {
+  locale: Locale;
+  labels: PowerSearchDataGridLabels;
+  table: PowerSearchTableInstance;
+  asyncState?: DataGridAsyncState | undefined;
+}
+
+interface PowerSearchTableRow extends LumoTableRow {
+  original: PowerSearchDataGridRow;
+}
+
+interface PowerSearchTableInstance extends LumoTableInstance, DataGridTableInstance {
+  getRowModel: () => { rows: readonly PowerSearchTableRow[] };
+}
+
+function PowerSearchResults({ locale, labels, table, asyncState }: PowerSearchResultsProps) {
+  return (
+    <DataGrid locale={locale} table={table} asyncState={asyncState}>
+      <Table label={labels.gridLabel} locale={locale} table={table}>
+        <TableHeader>
+          <Column id="name" isRowHeader>{labels.nameHeader}</Column>
+          <Column id="city">{labels.cityHeader}</Column>
+          <Column id="total">{labels.totalHeader}</Column>
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <Row key={row.id} row={row}>
+              <Cell isRowHeader>{row.original.name}</Cell>
+              <Cell>{row.original.city}</Cell>
+              <Cell>{formatNumber(row.original.total, locale)}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+    </DataGrid>
+  );
+}
+
+function LocalPowerSearchDataGrid({
+  locale,
+  fields,
+  strings,
+  rows,
+  labels,
+  defaultQuery = [],
+}: Omit<PowerSearchDataGridIslandProps, "mode">) {
+  const [query, setQuery] = useState<readonly FilterClause[]>(defaultQuery);
+  const table = useLumoQueryTable<PowerSearchDataGridRow>({
+    locale,
+    data: rows,
+    query,
+    queryFields: powerSearchExecutionFields(fields),
+    columns: [
+      { id: "name", accessorKey: "name" },
+      { id: "city", accessorKey: "city" },
+      { id: "total", accessorKey: "total" },
+    ],
+    getRowId: (row) => row.id,
+  });
+  return (
+    <div className="grid gap-4">
+      <PowerSearch
+        fields={fields}
+        strings={strings}
+        value={query}
+        onValueChange={setQuery}
+        resultCount={formatNumber(table.getRowCount(), locale)}
+        name="query"
+      />
+      <PowerSearchResults locale={locale} labels={labels} table={table} />
+    </div>
+  );
+}
+
+function RemotePowerSearchDataGrid({
+  locale,
+  fields,
+  strings,
+  rows,
+  labels,
+  defaultQuery = [],
+}: Omit<PowerSearchDataGridIslandProps, "mode">) {
+  const [query, setQuery] = useState<readonly FilterClause[]>(defaultQuery);
+  const queryFields = powerSearchExecutionFields(fields);
+  const queryBytes = serializeQuery(query);
+  const grid = useAsyncLumoTable<PowerSearchDataGridRow, readonly FilterClause[]>({
+    collection: {
+      query,
+      queryKey: queryBytes,
+      getKey: (row) => row.id,
+      load: ({ query: remoteQuery, signal }) =>
+        new Promise<AsyncCollectionPage<PowerSearchDataGridRow, string>>((resolve, reject) => {
+          // The serialize/parse roundtrip is the example's wire boundary. A real
+          // product replaces this timer with fetch while keeping the request bytes.
+          const bytes = serializeQuery(remoteQuery);
+          const timer = globalThis.setTimeout(() => {
+            const parsed = parseQuery(bytes);
+            if (!parsed.ok) {
+              reject(new TypeError("The remote query payload is invalid."));
+              return;
+            }
+            const items = executeQuery(rows, parsed.value, queryFields);
+            resolve({ items, totalCount: items.length });
+          }, 220);
+          signal.addEventListener(
+            "abort",
+            () => {
+              globalThis.clearTimeout(timer);
+              reject(signal.reason);
+            },
+            { once: true },
+          );
+        }),
+    },
+    table: {
+      locale,
+      columns: [
+        { id: "name", accessorKey: "name" },
+        { id: "city", accessorKey: "city" },
+        { id: "total", accessorKey: "total" },
+      ],
+      getRowId: (row) => row.id,
+    },
+    messages: {
+      loading: labels.loadingText,
+      refreshing: labels.refreshingText,
+      loadingMore: labels.loadingMoreText,
+      empty: labels.emptyText,
+      retry: labels.retryLabel,
+      loadMore: labels.loadMoreLabel,
+      error: () => labels.errorText,
+    },
+  });
+  return (
+    <div className="grid gap-4">
+      <PowerSearch
+        fields={fields}
+        strings={strings}
+        value={query}
+        onValueChange={setQuery}
+        resultCount={
+          grid.collection.totalCount === undefined
+            ? undefined
+            : formatNumber(grid.collection.totalCount, locale)
+        }
+        name="query"
+      />
+      <PowerSearchResults
+        locale={locale}
+        labels={labels}
+        table={grid.table}
+        asyncState={grid.asyncState}
+      />
+    </div>
+  );
+}
+
+/** Local execution or an abortable serialized-query adapter, chosen explicitly. */
+export function PowerSearchDataGridIsland(props: PowerSearchDataGridIslandProps) {
+  return props.mode === "local" ? (
+    <LocalPowerSearchDataGrid {...props} />
+  ) : (
+    <RemotePowerSearchDataGrid {...props} />
+  );
 }
 
 /** Paged rows through the shared transport-independent collection controller. */
