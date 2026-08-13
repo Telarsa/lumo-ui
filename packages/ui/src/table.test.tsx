@@ -864,9 +864,9 @@ describe("TableWidgetCell — the keyboard", () => {
  * WIDGET-CELL CARVE-OUT COULD NOT REACH
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-function WithResizers() {
+function WithResizers({ locale = "fa-IR" }: { locale?: Locale }) {
   const table = useLumoTable({
-    locale: "fa-IR",
+    locale,
     data: PEOPLE,
     columns: [
       { id: "name", accessorKey: "name" },
@@ -874,7 +874,7 @@ function WithResizers() {
     ],
   });
   return (
-    <Table label="افراد" locale="fa-IR" table={table}>
+    <Table label="افراد" locale={locale} table={table}>
       <TableHeader>
         <Column id="name" isRowHeader resizer={<ColumnResizer label="تغییر اندازهٔ ستون" />}>
           نام
@@ -922,20 +922,27 @@ describe("ColumnResizer — a grid with resizable columns is still ONE tab stop"
     }
   });
 
-  it("enters a resizer from its header and resizes with arrow keys", () => {
-    const { container } = render(<WithResizers />);
-    const header = container.querySelector<HTMLElement>('[role="columnheader"]')!;
-    const handle = header.querySelector<HTMLElement>('button[aria-label="تغییر اندازهٔ ستون"]')!;
-    const before = Number(handle.getAttribute("aria-valuenow"));
+  it("mirrors a physical ArrowRight resize between Persian and English", () => {
+    for (const [locale, comparison] of [
+      ["fa-IR", "shrinks"],
+      ["en-US", "grows"],
+    ] as const) {
+      const { container, unmount } = render(<WithResizers locale={locale} />);
+      const header = container.querySelector<HTMLElement>('[role="columnheader"]')!;
+      const handle = header.querySelector<HTMLElement>('button[aria-label="تغییر اندازهٔ ستون"]')!;
+      const before = Number(handle.getAttribute("aria-valuenow"));
 
-    act(() => {
-      header.focus();
-      fireEvent.keyDown(header, { key: "F2" });
-    });
-    expect(document.activeElement).toBe(handle);
-    fireEvent.keyDown(handle, { key: "ArrowRight" });
-    expect(Number(handle.getAttribute("aria-valuenow"))).toBeGreaterThan(before);
-    fireEvent.keyDown(handle, { key: "Escape" });
-    expect(document.activeElement).toBe(header);
+      act(() => {
+        header.focus();
+        fireEvent.keyDown(header, { key: "F2" });
+      });
+      expect(document.activeElement).toBe(handle);
+      fireEvent.keyDown(handle, { key: "ArrowRight" });
+      const after = Number(handle.getAttribute("aria-valuenow"));
+      expect(comparison === "grows" ? after > before : after < before).toBe(true);
+      fireEvent.keyDown(handle, { key: "Escape" });
+      expect(document.activeElement).toBe(header);
+      unmount();
+    }
   });
 });
