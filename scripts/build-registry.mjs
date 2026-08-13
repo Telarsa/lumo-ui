@@ -212,6 +212,7 @@ const importSpecifiers = (source, fileName) => {
 };
 
 /** First complete prose sentence from the leading file docblock. */
+/** @param {string} source */
 const registryDescription = (source) => {
   const block = source.match(/\/\*\*([\s\S]*?)\*\//)?.[1] ?? "";
   const prose = block
