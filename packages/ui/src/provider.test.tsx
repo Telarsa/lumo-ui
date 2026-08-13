@@ -1,7 +1,52 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { act, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { useDirection } from "@base-ui/react/direction-provider";
-import { LumoProvider } from "./provider.tsx";
+import {
+  LumoProvider,
+  ManagedSurfaces,
+  createCommandManager,
+  createModalManager,
+} from "./provider.tsx";
+
+describe("SSR-safe global surface managers", () => {
+  it("serves an empty deterministic snapshot, then opens, updates and dismisses a modal", () => {
+    const manager = createModalManager<{ title: string }>();
+    expect(
+      renderToStaticMarkup(
+        <ManagedSurfaces manager={manager}>
+          {({ value }) => <p>{value.title}</p>}
+        </ManagedSurfaces>,
+      ),
+    ).toBe("");
+
+    render(
+      <ManagedSurfaces manager={manager}>
+        {({ value }) => <p>{value.title}</p>}
+      </ManagedSurfaces>,
+    );
+    let id = "";
+    act(() => {
+      id = manager.open({ title: "ویرایش" });
+    });
+    expect(screen.getByText("ویرایش")).toBeTruthy();
+    act(() => manager.update(id, { title: "ویرایش‌شده" }));
+    expect(screen.getByText("ویرایش‌شده")).toBeTruthy();
+    act(() => manager.dismiss(id));
+    expect(screen.queryByText("ویرایش‌شده")).toBeNull();
+  });
+
+  it("a command manager is a singleton spotlight while a modal manager is a stack", () => {
+    const commands = createCommandManager<string>();
+    const modals = createModalManager<string>();
+    commands.open("one");
+    commands.open("two");
+    modals.open("one");
+    modals.open("two");
+    expect(commands.getSnapshot().map((item) => item.value)).toEqual(["two"]);
+    expect(modals.getSnapshot().map((item) => item.value)).toEqual(["one", "two"]);
+  });
+});
 
 /**
  * The defect this file pins is invisible to every other gate in the repo.

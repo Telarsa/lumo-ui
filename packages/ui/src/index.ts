@@ -52,10 +52,14 @@ export type {
 export {
   LumoForm,
   fieldControl,
+  createLatestAsyncValidator,
+  formSubmissionState,
   firstError,
   focusFirstInvalid,
   isValidNationalId,
   lumoValidators,
+  listFieldControl,
+  lumoStandardSchema,
   revalidateLogic,
   useLumoForm,
   visibleLength,
@@ -65,6 +69,12 @@ export type {
   LumoFormField,
   LumoFormInstance,
   LumoFormProps,
+  LumoFormSubmissionState,
+  LumoLatestAsyncValidator,
+  LumoListField,
+  LumoListFieldControl,
+  LumoStandardSchema,
+  LumoStandardSchemaIssue,
   LumoValidator,
   LumoValidatorMessages,
 } from "./form-state.tsx";
@@ -516,6 +526,7 @@ export {
   TableSelectionCell,
   TableTreeCell,
   TableWidgetCell,
+  VirtualTableBody,
   localeSortFn,
   lumoTableFeatures,
   useAsyncLumoTable,
@@ -536,6 +547,7 @@ export type {
   TableSelectionCellProps,
   TableTreeCellProps,
   TableWidgetCellProps,
+  VirtualTableBodyProps,
   // The structural seam the grid reads TanStack through. Exported because a
   // consumer wiring their own state layer needs to know what `Table` asks for —
   // and because the interfaces ARE the statement that TanStack owns no ARIA.
@@ -696,8 +708,18 @@ export type {
   PaginationSlot,
 } from "./pagination.variants.ts";
 
-export { LumoProvider } from "./provider.tsx";
-export type { LumoProviderProps } from "./provider.tsx";
+export {
+  LumoProvider,
+  ManagedSurfaces,
+  createCommandManager,
+  createModalManager,
+} from "./provider.tsx";
+export type {
+  LumoProviderProps,
+  LumoSurfaceManager,
+  ManagedSurface,
+  ManagedSurfacesProps,
+} from "./provider.tsx";
 
 export {
   HoverCard,

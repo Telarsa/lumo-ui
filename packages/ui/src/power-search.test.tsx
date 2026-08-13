@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   PowerSearch,
   createFilter,
+  createFilterGroup,
   serializeQuery,
   type PowerSearchField,
   type PowerSearchStrings,
@@ -33,6 +34,11 @@ const strings: PowerSearchStrings = {
   tokenTemplate: "{field}، {operator}، {value}",
   emptyValue: "بدون مقدار",
   valueSeparator: "، ",
+  groupLabelTemplate: "گروه {combinator}",
+  andLabel: "همه",
+  orLabel: "هرکدام",
+  addGroup: "افزودن گروه",
+  removeGroup: "حذف گروه",
 };
 
 const fields: readonly PowerSearchField[] = [
@@ -92,6 +98,92 @@ const fields: readonly PowerSearchField[] = [
 ];
 
 describe("PowerSearch", () => {
+  it("edits nested AND/OR groups without flattening the canonical query", () => {
+    const onValueChange = vi.fn();
+    render(
+      <PowerSearch
+        fields={fields}
+        strings={{
+          ...strings,
+          groupLabelTemplate: "گروه {combinator}",
+          andLabel: "همه",
+          orLabel: "هرکدام",
+          addGroup: "افزودن گروه",
+          removeGroup: "حذف گروه",
+        }}
+        value={createFilterGroup(
+          "and",
+          [
+            createFilter("status", "is", ["open"], "open"),
+            createFilterGroup(
+              "or",
+              [
+                createFilter("total", "gte", ["100"], "large"),
+                createFilter("archived", "is", ["false"], "active"),
+              ],
+              "either",
+            ),
+          ],
+          "root",
+        )}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    const nested = screen.getByRole("group", { name: "گروه هرکدام" });
+    fireEvent.change(within(nested).getByRole("combobox", { name: strings.operatorLabel }), {
+      target: { value: "and" },
+    });
+
+    expect(onValueChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        id: "root",
+        children: expect.arrayContaining([
+          expect.objectContaining({ id: "either", combinator: "and" }),
+        ]),
+      }),
+    );
+    expect(serializeQuery(onValueChange.mock.calls.at(-1)?.[0])).toContain(
+      '\"combinator\":\"and\"',
+    );
+  });
+
+  it("adds and removes a nested group through visible caller-labelled controls", () => {
+    const onValueChange = vi.fn();
+    const groupedStrings = {
+      ...strings,
+      groupLabelTemplate: "گروه {combinator}",
+      andLabel: "همه",
+      orLabel: "هرکدام",
+      addGroup: "افزودن گروه",
+      removeGroup: "حذف گروه",
+    };
+    const { rerender } = render(
+      <PowerSearch
+        fields={fields}
+        strings={groupedStrings}
+        value={createFilterGroup("and", [], "root")}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: groupedStrings.addGroup }));
+    const added = onValueChange.mock.calls.at(-1)?.[0];
+    expect(added.children).toHaveLength(1);
+    expect(added.children[0]).toMatchObject({ combinator: "and", children: [] });
+
+    rerender(
+      <PowerSearch
+        fields={fields}
+        strings={groupedStrings}
+        value={added}
+        onValueChange={onValueChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: groupedStrings.removeGroup }));
+    expect(onValueChange.mock.calls.at(-1)?.[0].children).toEqual([]);
+  });
+
   it("ships a closed, named combobox without a dangling controls reference in the first byte", () => {
     const html = renderToStaticMarkup(<PowerSearch fields={fields} strings={strings} />);
     const combobox = /<input[^>]*role="combobox"[^>]*>/.exec(html)?.[0];

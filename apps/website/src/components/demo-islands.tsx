@@ -1724,7 +1724,7 @@ import {
   type DataGridAsyncState,
   type DataGridColumnLabel,
   type DataGridTableInstance,
-  type FilterClause,
+  type FilterQuery,
   type LumoTableInstance,
   type LumoTableRow,
   type PowerSearchField,
@@ -1781,7 +1781,7 @@ export interface PowerSearchDataGridIslandProps {
   strings: PowerSearchStrings;
   rows: readonly PowerSearchDataGridRow[];
   labels: PowerSearchDataGridLabels;
-  defaultQuery?: readonly FilterClause[] | undefined;
+  defaultQuery?: FilterQuery | undefined;
 }
 
 function powerSearchExecutionFields(
@@ -1869,7 +1869,7 @@ function LocalPowerSearchDataGrid({
   labels,
   defaultQuery = [],
 }: Omit<PowerSearchDataGridIslandProps, "mode">) {
-  const [query, setQuery] = useState<readonly FilterClause[]>(defaultQuery);
+  const [query, setQuery] = useState<FilterQuery>(defaultQuery);
   const table = useLumoQueryTable<PowerSearchDataGridRow>({
     locale,
     data: rows,
@@ -1905,10 +1905,10 @@ function RemotePowerSearchDataGrid({
   labels,
   defaultQuery = [],
 }: Omit<PowerSearchDataGridIslandProps, "mode">) {
-  const [query, setQuery] = useState<readonly FilterClause[]>(defaultQuery);
+  const [query, setQuery] = useState<FilterQuery>(defaultQuery);
   const queryFields = powerSearchExecutionFields(fields);
   const queryBytes = serializeQuery(query);
-  const grid = useAsyncLumoTable<PowerSearchDataGridRow, readonly FilterClause[]>({
+  const grid = useAsyncLumoTable<PowerSearchDataGridRow, FilterQuery>({
     collection: {
       query,
       queryKey: queryBytes,

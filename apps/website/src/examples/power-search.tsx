@@ -43,6 +43,11 @@ const t = {
   },
   empty: { "fa-IR": "بدون مقدار", "en-US": "No value" },
   valueSeparator: { "fa-IR": "، ", "en-US": ", " },
+  groupLabelTemplate: { "fa-IR": "گروه {combinator}", "en-US": "{combinator} group" },
+  andLabel: { "fa-IR": "همه", "en-US": "All" },
+  orLabel: { "fa-IR": "هرکدام", "en-US": "Any" },
+  addGroup: { "fa-IR": "افزودن گروه", "en-US": "Add group" },
+  removeGroup: { "fa-IR": "حذف گروه", "en-US": "Remove group" },
   status: { "fa-IR": "وضعیت", "en-US": "Status" },
   total: { "fa-IR": "مبلغ", "en-US": "Total" },
   due: { "fa-IR": "سررسید", "en-US": "Due date" },
@@ -105,6 +110,11 @@ function strings(l: Locale): PowerSearchStrings {
     tokenTemplate: t.token[l],
     emptyValue: t.empty[l],
     valueSeparator: t.valueSeparator[l],
+    groupLabelTemplate: t.groupLabelTemplate[l],
+    andLabel: t.andLabel[l],
+    orLabel: t.orLabel[l],
+    addGroup: t.addGroup[l],
+    removeGroup: t.removeGroup[l],
   };
 }
 

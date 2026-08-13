@@ -15,12 +15,17 @@ import { inputVariants } from "./text-field.tsx";
 import {
   assertQuery,
   createFilter,
+  createFilterGroup,
   serializeQuery,
   type FilterClause,
+  type FilterExpression,
+  type FilterGroup,
+  type FilterQuery,
+  type QueryCombinator,
 } from "./filters.shared.ts";
 
-export { createFilter, serializeQuery } from "./filters.shared.ts";
-export type { FilterClause } from "./filters.shared.ts";
+export { createFilter, createFilterGroup, serializeQuery } from "./filters.shared.ts";
+export type { FilterClause, FilterExpression, FilterGroup, FilterQuery } from "./filters.shared.ts";
 
 export interface PowerSearchOperator {
   id: string;
@@ -129,12 +134,18 @@ export interface PowerSearchStrings {
   emptyValue: string;
   /** Locale-authored separator used between multi-value labels. */
   valueSeparator: string;
+  /** `{combinator}` is replaced with the caller-authored AND/OR label. */
+  groupLabelTemplate: string;
+  andLabel: string;
+  orLabel: string;
+  addGroup: string;
+  removeGroup: string;
 }
 
 export interface PowerSearchSavedView {
   id: string;
   label: string;
-  query: readonly FilterClause[];
+  query: FilterQuery;
   disabled?: boolean | undefined;
 }
 
@@ -150,9 +161,9 @@ export interface PowerSearchProps
   > {
   fields: readonly PowerSearchField[];
   strings: PowerSearchStrings;
-  value?: readonly FilterClause[] | undefined;
-  defaultValue?: readonly FilterClause[] | undefined;
-  onValueChange?: ((value: readonly FilterClause[]) => void) | undefined;
+  value?: FilterQuery | undefined;
+  defaultValue?: FilterQuery | undefined;
+  onValueChange?: ((value: FilterQuery) => void) | undefined;
   savedViews?: readonly PowerSearchSavedView[] | undefined;
   onSavedViewChange?: ((view: PowerSearchSavedView) => void) | undefined;
   /** Already-localized display count. */
@@ -164,6 +175,10 @@ export interface PowerSearchProps
   name?: string | undefined;
   form?: string | undefined;
   className?: string | undefined;
+}
+
+function isFilterGroup(expression: FilterExpression): expression is FilterGroup {
+  return "children" in expression;
 }
 
 function replace(template: string, values: Readonly<Record<string, string>>): string {
@@ -444,7 +459,7 @@ function PowerSearchToken({
             <p className="text-xs text-fg-muted">{draftField.status}</p>
           )}
           {error === null ? null : (
-            <p id={errorId} role="alert" className="text-sm text-danger">
+            <p id={errorId} role="alert" className="text-sm text-critical">
               {error}
             </p>
           )}
@@ -488,6 +503,123 @@ function PowerSearchToken({
   );
 }
 
+interface PowerSearchGroupProps {
+  group: FilterGroup;
+  fields: readonly PowerSearchField[];
+  strings: PowerSearchStrings;
+  isDisabled: boolean;
+  readOnly: boolean;
+  isRoot?: boolean | undefined;
+  createId: (kind: "group") => string;
+  onChange: (group: FilterGroup) => void;
+  onRemove?: (() => void) | undefined;
+}
+
+/** Recursive visual projection of the shared query AST; it owns no parallel state. */
+function PowerSearchGroup({
+  group,
+  fields,
+  strings,
+  isDisabled,
+  readOnly,
+  isRoot = false,
+  createId,
+  onChange,
+  onRemove,
+}: PowerSearchGroupProps) {
+  const combinatorLabel = group.combinator === "and" ? strings.andLabel : strings.orLabel;
+  const label = replace(strings.groupLabelTemplate, { combinator: combinatorLabel });
+  const updateChild = (id: string, next: FilterExpression) =>
+    onChange({
+      ...group,
+      children: group.children.map((child) => (child.id === id ? next : child)),
+    });
+  const removeChild = (id: string) =>
+    onChange({ ...group, children: group.children.filter((child) => child.id !== id) });
+
+  return (
+    <div
+      role="group"
+      aria-label={label}
+      className={cn(
+        "flex min-w-0 flex-col gap-2 rounded-md border border-border p-2",
+        isRoot ? "bg-surface" : "bg-surface-sunken",
+      )}
+    >
+      <div className="flex flex-wrap items-center gap-2">
+        <select
+          data-lumo=""
+          aria-label={strings.operatorLabel}
+          value={group.combinator}
+          disabled={isDisabled || readOnly}
+          onChange={(event) =>
+            onChange({ ...group, combinator: event.currentTarget.value as QueryCombinator })
+          }
+          className={cn(nativeSelectVariants({ size: "sm" }), "w-auto")}
+        >
+          <option value="and">{strings.andLabel}</option>
+          <option value="or">{strings.orLabel}</option>
+        </select>
+        <Button
+          variant="ghost"
+          size="sm"
+          isDisabled={isDisabled || readOnly}
+          onPress={() =>
+            onChange({
+              ...group,
+              children: [
+                ...group.children,
+                createFilterGroup("and", [], createId("group")),
+              ],
+            })
+          }
+        >
+          {strings.addGroup}
+        </Button>
+        {isRoot || onRemove === undefined ? null : (
+          <Button
+            variant="ghost"
+            size="sm"
+            isDisabled={isDisabled || readOnly}
+            onPress={onRemove}
+          >
+            {strings.removeGroup}
+          </Button>
+        )}
+      </div>
+      <div className="flex min-w-0 flex-col gap-2">
+        {group.children.map((child) =>
+          isFilterGroup(child) ? (
+            <PowerSearchGroup
+              key={child.id}
+              group={child}
+              fields={fields}
+              strings={strings}
+              isDisabled={isDisabled}
+              readOnly={readOnly}
+              createId={createId}
+              onChange={(next) => updateChild(child.id, next)}
+              onRemove={() => removeChild(child.id)}
+            />
+          ) : (
+            <div key={child.id} className="flex min-w-0 items-center gap-2">
+              <PowerSearchToken
+                clause={child}
+                fields={fields}
+                strings={strings}
+                isDisabled={isDisabled}
+                readOnly={readOnly}
+                onCommit={(next) => updateChild(child.id, next)}
+                onRemove={() => removeChild(child.id)}
+              />
+            </div>
+          ),
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function PowerSearch({
   fields,
   strings,
@@ -509,13 +641,13 @@ export function PowerSearch({
   const generatedId = useId();
   const nextId = useRef(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const [uncontrolled, setUncontrolled] = useState<readonly FilterClause[]>(defaultValue);
+  const [uncontrolled, setUncontrolled] = useState<FilterQuery>(defaultValue);
   const [query, setQuery] = useState("");
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [expanded, setExpanded] = useState(false);
   const [savedViewId, setSavedViewId] = useState("");
-  const clauses = value ?? uncontrolled;
+  const queryValue = value ?? uncontrolled;
   const fieldsById = new Map(fields.map((field) => [field.id, field] as const));
 
   if (fields.length === 0) throw new RangeError("PowerSearch requires at least one field.");
@@ -526,18 +658,24 @@ export function PowerSearch({
     throw new RangeError("PowerSearch maxVisibleFilters must be at least one.");
   }
   for (const field of fields) defaultOperator(field);
-  assertQuery(clauses, fields);
+  assertQuery(queryValue, fields);
   for (const view of savedViews) assertQuery(view.query, fields);
 
   const normalized = query.trim().toLocaleLowerCase();
   const matchingFields = fields.filter((field) =>
     normalized === "" ? true : field.label.toLocaleLowerCase().includes(normalized),
   );
+  const rootGroup = !Array.isArray(queryValue) && isFilterGroup(queryValue as FilterExpression);
+  const clauses = Array.isArray(queryValue)
+    ? (queryValue as readonly FilterClause[])
+    : rootGroup
+      ? []
+      : [queryValue as FilterClause];
   const visibleClauses = expanded ? clauses : clauses.slice(0, maxVisibleFilters);
   const hiddenCount = clauses.length - visibleClauses.length;
   const unavailable = isDisabled || readOnly;
 
-  function update(next: readonly FilterClause[], selectedView = "") {
+  function update(next: FilterQuery, selectedView = "") {
     if (value === undefined) setUncontrolled(next);
     setSavedViewId(selectedView);
     onValueChange?.(next);
@@ -547,7 +685,17 @@ export function PowerSearch({
     if (field.disabled === true || unavailable) return;
     const operator = defaultOperator(field);
     const id = `power-search-${generatedId.replaceAll(":", "")}-${++nextId.current}`;
-    update([...clauses, createFilter(field.id, operator.id, [], id)]);
+    const clause = createFilter(field.id, operator.id, [], id);
+    update(
+      Array.isArray(queryValue)
+        ? [...queryValue, clause]
+        : rootGroup
+          ? {
+              ...(queryValue as FilterGroup),
+              children: [...(queryValue as FilterGroup).children, clause],
+            }
+          : [queryValue as FilterClause, clause],
+    );
     setQuery("");
     setSuggestionsOpen(false);
   }
@@ -585,7 +733,7 @@ export function PowerSearch({
           tabIndex={-1}
           name={name}
           form={form}
-          value={serializeQuery(clauses)}
+          value={serializeQuery(queryValue)}
         />
       )}
       <div className="flex flex-wrap items-center gap-2">
@@ -663,6 +811,7 @@ export function PowerSearch({
               <div id={`${generatedId}-fields`} role="listbox" aria-label={strings.suggestionsLabel}>
                 {matchingFields.map((field, index) => (
                   <button
+                    data-lumo=""
                     key={field.id}
                     id={`${generatedId}-field-${field.id}`}
                     type="button"
@@ -673,9 +822,9 @@ export function PowerSearch({
                     onClick={() => addField(field)}
                     className={cn(
                       "flex w-full flex-col rounded-sm px-2 py-1.5 text-start text-sm outline-none",
-                      "aria-selected:bg-surface-hover focus-visible:ring-2 focus-visible:ring-focus",
+                      "aria-selected:bg-surface-hover",
                       field.disabled === true
-                        ? "cursor-not-allowed text-fg-disabled"
+                        ? "cursor-not-allowed text-fg-muted opacity-50"
                         : "cursor-pointer text-fg hover:bg-surface-hover",
                     )}
                   >
@@ -695,7 +844,18 @@ export function PowerSearch({
           ) : null}
         </div>
       </div>
-      {clauses.length === 0 ? null : (
+      {rootGroup ? (
+        <PowerSearchGroup
+          group={queryValue as FilterGroup}
+          fields={fields}
+          strings={strings}
+          isDisabled={isDisabled}
+          readOnly={readOnly}
+          isRoot
+          createId={() => `power-search-${generatedId.replaceAll(":", "")}-group-${++nextId.current}`}
+          onChange={(next) => update(next)}
+        />
+      ) : clauses.length === 0 ? null : (
         <div className="flex flex-wrap items-center gap-2">
           {visibleClauses.map((clause) => (
             <PowerSearchToken
@@ -727,7 +887,7 @@ export function PowerSearch({
           role="status"
           aria-live="polite"
           data-status={status?.kind}
-          className={cn("text-sm text-fg-muted", status?.kind === "error" && "text-danger")}
+          className={cn("text-sm text-fg-muted", status?.kind === "error" && "text-critical")}
         >
           {statusText}
         </p>

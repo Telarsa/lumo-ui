@@ -16,7 +16,7 @@
  * `gridArrow` lives in a directive-free module with no DOM in its signature.
  */
 
-import { createElement, type FunctionComponent, type ReactElement } from "react";
+import { createElement, useRef, type FunctionComponent, type ReactElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -27,6 +27,8 @@ import {
   Table,
   TableBody,
   TableHeader,
+  TableSelectionCell,
+  VirtualTableBody,
   TableTreeCell,
   TableWidgetCell,
   ColumnResizer,
@@ -39,6 +41,87 @@ import { gridArrow } from "./table.variants.ts";
 import { formatNumber, type Locale } from "@lumo-ui/core";
 
 afterEach(cleanup);
+
+describe("VirtualTableBody — native-grid windowing", () => {
+  const data = Array.from({ length: 1_000 }, (_, index) => ({
+    id: `row-${index}`,
+    name: `Row ${index}`,
+  }));
+
+  function VirtualGrid() {
+    const scrollRef = useRef<HTMLDivElement>(null);
+    const table = useLumoTable({
+      locale: "en-US",
+      data,
+      columns: [{ id: "name", accessorKey: "name" }],
+      getRowId: (row) => row.id,
+      enableRowSelection: true,
+    });
+    const rows = table.getRowModel().rows;
+    return (
+      <div ref={scrollRef} data-testid="viewport" style={{ height: 200, overflow: "auto" }}>
+        <Table label="Orders" locale="en-US" table={table} rowCount={1_000}>
+          <TableHeader>
+            <Column id="pick">Pick</Column>
+            <Column id="name" isRowHeader>Name</Column>
+          </TableHeader>
+          <VirtualTableBody
+            rows={rows}
+            scrollRef={scrollRef}
+            estimateSize={40}
+            initialSize={200}
+            getRowKey={(row) => row.id}
+          >
+            {(row) => (
+              <>
+                <TableSelectionCell label={`Select ${row.id}`} />
+                <Cell isRowHeader>{String(row.getValue("name"))}</Cell>
+              </>
+            )}
+          </VirtualTableBody>
+        </Table>
+      </div>
+    );
+  }
+
+  it("renders a window while announcing the full corpus and absolute row positions", () => {
+    const viewportHeight = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(200);
+    const view = render(<VirtualGrid />);
+    const grid = view.getByRole("grid");
+    expect(grid.getAttribute("aria-rowcount")).toBe("1001");
+    expect(view.getAllByRole("row").length).toBeLessThan(30);
+    expect(view.getByRole("rowheader", { name: "Row 0" }).parentElement?.getAttribute("aria-rowindex")).toBe("2");
+
+    const viewport = view.getByTestId("viewport");
+    Object.defineProperty(viewport, "scrollTop", { value: 4_000, writable: true });
+    fireEvent.scroll(viewport);
+    const firstMounted = view.container.querySelector<HTMLElement>('tr[data-index]');
+    const absoluteIndex = Number(firstMounted?.dataset["index"]);
+    expect(absoluteIndex).toBeGreaterThan(0);
+    expect(firstMounted?.getAttribute("aria-rowindex")).toBe(String(absoluteIndex + 2));
+    viewportHeight.mockRestore();
+  });
+
+  it("keeps key-based selection while a selected row is unmounted and remounted", () => {
+    const viewportHeight = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(200);
+    const view = render(<VirtualGrid />);
+    const first = view.getByRole("checkbox", { name: "Select row-0" });
+    fireEvent.click(first);
+    expect(first.getAttribute("aria-checked")).toBe("true");
+    const viewport = view.getByTestId("viewport");
+    Object.defineProperty(viewport, "scrollTop", { value: 4_000, writable: true });
+    fireEvent.scroll(viewport);
+    expect(view.queryByRole("checkbox", { name: "Select row-0" })).toBeNull();
+    viewport.scrollTop = 0;
+    fireEvent.scroll(viewport);
+    expect(view.getByRole("checkbox", { name: "Select row-0" }).getAttribute("aria-checked")).toBe("true");
+    viewportHeight.mockRestore();
+  });
+});
 
 /* ════════════════════════════════════════════════════════════════════════════
  * THE ARROW KEYS

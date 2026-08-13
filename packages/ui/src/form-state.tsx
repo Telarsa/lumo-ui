@@ -356,6 +356,107 @@ export function firstError(errors: readonly unknown[], locale: Locale): string |
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
+ * ENTERPRISE FORM ADAPTERS
+ * ═══════════════════════════════════════════════════════════════════════════ */
+
+export interface LumoFormSubmissionState {
+  isDirty: boolean;
+  isTouched: boolean;
+  isSubmitting: boolean;
+  canSubmit: boolean;
+}
+
+/** Stable projection for `<form.Subscribe selector={formSubmissionState}>`. */
+export function formSubmissionState(state: LumoFormSubmissionState): LumoFormSubmissionState {
+  return {
+    isDirty: state.isDirty,
+    isTouched: state.isTouched,
+    isSubmitting: state.isSubmitting,
+    canSubmit: state.canSubmit,
+  };
+}
+
+export interface LumoListField<TItem> {
+  name: string;
+  state: { value: readonly TItem[] };
+  pushValue: (value: TItem) => void;
+  removeValue: (index: number) => void;
+  moveValue: (from: number, to: number) => void;
+}
+
+export interface LumoListFieldControl<TItem> {
+  name: string;
+  items: readonly TItem[];
+  append: (value: TItem) => void;
+  remove: (index: number) => void;
+  move: (from: number, to: number) => void;
+}
+
+/** Typed list/nested-field bridge; operations stay owned by TanStack Form. */
+export function listFieldControl<TItem>(field: LumoListField<TItem>): LumoListFieldControl<TItem> {
+  return {
+    name: field.name,
+    items: field.state.value,
+    append: field.pushValue,
+    remove: field.removeValue,
+    move: field.moveValue,
+  };
+}
+
+export interface LumoStandardSchemaIssue {
+  message: string;
+  path?: readonly unknown[] | undefined;
+}
+
+export interface LumoStandardSchema<TInput> {
+  readonly "~standard": {
+    readonly version: 1;
+    readonly vendor: string;
+    readonly validate: (
+      value: TInput,
+    ) =>
+      | { value: unknown; issues?: undefined }
+      | { issues: readonly LumoStandardSchemaIssue[] }
+      | Promise<
+          | { value: unknown; issues?: undefined }
+          | { issues: readonly LumoStandardSchemaIssue[] }
+        >;
+  };
+}
+
+/** Standard Schema adapter that returns its caller-authored issues unchanged. */
+export function lumoStandardSchema<TInput>(schema: LumoStandardSchema<TInput>) {
+  return async ({ value }: { value: TInput }): Promise<readonly LumoStandardSchemaIssue[] | undefined> => {
+    const result = await schema["~standard"].validate(value);
+    return "issues" in result && result.issues !== undefined ? result.issues : undefined;
+  };
+}
+
+export type LumoLatestAsyncValidator<TValue> = (context: {
+  value: TValue;
+  signal: AbortSignal;
+}) => Promise<string | undefined>;
+
+/**
+ * Cancels the preceding remote field check and suppresses stale completion.
+ * Transport and prose remain caller-owned; Lumo owns only request ordering.
+ */
+export function createLatestAsyncValidator<TValue>(
+  validate: LumoLatestAsyncValidator<TValue>,
+): (context: { value: TValue }) => Promise<string | undefined> {
+  let active: AbortController | undefined;
+  let generation = 0;
+  return async ({ value }) => {
+    active?.abort();
+    const controller = new AbortController();
+    active = controller;
+    const ownGeneration = ++generation;
+    const result = await validate({ value, signal: controller.signal });
+    return ownGeneration === generation && !controller.signal.aborted ? result : undefined;
+  };
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
  * THE VALIDATORS
  * ═══════════════════════════════════════════════════════════════════════════ */
 

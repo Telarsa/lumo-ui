@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment, useSyncExternalStore, type ReactNode } from "react";
 import { DirectionProvider } from "@base-ui/react/direction-provider";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { direction } from "@lumo-ui/core";
@@ -107,4 +108,83 @@ export function LumoProvider({ locale, children }: LumoProviderProps) {
       <DirectionProvider direction={direction(locale)}>{children}</DirectionProvider>
     </LumoLocaleContext.Provider>
   );
+}
+
+/* Global modal/command state. Markup remains caller-owned and therefore keeps
+ * Dialog/Command's required announced strings at the composition site. */
+export interface ManagedSurface<T> {
+  id: string;
+  value: T;
+}
+
+export interface LumoSurfaceManager<T> {
+  open: (value: T) => string;
+  update: (id: string, value: T) => void;
+  dismiss: (id: string) => void;
+  dismissAll: () => void;
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => readonly ManagedSurface<T>[];
+  getServerSnapshot: () => readonly ManagedSurface<T>[];
+}
+
+const EMPTY_SURFACES: readonly ManagedSurface<never>[] = [];
+
+function createSurfaceManager<T>(limit?: number): LumoSurfaceManager<T> {
+  let sequence = 0;
+  let snapshot: readonly ManagedSurface<T>[] = [];
+  const listeners = new Set<() => void>();
+  const publish = (next: readonly ManagedSurface<T>[]) => {
+    snapshot = next;
+    listeners.forEach((listener) => listener());
+  };
+  return {
+    open(value) {
+      const item = { id: `lumo-surface-${++sequence}`, value };
+      const next = [...snapshot, item];
+      publish(limit === undefined ? next : next.slice(-limit));
+      return item.id;
+    },
+    update(id, value) {
+      publish(snapshot.map((item) => (item.id === id ? { id, value } : item)));
+    },
+    dismiss(id) {
+      publish(snapshot.filter((item) => item.id !== id));
+    },
+    dismissAll() {
+      if (snapshot.length > 0) publish([]);
+    },
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot: () => snapshot,
+    getServerSnapshot: () => EMPTY_SURFACES as readonly ManagedSurface<T>[],
+  };
+}
+
+/** Stack manager for globally rendered dialogs. */
+export function createModalManager<T>(): LumoSurfaceManager<T> {
+  return createSurfaceManager<T>();
+}
+
+/** Singleton manager for command palettes/spotlights; a new open replaces the old one. */
+export function createCommandManager<T>(): LumoSurfaceManager<T> {
+  return createSurfaceManager<T>(1);
+}
+
+export interface ManagedSurfacesProps<T> {
+  manager: LumoSurfaceManager<T>;
+  children: (item: ManagedSurface<T>) => LumoNode;
+}
+
+/** SSR-safe renderer: the server snapshot is always empty and deterministic. */
+export function ManagedSurfaces<T>({ manager, children }: ManagedSurfacesProps<T>) {
+  const items = useSyncExternalStore(
+    manager.subscribe,
+    manager.getSnapshot,
+    manager.getServerSnapshot,
+  );
+  return items.map((item) => (
+    <Fragment key={item.id}>{children(item) as ReactNode}</Fragment>
+  ));
 }

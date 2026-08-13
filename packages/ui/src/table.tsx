@@ -4,12 +4,14 @@ import {
   Children,
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type ComponentProps,
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { ArrowDown, ArrowUp, ChevronsUpDown, ChevronDown } from "lucide-react";
 import {
@@ -40,7 +42,9 @@ import {
   useAsyncCollection,
   type AsyncCollectionMessages,
   type AsyncCollectionOptions,
+  type AsyncCollectionStatus,
 } from "./async-collection.ts";
+import { useVirtualWindow } from "./virtualizer.ts";
 import {
   executeQuery,
   type FilterQuery,
@@ -634,7 +638,14 @@ export interface TableProps
      * handler on that wrapper, where it will see the event by bubbling and
      * cannot displace the grid's.
      */
-    "ref" | "onKeyDown" | "children" | "className" | "aria-label" | "role"
+    | "ref"
+    | "onKeyDown"
+    | "children"
+    | "className"
+    | "aria-label"
+    | "aria-rowcount"
+    | "aria-busy"
+    | "role"
   > {
   /**
    * Announced name of the grid. REQUIRED.
@@ -655,6 +666,10 @@ export interface TableProps
   hierarchical?: boolean | undefined;
   /** The instance from `useLumoTable`, when this grid has state. */
   table?: LumoTableInstance | undefined;
+  /** Total data rows when only a virtual/paged window is mounted. */
+  rowCount?: number | undefined;
+  /** Remote work state; active loading is exposed on the grid. */
+  asyncStatus?: AsyncCollectionStatus | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -663,6 +678,8 @@ export function Table({
   label,
   locale,
   table,
+  rowCount,
+  asyncStatus,
   hierarchical = false,
   className,
   ...props
@@ -822,10 +839,13 @@ export function Table({
         {...(table === undefined
           ? {}
           : {
-              "aria-rowcount": table.getRowModel().rows.length + 1,
+              "aria-rowcount": (rowCount ?? table.getRowModel().rows.length) + 1,
               "aria-colcount": table.getAllColumns().length,
             })}
         {...(multiselectable ? { "aria-multiselectable": true } : {})}
+        {...(asyncStatus === "loading" || asyncStatus === "refreshing" || asyncStatus === "loading-more"
+          ? { "aria-busy": true }
+          : {})}
         onKeyDown={onKeyDown}
         className={cn(tableVariants(), className)}
       />
@@ -1103,6 +1123,108 @@ export function TableBody({
               {child}
             </RowContext.Provider>
           ))}
+    </tbody>
+  );
+}
+
+export interface VirtualTableBodyProps<TRow extends LumoTableRow>
+  extends Omit<ComponentProps<"tbody">, "children" | "className"> {
+  rows: readonly TRow[];
+  scrollRef: RefObject<HTMLElement | null>;
+  estimateSize: number | ((index: number) => number);
+  initialSize: number;
+  overscan?: number | undefined;
+  getRowKey: (row: TRow) => string | number;
+  asyncStatus?: AsyncCollectionStatus | undefined;
+  onEndReached?: (() => void) | undefined;
+  endReachedThreshold?: number | undefined;
+  children: (row: TRow, absoluteIndex: number) => LumoNode;
+  renderEmptyState?: LumoNode;
+  className?: string | undefined;
+}
+
+/**
+ * Native-table virtualization: spacer rows preserve table layout while the
+ * mounted rows keep their absolute `aria-rowindex` coordinates and row keys.
+ */
+export function VirtualTableBody<TRow extends LumoTableRow>({
+  rows,
+  scrollRef,
+  estimateSize,
+  initialSize,
+  overscan = 6,
+  getRowKey,
+  asyncStatus,
+  onEndReached,
+  endReachedThreshold = 2,
+  children,
+  renderEmptyState,
+  className,
+  ...props
+}: VirtualTableBodyProps<TRow>) {
+  const { bodyRowCount } = useTableContext();
+  bodyRowCount.current = rows.length;
+  const estimate = useMemo(
+    () => (typeof estimateSize === "number" ? () => estimateSize : estimateSize),
+    [estimateSize],
+  );
+  const virtual = useVirtualWindow({
+    count: rows.length,
+    estimateSize: estimate,
+    scrollRef,
+    initialSize,
+    overscan,
+    getItemKey: (index) => getRowKey(rows[index]!),
+  });
+  const first = virtual.items[0];
+  const last = virtual.items.at(-1);
+  const before = first?.start ?? 0;
+  const after = last === undefined ? 0 : Math.max(0, virtual.totalSize - last.start - last.size);
+  const requestedCount = useRef<number | null>(null);
+  useEffect(() => {
+    if (
+      onEndReached === undefined ||
+      rows.length === 0 ||
+      last === undefined ||
+      last.index < rows.length - 1 - endReachedThreshold ||
+      requestedCount.current === rows.length ||
+      asyncStatus === "loading" ||
+      asyncStatus === "loading-more" ||
+      asyncStatus === "refreshing"
+    ) {
+      return;
+    }
+    requestedCount.current = rows.length;
+    onEndReached();
+  }, [asyncStatus, endReachedThreshold, last, onEndReached, rows.length]);
+
+  return (
+    <tbody
+      className={cn(tableBodyVariants(), className)}
+      {...(rows.length === 0 ? { "data-empty": "" } : {})}
+      {...props}
+    >
+      {rows.length === 0 ? renderEmptyState : null}
+      {before > 0 ? (
+        <tr aria-hidden="true" role="presentation">
+          <td role="presentation" style={{ height: before, padding: 0, border: 0 }} />
+        </tr>
+      ) : null}
+      {virtual.items.map((item) => {
+        const row = rows[item.index]!;
+        return (
+          <RowContext.Provider key={item.key} value={{ index: item.index + 1, row }}>
+            <Row row={row} data-index={item.index}>
+              {children(row, item.index)}
+            </Row>
+          </RowContext.Provider>
+        );
+      })}
+      {after > 0 ? (
+        <tr aria-hidden="true" role="presentation">
+          <td role="presentation" style={{ height: after, padding: 0, border: 0 }} />
+        </tr>
+      ) : null}
     </tbody>
   );
 }

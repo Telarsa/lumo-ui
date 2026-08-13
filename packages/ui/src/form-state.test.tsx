@@ -26,6 +26,10 @@ import {
   firstError,
   focusFirstInvalid,
   isValidNationalId,
+  createLatestAsyncValidator,
+  formSubmissionState,
+  listFieldControl,
+  lumoStandardSchema,
   lumoValidators,
   useLumoForm,
   visibleLength,
@@ -34,6 +38,78 @@ import {
 import { TextField } from "./text-field.tsx";
 
 afterEach(cleanup);
+
+describe("enterprise form integration", () => {
+  it("projects dirty, touched, submitting and can-submit without mirroring form state", () => {
+    expect(
+      formSubmissionState({
+        isDirty: true,
+        isTouched: true,
+        isSubmitting: true,
+        canSubmit: false,
+      }),
+    ).toEqual({ isDirty: true, isTouched: true, isSubmitting: true, canSubmit: false });
+  });
+
+  it("adapts nested list mutations to stable field operations", () => {
+    const calls: unknown[] = [];
+    const control = listFieldControl({
+      name: "team.members",
+      state: { value: [{ id: "one" }, { id: "two" }] },
+      pushValue: (value) => calls.push(["push", value]),
+      removeValue: (index) => calls.push(["remove", index]),
+      moveValue: (from, to) => calls.push(["move", from, to]),
+    });
+    control.append({ id: "three" });
+    control.remove(0);
+    control.move(1, 0);
+    expect(control.name).toBe("team.members");
+    expect(control.items.map((item) => item.id)).toEqual(["one", "two"]);
+    expect(calls).toEqual([
+      ["push", { id: "three" }],
+      ["remove", 0],
+      ["move", 1, 0],
+    ]);
+  });
+
+  it("runs Standard Schema sync and async validation and preserves caller-authored issues", async () => {
+    const sync = lumoStandardSchema<string>({
+      "~standard": {
+        version: 1,
+        vendor: "test",
+        validate: (value) =>
+          value === "درست" ? { value } : { issues: [{ message: "مقدار معتبر نیست" }] },
+      },
+    });
+    expect(await sync({ value: "بد" })).toEqual([{ message: "مقدار معتبر نیست" }]);
+    expect(await sync({ value: "درست" })).toBeUndefined();
+
+    const asyncSchema = lumoStandardSchema<string>({
+      "~standard": {
+        version: 1,
+        vendor: "test",
+        validate: async (value) => ({ value }),
+      },
+    });
+    expect(await asyncSchema({ value: "درست" })).toBeUndefined();
+  });
+
+  it("aborts obsolete async validation and only publishes the latest result", async () => {
+    const pending = new Map<string, (value: string | undefined) => void>();
+    const validator = createLatestAsyncValidator<string>(({ value, signal }) =>
+      new Promise((resolve) => {
+        signal.addEventListener("abort", () => resolve(undefined), { once: true });
+        pending.set(value, resolve);
+      }),
+    );
+    const first = validator({ value: "old" });
+    const second = validator({ value: "new" });
+    pending.get("old")?.("old error");
+    pending.get("new")?.("new error");
+    expect(await first).toBeUndefined();
+    expect(await second).toBe("new error");
+  });
+});
 
 /** A field in whatever state a test needs, without standing up a whole form. */
 function fakeField<T>(

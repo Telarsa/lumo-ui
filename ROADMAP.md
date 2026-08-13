@@ -79,22 +79,22 @@ checked individually so a partly integrated engine is not disguised as either
       recovery presentation without inventing composite children. TransferList
       preserves its selected destination while the source changes, and Tree
       preserves rows while refresh is busy.
-- [ ] Add virtualized async DataGrid and collection recipes where corpus size
+- [x] Add virtualized async DataGrid and collection recipes where corpus size
       makes them necessary, with explicit selection stability across paging,
       grouping, refresh and unmounted rows.
 - [x] Build PowerSearch's token/typeahead/edit-popover surface over the shipped
       query engine: typed editor catalogue, status/disabled states, overflow,
       saved views and result count.
-- [ ] Add a visual editor for nested AND/OR groups. PowerSearch currently edits
-      the backwards-compatible implicit-AND clause root; the shared query engine
-      already executes, validates and serializes nested groups.
+- [x] Add a visual editor for nested AND/OR groups. PowerSearch now recursively
+      edits the shared query AST while retaining the backwards-compatible
+      implicit-AND clause-array root.
 - [x] Connect the same query bytes to local DataGrid and one concrete remote
       adapter/example. Remote transport stays caller-owned.
-- [ ] Add first-party form integration for nested/list values, async validation,
+- [x] Add first-party form integration for nested/list values, async validation,
       dirty/touched/submitting state and schema adapters. Add hooks only when
       they encode a recurring Lumo behavior; do not clone a general-purpose
       hooks catalog by count.
-- [ ] Add global notification, modal and command/spotlight managers with SSR-safe
+- [x] Add global notification, modal and command/spotlight managers with SSR-safe
       providers, locale-required announcements and imperative update/dismiss
       handles.
 

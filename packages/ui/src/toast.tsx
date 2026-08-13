@@ -164,6 +164,8 @@ export interface LumoToastQueue {
    * file header, and note that this adapter has to ACT to keep it that way.
    */
   add: (content: LumoToastContent, options?: { timeout?: number | undefined }) => string;
+  /** Replace visible content/status without moving the toast in the queue. */
+  update: (id: string, content: LumoToastContent) => void;
   /** Dismiss one toast, or all of them. */
   close: (id?: string) => void;
   /**
@@ -186,23 +188,27 @@ export function createToastQueue(options?: {
   maxVisibleToasts?: number | undefined;
 }): LumoToastQueue {
   const manager = BaseToast.createToastManager<LumoToastData>();
+  const contentOptions = (content: LumoToastContent) => ({
+    title: content.title as React.ReactNode,
+    ...(content.description === undefined
+      ? {}
+      : { description: content.description as React.ReactNode }),
+    data: {
+      tone: content.tone ?? "neutral",
+      ...(content.action === undefined ? {} : { action: content.action }),
+    },
+  });
   return {
     manager,
     maxVisibleToasts: options?.maxVisibleToasts,
     add: (content, addOptions) =>
       manager.add({
-        title: content.title as React.ReactNode,
-        ...(content.description === undefined
-          ? {}
-          : { description: content.description as React.ReactNode }),
-        data: {
-          tone: content.tone ?? "neutral",
-          ...(content.action === undefined ? {} : { action: content.action }),
-        },
+        ...contentOptions(content),
         // See the file header. Base UI's own default is 5000; Lumo's is none,
         // and `0` is Base UI's spelling of "never auto-dismiss".
         timeout: addOptions?.timeout ?? 0,
       }),
+    update: (id, content) => manager.update(id, contentOptions(content)),
     close: (id) => manager.close(id),
   };
 }

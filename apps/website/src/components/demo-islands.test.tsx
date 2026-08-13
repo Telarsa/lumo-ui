@@ -93,6 +93,11 @@ const powerStrings = {
   tokenTemplate: "{field}، {operator}، {value}",
   emptyValue: "بدون مقدار",
   valueSeparator: "، ",
+  groupLabelTemplate: "گروه {combinator}",
+  andLabel: "همه",
+  orLabel: "هرکدام",
+  addGroup: "افزودن گروه",
+  removeGroup: "حذف گروه",
 } as const;
 
 const powerFields: readonly PowerSearchField[] = [

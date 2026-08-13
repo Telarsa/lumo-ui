@@ -224,6 +224,22 @@ describe("Toast — the portal carries the requested direction", () => {
     expect(invoked).toBe(1);
   });
 
+  it("updates and dismisses a global notification through its imperative handle", async () => {
+    const queue = createToastQueue();
+    render(<ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />);
+    let id = "";
+    await act(async () => {
+      id = queue.add({ title: "در حال ذخیره", tone: "neutral" });
+    });
+    await act(async () => {
+      queue.update(id, { title: "ذخیره شد", tone: "positive" });
+    });
+    expect(screen.queryByText("در حال ذخیره")).toBeNull();
+    expect(screen.getByText("ذخیره شد")).toBeTruthy();
+    await act(async () => queue.close(id));
+    expect(screen.queryByText("ذخیره شد")).toBeNull();
+  });
+
   /*
    * THE STACK MUST OUTRANK THE MODAL SCRIM.
    *
