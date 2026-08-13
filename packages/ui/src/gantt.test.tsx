@@ -673,6 +673,12 @@ describe("the served bytes carry the tab stop and the name", () => {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 describe("every announced string is a required prop", () => {
+  it("does not accept a direction that can disagree with locale", () => {
+    // @ts-expect-error direction is owned by the required locale.
+    void <Gantt dir="ltr" label="برنامه" locale="fa-IR" tasks={[SPRINT]} strings={STRINGS} />;
+    expect(true).toBe(true);
+  });
+
   /**
    * COMPILE-ENFORCED, which is the only enforcement that matters for this rule.
    *

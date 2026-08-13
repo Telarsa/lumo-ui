@@ -53,6 +53,12 @@ const list = (extra: Record<string, unknown> = {}) =>
   );
 
 describe("VirtualList — the served bytes carry real rows", () => {
+  it("does not accept a direction that can disagree with locale", () => {
+    // @ts-expect-error direction is owned by the required locale.
+    void <VirtualList dir="ltr" label="فهرست" locale="fa-IR" count={1} estimateSize={40} initialSize={40}>{() => "ردیف"}</VirtualList>;
+    expect(true).toBe(true);
+  });
+
   it("serves a screenful, not an empty list", () => {
     // The defect this pins is the one `chart.variants.ts` records for recharts:
     // a component that contributes nothing to the served HTML is a page-shaped

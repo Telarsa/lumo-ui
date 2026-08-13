@@ -101,10 +101,10 @@ describe("OverflowList", () => {
       ["small-a", 20],
       ["small-b", 20],
     ]);
-    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function () {
+    vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockImplementation(function (this: HTMLElement) {
       return this.hasAttribute("data-lumo") ? available : 0;
     });
-    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function () {
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
       const width = this.hasAttribute("data-overflow-list-overflow")
         ? 30
         : (widths.get(this.textContent ?? "") ?? 0);
