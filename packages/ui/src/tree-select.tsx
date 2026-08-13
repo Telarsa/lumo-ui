@@ -98,7 +98,7 @@ export function TreeSelect({
   return (
     <div data-lumo="" className={cn("relative flex w-full flex-col gap-1.5", className)}>
       <label id={`${id}-label`} className="text-sm font-medium text-fg">{label}</label>
-      <button type="button" aria-labelledby={`${id}-label ${id}-value`} aria-expanded={open} aria-haspopup="tree" disabled={isDisabled} className="flex h-10 items-center justify-between rounded-md border border-border-control bg-surface px-3 text-start text-sm" onClick={() => setOpen((current) => !current)}>
+      <button type="button" aria-labelledby={`${id}-label ${id}-value`} aria-expanded={open} aria-haspopup="tree" disabled={isDisabled} className="flex h-control-md items-center justify-between rounded-md border border-border-control bg-surface px-3 text-start text-sm" onClick={() => setOpen((current) => !current)}>
         <span id={`${id}-value`}>{labels.length ? labels.join(", ") : placeholder}</span>
         <ChevronDown aria-hidden="true" className="size-4" />
       </button>

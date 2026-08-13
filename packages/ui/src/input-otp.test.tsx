@@ -11,13 +11,22 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { InputOtp, otpDigits } from "./input-otp.tsx";
+import { InputOtp, inputOtpSlotVariants, otpDigits } from "./input-otp.tsx";
 
 afterEach(cleanup);
 
 const control = () => screen.getByRole("textbox") as HTMLInputElement;
 
 describe("InputOtp — one input, six boxes", () => {
+  it("uses the same compact square and type scale as other form controls", () => {
+    const classes = inputOtpSlotVariants();
+    expect(classes).toContain("h-control-md");
+    expect(classes).toContain("w-control-md");
+    expect(classes).toContain("text-sm");
+    expect(classes).not.toContain("h-12");
+    expect(classes).not.toContain("text-lg");
+  });
+
   it("serves exactly ONE control for the whole code", () => {
     render(<InputOtp label="کد پیامک‌شده" locale="fa-IR" />);
     // Six inputs would be six tab stops, six names, and a paste that lands

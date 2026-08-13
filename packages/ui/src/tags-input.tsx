@@ -70,7 +70,7 @@ export function TagsInput({
   return (
     <div data-lumo="" className={cn("relative flex w-full flex-col gap-1.5", className)}>
       <label htmlFor={id} className="text-sm font-medium text-fg">{label}</label>
-      <div className="flex min-h-10 flex-wrap items-center gap-1 rounded-md border border-border-control bg-surface px-2 py-1">
+      <div className="flex min-h-control-md flex-wrap items-center gap-1 rounded-md border border-border-control bg-surface px-2 py-1">
         {tags.map((tag, index) => (
           <span key={`${tag}-${index}`} className="inline-flex items-center gap-1 rounded bg-surface-sunken px-2 py-1 text-sm">
             {tag}

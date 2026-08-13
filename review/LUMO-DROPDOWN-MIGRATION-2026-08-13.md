@@ -49,14 +49,15 @@ modules.
 7. TagsInput's native datalist could not expose Lumo option styling or a stable
    active-descendant contract. Its test now requires a named suggestion list,
    arrow highlight, Enter selection, and no datalist.
-8. The first scrollbar polish reserved a stable gutter and revealed a thin
-   native rail during interaction. The 390 px Persian calendar pass proved the
-   reservation itself remained visible as an empty strip and made the popup
-   look wider than its content. The final treatment follows the Base UI /
-   Radix-style long-select pattern instead: the engine hides the native rail,
-   reserves no gutter, and exposes 20 px surface-backed edge scroll controls
-   only where more content exists. Calendar caption selects additionally use
-   an 80 px trigger/popup, 29 px options, and a 256 px cap.
+8. The first scrollbar polish reserved a stable gutter, which the 390 px
+   Persian calendar pass proved remained visible as an empty strip and made
+   the popup look wider than its content. A later edge-arrow treatment removed
+   that strip, but also removed the draggable thumb and made pointer scrolling
+   depend on a wheel or trackpad. The final treatment keeps a thin, always
+   draggable native thumb over a light `surface-sunken` track, without
+   `scrollbar-gutter: stable`. Calendar caption
+   selects additionally keep the compact 80 px trigger/popup, 29 px options,
+   and 256 px cap.
 9. Select options no longer opt into the global standalone-control focus ring.
    A listbox is a composite: its keyboard cursor is the highlighted row, while
    the selected row already has `aria-selected` and the check indicator. The
@@ -78,9 +79,9 @@ the mutations were restored before verification.
   viewport and has one visible scrolling owner. The fresh final tab produced no
   console errors.
 - The final Persian year popup at 390×844 measures 80×256 px, with 29 px rows,
-  `scrollbar-gutter: auto`, `scrollbar-width: none`, equal `clientWidth` and
-  `offsetWidth`, and no option outline. Both 20 px edge controls are visible
-  around the selected middle year; they disappear independently at the ends.
+  `scrollbar-gutter: auto`, `scrollbar-width: thin`, a visible draggable thumb
+  over a light `surface-sunken` track, and no option outline or edge-scroll
+  controls.
 - A source-less MutationObserver error appeared only during the earlier rapid
   reuse loop and did not reproduce in the fresh final tab; it is rejected as
   browser-instrumentation teardown, consistent with the prior Wave 3 finding.

@@ -50,13 +50,17 @@ it("gives long dropdowns exactly one scrolling layer", () => {
   expect(selectListBoxVariants()).toContain("overflow-auto");
 });
 
-it("does not reserve a permanently visible scrollbar rail", () => {
+it("uses a thin draggable scrollbar without reserving an empty gutter", () => {
   const classes = selectListBoxVariants();
   expect(classes).not.toContain("[scrollbar-gutter:stable]");
-  expect(classes).not.toContain("[scrollbar-width:thin]");
+  expect(classes).toContain("[scrollbar-width:thin]");
+  expect(classes).toContain(
+    "[scrollbar-color:var(--color-border-strong)_var(--color-surface-sunken)]",
+  );
+  expect(classes).toContain("[&::-webkit-scrollbar-track]:bg-surface-sunken");
 });
 
-it("uses the engine's gutter-free edge-scroll treatment for long lists", () => {
+it("keeps the native draggable scrollbar instead of hiding it for edge arrows", () => {
   render(
     <Select placeholder="سال را انتخاب کنید" aria-label="سال" defaultOpen>
       <SelectTrigger />
@@ -67,7 +71,7 @@ it("uses the engine's gutter-free edge-scroll treatment for long lists", () => {
     </Select>,
   );
   const list = screen.getByRole("listbox");
-  expect(list.classList.contains("base-ui-disable-scrollbar")).toBe(true);
+  expect(list.classList.contains("base-ui-disable-scrollbar")).toBe(false);
 });
 
 it("keeps composite option focus inside the listbox instead of drawing a button ring", () => {

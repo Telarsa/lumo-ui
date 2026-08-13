@@ -1,7 +1,15 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-import { Button } from "./button.tsx";
+import { Button, buttonVariants } from "./button.tsx";
+
+it("keeps default buttons compact with a proportionate control icon", () => {
+  const classes = buttonVariants();
+  expect(classes).toContain("h-control-md");
+  expect(classes).toContain("[&_svg]:size-4");
+  expect(classes).not.toContain("h-control-lg");
+  expect(classes).not.toContain("[&_svg]:size-5");
+});
 
 describe("Button event contracts", () => {
   it("delivers both onPress and onClick when both are supplied", () => {

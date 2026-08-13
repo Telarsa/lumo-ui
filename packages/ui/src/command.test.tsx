@@ -29,11 +29,17 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
+  commandInputVariants,
 } from "./command.tsx";
 
 afterEach(cleanup);
 
 const LATIN_WORD = /[A-Za-z]{3,}/;
+
+it("uses the shared compact control height instead of a one-off command height", () => {
+  expect(commandInputVariants()).toContain("h-control-md");
+  expect(commandInputVariants()).not.toContain("h-11");
+});
 
 function spokenAttributes(root: ParentNode = document): string[] {
   const attrs = [

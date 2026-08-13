@@ -83,7 +83,7 @@ export function Cascader({
         aria-expanded={open}
         aria-haspopup="dialog"
         disabled={isDisabled}
-        className="flex h-10 items-center justify-between rounded-md border border-border-control bg-surface px-3 text-start text-sm"
+        className="flex h-control-md items-center justify-between rounded-md border border-border-control bg-surface px-3 text-start text-sm"
         onClick={() => setOpen((current) => !current)}
       >
         <span id={`${id}-value`}>{selected.length ? selected.map((node) => node.label).join(" / ") : placeholder}</span>

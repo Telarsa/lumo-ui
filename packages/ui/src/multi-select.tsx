@@ -98,7 +98,7 @@ export function MultiSelect({
         <label htmlFor={inputId} className="text-sm font-medium text-fg">
           {label}
         </label>
-        <BaseCombobox.InputGroup className="flex min-h-10 w-full items-center rounded-md border border-border-control bg-surface px-2 py-1 focus-within:border-border-strong data-disabled:pointer-events-none data-disabled:opacity-50">
+        <BaseCombobox.InputGroup className="flex min-h-control-md w-full items-center rounded-md border border-border-control bg-surface px-2 py-1 focus-within:border-border-strong data-disabled:pointer-events-none data-disabled:opacity-50">
           <BaseCombobox.Chips className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
             <BaseCombobox.Value>
               {(current: MultiSelectOption[]) => (

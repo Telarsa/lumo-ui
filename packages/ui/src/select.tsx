@@ -11,7 +11,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
 import { cn, type LumoNode, type ValidationError } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
@@ -238,20 +238,12 @@ export const selectPopoverVariants = cva(
 );
 
 export const selectListBoxVariants = cva(
-  "min-h-0 flex-1 max-h-[inherit] overflow-auto p-1 outline-none scroll-py-5",
-);
-
-const selectScrollArrowVariants = cva(
-  "absolute inset-x-0 z-10 hidden h-5 cursor-default items-center justify-center " +
-    "bg-surface text-fg-subtle data-[visible]:flex [&_svg]:size-3 [&_svg]:shrink-0",
-  {
-    variants: {
-      direction: {
-        up: "top-0",
-        down: "bottom-0",
-      },
-    },
-  },
+  "min-h-0 flex-1 max-h-[inherit] overflow-auto p-1 outline-none " +
+    "[scrollbar-width:thin] " +
+    "[scrollbar-color:var(--color-border-strong)_var(--color-surface-sunken)] " +
+    "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-surface-sunken " +
+    "[&::-webkit-scrollbar-thumb]:rounded-full " +
+    "[&::-webkit-scrollbar-thumb]:bg-border-strong",
 );
 
 export const selectGroupLabelVariants = cva(
@@ -878,9 +870,6 @@ export function SelectPopover<T extends object>({
         <BaseSelect.Popup
           className={cn(popoverVariants({ padded: false }), selectPopoverVariants(), className)}
         >
-          <BaseSelect.ScrollUpArrow className={selectScrollArrowVariants({ direction: "up" })}>
-            <ChevronUp aria-hidden="true" />
-          </BaseSelect.ScrollUpArrow>
           <BaseSelect.List
             data-lumo=""
             className={cn(selectListBoxVariants(), listBoxClassName)}
@@ -889,11 +878,6 @@ export function SelectPopover<T extends object>({
                 gone, and the cast was what let the two disagree. */}
             {children}
           </BaseSelect.List>
-          <BaseSelect.ScrollDownArrow
-            className={selectScrollArrowVariants({ direction: "down" })}
-          >
-            <ChevronDown aria-hidden="true" />
-          </BaseSelect.ScrollDownArrow>
           {stateText === null && stateAction === undefined ? null : (
             <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-fg-muted">
               <span role="status" aria-live="polite">

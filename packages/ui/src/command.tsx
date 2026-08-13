@@ -129,7 +129,7 @@ export const commandInputWrapperVariants = cva(
 );
 
 export const commandInputVariants = cva(
-  "h-11 w-full min-w-0 bg-transparent " +
+  "h-control-md w-full min-w-0 bg-transparent " +
     "text-sm text-fg text-start outline-none " +
     "placeholder:text-fg-subtle " +
     "disabled:cursor-not-allowed disabled:opacity-50 " +

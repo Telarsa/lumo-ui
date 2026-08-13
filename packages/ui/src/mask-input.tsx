@@ -96,7 +96,7 @@ export function MaskInput({
         value={shown}
         aria-invalid={incomplete || undefined}
         aria-describedby={[description ? descriptionId : "", incomplete ? errorId : ""].filter(Boolean).join(" ") || undefined}
-        className={cn("h-10 w-full rounded-md border border-border-control bg-surface px-3 text-sm text-fg outline-none", className)}
+        className={cn("h-control-md w-full rounded-md border border-border-control bg-surface px-3 text-sm text-fg outline-none", className)}
         onChange={() => {}}
       />
       {description === undefined ? null : <p id={descriptionId} className="text-sm text-fg-muted">{description}</p>}

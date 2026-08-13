@@ -67,7 +67,7 @@ function ColorControls({
           name={name}
           onChange={(event) => onText(event.currentTarget.value)}
         />
-        <label className="relative size-10 shrink-0 overflow-hidden rounded-md border border-border-control" title={pickerLabel}>
+        <label className="relative size-control-md shrink-0 overflow-hidden rounded-md border border-border-control" title={pickerLabel}>
           <input
             type="color"
             aria-label={pickerLabel}

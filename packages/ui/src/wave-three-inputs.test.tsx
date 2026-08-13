@@ -8,11 +8,82 @@ import { JsonInput, validateJson } from "./json-input.tsx";
 import { MaskInput, maskValue } from "./mask-input.tsx";
 import { MultiSelect } from "./multi-select.tsx";
 import { TagsInput } from "./tags-input.tsx";
-import { resolveCascaderPath } from "./cascader.tsx";
-import { treeSelectionState } from "./tree-select.tsx";
+import { Cascader, resolveCascaderPath } from "./cascader.tsx";
+import { TreeSelect, treeSelectionState } from "./tree-select.tsx";
 import { RangeSlider } from "./range-slider.tsx";
 
 describe("Wave 3 product inputs", () => {
+  it("keeps every newer field trigger on the shared compact control scale", () => {
+    const { rerender } = render(
+      <MaskInput label="Account" mask="####" />,
+    );
+    expect(screen.getByLabelText("Account").className).toContain("h-control-md");
+    expect(screen.getByLabelText("Account").className).not.toContain("h-10");
+
+    rerender(
+      <Cascader
+        locale="en-US"
+        label="Location"
+        placeholder="Choose"
+        columnsLabel="Location levels"
+        options={[{ value: "ir", label: "Iran" }]}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Location Choose" }).className).toContain(
+      "h-control-md",
+    );
+
+    rerender(
+      <TreeSelect
+        label="Permissions"
+        treeLabel="Permission tree"
+        placeholder="Choose"
+        options={[{ value: "read", label: "Read" }]}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Permissions Choose" }).className).toContain(
+      "h-control-md",
+    );
+  });
+
+  it("aligns composite fields and adjacent affordances to that same compact scale", () => {
+    const { container, rerender } = render(
+      <ColorInput
+        label="Brand"
+        pickerLabel="Pick brand color"
+        invalidColorMessage="Invalid color"
+      />,
+    );
+    expect(container.querySelector('input[type="color"]')?.parentElement?.className).toContain(
+      "size-control-md",
+    );
+
+    rerender(
+      <TagsInput
+        label="Tags"
+        placeholder="Add tag"
+        removeLabel={(tag) => `Remove ${tag}`}
+      />,
+    );
+    expect(screen.getByRole("combobox", { name: "Tags" }).parentElement?.className).toContain(
+      "min-h-control-md",
+    );
+
+    rerender(
+      <MultiSelect
+        locale="en-US"
+        label="Libraries"
+        placeholder="Choose"
+        suggestionsLabel="Library suggestions"
+        removeLabel={(label) => `Remove ${label}`}
+        options={[{ value: "react", label: "React" }]}
+      />,
+    );
+    expect(
+      screen.getByRole("combobox", { name: "Libraries" }).parentElement?.parentElement?.className,
+    ).toContain("min-h-control-md");
+  });
+
   it("normalizes supported CSS colors without exposing Culori objects", () => {
     expect(normalizeColor("rgb(255 0 0 / 50%)", "hex8")).toBe("#ff000080");
     expect(normalizeColor("not-a-color", "hex")).toBeUndefined();

@@ -88,12 +88,12 @@ export const inputOtpRowVariants = cva(
   // `relative` so the one real input can be stretched over the row. `w-fit`
   // because a code has a fixed number of boxes and stretching them across a
   // form column makes six digits look like a spreadsheet.
-  "relative flex w-fit items-center gap-2",
+  "relative flex w-fit items-center gap-1.5",
 );
 
 export const inputOtpSlotVariants = cva(
-  "flex h-12 w-10 items-center justify-center rounded-md border border-border-control " +
-    "bg-surface text-lg font-medium text-fg transition-colors " +
+  "flex h-control-md w-control-md items-center justify-center rounded-md border border-border-control " +
+    "bg-surface text-sm font-medium text-fg transition-colors " +
     // The row is one field, so the ring belongs to the box the caret is in —
     // not to all six. `data-active` is written by this component; there is no
     // engine underneath to take it from.
@@ -106,7 +106,7 @@ export const inputOtpCaretVariants = cva(
   // `animate-pulse` rather than a bespoke `animate-caret-blink`: it is built in,
   // it respects `prefers-reduced-motion` through Tailwind's own reset, and a
   // caret is the one piece of chrome not worth a keyframe of our own.
-  "h-6 w-px animate-pulse bg-fg",
+  "h-5 w-px animate-pulse bg-fg",
 );
 
 export const inputOtpControlVariants = cva(
