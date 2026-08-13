@@ -22,7 +22,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   Select,
@@ -35,7 +35,10 @@ import {
   selectPopoverVariants,
 } from "./select.tsx";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+});
 
 it("caps long dropdowns to the positioning engine's available height", () => {
   expect(selectPopoverVariants()).toContain("max-h-[min(20rem,var(--available-height))]");
@@ -45,6 +48,44 @@ it("gives long dropdowns exactly one scrolling layer", () => {
   expect(selectPopoverVariants()).toContain("overflow-hidden");
   expect(selectPopoverVariants()).not.toContain("overflow-auto");
   expect(selectListBoxVariants()).toContain("overflow-auto");
+});
+
+it("keeps the scrollbar quiet at rest and reveals it for interaction", () => {
+  const classes = selectListBoxVariants();
+  expect(classes).toContain("[scrollbar-width:thin]");
+  expect(classes).toContain("[scrollbar-color:transparent_transparent]");
+  expect(classes).toContain(
+    "hover:[scrollbar-color:var(--color-border-strong)_transparent]",
+  );
+  expect(classes).not.toContain("focus-within:");
+  expect(classes).toContain(
+    "data-[scrolling]:[scrollbar-color:var(--color-border-strong)_transparent]",
+  );
+});
+
+it("marks active wheel or touch scrolling, then quiets the scrollbar", () => {
+  render(
+    <Select placeholder="سال را انتخاب کنید" aria-label="سال" defaultOpen>
+      <SelectTrigger />
+      <SelectPopover>
+        <SelectItem id="1403">۱۴۰۳</SelectItem>
+        <SelectItem id="1404">۱۴۰۴</SelectItem>
+      </SelectPopover>
+    </Select>,
+  );
+  const list = screen.getByRole("listbox");
+  vi.useFakeTimers();
+
+  expect(list.classList.contains("base-ui-disable-scrollbar")).toBe(false);
+  expect(list.hasAttribute("data-scrolling")).toBe(false);
+  fireEvent.scroll(list);
+  expect(list.hasAttribute("data-scrolling")).toBe(true);
+
+  act(() => vi.advanceTimersByTime(700));
+  expect(list.hasAttribute("data-scrolling")).toBe(false);
+
+  fireEvent.keyDown(list, { key: "ArrowDown" });
+  expect(list.hasAttribute("data-scrolling")).toBe(true);
 });
 
 /** The collapsed control's visible text: the `<span>` `SelectValue` renders. */

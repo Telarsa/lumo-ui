@@ -1,6 +1,16 @@
 "use client";
 
-import { Children, createContext, isValidElement, useContext, useId, useMemo, useState } from "react";
+import {
+  Children,
+  createContext,
+  isValidElement,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { ReactNode } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
@@ -226,10 +236,22 @@ export const selectPopoverVariants = cva(
   // positioner writes `--anchor-width` (verified in useAnchorPositioning.mjs).
   // The variable name is engine-owned, so this is a forced edit, not a restyle
   // — keeping `--trigger-width` would silently shrink-wrap the panel.
-  "w-[var(--anchor-width)] max-h-[min(20rem,var(--available-height))] overflow-hidden p-0",
+  "flex w-[var(--anchor-width)] max-h-[min(20rem,var(--available-height))] flex-col overflow-hidden p-0",
 );
 
-export const selectListBoxVariants = cva("max-h-[inherit] overflow-auto p-1 outline-none");
+export const selectListBoxVariants = cva(
+  "min-h-0 flex-1 max-h-[inherit] overflow-auto p-1 outline-none " +
+    "[scrollbar-width:thin] [scrollbar-gutter:stable] " +
+    "[scrollbar-color:transparent_transparent] " +
+    "hover:[scrollbar-color:var(--color-border-strong)_transparent] " +
+    "data-[scrolling]:[scrollbar-color:var(--color-border-strong)_transparent] " +
+    "[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent " +
+    "[&::-webkit-scrollbar-thumb]:rounded-full " +
+    "[&::-webkit-scrollbar-thumb]:bg-transparent " +
+    "[&::-webkit-scrollbar-thumb]:transition-colors " +
+    "hover:[&::-webkit-scrollbar-thumb]:bg-border-strong " +
+    "data-[scrolling]:[&::-webkit-scrollbar-thumb]:bg-border-strong",
+);
 
 export const selectGroupLabelVariants = cva(
   // `px-2` matches the item's inline padding so the heading's first glyph lines
@@ -826,6 +848,22 @@ export function SelectPopover<T extends object>({
   children,
 }: SelectPopoverProps<T>) {
   const field = useContext(SelectFieldContext);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollIdleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (scrollIdleTimer.current !== null) clearTimeout(scrollIdleTimer.current);
+    },
+    [],
+  );
+  const revealScrollbar = () => {
+    setIsScrolling(true);
+    if (scrollIdleTimer.current !== null) clearTimeout(scrollIdleTimer.current);
+    scrollIdleTimer.current = setTimeout(() => {
+      setIsScrolling(false);
+      scrollIdleTimer.current = null;
+    }, 650);
+  };
   const stateText =
     field?.asyncState?.status === "loading" || field?.asyncState?.status === "error"
       ? field.asyncState.text
@@ -850,6 +888,9 @@ export function SelectPopover<T extends object>({
         >
           <BaseSelect.List
             data-lumo=""
+            data-scrolling={isScrolling ? "" : undefined}
+            onKeyDown={revealScrollbar}
+            onScroll={revealScrollbar}
             className={cn(selectListBoxVariants(), listBoxClassName)}
           >
             {/* No cast. `children` is `LumoNode` now that the function arm is

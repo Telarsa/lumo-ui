@@ -49,6 +49,13 @@ modules.
 7. TagsInput's native datalist could not expose Lumo option styling or a stable
    active-descendant contract. Its test now requires a named suggestion list,
    arrow highlight, Enter selection, and no datalist.
+8. The long-list scrollbar is now thin and transparent at rest, then uses the
+   strong-border token on pointer hover, keyboard navigation or active wheel /
+   touch scrolling. A first implementation combined this with Base UI scroll
+   arrows; the browser proved those arrows inject `base-ui-disable-scrollbar`
+   and made the custom styling vacuous. A DOM assertion now forbids that class,
+   while timed interaction assertions require the active state and its return
+   to rest.
 
 The red state was observed before each fix. Re-applying the relevant old class,
 factory, native control, or duplicate error branch fails the named assertion;
@@ -63,6 +70,10 @@ the mutations were restored before verification.
 - Calendar's 105-option Persian year popup remains open, stays within the
   viewport and has one visible scrolling owner. The fresh final tab produced no
   console errors.
+- The polished scrollbar computes to `thin` with transparent track/thumb at
+  rest, changes to the border token during a real wheel scroll, and returns to
+  transparent after 650 ms idle. The same popup is 320 px tall and entirely
+  within a 390×844 viewport, with no horizontal overflow.
 - A source-less MutationObserver error appeared only during the earlier rapid
   reuse loop and did not reproduce in the fresh final tab; it is rejected as
   browser-instrumentation teardown, consistent with the prior Wave 3 finding.
