@@ -66,6 +66,9 @@ const t = {
 
   threads: { "fa-IR": "گفت‌وگوها", "en-US": "Conversations" },
   threadWord: { "fa-IR": "گفت‌وگو", "en-US": "Conversation" },
+  remote: { "fa-IR": "نتایج دور", "en-US": "Remote results" },
+  resultWord: { "fa-IR": "نتیجه", "en-US": "Result" },
+  loaded: { "fa-IR": "تعداد بارگذاری‌شده", "en-US": "Loaded" },
 } satisfies Record<string, LocalizedText>;
 
 function CorpusExample(l: Locale) {
@@ -127,6 +130,23 @@ function EstimatesExample(l: Locale) {
       initialSize={320}
       className="h-80 max-w-md rounded-md border border-border bg-surface p-2"
       itemClassName="rounded-md border border-border bg-surface-sunken"
+    />
+  );
+}
+
+function InfiniteExample(l: Locale) {
+  return (
+    <VirtualListIsland
+      locale={l}
+      label={t.remote[l]}
+      rowWord={t.resultWord[l]}
+      count={40}
+      loadToCount={120}
+      loadedWord={t.loaded[l]}
+      rowSize={44}
+      initialSize={240}
+      className="h-60 max-w-md rounded-md border border-border bg-surface"
+      itemClassName="border-be border-border"
     />
   );
 }
@@ -235,6 +255,17 @@ export const EXAMPLES: ComponentExamples = {
           "Here a row's size is a function of the index rather than a constant, so the rows have different heights and the scrollbar is right before any of them mount. Once they do, real measurement replaces the estimate — and because the measurement cache is keyed by the row's own identity rather than by its position, sorting the list does not leave a row's height behind. The `gap` is part of the same arithmetic rather than a CSS gap, because CSS does not tell the virtualiser about it.",
       },
       render: EstimatesExample,
+    },
+    {
+      id: "infinite",
+      title: { "fa-IR": "بارگذاری با رسیدن به پایان", "en-US": "Load on end reached" },
+      description: {
+        "fa-IR":
+          "وقتی پنجره به آستانهٔ پایان می‌رسد، برای همان اندازهٔ داده فقط یک بار درخواست می‌دهد. با بزرگ‌شدن مجموعه دوباره مسلح می‌شود؛ رندرِ دوباره با همان شمار هرگز درخواست را تکرار نمی‌کند.",
+        "en-US":
+          "When the window reaches the end threshold it requests once for that corpus size. Growing the collection rearms it; rerendering the same count never repeats the request.",
+      },
+      render: InfiniteExample,
     },
   ],
 };

@@ -13,7 +13,7 @@
  * makes, and the reason its vitest config has no `environment: "jsdom"`.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -261,6 +261,7 @@ describe("FileUpload — both React Aria leaks are gone", () => {
         label="کشیدن پرونده"
         triggerLabel="انتخاب"
         acceptedFileTypes={["image/*", ".pdf"]}
+        allowsMultiple
         onSelectFiles={(files) => seen.push(files.map((file) => file.name))}
       />,
     );
@@ -276,6 +277,40 @@ describe("FileUpload — both React Aria leaks are gone", () => {
       },
     });
     expect(seen).toEqual([["photo.png", "report.PDF"]]);
+  });
+
+  it("enforces one-file and size limits on drops and reports every rejection", () => {
+    const selected: string[][] = [];
+    const rejected: Array<[string, string]> = [];
+    const { container } = render(
+      <FileUpload
+        label="کشیدن پرونده"
+        triggerLabel="انتخاب"
+        maxFileSize={4}
+        onSelectFiles={(files) => selected.push(files.map((file) => file.name))}
+        onRejectFiles={(items) =>
+          rejected.push(...items.map((item) => [item.file.name, item.reason] as [string, string]))
+        }
+      />,
+    );
+    fireEvent.drop(container.querySelector('[role="group"]')!, {
+      dataTransfer: {
+        types: ["Files"],
+        files: [new File(["1234"], "ok.txt"), new File(["12345"], "large.txt")],
+      },
+    });
+
+    expect(selected).toEqual([["ok.txt"]]);
+    expect(rejected).toEqual([["large.txt", "size"]]);
+
+    fireEvent.drop(container.querySelector('[role="group"]')!, {
+      dataTransfer: {
+        types: ["Files"],
+        files: [new File(["a"], "first.txt"), new File(["b"], "second.txt")],
+      },
+    });
+    expect(selected.at(-1)).toEqual(["first.txt"]);
+    expect(rejected.at(-1)).toEqual(["second.txt", "count"]);
   });
 
   it("ignores a drag that carries no files", () => {
@@ -311,5 +346,50 @@ describe("FileUploadItem — a size is a number and the name may be any script",
     expect(row.textContent).not.toMatch(/\bMB\b/);
     // The file name is isolated with <bdi>, because its script is unpredictable.
     expect(row.querySelector("bdi")?.textContent).toBe("report-2024.pdf");
+  });
+
+  it("publishes caller-owned upload progress and a retryable error", () => {
+    const { rerender } = render(
+      <FileUploadList>
+        <FileUploadItem
+          name="گزارش.pdf"
+          size={1000}
+          locale="fa-IR"
+          removeLabel={(n) => `حذف ${n}`}
+          onRemove={() => {}}
+          lifecycle={{
+            status: "uploading",
+            statusText: "در حال بارگذاری گزارش.pdf",
+            progress: 0.4,
+            progressText: "چهل درصد",
+          }}
+        />
+      </FileUploadList>,
+    );
+    const progress = screen.getByRole("progressbar", { name: "در حال بارگذاری گزارش.pdf" });
+    expect(progress.getAttribute("aria-valuenow")).toBe("40");
+    expect(progress.getAttribute("aria-valuetext")).toBe("چهل درصد");
+    expect(screen.getByRole("listitem").getAttribute("aria-busy")).toBe("true");
+
+    const retry = vi.fn();
+    rerender(
+      <FileUploadList>
+        <FileUploadItem
+          name="گزارش.pdf"
+          size={1000}
+          locale="fa-IR"
+          removeLabel={(n) => `حذف ${n}`}
+          onRemove={() => {}}
+          lifecycle={{
+            status: "error",
+            statusText: "بارگذاری ناموفق بود",
+            action: { label: "تلاش دوباره برای گزارش.pdf", onPress: retry },
+          }}
+        />
+      </FileUploadList>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "تلاش دوباره برای گزارش.pdf" }));
+    expect(retry).toHaveBeenCalledOnce();
+    expect(screen.getByRole("listitem").getAttribute("data-status")).toBe("error");
   });
 });

@@ -511,7 +511,12 @@ export {
 export type { GridArrow, GridStep } from "./table.variants.ts";
 
 export { ListBox, ListBoxItem, listBoxItemVariants, listBoxVariants } from "./list-box.tsx";
-export type { ListBoxItemProps, ListBoxProps } from "./list-box.tsx";
+export type {
+  ListBoxAsyncAction,
+  ListBoxAsyncState,
+  ListBoxItemProps,
+  ListBoxProps,
+} from "./list-box.tsx";
 
 export {
   DescriptionDetail,
@@ -676,9 +681,13 @@ export type {
 
 export { FileUpload, FileUploadItem, FileUploadList } from "./file-upload.tsx";
 export type {
+  FileUploadLifecycle,
+  FileUploadLifecycleAction,
   FileUploadItemProps,
   FileUploadListProps,
   FileUploadProps,
+  FileUploadRejection,
+  FileUploadRejectionReason,
 } from "./file-upload.tsx";
 
 /*
@@ -961,6 +970,31 @@ export type {
 export { Scrollspy, scrollspyLinkVariants, scrollspyVariants } from "./scrollspy.tsx";
 export type { ScrollspyItem, ScrollspyProps } from "./scrollspy.tsx";
 
+export {
+  OverflowList,
+  fitOverflowItems,
+  overflowListItemVariants,
+  overflowListMeasureVariants,
+  overflowListVariants,
+} from "./overflow-list.tsx";
+export type {
+  OverflowFitInput,
+  OverflowListEntry,
+  OverflowListProps,
+} from "./overflow-list.tsx";
+
+export {
+  TransferList,
+  transferListActionsVariants,
+  transferListPanelVariants,
+  transferListVariants,
+} from "./transfer-list.tsx";
+export type {
+  TransferListItem,
+  TransferListProps,
+  TransferListStrings,
+} from "./transfer-list.tsx";
+
 export { IconTile, iconTileVariants } from "./icon-tile.tsx";
 export type { IconTileProps } from "./icon-tile.tsx";
 
@@ -1220,7 +1254,7 @@ export {
 export type { TreeChevronTurn } from "./tree.variants.ts";
 
 export { VirtualList } from "./virtual-list.tsx";
-export type { VirtualListHandle, VirtualListProps } from "./virtual-list.tsx";
+export type { VirtualListHandle, VirtualListProps, VirtualListRange } from "./virtual-list.tsx";
 
 /*
  * Same rule again — and here it is the RTL arithmetic that needs it. A server
@@ -1255,6 +1289,7 @@ export {
   ganttDateIn,
   ganttGeometry,
   moveGanttTask,
+  resizeGanttTask,
 } from "./gantt.tsx";
 export type {
   GanttColumn,
@@ -1262,6 +1297,7 @@ export type {
   GanttPlacement,
   GanttProps,
   GanttScale,
+  GanttResizeEdge,
   GanttStrings,
   GanttTask,
 } from "./gantt.tsx";

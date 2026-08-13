@@ -1150,6 +1150,7 @@
       ],
       "registryDependencies": [
         "autocomplete",
+        "button",
         "form"
       ],
       "files": [
@@ -1349,6 +1350,24 @@
           "path": "packages/ui/src/base-ui-adapter.ts",
           "type": "registry:ui",
           "target": "components/ui/base-ui-adapter.ts"
+        }
+      ]
+    },
+    {
+      "name": "overflow-list",
+      "type": "registry:ui",
+      "title": "Overflow List",
+      "description": "A single-row collection that replaces items which no longer fit with a",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/overflow-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/overflow-list.tsx"
         }
       ]
     },
@@ -2181,6 +2200,34 @@
           "path": "packages/ui/src/tooltip.tsx",
           "type": "registry:ui",
           "target": "components/ui/tooltip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "transfer-list",
+      "type": "registry:ui",
+      "title": "Transfer List",
+      "description": "Two named listboxes and the movement between them.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "button",
+        "list-box"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/transfer-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/transfer-list.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },

@@ -69,6 +69,7 @@ afterEach(cleanup);
 const FA: EventCalendarStrings = {
   monthView: "ماه",
   dayView: "روز",
+  daysView: (count) => `${count} روز`,
   weekView: "هفته",
   agendaView: "فهرست",
   viewSwitcherLabel: "نمای تقویم",
@@ -87,6 +88,7 @@ const FA: EventCalendarStrings = {
 const EN: EventCalendarStrings = {
   monthView: "Month",
   dayView: "Day",
+  daysView: (count) => `${count} days`,
   weekView: "Week",
   agendaView: "Agenda",
   viewSwitcherLabel: "Calendar view",
@@ -653,6 +655,36 @@ describe("the four views answer four questions", () => {
     expect(screen.queryByText("today-event")).toBeNull();
     expect(screen.getByText("tomorrow-event")).toBeTruthy();
     expect(screen.getByRole("status").textContent).toContain("۲۱");
+  });
+
+  it("an N-day view projects and advances exactly the requested window", () => {
+    mount(
+      "fa-IR",
+      calendarFor(
+        "fa-IR",
+        [
+          meeting("first", 9, 0, 10, 0),
+          {
+            id: "fourth",
+            title: "fourth",
+            start: new CalendarDateTime(GREGORY, 2026, 8, 14, 9),
+            end: new CalendarDateTime(GREGORY, 2026, 8, 14, 10),
+          },
+        ],
+        { defaultView: "days", dayCount: 3 },
+      ),
+    );
+
+    expect(screen.getAllByRole("gridcell")).toHaveLength(3);
+    expect(screen.getByText("first")).toBeTruthy();
+    expect(screen.queryByText("fourth")).toBeNull();
+    expect(screen.getByRole("button", { name: "۳ روز" }).getAttribute("aria-pressed")).toBe(
+      "true",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "دورهٔ بعد" }));
+    expect(screen.queryByText("first")).toBeNull();
+    expect(screen.getByText("fourth")).toBeTruthy();
   });
 
   it("an all-day event is on the week view's strip, never on the time axis", () => {

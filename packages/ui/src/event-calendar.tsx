@@ -273,7 +273,7 @@ export {
  * every screenshot. A default like `allDay = "All day"` is that defect with a
  * shorter fuse.
  *
- * Four members are FUNCTIONS rather than templates, for the reason
+ * Six members are FUNCTIONS rather than templates, for the reason
  * `DateSelector.formatRange` gives at length: two Arabic-number runs with a
  * neutral character between them put that neutral under the PARAGRAPH's
  * direction by the Unicode bidi algorithm, so «۹:۰۰ – ۱۰:۰۰» can render with
@@ -305,8 +305,9 @@ export {
  *     stop inside a roving-tabindex widget, which is the shape
  *     `composite-tab-stop.ts` measures as broken; doing it properly needs a
  *     two-axis grid navigation model, which is a change to make deliberately.
- *  4. **No resource or N-day views.** No swimlane per room or per person, and
- *     no arbitrary «۳ روز» window. Both are a different grid, not a prop.
+ *  4. **No resource view.** There is an arbitrary «۳ روز» window, but no
+ *     swimlane per room or per person; resources are a second axis with their
+ *     own navigation and virtualisation model, not a label prop.
  *  5. **No time-zone conversion.** `CalendarDateTime` is a WALL time with no
  *     zone, so every event is in whatever zone the caller was thinking in and
  *     the component converts nothing. A cross-zone calendar needs
@@ -317,8 +318,8 @@ export {
  *     rather than one bar stretched across a week row. A spanning bar needs a
  *     per-week lane allocator, and its layout is on the axis that mirrors.
  *  7. **No month-cell overlap geometry.** Month cells stack chips in order and
- *     overflow to «+۳ بیشتر»; only the WEEK view lays events out against a time
- *     axis, because only the week view has one.
+ *     overflow to «+۳ بیشتر»; the week, day and N-day views lay events out
+ *     against a time axis because those are the views that have one.
  *  8. **No virtualisation.** Every day in the visible period renders every one
  *     of its events. A month of a thousand events is a `VirtualList` problem
  *     and this component does not pretend otherwise.
@@ -331,7 +332,7 @@ export {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /** Which question the calendar is currently answering. See the header. */
-export type EventCalendarView = "month" | "week" | "day" | "agenda";
+export type EventCalendarView = "month" | "week" | "day" | "days" | "agenda";
 
 /** A chip's colour. Not announced — the accessible name carries the meaning. */
 export type EventCalendarTone = "accent" | "positive" | "caution" | "critical" | "neutral";
@@ -445,9 +446,11 @@ export interface EventCalendarStrings {
   weekView: string;
   /** Names the day view's button, e.g. «روز». */
   dayView: string;
+  /** Names an N-day view's button. Receives a locale-formatted count. */
+  daysView: (count: string) => string;
   /** Names the agenda view's button, e.g. «فهرست». */
   agendaView: string;
-  /** Names the group the four buttons sit in, e.g. «نمای تقویم». */
+  /** Names the group the five buttons sit in, e.g. «نمای تقویم». */
   viewSwitcherLabel: string;
   /** Names the backward button, e.g. «دورهٔ پیش». */
   previous: string;
@@ -798,6 +801,8 @@ export interface EventCalendarProps
   view?: EventCalendarView | undefined;
   defaultView?: EventCalendarView | undefined;
   onViewChange?: ((view: EventCalendarView) => void) | undefined;
+  /** Number of consecutive days in the `days` view. Clamped to 2–14. */
+  dayCount?: number | undefined;
   /**
    * Which day to mark as today, if any. A PROP, not a clock read — see the
    * header. Omitted, nothing is marked, which is correct for a calendar showing
@@ -824,6 +829,7 @@ export function EventCalendar({
   view,
   defaultView,
   onViewChange,
+  dayCount = 3,
   todayDate,
   onDaySelect,
   maxEventsPerDay,
@@ -849,6 +855,7 @@ export function EventCalendar({
     defaultView ?? "month",
   );
   const current: EventCalendarView = view ?? uncontrolledView;
+  const visibleDayCount = Math.min(14, Math.max(2, Math.trunc(dayCount)));
 
   /*
    * The roving tab stop. `false` in the SERVED bytes, which is what puts
@@ -912,7 +919,9 @@ export function EventCalendar({
           ? strings.weekView
           : next === "day"
             ? strings.dayView
-            : strings.agendaView,
+            : next === "days"
+              ? strings.daysView(formatNumber(visibleDayCount, locale))
+              : strings.agendaView,
     );
   };
 
@@ -965,6 +974,16 @@ export function EventCalendar({
         dateText(last, locale, { day: "numeric", month: "long", year: "numeric" }),
       );
     }
+    if (current === "days") {
+      return strings.range(
+        dateText(focus, locale, { day: "numeric", month: "long" }),
+        dateText(focus.add({ days: visibleDayCount - 1 }), locale, {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        }),
+      );
+    }
     return dateText(focus, locale, { month: "long", year: "numeric" });
   };
 
@@ -983,9 +1002,11 @@ export function EventCalendar({
     const next =
       current === "day"
         ? focus.add({ days: amount })
-        : current === "week"
-          ? weekStart(focus).add({ weeks: amount })
-          : startOfMonth(focus).add({ months: amount });
+        : current === "days"
+          ? focus.add({ days: amount * visibleDayCount })
+          : current === "week"
+            ? weekStart(focus).add({ weeks: amount })
+            : startOfMonth(focus).add({ months: amount });
     if (focusedDate === undefined) setUncontrolledFocus(next);
     onFocusedDateChange?.(next);
     setAnnouncement(dayName(next));
@@ -1351,6 +1372,7 @@ export function EventCalendar({
     ["month", strings.monthView],
     ["week", strings.weekView],
     ["day", strings.dayView],
+    ["days", strings.daysView(formatNumber(visibleDayCount, locale))],
     ["agenda", strings.agendaView],
   ];
 
@@ -1381,7 +1403,7 @@ export function EventCalendar({
 
         {/*
           A group of pressed buttons, not a `role="tablist"`. A tablist promises
-          arrow-key navigation and a tab/panel relationship; four buttons that
+          arrow-key navigation and a tab/panel relationship; five buttons that
           each rewrite the same region are exactly what `aria-pressed` is for,
           and it costs no keyboard model this component would then have to own.
         */}
@@ -1415,7 +1437,13 @@ export function EventCalendar({
           ? timeGrid(daysOfWeek(weekStart(focus)))
           : current === "day"
             ? timeGrid([focus])
-            : agenda()}
+            : current === "days"
+              ? timeGrid(
+                  Array.from({ length: visibleDayCount }, (_, offset) =>
+                    focus.add({ days: offset }),
+                  ),
+                )
+              : agenda()}
     </div>
   );
 }

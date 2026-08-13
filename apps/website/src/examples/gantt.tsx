@@ -54,6 +54,8 @@ const t = {
   day: { "fa-IR": "روز", "en-US": "Day" },
   week: { "fa-IR": "هفته", "en-US": "Week" },
   month: { "fa-IR": "ماه", "en-US": "Month" },
+  quarter: { "fa-IR": "فصل", "en-US": "Quarter" },
+  year: { "fa-IR": "سال", "en-US": "Year" },
   taskHeader: { "fa-IR": "کار", "en-US": "Task" },
   timeline: { "fa-IR": "خط زمان", "en-US": "Timeline" },
   barRole: { "fa-IR": "نوار زمان‌بندی", "en-US": "Schedule bar" },
@@ -64,6 +66,11 @@ const t = {
   pickedUp: { "fa-IR": "برداشته شد،", "en-US": "Picked up," },
   dropped: { "fa-IR": "رها شد،", "en-US": "Dropped," },
   cancelled: { "fa-IR": "جابه‌جایی لغو شد.", "en-US": "The move was cancelled." },
+  expand: { "fa-IR": "باز کردن", "en-US": "Expand" },
+  collapse: { "fa-IR": "بستن", "en-US": "Collapse" },
+  resizeStart: { "fa-IR": "تغییر آغاز", "en-US": "Resize the start of" },
+  resizeEnd: { "fa-IR": "تغییر پایان", "en-US": "Resize the end of" },
+  resized: { "fa-IR": "بازهٔ تازهٔ", "en-US": "Resized" },
 
   releaseLabel: { "fa-IR": "برنامهٔ انتشار نسخهٔ بهار", "en-US": "Spring release plan" },
   design: { "fa-IR": "طراحی صفحهٔ پرداخت", "en-US": "Design the checkout page" },
@@ -71,6 +78,7 @@ const t = {
   content: { "fa-IR": "نگارش متن راهنما", "en-US": "Write the help copy" },
   test: { "fa-IR": "آزمون پذیرش", "en-US": "Acceptance testing" },
   ship: { "fa-IR": "انتشار عمومی", "en-US": "Public release" },
+  releaseGroup: { "fa-IR": "نسخهٔ بهار", "en-US": "Spring release" },
 
   yearLabel: { "fa-IR": "برنامهٔ یک‌سالهٔ محصول", "en-US": "The product year" },
   research: { "fa-IR": "پژوهش کاربر", "en-US": "User research" },
@@ -94,6 +102,8 @@ function ReleaseExample(l: Locale) {
       dayWord={t.day[l]}
       weekWord={t.week[l]}
       monthWord={t.month[l]}
+      quarterWord={t.quarter[l]}
+      yearWord={t.year[l]}
       taskColumnHeader={t.taskHeader[l]}
       timelineLabel={t.timeline[l]}
       barRoleDescription={t.barRole[l]}
@@ -104,12 +114,18 @@ function ReleaseExample(l: Locale) {
       pickedUp={t.pickedUp[l]}
       dropped={t.dropped[l]}
       cancelled={t.cancelled[l]}
+      expandWord={t.expand[l]}
+      collapseWord={t.collapse[l]}
+      resizeStartWord={t.resizeStart[l]}
+      resizeEndWord={t.resizeEnd[l]}
+      resizedWord={t.resized[l]}
       tasks={[
-        { id: "design", label: t.design[l], start: "2026-03-21", end: "2026-03-27", progress: 1 },
-        { id: "build", label: t.build[l], start: "2026-03-25", end: "2026-04-04", progress: 0.6 },
-        { id: "content", label: t.content[l], start: "2026-03-28", end: "2026-04-01", progress: 0.25 },
-        { id: "test", label: t.test[l], start: "2026-04-02", end: "2026-04-06" },
-        { id: "ship", label: t.ship[l], start: "2026-04-07", end: "2026-04-07" },
+        { id: "release", label: t.releaseGroup[l], start: "2026-03-21", end: "2026-04-07", progress: 0.45 },
+        { id: "design", parentId: "release", label: t.design[l], start: "2026-03-21", end: "2026-03-27", progress: 1 },
+        { id: "build", parentId: "release", label: t.build[l], start: "2026-03-25", end: "2026-04-04", progress: 0.6 },
+        { id: "content", parentId: "release", label: t.content[l], start: "2026-03-28", end: "2026-04-01", progress: 0.25 },
+        { id: "test", parentId: "release", label: t.test[l], start: "2026-04-02", end: "2026-04-06" },
+        { id: "ship", parentId: "release", label: t.ship[l], start: "2026-04-07", end: "2026-04-07" },
       ]}
     />
   );
@@ -132,6 +148,8 @@ function YearExample(l: Locale) {
       dayWord={t.day[l]}
       weekWord={t.week[l]}
       monthWord={t.month[l]}
+      quarterWord={t.quarter[l]}
+      yearWord={t.year[l]}
       taskColumnHeader={t.taskHeader[l]}
       timelineLabel={t.timeline[l]}
       barRoleDescription={t.barRole[l]}
@@ -142,6 +160,11 @@ function YearExample(l: Locale) {
       pickedUp={t.pickedUp[l]}
       dropped={t.dropped[l]}
       cancelled={t.cancelled[l]}
+      expandWord={t.expand[l]}
+      collapseWord={t.collapse[l]}
+      resizeStartWord={t.resizeStart[l]}
+      resizeEndWord={t.resizeEnd[l]}
+      resizedWord={t.resized[l]}
       tasks={[
         { id: "research", label: t.research[l], start: "2026-03-21", end: "2026-06-21", progress: 1 },
         { id: "platform", label: t.platform[l], start: "2026-05-22", end: "2026-11-21", progress: 0.55 },

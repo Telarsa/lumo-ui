@@ -1,5 +1,6 @@
 import type { Locale } from "@lumo-ui/core";
 import { ListBox, ListBoxItem } from "@lumo-ui/ui";
+import { AsyncListBoxIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -67,6 +68,12 @@ const t = {
   msgThree: { "fa-IR": "انبار تهران — کالا رسید", "en-US": "Tehran warehouse — the goods arrived" },
   msgFour: { "fa-IR": "حسابداری — یادآوری پرداخت", "en-US": "Accounting — a payment reminder" },
   msgFive: { "fa-IR": "کامیاب نظری — بازبینی طراحی", "en-US": "Kamyab Nazari — design review" },
+  remote: { "fa-IR": "مخزن‌های دور", "en-US": "Remote repositories" },
+  failed: { "fa-IR": "دریافت مخزن‌ها ناموفق بود", "en-US": "Repositories could not be loaded" },
+  retry: { "fa-IR": "تلاش دوباره", "en-US": "Retry" },
+  noRepos: { "fa-IR": "مخزنی پیدا نشد", "en-US": "No repositories found" },
+  lumo: { "fa-IR": "لومو", "en-US": "Lumo" },
+  gate: { "fa-IR": "دروازه", "en-US": "Gate" },
 } satisfies Record<string, LocalizedText>;
 
 function SingleExample(l: Locale) {
@@ -134,6 +141,21 @@ function MasterPaneExample(l: Locale) {
       <ListBoxItem id="four">{t.msgFour[l]}</ListBoxItem>
       <ListBoxItem id="five">{t.msgFive[l]}</ListBoxItem>
     </ListBox>
+  );
+}
+
+function AsyncExample(l: Locale) {
+  return (
+    <AsyncListBoxIsland
+      label={t.remote[l]}
+      errorText={t.failed[l]}
+      retryLabel={t.retry[l]}
+      emptyText={t.noRepos[l]}
+      items={[
+        { id: "lumo", label: t.lumo[l] },
+        { id: "gate", label: t.gate[l] },
+      ]}
+    />
   );
 }
 
@@ -236,6 +258,17 @@ export const EXAMPLES: ComponentExamples = {
           "The thing this component was built for: a list that scrolls and takes one tab stop, so a keyboard reader reaches the detail column with a single Tab instead of walking five messages. The height cap is one class and the scrolling stays inside that box.",
       },
       render: MasterPaneExample,
+    },
+    {
+      id: "async",
+      title: { "fa-IR": "خطا و بازیابیِ دور", "en-US": "Remote error and recovery" },
+      description: {
+        "fa-IR":
+          "خطا و دکمهٔ تلاش دوباره بیرونِ role=listbox هستند، پس صفحه‌خوان آن‌ها را با گزینهٔ انتخابی اشتباه نمی‌گیرد. پس از بازیابی، گزینه‌های واقعی با همان مدلِ صفحه‌کلید وارد می‌شوند.",
+        "en-US":
+          "The error and retry action sit outside `role=listbox`, so assistive technology cannot mistake them for selectable options. After recovery, real options enter with the same keyboard model.",
+      },
+      render: AsyncExample,
     },
   ],
 };

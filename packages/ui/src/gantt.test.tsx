@@ -39,6 +39,7 @@ import {
   ganttDateIn,
   ganttGeometry,
   moveGanttTask,
+  resizeGanttTask,
   type GanttScale,
   type GanttStrings,
   type GanttTask,
@@ -59,7 +60,7 @@ function own(date: CalendarDate): [string, number, number, number] {
 
 const STRINGS: GanttStrings = {
   scaleGroupLabel: "مقیاس زمان",
-  scaleNames: { day: "روز", week: "هفته", month: "ماه" },
+  scaleNames: { day: "روز", week: "هفته", month: "ماه", quarter: "فصل", year: "سال" },
   taskColumnHeader: "کار",
   timelineLabel: "خط زمان",
   barRoleDescription: "نوار زمان‌بندی",
@@ -71,6 +72,11 @@ const STRINGS: GanttStrings = {
   dropped: "رها شد،",
   cancelled: "جابه‌جایی لغو شد.",
   movedTo: (label, from, to) => `${label} از ${from} تا ${to}`,
+  expandTask: (label) => `باز کردن ${label}`,
+  collapseTask: (label) => `بستن ${label}`,
+  resizeStart: (label) => `تغییر آغاز ${label}`,
+  resizeEnd: (label) => `تغییر پایان ${label}`,
+  resizedTo: (label, from, to) => `${label} اکنون از ${from} تا ${to}`,
 };
 
 /** A one-week task starting on Nowruz ۱۴۰۵, expressed in GREGORIAN fields. */
@@ -286,6 +292,21 @@ describe("the month scale asks the calendar for its column widths", () => {
     expect(toCalendar(en.start, GREGORY).toString()).toBe("2026-03-15"); // Sunday
     expect(fa.columns.every((column) => column.days === 7)).toBe(true);
   });
+
+  it("quarter and year scales use the reader's calendar boundaries", () => {
+    const quarter = ganttGeometry([], "quarter" as GanttScale, "fa-IR", JALALI_YEAR);
+    expect(quarter.columns.map((column) => column.days)).toEqual([93, 93, 90, 89]);
+    expect(quarter.columns.map((column) => column.label)).toEqual([
+      "۱۴۰۵ فروردین",
+      "۱۴۰۵ تیر",
+      "۱۴۰۵ مهر",
+      "۱۴۰۵ دی",
+    ]);
+
+    const year = ganttGeometry([], "year" as GanttScale, "fa-IR", JALALI_YEAR);
+    expect(year.columns).toHaveLength(1);
+    expect(year.columns[0]).toMatchObject({ days: 365, label: "۱۴۰۵" });
+  });
 });
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -328,7 +349,7 @@ describe("which arrow moves a bar LATER is mirrored", () => {
         strings={STRINGS}
       />,
     );
-    const bar = screen.getByRole("button", { name: /طراحی/ });
+    const bar = screen.getByRole("button", { name: /^طراحی،/ });
     // Space picks the bar up. Nothing moves until it is held — the same
     // WAI-ARIA model `sortable.tsx` and `kanban.tsx` implement.
     fireEvent.keyDown(bar, { key: " " });
@@ -377,7 +398,7 @@ describe("which arrow moves a bar LATER is mirrored", () => {
         strings={STRINGS}
       />,
     );
-    fireEvent.keyDown(screen.getByRole("button", { name: /طراحی/ }), { key: "ArrowLeft" });
+    fireEvent.keyDown(screen.getByRole("button", { name: /^طراحی،/ }), { key: "ArrowLeft" });
     expect(onTasksChange).not.toHaveBeenCalled();
   });
 
@@ -395,7 +416,7 @@ describe("which arrow moves a bar LATER is mirrored", () => {
       );
     }
     render(<Harness />);
-    const bar = screen.getByRole("button", { name: /طراحی/ });
+    const bar = screen.getByRole("button", { name: /^طراحی،/ });
     fireEvent.keyDown(bar, { key: " " });
     fireEvent.keyDown(bar, { key: "ArrowLeft" });
 
@@ -406,6 +427,109 @@ describe("which arrow moves a bar LATER is mirrored", () => {
     // A live region that speaks a Latin digit on a Persian page is the defect
     // `no-latin-digits` grades; the announcement is built from `formatDate`.
     expect(live?.textContent).not.toMatch(/[0-9]/);
+  });
+});
+
+describe("task hierarchy", () => {
+  const hierarchy = [
+    { ...SPRINT, id: "release", label: "انتشار" },
+    { ...SPRINT, id: "design", label: "طراحی", parentId: "release" },
+    { ...SPRINT, id: "review", label: "بازبینی", parentId: "design" },
+    { ...SPRINT, id: "support", label: "پشتیبانی" },
+  ];
+
+  it("collapses descendants and expands only the requested branch", () => {
+    render(
+      <Gantt
+        label="برنامه"
+        locale="fa-IR"
+        tasks={hierarchy}
+        strings={{
+          ...STRINGS,
+          expandTask: (label: string) => `باز کردن ${label}`,
+          collapseTask: (label: string) => `بستن ${label}`,
+        }}
+        defaultExpandedTaskIds={[]}
+      />,
+    );
+
+    expect(screen.getByText("انتشار")).not.toBeNull();
+    expect(screen.getByText("پشتیبانی")).not.toBeNull();
+    expect(screen.queryByText("طراحی")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "باز کردن انتشار" }));
+    expect(screen.getByText("طراحی")).not.toBeNull();
+    expect(screen.queryByText("بازبینی")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "باز کردن طراحی" }));
+    expect(screen.getByText("بازبینی")).not.toBeNull();
+  });
+});
+
+describe("task resizing", () => {
+  it("changes one edge and clamps it before the opposite edge", () => {
+    const laterStart = resizeGanttTask([SPRINT], "sprint", "start", "day", 2, "fa-IR");
+    expect(laterStart[0]?.start.toString()).toBe("2026-03-23");
+    expect(laterStart[0]?.end.toString()).toBe("2026-03-27");
+
+    const beforeStart = resizeGanttTask(laterStart, "sprint", "end", "day", -20, "fa-IR");
+    expect(beforeStart[0]?.end.compare(beforeStart[0]!.start)).toBe(0);
+  });
+
+  it("mirrors a resize handle's later key in Persian", () => {
+    const onTasksChange = vi.fn();
+    render(
+      <Gantt
+        label="برنامه"
+        locale="fa-IR"
+        tasks={[SPRINT]}
+        strings={STRINGS}
+        onTasksChange={onTasksChange}
+      />,
+    );
+
+    fireEvent.keyDown(screen.getByRole("button", { name: "تغییر پایان طراحی" }), {
+      key: "ArrowLeft",
+    });
+    const changed = onTasksChange.mock.calls[0]?.[0] as GanttTask[];
+    expect(changed[0]?.end.toString()).toBe("2026-03-28");
+  });
+
+  it("converts a Persian pointer drag toward inline-end into one later day", () => {
+    const onTasksChange = vi.fn();
+    const { container } = render(
+      <Gantt
+        label="برنامه"
+        locale="fa-IR"
+        tasks={[SPRINT]}
+        strings={STRINGS}
+        onTasksChange={onTasksChange}
+      />,
+    );
+    const track = container.querySelector<HTMLElement>("[data-gantt-track]");
+    expect(track).not.toBeNull();
+    vi.spyOn(track!, "getBoundingClientRect").mockReturnValue({
+      width: 700,
+      height: 40,
+      x: 0,
+      y: 0,
+      top: 0,
+      right: 700,
+      bottom: 40,
+      left: 0,
+      toJSON: () => ({}),
+    });
+
+    const handle = screen.getByRole("button", { name: "تغییر پایان طراحی" });
+    fireEvent.pointerDown(handle, { pointerId: 1, clientX: 500 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 400 });
+    fireEvent.pointerMove(handle, { pointerId: 1, clientX: 300 });
+    fireEvent.pointerUp(handle, { pointerId: 1 });
+
+    const first = onTasksChange.mock.calls[0]?.[0] as GanttTask[];
+    const second = onTasksChange.mock.calls[1]?.[0] as GanttTask[];
+    expect(first[0]?.end.toString()).toBe("2026-03-28");
+    expect(second[0]?.end.toString()).toBe("2026-03-29");
   });
 });
 
@@ -538,10 +662,10 @@ describe("every announced string is a required prop", () => {
     expect([noLabel, noStrings, noScaleName, noBarName, unlabelled]).toHaveLength(5);
   });
 
-  it("the scale union is closed — a fourth scale is a compile error, not a blank header", () => {
-    // @ts-expect-error v1 ships three scales and no free zoom. See the header.
-    const quarter: GanttScale = "quarter";
-    expect(quarter).toBe("quarter");
+  it("the scale union is closed — an unknown scale is a compile error, not a blank header", () => {
+    // @ts-expect-error day through year are explicit; an invented scale has no name or geometry.
+    const decade: GanttScale = "decade";
+    expect(decade).toBe("decade");
   });
 });
 

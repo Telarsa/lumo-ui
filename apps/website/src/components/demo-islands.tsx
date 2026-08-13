@@ -1868,7 +1868,15 @@ export function DataGridIsland({
  * as a prop, in both locales, from the examples module; every number arrives as
  * data and leaves through the component's own formatter.
  */
-import { FileUpload, FileUploadItem, FileUploadList, TagGroup, TagItem, TagList } from "@lumo-ui/ui";
+import {
+  FileUpload,
+  FileUploadItem,
+  FileUploadList,
+  TagGroup,
+  TagItem,
+  TagList,
+  type FileUploadLifecycle,
+} from "@lumo-ui/ui";
 
 /** One filterable row. Plain data, so it crosses the boundary. */
 export interface AutocompleteRow {
@@ -2087,6 +2095,20 @@ export interface UploadedFile {
   name: string;
   /** Size in BYTES. A number — the component formats it, nothing interpolates it. */
   size: number;
+  lifecycle?:
+    | {
+        status: "uploading";
+        statusText: string;
+        progress: number;
+        progressText: string;
+      }
+    | {
+        status: "queued" | "success" | "error";
+        statusText: string;
+        actionLabel?: string | undefined;
+        actionResultText?: string | undefined;
+      }
+    | undefined;
 }
 
 export interface FileUploadIslandProps {
@@ -2101,6 +2123,8 @@ export interface FileUploadIslandProps {
   removeWord: string;
   acceptedFileTypes?: readonly string[] | undefined;
   allowsMultiple?: boolean | undefined;
+  maxFileSize?: number | undefined;
+  maxFiles?: number | undefined;
   isDisabled?: boolean | undefined;
   /** Rows the list starts with, so a size boundary can be shown without a picker. */
   initialFiles?: readonly UploadedFile[] | undefined;
@@ -2123,6 +2147,8 @@ export function FileUploadIsland({
   removeWord,
   acceptedFileTypes,
   allowsMultiple,
+  maxFileSize,
+  maxFiles,
   isDisabled,
   initialFiles,
 }: FileUploadIslandProps) {
@@ -2134,6 +2160,9 @@ export function FileUploadIsland({
         triggerLabel={triggerLabel}
         {...(acceptedFileTypes === undefined ? {} : { acceptedFileTypes })}
         {...(allowsMultiple === undefined ? {} : { allowsMultiple })}
+        {...(maxFileSize === undefined ? {} : { maxFileSize })}
+        {...(maxFiles === undefined ? {} : { maxFiles })}
+        currentFileCount={files.length}
         {...(isDisabled === undefined ? {} : { isDisabled })}
         onSelectFiles={(chosen) => {
           const rows = chosen.map((file) => ({ name: file.name, size: file.size }));
@@ -2144,18 +2173,55 @@ export function FileUploadIsland({
       </FileUpload>
       {files.length === 0 ? null : (
         <FileUploadList>
-          {files.map((file) => (
-            <FileUploadItem
-              key={file.name}
-              name={file.name}
-              size={file.size}
-              locale={locale}
-              removeLabel={(fileName) => `${removeWord} ${fileName}`}
-              onRemove={() => {
-                setFiles((current) => current.filter((row) => row.name !== file.name));
-              }}
-            />
-          ))}
+          {files.map((file) => {
+            const lifecycle: FileUploadLifecycle | undefined =
+              file.lifecycle === undefined
+                ? undefined
+                : file.lifecycle.status === "uploading"
+                  ? file.lifecycle
+                  : {
+                      status: file.lifecycle.status,
+                      statusText: file.lifecycle.statusText,
+                      ...(file.lifecycle.actionLabel === undefined
+                        ? {}
+                        : {
+                            action: {
+                              label: file.lifecycle.actionLabel,
+                              onPress: () => {
+                                setFiles((current) =>
+                                  current.map((row) =>
+                                    row.name === file.name
+                                      ? {
+                                          ...row,
+                                          lifecycle: {
+                                            status: "success",
+                                            statusText:
+                                              file.lifecycle?.status === "uploading"
+                                                ? file.lifecycle.statusText
+                                                : (file.lifecycle?.actionResultText ?? file.lifecycle?.statusText ?? ""),
+                                          },
+                                        }
+                                      : row,
+                                  ),
+                                );
+                              },
+                            },
+                          }),
+                    };
+            return (
+              <FileUploadItem
+                key={file.name}
+                name={file.name}
+                size={file.size}
+                locale={locale}
+                {...(lifecycle === undefined ? {} : { lifecycle })}
+                removeLabel={(fileName) => `${removeWord} ${fileName}`}
+                onRemove={() => {
+                  setFiles((current) => current.filter((row) => row.name !== file.name));
+                }}
+              />
+            );
+          })}
         </FileUploadList>
       )}
     </div>
@@ -2194,6 +2260,8 @@ export function FileUploadIsland({
 import { useId } from "react";
 import {
   DateInput,
+  ListBox,
+  ListBoxItem,
   VirtualList,
   useDateFieldState,
   useTimeFieldState,
@@ -2438,6 +2506,9 @@ export interface VirtualListIslandProps {
   rowWord: string;
   className?: string | undefined;
   itemClassName?: string | undefined;
+  /** When present, reaching the end grows the remote corpus up to this count. */
+  loadToCount?: number | undefined;
+  loadedWord?: string | undefined;
 }
 
 /**
@@ -2460,31 +2531,92 @@ export function VirtualListIsland({
   rowWord,
   className,
   itemClassName,
+  loadToCount,
+  loadedWord,
 }: VirtualListIslandProps) {
+  const [loadedCount, setLoadedCount] = useState(count);
+  const effectiveCount = loadToCount === undefined ? count : loadedCount;
   return (
-    <VirtualList
-      label={label}
-      locale={locale}
-      count={count}
-      estimateSize={
-        varyingSizes === true
-          ? (index) => (index % 3 === 0 ? rowSize + 28 : rowSize)
-          : rowSize
-      }
-      initialSize={initialSize}
-      {...(orientation === undefined ? {} : { orientation })}
-      {...(gap === undefined ? {} : { gap })}
-      {...(className === undefined ? {} : { className })}
-      {...(itemClassName === undefined ? {} : { itemClassName })}
-    >
-      {(index) => (
-        <div className="flex h-full items-center gap-2 px-3 text-sm">
-          <span className="text-fg-muted">{rowWord}</span>
-          {/* Through `formatNumber` — a bare {index} is a Latin digit. */}
-          <span className="font-medium text-fg">{formatNumber(index + 1, locale)}</span>
-        </div>
+    <div className="flex flex-col gap-2">
+      <VirtualList
+        label={label}
+        locale={locale}
+        count={effectiveCount}
+        estimateSize={
+          varyingSizes === true
+            ? (index) => (index % 3 === 0 ? rowSize + 28 : rowSize)
+            : rowSize
+        }
+        initialSize={initialSize}
+        {...(orientation === undefined ? {} : { orientation })}
+        {...(gap === undefined ? {} : { gap })}
+        {...(className === undefined ? {} : { className })}
+        {...(itemClassName === undefined ? {} : { itemClassName })}
+        {...(loadToCount === undefined
+          ? {}
+          : {
+              endReachedThreshold: 2,
+              onEndReached: () =>
+                setLoadedCount((current) => Math.min(loadToCount, current + 20)),
+            })}
+      >
+        {(index) => (
+          <div className="flex h-full items-center gap-2 px-3 text-sm">
+            <span className="text-fg-muted">{rowWord}</span>
+            {/* Through `formatNumber` — a bare {index} is a Latin digit. */}
+            <span className="font-medium text-fg">{formatNumber(index + 1, locale)}</span>
+          </div>
+        )}
+      </VirtualList>
+      {loadedWord === undefined ? null : (
+        <p role="status" className="text-xs text-fg-muted">
+          {loadedWord} {formatNumber(effectiveCount, locale)}
+        </p>
       )}
-    </VirtualList>
+    </div>
+  );
+}
+
+export interface AsyncListBoxIslandProps {
+  label: string;
+  errorText: string;
+  retryLabel: string;
+  emptyText: string;
+  items: readonly { id: string; label: string }[];
+}
+
+/** Remote state is adjacent to the composite, never a fake selectable option. */
+export function AsyncListBoxIsland({
+  label,
+  errorText,
+  retryLabel,
+  emptyText,
+  items,
+}: AsyncListBoxIslandProps) {
+  const [failed, setFailed] = useState(true);
+  return (
+    <ListBox
+      label={label}
+      selectionMode="single"
+      asyncState={
+        failed
+          ? {
+              status: "error",
+              text: errorText,
+              action: { label: retryLabel, onPress: () => setFailed(false) },
+            }
+          : { status: "ready", emptyText }
+      }
+      className="max-w-xs rounded-md border border-border bg-surface"
+    >
+      {failed
+        ? null
+        : items.map((item) => (
+            <ListBoxItem key={item.id} id={item.id} textValue={item.label}>
+              {item.label}
+            </ListBoxItem>
+          ))}
+    </ListBox>
   );
 }
 
@@ -2624,6 +2756,7 @@ import { Gantt, ganttDate, type GanttScale, type GanttTask } from "@lumo-ui/ui";
 /** One row, as data a server module can hand across the boundary. */
 export interface GanttIslandTask {
   id: string;
+  parentId?: string;
   /** The task's name, in the page's locale. */
   label: string;
   /** `YYYY-MM-DD`. A DAY, not an instant — see the block above. */
@@ -2641,10 +2774,12 @@ export interface GanttIslandProps {
   tasks: readonly GanttIslandTask[];
   /** Names the group of scale buttons. */
   scaleGroupLabel: string;
-  /** The three scale names. No English default exists for these. */
+  /** The five scale names. No English default exists for these. */
   dayWord: string;
   weekWord: string;
   monthWord: string;
+  quarterWord: string;
+  yearWord: string;
   /** Heads the task-name column. */
   taskColumnHeader: string;
   /** Names the timeline region. */
@@ -2674,6 +2809,11 @@ export interface GanttIslandProps {
   pickedUp: string;
   dropped: string;
   cancelled: string;
+  expandWord: string;
+  collapseWord: string;
+  resizeStartWord: string;
+  resizeEndWord: string;
+  resizedWord: string;
   defaultScale?: GanttScale;
 }
 
@@ -2695,6 +2835,8 @@ export function GanttIsland({
   dayWord,
   weekWord,
   monthWord,
+  quarterWord,
+  yearWord,
   taskColumnHeader,
   timelineLabel,
   barRoleDescription,
@@ -2705,11 +2847,17 @@ export function GanttIsland({
   pickedUp,
   dropped,
   cancelled,
+  expandWord,
+  collapseWord,
+  resizeStartWord,
+  resizeEndWord,
+  resizedWord,
   defaultScale,
 }: GanttIslandProps) {
   const [rows, setRows] = useState<GanttTask[]>(() =>
     tasks.map((task) => ({
       id: task.id,
+      ...(task.parentId === undefined ? {} : { parentId: task.parentId }),
       label: task.label,
       start: ganttDate(task.start),
       end: ganttDate(task.end),
@@ -2725,7 +2873,13 @@ export function GanttIsland({
       {...(defaultScale === undefined ? {} : { defaultScale })}
       strings={{
         scaleGroupLabel,
-        scaleNames: { day: dayWord, week: weekWord, month: monthWord },
+        scaleNames: {
+          day: dayWord,
+          week: weekWord,
+          month: monthWord,
+          quarter: quarterWord,
+          year: yearWord,
+        },
         taskColumnHeader,
         timelineLabel,
         barRoleDescription,
@@ -2737,6 +2891,12 @@ export function GanttIsland({
         dropped,
         cancelled,
         movedTo: (name, from, to) => `${name}${separator}${fromWord} ${from} ${toWord} ${to}`,
+        expandTask: (name) => `${expandWord} ${name}`,
+        collapseTask: (name) => `${collapseWord} ${name}`,
+        resizeStart: (name) => `${resizeStartWord} ${name}`,
+        resizeEnd: (name) => `${resizeEndWord} ${name}`,
+        resizedTo: (name, from, to) =>
+          `${resizedWord} ${name}${separator}${fromWord} ${from} ${toWord} ${to}`,
       }}
     />
   );
@@ -2780,12 +2940,13 @@ import {
 export interface EventCalendarIslandProps {
   /** Names the grid. */
   label: string;
-  /** The four view buttons, in the caller's own words. */
+  /** The five view buttons, in the caller's own words. */
   monthView: string;
   weekView: string;
   dayView: string;
+  daysWord: string;
   agendaView: string;
-  /** Names the group the four sit in. */
+  /** Names the group the five sit in. */
   viewSwitcherLabel: string;
   previous: string;
   next: string;
@@ -2821,6 +2982,7 @@ export interface EventCalendarIslandProps {
   /** `YYYY-MM-DD`, marked as today. Also fixed, for the same reason. */
   todayDay?: string;
   defaultView?: EventCalendarView;
+  dayCount?: number;
   maxEventsPerDay?: number;
 }
 
@@ -2836,6 +2998,7 @@ export function EventCalendarIsland({
   monthView,
   weekView,
   dayView,
+  daysWord,
   agendaView,
   viewSwitcherLabel,
   previous,
@@ -2852,6 +3015,7 @@ export function EventCalendarIsland({
   focusedDay,
   todayDay,
   defaultView,
+  dayCount,
   maxEventsPerDay,
 }: EventCalendarIslandProps) {
   return (
@@ -2860,12 +3024,14 @@ export function EventCalendarIsland({
       defaultFocusedDate={eventCalendarDay(focusedDay)}
       {...(todayDay === undefined ? {} : { todayDate: eventCalendarDay(todayDay) })}
       {...(defaultView === undefined ? {} : { defaultView })}
+      {...(dayCount === undefined ? {} : { dayCount })}
       {...(maxEventsPerDay === undefined ? {} : { maxEventsPerDay })}
       events={events.map(eventCalendarEvent)}
       strings={{
         monthView,
         weekView,
         dayView,
+        daysView: (count) => `${count} ${daysWord}`,
         agendaView,
         viewSwitcherLabel,
         previous,
@@ -3469,5 +3635,99 @@ export function ChartMotionIsland({
           : `${strings.selectedWord}: ${selected.month} — ${formatNumber(selected.sales, locale)}`}
       </p>
     </div>
+  );
+}
+
+/* ─────────────────────────────────────────────── overflow-list · transfer-list ─ */
+
+import { OverflowList, TransferList } from "@lumo-ui/ui";
+
+export interface OverflowListIslandProps {
+  locale: Locale;
+  items: readonly string[];
+  moreWord: string;
+  collapseFrom?: "start" | "end" | undefined;
+}
+
+/** The render callbacks stay inside the client boundary; the example passes plain copy. */
+export function OverflowListIsland({
+  locale,
+  items,
+  moreWord,
+  collapseFrom,
+}: OverflowListIslandProps) {
+  return (
+    <OverflowList
+      items={items}
+      getKey={(item) => item}
+      initialVisibleItems={3}
+      minVisibleItems={1}
+      maxVisibleItems={5}
+      {...(collapseFrom === undefined ? {} : { collapseFrom })}
+      renderItem={(item) => (
+        <Button size="sm" variant="outline">
+          {item}
+        </Button>
+      )}
+      renderOverflow={(hidden) => (
+        <Button size="sm" variant="outline">
+          +{formatNumber(hidden.length, locale)} {moreWord}
+        </Button>
+      )}
+      className="w-full max-w-lg"
+    />
+  );
+}
+
+export interface TransferListIslandProps {
+  locale: Locale;
+  availableLabel: string;
+  selectedLabel: string;
+  addSelected: string;
+  removeSelected: string;
+  moveUp: string;
+  moveDown: string;
+  movedWord: string;
+  destinationWord: string;
+  items: readonly { id: string; label: string; isLocked?: boolean | undefined }[];
+  defaultValue: readonly string[];
+}
+
+/** A working ordered selector. Every announced word arrives from the examples file. */
+export function TransferListIsland({
+  locale,
+  availableLabel,
+  selectedLabel,
+  addSelected,
+  removeSelected,
+  moveUp,
+  moveDown,
+  movedWord,
+  destinationWord,
+  items,
+  defaultValue,
+}: TransferListIslandProps) {
+  return (
+    <TransferList
+      items={items.map((item) => ({
+        id: item.id,
+        textValue: item.label,
+        children: item.label,
+        ...(item.isLocked === undefined ? {} : { isLocked: item.isLocked }),
+      }))}
+      defaultValue={defaultValue}
+      strings={{
+        availableLabel,
+        selectedLabel,
+        addSelected,
+        removeSelected,
+        moveUp,
+        moveDown,
+        moved: (count, destination) =>
+          `${count} ${movedWord} ${destinationWord} ${destination}`,
+      }}
+      className="max-w-3xl"
+      data-locale={locale}
+    />
   );
 }

@@ -44,6 +44,7 @@ const t = {
   month: { "fa-IR": "ماه", "en-US": "Month" },
   week: { "fa-IR": "هفته", "en-US": "Week" },
   day: { "fa-IR": "روز", "en-US": "Day" },
+  days: { "fa-IR": "روزه", "en-US": "days" },
   agenda: { "fa-IR": "فهرست", "en-US": "Agenda" },
   switcher: { "fa-IR": "نمای تقویم", "en-US": "Calendar view" },
   previous: { "fa-IR": "دورهٔ پیش", "en-US": "Previous period" },
@@ -125,6 +126,7 @@ function MonthExample(l: Locale) {
       monthView={t.month[l]}
       weekView={t.week[l]}
       dayView={t.day[l]}
+      daysWord={t.days[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -151,6 +153,7 @@ function WeekExample(l: Locale) {
       monthView={t.month[l]}
       weekView={t.week[l]}
       dayView={t.day[l]}
+      daysWord={t.days[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -178,6 +181,7 @@ function DayExample(l: Locale) {
       monthView={t.month[l]}
       weekView={t.week[l]}
       dayView={t.day[l]}
+      daysWord={t.days[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -198,6 +202,35 @@ function DayExample(l: Locale) {
   );
 }
 
+function DaysExample(l: Locale) {
+  return (
+    <EventCalendarIsland
+      label={t.clinic[l]}
+      monthView={t.month[l]}
+      weekView={t.week[l]}
+      dayView={t.day[l]}
+      daysWord={t.days[l]}
+      agendaView={t.agenda[l]}
+      viewSwitcherLabel={t.switcher[l]}
+      previous={t.previous[l]}
+      next={t.next[l]}
+      allDay={t.allDay[l]}
+      empty={t.empty[l]}
+      continued={t.continued[l]}
+      joinWord={t.join[l]}
+      separator={t.separator[l]}
+      eventsWord={t.events[l]}
+      moreWord={t.more[l]}
+      todayWord={t.today[l]}
+      focusedDay={ANCHOR}
+      todayDay={ANCHOR}
+      defaultView="days"
+      dayCount={3}
+      events={workWeek(l)}
+    />
+  );
+}
+
 function AgendaExample(l: Locale) {
   return (
     <EventCalendarIsland
@@ -205,6 +238,7 @@ function AgendaExample(l: Locale) {
       monthView={t.month[l]}
       weekView={t.week[l]}
       dayView={t.day[l]}
+      daysWord={t.days[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -241,6 +275,7 @@ function AllDayExample(l: Locale) {
       monthView={t.month[l]}
       weekView={t.week[l]}
       dayView={t.day[l]}
+      daysWord={t.days[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -273,9 +308,9 @@ export const EXAMPLES: ComponentExamples = {
     title: { "fa-IR": "تقویم رویداد", "en-US": "Event calendar" },
     intro: {
       "fa-IR":
-        "شبکه‌ای برای زمان‌بندی، در تقویم خودِ خواننده. ماهش مرداد است، هفته‌اش از شنبه شروع می‌شود و یک رویداد روی همان روزی می‌نشیند که خواننده به آن اشاره می‌کند — همان داده، دو تقویم. چهار نما دارد: ماه، هفته، روز و فهرست.",
+        "شبکه‌ای برای زمان‌بندی، در تقویم خودِ خواننده. ماهش مرداد است، هفته‌اش از شنبه شروع می‌شود و یک رویداد روی همان روزی می‌نشیند که خواننده به آن اشاره می‌کند — همان داده، دو تقویم. پنج نما دارد: ماه، هفته، روز، چندروز و فهرست.",
       "en-US":
-        "A scheduling grid in the reader's own calendar. Its month is Mordad, its week starts on Saturday, and an event lands on the day the reader would point at — same data, two calendars. Four views: month, week, day and agenda.",
+        "A scheduling grid in the reader's own calendar. Its month is Mordad, its week starts on Saturday, and an event lands on the day the reader would point at — same data, two calendars. Five views: month, week, day, N-day and agenda.",
     },
     composition: [
       `<EventCalendar label               ← names the grid`,
@@ -283,7 +318,7 @@ export const EXAMPLES: ComponentExamples = {
       `               events              ← occurrences; no recurrence in v1`,
       `               defaultFocusedDate  ← required: the component reads no clock`,
       `               todayDate           ← optional, also passed in`,
-      `               defaultView>        ← month | week | day | agenda`,
+      `               defaultView dayCount> ← month | week | day | days | agenda`,
       `  …the toolbar, the grid or the list   ← rendered for you`,
       `</EventCalendar>`,
     ].join("\n"),
@@ -359,6 +394,17 @@ export const EXAMPLES: ComponentExamples = {
           "Uses the week view's same time axis and overlap geometry for one focused day at a more readable width. Period navigation moves one day, and events from other days do not enter the grid.",
       },
       render: DayExample,
+    },
+    {
+      id: "days",
+      title: { "fa-IR": "نمای سه‌روزه", "en-US": "Three-day view" },
+      description: {
+        "fa-IR":
+          "پنجره‌ای فشرده برای سه روزِ پیاپی که هندسهٔ زمانیِ نمای هفته را نگه می‌دارد. دکمه‌های دوره دقیقاً سه روز جابه‌جا می‌شوند؛ پس برنامهٔ کاریِ لغزان مجبور نیست خود را در مرزِ هفته بشکند.",
+        "en-US":
+          "A compact window over three consecutive days that keeps the week view's time geometry. Period navigation advances exactly three days, so a rolling work schedule does not have to break at a week boundary.",
+      },
+      render: DaysExample,
     },
     {
       id: "agenda",

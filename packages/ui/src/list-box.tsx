@@ -28,6 +28,7 @@ import {
   type SelectionMode,
 } from "@lumo-ui/core";
 import { foldPersian } from "./autocomplete.tsx";
+import { Button } from "./button.tsx";
 import { useLumoLocale } from "./locale.ts";
 import { optional } from "./form.tsx";
 
@@ -290,6 +291,20 @@ function startsWithFolded(text: string, query: string, collator: Intl.Collator):
  * does not implement, so passing it is a compile error naming the call site.
  * See the header for the list and the argument.
  */
+export interface ListBoxAsyncAction {
+  label: string;
+  onPress: () => void;
+}
+
+export type ListBoxAsyncState =
+  | { status: "loading" | "error"; text: string; action?: ListBoxAsyncAction | undefined }
+  | {
+      status: "ready";
+      /** Announced only when the rendered collection is empty. */
+      emptyText: string;
+      loadMore?: ListBoxAsyncAction | undefined;
+    };
+
 export interface ListBoxProps<T extends object>
   /*
    * `ref` and `onKeyDown` are owned for `TableProps`' reason and with the same
@@ -338,6 +353,8 @@ export interface ListBoxProps<T extends object>
   shouldFocusWrap?: boolean;
   /** Announced name of the list. Required. */
   label: string;
+  /** Caller-owned remote collection state rendered outside the composite. */
+  asyncState?: ListBoxAsyncState | undefined;
   /** Options: static children, or a render function over `items`. */
   children?: LumoNode | ((item: T) => LumoNode);
   className?: string | undefined;
@@ -358,6 +375,7 @@ export function ListBox<T extends object>({
   onAction,
   orientation = "vertical",
   shouldFocusWrap,
+  asyncState,
   ...props
 }: ListBoxProps<T>) {
   const locale = useLumoLocale();
@@ -669,18 +687,29 @@ export function ListBox<T extends object>({
     },
   };
 
+  const stateText =
+    asyncState?.status === "loading" || asyncState?.status === "error"
+      ? asyncState.text
+      : asyncState?.status === "ready" && optionElements.length === 0
+        ? asyncState.emptyText
+        : null;
+  const stateAction =
+    asyncState?.status === "ready" ? asyncState.loadMore : asyncState?.action;
+
   return (
     <ListBoxContext.Provider value={context}>
-      <div
-        {...props}
-        ref={ref}
-        data-lumo=""
-        role="listbox"
-        aria-label={label}
+      <>
+        <div
+          {...props}
+          ref={ref}
+          data-lumo=""
+          role="listbox"
+          aria-label={label}
         // Written even when it is the default, because it is a fact a reader is
         // told before touching anything, and because a horizontal list that
         // omits it is announced as a vertical one.
         aria-orientation={orientation}
+        {...(asyncState?.status === "loading" ? { "aria-busy": true } : {})}
         {...(selectionMode === "multiple" ? { "aria-multiselectable": true } : {})}
         {...optional("id", id)}
         onKeyDown={onKeyDown}
@@ -691,7 +720,22 @@ export function ListBox<T extends object>({
             {element}
           </ListBoxIndexContext.Provider>
         ))}
-      </div>
+        </div>
+        {stateText === null && stateAction === undefined ? null : (
+          <div className="mt-2 flex items-center justify-between gap-2 text-sm text-fg-muted">
+            {stateText === null ? null : (
+              <span role="status" aria-live="polite">
+                {stateText}
+              </span>
+            )}
+            {stateAction === undefined ? null : (
+              <Button variant="outline" size="sm" onPress={stateAction.onPress}>
+                {stateAction.label}
+              </Button>
+            )}
+          </div>
+        )}
+      </>
     </ListBoxContext.Provider>
   );
 }

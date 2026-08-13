@@ -100,7 +100,7 @@ export const ganttTaskRowVariants = cva(
 /** The scroll container. `min-w-0` so it may shrink below its content. */
 export const ganttTimelineVariants = cva("min-w-0 flex-1 overflow-x-auto");
 
-/** The scale row: one cell per day, week or month. */
+/** The scale row: one calendar-aligned cell per active scale unit. */
 export const ganttScaleRowVariants = cva("flex h-8 items-stretch");
 
 export const ganttColumnHeaderVariants = cva(

@@ -59,33 +59,24 @@ export {
  *
  * Stated first, and stated the way `table.tsx` lists what it lost, because a
  * gap that is written down is a decision and a gap that is not is a bug report.
- * ReUI's gantt ships all six; each of them is a quarter of work rather than a
+ * ReUI's gantt ships the remaining three; each of them is a quarter of work rather than a
  * feature, and shipping a half-built one would be worse than shipping none:
  *
  *  1. **No dependency arrows.** No "finish-to-start" edges between bars, and
  *     therefore no scheduling engine behind them. An arrow is not a line — it
  *     is a constraint that has to survive a move, which means a solver, a cycle
  *     check, and an announcement for a bar that moved because ANOTHER bar did.
- *  2. **No summary or rollup rows.** Tasks are a flat list. A parent bar whose
- *     extent is the union of its children's is a tree plus a derived value,
- *     which is `tree.tsx`'s keyboard model plus this file's geometry, and the
- *     two have no overlap worth merging early.
- *  3. **No drag-resize of bar edges.** A bar can be MOVED (by keyboard here);
- *     neither end can be dragged to change the task's duration. That gesture
- *     needs a hit target of a few pixels on the axis that mirrors, which is
- *     precisely the thing this file exists not to get wrong by guessing.
- *  4. **No free zoom.** Three scales — day, week, month — and nothing between
- *     them. A continuous zoom makes the column set a function of a pixel
- *     measurement taken after layout, and every calendar boundary in it becomes
- *     approximate.
- *  5. **No critical path.** It is a graph algorithm over dependencies that do
+ *  2. **No critical path.** It is a graph algorithm over dependencies that do
  *     not exist here (see 1).
- *  6. **No baseline comparison.** No second, planned set of bars drawn behind
+ *  3. **No baseline comparison.** No second, planned set of bars drawn behind
  *     the actual ones, and no variance read-out.
  *
- * What IS here: the split view, bars positioned and sized from dates, the three
- * scales, keyboard move of a picked-up bar, a progress fill, and every change
- * announced.
+ * What IS here: the split view, collapsible task hierarchy, bars positioned and
+ * sized from dates, five calendar-aligned scales from day through year,
+ * keyboard movement, pointer and keyboard edge resizing, a progress fill, and
+ * every state change announced. Parent dates remain caller-owned rather than a
+ * silent rollup: changing a child never rewrites business data the caller did
+ * not authorize this view to own.
  *
  * ═══ THE DEFECT THIS FILE IS DESIGNED AROUND ════════════════════════════════
  *
@@ -203,15 +194,23 @@ export {
  * THE ARITHMETIC — no React, no DOM, no `Date` except at the formatting edge
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-/** The three scales. There is nothing between them — see the header, item 4. */
-export type GanttScale = "day" | "week" | "month";
+/** Calendar-aligned scales, from individual days through whole years. */
+export type GanttScale = "day" | "week" | "month" | "quarter" | "year";
 
-export const GANTT_SCALES = ["day", "week", "month"] as const satisfies readonly GanttScale[];
+export const GANTT_SCALES = [
+  "day",
+  "week",
+  "month",
+  "quarter",
+  "year",
+] as const satisfies readonly GanttScale[];
 
 /** One row of the chart. `end` is INCLUSIVE: a one-day task has `start === end`. */
 export interface GanttTask {
   /** Distinguishes this task from its siblings. Never announced. */
   id: string;
+  /** Optional parent row. Missing parents and cycles are promoted to roots. */
+  parentId?: string | undefined;
   /** The reader's own words for the task. Required — it is the row's text. */
   label: string;
   /** First day of the task, in ANY calendar; converted on arrival. */
@@ -342,7 +341,11 @@ function percent(ratio: number): string {
 function unitStart(date: CalendarDate, scale: GanttScale, locale: Locale): CalendarDate {
   if (scale === "day") return date;
   if (scale === "week") return startOfWeek(date, locale);
-  return startOfMonth(date);
+  if (scale === "month") return startOfMonth(date);
+  if (scale === "quarter") {
+    return date.subtract({ months: (date.month - 1) % 3, days: date.day - 1 });
+  }
+  return date.subtract({ months: date.month - 1, days: date.day - 1 });
 }
 
 /**
@@ -355,7 +358,9 @@ function unitStart(date: CalendarDate, scale: GanttScale, locale: Locale): Calen
 function unitEnd(date: CalendarDate, scale: GanttScale): CalendarDate {
   if (scale === "day") return date;
   if (scale === "week") return date.add({ days: 6 });
-  return endOfMonth(date);
+  if (scale === "month") return endOfMonth(date);
+  if (scale === "quarter") return date.add({ months: 3 }).subtract({ days: 1 });
+  return date.add({ years: 1 }).subtract({ days: 1 });
 }
 
 /**
@@ -438,7 +443,11 @@ function ganttColumnLabel(date: CalendarDate, scale: GanttScale, locale: Locale)
   const js = toPickerDate(date);
   if (scale === "day") return formatDate(js, locale, { day: "numeric" });
   if (scale === "week") return formatDate(js, locale, { month: "short", day: "numeric" });
-  return formatDate(js, locale, { month: "long" });
+  if (scale === "month") return formatDate(js, locale, { month: "long" });
+  if (scale === "quarter") {
+    return formatDate(js, locale, { month: "long", year: "numeric" });
+  }
+  return formatDate(js, locale, { year: "numeric" });
 }
 
 /**
@@ -502,8 +511,47 @@ export function moveGanttTask<T extends GanttTask>(
         ? start.add({ days: steps })
         : scale === "week"
           ? start.add({ weeks: steps })
-          : start.add({ months: steps });
+          : scale === "month"
+            ? start.add({ months: steps })
+            : scale === "quarter"
+              ? start.add({ months: steps * 3 })
+              : start.add({ years: steps });
     return { ...task, start: moved, end: moved.add({ days: Math.max(span, 0) }) };
+  });
+}
+
+export type GanttResizeEdge = "start" | "end";
+
+/** Changes one inclusive edge and never allows the interval to invert. */
+export function resizeGanttTask<T extends GanttTask>(
+  tasks: readonly T[],
+  id: string,
+  edge: GanttResizeEdge,
+  scale: GanttScale,
+  steps: number,
+  locale: Locale,
+): T[] {
+  const shiftDate = (date: CalendarDate) =>
+    scale === "day"
+      ? date.add({ days: steps })
+      : scale === "week"
+        ? date.add({ weeks: steps })
+        : scale === "month"
+          ? date.add({ months: steps })
+          : scale === "quarter"
+            ? date.add({ months: steps * 3 })
+            : date.add({ years: steps });
+
+  return tasks.map((task) => {
+    if (task.id !== id) return task;
+    const start = ganttDateIn(task.start, locale);
+    const end = ganttDateIn(task.end, locale);
+    if (edge === "start") {
+      const resized = shiftDate(start);
+      return { ...task, start: resized.compare(end) > 0 ? end : resized, end };
+    }
+    const resized = shiftDate(end);
+    return { ...task, start, end: resized.compare(start) < 0 ? start : resized };
   });
 }
 
@@ -527,7 +575,7 @@ export interface GanttStrings {
   /**
    * One name per scale, e.g. `{ day: "روز", week: "هفته", month: "ماه" }`.
    *
-   * A `Record<GanttScale, string>` rather than three optional props, so a scale
+   * A `Record<GanttScale, string>` rather than five optional props, so a scale
    * added later is a COMPILE error at every call site instead of an English
    * button appearing on a Persian page.
    */
@@ -570,6 +618,16 @@ export interface GanttStrings {
    * two, the same call `kanban.tsx` makes for a column and a position.
    */
   movedTo: (label: string, from: string, to: string) => string;
+  /** Names a collapsed branch's disclosure control. */
+  expandTask: (label: string) => string;
+  /** Names an expanded branch's disclosure control. */
+  collapseTask: (label: string) => string;
+  /** Names the keyboard/pointer handle for the task's first day. */
+  resizeStart: (label: string) => string;
+  /** Names the keyboard/pointer handle for the task's last day. */
+  resizeEnd: (label: string) => string;
+  /** Announces the complete interval after either edge changes. */
+  resizedTo: (label: string, from: string, to: string) => string;
 }
 
 export interface GanttProps<T extends GanttTask>
@@ -601,6 +659,11 @@ export interface GanttProps<T extends GanttTask>
   scale?: GanttScale | undefined;
   defaultScale?: GanttScale | undefined;
   onScaleChange?: ((scale: GanttScale) => void) | undefined;
+  /** Controlled ids of task branches whose direct children are visible. */
+  expandedTaskIds?: readonly string[] | undefined;
+  /** Initial branch state. Parent rows default to expanded when omitted. */
+  defaultExpandedTaskIds?: readonly string[] | undefined;
+  onExpandedTaskIdsChange?: ((ids: string[]) => void) | undefined;
   /**
    * Overrides the extent derived from the tasks — a quarter view stays a whole
    * quarter even when the work stops half way through it.
@@ -617,6 +680,61 @@ export interface GanttProps<T extends GanttTask>
   className?: string | undefined;
 }
 
+interface GanttVisibleRow<T extends GanttTask> {
+  task: T;
+  depth: number;
+  hasChildren: boolean;
+}
+
+/**
+ * Flattens the caller's parent-id graph into one stable visible row order.
+ * Orphans and cycles remain visible roots rather than disappearing from the
+ * chart, which keeps malformed remote data inspectable and recoverable.
+ */
+function visibleGanttRows<T extends GanttTask>(
+  tasks: readonly T[],
+  expandedIds: ReadonlySet<string>,
+): GanttVisibleRow<T>[] {
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const children = new Map<string, T[]>();
+  const roots: T[] = [];
+  for (const task of tasks) {
+    const parent = task.parentId;
+    if (parent === undefined || parent === task.id || !byId.has(parent)) {
+      roots.push(task);
+      continue;
+    }
+    const siblings = children.get(parent) ?? [];
+    siblings.push(task);
+    children.set(parent, siblings);
+  }
+
+  const rows: GanttVisibleRow<T>[] = [];
+  const visited = new Set<string>();
+  const reachable = new Set<string>();
+  const markReachable = (task: T) => {
+    if (reachable.has(task.id)) return;
+    reachable.add(task.id);
+    for (const child of children.get(task.id) ?? []) markReachable(child);
+  };
+  for (const root of roots) markReachable(root);
+  const visit = (task: T, depth: number, ancestors: ReadonlySet<string>) => {
+    if (visited.has(task.id) || ancestors.has(task.id)) return;
+    visited.add(task.id);
+    const descendants = children.get(task.id) ?? [];
+    rows.push({ task, depth, hasChildren: descendants.length > 0 });
+    if (!expandedIds.has(task.id)) return;
+    const nextAncestors = new Set(ancestors).add(task.id);
+    for (const child of descendants) visit(child, depth + 1, nextAncestors);
+  };
+
+  for (const root of roots) visit(root, 0, new Set());
+  for (const task of tasks) {
+    if (!reachable.has(task.id) && !visited.has(task.id)) visit(task, 0, new Set());
+  }
+  return rows;
+}
+
 export function Gantt<T extends GanttTask>({
   label,
   locale,
@@ -626,6 +744,9 @@ export function Gantt<T extends GanttTask>({
   scale,
   defaultScale,
   onScaleChange,
+  expandedTaskIds,
+  defaultExpandedTaskIds,
+  onExpandedTaskIdsChange,
   range,
   dateFormatOptions,
   description,
@@ -636,6 +757,18 @@ export function Gantt<T extends GanttTask>({
     defaultScale ?? "day",
   );
   const activeScale = scale ?? uncontrolledScale;
+  const parentIds = React.useMemo(() => {
+    const found = new Set<string>();
+    for (const task of tasks) {
+      if (task.parentId !== undefined) found.add(task.parentId);
+    }
+    return tasks.filter((task) => found.has(task.id)).map((task) => task.id);
+  }, [tasks]);
+  const [uncontrolledExpandedIds, setUncontrolledExpandedIds] = React.useState<readonly string[]>(
+    defaultExpandedTaskIds ?? parentIds,
+  );
+  const activeExpandedIds = expandedTaskIds ?? uncontrolledExpandedIds;
+  const visibleRows = visibleGanttRows(tasks, new Set(activeExpandedIds));
 
   /*
    * THE TAB STOP, computed during render from state whose initial value is
@@ -649,6 +782,14 @@ export function Gantt<T extends GanttTask>({
   const originRef = React.useRef<readonly T[] | null>(null);
   const [announcement, setAnnouncement] = React.useState("");
   const rootRef = React.useRef<HTMLDivElement>(null);
+  const pointerResizeRef = React.useRef<{
+    id: string;
+    edge: GanttResizeEdge;
+    pointerId: number;
+    origin: number;
+    lastStep: number;
+    pixelsPerStep: number;
+  } | null>(null);
 
   /*
    * The props as of the last commit, readable from a handler older than it.
@@ -658,12 +799,22 @@ export function Gantt<T extends GanttTask>({
    */
   const latest = React.useRef({ tasks, onTasksChange });
   React.useEffect(() => {
-    latest.current = { tasks, onTasksChange };
+    if (pointerResizeRef.current === null) latest.current = { tasks, onTasksChange };
+    else latest.current.onTasksChange = onTasksChange;
   });
 
   const isRtl = direction(locale) === "rtl";
 
   const geometry = ganttGeometry(tasks, activeScale, locale, range);
+
+  const toggleTask = (id: string) => {
+    const next = new Set(activeExpandedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    const ids = Array.from(next);
+    if (expandedTaskIds === undefined) setUncontrolledExpandedIds(ids);
+    onExpandedTaskIdsChange?.(ids);
+  };
 
   /** A date as the reader reads it. The one JS `Date`, at the last moment. */
   const spoken = React.useCallback(
@@ -711,8 +862,60 @@ export function Gantt<T extends GanttTask>({
     const change = latest.current.onTasksChange;
     if (change === undefined) return;
     const next = moveGanttTask(latest.current.tasks, id, activeScale, steps, locale);
+    latest.current = { tasks: next, onTasksChange: change };
     change(next);
     announce(strings.pickedUp, next, id);
+  };
+
+  const resize = (id: string, edge: GanttResizeEdge, steps: number) => {
+    const change = latest.current.onTasksChange;
+    if (change === undefined) return;
+    const next = resizeGanttTask(latest.current.tasks, id, edge, activeScale, steps, locale);
+    latest.current = { tasks: next, onTasksChange: change };
+    change(next);
+    const task = next.find((candidate) => candidate.id === id);
+    if (task !== undefined) {
+      setAnnouncement(
+        strings.resizedTo(task.label, spoken(task.start), spoken(task.end)),
+      );
+    }
+  };
+
+  const beginPointerResize = (
+    event: React.PointerEvent<HTMLButtonElement>,
+    id: string,
+    edge: GanttResizeEdge,
+  ) => {
+    const track = rootRef.current?.querySelector<HTMLElement>("[data-gantt-track]");
+    const width = track?.getBoundingClientRect().width ?? 0;
+    if (width <= 0 || geometry.columns.length === 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    pointerResizeRef.current = {
+      id,
+      edge,
+      pointerId: event.pointerId,
+      origin: event.clientX,
+      lastStep: 0,
+      pixelsPerStep: width / geometry.columns.length,
+    };
+  };
+
+  const continuePointerResize = (event: React.PointerEvent<HTMLButtonElement>) => {
+    const state = pointerResizeRef.current;
+    if (state === null || state.pointerId !== event.pointerId) return;
+    const inlineDelta = (event.clientX - state.origin) * (isRtl ? -1 : 1);
+    const step = Math.round(inlineDelta / state.pixelsPerStep);
+    const change = step - state.lastStep;
+    if (change === 0) return;
+    state.lastStep = step;
+    resize(state.id, state.edge, change);
+  };
+
+  const endPointerResize = (event: React.PointerEvent<HTMLButtonElement>) => {
+    if (pointerResizeRef.current?.pointerId !== event.pointerId) return;
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+    pointerResizeRef.current = null;
   };
 
   /** Moves the roving focus. The BLOCK axis, which mirrors in no script. */
@@ -804,9 +1007,33 @@ export function Gantt<T extends GanttTask>({
       <div role="group" aria-label={label} className={ganttSplitVariants()}>
         <div className={ganttTaskListVariants()}>
           <div className={ganttTaskHeaderVariants()}>{strings.taskColumnHeader}</div>
-          {tasks.map((task) => (
-            <div key={task.id} className={ganttTaskRowVariants()}>
-              {task.label}
+          {visibleRows.map(({ task, depth, hasChildren }) => (
+            <div
+              key={task.id}
+              className={ganttTaskRowVariants()}
+              style={{ paddingInlineStart: `calc(0.75rem + ${depth}rem)` }}
+            >
+              {hasChildren ? (
+                <button
+                  type="button"
+                  data-lumo=""
+                  aria-expanded={activeExpandedIds.includes(task.id)}
+                  aria-label={
+                    activeExpandedIds.includes(task.id)
+                      ? strings.collapseTask(task.label)
+                      : strings.expandTask(task.label)
+                  }
+                  className="flex min-w-0 items-center gap-1 text-start"
+                  onClick={() => toggleTask(task.id)}
+                >
+                  <span aria-hidden="true" className="shrink-0 text-fg-muted">
+                    {activeExpandedIds.includes(task.id) ? "⌄" : "›"}
+                  </span>
+                  <span className="truncate">{task.label}</span>
+                </button>
+              ) : (
+                task.label
+              )}
             </div>
           ))}
         </div>
@@ -824,7 +1051,10 @@ export function Gantt<T extends GanttTask>({
             for consistency with the bars — the two must agree about which axis
             they are on or a future writing-mode change breaks only one of them.
           */}
-          <div style={{ minInlineSize: `${geometry.totalDays * PIXELS_PER_DAY[activeScale]}px` }}>
+          <div
+            data-gantt-track=""
+            style={{ minInlineSize: `${geometry.totalDays * PIXELS_PER_DAY[activeScale]}px` }}
+          >
             <div className={ganttScaleRowVariants()}>
               {geometry.columns.map((column) => (
                 <div
@@ -838,7 +1068,7 @@ export function Gantt<T extends GanttTask>({
             </div>
 
             <ul className="list-none p-0">
-              {tasks.map((task, index) => {
+              {visibleRows.map(({ task }, index) => {
                 const placement = ganttBarPlacement(task, geometry, locale);
                 const held = heldId === task.id;
                 const progress =
@@ -881,6 +1111,56 @@ export function Gantt<T extends GanttTask>({
                         )}
                       </button>
                     )}
+                    {placement === null || onTasksChange === undefined ? null : (
+                      <>
+                        <button
+                          type="button"
+                          data-lumo=""
+                          data-gantt-resize="start"
+                          aria-label={strings.resizeStart(task.label)}
+                          style={{
+                            insetInlineStart: placement.insetInlineStart,
+                            inlineSize: "0.5rem",
+                          }}
+                          className="absolute inset-y-2 z-10 touch-none cursor-ew-resize rounded-sm bg-border/70 hover:bg-accent"
+                          onPointerDown={(event) => beginPointerResize(event, task.id, "start")}
+                          onPointerMove={continuePointerResize}
+                          onPointerUp={endPointerResize}
+                          onPointerCancel={endPointerResize}
+                          onKeyDown={(event) => {
+                            const laterKey = isRtl ? "ArrowLeft" : "ArrowRight";
+                            const earlierKey = isRtl ? "ArrowRight" : "ArrowLeft";
+                            if (event.key === laterKey || event.key === earlierKey) {
+                              event.preventDefault();
+                              resize(task.id, "start", event.key === laterKey ? 1 : -1);
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          data-lumo=""
+                          data-gantt-resize="end"
+                          aria-label={strings.resizeEnd(task.label)}
+                          style={{
+                            insetInlineStart: `calc(${placement.insetInlineStart} + ${placement.inlineSize} - 0.5rem)`,
+                            inlineSize: "0.5rem",
+                          }}
+                          className="absolute inset-y-2 z-10 touch-none cursor-ew-resize rounded-sm bg-border/70 hover:bg-accent"
+                          onPointerDown={(event) => beginPointerResize(event, task.id, "end")}
+                          onPointerMove={continuePointerResize}
+                          onPointerUp={endPointerResize}
+                          onPointerCancel={endPointerResize}
+                          onKeyDown={(event) => {
+                            const laterKey = isRtl ? "ArrowLeft" : "ArrowRight";
+                            const earlierKey = isRtl ? "ArrowRight" : "ArrowLeft";
+                            if (event.key === laterKey || event.key === earlierKey) {
+                              event.preventDefault();
+                              resize(task.id, "end", event.key === laterKey ? 1 : -1);
+                            }
+                          }}
+                        />
+                      </>
+                    )}
                   </li>
                 );
               })}
@@ -903,4 +1183,10 @@ export function Gantt<T extends GanttTask>({
  * — the columns themselves are percentages, so a chart in a wide container
  * simply fills it.
  */
-const PIXELS_PER_DAY: Record<GanttScale, number> = { day: 36, week: 12, month: 5 };
+const PIXELS_PER_DAY: Record<GanttScale, number> = {
+  day: 36,
+  week: 12,
+  month: 5,
+  quarter: 2,
+  year: 0.5,
+};

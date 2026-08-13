@@ -19,7 +19,7 @@
 
 import { createRef } from "react";
 import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { formatNumber } from "@lumo-ui/core";
 import { VirtualList, type VirtualListHandle } from "./virtual-list.tsx";
@@ -209,6 +209,46 @@ describe("VirtualList — imperative scrolling", () => {
     ref.current?.scrollToIndex(25);
 
     expect(viewport.scrollTop).toBe(1_000);
+  });
+});
+
+describe("VirtualList — async range seam", () => {
+  it("reports the true visible range and requests the next page once per corpus size", () => {
+    const viewportHeight = vi
+      .spyOn(HTMLElement.prototype, "clientHeight", "get")
+      .mockReturnValue(200);
+    const onVisibleRangeChange = vi.fn();
+    const onEndReached = vi.fn();
+    const renderList = (count: number, endReachedThreshold = 0) => (
+      <VirtualList
+        label="Orders"
+        locale="en-US"
+        count={count}
+        estimateSize={40}
+        initialSize={200}
+        overscan={0}
+        onVisibleRangeChange={onVisibleRangeChange}
+        onEndReached={onEndReached}
+        endReachedThreshold={endReachedThreshold}
+      >
+        {(index) => <span>row {index}</span>}
+      </VirtualList>
+    );
+
+    const view = render(renderList(3));
+    expect(onVisibleRangeChange).toHaveBeenLastCalledWith({ startIndex: 0, endIndex: 2 });
+    expect(onEndReached).toHaveBeenCalledOnce();
+
+    // Change an effect dependency while keeping the corpus size fixed. A plain
+    // rerender never reruns the effect and therefore cannot prove the per-count
+    // request guard exists.
+    view.rerender(renderList(3, 1));
+    expect(onEndReached).toHaveBeenCalledOnce();
+
+    view.rerender(renderList(5));
+    expect(onVisibleRangeChange).toHaveBeenLastCalledWith({ startIndex: 0, endIndex: 4 });
+    expect(onEndReached).toHaveBeenCalledTimes(2);
+    viewportHeight.mockRestore();
   });
 });
 

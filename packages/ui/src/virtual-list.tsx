@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useImperativeHandle,
   useRef,
   type ComponentProps,
@@ -128,6 +129,11 @@ export interface VirtualListHandle {
   ): void;
 }
 
+export interface VirtualListRange {
+  startIndex: number;
+  endIndex: number;
+}
+
 export interface VirtualListProps
   /*
    * `ref` is owned, and this is the component AUDIT §4.2 used as the example of
@@ -182,6 +188,12 @@ export interface VirtualListProps
   getItemKey?: ((index: number) => string | number) | undefined;
   /** Gap between rows in pixels. Part of the arithmetic, so not a CSS gap. */
   gap?: number | undefined;
+  /** Reports the true corpus indices represented by the current window. */
+  onVisibleRangeChange?: ((range: VirtualListRange) => void) | undefined;
+  /** Requests another page once when the window reaches the corpus end. */
+  onEndReached?: (() => void) | undefined;
+  /** How many rows before the end should request another page. */
+  endReachedThreshold?: number | undefined;
   /** Renders one row's contents. Called with the row's TRUE index. */
   children: (index: number) => LumoNode;
   /** Class for the scroll container. */
@@ -202,6 +214,9 @@ export function VirtualList({
   orientation = "vertical",
   getItemKey,
   gap,
+  onVisibleRangeChange,
+  onEndReached,
+  endReachedThreshold = 0,
   children,
   className,
   itemClassName,
@@ -236,6 +251,27 @@ export function VirtualList({
   });
 
   useImperativeHandle(ref, () => ({ scrollToIndex, scrollToOffset }), [scrollToIndex, scrollToOffset]);
+
+  const rangeCallback = useRef(onVisibleRangeChange);
+  const endCallback = useRef(onEndReached);
+  rangeCallback.current = onVisibleRangeChange;
+  endCallback.current = onEndReached;
+  const requestedAtCount = useRef<number | null>(null);
+  const firstIndex = items[0]?.index;
+  const lastIndex = items.at(-1)?.index;
+
+  useEffect(() => {
+    if (firstIndex === undefined || lastIndex === undefined) return;
+    rangeCallback.current?.({ startIndex: firstIndex, endIndex: lastIndex });
+  }, [firstIndex, lastIndex]);
+
+  useEffect(() => {
+    if (lastIndex === undefined || count === 0 || endCallback.current === undefined) return;
+    const threshold = Math.max(0, Math.trunc(endReachedThreshold));
+    if (lastIndex < count - 1 - threshold || requestedAtCount.current === count) return;
+    requestedAtCount.current = count;
+    endCallback.current();
+  }, [count, endReachedThreshold, lastIndex]);
 
   return (
     <div

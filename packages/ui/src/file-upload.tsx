@@ -162,9 +162,17 @@ export interface FileUploadProps
   triggerLabel: string;
   /** Called with the files, however they arrived — dropped, picked or pasted. */
   onSelectFiles?: (files: File[]) => void;
+  /** Reports files rejected by type, size, or the remaining count budget. */
+  onRejectFiles?: (rejections: FileUploadRejection[]) => void;
   /** MIME types or extensions the picker offers, e.g. `["image/png", ".pdf"]`. */
   acceptedFileTypes?: readonly string[] | undefined;
   allowsMultiple?: boolean | undefined;
+  /** Maximum bytes per file. Non-finite and negative values reject nothing. */
+  maxFileSize?: number | undefined;
+  /** Maximum total files, including `currentFileCount`. */
+  maxFiles?: number | undefined;
+  /** Files already owned by the caller, used to compute the remaining slots. */
+  currentFileCount?: number | undefined;
   isDisabled?: boolean | undefined;
   /** Hint under the button — a size limit, an accepted-formats line. */
   children?: LumoNode;
@@ -175,8 +183,12 @@ export function FileUpload({
   label,
   triggerLabel,
   onSelectFiles,
+  onRejectFiles,
   acceptedFileTypes,
   allowsMultiple,
+  maxFileSize,
+  maxFiles,
+  currentFileCount,
   isDisabled,
   children,
   className,
@@ -206,12 +218,36 @@ export function FileUpload({
       return file.type.toLowerCase() === candidate;
     });
 
-  const deliver = (files: FileList | null | undefined) => {
+  const deliver = (files: FileList | readonly File[] | null | undefined) => {
     // `FileList` is not an array. `Array.from` rather than a spread so the
     // conversion is explicit at the boundary where the DOM type ends.
     if (files && files.length > 0) {
-      const accepted = Array.from(files).filter(accepts);
+      const accepted: File[] = [];
+      const rejected: FileUploadRejection[] = [];
+      const requestedLimit = allowsMultiple === true ? maxFiles : 1;
+      let slots =
+        requestedLimit === undefined
+          ? Number.POSITIVE_INFINITY
+          : Math.max(0, Math.floor(requestedLimit) - Math.max(0, currentFileCount ?? 0));
+      for (const file of Array.from(files)) {
+        if (!accepts(file)) {
+          rejected.push({ file, reason: "type" });
+        } else if (
+          maxFileSize !== undefined &&
+          Number.isFinite(maxFileSize) &&
+          maxFileSize >= 0 &&
+          file.size > maxFileSize
+        ) {
+          rejected.push({ file, reason: "size" });
+        } else if (slots <= 0) {
+          rejected.push({ file, reason: "count" });
+        } else {
+          accepted.push(file);
+          slots -= 1;
+        }
+      }
       if (accepted.length > 0) onSelectFiles?.(accepted);
+      if (rejected.length > 0) onRejectFiles?.(rejected);
     }
   };
 
@@ -337,6 +373,13 @@ export function FileUpload({
   );
 }
 
+export type FileUploadRejectionReason = "type" | "size" | "count";
+
+export interface FileUploadRejection {
+  file: File;
+  reason: FileUploadRejectionReason;
+}
+
 export interface FileUploadListProps
   extends Omit<ComponentProps<"ul">, "children" | "className"> {
   children?: LumoNode;
@@ -360,6 +403,30 @@ export function FileUploadList({ children, className, ...props }: FileUploadList
   );
 }
 
+export interface FileUploadLifecycleAction {
+  /** Visible and announced action text, e.g. «تلاش دوباره برای گزارش.pdf». */
+  label: string;
+  onPress: () => void;
+}
+
+export type FileUploadLifecycle =
+  | {
+      status: "uploading";
+      /** Visible state text and the progress bar's accessible name. */
+      statusText: string;
+      /** Fraction in `0…1`; rendering clamps it without changing caller state. */
+      progress: number;
+      /** Localised value prose, e.g. «چهل درصد». */
+      progressText: string;
+      action?: FileUploadLifecycleAction | undefined;
+    }
+  | {
+      status: "queued" | "success" | "error";
+      /** Visible live-region text authored by the caller. */
+      statusText: string;
+      action?: FileUploadLifecycleAction | undefined;
+    };
+
 export interface FileUploadItemProps
   extends Omit<ComponentProps<"li">, "children" | "className"> {
   /** The file's own name, exactly as the file system reports it. */
@@ -382,6 +449,8 @@ export interface FileUploadItemProps
   onRemove: () => void;
   /** Options for `Intl.NumberFormat` — see `formatFileSize`. */
   formatOptions?: Intl.NumberFormatOptions | undefined;
+  /** Caller-owned transfer state. This module renders it but never performs I/O. */
+  lifecycle?: FileUploadLifecycle | undefined;
   className?: string | undefined;
 }
 
@@ -392,11 +461,17 @@ export function FileUploadItem({
   removeLabel,
   onRemove,
   formatOptions,
+  lifecycle,
   className,
   ...props
 }: FileUploadItemProps) {
   return (
-    <li className={cn(fileUploadItemVariants(), className)} {...props}>
+    <li
+      className={cn(fileUploadItemVariants(), className)}
+      {...props}
+      {...(lifecycle === undefined ? {} : { "data-status": lifecycle.status })}
+      {...(lifecycle?.status === "uploading" ? { "aria-busy": true } : {})}
+    >
       <Paperclip aria-hidden="true" className="size-4 shrink-0 text-fg-muted" />
 
       {/*
@@ -418,9 +493,11 @@ export function FileUploadItem({
        * `no-latin-digits` rule would fire on `report-2024.pdf`. Marked, not
        * excused — and the mark is inert when the name is Persian.
        */}
-      <bdi data-lumo-latn="" className="min-w-0 flex-1 truncate">
-        {name}
-      </bdi>
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex min-w-0 items-center gap-3">
+          <bdi data-lumo-latn="" className="min-w-0 flex-1 truncate">
+            {name}
+          </bdi>
 
       {/*
        * The formatted size. It is a STRING by the time it reaches JSX, which is
@@ -428,7 +505,43 @@ export function FileUploadItem({
        * `{size}` here would be the file-upload spelling of the `{day.day}` that
        * shipped 77 Latin calendar cells.
        */}
-      <span className="shrink-0 text-fg-muted">{formatFileSize(size, locale, formatOptions)}</span>
+          <span className="shrink-0 text-fg-muted">
+            {formatFileSize(size, locale, formatOptions)}
+          </span>
+        </div>
+
+        {lifecycle === undefined ? null : (
+          <div className="flex min-w-0 items-center gap-2 text-xs text-fg-muted">
+            <span role="status" aria-live="polite" className="min-w-0 truncate">
+              {lifecycle.statusText}
+            </span>
+            {lifecycle.status === "uploading" ? (
+              <div
+                role="progressbar"
+                aria-label={lifecycle.statusText}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(Math.max(0, Math.min(lifecycle.progress, 1)) * 100)}
+                aria-valuetext={lifecycle.progressText}
+                className="h-1.5 min-w-16 flex-1 overflow-hidden rounded-full bg-surface-sunken"
+              >
+                <span
+                  aria-hidden="true"
+                  className="block h-full rounded-full bg-accent"
+                  style={{
+                    inlineSize: `${Math.max(0, Math.min(lifecycle.progress, 1)) * 100}%`,
+                  }}
+                />
+              </div>
+            ) : null}
+            {lifecycle.action === undefined ? null : (
+              <Button variant="ghost" size="sm" onPress={lifecycle.action.onPress}>
+                {lifecycle.action.label}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {/*
        * `data-lumo-latn` on the CONTROL, not on the row.

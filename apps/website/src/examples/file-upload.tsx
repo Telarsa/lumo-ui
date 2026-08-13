@@ -73,6 +73,11 @@ const t = {
   persianReport: { "fa-IR": "گزارش سالانه.pdf", "en-US": "گزارش سالانه.pdf" },
   latinReport: { "fa-IR": "invoice-april.pdf", "en-US": "invoice-april.pdf" },
   screenshot: { "fa-IR": "نماگرفت میز کار.png", "en-US": "نماگرفت میز کار.png" },
+  uploading: { "fa-IR": "در حال بارگذاری", "en-US": "Uploading" },
+  uploaded: { "fa-IR": "بارگذاری شد", "en-US": "Uploaded" },
+  failed: { "fa-IR": "بارگذاری ناموفق بود", "en-US": "Upload failed" },
+  retry: { "fa-IR": "تلاش دوباره", "en-US": "Retry" },
+  percent: { "fa-IR": "هفتاد و دو درصد", "en-US": "Seventy-two percent" },
 } satisfies Record<string, LocalizedText>;
 
 /**
@@ -133,6 +138,43 @@ function SingleFileExample(l: Locale) {
   );
 }
 
+function LifecycleExample(l: Locale) {
+  return (
+    <FileUploadIsland
+      locale={l}
+      label={t.attachments[l]}
+      triggerLabel={t.chooseFile[l]}
+      hint={t.uploadHint[l]}
+      removeWord={t.removeWord[l]}
+      allowsMultiple
+      maxFiles={5}
+      maxFileSize={10_000_000}
+      initialFiles={[
+        {
+          name: t.persianReport[l],
+          size: 1_248_000,
+          lifecycle: {
+            status: "uploading",
+            statusText: t.uploading[l],
+            progress: 0.72,
+            progressText: t.percent[l],
+          },
+        },
+        {
+          name: t.latinReport[l],
+          size: 862_400,
+          lifecycle: {
+            status: "error",
+            statusText: t.failed[l],
+            actionLabel: t.retry[l],
+            actionResultText: t.uploaded[l],
+          },
+        },
+      ]}
+    />
+  );
+}
+
 function PasteExample(l: Locale) {
   return (
     <FileUploadIsland
@@ -172,14 +214,14 @@ export const EXAMPLES: ComponentExamples = {
     composition: [
       `<FileUpload`,
       `  label            ← REQUIRED: names the role="group" drop area`,
-      `  triggerLabel     ← REQUIRED: visible text on the picker button`,
       `  onSelectFiles    ← called for dropped, picked AND pasted files alike`,
-      `  acceptedFileTypes allowsMultiple isDisabled>`,
+      `  acceptedFileTypes maxFileSize maxFiles currentFileCount`,
+      `  allowsMultiple isDisabled onRejectFiles>`,
       `  …the hint…       ← rendered only when there is one`,
       `</FileUpload>`,
       ``,
       `<FileUploadList>`,
-      `  <FileUploadItem name size locale removeLabel onRemove formatOptions />`,
+      `  <FileUploadItem name size locale lifecycle removeLabel onRemove />`,
       `</FileUploadList>`,
     ].join("\n"),
     parts: [
@@ -240,11 +282,22 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "فقط یک پرونده", "en-US": "One file only" },
       description: {
         "fa-IR":
-          "بدون اجازهٔ چندتایی، انتخابگرِ سیستم یک پرونده می‌گیرد و انتخابِ تازه جای قبلی را می‌گیرد. فهرستِ پذیرفته‌شده‌ها فقط به انتخابگر پیشنهاد می‌دهد و یک اعتبارسنجی نیست: کشیدنِ چیزِ دیگری همچنان می‌رسد، و ردکردنش کارِ همان جایی است که پرونده را می‌گیرد.",
+          "بدون اجازهٔ چندتایی، انتخابگرِ سیستم یک پرونده می‌گیرد و انتخابِ تازه جای قبلی را می‌گیرد. قانونِ نوع روی هر سه مسیرِ انتخاب، رهاکردن و چسباندن اجرا می‌شود؛ پروندهٔ ناسازگار به onRejectFiles می‌رود و هرگز به فهرستِ پذیرفته‌شده نمی‌رسد.",
         "en-US":
-          "Without the multiple flag the system picker takes one file and a new choice replaces the previous one. The accepted-types list only SUGGESTS to the picker and is not a validation: dragging something else still arrives, and rejecting it belongs to whatever receives the file.",
+          "Without the multiple flag the system picker takes one file and a new choice replaces the previous one. Type rules run across picker, drop and paste alike; an incompatible file reaches `onRejectFiles` and never enters the accepted list.",
       },
       render: SingleFileExample,
+    },
+    {
+      id: "lifecycle",
+      title: { "fa-IR": "چرخهٔ بارگذاری", "en-US": "Upload lifecycle" },
+      description: {
+        "fa-IR":
+          "یک ردیف در حال پیشرفت است و مقدار دیداری و aria-valuetext نوشته‌شده دارد؛ ردیف دیگر خطا و عملِ تلاش دوباره را در همان وضعیت نشان می‌دهد. وضعیت فقط رنگ نیست و در ناحیهٔ زنده هم گفته می‌شود.",
+        "en-US":
+          "One row is progressing with authored visible and `aria-valuetext` copy; another exposes an error and retry action in the same state. Status is not carried by color alone and is also spoken through a live region.",
+      },
+      render: LifecycleExample,
     },
     {
       id: "paste",

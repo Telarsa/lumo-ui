@@ -25,7 +25,7 @@
  *     the same arrangement `table.variants.ts` gives `gridArrow`.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
@@ -276,5 +276,50 @@ describe("a render function over items", () => {
     expect(html.split('role="option"').length - 1).toBe(2);
     expect(html.split('tabindex="0"').length - 1).toBe(1);
     expect(/data-index="1"[^>]*tabindex="0"/.test(html)).toBe(true);
+  });
+});
+
+describe("async collection state", () => {
+  it("announces loading without inventing a selectable option", () => {
+    const { getByRole, queryAllByRole } = render(
+      <ListBox
+        label="شهرها"
+        asyncState={{ status: "loading", text: "در حال دریافت شهرها" }}
+      />,
+    );
+    expect(getByRole("listbox").getAttribute("aria-busy")).toBe("true");
+    expect(getByRole("status").textContent).toBe("در حال دریافت شهرها");
+    expect(queryAllByRole("option")).toHaveLength(0);
+  });
+
+  it("renders an empty result and explicit retry/load-more actions outside the composite", () => {
+    const retry = vi.fn();
+    const { getByRole, rerender } = render(
+      <ListBox
+        label="شهرها"
+        asyncState={{
+          status: "error",
+          text: "دریافت شهرها ناموفق بود",
+          action: { label: "تلاش دوباره", onPress: retry },
+        }}
+      />,
+    );
+    fireEvent.click(getByRole("button", { name: "تلاش دوباره" }));
+    expect(retry).toHaveBeenCalledOnce();
+
+    const loadMore = vi.fn();
+    rerender(
+      <ListBox
+        label="شهرها"
+        asyncState={{
+          status: "ready",
+          emptyText: "شهری پیدا نشد",
+          loadMore: { label: "شهرهای بیشتر", onPress: loadMore },
+        }}
+      />,
+    );
+    expect(getByRole("status").textContent).toBe("شهری پیدا نشد");
+    fireEvent.click(getByRole("button", { name: "شهرهای بیشتر" }));
+    expect(loadMore).toHaveBeenCalledOnce();
   });
 });

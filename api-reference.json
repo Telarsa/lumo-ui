@@ -4565,6 +4565,11 @@
             "required": false
           },
           {
+            "name": "dayCount",
+            "type": "number | undefined",
+            "required": false
+          },
+          {
             "name": "defaultView",
             "type": "EventCalendarView | undefined",
             "required": false
@@ -4687,6 +4692,11 @@
             "name": "formatOptions",
             "type": "Intl.NumberFormatOptions | undefined",
             "required": false
+          },
+          {
+            "name": "lifecycle",
+            "type": "FileUploadLifecycle | undefined",
+            "required": false
           }
         ]
       },
@@ -4739,8 +4749,28 @@
             "required": false
           },
           {
+            "name": "currentFileCount",
+            "type": "number | undefined",
+            "required": false
+          },
+          {
             "name": "isDisabled",
             "type": "boolean | undefined",
+            "required": false
+          },
+          {
+            "name": "maxFiles",
+            "type": "number | undefined",
+            "required": false
+          },
+          {
+            "name": "maxFileSize",
+            "type": "number | undefined",
+            "required": false
+          },
+          {
+            "name": "onRejectFiles",
+            "type": "(rejections: FileUploadRejection[]) => void",
             "required": false
           },
           {
@@ -5059,6 +5089,11 @@
             "required": false
           },
           {
+            "name": "defaultExpandedTaskIds",
+            "type": "readonly string[] | undefined",
+            "required": false
+          },
+          {
             "name": "defaultScale",
             "type": "GanttScale | undefined",
             "required": false
@@ -5066,6 +5101,16 @@
           {
             "name": "description",
             "type": "LumoNode",
+            "required": false
+          },
+          {
+            "name": "expandedTaskIds",
+            "type": "readonly string[] | undefined",
+            "required": false
+          },
+          {
+            "name": "onExpandedTaskIdsChange",
+            "type": "((ids: string[]) => void) | undefined",
             "required": false
           },
           {
@@ -6164,6 +6209,11 @@
             "name": "label",
             "type": "string",
             "required": true
+          },
+          {
+            "name": "asyncState",
+            "type": "ListBoxAsyncState | undefined",
+            "required": false
           },
           {
             "name": "children",
@@ -7341,6 +7391,63 @@
           {
             "name": "value",
             "type": "number",
+            "required": false
+          }
+        ]
+      }
+    ],
+    "overflow-list.tsx": [
+      {
+        "name": "OverflowListProps",
+        "props": [
+          {
+            "name": "getKey",
+            "type": "(item: T, index: number) => Key",
+            "required": true
+          },
+          {
+            "name": "initialVisibleItems",
+            "type": "number",
+            "required": true
+          },
+          {
+            "name": "items",
+            "type": "readonly T[]",
+            "required": true
+          },
+          {
+            "name": "renderItem",
+            "type": "(item: T, index: number) => LumoNode",
+            "required": true
+          },
+          {
+            "name": "renderOverflow",
+            "type": "(hidden: readonly OverflowListEntry<T>[]) => LumoNode",
+            "required": true
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "collapseFrom",
+            "type": "\"start\" | \"end\" | undefined",
+            "required": false
+          },
+          {
+            "name": "gap",
+            "type": "number | undefined",
+            "required": false
+          },
+          {
+            "name": "maxVisibleItems",
+            "type": "number | undefined",
+            "required": false
+          },
+          {
+            "name": "minVisibleItems",
+            "type": "number | undefined",
             "required": false
           }
         ]
@@ -12493,6 +12600,43 @@
         ]
       }
     ],
+    "transfer-list.tsx": [
+      {
+        "name": "TransferListProps",
+        "props": [
+          {
+            "name": "items",
+            "type": "readonly TransferListItem[]",
+            "required": true
+          },
+          {
+            "name": "strings",
+            "type": "TransferListStrings",
+            "required": true
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "defaultValue",
+            "type": "readonly Key[] | undefined",
+            "required": false
+          },
+          {
+            "name": "onValueChange",
+            "type": "((value: readonly Key[]) => void) | undefined",
+            "required": false
+          },
+          {
+            "name": "value",
+            "type": "readonly Key[] | undefined",
+            "required": false
+          }
+        ]
+      }
+    ],
     "tree.tsx": [
       {
         "name": "TreeItemProps",
@@ -12825,6 +12969,11 @@
             "required": false
           },
           {
+            "name": "endReachedThreshold",
+            "type": "number | undefined",
+            "required": false
+          },
+          {
             "name": "gap",
             "type": "number | undefined",
             "required": false
@@ -12837,6 +12986,16 @@
           {
             "name": "itemClassName",
             "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "onEndReached",
+            "type": "(() => void) | undefined",
+            "required": false
+          },
+          {
+            "name": "onVisibleRangeChange",
+            "type": "((range: VirtualListRange) => void) | undefined",
             "required": false
           },
           {
