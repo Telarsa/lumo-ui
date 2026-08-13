@@ -698,7 +698,7 @@ export function ListBox<T extends object>({
 
   return (
     <ListBoxContext.Provider value={context}>
-      <>
+      <div data-lumo="" data-list-box-frame="">
         <div
           {...props}
           ref={ref}
@@ -735,7 +735,7 @@ export function ListBox<T extends object>({
             )}
           </div>
         )}
-      </>
+      </div>
     </ListBoxContext.Provider>
   );
 }
