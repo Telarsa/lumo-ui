@@ -13,26 +13,74 @@ the Persian layer and the conformance gate are owned. The earlier React Aria
 decision was superseded by the verified Base UI migration described in
 `REVIEW-BRIEF.md §3`.
 
-## Current focus reset — 13 August 2026
+## Current measured state — 13 August 2026
+
+- **98 implementation modules, 99 public component pages, 30 blocks and 128
+  generated registry items.** `IconButton` has its own page but shares
+  `button.tsx`, which explains the one-page difference.
+- The complete English/LTR and Persian/RTL catalogue pass covered **198 rendered
+  component pages**. One isolated mutation was attempted in every UI module.
+- Real VoiceOver and Android TalkBack passes found and fixed defects. NVDA,
+  JAWS and a current Chrome/TalkBack matrix remain deliberately deferred; they
+  earn no score until an OS-independent hosted device/AT route is available.
+- The latest complete pre-foundation verification baseline covered **2,616
+  tests, 128 clean-room registry payloads and 540 generated documents**. The
+  subsequent async-collection and query-engine commits passed their focused
+  suites, typecheck, lint, prop/root, registry and 128-payload smoke gates. The
+  next top-level `pnpm run verify` remains reserved for the end of the current
+  product-depth sequence.
+- The last evidence-backed whole-library rating is **9.3/10**, after the
+  independent-review reset, remediation, full visual/mutation pass and two real
+  AT environments. The newer product foundations have not been used to inflate
+  that number before a fresh end-to-end evaluation.
+
+## Product-depth programme — current plan
 
 The support envelope is **React web**, not every UI framework. Lumo also targets
 deep, styled product components rather than drop-in compatibility with every
 low-level Radix/Ark part. Those are deliberate boundaries, not backlog. See
 `DECISIONS.md §19`.
 
-The next work is product depth, in dependency order:
+The next work is product depth, in dependency order. Completed subcontracts are
+checked individually so a partly integrated engine is not disguised as either
+"not started" or "done".
 
-### Wave 1 — shared enterprise foundations
+### Foundations already shipped
 
-- [ ] Build one async/grouped/virtual collection controller with loading,
-      failure, paging, cancellation and stable selection contracts. Use it in
-      DataGrid, Combobox, Select, ListBox, Tree and TransferList.
-      **Foundation shipped 13 Aug:** ListBox and VirtualList now share
-      `async-collection.ts`; the remaining integrations keep this item open.
-- [ ] Define a query model shared by Filters, PowerSearch and DataGrid: typed
-      fields/operators, validation, serialization and local/remote execution.
-      **Engine shipped 13 Aug:** Filters and local DataGrid share the nested
-      model; PowerSearch UI and a concrete remote adapter keep this item open.
+- [x] A transport-independent async collection engine with abort/cancellation,
+      stale-result rejection, cursor paging, in-flight guards, stable duplicate
+      replacement, retry, refresh, total count and grouping.
+- [x] ListBox async presentation and VirtualList paging/busy-state integration,
+      including the public `scrollToIndex`/`scrollToOffset` handle.
+- [x] A shared nested query model with typed fields/operators, AND/OR groups,
+      structured validation, canonical safe parsing/serialization and local
+      execution.
+- [x] Filters and local DataGrid execution use that same query model rather than
+      maintaining parallel filter semantics.
+- [x] DataGrid column visibility, sparse keyboard coordinates, expansion,
+      hierarchical/tree rows and logical RTL disclosure behavior.
+- [x] EventCalendar day and configurable 2–14-day views, reusing its existing
+      month/week/agenda and overlap model.
+- [x] Gantt day/week/month/quarter/year scales, collapsible hierarchy and
+      keyboard/pointer edge resizing with Jalali and RTL assertions.
+- [x] FileUpload acquisition validation plus explicit queued/uploading/success/
+      error presentation, progress and caller-owned recovery actions.
+- [x] OverflowList and TransferList, the two genuine Astryx catalogue gaps that
+      survived the "can existing Lumo parts compose it?" test.
+- [x] The independent-review defects, all-page visual pass, per-module mutation
+      floor, VoiceOver defects and Android TalkBack defects are remediated and
+      recorded under `review/`.
+
+### Wave 1 — finish the shared enterprise seams
+
+- [ ] Integrate the shared async controller with DataGrid, ComboBox, Select,
+      Tree and TransferList. Keep selection stable across paging, grouping and
+      refresh; add virtualized recipes where corpus size makes it necessary.
+- [ ] Build PowerSearch's token/typeahead/edit-popover surface over the shipped
+      query engine: typed editor catalogue, status/disabled states, overflow,
+      saved views and result count.
+- [ ] Connect the same query bytes to local DataGrid and one concrete remote
+      adapter/example. Remote transport stays caller-owned.
 - [ ] Add first-party form integration for nested/list values, async validation,
       dirty/touched/submitting state and schema adapters. Add hooks only when
       they encode a recurring Lumo behavior; do not clone a general-purpose
@@ -43,20 +91,19 @@ The next work is product depth, in dependency order:
 
 ### Wave 2 — ReUI-class product engines
 
-- [ ] **DataGrid:** pinning, group/tree rows, editing, virtualization/infinite
-      loading, reorder, footer/aggregation contracts and a measured performance
-      envelope. Integrate Filters and PowerSearch instead of adding parallel
-      query state.
+- [ ] **DataGrid:** pinning, column/row reorder, cell editing, virtualization/
+      infinite loading, footer/aggregation contracts and a measured performance
+      envelope. Expansion and hierarchical/tree rows are already shipped.
 - [ ] **EventCalendar/Scheduler:** resources, recurrence, IANA zones, CRUD,
       configurable working hours and snap intervals, plus keyboard and pointer
-      create/move/resize.
+      create/move/resize. Month/week/day/N-day/agenda are already shipped.
 - [ ] **Gantt:** dependency graph, summary rollups, baselines, critical path,
-      continuous zoom and a resizable hierarchy/timeline split pane. Reuse the
-      calendar and query foundations where the domain model genuinely matches.
+      continuous zoom and a resizable hierarchy/timeline split pane. Five
+      calendar scales, hierarchy and task-edge resizing are already shipped.
 - [ ] **Upload:** directory/camera acquisition and transforms; optional transport
       adapters with cancellation, chunking, pause/resume and retry; sortable
-      gallery/table recipes. Keep visual lifecycle state usable without a
-      bundled network client.
+      gallery/table recipes. Validation and the visual lifecycle are already
+      transport-independent and shipped.
 
 ### Wave 3 — Mantine replacement depth
 
@@ -71,8 +118,8 @@ The next work is product depth, in dependency order:
 
 ### Wave 4 — Astryx-class internal tools
 
-- [ ] **PowerSearch:** make the Wave 1 query model a coherent command/search
-      surface connected to DataGrid and saved views.
+- [ ] **PowerSearch:** complete the Wave 1 UI and publish local/remote DataGrid
+      recipes. The shared query semantics are already shipped.
 - [ ] **LogStream:** virtual append-only data, follow/pause, filters, severity,
       timestamps, copy/export and accessible live-update policies.
 - [ ] **AI/chat:** composer, streaming states, citations, tool-call disclosure,
@@ -90,22 +137,32 @@ The next work is product depth, in dependency order:
       a hosted real-AT/device service that removes local OS provisioning from the
       workflow. Accessibility-tree snapshots do not close this item.
 
+### Explicit non-goals
+
+- React web is the supported platform. Vue/Solid/Svelte/React Native breadth is
+  not a roadmap item and does not reduce the React-library rating.
+- Lumo is a styled product system, not a universal Radix/Ark part-for-part
+  primitive layer. Add an escape hatch only for a demonstrated product need.
+- Do not add thin catalogue aliases, a generic hooks collection, bundled network
+  clients, or editor/AI runtimes before their security, CSP, bundle and product
+  contracts are decided.
+
 ---
 
 ## What v1.0 contains
 
-| | count | notes |
+| surface | current state | acceptance rule |
 |---|---|---|
-| Components | ~50 | **52 shipped.** Remaining: ContextMenu, and the v0.7 date family |
-| Blocks | ~25 | **28 shipped — v0.4 is closed.** |
-| Locales | 2 | `fa-IR`, `en-US`, complete-or-compile-error |
-| Gate rules | ~10 | each with a poison fixture proving it fails |
-| Owned source | ~12k lines | measured basis: 290 lines per behaviour component |
+| Components | **98 implementation modules / 99 public pages** | real behavior or caller complexity removed; no count-only aliases |
+| Blocks | **30** | compose public Lumo APIs only |
+| Locales | `fa-IR`, `en-US` | complete-or-compile-error |
+| Registry | **128 generated items** | dependency-validated, copied and typechecked outside the workspace |
+| Gates | prop/root, API, registry, consumer, HTML and vocabulary tiers | every rule needs a poison or mutation that proves it can fail |
 
-For reference, the libraries measured this session: Astryx 100 components,
-React Aria Components 76, Ark UI 61, Base UI 38. Their union is 172 distinct
-components, of which roughly 55 are purely presentational and about 30 are
-things no Telarsa product will ever render. 62 is the useful middle.
+Competitor counts are deliberately not a target: catalogues mix primitives,
+gallery recipes, paid engines and aliases differently. Current behavior-level
+comparisons live in `review/PARITY-PASS-2026-08-13.md` and
+`review/COMPETITOR-REPLACEMENT-2026-08-13.md`.
 
 ---
 
@@ -133,15 +190,15 @@ site can be built out of it.
 - [x] Every component's announced strings are required props
 - [x] Gate runs against a real two-page build
 
-## v0.3 — Composite components ◐ mostly
+## v0.3 — Composite components ✅
 
-The ones that need a behaviour machine. These are where React Aria earns its
-place.
+The ones that need a behaviour machine. These now rent their low-level behavior
+from Base UI while retaining Lumo's public vocabulary.
 
 - [x] Select, ComboBox, Menu
 - [x] Standalone Listbox
 - [x] Autocomplete
-- [ ] ContextMenu
+- [x] ContextMenu
 - [x] Dialog, Drawer, Popover, Tooltip
 - [x] HoverCard
 - [x] Tabs, Disclosure (accordion), Breadcrumbs
@@ -185,7 +242,7 @@ what the reader gets before — or without — hydration.
 rather than composing purely from `@lumo-ui/ui`. One-directional, no cycle, and
 the alternative was duplicating a block that already existed.
 
-## v0.5 — The showcase site ✅ (density control deferred)
+## v0.5 — The showcase site ✅
 
 Internal-first (see `DECISIONS.md §0.2`), but built like a real library's docs
 because it is how the library is used and reviewed.
@@ -211,8 +268,9 @@ announces.
       the mirrored route, never a CSS flip — a flip would leave `<html lang>`
       disagreeing with the geometry, the exact defect the library exists to
       prevent. `preview-toolbar.tsx`'s header carries the argument.
-- [ ] Density control on the preview — deferred; the token (`--lumo-density`)
-      exists, the toolbar does not expose it yet
+- [x] Density tokens and scoped density islands exist. A global preview toggle
+      was tested and deliberately removed because it shrank icons as though it
+      were zoom. Reintroduce only with a system-wide density contract.
 - [x] The evidence panel: computed accessible names for the rendered demo.
       Computed POST-BUILD from the same bytes the gate grades
       (`apps/website/scripts/inject-evidence.mjs`), because Next cannot
@@ -237,47 +295,50 @@ single flat list serving both.
 
 - [x] `registry.json` generated from the components that exist, shadcn-shaped
 - [ ] `shadcn build` → static JSON, served privately
-- [x] Consumer install smoke test in CI — 80 items compile outside the workspace
+- [x] Consumer install smoke test in CI — all 128 items validate dependency
+      closure, copy and typecheck outside the workspace
 - [ ] Versioned snapshots so a consumer pins a release rather than `latest`
-- [ ] `--diff` workflow documented for taking upstream changes
+- [x] Vendor/adaptation history and the `shadcn add --diff` workflow documented
+      in the CLI/introduction guides and source-vocabulary rules
 
-## v0.7 — Dates and the Persian long tail
+## v0.7 — Dates and the Persian long tail ✅
 
 Deliberately late: Khroos milestone M9 puts the availability calendar
 post-launch, behind the provider tier.
 
-- [ ] Calendar, RangeCalendar, DatePicker, DateRangePicker, DateField, TimeField
-- [ ] Jalali verified for *entry*, not only display — segment increment, Esfand
+- [x] Calendar, RangeCalendar, DatePicker, DateRangePicker, DateField, TimeField
+- [x] Jalali verified for *entry*, not only display — segment increment, Esfand
       rollover, leap years
-- [ ] The client string dictionary for the 3 measured leaks that props cannot
-      reach (`CalendarCell`, `DateSegment`)
-- [ ] Bidi isolation for user-generated content — a marketplace is full of Latin
-      brand names inside Persian sentences
+- [x] Base UI/date-layer server strings and unreachable date-cell/segment leaks
+      are covered by the Persian string contract
+- [x] Bidi isolation is shipped for mixed-script identifiers and filenames;
+      date/time range formatters own their neutral separators
 
-## v0.8 — Data-dense surfaces
+## v0.8 — Data-dense surfaces ◐ product depth continues above
 
 - [x] Table with sorting, selection, column resize
-- [ ] Virtualized list and grid
-- [ ] Tree, TreeGrid
+- [x] Virtualized list with corpus semantics, paging and imperative scrolling
+- [ ] Virtualized DataGrid (ordinary and hierarchical grids already ship)
+- [x] Tree and hierarchical `role="treegrid"` Table/DataGrid
 - [x] Charts — the one genuine gap, since no headless library ships them.
       Closed with recharts plus a server-rendered `<ChartData>` table; seven
       libraries were measured first and the comparison is above.
-- [ ] Keyboard-accessible drag and drop, or a "Move to…" affordance instead
-- [ ] **`VirtualList` scroll-to-index.** AUDIT §4.2 named "a consumer cannot …
-      scroll a `VirtualList` to an index" as one cost of having no `ref` story.
-      The root contract (DECISIONS §17) did NOT fix this one, and saying so is
-      the point: `VirtualList` OWNS its `ref`, because that element is the
-      virtualiser's scroll container and a consumer's ref replacing it empties
-      the window. The answer is an imperative handle — `DateInput` already sets
-      the precedent by handing back a `DateInputHandle` rather than a `<div>` —
-      not a passthrough ref that would look like it worked.
+- [x] Keyboard-accessible Sortable/Kanban movement and TransferList's explicit
+      “move to” controls
+- [x] `VirtualListHandle.scrollToIndex` and `.scrollToOffset`, without replacing
+      the virtualizer-owned DOM ref
 
 ## v0.9 — Hardening
 
-- [ ] CDP tier: grade the real engine accessibility tree, not an approximation
+- [x] Full 99-page × 2-direction production-browser visual pass
+- [x] One isolated mutation attempted in every one of the 98 UI modules
+- [x] Real macOS VoiceOver and Android TalkBack high-risk sessions, with found
+      defects converted to assertions
+- [ ] Automated CDP tier: grade the real engine accessibility tree, not an
+      approximation
 - [ ] Weekly browser-capability probe checked into the repo
-- [ ] Screen-reader pass in Persian — and establish what actually reads Persian
-      on Android and iOS, because macOS ships no Persian voice
+- [ ] Hosted NVDA/JAWS/current-Chrome TalkBack matrix; paused until it is not
+      coupled to local OS provisioning
 - [ ] Visual regression on a direction-flip for the six riskiest components
 - [ ] Bundle budget per component, enforced
 
@@ -297,8 +358,10 @@ Not a version bump; a state of the portfolio.
 ## Rules that do not change between versions
 
 1. **Behaviour is rented.** We do not write focus management, collections or
-   overlay positioning. If React Aria is wrong we patch it with `pnpm patch` and
-   file upstream — a patch fails loudly on the next bump, which is the alarm.
+   overlay positioning when Base UI owns the required machine. Where Lumo owns
+   a product engine—calendar projection, virtualization, query execution or
+   planning arithmetic—the boundary is a tested deep module rather than ad-hoc
+   behavior inside examples.
 2. **Every announced string is a required prop.** No user-facing English in the
    library. A missing string is a compile error.
 3. **No CSS Modules.** Styling is Tailwind utilities inside `cva`, so
@@ -308,9 +371,9 @@ Not a version bump; a state of the portfolio.
    is not a rule. This caught a real vacuous gate on its first run.
 6. **The gate grades prerendered output.** Correct-after-hydration is not correct
    for SEO-indexed pages.
-7. **Scope discipline over cleverness.** ~47% of React Aria's 88k lines is code a
-   two-locale, two-person system would never write. Not writing it is the single
-   largest saving available.
+7. **Scope discipline over catalogue count.** React web, Persian/English and
+   styled product components are the support envelope. Unused framework ports,
+   thin aliases and speculative hooks are maintenance, not product depth.
 
 
 ### The chart library should probably change — visx server-renders
