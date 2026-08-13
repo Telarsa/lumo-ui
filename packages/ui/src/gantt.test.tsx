@@ -464,6 +464,18 @@ describe("task hierarchy", () => {
     fireEvent.click(screen.getByRole("button", { name: "باز کردن طراحی" }));
     expect(screen.getByText("بازبینی")).not.toBeNull();
   });
+
+  it("keeps one tabbable bar after collapsing the branch that held focus", () => {
+    const { container } = render(
+      <Gantt label="برنامه" locale="fa-IR" tasks={hierarchy} strings={STRINGS} />,
+    );
+    fireEvent.focus(screen.getByRole("button", { name: /^بازبینی،/ }));
+    fireEvent.click(screen.getByRole("button", { name: "بستن انتشار" }));
+
+    const bars = [...container.querySelectorAll<HTMLElement>("[data-gantt-bar]")];
+    expect(bars).toHaveLength(2);
+    expect(bars.filter((bar) => bar.tabIndex === 0)).toHaveLength(1);
+  });
 });
 
 describe("task resizing", () => {
@@ -602,6 +614,33 @@ describe("the served bytes carry the tab stop and the name", () => {
     expect(bars[0]).toContain('tabindex="0"');
     expect(bars[1]).toContain('tabindex="-1"');
     expect(bars[2]).toContain('tabindex="-1"');
+  });
+
+  it("serves one tab stop when earlier rows have no bar in the requested range", () => {
+    const outside = {
+      ...SPRINT,
+      id: "outside",
+      start: new CalendarDate(GREGORY, 2026, 2, 1),
+      end: new CalendarDate(GREGORY, 2026, 2, 2),
+    };
+    const inside = { ...SPRINT, id: "inside" };
+    const markup = renderToStaticMarkup(
+      <Gantt
+        label="برنامه"
+        locale="fa-IR"
+        tasks={[outside, inside]}
+        strings={STRINGS}
+        range={{
+          start: new CalendarDate(GREGORY, 2026, 3, 21),
+          end: new CalendarDate(GREGORY, 2026, 3, 30),
+        }}
+      />,
+    );
+    const bars = Array.from(markup.matchAll(/<button[^>]*data-gantt-bar[^>]*>/g)).map(
+      (match) => match[0] ?? "",
+    );
+    expect(bars).toHaveLength(1);
+    expect(bars.filter((bar) => bar.includes('tabindex="0"'))).toHaveLength(1);
   });
 
   it("every bar is NAMED in the first byte, and the name says what and when", () => {
