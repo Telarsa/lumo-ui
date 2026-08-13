@@ -2922,6 +2922,12 @@
             "description": "Announced name of the suggestion list. REQUIRED.\nBase UI names it nothing at all."
           },
           {
+            "name": "asyncState",
+            "type": "AsyncCollectionPresentation | undefined",
+            "required": false,
+            "description": "Caller-authored loading/error/empty state from the shared async controller."
+          },
+          {
             "name": "children",
             "type": "LumoNode | ((item: T) => LumoNode)",
             "required": false,
@@ -3457,6 +3463,12 @@
             "type": "DataGridTableInstance",
             "required": true,
             "description": "The instance from `useLumoTable`. The grid never creates one."
+          },
+          {
+            "name": "asyncState",
+            "type": "AsyncCollectionPresentation | undefined",
+            "required": false,
+            "description": "Shared loading/error/paging presentation from `useAsyncLumoTable`."
           },
           {
             "name": "children",
@@ -7309,7 +7321,7 @@
           },
           {
             "name": "asyncState",
-            "type": "ListBoxAsyncState | undefined",
+            "type": "AsyncCollectionPresentation | undefined",
             "required": false,
             "description": "Caller-owned remote collection state rendered outside the composite."
           },
@@ -10821,6 +10833,12 @@
             "type": "string | undefined",
             "required": false,
             "description": "Announced name, when no visible `<Label>` names the control."
+          },
+          {
+            "name": "asyncState",
+            "type": "AsyncCollectionPresentation | undefined",
+            "required": false,
+            "description": "Caller-authored loading/error/empty state from the shared async controller."
           },
           {
             "name": "children",
@@ -14849,6 +14867,12 @@
             "description": "Inherited DOM or shared Lumo prop."
           },
           {
+            "name": "asyncState",
+            "type": "AsyncCollectionPresentation | undefined",
+            "required": false,
+            "description": "Remote state for the available/source pool; selected values stay usable."
+          },
+          {
             "name": "className",
             "type": "string | undefined",
             "required": false,
@@ -15095,6 +15119,12 @@
             "description": "Identifies the element (or elements) that labels the current element."
           },
           {
+            "name": "asyncStatus",
+            "type": "AsyncCollectionStatus | undefined",
+            "required": false,
+            "description": "Shared remote status; status copy stays adjacent to the treegrid."
+          },
+          {
             "name": "children",
             "type": "LumoNode | ((item: T) => ReactNode)",
             "required": false,
@@ -15262,6 +15292,12 @@
             "type": "Locale",
             "required": true,
             "description": "The locale. Direction is derived from it — there is deliberately no `dir`\nand no `isRtl` prop, see the header."
+          },
+          {
+            "name": "asyncStatus",
+            "type": "AsyncCollectionStatus | undefined",
+            "required": false,
+            "description": "Remote collection status. Active work owns `aria-busy`; ready and error\nremain operable and are announced by caller-authored status UI."
           },
           {
             "name": "className",

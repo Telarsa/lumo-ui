@@ -24,6 +24,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
+import type {
+  AsyncCollectionPage,
+  AsyncCollectionRequest,
+} from "./async-collection.ts";
 import {
   DataGrid,
   DataGridColumnsMenu,
@@ -41,6 +45,7 @@ import {
   Table,
   TableBody,
   TableHeader,
+  useAsyncLumoTable,
   useLumoTable,
 } from "./table.tsx";
 
@@ -116,6 +121,128 @@ const PAGER = {
   pageLabel: (n: string) => `صفحهٔ ${n}`,
   rangeLabel: (from: string, to: string, total: string) => `${from}–${to} از ${total}`,
 };
+
+const ASYNC_MESSAGES = {
+  loading: "در حال دریافت سفارش‌ها",
+  refreshing: "در حال تازه‌سازی سفارش‌ها",
+  loadingMore: "در حال دریافت سفارش‌های بیشتر",
+  empty: "سفارشی پیدا نشد",
+  retry: "تلاش دوباره",
+  loadMore: "سفارش‌های بیشتر",
+  error: () => "دریافت سفارش‌ها ناموفق بود",
+} as const;
+
+interface AsyncOrder {
+  id: string;
+  name: string;
+}
+
+type AsyncOrderRequest = AsyncCollectionRequest<{ account: string }, string>;
+
+function AsyncGrid({
+  load,
+}: {
+  load: (request: AsyncOrderRequest) => Promise<AsyncCollectionPage<AsyncOrder, string>>;
+}) {
+  const grid = useAsyncLumoTable({
+    collection: {
+      query: { account: "current" },
+      queryKey: "current-account",
+      load,
+      getKey: (row) => row.id,
+    },
+    table: {
+      locale: "fa-IR",
+      columns: [{ id: "name", accessorKey: "name" }],
+      getRowId: (row) => row.id,
+    },
+    messages: ASYNC_MESSAGES,
+  });
+
+  return (
+    <DataGrid locale="fa-IR" table={grid.table} asyncState={grid.asyncState}>
+      <Table label="سفارش‌ها" locale="fa-IR" table={grid.table}>
+        <TableHeader>
+          <Column id="name" isRowHeader>
+            نام
+          </Column>
+        </TableHeader>
+        <TableBody>
+          {grid.table.getRowModel().rows.map((row) => (
+            <Row key={row.id} row={row}>
+              <Cell isRowHeader>{row.original.name}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+    </DataGrid>
+  );
+}
+
+describe("DataGrid — shared async collection seam", () => {
+  it("announces loading on the shell, then projects the loaded rows into the table", async () => {
+    let resolve!: (page: { items: readonly AsyncOrder[] }) => void;
+    const page = new Promise<{ items: readonly AsyncOrder[] }>((next) => {
+      resolve = next;
+    });
+    const { container } = render(<AsyncGrid load={() => page} />);
+
+    const shell = container.firstElementChild;
+    expect(shell?.getAttribute("aria-busy")).toBe("true");
+    expect(screen.getByRole("status").textContent).toBe(ASYNC_MESSAGES.loading);
+    expect(screen.queryByRole("rowheader", { name: "سارا" })).toBeNull();
+
+    await act(async () => {
+      resolve({ items: [{ id: "one", name: "سارا" }] });
+      await page;
+    });
+
+    expect(shell?.getAttribute("aria-busy")).toBeNull();
+    expect(screen.getByRole("rowheader", { name: "سارا" })).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  it("keeps loaded rows while the shared cursor action fetches and merges the next page", async () => {
+    let resolveMore!: (page: AsyncCollectionPage<AsyncOrder, string>) => void;
+    const more = new Promise<AsyncCollectionPage<AsyncOrder, string>>((next) => {
+      resolveMore = next;
+    });
+    const load = vi.fn((request: AsyncOrderRequest) =>
+      request.cursor === undefined
+        ? Promise.resolve({
+            items: [{ id: "one", name: "سارا" }],
+            nextCursor: "second",
+            totalCount: 2,
+          })
+        : more,
+    );
+    const { container } = render(<AsyncGrid load={load} />);
+
+    expect(await screen.findByRole("rowheader", { name: "سارا" })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: ASYNC_MESSAGES.loadMore }));
+
+    expect(container.firstElementChild?.getAttribute("aria-busy")).toBe("true");
+    expect(screen.getByRole("rowheader", { name: "سارا" })).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toBe(ASYNC_MESSAGES.loadingMore);
+
+    await act(async () => {
+      resolveMore({
+        items: [
+          { id: "one", name: "سارا به‌روز" },
+          { id: "two", name: "رضا" },
+        ],
+        totalCount: 2,
+      });
+      await more;
+    });
+
+    expect(screen.queryByRole("rowheader", { name: "سارا" })).toBeNull();
+    expect(screen.getByRole("rowheader", { name: "سارا به‌روز" })).toBeTruthy();
+    expect(screen.getByRole("rowheader", { name: "رضا" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: ASYNC_MESSAGES.loadMore })).toBeNull();
+    expect(load).toHaveBeenCalledTimes(2);
+  });
+});
 
 /* ════════════════════════════════════════════════════════════════════════════
  * THE RANGE READ-OUT

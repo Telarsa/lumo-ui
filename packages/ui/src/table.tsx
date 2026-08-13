@@ -36,6 +36,12 @@ import {
 import { FORMAT_LOCALE, cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Checkbox, type CheckboxProps } from "./checkbox.tsx";
 import {
+  presentAsyncCollection,
+  useAsyncCollection,
+  type AsyncCollectionMessages,
+  type AsyncCollectionOptions,
+} from "./async-collection.ts";
+import {
   executeQuery,
   type FilterQuery,
   type QueryExecutionField,
@@ -373,6 +379,45 @@ export function useLumoQueryTable<TData extends RowData>({
 }: LumoQueryTableOptions<TData>) {
   const queriedData = executeQuery(data, query, queryFields);
   return useLumoTable({ ...options, data: queriedData } as LumoTableOptions<TData>);
+}
+
+export interface AsyncLumoTableOptions<
+  TData extends RowData,
+  Query,
+  Cursor = string,
+> {
+  /** Transport-independent loading, paging and identity contract. */
+  collection: AsyncCollectionOptions<TData, Query, Cursor>;
+  /** Ordinary Lumo table options; rows always come from `collection`. */
+  table: Omit<LumoTableOptions<TData>, "data">;
+  /** Every announced collection sentence, authored by the caller. */
+  messages: AsyncCollectionMessages;
+}
+
+/**
+ * Projects one shared async collection into a Lumo table and its presentation
+ * state. Cancellation, stale results, paging, retry and refresh remain owned by
+ * `useAsyncCollection`; the grid receives no second loader state machine.
+ */
+export function useAsyncLumoTable<
+  TData extends RowData,
+  Query,
+  Cursor = string,
+>({
+  collection: collectionOptions,
+  table: tableOptions,
+  messages,
+}: AsyncLumoTableOptions<TData, Query, Cursor>) {
+  const collection = useAsyncCollection(collectionOptions);
+  const table = useLumoTable({
+    ...tableOptions,
+    data: collection.items,
+  } as LumoTableOptions<TData>);
+  return {
+    table,
+    collection,
+    asyncState: presentAsyncCollection(collection, messages),
+  };
 }
 
 /* ════════════════════════════════════════════════════════════════════════════

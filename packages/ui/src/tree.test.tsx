@@ -61,6 +61,19 @@ describe("tree — the shape RAC actually emits, pinned", () => {
     expect(rows().length).toBeGreaterThan(0);
   });
 
+  it("keeps its rows while the shared collection refreshes and marks the treegrid busy", () => {
+    render(
+      <LumoProvider locale="fa-IR">
+        <Tree label="پرونده‌های پروژه" asyncStatus="refreshing">
+          <TreeItem id="asnad" textValue="اسناد" title="اسناد" />
+        </Tree>
+      </LumoProvider>,
+    );
+
+    expect(screen.getByRole("treegrid").getAttribute("aria-busy")).toBe("true");
+    expect(screen.getByRole("row", { name: "اسناد" })).toBeTruthy();
+  });
+
   it("names every row from `textValue`, so the name and the typeahead key are one string", () => {
     render(<Files locale="fa-IR" />);
     expect(screen.getByRole("row", { name: "اسناد" })).toBeTruthy();

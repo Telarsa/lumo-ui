@@ -360,6 +360,7 @@ export {
 export type {
   DataGridColumn,
   DataGridColumnLabel,
+  DataGridAsyncState,
   DataGridColumnsMenuProps,
   DataGridEmptyProps,
   DataGridPaginationProps,
@@ -500,6 +501,7 @@ export {
   TableWidgetCell,
   localeSortFn,
   lumoTableFeatures,
+  useAsyncLumoTable,
   useLumoTable,
   useLumoQueryTable,
 } from "./table.tsx";
@@ -521,6 +523,7 @@ export type {
   // consumer wiring their own state layer needs to know what `Table` asks for —
   // and because the interfaces ARE the statement that TanStack owns no ARIA.
   LumoTableColumn,
+  AsyncLumoTableOptions,
   LumoExpandableTableRow,
   LumoTableFeatures,
   LumoTableInstance,

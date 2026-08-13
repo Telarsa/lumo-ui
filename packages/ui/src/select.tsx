@@ -8,6 +8,8 @@ import { Select as BaseSelect } from "@base-ui/react/select";
 import { cn, type LumoNode, type ValidationError } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
 import { Description, Field, FieldError, optional, useFieldControl } from "./form.tsx";
+import type { AsyncCollectionPresentation } from "./async-collection.ts";
+import { Button } from "./button.tsx";
 
 /**
  * EXPERIMENT — this file is the React Aria Select rebuilt on Base UI 1.7.0.
@@ -273,6 +275,8 @@ export const selectItemVariants = cva(
 interface SelectFieldContextValue {
   placeholder: string;
   label: string | undefined;
+  asyncState: AsyncCollectionPresentation | undefined;
+  itemCount: number;
 }
 
 const SelectFieldContext = createContext<SelectFieldContextValue | null>(null);
@@ -406,6 +410,8 @@ export interface SelectProps<T extends object> {
   onSelectionChange?: ((key: string | null) => void) | undefined;
   isDisabled?: boolean | undefined;
   isRequired?: boolean | undefined;
+  /** Caller-authored loading/error/empty state from the shared async controller. */
+  asyncState?: AsyncCollectionPresentation | undefined;
   isOpen?: boolean | undefined;
   defaultOpen?: boolean | undefined;
   onOpenChange?: ((isOpen: boolean) => void) | undefined;
@@ -464,6 +470,7 @@ export function Select<T extends object>({
   onSelectionChange,
   isDisabled,
   isRequired,
+  asyncState,
   isOpen,
   defaultOpen,
   onOpenChange,
@@ -584,7 +591,14 @@ export function Select<T extends object>({
           : { onOpenChange: (open: boolean) => onOpenChange(open) })}
         {...(name === undefined ? {} : { name })}
       >
-        <SelectFieldContext.Provider value={{ placeholder, label: ariaLabel }}>
+        <SelectFieldContext.Provider
+          value={{
+            placeholder,
+            label: ariaLabel,
+            asyncState,
+            itemCount: Object.keys(itemLabels).length,
+          }}
+        >
           {children}
           {/*
            * Rendered HERE rather than left to the consumer, and it is the same
@@ -637,6 +651,7 @@ export function SelectTrigger({ className, size, children }: SelectTriggerProps)
       data-lumo=""
       {...control}
       {...(field?.label === undefined ? {} : { "aria-label": field.label })}
+      {...(field?.asyncState?.status === "loading" ? { "aria-busy": true } : {})}
       className={cn(selectTriggerVariants({ size }), className)}
     >
       {children ?? <SelectValue />}
@@ -738,6 +753,17 @@ export function SelectPopover<T extends object>({
   listBoxClassName,
   children,
 }: SelectPopoverProps<T>) {
+  const field = useContext(SelectFieldContext);
+  const stateText =
+    field?.asyncState?.status === "loading" || field?.asyncState?.status === "error"
+      ? field.asyncState.text
+      : field?.asyncState?.status === "ready" && field.itemCount === 0
+        ? field.asyncState.emptyText
+        : null;
+  const stateAction =
+    field?.asyncState?.status === "ready"
+      ? field.asyncState.loadMore
+      : field?.asyncState?.action;
   return (
     <BaseSelect.Portal>
       <BaseSelect.Positioner
@@ -758,6 +784,18 @@ export function SelectPopover<T extends object>({
                 gone, and the cast was what let the two disagree. */}
             {children}
           </BaseSelect.List>
+          {stateText === null && stateAction === undefined ? null : (
+            <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-fg-muted">
+              <span role="status" aria-live="polite">
+                {stateText}
+              </span>
+              {stateAction === undefined ? null : (
+                <Button variant="outline" size="sm" onPress={stateAction.onPress}>
+                  {stateAction.label}
+                </Button>
+              )}
+            </div>
+          )}
         </BaseSelect.Popup>
       </BaseSelect.Positioner>
     </BaseSelect.Portal>

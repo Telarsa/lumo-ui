@@ -1,5 +1,6 @@
 import type { Locale } from "@lumo-ui/core";
 import {
+  DataGridAsyncIsland,
   DataGridIsland,
   DataGridTreeIsland,
   type DataGridIslandRow,
@@ -60,6 +61,19 @@ const t = {
   ofWord: { "fa-IR": "از", "en-US": "of" },
   pageSizeLabel: { "fa-IR": "تعداد ردیف در هر صفحه", "en-US": "Rows per page" },
   treeGridLabel: { "fa-IR": "سفارش‌ها و ارسال‌ها", "en-US": "Orders and shipments" },
+  asyncGridLabel: { "fa-IR": "سفارش‌های راه دور", "en-US": "Remote orders" },
+  loading: { "fa-IR": "در حال دریافت سفارش‌ها", "en-US": "Loading orders" },
+  refreshing: { "fa-IR": "در حال تازه‌سازی سفارش‌ها", "en-US": "Refreshing orders" },
+  loadingMore: {
+    "fa-IR": "در حال دریافت سفارش‌های بیشتر",
+    "en-US": "Loading more orders",
+  },
+  retry: { "fa-IR": "تلاش دوباره", "en-US": "Retry" },
+  loadMore: { "fa-IR": "سفارش‌های بیشتر", "en-US": "Load more orders" },
+  remoteError: {
+    "fa-IR": "دریافت سفارش‌ها ناموفق بود",
+    "en-US": "Orders could not be loaded",
+  },
 
   colName: { "fa-IR": "مشتری", "en-US": "Customer" },
   colCity: { "fa-IR": "شهر", "en-US": "City" },
@@ -229,6 +243,25 @@ function TreeRowsExample(l: Locale) {
   );
 }
 
+function AsyncRowsExample(l: Locale) {
+  const all = rows(l).slice(0, 6);
+  return (
+    <DataGridAsyncIsland
+      locale={l}
+      label={t.asyncGridLabel[l]}
+      nameHeader={t.colName[l]}
+      pages={[all.slice(0, 3), all.slice(3)]}
+      loadingText={t.loading[l]}
+      refreshingText={t.refreshing[l]}
+      loadingMoreText={t.loadingMore[l]}
+      emptyText={t.empty[l]}
+      retryLabel={t.retry[l]}
+      loadMoreLabel={t.loadMore[l]}
+      errorText={t.remoteError[l]}
+    />
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
     tier: "data",
@@ -337,6 +370,17 @@ export const EXAMPLES: ComponentExamples = {
           "Expand and collapse the parent order. The table exposes treegrid, row level and expansion state; the whole grid still has one Tab stop, and the logical inline-end arrow opens the focused row.",
       },
       render: TreeRowsExample,
+    },
+    {
+      id: "async-pages",
+      title: { "fa-IR": "صفحه‌های راه دور", "en-US": "Remote pages" },
+      description: {
+        "fa-IR":
+          "بارگذاری، لغو، جلوگیری از پاسخِ کهنه و ادغامِ صفحه‌ها از همان کنترل‌گرِ مشترکِ ListBox و VirtualList می‌آید. «سفارش‌های بیشتر» را بزنید: ردیف‌های کنونی هنگام دریافت می‌مانند و حالتِ مشغول روی خودِ پوسته اعلام می‌شود.",
+        "en-US":
+          "Loading, cancellation, stale-result rejection and page merging come from the same controller used by ListBox and VirtualList. Press “Load more orders”: existing rows remain during the request and busy state is announced on the shell itself.",
+      },
+      render: AsyncRowsExample,
     },
   ],
 };

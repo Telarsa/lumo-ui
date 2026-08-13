@@ -8,6 +8,7 @@ import { Menu, MenuCheckboxItem, MenuPopover, MenuTrigger } from "./menu.tsx";
 import { NativeSelect } from "./native-select.tsx";
 import { Pagination } from "./pagination.tsx";
 import { SearchField } from "./search-field.tsx";
+import type { AsyncCollectionPresentation } from "./async-collection.ts";
 import {
   dataGridEmptyVariants,
   dataGridFooterVariants,
@@ -117,6 +118,7 @@ export interface DataGridTableInstance {
 interface DataGridContextValue {
   locale: Locale;
   table: DataGridTableInstance;
+  asyncState: DataGridAsyncState | undefined;
 }
 
 const DataGridContext = createContext<DataGridContextValue | null>(null);
@@ -139,6 +141,8 @@ export interface DataGridProps {
   locale: Locale;
   /** The instance from `useLumoTable`. The grid never creates one. */
   table: DataGridTableInstance;
+  /** Shared loading/error/paging presentation from `useAsyncLumoTable`. */
+  asyncState?: DataGridAsyncState | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -152,11 +156,43 @@ export interface DataGridProps {
  * screen reader's landmark list. `frame.tsx` makes the same call for the same
  * reason.
  */
-export function DataGrid({ locale, table, children, className }: DataGridProps) {
+export type DataGridAsyncState = AsyncCollectionPresentation;
+
+export function DataGrid({ locale, table, asyncState, children, className }: DataGridProps) {
+  const rowCount = table.getRowCount();
+  const stateText =
+    asyncState?.status === "loading" || asyncState?.status === "error"
+      ? asyncState.text
+      : asyncState?.status === "ready" && rowCount === 0
+        ? asyncState.emptyText
+        : null;
+  const stateAction =
+    asyncState?.status === "ready" ? asyncState.loadMore : asyncState?.action;
   return (
-    <DataGridContext.Provider value={{ locale, table }}>
-      <div data-lumo="" className={cn(dataGridVariants(), className)}>
+    <DataGridContext.Provider value={{ locale, table, asyncState }}>
+      <div
+        data-lumo=""
+        {...(asyncState?.status === "loading" ? { "aria-busy": true } : {})}
+        className={cn(dataGridVariants(), className)}
+      >
         {children as ReactNode}
+        {asyncState === undefined ? null : (
+          <div
+            className={cn(
+              "mt-2 flex items-center justify-between gap-2 text-sm text-fg-muted",
+              stateText === null && stateAction === undefined ? "sr-only" : undefined,
+            )}
+          >
+            <span role="status" aria-live="polite">
+              {stateText}
+            </span>
+            {stateAction === undefined ? null : (
+              <Button variant="outline" size="sm" onPress={stateAction.onPress}>
+                {stateAction.label}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </DataGridContext.Provider>
   );
@@ -386,8 +422,10 @@ export interface DataGridEmptyProps {
  * technique without changing visible text or layout.
  */
 export function DataGridEmpty({ children, className }: DataGridEmptyProps) {
-  const { table } = useDataGrid();
-  const isEmpty = table.getRowCount() === 0;
+  const { table, asyncState } = useDataGrid();
+  // Async emptiness belongs to the shared state on the shell. Suppressing this
+  // parallel sentence prevents two live regions from announcing the same result.
+  const isEmpty = asyncState === undefined && table.getRowCount() === 0;
   const [mutationMarker, setMutationMarker] = useState(false);
   useEffect(() => {
     if (!isEmpty) {

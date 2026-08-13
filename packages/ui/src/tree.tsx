@@ -47,6 +47,7 @@ import {
   type StyleProps,
 } from "@lumo-ui/core";
 import { useLumoLocale } from "./locale.ts";
+import type { AsyncCollectionStatus } from "./async-collection.ts";
 // No `"use client"` in that module, so the classes, the two verbs and the
 // chevron arithmetic stay callable from a server component. See
 // tree.variants.ts's header, which records the emitted shape this file owes.
@@ -625,6 +626,8 @@ export interface TreeProps<T extends object> extends TreePropsBase<T> {
    * REQUIRED — see the file header. A treegrid names nothing by itself.
    */
   label: string;
+  /** Shared remote status; status copy stays adjacent to the treegrid. */
+  asyncStatus?: AsyncCollectionStatus | undefined;
   children?: LumoNode | ((item: T) => ReactNode);
   className?: string | undefined;
 }
@@ -684,6 +687,7 @@ export function Tree<T extends object>({
   disabledKeys,
   disallowEmptySelection,
   onAction,
+  asyncStatus,
   // — accepted by the API, unreachable here. Each is documented on its
   //   declaration in `TreePropsBase`; destructured so none reaches the DOM. —
   items,
@@ -904,6 +908,11 @@ export function Tree<T extends object>({
       ref={gridRef}
       role="treegrid"
       aria-label={label}
+      {...(asyncStatus === "loading" ||
+      asyncStatus === "refreshing" ||
+      asyncStatus === "loading-more"
+        ? { "aria-busy": true }
+        : {})}
       // See "THE TAB STOP" in the header. Render body, not an effect.
       tabIndex={focusedKey === null ? 0 : -1}
       data-selection-mode={selectionMode}

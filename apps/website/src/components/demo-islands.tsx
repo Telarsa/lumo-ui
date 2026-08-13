@@ -1713,6 +1713,9 @@ import {
   DataGridPagination,
   DataGridSearch,
   DataGridToolbar,
+  useAsyncLumoTable,
+  type AsyncCollectionPage,
+  type AsyncCollectionRequest,
   type DataGridColumnLabel,
 } from "@lumo-ui/ui";
 import { formatNumber } from "@lumo-ui/core";
@@ -1724,6 +1727,97 @@ export interface DataGridIslandRow {
   city: string;
   /** A real number. It reaches the cell through `formatNumber`, never bare. */
   total: number;
+}
+
+export interface DataGridAsyncIslandProps {
+  locale: Locale;
+  label: string;
+  nameHeader: string;
+  pages: readonly (readonly DataGridIslandRow[])[];
+  loadingText: string;
+  refreshingText: string;
+  loadingMoreText: string;
+  emptyText: string;
+  retryLabel: string;
+  loadMoreLabel: string;
+  errorText: string;
+}
+
+/** Paged rows through the shared transport-independent collection controller. */
+export function DataGridAsyncIsland({
+  locale,
+  label,
+  nameHeader,
+  pages,
+  loadingText,
+  refreshingText,
+  loadingMoreText,
+  emptyText,
+  retryLabel,
+  loadMoreLabel,
+  errorText,
+}: DataGridAsyncIslandProps) {
+  const grid = useAsyncLumoTable({
+    collection: {
+      query: { scope: "recent" },
+      queryKey: "recent-orders",
+      getKey: (row) => row.id,
+      load: ({ cursor, signal }: AsyncCollectionRequest<{ scope: string }, string>) =>
+        new Promise<AsyncCollectionPage<DataGridIslandRow, string>>((resolve, reject) => {
+          const index = cursor === undefined ? 0 : Number(cursor);
+          const timer = globalThis.setTimeout(() => {
+            const items = pages[index] ?? [];
+            const nextIndex = index + 1;
+            resolve({
+              items,
+              ...(nextIndex < pages.length ? { nextCursor: String(nextIndex) } : {}),
+              totalCount: pages.reduce((total, page) => total + page.length, 0),
+            });
+          }, 350);
+          signal.addEventListener(
+            "abort",
+            () => {
+              globalThis.clearTimeout(timer);
+              reject(signal.reason);
+            },
+            { once: true },
+          );
+        }),
+    },
+    table: {
+      locale,
+      columns: [{ id: "name", accessorKey: "name" }],
+      getRowId: (row) => row.id,
+    },
+    messages: {
+      loading: loadingText,
+      refreshing: refreshingText,
+      loadingMore: loadingMoreText,
+      empty: emptyText,
+      retry: retryLabel,
+      loadMore: loadMoreLabel,
+      error: () => errorText,
+    },
+  });
+
+  return (
+    <DataGrid locale={locale} table={grid.table} asyncState={grid.asyncState}>
+      <Table label={label} locale={locale} table={grid.table} className="max-w-xl">
+        <TableHeader>
+          <Column id="name" isRowHeader>
+            {nameHeader}
+          </Column>
+        </TableHeader>
+        <TableBody>
+          {grid.table.getRowModel().rows.map((row) => (
+            <Row key={row.id} row={row}>
+              <Cell isRowHeader>{row.original.name}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+    </DataGrid>
+  );
 }
 
 export interface DataGridIslandProps {

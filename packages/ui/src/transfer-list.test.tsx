@@ -72,4 +72,19 @@ describe("TransferList", () => {
     fireEvent.click(screen.getByRole("option", { name: "Owner" }));
     expect(screen.getByRole("listbox", { name: "Visible fields" }).textContent).toContain("Owner");
   });
+
+  it("loads the source pool without hiding already selected destination values", () => {
+    renderList({
+      items: [items[0]],
+      defaultValue: ["name"],
+      asyncState: { status: "loading", text: "Loading available fields" },
+    });
+
+    expect(
+      screen.getByRole("listbox", { name: "Available fields" }).getAttribute("aria-busy"),
+    ).toBe("true");
+    expect(screen.getByText("Loading available fields")).toBeTruthy();
+    expect(screen.getByRole("listbox", { name: "Available fields" }).querySelectorAll('[role="option"]')).toHaveLength(0);
+    expect(screen.getByRole("option", { name: "Name" })).toBeTruthy();
+  });
 });

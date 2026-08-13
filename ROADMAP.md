@@ -73,9 +73,15 @@ checked individually so a partly integrated engine is not disguised as either
 
 ### Wave 1 — finish the shared enterprise seams
 
-- [ ] Integrate the shared async controller with DataGrid, ComboBox, Select,
-      Tree and TransferList. Keep selection stable across paging, grouping and
-      refresh; add virtualized recipes where corpus size makes it necessary.
+- [x] Integrate the shared async controller with DataGrid, ComboBox, Select,
+      Tree and TransferList. DataGrid owns the full item/controller projection;
+      the collection controls expose caller-authored loading, error, empty and
+      recovery presentation without inventing composite children. TransferList
+      preserves its selected destination while the source changes, and Tree
+      preserves rows while refresh is busy.
+- [ ] Add virtualized async DataGrid and collection recipes where corpus size
+      makes them necessary, with explicit selection stability across paging,
+      grouping, refresh and unmounted rows.
 - [ ] Build PowerSearch's token/typeahead/edit-popover surface over the shipped
       query engine: typed editor catalogue, status/disabled states, overflow,
       saved views and result count.

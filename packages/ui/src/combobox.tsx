@@ -6,6 +6,8 @@ import { Check, ChevronDown } from "lucide-react";
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
+import type { AsyncCollectionPresentation } from "./async-collection.ts";
+import { Button } from "./button.tsx";
 
 /**
  * EXPERIMENT — this file is the React Aria ComboBox rebuilt on Base UI 1.7.0.
@@ -136,6 +138,8 @@ export interface ComboBoxProps<T extends object> {
   children?: LumoNode | ((item: T) => LumoNode);
   /** The collection the render-function form iterates and filters. */
   items?: Iterable<T> | undefined;
+  /** Caller-authored loading/error/empty state from the shared async controller. */
+  asyncState?: AsyncCollectionPresentation | undefined;
   /** The selected key. Maps to Base UI's `value`. */
   selectedKey?: string | null | undefined;
   defaultSelectedKey?: string | null | undefined;
@@ -158,6 +162,7 @@ export function ComboBox<T extends object>({
   placeholder,
   children,
   items,
+  asyncState,
   selectedKey,
   defaultSelectedKey,
   onSelectionChange,
@@ -170,6 +175,15 @@ export function ComboBox<T extends object>({
   className,
   popoverClassName,
 }: ComboBoxProps<T>) {
+  const resolvedItems = items === undefined ? undefined : Array.from(items);
+  const stateText =
+    asyncState?.status === "loading" || asyncState?.status === "error"
+      ? asyncState.text
+      : asyncState?.status === "ready" && resolvedItems?.length === 0
+        ? asyncState.emptyText
+        : null;
+  const stateAction =
+    asyncState?.status === "ready" ? asyncState.loadMore : asyncState?.action;
   // The input's id, chosen here rather than left to Base UI, so the visible
   // label can point at it with a native `htmlFor` — see the comment on the
   // `<label>` below. `useId` is SSR-stable, so the pairing exists in the first
@@ -216,7 +230,7 @@ export function ComboBox<T extends object>({
   return (
     <BaseCombobox.Root
       id={inputId}
-      {...(items === undefined ? {} : { items: Array.from(items) })}
+      {...(resolvedItems === undefined ? {} : { items: resolvedItems })}
       {...(selectedKey === undefined ? {} : { value: selectedKey })}
       {...(defaultSelectedKey === undefined ? {} : { defaultValue: defaultSelectedKey })}
       {...(onSelectionChange === undefined
@@ -271,7 +285,11 @@ export function ComboBox<T extends object>({
          * nothing. `role` is a plain DOM attribute on a plain `<div>`, so this
          * costs nothing and depends on no engine behaviour.
          */}
-        <div role="group" className={comboBoxGroupVariants()}>
+        <div
+          role="group"
+          {...(asyncState?.status === "loading" ? { "aria-busy": true } : {})}
+          className={comboBoxGroupVariants()}
+        >
           <BaseCombobox.Input
             className={comboBoxInputVariants()}
             {...(placeholder === undefined ? {} : { placeholder })}
@@ -309,6 +327,18 @@ export function ComboBox<T extends object>({
               >
                 {children as LumoNode}
               </BaseCombobox.List>
+              {stateText === null && stateAction === undefined ? null : (
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-fg-muted">
+                  <span role="status" aria-live="polite">
+                    {stateText}
+                  </span>
+                  {stateAction === undefined ? null : (
+                    <Button variant="outline" size="sm" onPress={stateAction.onPress}>
+                      {stateAction.label}
+                    </Button>
+                  )}
+                </div>
+              )}
             </BaseCombobox.Popup>
           </BaseCombobox.Positioner>
         </BaseCombobox.Portal>

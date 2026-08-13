@@ -376,6 +376,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "button",
         "popover"
       ],
       "files": [
@@ -383,6 +384,11 @@
           "path": "packages/ui/src/combobox.tsx",
           "type": "registry:ui",
           "target": "components/ui/combobox.tsx"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },
@@ -465,6 +471,11 @@
           "path": "packages/ui/src/data-grid.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/data-grid.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },
@@ -1691,6 +1702,7 @@
         "lucide-react"
       ],
       "registryDependencies": [
+        "button",
         "form",
         "popover"
       ],
@@ -1699,6 +1711,11 @@
           "path": "packages/ui/src/select.tsx",
           "type": "registry:ui",
           "target": "components/ui/select.tsx"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },
@@ -1927,6 +1944,11 @@
           "path": "packages/ui/src/table.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/table.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         },
         {
           "path": "packages/ui/src/filters.shared.ts",
@@ -2238,6 +2260,11 @@
           "path": "packages/ui/src/locale.ts",
           "type": "registry:ui",
           "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },
@@ -2267,6 +2294,11 @@
           "path": "packages/ui/src/locale.ts",
           "type": "registry:ui",
           "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },

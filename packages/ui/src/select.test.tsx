@@ -21,7 +21,8 @@
  * A test that reached for `render()` here would prove nothing.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   Select,
@@ -32,6 +33,8 @@ import {
   SelectTrigger,
 } from "./select.tsx";
 
+afterEach(cleanup);
+
 /** The collapsed control's visible text: the `<span>` `SelectValue` renders. */
 function collapsedValue(html: string): string | undefined {
   const button = /<button[^>]*role="combobox"[^>]*>([\s\S]*?)<\/button>/.exec(html)?.[1];
@@ -39,6 +42,69 @@ function collapsedValue(html: string): string | undefined {
   // The chevron is a sibling `<svg>`; the value is the first `<span>`.
   return /<span[^>]*>([\s\S]*?)<\/span>/.exec(button)?.[1]?.replace(/<[^>]*>/g, "");
 }
+
+describe("Select — shared async collection presentation", () => {
+  it("marks its trigger busy and reports loading outside the option list", () => {
+    render(
+      <Select
+        placeholder="یک شهر انتخاب کنید"
+        aria-label="شهر"
+        defaultOpen
+        asyncState={{ status: "loading", text: "در حال دریافت شهرها" }}
+      >
+        <SelectTrigger />
+        <SelectPopover />
+      </Select>,
+    );
+
+    expect(screen.getByRole("combobox", { name: "شهر" }).getAttribute("aria-busy")).toBe(
+      "true",
+    );
+    expect(screen.getByRole("status").textContent).toBe("در حال دریافت شهرها");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+  });
+
+  it("delivers a failed collection's recovery action without creating an option", () => {
+    const retry = vi.fn();
+    render(
+      <Select
+        placeholder="یک شهر انتخاب کنید"
+        aria-label="شهر"
+        defaultOpen
+        asyncState={{
+          status: "error",
+          text: "دریافت شهرها ناموفق بود",
+          action: { label: "تلاش دوباره", onPress: retry },
+        }}
+      >
+        <SelectTrigger />
+        <SelectPopover />
+      </Select>,
+    );
+
+    expect(screen.getByRole("status").textContent).toBe("دریافت شهرها ناموفق بود");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "تلاش دوباره" }));
+    expect(retry).toHaveBeenCalledOnce();
+  });
+
+  it("announces the caller's empty result when the ready collection has no items", () => {
+    render(
+      <Select
+        placeholder="یک شهر انتخاب کنید"
+        aria-label="شهر"
+        defaultOpen
+        asyncState={{ status: "ready", emptyText: "شهری پیدا نشد" }}
+      >
+        <SelectTrigger />
+        <SelectPopover />
+      </Select>,
+    );
+
+    expect(screen.getByRole("status").textContent).toBe("شهری پیدا نشد");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+  });
+});
 
 describe("the collapsed value resolves the selected key to its item's label", () => {
   it("a defaultSelectedKey renders the item's Persian text, not the key", () => {

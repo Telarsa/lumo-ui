@@ -25,7 +25,8 @@
  * RESOLVES, and a duplicate satisfies that.
  */
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import {
@@ -35,6 +36,8 @@ import {
   AutocompleteListBox,
 } from "./autocomplete.tsx";
 import { Command, CommandInput, CommandItem, CommandList } from "./command.tsx";
+
+afterEach(cleanup);
 
 /** Every `id="…"` in the markup, in document order, duplicates included. */
 function ids(html: string): string[] {
@@ -110,6 +113,65 @@ describe("ComboBox — ids are unique in the first byte", () => {
       </div>,
     );
     expect(duplicates(html)).toEqual([]);
+  });
+});
+
+describe("ComboBox — shared async collection presentation", () => {
+  it("marks the field busy and reports loading without inventing an option", () => {
+    render(
+      <ComboBox
+        label="شهر"
+        showSuggestionsLabel="نمایش پیشنهادها"
+        suggestionsLabel="پیشنهادها"
+        asyncState={{ status: "loading", text: "در حال دریافت شهرها" }}
+      />,
+    );
+
+    expect(screen.getByRole("group").getAttribute("aria-busy")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "نمایش پیشنهادها" }));
+
+    expect(screen.getByRole("status").textContent).toBe("در حال دریافت شهرها");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+  });
+
+  it("keeps a failed request outside the option list and delivers its recovery action", () => {
+    const retry = vi.fn();
+    render(
+      <ComboBox
+        label="شهر"
+        showSuggestionsLabel="نمایش پیشنهادها"
+        suggestionsLabel="پیشنهادها"
+        asyncState={{
+          status: "error",
+          text: "دریافت شهرها ناموفق بود",
+          action: { label: "تلاش دوباره", onPress: retry },
+        }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "نمایش پیشنهادها" }));
+    expect(screen.getByRole("status").textContent).toBe("دریافت شهرها ناموفق بود");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+    fireEvent.click(screen.getByRole("button", { name: "تلاش دوباره" }));
+    expect(retry).toHaveBeenCalledOnce();
+  });
+
+  it("reports a ready empty collection without creating a selectable placeholder", () => {
+    render(
+      <ComboBox
+        label="شهر"
+        showSuggestionsLabel="نمایش پیشنهادها"
+        suggestionsLabel="پیشنهادها"
+        items={[]}
+        asyncState={{ status: "ready", emptyText: "شهری پیدا نشد" }}
+      >
+        {() => null}
+      </ComboBox>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "نمایش پیشنهادها" }));
+    expect(screen.getByRole("status").textContent).toBe("شهری پیدا نشد");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
   });
 });
 

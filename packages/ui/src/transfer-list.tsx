@@ -6,6 +6,7 @@ import { cn, formatNumber, type Key, type LumoNode, type Selection } from "@lumo
 import { Button } from "./button.tsx";
 import { ListBox, ListBoxItem } from "./list-box.tsx";
 import { useLumoLocale } from "./locale.ts";
+import type { AsyncCollectionPresentation } from "./async-collection.ts";
 
 /**
  * Two named listboxes and the movement between them.
@@ -58,6 +59,8 @@ export interface TransferListProps
   value?: readonly Key[] | undefined;
   defaultValue?: readonly Key[] | undefined;
   onValueChange?: ((value: readonly Key[]) => void) | undefined;
+  /** Remote state for the available/source pool; selected values stay usable. */
+  asyncState?: AsyncCollectionPresentation | undefined;
   className?: string | undefined;
 }
 
@@ -95,6 +98,7 @@ export function TransferList({
   value,
   defaultValue = [],
   onValueChange,
+  asyncState,
   className,
   ...props
 }: TransferListProps) {
@@ -149,6 +153,7 @@ export function TransferList({
     <div {...props} data-lumo="" className={cn(transferListVariants(), className)}>
       <ListBox
         label={strings.availableLabel}
+        asyncState={asyncState}
         selectionMode="multiple"
         selectedKeys={availableSelection}
         onSelectionChange={(selection) => setAvailableSelection(keys(selection))}
