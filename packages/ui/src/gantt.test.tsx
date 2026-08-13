@@ -37,9 +37,14 @@ import {
   Gantt,
   ganttBarPlacement,
   ganttDateIn,
+  ganttDate,
   ganttGeometry,
   moveGanttTask,
   resizeGanttTask,
+  ganttCriticalPath,
+  rollupGanttTasks,
+  ganttZoom,
+  ganttDependencyPath,
   type GanttScale,
   type GanttStrings,
   type GanttTask,
@@ -77,6 +82,8 @@ const STRINGS: GanttStrings = {
   resizeStart: (label) => `تغییر آغاز ${label}`,
   resizeEnd: (label) => `تغییر پایان ${label}`,
   resizedTo: (label, from, to) => `${label} اکنون از ${from} تا ${to}`,
+  zoomLabel: "بزرگ‌نمایی خط زمان",
+  resizeSplit: "تغییر پهنای فهرست کارها",
 };
 
 /** A one-week task starting on Nowruz ۱۴۰۵, expressed in GREGORIAN fields. */
@@ -87,6 +94,91 @@ const SPRINT: GanttTask = {
   end: new CalendarDate(GREGORY, 2026, 3, 27),
   progress: 0.4,
 };
+
+describe("Gantt enterprise planning engine", () => {
+  const tasks: GanttTask[] = [
+    { id: "root", label: "Root", start: ganttDate("2026-01-01"), end: ganttDate("2026-01-01") },
+    { id: "a", parentId: "root", label: "A", start: ganttDate("2026-01-01"), end: ganttDate("2026-01-02"), progress: 1 },
+    { id: "b", parentId: "root", label: "B", start: ganttDate("2026-01-03"), end: ganttDate("2026-01-05"), progress: 0.5 },
+    { id: "c", label: "C", start: ganttDate("2026-01-03"), end: ganttDate("2026-01-03") },
+  ];
+
+  it("computes summary rollups and the longest dependency path", () => {
+    const rolled = rollupGanttTasks(tasks);
+    const root = rolled.find((task) => task.id === "root")!;
+    expect(root.start.toString()).toBe("2026-01-01");
+    expect(root.end.toString()).toBe("2026-01-05");
+    expect(root.progress).toBeCloseTo(0.7);
+    expect(
+      ganttCriticalPath(tasks, [
+        { from: "a", to: "b", type: "finish-to-start" },
+        { from: "a", to: "c", type: "finish-to-start" },
+      ]),
+    ).toEqual(["a", "b"]);
+  });
+
+  it("rolls nested descendants through their intermediate summaries", () => {
+    const nested: GanttTask[] = [
+      { id: "portfolio", label: "Portfolio", start: ganttDate("2026-01-10"), end: ganttDate("2026-01-10") },
+      { id: "release", parentId: "portfolio", label: "Release", start: ganttDate("2026-01-09"), end: ganttDate("2026-01-09") },
+      { id: "design", parentId: "release", label: "Design", start: ganttDate("2026-01-01"), end: ganttDate("2026-01-02"), progress: 1 },
+      { id: "build", parentId: "release", label: "Build", start: ganttDate("2026-01-03"), end: ganttDate("2026-01-06"), progress: 0.25 },
+    ];
+
+    const rolled = rollupGanttTasks(nested);
+    const portfolio = rolled.find((task) => task.id === "portfolio")!;
+    const release = rolled.find((task) => task.id === "release")!;
+    expect([release.start.toString(), release.end.toString(), release.progress]).toEqual([
+      "2026-01-01",
+      "2026-01-06",
+      0.5,
+    ]);
+    expect([portfolio.start.toString(), portfolio.end.toString(), portfolio.progress]).toEqual([
+      "2026-01-01",
+      "2026-01-06",
+      0.5,
+    ]);
+  });
+
+  it("rejects dependency cycles instead of inventing a critical path", () => {
+    expect(() =>
+      ganttCriticalPath(tasks, [
+        { from: "a", to: "b", type: "finish-to-start" },
+        { from: "b", to: "a", type: "finish-to-start" },
+      ]),
+    ).toThrow(/cycle/i);
+  });
+
+  it("draws dependency connectors from finish to start and mirrors their physical x under RTL", () => {
+    const geometry = ganttGeometry(tasks, "day", "en-US", {
+      start: ganttDate("2026-01-01"),
+      end: ganttDate("2026-01-05"),
+    });
+    const ltr = ganttDependencyPath(tasks[1]!, tasks[2]!, 1, 2, geometry, "en-US");
+    const rtl = ganttDependencyPath(tasks[1]!, tasks[2]!, 1, 2, geometry, "fa-IR");
+    expect(ltr).toMatch(/^M 40 92 C/);
+    expect(rtl).toMatch(/^M 60 92 C/);
+  });
+
+  it("clamps continuous zoom and exposes a keyboard-resizable split", () => {
+    expect(ganttZoom(1, 0.25)).toBe(1.25);
+    expect(ganttZoom(3.9, 1)).toBe(4);
+    const changes = vi.fn();
+    render(
+      <Gantt
+        label="برنامه"
+        locale="fa-IR"
+        tasks={[SPRINT]}
+        strings={STRINGS}
+        splitSize={220}
+        onSplitSizeChange={changes}
+      />,
+    );
+    const separator = screen.getByRole("separator", { name: STRINGS.resizeSplit });
+    fireEvent.keyDown(separator, { key: "ArrowLeft" });
+    expect(changes).toHaveBeenCalledWith(230);
+  });
+});
 
 /** Every `style="…"` in a server render, as a list of declarations. */
 function styles(html: string): string[] {

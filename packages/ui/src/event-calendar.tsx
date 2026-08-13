@@ -8,19 +8,22 @@ import {
   type CSSProperties,
   type FocusEvent as ReactFocusEvent,
   type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
 } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import {
   endOfMonth,
   endOfWeek,
+  CalendarDateTime,
   parseDate,
   parseDateTime,
+  parseAbsolute,
   startOfMonth,
   startOfWeek,
   toCalendar,
   toCalendarDate,
   type CalendarDate,
-  type CalendarDateTime,
+  type ZonedDateTime,
 } from "@internationalized/date";
 import {
   cn,
@@ -273,7 +276,7 @@ export {
  * every screenshot. A default like `allDay = "All day"` is that defect with a
  * shorter fuse.
  *
- * Six members are FUNCTIONS rather than templates, for the reason
+ * Function members are callbacks rather than templates, for the reason
  * `DateSelector.formatRange` gives at length: two Arabic-number runs with a
  * neutral character between them put that neutral under the PARAGRAPH's
  * direction by the Unicode bidi algorithm, so «۹:۰۰ – ۱۰:۰۰» can render with
@@ -281,46 +284,26 @@ export {
  * and only in Persian. Handing the caller the whole sentence is what lets them
  * place a U+200F or use a word instead of a dash.
  *
- * ═══ WHAT v1 DOES NOT DO ════════════════════════════════════════════════════
+ * The scheduling helpers now cover bounded daily/weekly/monthly recurrence and
+ * exclusions, resource grouping, immutable CRUD, explicit IANA-zone conversion
+ * and snap/work-hour constrained move/resize. Supplying the mutation callbacks
+ * enables keyboard and pointer creation, movement, resizing and deletion; every
+ * completed operation is announced with a required caller-authored string.
  *
- * Listed the way `table.tsx` lists what it lost, because a gap that is written
- * down is a decision and a gap that is not is a bug report. ReUI ships all of
- * these; each is a quarter of work rather than a component, and a scoped
- * component whose limits are written down is worth more than a broad one whose
- * gaps are discovered.
+ * Deliberate remaining limits:
  *
- *  1. **No recurrence.** No RFC 5545 `RRULE`, no `EXDATE`, no expansion of a
- *     series into occurrences. Every event in `events` is one occurrence with
- *     one start and one end. Recurrence in a NON-GREGORIAN calendar is its own
- *     problem — «هر ماه، روز ۳۱» does not exist in the second half of a Jalali
- *     year, and RFC 5545's BYMONTHDAY semantics are defined over a calendar
- *     that has no such rule — so it is a design question, not a feature.
- *  2. **No drag-to-create, no drag-to-move, no edge-resize.** No pointer
- *     gesture writes a value; the component is read-only over `events`. This is
- *     also the axis ReUI's own RTL note is about, and `kanban.tsx` records what
- *     it costs to do properly (hit-test rects, never index arithmetic).
- *  3. **No per-event selection or activation.** Focus is at DAY granularity —
- *     one roving stop over day cells — and `onDaySelect` reports the day. Event
- *     chips are not buttons. A chip that were a button would be a second tab
- *     stop inside a roving-tabindex widget, which is the shape
- *     `composite-tab-stop.ts` measures as broken; doing it properly needs a
- *     two-axis grid navigation model, which is a change to make deliberately.
- *  4. **No resource view.** There is an arbitrary «۳ روز» window, but no
- *     swimlane per room or per person; resources are a second axis with their
- *     own navigation and virtualisation model, not a label prop.
- *  5. **No time-zone conversion.** `CalendarDateTime` is a WALL time with no
- *     zone, so every event is in whatever zone the caller was thinking in and
- *     the component converts nothing. A cross-zone calendar needs
- *     `ZonedDateTime` end to end plus a zone selector, and half of that is
- *     worse than none.
- *  6. **No spanning bars in the month view.** A multi-day event renders one
+ *  1. **No full RFC 5545 editor/parser.** The recurrence model is a bounded,
+ *     typed subset rather than an ambiguous string accepted and partly ignored.
+ *  2. **No resource swimlane renderer.** `groupSchedulerEvents` provides the
+ *     engine boundary, but lane layout/navigation remains product-owned.
+ *  3. **No spanning bars in the month view.** A multi-day event renders one
  *     chip per day it covers, with `continued` on every day after the first,
  *     rather than one bar stretched across a week row. A spanning bar needs a
  *     per-week lane allocator, and its layout is on the axis that mirrors.
- *  7. **No month-cell overlap geometry.** Month cells stack chips in order and
+ *  4. **No month-cell overlap geometry.** Month cells stack chips in order and
  *     overflow to «+۳ بیشتر»; the week, day and N-day views lay events out
  *     against a time axis because those are the views that have one.
- *  8. **No virtualisation.** Every day in the visible period renders every one
+ *  5. **No virtualisation.** Every day in the visible period renders every one
  *     of its events. A month of a thousand events is a `VirtualList` problem
  *     and this component does not pretend otherwise.
  *
@@ -337,12 +320,14 @@ export type EventCalendarView = "month" | "week" | "day" | "days" | "agenda";
 /** A chip's colour. Not announced — the accessible name carries the meaning. */
 export type EventCalendarTone = "accent" | "positive" | "caution" | "critical" | "neutral";
 
-interface EventCalendarEventBase {
+export interface EventCalendarEventBase {
   /** Distinguishes this occurrence from its siblings. Never announced. */
   id: string;
   /** What the chip says and what a screen reader hears. REQUIRED. */
   title: string;
   tone?: EventCalendarTone | undefined;
+  /** Optional scheduler swimlane identity. */
+  resourceId?: string | undefined;
 }
 
 /**
@@ -376,6 +361,157 @@ export interface EventCalendarTimedEvent extends EventCalendarEventBase {
 }
 
 export type EventCalendarEvent = EventCalendarAllDayEvent | EventCalendarTimedEvent;
+
+export interface SchedulerRecurrence {
+  frequency: "daily" | "weekly" | "monthly";
+  interval?: number | undefined;
+  count: number;
+  until?: CalendarDate | CalendarDateTime | undefined;
+  excluded?: readonly CalendarDate[] | undefined;
+}
+
+/** Bounded recurrence expansion; unbounded rules are deliberately unrepresentable. */
+export function expandEventRecurrence(
+  event: EventCalendarEvent,
+  recurrence: SchedulerRecurrence,
+): EventCalendarEvent[] {
+  const occurrences: EventCalendarEvent[] = [];
+  const interval = Math.max(1, Math.trunc(recurrence.interval ?? 1));
+  const step =
+    recurrence.frequency === "daily"
+      ? { days: interval }
+      : recurrence.frequency === "weekly"
+        ? { weeks: interval }
+        : { months: interval };
+  let start = event.start;
+  let end = event.end;
+  for (let index = 0; index < Math.max(0, Math.trunc(recurrence.count)); index += 1) {
+    if (recurrence.until !== undefined && start.compare(recurrence.until as never) > 0) break;
+    const day = toCalendarDate(start);
+    const excluded = recurrence.excluded?.some((candidate) => candidate.compare(day) === 0) ?? false;
+    if (!excluded) {
+      occurrences.push({ ...event, id: `${event.id}@${start.toString()}`, start, end } as EventCalendarEvent);
+    }
+    start = start.add(step);
+    end = end.add(step);
+  }
+  return occurrences;
+}
+
+export function groupSchedulerEvents(
+  events: readonly EventCalendarEvent[],
+): ReadonlyMap<string, readonly EventCalendarEvent[]> {
+  const groups = new Map<string, EventCalendarEvent[]>();
+  for (const event of events) {
+    const key = event.resourceId ?? "";
+    const group = groups.get(key) ?? [];
+    group.push(event);
+    groups.set(key, group);
+  }
+  return groups;
+}
+
+export type SchedulerMutation =
+  | { type: "create"; event: EventCalendarEvent }
+  | { type: "update"; id: string; patch: Partial<EventCalendarEventBase> }
+  | { type: "delete"; id: string };
+
+export function applySchedulerMutation(
+  events: readonly EventCalendarEvent[],
+  mutation: SchedulerMutation,
+): EventCalendarEvent[] {
+  if (mutation.type === "create") return [...events, mutation.event];
+  if (mutation.type === "delete") return events.filter((event) => event.id !== mutation.id);
+  return events.map((event) =>
+    event.id === mutation.id ? ({ ...event, ...mutation.patch } as EventCalendarEvent) : event,
+  );
+}
+
+export interface SchedulerMoveOptions {
+  snapMinutes: number;
+  workday?: readonly [startMinute: number, endMinute: number] | undefined;
+}
+
+/** Shared keyboard/pointer move arithmetic with snap and work-hour clamping. */
+export function moveSchedulerEvent(
+  event: EventCalendarEvent,
+  deltaMinutes: number,
+  options: SchedulerMoveOptions,
+): EventCalendarEvent {
+  if (event.allDay === true) {
+    const days = Math.round(deltaMinutes / 1440);
+    return { ...event, start: event.start.add({ days }), end: event.end.add({ days }) };
+  }
+  const snap = Math.max(1, Math.trunc(options.snapMinutes));
+  const snapped = Math.round(deltaMinutes / snap) * snap;
+  const duration = Math.max(
+    0,
+    (event.end.toDate("UTC").getTime() - event.start.toDate("UTC").getTime()) / 60_000,
+  );
+  const originalMinute = event.start.hour * 60 + event.start.minute;
+  let target = originalMinute + snapped;
+  if (options.workday !== undefined) {
+    target = Math.min(options.workday[1] - duration, Math.max(options.workday[0], target));
+  }
+  const moved = event.start.set({ hour: Math.floor(target / 60), minute: target % 60 });
+  return { ...event, start: moved, end: moved.add({ minutes: duration }) };
+}
+
+export type SchedulerResizeEdge = "start" | "end";
+
+export function resizeSchedulerEvent(
+  event: EventCalendarEvent,
+  edge: SchedulerResizeEdge,
+  deltaMinutes: number,
+  options: SchedulerMoveOptions,
+): EventCalendarEvent {
+  if (event.allDay === true) {
+    const days = Math.round(deltaMinutes / 1440);
+    const candidate = (edge === "start" ? event.start : event.end).add({ days });
+    return edge === "start"
+      ? { ...event, start: candidate.compare(event.end) > 0 ? event.end : candidate }
+      : { ...event, end: candidate.compare(event.start) < 0 ? event.start : candidate };
+  }
+  const snap = Math.max(1, Math.trunc(options.snapMinutes));
+  const snapped = Math.round(deltaMinutes / snap) * snap;
+  const source = edge === "start" ? event.start : event.end;
+  let minute = source.hour * 60 + source.minute + snapped;
+  if (options.workday !== undefined) {
+    minute = Math.min(options.workday[1], Math.max(options.workday[0], minute));
+  }
+  const candidate = source.set({ hour: Math.floor(minute / 60), minute: minute % 60 });
+  return edge === "start"
+    ? { ...event, start: candidate.compare(event.end) >= 0 ? event.end.subtract({ minutes: snap }) : candidate }
+    : { ...event, end: candidate.compare(event.start) <= 0 ? event.start.add({ minutes: snap }) : candidate };
+}
+
+export interface SchedulerZonedEventInput {
+  id: string;
+  title: string;
+  start: string;
+  end: string;
+  timeZone: string;
+  resourceId?: string | undefined;
+}
+
+export interface SchedulerZonedEvent {
+  id: string;
+  title: string;
+  start: ZonedDateTime;
+  end: ZonedDateTime;
+  resourceId?: string | undefined;
+}
+
+/** Converts ISO instants only through the caller's explicit IANA time zone. */
+export function schedulerZonedEvent(input: SchedulerZonedEventInput): SchedulerZonedEvent {
+  return {
+    id: input.id,
+    title: input.title,
+    start: parseAbsolute(input.start, input.timeZone),
+    end: parseAbsolute(input.end, input.timeZone),
+    ...(input.resourceId === undefined ? {} : { resourceId: input.resourceId }),
+  };
+}
 
 /**
  * One event as PLAIN DATA, for the boundary a class instance cannot cross.
@@ -516,6 +652,38 @@ export interface EventCalendarStrings {
   moreEvents: (count: string) => string;
   /** Marks a day that is the middle or end of a multi-day event, e.g. «ادامه». */
   continued: string;
+  /** Announces a completed move from the event's full accessible name. */
+  eventMoved: (eventName: string) => string;
+  /** Announces a completed resize from the event's full accessible name. */
+  eventResized: (eventName: string) => string;
+  /** Announces deletion from the event title. */
+  eventDeleted: (title: string) => string;
+  /** Announces the time range selected for a newly requested event. */
+  eventCreated: (when: string) => string;
+}
+
+export interface SchedulerDraft {
+  day: CalendarDate;
+  startMinute: number;
+  endMinute: number;
+}
+
+/** Turns a calendar-owned draft into a timed event without losing its calendar. */
+export function schedulerDraftEvent(
+  draft: SchedulerDraft,
+  input: Pick<EventCalendarTimedEvent, "id" | "title" | "tone" | "resourceId">,
+): EventCalendarTimedEvent {
+  const at = (minutes: number) =>
+    new CalendarDateTime(
+      draft.day.calendar,
+      draft.day.era,
+      draft.day.year,
+      draft.day.month,
+      draft.day.day,
+      Math.floor(minutes / 60),
+      minutes % 60,
+    );
+  return { ...input, start: at(draft.startMinute), end: at(draft.endMinute) };
 }
 
 /* ════════════════════════════════════════════════════════════════════════════
@@ -811,6 +979,14 @@ export interface EventCalendarProps
   todayDate?: CalendarDate | undefined;
   /** Enter, Space or a click on a day cell. The day is in the reader's calendar. */
   onDaySelect?: ((date: CalendarDate) => void) | undefined;
+  /** Enables keyboard/pointer event move and resize controls. */
+  onEventCreate?: ((draft: SchedulerDraft) => void) | undefined;
+  onEventChange?: ((event: EventCalendarEvent) => void) | undefined;
+  onEventDelete?: ((id: string) => void) | undefined;
+  snapMinutes?: number | undefined;
+  workday?: readonly [startMinute: number, endMinute: number] | undefined;
+  /** Pointer pixels per minute; shared by move and Shift-resize. */
+  pixelsPerMinute?: number | undefined;
   /**
    * How many chips a month cell shows before «+۳ بیشتر». Not announced — a
    * count is not a word — so it may have a default.
@@ -832,6 +1008,12 @@ export function EventCalendar({
   dayCount = 3,
   todayDate,
   onDaySelect,
+  onEventCreate,
+  onEventChange,
+  onEventDelete,
+  snapMinutes = 15,
+  workday,
+  pixelsPerMinute = 2,
   maxEventsPerDay,
   className,
   ...props
@@ -876,6 +1058,7 @@ export function EventCalendar({
    * This is not the tab stop, which is computed in the render body.
    */
   const pendingFocus = useRef(false);
+  const pointerEvent = useRef<{ id: string; originY: number; resize: boolean } | null>(null);
 
   const index = indexEvents(events, locale);
   const segmentsOn = (day: CalendarDate): readonly EventCalendarSegment[] =>
@@ -1022,6 +1205,20 @@ export function EventCalendar({
   const forwardKey = rtl ? "ArrowLeft" : "ArrowRight";
   const backwardKey = rtl ? "ArrowRight" : "ArrowLeft";
 
+  const createAt = (day: CalendarDate, requestedMinute: number) => {
+    if (onEventCreate === undefined) return;
+    const stepMinutes = Math.max(1, Math.round(snapMinutes));
+    const [minimum, maximum] = workday ?? [0, MINUTES_PER_DAY];
+    const snapped = Math.round(requestedMinute / stepMinutes) * stepMinutes;
+    const startMinute = Math.max(minimum, Math.min(snapped, maximum - stepMinutes));
+    const endMinute = Math.min(maximum, startMinute + stepMinutes);
+    const draft = { day: toCalendar(day, calendar), startMinute, endMinute };
+    onEventCreate(draft);
+    setAnnouncement(
+      strings.eventCreated(strings.range(timeText(startMinute, locale), timeText(endMinute, locale))),
+    );
+  };
+
   function onGridKeyDown(event: ReactKeyboardEvent<HTMLDivElement>) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     switch (event.key) {
@@ -1053,6 +1250,21 @@ export function EventCalendar({
       case " ":
         onDaySelect?.(focus);
         break;
+      case "c":
+      case "C":
+        if (onEventCreate === undefined || (event.target as HTMLElement).closest("button") !== null) return;
+        createAt(focus, workday?.[0] ?? 9 * 60);
+        break;
+      case "e":
+      case "E": {
+        if ((event.target as HTMLElement).closest("button") !== null) return;
+        const control = gridRef.current?.querySelector<HTMLElement>(
+          '[data-lumo-focused="true"] [data-lumo-event-control]',
+        );
+        if (control === undefined || control === null) return;
+        control.focus();
+        break;
+      }
       default:
         return;
     }
@@ -1088,14 +1300,75 @@ export function EventCalendar({
         ? strings.allDay
         : strings.range(timeText(segment.startMinute, locale), timeText(segment.endMinute, locale));
     const name = strings.eventLabel(segment.event.title, when);
+    const interactive = onEventChange !== undefined && segment.event.allDay !== true;
+    const changeBy = (minutes: number, resize: boolean) => {
+      const next = resize
+        ? resizeSchedulerEvent(segment.event, "end", minutes, { snapMinutes, workday })
+        : moveSchedulerEvent(segment.event, minutes, { snapMinutes, workday });
+      onEventChange?.(next);
+      const changed = indexEvents([next], locale).get(dayKey(toCalendarDate(next.start)))?.[0];
+      const nextWhen =
+        changed?.startMinute === null || changed?.endMinute === null || changed === undefined
+          ? strings.allDay
+          : strings.range(timeText(changed.startMinute, locale), timeText(changed.endMinute, locale));
+      const changedName = strings.eventLabel(next.title, nextWhen);
+      setAnnouncement(resize ? strings.eventResized(changedName) : strings.eventMoved(changedName));
+    };
+    const control = interactive ? (
+      <button
+        type="button"
+        data-lumo=""
+        data-lumo-event-control=""
+        tabIndex={-1}
+        aria-label={segment.continued ? `${strings.continued} ${name}` : name}
+        aria-keyshortcuts="ArrowLeft ArrowRight Shift+ArrowLeft Shift+ArrowRight Delete"
+        className="size-full touch-none text-start"
+        onKeyDown={(event) => {
+          const later = rtl ? "ArrowLeft" : "ArrowRight";
+          const earlier = rtl ? "ArrowRight" : "ArrowLeft";
+          if (event.key === "Delete" && onEventDelete !== undefined) {
+            event.preventDefault();
+            event.stopPropagation();
+            event.currentTarget.closest<HTMLElement>('[role="gridcell"]')?.focus();
+            onEventDelete(segment.event.id);
+            setAnnouncement(strings.eventDeleted(segment.event.title));
+            return;
+          }
+          if (event.key !== later && event.key !== earlier) return;
+          event.preventDefault();
+          event.stopPropagation();
+          changeBy((event.key === later ? 1 : -1) * snapMinutes, event.shiftKey);
+        }}
+        onPointerDown={(event: ReactPointerEvent<HTMLButtonElement>) => {
+          pointerEvent.current = {
+            id: segment.event.id,
+            originY: event.clientY,
+            resize: event.shiftKey,
+          };
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+        }}
+        onPointerUp={(event) => {
+          const state = pointerEvent.current;
+          pointerEvent.current = null;
+          if (state === null || state.id !== segment.event.id) return;
+          changeBy((event.clientY - state.originY) / Math.max(0.1, pixelsPerMinute), state.resize);
+        }}
+      >
+        <span aria-hidden="true">{segment.event.title}</span>
+      </button>
+    ) : (
+      <>
+        <span className="sr-only">{segment.continued ? `${strings.continued} ${name}` : name}</span>
+        <span aria-hidden="true">{segment.event.title}</span>
+      </>
+    );
     return (
       <li
         key={key}
         className={eventCalendarChipVariants({ tone: segment.event.tone ?? "accent", filled })}
         {...(style === undefined ? {} : { style })}
       >
-        <span className="sr-only">{segment.continued ? `${strings.continued} ${name}` : name}</span>
-        <span aria-hidden="true">{segment.event.title}</span>
+        {control}
       </li>
     );
   };
@@ -1152,6 +1425,9 @@ export function EventCalendar({
                   data-lumo=""
                   role="gridcell"
                   aria-label={dayName(day)}
+                  {...(onEventCreate === undefined && onEventChange === undefined
+                    ? {}
+                    : { "aria-keyshortcuts": [onEventCreate === undefined ? "" : "C", onEventChange === undefined ? "" : "E"].filter(Boolean).join(" ") })}
                   tabIndex={entered && isFocus ? 0 : -1}
                   data-lumo-focused={isFocus ? "true" : "false"}
                   className={eventCalendarDayCellVariants({
@@ -1264,12 +1540,21 @@ export function EventCalendar({
                 data-lumo=""
                 role="gridcell"
                 aria-label={dayName(day)}
+                {...(onEventCreate === undefined && onEventChange === undefined
+                  ? {}
+                  : { "aria-keyshortcuts": [onEventCreate === undefined ? "" : "C", onEventChange === undefined ? "" : "E"].filter(Boolean).join(" ") })}
                 tabIndex={entered && key === focusKey ? 0 : -1}
                 data-lumo-focused={key === focusKey ? "true" : "false"}
                 className={eventCalendarWeekCellVariants({ today: isToday(day) })}
                 onClick={() => {
                   moveFocusTo(day);
                   onDaySelect?.(day);
+                }}
+                onDoubleClick={(event) => {
+                  if (onEventCreate === undefined || (event.target as HTMLElement).closest("button") !== null) return;
+                  const box = event.currentTarget.getBoundingClientRect();
+                  if (box.height <= 0) return;
+                  createAt(day, ((event.clientY - box.top) / box.height) * MINUTES_PER_DAY);
                 }}
               >
                 <ul className={eventCalendarAllDayVariants()}>

@@ -1,7 +1,7 @@
 /**
- * Breadth floor for the 98-module mutation campaign.
+ * Breadth floor for the 99-module mutation campaign.
  *
- * Ninety-six implementation modules render styled DOM and therefore contain
+ * Ninety-seven implementation modules render styled DOM and therefore contain
  * JSX `className` assignments. Removing those assignments from one module is an
  * observable visual mutation: the affected part loses its component styling.
  * The two honest non-visual modules have behavior-specific anchors instead:
@@ -29,8 +29,8 @@ const behaviorAnchors: Readonly<Record<string, string>> = {
 };
 
 describe("the systematic component mutation floor", () => {
-  it("grades the declared 98-module catalogue", () => {
-    expect(componentFiles).toHaveLength(98);
+  it("grades the declared 99-module catalogue", () => {
+    expect(componentFiles).toHaveLength(99);
   });
 
   it.each(componentFiles)("%s preserves its campaign anchor", (file) => {

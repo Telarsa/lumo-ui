@@ -35,6 +35,10 @@ import {
   DataGridPagination,
   DataGridSearch,
   DataGridToolbar,
+  DataGridEditableCell,
+  aggregateDataGrid,
+  dataGridPinnedStyle,
+  reorderDataGridItems,
   type DataGridColumn,
   type DataGridTableInstance,
 } from "./data-grid.tsx";
@@ -50,6 +54,66 @@ import {
 } from "./table.tsx";
 
 afterEach(cleanup);
+
+describe("DataGrid enterprise operations", () => {
+  it("pins against logical edges and reorders by stable id", () => {
+    expect(dataGridPinnedStyle("start", 24)).toEqual({ position: "sticky", insetInlineStart: 24 });
+    expect(dataGridPinnedStyle("end", 12)).toEqual({ position: "sticky", insetInlineEnd: 12 });
+    expect(reorderDataGridItems([{ id: "a" }, { id: "b" }, { id: "c" }], "c", "a").map((x) => x.id)).toEqual(["c", "a", "b"]);
+  });
+
+  it("aggregates visible rows with explicit column reducers", () => {
+    expect(
+      aggregateDataGrid(
+        [{ total: 10, owner: "a" }, { total: 15, owner: "b" }, { total: 5, owner: "a" }],
+        { total: "sum", owner: "unique-count" },
+      ),
+    ).toEqual({ total: 30, owner: 2 });
+  });
+
+  it("keeps 100k-row pure operations inside the documented one-second envelope", () => {
+    const rows = Array.from({ length: 100_000 }, (_, index) => ({
+      id: `row-${index}`,
+      total: index % 100,
+    }));
+    const started = performance.now();
+    const totals = aggregateDataGrid(rows, { total: "sum" });
+    const reordered = reorderDataGridItems(rows, "row-99999", "row-0");
+    const elapsed = performance.now() - started;
+    expect(totals.total).toBe(4_950_000);
+    expect(reordered[0]?.id).toBe("row-99999");
+    expect(elapsed).toBeLessThan(1_000);
+  });
+
+  it("commits cell edits on Enter and restores the source value on Escape", () => {
+    const commit = vi.fn();
+    const { rerender } = render(
+      <DataGridEditableCell
+        label="ویرایش مبلغ"
+        value="10"
+        onCommit={commit}
+        cancelLabel="لغو ویرایش"
+      />,
+    );
+    const editor = screen.getByRole("textbox", { name: "ویرایش مبلغ" });
+    fireEvent.change(editor, { target: { value: "20" } });
+    fireEvent.keyDown(editor, { key: "Enter" });
+    expect(commit).toHaveBeenCalledWith("20");
+
+    rerender(
+      <DataGridEditableCell
+        label="ویرایش مبلغ"
+        value="10"
+        onCommit={commit}
+        cancelLabel="لغو ویرایش"
+      />,
+    );
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "99" } });
+    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Escape" });
+    expect((screen.getByRole("textbox") as HTMLInputElement).value).toBe("10");
+    expect(commit).toHaveBeenCalledTimes(1);
+  });
+});
 
 /* ════════════════════════════════════════════════════════════════════════════
  * A FAKE THAT IS EXACTLY THE SEAM

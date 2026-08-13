@@ -7,6 +7,11 @@ export interface LumoHtmlProps {
   children: LumoNode;
   /** Passed through to `<html>`; typically a font variable class. */
   className?: string | undefined;
+  /**
+   * A pre-hydration script intentionally changes an attribute on `<html>`.
+   * Keep opt-in: ordinary document mismatches must remain visible.
+   */
+  suppressHydrationWarning?: boolean | undefined;
 }
 
 /**
@@ -38,13 +43,18 @@ export interface LumoHtmlProps {
  * `documentElement.lang` must equal the locale implied by the route path, and
  * `dir` must equal what `Intl` says for it.
  */
-export function LumoHtml({ lang, children, className }: LumoHtmlProps) {
+export function LumoHtml({ lang, children, className, suppressHydrationWarning }: LumoHtmlProps) {
   return (
     // THE one sanctioned `<html>`. The rule says "use LumoHtml instead"; this IS
     // LumoHtml, so it has nowhere to redirect to. Exempted here and nowhere else,
     // which is what keeps `dir` derived from `lang` in exactly one place.
     // eslint-disable-next-line no-restricted-syntax -- this is LumoHtml itself
-    <html lang={lang} dir={direction(lang)} className={className}>
+    <html
+      lang={lang}
+      dir={direction(lang)}
+      className={className}
+      suppressHydrationWarning={suppressHydrationWarning}
+    >
       {children}
     </html>
   );

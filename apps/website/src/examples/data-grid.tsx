@@ -40,6 +40,11 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * sentence to the caller, who can place an isolate if their wording needs one.
  * This file assembles it from two words, which is honest for this phrasing and
  * is not a general licence — `demo-islands.tsx` says the same from its side.
+ *
+ * The public engine additionally enables logical start/end pinning, column and
+ * row ordering, transactional cell editing, grouping/aggregation, native-table
+ * virtualization and infinite loading. Those are orthogonal contracts rather
+ * than a second monolithic grid component.
  */
 
 const t = {

@@ -17,8 +17,8 @@ const files = readdirSync(sourceDirectory)
   .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
   .sort();
 
-if (files.length !== 98) {
-  throw new Error(`Expected 98 implementation modules, found ${files.length}`);
+if (files.length !== 99) {
+  throw new Error(`Expected 99 implementation modules, found ${files.length}`);
 }
 
 /**

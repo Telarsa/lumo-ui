@@ -33,6 +33,11 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * grid is built in the calendar the reader counts in rather than in
  * milliseconds. That is the entire point of the component, and it is visible on
  * this page by switching the language.
+ *
+ * In the timed views press C on a focused day, or double-click its time column,
+ * to create a snapped event. Arrow keys on an event move it in logical time;
+ * Shift+Arrow resizes it and Delete removes it. Each mutation is reflected in
+ * the example's controlled state and announced in the page's language.
  */
 
 const t = {
@@ -57,6 +62,11 @@ const t = {
   events: { "fa-IR": "رویداد", "en-US": "events" },
   more: { "fa-IR": "رویداد دیگر", "en-US": "more" },
   today: { "fa-IR": "امروز", "en-US": "Today" },
+  moved: { "fa-IR": "جابجا شد", "en-US": "Moved" },
+  resized: { "fa-IR": "تغییر اندازه یافت", "en-US": "Resized" },
+  deleted: { "fa-IR": "حذف شد", "en-US": "Deleted" },
+  created: { "fa-IR": "ساخته شد", "en-US": "Created" },
+  newEvent: { "fa-IR": "رویداد تازه", "en-US": "New event" },
 
   standup: { "fa-IR": "جلسهٔ روزانه", "en-US": "Standup" },
   review: { "fa-IR": "بازبینی طراحی", "en-US": "Design review" },
@@ -139,6 +149,11 @@ function MonthExample(l: Locale) {
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
       todayWord={t.today[l]}
+      eventMovedWord={t.moved[l]}
+      eventResizedWord={t.resized[l]}
+      eventDeletedWord={t.deleted[l]}
+      eventCreatedWord={t.created[l]}
+      newEventTitle={t.newEvent[l]}
       focusedDay={ANCHOR}
       todayDay={ANCHOR}
       events={workWeek(l)}
@@ -166,6 +181,11 @@ function WeekExample(l: Locale) {
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
       todayWord={t.today[l]}
+      eventMovedWord={t.moved[l]}
+      eventResizedWord={t.resized[l]}
+      eventDeletedWord={t.deleted[l]}
+      eventCreatedWord={t.created[l]}
+      newEventTitle={t.newEvent[l]}
       focusedDay={ANCHOR}
       todayDay={ANCHOR}
       defaultView="week"
@@ -194,6 +214,11 @@ function DayExample(l: Locale) {
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
       todayWord={t.today[l]}
+      eventMovedWord={t.moved[l]}
+      eventResizedWord={t.resized[l]}
+      eventDeletedWord={t.deleted[l]}
+      eventCreatedWord={t.created[l]}
+      newEventTitle={t.newEvent[l]}
       focusedDay={ANCHOR}
       todayDay={ANCHOR}
       defaultView="day"
@@ -222,6 +247,11 @@ function DaysExample(l: Locale) {
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
       todayWord={t.today[l]}
+      eventMovedWord={t.moved[l]}
+      eventResizedWord={t.resized[l]}
+      eventDeletedWord={t.deleted[l]}
+      eventCreatedWord={t.created[l]}
+      newEventTitle={t.newEvent[l]}
       focusedDay={ANCHOR}
       todayDay={ANCHOR}
       defaultView="days"
@@ -251,6 +281,11 @@ function AgendaExample(l: Locale) {
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
       todayWord={t.today[l]}
+      eventMovedWord={t.moved[l]}
+      eventResizedWord={t.resized[l]}
+      eventDeletedWord={t.deleted[l]}
+      eventCreatedWord={t.created[l]}
+      newEventTitle={t.newEvent[l]}
       focusedDay={ANCHOR}
       defaultView="agenda"
       events={[
@@ -288,6 +323,11 @@ function AllDayExample(l: Locale) {
       eventsWord={t.events[l]}
       moreWord={t.more[l]}
       todayWord={t.today[l]}
+      eventMovedWord={t.moved[l]}
+      eventResizedWord={t.resized[l]}
+      eventDeletedWord={t.deleted[l]}
+      eventCreatedWord={t.created[l]}
+      newEventTitle={t.newEvent[l]}
       focusedDay={ANCHOR}
       todayDay={ANCHOR}
       maxEventsPerDay={2}

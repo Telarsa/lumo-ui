@@ -16,16 +16,22 @@ import {
 import { ArrowDown, ArrowUp, ChevronsUpDown, ChevronDown } from "lucide-react";
 import {
   columnFilteringFeature,
+  columnGroupingFeature,
+  columnOrderingFeature,
+  columnPinningFeature,
   columnResizingFeature,
   columnSizingFeature,
   columnVisibilityFeature,
   createExpandedRowModel,
   createFilteredRowModel,
+  createGroupedRowModel,
   createPaginatedRowModel,
   createSortedRowModel,
   filterFn_includesString,
   globalFilteringFeature,
   rowPaginationFeature,
+  rowPinningFeature,
+  rowAggregationFeature,
   rowExpandingFeature,
   rowSelectionFeature,
   rowSortingFeature,
@@ -283,6 +289,11 @@ export const lumoTableFeatures = tableFeatures({
   // the same argument this block already makes about `rowSortingFeature`: a
   // consumer who forgets it gets a menu whose toggles tick and hide nothing.
   columnVisibilityFeature,
+  columnOrderingFeature,
+  columnPinningFeature,
+  columnGroupingFeature,
+  rowPinningFeature,
+  rowAggregationFeature,
   sortedRowModel: createSortedRowModel(),
   filteredRowModel: createFilteredRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
@@ -355,6 +366,7 @@ export function useLumoTable<TData extends RowData>(options: LumoTableOptions<TD
     // names a built-in still gets it, and a column that names nothing stops
     // getting code-unit order.
     defaultColumn: { sortFn, ...defaultColumn },
+    getGroupedRowModel: createGroupedRowModel(),
     ...rest,
   } as Parameters<typeof useTable<LumoTableFeatures, TData>>[0]);
 }
@@ -1214,7 +1226,7 @@ export function VirtualTableBody<TRow extends LumoTableRow>({
         const row = rows[item.index]!;
         return (
           <RowContext.Provider key={item.key} value={{ index: item.index + 1, row }}>
-            <Row row={row} data-index={item.index}>
+            <Row ref={virtual.measureElement} row={row} data-index={item.index}>
               {children(row, item.index)}
             </Row>
           </RowContext.Provider>

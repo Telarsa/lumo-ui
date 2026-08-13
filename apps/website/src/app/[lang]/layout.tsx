@@ -48,7 +48,7 @@ export default async function LocaleLayout({
 }) {
   const lang = assertLocale((await params).lang);
   return (
-    <LumoHtml lang={lang} className={fontVariables}>
+    <LumoHtml lang={lang} className={fontVariables} suppressHydrationWarning>
       <head>
         <ThemeScript />
       </head>

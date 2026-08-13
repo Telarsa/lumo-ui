@@ -26,7 +26,7 @@
  * never reads a clock during render.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -45,6 +45,12 @@ import {
   EventCalendar,
   indexEvents,
   layoutDayEvents,
+  applySchedulerMutation,
+  expandEventRecurrence,
+  groupSchedulerEvents,
+  moveSchedulerEvent,
+  resizeSchedulerEvent,
+  schedulerZonedEvent,
   type EventCalendarEvent,
   type EventCalendarStrings,
 } from "./event-calendar.tsx";
@@ -56,6 +62,132 @@ const PERSIAN: Calendar = createCalendar("persian");
 const ANCHOR = new CalendarDate(GREGORY, 2026, 8, 11);
 
 afterEach(cleanup);
+
+describe("scheduler engine", () => {
+  const base: EventCalendarEvent = {
+    id: "standup",
+    title: "Standup",
+    resourceId: "team-a",
+    start: new CalendarDateTime(GREGORY, 2026, 8, 11, 9),
+    end: new CalendarDateTime(GREGORY, 2026, 8, 11, 9, 30),
+  };
+
+  it("expands bounded recurrence with exclusions and occurrence-stable ids", () => {
+    const occurrences = expandEventRecurrence(base, {
+      frequency: "daily",
+      count: 4,
+      excluded: [new CalendarDate(GREGORY, 2026, 8, 12)],
+    });
+    expect(occurrences.map((event) => event.id)).toEqual([
+      "standup@2026-08-11T09:00:00",
+      "standup@2026-08-13T09:00:00",
+      "standup@2026-08-14T09:00:00",
+    ]);
+  });
+
+  it("groups resources and applies create/update/delete without mutating source arrays", () => {
+    const other = { ...base, id: "other", resourceId: "team-b" };
+    expect([...groupSchedulerEvents([base, other]).keys()]).toEqual(["team-a", "team-b"]);
+    const created = applySchedulerMutation([base], { type: "create", event: other });
+    const updated = applySchedulerMutation(created, {
+      type: "update",
+      id: "standup",
+      patch: { title: "Daily" },
+    });
+    expect(updated.map((event) => event.title)).toEqual(["Daily", "Standup"]);
+    expect(applySchedulerMutation(updated, { type: "delete", id: "other" })).toHaveLength(1);
+    expect(base.title).toBe("Standup");
+  });
+
+  it("snaps keyboard/pointer moves and clamps them to working hours", () => {
+    const moved = moveSchedulerEvent(base, 17, { snapMinutes: 15, workday: [8 * 60, 17 * 60] });
+    expect((moved.start as CalendarDateTime).hour).toBe(9);
+    expect((moved.start as CalendarDateTime).minute).toBe(15);
+    const clamped = moveSchedulerEvent(base, 24 * 60, {
+      snapMinutes: 15,
+      workday: [8 * 60, 17 * 60],
+    });
+    expect((clamped.end as CalendarDateTime).hour).toBe(17);
+  });
+
+  it("resizes either timed edge on the same snap/work-hour contract", () => {
+    const later = resizeSchedulerEvent(base, "end", 22, {
+      snapMinutes: 15,
+      workday: [8 * 60, 17 * 60],
+    });
+    expect([(later.end as CalendarDateTime).hour, (later.end as CalendarDateTime).minute]).toEqual([9, 45]);
+    const guarded = resizeSchedulerEvent(base, "start", 120, { snapMinutes: 15 });
+    expect((guarded.start as CalendarDateTime).compare(guarded.end as CalendarDateTime)).toBeLessThan(0);
+  });
+
+  it("routes logical RTL keyboard move/resize/delete through interactive event chips", () => {
+    const change = vi.fn();
+    const remove = vi.fn();
+    mount(
+      "fa-IR",
+      calendarFor("fa-IR", [base], {
+        defaultView: "day",
+        onEventChange: change,
+        onEventDelete: remove,
+        snapMinutes: 15,
+      }),
+    );
+    const event = screen.getByRole("button", { name: /Standup/ });
+    expect(event.tabIndex).toBe(-1);
+    fireEvent.keyDown(screen.getByRole("gridcell"), { key: "e" });
+    expect(document.activeElement).toBe(event);
+    fireEvent.keyDown(event, { key: "ArrowLeft" });
+    expect((change.mock.calls[0]?.[0].start as CalendarDateTime).minute).toBe(15);
+    fireEvent.keyDown(screen.getByRole("button", { name: /Standup/ }), { key: "ArrowLeft", shiftKey: true });
+    expect((change.mock.calls[1]?.[0].end as CalendarDateTime).minute).toBe(45);
+    fireEvent.keyDown(screen.getByRole("button", { name: /Standup/ }), { key: "Delete" });
+    expect(remove).toHaveBeenCalledWith("standup");
+  });
+
+  it("creates snapped timed drafts from both the keyboard and pointer", () => {
+    const create = vi.fn();
+    mount(
+      "en-US",
+      calendarFor("en-US", [], {
+        defaultView: "day",
+        onEventCreate: create,
+        workday: [8 * 60, 17 * 60],
+        snapMinutes: 30,
+      }),
+    );
+    const cell = screen.getByRole("gridcell");
+
+    fireEvent.keyDown(cell, { key: "c" });
+    expect(create.mock.calls[0]?.[0]).toMatchObject({ startMinute: 480, endMinute: 510 });
+
+    vi.spyOn(cell, "getBoundingClientRect").mockReturnValue({
+      x: 0,
+      y: 100,
+      top: 100,
+      left: 0,
+      right: 200,
+      bottom: 1540,
+      width: 200,
+      height: 1440,
+      toJSON: () => ({}),
+    });
+    fireEvent.doubleClick(cell, { clientY: 700 });
+    expect(create.mock.calls[1]?.[0]).toMatchObject({ startMinute: 600, endMinute: 630 });
+    expect(screen.getByRole("status").textContent).toContain("Created");
+  });
+
+  it("converts an absolute instant through an explicit IANA zone", () => {
+    const event = schedulerZonedEvent({
+      id: "zone",
+      title: "Tehran",
+      start: "2026-03-21T10:00:00Z",
+      end: "2026-03-21T11:00:00Z",
+      timeZone: "Asia/Tehran",
+    });
+    expect(event.start.timeZone).toBe("Asia/Tehran");
+    expect([event.start.hour, event.start.minute]).toEqual([13, 30]);
+  });
+});
 
 /* ════════════════════════════════════════════════════════════════════════════
  * THE STRINGS
@@ -83,6 +215,10 @@ const FA: EventCalendarStrings = {
   range: (from, to) => `${from} تا ${to}`,
   moreEvents: (count) => `${count} رویداد دیگر`,
   continued: "ادامهٔ",
+  eventMoved: (name) => `جابجا شد، ${name}`,
+  eventResized: (name) => `تغییر اندازه یافت، ${name}`,
+  eventDeleted: (title) => `حذف شد، ${title}`,
+  eventCreated: (when) => `ساخته شد، ${when}`,
 };
 
 const EN: EventCalendarStrings = {
@@ -102,6 +238,10 @@ const EN: EventCalendarStrings = {
   range: (from, to) => `${from} to ${to}`,
   moreEvents: (count) => `${count} more`,
   continued: "Continued:",
+  eventMoved: (name) => `Moved, ${name}`,
+  eventResized: (name) => `Resized, ${name}`,
+  eventDeleted: (title) => `Deleted, ${title}`,
+  eventCreated: (when) => `Created, ${when}`,
 };
 
 const stringsFor = (locale: Locale) => (locale === "fa-IR" ? FA : EN);

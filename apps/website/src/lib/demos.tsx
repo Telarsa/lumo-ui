@@ -1836,6 +1836,7 @@ const DEMOS: Demo[] = [
         label={copy.dropFiles[l]}
         triggerLabel={copy.chooseFile[l]}
         allowsMultiple
+        allowsDirectories
         acceptedFileTypes={["image/*", "application/pdf"]}
       >
         <p className="text-xs text-fg-muted">{copy.uploadHint[l]}</p>

@@ -38,12 +38,19 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * The one genuine regression is stated on the last example: that hidden button
  * was itself a tab stop, so the area could receive a clipboard paste on its own.
  * Now something inside must be focused first.
+ *
+ * The primary picker accepts recursive directory drops. The public acquisition
+ * and transport helpers also cover camera capture, transforms, stable reorder,
+ * chunk progress, pause/resume, cancellation and retry; those policies stay
+ * outside the visual list so applications can bring their own transport.
  */
 
 const t = {
   dropFiles: { "fa-IR": "کشیدن و رها کردن پرونده‌ها", "en-US": "Drag and drop your files" },
   chooseFile: { "fa-IR": "انتخاب پرونده", "en-US": "Choose a file" },
   removeWord: { "fa-IR": "حذف", "en-US": "Remove" },
+  moveEarlier: { "fa-IR": "انتقال به بالاتر", "en-US": "Move earlier" },
+  moveLater: { "fa-IR": "انتقال به پایین‌تر", "en-US": "Move later" },
 
   uploadHint: {
     "fa-IR": "تصویر یا سند چاپی، هرکدام تا ده مگابایت.",
@@ -108,6 +115,7 @@ function DropAreaExample(l: Locale) {
       removeWord={t.removeWord[l]}
       acceptedFileTypes={["image/*", "application/pdf"]}
       allowsMultiple
+      allowsDirectories
     />
   );
 }
@@ -121,6 +129,8 @@ function SizeUnitExample(l: Locale) {
       removeWord={t.removeWord[l]}
       allowsMultiple
       initialFiles={seeded(l)}
+      moveEarlierWord={t.moveEarlier[l]}
+      moveLaterWord={t.moveLater[l]}
     />
   );
 }
@@ -134,6 +144,7 @@ function SingleFileExample(l: Locale) {
       hint={t.avatarHint[l]}
       removeWord={t.removeWord[l]}
       acceptedFileTypes={["image/png", "image/jpeg"]}
+      capture="environment"
     />
   );
 }

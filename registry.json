@@ -447,7 +447,7 @@
       "name": "data-grid",
       "type": "registry:ui",
       "title": "Data Grid",
-      "description": "The chrome around a `<Table>` — search, column visibility, paging, emptiness.",
+      "description": "Logical sticky placement: identical bytes in LTR/RTL, mirrored by CSS.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1460,6 +1460,7 @@
       "description": "False for operators such as “is empty”.",
       "author": "Telarsa",
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core"
       ],
       "registryDependencies": [
@@ -1473,6 +1474,11 @@
           "path": "packages/ui/src/power-search.tsx",
           "type": "registry:ui",
           "target": "components/ui/power-search.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         },
         {
           "path": "packages/ui/src/filters.shared.ts",
@@ -1977,6 +1983,11 @@
           "path": "packages/ui/src/async-collection.ts",
           "type": "registry:ui",
           "target": "components/ui/async-collection.ts"
+        },
+        {
+          "path": "packages/ui/src/virtualizer.ts",
+          "type": "registry:ui",
+          "target": "components/ui/virtualizer.ts"
         },
         {
           "path": "packages/ui/src/filters.shared.ts",

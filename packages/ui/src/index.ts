@@ -377,6 +377,10 @@ export {
   DataGridPagination,
   DataGridSearch,
   DataGridToolbar,
+  DataGridEditableCell,
+  aggregateDataGrid,
+  dataGridPinnedStyle,
+  reorderDataGridItems,
   dataGridEmptyVariants,
   dataGridFooterVariants,
   dataGridPageSizeVariants,
@@ -395,6 +399,9 @@ export type {
   DataGridSearchProps,
   DataGridTableInstance,
   DataGridToolbarProps,
+  DataGridAggregate,
+  DataGridEditableCellProps,
+  DataGridPin,
 } from "./data-grid.tsx";
 
 export { ContextMenu, ContextMenuTrigger } from "./context-menu.tsx";
@@ -760,7 +767,15 @@ export type {
   ReadOnlyRatingProps,
 } from "./rating.tsx";
 
-export { FileUpload, FileUploadItem, FileUploadList } from "./file-upload.tsx";
+export {
+  FileUpload,
+  FileUploadItem,
+  FileUploadList,
+  collectDroppedFiles,
+  createUploadController,
+  reorderUploadItems,
+  transformUploadFiles,
+} from "./file-upload.tsx";
 export type {
   FileUploadLifecycle,
   FileUploadLifecycleAction,
@@ -769,6 +784,13 @@ export type {
   FileUploadProps,
   FileUploadRejection,
   FileUploadRejectionReason,
+  UploadChunkContext,
+  UploadController,
+  UploadControllerOptions,
+  UploadControllerSnapshot,
+  UploadControllerStatus,
+  UploadDropEntry,
+  UploadTransform,
 } from "./file-upload.tsx";
 
 /*
@@ -1371,9 +1393,14 @@ export {
   ganttGeometry,
   moveGanttTask,
   resizeGanttTask,
+  ganttCriticalPath,
+  ganttDependencyPath,
+  ganttZoom,
+  rollupGanttTasks,
 } from "./gantt.tsx";
 export type {
   GanttColumn,
+  GanttDependency,
   GanttGeometry,
   GanttPlacement,
   GanttProps,
@@ -1424,9 +1451,17 @@ export {
   eventCalendarEvent,
   indexEvents,
   layoutDayEvents,
+  applySchedulerMutation,
+  expandEventRecurrence,
+  groupSchedulerEvents,
+  moveSchedulerEvent,
+  resizeSchedulerEvent,
+  schedulerDraftEvent,
+  schedulerZonedEvent,
 } from "./event-calendar.tsx";
 export type {
   EventCalendarAllDayEvent,
+  EventCalendarEventBase,
   EventCalendarEvent,
   EventCalendarEventInput,
   EventCalendarPlacement,
@@ -1437,6 +1472,13 @@ export type {
   EventCalendarTimedEvent,
   EventCalendarTone,
   EventCalendarView,
+  SchedulerMoveOptions,
+  SchedulerDraft,
+  SchedulerMutation,
+  SchedulerRecurrence,
+  SchedulerResizeEdge,
+  SchedulerZonedEvent,
+  SchedulerZonedEventInput,
 } from "./event-calendar.tsx";
 export {
   eventCalendarAgendaDateVariants,

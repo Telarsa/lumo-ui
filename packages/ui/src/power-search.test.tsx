@@ -194,6 +194,23 @@ describe("PowerSearch", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
+  it("formats numeric and date token values in the active locale without changing query bytes", () => {
+    render(
+      <PowerSearch
+        fields={fields}
+        strings={strings}
+        readOnly
+        defaultValue={[
+          createFilter("total", "gte", ["250"], "total"),
+          createFilter("due", "on", ["2026-08-13"], "due"),
+        ]}
+      />,
+    );
+    expect(screen.getByText(/۲۵۰/)).toBeTruthy();
+    expect(screen.getByText(/۱۴۰۵/)).toBeTruthy();
+    expect(document.body.textContent).not.toMatch(/[0-9]/);
+  });
+
   it("adds a typed clause from its field typeahead and emits the canonical query bytes", () => {
     const onValueChange = vi.fn();
     render(

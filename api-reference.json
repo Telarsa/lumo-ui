@@ -3380,6 +3380,53 @@
         ]
       },
       {
+        "name": "DataGridEditableCellProps",
+        "props": [
+          {
+            "name": "cancelLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onCommit",
+            "type": "(value: string) => void",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "validate",
+            "type": "((value: string) => string | null) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      },
+      {
         "name": "DataGridEmptyProps",
         "props": [
           {
@@ -5418,6 +5465,24 @@
             "description": "Enter, Space or a click on a day cell. The day is in the reader's calendar."
           },
           {
+            "name": "onEventChange",
+            "type": "((event: EventCalendarEvent) => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onEventCreate",
+            "type": "((draft: SchedulerDraft) => void) | undefined",
+            "required": false,
+            "description": "Enables keyboard/pointer event move and resize controls."
+          },
+          {
+            "name": "onEventDelete",
+            "type": "((id: string) => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
             "name": "onFocusedDateChange",
             "type": "((date: CalendarDate) => void) | undefined",
             "required": false,
@@ -5430,6 +5495,18 @@
             "description": "Inherited DOM or shared Lumo prop."
           },
           {
+            "name": "pixelsPerMinute",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Pointer pixels per minute; shared by move and Shift-resize."
+          },
+          {
+            "name": "snapMinutes",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
             "name": "todayDate",
             "type": "CalendarDate | undefined",
             "required": false,
@@ -5438,6 +5515,12 @@
           {
             "name": "view",
             "type": "EventCalendarView | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "workday",
+            "type": "readonly [startMinute: number, endMinute: number] | undefined",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
           }
@@ -5542,6 +5625,12 @@
             "type": "FileUploadLifecycle | undefined",
             "required": false,
             "description": "Caller-owned transfer state. This module renders it but never performs I/O."
+          },
+          {
+            "name": "order",
+            "type": "{ earlierLabel: string; laterLabel: string; onEarlier: () => void; onLater: () => void; isEarlierDisabled?: boolean | undefined; isLaterDisabled?: boolean | undefined; } | undefined",
+            "required": false,
+            "description": "Optional list/gallery ordering controls; every announced label is caller-authored."
           }
         ]
       },
@@ -5584,10 +5673,22 @@
             "description": "MIME types or extensions the picker offers, e.g. `[\"image/png\", \".pdf\"]`."
           },
           {
+            "name": "allowsDirectories",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Opts the picker into directory acquisition where the browser supports it."
+          },
+          {
             "name": "allowsMultiple",
             "type": "boolean | undefined",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "capture",
+            "type": "\"user\" | \"environment\" | undefined",
+            "required": false,
+            "description": "Native camera/media acquisition hint."
           },
           {
             "name": "children",
@@ -6011,6 +6112,24 @@
             "description": "Inherited DOM or shared Lumo prop."
           },
           {
+            "name": "defaultSplitSize",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultZoom",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "dependencies",
+            "type": "readonly GanttDependency[] | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
             "name": "description",
             "type": "LumoNode",
             "required": false,
@@ -6035,10 +6154,22 @@
             "description": "Inherited DOM or shared Lumo prop."
           },
           {
+            "name": "onSplitSizeChange",
+            "type": "((size: number) => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
             "name": "onTasksChange",
             "type": "((tasks: T[]) => void) | undefined",
             "required": false,
             "description": "Receives a whole new list after a keyboard move. Optional: a read-only\nchart is a legitimate chart, and without it the bars still take focus and\nstill announce their names — they simply cannot be moved."
+          },
+          {
+            "name": "onZoomChange",
+            "type": "((zoom: number) => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
           },
           {
             "name": "range",
@@ -6051,6 +6182,18 @@
             "type": "GanttScale | undefined",
             "required": false,
             "description": "The controlled scale. Uncontrolled with `defaultScale` otherwise."
+          },
+          {
+            "name": "splitSize",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "zoom",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
           }
         ]
       }
@@ -9191,7 +9334,7 @@
           },
           {
             "name": "defaultValue",
-            "type": "readonly FilterClause[] | undefined",
+            "type": "FilterQuery | undefined",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
           },
@@ -9227,7 +9370,7 @@
           },
           {
             "name": "onValueChange",
-            "type": "((value: readonly FilterClause[]) => void) | undefined",
+            "type": "((value: FilterQuery) => void) | undefined",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
           },
@@ -9257,7 +9400,7 @@
           },
           {
             "name": "value",
-            "type": "readonly FilterClause[] | undefined",
+            "type": "FilterQuery | undefined",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
           }
@@ -9417,6 +9560,23 @@
             "type": "Locale",
             "required": true,
             "description": "The document's locale. Same value given to `LumoHtml`.\n\nThere is deliberately no `direction` sibling — see the header. Direction is\n`direction(locale)` and cannot be overridden."
+          }
+        ]
+      },
+      {
+        "name": "ManagedSurfacesProps",
+        "props": [
+          {
+            "name": "children",
+            "type": "(item: ManagedSurface<T>) => LumoNode",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "manager",
+            "type": "LumoSurfaceManager<T>",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
           }
         ]
       }
@@ -12442,6 +12602,12 @@
             "description": "The locale. Drives the arrow-key mapping and the default collation. There\nis deliberately no `dir` prop — see `LumoProvider` for the argument."
           },
           {
+            "name": "asyncStatus",
+            "type": "AsyncCollectionStatus | undefined",
+            "required": false,
+            "description": "Remote work state; active loading is exposed on the grid."
+          },
+          {
             "name": "children",
             "type": "LumoNode",
             "required": false,
@@ -12458,6 +12624,12 @@
             "type": "boolean | undefined",
             "required": false,
             "description": "Emits `role=\"treegrid\"` and hierarchical row state."
+          },
+          {
+            "name": "rowCount",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Total data rows when only a virtual/paged window is mounted."
           },
           {
             "name": "table",
@@ -12568,6 +12740,83 @@
             "type": "boolean | undefined",
             "required": false,
             "description": "Uses a native row header while preserving the widget-focus model."
+          }
+        ]
+      },
+      {
+        "name": "VirtualTableBodyProps",
+        "props": [
+          {
+            "name": "children",
+            "type": "(row: TRow, absoluteIndex: number) => LumoNode",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "estimateSize",
+            "type": "number | ((index: number) => number)",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "getRowKey",
+            "type": "(row: TRow) => string | number",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "initialSize",
+            "type": "number",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "rows",
+            "type": "readonly TRow[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "scrollRef",
+            "type": "RefObject<HTMLElement | null>",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "asyncStatus",
+            "type": "AsyncCollectionStatus | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "endReachedThreshold",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onEndReached",
+            "type": "(() => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "overscan",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "renderEmptyState",
+            "type": "LumoNode",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
           }
         ]
       }

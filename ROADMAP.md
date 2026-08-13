@@ -15,7 +15,7 @@ decision was superseded by the verified Base UI migration described in
 
 ## Current measured state — 13 August 2026
 
-- **98 implementation modules, 99 public component pages, 30 blocks and 128
+- **99 implementation modules, 100 public component pages, 30 blocks and 129
   generated registry items.** `IconButton` has its own page but shares
   `button.tsx`, which explains the one-page difference.
 - The complete English/LTR and Persian/RTL catalogue pass covered **198 rendered
@@ -24,11 +24,9 @@ decision was superseded by the verified Base UI migration described in
   JAWS and a current Chrome/TalkBack matrix remain deliberately deferred; they
   earn no score until an OS-independent hosted device/AT route is available.
 - The latest complete pre-foundation verification baseline covered **2,616
-  tests, 128 clean-room registry payloads and 540 generated documents**. The
-  subsequent async-collection and query-engine commits passed their focused
-  suites, typecheck, lint, prop/root, registry and 128-payload smoke gates. The
-  next top-level `pnpm run verify` remains reserved for the end of the current
-  product-depth sequence.
+  tests, 128 clean-room registry payloads and 540 generated documents**. Waves
+  1 and 2 now have focused red/green and mutation evidence; their final whole-
+  workspace verification is recorded in `review/WAVE-1-2-EVIDENCE-2026-08-13.md`.
 - The last evidence-backed whole-library rating is **9.3/10**, after the
   independent-review reset, remediation, full visual/mutation pass and two real
   AT environments. The newer product foundations have not been used to inflate
@@ -100,16 +98,16 @@ checked individually so a partly integrated engine is not disguised as either
 
 ### Wave 2 — ReUI-class product engines
 
-- [ ] **DataGrid:** pinning, column/row reorder, cell editing, virtualization/
+- [x] **DataGrid:** pinning, column/row reorder, cell editing, virtualization/
       infinite loading, footer/aggregation contracts and a measured performance
       envelope. Expansion and hierarchical/tree rows are already shipped.
-- [ ] **EventCalendar/Scheduler:** resources, recurrence, IANA zones, CRUD,
+- [x] **EventCalendar/Scheduler:** resources, recurrence, IANA zones, CRUD,
       configurable working hours and snap intervals, plus keyboard and pointer
       create/move/resize. Month/week/day/N-day/agenda are already shipped.
-- [ ] **Gantt:** dependency graph, summary rollups, baselines, critical path,
+- [x] **Gantt:** dependency graph, summary rollups, baselines, critical path,
       continuous zoom and a resizable hierarchy/timeline split pane. Five
       calendar scales, hierarchy and task-edge resizing are already shipped.
-- [ ] **Upload:** directory/camera acquisition and transforms; optional transport
+- [x] **Upload:** directory/camera acquisition and transforms; optional transport
       adapters with cancellation, chunking, pause/resume and retry; sortable
       gallery/table recipes. Validation and the visual lifecycle are already
       transport-independent and shipped.
@@ -127,7 +125,7 @@ checked individually so a partly integrated engine is not disguised as either
 
 ### Wave 4 — Astryx-class internal tools
 
-- [ ] **PowerSearch:** add nested group editing. The typed token UI, shared
+- [x] **PowerSearch:** add nested group editing. The typed token UI, shared
       query semantics and local/abortable-remote DataGrid recipes are shipped.
 - [ ] **LogStream:** virtual append-only data, follow/pause, filters, severity,
       timestamps, copy/export and accessible live-update policies.
@@ -162,10 +160,10 @@ checked individually so a partly integrated engine is not disguised as either
 
 | surface | current state | acceptance rule |
 |---|---|---|
-| Components | **98 implementation modules / 99 public pages** | real behavior or caller complexity removed; no count-only aliases |
+| Components | **99 implementation modules / 100 public pages** | real behavior or caller complexity removed; no count-only aliases |
 | Blocks | **30** | compose public Lumo APIs only |
 | Locales | `fa-IR`, `en-US` | complete-or-compile-error |
-| Registry | **128 generated items** | dependency-validated, copied and typechecked outside the workspace |
+| Registry | **129 generated items** | dependency-validated, copied and typechecked outside the workspace |
 | Gates | prop/root, API, registry, consumer, HTML and vocabulary tiers | every rule needs a poison or mutation that proves it can fail |
 
 Competitor counts are deliberately not a target: catalogues mix primitives,

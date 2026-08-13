@@ -7,11 +7,12 @@ import {
   type ChangeEvent,
   type ComponentProps,
 } from "react";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, formatDate, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
 import { nativeSelectVariants } from "./native-select.tsx";
 import { Popover, PopoverTrigger } from "./popover.tsx";
 import { inputVariants } from "./text-field.tsx";
+import { useLumoLocale } from "./locale.ts";
 import {
   assertQuery,
   createFilter,
@@ -207,6 +208,7 @@ function fieldValue(
   values: readonly string[],
   emptyValue: string,
   valueSeparator: string,
+  locale: Locale,
 ): string {
   if (values.length === 0) return emptyValue;
   if (field.type === "boolean") {
@@ -220,6 +222,29 @@ function fieldValue(
   if (field.type === "custom" && field.formatValue !== undefined) {
     return field.formatValue(values);
   }
+  if (field.type === "number") {
+    return values
+      .map((value) => {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? formatNumber(parsed, locale) : value;
+      })
+      .join(valueSeparator);
+  }
+  if (field.type === "date") {
+    return values
+      .map((value) => {
+        const date = new Date(`${value}T12:00:00Z`);
+        return Number.isNaN(date.getTime())
+          ? value
+          : formatDate(date, locale, {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            });
+      })
+      .join(valueSeparator);
+  }
   return values.join(valueSeparator);
 }
 
@@ -227,12 +252,13 @@ function tokenText(
   clause: FilterClause,
   field: PowerSearchField,
   strings: PowerSearchStrings,
+  locale: Locale,
 ): string {
   const operator = field.operators.find((candidate) => candidate.id === clause.operatorId)!;
   return replace(strings.tokenTemplate, {
     field: field.label,
     operator: operator.label,
-    value: fieldValue(field, clause.values, strings.emptyValue, strings.valueSeparator),
+    value: fieldValue(field, clause.values, strings.emptyValue, strings.valueSeparator, locale),
   });
 }
 
@@ -342,6 +368,7 @@ interface PowerSearchTokenProps {
   clause: FilterClause;
   fields: readonly PowerSearchField[];
   strings: PowerSearchStrings;
+  locale: Locale;
   isDisabled: boolean;
   readOnly: boolean;
   onCommit: (clause: FilterClause) => void;
@@ -352,6 +379,7 @@ function PowerSearchToken({
   clause,
   fields,
   strings,
+  locale,
   isDisabled,
   readOnly,
   onCommit,
@@ -369,7 +397,7 @@ function PowerSearchToken({
     draftField.validate?.(draft.values, draft.operatorId) ??
     (needsValue && draft.values.length === 0 ? strings.invalidFilter : null);
   const label = replace(strings.editFilterTemplate, { field: field.label });
-  const visible = tokenText(clause, field, strings);
+  const visible = tokenText(clause, field, strings, locale);
 
   if (readOnly || isDisabled) {
     return (
@@ -507,6 +535,7 @@ interface PowerSearchGroupProps {
   group: FilterGroup;
   fields: readonly PowerSearchField[];
   strings: PowerSearchStrings;
+  locale: Locale;
   isDisabled: boolean;
   readOnly: boolean;
   isRoot?: boolean | undefined;
@@ -520,6 +549,7 @@ function PowerSearchGroup({
   group,
   fields,
   strings,
+  locale,
   isDisabled,
   readOnly,
   isRoot = false,
@@ -595,6 +625,7 @@ function PowerSearchGroup({
               group={child}
               fields={fields}
               strings={strings}
+              locale={locale}
               isDisabled={isDisabled}
               readOnly={readOnly}
               createId={createId}
@@ -607,6 +638,7 @@ function PowerSearchGroup({
                 clause={child}
                 fields={fields}
                 strings={strings}
+                locale={locale}
                 isDisabled={isDisabled}
                 readOnly={readOnly}
                 onCommit={(next) => updateChild(child.id, next)}
@@ -638,6 +670,7 @@ export function PowerSearch({
   className,
   ...props
 }: PowerSearchProps) {
+  const locale = useLumoLocale();
   const generatedId = useId();
   const nextId = useRef(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -849,6 +882,7 @@ export function PowerSearch({
           group={queryValue as FilterGroup}
           fields={fields}
           strings={strings}
+          locale={locale}
           isDisabled={isDisabled}
           readOnly={readOnly}
           isRoot
@@ -863,6 +897,7 @@ export function PowerSearch({
               clause={clause}
               fields={fields}
               strings={strings}
+              locale={locale}
               isDisabled={isDisabled}
               readOnly={readOnly}
               onCommit={(next) =>

@@ -42,6 +42,9 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * POSITIONS mirror on their own, because they are `inset-inline-start` rather
  * than a computed `left`; the KEY cannot, and that is the one place the
  * component asks `direction(locale)` anything.
+ * The zoom range and the keyboard-resizable separator exercise the continuous
+ * scale and split contracts; the release example also draws dependencies, a
+ * baseline and its computed critical path.
  *
  * Then switch to the month scale. The columns are NOT equal: Jalali months are
  * 31, 30 or 29 days inside a single year, so «فروردین» is visibly wider than
@@ -73,6 +76,8 @@ const t = {
   resizeStart: { "fa-IR": "تغییر آغاز", "en-US": "Resize the start of" },
   resizeEnd: { "fa-IR": "تغییر پایان", "en-US": "Resize the end of" },
   resized: { "fa-IR": "بازهٔ تازهٔ", "en-US": "Resized" },
+  zoom: { "fa-IR": "بزرگ‌نمایی خط زمان", "en-US": "Timeline zoom" },
+  split: { "fa-IR": "تغییر پهنای فهرست کارها", "en-US": "Resize task list" },
 
   releaseLabel: { "fa-IR": "برنامهٔ انتشار نسخهٔ بهار", "en-US": "Spring release plan" },
   design: { "fa-IR": "طراحی صفحهٔ پرداخت", "en-US": "Design the checkout page" },
@@ -121,10 +126,17 @@ function ReleaseExample(l: Locale) {
       resizeStartWord={t.resizeStart[l]}
       resizeEndWord={t.resizeEnd[l]}
       resizedWord={t.resized[l]}
+      zoomLabel={t.zoom[l]}
+      resizeSplit={t.split[l]}
+      dependencies={[
+        { from: "design", to: "build", type: "finish-to-start" },
+        { from: "build", to: "test", type: "finish-to-start" },
+        { from: "test", to: "ship", type: "finish-to-start" },
+      ]}
       tasks={[
         { id: "release", label: t.releaseGroup[l], start: "2026-03-21", end: "2026-04-07", progress: 0.45 },
         { id: "design", parentId: "release", label: t.design[l], start: "2026-03-21", end: "2026-03-27", progress: 1 },
-        { id: "build", parentId: "release", label: t.build[l], start: "2026-03-25", end: "2026-04-04", progress: 0.6 },
+        { id: "build", parentId: "release", label: t.build[l], start: "2026-03-25", end: "2026-04-04", baselineStart: "2026-03-24", baselineEnd: "2026-04-02", progress: 0.6 },
         { id: "content", parentId: "release", label: t.content[l], start: "2026-03-28", end: "2026-04-01", progress: 0.25 },
         { id: "test", parentId: "release", label: t.test[l], start: "2026-04-02", end: "2026-04-06" },
         { id: "ship", parentId: "release", label: t.ship[l], start: "2026-04-07", end: "2026-04-07" },
@@ -167,6 +179,8 @@ function YearExample(l: Locale) {
       resizeStartWord={t.resizeStart[l]}
       resizeEndWord={t.resizeEnd[l]}
       resizedWord={t.resized[l]}
+      zoomLabel={t.zoom[l]}
+      resizeSplit={t.split[l]}
       tasks={[
         { id: "research", label: t.research[l], start: "2026-03-21", end: "2026-06-21", progress: 1 },
         { id: "platform", label: t.platform[l], start: "2026-05-22", end: "2026-11-21", progress: 0.55 },

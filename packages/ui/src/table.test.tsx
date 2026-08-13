@@ -104,6 +104,20 @@ describe("VirtualTableBody — native-grid windowing", () => {
     viewportHeight.mockRestore();
   });
 
+  it("measures mounted native rows instead of keeping estimates forever", () => {
+    const measuredIndexes: string[] = [];
+    const rowHeight = vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function (this: HTMLElement) {
+      if (this instanceof HTMLTableRowElement && this.dataset["index"] !== undefined) {
+        measuredIndexes.push(this.dataset["index"]);
+        return 48;
+      }
+      return 0;
+    });
+    render(<VirtualGrid />);
+    expect(measuredIndexes).toContain("0");
+    rowHeight.mockRestore();
+  });
+
   it("keeps key-based selection while a selected row is unmounted and remounted", () => {
     const viewportHeight = vi
       .spyOn(HTMLElement.prototype, "clientHeight", "get")

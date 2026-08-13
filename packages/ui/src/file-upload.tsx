@@ -7,7 +7,7 @@ import {
   type ClipboardEvent as ReactClipboardEvent,
   type DragEvent as ReactDragEvent,
 } from "react";
-import { CloudUpload, Paperclip, X } from "lucide-react";
+import { ArrowDown, ArrowUp, CloudUpload, Paperclip, X } from "lucide-react";
 import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button, IconButton } from "./button.tsx";
 // The cva definitions and the size formatter live in a module with no
@@ -49,6 +49,12 @@ import {
  *         />
  *       ))}
  *     </FileUploadList>
+ *
+ * Acquisition covers picker, paste, camera capture and recursive directory
+ * drops. Pure transform/reorder helpers keep preview recipes deterministic;
+ * `createUploadController` adds an optional transport boundary with chunking,
+ * progress, pause/resume, cancellation and retry without coupling the visual
+ * lifecycle to a network client.
  *
  * ═══ WHAT BASE UI HAS: NOTHING. WHAT THAT ACTUALLY COST: 30 LINES ═══════════
  *
@@ -174,6 +180,10 @@ export interface FileUploadProps
   /** Files already owned by the caller, used to compute the remaining slots. */
   currentFileCount?: number | undefined;
   isDisabled?: boolean | undefined;
+  /** Native camera/media acquisition hint. */
+  capture?: "user" | "environment" | undefined;
+  /** Opts the picker into directory acquisition where the browser supports it. */
+  allowsDirectories?: boolean | undefined;
   /** Hint under the button — a size limit, an accepted-formats line. */
   children?: LumoNode;
   className?: string | undefined;
@@ -190,6 +200,8 @@ export function FileUpload({
   maxFiles,
   currentFileCount,
   isDisabled,
+  capture,
+  allowsDirectories,
   children,
   className,
   ...props
@@ -334,6 +346,10 @@ export function FileUpload({
         hidden
         {...(accept === undefined ? {} : { accept })}
         {...(allowsMultiple === true ? { multiple: true } : {})}
+        {...(capture === undefined ? {} : { capture })}
+        {...(allowsDirectories === true
+          ? ({ webkitdirectory: "", directory: "" } as Record<string, string>)
+          : {})}
         onChange={(event) => {
           deliver(event.target.files);
           // Cleared so choosing the SAME file twice in a row still fires a
@@ -371,6 +387,155 @@ export function FileUpload({
       {children == null ? null : <div className="text-center">{children}</div>}
     </div>
   );
+}
+
+export type UploadDropEntry =
+  | { kind: "file"; file: () => Promise<File> }
+  | { kind: "directory"; entries: () => Promise<readonly UploadDropEntry[]> };
+
+/** Recursively flattens the File System Entry API behind a browser-neutral seam. */
+export async function collectDroppedFiles(entries: readonly UploadDropEntry[]): Promise<File[]> {
+  const files: File[] = [];
+  for (const entry of entries) {
+    if (entry.kind === "file") files.push(await entry.file());
+    else files.push(...(await collectDroppedFiles(await entry.entries())));
+  }
+  return files;
+}
+
+export type UploadTransform = (file: File) => File | Promise<File>;
+
+export async function transformUploadFiles(
+  files: readonly File[],
+  transforms: readonly UploadTransform[],
+): Promise<File[]> {
+  return Promise.all(
+    files.map(async (file) => {
+      let current = file;
+      for (const transform of transforms) current = await transform(current);
+      return current;
+    }),
+  );
+}
+
+export function reorderUploadItems<T extends { id: string }>(
+  items: readonly T[],
+  activeId: string,
+  beforeId: string | null,
+): T[] {
+  const from = items.findIndex((item) => item.id === activeId);
+  const target = beforeId === null ? items.length : items.findIndex((item) => item.id === beforeId);
+  if (from < 0 || target < 0 || from === target) return [...items];
+  const next = [...items];
+  const [item] = next.splice(from, 1);
+  next.splice(from < target ? target - 1 : target, 0, item!);
+  return next;
+}
+
+export type UploadControllerStatus =
+  | "queued"
+  | "uploading"
+  | "paused"
+  | "success"
+  | "error"
+  | "cancelled";
+
+export interface UploadControllerSnapshot {
+  status: UploadControllerStatus;
+  progress: number;
+  error?: unknown;
+}
+
+export interface UploadChunkContext {
+  file: File;
+  chunk: Blob;
+  index: number;
+  count: number;
+  signal: AbortSignal;
+}
+
+export interface UploadControllerOptions {
+  file: File;
+  chunkSize?: number | undefined;
+  uploadChunk: (context: UploadChunkContext) => Promise<void>;
+}
+
+export interface UploadController {
+  readonly finished: Promise<void>;
+  pause: () => void;
+  resume: () => void;
+  cancel: () => void;
+  retry: () => Promise<void>;
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => UploadControllerSnapshot;
+}
+
+/** Optional transport adapter: no URL/client/runtime is bundled. */
+export function createUploadController(options: UploadControllerOptions): UploadController {
+  const chunkSize = Math.max(1, Math.trunc(options.chunkSize ?? (options.file.size || 1)));
+  const count = Math.max(1, Math.ceil(options.file.size / chunkSize));
+  const abort = new AbortController();
+  const listeners = new Set<() => void>();
+  let snapshot: UploadControllerSnapshot = { status: "queued", progress: 0 };
+  let completed = 0;
+  let wake: (() => void) | undefined;
+  const publish = (next: UploadControllerSnapshot) => {
+    snapshot = next;
+    listeners.forEach((listener) => listener());
+  };
+  const waitWhilePaused = async () => {
+    while (snapshot.status === "paused") {
+      await new Promise<void>((resolve) => {
+        wake = resolve;
+      });
+    }
+  };
+  const run = async () => {
+    try {
+      for (; completed < count; completed += 1) {
+        await waitWhilePaused();
+        if (abort.signal.aborted) return;
+        publish({ status: "uploading", progress: completed / count });
+        await options.uploadChunk({
+          file: options.file,
+          chunk: options.file.slice(completed * chunkSize, (completed + 1) * chunkSize),
+          index: completed,
+          count,
+          signal: abort.signal,
+        });
+        if (abort.signal.aborted) return;
+      }
+      publish({ status: "success", progress: 1 });
+    } catch (error) {
+      if (!abort.signal.aborted) publish({ status: "error", progress: completed / count, error });
+    }
+  };
+  const finished = Promise.resolve().then(run);
+  return {
+    finished,
+    pause() {
+      if (snapshot.status === "queued" || snapshot.status === "uploading") {
+        publish({ status: "paused", progress: snapshot.progress });
+      }
+    },
+    resume() {
+      if (snapshot.status !== "paused") return;
+      publish({ status: "uploading", progress: snapshot.progress });
+      wake?.();
+      wake = undefined;
+    },
+    cancel() {
+      abort.abort();
+      wake?.();
+      publish({ status: "cancelled", progress: snapshot.progress });
+    },
+    retry: run,
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot: () => snapshot,
+  };
 }
 
 export type FileUploadRejectionReason = "type" | "size" | "count";
@@ -451,6 +616,17 @@ export interface FileUploadItemProps
   formatOptions?: Intl.NumberFormatOptions | undefined;
   /** Caller-owned transfer state. This module renders it but never performs I/O. */
   lifecycle?: FileUploadLifecycle | undefined;
+  /** Optional list/gallery ordering controls; every announced label is caller-authored. */
+  order?:
+    | {
+        earlierLabel: string;
+        laterLabel: string;
+        onEarlier: () => void;
+        onLater: () => void;
+        isEarlierDisabled?: boolean | undefined;
+        isLaterDisabled?: boolean | undefined;
+      }
+    | undefined;
   className?: string | undefined;
 }
 
@@ -462,6 +638,7 @@ export function FileUploadItem({
   onRemove,
   formatOptions,
   lifecycle,
+  order,
   className,
   ...props
 }: FileUploadItemProps) {
@@ -560,6 +737,30 @@ export function FileUploadItem({
        * `removeLabel` is no longer caught here. That is the trade the README's
        * escape hatch describes — genuinely-Latin content is marked, not excused.
        */}
+      {order === undefined ? null : (
+        <div className="flex shrink-0 items-center gap-0.5">
+          <IconButton
+            data-lumo-latn=""
+            label={order.earlierLabel}
+            variant="ghost"
+            size="sm"
+            isDisabled={order.isEarlierDisabled ?? false}
+            onPress={order.onEarlier}
+          >
+            <ArrowUp aria-hidden="true" />
+          </IconButton>
+          <IconButton
+            data-lumo-latn=""
+            label={order.laterLabel}
+            variant="ghost"
+            size="sm"
+            isDisabled={order.isLaterDisabled ?? false}
+            onPress={order.onLater}
+          >
+            <ArrowDown aria-hidden="true" />
+          </IconButton>
+        </div>
+      )}
       <IconButton
         data-lumo-latn=""
         label={removeLabel(name)}

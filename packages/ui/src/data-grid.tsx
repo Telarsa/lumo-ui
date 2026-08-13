@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import { ColumnsIcon } from "lucide-react";
 import { cn, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
@@ -26,6 +26,106 @@ export {
   dataGridToolbarVariants,
   dataGridVariants,
 };
+
+export type DataGridPin = "start" | "end";
+
+/** Logical sticky placement: identical bytes in LTR/RTL, mirrored by CSS. */
+export function dataGridPinnedStyle(edge: DataGridPin, offset = 0): CSSProperties {
+  return edge === "start"
+    ? { position: "sticky", insetInlineStart: offset }
+    : { position: "sticky", insetInlineEnd: offset };
+}
+
+export function reorderDataGridItems<T extends { id: string }>(
+  items: readonly T[],
+  activeId: string,
+  beforeId: string,
+): T[] {
+  const from = items.findIndex((item) => item.id === activeId);
+  const target = items.findIndex((item) => item.id === beforeId);
+  if (from < 0 || target < 0 || from === target) return [...items];
+  const next = [...items];
+  const [item] = next.splice(from, 1);
+  next.splice(from < target ? target - 1 : target, 0, item!);
+  return next;
+}
+
+export type DataGridAggregate = "sum" | "count" | "min" | "max" | "mean" | "unique-count";
+
+export function aggregateDataGrid<Row extends Record<string, unknown>>(
+  rows: readonly Row[],
+  reducers: Readonly<Partial<Record<keyof Row, DataGridAggregate>>>,
+): Partial<Record<keyof Row, number>> {
+  const result: Partial<Record<keyof Row, number>> = {};
+  for (const key of Object.keys(reducers) as Array<keyof Row>) {
+    const reducer = reducers[key];
+    if (reducer === undefined) continue;
+    const values = rows.map((row) => row[key]);
+    const numbers = values.map(Number).filter(Number.isFinite);
+    result[key] =
+      reducer === "count"
+        ? values.length
+        : reducer === "unique-count"
+          ? new Set(values).size
+          : reducer === "sum"
+            ? numbers.reduce((sum, value) => sum + value, 0)
+            : reducer === "min"
+              ? Math.min(...numbers)
+              : reducer === "max"
+                ? Math.max(...numbers)
+                : numbers.length === 0
+                  ? 0
+                  : numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
+  }
+  return result;
+}
+
+export interface DataGridEditableCellProps {
+  label: string;
+  cancelLabel: string;
+  value: string;
+  onCommit: (value: string) => void;
+  validate?: ((value: string) => string | null) | undefined;
+  isDisabled?: boolean | undefined;
+  className?: string | undefined;
+}
+
+/** Controlled-value cell editor with transactional Enter/Escape semantics. */
+export function DataGridEditableCell({
+  label,
+  cancelLabel,
+  value,
+  onCommit,
+  validate,
+  isDisabled,
+  className,
+}: DataGridEditableCellProps) {
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  const error = validate?.(draft) ?? null;
+  return (
+    <input
+      data-lumo=""
+      aria-label={label}
+      aria-keyshortcuts="Enter Escape"
+      aria-description={cancelLabel}
+      aria-invalid={error !== null || undefined}
+      disabled={isDisabled}
+      value={draft}
+      onChange={(event) => setDraft(event.currentTarget.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          setDraft(value);
+        } else if (event.key === "Enter" && error === null) {
+          event.preventDefault();
+          onCommit(draft);
+        }
+      }}
+      className={cn("min-w-0 bg-transparent px-2 py-1 outline-none", className)}
+    />
+  );
+}
 
 /**
  * The chrome around a `<Table>` — search, column visibility, paging, emptiness.

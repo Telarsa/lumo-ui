@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Locale } from "@lumo-ui/core";
 import {
   Alert,
@@ -2300,6 +2300,7 @@ import {
   FileUpload,
   FileUploadItem,
   FileUploadList,
+  reorderUploadItems,
   TagGroup,
   TagItem,
   TagList,
@@ -2551,6 +2552,10 @@ export interface FileUploadIslandProps {
   removeWord: string;
   acceptedFileTypes?: readonly string[] | undefined;
   allowsMultiple?: boolean | undefined;
+  capture?: "user" | "environment" | undefined;
+  allowsDirectories?: boolean | undefined;
+  moveEarlierWord?: string | undefined;
+  moveLaterWord?: string | undefined;
   maxFileSize?: number | undefined;
   maxFiles?: number | undefined;
   isDisabled?: boolean | undefined;
@@ -2575,6 +2580,10 @@ export function FileUploadIsland({
   removeWord,
   acceptedFileTypes,
   allowsMultiple,
+  capture,
+  allowsDirectories,
+  moveEarlierWord,
+  moveLaterWord,
   maxFileSize,
   maxFiles,
   isDisabled,
@@ -2588,6 +2597,8 @@ export function FileUploadIsland({
         triggerLabel={triggerLabel}
         {...(acceptedFileTypes === undefined ? {} : { acceptedFileTypes })}
         {...(allowsMultiple === undefined ? {} : { allowsMultiple })}
+        {...(capture === undefined ? {} : { capture })}
+        {...(allowsDirectories === undefined ? {} : { allowsDirectories })}
         {...(maxFileSize === undefined ? {} : { maxFileSize })}
         {...(maxFiles === undefined ? {} : { maxFiles })}
         currentFileCount={files.length}
@@ -2601,7 +2612,7 @@ export function FileUploadIsland({
       </FileUpload>
       {files.length === 0 ? null : (
         <FileUploadList>
-          {files.map((file) => {
+          {files.map((file, index) => {
             const lifecycle: FileUploadLifecycle | undefined =
               file.lifecycle === undefined
                 ? undefined
@@ -2643,6 +2654,30 @@ export function FileUploadIsland({
                 size={file.size}
                 locale={locale}
                 {...(lifecycle === undefined ? {} : { lifecycle })}
+                {...(moveEarlierWord === undefined || moveLaterWord === undefined
+                  ? {}
+                  : {
+                      order: {
+                        earlierLabel: `${moveEarlierWord} ${file.name}`,
+                        laterLabel: `${moveLaterWord} ${file.name}`,
+                        isEarlierDisabled: index === 0,
+                        isLaterDisabled: index === files.length - 1,
+                        onEarlier: () =>
+                          setFiles((current) => {
+                            const keyed = current.map((row) => ({ ...row, id: row.name }));
+                            return reorderUploadItems(keyed, file.name, keyed[index - 1]?.id ?? null).map(
+                              ({ id: _id, ...row }) => row,
+                            );
+                          }),
+                        onLater: () =>
+                          setFiles((current) => {
+                            const keyed = current.map((row) => ({ ...row, id: row.name }));
+                            return reorderUploadItems(keyed, file.name, keyed[index + 2]?.id ?? null).map(
+                              ({ id: _id, ...row }) => row,
+                            );
+                          }),
+                      },
+                    })}
                 removeLabel={(fileName) => `${removeWord} ${fileName}`}
                 onRemove={() => {
                   setFiles((current) => current.filter((row) => row.name !== file.name));
@@ -3193,6 +3228,8 @@ export interface GanttIslandTask {
   end: string;
   /** `0…1`. Omitted means the task reports no progress at all. */
   progress?: number;
+  baselineStart?: string;
+  baselineEnd?: string;
 }
 
 export interface GanttIslandProps {
@@ -3200,6 +3237,7 @@ export interface GanttIslandProps {
   /** Names the whole chart. */
   label: string;
   tasks: readonly GanttIslandTask[];
+  dependencies?: readonly { from: string; to: string; type: "finish-to-start" }[];
   /** Names the group of scale buttons. */
   scaleGroupLabel: string;
   /** The five scale names. No English default exists for these. */
@@ -3242,6 +3280,8 @@ export interface GanttIslandProps {
   resizeStartWord: string;
   resizeEndWord: string;
   resizedWord: string;
+  zoomLabel: string;
+  resizeSplit: string;
   defaultScale?: GanttScale;
 }
 
@@ -3259,6 +3299,7 @@ export function GanttIsland({
   locale,
   label,
   tasks,
+  dependencies,
   scaleGroupLabel,
   dayWord,
   weekWord,
@@ -3280,6 +3321,8 @@ export function GanttIsland({
   resizeStartWord,
   resizeEndWord,
   resizedWord,
+  zoomLabel,
+  resizeSplit,
   defaultScale,
 }: GanttIslandProps) {
   const [rows, setRows] = useState<GanttTask[]>(() =>
@@ -3290,6 +3333,8 @@ export function GanttIsland({
       start: ganttDate(task.start),
       end: ganttDate(task.end),
       ...(task.progress === undefined ? {} : { progress: task.progress }),
+      ...(task.baselineStart === undefined ? {} : { baselineStart: ganttDate(task.baselineStart) }),
+      ...(task.baselineEnd === undefined ? {} : { baselineEnd: ganttDate(task.baselineEnd) }),
     })),
   );
   return (
@@ -3325,7 +3370,10 @@ export function GanttIsland({
         resizeEnd: (name) => `${resizeEndWord} ${name}`,
         resizedTo: (name, from, to) =>
           `${resizedWord} ${name}${separator}${fromWord} ${from} ${toWord} ${to}`,
+        zoomLabel,
+        resizeSplit,
       }}
+      {...(dependencies === undefined ? {} : { dependencies })}
     />
   );
 }
@@ -3361,7 +3409,9 @@ import {
   EventCalendar,
   eventCalendarDay,
   eventCalendarEvent,
+  schedulerDraftEvent,
   type EventCalendarEventInput,
+  type EventCalendarEvent,
   type EventCalendarView,
 } from "@lumo-ui/ui";
 
@@ -3403,6 +3453,11 @@ export interface EventCalendarIslandProps {
    * announced in none of them. See `EventCalendarStrings.todayLabel`.
    */
   todayWord: string;
+  eventMovedWord: string;
+  eventResizedWord: string;
+  eventDeletedWord: string;
+  eventCreatedWord: string;
+  newEventTitle: string;
   /** Plain data all the way down. `YYYY-MM-DD` or `YYYY-MM-DDTHH:mm`. */
   events: readonly EventCalendarEventInput[];
   /** `YYYY-MM-DD`. FIXED — a prerendered grid must not depend on a clock. */
@@ -3439,6 +3494,11 @@ export function EventCalendarIsland({
   eventsWord,
   moreWord,
   todayWord,
+  eventMovedWord,
+  eventResizedWord,
+  eventDeletedWord,
+  eventCreatedWord,
+  newEventTitle,
   events,
   focusedDay,
   todayDay,
@@ -3446,6 +3506,10 @@ export function EventCalendarIsland({
   dayCount,
   maxEventsPerDay,
 }: EventCalendarIslandProps) {
+  const [scheduled, setScheduled] = useState<readonly EventCalendarEvent[]>(() =>
+    events.map(eventCalendarEvent),
+  );
+  const createdId = useRef(0);
   return (
     <EventCalendar
       label={label}
@@ -3454,7 +3518,20 @@ export function EventCalendarIsland({
       {...(defaultView === undefined ? {} : { defaultView })}
       {...(dayCount === undefined ? {} : { dayCount })}
       {...(maxEventsPerDay === undefined ? {} : { maxEventsPerDay })}
-      events={events.map(eventCalendarEvent)}
+      events={scheduled}
+      onEventCreate={(draft) =>
+        setScheduled((current) => [
+          ...current,
+          schedulerDraftEvent(draft, {
+            id: `created-${++createdId.current}`,
+            title: newEventTitle,
+          }),
+        ])
+      }
+      onEventChange={(changed) =>
+        setScheduled((current) => current.map((event) => (event.id === changed.id ? changed : event)))
+      }
+      onEventDelete={(id) => setScheduled((current) => current.filter((event) => event.id !== id))}
       strings={{
         monthView,
         weekView,
@@ -3472,6 +3549,10 @@ export function EventCalendarIsland({
         eventLabel: (title, when) => `${title}${separator}${when}`,
         range: (from, to) => `${from} ${joinWord} ${to}`,
         moreEvents: (count) => `${count} ${moreWord}`,
+        eventMoved: (name) => `${eventMovedWord}${separator}${name}`,
+        eventResized: (name) => `${eventResizedWord}${separator}${name}`,
+        eventDeleted: (title) => `${eventDeletedWord}${separator}${title}`,
+        eventCreated: (when) => `${eventCreatedWord}${separator}${when}`,
       }}
     />
   );

@@ -55,28 +55,17 @@ export {
  *       strings={ganttStrings}
  *     />
  *
- * ═══ WHAT v1 DOES NOT DO ════════════════════════════════════════════════════
+ * The engine includes a collapsible hierarchy, explicit recursive summary
+ * rollups, four dependency types, cycle rejection, critical-path analysis,
+ * baseline bars, five calendar-aligned scales, continuous zoom, a resizable
+ * hierarchy/timeline split, keyboard movement, pointer and keyboard edge
+ * resizing, progress and required caller-authored announcements. Rollups are a
+ * pure opt-in helper: rendering never silently rewrites caller-owned tasks.
  *
- * Stated first, and stated the way `table.tsx` lists what it lost, because a
- * gap that is written down is a decision and a gap that is not is a bug report.
- * ReUI's gantt ships the remaining three; each of them is a quarter of work rather than a
- * feature, and shipping a half-built one would be worse than shipping none:
- *
- *  1. **No dependency arrows.** No "finish-to-start" edges between bars, and
- *     therefore no scheduling engine behind them. An arrow is not a line — it
- *     is a constraint that has to survive a move, which means a solver, a cycle
- *     check, and an announcement for a bar that moved because ANOTHER bar did.
- *  2. **No critical path.** It is a graph algorithm over dependencies that do
- *     not exist here (see 1).
- *  3. **No baseline comparison.** No second, planned set of bars drawn behind
- *     the actual ones, and no variance read-out.
- *
- * What IS here: the split view, collapsible task hierarchy, bars positioned and
- * sized from dates, five calendar-aligned scales from day through year,
- * keyboard movement, pointer and keyboard edge resizing, a progress fill, and
- * every state change announced. Parent dates remain caller-owned rather than a
- * silent rollup: changing a child never rewrites business data the caller did
- * not authorize this view to own.
+ * It deliberately stops short of automatic dependency scheduling/resource
+ * leveling. Connectors describe and analyse the caller's graph; moving one bar
+ * does not silently move another. A solver needs an explicit conflict policy,
+ * calendars per resource and its own announced cascade contract.
  *
  * ═══ THE DEFECT THIS FILE IS DESIGNED AROUND ════════════════════════════════
  *
@@ -223,6 +212,131 @@ export interface GanttTask {
    * caller writes a sentence that does not mention it.
    */
   progress?: number | undefined;
+  /** Optional planned interval rendered behind the actual bar. */
+  baselineStart?: CalendarDate | undefined;
+  baselineEnd?: CalendarDate | undefined;
+}
+
+export interface GanttDependency {
+  from: string;
+  to: string;
+  type: "finish-to-start" | "start-to-start" | "finish-to-finish" | "start-to-finish";
+  lagDays?: number | undefined;
+}
+
+/** Derives parent dates and duration-weighted progress without rewriting children. */
+export function rollupGanttTasks<T extends GanttTask>(tasks: readonly T[]): T[] {
+  const children = new Map<string, T[]>();
+  for (const task of tasks) {
+    if (task.parentId === undefined) continue;
+    const group = children.get(task.parentId) ?? [];
+    group.push(task);
+    children.set(task.parentId, group);
+  }
+  const rolled = new Map<string, T>();
+  const visiting = new Set<string>();
+  const visit = (task: T): T => {
+    const cached = rolled.get(task.id);
+    if (cached !== undefined) return cached;
+    if (visiting.has(task.id)) throw new RangeError("Gantt hierarchy contains a cycle.");
+    visiting.add(task.id);
+    const direct = children.get(task.id);
+    if (direct === undefined || direct.length === 0) {
+      const leaf = { ...task };
+      rolled.set(task.id, leaf);
+      visiting.delete(task.id);
+      return leaf;
+    }
+    const descendants = direct.map(visit);
+    const start = descendants.reduce((value, child) => earlier(value, child.start), descendants[0]!.start);
+    const end = descendants.reduce((value, child) => later(value, child.end), descendants[0]!.end);
+    const duration = (child: T) => child.end.compare(child.start) + 1;
+    const total = descendants.reduce((sum, child) => sum + duration(child), 0);
+    const completed = descendants.reduce(
+      (sum, child) => sum + duration(child) * Math.max(0, Math.min(child.progress ?? 0, 1)),
+      0,
+    );
+    const summary = { ...task, start, end, progress: total === 0 ? 0 : completed / total };
+    rolled.set(task.id, summary);
+    visiting.delete(task.id);
+    return summary;
+  };
+  return tasks.map(visit);
+}
+
+/** Longest duration path over the dependency DAG. */
+export function ganttCriticalPath(
+  tasks: readonly GanttTask[],
+  dependencies: readonly GanttDependency[],
+): string[] {
+  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const incoming = new Map<string, number>(tasks.map((task) => [task.id, 0]));
+  const outgoing = new Map<string, GanttDependency[]>();
+  for (const edge of dependencies) {
+    if (!byId.has(edge.from) || !byId.has(edge.to)) continue;
+    incoming.set(edge.to, (incoming.get(edge.to) ?? 0) + 1);
+    const group = outgoing.get(edge.from) ?? [];
+    group.push(edge);
+    outgoing.set(edge.from, group);
+  }
+  const queue = tasks.filter((task) => incoming.get(task.id) === 0).map((task) => task.id);
+  const distance = new Map<string, number>();
+  const previous = new Map<string, string>();
+  const duration = (id: string) => {
+    const task = byId.get(id)!;
+    return task.end.compare(task.start) + 1;
+  };
+  for (const id of queue) distance.set(id, duration(id));
+  let visited = 0;
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    visited += 1;
+    for (const edge of outgoing.get(id) ?? []) {
+      const candidate = (distance.get(id) ?? 0) + duration(edge.to) + (edge.lagDays ?? 0);
+      if (candidate > (distance.get(edge.to) ?? Number.NEGATIVE_INFINITY)) {
+        distance.set(edge.to, candidate);
+        previous.set(edge.to, id);
+      }
+      const remaining = (incoming.get(edge.to) ?? 1) - 1;
+      incoming.set(edge.to, remaining);
+      if (remaining === 0) queue.push(edge.to);
+    }
+  }
+  if (visited !== tasks.length) throw new RangeError("Gantt dependency graph contains a cycle.");
+  let end = tasks[0]?.id;
+  for (const task of tasks) {
+    if ((distance.get(task.id) ?? 0) > (distance.get(end ?? "") ?? 0)) end = task.id;
+  }
+  const path: string[] = [];
+  while (end !== undefined) {
+    path.unshift(end);
+    end = previous.get(end);
+  }
+  return path;
+}
+
+export function ganttZoom(current: number, delta: number): number {
+  return Math.min(4, Math.max(0.25, Number((current + delta).toFixed(2))));
+}
+
+export function ganttDependencyPath(
+  from: GanttTask,
+  to: GanttTask,
+  fromRow: number,
+  toRow: number,
+  geometry: GanttGeometry,
+  locale: Locale,
+): string {
+  if (geometry.totalDays <= 0) return "";
+  const endRatio = (ganttDateIn(from.end, locale).compare(geometry.start) + 1) / geometry.totalDays;
+  const startRatio = ganttDateIn(to.start, locale).compare(geometry.start) / geometry.totalDays;
+  const physical = (ratio: number) => (direction(locale) === "rtl" ? 100 - ratio * 100 : ratio * 100);
+  const startX = Number(physical(endRatio).toFixed(4));
+  const endX = Number(physical(startRatio).toFixed(4));
+  const startY = 32 + (fromRow + 0.5) * 40;
+  const endY = 32 + (toRow + 0.5) * 40;
+  const middle = Number(((startX + endX) / 2).toFixed(4));
+  return `M ${startX} ${startY} C ${middle} ${startY}, ${middle} ${endY}, ${endX} ${endY}`;
 }
 
 /** One cell of the scale row, and the fraction of the range it occupies. */
@@ -628,6 +742,8 @@ export interface GanttStrings {
   resizeEnd: (label: string) => string;
   /** Announces the complete interval after either edge changes. */
   resizedTo: (label: string, from: string, to: string) => string;
+  zoomLabel: string;
+  resizeSplit: string;
 }
 
 export interface GanttProps<T extends GanttTask>
@@ -669,6 +785,13 @@ export interface GanttProps<T extends GanttTask>
    * quarter even when the work stops half way through it.
    */
   range?: { start: CalendarDate; end: CalendarDate } | undefined;
+  dependencies?: readonly GanttDependency[] | undefined;
+  zoom?: number | undefined;
+  defaultZoom?: number | undefined;
+  onZoomChange?: ((zoom: number) => void) | undefined;
+  splitSize?: number | undefined;
+  defaultSplitSize?: number | undefined;
+  onSplitSizeChange?: ((size: number) => void) | undefined;
   /**
    * How a date is formatted wherever one is spoken. Not an announced string —
    * an `Intl` options bag — so it may have a default. It goes through
@@ -748,6 +871,13 @@ export function Gantt<T extends GanttTask>({
   defaultExpandedTaskIds,
   onExpandedTaskIdsChange,
   range,
+  dependencies = [],
+  zoom,
+  defaultZoom = 1,
+  onZoomChange,
+  splitSize,
+  defaultSplitSize = 224,
+  onSplitSizeChange,
   dateFormatOptions,
   description,
   className,
@@ -757,6 +887,10 @@ export function Gantt<T extends GanttTask>({
     defaultScale ?? "day",
   );
   const activeScale = scale ?? uncontrolledScale;
+  const [uncontrolledZoom, setUncontrolledZoom] = React.useState(defaultZoom);
+  const activeZoom = zoom ?? uncontrolledZoom;
+  const [uncontrolledSplit, setUncontrolledSplit] = React.useState(defaultSplitSize);
+  const activeSplit = splitSize ?? uncontrolledSplit;
   const parentIds = React.useMemo(() => {
     const found = new Set<string>();
     for (const task of tasks) {
@@ -814,6 +948,8 @@ export function Gantt<T extends GanttTask>({
     if (placements.get(task.id) !== null) barIndexById.set(task.id, barIndexById.size);
   }
   const servedFocusedIndex = Math.min(focusedIndex, Math.max(0, barIndexById.size - 1));
+  const criticalIds = new Set(dependencies.length === 0 ? [] : ganttCriticalPath(tasks, dependencies));
+  const visibleIndex = new Map(visibleRows.map(({ task }, index) => [task.id, index] as const));
 
   const toggleTask = (id: string) => {
     const next = new Set(activeExpandedIds);
@@ -1021,10 +1157,24 @@ export function Gantt<T extends GanttTask>({
             {strings.scaleNames[one]}
           </button>
         ))}
+        <input
+          data-lumo=""
+          type="range"
+          aria-label={strings.zoomLabel}
+          min={0.25}
+          max={4}
+          step={0.25}
+          value={activeZoom}
+          onChange={(event) => {
+            const next = Number(event.currentTarget.value);
+            if (zoom === undefined) setUncontrolledZoom(next);
+            onZoomChange?.(next);
+          }}
+        />
       </div>
 
       <div role="group" aria-label={label} className={ganttSplitVariants()}>
-        <div className={ganttTaskListVariants()}>
+        <div className={ganttTaskListVariants()} style={{ inlineSize: activeSplit }}>
           <div className={ganttTaskHeaderVariants()}>{strings.taskColumnHeader}</div>
           {visibleRows.map(({ task, depth, hasChildren }) => (
             <div
@@ -1058,6 +1208,27 @@ export function Gantt<T extends GanttTask>({
         </div>
 
         <div
+          data-lumo=""
+          role="separator"
+          aria-label={strings.resizeSplit}
+          aria-orientation="vertical"
+          aria-valuemin={160}
+          aria-valuemax={480}
+          aria-valuenow={activeSplit}
+          tabIndex={0}
+          className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-accent"
+          onKeyDown={(event) => {
+            const later = isRtl ? "ArrowLeft" : "ArrowRight";
+            const earlier = isRtl ? "ArrowRight" : "ArrowLeft";
+            if (event.key !== later && event.key !== earlier) return;
+            event.preventDefault();
+            const next = Math.min(480, Math.max(160, activeSplit + (event.key === later ? 10 : -10)));
+            if (splitSize === undefined) setUncontrolledSplit(next);
+            onSplitSizeChange?.(next);
+          }}
+        />
+
+        <div
           role="group"
           aria-label={strings.timelineLabel}
           className={ganttTimelineVariants()}
@@ -1072,7 +1243,8 @@ export function Gantt<T extends GanttTask>({
           */}
           <div
             data-gantt-track=""
-            style={{ minInlineSize: `${geometry.totalDays * PIXELS_PER_DAY[activeScale]}px` }}
+            className="relative"
+            style={{ minInlineSize: `${geometry.totalDays * PIXELS_PER_DAY[activeScale] * activeZoom}px` }}
           >
             <div className={ganttScaleRowVariants()}>
               {geometry.columns.map((column) => (
@@ -1085,6 +1257,33 @@ export function Gantt<T extends GanttTask>({
                 </div>
               ))}
             </div>
+
+            {dependencies.length === 0 ? null : (
+              <svg
+                aria-hidden="true"
+                viewBox={`0 0 100 ${32 + visibleRows.length * 40}`}
+                preserveAspectRatio="none"
+                className="pointer-events-none absolute inset-0 z-10 size-full overflow-visible text-border-strong"
+              >
+                {dependencies.map((dependency) => {
+                  const from = tasks.find((task) => task.id === dependency.from);
+                  const to = tasks.find((task) => task.id === dependency.to);
+                  const fromRow = visibleIndex.get(dependency.from);
+                  const toRow = visibleIndex.get(dependency.to);
+                  if (from === undefined || to === undefined || fromRow === undefined || toRow === undefined) return null;
+                  return (
+                    <path
+                      key={`${dependency.from}-${dependency.to}-${dependency.type}`}
+                      d={ganttDependencyPath(from, to, fromRow, toRow, geometry, locale)}
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="0.35"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                  );
+                })}
+              </svg>
+            )}
 
             <ul className="list-none p-0">
               {visibleRows.map(({ task }) => {
@@ -1100,11 +1299,25 @@ export function Gantt<T extends GanttTask>({
                 return (
                   <li key={task.id} className={ganttRowVariants()}>
                     {placement === null ? null : (
+                      task.baselineStart === undefined || task.baselineEnd === undefined ? null : (
+                        <span
+                          aria-hidden="true"
+                          className="absolute inset-y-3 rounded-sm bg-border-strong opacity-60"
+                          style={ganttBarPlacement(
+                            { ...task, start: task.baselineStart, end: task.baselineEnd },
+                            geometry,
+                            locale,
+                          ) ?? undefined}
+                        />
+                      )
+                    )}
+                    {placement === null ? null : (
                       <button
                         type="button"
                         data-lumo=""
                         data-gantt-bar={task.id}
                         {...(held ? { "data-held": "" } : {})}
+                        {...(criticalIds.has(task.id) ? { "data-critical": "" } : {})}
                         // The roving stop, from render-time state. See header.
                         tabIndex={barIndex === servedFocusedIndex ? 0 : -1}
                         aria-label={strings.barName(
