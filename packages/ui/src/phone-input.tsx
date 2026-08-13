@@ -7,7 +7,7 @@ import { cva } from "class-variance-authority";
 // `input-otp.tsx` makes and for the same reason.
 import { formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Description, Field, FieldError, Label } from "./form.tsx";
-import { NativeSelect } from "./native-select.tsx";
+import { SelectField } from "./select.tsx";
 
 /**
  * A phone number, entered the way Iranians actually type one.
@@ -77,7 +77,7 @@ import { NativeSelect } from "./native-select.tsx";
  */
 
 export interface PhoneCountry {
-  /** ISO 3166-1 alpha-2, uppercase. The `<option>`'s value. */
+  /** ISO 3166-1 alpha-2, uppercase. The dropdown item's value. */
   code: string;
   /** Dial code WITHOUT the plus, e.g. "98". */
   dial: string;
@@ -276,36 +276,21 @@ export function PhoneInput({
     >
       <Label>{label}</Label>
       <div className={phoneInputRowVariants()}>
-        {/*
-         * A native select and not the styled one: this is a long list of
-         * country names on a form that is very often filled on a phone, and the
-         * platform's own picker is the control people can use one-handed.
-         * `native-select.tsx` makes that argument in full.
-         */}
-        <NativeSelect
+        <SelectField
           label={countryLabel}
-          // Hidden, not absent. The field already shows one visible label —
-          // «شمارهٔ موبایل» — and a second visible one would read as two
-          // separate questions. The name still has to exist: this is a real
-          // control and `named-controls` fails the build on an unnamed one.
-          labelHidden
-          value={country?.code ?? countryCode}
-          onChange={(event) => setCountryCode(event.target.value)}
-          {...(isDisabled === true ? { disabled: true } : {})}
-          className="w-auto shrink-0"
-        >
-          {countries.map((c) => (
-            <option key={c.code} value={c.code}>
-              {/*
-               * The country's own name plus its dial code. The dial code is
-               * rendered in the reader's numerals — it is a number they read,
-               * not an identifier — while the `+` sits inside the same `<bdi>`
-               * on the input below, where it can actually be isolated.
-               */}
-              {`${c.name[locale]} +${renderDigits(c.dial, locale)}`}
-            </option>
-          ))}
-        </NativeSelect>
+          placeholder={countryLabel}
+          selectedKey={country?.code ?? countryCode}
+          onSelectionChange={(key) => {
+            if (key !== null) setCountryCode(key);
+          }}
+          isDisabled={isDisabled}
+          className="w-36 shrink-0 sm:w-44"
+          triggerClassName="w-full"
+          options={countries.map((c) => ({
+            value: c.code,
+            label: `${c.name[locale]} +${renderDigits(c.dial, locale)}`,
+          }))}
+        />
 
         {/*
          * `bdi` + `data-lumo-latn`: the number is an LTR island. See the file

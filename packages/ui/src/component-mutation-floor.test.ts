@@ -1,5 +1,5 @@
 /**
- * Breadth floor for the 112-module mutation campaign.
+ * Breadth floor for the 111-module mutation campaign.
  *
  * Ninety-seven implementation modules render styled DOM and therefore contain
  * JSX `className` assignments. Removing those assignments from one module is an
@@ -29,8 +29,8 @@ const behaviorAnchors: Readonly<Record<string, string>> = {
 };
 
 describe("the systematic component mutation floor", () => {
-  it("grades the declared 112-module catalogue", () => {
-    expect(componentFiles).toHaveLength(112);
+  it("grades the declared 111-module catalogue", () => {
+    expect(componentFiles).toHaveLength(111);
   });
 
   it.each(componentFiles)("%s preserves its campaign anchor", (file) => {

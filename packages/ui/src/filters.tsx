@@ -5,12 +5,13 @@ import {
   useRef,
   useState,
   type ComponentProps,
-  type ChangeEvent,
 } from "react";
 import { cn } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
 import { inputVariants } from "./text-field.tsx";
-import { nativeSelectVariants } from "./native-select.tsx";
+import { SelectField } from "./select.tsx";
+import { MultiSelect } from "./multi-select.tsx";
+import { useLumoLocale } from "./locale.ts";
 import {
   assertQuery,
   createFilter,
@@ -83,6 +84,10 @@ export interface FiltersStrings {
   valueLabel: string;
   /** Full localized sentence. `{field}` is replaced with the field label. */
   removeFilterTemplate: string;
+  /** Announced name for the multi-value suggestion list. */
+  valueSuggestionsLabel: string;
+  /** Full localized sentence. `{value}` is replaced with the option label. */
+  removeValueTemplate: string;
   /** Caller-owned fallback when a value-taking operator has no value. */
   invalidFilter: string;
 }
@@ -134,6 +139,7 @@ export function Filters({
   className,
   ...props
 }: FiltersProps) {
+  const locale = useLumoLocale();
   const generatedId = useId();
   const nextId = useRef(0);
   const [uncontrolled, setUncontrolled] = useState<readonly FilterClause[]>(defaultValue);
@@ -193,56 +199,50 @@ export function Filters({
               data-invalid={error === null ? undefined : ""}
             >
               <div className="grid gap-2 sm:grid-cols-[minmax(8rem,1fr)_minmax(8rem,1fr)_minmax(10rem,2fr)_auto] sm:items-end">
-                <label className="flex min-w-0 flex-col gap-1.5 text-sm font-medium text-fg">
-                  {strings.fieldLabel}
-                  <select
-                    data-lumo=""
-                    className={cn(nativeSelectVariants({ size: "sm" }))}
-                    aria-label={strings.fieldLabel}
-                    value={field.id}
-                    onChange={(event) => {
-                      const nextField = fieldsById.get(event.currentTarget.value)!;
+                <SelectField
+                  label={strings.fieldLabel}
+                  placeholder={strings.fieldLabel}
+                  options={fields.map((candidate) => ({
+                    value: candidate.id,
+                    label: candidate.label,
+                  }))}
+                  selectedKey={field.id}
+                  onSelectionChange={(key) => {
+                      const nextField = fieldsById.get(key ?? "")!;
                       replaceClause(clause.id, {
                         id: clause.id,
                         fieldId: nextField.id,
                         operatorId: defaultOperator(nextField).id,
                         values: [],
                       });
-                    }}
-                  >
-                    {fields.map((candidate) => (
-                      <option key={candidate.id} value={candidate.id}>
-                        {candidate.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  }}
+                  showLabel
+                  size="sm"
+                  className="min-w-0"
+                />
 
-                <label className="flex min-w-0 flex-col gap-1.5 text-sm font-medium text-fg">
-                  {strings.operatorLabel}
-                  <select
-                    data-lumo=""
-                    className={cn(nativeSelectVariants({ size: "sm" }))}
-                    aria-label={strings.operatorLabel}
-                    value={operator.id}
-                    onChange={(event) => {
+                <SelectField
+                  label={strings.operatorLabel}
+                  placeholder={strings.operatorLabel}
+                  options={field.operators.map((candidate) => ({
+                    value: candidate.id,
+                    label: candidate.label,
+                  }))}
+                  selectedKey={operator.id}
+                  onSelectionChange={(key) => {
                       const nextOperator = field.operators.find(
-                        (candidate) => candidate.id === event.currentTarget.value,
+                        (candidate) => candidate.id === key,
                       )!;
                       replaceClause(clause.id, {
                         ...clause,
                         operatorId: nextOperator.id,
                         values: nextOperator.requiresValue === false ? [] : clause.values,
                       });
-                    }}
-                  >
-                    {field.operators.map((candidate) => (
-                      <option key={candidate.id} value={candidate.id}>
-                        {candidate.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                  }}
+                  showLabel
+                  size="sm"
+                  className="min-w-0"
+                />
 
                 {needsValue ? (
                   field.type === "text" ? (
@@ -264,35 +264,40 @@ export function Filters({
                         }
                       />
                     </label>
+                  ) : field.type === "multiselect" ? (
+                    <MultiSelect
+                      locale={locale}
+                      label={strings.valueLabel}
+                      placeholder={strings.valueLabel}
+                      suggestionsLabel={strings.valueSuggestionsLabel}
+                      removeLabel={(label) =>
+                        strings.removeValueTemplate.replaceAll("{value}", label)
+                      }
+                      options={field.options}
+                      value={clause.values}
+                      onValueChange={(values) =>
+                        replaceClause(clause.id, { ...clause, values })
+                      }
+                      className="min-w-0"
+                    />
                   ) : (
-                    <label className="flex min-w-0 flex-col gap-1.5 text-sm font-medium text-fg">
-                      {strings.valueLabel}
-                      <select
-                        data-lumo=""
-                        className={cn(nativeSelectVariants({ size: "sm" }))}
-                        aria-label={strings.valueLabel}
-                        aria-invalid={error === null ? undefined : true}
-                        aria-describedby={error === null ? undefined : errorId}
-                        multiple={field.type === "multiselect"}
-                        value={field.type === "multiselect" ? [...clause.values] : clause.values[0] ?? ""}
-                        onChange={(event: ChangeEvent<HTMLSelectElement>) => {
-                          const values =
-                            field.type === "multiselect"
-                              ? [...event.currentTarget.selectedOptions].map((option) => option.value)
-                              : event.currentTarget.value === ""
-                                ? []
-                                : [event.currentTarget.value];
-                          replaceClause(clause.id, { ...clause, values });
-                        }}
-                      >
-                        {field.type === "select" ? <option value="" /> : null}
-                        {field.options.map((option) => (
-                          <option key={option.value} value={option.value} disabled={option.disabled}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <SelectField
+                      label={strings.valueLabel}
+                      placeholder={strings.valueLabel}
+                      options={field.options}
+                      selectedKey={clause.values[0] ?? null}
+                      onSelectionChange={(key) =>
+                        replaceClause(clause.id, {
+                          ...clause,
+                          values: key === null ? [] : [key],
+                        })
+                      }
+                      isInvalid={error !== null}
+                      errorMessage={error}
+                      showLabel
+                      size="sm"
+                      className="min-w-0"
+                    />
                   )
                 ) : (
                   <span aria-hidden="true" />
@@ -308,7 +313,7 @@ export function Filters({
                   <span aria-hidden="true">×</span>
                 </Button>
               </div>
-              {error === null ? null : (
+              {error === null || (needsValue && field.type === "select") ? null : (
                 <p id={errorId} role="alert" className="mt-1.5 text-xs text-critical">
                   {error}
                 </p>

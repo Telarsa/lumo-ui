@@ -15,7 +15,7 @@ decision was superseded by the verified Base UI migration described in
 
 ## Current measured state — 13 August 2026
 
-- **112 implementation modules, 113 public component pages, 30 blocks and 142
+- **111 implementation modules, 112 public component pages, 30 blocks and 141
   generated registry items.** `IconButton` has its own page but shares
   `button.tsx`, which explains the one-page difference.
 - The complete English/LTR and Persian/RTL catalogue pass covered **198 rendered
@@ -23,13 +23,13 @@ decision was superseded by the verified Base UI migration described in
 - Real VoiceOver and Android TalkBack passes found and fixed defects. NVDA,
   JAWS and a current Chrome/TalkBack matrix remain deliberately deferred; they
   earn no score until an OS-independent hosted device/AT route is available.
-- The latest complete verification baseline covers **2,912 tests, 142
-  clean-room registry payloads and 598 generated documents**. Waves 1–3 have
+- The latest complete verification baseline covers **2,904 tests, 141
+  clean-room registry payloads and 594 generated documents**. Waves 1–3 have
   focused red/green, mutation, production-build and browser evidence.
-- The last evidence-backed whole-library rating is **9.3/10**, after the
-  independent-review reset, remediation, full visual/mutation pass and two real
-  AT environments. The newer product foundations have not been used to inflate
-  that number before a fresh end-to-end evaluation.
+- The current evidence-backed whole-library rating is **9.6/10**, after the
+  independent-review reset, remediation, full visual/mutation pass, two real AT
+  environments, Waves 1–3 and the product-wide Lumo dropdown migration. The
+  score still excludes deferred Windows AT and unshipped Wave 4 breadth.
 
 ## Product-depth programme — current plan
 
@@ -159,10 +159,10 @@ checked individually so a partly integrated engine is not disguised as either
 
 | surface | current state | acceptance rule |
 |---|---|---|
-| Components | **112 implementation modules / 113 public pages** | real behavior or caller complexity removed; no count-only aliases |
+| Components | **111 implementation modules / 112 public pages** | real behavior or caller complexity removed; no count-only aliases |
 | Blocks | **30** | compose public Lumo APIs only |
 | Locales | `fa-IR`, `en-US` | complete-or-compile-error |
-| Registry | **142 generated items** | dependency-validated, copied and typechecked outside the workspace |
+| Registry | **141 generated items** | dependency-validated, copied and typechecked outside the workspace |
 | Gates | prop/root, API, registry, consumer, HTML and vocabulary tiers | every rule needs a poison or mutation that proves it can fail |
 
 Competitor counts are deliberately not a target: catalogues mix primitives,

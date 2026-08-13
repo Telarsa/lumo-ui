@@ -10,7 +10,7 @@
  *     pager the first time;
  *   · the 0-based ↔ 1-based conversion between TanStack and `Pagination`;
  *   · that every integer on the footer went through `formatNumber`, including
- *     the `<option>` text, which is the one place `LumoNode` cannot refuse a
+ *     the dropdown item text, which is reader-facing even though its key stays
  *     bare number;
  *   · that the last visible column cannot be hidden — a trapped state, not a
  *     styling nicety.
@@ -417,19 +417,21 @@ describe("DataGridPagination — 0-based TanStack against a 1-based pager", () =
 describe("DataGridPagination — rows per page", () => {
   const SIZES = [10, 25, 50] as const;
 
-  it("renders every option through formatNumber while the VALUE stays ASCII", () => {
-    // The one place `LumoNode` cannot help: `<option>` text is not JSX children
-    // it can refuse. The value has to stay ASCII because `Number()` parses it
-    // straight back — the same in/out split `input-otp.tsx` draws.
+  it("renders every dropdown item through formatNumber while the submitted value stays ASCII", () => {
     const table = stubTable({ rowCount: 48, pageSize: 10 });
     const { container } = render(
       <DataGrid locale="fa-IR" table={table}>
         <DataGridPagination {...PAGER} pageSizeLabel="تعداد در هر صفحه" pageSizes={SIZES} />
       </DataGrid>,
     );
-    const options = [...container.querySelectorAll("option")];
-    expect(options.map((o) => o.textContent)).toEqual(["۱۰", "۲۵", "۵۰"]);
-    expect(options.map((o) => o.getAttribute("value"))).toEqual(["10", "25", "50"]);
+    const control = screen.getByRole("combobox", { name: "تعداد در هر صفحه" });
+    fireEvent.click(control);
+    expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+      "۱۰",
+      "۲۵",
+      "۵۰",
+    ]);
+    expect(container.querySelector('input[aria-hidden="true"]')?.getAttribute("value")).toBe("10");
   });
 
   it("names the control even though its label is visually hidden", () => {
@@ -439,7 +441,9 @@ describe("DataGridPagination — rows per page", () => {
         <DataGridPagination {...PAGER} pageSizeLabel="تعداد در هر صفحه" pageSizes={SIZES} />
       </DataGrid>,
     );
-    expect(screen.getByRole("combobox", { name: "تعداد در هر صفحه" })).toBeTruthy();
+    const control = screen.getByRole("combobox", { name: "تعداد در هر صفحه" });
+    expect(control.tagName).toBe("BUTTON");
+    expect(document.querySelector("select")).toBeNull();
   });
 
   it("returns to page one when the size changes", () => {
@@ -451,9 +455,10 @@ describe("DataGridPagination — rows per page", () => {
         <DataGridPagination {...PAGER} pageSizeLabel="تعداد در هر صفحه" pageSizes={SIZES} />
       </DataGrid>,
     );
-    fireEvent.change(screen.getByRole("combobox", { name: "تعداد در هر صفحه" }), {
-      target: { value: "50" },
-    });
+    fireEvent.click(screen.getByRole("combobox", { name: "تعداد در هر صفحه" }));
+    const option = screen.getByRole("option", { name: "۵۰" });
+    fireEvent.pointerDown(option, { pointerType: "mouse" });
+    fireEvent.click(option);
     expect(table.calls.pageSize).toEqual([50]);
     expect(table.calls.pageIndex).toEqual([0]);
   });
@@ -473,7 +478,7 @@ describe("DataGridPagination — rows per page", () => {
    *
    * `pageSizeLabel` was documented "REQUIRED" and typed `string | undefined`,
    * and the render guard read `pageSizeLabel !== undefined`. So a caller who
-   * offered sizes and forgot the name did not get an unnamed `<select>` and did
+   * offered sizes and forgot the name did not get an unnamed dropdown and did
    * not get an error: the rows-per-page control SILENTLY DISAPPEARED, and every
    * assertion in this file above still passed because each one supplies both.
    *

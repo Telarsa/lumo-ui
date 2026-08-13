@@ -20,9 +20,11 @@ const strings: PowerSearchStrings = {
   noFields: "فیلدی پیدا نشد",
   editFilterTemplate: "ویرایش فیلتر: {field}",
   removeFilterTemplate: "حذف فیلتر: {field}",
+  removeValueTemplate: "حذف مقدار: {value}",
   fieldLabel: "فیلد",
   operatorLabel: "عملگر",
   valueLabel: "مقدار",
+  valueSuggestionsLabel: "مقدارهای موجود",
   apply: "اعمال",
   cancel: "انصراف",
   invalidFilter: "مقدار این فیلتر معتبر نیست",
@@ -131,9 +133,10 @@ describe("PowerSearch", () => {
     );
 
     const nested = screen.getByRole("group", { name: "گروه هرکدام" });
-    fireEvent.change(within(nested).getByRole("combobox", { name: strings.operatorLabel }), {
-      target: { value: "and" },
-    });
+    fireEvent.click(within(nested).getByRole("combobox", { name: strings.operatorLabel }));
+    const allOption = screen.getByRole("option", { name: strings.andLabel });
+    fireEvent.pointerDown(allOption, { pointerType: "mouse" });
+    fireEvent.click(allOption);
 
     expect(onValueChange).toHaveBeenLastCalledWith(
       expect.objectContaining({
@@ -291,7 +294,10 @@ describe("PowerSearch", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "ویرایش فیلتر: بایگانی" }));
-    expect(within(screen.getByRole("dialog")).getByRole("option", { name: "بله" })).toBeTruthy();
+    expect(
+      within(screen.getByRole("dialog")).getByRole("combobox", { name: strings.valueLabel })
+        .textContent,
+    ).toContain("بله");
 
     cleanup();
     render(
@@ -302,8 +308,11 @@ describe("PowerSearch", () => {
       />,
     );
     fireEvent.click(screen.getByRole("button", { name: "ویرایش فیلتر: مالک" }));
-    const multi = within(screen.getByRole("dialog")).getByLabelText(strings.valueLabel);
-    expect(multi.getAttribute("multiple")).not.toBeNull();
+    const multi = within(screen.getByRole("dialog")).getByRole("combobox", {
+      name: strings.valueLabel,
+    });
+    expect(multi.tagName).toBe("INPUT");
+    expect(document.querySelector("select")).toBeNull();
   });
 
   it("collapses excess tokens without removing them from the query", () => {
@@ -350,9 +359,12 @@ describe("PowerSearch", () => {
     );
     expect(screen.getByRole("status").textContent).toContain("12 نتیجه");
     expect(screen.getByRole("status").textContent).toContain("در حال دریافت نتیجه‌ها");
-    fireEvent.change(screen.getByRole("combobox", { name: strings.savedViewsLabel }), {
-      target: { value: "open" },
-    });
+    expect(screen.getByRole("combobox", { name: strings.savedViewsLabel }).tagName).toBe("BUTTON");
+    expect(document.querySelector("select")).toBeNull();
+    fireEvent.click(screen.getByRole("combobox", { name: strings.savedViewsLabel }));
+    const savedView = screen.getByRole("option", { name: "سفارش‌های باز" });
+    fireEvent.pointerDown(savedView, { pointerType: "mouse" });
+    fireEvent.click(savedView);
     expect(onValueChange).toHaveBeenCalledWith([
       { id: "saved-open", fieldId: "status", operatorId: "is", values: ["open"] },
     ]);

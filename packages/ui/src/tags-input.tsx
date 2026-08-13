@@ -4,14 +4,13 @@ import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@lumo-ui/core";
 
-export interface TagsInputProps {
+interface TagsInputBaseProps {
   label: string;
   placeholder: string;
   removeLabel: (tag: string) => string;
   value?: readonly string[];
   defaultValue?: readonly string[];
   onValueChange?: (value: readonly string[]) => void;
-  suggestions?: readonly string[];
   splitCharacters?: readonly string[];
   isDuplicate?: (candidate: string, current: readonly string[]) => boolean;
   maxTags?: number;
@@ -19,6 +18,12 @@ export interface TagsInputProps {
   name?: string;
   className?: string;
 }
+
+export type TagsInputProps = TagsInputBaseProps &
+  (
+    | { suggestions?: undefined; suggestionsLabel?: undefined }
+    | { suggestions: readonly string[]; suggestionsLabel: string }
+  );
 
 export function TagsInput({
   label,
@@ -28,6 +33,7 @@ export function TagsInput({
   defaultValue = [],
   onValueChange,
   suggestions = [],
+  suggestionsLabel,
   splitCharacters = [","],
   isDuplicate = (candidate, current) => current.includes(candidate),
   maxTags,
@@ -38,7 +44,12 @@ export function TagsInput({
   const id = React.useId();
   const [internal, setInternal] = React.useState<readonly string[]>(defaultValue);
   const [draft, setDraft] = React.useState("");
+  const [open, setOpen] = React.useState(false);
+  const [activeIndex, setActiveIndex] = React.useState(0);
   const tags = value ?? internal;
+  const availableSuggestions = suggestions.filter(
+    (suggestion) => !isDuplicate(suggestion, tags) && suggestion.includes(draft),
+  );
   const commit = (next: readonly string[]) => {
     if (value === undefined) setInternal(next);
     onValueChange?.(next);
@@ -57,7 +68,7 @@ export function TagsInput({
     setDraft("");
   };
   return (
-    <div data-lumo="" className={cn("flex w-full flex-col gap-1.5", className)}>
+    <div data-lumo="" className={cn("relative flex w-full flex-col gap-1.5", className)}>
       <label htmlFor={id} className="text-sm font-medium text-fg">{label}</label>
       <div className="flex min-h-10 flex-wrap items-center gap-1 rounded-md border border-border-control bg-surface px-2 py-1">
         {tags.map((tag, index) => (
@@ -70,14 +81,41 @@ export function TagsInput({
         ))}
         <input
           id={id}
-          list={`${id}-suggestions`}
+          role="combobox"
+          aria-expanded={open && availableSuggestions.length > 0}
+          aria-controls={open && availableSuggestions.length > 0 ? `${id}-suggestions` : undefined}
+          aria-activedescendant={
+            open && availableSuggestions[activeIndex] !== undefined
+              ? `${id}-suggestion-${activeIndex}`
+              : undefined
+          }
           value={draft}
           disabled={isDisabled}
           placeholder={tags.length === 0 ? placeholder : undefined}
           className="min-w-24 flex-1 bg-transparent py-1 text-sm outline-none"
-          onChange={(event) => setDraft(event.currentTarget.value)}
+          onFocus={() => setOpen(true)}
+          onBlur={() => queueMicrotask(() => setOpen(false))}
+          onChange={(event) => {
+            setDraft(event.currentTarget.value);
+            setActiveIndex(0);
+            setOpen(true);
+          }}
           onKeyDown={(event) => {
-            if (event.key === "Enter") { event.preventDefault(); add(draft); }
+            if (event.key === "ArrowDown" && availableSuggestions.length > 0) {
+              event.preventDefault();
+              setOpen(true);
+              setActiveIndex((activeIndex + 1) % availableSuggestions.length);
+            } else if (event.key === "ArrowUp" && availableSuggestions.length > 0) {
+              event.preventDefault();
+              setOpen(true);
+              setActiveIndex((activeIndex - 1 + availableSuggestions.length) % availableSuggestions.length);
+            } else if (event.key === "Enter") {
+              event.preventDefault();
+              add(open && availableSuggestions[activeIndex] !== undefined ? availableSuggestions[activeIndex] : draft);
+              setOpen(false);
+            } else if (event.key === "Escape") {
+              setOpen(false);
+            }
             if (event.key === "Backspace" && !draft && tags.length > 0) commit(tags.slice(0, -1));
           }}
           onPaste={(event) => {
@@ -85,8 +123,33 @@ export function TagsInput({
             if (splitCharacters.some((separator) => text.includes(separator))) { event.preventDefault(); add(text); }
           }}
         />
-        <datalist id={`${id}-suggestions`}>{suggestions.map((suggestion) => <option key={suggestion} value={suggestion} />)}</datalist>
       </div>
+      {open && availableSuggestions.length > 0 ? (
+        <div
+          id={`${id}-suggestions`}
+          role="listbox"
+          aria-label={suggestionsLabel}
+          className="absolute inset-is-0 top-full z-40 mt-1 w-full rounded-md border border-border bg-surface p-1 shadow-overlay"
+        >
+          {availableSuggestions.map((suggestion, index) => (
+            <button
+              key={suggestion}
+              id={`${id}-suggestion-${index}`}
+              type="button"
+              role="option"
+              aria-selected={index === activeIndex}
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={() => {
+                add(suggestion);
+                setOpen(false);
+              }}
+              className="flex w-full rounded-sm px-2 py-1.5 text-start text-sm text-fg outline-none aria-selected:bg-surface-hover"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      ) : null}
       {name === undefined ? null : tags.map((tag, index) => <input key={`${tag}-${index}`} type="hidden" name={name} value={tag} />)}
     </div>
   );

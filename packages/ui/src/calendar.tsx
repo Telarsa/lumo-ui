@@ -1,8 +1,8 @@
 "use client";
 
-import { useId, type ComponentProps } from "react";
+import { useId, type ChangeEvent, type ComponentProps } from "react";
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, type DropdownProps } from "react-day-picker";
 import type { CalendarDate } from "@internationalized/date";
 import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
@@ -23,6 +23,7 @@ import {
   calendarVariants,
 } from "./calendar.variants.ts";
 import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
+import { SelectField } from "./select.tsx";
 
 export {
   calendarCellVariants,
@@ -152,12 +153,12 @@ export {
  * failure than the one being fixed and is the whole of the argument.
  *
  * Note also that `startMonth`/`endMonth` are what `getYearOptions` reads: the
- * year `<select>` derives its option list from `navStart`/`navEnd` alone, so
+ * year dropdown derives its option list from `navStart`/`navEnd` alone, so
  * dropping them would empty the dropdowns the union below requires bounds FOR.
  *
  * ═══ THE CAPTION DROPDOWNS, AND WHY A YEAR LIST NEEDS BOUNDS IN THE TYPE ════
  *
- * `captionLayout` turns the month/year caption into two real `<select>`s. It
+ * `captionLayout` turns the month/year caption into two Lumo dropdowns. It
  * exists because paging is the only other way to move, and paging is counted in
  * MONTHS: a reader born in ۱۳۶۰ is 540 of them from ۱۴۰۵/۵, so a date of birth
  * was 540 presses of «ماه پیش» and is now two choices. The apparatus to do it —
@@ -184,7 +185,7 @@ export {
  * `event-calendar.tsx` and `date-selector.tsx` both made a required prop of
  * (`defaultFocusedDate`, and presets resolved on press): the server that renders
  * at 23:59 on ۲۹ اسفند and the client that hydrates a minute later disagree, and
- * the disagreement is not a highlight this time but the CONTENTS of a `<select>`.
+ * the disagreement is not a highlight this time but the dropdown contents.
  * It is also a nondeterministic build — the same source produces a different
  * static page tomorrow. Measured, in `dates.test.tsx` («a year list with no
  * bounds is a different list tomorrow»): under two fake clocks a year apart, an
@@ -198,7 +199,7 @@ export {
  *     <Calendar captionLayout="dropdown" minValue={…} maxValue={…} />
  *
  * `"dropdown-months"` is deliberately NOT in that half of the union. It renders
- * one `<select>` of the twelve months of the DISPLAYED year — `getMonthOptions`
+ * one dropdown of the twelve months of the DISPLAYED year — `getMonthOptions`
  * takes `navStart`/`navEnd` only to disable options, and `hasYearDropdown` above
  * excludes it — so it reads no clock, and requiring bounds for it would be a
  * required prop the code cannot justify.
@@ -229,7 +230,7 @@ export type CalendarCaptionLayout = "label" | "dropdown" | "dropdown-months" | "
  */
 export type CalendarNavigation =
   | {
-      /** Paging chevrons only, or a month `<select>` — neither reads a clock. */
+      /** Paging chevrons only, or a month dropdown — neither reads a clock. */
       captionLayout?: "label" | "dropdown-months" | undefined;
       /** Earliest selectable DAY. Itself selectable; the day before it is not. */
       minValue?: CalendarDate | undefined;
@@ -237,7 +238,7 @@ export type CalendarNavigation =
       maxValue?: CalendarDate | undefined;
     }
   | {
-      /** A year `<select>`. Both bounds are REQUIRED — see the header. */
+      /** A year dropdown. Both bounds are REQUIRED — see the header. */
       captionLayout: "dropdown" | "dropdown-years";
       /** Earliest selectable DAY, and the first year in the list. */
       minValue: CalendarDate;
@@ -386,7 +387,7 @@ export function calendarClassNames(): Record<string, string> {
  * only two react-day-picker emitted while there were no dropdowns, and it
  * became wrong the moment `captionLayout` was reachable: `Dropdown.js` renders
  * `<Chevron orientation="down" size={18} />` beside the caption, so a Persian
- * calendar's month `<select>` was marked with «‹» — the PREVIOUS-month glyph in
+ * calendar's month dropdown was marked with «‹» — the PREVIOUS-month glyph in
  * an RTL script, on a control that opens a list. A chevron on a select is the
  * one that is not direction-sensitive at all: a list opens downward in every
  * script, so `down` is a third case and not a side.
@@ -405,6 +406,31 @@ export function calendarChevron(locale: Locale) {
       orientation === "down" ? ChevronDownIcon : orientation === "left" ? Previous : Next;
     return <Icon aria-hidden="true" className="size-4" />;
   };
+}
+
+/** Adapts react-day-picker's numeric dropdown contract to Lumo's Select. */
+export function CalendarDropdown({ options = [], value, onChange, disabled, "aria-label": label }: DropdownProps) {
+  const accessibleLabel = label ?? "";
+  return (
+    <SelectField
+      label={accessibleLabel}
+      placeholder={accessibleLabel}
+      options={options.map((option) => ({
+        value: String(option.value),
+        label: option.label,
+        disabled: option.disabled,
+      }))}
+      selectedKey={value === undefined ? null : String(value)}
+      onSelectionChange={(key) => {
+        if (key === null || onChange === undefined) return;
+        onChange({ target: { value: key } } as ChangeEvent<HTMLSelectElement>);
+      }}
+      isDisabled={disabled}
+      size="sm"
+      className="relative z-[1] w-auto"
+      triggerClassName="w-auto min-w-24"
+    />
+  );
 }
 
 /**
@@ -578,7 +604,7 @@ export function Calendar({
         labels={config.labels as never}
         weekStartsOn={config.weekStartsOn as never}
         classNames={calendarClassNames()}
-        components={{ Chevron: calendarChevron(locale) }}
+        components={{ Chevron: calendarChevron(locale), Dropdown: CalendarDropdown }}
         /*
          * Omitted entirely when absent rather than passed as `"label"`:
          * `captionLayout?.startsWith("dropdown")` is what upstream branches on,
@@ -608,7 +634,7 @@ export function Calendar({
          * keyboard reader moves, so it would be an unbounded run for them too.
          *
          * They are also load-bearing for `captionLayout`: `getYearOptions`
-         * derives the year `<select>`'s options from `navStart`/`navEnd`
+         * derives the year dropdown's options from `navStart`/`navEnd`
          * alone, so removing them would empty the dropdowns the union in
          * `CalendarNavigation` requires bounds FOR. `dates.test.tsx` pins
          * both halves — the ۱۳۰۰…۱۴۰۵ option list, and the disabled ۱۴ مرداد.

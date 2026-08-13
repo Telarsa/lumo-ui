@@ -7,7 +7,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
 import { cn, type LumoNode, type ValidationError } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
-import { Description, Field, FieldError, optional, useFieldControl } from "./form.tsx";
+import { Description, Field, FieldError, Label, optional, useFieldControl } from "./form.tsx";
 import type { AsyncCollectionPresentation } from "./async-collection.ts";
 import { Button } from "./button.tsx";
 
@@ -226,7 +226,7 @@ export const selectPopoverVariants = cva(
   // positioner writes `--anchor-width` (verified in useAnchorPositioning.mjs).
   // The variable name is engine-owned, so this is a forced edit, not a restyle
   // — keeping `--trigger-width` would silently shrink-wrap the panel.
-  "w-[var(--anchor-width)] overflow-auto p-0",
+  "w-[var(--anchor-width)] max-h-[min(20rem,var(--available-height))] overflow-hidden p-0",
 );
 
 export const selectListBoxVariants = cva("max-h-[inherit] overflow-auto p-1 outline-none");
@@ -677,6 +677,78 @@ export function SelectValue<T extends object>({ className, children }: SelectVal
     >
       {children}
     </BaseSelect.Value>
+  );
+}
+
+export interface SelectFieldOption {
+  value: string;
+  label: string;
+  disabled?: boolean | undefined;
+}
+
+export interface SelectFieldProps extends SelectTriggerVariantProps {
+  label: string;
+  placeholder: string;
+  options: readonly SelectFieldOption[];
+  selectedKey?: string | null | undefined;
+  defaultSelectedKey?: string | null | undefined;
+  onSelectionChange?: ((key: string | null) => void) | undefined;
+  isDisabled?: boolean | undefined;
+  isInvalid?: boolean | undefined;
+  errorMessage?: LumoNode;
+  name?: string | undefined;
+  showLabel?: boolean | undefined;
+  className?: string | undefined;
+  triggerClassName?: string | undefined;
+}
+
+/**
+ * The compact spelling of Lumo's full Select composition for product widgets.
+ * It owns no state or keyboard model; those remain in the public Select parts.
+ */
+export function SelectField({
+  label,
+  placeholder,
+  options,
+  selectedKey,
+  defaultSelectedKey,
+  onSelectionChange,
+  isDisabled,
+  isInvalid,
+  errorMessage,
+  name,
+  showLabel = false,
+  size,
+  className,
+  triggerClassName,
+}: SelectFieldProps) {
+  return (
+    <Select<object>
+      placeholder={placeholder}
+      aria-label={label}
+      {...(selectedKey === undefined ? {} : { selectedKey })}
+      {...(defaultSelectedKey === undefined ? {} : { defaultSelectedKey })}
+      {...(onSelectionChange === undefined ? {} : { onSelectionChange })}
+      {...(isDisabled === undefined ? {} : { isDisabled })}
+      {...(isInvalid === undefined ? {} : { isInvalid })}
+      {...(errorMessage == null ? {} : { errorMessage })}
+      {...(name === undefined ? {} : { name })}
+      {...(className === undefined ? {} : { className })}
+    >
+      {showLabel ? <Label>{label}</Label> : null}
+      <SelectTrigger size={size} className={triggerClassName} />
+      <SelectPopover>
+        {options.map((option) => (
+          <SelectItem
+            key={option.value}
+            id={option.value}
+            {...(option.disabled === undefined ? {} : { isDisabled: option.disabled })}
+          >
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectPopover>
+    </Select>
   );
 }
 

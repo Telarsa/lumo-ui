@@ -4,12 +4,12 @@ import {
   useId,
   useRef,
   useState,
-  type ChangeEvent,
   type ComponentProps,
 } from "react";
 import { cn, formatDate, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
-import { nativeSelectVariants } from "./native-select.tsx";
+import { SelectField } from "./select.tsx";
+import { MultiSelect } from "./multi-select.tsx";
 import { Popover, PopoverTrigger } from "./popover.tsx";
 import { inputVariants } from "./text-field.tsx";
 import { useLumoLocale } from "./locale.ts";
@@ -120,6 +120,9 @@ export interface PowerSearchStrings {
   fieldLabel: string;
   operatorLabel: string;
   valueLabel: string;
+  valueSuggestionsLabel: string;
+  /** Full localized sentence. `{value}` is replaced with the option label. */
+  removeValueTemplate: string;
   apply: string;
   cancel: string;
   invalidFilter: string;
@@ -270,6 +273,9 @@ interface ValueEditorProps {
   isDisabled: boolean;
   isInvalid: boolean;
   describedBy: string | undefined;
+  locale: Locale;
+  suggestionsLabel: string;
+  removeValueTemplate: string;
 }
 
 function ValueEditor({
@@ -280,6 +286,9 @@ function ValueEditor({
   isDisabled,
   isInvalid,
   describedBy,
+  locale,
+  suggestionsLabel,
+  removeValueTemplate,
 }: ValueEditorProps) {
   const common = {
     "aria-label": label,
@@ -298,48 +307,53 @@ function ValueEditor({
       describedBy,
     });
   }
-  if (field.type === "select" || field.type === "multiselect" || field.type === "entity") {
+  if (field.type === "multiselect") {
     return (
-      <select
-        data-lumo=""
-        {...common}
-        multiple={field.type === "multiselect"}
-        value={field.type === "multiselect" ? [...values] : values[0] ?? ""}
-        onChange={(event: ChangeEvent<HTMLSelectElement>) => {
-          const next =
-            field.type === "multiselect"
-              ? Array.from(event.currentTarget.selectedOptions, (option) => option.value)
-              : event.currentTarget.value === ""
-                ? []
-                : [event.currentTarget.value];
-          onValuesChange(next);
-        }}
-        className={cn(nativeSelectVariants({ size: "sm" }))}
-      >
-        {field.type === "multiselect" ? null : <option value="" />}
-        {field.options.map((option) => (
-          <option key={option.value} value={option.value} disabled={option.disabled}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <MultiSelect
+        locale={locale}
+        label={label}
+        placeholder={label}
+        suggestionsLabel={suggestionsLabel}
+        removeLabel={(optionLabel) =>
+          removeValueTemplate.replaceAll("{value}", optionLabel)
+        }
+        options={field.options}
+        value={values}
+        onValueChange={onValuesChange}
+        isDisabled={isDisabled}
+        className="min-w-0"
+      />
+    );
+  }
+  if (field.type === "select" || field.type === "entity") {
+    return (
+      <SelectField
+        label={label}
+        placeholder={label}
+        options={field.options}
+        selectedKey={values[0] ?? null}
+        onSelectionChange={(key) => onValuesChange(key === null ? [] : [key])}
+        isDisabled={isDisabled}
+        isInvalid={isInvalid}
+        size="sm"
+      />
     );
   }
   if (field.type === "boolean") {
     return (
-      <select
-        data-lumo=""
-        {...common}
-        value={values[0] ?? ""}
-        onChange={(event) =>
-          onValuesChange(event.currentTarget.value === "" ? [] : [event.currentTarget.value])
-        }
-        className={cn(nativeSelectVariants({ size: "sm" }))}
-      >
-        <option value="" />
-        <option value="true">{field.trueLabel}</option>
-        <option value="false">{field.falseLabel}</option>
-      </select>
+      <SelectField
+        label={label}
+        placeholder={label}
+        options={[
+          { value: "true", label: field.trueLabel },
+          { value: "false", label: field.falseLabel },
+        ]}
+        selectedKey={values[0] ?? null}
+        onSelectionChange={(key) => onValuesChange(key === null ? [] : [key])}
+        isDisabled={isDisabled}
+        isInvalid={isInvalid}
+        size="sm"
+      />
     );
   }
   return (
@@ -420,55 +434,49 @@ function PowerSearchToken({
       </Button>
       <Popover placement="bottom start" className="w-[min(28rem,calc(100vw-2rem))]">
         <div className="grid gap-3">
-          <label className="grid gap-1.5 text-sm font-medium text-fg">
-            {strings.fieldLabel}
-            <select
-              data-lumo=""
-              aria-label={strings.fieldLabel}
-              value={draftField.id}
-              onChange={(event) => {
-                const nextField = fieldsById.get(event.currentTarget.value)!;
+          <SelectField
+            label={strings.fieldLabel}
+            placeholder={strings.fieldLabel}
+            options={fields.map((candidate) => ({
+              value: candidate.id,
+              label: candidate.label,
+              disabled: candidate.disabled,
+            }))}
+            selectedKey={draftField.id}
+            onSelectionChange={(key) => {
+                const nextField = fieldsById.get(key ?? "")!;
                 setDraft({
                   ...draft,
                   fieldId: nextField.id,
                   operatorId: defaultOperator(nextField).id,
                   values: [],
                 });
-              }}
-              className={cn(nativeSelectVariants({ size: "sm" }))}
-            >
-              {fields.map((candidate) => (
-                <option key={candidate.id} value={candidate.id} disabled={candidate.disabled}>
-                  {candidate.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="grid gap-1.5 text-sm font-medium text-fg">
-            {strings.operatorLabel}
-            <select
-              data-lumo=""
-              aria-label={strings.operatorLabel}
-              value={operator.id}
-              onChange={(event) => {
+            }}
+            showLabel
+            size="sm"
+          />
+          <SelectField
+            label={strings.operatorLabel}
+            placeholder={strings.operatorLabel}
+            options={draftField.operators.map((candidate) => ({
+              value: candidate.id,
+              label: candidate.label,
+              disabled: candidate.disabled,
+            }))}
+            selectedKey={operator.id}
+            onSelectionChange={(key) => {
                 const nextOperator = draftField.operators.find(
-                  (candidate) => candidate.id === event.currentTarget.value,
+                  (candidate) => candidate.id === key,
                 )!;
                 setDraft({
                   ...draft,
                   operatorId: nextOperator.id,
                   values: nextOperator.requiresValue === false ? [] : draft.values,
                 });
-              }}
-              className={cn(nativeSelectVariants({ size: "sm" }))}
-            >
-              {draftField.operators.map((candidate) => (
-                <option key={candidate.id} value={candidate.id} disabled={candidate.disabled}>
-                  {candidate.label}
-                </option>
-              ))}
-            </select>
-          </label>
+            }}
+            showLabel
+            size="sm"
+          />
           {needsValue ? (
             <label className="grid gap-1.5 text-sm font-medium text-fg">
               {strings.valueLabel}
@@ -480,6 +488,9 @@ function PowerSearchToken({
                 isDisabled={false}
                 isInvalid={error !== null}
                 describedBy={error === null ? undefined : errorId}
+                locale={locale}
+                suggestionsLabel={strings.valueSuggestionsLabel}
+                removeValueTemplate={strings.removeValueTemplate}
               />
             </label>
           ) : null}
@@ -577,19 +588,22 @@ function PowerSearchGroup({
       )}
     >
       <div className="flex flex-wrap items-center gap-2">
-        <select
-          data-lumo=""
-          aria-label={strings.operatorLabel}
-          value={group.combinator}
-          disabled={isDisabled || readOnly}
-          onChange={(event) =>
-            onChange({ ...group, combinator: event.currentTarget.value as QueryCombinator })
-          }
-          className={cn(nativeSelectVariants({ size: "sm" }), "w-auto")}
-        >
-          <option value="and">{strings.andLabel}</option>
-          <option value="or">{strings.orLabel}</option>
-        </select>
+        <SelectField
+          label={strings.operatorLabel}
+          placeholder={strings.operatorLabel}
+          options={[
+            { value: "and", label: strings.andLabel },
+            { value: "or", label: strings.orLabel },
+          ]}
+          selectedKey={group.combinator}
+          onSelectionChange={(key) => {
+            if (key !== null) onChange({ ...group, combinator: key as QueryCombinator });
+          }}
+          isDisabled={isDisabled || readOnly}
+          size="sm"
+          className="w-auto"
+          triggerClassName="w-auto min-w-24"
+        />
         <Button
           variant="ghost"
           size="sm"
@@ -771,13 +785,18 @@ export function PowerSearch({
       )}
       <div className="flex flex-wrap items-center gap-2">
         {savedViews.length === 0 ? null : (
-          <select
-            data-lumo=""
-            aria-label={strings.savedViewsLabel}
-            value={savedViewId}
-            disabled={unavailable}
-            onChange={(event) => {
-              const view = savedViews.find((candidate) => candidate.id === event.currentTarget.value);
+          <SelectField
+            label={strings.savedViewsLabel}
+            placeholder={strings.savedViewsPlaceholder}
+            options={savedViews.map((view) => ({
+              value: view.id,
+              label: view.label,
+              disabled: view.disabled,
+            }))}
+            selectedKey={savedViewId === "" ? null : savedViewId}
+            isDisabled={unavailable}
+            onSelectionChange={(key) => {
+              const view = savedViews.find((candidate) => candidate.id === key);
               if (view === undefined) {
                 setSavedViewId("");
                 return;
@@ -785,15 +804,9 @@ export function PowerSearch({
               update(view.query, view.id);
               onSavedViewChange?.(view);
             }}
-            className={cn(nativeSelectVariants({ size: "sm" }), "w-auto min-w-40")}
-          >
-            <option value="">{strings.savedViewsPlaceholder}</option>
-            {savedViews.map((view) => (
-              <option key={view.id} value={view.id} disabled={view.disabled}>
-                {view.label}
-              </option>
-            ))}
-          </select>
+            size="sm"
+            className="w-auto min-w-40"
+          />
         )}
         <div ref={wrapperRef} className="relative min-w-48 flex-1">
           <input

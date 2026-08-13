@@ -121,7 +121,7 @@ And it must not be justified by Tessalor's needs, because **Tessalor is not its
 best customer.** By this architecture the catalogue uses the stylesheet layer
 and almost none of the JavaScript layer — the chart type toggle, the category
 menu and the OS dropdown were all rebuilt this session as radio inputs,
-`<details>` and a native `<select>`, at 0 KB each. That is the correct outcome,
+`<details>` and other native disclosures, at 0 KB each. That is the correct outcome,
 not a failure of the library.
 
 The right order is to finish the 200 and **keep a note, per component, of where

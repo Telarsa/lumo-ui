@@ -7,6 +7,7 @@ import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
 import {
   calendarChevron,
+  CalendarDropdown,
   calendarClassNames,
   calendarDisabled,
   describedByWith,
@@ -110,7 +111,7 @@ export interface RangeCalendarBaseProps
 /**
  * The range grid's props, with the SAME caption-layout union `Calendar` uses.
  *
- * Imported rather than restated: a year `<select>` derives its options from the
+ * Imported rather than restated: a year dropdown derives its options from the
  * clock unless both bounds are given, and that argument does not change because
  * the grid selects two days instead of one. `calendar.tsx`'s header has the
  * measurement; a second copy of the union here is how one of the two components
@@ -206,7 +207,7 @@ export function RangeCalendar({
           day: rangeCalendarCellVariants(),
           ...rangeCalendarSelectionVariants(),
         }}
-        components={{ Chevron: calendarChevron(locale) }}
+        components={{ Chevron: calendarChevron(locale), Dropdown: CalendarDropdown }}
         // Forwarded only when stated, exactly as `Calendar` does — see the
         // comment there for why `undefined` is not spelled `"label"`.
         {...(captionLayout ? { captionLayout } : {})}

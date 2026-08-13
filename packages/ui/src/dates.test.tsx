@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -821,9 +821,16 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
    * every assertion in this block vacuous — so it throws instead.
    */
   const optionsOf = (root: ParentNode, name: string): string[] => {
-    const select = root.querySelector(`select[aria-label="${name}"]`);
-    if (!select) throw new Error(`no <select> named ${name} rendered`);
-    return [...select.querySelectorAll("option")].map((o) => o.textContent ?? "");
+    const native = root.querySelector(`select[aria-label="${name}"]`);
+    if (native) return [...native.querySelectorAll("option")].map((o) => o.textContent ?? "");
+    const trigger = root.querySelector(`button[role="combobox"][aria-label="${name}"]`);
+    if (!trigger) throw new Error(`no dropdown named ${name} rendered`);
+    fireEvent.click(trigger);
+    const options = [...document.querySelectorAll('[role="option"]')].map(
+      (option) => option.textContent ?? "",
+    );
+    fireEvent.keyDown(trigger, { key: "Escape" });
+    return options;
   };
 
   /** «مرداد» from `Intl`, computed rather than tabled — see this file's header. */
@@ -832,10 +839,12 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
 
   const persianYear = (year: number) => formatNumber(year, "fa-IR", { useGrouping: false });
 
-  it("renders two real <select>s: twelve Jalali months, and years in Persian digits", () => {
-    const root = parse(ssr(<Calendar {...CAL} {...DOB} defaultMonth={jalali(1360, 5, 1)} />));
+  it("renders two Lumo dropdowns: twelve Jalali months, and years in Persian digits", () => {
+    cleanup();
+    const { container: root } = live(<Calendar {...CAL} {...DOB} defaultMonth={jalali(1360, 5, 1)} />);
 
-    expect(root.querySelectorAll("select")).toHaveLength(2);
+    expect(root.querySelectorAll("select")).toHaveLength(0);
+    expect(root.querySelectorAll('button[role="combobox"]')).toHaveLength(2);
 
     /*
      * Every month, in order, EQUAL to what `Intl` says under the persian
@@ -871,28 +880,21 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
      * a prop-reachable label, and read out by its own option text.
      */
     const root = parse(html);
-    for (const select of root.querySelectorAll("select")) {
-      const painted = select.parentElement?.querySelector('span[aria-hidden="true"]');
-      expect(painted?.textContent?.trim()).toBeTruthy();
-      expect(painted?.textContent).not.toMatch(LATIN_WORD);
+    for (const dropdown of root.querySelectorAll('button[role="combobox"]')) {
+      expect(dropdown.textContent?.trim()).toBeTruthy();
+      expect(dropdown.textContent).not.toMatch(LATIN_WORD);
     }
   });
 
-  it("the selects are focusable and each one MOVES the grid", () => {
+  it("the dropdowns are focusable and each one MOVES the grid", () => {
     /*
-     * A native `<select>`: the keyboard model is the platform's, and jsdom
-     * cannot open a platform popup. What is measurable — and what was broken
-     * before, because the element did not exist — is that the control is
-     * reachable (focusable, not disabled) and that operating it navigates.
-     * `fireEvent.change` is exactly the event a keyboard selection dispatches.
+     * Lumo Select owns the keyboard model. What is measurable is that the
+     * control is reachable and selecting an item navigates the grid.
      */
     const { container } = live(<Calendar {...CAL} {...DOB} defaultMonth={jalali(1405, 5, 1)} />);
     const year = container.querySelector(
-      `select[aria-label="${YEAR_DROPDOWN}"]`,
-    ) as HTMLSelectElement;
-    const month = container.querySelector(
-      `select[aria-label="${MONTH_DROPDOWN}"]`,
-    ) as HTMLSelectElement;
+      `button[role="combobox"][aria-label="${YEAR_DROPDOWN}"]`,
+    ) as HTMLButtonElement;
 
     expect(year.disabled).toBe(false);
     expect(year.getAttribute("tabindex")).not.toBe("-1");
@@ -900,29 +902,55 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
     expect(document.activeElement).toBe(year);
 
     // Forty-five years, in one change. This is the whole point of the feature.
-    fireEvent.change(year, { target: { value: "1360" } });
+    fireEvent.click(year);
+    const yearOption = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+      (option) => option.textContent === persianYear(1360),
+    )!;
+    fireEvent.pointerDown(yearOption, { pointerType: "mouse" });
+    fireEvent.click(yearOption);
     expect(caption(container as HTMLElement)).toContain(persianYear(1360));
 
     // Month values are ZERO-BASED — `getMonth` in `calendar-datelib.ts` says so
     // — hence 9 for دی, the tenth month.
-    fireEvent.change(month, { target: { value: "9" } });
+    const month = container.querySelector(
+      `button[role="combobox"][aria-label="${MONTH_DROPDOWN}"]`,
+    ) as HTMLButtonElement;
+    fireEvent.click(month);
+    const monthOption = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(
+      (option) => option.textContent === monthName(10),
+    )!;
+    fireEvent.pointerDown(monthOption, { pointerType: "mouse" });
+    fireEvent.click(monthOption);
     const heading = caption(container as HTMLElement);
     expect(heading).toContain(monthName(10));
     expect(heading).toContain(persianYear(1360));
   });
 
+  it("keeps the year popup mounted after focus settles", async () => {
+    cleanup();
+    const { container } = live(<Calendar {...CAL} {...DOB} defaultMonth={jalali(1405, 5, 1)} />);
+    const year = container.querySelector(
+      `button[role="combobox"][aria-label="${YEAR_DROPDOWN}"]`,
+    ) as HTMLButtonElement;
+    fireEvent.click(year);
+    await waitFor(() => {
+      expect(year.getAttribute("aria-expanded")).toBe("true");
+      expect(document.querySelectorAll('[role="option"]')).toHaveLength(1405 - 1300 + 1);
+    });
+  });
+
   it("the range grid gets the same two selects, from the same union", () => {
-    const root = parse(
-      ssr(
+    cleanup();
+    const { container: root } = live(
         <RangeCalendar
           {...CAL}
           today={RANGE_TODAY}
           {...DOB}
           value={{ from: jalali(1360, 5, 10), to: jalali(1360, 5, 15) }}
         />,
-      ),
     );
-    expect(root.querySelectorAll("select")).toHaveLength(2);
+    expect(root.querySelectorAll("select")).toHaveLength(0);
+    expect(root.querySelectorAll('button[role="combobox"]')).toHaveLength(2);
     expect(optionsOf(root, MONTH_DROPDOWN)).toHaveLength(12);
     expect(optionsOf(root, YEAR_DROPDOWN)).toHaveLength(1405 - 1300 + 1);
   });
@@ -952,7 +980,8 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
       container.querySelector(`button[aria-label="${LABELS.openCalendarLabel}"]`) as HTMLElement,
     );
 
-    expect(baseElement.querySelectorAll("select")).toHaveLength(2);
+    expect(baseElement.querySelectorAll("select")).toHaveLength(0);
+    expect(baseElement.querySelectorAll('button[role="combobox"]')).toHaveLength(2);
     expect(optionsOf(baseElement, MONTH_DROPDOWN)).toHaveLength(12);
     expect(optionsOf(baseElement, YEAR_DROPDOWN)).toHaveLength(1405 - 1300 + 1);
   });
@@ -965,12 +994,14 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
      * `CalendarNavigation` where the bounds stay optional — requiring them
      * would be a required prop with nothing behind it.
      */
-    const root = parse(
-      ssr(<Calendar {...CAL} captionLayout="dropdown-months" defaultMonth={jalali(1405, 5, 1)} />),
+    cleanup();
+    const { container: root } = live(
+      <Calendar {...CAL} captionLayout="dropdown-months" defaultMonth={jalali(1405, 5, 1)} />,
     );
-    expect(root.querySelectorAll("select")).toHaveLength(1);
+    expect(root.querySelectorAll("select")).toHaveLength(0);
+    expect(root.querySelectorAll('button[role="combobox"]')).toHaveLength(1);
     expect(optionsOf(root, MONTH_DROPDOWN)).toHaveLength(12);
-    expect(root.querySelector(`select[aria-label="${YEAR_DROPDOWN}"]`)).toBeNull();
+    expect(root.querySelector(`[role="combobox"][aria-label="${YEAR_DROPDOWN}"]`)).toBeNull();
     // …and the year beside it is still Persian text rather than a control.
     expect(root.textContent).toContain(persianYear(1405));
   });
@@ -983,12 +1014,12 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
      * orientation that was not "left" used to resolve to the NEXT-month glyph —
      * «‹» in an RTL script, on a control that opens a list.
      */
-    const roots = [...root.querySelectorAll("select")].map((s) => s.parentElement);
-    expect(roots).toHaveLength(2);
-    for (const box of roots) {
-      expect(box?.querySelector("svg.lucide-chevron-down")).not.toBeNull();
-      expect(box?.querySelector("svg.lucide-chevron-left")).toBeNull();
-      expect(box?.querySelector("svg.lucide-chevron-right")).toBeNull();
+    const dropdowns = [...root.querySelectorAll('button[role="combobox"]')];
+    expect(dropdowns).toHaveLength(2);
+    for (const dropdown of dropdowns) {
+      expect(dropdown.querySelector("svg.lucide-chevron-down")).not.toBeNull();
+      expect(dropdown.querySelector("svg.lucide-chevron-left")).toBeNull();
+      expect(dropdown.querySelector("svg.lucide-chevron-right")).toBeNull();
     }
 
     // Unchanged, and asserted here so the fix cannot be "make them all down":
@@ -997,19 +1028,18 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
     expect(previous?.querySelector("svg.lucide-chevron-right")).not.toBeNull();
   });
 
-  it("the <select> is transparent and OVER the caption, not beside it", () => {
+  it("uses Lumo's visible trigger instead of a transparent native select", () => {
     /*
      * The two elements have to agree, and only the class map can make them: a
-     * `<select>` left in flow is as wide as its widest option, so the box a
-     * reader clicks would not be the caption they see. Asserting the classes
-     * reach the element is the jsdom-visible half of that; `calendar.variants.ts`
-     * carries the argument and the built stylesheet carries the pixels.
+     * The visible Lumo trigger is the clickable control itself, so its box and
+     * caption cannot drift apart as the former transparent overlay could.
      */
     const root = parse(ssr(<Calendar {...CAL} {...DOB} />));
-    const select = root.querySelector("select");
-    expect(select?.className).toContain("absolute");
-    expect(select?.className).toContain("opacity-0");
-    expect(select?.parentElement?.className).toContain("relative");
+    const dropdown = root.querySelector('button[role="combobox"]');
+    expect(root.querySelector("select")).toBeNull();
+    expect(dropdown?.className).toContain("border-border-control");
+    expect(dropdown?.className).not.toContain("opacity-0");
+    expect(dropdown?.parentElement?.className).toContain("relative");
     /*
      * The ring is on the painted parent, because the focused element is
      * invisible — and the parent says so with a MARKER rather than a ring.
@@ -1022,8 +1052,8 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
      * `data-lumo-proxy-focus` because react-day-picker's `classNames` map takes
      * class strings and nothing else.
      */
-    expect(select?.parentElement?.className).toContain("lumo-proxy-focus");
-    expect(select?.parentElement?.className).not.toContain("outline-accent");
+    expect(dropdown?.hasAttribute("data-lumo")).toBe(true);
+    expect(dropdown?.className).not.toContain("outline-accent");
   });
 
   it("a BOUNDED year list is the same list tomorrow — and an unbounded one is not", () => {
@@ -1032,7 +1062,9 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
     /** The same element, rendered with the system clock set to `iso`. */
     const yearsAt = (iso: string, el: React.ReactElement) => {
       vi.setSystemTime(new Date(iso));
-      return optionsOf(parse(ssr(el)), YEAR_DROPDOWN);
+      cleanup();
+      const { container } = live(el);
+      return optionsOf(container, YEAR_DROPDOWN);
     };
 
     vi.useFakeTimers();

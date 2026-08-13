@@ -5,7 +5,7 @@ import { ColumnsIcon } from "lucide-react";
 import { cn, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
 import { Menu, MenuCheckboxItem, MenuPopover, MenuTrigger } from "./menu.tsx";
-import { NativeSelect } from "./native-select.tsx";
+import { SelectField } from "./select.tsx";
 import { Pagination } from "./pagination.tsx";
 import { SearchField } from "./search-field.tsx";
 import type { AsyncCollectionPresentation } from "./async-collection.ts";
@@ -608,7 +608,7 @@ interface WithPageSizesProps {
  *
  * `pageSizeLabel` was documented "REQUIRED" and typed `string | undefined`, and
  * the render guard below read `pageSizeLabel !== undefined`. So a caller who
- * offered sizes and forgot the name got neither an unnamed `<select>` nor an
+ * offered sizes and forgot the name got neither an unnamed dropdown nor an
  * error — the rows-per-page control SILENTLY DISAPPEARED. AUDIT §2.3, and §3.1
  * names the class: a comment doing the type system's job.
  *
@@ -620,7 +620,7 @@ interface WithPageSizesProps {
  *
  * The union rather than the one-keystroke `pageSizeLabel: string`, because a
  * grid with no size control would then have to invent a Persian name for a
- * `<select>` that never renders — and CONTRIBUTING's rule is that an announced
+ * dropdown that never renders — and CONTRIBUTING's rule is that an announced
  * string is required, not that an unannounced one is. `link.tsx`'s
  * `newTab`/`newTabLabel` and `alert.tsx` are the same construction; the guard
  * below now tests `pageSizes` alone, because the label's presence is no longer
@@ -633,10 +633,7 @@ export type DataGridPaginationProps = DataGridPaginationBaseProps &
  * The footer: how many rows you are looking at, and how to move.
  *
  * Every integer on this row goes through `formatNumber` — the page numbers
- * inside `Pagination`, the range read-out, and each option in the size select.
- * A bare `{pageSize}` in the `<option>` is the exact defect `LumoNode` exists
- * for, and an `<option>` is one of the few places it can still hide, because
- * option text is not JSX children that `LumoNode` can refuse.
+ * inside `Pagination`, the range read-out, and each item in the size dropdown.
  */
 export function DataGridPagination(props: DataGridPaginationProps) {
   /*
@@ -678,36 +675,32 @@ export function DataGridPagination(props: DataGridPaginationProps) {
          * `props.pageSizes` and not a destructured local: the narrowing this
          * test performs is what makes `props.pageSizeLabel` a `string` two
          * lines down. The `length > 0` half is still a runtime concern — an
-         * empty array is a legal `readonly number[]` and a `<select>` with no
+         * empty array is a legal `readonly number[]` and a dropdown with no
          * options is a control that answers nothing.
          */}
         {props.pageSizes !== undefined && props.pageSizes.length > 0 ? (
           <div className={dataGridPageSizeVariants()}>
-            <NativeSelect
+            <SelectField
               label={props.pageSizeLabel}
-              // Hidden, not absent: the footer already reads as one row and a
-              // second visible label would read as a second question. The name
-              // still has to exist — see `phone-input.tsx`, same call.
-              labelHidden
+              placeholder={props.pageSizeLabel}
               size="sm"
-              value={String(pageSize)}
-              onChange={(event) => {
-                table.setPageSize(Number(event.target.value));
+              selectedKey={String(pageSize)}
+              onSelectionChange={(key) => {
+                if (key === null) return;
+                table.setPageSize(Number(key));
                 // Row 11 is on page two at ten-per-page and page one at fifty.
                 // Keeping the index would land the reader past the end.
                 table.setPageIndex(0);
               }}
               className="w-auto"
-            >
-              {props.pageSizes.map((size) => (
-                // Through `formatNumber`. The VALUE stays ASCII because it is
-                // parsed straight back by `Number()` — the same in/out split
-                // `input-otp.tsx` and `phone-input.tsx` draw.
-                <option key={size} value={String(size)}>
-                  {formatNumber(size, locale)}
-                </option>
-              ))}
-            </NativeSelect>
+              triggerClassName="w-auto min-w-20"
+              options={props.pageSizes.map((size) => ({
+                // The key stays ASCII because it is parsed straight back by
+                // Number(); only the reader-facing label is localized.
+                value: String(size),
+                label: formatNumber(size, locale),
+              }))}
+            />
           </div>
         ) : null}
       </div>

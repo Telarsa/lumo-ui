@@ -31,9 +31,21 @@ import {
   SelectPopover,
   SelectSeparator,
   SelectTrigger,
+  selectListBoxVariants,
+  selectPopoverVariants,
 } from "./select.tsx";
 
 afterEach(cleanup);
+
+it("caps long dropdowns to the positioning engine's available height", () => {
+  expect(selectPopoverVariants()).toContain("max-h-[min(20rem,var(--available-height))]");
+});
+
+it("gives long dropdowns exactly one scrolling layer", () => {
+  expect(selectPopoverVariants()).toContain("overflow-hidden");
+  expect(selectPopoverVariants()).not.toContain("overflow-auto");
+  expect(selectListBoxVariants()).toContain("overflow-auto");
+});
 
 /** The collapsed control's visible text: the `<span>` `SelectValue` renders. */
 function collapsedValue(html: string): string | undefined {

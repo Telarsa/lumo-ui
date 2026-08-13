@@ -255,7 +255,8 @@
         "react-day-picker"
       ],
       "registryDependencies": [
-        "form"
+        "form",
+        "select"
       ],
       "files": [
         {
@@ -515,9 +516,9 @@
       "registryDependencies": [
         "button",
         "menu",
-        "native-select",
         "pagination",
-        "search-field"
+        "search-field",
+        "select"
       ],
       "files": [
         {
@@ -904,11 +905,13 @@
       "description": "False for operators such as “is empty”.",
       "author": "Telarsa",
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core"
       ],
       "registryDependencies": [
         "button",
-        "native-select",
+        "multi-select",
+        "select",
         "text-field"
       ],
       "files": [
@@ -916,6 +919,11 @@
           "path": "packages/ui/src/filters.tsx",
           "type": "registry:ui",
           "target": "components/ui/filters.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         },
         {
           "path": "packages/ui/src/filters.shared.ts",
@@ -1417,24 +1425,6 @@
       ]
     },
     {
-      "name": "native-select",
-      "type": "registry:ui",
-      "title": "Native Select",
-      "description": "A styled REAL `<select>` — and the reason to reach for it is the platform picker.",
-      "author": "Telarsa",
-      "dependencies": [
-        "@lumo-ui/core",
-        "class-variance-authority"
-      ],
-      "files": [
-        {
-          "path": "packages/ui/src/native-select.tsx",
-          "type": "registry:ui",
-          "target": "components/ui/native-select.tsx"
-        }
-      ]
-    },
-    {
       "name": "navigation-menu",
       "type": "registry:ui",
       "title": "Navigation Menu",
@@ -1559,7 +1549,7 @@
       ],
       "registryDependencies": [
         "form",
-        "native-select"
+        "select"
       ],
       "files": [
         {
@@ -1601,8 +1591,9 @@
       ],
       "registryDependencies": [
         "button",
-        "native-select",
+        "multi-select",
         "popover",
+        "select",
         "text-field"
       ],
       "files": [

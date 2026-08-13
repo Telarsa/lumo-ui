@@ -1790,7 +1790,7 @@
             "name": "captionLayout",
             "type": "\"label\" | \"dropdown\" | \"dropdown-months\" | \"dropdown-years\" | undefined",
             "required": false,
-            "description": "Paging chevrons only, or a month `<select>` — neither reads a clock.\nA year `<select>`. Both bounds are REQUIRED — see the header."
+            "description": "Paging chevrons only, or a month dropdown — neither reads a clock.\nA year dropdown. Both bounds are REQUIRED — see the header."
           },
           {
             "name": "className",
@@ -4160,7 +4160,7 @@
             "name": "captionLayout",
             "type": "\"label\" | \"dropdown\" | \"dropdown-months\" | \"dropdown-years\" | undefined",
             "required": false,
-            "description": "Paging chevrons only, or a month `<select>` — neither reads a clock.\nA year `<select>`. Both bounds are REQUIRED — see the header."
+            "description": "Paging chevrons only, or a month dropdown — neither reads a clock.\nA year dropdown. Both bounds are REQUIRED — see the header."
           },
           {
             "name": "className",
@@ -8760,95 +8760,6 @@
         ]
       }
     ],
-    "native-select.tsx": [
-      {
-        "name": "NativeSelectOptGroupProps",
-        "props": [
-          {
-            "name": "label",
-            "type": "string",
-            "required": true,
-            "description": "The group's announced and displayed name, e.g. «استان تهران». REQUIRED —\nthe attribute is rendered by the platform picker itself, and an optgroup\nwithout one shows an empty row."
-          },
-          {
-            "name": "children",
-            "type": "LumoNode",
-            "required": false,
-            "description": "Inherited DOM or shared Lumo prop."
-          },
-          {
-            "name": "className",
-            "type": "string | undefined",
-            "required": false,
-            "description": "Inherited DOM or shared Lumo prop."
-          }
-        ]
-      },
-      {
-        "name": "NativeSelectOptionProps",
-        "props": [
-          {
-            "name": "children",
-            "type": "LumoNode",
-            "required": false,
-            "description": "Inherited DOM or shared Lumo prop."
-          },
-          {
-            "name": "className",
-            "type": "string | undefined",
-            "required": false,
-            "description": "Inherited DOM or shared Lumo prop."
-          }
-        ]
-      },
-      {
-        "name": "NativeSelectProps",
-        "props": [
-          {
-            "name": "label",
-            "type": "string",
-            "required": true,
-            "description": "The control's name, e.g. «شهر». REQUIRED — rendered as a real `<label>`\nwired by `for`/`id`, so it is both visible and announced."
-          },
-          {
-            "name": "children",
-            "type": "LumoNode",
-            "required": false,
-            "description": "Inherited DOM or shared Lumo prop."
-          },
-          {
-            "name": "className",
-            "type": "string | undefined",
-            "required": false,
-            "description": "Inherited DOM or shared Lumo prop."
-          },
-          {
-            "name": "isInvalid",
-            "type": "boolean | undefined",
-            "required": false,
-            "description": "Marks the control invalid for AT and recolours the border."
-          },
-          {
-            "name": "labelHidden",
-            "type": "boolean | undefined",
-            "required": false,
-            "description": "Visually hides the label but keeps it for assistive technology."
-          },
-          {
-            "name": "selectClassName",
-            "type": "string | undefined",
-            "required": false,
-            "description": "Inherited DOM or shared Lumo prop."
-          },
-          {
-            "name": "size",
-            "type": "\"sm\" | \"md\" | undefined",
-            "required": false,
-            "description": "Visual scale. The native row-count attribute is shadowed — see header."
-          }
-        ]
-      }
-    ],
     "navigation-menu.tsx": [
       {
         "name": "NavigationMenuItemProps",
@@ -10707,7 +10618,7 @@
             "name": "captionLayout",
             "type": "\"label\" | \"dropdown\" | \"dropdown-months\" | \"dropdown-years\" | undefined",
             "required": false,
-            "description": "Paging chevrons only, or a month `<select>` — neither reads a clock.\nA year `<select>`. Both bounds are REQUIRED — see the header."
+            "description": "Paging chevrons only, or a month dropdown — neither reads a clock.\nA year dropdown. Both bounds are REQUIRED — see the header."
           },
           {
             "name": "className",
@@ -11760,6 +11671,95 @@
       }
     ],
     "select.tsx": [
+      {
+        "name": "SelectFieldProps",
+        "props": [
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "options",
+            "type": "readonly SelectFieldOption[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "placeholder",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultSelectedKey",
+            "type": "string | null | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "errorMessage",
+            "type": "LumoNode",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isInvalid",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "name",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onSelectionChange",
+            "type": "((key: string | null) => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "selectedKey",
+            "type": "string | null | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "showLabel",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "size",
+            "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "triggerClassName",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      },
       {
         "name": "SelectGroupProps",
         "props": [
@@ -14274,7 +14274,13 @@
           },
           {
             "name": "suggestions",
-            "type": "readonly string[]",
+            "type": "readonly string[] | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "suggestionsLabel",
+            "type": "string | undefined",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
           },

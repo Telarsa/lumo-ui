@@ -67,9 +67,9 @@ React's price, on every page.
 
 ## Status
 
-`@lumo-ui/core` has `Select`, implementing the full WAI-ARIA listbox pattern. It
-renders a native `<select>` on a coarse pointer, deliberately: the reason to
-replace a select is that the *desktop* OS popup looks foreign, while on a phone
-iOS's wheel picker beats anything we could build.
+`@lumo-ui/ui` has `Select`, implementing the full WAI-ARIA listbox pattern.
+Lumo product surfaces use that component across pointer types, so the same
+localized styling, validation wiring and option behavior is available on every
+device instead of silently falling back to an unrelated native dropdown.
 
 Everything else is scaffolding.

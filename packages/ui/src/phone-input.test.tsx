@@ -126,7 +126,9 @@ describe("the country list", () => {
     render(<PhoneInput {...LABELS} locale="fa-IR" />);
     // Two controls in one field means two names. The second is hidden, not
     // absent — `named-controls` fails the build on an unnamed control.
-    expect(screen.getByLabelText("کشور")).toBeTruthy();
+    const country = screen.getByRole("combobox", { name: "کشور" });
+    expect(country.tagName).toBe("BUTTON");
+    expect(document.querySelector("select")).toBeNull();
   });
 
   it("switching country re-reads the same typed number under the new plan", () => {
@@ -134,7 +136,10 @@ describe("the country list", () => {
     render(
       <PhoneInput {...LABELS} locale="en-US" value="+989121234567" onChange={onChange} />,
     );
-    fireEvent.change(screen.getByLabelText("کشور"), { target: { value: "AE" } });
+    fireEvent.click(screen.getByRole("combobox", { name: "کشور" }));
+    const option = screen.getByRole("option", { name: "UAE +971" });
+    fireEvent.pointerDown(option, { pointerType: "mouse" });
+    fireEvent.click(option);
     // The dial code shown moves to +971. The digits the user typed are theirs
     // and are not silently rewritten.
     expect(screen.getByLabelText("شمارهٔ موبایل")).toBeTruthy();
@@ -168,11 +173,11 @@ describe("controlled country inference", () => {
     const { rerender } = render(
       <PhoneInput {...LABELS} locale="fa-IR" value="+4915112345678" />,
     );
-    expect(screen.getByLabelText("کشور")).toHaveProperty("value", "DE");
+    expect(screen.getByRole("combobox", { name: "کشور" }).textContent).toContain("آلمان +۴۹");
     expect(screen.getByLabelText("شمارهٔ موبایل")).toHaveProperty("value", "۱۵۱۱۲۳۴۵۶۷۸");
 
     rerender(<PhoneInput {...LABELS} locale="fa-IR" value="+971501234567" />);
-    expect(screen.getByLabelText("کشور")).toHaveProperty("value", "AE");
+    expect(screen.getByRole("combobox", { name: "کشور" }).textContent).toContain("امارات +۹۷۱");
   });
 });
 

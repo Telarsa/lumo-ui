@@ -76,6 +76,7 @@ export function MultiSelectIsland({
 export interface TagsInputIslandProps {
   label: string;
   placeholder: string;
+  suggestionsLabel: string;
   removePrefix: string;
   suggestions: readonly string[];
   defaultValue?: readonly string[];
@@ -84,6 +85,7 @@ export interface TagsInputIslandProps {
 export function TagsInputIsland({
   label,
   placeholder,
+  suggestionsLabel,
   removePrefix,
   suggestions,
   defaultValue,
@@ -95,6 +97,7 @@ export function TagsInputIsland({
       placeholder={placeholder}
       removeLabel={(item) => `${removePrefix} ${item}`}
       suggestions={suggestions}
+      suggestionsLabel={suggestionsLabel}
       value={value}
       onValueChange={setValue}
       className="max-w-sm"

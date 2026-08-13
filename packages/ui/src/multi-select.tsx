@@ -10,7 +10,7 @@ import { popoverVariants } from "./popover.tsx";
 export interface MultiSelectOption {
   value: string;
   label: string;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
 export interface MultiSelectProps {

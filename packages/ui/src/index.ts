@@ -441,6 +441,7 @@ export type { ContextMenuProps, ContextMenuTriggerProps } from "./context-menu.t
 
 export {
   Select,
+  SelectField,
   SelectGroup,
   SelectItem,
   SelectPopover,
@@ -458,6 +459,8 @@ export {
 } from "./select.tsx";
 export type {
   SelectGroupProps,
+  SelectFieldOption,
+  SelectFieldProps,
   SelectItemProps,
   SelectPopoverProps,
   SelectProps,
@@ -1168,18 +1171,6 @@ export {
 export type { KanbanCard, KanbanColumn, KanbanProps, KanbanStrings } from "./kanban.tsx";
 
 export {
-  NativeSelect,
-  NativeSelectOptGroup,
-  NativeSelectOption,
-  nativeSelectVariants,
-} from "./native-select.tsx";
-export type {
-  NativeSelectOptGroupProps,
-  NativeSelectOptionProps,
-  NativeSelectProps,
-} from "./native-select.tsx";
-
-export {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuLink,
@@ -1252,7 +1243,7 @@ export type {
  */
 export { calendarDay } from "./calendar-datelib.ts";
 
-export { Calendar, calendarChevron, calendarClassNames, describedByWith } from "./calendar.tsx";
+export { Calendar, CalendarDropdown, calendarChevron, calendarClassNames, describedByWith } from "./calendar.tsx";
 export type {
   CalendarBaseProps,
   CalendarCaptionLayout,

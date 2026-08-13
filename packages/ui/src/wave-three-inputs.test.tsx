@@ -172,6 +172,23 @@ describe("Wave 3 product inputs", () => {
     expect(onValueChange).toHaveBeenLastCalledWith(["one", "two"]);
   });
 
+  it("uses a named Lumo suggestions popup instead of the browser datalist", () => {
+    render(
+      <TagsInput
+        label="Tags"
+        placeholder="Add tag"
+        removeLabel={(tag) => `Remove ${tag}`}
+        suggestions={["Charts"]}
+        suggestionsLabel="Suggested tags"
+      />,
+    );
+    const input = screen.getByRole("combobox", { name: "Tags" });
+    expect(document.querySelector("datalist")).toBeNull();
+    fireEvent.focus(input);
+    expect(screen.getByRole("listbox", { name: "Suggested tags" })).toBeTruthy();
+    expect(screen.getByRole("option", { name: "Charts" })).toBeTruthy();
+  });
+
   it("resolves only valid cascader paths", () => {
     const options = [{ value: "asia", label: "Asia", children: [{ value: "ir", label: "Iran" }] }];
     expect(resolveCascaderPath(options, ["asia", "ir"]).map((node) => node.label)).toEqual(["Asia", "Iran"]);

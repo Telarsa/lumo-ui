@@ -38,6 +38,8 @@ const strings = {
   operatorLabel: "عملگر",
   valueLabel: "مقدار",
   removeFilterTemplate: "حذف فیلتر: {field}",
+  valueSuggestionsLabel: "مقدارهای موجود",
+  removeValueTemplate: "حذف مقدار: {value}",
   invalidFilter: "مقدار این فیلتر معتبر نیست",
 };
 
@@ -58,6 +60,8 @@ describe("Filters", () => {
       'value="[{&quot;id&quot;:&quot;status-1&quot;,&quot;fieldId&quot;:&quot;status&quot;,&quot;operatorId&quot;:&quot;is&quot;,&quot;values&quot;:[&quot;open&quot;]}]"',
     );
     expect(html).toContain("باز");
+    expect(html).not.toContain("<select");
+    expect(html).toContain('role="combobox"');
   });
 
   it("adds a deterministic default clause and reports it", () => {
@@ -66,7 +70,7 @@ describe("Filters", () => {
 
     fireEvent.click(screen.getByRole("button", { name: strings.addFilter }));
 
-    expect((screen.getByRole("combobox", { name: strings.fieldLabel }) as HTMLSelectElement).value).toBe("status");
+    expect(screen.getByRole("combobox", { name: strings.fieldLabel }).textContent).toContain("وضعیت");
     expect(onValueChange).toHaveBeenCalledWith([
       expect.objectContaining({ fieldId: "status", operatorId: "is", values: [] }),
     ]);
@@ -83,9 +87,10 @@ describe("Filters", () => {
       />,
     );
 
-    fireEvent.change(screen.getByRole("combobox", { name: strings.fieldLabel }), {
-      target: { value: "title" },
-    });
+    fireEvent.click(screen.getByRole("combobox", { name: strings.fieldLabel }));
+    const titleOption = screen.getByRole("option", { name: "عنوان" });
+    fireEvent.pointerDown(titleOption, { pointerType: "mouse" });
+    fireEvent.click(titleOption);
     expect(onValueChange).toHaveBeenLastCalledWith([
       { id: "stable-id", fieldId: "title", operatorId: "contains", values: [] },
     ]);
@@ -130,6 +135,58 @@ describe("Filters", () => {
 
     expect(screen.getByRole("textbox", { name: strings.valueLabel }).getAttribute("aria-invalid")).toBe("true");
     expect(screen.getByText("عبارت باید بلندتر باشد").getAttribute("role")).toBe("alert");
+  });
+
+  it("renders a select clause error once through the Lumo field", () => {
+    const invalidFields: readonly FilterField[] = [
+      {
+        ...fields[0]!,
+        validate: () => "یک وضعیت را انتخاب کنید",
+      },
+    ];
+    render(
+      <Filters
+        fields={invalidFields}
+        strings={strings}
+        defaultValue={[createFilter("status", "is", [], "status-1")]}
+      />,
+    );
+
+    expect(screen.getAllByText("یک وضعیت را انتخاب کنید")).toHaveLength(1);
+    expect(
+      screen.getByRole("combobox", { name: strings.valueLabel }).getAttribute("aria-invalid"),
+    ).toBe("true");
+  });
+
+  it("uses Lumo's multi-select with removable chips instead of a native multiple select", () => {
+    const onValueChange = vi.fn();
+    const multiFields: readonly FilterField[] = [
+      {
+        id: "team",
+        label: "تیم",
+        type: "multiselect",
+        operators: [{ id: "any", label: "یکی از" }],
+        options: [
+          { value: "design", label: "طراحی" },
+          { value: "engineering", label: "مهندسی" },
+        ],
+      },
+    ];
+    const { container } = render(
+      <Filters
+        fields={multiFields}
+        strings={strings}
+        defaultValue={[createFilter("team", "any", ["design"], "team-1")]}
+        onValueChange={onValueChange}
+      />,
+    );
+
+    expect(container.querySelector("select")).toBeNull();
+    expect(screen.getByRole("combobox", { name: strings.valueLabel })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "حذف مقدار: طراحی" }));
+    expect(onValueChange).toHaveBeenLastCalledWith([
+      { id: "team-1", fieldId: "team", operatorId: "any", values: [] },
+    ]);
   });
 
   it("rejects clauses that reference an unknown field or operator", () => {

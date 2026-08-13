@@ -102,7 +102,7 @@ export interface DatePickerBaseProps {
  * for that is decades from the month the grid opens on — so the picker had to
  * reach `captionLayout` or the feature would be available everywhere except the
  * component that needs it. The union comes from `calendar.tsx` rather than being
- * restated, so the bounds a year `<select>` requires are required here too, at
+ * restated, so the bounds a year dropdown requires are required here too, at
  * compile time, and for the same measured reason.
  */
 export type DatePickerProps = DatePickerBaseProps & CalendarNavigation;
