@@ -19,6 +19,9 @@ describe("generated API reference gate", () => {
       "node scripts/build-api-reference.mjs",
     );
     expect(rootPackage.scripts?.verify).toContain("pnpm run gate:api");
+
+    const workflow = readFileSync(join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
+    expect(workflow).toContain("run: pnpm run gate:api");
   });
 
   it("rejects stale output and accepts only checker-generated content", () => {
