@@ -147,7 +147,7 @@ export interface VirtualListProps
    */
   extends Omit<
     ComponentProps<"div">,
-    "children" | "className" | "ref" | "role" | "aria-label" | "tabIndex"
+    "children" | "className" | "ref" | "role" | "aria-label" | "tabIndex" | "dir"
   > {
   /**
    * The list's announced name, e.g. «فهرست سفارش‌ها».

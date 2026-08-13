@@ -637,7 +637,7 @@ export interface GanttProps<T extends GanttTask>
    * the drag would stop working with nothing thrown — the `table.tsx` defect,
    * one component over. Everything else the `<div>` accepts is the caller's.
    */
-  extends Omit<React.ComponentProps<"div">, "children" | "className" | "ref"> {
+  extends Omit<React.ComponentProps<"div">, "children" | "className" | "ref" | "dir"> {
   /** Names the whole chart, e.g. «برنامهٔ انتشار». REQUIRED. */
   label: string;
   /**
