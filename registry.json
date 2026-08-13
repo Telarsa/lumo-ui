@@ -1454,6 +1454,34 @@
       ]
     },
     {
+      "name": "power-search",
+      "type": "registry:ui",
+      "title": "Power Search",
+      "description": "False for operators such as “is empty”.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "button",
+        "native-select",
+        "popover",
+        "text-field"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/power-search.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/power-search.tsx"
+        },
+        {
+          "path": "packages/ui/src/filters.shared.ts",
+          "type": "registry:ui",
+          "target": "components/ui/filters.shared.ts"
+        }
+      ]
+    },
+    {
       "name": "progress",
       "type": "registry:ui",
       "title": "Progress",

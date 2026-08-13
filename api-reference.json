@@ -9126,6 +9126,144 @@
         ]
       }
     ],
+    "power-search.tsx": [
+      {
+        "name": "PowerSearchCustomEditorProps",
+        "props": [
+          {
+            "name": "describedBy",
+            "type": "string | undefined",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isInvalid",
+            "type": "boolean",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValuesChange",
+            "type": "(values: readonly string[]) => void",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "values",
+            "type": "readonly string[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      },
+      {
+        "name": "PowerSearchProps",
+        "props": [
+          {
+            "name": "fields",
+            "type": "readonly PowerSearchField[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "strings",
+            "type": "PowerSearchStrings",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "readonly FilterClause[] | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "form",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "maxVisibleFilters",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "name",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onSavedViewChange",
+            "type": "((view: PowerSearchSavedView) => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "((value: readonly FilterClause[]) => void) | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "readOnly",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "resultCount",
+            "type": "string | number | undefined",
+            "required": false,
+            "description": "Already-localized display count."
+          },
+          {
+            "name": "savedViews",
+            "type": "readonly PowerSearchSavedView[] | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "status",
+            "type": "PowerSearchStatus | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "readonly FilterClause[] | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
     "progress.tsx": [
       {
         "name": "MeterProps",

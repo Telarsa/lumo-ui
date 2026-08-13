@@ -101,6 +101,23 @@ export type {
   QueryShapeField,
   QueryShapeOperator,
 } from "./filters.shared.ts";
+export { PowerSearch } from "./power-search.tsx";
+export type {
+  PowerSearchBooleanField,
+  PowerSearchChoiceField,
+  PowerSearchCustomEditorProps,
+  PowerSearchCustomField,
+  PowerSearchDateField,
+  PowerSearchField,
+  PowerSearchNumberField,
+  PowerSearchOperator,
+  PowerSearchOption,
+  PowerSearchProps,
+  PowerSearchSavedView,
+  PowerSearchStatus,
+  PowerSearchStrings,
+  PowerSearchTextField,
+} from "./power-search.tsx";
 
 export {
   groupCollection,

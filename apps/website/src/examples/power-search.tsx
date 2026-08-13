@@ -1,0 +1,218 @@
+import type { Locale } from "@lumo-ui/core";
+import {
+  PowerSearch,
+  createFilter,
+  type PowerSearchField,
+  type PowerSearchStrings,
+} from "@lumo-ui/ui";
+import type { ComponentExamples, LocalizedText } from "./_system/types";
+
+const t = {
+  title: { "fa-IR": "جست‌وجوی پیشرفته", "en-US": "Power search" },
+  intro: {
+    "fa-IR":
+      "جست‌وجوی فیلدمحور با بندهای ویرایش‌پذیر، ویرایشگرهای نوع‌دار، نماهای ذخیره‌شده و همان مدل پرس‌وجویی که جدول داده اجرا می‌کند.",
+    "en-US":
+      "Field-aware search with editable clauses, typed editors, saved views, and the same query model executed by DataGrid.",
+  },
+  region: { "fa-IR": "جست‌وجوی سفارش‌ها", "en-US": "Search orders" },
+  add: { "fa-IR": "افزودن فیلتر", "en-US": "Add a filter" },
+  placeholder: { "fa-IR": "نام فیلد را بنویسید", "en-US": "Type a field name" },
+  suggestions: { "fa-IR": "فیلدهای سفارش", "en-US": "Order fields" },
+  noFields: { "fa-IR": "فیلدی پیدا نشد", "en-US": "No fields found" },
+  edit: { "fa-IR": "ویرایش فیلتر: {field}", "en-US": "Edit filter: {field}" },
+  remove: { "fa-IR": "حذف فیلتر: {field}", "en-US": "Remove filter: {field}" },
+  field: { "fa-IR": "فیلد", "en-US": "Field" },
+  operator: { "fa-IR": "عملگر", "en-US": "Operator" },
+  value: { "fa-IR": "مقدار", "en-US": "Value" },
+  apply: { "fa-IR": "اعمال", "en-US": "Apply" },
+  cancel: { "fa-IR": "انصراف", "en-US": "Cancel" },
+  invalid: { "fa-IR": "برای این فیلتر مقدار انتخاب کنید", "en-US": "Choose a value for this filter" },
+  views: { "fa-IR": "نمای ذخیره‌شده", "en-US": "Saved view" },
+  chooseView: { "fa-IR": "انتخاب نما", "en-US": "Choose a view" },
+  results: { "fa-IR": "{count} نتیجه", "en-US": "{count} results" },
+  overflow: { "fa-IR": "نمایش {count} فیلتر دیگر", "en-US": "Show {count} more filters" },
+  collapse: { "fa-IR": "نمایش فیلترهای کمتر", "en-US": "Show fewer filters" },
+  token: {
+    "fa-IR": "{field}، {operator}، {value}",
+    "en-US": "{field}, {operator}, {value}",
+  },
+  empty: { "fa-IR": "بدون مقدار", "en-US": "No value" },
+  valueSeparator: { "fa-IR": "، ", "en-US": ", " },
+  status: { "fa-IR": "وضعیت", "en-US": "Status" },
+  total: { "fa-IR": "مبلغ", "en-US": "Total" },
+  due: { "fa-IR": "سررسید", "en-US": "Due date" },
+  archived: { "fa-IR": "بایگانی", "en-US": "Archived" },
+  owner: { "fa-IR": "مالک", "en-US": "Owner" },
+  is: { "fa-IR": "برابر است", "en-US": "is" },
+  atLeast: { "fa-IR": "حداقل", "en-US": "at least" },
+  on: { "fa-IR": "در تاریخ", "en-US": "on" },
+  any: { "fa-IR": "یکی از", "en-US": "is any of" },
+  emptyOperator: { "fa-IR": "خالی است", "en-US": "is empty" },
+  open: { "fa-IR": "باز", "en-US": "Open" },
+  closed: { "fa-IR": "بسته", "en-US": "Closed" },
+  yes: { "fa-IR": "بله", "en-US": "Yes" },
+  no: { "fa-IR": "خیر", "en-US": "No" },
+  sara: { "fa-IR": "سارا", "en-US": "Sara" },
+  navid: { "fa-IR": "نوید", "en-US": "Navid" },
+  openView: { "fa-IR": "سفارش‌های باز", "en-US": "Open orders" },
+  reviewView: { "fa-IR": "نیازمند بررسی", "en-US": "Needs review" },
+  remoteStatus: { "fa-IR": "نتیجه‌ها به‌روز هستند", "en-US": "Results are up to date" },
+} satisfies Record<string, LocalizedText>;
+
+function strings(l: Locale): PowerSearchStrings {
+  return {
+    regionLabel: t.region[l],
+    inputLabel: t.add[l],
+    inputPlaceholder: t.placeholder[l],
+    suggestionsLabel: t.suggestions[l],
+    noFields: t.noFields[l],
+    editFilterTemplate: t.edit[l],
+    removeFilterTemplate: t.remove[l],
+    fieldLabel: t.field[l],
+    operatorLabel: t.operator[l],
+    valueLabel: t.value[l],
+    apply: t.apply[l],
+    cancel: t.cancel[l],
+    invalidFilter: t.invalid[l],
+    savedViewsLabel: t.views[l],
+    savedViewsPlaceholder: t.chooseView[l],
+    resultCountTemplate: t.results[l],
+    overflowTemplate: t.overflow[l],
+    collapseFilters: t.collapse[l],
+    tokenTemplate: t.token[l],
+    emptyValue: t.empty[l],
+    valueSeparator: t.valueSeparator[l],
+  };
+}
+
+function fields(l: Locale): readonly PowerSearchField[] {
+  return [
+    {
+      id: "status",
+      label: t.status[l],
+      type: "select",
+      operators: [
+        { id: "is", label: t.is[l] },
+        { id: "empty", label: t.emptyOperator[l], requiresValue: false },
+      ],
+      options: [
+        { value: "open", label: t.open[l] },
+        { value: "closed", label: t.closed[l] },
+      ],
+    },
+    {
+      id: "total",
+      label: t.total[l],
+      type: "number",
+      min: 0,
+      step: 10,
+      operators: [{ id: "gte", label: t.atLeast[l] }],
+    },
+    {
+      id: "due",
+      label: t.due[l],
+      type: "date",
+      operators: [{ id: "on", label: t.on[l] }],
+    },
+    {
+      id: "archived",
+      label: t.archived[l],
+      type: "boolean",
+      trueLabel: t.yes[l],
+      falseLabel: t.no[l],
+      operators: [{ id: "is", label: t.is[l] }],
+    },
+    {
+      id: "owner",
+      label: t.owner[l],
+      type: "multiselect",
+      operators: [{ id: "any", label: t.any[l] }],
+      options: [
+        { value: "sara", label: t.sara[l] },
+        { value: "navid", label: t.navid[l] },
+      ],
+    },
+  ];
+}
+
+function TypedQueryExample(l: Locale) {
+  return (
+    <PowerSearch
+      fields={fields(l)}
+      strings={strings(l)}
+      resultCount={new Intl.NumberFormat(l).format(18)}
+      defaultValue={[
+        createFilter("status", "is", ["open"], "status-open"),
+        createFilter("total", "gte", ["250"], "total-250"),
+      ]}
+    />
+  );
+}
+
+function SavedViewsExample(l: Locale) {
+  return (
+    <PowerSearch
+      fields={fields(l)}
+      strings={strings(l)}
+      maxVisibleFilters={2}
+      resultCount={new Intl.NumberFormat(l).format(7)}
+      status={{ kind: "success", text: t.remoteStatus[l] }}
+      savedViews={[
+        {
+          id: "open",
+          label: t.openView[l],
+          query: [createFilter("status", "is", ["open"], "view-open")],
+        },
+        {
+          id: "review",
+          label: t.reviewView[l],
+          query: [
+            createFilter("status", "is", ["open"], "view-review-status"),
+            createFilter("total", "gte", ["500"], "view-review-total"),
+            createFilter("archived", "is", ["false"], "view-review-archive"),
+          ],
+        },
+      ]}
+    />
+  );
+}
+
+function ReadOnlyExample(l: Locale) {
+  return (
+    <PowerSearch
+      fields={fields(l)}
+      strings={strings(l)}
+      readOnly
+      resultCount={new Intl.NumberFormat(l).format(3)}
+      defaultValue={[
+        createFilter("owner", "any", ["sara", "navid"], "owners"),
+        createFilter("due", "on", ["2026-08-13"], "due"),
+      ]}
+    />
+  );
+}
+
+export const EXAMPLES: ComponentExamples = {
+  meta: {
+    title: t.title,
+    intro: t.intro,
+    tier: "form",
+    isNew: true,
+    composition: `<PowerSearch fields={fields} strings={strings} value={query} />`,
+    parts: [
+      {
+        name: "PowerSearch",
+        description: {
+          "fa-IR": "انتخاب‌گر فیلد، بندهای ویرایش‌پذیر و نماهای ذخیره‌شده را روی مدل مشترک پرس‌وجو قرار می‌دهد.",
+          "en-US": "Places field typeahead, editable clauses, and saved views over the shared query model.",
+        },
+      },
+    ],
+  },
+  examples: [
+    { id: "typed-query", title: { "fa-IR": "بندهای نوع‌دار", "en-US": "Typed clauses" }, render: TypedQueryExample },
+    { id: "saved-views", title: { "fa-IR": "نما و سرریز", "en-US": "Views and overflow" }, render: SavedViewsExample },
+    { id: "read-only", title: { "fa-IR": "فقط‌خواندنی", "en-US": "Read only" }, render: ReadOnlyExample },
+  ],
+};

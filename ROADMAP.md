@@ -82,9 +82,12 @@ checked individually so a partly integrated engine is not disguised as either
 - [ ] Add virtualized async DataGrid and collection recipes where corpus size
       makes them necessary, with explicit selection stability across paging,
       grouping, refresh and unmounted rows.
-- [ ] Build PowerSearch's token/typeahead/edit-popover surface over the shipped
+- [x] Build PowerSearch's token/typeahead/edit-popover surface over the shipped
       query engine: typed editor catalogue, status/disabled states, overflow,
       saved views and result count.
+- [ ] Add a visual editor for nested AND/OR groups. PowerSearch currently edits
+      the backwards-compatible implicit-AND clause root; the shared query engine
+      already executes, validates and serializes nested groups.
 - [ ] Connect the same query bytes to local DataGrid and one concrete remote
       adapter/example. Remote transport stays caller-owned.
 - [ ] Add first-party form integration for nested/list values, async validation,
@@ -124,8 +127,9 @@ checked individually so a partly integrated engine is not disguised as either
 
 ### Wave 4 — Astryx-class internal tools
 
-- [ ] **PowerSearch:** complete the Wave 1 UI and publish local/remote DataGrid
-      recipes. The shared query semantics are already shipped.
+- [ ] **PowerSearch:** publish the Wave 1 local/remote DataGrid recipes and add
+      nested group editing. The typed token UI and shared query semantics are
+      already shipped.
 - [ ] **LogStream:** virtual append-only data, follow/pause, filters, severity,
       timestamps, copy/export and accessible live-update policies.
 - [ ] **AI/chat:** composer, streaming states, citations, tool-call disclosure,
