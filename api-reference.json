@@ -2283,6 +2283,85 @@
         ]
       }
     ],
+    "cascader.tsx": [
+      {
+        "name": "CascaderProps",
+        "props": [
+          {
+            "name": "columnsLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "options",
+            "type": "readonly CascaderOption[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "placeholder",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "changeOnSelect",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "readonly string[] | null",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "(path: readonly string[] | null, options: readonly CascaderOption[]) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "readonly string[] | null",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
     "chart.tsx": [
       {
         "name": "ChartContainerProps",
@@ -2872,6 +2951,140 @@
             "type": "string",
             "required": false,
             "description": "The value submitted with form data when the control is selected."
+          }
+        ]
+      }
+    ],
+    "color-input.tsx": [
+      {
+        "name": "ColorInputProps",
+        "props": [
+          {
+            "name": "invalidColorMessage",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "pickerLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "format",
+            "type": "ColorFormat",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isRequired",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "(value: string) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "swatches",
+            "type": "readonly ColorSwatch[]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
+    "color-picker.tsx": [
+      {
+        "name": "ColorPickerProps",
+        "props": [
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "swatches",
+            "type": "readonly ColorSwatch[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "(value: string) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
           }
         ]
       }
@@ -6198,6 +6411,85 @@
         ]
       }
     ],
+    "heatmap-chart.tsx": [
+      {
+        "name": "HeatmapChartProps",
+        "props": [
+          {
+            "name": "data",
+            "type": "readonly HeatmapDatum[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "dataCaption",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "valueLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "xAxisLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "yAxisLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "height",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "highColor",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "initialWidth",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "lowColor",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
     "hover-card.tsx": [
       {
         "name": "HoverCardProps",
@@ -7270,6 +7562,61 @@
         ]
       }
     ],
+    "json-input.tsx": [
+      {
+        "name": "JsonInputProps",
+        "props": [
+          {
+            "name": "invalidJsonMessage",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "formatOnBlur",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "indent",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "(text: string, parsed: JsonValidation) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
     "kanban.tsx": [
       {
         "name": "KanbanProps",
@@ -7585,6 +7932,55 @@
           {
             "name": "variant",
             "type": "\"separator\" | \"status\" | \"border\" | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
+    "mask-input.tsx": [
+      {
+        "name": "MaskInputProps",
+        "props": [
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "mask",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "description",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "incompleteMessage",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "(raw: string, masked: string, complete: boolean) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "string",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
           }
@@ -8263,6 +8659,103 @@
             "type": "Ref<HTMLElement> | undefined",
             "required": false,
             "description": "The root, at the widest type both branches satisfy — `<time>` when\n`dateTime` is supplied and `<span>` when it is not. Widened rather than\ndropped; see `props.ts`'s contract."
+          }
+        ]
+      }
+    ],
+    "multi-select.tsx": [
+      {
+        "name": "MultiSelectProps",
+        "props": [
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "options",
+            "type": "readonly MultiSelectOption[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "placeholder",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "removeLabel",
+            "type": "(label: string) => string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "suggestionsLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "readonly string[]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "hideSelectedOptions",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isRequired",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "maxValues",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "(value: readonly string[]) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "readonly string[]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
           }
         ]
       }
@@ -9654,6 +10147,73 @@
         ]
       }
     ],
+    "radar-chart.tsx": [
+      {
+        "name": "RadarChartProps",
+        "props": [
+          {
+            "name": "data",
+            "type": "readonly RadarDatum[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "dataCaption",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "dimensionLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "maxValue",
+            "type": "number",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "series",
+            "type": "readonly RadarSeries[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "height",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "initialWidth",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
     "radio-group.tsx": [
       {
         "name": "RadioGroupProps",
@@ -10212,6 +10772,109 @@
         ]
       }
     ],
+    "range-slider.tsx": [
+      {
+        "name": "RangeSliderProps",
+        "props": [
+          {
+            "name": "endLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "startLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "readonly [number, number]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "form",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "formatOptions",
+            "type": "Intl.NumberFormatOptions",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "maxValue",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "minValue",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onChange",
+            "type": "(value: readonly [number, number]) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onChangeEnd",
+            "type": "(value: readonly [number, number]) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "step",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "readonly [number, number]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
     "rating.tsx": [
       {
         "name": "InteractiveRatingProps",
@@ -10513,6 +11176,73 @@
             "type": "\"horizontal\" | \"vertical\"",
             "required": false,
             "description": "`horizontal` splits along the inline axis (panes side by side) and is the\ndirection-sensitive case; `vertical` stacks panes on the block axis."
+          }
+        ]
+      }
+    ],
+    "sankey-chart.tsx": [
+      {
+        "name": "SankeyChartProps",
+        "props": [
+          {
+            "name": "dataCaption",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "links",
+            "type": "readonly SankeyLinkDatum[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "nodes",
+            "type": "readonly SankeyNodeDatum[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "targetLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "valueLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "height",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "initialWidth",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
           }
         ]
       }
@@ -13472,6 +14202,91 @@
         ]
       }
     ],
+    "tags-input.tsx": [
+      {
+        "name": "TagsInputProps",
+        "props": [
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "placeholder",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "removeLabel",
+            "type": "(tag: string) => string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "readonly string[]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDuplicate",
+            "type": "(candidate: string, current: readonly string[]) => boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "maxTags",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "(value: readonly string[]) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "splitCharacters",
+            "type": "readonly string[]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "suggestions",
+            "type": "readonly string[]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "readonly string[]",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
     "text-area.tsx": [
       {
         "name": "TextAreaProps",
@@ -15286,6 +16101,79 @@
         ]
       }
     ],
+    "tree-select.tsx": [
+      {
+        "name": "TreeSelectProps",
+        "props": [
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "options",
+            "type": "readonly TreeSelectOption[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "placeholder",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "treeLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "defaultValue",
+            "type": "string | readonly string[] | null",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "mode",
+            "type": "\"single\" | \"multiple\" | \"checkbox\"",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "name",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "onValueChange",
+            "type": "(value: string | readonly string[] | null) => void",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "value",
+            "type": "string | readonly string[] | null",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
     "tree.tsx": [
       {
         "name": "TreeItemProps",
@@ -15634,6 +16522,67 @@
           {
             "name": "translate",
             "type": "\"yes\" | \"no\" | undefined",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          }
+        ]
+      }
+    ],
+    "treemap-chart.tsx": [
+      {
+        "name": "TreemapChartProps",
+        "props": [
+          {
+            "name": "data",
+            "type": "readonly TreemapDatum[]",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "dataCaption",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "parentLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "valueLabel",
+            "type": "string",
+            "required": true,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "className",
+            "type": "string",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "height",
+            "type": "number",
+            "required": false,
+            "description": "Inherited DOM or shared Lumo prop."
+          },
+          {
+            "name": "initialWidth",
+            "type": "number",
             "required": false,
             "description": "Inherited DOM or shared Lumo prop."
           }

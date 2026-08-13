@@ -180,6 +180,10 @@ const EXTERNAL = new Set([
   "@tanstack/charts",
   "@tanstack/react-table",
   "@tanstack/react-form",
+  // Deep product-input engines. The copied files import these directly and
+  // keep their objects behind Lumo's string/raw-value interfaces.
+  "culori",
+  "maska",
 ]);
 
 /**

@@ -1,6 +1,38 @@
 export { Button, IconButton } from "./button.tsx";
 export type { ButtonProps, IconButtonProps } from "./button.tsx";
 
+export { HeatmapChart } from "./heatmap-chart.tsx";
+export type { HeatmapChartProps, HeatmapDatum } from "./heatmap-chart.tsx";
+export { RadarChart } from "./radar-chart.tsx";
+export type { RadarChartProps, RadarDatum, RadarSeries } from "./radar-chart.tsx";
+export { TreemapChart } from "./treemap-chart.tsx";
+export type { TreemapChartProps, TreemapDatum } from "./treemap-chart.tsx";
+export { SankeyChart } from "./sankey-chart.tsx";
+export type {
+  SankeyChartProps,
+  SankeyLinkDatum,
+  SankeyNodeDatum,
+} from "./sankey-chart.tsx";
+
+export { ColorPicker } from "./color-picker.tsx";
+export type { ColorPickerProps, ColorSwatch } from "./color-picker.tsx";
+export { ColorInput, normalizeColor } from "./color-input.tsx";
+export type { ColorFormat, ColorInputProps } from "./color-input.tsx";
+export { JsonInput, validateJson } from "./json-input.tsx";
+export type { JsonInputProps, JsonValidation } from "./json-input.tsx";
+export { MaskInput, maskValue } from "./mask-input.tsx";
+export type { MaskInputProps, MaskValue } from "./mask-input.tsx";
+export { MultiSelect } from "./multi-select.tsx";
+export type { MultiSelectOption, MultiSelectProps } from "./multi-select.tsx";
+export { TagsInput } from "./tags-input.tsx";
+export type { TagsInputProps } from "./tags-input.tsx";
+export { Cascader, resolveCascaderPath } from "./cascader.tsx";
+export type { CascaderOption, CascaderProps } from "./cascader.tsx";
+export { TreeSelect, treeSelectionState } from "./tree-select.tsx";
+export type { TreeSelectOption, TreeSelectProps } from "./tree-select.tsx";
+export { RangeSlider } from "./range-slider.tsx";
+export type { RangeSliderProps } from "./range-slider.tsx";
+
 export {
   ButtonGroup,
   ButtonGroupSeparator,

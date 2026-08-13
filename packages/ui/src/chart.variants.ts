@@ -134,7 +134,11 @@ export type ChartConfig = Record<
  * seven-library round. Two selectors replace thirteen, and both are colour.
  */
 export const chartContainerVariants = cva(
-  "flex aspect-video justify-center text-xs " +
+  // The renderer already receives an explicit height. `aspect-video` therefore
+  // turned height into a minimum width (280px → 498px) and forced every tall
+  // chart family off a phone viewport. Width belongs to the containing layout;
+  // the deterministic `initialWidth` still owns the server geometry.
+  "flex w-full min-w-0 justify-center text-xs " +
     "[&_.ts-chart__grid]:text-border/50 " +
     "[&_.ts-chart__axis]:text-fg-muted",
 );

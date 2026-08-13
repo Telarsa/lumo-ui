@@ -316,6 +316,24 @@
       ]
     },
     {
+      "name": "cascader",
+      "type": "registry:ui",
+      "title": "Cascader",
+      "description": "Lumo registry item.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/cascader.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/cascader.tsx"
+        }
+      ]
+    },
+    {
       "name": "chart",
       "type": "registry:ui",
       "title": "Chart",
@@ -360,6 +378,46 @@
           "path": "packages/ui/src/checkbox.tsx",
           "type": "registry:ui",
           "target": "components/ui/checkbox.tsx"
+        }
+      ]
+    },
+    {
+      "name": "color-input",
+      "type": "registry:ui",
+      "title": "Color Input",
+      "description": "Lumo registry item.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "culori"
+      ],
+      "registryDependencies": [
+        "color-picker",
+        "form",
+        "text-field"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/color-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/color-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "color-picker",
+      "type": "registry:ui",
+      "title": "Color Picker",
+      "description": "Lumo registry item.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/color-picker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/color-picker.tsx"
         }
       ]
     },
@@ -955,6 +1013,27 @@
       ]
     },
     {
+      "name": "heatmap-chart",
+      "type": "registry:ui",
+      "title": "Heatmap Chart",
+      "description": "A labelled ordinal matrix with a semantic table in the served bytes.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts"
+      ],
+      "registryDependencies": [
+        "chart"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/heatmap-chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/heatmap-chart.tsx"
+        }
+      ]
+    },
+    {
       "name": "hover-card",
       "type": "registry:ui",
       "title": "Hover Card",
@@ -1093,6 +1172,23 @@
       ]
     },
     {
+      "name": "json-input",
+      "type": "registry:ui",
+      "title": "Json Input",
+      "description": "Lumo registry item.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/json-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/json-input.tsx"
+        }
+      ]
+    },
+    {
       "name": "kanban",
       "type": "registry:ui",
       "title": "Kanban",
@@ -1201,6 +1297,24 @@
       ]
     },
     {
+      "name": "mask-input",
+      "type": "registry:ui",
+      "title": "Mask Input",
+      "description": "Lumo registry item.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "maska"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/mask-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/mask-input.tsx"
+        }
+      ]
+    },
+    {
       "name": "menu",
       "type": "registry:ui",
       "title": "Menu",
@@ -1277,6 +1391,28 @@
           "path": "packages/ui/src/message.tsx",
           "type": "registry:ui",
           "target": "components/ui/message.tsx"
+        }
+      ]
+    },
+    {
+      "name": "multi-select",
+      "type": "registry:ui",
+      "title": "Multi Select",
+      "description": "A searchable multiple selection field.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/core",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/multi-select.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/multi-select.tsx"
         }
       ]
     },
@@ -1552,6 +1688,27 @@
       ]
     },
     {
+      "name": "radar-chart",
+      "type": "registry:ui",
+      "title": "Radar Chart",
+      "description": "A comparative radar profile with explicit domains and tabular parity.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts"
+      ],
+      "registryDependencies": [
+        "chart"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/radar-chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/radar-chart.tsx"
+        }
+      ]
+    },
+    {
       "name": "radio-group",
       "type": "registry:ui",
       "title": "Radio Group",
@@ -1603,6 +1760,28 @@
       ]
     },
     {
+      "name": "range-slider",
+      "type": "registry:ui",
+      "title": "Range Slider",
+      "description": "Two ordered values with independently named, locale-formatted thumbs.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "slider"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/range-slider.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/range-slider.tsx"
+        }
+      ]
+    },
+    {
       "name": "rating",
       "type": "registry:ui",
       "title": "Rating",
@@ -1641,6 +1820,27 @@
           "path": "packages/ui/src/resizable.tsx",
           "type": "registry:ui",
           "target": "components/ui/resizable.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sankey-chart",
+      "type": "registry:ui",
+      "title": "Sankey Chart",
+      "description": "A validated proportional-flow diagram with semantic source/target rows.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts"
+      ],
+      "registryDependencies": [
+        "chart"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/sankey-chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/sankey-chart.tsx"
         }
       ]
     },
@@ -2055,6 +2255,24 @@
       ]
     },
     {
+      "name": "tags-input",
+      "type": "registry:ui",
+      "title": "Tags Input",
+      "description": "Lumo registry item.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/tags-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tags-input.tsx"
+        }
+      ]
+    },
+    {
       "name": "text-area",
       "type": "registry:ui",
       "title": "Text Area",
@@ -2308,6 +2526,24 @@
       ]
     },
     {
+      "name": "tree-select",
+      "type": "registry:ui",
+      "title": "Tree Select",
+      "description": "Lumo registry item.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/tree-select.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tree-select.tsx"
+        }
+      ]
+    },
+    {
       "name": "tree",
       "type": "registry:ui",
       "title": "Tree",
@@ -2338,6 +2574,27 @@
           "path": "packages/ui/src/async-collection.ts",
           "type": "registry:ui",
           "target": "components/ui/async-collection.ts"
+        }
+      ]
+    },
+    {
+      "name": "treemap-chart",
+      "type": "registry:ui",
+      "title": "Treemap Chart",
+      "description": "A responsive hierarchical area chart; authored rows are never mutated.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts"
+      ],
+      "registryDependencies": [
+        "chart"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/treemap-chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/treemap-chart.tsx"
         }
       ]
     },

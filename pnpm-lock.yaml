@@ -16,8 +16,8 @@ catalogs:
       specifier: 4.3.3
       version: 4.3.3
     '@tanstack/charts':
-      specifier: 0.9.0
-      version: 0.9.0
+      specifier: 0.11.1
+      version: 0.11.1
     '@tanstack/react-form':
       specifier: 1.33.4
       version: 1.33.4
@@ -27,6 +27,9 @@ catalogs:
     '@testing-library/react':
       specifier: ^16.3.2
       version: 16.3.2
+    '@types/culori':
+      specifier: 4.0.1
+      version: 4.0.1
     '@types/node':
       specifier: 24.13.3
       version: 24.13.3
@@ -45,6 +48,9 @@ catalogs:
     clsx:
       specifier: 2.1.1
       version: 2.1.1
+    culori:
+      specifier: 4.0.2
+      version: 4.0.2
     dom-accessibility-api:
       specifier: 0.7.1
       version: 0.7.1
@@ -66,6 +72,9 @@ catalogs:
     lucide-react:
       specifier: 1.30.0
       version: 1.30.0
+    maska:
+      specifier: 3.2.0
+      version: 3.2.0
     next:
       specifier: 16.0.4
       version: 16.0.4
@@ -348,7 +357,7 @@ importers:
         version: link:../core
       '@tanstack/charts':
         specifier: 'catalog:'
-        version: 0.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@tanstack/react-form':
         specifier: 'catalog:'
         version: 1.33.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -358,12 +367,18 @@ importers:
       class-variance-authority:
         specifier: 'catalog:'
         version: 0.7.1
+      culori:
+        specifier: 'catalog:'
+        version: 4.0.2
       embla-carousel-react:
         specifier: 'catalog:'
         version: 8.6.0(react@19.2.8)
       lucide-react:
         specifier: 'catalog:'
         version: 1.30.0(react@19.2.8)
+      maska:
+        specifier: 'catalog:'
+        version: 3.2.0
       react-day-picker:
         specifier: 'catalog:'
         version: 10.0.1(@types/react@19.2.18)(react@19.2.8)
@@ -371,6 +386,9 @@ importers:
       '@testing-library/react':
         specifier: 'catalog:'
         version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@types/culori':
+        specifier: 'catalog:'
+        version: 4.0.1
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -1105,8 +1123,8 @@ packages:
   '@tailwindcss/postcss@4.3.3':
     resolution: {integrity: sha512-JTSZZGQi1AyKirbLN3azmjVzef92tcX7h+iSqPdaeStyFpGpDlKvvpxeOE8njhbUanbRwr3z8DyzhICWnMtQeg==}
 
-  '@tanstack/charts@0.9.0':
-    resolution: {integrity: sha512-QnpBLXjSqZff/WOLTK1lbVnM8NnjmEOiIFQS/yeAiJ/L8ZMIfRio7CQCJZZOd/GEAnKKTEb09WqnE7iEnASzfQ==}
+  '@tanstack/charts@0.11.1':
+    resolution: {integrity: sha512-UgLrJT8rLVjeeSV3sE1WntTv1/YCLjcBcreKewDYJs4sH2qT3FHNA0foeksWf5wcFav3QoKWlhZGzG62ZVePcA==}
     peerDependencies:
       '@angular/core': '>=19'
       '@angular/platform-browser': '>=19'
@@ -1213,6 +1231,9 @@ packages:
 
   '@types/chai@5.2.3':
     resolution: {integrity: sha512-Mw558oeA9fFbv65/y4mHtXDs9bPnFMZAL/jxdPFUpOHHIXX91mcgEHbS5Lahr+pwZFR8A7GQleRWeI6cGFC2UA==}
+
+  '@types/culori@4.0.1':
+    resolution: {integrity: sha512-43M51r/22CjhbOXyGT361GZ9vncSVQ39u62x5eJdBQFviI8zWp2X5jzqg7k4M6PVgDQAClpy2bUe2dtwEgEDVQ==}
 
   '@types/d3-force@3.0.10':
     resolution: {integrity: sha512-ZYeSaCF3p73RdOKcjj+swRlZfnYpK1EbaDiYICEEp5Q6sUiqFaFQ9qgoshp5CzIyyb/yD09kD9o2zEltCexlgw==}
@@ -1515,6 +1536,10 @@ packages:
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
+
+  culori@4.0.2:
+    resolution: {integrity: sha512-1+BhOB8ahCn4O0cep0Sh2l9KCOfOdY+BXJnKMHFFzDEouSr/el18QwXEMRlOj9UY5nCeA8UN3a/82rUWRBeyBw==}
+    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
   d3-array@2.12.1:
     resolution: {integrity: sha512-B0ErZK/66mHtEsR1TkPEEkwdy+WDesimkM5gpZr5Dsg54BiTA5RXtYW5qTLIAcekaS9xfZrzBLF/OAkB3Qn1YQ==}
@@ -2145,6 +2170,9 @@ packages:
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
+
+  maska@3.2.0:
+    resolution: {integrity: sha512-zSmSgs5/q9vMSmrdZT3rKOv9uLznNWR/niuuAdBZDTvB3SMKOX9vhMtDijFyExz+B4UClu2rvksylUh/ea1bLA==}
 
   mdast-util-to-hast@13.2.1:
     resolution: {integrity: sha512-cctsq2wp5vTsLIcaymblUriiTcZd0CwWtCbLvrOzYCDZoWyMNV8sZ7krj09FSnsiJi3WVsHLM4k6Dq/yaPyCXA==}
@@ -3272,7 +3300,7 @@ snapshots:
       postcss: 8.5.26
       tailwindcss: 4.3.3
 
-  '@tanstack/charts@0.9.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@tanstack/charts@0.11.1(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@types/d3-force': 3.0.10
       '@types/d3-geo': 3.1.1
@@ -3363,6 +3391,8 @@ snapshots:
     dependencies:
       '@types/deep-eql': 4.0.2
       assertion-error: 2.0.1
+
+  '@types/culori@4.0.1': {}
 
   '@types/d3-force@3.0.10': {}
 
@@ -3680,6 +3710,8 @@ snapshots:
   cssom@0.5.0: {}
 
   csstype@3.2.3: {}
+
+  culori@4.0.2: {}
 
   d3-array@2.12.1:
     dependencies:
@@ -4266,6 +4298,8 @@ snapshots:
   magic-string@0.30.21:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  maska@3.2.0: {}
 
   mdast-util-to-hast@13.2.1:
     dependencies:

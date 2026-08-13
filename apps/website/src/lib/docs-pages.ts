@@ -62,6 +62,14 @@ export const DOCS_PAGES: readonly DocsPage[] = [
     },
   },
   {
+    slug: "integration-recipes",
+    label: { "fa-IR": "دستورهای یکپارچه‌سازی", "en-US": "Integration recipes" },
+    intro: {
+      "fa-IR": "هوک‌های کوچک و آزموده‌ای که باید در محصول کپی شوند، نه اینکه API زمان اجرای لومو را بزرگ کنند.",
+      "en-US": "Small tested hooks to copy into a product instead of expanding Lumo's runtime API.",
+    },
+  },
+  {
     slug: "coverage",
     label: { "fa-IR": "پوشش نمونه‌ها", "en-US": "Example coverage" },
     intro: {

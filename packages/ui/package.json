@@ -26,11 +26,14 @@
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-table": "catalog:",
     "class-variance-authority": "catalog:",
+    "culori": "catalog:",
     "embla-carousel-react": "catalog:",
-    "lucide-react": "catalog:"
+    "lucide-react": "catalog:",
+    "maska": "catalog:"
   },
   "devDependencies": {
     "@testing-library/react": "catalog:",
+    "@types/culori": "catalog:",
     "react-aria-components": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",

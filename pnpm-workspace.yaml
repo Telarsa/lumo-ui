@@ -129,7 +129,16 @@ catalog:
   # not a re-pin, on roughly every minor until 1.0. The React adapter is the
   # `./react` subpath of this one package; `@tanstack/react-charts` is the dead
   # pre-0.9.0 name and must not be added.
-  '@tanstack/charts': 0.9.0
+  '@tanstack/charts': 0.11.1
+
+  # Product input engines. Both are deliberately framework-independent: Lumo
+  # owns the React lifecycle, field markup, announced strings, locale and RTL.
+  # Culori supplies standards-based CSS color parsing/conversion; the `/fn`
+  # entry keeps the shipped subset tree-shakeable. Maska supplies the caret and
+  # edit-state machinery that a correct mask cannot derive from the final value.
+  culori: 4.0.2
+  maska: 3.2.0
+  '@types/culori': 4.0.1
 
   # --- the calendar GRID (not the calendar SYSTEM) ---------------------------
   # Adopted 11 Aug 2026 for the date family, and the split is the whole point:
@@ -292,4 +301,3 @@ catalog:
   # The CLI that builds the registry and applies the RTL transform. Pinned so
   # `shadcn migrate rtl` cannot change its rewrite table under us between runs.
   shadcn: 4.16.2
-

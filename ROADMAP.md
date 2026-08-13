@@ -15,7 +15,7 @@ decision was superseded by the verified Base UI migration described in
 
 ## Current measured state — 13 August 2026
 
-- **99 implementation modules, 100 public component pages, 30 blocks and 129
+- **112 implementation modules, 113 public component pages, 30 blocks and 142
   generated registry items.** `IconButton` has its own page but shares
   `button.tsx`, which explains the one-page difference.
 - The complete English/LTR and Persian/RTL catalogue pass covered **198 rendered
@@ -23,10 +23,9 @@ decision was superseded by the verified Base UI migration described in
 - Real VoiceOver and Android TalkBack passes found and fixed defects. NVDA,
   JAWS and a current Chrome/TalkBack matrix remain deliberately deferred; they
   earn no score until an OS-independent hosted device/AT route is available.
-- The latest complete pre-foundation verification baseline covered **2,616
-  tests, 128 clean-room registry payloads and 540 generated documents**. Waves
-  1 and 2 now have focused red/green and mutation evidence; their final whole-
-  workspace verification is recorded in `review/WAVE-1-2-EVIDENCE-2026-08-13.md`.
+- The latest complete verification baseline covers **2,912 tests, 142
+  clean-room registry payloads and 598 generated documents**. Waves 1–3 have
+  focused red/green, mutation, production-build and browser evidence.
 - The last evidence-backed whole-library rating is **9.3/10**, after the
   independent-review reset, remediation, full visual/mutation pass and two real
   AT environments. The newer product foundations have not been used to inflate
@@ -112,15 +111,15 @@ checked individually so a partly integrated engine is not disguised as either
       gallery/table recipes. Validation and the visual lifecycle are already
       transport-independent and shipped.
 
-### Wave 3 — Mantine replacement depth
+### Wave 3 — Mantine replacement depth ✅
 
-- [ ] Ship only the named chart families demanded by target products, starting
+- [x] Ship only the named chart families demanded by target products, starting
       from heatmap/treemap/radar/Sankey demand rather than a catalog-count goal;
       preserve the SSR semantic-data companion.
-- [ ] Close product-used input gaps such as ColorInput/Picker, MaskInput,
+- [x] Close product-used input gaps such as ColorInput/Picker, MaskInput,
       JsonInput, MultiSelect, Cascader, TreeSelect, editable TagsInput and
       RangeSlider. Each addition must own a real state model, not be an alias.
-- [ ] Publish tested integration recipes for the smaller utility/hook needs that
+- [x] Publish tested integration recipes for the smaller utility/hook needs that
       do not warrant a Lumo-owned abstraction.
 
 ### Wave 4 — Astryx-class internal tools
@@ -160,10 +159,10 @@ checked individually so a partly integrated engine is not disguised as either
 
 | surface | current state | acceptance rule |
 |---|---|---|
-| Components | **99 implementation modules / 100 public pages** | real behavior or caller complexity removed; no count-only aliases |
+| Components | **112 implementation modules / 113 public pages** | real behavior or caller complexity removed; no count-only aliases |
 | Blocks | **30** | compose public Lumo APIs only |
 | Locales | `fa-IR`, `en-US` | complete-or-compile-error |
-| Registry | **129 generated items** | dependency-validated, copied and typechecked outside the workspace |
+| Registry | **142 generated items** | dependency-validated, copied and typechecked outside the workspace |
 | Gates | prop/root, API, registry, consumer, HTML and vocabulary tiers | every rule needs a poison or mutation that proves it can fail |
 
 Competitor counts are deliberately not a target: catalogues mix primitives,
@@ -325,11 +324,12 @@ post-launch, behind the provider tier.
 
 - [x] Table with sorting, selection, column resize
 - [x] Virtualized list with corpus semantics, paging and imperative scrolling
-- [ ] Virtualized DataGrid (ordinary and hierarchical grids already ship)
+- [x] Virtualized DataGrid, including infinite loading and hierarchical rows
 - [x] Tree and hierarchical `role="treegrid"` Table/DataGrid
 - [x] Charts — the one genuine gap, since no headless library ships them.
-      Closed with recharts plus a server-rendered `<ChartData>` table; seven
-      libraries were measured first and the comparison is above.
+      Closed on TanStack Charts with a server-rendered `<ChartData>` table;
+      heatmap, radar, treemap and Sankey now have dedicated product components
+      and separate bilingual pages.
 - [x] Keyboard-accessible Sortable/Kanban movement and TransferList's explicit
       “move to” controls
 - [x] `VirtualListHandle.scrollToIndex` and `.scrollToOffset`, without replacing

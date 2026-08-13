@@ -16,9 +16,11 @@ import {
   MenuSection,
   MenuSeparator,
   MenuTrigger,
+  MultiSelect,
   Pagination,
   Rating,
   TextField,
+  TagsInput,
   ToastRegion,
   barY,
   chartCategoryAxis,
@@ -35,6 +37,70 @@ import {
   type ChartConfig,
   type LumoValidatorMessages,
 } from "@lumo-ui/ui";
+
+export interface MultiSelectIslandProps {
+  locale: Locale;
+  label: string;
+  placeholder: string;
+  suggestionsLabel: string;
+  removePrefix: string;
+  options: readonly { value: string; label: string }[];
+  defaultValue?: readonly string[];
+}
+
+export function MultiSelectIsland({
+  locale,
+  label,
+  placeholder,
+  suggestionsLabel,
+  removePrefix,
+  options,
+  defaultValue,
+}: MultiSelectIslandProps) {
+  const [value, setValue] = useState<readonly string[]>(defaultValue ?? []);
+  return (
+    <MultiSelect
+      locale={locale}
+      label={label}
+      placeholder={placeholder}
+      suggestionsLabel={suggestionsLabel}
+      removeLabel={(item) => `${removePrefix} ${item}`}
+      options={options}
+      value={value}
+      onValueChange={setValue}
+      className="max-w-sm"
+    />
+  );
+}
+
+export interface TagsInputIslandProps {
+  label: string;
+  placeholder: string;
+  removePrefix: string;
+  suggestions: readonly string[];
+  defaultValue?: readonly string[];
+}
+
+export function TagsInputIsland({
+  label,
+  placeholder,
+  removePrefix,
+  suggestions,
+  defaultValue,
+}: TagsInputIslandProps) {
+  const [value, setValue] = useState<readonly string[]>(defaultValue ?? []);
+  return (
+    <TagsInput
+      label={label}
+      placeholder={placeholder}
+      removeLabel={(item) => `${removePrefix} ${item}`}
+      suggestions={suggestions}
+      value={value}
+      onValueChange={setValue}
+      className="max-w-sm"
+    />
+  );
+}
 
 /**
  * The four demos that cannot be written in `demos.tsx`, and exactly why.

@@ -1,0 +1,113 @@
+"use client";
+
+import { angleGrid, polar, radialArea, radialGrid, radialLine } from "@tanstack/charts/polar";
+import { scaleLinear } from "@tanstack/charts/scales/linear";
+import { scalePoint } from "@tanstack/charts/scales/point";
+import { type Locale } from "@lumo-ui/core";
+
+import { ChartContainer, ChartLegend, defineChart, type ChartConfig } from "./chart.tsx";
+
+export interface RadarSeries {
+  key: string;
+  label: string;
+  color: string;
+}
+
+export interface RadarDatum {
+  dimension: string;
+  [series: string]: string | number;
+}
+
+export interface RadarChartProps {
+  locale: Locale;
+  label: string;
+  dataCaption: string;
+  dimensionLabel: string;
+  data: readonly RadarDatum[];
+  series: readonly RadarSeries[];
+  maxValue: number;
+  height?: number;
+  initialWidth?: number;
+  className?: string;
+}
+
+/** A comparative radar profile with explicit domains and tabular parity. */
+export function RadarChart({
+  locale,
+  label,
+  dataCaption,
+  dimensionLabel,
+  data,
+  series,
+  maxValue,
+  height = 320,
+  initialWidth,
+  className,
+}: RadarChartProps) {
+  if (!Number.isFinite(maxValue) || maxValue <= 0) {
+    throw new RangeError("RadarChart maxValue must be a positive finite number");
+  }
+  const dimensions = data.map((row) => row.dimension);
+  const marks = series.flatMap((entry) => {
+    const profile = data.map((row, index) => ({
+      id: `${entry.key}-${index}`,
+      dimension: row.dimension,
+      value: Number(row[entry.key]),
+    }));
+    return [
+      radialArea(profile, {
+        id: `${entry.key}-area`,
+        angle: "dimension",
+        radius: "value",
+        fill: entry.color,
+        fillOpacity: 0.16,
+      }),
+      radialLine(profile, {
+        id: `${entry.key}-line`,
+        angle: "dimension",
+        radius: "value",
+        stroke: entry.color,
+        strokeWidth: 2,
+        points: true,
+      }),
+    ] as const;
+  });
+  const definition = defineChart({
+    marks: [
+      polar({
+        radiusRatio: 0.72,
+        angle: { scale: scalePoint<string>().domain(dimensions), wrap: true },
+        radius: { scale: scaleLinear().domain([0, maxValue]) },
+        guides: [
+          radialGrid({ values: [maxValue * 0.25, maxValue * 0.5, maxValue * 0.75, maxValue], shape: "polygon" }),
+          angleGrid({ values: dimensions, labels: true }),
+        ],
+        marks,
+      }),
+    ],
+    x: null,
+    y: null,
+    guides: false,
+  });
+  const config: ChartConfig = {
+    dimension: { label: dimensionLabel },
+    ...Object.fromEntries(series.map((entry) => [entry.key, { label: entry.label, color: entry.color }])),
+  };
+
+  return (
+    <ChartContainer
+      className={className}
+      config={config}
+      locale={locale}
+      label={label}
+      definition={definition}
+      data={data.map((row) => ({ ...row }))}
+      categoryKey="dimension"
+      dataCaption={dataCaption}
+      height={height}
+      initialWidth={initialWidth}
+    >
+      <ChartLegend />
+    </ChartContainer>
+  );
+}

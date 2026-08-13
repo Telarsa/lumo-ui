@@ -1,0 +1,6 @@
+import type { Locale } from "@lumo-ui/core";
+import { ColorPicker } from "@lumo-ui/ui";
+import type { ComponentExamples } from "./_system/types";
+const c = { label: { "fa-IR": "رنگ برند", "en-US": "Brand color" }, red: { "fa-IR": "قرمز", "en-US": "Red" }, blue: { "fa-IR": "آبی", "en-US": "Blue" }, green: { "fa-IR": "سبز", "en-US": "Green" } } as const;
+function SwatchesExample(l: Locale) { return <ColorPicker label={c.label[l]} defaultValue="#2563eb" swatches={[{ value: "#dc2626", label: c.red[l] }, { value: "#2563eb", label: c.blue[l] }, { value: "#16a34a", label: c.green[l] }]} />; }
+export const EXAMPLES: ComponentExamples = { meta: { isNew: true, tier: "form", title: { "fa-IR": "انتخاب‌گر رنگ", "en-US": "Color picker" }, intro: { "fa-IR": "مجموعهٔ نام‌دار رنگ‌ها با انتخاب رادیویی واقعی و فوکوس دیداری.", "en-US": "A named color collection with real radio selection and visible focus." }, composition: "<ColorPicker label swatches value defaultValue onValueChange />", parts: [{ name: "ColorPicker", description: { "fa-IR": "انتخاب محدود از نمونه‌رنگ‌های نام‌دار.", "en-US": "A constrained choice among individually named swatches." } }] }, examples: [{ id: "swatches", title: { "fa-IR": "پالت برند", "en-US": "Brand palette" }, render: SwatchesExample }] };
