@@ -35,7 +35,7 @@ import {
 } from "./table.tsx";
 import { IconButton } from "./button.tsx";
 import { gridArrow } from "./table.variants.ts";
-import type { Locale } from "@lumo-ui/core";
+import { formatNumber, type Locale } from "@lumo-ui/core";
 
 afterEach(cleanup);
 
@@ -876,10 +876,27 @@ function WithResizers({ locale = "fa-IR" }: { locale?: Locale }) {
   return (
     <Table label="افراد" locale={locale} table={table}>
       <TableHeader>
-        <Column id="name" isRowHeader resizer={<ColumnResizer label="تغییر اندازهٔ ستون" />}>
+        <Column
+          id="name"
+          isRowHeader
+          resizer={
+            <ColumnResizer
+              label="تغییر اندازهٔ ستون"
+              valueText={(value) => `${formatNumber(value, "fa-IR")} پیکسل`}
+            />
+          }
+        >
           نام
         </Column>
-        <Column id="city" resizer={<ColumnResizer label="تغییر اندازهٔ ستون" />}>
+        <Column
+          id="city"
+          resizer={
+            <ColumnResizer
+              label="تغییر اندازهٔ ستون"
+              valueText={(value) => `${formatNumber(value, "fa-IR")} پیکسل`}
+            />
+          }
+        >
           شهر
         </Column>
       </TableHeader>
@@ -920,6 +937,12 @@ describe("ColumnResizer — a grid with resizable columns is still ONE tab stop"
     for (const [tag] of html.matchAll(/<button[^>]*تغییر اندازهٔ ستون[^>]*>/g)) {
       expect(tag).toContain('tabindex="-1"');
     }
+  });
+
+  it("serves a localized value string that VoiceOver actually announces", () => {
+    const html = renderToStaticMarkup(<WithResizers />);
+    expect(html).toContain(`aria-valuetext="${formatNumber(150, "fa-IR")} پیکسل"`);
+    expect(html).not.toContain('aria-valuetext="150 pixels"');
   });
 
   it("mirrors a physical ArrowRight resize between Persian and English", () => {

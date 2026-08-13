@@ -286,6 +286,10 @@ export function VirtualList({
       className={cn(virtualListVariants({ orientation }), className)}
     >
       <div
+        // Layout-only: flatten this node in the accessibility tree so the
+        // list's owned listitems are its exposed children. VoiceOver otherwise
+        // counts this one wrapper and announces “1 item”.
+        role="presentation"
         className={cn(virtualListSizerVariants())}
         /*
          * The scrollable LENGTH, along the main axis only. Logical properties:

@@ -930,6 +930,8 @@ export interface TableResizingIslandProps {
   amountHeader: string;
   /** Announced name of the resize handle. */
   resizeLabel: string;
+  /** Localized unit announced after the current column width. */
+  resizeUnit: string;
   rows: readonly (OrderDemoRow & { readonly amountText: string })[];
 }
 
@@ -946,6 +948,7 @@ export function TableResizingIsland({
   cityHeader,
   amountHeader,
   resizeLabel,
+  resizeUnit,
   rows,
 }: TableResizingIslandProps) {
   const table = useLumoTable({
@@ -967,7 +970,13 @@ export function TableResizingIsland({
             id="customer"
             isRowHeader
             defaultWidth={200}
-            resizer={<ColumnResizer label={resizeLabel} columnId="customer" />}
+            resizer={
+              <ColumnResizer
+                label={resizeLabel}
+                valueText={(value) => `${formatNumber(value, locale)} ${resizeUnit}`}
+                columnId="customer"
+              />
+            }
           >
             {customerHeader}
           </Column>
@@ -1010,6 +1019,8 @@ export interface TableDemoIslandProps {
   sortAscendingLabel: string;
   sortDescendingLabel: string;
   resizeLabel: string;
+  /** Localized unit announced after the current column width. */
+  resizeUnit: string;
   /** Rows, with the amount ALREADY formatted — see `Cell`. */
   rows: readonly (OrderDemoRow & { readonly amount: number; readonly amountText: string })[];
 }
@@ -1025,6 +1036,7 @@ export function TableDemoIsland({
   sortAscendingLabel,
   sortDescendingLabel,
   resizeLabel,
+  resizeUnit,
   rows,
 }: TableDemoIslandProps) {
   const table = useLumoTable({
@@ -1054,15 +1066,20 @@ export function TableDemoIsland({
            * The resizer's own announced value USED to be React Aria's English
            * "75 pixels", closed by a 27 KB patch of `node_modules` that shipped
            * an `fa-IR` table bundle. The patch is retired: this handle is Lumo's
-           * own `<button>` with a required Persian `label` and no value string
-           * at all to leak. One workaround the migration DELETED rather than
-           * translated.
+           * own `<button>` with a required name and localized value formatter.
+           * One workaround the migration DELETED rather than translated.
            */}
           <Column
             id="customer"
             isRowHeader
             defaultWidth={180}
-            resizer={<ColumnResizer label={resizeLabel} columnId="customer" />}
+            resizer={
+              <ColumnResizer
+                label={resizeLabel}
+                valueText={(value) => `${formatNumber(value, locale)} ${resizeUnit}`}
+                columnId="customer"
+              />
+            }
           >
             {customerHeader}
           </Column>
@@ -2608,7 +2625,7 @@ export function VirtualListIsland({
   const [loadedCount, setLoadedCount] = useState(count);
   const effectiveCount = loadToCount === undefined ? count : loadedCount;
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex w-full flex-col gap-2">
       <VirtualList
         label={label}
         locale={locale}

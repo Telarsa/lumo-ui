@@ -139,6 +139,10 @@ describe("VirtualList — the set size is the corpus", () => {
     expect(html).toContain('role="list"');
     expect(html).toContain('aria-label="فهرست سفارش‌ها"');
     expect(html).toContain('tabindex="0"');
+    // The positioning box is layout-only. If it remains a generic AX node,
+    // VoiceOver counts that one wrapper and announces “list … 1 item” even
+    // though the rendered descendants are listitems with aria-setsize.
+    expect(html).toMatch(/role="list"[^>]*>\s*<div[^>]*role="presentation"/);
     // Rows must NOT be focusable: ten thousand tab stops is a keyboard trap.
     expect(html).not.toMatch(/role="listitem"[^>]*tabindex/);
   });

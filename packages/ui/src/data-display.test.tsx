@@ -78,14 +78,14 @@ const englishIn = (values: string[]) => values.filter((v) => LATIN_WORD.test(v))
  *     props for facts that now live in `useLumoTable`. Same facts, same
  *     assertions, different spelling.
  *
- *   INVERTED, and this is the interesting one
+ *   RESTORED AT THE PUBLIC BOUNDARY
  *     `aria-valuetext="\d+ pixels"` asserted that React Aria leaked an English,
  *     Latin-digited string onto a hidden <input type="range"> that no prop
  *     could reach — the defect `patches/react-aria@3.51.0.patch` existed to
- *     translate. There is no hidden input and no bundle any more, so the
- *     assertion is inverted rather than deleted: the resizer must emit NO
- *     aria-valuetext at all. Deleting it would have thrown away the record that
- *     the defect existed and is gone.
+ *     translate. The hidden input and bundle are gone. A real VoiceOver test,
+ *     however, proved that the replacement separator's raw `aria-valuenow`
+ *     was not announced. The component now requires a caller formatter and
+ *     emits Persian `aria-valuetext` directly on its visible handle.
  *
  *   INVERTED, same shape
  *     `'sortable column'` was React Aria appending a detached, English
@@ -159,7 +159,13 @@ function ResizableTable() {
           <Column
             id="name"
             isRowHeader
-            resizer={<ColumnResizer label="تغییر اندازه ستون" columnId="name" />}
+            resizer={
+              <ColumnResizer
+                label="تغییر اندازه ستون"
+                valueText={(value) => `${value.toLocaleString("fa-IR")} پیکسل`}
+                columnId="name"
+              />
+            }
           >
             نام
           </Column>
@@ -241,7 +247,7 @@ describe("Table's announced strings are all Persian", () => {
 });
 
 describe("Two React Aria leaks this migration RETIRED, asserted as gone", () => {
-  it("the resizer emits no aria-valuetext at all, and no hidden input", () => {
+  it("the resizer emits caller-localized value text and no hidden input", () => {
     /*
      * INVERTED from `expect(html).toMatch(/aria-valuetext="\d+ pixels"/)`.
      *
@@ -252,11 +258,12 @@ describe("Two React Aria leaks this migration RETIRED, asserted as gone", () => 
      * correctness of a Persian page depended on a node_modules patch surviving
      * every install.
      *
-     * The handle is a plain <button> now. If this assertion ever goes red,
-     * something has reintroduced a hidden range input into the resizer.
+     * The handle is a plain <button> now, with caller-owned Persian value text
+     * on that same element. The old hidden range and English bundle string
+     * remain forbidden.
      */
     const html = renderToStaticMarkup(<ResizableTable />);
-    expect(html).not.toContain("aria-valuetext");
+    expect(html).toContain('aria-valuetext="۱۵۰ پیکسل"');
     expect(html).not.toContain("pixels");
     expect(html).not.toContain('type="range"');
   });

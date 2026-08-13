@@ -165,15 +165,14 @@ const RovingCheckbox = Checkbox as (
  *     `null` for non-arrow keys so a typeahead can be added later without the
  *     grid having already swallowed the keystroke.
  *
- *  2. **The resizer's `aria-valuetext`.** React Aria emitted
+ *  2. **The resizer's old bundled `aria-valuetext`.** React Aria emitted
  *     `"{value} pixels"` from its own bundle onto a hidden `<input
  *     type="range">`, unreachable by prop, and Lumo carried a 27 KB
  *     `node_modules` patch (`patches/react-aria@3.51.0.patch`) to translate it.
  *     **That patch is no longer load-bearing for this file**: the resizer below
- *     is a `<button>` Lumo renders, its name is a required prop, and there is
- *     no hidden input and no bundle string. A workaround retired by a migration
- *     is worth more than one maintained by it — and this is the strongest
- *     single argument in the table's column of the ledger.
+ *     is a `<button>` Lumo renders; its name and value formatter are required
+ *     props, and there is no hidden input or bundle string. A workaround
+ *     retired by a migration is worth more than one maintained by it.
  *
  * ═══ THE FOUR ANNOUNCED STRINGS, ALL STILL REQUIRED PROPS ═══════════════════
  *
@@ -1643,10 +1642,12 @@ export function ResizableTableContainer({
  * on a patch surviving every `pnpm install`.
  *
  * **There is no hidden input here and no bundle.** The handle is a `<button>`
- * this file renders, its name is a required prop, and the only announced string
- * is the one the caller passed. The patch is not needed for this component any
- * more; whether it can be deleted outright depends on the components still on
- * React Aria, which this file does not own.
+ * this file renders, and both its name and human-readable value are required
+ * caller strings. A real VoiceOver poison twin made the second requirement
+ * load-bearing: `aria-valuenow="180"` alone announced only “vertical splitter”;
+ * adding `aria-valuetext="۱۸۰ پیکسل"` announced the size. The patch is not
+ * needed for this component any more; whether it can be deleted outright
+ * depends on the components still on React Aria, which this file does not own.
  *
  * A `<button>` and not a `<div>`: a resize handle must be operable from the
  * keyboard (WCAG 2.1.1), and a button is the one element that is focusable,
@@ -1695,15 +1696,28 @@ export interface ColumnResizerProps
     | "aria-valuenow"
     | "aria-valuemin"
     | "aria-valuemax"
+    | "aria-valuetext"
   > {
   /** Announced name of the resize handle. Required. */
   label: string;
+  /**
+   * Human-readable current width, e.g. `value => `${formatNumber(value,
+   * locale)} پیکسل``. Required because VoiceOver does not expose the raw
+   * `aria-valuenow` for this separator.
+   */
+  valueText: (value: number) => string;
   /** The column this handle resizes. */
   columnId?: string | undefined;
   className?: string | undefined;
 }
 
-export function ColumnResizer({ label, columnId, className, ...props }: ColumnResizerProps) {
+export function ColumnResizer({
+  label,
+  valueText,
+  columnId,
+  className,
+  ...props
+}: ColumnResizerProps) {
   const { table, locale } = useTableContext();
   const rtl = direction(locale) === "rtl";
   const contextualColumnId = useContext(ColumnIdContext);
@@ -1739,10 +1753,11 @@ export function ColumnResizer({ label, columnId, className, ...props }: ColumnRe
             "aria-valuenow": size,
             "aria-valuemin": minSize,
             "aria-valuemax": maxSize,
+            "aria-valuetext": valueText(size),
           })}
       // Not a sequential tab stop — the grid is one stop and this handle sits
       // inside the cell that holds it. See the header for the trade and its
-      // measurement; `props` below can still override it.
+      // measurement; the consumer cannot override it.
       tabIndex={-1}
       {...(resizing ? { "data-resizing": "" } : {})}
       {...(header === undefined

@@ -52,6 +52,7 @@ const t = {
   sortedAscending: { "fa-IR": "مرتب‌شده صعودی", "en-US": "Sorted ascending" },
   sortedDescending: { "fa-IR": "مرتب‌شده نزولی", "en-US": "Sorted descending" },
   resizeColumn: { "fa-IR": "تغییر پهنای ستون", "en-US": "Resize the column" },
+  resizeUnit: { "fa-IR": "پیکسل", "en-US": "pixels" },
   total: { "fa-IR": "جمع", "en-US": "Total" },
   status: { "fa-IR": "وضعیت", "en-US": "Status" },
   paid: { "fa-IR": "پرداخت‌شده", "en-US": "Paid" },
@@ -193,6 +194,7 @@ function ResizingExample(l: Locale) {
       cityHeader={t.city[l]}
       amountHeader={t.amount[l]}
       resizeLabel={t.resizeColumn[l]}
+      resizeUnit={t.resizeUnit[l]}
       rows={[
         {
           id: "resizing-a",
@@ -348,7 +350,7 @@ export const EXAMPLES: ComponentExamples = {
       `  <Table label="…" locale={locale} table={table}>`,
       `    <TableHeader>`,
       `      <TableSelectAllColumn label="…" />`,
-      `      <Column id="…" isRowHeader resizer={<ColumnResizer label="…" />}>…</Column>`,
+      `      <Column id="…" isRowHeader resizer={<ColumnResizer label="…" valueText={(value) => \`\${formatNumber(value, locale)} \${unit}\`} />}>…</Column>`,
       `    </TableHeader>`,
       `    <TableBody>`,
       `      <Row row={row}>`,

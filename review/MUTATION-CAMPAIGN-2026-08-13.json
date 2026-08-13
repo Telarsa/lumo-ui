@@ -1,0 +1,597 @@
+{
+  "generatedAt": "2026-08-13T10:54:50.370Z",
+  "population": 98,
+  "killed": 98,
+  "survived": 0,
+  "invalid": 0,
+  "results": [
+    {
+      "file": "alert-dialog.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1606
+    },
+    {
+      "file": "alert.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1182
+    },
+    {
+      "file": "aspect-ratio.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1160
+    },
+    {
+      "file": "attachment.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1184
+    },
+    {
+      "file": "autocomplete.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1188
+    },
+    {
+      "file": "avatar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1172
+    },
+    {
+      "file": "badge.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1158
+    },
+    {
+      "file": "breadcrumbs.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1201
+    },
+    {
+      "file": "bubble.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1184
+    },
+    {
+      "file": "button-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1166
+    },
+    {
+      "file": "button.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1254
+    },
+    {
+      "file": "calendar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1185
+    },
+    {
+      "file": "card.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1171
+    },
+    {
+      "file": "carousel.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1172
+    },
+    {
+      "file": "chart.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1191
+    },
+    {
+      "file": "checkbox.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1168
+    },
+    {
+      "file": "combobox.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1156
+    },
+    {
+      "file": "command.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1205
+    },
+    {
+      "file": "context-menu.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1244
+    },
+    {
+      "file": "data-grid.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1158
+    },
+    {
+      "file": "date-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1193
+    },
+    {
+      "file": "date-input.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1186
+    },
+    {
+      "file": "date-picker.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1164
+    },
+    {
+      "file": "date-range-picker.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1187
+    },
+    {
+      "file": "date-selector.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1198
+    },
+    {
+      "file": "description-list.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1177
+    },
+    {
+      "file": "dialog.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1162
+    },
+    {
+      "file": "disclosure.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1201
+    },
+    {
+      "file": "drawer.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1177
+    },
+    {
+      "file": "empty-state.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1216
+    },
+    {
+      "file": "event-calendar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1151
+    },
+    {
+      "file": "file-upload.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1150
+    },
+    {
+      "file": "filters.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1139
+    },
+    {
+      "file": "form-state.tsx",
+      "operator": "remove submit cancellation",
+      "status": "killed",
+      "durationMs": 1138
+    },
+    {
+      "file": "form.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1165
+    },
+    {
+      "file": "frame.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1124
+    },
+    {
+      "file": "gantt.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1160
+    },
+    {
+      "file": "hover-card.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1167
+    },
+    {
+      "file": "icon-stack.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1245
+    },
+    {
+      "file": "icon-tile.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1170
+    },
+    {
+      "file": "input-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1164
+    },
+    {
+      "file": "input-otp.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1208
+    },
+    {
+      "file": "item.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1181
+    },
+    {
+      "file": "kanban.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1189
+    },
+    {
+      "file": "kbd.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1213
+    },
+    {
+      "file": "link.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1182
+    },
+    {
+      "file": "list-box.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1217
+    },
+    {
+      "file": "marker.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1273
+    },
+    {
+      "file": "menu.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1188
+    },
+    {
+      "file": "menubar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1180
+    },
+    {
+      "file": "message-scroller.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1184
+    },
+    {
+      "file": "message.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1195
+    },
+    {
+      "file": "native-select.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1160
+    },
+    {
+      "file": "navigation-menu.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1182
+    },
+    {
+      "file": "num.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1207
+    },
+    {
+      "file": "number-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1332
+    },
+    {
+      "file": "overflow-list.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1175
+    },
+    {
+      "file": "pagination.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1287
+    },
+    {
+      "file": "phone-input.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1194
+    },
+    {
+      "file": "popover.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1234
+    },
+    {
+      "file": "progress.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1208
+    },
+    {
+      "file": "provider.tsx",
+      "operator": "disconnect direction from locale",
+      "status": "killed",
+      "durationMs": 1215
+    },
+    {
+      "file": "questionnaire.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1451
+    },
+    {
+      "file": "radio-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1276
+    },
+    {
+      "file": "range-calendar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1195
+    },
+    {
+      "file": "rating.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1174
+    },
+    {
+      "file": "resizable.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1282
+    },
+    {
+      "file": "scroll-area.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1203
+    },
+    {
+      "file": "scrollspy.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1184
+    },
+    {
+      "file": "search-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1205
+    },
+    {
+      "file": "segmented-control.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1223
+    },
+    {
+      "file": "select.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1177
+    },
+    {
+      "file": "separator.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1207
+    },
+    {
+      "file": "sidebar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1231
+    },
+    {
+      "file": "skeleton-presets.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1210
+    },
+    {
+      "file": "skeleton.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1217
+    },
+    {
+      "file": "slider.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1277
+    },
+    {
+      "file": "sortable.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1203
+    },
+    {
+      "file": "spinner.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1191
+    },
+    {
+      "file": "stack.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1231
+    },
+    {
+      "file": "steps.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1229
+    },
+    {
+      "file": "switch.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1192
+    },
+    {
+      "file": "table.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1194
+    },
+    {
+      "file": "tabs.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1256
+    },
+    {
+      "file": "tag-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1211
+    },
+    {
+      "file": "tag.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1277
+    },
+    {
+      "file": "text-area.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1228
+    },
+    {
+      "file": "text-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1200
+    },
+    {
+      "file": "time-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1230
+    },
+    {
+      "file": "timeline.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1277
+    },
+    {
+      "file": "toast.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1259
+    },
+    {
+      "file": "toggle-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1197
+    },
+    {
+      "file": "toggle.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1228
+    },
+    {
+      "file": "toolbar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1229
+    },
+    {
+      "file": "tooltip.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1211
+    },
+    {
+      "file": "transfer-list.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1341
+    },
+    {
+      "file": "tree.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1246
+    },
+    {
+      "file": "virtual-list.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1220
+    }
+  ]
+}

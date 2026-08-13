@@ -12148,6 +12148,12 @@
             "description": "Announced name of the resize handle. Required."
           },
           {
+            "name": "valueText",
+            "type": "(value: number) => string",
+            "required": true,
+            "description": "Human-readable current width, e.g. `value => `${formatNumber(value,\nlocale)} پیکسل``. Required because VoiceOver does not expose the raw\n`aria-valuenow` for this separator."
+          },
+          {
             "name": "className",
             "type": "string | undefined",
             "required": false,

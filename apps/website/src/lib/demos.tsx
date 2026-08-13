@@ -445,6 +445,7 @@ const copy = {
   sortedAscending: { "fa-IR": "مرتب‌شده صعودی", "en-US": "Sorted ascending" },
   sortedDescending: { "fa-IR": "مرتب‌شده نزولی", "en-US": "Sorted descending" },
   resizeColumn: { "fa-IR": "تغییر اندازهٔ ستون", "en-US": "Resize the column" },
+  resizeUnit: { "fa-IR": "پیکسل", "en-US": "pixels" },
   customerOne: { "fa-IR": "سارا محمدی", "en-US": "Sara Mohammadi" },
   customerTwo: { "fa-IR": "رضا کریمی", "en-US": "Reza Karimi" },
   customerThree: { "fa-IR": "نگار حسینی", "en-US": "Negar Hosseini" },
@@ -1477,6 +1478,7 @@ const DEMOS: Demo[] = [
         sortAscendingLabel={copy.sortedAscending[l]}
         sortDescendingLabel={copy.sortedDescending[l]}
         resizeLabel={copy.resizeColumn[l]}
+        resizeUnit={copy.resizeUnit[l]}
         rows={[
           {
             id: "a",
