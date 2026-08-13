@@ -36,6 +36,11 @@ import {
 import { FORMAT_LOCALE, cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Checkbox, type CheckboxProps } from "./checkbox.tsx";
 import {
+  executeQuery,
+  type FilterQuery,
+  type QueryExecutionField,
+} from "./filters.shared.ts";
+import {
   cellVariants,
   columnResizerVariants,
   columnVariants,
@@ -342,6 +347,32 @@ export function useLumoTable<TData extends RowData>(options: LumoTableOptions<TD
     defaultColumn: { sortFn, ...defaultColumn },
     ...rest,
   } as Parameters<typeof useTable<LumoTableFeatures, TData>>[0]);
+}
+
+export type LumoQueryTableOptions<TData extends RowData> = Omit<
+  LumoTableOptions<TData>,
+  "data"
+> & {
+  /** Unfiltered source rows. */
+  data: readonly TData[];
+  /** The same serializable query model rendered by `Filters`. */
+  query: FilterQuery;
+  /** Typed field readers and operators used for local execution. */
+  queryFields: readonly QueryExecutionField<TData>[];
+};
+
+/**
+ * Creates a Lumo table from the same typed query tree used by Filters and
+ * remote collection adapters, so local DataGrid filtering is not a second DSL.
+ */
+export function useLumoQueryTable<TData extends RowData>({
+  data,
+  query,
+  queryFields,
+  ...options
+}: LumoQueryTableOptions<TData>) {
+  const queriedData = executeQuery(data, query, queryFields);
+  return useLumoTable({ ...options, data: queriedData } as LumoTableOptions<TData>);
 }
 
 /* ════════════════════════════════════════════════════════════════════════════

@@ -11,10 +11,35 @@ import { cn } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
 import { inputVariants } from "./text-field.tsx";
 import { nativeSelectVariants } from "./native-select.tsx";
-import { createFilter, type FilterClause } from "./filters.shared.ts";
+import {
+  assertQuery,
+  createFilter,
+  serializeQuery,
+  type FilterClause,
+} from "./filters.shared.ts";
 
-export { createFilter } from "./filters.shared.ts";
-export type { FilterClause } from "./filters.shared.ts";
+export {
+  assertQuery,
+  createFilter,
+  createFilterGroup,
+  executeQuery,
+  parseQuery,
+  queryIssues,
+  serializeQuery,
+} from "./filters.shared.ts";
+export type {
+  FilterClause,
+  FilterExpression,
+  FilterGroup,
+  FilterQuery,
+  ParseQueryResult,
+  QueryCombinator,
+  QueryExecutionField,
+  QueryExecutionOperator,
+  QueryIssue,
+  QueryShapeField,
+  QueryShapeOperator,
+} from "./filters.shared.ts";
 
 export interface FilterOperator {
   id: string;
@@ -123,24 +148,8 @@ export function Filters({
   }
   for (const field of fields) {
     defaultOperator(field);
-    if (new Set(field.operators.map((operator) => operator.id)).size !== field.operators.length) {
-      throw new RangeError(`Filters field "${field.id}" operator ids must be unique.`);
-    }
   }
-  if (new Set(clauses.map((clause) => clause.id)).size !== clauses.length) {
-    throw new RangeError("Filters clause ids must be unique.");
-  }
-  for (const clause of clauses) {
-    const field = fieldsById.get(clause.fieldId);
-    if (field === undefined) {
-      throw new RangeError(`Filters clause "${clause.id}" references unknown field "${clause.fieldId}".`);
-    }
-    if (!field.operators.some((operator) => operator.id === clause.operatorId)) {
-      throw new RangeError(
-        `Filters clause "${clause.id}" references unknown operator "${clause.operatorId}".`,
-      );
-    }
-  }
+  assertQuery(clauses, fields);
 
   function update(next: readonly FilterClause[]) {
     if (value === undefined) setUncontrolled(next);
@@ -164,7 +173,7 @@ export function Filters({
           tabIndex={-1}
           name={name}
           form={form}
-          value={JSON.stringify(clauses)}
+          value={serializeQuery(clauses)}
         />
       )}
       <div className="flex flex-col gap-2">

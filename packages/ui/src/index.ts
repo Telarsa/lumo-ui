@@ -70,7 +70,15 @@ export type {
 } from "./form-state.tsx";
 
 export { Filters } from "./filters.tsx";
-export { createFilter } from "./filters.shared.ts";
+export {
+  assertQuery,
+  createFilter,
+  createFilterGroup,
+  executeQuery,
+  parseQuery,
+  queryIssues,
+  serializeQuery,
+} from "./filters.shared.ts";
 export type {
   FilterField,
   FilterOperator,
@@ -80,7 +88,19 @@ export type {
   FiltersStrings,
   FilterTextField,
 } from "./filters.tsx";
-export type { FilterClause } from "./filters.shared.ts";
+export type {
+  FilterClause,
+  FilterExpression,
+  FilterGroup,
+  FilterQuery,
+  ParseQueryResult,
+  QueryCombinator,
+  QueryExecutionField,
+  QueryExecutionOperator,
+  QueryIssue,
+  QueryShapeField,
+  QueryShapeOperator,
+} from "./filters.shared.ts";
 
 export {
   groupCollection,
@@ -481,6 +501,7 @@ export {
   localeSortFn,
   lumoTableFeatures,
   useLumoTable,
+  useLumoQueryTable,
 } from "./table.tsx";
 export type {
   CellProps,
@@ -504,6 +525,7 @@ export type {
   LumoTableFeatures,
   LumoTableInstance,
   LumoTableOptions,
+  LumoQueryTableOptions,
   LumoTableRow,
 } from "./table.tsx";
 

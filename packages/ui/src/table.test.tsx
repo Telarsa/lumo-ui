@@ -31,6 +31,7 @@ import {
   TableWidgetCell,
   ColumnResizer,
   localeSortFn,
+  useLumoQueryTable,
   useLumoTable,
 } from "./table.tsx";
 import { IconButton } from "./button.tsx";
@@ -126,6 +127,50 @@ describe("localeSortFn — TanStack's default sorts Persian by code unit", () =>
     const en = cmp(localeSortFn("en-US"));
     expect(en("apple", "banana")).toBeLessThan(0);
     expect(en("Item 2", "Item 10")).toBeLessThan(0);
+  });
+});
+
+describe("useLumoQueryTable — one query model for Filters and DataGrid", () => {
+  it("projects local rows through the shared typed operators before table state", () => {
+    type Order = { id: string; status: string; total: number };
+    const data: Order[] = [
+      { id: "one", status: "open", total: 120 },
+      { id: "two", status: "closed", total: 40 },
+      { id: "three", status: "open", total: 15 },
+    ];
+
+    function QueryRows() {
+      const table = useLumoQueryTable({
+        locale: "en-US",
+        data,
+        columns: [{ id: "status", accessorKey: "status" }],
+        getRowId: (row) => row.id,
+        query: {
+          id: "root",
+          combinator: "and",
+          children: [
+            { id: "open", fieldId: "status", operatorId: "is", values: ["open"] },
+            { id: "large", fieldId: "total", operatorId: "gte", values: ["100"] },
+          ],
+        },
+        queryFields: [
+          {
+            id: "status",
+            read: (row) => row.status,
+            operators: [{ id: "is", test: (value, values) => values.includes(String(value)) }],
+          },
+          {
+            id: "total",
+            read: (row) => row.total,
+            operators: [{ id: "gte", test: (value, values) => Number(value) >= Number(values[0]) }],
+          },
+        ],
+      });
+      return <output>{table.getRowModel().rows.map((row) => row.id).join(",")}</output>;
+    }
+
+    const { container } = render(<QueryRows />);
+    expect(container.querySelector("output")?.textContent).toBe("one");
   });
 });
 

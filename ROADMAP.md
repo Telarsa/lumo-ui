@@ -31,6 +31,8 @@ The next work is product depth, in dependency order:
       `async-collection.ts`; the remaining integrations keep this item open.
 - [ ] Define a query model shared by Filters, PowerSearch and DataGrid: typed
       fields/operators, validation, serialization and local/remote execution.
+      **Engine shipped 13 Aug:** Filters and local DataGrid share the nested
+      model; PowerSearch UI and a concrete remote adapter keep this item open.
 - [ ] Add first-party form integration for nested/list values, async validation,
       dirty/touched/submitting state and schema adapters. Add hooks only when
       they encode a recurring Lumo behavior; do not clone a general-purpose
