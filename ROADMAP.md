@@ -8,9 +8,85 @@ it says so.
 start from and maintain — Persian-first, accessible by construction, with the
 correctness rules enforced by a failing build rather than by discipline.
 
-**The shape.** Behaviour is rented from React Aria Components. Styling, tokens,
-composition, the Persian layer and the conformance gate are owned. See
-`DECISIONS.md §0`.
+**The shape.** Behaviour is rented from Base UI. Styling, tokens, composition,
+the Persian layer and the conformance gate are owned. The earlier React Aria
+decision was superseded by the verified Base UI migration described in
+`REVIEW-BRIEF.md §3`.
+
+## Current focus reset — 13 August 2026
+
+The support envelope is **React web**, not every UI framework. Lumo also targets
+deep, styled product components rather than drop-in compatibility with every
+low-level Radix/Ark part. Those are deliberate boundaries, not backlog. See
+`DECISIONS.md §19`.
+
+The next work is product depth, in dependency order:
+
+### Wave 1 — shared enterprise foundations
+
+- [ ] Build one async/grouped/virtual collection controller with loading,
+      failure, paging, cancellation and stable selection contracts. Use it in
+      DataGrid, Combobox, Select, ListBox, Tree and TransferList.
+      **Foundation shipped 13 Aug:** ListBox and VirtualList now share
+      `async-collection.ts`; the remaining integrations keep this item open.
+- [ ] Define a query model shared by Filters, PowerSearch and DataGrid: typed
+      fields/operators, validation, serialization and local/remote execution.
+- [ ] Add first-party form integration for nested/list values, async validation,
+      dirty/touched/submitting state and schema adapters. Add hooks only when
+      they encode a recurring Lumo behavior; do not clone a general-purpose
+      hooks catalog by count.
+- [ ] Add global notification, modal and command/spotlight managers with SSR-safe
+      providers, locale-required announcements and imperative update/dismiss
+      handles.
+
+### Wave 2 — ReUI-class product engines
+
+- [ ] **DataGrid:** pinning, group/tree rows, editing, virtualization/infinite
+      loading, reorder, footer/aggregation contracts and a measured performance
+      envelope. Integrate Filters and PowerSearch instead of adding parallel
+      query state.
+- [ ] **EventCalendar/Scheduler:** resources, recurrence, IANA zones, CRUD,
+      configurable working hours and snap intervals, plus keyboard and pointer
+      create/move/resize.
+- [ ] **Gantt:** dependency graph, summary rollups, baselines, critical path,
+      continuous zoom and a resizable hierarchy/timeline split pane. Reuse the
+      calendar and query foundations where the domain model genuinely matches.
+- [ ] **Upload:** directory/camera acquisition and transforms; optional transport
+      adapters with cancellation, chunking, pause/resume and retry; sortable
+      gallery/table recipes. Keep visual lifecycle state usable without a
+      bundled network client.
+
+### Wave 3 — Mantine replacement depth
+
+- [ ] Ship only the named chart families demanded by target products, starting
+      from heatmap/treemap/radar/Sankey demand rather than a catalog-count goal;
+      preserve the SSR semantic-data companion.
+- [ ] Close product-used input gaps such as ColorInput/Picker, MaskInput,
+      JsonInput, MultiSelect, Cascader, TreeSelect, editable TagsInput and
+      RangeSlider. Each addition must own a real state model, not be an alias.
+- [ ] Publish tested integration recipes for the smaller utility/hook needs that
+      do not warrant a Lumo-owned abstraction.
+
+### Wave 4 — Astryx-class internal tools
+
+- [ ] **PowerSearch:** make the Wave 1 query model a coherent command/search
+      surface connected to DataGrid and saved views.
+- [ ] **LogStream:** virtual append-only data, follow/pause, filters, severity,
+      timestamps, copy/export and accessible live-update policies.
+- [ ] **AI/chat:** composer, streaming states, citations, tool-call disclosure,
+      code/Markdown rendering, retry/error handling and deliberate auto-follow.
+- [ ] **Editors:** decide sanitization, plugin, syntax-highlighting, CSP and bundle
+      policy before selecting any runtime dependency; then ship the editor modes
+      actual products require.
+- [ ] Build an internal-tool sandbox and complete application templates only
+      after the underlying engines are shared and tested; templates must consume
+      public Lumo APIs rather than hide private one-off logic.
+
+### Deferred evidence, not active platform work
+
+- [ ] NVDA, JAWS and current Chrome/TalkBack remain unproved. Resume only through
+      a hosted real-AT/device service that removes local OS provisioning from the
+      workflow. Accessibility-tree snapshots do not close this item.
 
 ---
 

@@ -1133,3 +1133,38 @@ a reason and measured separately.
 
 All of it was proved by reverting each fix and naming the assertion that goes
 red; the table is in the Phase 2.2/2.3 outcome in AUDIT.md §9.
+
+---
+
+## §19 — The replacement envelope is React web and product-depth composition
+
+**Decided 13 August 2026.** Lumo targets React applications on the web. Vue,
+Svelte, Solid and native bindings are not parity targets and their absence is
+not a product defect. §12 already proves that the copy-in components are
+framework-independent *within React*; adding another renderer would multiply
+the component, interaction and accessibility surfaces without helping the
+products Lumo exists to serve.
+
+Lumo also does not target universal low-level primitive compatibility. Radix
+and Ark expose granular parts such as `Root`, `Trigger`, `Content`, `Portal` and
+`Item`, element substitution such as `asChild`, context hooks, and direct state
+machine access. Lumo deliberately owns more of each component's structure,
+styling and semantic contract. That narrower surface reduces consumer assembly
+and prevents callers from replacing component-owned roles, ID relationships or
+locale-derived direction. Add a part-level escape hatch or migration adapter
+only when a real supported React product cannot express its requirement through
+the existing contract; do not reproduce another library's primitive API for
+catalog parity.
+
+Roadmap capacity therefore goes to product-depth systems: enterprise data grid,
+scheduler, Gantt and upload workflows; form, chart, input and global-manager
+capabilities used by Telarsa applications; and AI/chat, PowerSearch, LogStream,
+editor and internal-tool workflows. Shared state and data engines should deepen
+several of those systems rather than create isolated look-alike components.
+
+The unfinished NVDA/JAWS/current-Chrome matrix is deferred until a hosted
+assistive-technology or device lab can expose real platform sessions through an
+OS-agnostic workflow. A DOM accessibility tree, ARIA snapshot or synthetic
+speech test is useful supporting evidence but is not a substitute for the real
+reader. Until then, the matrix remains explicitly unproved and contributes no
+score; no local Windows VM work is in scope.

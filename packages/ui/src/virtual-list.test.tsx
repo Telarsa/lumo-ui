@@ -223,6 +223,27 @@ describe("VirtualList — imperative scrolling", () => {
 });
 
 describe("VirtualList — async range seam", () => {
+  it("announces only active remote work as busy", () => {
+    const renderList = (asyncStatus: "loading-more" | "error") => (
+      <VirtualList
+        label="Orders"
+        locale="en-US"
+        count={2}
+        estimateSize={40}
+        initialSize={80}
+        asyncStatus={asyncStatus}
+      >
+        {(index) => <span>row {index}</span>}
+      </VirtualList>
+    );
+
+    const view = render(renderList("loading-more"));
+    expect(view.getByRole("list").getAttribute("aria-busy")).toBe("true");
+
+    view.rerender(renderList("error"));
+    expect(view.getByRole("list").hasAttribute("aria-busy")).toBe(false);
+  });
+
   it("reports the true visible range and requests the next page once per corpus size", () => {
     const viewportHeight = vi
       .spyOn(HTMLElement.prototype, "clientHeight", "get")

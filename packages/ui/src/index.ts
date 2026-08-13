@@ -82,6 +82,23 @@ export type {
 } from "./filters.tsx";
 export type { FilterClause } from "./filters.shared.ts";
 
+export {
+  groupCollection,
+  presentAsyncCollection,
+  useAsyncCollection,
+} from "./async-collection.ts";
+export type {
+  AsyncCollectionAction,
+  AsyncCollectionMessages,
+  AsyncCollectionOptions,
+  AsyncCollectionPage,
+  AsyncCollectionPresentation,
+  AsyncCollectionRequest,
+  AsyncCollectionResult,
+  AsyncCollectionStatus,
+  CollectionGroup,
+} from "./async-collection.ts";
+
 export { TextField, inputVariants } from "./text-field.tsx";
 export type { TextFieldProps } from "./text-field.tsx";
 

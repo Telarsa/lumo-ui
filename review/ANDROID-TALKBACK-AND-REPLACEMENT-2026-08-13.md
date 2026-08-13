@@ -204,6 +204,13 @@ screen readers. Per the user's instruction, no VM image, Windows licence,
 NVDA, or JAWS installation was downloaded. These remain explicit evidence
 gaps and contribute no score.
 
+**Decision 13 August 2026:** this work is parked until a hosted real-AT/device
+service can expose the Windows and current-Chrome sessions through an
+OS-agnostic workflow. The service must still run the actual reader on its native
+OS; accessibility-tree inspection, ARIA snapshots and synthetic speech are not
+accepted as substitutes. No local Windows provisioning is on the active
+roadmap.
+
 ## Competitor position after the real Android session
 
 The full current-source comparison and per-competitor migration checklists are

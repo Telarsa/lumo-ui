@@ -1160,6 +1160,11 @@
           "target": "components/ui/list-box.tsx"
         },
         {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
+        },
+        {
           "path": "packages/ui/src/locale.ts",
           "type": "registry:ui",
           "target": "components/ui/locale.ts"
@@ -2285,6 +2290,11 @@
           "path": "packages/ui/src/virtualizer.ts",
           "type": "registry:ui",
           "target": "components/ui/virtualizer.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },

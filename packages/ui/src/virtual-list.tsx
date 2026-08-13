@@ -9,6 +9,7 @@ import {
   type Ref,
 } from "react";
 import { useVirtualWindow } from "./virtualizer.ts";
+import type { AsyncCollectionStatus } from "./async-collection.ts";
 import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 import {
   virtualListItemVariants,
@@ -147,7 +148,14 @@ export interface VirtualListProps
    */
   extends Omit<
     ComponentProps<"div">,
-    "children" | "className" | "ref" | "role" | "aria-label" | "tabIndex" | "dir"
+    | "children"
+    | "className"
+    | "ref"
+    | "role"
+    | "aria-label"
+    | "aria-busy"
+    | "tabIndex"
+    | "dir"
   > {
   /**
    * The list's announced name, e.g. «فهرست سفارش‌ها».
@@ -190,6 +198,11 @@ export interface VirtualListProps
   gap?: number | undefined;
   /** Reports the true corpus indices represented by the current window. */
   onVisibleRangeChange?: ((range: VirtualListRange) => void) | undefined;
+  /**
+   * Remote collection status. Active work owns `aria-busy`; ready and error
+   * remain operable and are announced by caller-authored status UI.
+   */
+  asyncStatus?: AsyncCollectionStatus | undefined;
   /** Requests another page once when the window reaches the corpus end. */
   onEndReached?: (() => void) | undefined;
   /** How many rows before the end should request another page. */
@@ -215,6 +228,7 @@ export function VirtualList({
   getItemKey,
   gap,
   onVisibleRangeChange,
+  asyncStatus,
   onEndReached,
   endReachedThreshold = 0,
   children,
@@ -283,6 +297,11 @@ export function VirtualList({
       tabIndex={0}
       role="list"
       aria-label={label}
+      {...(asyncStatus === "loading" ||
+      asyncStatus === "refreshing" ||
+      asyncStatus === "loading-more"
+        ? { "aria-busy": true }
+        : {})}
       className={cn(virtualListVariants({ orientation }), className)}
     >
       <div

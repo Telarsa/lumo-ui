@@ -114,7 +114,7 @@ OverflowList and TransferList) are accounted for here.
 | Toast/notification system | **Lumo primitive is sound; system layer is thinner.** | Lumo requires region/close/action names and does not force a timeout. Radix/Ark/Mantine and shadcn/Sonner offer queue/store APIs, update/promise flows, placements and gestures. Ark's current changelog includes priority queuing; Mantine documents a separate notification system. |
 | Specialist inputs/utilities | **Lumo materially narrower.** | Ark and Mantine officially ship color/angle/range controls; Ark additionally ships state machines such as Signature Pad, QR Code, Tour and Floating Panel; Mantine lists ColorInput, JsonInput, MaskInput, MultiSelect, Cascader, TreeSelect, RingProgress and FloatingWindow. Lumo should not claim parity by composing a TextField around these missing state models. |
 | Chat, editors and internal tools | **Lumo has conversation display; Astryx leads decisively.** | Lumo has Attachment, Bubble, Marker, Message and MessageScroller. Astryx's current releases and sandbox show ChatComposer/Dictation/Tool Calls, citations/markdown/code, messaging shells, IDE/page-editor/file-explorer templates, PowerSearch, LogStream and table plugins. The locally verified gap list is recorded at `review/DEPTH-ASTRYX-FINAL-2026-08-13.md:202-204`. |
-| Multi-framework and native | **Lumo loses.** | [Ark](https://ark-ui.com/docs/overview/about) supports React, Solid, Vue and Svelte with one state-machine layer. [Shadcn's registry](https://ui.shadcn.com/docs/registry) is framework-neutral. Lumo UI is React-only, and `REVIEW-BRIEF.md:40-49` says native is “not started”. It cannot replace Ark in a mixed-framework organisation or a mobile library today. |
+| Multi-framework and native | **Outside Lumo's replacement envelope.** | [Ark](https://ark-ui.com/docs/overview/about) supports React, Solid, Vue and Svelte with one state-machine layer. [Shadcn's registry](https://ui.shadcn.com/docs/registry) is framework-neutral. Lumo intentionally targets React web (`DECISIONS.md §19`), so this is a boundary rather than a backlog item. It should not claim to replace Ark in a mixed-framework organisation or any native library. |
 | Hooks/utilities ecosystem | **Mantine lead.** | [Mantine's current homepage](https://mantine.dev/) advertises 120+ components and 70+ hooks. Lumo deliberately focuses on components/contracts and does not expose a comparable general hooks package. A Mantine migration must inventory hook imports separately; replacing only JSX leaves a large hidden dependency. |
 | Examples, themes and AI tooling | **Competitors lead adoption velocity.** | Lumo has bilingual examples, generated API and 30 verified blocks. Shadcn has public free blocks, presets, registry APIs and an MCP server; ReUI has a large free example catalog plus agent tooling (paid blocks/templates are not counted as free parity); Ark and Mantine publish `llms.txt`/agent integrations; Astryx has Storybook, a sandbox and theme tools. Lumo's internal docs are strong but not yet an equivalent public adoption system. |
 
@@ -164,7 +164,9 @@ behavior:
 2. **No drop-in primitive compatibility.** Radix and Ark consumers commonly
    style or compose individual parts. Lumo's higher-level API requires a
    migration, not an import rename.
-3. **No multi-framework implementation and no native implementation.**
+3. **React web is the declared support envelope.** Multi-framework and native
+   parity are explicit non-goals, not unfinished replacement work
+   (`DECISIONS.md §19`).
 4. **Enterprise engines remain incomplete:** dependency-aware Gantt,
    resource/recurring/zoned scheduler, advanced grid, integrated remote/virtual
    pickers and resumable upload transport.
@@ -380,11 +382,8 @@ replacement envelope.
       consumer demand justifies owning each state machine.
 - [ ] Chat/AI, editors, file explorer, LogStream, Lightbox and advanced
       visualization packages with explicit security/accessibility policies.
-- [ ] Multi-framework adapters if Ark replacement is genuinely a goal; otherwise
-      state “React web only” prominently and do not spend roadmap capacity on a
-      false parity target.
-- [ ] React Native/Expo package if “replace across product platforms” includes
-      mobile. The present native probe is not a component library.
+- [x] State “React web only” prominently and do not spend roadmap capacity on
+      multi-framework or native parity (`DECISIONS.md §19`).
 
 ## Recommended positioning now
 

@@ -123,6 +123,11 @@ const SHARED_COMPANIONS = new Set([
    * dangling `./filters.shared.ts` import in every consumer project.
    */
   "filters.shared.ts",
+  /*
+   * Shared remote-collection behavior. ListBox imports its presentation shape,
+   * so the copied item also carries the controller used to produce that shape.
+   */
+  "async-collection.ts",
 ]);
 
 /** Packages a consumer must install; everything else is workspace-internal. */

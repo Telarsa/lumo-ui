@@ -29,6 +29,10 @@ import {
 } from "@lumo-ui/core";
 import { foldPersian } from "./autocomplete.tsx";
 import { Button } from "./button.tsx";
+import type {
+  AsyncCollectionAction,
+  AsyncCollectionPresentation,
+} from "./async-collection.ts";
 import { useLumoLocale } from "./locale.ts";
 import { optional } from "./form.tsx";
 
@@ -291,19 +295,8 @@ function startsWithFolded(text: string, query: string, collator: Intl.Collator):
  * does not implement, so passing it is a compile error naming the call site.
  * See the header for the list and the argument.
  */
-export interface ListBoxAsyncAction {
-  label: string;
-  onPress: () => void;
-}
-
-export type ListBoxAsyncState =
-  | { status: "loading" | "error"; text: string; action?: ListBoxAsyncAction | undefined }
-  | {
-      status: "ready";
-      /** Announced only when the rendered collection is empty. */
-      emptyText: string;
-      loadMore?: ListBoxAsyncAction | undefined;
-    };
+export type ListBoxAsyncAction = AsyncCollectionAction;
+export type ListBoxAsyncState = AsyncCollectionPresentation;
 
 export interface ListBoxProps<T extends object>
   /*
