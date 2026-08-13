@@ -95,7 +95,7 @@ export function OverflowList<T>({
   items,
   getKey,
   initialVisibleItems,
-  minVisibleItems = 0,
+  minVisibleItems = 1,
   maxVisibleItems = items.length,
   collapseFrom = "end",
   gap = 8,
