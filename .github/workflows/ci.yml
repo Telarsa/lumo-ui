@@ -115,6 +115,11 @@ jobs:
           node scripts/build-registry.mjs
           git diff --exit-code registry.json
 
+      # The prop reference is generated from the checker. Keeping this separate
+      # from Registry makes a stale API artifact name itself in CI.
+      - name: API reference
+        run: pnpm run gate:api
+
       # Two minutes standing between us and publishing a registry nobody has
       # ever installed from. Copies every item into a bare project and compiles
       # it, so a dependency missing from a registry entry fails here rather than
