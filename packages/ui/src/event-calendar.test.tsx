@@ -687,6 +687,36 @@ describe("the four views answer four questions", () => {
     expect(screen.getByText("fourth")).toBeTruthy();
   });
 
+  it("renders each requested N-day width and clamps out-of-range widths to 2–14", () => {
+    for (const [requested, expected] of [
+      [2, 2],
+      [5, 5],
+      [14, 14],
+      [1, 2],
+      [15, 14],
+    ] as const) {
+      mount("en-US", calendarFor("en-US", [], { defaultView: "days", dayCount: requested }));
+      expect(screen.getAllByRole("gridcell"), `dayCount=${requested}`).toHaveLength(expected);
+      cleanup();
+    }
+  });
+
+  it("advances an N-day view by exactly N calendar days", () => {
+    let moved: CalendarDate | undefined;
+    mount(
+      "en-US",
+      calendarFor("en-US", [], {
+        defaultView: "days",
+        dayCount: 5,
+        onFocusedDateChange: (next: CalendarDate) => {
+          moved = next;
+        },
+      }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Next period" }));
+    expect(moved?.compare(ANCHOR.add({ days: 5 }))).toBe(0);
+  });
+
   it("an all-day event is on the week view's strip, never on the time axis", () => {
     // The split `allDay` exists for: an all-day event modelled as 00:00–23:59
     // is a lie about both ends, and it would sit under the hour lines pushing
