@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "aria-vega",
+  "style": "vega",
   "rtl": true,
   "rsc": true,
   "tsx": true,

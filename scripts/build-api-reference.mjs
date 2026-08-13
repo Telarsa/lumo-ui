@@ -85,6 +85,12 @@ function isOnlyUndefined(type) {
   return type.isUnion() && type.types.every((member) => (member.flags & ts.TypeFlags.Undefined) !== 0);
 }
 
+/** @param {ts.Symbol} symbol */
+function descriptionOf(symbol) {
+  const own = ts.displayPartsToString(symbol.getDocumentationComment(checker)).trim();
+  return own.length > 0 ? own : "Inherited DOM or shared Lumo prop.";
+}
+
 /** @type {Record<string, Array<{name: string, props: Array<{name: string, type: string, required: boolean}>}>>} */
 const modules = {};
 for (const [moduleName, propsNames] of [...propsByModule].sort(([a], [b]) => a.localeCompare(b))) {
@@ -121,6 +127,7 @@ for (const [moduleName, propsNames] of [...propsByModule].sort(([a], [b]) => a.l
           ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope,
         ),
         required: (prop.flags & ts.SymbolFlags.Optional) === 0,
+        description: descriptionOf(prop),
       }))
       .sort((a, b) => Number(b.required) - Number(a.required) || a.name.localeCompare(b.name));
     if (props.length > 0) groups.push({ name: propsName, props });

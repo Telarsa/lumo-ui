@@ -211,6 +211,21 @@ const importSpecifiers = (source, fileName) => {
   return specifiers;
 };
 
+/** First complete prose sentence from the leading file docblock. */
+const registryDescription = (source) => {
+  const block = source.match(/\/\*\*([\s\S]*?)\*\//)?.[1] ?? "";
+  const prose = block
+    .split("\n")
+    .map((line) => line.replace(/^\s*\*\s?/, "").trim())
+    .filter((line) => line.length > 0 && !line.startsWith("═══") && !line.startsWith("──"))
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (prose.length === 0) return "Lumo registry item.";
+  const sentence = prose.match(/^.*?[.!?…](?:\s|$)/)?.[0]?.trim();
+  return sentence ?? `${prose}.`;
+};
+
 const items = [];
 for (const { dir, type, target } of SOURCES) {
   /** @type {string[]} */
@@ -324,7 +339,7 @@ for (const { dir, type, target } of SOURCES) {
     name,
     type,
     title: name.replace(/(^|-)(\w)/g, (_, d, c) => (d ? " " : "") + c.toUpperCase()).trim(),
-    description: (source.match(/^\s*\*\s+(.+)$/m)?.[1] ?? "").slice(0, 200),
+    description: registryDescription(source),
     author: "Telarsa",
     ...(dependencies.length ? { dependencies: [...new Set(dependencies)].sort() } : {}),
     ...(registryDependencies.length ? { registryDependencies } : {}),
