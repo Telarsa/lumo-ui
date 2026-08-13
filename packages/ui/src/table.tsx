@@ -1704,7 +1704,8 @@ export interface ColumnResizerProps
 }
 
 export function ColumnResizer({ label, columnId, className, ...props }: ColumnResizerProps) {
-  const { table } = useTableContext();
+  const { table, locale } = useTableContext();
+  const rtl = direction(locale) === "rtl";
   const contextualColumnId = useContext(ColumnIdContext);
   const resolvedColumnId = columnId ?? contextualColumnId;
   const header = resolvedColumnId === undefined
@@ -1756,10 +1757,10 @@ export function ColumnResizer({ label, columnId, className, ...props }: ColumnRe
           event.currentTarget.closest<HTMLElement>('[role="columnheader"]')?.focus();
         } else if (event.key === "ArrowRight") {
           event.preventDefault();
-          resizeBy(10);
+          resizeBy(rtl ? -10 : 10);
         } else if (event.key === "ArrowLeft") {
           event.preventDefault();
-          resizeBy(-10);
+          resizeBy(rtl ? 10 : -10);
         } else if (event.key === "Home") {
           event.preventDefault();
           resizeBy(minSize - (size ?? minSize));
