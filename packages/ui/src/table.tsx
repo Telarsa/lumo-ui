@@ -11,18 +11,20 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type ReactNode,
 } from "react";
-import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronsUpDown, ChevronDown } from "lucide-react";
 import {
   columnFilteringFeature,
   columnResizingFeature,
   columnSizingFeature,
   columnVisibilityFeature,
+  createExpandedRowModel,
   createFilteredRowModel,
   createPaginatedRowModel,
   createSortedRowModel,
   filterFn_includesString,
   globalFilteringFeature,
   rowPaginationFeature,
+  rowExpandingFeature,
   rowSelectionFeature,
   rowSortingFeature,
   sortFn_basic,
@@ -31,7 +33,7 @@ import {
   useTable,
   type RowData,
 } from "@tanstack/react-table";
-import { FORMAT_LOCALE, cn, type Locale, type LumoNode } from "@lumo-ui/core";
+import { FORMAT_LOCALE, cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Checkbox, type CheckboxProps } from "./checkbox.tsx";
 import {
   cellVariants,
@@ -257,6 +259,7 @@ export const lumoTableFeatures = tableFeatures({
   rowSortingFeature,
   rowSelectionFeature,
   rowPaginationFeature,
+  rowExpandingFeature,
   columnFilteringFeature,
   globalFilteringFeature,
   columnSizingFeature,
@@ -269,6 +272,7 @@ export const lumoTableFeatures = tableFeatures({
   sortedRowModel: createSortedRowModel(),
   filteredRowModel: createFilteredRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
+  expandedRowModel: createExpandedRowModel(),
   sortFns: { basic: sortFn_basic, datetime: sortFn_datetime },
   filterFns: { includesString: filterFn_includesString },
 });
@@ -366,6 +370,8 @@ export interface LumoTableColumn {
   toggleSorting: () => void;
   getIsResizing: () => boolean;
   getSize: () => number;
+  /** Whether this column is currently part of the rendered projection. */
+  getIsVisible?: (() => boolean) | undefined;
   columnDef: { minSize?: number | undefined; maxSize?: number | undefined };
   id: string;
 }
@@ -376,6 +382,17 @@ export interface LumoTableRow {
   getIsSelected: () => boolean;
   getCanSelect: () => boolean;
   toggleSelected: () => void;
+  depth?: number | undefined;
+  getCanExpand?: (() => boolean) | undefined;
+  getIsExpanded?: (() => boolean) | undefined;
+}
+
+/** The extra scalar state a hierarchical row exposes to `TableTreeCell`. */
+export interface LumoExpandableTableRow extends LumoTableRow {
+  depth: number;
+  getCanExpand: () => boolean;
+  getIsExpanded: () => boolean;
+  toggleExpanded: () => void;
 }
 
 /** What `Table`, `TableSelectAllColumn` and `ColumnResizer` need from a table. */
@@ -408,6 +425,8 @@ export interface LumoTableInstance {
 
 interface TableContextValue {
   locale: Locale;
+  /** Whether the rows form a hierarchy rather than a flat grid. */
+  hierarchical: boolean;
   /** `{row, col}` of the one cell that is in the tab order. */
   active: { row: number; col: number };
   /** The TanStack instance, when the caller supplied one. */
@@ -433,6 +452,15 @@ interface TableContextValue {
    * which is why `Cell` also accepts an explicit `isRowHeader`.
    */
   rowHeaderColumns: Set<number>;
+  /**
+   * Column positions hidden by the state layer.
+   *
+   * The header writes this set before the body renders, exactly like
+   * `rowHeaderColumns`. Keeping the decision here means one visibility toggle
+   * removes the header, body, footer and widget cells together instead of
+   * asking every row renderer to mirror TanStack state by hand.
+   */
+  hiddenColumns: Set<number>;
   /**
    * How many rows `TableBody` rendered, so `TableFooter` knows which row index
    * comes after them.
@@ -548,17 +576,27 @@ export interface TableProps
    * is deliberately no `dir` prop — see `LumoProvider` for the argument.
    */
   locale: Locale;
+  /** Emits `role="treegrid"` and hierarchical row state. */
+  hierarchical?: boolean | undefined;
   /** The instance from `useLumoTable`, when this grid has state. */
   table?: LumoTableInstance | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function Table({ label, locale, table, className, ...props }: TableProps) {
+export function Table({
+  label,
+  locale,
+  table,
+  hierarchical = false,
+  className,
+  ...props
+}: TableProps) {
   const ref = useRef<HTMLTableElement>(null);
   const [active, setActive] = useState({ row: 0, col: 0 });
   const arrow = useMemo(() => gridArrow(locale), [locale]);
   const rowHeaderColumns = useRef<Set<number>>(new Set()).current;
+  const hiddenColumns = useRef<Set<number>>(new Set()).current;
   const bodyRowCount = useRef(0);
 
   /**
@@ -569,20 +607,49 @@ export function Table({ label, locale, table, className, ...props }: TableProps)
    * typeahead or a page-level shortcut can still be added later.
    */
   function onKeyDown(event: ReactKeyboardEvent<HTMLTableElement>) {
+    const treeToggle = (event.target as HTMLElement).closest<HTMLElement>(
+      "[data-lumo-tree-toggle]",
+    );
+    if (hierarchical && treeToggle !== null) {
+      const expanded = treeToggle.getAttribute("aria-expanded") === "true";
+      const inlineEndKey = arrow.direction === "rtl" ? "ArrowLeft" : "ArrowRight";
+      const inlineStartKey = arrow.direction === "rtl" ? "ArrowRight" : "ArrowLeft";
+      if ((!expanded && event.key === inlineEndKey) || (expanded && event.key === inlineStartKey)) {
+        event.preventDefault();
+        treeToggle.click();
+        return;
+      }
+    }
+
     const step = arrow.step(event.key);
     if (step === null) return;
 
     const grid = ref.current;
     if (!grid) return;
 
-    const next = { row: active.row + step.row, col: active.col + step.col };
-    const target = grid.querySelector<HTMLElement>(
-      `[data-row-index="${next.row}"][data-col-index="${next.col}"]`,
-    );
+    let next = { row: active.row + step.row, col: active.col + step.col };
+    let target: HTMLElement | null = null;
+    const cellCount = grid.querySelectorAll<HTMLElement>(
+      "[data-row-index][data-col-index]",
+    ).length;
+
+    // A hidden column is absent from the DOM, but it retains its source index
+    // in `aria-colindex` and `data-col-index`. Walk in the requested direction
+    // until the next rendered coordinate is found so column visibility cannot
+    // turn a middle gap into a keyboard edge. `cellCount` is a DOM-derived
+    // upper bound, so malformed or sparse caller markup cannot loop forever.
+    for (let attempt = 0; attempt < cellCount; attempt += 1) {
+      if (next.row < 0 || next.col < 0) break;
+      target = grid.querySelector<HTMLElement>(
+        `[data-row-index="${next.row}"][data-col-index="${next.col}"]`,
+      );
+      if (target !== null) break;
+      next = { row: next.row + step.row, col: next.col + step.col };
+    }
     // No wrap-around and no clamping: at an edge the key simply does nothing,
     // which is what a grid does. Silently clamping would make Home and End
     // (not implemented) look broken when they arrive.
-    if (!target) return;
+    if (target === null) return;
 
     event.preventDefault();
     setActive(next);
@@ -620,8 +687,16 @@ export function Table({ label, locale, table, className, ...props }: TableProps)
   }
 
   const value = useMemo<TableContextValue>(
-    () => ({ locale, active, table, rowHeaderColumns, bodyRowCount }),
-    [locale, active, table, rowHeaderColumns, bodyRowCount],
+    () => ({
+      locale,
+      hierarchical,
+      active,
+      table,
+      rowHeaderColumns,
+      hiddenColumns,
+      bodyRowCount,
+    }),
+    [locale, hierarchical, active, table, rowHeaderColumns, hiddenColumns, bodyRowCount],
   );
 
   /*
@@ -657,7 +732,7 @@ export function Table({ label, locale, table, className, ...props }: TableProps)
         {...props}
         ref={ref}
         data-lumo=""
-        role="grid"
+        role={hierarchical ? "treegrid" : "grid"}
         aria-label={label}
         /*
          * `aria-rowcount` counts the HEADER row too, which is what the spec
@@ -812,15 +887,25 @@ export function Column({
   sortDescendingLabel,
   ...props
 }: ColumnProps) {
-  const { table, active, rowHeaderColumns } = useTableContext();
+  const { table, active, rowHeaderColumns, hiddenColumns } = useTableContext();
   const col = useContext(ColContext);
+
+  const column = id === undefined ? undefined : table?.getColumn(id);
+  const visible = column?.getIsVisible?.() !== false;
+
+  // The header is the single source for a column's projection. It renders
+  // before every body/footer row, so those cells read the same decision during
+  // this render and cannot drift from the header.
+  if (visible) hiddenColumns.delete(col);
+  else hiddenColumns.add(col);
 
   // See `TableContextValue.rowHeaderColumns` for why this is a render-phase
   // write into a ref rather than state.
   if (isRowHeader === true) rowHeaderColumns.add(col);
   else rowHeaderColumns.delete(col);
 
-  const column = id === undefined ? undefined : table?.getColumn(id);
+  if (!visible) return null;
+
   const sorted = column?.getIsSorted() ?? false;
   const sortable = allowsSorting === true;
   const onHeaderKeyDown = (event: ReactKeyboardEvent<HTMLTableCellElement>) => {
@@ -1030,9 +1115,13 @@ export interface RowProps
 }
 
 export function Row({ row, isDisabled, className, children, ...props }: RowProps) {
+  const { hierarchical, table } = useTableContext();
   const context = useContext(RowContext);
   const index = context?.index ?? 1;
-  const selectable = row?.getCanSelect() ?? false;
+  const selectionEnabled =
+    table?.options.enableRowSelection !== undefined && table.options.enableRowSelection !== false;
+  const selectable = selectionEnabled && (row?.getCanSelect() ?? false);
+  const expandable = hierarchical && (row?.getCanExpand?.() ?? false);
 
   return (
     <RowContext.Provider value={{ index, row }}>
@@ -1041,6 +1130,8 @@ export function Row({ row, isDisabled, className, children, ...props }: RowProps
         data-lumo=""
         role="row"
         aria-rowindex={index + 1}
+        {...(hierarchical ? { "aria-level": Math.max(0, row?.depth ?? 0) + 1 } : {})}
+        {...(expandable ? { "aria-expanded": row?.getIsExpanded?.() ?? false } : {})}
         /*
          * Emitted ONLY when the row can be selected. `aria-selected="false"` on
          * a non-selectable row tells a screen reader the grid has a selection
@@ -1074,13 +1165,15 @@ export interface CellProps
 }
 
 export function Cell({ isRowHeader, className, children, ...props }: CellProps) {
-  const { active, rowHeaderColumns } = useTableContext();
+  const { active, rowHeaderColumns, hiddenColumns } = useTableContext();
   const rowContext = useContext(RowContext);
   const col = useContext(ColContext);
   const rowIndex = rowContext?.index ?? 1;
   // The column's declaration is the default; an explicit prop on the cell wins,
   // which is what makes the ordering caveat in `rowHeaderColumns` recoverable.
   const rowHeader = isRowHeader ?? rowHeaderColumns.has(col);
+
+  if (hiddenColumns.has(col)) return null;
 
   const shared = {
     "data-lumo": "",
@@ -1199,12 +1292,14 @@ export interface TableSelectionCellProps
 }
 
 export function TableSelectionCell({ label, className, ...props }: TableSelectionCellProps) {
-  const { active } = useTableContext();
+  const { active, hiddenColumns } = useTableContext();
   const rowContext = useContext(RowContext);
   const col = useContext(ColContext);
   const rowIndex = rowContext?.index ?? 1;
   const isActive = active.row === rowIndex && active.col === col;
   const row = rowContext?.row as LumoTableRow | undefined;
+
+  if (hiddenColumns.has(col)) return null;
 
   return (
     <td
@@ -1363,42 +1458,130 @@ export interface TableWidgetCellProps
    * straight through: `(tabIndex) => <IconButton label="…" tabIndex={tabIndex} />`.
    */
   children: (tabIndex: 0 | -1) => LumoNode;
+  /** Uses a native row header while preserving the widget-focus model. */
+  isRowHeader?: boolean | undefined;
   className?: string | undefined;
 }
 
-export function TableWidgetCell({ className, children, ...props }: TableWidgetCellProps) {
-  const { active } = useTableContext();
+export function TableWidgetCell({ isRowHeader, className, children, ...props }: TableWidgetCellProps) {
+  const { active, hiddenColumns, rowHeaderColumns } = useTableContext();
   const rowContext = useContext(RowContext);
   const col = useContext(ColContext);
   const rowIndex = rowContext?.index ?? 1;
   const isActive = active.row === rowIndex && active.col === col;
+  const rowHeader = isRowHeader ?? rowHeaderColumns.has(col);
+
+  if (hiddenColumns.has(col)) return null;
+
+  const shared = {
+    "data-lumo": "",
+    "aria-colindex": col + 1,
+    "data-row-index": rowIndex,
+    "data-col-index": col,
+    // See `TableSelectAllColumn` — this is what makes the arrow keys land on
+    // the control rather than on the cell around it.
+    "data-lumo-widget-cell": "",
+    tabIndex: -1,
+    className: cn(cellVariants(), "w-0 whitespace-nowrap", className),
+  } as const;
+  const content = children(isActive ? 0 : -1);
+
+  return rowHeader ? (
+    <th {...(props as ComponentProps<"th">)} {...shared} role="rowheader" scope="row">
+      {content}
+    </th>
+  ) : (
+    <td {...props} {...shared} role="gridcell">
+      {content}
+    </td>
+  );
+}
+
+export interface TableTreeCellProps
+  extends Omit<TableWidgetCellProps, "children" | "isRowHeader"> {
+  /** The TanStack row whose expansion state this cell controls. */
+  row: LumoExpandableTableRow;
+  /** Whole announced phrase for the collapsed state. */
+  expandLabel: string;
+  /** Whole announced phrase for the expanded state. */
+  collapseLabel: string;
+  /** Logical indentation per depth level, in pixels. */
+  indent?: number | undefined;
+  children?: LumoNode;
+}
+
+/**
+ * The row-header cell for hierarchical data.
+ *
+ * Parent rows use the widget-focus model: the grid's single Tab stop lands on
+ * the disclosure button, whose state and name come from the same row object.
+ * Leaves render a normal focusable row-header cell, so they never delegate the
+ * stop to a control that does not exist. Indentation uses `paddingInlineStart`
+ * and therefore follows the document direction without a physical-side prop.
+ */
+export function TableTreeCell({
+  row,
+  expandLabel,
+  collapseLabel,
+  indent = 20,
+  className,
+  children,
+  ...props
+}: TableTreeCellProps) {
+  const { locale } = useTableContext();
+  const canExpand = row.getCanExpand();
+  const expanded = row.getIsExpanded();
+  const content = (
+    <span
+      className="flex min-w-0 items-center gap-2"
+      style={{ paddingInlineStart: `${Math.max(0, row.depth) * Math.max(0, indent)}px` }}
+    >
+      {canExpand ? null : <span aria-hidden="true" className="size-6 shrink-0" />}
+      <span className="min-w-0 truncate">{children}</span>
+    </span>
+  );
+
+  if (!canExpand) {
+    return (
+      <Cell isRowHeader className={className} {...props}>
+        {content}
+      </Cell>
+    );
+  }
 
   return (
-    <td
+    <TableWidgetCell
+      isRowHeader
+      className={cn("w-auto whitespace-normal", className)}
       {...props}
-      data-lumo=""
-      role="gridcell"
-      aria-colindex={col + 1}
-      data-row-index={rowIndex}
-      data-col-index={col}
-      // See `TableSelectAllColumn` — this is what makes the arrow keys land on
-      // the control rather than on the `<td>` around it.
-      data-lumo-widget-cell=""
-      /*
-       * Permanently `-1`, exactly as `TableSelectionCell` is, and for the
-       * argument written out there: the cell holding a widget is not itself the
-       * tab stop. The coordinates stay on the `<td>` because that is what the
-       * arrow keys search for.
-       */
-      tabIndex={-1}
-      // `w-0` + `whitespace-nowrap` shrink-wraps an actions column to its
-      // buttons, on either side of the grid — the same pair the selection
-      // column uses, and it is `w-0` rather than a physical width for the same
-      // reason: it states a size, not a side.
-      className={cn(cellVariants(), "w-0 whitespace-nowrap", className)}
     >
-      {children(isActive ? 0 : -1)}
-    </td>
+      {(tabIndex) => (
+        <span
+          className="flex min-w-0 items-center gap-2"
+          style={{ paddingInlineStart: `${Math.max(0, row.depth) * Math.max(0, indent)}px` }}
+        >
+          <button
+            data-lumo=""
+            data-lumo-tree-toggle=""
+            type="button"
+            tabIndex={tabIndex}
+            aria-label={expanded ? collapseLabel : expandLabel}
+            aria-expanded={expanded}
+            onClick={() => row.toggleExpanded()}
+            className="inline-flex size-6 shrink-0 items-center justify-center rounded-sm border-0 bg-transparent p-0 text-fg-muted hover:bg-surface-hover hover:text-fg"
+          >
+            <ChevronDown
+              aria-hidden="true"
+              className={cn(
+                "transition-transform motion-reduce:transition-none",
+                expanded ? "" : direction(locale) === "rtl" ? "-rotate-90" : "rotate-90",
+              )}
+            />
+          </button>
+          <span className="min-w-0 truncate">{children}</span>
+        </span>
+      )}
+    </TableWidgetCell>
   );
 }
 

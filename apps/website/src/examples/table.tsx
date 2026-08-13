@@ -359,6 +359,7 @@ export const EXAMPLES: ComponentExamples = {
       `      <Row row={row}>`,
       `        <TableSelectionCell label="…" />`,
       `        <Cell>…</Cell>`,
+      `        <TableTreeCell row={row} expandLabel="…" collapseLabel="…">…</TableTreeCell>`,
       `        <TableWidgetCell>{(tabIndex) => <IconButton label="…" tabIndex={tabIndex} />}</TableWidgetCell>`,
       `      </Row>`,
       `    </TableBody>`,
@@ -448,6 +449,15 @@ export const EXAMPLES: ComponentExamples = {
             "خانه‌ای که محتوایش یک کنترل است — ستون کنش‌ها. گرید از بیرون یک ایست «Tab» دارد و دکمه ایستِ خودش را می‌آورد، پس «Cell» ساده با یک دکمه در آن، به ازای هر ردیف یک ایست اضافه سرو می‌کند. این جزء مدل «widget focus» را می‌نویسد: خودِ «td» همیشه منفی‌یک می‌ماند و صفرِ گردان از راه «render prop» به کنترل می‌رسد، پس در نخستین بایتِ سرو‌شده درست است نه پس از hydration. یک کنترل در هر خانه: خانه‌ای با چند ابزارک به حالتِ ورود و خروج نیاز دارد که این گرید ندارد.",
           "en-US":
             "A cell whose content is a control — the actions column. A grid is one Tab stop from the outside and a button brings its own, so a plain «Cell» with a button in it serves one extra stop PER ROW. This part writes ARIA's widget-focus model: the «td» stays at minus one permanently and the roving zero reaches the control through a render prop, so it is right in the first served byte rather than after hydration. One control per cell: a cell with several widgets needs an enter-and-leave mode this grid does not implement.",
+        },
+      },
+      {
+        name: "TableTreeCell",
+        description: {
+          "fa-IR":
+            "خانهٔ سرردیف برای دادهٔ سلسله‌مراتبی. ردیف والد یک دکمهٔ بازشدنِ نام‌دار می‌گیرد، برگ یک خانهٔ معمولی و قابل تمرکز می‌ماند، و تورفتگی با paddingInlineStart در هر دو جهت درست است.",
+          "en-US":
+            "The row-header cell for hierarchical data. A parent gets a named disclosure button, a leaf remains a normally focusable cell, and indentation uses paddingInlineStart in both directions.",
         },
       },
       {

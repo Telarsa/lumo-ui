@@ -34,6 +34,15 @@ import {
   type DataGridColumn,
   type DataGridTableInstance,
 } from "./data-grid.tsx";
+import {
+  Cell,
+  Column,
+  Row,
+  Table,
+  TableBody,
+  TableHeader,
+  useLumoTable,
+} from "./table.tsx";
 
 afterEach(cleanup);
 
@@ -462,6 +471,100 @@ describe("DataGridColumnsMenu", () => {
     openColumnsMenu(table);
     fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "شهر" }));
     expect(table.calls.visibility).toEqual([["city", false]]);
+  });
+
+  it("removes the hidden header and every matching body cell from the rendered grid", () => {
+    function VisibilityGrid() {
+      const table = useLumoTable({
+        locale: "fa-IR",
+        data: [{ id: "one", name: "سارا", city: "تهران" }],
+        columns: [
+          { id: "name", accessorKey: "name" },
+          { id: "city", accessorKey: "city" },
+        ],
+        getRowId: (row) => row.id,
+      });
+
+      return (
+        <DataGrid locale="fa-IR" table={table}>
+          <DataGridColumnsMenu label="ستون‌ها" columns={COLUMN_LABELS} />
+          <Table label="سفارش‌ها" locale="fa-IR" table={table}>
+            <TableHeader>
+              <Column id="name" isRowHeader>
+                نام
+              </Column>
+              <Column id="city">شهر</Column>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <Row key={row.id} row={row}>
+                  <Cell isRowHeader>{String(row.getValue("name"))}</Cell>
+                  <Cell>{String(row.getValue("city"))}</Cell>
+                </Row>
+              ))}
+            </TableBody>
+          </Table>
+        </DataGrid>
+      );
+    }
+
+    render(<VisibilityGrid />);
+    fireEvent.click(screen.getByRole("button", { name: "ستون‌ها" }));
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "شهر" }));
+
+    expect(screen.queryByRole("columnheader", { name: "شهر" })).toBeNull();
+    expect(screen.queryByRole("gridcell", { name: "تهران" })).toBeNull();
+  });
+
+  it("moves keyboard focus across a hidden column instead of trapping the grid", () => {
+    function VisibilityNavigationGrid() {
+      const table = useLumoTable({
+        locale: "fa-IR",
+        data: [{ id: "one", name: "سارا", city: "تهران", total: "۱۰۰" }],
+        columns: [
+          { id: "name", accessorKey: "name" },
+          { id: "city", accessorKey: "city" },
+          { id: "total", accessorKey: "total" },
+        ],
+        getRowId: (row) => row.id,
+      });
+
+      return (
+        <DataGrid locale="fa-IR" table={table}>
+          <DataGridColumnsMenu label="ستون‌ها" columns={COLUMN_LABELS} />
+          <Table label="سفارش‌ها" locale="fa-IR" table={table}>
+            <TableHeader>
+              <Column id="name" isRowHeader>
+                نام
+              </Column>
+              <Column id="city">شهر</Column>
+              <Column id="total">مبلغ</Column>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.map((row) => (
+                <Row key={row.id} row={row}>
+                  <Cell isRowHeader>{String(row.getValue("name"))}</Cell>
+                  <Cell>{String(row.getValue("city"))}</Cell>
+                  <Cell>{String(row.getValue("total"))}</Cell>
+                </Row>
+              ))}
+            </TableBody>
+          </Table>
+        </DataGrid>
+      );
+    }
+
+    render(<VisibilityNavigationGrid />);
+    fireEvent.click(screen.getByRole("button", { name: "ستون‌ها" }));
+    fireEvent.click(screen.getByRole("menuitemcheckbox", { name: "شهر" }));
+
+    const name = screen.getByRole("columnheader", { name: "نام" });
+    const total = screen.getByRole("columnheader", { name: "مبلغ" });
+    name.focus();
+    fireEvent.keyDown(name, { key: "ArrowLeft" });
+
+    expect(document.activeElement).toBe(total);
+    expect(total.getAttribute("tabindex")).toBe("0");
   });
 });
 

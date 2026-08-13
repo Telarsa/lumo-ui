@@ -17,7 +17,7 @@
  */
 
 import { createElement, type FunctionComponent, type ReactElement } from "react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
@@ -27,6 +27,7 @@ import {
   Table,
   TableBody,
   TableHeader,
+  TableTreeCell,
   TableWidgetCell,
   ColumnResizer,
   localeSortFn,
@@ -125,6 +126,202 @@ describe("localeSortFn — TanStack's default sorts Persian by code unit", () =>
     const en = cmp(localeSortFn("en-US"));
     expect(en("apple", "banana")).toBeLessThan(0);
     expect(en("Item 2", "Item 10")).toBeLessThan(0);
+  });
+});
+
+describe("useLumoTable — hierarchical row projection", () => {
+  it("does not expose a collapsed child in the rendered row model", () => {
+    type Node = { id: string; label: string; children?: Node[] };
+    const data: Node[] = [
+      {
+        id: "parent",
+        label: "سفارش مادر",
+        children: [{ id: "child", label: "سفارش وابسته" }],
+      },
+    ];
+
+    function ExpandedRows() {
+      const table = useLumoTable({
+        locale: "fa-IR",
+        data,
+        columns: [{ id: "label", accessorKey: "label" }],
+        getRowId: (row) => row.id,
+        getSubRows: (row) => row.children,
+        initialState: { expanded: {} },
+      });
+      return <output>{table.getRowModel().rows.map((row) => row.id).join(",")}</output>;
+    }
+
+    const { container } = render(<ExpandedRows />);
+    expect(container.querySelector("output")?.textContent).toBe("parent");
+  });
+
+  it("lets a row disclose its children through the installed state feature", () => {
+    type Node = { id: string; children?: Node[] };
+    const data: Node[] = [{ id: "parent", children: [{ id: "child" }] }];
+
+    function ExpandableRows() {
+      const table = useLumoTable({
+        locale: "fa-IR",
+        data,
+        columns: [{ id: "id", accessorKey: "id" }],
+        getRowId: (row) => row.id,
+        getSubRows: (row) => row.children,
+      });
+      const rows = table.getRowModel().rows;
+      return (
+        <>
+          <button type="button" onClick={() => rows[0]?.toggleExpanded()}>
+            باز کردن
+          </button>
+          <output>{rows.map((row) => row.id).join(",")}</output>
+        </>
+      );
+    }
+
+    const { container } = render(<ExpandableRows />);
+    fireEvent.click(container.querySelector("button") as HTMLButtonElement);
+    expect(container.querySelector("output")?.textContent).toBe("parent,child");
+  });
+
+  it("collapses a row that was expanded in the initial state", () => {
+    type Node = { id: string; children?: Node[] };
+    const data: Node[] = [{ id: "parent", children: [{ id: "child" }] }];
+
+    function CollapsibleRows() {
+      const table = useLumoTable({
+        locale: "fa-IR",
+        data,
+        columns: [{ id: "id", accessorKey: "id" }],
+        getRowId: (row) => row.id,
+        getSubRows: (row) => row.children,
+        initialState: { expanded: { parent: true } },
+      });
+      const rows = table.getRowModel().rows;
+      return (
+        <>
+          <button type="button" onClick={() => rows[0]?.toggleExpanded()}>
+            بستن
+          </button>
+          <output>{rows.map((row) => row.id).join(",")}</output>
+        </>
+      );
+    }
+
+    const { container } = render(<CollapsibleRows />);
+    expect(container.querySelector("output")?.textContent).toBe("parent,child");
+    fireEvent.click(container.querySelector("button") as HTMLButtonElement);
+    expect(container.querySelector("output")?.textContent).toBe("parent");
+  });
+});
+
+describe("TableTreeCell — the row disclosure control", () => {
+  it("serves the caller's label, exposes state, and toggles the row", () => {
+    const toggleExpanded = vi.fn();
+    const row = {
+      id: "parent",
+      depth: 1,
+      getIsSelected: () => false,
+      getCanSelect: () => false,
+      toggleSelected: () => {},
+      getCanExpand: () => true,
+      getIsExpanded: () => false,
+      toggleExpanded,
+    };
+
+    const { getByRole } = render(
+      <Table label="سفارش‌ها" locale="fa-IR">
+        <TableHeader>
+          <Column id="name" isRowHeader>
+            نام
+          </Column>
+        </TableHeader>
+        <TableBody>
+          <Row row={row}>
+            <TableTreeCell
+              row={row}
+              expandLabel="باز کردن سفارش مادر"
+              collapseLabel="بستن سفارش مادر"
+            >
+              سفارش مادر
+            </TableTreeCell>
+          </Row>
+        </TableBody>
+      </Table>,
+    );
+
+    const trigger = getByRole("button", { name: "باز کردن سفارش مادر" });
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    fireEvent.click(trigger);
+    expect(toggleExpanded).toHaveBeenCalledOnce();
+  });
+
+  it("makes hierarchical structure explicit on the table and parent row", () => {
+    const row = {
+      id: "child-parent",
+      depth: 1,
+      getIsSelected: () => false,
+      getCanSelect: () => false,
+      toggleSelected: () => {},
+      getCanExpand: () => true,
+      getIsExpanded: () => false,
+      toggleExpanded: () => {},
+    };
+    const { container } = render(
+      <Table label="سفارش‌ها" locale="fa-IR" hierarchical>
+        <TableHeader>
+          <Column id="name">نام</Column>
+        </TableHeader>
+        <TableBody>
+          <Row row={row}>
+            <TableTreeCell row={row} expandLabel="باز کردن" collapseLabel="بستن">
+              سفارش مادر
+            </TableTreeCell>
+          </Row>
+        </TableBody>
+      </Table>,
+    );
+
+    expect(container.querySelector("table")?.getAttribute("role")).toBe("treegrid");
+    const bodyRow = container.querySelector("tbody tr");
+    expect(bodyRow?.getAttribute("aria-level")).toBe("2");
+    expect(bodyRow?.getAttribute("aria-expanded")).toBe("false");
+  });
+
+  it("uses the logical inline-end arrow to expand a focused Persian row", () => {
+    const toggleExpanded = vi.fn();
+    const row = {
+      id: "parent",
+      depth: 0,
+      getIsSelected: () => false,
+      getCanSelect: () => false,
+      toggleSelected: () => {},
+      getCanExpand: () => true,
+      getIsExpanded: () => false,
+      toggleExpanded,
+    };
+    const { container } = render(
+      <Table label="سفارش‌ها" locale="fa-IR" hierarchical>
+        <TableHeader>
+          <Column id="name">نام</Column>
+        </TableHeader>
+        <TableBody>
+          <Row row={row}>
+            <TableTreeCell row={row} expandLabel="باز کردن" collapseLabel="بستن">
+              سفارش مادر
+            </TableTreeCell>
+          </Row>
+        </TableBody>
+      </Table>,
+    );
+
+    const grid = container.querySelector("table") as HTMLTableElement;
+    fireEvent.keyDown(grid, { key: "ArrowDown" });
+    const trigger = container.querySelector("[data-lumo-tree-toggle]") as HTMLButtonElement;
+    expect(document.activeElement).toBe(trigger);
+
+    fireEvent.keyDown(trigger, { key: "ArrowLeft" });
+    expect(toggleExpanded).toHaveBeenCalledOnce();
   });
 });
 
@@ -245,6 +442,11 @@ describe("Table — the grid the two libraries build together", () => {
     // row is touched. Emitting it on a grid with no selection tells a reader
     // that keys exist which do nothing.
     expect(renderToStaticMarkup(<People />)).not.toContain("aria-multiselectable");
+  });
+
+  it("does not mark rows selectable when selection was never enabled", () => {
+    const html = renderToStaticMarkup(<People />);
+    expect(html).not.toContain(' aria-selected="');
   });
 
   it("is one Tab stop, and the stop is a real cell", () => {

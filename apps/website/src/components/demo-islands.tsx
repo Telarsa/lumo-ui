@@ -710,6 +710,7 @@ import {
   TableHeader,
   TableSelectAllColumn,
   TableSelectionCell,
+  TableTreeCell,
   TableWidgetCell,
   useLumoTable,
 } from "@lumo-ui/ui";
@@ -1663,6 +1664,74 @@ export interface DataGridIslandProps {
   pageSizes?: readonly number[];
   /** Starting rows per page. */
   pageSize?: number;
+}
+
+export interface DataGridTreeIslandRow {
+  id: string;
+  name: string;
+  total: number;
+  expandLabel: string;
+  collapseLabel: string;
+  children?: readonly DataGridTreeIslandRow[] | undefined;
+}
+
+export interface DataGridTreeIslandProps {
+  locale: Locale;
+  label: string;
+  nameHeader: string;
+  totalHeader: string;
+  rows: readonly DataGridTreeIslandRow[];
+}
+
+/** Hierarchical rows through the same table state and keyboard seam. */
+export function DataGridTreeIsland({
+  locale,
+  label,
+  nameHeader,
+  totalHeader,
+  rows,
+}: DataGridTreeIslandProps) {
+  // TanStack treats a new data reference as a new row structure and schedules
+  // an expanded-state reset. Keep the server-provided snapshot stable so an
+  // expansion does not visibly undo itself on the next microtask.
+  const [data] = useState(() => [...rows]);
+  const table = useLumoTable({
+    locale,
+    data,
+    columns: [
+      { id: "name", accessorKey: "name" },
+      { id: "total", accessorKey: "total" },
+    ],
+    getRowId: (row) => row.id,
+    getSubRows: (row) => (row.children === undefined ? undefined : [...row.children]),
+  });
+
+  return (
+    <DataGrid locale={locale} table={table}>
+      <Table label={label} locale={locale} table={table} hierarchical className="max-w-xl">
+        <TableHeader>
+          <Column id="name" isRowHeader>
+            {nameHeader}
+          </Column>
+          <Column id="total">{totalHeader}</Column>
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <Row key={row.id} row={row}>
+              <TableTreeCell
+                row={row}
+                expandLabel={row.original.expandLabel}
+                collapseLabel={row.original.collapseLabel}
+              >
+                {row.original.name}
+              </TableTreeCell>
+              <Cell>{formatNumber(row.original.total, locale)}</Cell>
+            </Row>
+          ))}
+        </TableBody>
+      </Table>
+    </DataGrid>
+  );
 }
 
 /**

@@ -10348,6 +10348,11 @@
             "required": false
           },
           {
+            "name": "hierarchical",
+            "type": "boolean | undefined",
+            "required": false
+          },
+          {
             "name": "table",
             "type": "LumoTableInstance | undefined",
             "required": false
@@ -10390,6 +10395,41 @@
         ]
       },
       {
+        "name": "TableTreeCellProps",
+        "props": [
+          {
+            "name": "collapseLabel",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "expandLabel",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "row",
+            "type": "LumoExpandableTableRow",
+            "required": true
+          },
+          {
+            "name": "children",
+            "type": "LumoNode",
+            "required": false
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "indent",
+            "type": "number | undefined",
+            "required": false
+          }
+        ]
+      },
+      {
         "name": "TableWidgetCellProps",
         "props": [
           {
@@ -10400,6 +10440,11 @@
           {
             "name": "className",
             "type": "string | undefined",
+            "required": false
+          },
+          {
+            "name": "isRowHeader",
+            "type": "boolean | undefined",
             "required": false
           }
         ]

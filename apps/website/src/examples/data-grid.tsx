@@ -1,5 +1,10 @@
 import type { Locale } from "@lumo-ui/core";
-import { DataGridIsland, type DataGridIslandRow } from "@/components/demo-islands";
+import {
+  DataGridIsland,
+  DataGridTreeIsland,
+  type DataGridIslandRow,
+  type DataGridTreeIslandRow,
+} from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -54,6 +59,7 @@ const t = {
   pageWord: { "fa-IR": "صفحهٔ", "en-US": "Page" },
   ofWord: { "fa-IR": "از", "en-US": "of" },
   pageSizeLabel: { "fa-IR": "تعداد ردیف در هر صفحه", "en-US": "Rows per page" },
+  treeGridLabel: { "fa-IR": "سفارش‌ها و ارسال‌ها", "en-US": "Orders and shipments" },
 
   colName: { "fa-IR": "مشتری", "en-US": "Customer" },
   colCity: { "fa-IR": "شهر", "en-US": "City" },
@@ -77,6 +83,20 @@ const t = {
   cShiraz: { "fa-IR": "شیراز", "en-US": "Shiraz" },
   cTabriz: { "fa-IR": "تبریز", "en-US": "Tabriz" },
   cIsfahan: { "fa-IR": "اصفهان", "en-US": "Isfahan" },
+  parentOrder: { "fa-IR": "سفارش عمدهٔ آفتاب", "en-US": "Aftab bulk order" },
+  firstShipment: { "fa-IR": "ارسال نخست", "en-US": "First shipment" },
+  secondShipment: { "fa-IR": "ارسال دوم", "en-US": "Second shipment" },
+  otherOrder: { "fa-IR": "سفارش فروشگاه بهار", "en-US": "Bahar shop order" },
+  expandParent: {
+    "fa-IR": "باز کردن ارسال‌های سفارش آفتاب",
+    "en-US": "Expand Aftab order shipments",
+  },
+  collapseParent: {
+    "fa-IR": "بستن ارسال‌های سفارش آفتاب",
+    "en-US": "Collapse Aftab order shipments",
+  },
+  expandUnused: { "fa-IR": "باز کردن ردیف", "en-US": "Expand row" },
+  collapseUnused: { "fa-IR": "بستن ردیف", "en-US": "Collapse row" },
 } satisfies Record<string, LocalizedText>;
 
 /**
@@ -158,6 +178,53 @@ function CompactExample(l: Locale) {
       ofWord={t.ofWord[l]}
       pageSizeLabel={t.pageSizeLabel[l]}
       pageSize={10}
+    />
+  );
+}
+
+function treeRows(l: Locale): readonly DataGridTreeIslandRow[] {
+  return [
+    {
+      id: "aftab",
+      name: t.parentOrder[l],
+      total: 2_400_000,
+      expandLabel: t.expandParent[l],
+      collapseLabel: t.collapseParent[l],
+      children: [
+        {
+          id: "shipment-one",
+          name: t.firstShipment[l],
+          total: 1_400_000,
+          expandLabel: t.expandUnused[l],
+          collapseLabel: t.collapseUnused[l],
+        },
+        {
+          id: "shipment-two",
+          name: t.secondShipment[l],
+          total: 1_000_000,
+          expandLabel: t.expandUnused[l],
+          collapseLabel: t.collapseUnused[l],
+        },
+      ],
+    },
+    {
+      id: "bahar",
+      name: t.otherOrder[l],
+      total: 760_000,
+      expandLabel: t.expandUnused[l],
+      collapseLabel: t.collapseUnused[l],
+    },
+  ];
+}
+
+function TreeRowsExample(l: Locale) {
+  return (
+    <DataGridTreeIsland
+      locale={l}
+      label={t.treeGridLabel[l]}
+      nameHeader={t.colName[l]}
+      totalHeader={t.colTotal[l]}
+      rows={treeRows(l)}
     />
   );
 }
@@ -259,6 +326,17 @@ export const EXAMPLES: ComponentExamples = {
           "With four rows and ten per page the pager is not drawn at all — chrome that can never do anything is better absent — but the range read-out stays, because it still has something to say. Type a search that matches nothing to hear the empty state announce itself.",
       },
       render: CompactExample,
+    },
+    {
+      id: "tree-rows",
+      title: { "fa-IR": "ردیف‌های درختی", "en-US": "Tree rows" },
+      description: {
+        "fa-IR":
+          "یک سفارش مادر را باز و بسته کنید. جدول نقش treegrid، سطح هر ردیف و وضعیت بازشدن را اعلام می‌کند؛ تمرکز همچنان برای کل شبکه یک ایستگاه است و پیکانِ سمتِ پایانِ خط ردیف فارسی را باز می‌کند.",
+        "en-US":
+          "Expand and collapse the parent order. The table exposes treegrid, row level and expansion state; the whole grid still has one Tab stop, and the logical inline-end arrow opens the focused row.",
+      },
+      render: TreeRowsExample,
     },
   ],
 };
