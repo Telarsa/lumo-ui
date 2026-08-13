@@ -189,6 +189,20 @@ export function X({ onOpenChange: _onOpenChange }: XProps) { return <button />; 
   });
 });
 
+describe("module-scope name collisions are not delivery", () => {
+  it("does not let a variant key clear a dropped prop of the same name", () => {
+    const src = `
+const variants = { size: { sm: "small", md: "medium" } };
+export interface ProbeProps { size?: string; toneLabel?: string; }
+export function Probe({ ...props }: ProbeProps) { return <div />; }
+`;
+    expect(gradeSource("probe.tsx", src).map((violation) => violation.prop).sort()).toEqual([
+      "ProbeProps.size",
+      "ProbeProps.toneLabel",
+    ]);
+  });
+});
+
 /**
  * Scope, pinned in both directions.
  *
