@@ -43,6 +43,7 @@ const t = {
 
   month: { "fa-IR": "ماه", "en-US": "Month" },
   week: { "fa-IR": "هفته", "en-US": "Week" },
+  day: { "fa-IR": "روز", "en-US": "Day" },
   agenda: { "fa-IR": "فهرست", "en-US": "Agenda" },
   switcher: { "fa-IR": "نمای تقویم", "en-US": "Calendar view" },
   previous: { "fa-IR": "دورهٔ پیش", "en-US": "Previous period" },
@@ -123,6 +124,7 @@ function MonthExample(l: Locale) {
       label={t.team[l]}
       monthView={t.month[l]}
       weekView={t.week[l]}
+      dayView={t.day[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -148,6 +150,7 @@ function WeekExample(l: Locale) {
       label={t.clinic[l]}
       monthView={t.month[l]}
       weekView={t.week[l]}
+      dayView={t.day[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -168,12 +171,40 @@ function WeekExample(l: Locale) {
   );
 }
 
+function DayExample(l: Locale) {
+  return (
+    <EventCalendarIsland
+      label={t.clinic[l]}
+      monthView={t.month[l]}
+      weekView={t.week[l]}
+      dayView={t.day[l]}
+      agendaView={t.agenda[l]}
+      viewSwitcherLabel={t.switcher[l]}
+      previous={t.previous[l]}
+      next={t.next[l]}
+      allDay={t.allDay[l]}
+      empty={t.empty[l]}
+      continued={t.continued[l]}
+      joinWord={t.join[l]}
+      separator={t.separator[l]}
+      eventsWord={t.events[l]}
+      moreWord={t.more[l]}
+      todayWord={t.today[l]}
+      focusedDay={ANCHOR}
+      todayDay={ANCHOR}
+      defaultView="day"
+      events={workWeek(l)}
+    />
+  );
+}
+
 function AgendaExample(l: Locale) {
   return (
     <EventCalendarIsland
       label={t.release[l]}
       monthView={t.month[l]}
       weekView={t.week[l]}
+      dayView={t.day[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -209,6 +240,7 @@ function AllDayExample(l: Locale) {
       label={t.travel[l]}
       monthView={t.month[l]}
       weekView={t.week[l]}
+      dayView={t.day[l]}
       agendaView={t.agenda[l]}
       viewSwitcherLabel={t.switcher[l]}
       previous={t.previous[l]}
@@ -241,9 +273,9 @@ export const EXAMPLES: ComponentExamples = {
     title: { "fa-IR": "تقویم رویداد", "en-US": "Event calendar" },
     intro: {
       "fa-IR":
-        "شبکه‌ای برای زمان‌بندی، در تقویم خودِ خواننده. ماهش مرداد است، هفته‌اش از شنبه شروع می‌شود و یک رویداد روی همان روزی می‌نشیند که خواننده به آن اشاره می‌کند — همان داده، دو تقویم. سه نما دارد: ماه، هفته و فهرست.",
+        "شبکه‌ای برای زمان‌بندی، در تقویم خودِ خواننده. ماهش مرداد است، هفته‌اش از شنبه شروع می‌شود و یک رویداد روی همان روزی می‌نشیند که خواننده به آن اشاره می‌کند — همان داده، دو تقویم. چهار نما دارد: ماه، هفته، روز و فهرست.",
       "en-US":
-        "A scheduling grid in the reader's own calendar. Its month is Mordad, its week starts on Saturday, and an event lands on the day the reader would point at — same data, two calendars. Three views: month, week and agenda.",
+        "A scheduling grid in the reader's own calendar. Its month is Mordad, its week starts on Saturday, and an event lands on the day the reader would point at — same data, two calendars. Four views: month, week, day and agenda.",
     },
     composition: [
       `<EventCalendar label               ← names the grid`,
@@ -251,7 +283,7 @@ export const EXAMPLES: ComponentExamples = {
       `               events              ← occurrences; no recurrence in v1`,
       `               defaultFocusedDate  ← required: the component reads no clock`,
       `               todayDate           ← optional, also passed in`,
-      `               defaultView>        ← month | week | agenda`,
+      `               defaultView>        ← month | week | day | agenda`,
       `  …the toolbar, the grid or the list   ← rendered for you`,
       `</EventCalendar>`,
     ].join("\n"),
@@ -316,6 +348,17 @@ export const EXAMPLES: ComponentExamples = {
           "The only view with a time axis, therefore the only one that needs overlap geometry. Three clashing meetings take one lane each and the afternoon event stays full width: width is a property of the cluster, not of the day.",
       },
       render: WeekExample,
+    },
+    {
+      id: "day",
+      title: { "fa-IR": "نمای روز", "en-US": "Day view" },
+      description: {
+        "fa-IR":
+          "همان محور ساعت و هندسهٔ هم‌پوشانیِ نمای هفته را برای یک روزِ متمرکز با پهنای خواناتر نشان می‌دهد. دکمه‌های دوره یک روز جابه‌جا می‌شوند و دادهٔ روزهای دیگر وارد شبکه نمی‌شود.",
+        "en-US":
+          "Uses the week view's same time axis and overlap geometry for one focused day at a more readable width. Period navigation moves one day, and events from other days do not enter the grid.",
+      },
+      render: DayExample,
     },
     {
       id: "agenda",

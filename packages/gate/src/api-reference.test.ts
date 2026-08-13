@@ -51,5 +51,12 @@ describe("generated API reference gate", () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
-  }, 60_000);
+  // This poison fixture intentionally runs the full checker three times: stale,
+  // generated, then fresh. A cold TypeScript program can take ~25 seconds per
+  // pass on CI or a busy review workspace, so the repository's former 60-second
+  // ceiling timed out before the third assertion while every child process was
+  // still healthy. Keep enough headroom for the behavior test to finish; a
+  // performance budget belongs on one measured generator run, not on three
+  // correctness runs sharing a wall-clock timeout.
+  }, 120_000);
 });

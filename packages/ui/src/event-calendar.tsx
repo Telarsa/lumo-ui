@@ -130,10 +130,10 @@ export {
  * Every digit rule is green on that page. A meeting placed on it is off by 622
  * years and looks perfect.
  *
- * ═══ THREE VIEWS, AND WHY THOSE THREE ═══════════════════════════════════════
+ * ═══ FOUR VIEWS, AND WHY THOSE FOUR ═════════════════════════════════════════
  *
- * `month`, `week`, `agenda`. They are not three renderers of one layout; they
- * are three answers to three different questions, and each one is the cheapest
+ * `month`, `week`, `day`, `agenda`. They are not four renderers of one layout; they
+ * are four answers to four different questions, and each one is the cheapest
  * shape that answers its own:
  *
  *   month    «which days are busy» — a 7-column grid, one cell per day, events
@@ -147,6 +147,10 @@ export {
  *            own strip above it; that split is what `allDay` is FOR, and it is
  *            the reason a calendar cannot model an all-day event as "00:00 to
  *            23:59" without lying about both ends.
+ *
+ *   day      the same time-axis question at a readable width for one focused
+ *            day. It intentionally shares the week renderer and overlap model;
+ *            a second day renderer would be two implementations of one fact.
  *
  *   agenda   «what is next» — a linear list of the days that have anything,
  *            which is the view that works on a phone and the view a screen
@@ -327,7 +331,7 @@ export {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /** Which question the calendar is currently answering. See the header. */
-export type EventCalendarView = "month" | "week" | "agenda";
+export type EventCalendarView = "month" | "week" | "day" | "agenda";
 
 /** A chip's colour. Not announced — the accessible name carries the meaning. */
 export type EventCalendarTone = "accent" | "positive" | "caution" | "critical" | "neutral";
@@ -439,9 +443,11 @@ export interface EventCalendarStrings {
   monthView: string;
   /** Names the week view's button, e.g. «هفته». */
   weekView: string;
+  /** Names the day view's button, e.g. «روز». */
+  dayView: string;
   /** Names the agenda view's button, e.g. «فهرست». */
   agendaView: string;
-  /** Names the group the three buttons sit in, e.g. «نمای تقویم». */
+  /** Names the group the four buttons sit in, e.g. «نمای تقویم». */
   viewSwitcherLabel: string;
   /** Names the backward button, e.g. «دورهٔ پیش». */
   previous: string;
@@ -900,7 +906,13 @@ export function EventCalendar({
     if (view === undefined) setUncontrolledView(next);
     onViewChange?.(next);
     setAnnouncement(
-      next === "month" ? strings.monthView : next === "week" ? strings.weekView : strings.agendaView,
+      next === "month"
+        ? strings.monthView
+        : next === "week"
+          ? strings.weekView
+          : next === "day"
+            ? strings.dayView
+            : strings.agendaView,
     );
   };
 
@@ -936,6 +948,14 @@ export function EventCalendar({
   };
 
   const periodText = (): string => {
+    if (current === "day") {
+      return dateText(focus, locale, {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    }
     if (current === "week") {
       const first = weekStart(focus);
       const last = first.add({ days: 6 });
@@ -961,9 +981,11 @@ export function EventCalendar({
    */
   const step = (amount: number) => {
     const next =
-      current === "week"
-        ? weekStart(focus).add({ weeks: amount })
-        : startOfMonth(focus).add({ months: amount });
+      current === "day"
+        ? focus.add({ days: amount })
+        : current === "week"
+          ? weekStart(focus).add({ weeks: amount })
+          : startOfMonth(focus).add({ months: amount });
     if (focusedDate === undefined) setUncontrolledFocus(next);
     onFocusedDateChange?.(next);
     setAnnouncement(dayName(next));
@@ -1140,10 +1162,9 @@ export function EventCalendar({
     );
   };
 
-  /* ── the week view ────────────────────────────────────────────────────── */
+  /* ── the time-axis views ──────────────────────────────────────────────── */
 
-  const weekGrid = (): LumoNode => {
-    const days = daysOfWeek(weekStart(focus));
+  const timeGrid = (days: readonly CalendarDate[]): LumoNode => {
     const focusKey = dayKey(focus);
     const hours = Array.from({ length: 24 }, (_, hour) => hour);
 
@@ -1155,6 +1176,7 @@ export function EventCalendar({
         aria-label={label}
         tabIndex={entered ? -1 : 0}
         className={eventCalendarWeekGridVariants()}
+        style={{ gridTemplateColumns: `auto repeat(${days.length}, minmax(0, 1fr))` }}
         onKeyDown={onGridKeyDown}
         onFocus={onGridFocus}
       >
@@ -1328,6 +1350,7 @@ export function EventCalendar({
   const views: readonly [EventCalendarView, string][] = [
     ["month", strings.monthView],
     ["week", strings.weekView],
+    ["day", strings.dayView],
     ["agenda", strings.agendaView],
   ];
 
@@ -1358,7 +1381,7 @@ export function EventCalendar({
 
         {/*
           A group of pressed buttons, not a `role="tablist"`. A tablist promises
-          arrow-key navigation and a tab/panel relationship; three buttons that
+          arrow-key navigation and a tab/panel relationship; four buttons that
           each rewrite the same region are exactly what `aria-pressed` is for,
           and it costs no keyboard model this component would then have to own.
         */}
@@ -1386,7 +1409,13 @@ export function EventCalendar({
         {announcement}
       </div>
 
-      {current === "month" ? monthGrid() : current === "week" ? weekGrid() : agenda()}
+      {current === "month"
+        ? monthGrid()
+        : current === "week"
+          ? timeGrid(daysOfWeek(weekStart(focus)))
+          : current === "day"
+            ? timeGrid([focus])
+            : agenda()}
     </div>
   );
 }

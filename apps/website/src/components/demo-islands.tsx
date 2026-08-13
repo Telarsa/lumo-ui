@@ -2780,11 +2780,12 @@ import {
 export interface EventCalendarIslandProps {
   /** Names the grid. */
   label: string;
-  /** The three view buttons, in the caller's own words. */
+  /** The four view buttons, in the caller's own words. */
   monthView: string;
   weekView: string;
+  dayView: string;
   agendaView: string;
-  /** Names the group the three sit in. */
+  /** Names the group the four sit in. */
   viewSwitcherLabel: string;
   previous: string;
   next: string;
@@ -2834,6 +2835,7 @@ export function EventCalendarIsland({
   label,
   monthView,
   weekView,
+  dayView,
   agendaView,
   viewSwitcherLabel,
   previous,
@@ -2863,6 +2865,7 @@ export function EventCalendarIsland({
       strings={{
         monthView,
         weekView,
+        dayView,
         agendaView,
         viewSwitcherLabel,
         previous,

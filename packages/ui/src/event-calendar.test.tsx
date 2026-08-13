@@ -68,6 +68,7 @@ afterEach(cleanup);
 
 const FA: EventCalendarStrings = {
   monthView: "ماه",
+  dayView: "روز",
   weekView: "هفته",
   agendaView: "فهرست",
   viewSwitcherLabel: "نمای تقویم",
@@ -85,6 +86,7 @@ const FA: EventCalendarStrings = {
 
 const EN: EventCalendarStrings = {
   monthView: "Month",
+  dayView: "Day",
   weekView: "Week",
   agendaView: "Agenda",
   viewSwitcherLabel: "Calendar view",
@@ -590,10 +592,10 @@ describe("arrow keys move in READING order, not in screen order", () => {
 });
 
 /* ════════════════════════════════════════════════════════════════════════════
- * 8 — THE OTHER TWO VIEWS
+ * 8 — THE OTHER VIEWS
  * ═══════════════════════════════════════════════════════════════════════════ */
 
-describe("the three views answer three questions", () => {
+describe("the four views answer four questions", () => {
   it("the view switcher is a group of pressed buttons, named by the caller", () => {
     mount("fa-IR", calendarFor("fa-IR"));
     const group = screen.getByRole("group", { name: "نمای تقویم" });
@@ -613,6 +615,44 @@ describe("the three views answer three questions", () => {
     mount("fa-IR", calendarFor("fa-IR", [meeting("standup", 9, 0, 10, 0)], { defaultView: "agenda" }));
     expect(screen.getByText("standup")).toBeTruthy();
     expect(screen.queryByText("رویدادی نیست")).toBeNull();
+  });
+
+  it("the day view projects exactly the focused day onto the time axis", () => {
+    mount("fa-IR", calendarFor("fa-IR", [
+      meeting("focused", 9, 0, 10, 0),
+      {
+        id: "tomorrow",
+        title: "tomorrow",
+        start: new CalendarDateTime(GREGORY, 2026, 8, 12, 9),
+        end: new CalendarDateTime(GREGORY, 2026, 8, 12, 10),
+      },
+    ]));
+
+    fireEvent.click(screen.getByRole("button", { name: "روز" }));
+
+    expect(screen.getAllByRole("gridcell")).toHaveLength(1);
+    expect(screen.getByText("focused")).toBeTruthy();
+    expect(screen.queryByText("tomorrow")).toBeNull();
+    expect(screen.getByRole("button", { name: "روز" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("the day view's period controls move by one day", () => {
+    mount("fa-IR", calendarFor("fa-IR", [
+      meeting("today-event", 9, 0, 10, 0),
+      {
+        id: "tomorrow-event",
+        title: "tomorrow-event",
+        start: new CalendarDateTime(GREGORY, 2026, 8, 12, 9),
+        end: new CalendarDateTime(GREGORY, 2026, 8, 12, 10),
+      },
+    ], { defaultView: "day" }));
+
+    expect(screen.getByText("today-event")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "دورهٔ بعد" }));
+
+    expect(screen.queryByText("today-event")).toBeNull();
+    expect(screen.getByText("tomorrow-event")).toBeTruthy();
+    expect(screen.getByRole("status").textContent).toContain("۲۱");
   });
 
   it("an all-day event is on the week view's strip, never on the time axis", () => {
