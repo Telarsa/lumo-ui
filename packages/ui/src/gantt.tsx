@@ -806,6 +806,14 @@ export function Gantt<T extends GanttTask>({
   const isRtl = direction(locale) === "rtl";
 
   const geometry = ganttGeometry(tasks, activeScale, locale, range);
+  const placements = new Map(
+    visibleRows.map(({ task }) => [task.id, ganttBarPlacement(task, geometry, locale)] as const),
+  );
+  const barIndexById = new Map<string, number>();
+  for (const { task } of visibleRows) {
+    if (placements.get(task.id) !== null) barIndexById.set(task.id, barIndexById.size);
+  }
+  const servedFocusedIndex = Math.min(focusedIndex, Math.max(0, barIndexById.size - 1));
 
   const toggleTask = (id: string) => {
     const next = new Set(activeExpandedIds);
@@ -1068,8 +1076,9 @@ export function Gantt<T extends GanttTask>({
             </div>
 
             <ul className="list-none p-0">
-              {visibleRows.map(({ task }, index) => {
-                const placement = ganttBarPlacement(task, geometry, locale);
+              {visibleRows.map(({ task }) => {
+                const placement = placements.get(task.id) ?? null;
+                const barIndex = barIndexById.get(task.id);
                 const held = heldId === task.id;
                 const progress =
                   task.progress === undefined
@@ -1086,7 +1095,7 @@ export function Gantt<T extends GanttTask>({
                         data-gantt-bar={task.id}
                         {...(held ? { "data-held": "" } : {})}
                         // The roving stop, from render-time state. See header.
-                        tabIndex={index === focusedIndex ? 0 : -1}
+                        tabIndex={barIndex === servedFocusedIndex ? 0 : -1}
                         aria-label={strings.barName(
                           task.label,
                           spoken(ganttDateIn(task.start, locale)),
@@ -1097,7 +1106,9 @@ export function Gantt<T extends GanttTask>({
                         aria-pressed={held}
                         style={placement}
                         className={ganttBarVariants()}
-                        onFocus={() => setFocusedIndex(index)}
+                        onFocus={() => {
+                          if (barIndex !== undefined) setFocusedIndex(barIndex);
+                        }}
                         onKeyDown={(event) => onBarKeyDown(event, task.id)}
                       >
                         {task.progress === undefined ? null : (
