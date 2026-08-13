@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -7,6 +7,16 @@ import { describe, expect, it } from "vitest";
 const ROOT = join(import.meta.dirname, "..", "..", "..");
 
 describe("registry freshness gate", () => {
+  it("publishes complete, non-empty registry descriptions", () => {
+    const registry = JSON.parse(readFileSync(join(ROOT, "registry.json"), "utf8")) as {
+      items: { name: string; description: string }[];
+    };
+    const incomplete = registry.items.filter(
+      ({ description }) => description.length === 0 || !/[.!?…):`\]»]$/.test(description),
+    );
+    expect(incomplete.map(({ name }) => name)).toEqual([]);
+  });
+
   it("checks generated content against the requested file without relying on git state", () => {
     const dir = mkdtempSync(join(tmpdir(), "lumo-registry-fixture-"));
     try {

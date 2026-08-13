@@ -24,6 +24,20 @@ describe("generated API reference gate", () => {
     expect(workflow).toContain("run: pnpm run gate:api");
   });
 
+  it("publishes source documentation for every generated prop", () => {
+    const api = JSON.parse(readFileSync(join(ROOT, "api-reference.json"), "utf8")) as {
+      modules: Record<string, { name: string; props: { name: string; description?: string }[] }[]>;
+    };
+    const undocumented = Object.entries(api.modules).flatMap(([moduleName, groups]) =>
+      groups.flatMap((group) =>
+        group.props
+          .filter((prop) => prop.description === undefined || prop.description.length === 0)
+          .map((prop) => `${moduleName}:${group.name}.${prop.name}`),
+      ),
+    );
+    expect(undocumented).toEqual([]);
+  });
+
   it("rejects stale output and accepts only checker-generated content", () => {
     const dir = mkdtempSync(join(tmpdir(), "lumo-api-fixture-"));
     try {
