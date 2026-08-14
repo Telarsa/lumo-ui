@@ -1141,16 +1141,27 @@ export function TableBody({
 
 export interface VirtualTableBodyProps<TRow extends LumoTableRow>
   extends Omit<ComponentProps<"tbody">, "children" | "className"> {
+  /** The full data set; only the visible window is rendered. */
   rows: readonly TRow[];
+  /** The scrolling element, owned by the caller so the table can share it. */
   scrollRef: RefObject<HTMLElement | null>;
+  /** A row's pixel height before measurement, fixed or per index. */
   estimateSize: number | ((index: number) => number);
+  /** The viewport's pixel height for the server render and first frame. */
   initialSize: number;
+  /** Rows rendered beyond the visible window on each side. */
   overscan?: number | undefined;
+  /** Stable identity per row; keys survive scrolling so selection can. */
   getRowKey: (row: TRow) => string | number;
+  /** The shared async-collection status driving the loading and error rows. */
   asyncStatus?: AsyncCollectionStatus | undefined;
+  /** Called when scrolling approaches the end; the load-more hook. */
   onEndReached?: (() => void) | undefined;
+  /** How many rows before the end onEndReached fires. */
   endReachedThreshold?: number | undefined;
+  /** Renders one row from its datum and ABSOLUTE index — the index in the full data set, not the window. */
   children: (row: TRow, absoluteIndex: number) => LumoNode;
+  /** Rendered instead of rows when the data set is empty. */
   renderEmptyState?: LumoNode;
   className?: string | undefined;
 }

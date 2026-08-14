@@ -17,15 +17,25 @@ export interface HeatmapDatum {
 
 export interface HeatmapChartProps {
   locale: Locale;
+  /** The accessible name announced for the chart. */
   label: string;
+  /** The accessible caption of the semantic data table served beside the chart. */
   dataCaption: string;
+  /** The category axis label. */
   xAxisLabel: string;
+  /** The row axis label. */
   yAxisLabel: string;
+  /** The value column's name in the legend and the data table. */
   valueLabel: string;
+  /** The matrix cells: an x category, a y category, and the value that colors them. */
   data: readonly HeatmapDatum[];
+  /** The drawing height in pixels. */
   height?: number;
+  /** The width used for the server render and first frame. */
   initialWidth?: number;
+  /** The gradient color for the smallest value. */
   lowColor?: string;
+  /** The gradient color for the largest value. */
   highColor?: string;
   className?: string;
 }

@@ -227,6 +227,7 @@ export interface GridProps
    */
   ref?: Ref<HTMLElement> | undefined;
   children?: LumoNode;
+  /** The element rendered as the grid container. */
   tag?: BoxTag | undefined;
   className?: string | undefined;
 }

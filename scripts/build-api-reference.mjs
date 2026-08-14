@@ -123,13 +123,19 @@ const HOUSE_VOCABULARY = new Map([
   ["formNoValidate", "Standard form-submission override, forwarded to the underlying control."],
   ["formTarget", "Standard form-submission override, forwarded to the underlying control."],
 ]);
-/** @param {ts.Symbol} symbol */
-function descriptionOf(symbol) {
+/** @param {ts.Symbol} symbol @param {string} typeText */
+function descriptionOf(symbol, typeText) {
   const own = ts.displayPartsToString(symbol.getDocumentationComment(checker)).trim();
   if (own.length > 0) return own;
   if (isLumoAuthored(symbol)) {
     const shared = HOUSE_VOCABULARY.get(symbol.name);
     if (shared !== undefined) return shared;
+    // Plain `children: LumoNode` is house vocabulary too, but ONLY at that
+    // exact type: render-prop children ((item) => LumoNode) and constrained
+    // unions mean something component-specific and stay counted as debt.
+    if (symbol.name === "children" && /^LumoNode( \| undefined)?$/.test(typeText)) {
+      return "The content this component renders.";
+    }
     undocumentedLumoProps += 1;
     return "Lumo prop — docblock pending.";
   }
@@ -164,16 +170,19 @@ for (const [moduleName, propsNames] of [...propsByModule].sort(([a], [b]) => a.l
         return { prop, propDeclaration, propType };
       })
       .filter(({ propType }) => !isOnlyUndefined(propType))
-      .map(({ prop, propDeclaration, propType }) => ({
-        name: prop.name,
-        type: checker.typeToString(
+      .map(({ prop, propDeclaration, propType }) => {
+        const typeText = checker.typeToString(
           propType,
           propDeclaration,
           ts.TypeFormatFlags.NoTruncation | ts.TypeFormatFlags.UseAliasDefinedOutsideCurrentScope,
-        ),
-        required: (prop.flags & ts.SymbolFlags.Optional) === 0,
-        description: descriptionOf(prop),
-      }))
+        );
+        return {
+          name: prop.name,
+          type: typeText,
+          required: (prop.flags & ts.SymbolFlags.Optional) === 0,
+          description: descriptionOf(prop, typeText),
+        };
+      })
       .sort((a, b) => Number(b.required) - Number(a.required) || a.name.localeCompare(b.name));
     if (props.length > 0) groups.push({ name: propsName, props });
   }

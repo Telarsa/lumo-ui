@@ -222,6 +222,7 @@ export interface ReadOnlyRatingProps extends RatingBaseProps {
 }
 
 export interface InteractiveRatingProps extends RatingBaseProps {
+  /** Never true on this arm; the discriminant that keeps the union honest. */
   isReadOnly?: false | undefined;
   /**
    * Announced name of the group, e.g. «امتیاز شما». REQUIRED — an unnamed
@@ -241,8 +242,10 @@ export interface InteractiveRatingProps extends RatingBaseProps {
   value?: number | undefined;
   /** The initially selected score (uncontrolled). */
   defaultValue?: number | undefined;
+  /** Called with the chosen score. */
   onChange?: ((value: number) => void) | undefined;
   isDisabled?: boolean | undefined;
+  /** Marks the rating required for form submission and announces it as such. */
   isRequired?: boolean | undefined;
   /** Name for form submission. */
   name?: string | undefined;

@@ -147,7 +147,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -208,7 +208,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -233,7 +233,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -285,7 +285,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -331,7 +331,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -611,7 +611,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -671,7 +671,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -845,7 +845,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -905,7 +905,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -952,7 +952,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -977,7 +977,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1012,7 +1012,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1035,7 +1035,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1064,7 +1064,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1089,7 +1089,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1135,7 +1135,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1220,7 +1220,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1477,7 +1477,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1863,7 +1863,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1880,7 +1880,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1903,7 +1903,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -1920,7 +1920,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -2248,7 +2248,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -2555,7 +2555,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -2734,7 +2734,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -3097,7 +3097,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -3162,19 +3162,19 @@
             "name": "defaultInputValue",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial typed text, when the text is uncontrolled."
           },
           {
             "name": "defaultSelectedKey",
             "type": "string | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initially selected key, when selection is uncontrolled."
           },
           {
             "name": "inputValue",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The typed text, when controlled."
           },
           {
             "name": "isDisabled",
@@ -3186,7 +3186,7 @@
             "name": "isRequired",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks the field required for form submission and announces it as such."
           },
           {
             "name": "items",
@@ -3204,19 +3204,19 @@
             "name": "name",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Submitted field name when the control sits inside a form."
           },
           {
             "name": "onInputChange",
             "type": "((value: string) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the typed text after every keystroke."
           },
           {
             "name": "onSelectionChange",
             "type": "((key: string | null) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the newly selected key, or null when cleared."
           },
           {
             "name": "placeholder",
@@ -3247,7 +3247,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "closeLabel",
@@ -3277,7 +3277,7 @@
             "name": "defaultOpen",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Opens the palette on first render, when open state is uncontrolled."
           },
           {
             "name": "isDismissable",
@@ -3289,13 +3289,13 @@
             "name": "isOpen",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Whether the palette is open, when controlled."
           },
           {
             "name": "onOpenChange",
             "type": "((isOpen: boolean) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when the palette opens or closes."
           },
           {
             "name": "trigger",
@@ -3312,7 +3312,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -3329,7 +3329,7 @@
             "name": "children",
             "type": "LumoNode | ((item: T) => LumoNode)",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Static items, or a render function over this group's items."
           },
           {
             "name": "className",
@@ -3370,7 +3370,7 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty search input."
           }
         ]
       },
@@ -3381,7 +3381,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -3457,7 +3457,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -3509,7 +3509,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -3605,25 +3605,25 @@
             "name": "cancelLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name of the control that abandons the edit."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name of the edit input."
           },
           {
             "name": "onCommit",
             "type": "(value: string) => void",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the new value when the edit is confirmed."
           },
           {
             "name": "value",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The cell's committed value the editor starts from."
           },
           {
             "name": "className",
@@ -3641,7 +3641,7 @@
             "name": "validate",
             "type": "((value: string) => string | null) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Returns an error message for a candidate value, or null to accept it."
           }
         ]
       },
@@ -3652,7 +3652,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -3740,7 +3740,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -3775,7 +3775,7 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty search input."
           }
         ]
       },
@@ -3786,7 +3786,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4077,13 +4077,13 @@
             "name": "defaultValue",
             "type": "CalendarDate | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial date, when the value is uncontrolled."
           },
           {
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it."
           },
           {
             "name": "errorMessage",
@@ -4095,7 +4095,7 @@
             "name": "isDateUnavailable",
             "type": "((date: CalendarDate) => boolean) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks individual dates unselectable in the grid."
           },
           {
             "name": "isDisabled",
@@ -4113,13 +4113,13 @@
             "name": "isReadOnly",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The value is announced and focusable but cannot be edited."
           },
           {
             "name": "onChange",
             "type": "((value: CalendarDate | null) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the committed date, or null when cleared."
           },
           {
             "name": "placeholderValue",
@@ -4131,13 +4131,13 @@
             "name": "size",
             "type": "DateInputSize",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The control-height variant shared across form controls."
           },
           {
             "name": "value",
             "type": "CalendarDate | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The date, when controlled. Always a CalendarDate in the caller's calendar."
           }
         ]
       },
@@ -4178,13 +4178,13 @@
             "name": "defaultValue",
             "type": "CalendarDate | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial date, when the value is uncontrolled."
           },
           {
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it."
           },
           {
             "name": "errorMessage",
@@ -4196,7 +4196,7 @@
             "name": "isDateUnavailable",
             "type": "((date: CalendarDate) => boolean) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks individual dates unselectable in the grid."
           },
           {
             "name": "isDisabled",
@@ -4214,7 +4214,7 @@
             "name": "isReadOnly",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The value is announced and focusable but cannot be edited."
           },
           {
             "name": "maxValue",
@@ -4232,7 +4232,7 @@
             "name": "onChange",
             "type": "((value: CalendarDate | null) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the committed date, or null when cleared."
           },
           {
             "name": "placeholderValue",
@@ -4244,13 +4244,13 @@
             "name": "size",
             "type": "DateInputSize",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The control-height variant shared across form controls."
           },
           {
             "name": "value",
             "type": "CalendarDate | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The date, when controlled. Always a CalendarDate in the caller's calendar."
           }
         ]
       }
@@ -4299,13 +4299,13 @@
             "name": "defaultValue",
             "type": "CalendarDateRange | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial range, when the value is uncontrolled."
           },
           {
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it."
           },
           {
             "name": "errorMessage",
@@ -4317,7 +4317,7 @@
             "name": "isDateUnavailable",
             "type": "((date: CalendarDate) => boolean) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks individual dates unselectable in the grid."
           },
           {
             "name": "isDisabled",
@@ -4335,13 +4335,13 @@
             "name": "isReadOnly",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The value is announced and focusable but cannot be edited."
           },
           {
             "name": "maxValue",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The latest selectable date."
           },
           {
             "name": "minValue",
@@ -4353,25 +4353,25 @@
             "name": "onChange",
             "type": "((value: CalendarDateRange | null) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the committed range, or null when cleared."
           },
           {
             "name": "placeholderValue",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The date the empty segments start from when editing begins."
           },
           {
             "name": "size",
             "type": "DateInputSize",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The control-height variant shared across form controls."
           },
           {
             "name": "value",
             "type": "CalendarDateRange | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The range, when controlled. CalendarDate endpoints, inclusive."
           }
         ]
       }
@@ -4524,7 +4524,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4541,7 +4541,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4564,7 +4564,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4581,7 +4581,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4600,7 +4600,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4623,7 +4623,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4646,7 +4646,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4705,7 +4705,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4794,7 +4794,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -4902,7 +4902,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -5009,7 +5009,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -5074,7 +5074,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -5229,7 +5229,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -5380,7 +5380,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -5469,7 +5469,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -5663,13 +5663,13 @@
             "name": "defaultView",
             "type": "EventCalendarView | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial view, when the view is uncontrolled."
           },
           {
             "name": "focusedDate",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The date the grid centers on, when controlled."
           },
           {
             "name": "maxEventsPerDay",
@@ -5687,7 +5687,7 @@
             "name": "onEventChange",
             "type": "((event: EventCalendarEvent) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the updated event after a move or resize."
           },
           {
             "name": "onEventCreate",
@@ -5699,19 +5699,19 @@
             "name": "onEventDelete",
             "type": "((id: string) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the event the reader deleted."
           },
           {
             "name": "onFocusedDateChange",
             "type": "((date: CalendarDate) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when navigation moves the focused date."
           },
           {
             "name": "onViewChange",
             "type": "((view: EventCalendarView) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when the reader switches view."
           },
           {
             "name": "pixelsPerMinute",
@@ -5723,7 +5723,7 @@
             "name": "snapMinutes",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The granularity drags and resizes snap to."
           },
           {
             "name": "todayDate",
@@ -5735,13 +5735,13 @@
             "name": "view",
             "type": "EventCalendarView | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The active view, when controlled."
           },
           {
             "name": "workday",
             "type": "readonly [startMinute: number, endMinute: number] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The hour range emphasized in the day and week views."
           }
         ]
       }
@@ -5860,7 +5860,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6029,7 +6029,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6054,7 +6054,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6071,7 +6071,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6130,7 +6130,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6201,7 +6201,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6224,7 +6224,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6261,7 +6261,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6298,7 +6298,7 @@
             "name": "strings",
             "type": "GanttStrings",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Every string the chart announces or renders. All caller-authored."
           },
           {
             "name": "tasks",
@@ -6328,25 +6328,25 @@
             "name": "defaultScale",
             "type": "GanttScale | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial time scale, when scale is uncontrolled."
           },
           {
             "name": "defaultSplitSize",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial pixel width of the task list, when uncontrolled."
           },
           {
             "name": "defaultZoom",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial zoom factor, when uncontrolled."
           },
           {
             "name": "dependencies",
             "type": "readonly GanttDependency[] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Typed dependency edges drawn between bars and fed to the critical path."
           },
           {
             "name": "description",
@@ -6364,19 +6364,19 @@
             "name": "onExpandedTaskIdsChange",
             "type": "((ids: string[]) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the expanded summary-task ids after a toggle."
           },
           {
             "name": "onScaleChange",
             "type": "((scale: GanttScale) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when the reader picks another time scale."
           },
           {
             "name": "onSplitSizeChange",
             "type": "((size: number) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called while the task-list split is resized."
           },
           {
             "name": "onTasksChange",
@@ -6388,7 +6388,7 @@
             "name": "onZoomChange",
             "type": "((zoom: number) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when the timeline zoom changes."
           },
           {
             "name": "range",
@@ -6406,13 +6406,13 @@
             "name": "splitSize",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The task list's pixel width, when controlled."
           },
           {
             "name": "zoom",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The timeline zoom factor, when controlled."
           }
         ]
       }
@@ -6425,19 +6425,19 @@
             "name": "data",
             "type": "readonly HeatmapDatum[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The matrix cells: an x category, a y category, and the value that colors them."
           },
           {
             "name": "dataCaption",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible caption of the semantic data table served beside the chart."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name announced for the chart."
           },
           {
             "name": "locale",
@@ -6449,19 +6449,19 @@
             "name": "valueLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The value column's name in the legend and the data table."
           },
           {
             "name": "xAxisLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The category axis label."
           },
           {
             "name": "yAxisLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The row axis label."
           },
           {
             "name": "className",
@@ -6473,25 +6473,25 @@
             "name": "height",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The drawing height in pixels."
           },
           {
             "name": "highColor",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The gradient color for the largest value."
           },
           {
             "name": "initialWidth",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The width used for the server render and first frame."
           },
           {
             "name": "lowColor",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The gradient color for the smallest value."
           }
         ]
       }
@@ -6516,7 +6516,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6577,7 +6577,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -6717,7 +6717,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7330,7 +7330,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7359,7 +7359,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7382,7 +7382,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7411,7 +7411,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7423,7 +7423,7 @@
             "name": "media",
             "type": "\"icon\" | \"image\" | \"plain\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "How the leading media is framed: an icon chip, an image, or unframed."
           }
         ]
       },
@@ -7434,7 +7434,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7469,7 +7469,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7509,7 +7509,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7711,7 +7711,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7772,7 +7772,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7910,7 +7910,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -7927,7 +7927,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8013,7 +8013,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8048,7 +8048,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8113,7 +8113,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8183,7 +8183,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8212,7 +8212,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8389,7 +8389,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8544,7 +8544,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8581,7 +8581,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8612,7 +8612,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8629,7 +8629,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8803,7 +8803,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8850,7 +8850,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8873,7 +8873,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -8914,7 +8914,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -9520,7 +9520,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -9567,7 +9567,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -9693,7 +9693,7 @@
             "name": "describedBy",
             "type": "string | undefined",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Id of the element describing the editor, forwarded as aria-describedby."
           },
           {
             "name": "isDisabled",
@@ -9705,25 +9705,25 @@
             "name": "isInvalid",
             "type": "boolean",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Whether the clause's current values fail validation."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name the editor's control must carry."
           },
           {
             "name": "onValuesChange",
             "type": "(values: readonly string[]) => void",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the clause's full value list after every edit."
           },
           {
             "name": "values",
             "type": "readonly string[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The clause's current values, always strings in canonical query form."
           }
         ]
       },
@@ -9734,13 +9734,13 @@
             "name": "fields",
             "type": "readonly PowerSearchField[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The searchable fields: id, label, type, and the operators each supports."
           },
           {
             "name": "strings",
             "type": "PowerSearchStrings",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Every string the control announces or renders. All caller-authored."
           },
           {
             "name": "className",
@@ -9752,13 +9752,13 @@
             "name": "defaultValue",
             "type": "FilterQuery | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial query, when the query is uncontrolled."
           },
           {
             "name": "form",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Associates the posted query with a form by id."
           },
           {
             "name": "isDisabled",
@@ -9770,31 +9770,31 @@
             "name": "maxVisibleFilters",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Collapses filters beyond this count behind an overflow control."
           },
           {
             "name": "name",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Submitted field name; the query posts as canonical JSON bytes."
           },
           {
             "name": "onSavedViewChange",
             "type": "((view: PowerSearchSavedView) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when the reader applies a saved view."
           },
           {
             "name": "onValueChange",
             "type": "((value: FilterQuery) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the full query after every change."
           },
           {
             "name": "readOnly",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Renders the query as tokens without editing affordances."
           },
           {
             "name": "resultCount",
@@ -9806,19 +9806,19 @@
             "name": "savedViews",
             "type": "readonly PowerSearchSavedView[] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Caller-persisted named queries offered in the views picker."
           },
           {
             "name": "status",
             "type": "PowerSearchStatus | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Caller-authored result status line, e.g. a result count."
           },
           {
             "name": "value",
             "type": "FilterQuery | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The query, when controlled. Canonical FilterQuery shape."
           }
         ]
       }
@@ -9969,7 +9969,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "locale",
@@ -10005,7 +10005,7 @@
             "name": "items",
             "type": "readonly QuestionnaireItem[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The questions, in order; disabled items leave navigation and progress."
           },
           {
             "name": "locale",
@@ -10017,13 +10017,13 @@
             "name": "strings",
             "type": "QuestionnaireStrings",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Every string the flow announces or renders. All caller-authored."
           },
           {
             "name": "activeId",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The visible question's id, when navigation is controlled."
           },
           {
             "name": "className",
@@ -10035,37 +10035,37 @@
             "name": "defaultActiveId",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The first visible question, when navigation is uncontrolled."
           },
           {
             "name": "defaultValue",
             "type": "Readonly<Record<string, readonly string[]>> | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial answers, when answers are uncontrolled."
           },
           {
             "name": "onActiveIdChange",
             "type": "((id: string) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when navigation moves to another question."
           },
           {
             "name": "onSubmitAnswers",
             "type": "((value: QuestionnaireValue) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the complete answers on submit."
           },
           {
             "name": "onValueChange",
             "type": "((value: QuestionnaireValue) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the full answer record after every change."
           },
           {
             "name": "value",
             "type": "Readonly<Record<string, readonly string[]>> | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The answers keyed by question id, when controlled."
           }
         ]
       }
@@ -10078,25 +10078,25 @@
             "name": "data",
             "type": "readonly RadarDatum[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "One row per dimension, each carrying a value under every series key."
           },
           {
             "name": "dataCaption",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible caption of the semantic data table served beside the chart."
           },
           {
             "name": "dimensionLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The dimension column's name in the data table."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name announced for the chart."
           },
           {
             "name": "locale",
@@ -10108,13 +10108,13 @@
             "name": "maxValue",
             "type": "number",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The radial scale's maximum; every ring is a quarter of it."
           },
           {
             "name": "series",
             "type": "readonly RadarSeries[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The profiles drawn, each a key into the rows with a label and color."
           },
           {
             "name": "className",
@@ -10126,13 +10126,13 @@
             "name": "height",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The drawing height in pixels."
           },
           {
             "name": "initialWidth",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The width used for the server render and first frame."
           }
         ]
       }
@@ -10181,7 +10181,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -10378,7 +10378,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -10842,13 +10842,13 @@
             "name": "isReadOnly",
             "type": "false | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Never true on this arm; the discriminant that keeps the union honest."
           },
           {
             "name": "isRequired",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks the rating required for form submission and announces it as such."
           },
           {
             "name": "maxValue",
@@ -10866,7 +10866,7 @@
             "name": "onChange",
             "type": "((value: number) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the chosen score."
           },
           {
             "name": "size",
@@ -10913,13 +10913,13 @@
             "name": "isReadOnly",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Renders a `role=\"img\"` summary instead of a control."
+            "description": "Renders a `role=\"img\"` summary instead of a control.\nNever true on this arm; the discriminant that keeps the union honest."
           },
           {
             "name": "isRequired",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks the rating required for form submission and announces it as such."
           },
           {
             "name": "label",
@@ -10943,7 +10943,7 @@
             "name": "onChange",
             "type": "((value: number) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the chosen score."
           },
           {
             "name": "size",
@@ -11111,19 +11111,19 @@
             "name": "dataCaption",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible caption of the semantic data table served beside the chart."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name announced for the chart, and the source column's name."
           },
           {
             "name": "links",
             "type": "readonly SankeyLinkDatum[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The flows: source node, target node, and the value that sizes the ribbon."
           },
           {
             "name": "locale",
@@ -11135,19 +11135,19 @@
             "name": "nodes",
             "type": "readonly SankeyNodeDatum[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The nodes, each a stable id with a display label."
           },
           {
             "name": "targetLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The target column's name in the data table."
           },
           {
             "name": "valueLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The value column's name in the data table."
           },
           {
             "name": "className",
@@ -11159,13 +11159,13 @@
             "name": "height",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The drawing height in pixels."
           },
           {
             "name": "initialWidth",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The width used for the server render and first frame."
           }
         ]
       }
@@ -11184,7 +11184,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -11595,7 +11595,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -11630,7 +11630,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -11690,19 +11690,19 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name of the field, rendered as its visible label unless showLabel hides it."
           },
           {
             "name": "options",
             "type": "readonly SelectFieldOption[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The options offered, each a stable string key with a display label."
           },
           {
             "name": "placeholder",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown on the trigger before any option is chosen."
           },
           {
             "name": "className",
@@ -11714,13 +11714,13 @@
             "name": "defaultSelectedKey",
             "type": "string | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initially selected key, when selection is uncontrolled."
           },
           {
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The validation message rendered and announced when the field is invalid."
           },
           {
             "name": "isDisabled",
@@ -11732,49 +11732,49 @@
             "name": "isInvalid",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Overrides the invalid state derived from errorMessage."
           },
           {
             "name": "itemClassName",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Additional classes merged onto every option row."
           },
           {
             "name": "listBoxClassName",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Additional classes merged onto the option list."
           },
           {
             "name": "name",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Submitted field name when the control sits inside a form."
           },
           {
             "name": "onSelectionChange",
             "type": "((key: string | null) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the newly selected key, or null when cleared."
           },
           {
             "name": "popoverClassName",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Additional classes merged onto the popup surface."
           },
           {
             "name": "selectedKey",
             "type": "string | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The selected key, when selection is controlled."
           },
           {
             "name": "showLabel",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Renders the label visibly; when false the name is announced only."
           },
           {
             "name": "size",
@@ -11786,7 +11786,7 @@
             "name": "triggerClassName",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Additional classes merged onto the trigger button."
           }
         ]
       },
@@ -11803,7 +11803,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -11826,7 +11826,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -11902,7 +11902,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -11914,7 +11914,7 @@
             "name": "defaultOpen",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Opens the popup on first render, when open state is uncontrolled."
           },
           {
             "name": "defaultSelectedKey",
@@ -11950,13 +11950,13 @@
             "name": "isOpen",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Whether the popup is open, when controlled."
           },
           {
             "name": "isRequired",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks the field required for form submission and announces it as such."
           },
           {
             "name": "name",
@@ -11968,7 +11968,7 @@
             "name": "onOpenChange",
             "type": "((isOpen: boolean) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when the popup opens or closes."
           },
           {
             "name": "onSelectionChange",
@@ -12008,7 +12008,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12042,7 +12042,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12086,7 +12086,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12121,7 +12121,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12168,7 +12168,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12203,7 +12203,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12647,7 +12647,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12694,7 +12694,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12724,7 +12724,7 @@
             "name": "tag",
             "type": "BoxTag | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The element rendered as the grid container."
           }
         ]
       },
@@ -12741,7 +12741,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -12899,7 +12899,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13139,7 +13139,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13168,7 +13168,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13250,7 +13250,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13267,7 +13267,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13296,7 +13296,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13319,7 +13319,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13336,7 +13336,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13371,7 +13371,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13464,7 +13464,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13510,43 +13510,43 @@
             "name": "children",
             "type": "(row: TRow, absoluteIndex: number) => LumoNode",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Renders one row from its datum and ABSOLUTE index — the index in the full data set, not the window."
           },
           {
             "name": "estimateSize",
             "type": "number | ((index: number) => number)",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "A row's pixel height before measurement, fixed or per index."
           },
           {
             "name": "getRowKey",
             "type": "(row: TRow) => string | number",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Stable identity per row; keys survive scrolling so selection can."
           },
           {
             "name": "initialSize",
             "type": "number",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The viewport's pixel height for the server render and first frame."
           },
           {
             "name": "rows",
             "type": "readonly TRow[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The full data set; only the visible window is rendered."
           },
           {
             "name": "scrollRef",
             "type": "RefObject<HTMLElement | null>",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The scrolling element, owned by the caller so the table can share it."
           },
           {
             "name": "asyncStatus",
             "type": "AsyncCollectionStatus | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The shared async-collection status driving the loading and error rows."
           },
           {
             "name": "className",
@@ -13558,25 +13558,25 @@
             "name": "endReachedThreshold",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "How many rows before the end onEndReached fires."
           },
           {
             "name": "onEndReached",
             "type": "(() => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when scrolling approaches the end; the load-more hook."
           },
           {
             "name": "overscan",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Rows rendered beyond the visible window on each side."
           },
           {
             "name": "renderEmptyState",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Rendered instead of rows when the data set is empty."
           }
         ]
       }
@@ -13702,7 +13702,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13791,7 +13791,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -13988,7 +13988,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -14103,7 +14103,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -14144,7 +14144,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -14184,7 +14184,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -14203,7 +14203,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15090,7 +15090,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15125,7 +15125,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15142,7 +15142,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15267,7 +15267,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15332,7 +15332,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15466,7 +15466,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15669,7 +15669,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15880,7 +15880,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -15970,7 +15970,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The content this component renders."
           },
           {
             "name": "className",
@@ -16572,19 +16572,19 @@
             "name": "data",
             "type": "readonly TreemapDatum[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The hierarchy rows: id, parent id, label, and the value that sizes the tile."
           },
           {
             "name": "dataCaption",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible caption of the semantic data table served beside the chart."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name announced for the chart."
           },
           {
             "name": "locale",
@@ -16596,13 +16596,13 @@
             "name": "parentLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The parent column's name in the data table."
           },
           {
             "name": "valueLabel",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The value column's name in the data table."
           },
           {
             "name": "className",
@@ -16614,13 +16614,13 @@
             "name": "height",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The drawing height in pixels."
           },
           {
             "name": "initialWidth",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The width used for the server render and first frame."
           }
         ]
       }

@@ -281,8 +281,11 @@ export interface CommandDialogProps {
   closeLabel: string;
   /** The trigger control, if the dialog is not controlled. */
   trigger?: LumoNode;
+  /** Whether the palette is open, when controlled. */
   isOpen?: boolean | undefined;
+  /** Opens the palette on first render, when open state is uncontrolled. */
   defaultOpen?: boolean | undefined;
+  /** Called when the palette opens or closes. */
   onOpenChange?: ((isOpen: boolean) => void) | undefined;
   /**
    * Close on backdrop press, the way cmdk palettes do. OPT-IN, matching
@@ -366,6 +369,7 @@ export interface CommandInputProps {
    * the moment the user types.
    */
   label: string;
+  /** Text shown in the empty search input. */
   placeholder?: string | undefined;
   className?: string | undefined;
 }
@@ -464,6 +468,7 @@ export interface CommandGroupProps<T = unknown> {
   heading?: LumoNode;
   /** This group's own items, for the grouped `items` shape. */
   items?: readonly T[] | undefined;
+  /** Static items, or a render function over this group's items. */
   children?: ((item: T) => LumoNode) | LumoNode;
   className?: string | undefined;
 }

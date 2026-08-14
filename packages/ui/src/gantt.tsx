@@ -777,27 +777,38 @@ export interface GanttProps<T extends GanttTask>
    * still announce their names — they simply cannot be moved.
    */
   onTasksChange?: ((tasks: T[]) => void) | undefined;
+  /** Every string the chart announces or renders. All caller-authored. */
   strings: GanttStrings;
   /** The controlled scale. Uncontrolled with `defaultScale` otherwise. */
   scale?: GanttScale | undefined;
+  /** The initial time scale, when scale is uncontrolled. */
   defaultScale?: GanttScale | undefined;
+  /** Called when the reader picks another time scale. */
   onScaleChange?: ((scale: GanttScale) => void) | undefined;
   /** Controlled ids of task branches whose direct children are visible. */
   expandedTaskIds?: readonly string[] | undefined;
   /** Initial branch state. Parent rows default to expanded when omitted. */
   defaultExpandedTaskIds?: readonly string[] | undefined;
+  /** Called with the expanded summary-task ids after a toggle. */
   onExpandedTaskIdsChange?: ((ids: string[]) => void) | undefined;
   /**
    * Overrides the extent derived from the tasks — a quarter view stays a whole
    * quarter even when the work stops half way through it.
    */
   range?: { start: CalendarDate; end: CalendarDate } | undefined;
+  /** Typed dependency edges drawn between bars and fed to the critical path. */
   dependencies?: readonly GanttDependency[] | undefined;
+  /** The timeline zoom factor, when controlled. */
   zoom?: number | undefined;
+  /** The initial zoom factor, when uncontrolled. */
   defaultZoom?: number | undefined;
+  /** Called when the timeline zoom changes. */
   onZoomChange?: ((zoom: number) => void) | undefined;
+  /** The task list's pixel width, when controlled. */
   splitSize?: number | undefined;
+  /** The initial pixel width of the task list, when uncontrolled. */
   defaultSplitSize?: number | undefined;
+  /** Called while the task-list split is resized. */
   onSplitSizeChange?: ((size: number) => void) | undefined;
   /**
    * How a date is formatted wherever one is spoken. Not an announced string —

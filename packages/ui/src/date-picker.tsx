@@ -76,21 +76,28 @@ export interface DatePickerBaseProps {
   label: string;
   /** Name of the button that opens the calendar. Required — the trigger is an icon. */
   openCalendarLabel: string;
+  /** The date, when controlled. Always a CalendarDate in the caller's calendar. */
   value?: CalendarDate | null | undefined;
+  /** The initial date, when the value is uncontrolled. */
   defaultValue?: CalendarDate | null | undefined;
+  /** Called with the committed date, or null when cleared. */
   onChange?: ((value: CalendarDate | null) => void) | undefined;
   /** The day the grid marks as today. Required for deterministic SSR/hydration. */
   today: CalendarDate;
   /** The date an empty field cycles from. Defaults to today. */
   placeholderValue?: CalendarDate | undefined;
+  /** Marks individual dates unselectable in the grid. */
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
+  /** Help text rendered under the field and linked to it. */
   description?: LumoNode;
   /** Shown under the field. Supplying one marks it invalid. */
   errorMessage?: LumoNode;
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;
   isDisabled?: boolean | undefined;
+  /** The value is announced and focusable but cannot be edited. */
   isReadOnly?: boolean | undefined;
+  /** The control-height variant shared across form controls. */
   size?: DateInputSize;
   className?: string | undefined;
 }

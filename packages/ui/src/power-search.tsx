@@ -85,11 +85,16 @@ export interface PowerSearchChoiceField extends PowerSearchFieldBase {
 }
 
 export interface PowerSearchCustomEditorProps {
+  /** The clause's current values, always strings in canonical query form. */
   values: readonly string[];
+  /** Called with the clause's full value list after every edit. */
   onValuesChange: (values: readonly string[]) => void;
+  /** The accessible name the editor's control must carry. */
   label: string;
   isDisabled: boolean;
+  /** Whether the clause's current values fail validation. */
   isInvalid: boolean;
+  /** Id of the element describing the editor, forwarded as aria-describedby. */
   describedBy: string | undefined;
 }
 
@@ -165,20 +170,32 @@ export interface PowerSearchProps
     ComponentProps<"section">,
     "children" | "className" | "aria-label" | "value" | "defaultValue" | "onChange"
   > {
+  /** The searchable fields: id, label, type, and the operators each supports. */
   fields: readonly PowerSearchField[];
+  /** Every string the control announces or renders. All caller-authored. */
   strings: PowerSearchStrings;
+  /** The query, when controlled. Canonical FilterQuery shape. */
   value?: FilterQuery | undefined;
+  /** The initial query, when the query is uncontrolled. */
   defaultValue?: FilterQuery | undefined;
+  /** Called with the full query after every change. */
   onValueChange?: ((value: FilterQuery) => void) | undefined;
+  /** Caller-persisted named queries offered in the views picker. */
   savedViews?: readonly PowerSearchSavedView[] | undefined;
+  /** Called when the reader applies a saved view. */
   onSavedViewChange?: ((view: PowerSearchSavedView) => void) | undefined;
   /** Already-localized display count. */
   resultCount?: number | string | undefined;
+  /** Caller-authored result status line, e.g. a result count. */
   status?: PowerSearchStatus | undefined;
+  /** Collapses filters beyond this count behind an overflow control. */
   maxVisibleFilters?: number | undefined;
+  /** Renders the query as tokens without editing affordances. */
   readOnly?: boolean | undefined;
   isDisabled?: boolean | undefined;
+  /** Submitted field name; the query posts as canonical JSON bytes. */
   name?: string | undefined;
+  /** Associates the posted query with a form by id. */
   form?: string | undefined;
   className?: string | undefined;
 }

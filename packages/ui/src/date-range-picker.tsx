@@ -81,9 +81,13 @@ export interface DateRangePickerProps {
   openCalendarLabel: string;
   /** Clock input forwarded to the popup calendar for deterministic rendering. */
   today: CalendarDate;
+  /** The range, when controlled. CalendarDate endpoints, inclusive. */
   value?: CalendarDateRange | null | undefined;
+  /** The initial range, when the value is uncontrolled. */
   defaultValue?: CalendarDateRange | null | undefined;
+  /** Called with the committed range, or null when cleared. */
   onChange?: ((value: CalendarDateRange | null) => void) | undefined;
+  /** The date the empty segments start from when editing begins. */
   placeholderValue?: CalendarDate | undefined;
   /**
    * Earliest and latest selectable DAY, forwarded to the grid unchanged.
@@ -94,15 +98,20 @@ export interface DateRangePickerProps {
    * commit different answers for the same day.
    */
   minValue?: CalendarDate | undefined;
+  /** The latest selectable date. */
   maxValue?: CalendarDate | undefined;
+  /** Marks individual dates unselectable in the grid. */
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
+  /** Help text rendered under the field and linked to it. */
   description?: LumoNode;
   /** Shown under the field. Supplying one marks it invalid. */
   errorMessage?: LumoNode;
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;
   isDisabled?: boolean | undefined;
+  /** The value is announced and focusable but cannot be edited. */
   isReadOnly?: boolean | undefined;
+  /** The control-height variant shared across form controls. */
   size?: DateInputSize;
   className?: string | undefined;
 }

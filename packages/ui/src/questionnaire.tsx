@@ -60,14 +60,23 @@ export interface QuestionnaireProps
     "children" | "className" | "onSubmit" | "value" | "defaultValue" | "onChange"
   > {
   locale: Locale;
+  /** The questions, in order; disabled items leave navigation and progress. */
   items: readonly QuestionnaireItem[];
+  /** Every string the flow announces or renders. All caller-authored. */
   strings: QuestionnaireStrings;
+  /** The answers keyed by question id, when controlled. */
   value?: QuestionnaireValue | undefined;
+  /** The initial answers, when answers are uncontrolled. */
   defaultValue?: QuestionnaireValue | undefined;
+  /** Called with the full answer record after every change. */
   onValueChange?: ((value: QuestionnaireValue) => void) | undefined;
+  /** The visible question's id, when navigation is controlled. */
   activeId?: string | undefined;
+  /** The first visible question, when navigation is uncontrolled. */
   defaultActiveId?: string | undefined;
+  /** Called when navigation moves to another question. */
   onActiveIdChange?: ((id: string) => void) | undefined;
+  /** Called with the complete answers on submit. */
   onSubmitAnswers?: ((value: QuestionnaireValue) => void) | undefined;
   className?: string | undefined;
 }

@@ -123,12 +123,19 @@ export interface TreemapDatum {
 
 export interface TreemapChartProps {
   locale: Locale;
+  /** The accessible name announced for the chart. */
   label: string;
+  /** The accessible caption of the semantic data table served beside the chart. */
   dataCaption: string;
+  /** The parent column's name in the data table. */
   parentLabel: string;
+  /** The value column's name in the data table. */
   valueLabel: string;
+  /** The hierarchy rows: id, parent id, label, and the value that sizes the tile. */
   data: readonly TreemapDatum[];
+  /** The drawing height in pixels. */
   height?: number;
+  /** The width used for the server render and first frame. */
   initialWidth?: number;
   className?: string;
 }

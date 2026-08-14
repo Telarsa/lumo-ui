@@ -964,10 +964,15 @@ export interface EventCalendarProps
    * pass it from somewhere that renders once.
    */
   defaultFocusedDate: CalendarDate;
+  /** The date the grid centers on, when controlled. */
   focusedDate?: CalendarDate | undefined;
+  /** Called when navigation moves the focused date. */
   onFocusedDateChange?: ((date: CalendarDate) => void) | undefined;
+  /** The active view, when controlled. */
   view?: EventCalendarView | undefined;
+  /** The initial view, when the view is uncontrolled. */
   defaultView?: EventCalendarView | undefined;
+  /** Called when the reader switches view. */
   onViewChange?: ((view: EventCalendarView) => void) | undefined;
   /** Number of consecutive days in the `days` view. Clamped to 2–14. */
   dayCount?: number | undefined;
@@ -981,9 +986,13 @@ export interface EventCalendarProps
   onDaySelect?: ((date: CalendarDate) => void) | undefined;
   /** Enables keyboard/pointer event move and resize controls. */
   onEventCreate?: ((draft: SchedulerDraft) => void) | undefined;
+  /** Called with the updated event after a move or resize. */
   onEventChange?: ((event: EventCalendarEvent) => void) | undefined;
+  /** Called with the event the reader deleted. */
   onEventDelete?: ((id: string) => void) | undefined;
+  /** The granularity drags and resizes snap to. */
   snapMinutes?: number | undefined;
+  /** The hour range emphasized in the day and week views. */
   workday?: readonly [startMinute: number, endMinute: number] | undefined;
   /** Pointer pixels per minute; shared by move and Shift-resize. */
   pixelsPerMinute?: number | undefined;

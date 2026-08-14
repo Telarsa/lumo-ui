@@ -424,11 +424,15 @@ export interface SelectProps<T extends object> {
   /** Called with the newly selected key. Maps to Base UI's `onValueChange`. */
   onSelectionChange?: ((key: string | null) => void) | undefined;
   isDisabled?: boolean | undefined;
+  /** Marks the field required for form submission and announces it as such. */
   isRequired?: boolean | undefined;
   /** Caller-authored loading/error/empty state from the shared async controller. */
   asyncState?: AsyncCollectionPresentation | undefined;
+  /** Whether the popup is open, when controlled. */
   isOpen?: boolean | undefined;
+  /** Opens the popup on first render, when open state is uncontrolled. */
   defaultOpen?: boolean | undefined;
+  /** Called when the popup opens or closes. */
   onOpenChange?: ((isOpen: boolean) => void) | undefined;
   /** Form field name for the hidden input Base UI renders. */
   name?: string | undefined;
@@ -702,21 +706,35 @@ export interface SelectFieldOption {
 }
 
 export interface SelectFieldProps extends SelectTriggerVariantProps {
+  /** The accessible name of the field, rendered as its visible label unless showLabel hides it. */
   label: string;
+  /** Text shown on the trigger before any option is chosen. */
   placeholder: string;
+  /** The options offered, each a stable string key with a display label. */
   options: readonly SelectFieldOption[];
+  /** The selected key, when selection is controlled. */
   selectedKey?: string | null | undefined;
+  /** The initially selected key, when selection is uncontrolled. */
   defaultSelectedKey?: string | null | undefined;
+  /** Called with the newly selected key, or null when cleared. */
   onSelectionChange?: ((key: string | null) => void) | undefined;
   isDisabled?: boolean | undefined;
+  /** Overrides the invalid state derived from errorMessage. */
   isInvalid?: boolean | undefined;
+  /** The validation message rendered and announced when the field is invalid. */
   errorMessage?: LumoNode;
+  /** Submitted field name when the control sits inside a form. */
   name?: string | undefined;
+  /** Renders the label visibly; when false the name is announced only. */
   showLabel?: boolean | undefined;
   className?: string | undefined;
+  /** Additional classes merged onto the trigger button. */
   triggerClassName?: string | undefined;
+  /** Additional classes merged onto the popup surface. */
   popoverClassName?: string | undefined;
+  /** Additional classes merged onto the option list. */
   listBoxClassName?: string | undefined;
+  /** Additional classes merged onto every option row. */
   itemClassName?: string | undefined;
 }
 

@@ -154,13 +154,20 @@ export interface ComboBoxProps<T extends object> {
   asyncState?: AsyncCollectionPresentation | undefined;
   /** The selected key. Maps to Base UI's `value`. */
   selectedKey?: string | null | undefined;
+  /** The initially selected key, when selection is uncontrolled. */
   defaultSelectedKey?: string | null | undefined;
+  /** Called with the newly selected key, or null when cleared. */
   onSelectionChange?: ((key: string | null) => void) | undefined;
+  /** The typed text, when controlled. */
   inputValue?: string | undefined;
+  /** The initial typed text, when the text is uncontrolled. */
   defaultInputValue?: string | undefined;
+  /** Called with the typed text after every keystroke. */
   onInputChange?: ((value: string) => void) | undefined;
   isDisabled?: boolean | undefined;
+  /** Marks the field required for form submission and announces it as such. */
   isRequired?: boolean | undefined;
+  /** Submitted field name when the control sits inside a form. */
   name?: string | undefined;
   className?: string | undefined;
   /** Class for the popover surface. */

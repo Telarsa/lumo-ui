@@ -87,10 +87,15 @@ export function aggregateDataGrid<Row extends Record<string, unknown>>(
 }
 
 export interface DataGridEditableCellProps {
+  /** The accessible name of the edit input. */
   label: string;
+  /** The accessible name of the control that abandons the edit. */
   cancelLabel: string;
+  /** The cell's committed value the editor starts from. */
   value: string;
+  /** Called with the new value when the edit is confirmed. */
   onCommit: (value: string) => void;
+  /** Returns an error message for a candidate value, or null to accept it. */
   validate?: ((value: string) => string | null) | undefined;
   isDisabled?: boolean | undefined;
   className?: string | undefined;
@@ -329,6 +334,7 @@ export interface DataGridSearchProps {
   label: string;
   /** The clear button's name. REQUIRED — a default would be English. */
   clearLabel: string;
+  /** Text shown in the empty search input. */
   placeholder?: string | undefined;
   className?: string | undefined;
 }

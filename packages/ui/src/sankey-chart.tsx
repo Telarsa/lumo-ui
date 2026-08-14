@@ -22,13 +22,21 @@ export interface SankeyLinkDatum {
 
 export interface SankeyChartProps {
   locale: Locale;
+  /** The accessible name announced for the chart, and the source column's name. */
   label: string;
+  /** The accessible caption of the semantic data table served beside the chart. */
   dataCaption: string;
+  /** The target column's name in the data table. */
   targetLabel: string;
+  /** The value column's name in the data table. */
   valueLabel: string;
+  /** The nodes, each a stable id with a display label. */
   nodes: readonly SankeyNodeDatum[];
+  /** The flows: source node, target node, and the value that sizes the ribbon. */
   links: readonly SankeyLinkDatum[];
+  /** The drawing height in pixels. */
   height?: number;
+  /** The width used for the server render and first frame. */
   initialWidth?: number;
   className?: string;
 }

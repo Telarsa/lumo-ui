@@ -21,13 +21,21 @@ export interface RadarDatum {
 
 export interface RadarChartProps {
   locale: Locale;
+  /** The accessible name announced for the chart. */
   label: string;
+  /** The accessible caption of the semantic data table served beside the chart. */
   dataCaption: string;
+  /** The dimension column's name in the data table. */
   dimensionLabel: string;
+  /** One row per dimension, each carrying a value under every series key. */
   data: readonly RadarDatum[];
+  /** The profiles drawn, each a key into the rows with a label and color. */
   series: readonly RadarSeries[];
+  /** The radial scale's maximum; every ring is a quarter of it. */
   maxValue: number;
+  /** The drawing height in pixels. */
   height?: number;
+  /** The width used for the server render and first frame. */
   initialWidth?: number;
   className?: string;
 }

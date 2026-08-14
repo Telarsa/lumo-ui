@@ -181,6 +181,7 @@ export function ItemSeparator({ className, ...props }: ItemSeparatorProps) {
 }
 
 export interface ItemMediaProps extends ItemSectionProps {
+  /** How the leading media is framed: an icon chip, an image, or unframed. */
   media?: ItemMediaVariantProps["media"];
 }
 
