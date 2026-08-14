@@ -109,6 +109,28 @@ describe("enterprise form integration", () => {
     expect(await first).toBeUndefined();
     expect(await second).toBe("new error");
   });
+
+  it("discards a stale result even when the transport ignores the abort signal", async () => {
+    /*
+     * The fixture above resolves `undefined` ON abort, which lets EITHER of
+     * the validator's two guards — the AbortController and the generation
+     * counter — satisfy it alone: an independent mutation campaign proved
+     * the two mutually masking (FORM1/FORM2). This transport never looks at
+     * the signal, so only the generation counter can discard the stale
+     * result, and removing it makes the OLD error win the race below.
+     */
+    const pending = new Map<string, (value: string | undefined) => void>();
+    const validator = createLatestAsyncValidator<string>(
+      ({ value }) => new Promise((resolve) => pending.set(value, resolve)),
+    );
+    const first = validator({ value: "old" });
+    const second = validator({ value: "new" });
+    // The NEW call settles first; the stale one arrives late with an error.
+    pending.get("new")?.("new error");
+    pending.get("old")?.("old error");
+    expect(await second).toBe("new error");
+    expect(await first).toBeUndefined();
+  });
 });
 
 /** A field in whatever state a test needs, without standing up a whole form. */

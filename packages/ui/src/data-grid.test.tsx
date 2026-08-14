@@ -93,6 +93,32 @@ describe("DataGrid enterprise operations", () => {
     ).toEqual({ total: 0 });
   });
 
+  it("reorders forward as well as backward — the index shift is not a no-op", () => {
+    /*
+     * The two prior fixtures were provably the exact cases where the
+     * `from < target ? target - 1 : target` adjustment changes nothing
+     * (found by an independent mutation campaign). A FORWARD move is where
+     * removing the item first shifts every later index down, so the
+     * unadjusted insert lands one slot too late.
+     */
+    const rows = [{ id: "a" }, { id: "b" }, { id: "c" }, { id: "d" }];
+    expect(reorderDataGridItems(rows, "a", "c").map((row) => row.id)).toEqual([
+      "b",
+      "a",
+      "c",
+      "d",
+    ]);
+    expect(reorderDataGridItems(rows, "b", "d").map((row) => row.id)).toEqual([
+      "a",
+      "c",
+      "b",
+      "d",
+    ]);
+    // Unknown ids and self-moves return a copy, unchanged.
+    expect(reorderDataGridItems(rows, "zz", "c").map((row) => row.id)).toEqual(["a", "b", "c", "d"]);
+    expect(reorderDataGridItems(rows, "c", "c").map((row) => row.id)).toEqual(["a", "b", "c", "d"]);
+  });
+
   it("keeps 100k-row pure operations inside the documented one-second envelope", () => {
     const rows = Array.from({ length: 100_000 }, (_, index) => ({
       id: `row-${index}`,

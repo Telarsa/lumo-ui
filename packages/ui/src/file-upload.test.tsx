@@ -204,3 +204,66 @@ describe("FileUploadItem lifecycle", () => {
     expect(screen.getByRole("status").textContent).toBe("Uploaded");
   });
 });
+
+/**
+ * Survivor-killing tier, from the independent 68-mutation campaign.
+ *
+ * Each test below targets a mutation that SURVIVED the full suite: the code
+ * was correct, the property was unproven. The two here are the campaign's
+ * highest-risk survivors — the pre-chunk abort guard (cancel-while-paused
+ * uploaded one more chunk with the guard removed) and the hand-rolled
+ * progressbar's ARIA values, which nothing observed.
+ */
+describe("mutation survivors, now observed", () => {
+  it("cancel while paused uploads nothing more — the pre-chunk abort guard", async () => {
+    const calls: number[] = [];
+    let releaseFirst: (() => void) | undefined;
+    const controller = createUploadController({
+      file: new File(["abcdef"], "report.txt"),
+      chunkSize: 2,
+      uploadChunk: async ({ index }) => {
+        calls.push(index);
+        if (index === 0) await new Promise<void>((resolve) => { releaseFirst = resolve; });
+      },
+    });
+    // Wait until chunk 0 is genuinely in flight before pausing — pausing
+    // earlier races the controller's own queued→uploading transition.
+    while (calls.length === 0) await new Promise((resolve) => setTimeout(resolve, 0));
+    controller.pause();
+    releaseFirst?.();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    controller.cancel();
+    // Let the run loop wake from the pause and observe the abort.
+    await controller.finished;
+    // Without the pre-chunk `abort.signal.aborted` check, the wake from
+    // cancel() re-enters the loop and uploads chunk 1 with an aborted signal.
+    expect(calls).toEqual([0]);
+    expect(controller.getSnapshot().status).toBe("cancelled");
+  });
+
+  it("the uploading progressbar serves clamped ARIA values and its caller-authored name", () => {
+    render(
+      <FileUploadList label="پرونده‌ها">
+        <FileUploadItem
+          name="گزارش.pdf"
+          size={10}
+          locale="fa-IR"
+          removeLabel={(name) => `حذف ${name}`}
+          onRemove={() => undefined}
+          lifecycle={{
+            status: "uploading",
+            statusText: "در حال بارگذاری",
+            // Out of range on purpose: rendering must clamp to 100.
+            progress: 1.4,
+            progressText: "چهل درصد",
+          }}
+        />
+      </FileUploadList>,
+    );
+    const bar = screen.getByRole("progressbar", { name: "در حال بارگذاری" });
+    expect(bar.getAttribute("aria-valuemin")).toBe("0");
+    expect(bar.getAttribute("aria-valuemax")).toBe("100");
+    expect(bar.getAttribute("aria-valuenow")).toBe("100");
+    expect(bar.getAttribute("aria-valuetext")).toBe("چهل درصد");
+  });
+});
