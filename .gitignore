@@ -13,3 +13,4 @@ coverage/
 out/
 .next/
 *.tsbuildinfo
+mutation-report.json
