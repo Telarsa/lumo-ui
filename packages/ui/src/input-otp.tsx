@@ -189,6 +189,7 @@ export interface InputOtpProps {
   className?: string | undefined;
 }
 
+/** A one-time-code entry row: one real input, per-digit slots, and Persian digits on Persian pages. */
 export function InputOtp({
   label,
   locale,

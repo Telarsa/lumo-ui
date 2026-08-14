@@ -220,10 +220,94 @@ const importSpecifiers = (source, fileName) => {
   return specifiers;
 };
 
-/** First complete prose sentence from the leading file docblock. */
-/** @param {string} source */
-const registryDescription = (source) => {
-  const block = source.match(/\/\*\*([\s\S]*?)\*\//)?.[1] ?? "";
+/*
+ * Item descriptions, resolved from sources that actually DESCRIBE THE ITEM.
+ *
+ * The first version took the first docblock anywhere in the file, which
+ * produced descriptions like the `table` item introduced as "`<Checkbox>`
+ * with a `tabIndex`…" — the RovingCheckbox helper's comment, because that
+ * helper happened to sit first. A docblock is admissible only when it is
+ * attached to the export that bears the item's name, or when it is a true
+ * file header (before the first import). Files with neither fall back to the
+ * hand-written English intro the website already carries for the same id —
+ * one human-authored source instead of a second copy to keep in sync.
+ */
+const WEBSITE_INTRO_SOURCES = [
+  join(ROOT, "apps/website/src/lib/demos.tsx"),
+  join(ROOT, "apps/website/src/lib/blocks.tsx"),
+];
+const websiteIntros = new Map();
+for (const introPath of WEBSITE_INTRO_SOURCES) {
+  const text = await readFile(introPath, "utf8").catch(() => "");
+  if (text === "") continue;
+  const sf = ts.createSourceFile(introPath, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  /** @param {import("typescript").Node} node */
+  const collectIntros = (node) => {
+    if (ts.isObjectLiteralExpression(node)) {
+      /** @type {string | undefined} */ let id;
+      /** @type {string | undefined} */ let intro;
+      for (const prop of node.properties) {
+        if (!ts.isPropertyAssignment(prop)) continue;
+        const key = prop.name.getText(sf).replace(/["']/g, "");
+        if (key === "id" && ts.isStringLiteral(prop.initializer)) id = prop.initializer.text;
+        if (key === "intro" && ts.isObjectLiteralExpression(prop.initializer)) {
+          for (const localeProp of prop.initializer.properties) {
+            if (
+              ts.isPropertyAssignment(localeProp) &&
+              localeProp.name.getText(sf).includes("en-US") &&
+              ts.isStringLiteral(localeProp.initializer)
+            ) {
+              intro = localeProp.initializer.text;
+            }
+          }
+        }
+      }
+      if (id !== undefined && intro !== undefined && !websiteIntros.has(id)) {
+        websiteIntros.set(id, intro);
+      }
+    }
+    ts.forEachChild(node, collectIntros);
+  };
+  collectIntros(sf);
+}
+/* The per-component examples files carry the same hand-written bilingual
+ * intro under `meta:`, keyed by their own file name rather than an `id`
+ * property. Same authoring source, third location. */
+const EXAMPLES_DIR = join(ROOT, "apps/website/src/examples");
+for (const exampleFile of (await readdir(EXAMPLES_DIR).catch(() => [])).filter(
+  (f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"),
+)) {
+  const exampleName = exampleFile.replace(/\.tsx$/, "");
+  if (websiteIntros.has(exampleName)) continue;
+  const text = await readFile(join(EXAMPLES_DIR, exampleFile), "utf8").catch(() => "");
+  if (text === "") continue;
+  const sf = ts.createSourceFile(exampleFile, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  /** @type {string | undefined} */
+  let intro;
+  /** @param {import("typescript").Node} node */
+  const findIntro = (node) => {
+    if (intro === undefined && ts.isPropertyAssignment(node)) {
+      const key = node.name.getText(sf).replace(/["']/g, "");
+      if (key === "intro" && ts.isObjectLiteralExpression(node.initializer)) {
+        for (const localeProp of node.initializer.properties) {
+          if (
+            ts.isPropertyAssignment(localeProp) &&
+            localeProp.name.getText(sf).includes("en-US") &&
+            ts.isStringLiteral(localeProp.initializer)
+          ) {
+            intro = localeProp.initializer.text;
+          }
+        }
+      }
+    }
+    ts.forEachChild(node, findIntro);
+  };
+  findIntro(sf);
+  if (intro !== undefined) websiteIntros.set(exampleName, intro);
+}
+
+/** @param {string} block */
+const proseSentence = (block) => {
   const prose = block
     .split("\n")
     .map((line) => line.replace(/^\s*\*\s?/, "").trim())
@@ -231,9 +315,40 @@ const registryDescription = (source) => {
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();
-  if (prose.length === 0) return "Lumo registry item.";
+  if (prose.length === 0) return undefined;
   const sentence = prose.match(/^.*?[.!?…](?:\s|$)/)?.[0]?.trim();
   return sentence ?? `${prose}.`;
+};
+
+/** @param {string} source @param {string} name */
+const registryDescription = (source, name) => {
+  const pascal = name
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+  const attached = new RegExp(
+    `\\/\\*\\*([\\s\\S]*?)\\*\\/\\s*export (?:function|const) ${pascal}\\b`,
+  ).exec(source)?.[1];
+  if (attached !== undefined) {
+    const sentence = proseSentence(attached);
+    if (sentence !== undefined) return sentence;
+  }
+  const head = /\/\*\*([\s\S]*?)\*\//.exec(source);
+  const firstImport = source.search(/^import /m);
+  if (
+    head?.[1] !== undefined &&
+    (firstImport === -1 || source.indexOf(head[0]) < firstImport)
+  ) {
+    const sentence = proseSentence(head[1]);
+    if (sentence !== undefined) return sentence;
+  }
+  const intro = websiteIntros.get(name);
+  if (intro !== undefined) {
+    // Intros are page paragraphs; the registry wants the opening sentence.
+    const sentence = intro.match(/^.*?[.!?…](?:\s|$)/)?.[0]?.trim();
+    return sentence ?? intro;
+  }
+  return "Lumo registry item.";
 };
 
 const items = [];
@@ -349,7 +464,7 @@ for (const { dir, type, target } of SOURCES) {
     name,
     type,
     title: name.replace(/(^|-)(\w)/g, (_, d, c) => (d ? " " : "") + c.toUpperCase()).trim(),
-    description: registryDescription(source),
+    description: registryDescription(source, name),
     author: "Telarsa",
     ...(dependencies.length ? { dependencies: [...new Set(dependencies)].sort() } : {}),
     ...(registryDependencies.length ? { registryDependencies } : {}),
