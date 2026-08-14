@@ -52,6 +52,7 @@ export const descriptionListVariants = cva("flex flex-col gap-2 text-sm");
 
 export const descriptionGroupVariants = cva("min-w-0", {
   variants: {
+    /** Stacked pairs or the side-by-side columns. */
     layout: {
       /**
        * Term at the inline start, detail at the inline end, on one line.

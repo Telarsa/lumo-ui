@@ -260,6 +260,7 @@ export interface DateFieldProps<T extends DateValue> extends SupportedDateFieldP
   description?: LumoNode;
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;
+  /** The control-height variant shared across form controls. */
   size?: DateFieldSize;
   className?: string | undefined;
   /** Classes for the segment box itself. */

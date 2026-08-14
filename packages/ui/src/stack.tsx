@@ -71,6 +71,7 @@ export type BoxTag =
 
 export const stackVariants = cva("flex", {
   variants: {
+    /** Main axis: a logical row that mirrors under RTL, or a column. */
     direction: {
       // `flex-row` is the INLINE axis, so it already reverses under
       // `dir="rtl"`. `flex-row-reverse` is deliberately not offered: it reverses
@@ -80,6 +81,7 @@ export const stackVariants = cva("flex", {
       row: "flex-row",
       column: "flex-col",
     },
+    /** The spacing step between children, from the spacing scale. */
     gap: {
       none: "gap-0",
       xs: "gap-1",
@@ -88,6 +90,7 @@ export const stackVariants = cva("flex", {
       lg: "gap-6",
       xl: "gap-8",
     },
+    /** Cross-axis alignment of the children. */
     align: {
       start: "items-start",
       center: "items-center",
@@ -95,6 +98,7 @@ export const stackVariants = cva("flex", {
       stretch: "items-stretch",
       baseline: "items-baseline",
     },
+    /** Main-axis distribution of the children. */
     justify: {
       start: "justify-start",
       center: "justify-center",
@@ -103,6 +107,7 @@ export const stackVariants = cva("flex", {
       around: "justify-around",
       evenly: "justify-evenly",
     },
+    /** Lets the row wrap instead of overflowing. */
     wrap: {
       true: "flex-wrap",
       false: "flex-nowrap",
@@ -177,6 +182,7 @@ export function Stack({
 
 export const gridVariants = cva("grid", {
   variants: {
+    /** The column template: a fixed count or the auto-fill preset. */
     cols: {
       // Grid tracks are laid out along the inline axis, so column 1 is the
       // reader's first column in both scripts. This is the reason a card grid
@@ -195,6 +201,7 @@ export const gridVariants = cva("grid", {
        */
       auto: "grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]",
     },
+    /** The spacing step between tracks, from the spacing scale. */
     gap: {
       none: "gap-0",
       xs: "gap-1",
@@ -203,6 +210,7 @@ export const gridVariants = cva("grid", {
       lg: "gap-6",
       xl: "gap-8",
     },
+    /** Cross-axis alignment of grid items. */
     align: {
       start: "items-start",
       center: "items-center",
@@ -258,6 +266,7 @@ export const containerVariants = cva(
   "mx-auto w-full",
   {
     variants: {
+      /** The max-width preset the content column is clamped to. */
       size: {
         // Tailwind v4's `--container-*` scale. `max-w-screen-*` was removed in
         // v4 and would silently emit nothing.
@@ -267,6 +276,7 @@ export const containerVariants = cva(
         xl: "max-w-7xl",
         full: "max-w-none",
       },
+      /** Adds the page gutter padding on the inline edges. */
       padded: {
         true: "px-4",
         false: "",

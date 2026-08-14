@@ -173,7 +173,9 @@ export function createCommandManager<T>(): LumoSurfaceManager<T> {
 }
 
 export interface ManagedSurfacesProps<T> {
+  /** The surface manager instance owning imperative overlays. */
   manager: LumoSurfaceManager<T>;
+  /** The subtree the managed surfaces serve. */
   children: (item: ManagedSurface<T>) => LumoNode;
 }
 

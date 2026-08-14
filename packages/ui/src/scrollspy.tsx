@@ -99,6 +99,7 @@ export interface ScrollspyProps {
    * landmark list shows them by name. Two unnamed ones are indistinguishable.
    */
   label: string;
+  /** The page sections linked: each an element id with a visible label. */
   items: readonly ScrollspyItem[];
   /**
    * How far down the viewport or supplied scroll root the eye line sits.

@@ -41,6 +41,7 @@ export const skeletonVariants = cva(
   "block animate-pulse bg-surface-sunken motion-reduce:animate-none",
   {
     variants: {
+      /** The placeholder's silhouette: text line, circle, or block. */
       shape: {
         /** A line of body copy. */
         text: "h-4 w-full rounded-sm",

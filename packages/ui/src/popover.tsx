@@ -120,6 +120,7 @@ export const popoverVariants = cva(
     "motion-reduce:transition-none",
   {
     variants: {
+      /** Applies the surface's default inner padding. */
       padded: {
         true: "p-4",
         false: "p-0",

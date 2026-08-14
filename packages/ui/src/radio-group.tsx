@@ -38,6 +38,7 @@ import {
  */
 export const radioListVariants = cva("flex", {
   variants: {
+    /** The axis the radios are laid along. */
     orientation: {
       vertical: "flex-col gap-2",
       horizontal: "flex-row flex-wrap gap-x-6 gap-y-2",

@@ -96,6 +96,7 @@ export const iconTileVariants = cva(
         subtle: "",
         solid: "",
       },
+      /** The tile's edge-length step. */
       size: {
         sm: "size-8",
         md: "size-10",

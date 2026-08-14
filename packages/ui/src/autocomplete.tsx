@@ -195,6 +195,7 @@ export interface AutocompleteProps<T = string> {
   inputValue?: string | undefined;
   /** The initial query (uncontrolled). */
   defaultInputValue?: string | undefined;
+  /** Called with the typed text after every keystroke. */
   onInputValueChange?: ((value: string) => void) | undefined;
   /** At least an input and a collection. See the file header. */
   children?: LumoNode;

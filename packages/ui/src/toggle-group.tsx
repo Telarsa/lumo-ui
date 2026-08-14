@@ -93,10 +93,12 @@ export interface ToggleButtonGroupProps {
   selectedKeys?: Iterable<Key> | undefined;
   /** The initially pressed keys (uncontrolled). */
   defaultSelectedKeys?: Iterable<Key> | undefined;
+  /** Called with the full selected-key set after every toggle. */
   onSelectionChange?: ((keys: Set<Key>) => void) | undefined;
   /** Refuse to empty the group. See the file header for how this is honoured. */
   disallowEmptySelection?: boolean | undefined;
   isDisabled?: boolean | undefined;
+  /** The axis the buttons are laid along. */
   orientation?: "horizontal" | "vertical" | undefined;
   /** Announced name of the group. */
   "aria-label"?: string | undefined;
@@ -215,6 +217,7 @@ export interface ToggleButtonProps extends VariantProps<typeof toggleButtonVaria
   isSelected?: boolean | undefined;
   /** Pressed state for a STANDALONE toggle (uncontrolled). */
   defaultSelected?: boolean | undefined;
+  /** Called with the button's new pressed state. */
   onChange?: ((isSelected: boolean) => void) | undefined;
   isDisabled?: boolean | undefined;
   /** Announced name. Required for an icon-only toggle — an icon is not a name. */

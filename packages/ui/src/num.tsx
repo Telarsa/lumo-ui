@@ -18,6 +18,7 @@ import { formatDate, formatNumber, type Locale } from "@lumo-ui/core";
  * server and a consumer pays no hydration for a number.
  */
 export interface NumProps extends Intl.NumberFormatOptions {
+  /** The number, formatted in the locale's digits and separators. */
   value: number;
   locale: Locale;
   /**
@@ -43,6 +44,7 @@ export function Num({ value, locale, className, ...options }: NumProps) {
 }
 
 export interface DateTextProps extends Intl.DateTimeFormatOptions {
+  /** The instant, formatted in the locale's calendar. */
   value: Date;
   locale: Locale;
   /**

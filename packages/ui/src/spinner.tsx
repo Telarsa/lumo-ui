@@ -47,6 +47,7 @@ export const spinnerVariants = cva(
     "motion-reduce:animate-pulse",
   {
     variants: {
+      /** The ring's diameter step. */
       size: {
         sm: "size-4",
         md: "size-5",
@@ -96,6 +97,12 @@ export interface SpinnerProps
    * reason. `ref` and `id` are untouched — they land on the root via `...props`. */
   extends Omit<ComponentProps<"span">, "children" | "className" | "role" | "color">,
     VariantProps<typeof spinnerVariants> {
+  /**
+   * Where the ring takes its color from: the current text color, the accent,
+   * or muted. Redeclared from the variants (same derived type) only because
+   * the checker loses the cva key's docblock across this intersection.
+   */
+  color?: VariantProps<typeof spinnerVariants>["color"];
   /**
    * What is being waited for, in the reader's language, e.g. «در حال بارگذاری…».
    *

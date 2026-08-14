@@ -332,6 +332,7 @@ export interface ChartContainerProps
    * complete without one.
    */
   children?: import("@lumo-ui/core").LumoNode;
+  /** Per-series labels and colors, keyed by the data's series keys. */
   config: ChartConfig;
   /** The numbering system every tick, tooltip and legend figure is formatted in. */
   locale: Locale;
@@ -542,10 +543,14 @@ export function ChartContainer({
 }
 
 export interface ChartDataProps {
+  /** Per-series labels and colors, keyed by the data's series keys. */
   config: ChartConfig;
   locale: Locale;
+  /** The rows the table serves — the same data the chart draws. */
   data: ChartRow[];
+  /** The row-heading column's key in the data. */
   categoryKey: string;
+  /** The accessible caption of the semantic data table. */
   caption: string;
 }
 

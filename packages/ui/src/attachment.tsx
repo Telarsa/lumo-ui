@@ -254,6 +254,7 @@ export function AttachmentProgress({ locale, label, value, className }: Attachme
 }
 
 export interface AttachmentRemoveProps extends Omit<IconButtonProps, "children" | "size"> {
+  /** The size step on the shared control scale. */
   size?: IconButtonProps["size"];
 }
 

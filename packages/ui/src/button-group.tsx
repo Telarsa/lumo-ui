@@ -53,6 +53,7 @@ export const buttonGroupVariants = cva(
     "[&>*:focus-visible]:relative [&>*:focus-visible]:z-10",
   {
     variants: {
+      /** The axis the buttons are laid along. */
       orientation: {
         horizontal:
           "[&>*+*]:rounded-s-none [&>*+*]:border-s-0 " +

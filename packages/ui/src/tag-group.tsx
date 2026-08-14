@@ -176,6 +176,7 @@ export const tagItemVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
+      /** The tag-size step. */
       size: {
         // `ps-`/`pe-` rather than `px-`: the inline-END cap is trimmed when a
         // remove button is present, and only a logical pair can express "the
@@ -183,6 +184,7 @@ export const tagItemVariants = cva(
         sm: "h-6 gap-1 ps-2 pe-2 text-xs",
         md: "h-7 gap-1.5 ps-2.5 pe-2.5 text-sm",
       },
+      /** Reserves the inline-end space the remove control occupies. */
       removable: {
         true: "pe-1",
         false: "",

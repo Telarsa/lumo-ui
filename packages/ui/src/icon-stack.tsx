@@ -50,6 +50,7 @@ export const iconStackVariants = cva(
   "flex items-center [&>*]:ring-2 [&>*]:ring-bg [&>*:not(:first-child)]:-ms-2",
   {
     variants: {
+      /** The member-chip diameter step. */
       size: {
         sm: "[&>*]:size-6 [&>*]:text-xs",
         md: "[&>*]:size-8 [&>*]:text-sm",

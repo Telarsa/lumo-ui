@@ -628,6 +628,7 @@ export interface TreeProps<T extends object> extends TreePropsBase<T> {
   label: string;
   /** Shared remote status; status copy stays adjacent to the treegrid. */
   asyncStatus?: AsyncCollectionStatus | undefined;
+  /** Static items, or a render function over the tree's data. */
   children?: LumoNode | ((item: T) => ReactNode);
   className?: string | undefined;
 }

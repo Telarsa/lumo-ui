@@ -159,6 +159,7 @@ export interface PaginationProps
   pageLabel: (formattedPage: string) => string;
   /** Pages shown on each side of the current one. Default 1. */
   siblingCount?: number | undefined;
+  /** The size step on the shared control scale. */
   size?: PaginationItemVariantProps["size"];
   className?: string | undefined;
 }

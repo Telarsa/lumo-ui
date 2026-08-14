@@ -249,8 +249,11 @@ export interface KanbanProps<T extends KanbanCard>
   /** Names the board. Required. */
   label: string;
   locale: Locale;
+  /** The board: columns in order, each carrying its cards. */
   columns: ReadonlyArray<KanbanColumn<T>>;
+  /** Called with the full board after a card or column moves. */
   onColumnsChange: (columns: Array<KanbanColumn<T>>) => void;
+  /** Every string the board announces or renders. All caller-authored. */
   strings: KanbanStrings;
   /** Renders one card's content. The handle is supplied. */
   children: (card: T, column: KanbanColumn<T>) => LumoNode;

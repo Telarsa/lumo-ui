@@ -126,6 +126,7 @@ export const progressTrackVariants = cva(
   "flex w-full overflow-hidden rounded-full bg-surface-sunken",
   {
     variants: {
+      /** The track-thickness step. */
       size: {
         sm: "h-1",
         md: "h-2",
@@ -360,10 +361,15 @@ export interface MeterProps
   label: string;
   /** The locale to format the value in. Required by design — see the file header. */
   locale: Locale;
+  /** The measured value within the scale. */
   value?: number | undefined;
+  /** The scale's minimum. Defaults to 0. */
   minValue?: number | undefined;
+  /** The scale's maximum. Defaults to 1. */
   maxValue?: number | undefined;
+  /** Intl.NumberFormat options for the displayed and announced value. */
   formatOptions?: Intl.NumberFormatOptions | undefined;
+  /** Renders the formatted value beside the label. */
   showValue?: boolean | undefined;
   /**
    * Colour of the fill.

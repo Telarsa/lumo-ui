@@ -102,6 +102,7 @@ export const eventCalendarViewButtonVariants = cva(
     variants: {
       // Driven from the same boolean that writes `aria-pressed`, so what a
       // screen reader hears and what a sighted reader sees cannot come apart.
+      /** Marks the selected view. */
       active: {
         true: "bg-surface font-medium text-fg shadow-raised",
         false: "",
@@ -151,6 +152,7 @@ export const eventCalendarDayCellVariants = cva(
        * a reader looking at the last week of this one wants to see.
        */
       outside: { true: "bg-surface-sunken/60 text-fg-subtle", false: "" },
+      /** Marks the reader's current day. */
       today: { true: "bg-accent/5", false: "" },
     },
     defaultVariants: { outside: false, today: false },
@@ -257,6 +259,7 @@ export const eventCalendarChipVariants = cva(
   "block w-full truncate rounded-sm px-1.5 py-0.5 text-start text-[0.6875rem] leading-tight",
   {
     variants: {
+      /** The event's semantic color. */
       tone: {
         accent: "bg-accent/15 text-accent",
         positive: "bg-positive/15 text-positive",

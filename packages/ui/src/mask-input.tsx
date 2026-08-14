@@ -19,12 +19,18 @@ export function maskValue(value: string, mask: string): MaskValue {
 
 export interface MaskInputProps
   extends Omit<React.ComponentProps<"input">, "defaultValue" | "value" | "onChange" | "children"> {
+  /** The accessible name of the field, rendered as its visible label. */
   label: string;
+  /** The maska pattern the input enforces while typing. */
   mask: string;
+  /** The masked text, when controlled. */
   value?: string;
+  /** The initial masked text, when uncontrolled. */
   defaultValue?: string;
+  /** Called with the masked and unmasked value after every change. */
   onValueChange?: (raw: string, masked: string, complete: boolean) => void;
   description?: string;
+  /** The error announced when the value does not fill the mask. */
   incompleteMessage?: string;
 }
 

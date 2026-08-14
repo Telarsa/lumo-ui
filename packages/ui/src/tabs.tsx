@@ -379,6 +379,7 @@ interface TabListPropsBase<T extends object>
 export interface TabListProps<T extends object> extends TabListPropsBase<T> {
   /** Announced name of the tab list. Required. */
   label: string;
+  /** The tabs, in order. */
   children?: LumoNode | ((item: T) => LumoNode);
   className?: string | undefined;
 }

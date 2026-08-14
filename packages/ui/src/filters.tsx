@@ -99,13 +99,19 @@ export interface FiltersProps
     ComponentProps<"section">,
     "children" | "className" | "aria-label" | "value" | "defaultValue" | "onChange"
   > {
+  /** The filterable fields: id, label, type, and the operators each supports. */
   fields: readonly FilterField[];
+  /** Every string the control announces or renders. All caller-authored. */
   strings: FiltersStrings;
+  /** The clause list, when controlled. */
   value?: readonly FilterClause[] | undefined;
+  /** The initial clause list, when uncontrolled. */
   defaultValue?: readonly FilterClause[] | undefined;
+  /** Called with the full clause list after every change. */
   onValueChange?: ((value: readonly FilterClause[]) => void) | undefined;
   /** Serializes the complete clause model into one hidden form control. */
   name?: string | undefined;
+  /** Associates the posted query with a form by id. */
   form?: string | undefined;
   className?: string | undefined;
 }

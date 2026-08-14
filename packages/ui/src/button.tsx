@@ -217,6 +217,7 @@ export function Button({
 export interface IconButtonProps extends Omit<ButtonProps, "size" | "aria-label"> {
   /** Announced name. Required: an icon is not a name. */
   label: string;
+  /** The size step on the shared control scale. */
   size?: "sm" | "md" | "lg";
 }
 

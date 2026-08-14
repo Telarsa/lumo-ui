@@ -77,16 +77,23 @@ export interface OverflowListProps<T>
    * ref replace it would freeze shrink and grow-back with no error.
    */
   extends Omit<ComponentProps<"div">, "children" | "className" | "ref"> {
+  /** The full collection; items that no longer fit collapse into the overflow. */
   items: readonly T[];
+  /** Stable identity per item; measurement caches by it. */
   getKey: (item: T, index: number) => Key;
   /** Deterministic number rendered before a browser can measure. Required. */
   initialVisibleItems: number;
+  /** Lower bound on visible items regardless of space. */
   minVisibleItems?: number | undefined;
+  /** Upper bound on visible items regardless of space. */
   maxVisibleItems?: number | undefined;
+  /** Which end gives up items first when space runs out. */
   collapseFrom?: "start" | "end" | undefined;
   /** Inline gap in CSS pixels. It participates in fitting, so it is not a class-only concern. */
   gap?: number | undefined;
+  /** Renders one visible item. */
   renderItem: (item: T, index: number) => LumoNode;
+  /** Renders the overflow affordance from the hidden entries. */
   renderOverflow: (hidden: readonly OverflowListEntry<T>[]) => LumoNode;
   className?: string | undefined;
 }

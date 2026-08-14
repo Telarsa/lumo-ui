@@ -98,6 +98,7 @@ export const stepsVariants = cva("w-full");
 
 export const stepsListVariants = cva("flex list-none p-0", {
   variants: {
+    /** The axis the steps are laid along. */
     orientation: {
       // Normal flow, no `flex-row-reverse`. Under `dir="rtl"` a flex row already
       // lays step ۱ out on the RIGHT and walks leftwards; reversing it here
@@ -112,6 +113,7 @@ export const stepsListVariants = cva("flex list-none p-0", {
 
 export const stepVariants = cva("flex gap-3", {
   variants: {
+    /** The axis the steps are laid along. */
     orientation: {
       // `flex-1` on every step but the last lets the connector line absorb the
       // slack, so the markers space themselves evenly without a grid template
@@ -157,6 +159,7 @@ export const stepTitleVariants = cva("text-sm", {
 
 export const stepConnectorVariants = cva("shrink bg-border", {
   variants: {
+    /** The axis the steps are laid along. */
     orientation: {
       horizontal: "h-px flex-1",
       // `w-px` and `h-*` are size, not position: neither mirrors, so both are
@@ -205,6 +208,7 @@ export interface StepsProps
    * every step is then complete and none is falsely marked current.
    */
   current: number;
+  /** The steps in order; the current index marks progress. */
   items: readonly StepItem[];
   /** Announced status of a finished step, e.g. «تکمیل‌شده». REQUIRED. */
   completeLabel: string;

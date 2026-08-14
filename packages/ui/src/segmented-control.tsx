@@ -165,6 +165,7 @@ export const segmentedControlItemVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         sm: "h-7 px-3 text-xs",
         md: "h-8 px-4 text-sm",
@@ -189,6 +190,7 @@ export interface SegmentedControlProps {
   selectedKeys?: Iterable<Key> | undefined;
   /** The initially selected key, as a one-element iterable. */
   defaultSelectedKeys?: Iterable<Key> | undefined;
+  /** Called with the newly selected key. */
   onSelectionChange?: ((keys: Set<Key>) => void) | undefined;
   isDisabled?: boolean | undefined;
   /** Form field name for the proxy `<input type="radio">` Base UI renders. */

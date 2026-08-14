@@ -53,6 +53,7 @@ export const kbdVariants = cva(
     "shadow-[inset_0_-1px_0_0_var(--color-border)]",
   {
     variants: {
+      /** The key-cap size step. */
       size: {
         // `px-*` is padding-inline in Tailwind v4, so the horizontal padding is
         // already logical. `min-w-*` keeps a single character from collapsing

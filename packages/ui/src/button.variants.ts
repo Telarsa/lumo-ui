@@ -139,6 +139,7 @@ export const buttonVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4",
   {
     variants: {
+      /** The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment. */
       variant: {
         // No `active:` on any variant. The press lives once, in the base string
         // above, and a variant that restated it would be the first of the next
@@ -163,6 +164,7 @@ export const buttonVariants = cva(
         // 6.84:1 → 6.21:1, both comfortably over AA.
         critical: "bg-critical text-bg hover:brightness-95",
       },
+      /** The size step on the shared control scale. */
       size: {
         // Padding is logical so it mirrors; height comes from the density-scaled
         // control tokens rather than a hardcoded rem.

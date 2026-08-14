@@ -203,6 +203,7 @@ export const dialogModalVariants = cva(
     "motion-reduce:transition-none",
   {
     variants: {
+      /** The modal's max-width preset. */
       size: {
         sm: "max-w-sm",
         md: "max-w-md",

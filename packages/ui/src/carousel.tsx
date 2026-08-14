@@ -108,9 +108,13 @@ export interface CarouselProps
    * `<CarouselItem>` through context so it cannot be forgotten on one of them.
    */
   slideRoleDescription: string;
+  /** Embla carousel options, forwarded to the engine. */
   opts?: CarouselOptions;
+  /** Embla plugins, forwarded to the engine. */
   plugins?: CarouselPlugin;
+  /** The scroll axis. */
   orientation?: "horizontal" | "vertical" | undefined;
+  /** Receives the embla API once the carousel mounts. */
   setApi?: ((api: CarouselApi) => void) | undefined;
   children?: LumoNode;
   className?: string | undefined;

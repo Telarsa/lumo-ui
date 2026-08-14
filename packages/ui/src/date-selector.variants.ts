@@ -57,6 +57,7 @@ export const dateSelectorTriggerVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         sm: "h-control-sm min-w-48 px-2.5 text-sm",
         md: "h-control-md px-3 text-sm",

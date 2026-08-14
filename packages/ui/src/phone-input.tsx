@@ -196,9 +196,11 @@ export interface PhoneInputProps {
   /** Overrides the shipped list. See the header. */
   countries?: readonly PhoneCountry[] | undefined;
   description?: LumoNode;
+  /** The validation message rendered and announced when the number is invalid. */
   errorMessage?: LumoNode;
   isDisabled?: boolean | undefined;
   placeholder?: string | undefined;
+  /** Submitted field name; the value posts in E.164. */
   name?: string | undefined;
   className?: string | undefined;
 }

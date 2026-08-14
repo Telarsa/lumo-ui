@@ -251,6 +251,7 @@ export const toastRegionVariants = cva(
   "fixed z-100 flex w-[min(24rem,90vw)] flex-col gap-2 outline-none",
   {
     variants: {
+      /** The viewport corner the stack anchors to; logical, so it mirrors under RTL. */
       placement: {
         "bottom-end": "bottom-4 end-4",
         "bottom-start": "bottom-4 start-4",
@@ -289,6 +290,7 @@ export const toastVariants = cva(
     "motion-reduce:transition-none",
   {
     variants: {
+      /** The notification's semantic color. */
       tone: {
         neutral: "border-s-border-strong",
         positive: "border-s-positive",

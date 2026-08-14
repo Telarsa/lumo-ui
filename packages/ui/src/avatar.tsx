@@ -63,6 +63,7 @@ export const avatarVariants = cva(
     "ring-1 ring-inset ring-border",
   {
     variants: {
+      /** The avatar's diameter step. */
       size: {
         // `size-*` sets width and height together. Neither is direction-aware,
         // so there is nothing to mirror here — worth stating because it is the

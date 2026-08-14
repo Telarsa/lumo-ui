@@ -33,6 +33,7 @@ export interface AspectRatioProps
   ratio: number;
   children?: LumoNode;
   className?: string | undefined;
+  /** Inline styles merged after the ratio variable this component sets. */
   style?: CSSProperties | undefined;
 }
 

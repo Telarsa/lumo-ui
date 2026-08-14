@@ -163,6 +163,7 @@ export const drawerVariants = cva(
     "motion-reduce:transition-none",
   {
     variants: {
+      /** The logical edge the drawer slides from; mirrors under RTL. */
       side: {
         /**
          * `start` = the edge the reader starts from: left in English, right in
@@ -178,6 +179,7 @@ export const drawerVariants = cva(
           "data-starting-style:end-[var(--lumo-drawer-offset)] " +
           "data-ending-style:end-[var(--lumo-drawer-offset)]",
       },
+      /** How much of the viewport the drawer occupies. */
       size: {
         // `min()` rather than a breakpoint variant: the panel must never exceed
         // the viewport, and a phone in landscape is not a "small screen".

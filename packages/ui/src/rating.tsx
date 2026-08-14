@@ -111,6 +111,7 @@ import { FOCUS_RING_SELF } from "./form.tsx";
 
 export const ratingVariants = cva("inline-flex w-fit items-center", {
   variants: {
+    /** The star-size step. */
     size: {
       sm: "[&_svg]:size-4",
       md: "[&_svg]:size-5",

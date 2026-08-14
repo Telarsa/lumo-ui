@@ -163,6 +163,7 @@ export const toggleButtonVariants = cva(
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         sm: "h-control-sm px-3 text-sm",
         md: "h-control-md px-4 text-sm",

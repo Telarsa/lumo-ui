@@ -123,6 +123,7 @@ export const paginationItemVariants = cva(
     "aria-disabled:pointer-events-none aria-disabled:opacity-50",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         // Square by construction: `min-w-*` with equal height, so a two-digit
         // page does not make its cell wider than a one-digit neighbour and jump
@@ -130,6 +131,7 @@ export const paginationItemVariants = cva(
         sm: "h-control-sm min-w-8 px-2 text-sm",
         md: "h-control-md min-w-10 px-2 text-sm",
       },
+      /** Marks the page the reader is on. */
       current: {
         // The page you are on. `aria-current="page"` is what announces it; this
         // is only the visual half, which is why the announcement is not

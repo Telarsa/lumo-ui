@@ -143,9 +143,11 @@ export interface DateInputProps
   /** Space-separated idrefs for `aria-describedby`. */
   describedBy?: string | undefined;
   isDisabled?: boolean | undefined;
+  /** The segments are announced and focusable but cannot be edited. */
   isReadOnly?: boolean | undefined;
   /** Draws the invalid state on every segment. */
   isInvalid?: boolean | undefined;
+  /** The control-height variant shared across form controls. */
   size?: DateInputSize;
   /**
    * Renders the segments WITHOUT the bordered box, for a caller that supplies

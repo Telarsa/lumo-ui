@@ -32,7 +32,12 @@ interface TagsInputBaseProps {
 export type TagsInputProps = TagsInputBaseProps &
   (
     | { suggestions?: undefined; suggestionsLabel?: undefined }
-    | { suggestions: readonly string[]; suggestionsLabel: string }
+    | {
+        /** Preset entries offered under the input as the reader types. */
+        suggestions: readonly string[];
+        /** The accessible name announced for the suggestions list. */
+        suggestionsLabel: string;
+      }
   );
 
 export function TagsInput({

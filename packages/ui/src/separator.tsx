@@ -52,6 +52,7 @@ export const separatorVariants = cva(
   "m-0 shrink-0 border-0 bg-border",
   {
     variants: {
+      /** Which axis the separator divides. */
       orientation: {
         // Width and height are physical dimensions, not physical *directions*
         // — there is no logical alternative to `h-px` and none is needed.
@@ -86,6 +87,7 @@ export interface SeparatorProps
    * see `props.ts`'s contract.
    */
   ref?: Ref<HTMLElement> | undefined;
+  /** Which axis the separator divides. */
   orientation?: "horizontal" | "vertical" | undefined;
   className?: string | undefined;
 }

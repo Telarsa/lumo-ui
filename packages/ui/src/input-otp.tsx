@@ -183,6 +183,7 @@ export interface InputOtpProps {
   /** Shown when the code is rejected. Sets the invalid state on every box. */
   errorMessage?: LumoNode;
   isDisabled?: boolean | undefined;
+  /** Focuses the code input on mount. */
   autoFocus?: boolean | undefined;
   /** Submitted name, when the row is inside a form. */
   name?: string | undefined;

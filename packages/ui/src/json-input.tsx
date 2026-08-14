@@ -15,13 +15,20 @@ export function validateJson(text: string): JsonValidation {
 
 export interface JsonInputProps
   extends Omit<React.ComponentProps<"textarea">, "children" | "defaultValue" | "value" | "onChange"> {
+  /** The accessible name of the field, rendered as its visible label. */
   label: string;
+  /** The error announced when the text is not parseable JSON. */
   invalidJsonMessage: string;
   description?: string;
+  /** The JSON text, when controlled. */
   value?: string;
+  /** The initial JSON text, when uncontrolled. */
   defaultValue?: string;
+  /** Called with the text and its parse result after every change. */
   onValueChange?: (text: string, parsed: JsonValidation) => void;
+  /** Pretty-prints valid JSON when focus leaves the field. */
   formatOnBlur?: boolean;
+  /** Spaces per level when formatting. */
   indent?: number;
 }
 

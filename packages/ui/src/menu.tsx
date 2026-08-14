@@ -153,8 +153,11 @@ const MenuActionContext = createContext<((key: string) => void) | null>(null);
 export interface MenuTriggerProps {
   /** The trigger control, then the `<MenuPopover>`. In that order. */
   children: LumoNode;
+  /** Whether the menu is open, when controlled. */
   isOpen?: boolean | undefined;
+  /** Opens the menu on first render, when open state is uncontrolled. */
   defaultOpen?: boolean | undefined;
+  /** Called when the menu opens or closes. */
   onOpenChange?: ((isOpen: boolean) => void) | undefined;
 }
 
@@ -216,6 +219,7 @@ export function MenuTrigger({ children, isOpen, defaultOpen, onOpenChange }: Men
  * and `LumoNode` here would type-check and then fail at runtime.
  */
 export interface SubmenuTriggerProps {
+  /** The parent item, then its submenu. In that order. */
   children: ReactElement[];
 }
 
@@ -416,6 +420,7 @@ interface MenuItemBaseProps<T extends object = object> {
   isDisabled?: boolean | undefined;
   /** Renders the item as a link. */
   href?: string | undefined;
+  /** The linked document's language, forwarded to the anchor. */
   hrefLang?: string | undefined;
   /**
    * Marks the item the user is already on — the entry in a menu of
@@ -449,11 +454,14 @@ interface MenuItemBaseProps<T extends object = object> {
 }
 
 interface MenuItemSameTabProps {
+  /** Opens the link in a new tab, with the announcement newTabLabel names. */
   newTab?: false | undefined;
+  /** Announced suffix telling the reader the link opens a new tab. */
   newTabLabel?: undefined;
 }
 
 interface MenuItemNewTabProps {
+  /** Opens the link in a new tab, with the announcement newTabLabel names. */
   newTab: true;
   newTabLabel: string;
 }
@@ -591,6 +599,7 @@ export function MenuItem<T extends object = object>({
  * gave, same reason it is not a styled div.
  */
 export interface MenuSectionProps<T extends object> {
+  /** The section's visible and announced heading. */
   title?: LumoNode;
   /**
    * TYPE CARRIER, NOT A PROP — see `MenuItemProps.value`. React Aria's

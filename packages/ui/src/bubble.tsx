@@ -108,6 +108,7 @@ export function Bubble({ variant, grouping = "single", className, ...props }: Bu
  */
 export const bubbleGroupVariants = cva("flex w-full min-w-0 flex-col gap-0.5", {
   variants: {
+    /** Which side of the conversation the group belongs to. */
     variant: {
       sent: "items-end",
       received: "items-start",
@@ -117,6 +118,7 @@ export const bubbleGroupVariants = cva("flex w-full min-w-0 flex-col gap-0.5", {
 
 export interface BubbleGroupProps
   extends Omit<ComponentProps<"div">, "children" | "className"> {
+  /** Which side of the conversation the group belongs to. */
   variant: BubbleVariant;
   children?: LumoNode;
   className?: string | undefined;
@@ -175,6 +177,7 @@ export interface BubbleCollapseProps {
    * transcript's headings make that wrong for a page, set the level that fits.
    */
   level?: number | undefined;
+  /** Starts expanded, when the disclosure is uncontrolled. */
   defaultExpanded?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;

@@ -54,6 +54,7 @@ export const scrollAreaVariants = cva(
     "[scrollbar-width:thin] [scrollbar-color:var(--color-border)_transparent]",
   {
     variants: {
+      /** Which axes scroll. */
       orientation: {
         // `overflow-x-hidden` rather than leaving it `visible`: a too-wide
         // child in a vertical list should clip, not push the page sideways —

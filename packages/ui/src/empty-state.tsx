@@ -23,6 +23,7 @@ export const emptyStateVariants = cva(
   "flex w-full flex-col items-center justify-center text-center",
   {
     variants: {
+      /** The vertical rhythm step of the whole state. */
       size: {
         // `py-*` is padding-block in Tailwind v4 — the block axis, so it does
         // not mirror and needs no logical counterpart.
@@ -61,6 +62,7 @@ export const emptyStateVariants = cva(
  */
 export const emptyStateMediaVariants = cva("flex items-center justify-center", {
   variants: {
+    /** How the icon is framed: the 40px chip or unframed. */
     media: {
       icon: "size-10 rounded-full bg-surface-sunken text-fg-subtle [&_svg]:size-5",
       // `max-w-full` so a wide illustration cannot push the panel's own width

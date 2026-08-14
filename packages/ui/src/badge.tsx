@@ -36,6 +36,7 @@ export const badgeVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-3",
   {
     variants: {
+      /** The semantic color: neutral, accent, positive, caution, or critical. */
       tone: {
         neutral: "",
         accent: "",
@@ -43,6 +44,7 @@ export const badgeVariants = cva(
         critical: "",
         caution: "",
       },
+      /** Solid fill or the quiet outline treatment. */
       variant: {
         solid: "border-transparent",
         subtle: "",

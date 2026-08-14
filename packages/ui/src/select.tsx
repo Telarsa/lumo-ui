@@ -208,6 +208,7 @@ export const selectTriggerVariants = cva(
     "data-popup-open:border-border-strong",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         // The same three the rest of the field family uses, from the same
         // density-scaled control tokens rather than literal rems. `text-*`

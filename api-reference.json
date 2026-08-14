@@ -189,7 +189,7 @@
             "name": "tone",
             "type": "\"accent\" | \"critical\" | \"neutral\" | \"positive\" | \"caution\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The semantic color: neutral, accent, positive, caution, or critical.\nRedeclared from the variants (same derived type) only because the\nintersection of the two cva `tone` keys loses their docblocks."
           }
         ]
       }
@@ -220,7 +220,7 @@
             "name": "style",
             "type": "CSSProperties | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Inline styles merged after the ratio variable this component sets."
           }
         ]
       }
@@ -558,7 +558,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -600,7 +600,7 @@
             "name": "variant",
             "type": "\"solid\" | \"outline\" | \"ghost\" | \"critical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment."
           }
         ]
       },
@@ -654,7 +654,7 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty control before the reader enters or picks a value."
           },
           {
             "name": "showLabel",
@@ -783,7 +783,7 @@
             "name": "onInputValueChange",
             "type": "((value: string) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the typed text after every keystroke."
           }
         ]
       }
@@ -814,7 +814,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | \"xl\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The avatar's diameter step."
           },
           {
             "name": "src",
@@ -857,13 +857,13 @@
             "name": "tone",
             "type": "\"accent\" | \"critical\" | \"neutral\" | \"positive\" | \"caution\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The semantic color: neutral, accent, positive, caution, or critical."
           },
           {
             "name": "variant",
             "type": "\"solid\" | \"subtle\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Solid fill or the quiet outline treatment."
           }
         ]
       }
@@ -989,7 +989,7 @@
             "name": "defaultExpanded",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Starts expanded, when the disclosure is uncontrolled."
           },
           {
             "name": "level",
@@ -1006,7 +1006,7 @@
             "name": "variant",
             "type": "BubbleVariant",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Which side of the conversation the group belongs to."
           },
           {
             "name": "children",
@@ -1101,7 +1101,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The axis the buttons are laid along."
           }
         ]
       },
@@ -1118,7 +1118,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Which axis the separator divides."
           },
           {
             "name": "ref",
@@ -1358,7 +1358,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | \"icon\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -1400,7 +1400,7 @@
             "name": "variant",
             "type": "\"solid\" | \"outline\" | \"ghost\" | \"critical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment."
           }
         ]
       },
@@ -1615,7 +1615,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\"",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -1657,7 +1657,7 @@
             "name": "variant",
             "type": "\"solid\" | \"outline\" | \"ghost\" | \"critical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment."
           }
         ]
       }
@@ -1670,13 +1670,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | \"icon\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "variant",
             "type": "\"solid\" | \"outline\" | \"ghost\" | \"critical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment."
           }
         ]
       }
@@ -1892,7 +1892,7 @@
             "name": "variant",
             "type": "\"outlined\" | \"elevated\" | \"plain\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame treatment: outlined, filled, or bare."
           }
         ]
       },
@@ -2154,7 +2154,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\"",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -2196,7 +2196,7 @@
             "name": "variant",
             "type": "\"solid\" | \"outline\" | \"ghost\" | \"critical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment."
           }
         ]
       },
@@ -2260,25 +2260,25 @@
             "name": "opts",
             "type": "Partial<OptionsType> | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Embla carousel options, forwarded to the engine."
           },
           {
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The scroll axis."
           },
           {
             "name": "plugins",
             "type": "CreatePluginType<LoosePluginType, {}>[] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Embla plugins, forwarded to the engine."
           },
           {
             "name": "setApi",
             "type": "((api: CarouselApi) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Receives the embla API once the carousel mounts."
           }
         ]
       }
@@ -2376,7 +2376,7 @@
             "name": "config",
             "type": "ChartConfig",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Per-series labels and colors, keyed by the data's series keys."
           },
           {
             "name": "data",
@@ -2459,25 +2459,25 @@
             "name": "caption",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible caption of the semantic data table."
           },
           {
             "name": "categoryKey",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The row-heading column's key in the data."
           },
           {
             "name": "config",
             "type": "ChartConfig",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Per-series labels and colors, keyed by the data's series keys."
           },
           {
             "name": "data",
             "type": "ChartRow[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The rows the table serves — the same data the chart draws."
           },
           {
             "name": "locale",
@@ -2573,7 +2573,7 @@
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "dir",
@@ -3569,7 +3569,7 @@
             "name": "onOpenChange",
             "type": "((isOpen: boolean) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when the menu opens or closes."
           }
         ]
       }
@@ -3847,7 +3847,7 @@
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "dir",
@@ -3949,7 +3949,7 @@
             "name": "size",
             "type": "DateFieldSize",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The control-height variant shared across form controls."
           },
           {
             "name": "style",
@@ -4028,7 +4028,7 @@
             "name": "isReadOnly",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The segments are announced and focusable but cannot be edited."
           },
           {
             "name": "ref",
@@ -4040,7 +4040,7 @@
             "name": "size",
             "type": "DateInputSize",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The control-height variant shared across form controls."
           }
         ]
       }
@@ -4438,7 +4438,7 @@
             "name": "defaultValue",
             "type": "CalendarDateRange | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial range, when uncontrolled."
           },
           {
             "name": "description",
@@ -4450,7 +4450,7 @@
             "name": "isDateUnavailable",
             "type": "((date: CalendarDate) => boolean) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks individual dates unselectable in the grid."
           },
           {
             "name": "isDisabled",
@@ -4462,7 +4462,7 @@
             "name": "maxValue",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The latest selectable date."
           },
           {
             "name": "minValue",
@@ -4474,7 +4474,7 @@
             "name": "onChange",
             "type": "((value: CalendarDateRange | null) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the committed range, or null when cleared."
           },
           {
             "name": "placement",
@@ -4492,13 +4492,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The control-height variant shared across form controls."
           },
           {
             "name": "value",
             "type": "CalendarDateRange | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The range, when controlled."
           }
         ]
       }
@@ -4511,7 +4511,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       }
@@ -4553,7 +4553,7 @@
             "name": "layout",
             "type": "\"row\" | \"stack\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Stacked pairs or the side-by-side columns."
           }
         ]
       },
@@ -4682,7 +4682,7 @@
             "name": "size",
             "type": "\"full\" | \"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The modal's max-width preset."
           },
           {
             "name": "style",
@@ -5529,13 +5529,13 @@
             "name": "side",
             "type": "\"start\" | \"end\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The logical edge the drawer slides from; mirrors under RTL."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "How much of the viewport the drawer occupies."
           },
           {
             "name": "slot",
@@ -5608,13 +5608,13 @@
             "name": "media",
             "type": "\"icon\" | \"bare\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "How the icon is framed: the 40px chip or unframed."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The vertical rhythm step of the whole state."
           }
         ]
       }
@@ -5760,7 +5760,7 @@
             "name": "tone",
             "type": "\"accent\" | \"critical\" | \"neutral\" | \"positive\" | \"caution\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The event's semantic color."
           }
         ]
       },
@@ -5777,7 +5777,7 @@
             "name": "today",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks the reader's current day."
           }
         ]
       },
@@ -5788,7 +5788,7 @@
             "name": "active",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks the selected view."
           }
         ]
       }
@@ -5901,7 +5901,7 @@
             "name": "allowsMultiple",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Lets one pick contain several files."
           },
           {
             "name": "capture",
@@ -5968,13 +5968,13 @@
             "name": "fields",
             "type": "readonly FilterField[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The filterable fields: id, label, type, and the operators each supports."
           },
           {
             "name": "strings",
             "type": "FiltersStrings",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Every string the control announces or renders. All caller-authored."
           },
           {
             "name": "className",
@@ -5986,13 +5986,13 @@
             "name": "defaultValue",
             "type": "readonly FilterClause[] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial clause list, when uncontrolled."
           },
           {
             "name": "form",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Associates the posted query with a form by id."
           },
           {
             "name": "name",
@@ -6004,13 +6004,13 @@
             "name": "onValueChange",
             "type": "((value: readonly FilterClause[]) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the full clause list after every change."
           },
           {
             "name": "value",
             "type": "readonly FilterClause[] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The clause list, when controlled."
           }
         ]
       }
@@ -6273,7 +6273,7 @@
             "name": "device",
             "type": "\"plain\" | \"browser\" | \"phone\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The chrome drawn around the content: phone or browser."
           }
         ]
       }
@@ -6595,7 +6595,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The member-chip diameter step."
           }
         ]
       }
@@ -6626,7 +6626,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The tile's edge-length step."
           },
           {
             "name": "tone",
@@ -6891,7 +6891,7 @@
             "name": "variant",
             "type": "\"solid\" | \"outline\" | \"ghost\" | \"critical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment."
           }
         ]
       },
@@ -6908,13 +6908,13 @@
             "name": "aria-activedescendant",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-autocomplete",
             "type": "\"none\" | \"inline\" | \"list\" | \"both\"",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-controls",
@@ -7166,13 +7166,13 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty control before the reader enters or picks a value."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -7251,7 +7251,7 @@
             "name": "autoFocus",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Focuses the code input on mount."
           },
           {
             "name": "className",
@@ -7342,13 +7342,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The row-density step shared by every arm of the item union."
           },
           {
             "name": "variant",
             "type": "\"outlined\" | \"plain\" | \"muted\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame treatment: outlined box, plain row, or muted fill."
           }
         ]
       },
@@ -7394,13 +7394,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The row-density step shared by every arm of the item union."
           },
           {
             "name": "variant",
             "type": "\"outlined\" | \"plain\" | \"muted\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame treatment: outlined box, plain row, or muted fill."
           }
         ]
       },
@@ -7452,13 +7452,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The row-density step shared by every arm of the item union."
           },
           {
             "name": "variant",
             "type": "\"outlined\" | \"plain\" | \"muted\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame treatment: outlined box, plain row, or muted fill."
           }
         ]
       },
@@ -7492,7 +7492,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Which axis the separator divides."
           },
           {
             "name": "ref",
@@ -7521,13 +7521,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The row-density step shared by every arm of the item union."
           },
           {
             "name": "variant",
             "type": "\"outlined\" | \"plain\" | \"muted\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame treatment: outlined box, plain row, or muted fill."
           }
         ]
       }
@@ -7540,7 +7540,7 @@
             "name": "media",
             "type": "\"icon\" | \"image\" | \"plain\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "How the leading media is framed: an icon chip, an image, or unframed."
           }
         ]
       },
@@ -7557,13 +7557,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The row-density step shared by every arm of the item union."
           },
           {
             "name": "variant",
             "type": "\"outlined\" | \"plain\" | \"muted\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame treatment: outlined box, plain row, or muted fill."
           }
         ]
       }
@@ -7576,49 +7576,49 @@
             "name": "invalidJsonMessage",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The error announced when the text is not parseable JSON."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name of the field, rendered as its visible label."
           },
           {
             "name": "defaultValue",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial JSON text, when uncontrolled."
           },
           {
             "name": "description",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "formatOnBlur",
             "type": "boolean",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Pretty-prints valid JSON when focus leaves the field."
           },
           {
             "name": "indent",
             "type": "number",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Spaces per level when formatting."
           },
           {
             "name": "onValueChange",
             "type": "(text: string, parsed: JsonValidation) => void",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the text and its parse result after every change."
           },
           {
             "name": "value",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The JSON text, when controlled."
           }
         ]
       }
@@ -7637,7 +7637,7 @@
             "name": "columns",
             "type": "readonly KanbanColumn<T>[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The board: columns in order, each carrying its cards."
           },
           {
             "name": "label",
@@ -7655,13 +7655,13 @@
             "name": "onColumnsChange",
             "type": "(columns: Array<KanbanColumn<T>>) => void",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the full board after a card or column moves."
           },
           {
             "name": "strings",
             "type": "KanbanStrings",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Every string the board announces or renders. All caller-authored."
           },
           {
             "name": "className",
@@ -7698,7 +7698,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The key-cap size step."
           }
         ]
       }
@@ -7747,13 +7747,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The text-size step."
           },
           {
             "name": "variant",
             "type": "\"accent\" | \"subtle\" | \"quiet\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "How strongly the link is styled against surrounding prose."
           }
         ]
       }
@@ -7939,7 +7939,7 @@
             "name": "variant",
             "type": "\"separator\" | \"status\" | \"border\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "What the marker renders as: a status dot, a separator, or a border."
           }
         ]
       }
@@ -7952,43 +7952,43 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name of the field, rendered as its visible label."
           },
           {
             "name": "mask",
             "type": "string",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The maska pattern the input enforces while typing."
           },
           {
             "name": "defaultValue",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial masked text, when uncontrolled."
           },
           {
             "name": "description",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "incompleteMessage",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The error announced when the value does not fill the mask."
           },
           {
             "name": "onValueChange",
             "type": "(raw: string, masked: string, complete: boolean) => void",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the masked and unmasked value after every change."
           },
           {
             "name": "value",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The masked text, when controlled."
           }
         ]
       }
@@ -8066,7 +8066,7 @@
             "name": "hrefLang",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The linked document's language, forwarded to the anchor."
           },
           {
             "name": "id",
@@ -8090,13 +8090,13 @@
             "name": "newTab",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Opens the link in a new tab, with the announcement newTabLabel names."
           },
           {
             "name": "newTabLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Announced suffix telling the reader the link opens a new tab."
           },
           {
             "name": "textValue",
@@ -8259,7 +8259,7 @@
             "name": "title",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The section's visible and announced heading."
           }
         ]
       },
@@ -8287,19 +8287,19 @@
             "name": "defaultOpen",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Opens the menu on first render, when open state is uncontrolled."
           },
           {
             "name": "isOpen",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Whether the menu is open, when controlled."
           },
           {
             "name": "onOpenChange",
             "type": "((isOpen: boolean) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called when the menu opens or closes."
           }
         ]
       },
@@ -8310,7 +8310,7 @@
             "name": "children",
             "type": "ReactElement<unknown, string | React.JSXElementConstructor<any>>[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The parent item, then its submenu. In that order."
           }
         ]
       }
@@ -8945,7 +8945,7 @@
             "name": "value",
             "type": "Date",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The instant, formatted in the locale's calendar."
           },
           {
             "name": "className",
@@ -8968,7 +8968,7 @@
             "name": "value",
             "type": "number",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The number, formatted in the locale's digits and separators."
           },
           {
             "name": "className",
@@ -9059,7 +9059,7 @@
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "dir",
@@ -9215,13 +9215,13 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty control before the reader enters or picks a value."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -9276,7 +9276,7 @@
             "name": "getKey",
             "type": "(item: T, index: number) => Key",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Stable identity per item; measurement caches by it."
           },
           {
             "name": "initialVisibleItems",
@@ -9288,19 +9288,19 @@
             "name": "items",
             "type": "readonly T[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The full collection; items that no longer fit collapse into the overflow."
           },
           {
             "name": "renderItem",
             "type": "(item: T, index: number) => LumoNode",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Renders one visible item."
           },
           {
             "name": "renderOverflow",
             "type": "(hidden: readonly OverflowListEntry<T>[]) => LumoNode",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Renders the overflow affordance from the hidden entries."
           },
           {
             "name": "className",
@@ -9312,7 +9312,7 @@
             "name": "collapseFrom",
             "type": "\"start\" | \"end\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Which end gives up items first when space runs out."
           },
           {
             "name": "gap",
@@ -9324,13 +9324,13 @@
             "name": "maxVisibleItems",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Upper bound on visible items regardless of space."
           },
           {
             "name": "minVisibleItems",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Lower bound on visible items regardless of space."
           }
         ]
       }
@@ -9403,7 +9403,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       }
@@ -9416,13 +9416,13 @@
             "name": "current",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks the page the reader is on."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       }
@@ -9471,13 +9471,13 @@
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The validation message rendered and announced when the number is invalid."
           },
           {
             "name": "isDisabled",
@@ -9489,7 +9489,7 @@
             "name": "name",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Submitted field name; the value posts in E.164."
           },
           {
             "name": "onChange",
@@ -9501,7 +9501,7 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty control before the reader enters or picks a value."
           },
           {
             "name": "value",
@@ -9549,19 +9549,19 @@
             "name": "aria-details",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-label",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-labelledby",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "children",
@@ -9633,7 +9633,7 @@
             "name": "padded",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Applies the surface's default inner padding."
           },
           {
             "name": "placement",
@@ -9849,31 +9849,31 @@
             "name": "formatOptions",
             "type": "Intl.NumberFormatOptions | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Intl.NumberFormat options for the displayed and announced value."
           },
           {
             "name": "maxValue",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The scale's maximum. Defaults to 1."
           },
           {
             "name": "minValue",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The scale's minimum. Defaults to 0."
           },
           {
             "name": "showValue",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Renders the formatted value beside the label."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The track-thickness step."
           },
           {
             "name": "tone",
@@ -9885,7 +9885,7 @@
             "name": "value",
             "type": "number | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The measured value within the scale."
           }
         ]
       },
@@ -9944,7 +9944,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The track-thickness step."
           },
           {
             "name": "tone",
@@ -9986,13 +9986,13 @@
             "name": "children",
             "type": "(item: ManagedSurface<T>) => LumoNode",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The subtree the managed surfaces serve."
           },
           {
             "name": "manager",
             "type": "LumoSurfaceManager<T>",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The surface manager instance owning imperative overlays."
           }
         ]
       }
@@ -10199,7 +10199,7 @@
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "dir",
@@ -10307,7 +10307,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The axis the radios are laid along."
           },
           {
             "name": "style",
@@ -10559,13 +10559,13 @@
             "name": "defaultMonth",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The month the grid opens on when no value decides it."
           },
           {
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "errorMessage",
@@ -10577,7 +10577,7 @@
             "name": "isDateUnavailable",
             "type": "((date: CalendarDate) => boolean) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks individual dates unselectable in the grid."
           },
           {
             "name": "isDisabled",
@@ -10595,7 +10595,7 @@
             "name": "value",
             "type": "CalendarDateRange | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The selected range, when controlled. CalendarDate endpoints, inclusive."
           }
         ]
       },
@@ -10642,13 +10642,13 @@
             "name": "defaultMonth",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The month the grid opens on when no value decides it."
           },
           {
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "errorMessage",
@@ -10660,7 +10660,7 @@
             "name": "isDateUnavailable",
             "type": "((date: CalendarDate) => boolean) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Marks individual dates unselectable in the grid."
           },
           {
             "name": "isDisabled",
@@ -10690,7 +10690,7 @@
             "name": "value",
             "type": "CalendarDateRange | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The selected range, when controlled. CalendarDate endpoints, inclusive."
           }
         ]
       }
@@ -10872,7 +10872,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The star-size step."
           },
           {
             "name": "value",
@@ -10949,7 +10949,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The star-size step."
           },
           {
             "name": "starLabel",
@@ -10978,7 +10978,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The star-size step."
           }
         ]
       },
@@ -11025,7 +11025,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The star-size step."
           }
         ]
       }
@@ -11196,7 +11196,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | \"both\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Which axes scroll."
           }
         ]
       }
@@ -11209,7 +11209,7 @@
             "name": "items",
             "type": "readonly ScrollspyItem[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The page sections linked: each an element id with a visible label."
           },
           {
             "name": "label",
@@ -11264,13 +11264,13 @@
             "name": "aria-activedescendant",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-autocomplete",
             "type": "\"none\" | \"inline\" | \"list\" | \"both\"",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-controls",
@@ -11348,7 +11348,7 @@
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "dir",
@@ -11528,13 +11528,13 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty control before the reader enters or picks a value."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -11613,7 +11613,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       },
@@ -11660,7 +11660,7 @@
             "name": "onSelectionChange",
             "type": "((keys: Set<Key>) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the newly selected key."
           },
           {
             "name": "selectedKeys",
@@ -11677,7 +11677,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       }
@@ -11780,7 +11780,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "triggerClassName",
@@ -12020,7 +12020,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       },
@@ -12031,7 +12031,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       },
@@ -12067,7 +12067,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Which axis the separator divides."
           },
           {
             "name": "ref",
@@ -12257,7 +12257,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | \"xl\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The avatar placeholder's diameter step."
           }
         ]
       },
@@ -12362,7 +12362,7 @@
             "name": "shape",
             "type": "\"text\" | \"circle\" | \"rect\" | \"heading\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The placeholder's silhouette: text line, circle, or block."
           }
         ]
       }
@@ -12501,7 +12501,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -12542,7 +12542,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       }
@@ -12561,7 +12561,7 @@
             "name": "items",
             "type": "readonly T[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The ordered collection; each item needs a stable id."
           },
           {
             "name": "label",
@@ -12585,7 +12585,7 @@
             "name": "strings",
             "type": "SortableStrings",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Every string the list announces while a move is in flight. All caller-authored."
           },
           {
             "name": "className",
@@ -12597,7 +12597,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\"",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The axis items are ordered along."
           }
         ]
       }
@@ -12622,7 +12622,7 @@
             "name": "color",
             "type": "\"accent\" | \"current\" | \"muted\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Where the ring takes its color from: the current text color, the accent,\nor muted. Redeclared from the variants (same derived type) only because\nthe checker loses the cva key's docblock across this intersection."
           },
           {
             "name": "showLabel",
@@ -12634,7 +12634,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The ring's diameter step."
           }
         ]
       }
@@ -12659,7 +12659,7 @@
             "name": "padded",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Adds the page gutter padding on the inline edges."
           },
           {
             "name": "ref",
@@ -12671,7 +12671,7 @@
             "name": "size",
             "type": "\"full\" | \"sm\" | \"md\" | \"lg\" | \"xl\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The max-width preset the content column is clamped to."
           },
           {
             "name": "tag",
@@ -12688,7 +12688,7 @@
             "name": "align",
             "type": "\"start\" | \"end\" | \"center\" | \"stretch\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Cross-axis alignment of grid items."
           },
           {
             "name": "children",
@@ -12706,13 +12706,13 @@
             "name": "cols",
             "type": "\"1\" | \"2\" | \"auto\" | \"3\" | \"4\" | \"6\" | \"12\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The column template: a fixed count or the auto-fill preset."
           },
           {
             "name": "gap",
             "type": "\"none\" | \"sm\" | \"md\" | \"lg\" | \"xl\" | \"xs\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The spacing step between tracks, from the spacing scale."
           },
           {
             "name": "ref",
@@ -12735,7 +12735,7 @@
             "name": "align",
             "type": "\"start\" | \"end\" | \"center\" | \"stretch\" | \"baseline\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Cross-axis alignment of the children."
           },
           {
             "name": "children",
@@ -12753,19 +12753,19 @@
             "name": "direction",
             "type": "\"row\" | \"column\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Main axis: a logical row that mirrors under RTL, or a column."
           },
           {
             "name": "gap",
             "type": "\"none\" | \"sm\" | \"md\" | \"lg\" | \"xl\" | \"xs\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The spacing step between children, from the spacing scale."
           },
           {
             "name": "justify",
             "type": "\"start\" | \"end\" | \"center\" | \"between\" | \"around\" | \"evenly\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Main-axis distribution of the children."
           },
           {
             "name": "ref",
@@ -12783,7 +12783,7 @@
             "name": "wrap",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Lets the row wrap instead of overflowing."
           }
         ]
       }
@@ -12814,7 +12814,7 @@
             "name": "items",
             "type": "readonly StepItem[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "The steps in order; the current index marks progress."
           },
           {
             "name": "label",
@@ -12844,7 +12844,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The axis the steps are laid along."
           }
         ]
       }
@@ -13126,7 +13126,7 @@
             "name": "size",
             "type": "\"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       }
@@ -13613,7 +13613,7 @@
             "name": "children",
             "type": "LumoNode | ((item: T) => LumoNode)",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The tabs, in order."
           },
           {
             "name": "className",
@@ -14156,7 +14156,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The tag-size step."
           }
         ]
       },
@@ -14167,13 +14167,13 @@
             "name": "removable",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Reserves the inline-end space the remove control occupies."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The tag-size step."
           }
         ]
       },
@@ -14227,7 +14227,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The tag-size step."
           }
         ]
       }
@@ -14306,13 +14306,13 @@
             "name": "suggestions",
             "type": "readonly string[] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Preset entries offered under the input as the reader types."
           },
           {
             "name": "suggestionsLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The accessible name announced for the suggestions list."
           },
           {
             "name": "value",
@@ -14337,13 +14337,13 @@
             "name": "aria-activedescendant",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-autocomplete",
             "type": "\"none\" | \"inline\" | \"list\" | \"both\"",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-controls",
@@ -14421,7 +14421,7 @@
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "dir",
@@ -14583,7 +14583,7 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty control before the reader enters or picks a value."
           },
           {
             "name": "rows",
@@ -14650,13 +14650,13 @@
             "name": "aria-activedescendant",
             "type": "string",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-autocomplete",
             "type": "\"none\" | \"inline\" | \"list\" | \"both\"",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Standard ARIA attribute, forwarded to the element that carries the role."
           },
           {
             "name": "aria-controls",
@@ -14902,13 +14902,13 @@
             "name": "placeholder",
             "type": "string | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Text shown in the empty control before the reader enters or picks a value."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -14975,13 +14975,13 @@
             "name": "defaultValue",
             "type": "TimeFields | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initial time, when uncontrolled."
           },
           {
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
             "name": "errorMessage",
@@ -15029,7 +15029,7 @@
             "name": "isReadOnly",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The value is announced and focusable but cannot be edited."
           },
           {
             "name": "isRequired",
@@ -15065,7 +15065,7 @@
             "name": "size",
             "type": "DateInputSize",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The control-height variant shared across form controls."
           },
           {
             "name": "validate",
@@ -15237,7 +15237,7 @@
             "name": "placement",
             "type": "\"bottom-end\" | \"bottom-start\" | \"top-end\" | \"top-start\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The viewport corner the stack anchors to; logical, so it mirrors under RTL."
           }
         ]
       },
@@ -15248,7 +15248,7 @@
             "name": "tone",
             "type": "\"critical\" | \"neutral\" | \"positive\" | \"caution\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The notification's semantic color."
           }
         ]
       }
@@ -15297,13 +15297,13 @@
             "name": "onSelectionChange",
             "type": "((keys: Set<Key>) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the full selected-key set after every toggle."
           },
           {
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\" | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The axis the buttons are laid along."
           },
           {
             "name": "selectedKeys",
@@ -15368,13 +15368,13 @@
             "name": "onChange",
             "type": "((isSelected: boolean) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the button's new pressed state."
           },
           {
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "tabIndex",
@@ -15393,7 +15393,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           }
         ]
       }
@@ -15574,7 +15574,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -15598,7 +15598,7 @@
             "name": "variant",
             "type": "\"outline\" | \"ghost\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame the pressed state paints against."
           }
         ]
       },
@@ -15777,7 +15777,7 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "slot",
@@ -15801,7 +15801,7 @@
             "name": "variant",
             "type": "\"outline\" | \"ghost\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame the pressed state paints against."
           }
         ]
       }
@@ -15820,13 +15820,13 @@
             "name": "size",
             "type": "\"sm\" | \"md\" | \"lg\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The size step on the shared control scale."
           },
           {
             "name": "variant",
             "type": "\"outline\" | \"ghost\" | null | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The frame the pressed state paints against."
           }
         ]
       }
@@ -16096,13 +16096,13 @@
             "name": "items",
             "type": "readonly TransferListItem[]",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Every item on either side; membership of the selected list is the value."
           },
           {
             "name": "strings",
             "type": "TransferListStrings",
             "required": true,
-            "description": "Lumo prop — docblock pending."
+            "description": "Every string the control announces or renders. All caller-authored."
           },
           {
             "name": "asyncState",
@@ -16120,19 +16120,19 @@
             "name": "defaultValue",
             "type": "readonly Key[] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The initially selected keys, when uncontrolled."
           },
           {
             "name": "onValueChange",
             "type": "((value: readonly Key[]) => void) | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Called with the full selected-key list after every move."
           },
           {
             "name": "value",
             "type": "readonly Key[] | undefined",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "The selected keys, when controlled."
           }
         ]
       }
@@ -16439,7 +16439,7 @@
             "name": "children",
             "type": "LumoNode | ((item: T) => ReactNode)",
             "required": false,
-            "description": "Lumo prop — docblock pending."
+            "description": "Static items, or a render function over the tree's data."
           },
           {
             "name": "className",

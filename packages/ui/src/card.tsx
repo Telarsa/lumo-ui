@@ -22,6 +22,7 @@ export const cardVariants = cva(
   "flex flex-col rounded-lg bg-surface text-fg",
   {
     variants: {
+      /** The frame treatment: outlined, filled, or bare. */
       variant: {
         outlined: "border border-border",
         // Elevation, not a border. Shadows are cast straight down (block axis),

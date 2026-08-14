@@ -168,6 +168,7 @@ export const alertVariants = cva(
  */
 export const alertIconVariants = cva("mbs-0.5 flex size-5 shrink-0 items-center justify-center", {
   variants: {
+    /** The semantic color: neutral, accent, positive, caution, or critical. */
     tone: {
       // `text-fg-muted` and not `text-fg`: the icon is decorative here (it is
       // `aria-hidden` at the call site) and a full-strength glyph beside a
@@ -219,6 +220,12 @@ const ROLE_FOR_LIVE = {
 interface AlertBaseProps
   extends Omit<ComponentProps<"div">, "children" | "className" | "title" | "role">,
     VariantProps<typeof alertVariants> {
+  /**
+   * The semantic color: neutral, accent, positive, caution, or critical.
+   * Redeclared from the variants (same derived type) only because the
+   * intersection of the two cva `tone` keys loses their docblocks.
+   */
+  tone?: VariantProps<typeof alertVariants>["tone"];
   /**
    * Optional leading icon. A slot rather than a per-tone default, because a
    * bundled icon set would ship a fifth dependency into every copied file — and

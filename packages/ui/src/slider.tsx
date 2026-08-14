@@ -146,6 +146,7 @@ export const sliderTrackVariants = cva(
     "data-disabled:opacity-50",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         sm: "h-1",
         md: "h-1.5",

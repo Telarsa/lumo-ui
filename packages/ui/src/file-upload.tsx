@@ -172,7 +172,7 @@ export interface FileUploadProps
   onRejectFiles?: (rejections: FileUploadRejection[]) => void;
   /** MIME types or extensions the picker offers, e.g. `["image/png", ".pdf"]`. */
   acceptedFileTypes?: readonly string[] | undefined;
-  allowsMultiple?: boolean | undefined;
+  /** Lets one pick contain several files. */  allowsMultiple?: boolean | undefined;
   /** Maximum bytes per file. Non-finite and negative values reject nothing. */
   maxFileSize?: number | undefined;
   /** Maximum total files, including `currentFileCount`. */

@@ -67,6 +67,7 @@ export function SkeletonText({ lines = 3, className, ...props }: SkeletonTextPro
 /** Mirrors avatar.tsx's size scale so nothing shifts when the portrait lands. */
 export const skeletonAvatarVariants = cva("rounded-full", {
   variants: {
+    /** The avatar placeholder's diameter step. */
     size: {
       sm: "size-6",
       md: "size-8",

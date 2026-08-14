@@ -376,10 +376,13 @@ export interface DateSelectorProps {
    * than inherited from whichever ICU build the host happens to have.
    */
   dateFormatOptions?: Intl.DateTimeFormatOptions | undefined;
+  /** The range, when controlled. */
   value?: CalendarDateRange | null | undefined;
   /** Clock input for the popup calendar. Required for deterministic rendering. */
   today: CalendarDate;
+  /** The initial range, when uncontrolled. */
   defaultValue?: CalendarDateRange | null | undefined;
+  /** Called with the committed range, or null when cleared. */
   onChange?: ((value: CalendarDateRange | null) => void) | undefined;
   /**
    * Earliest and latest selectable DAY in the grid, forwarded to `RangeCalendar`.
@@ -389,11 +392,14 @@ export interface DateSelectorProps {
    * out-of-range day. PRESETS are still not clamped to them: see item 4.
    */
   minValue?: CalendarDate | undefined;
+  /** The latest selectable date. */
   maxValue?: CalendarDate | undefined;
+  /** Marks individual dates unselectable in the grid. */
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
   isDisabled?: boolean | undefined;
   /** Logical only. `LumoPlacement` subtracts the physical spellings. */
   placement?: LumoPlacement;
+  /** The control-height variant shared across form controls. */
   size?: "sm" | "md" | "lg" | undefined;
   /** Shown under the grid, inside the panel. */
   description?: LumoNode;

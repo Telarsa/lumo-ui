@@ -81,6 +81,7 @@ import { Menu, MenuPopover, type MenuProps } from "./menu.tsx";
 export interface ContextMenuTriggerProps {
   /** The right-click surface, then the `<ContextMenu>`. In that order. */
   children: LumoNode;
+  /** Called when the menu opens or closes. */
   onOpenChange?: ((isOpen: boolean) => void) | undefined;
 }
 

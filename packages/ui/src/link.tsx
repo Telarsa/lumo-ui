@@ -78,6 +78,7 @@ export const linkVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4",
   {
     variants: {
+      /** How strongly the link is styled against surrounding prose. */
       variant: {
         // The default. Coloured and underlined, because colour alone is not a
         // distinguishing feature (WCAG 1.4.1) once the link sits inside prose.
@@ -124,6 +125,7 @@ export const linkVariants = cva(
         // a heading, where the target is obvious from the layout.
         quiet: "text-current no-underline hover:underline",
       },
+      /** The text-size step. */
       size: {
         sm: "text-sm",
         md: "text-base",

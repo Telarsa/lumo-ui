@@ -39,6 +39,7 @@ export const markerVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
+      /** The dot's semantic color. */
       variant: {
         /** A centered status line — presence, joins, date stamps. */
         status: "justify-center text-center",
@@ -61,6 +62,7 @@ export const markerVariants = cva(
 
 export interface MarkerProps
   extends Omit<ComponentProps<"div">, "children" | "className"> {
+  /** What the marker renders as: a status dot, a separator, or a border. */
   variant?: "status" | "separator" | "border" | undefined;
   children?: LumoNode;
   className?: string | undefined;

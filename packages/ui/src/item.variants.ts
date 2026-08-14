@@ -63,11 +63,13 @@ export const itemVariants = cva(
         true: "hover:bg-surface-hover active:translate-y-px",
         false: "",
       },
+      /** The frame treatment: outlined box, plain row, or muted fill. */
       variant: {
         plain: "rounded-md",
         outlined: "rounded-md border border-border bg-surface",
         muted: "rounded-md bg-surface-sunken",
       },
+      /** The row-density step shared by every arm of the item union. */
       size: {
         sm: "gap-2.5 px-3 py-2.5",
         md: "gap-3.5 px-4 py-3.5",
@@ -91,6 +93,7 @@ export const itemMediaVariants = cva(
     "group-has-[[data-lumo-item-description]]/lumo-item:self-start",
   {
     variants: {
+      /** How the leading media is framed: an icon chip, an image, or unframed. */
       media: {
         plain: "",
         icon: "[&_svg]:size-4",

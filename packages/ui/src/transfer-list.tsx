@@ -54,10 +54,15 @@ export interface TransferListStrings {
 
 export interface TransferListProps
   extends Omit<ComponentProps<"div">, "children" | "className" | "defaultValue" | "onChange"> {
+  /** Every item on either side; membership of the selected list is the value. */
   items: readonly TransferListItem[];
+  /** Every string the control announces or renders. All caller-authored. */
   strings: TransferListStrings;
+  /** The selected keys, when controlled. */
   value?: readonly Key[] | undefined;
+  /** The initially selected keys, when uncontrolled. */
   defaultValue?: readonly Key[] | undefined;
+  /** Called with the full selected-key list after every move. */
   onValueChange?: ((value: readonly Key[]) => void) | undefined;
   /** Remote state for the available/source pool; selected values stay usable. */
   asyncState?: AsyncCollectionPresentation | undefined;

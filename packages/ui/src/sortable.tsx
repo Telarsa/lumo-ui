@@ -179,10 +179,13 @@ export interface SortableProps<T extends SortableItem>
   /** Names the list. Required — a reorderable list needs a name. */
   label: string;
   locale: Locale;
+  /** The ordered collection; each item needs a stable id. */
   items: readonly T[];
   /** Called with the whole list in its new order. */
   onReorder: (items: T[]) => void;
+  /** The axis items are ordered along. */
   orientation?: "vertical" | "horizontal";
+  /** Every string the list announces while a move is in flight. All caller-authored. */
   strings: SortableStrings;
   /** Renders one item's content. The handle is supplied. */
   children: (item: T, index: number) => LumoNode;

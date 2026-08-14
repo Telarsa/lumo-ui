@@ -114,6 +114,7 @@ export const toggleVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
+      /** The frame the pressed state paints against. */
       variant: {
         /** No resting chrome; the ON state is the only fill. */
         ghost: "",
@@ -126,6 +127,7 @@ export const toggleVariants = cva(
          */
         outline: "border border-border-control bg-surface",
       },
+      /** The size step on the shared control scale. */
       size: {
         // Logical padding so it mirrors; heights come from the density-scaled
         // control tokens rather than a literal rem, so the preview toolbar's

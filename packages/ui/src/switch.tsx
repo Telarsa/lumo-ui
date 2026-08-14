@@ -33,6 +33,7 @@ export const switchVariants = cva(
     "data-disabled:cursor-not-allowed data-disabled:opacity-50",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         md: "text-sm",
         lg: "min-h-control-lg text-base",

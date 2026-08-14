@@ -48,6 +48,7 @@ export const tagVariants = cva(
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
+      /** The tag-size step. */
       size: {
         // `ps-`/`pe-` rather than `px-`: a removable tag needs less padding on
         // the inline END, where the remove button already contributes its own.

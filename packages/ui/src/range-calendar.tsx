@@ -95,10 +95,13 @@ export interface RangeCalendarBaseProps
   locale: Locale;
   /** Clock input for deterministic SSR and hydration. */
   today: CalendarDate;
+  /** The selected range, when controlled. CalendarDate endpoints, inclusive. */
   value?: CalendarDateRange | undefined;
   /** Fires with both ends, or `undefined` once the selection is cleared. */
   onChange?: ((value: CalendarDateRange | undefined) => void) | undefined;
+  /** The month the grid opens on when no value decides it. */
   defaultMonth?: CalendarDate | undefined;
+  /** Marks individual dates unselectable in the grid. */
   isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
   isDisabled?: boolean | undefined;
   description?: LumoNode;

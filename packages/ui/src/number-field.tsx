@@ -69,6 +69,7 @@ export const numberInputVariants = cva(
     "data-disabled:cursor-not-allowed data-disabled:bg-surface-sunken",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         sm: "h-control-sm text-sm",
         md: "h-control-md text-sm",

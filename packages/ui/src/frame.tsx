@@ -45,6 +45,7 @@ import { cn, type LumoNode } from "@lumo-ui/core";
 
 export const frameVariants = cva("overflow-hidden border border-border bg-surface", {
   variants: {
+    /** The chrome drawn around the content: phone or browser. */
     device: {
       /** A browser window: a bar with dots and an address line. */
       browser: "rounded-lg shadow-raised",

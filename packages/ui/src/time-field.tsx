@@ -74,6 +74,7 @@ export interface TimeFieldProps {
   label: string;
   /** Controlled value. Any `{hour, minute, second}` — a `Time` satisfies it. */
   value?: TimeFields | null | undefined;
+  /** The initial time, when uncontrolled. */
   defaultValue?: TimeFields | null | undefined;
   /** Fires with three numbers, or `null` while any segment is empty. */
   onChange?: ((value: TimeFields | null) => void) | undefined;
@@ -102,7 +103,9 @@ export interface TimeFieldProps {
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;
   isDisabled?: boolean | undefined;
+  /** The value is announced and focusable but cannot be edited. */
   isReadOnly?: boolean | undefined;
+  /** The control-height variant shared across form controls. */
   size?: DateInputSize;
   className?: string | undefined;
   /** Classes for the segment box itself. */

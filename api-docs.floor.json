@@ -1,4 +1,4 @@
 {
-  "note": "Ratchet for build-api-reference.mjs: the highest tolerated count of Lumo-authored props with no docblock. Documenting props lets this number be LOWERED in the same change; it must never be raised.",
-  "maxUndocumentedLumoProps": 231
+  "note": "Ratchet for build-api-reference.mjs: the highest tolerated count of Lumo-authored props with no docblock. Reached ZERO on 14 Aug 2026; every new prop must ship documented.",
+  "maxUndocumentedLumoProps": 0
 }
