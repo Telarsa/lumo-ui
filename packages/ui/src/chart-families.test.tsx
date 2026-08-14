@@ -141,6 +141,80 @@ describe("advanced chart families", () => {
  * of the chart system has — so the pin is on the output, where a regression
  * cannot hide behind an unwired option.
  */
+describe("chart families deliver the caller's classes", () => {
+  /*
+   * Each family's only `className=` is the caller passthrough onto
+   * ChartContainer — every other visible class belongs to chart.tsx. So the
+   * one observation that dies with the family's visual mutant is that the
+   * passthrough actually lands in the served bytes.
+   */
+  it("all four passthroughs reach the container", () => {
+    const marker = "zz-styling-floor";
+    const heat = renderToStaticMarkup(
+      <HeatmapChart
+        locale="en-US"
+        label="Intensity"
+        dataCaption="Intensity data"
+        xAxisLabel="Quarter"
+        yAxisLabel="Team"
+        valueLabel="Sales"
+        className={marker}
+        data={[{ id: "a", x: "Q1", y: "Core", value: 10 }]}
+      />,
+    );
+    const radar = renderToStaticMarkup(
+      <RadarChart
+        locale="en-US"
+        label="Profile"
+        dataCaption="Profile data"
+        dimensionLabel="Dimension"
+        maxValue={100}
+        className={marker}
+        series={[{ key: "one", label: "One", color: "var(--color-accent)" }]}
+        data={[
+          { dimension: "A", one: 10 },
+          { dimension: "B", one: 20 },
+          { dimension: "C", one: 30 },
+        ]}
+      />,
+    );
+    const tree = renderToStaticMarkup(
+      <TreemapChart
+        locale="en-US"
+        label="Share"
+        dataCaption="Share data"
+        parentLabel="Parent"
+        valueLabel="Value"
+        className={marker}
+        data={[
+          { id: "root", parentId: null, label: "All", value: 0 },
+          { id: "big", parentId: "root", label: "Big", value: 70 },
+        ]}
+      />,
+    );
+    const sankey = renderToStaticMarkup(
+      <SankeyChart
+        locale="en-US"
+        label="Flow"
+        dataCaption="Flow data"
+        targetLabel="Target"
+        valueLabel="Value"
+        className={marker}
+        nodes={[
+          { id: "a", label: "A" },
+          { id: "b", label: "B" },
+        ]}
+        links={[{ id: "ab", source: "a", target: "b", value: 10 }]}
+      />,
+    );
+    for (const html of [heat, radar, tree, sankey]) {
+      // Inside a CLASS attribute specifically — the campaign's mutant renames
+      // the attribute and keeps the value, so a bare contains() cannot die.
+      expect(html).toMatch(new RegExp(`class="[^"]*${marker}`));
+    }
+  });
+});
+
 describe("chart families mirror under RTL", () => {
   const xOf = (html: string, keyPart: string): number => {
     const tag = [...html.matchAll(/<(?:rect|text)\b[^>]*>/g)]

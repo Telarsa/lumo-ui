@@ -211,3 +211,15 @@ describe("Filters", () => {
     ).toThrow(/unknown operator/i);
   });
 });
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the filters region carries the module's own classes", () => {
+    const { container } = render(<Filters fields={fields} strings={strings} />);
+    expect(container.firstElementChild?.getAttribute("class")).toBeTruthy();
+  });
+});

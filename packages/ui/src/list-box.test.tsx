@@ -323,3 +323,17 @@ describe("async collection state", () => {
     expect(loadMore).toHaveBeenCalledOnce();
   });
 });
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the listbox carries the module's own classes", () => {
+    const { container } = render(
+      <ListBox label="شهرها" selectionMode="single">{cities}</ListBox>,
+    );
+    expect(container.querySelector('[role="listbox"]')?.getAttribute("class")).toBeTruthy();
+  });
+});

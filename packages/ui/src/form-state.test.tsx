@@ -18,7 +18,7 @@
 
 import { afterEach, describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render } from "@testing-library/react";
 import { gradeHtml, namedControls, resolvedIdrefs } from "../../gate/src/index.ts";
 import {
   LumoForm,
@@ -525,5 +525,26 @@ describe("firstError", () => {
   it("formats a numeric error rather than leaking a Latin digit", () => {
     expect(firstError([18], "fa-IR")).toBe("۱۸");
     expect(firstError([18], "en-US")).toBe("18");
+  });
+});
+
+describe("submit cancellation is observable", () => {
+  it("LumoForm prevents the native submit navigation", () => {
+    function Probe() {
+      const form = useLumoForm({ defaultValues: { subject: "" } });
+      return (
+        <LumoForm form={form}>
+          <form.Field name="subject">
+            {(field) => <TextField label="موضوع" {...fieldControl(field, "fa-IR")} />}
+          </form.Field>
+        </LumoForm>
+      );
+    }
+    const { container } = render(<Probe />);
+    const formElement = container.querySelector("form");
+    expect(formElement).toBeTruthy();
+    // fireEvent returns false when preventDefault was called — the campaign's
+    // form-state mutant removes exactly that call, and nothing observed it.
+    expect(fireEvent.submit(formElement as HTMLFormElement)).toBe(false);
   });
 });

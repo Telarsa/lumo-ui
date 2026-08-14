@@ -267,3 +267,17 @@ describe("mutation survivors, now observed", () => {
     expect(bar.getAttribute("aria-valuetext")).toBe("چهل درصد");
   });
 });
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the drop zone carries the module's own classes", () => {
+    const { container } = render(
+      <FileUpload label="بارگذاری پرونده" triggerLabel="انتخاب پرونده" />,
+    );
+    expect(container.firstElementChild?.getAttribute("class")).toBeTruthy();
+  });
+});

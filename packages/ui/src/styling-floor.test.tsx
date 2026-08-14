@@ -1,7 +1,21 @@
-import { render } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
+import { CalendarDate, PersianCalendar } from "@internationalized/date";
 import { Badge } from "./badge.tsx";
+import { HoverCard } from "./hover-card.tsx";
+import { DateSelector } from "./date-selector.tsx";
+import { Questionnaire } from "./questionnaire.tsx";
+import { TransferList } from "./transfer-list.tsx";
+import { Menu, MenuItem, MenuPopover, MenuTrigger } from "./menu.tsx";
+import { Menubar, MenubarButton } from "./menubar.tsx";
+import { NavigationMenu, NavigationMenuLink } from "./navigation-menu.tsx";
+import { PhoneInput } from "./phone-input.tsx";
+import { Resizable } from "./resizable.tsx";
+import { Scrollspy } from "./scrollspy.tsx";
+import { Sidebar, SidebarContent, SidebarGroup, SidebarItem } from "./sidebar.tsx";
+import { Sortable } from "./sortable.tsx";
+import { ToastRegion, createToastQueue } from "./toast.tsx";
 import { ColorPicker } from "./color-picker.tsx";
 import { Disclosure, DisclosureGroup, DisclosurePanel, DisclosureTrigger } from "./disclosure.tsx";
 import { InputOtp } from "./input-otp.tsx";
@@ -306,6 +320,112 @@ describe("styling floor — modules whose visual mutant previously survived", ()
     expectStyled(container.firstElementChild);
   });
 
+  it("Sidebar", () => {
+    const { container } = render(
+      <Sidebar label="ناوبری اصلی">
+        <SidebarContent>
+          <SidebarGroup title="گزارش‌ها">
+            <SidebarItem href="/dash" icon={<svg />}>داشبورد</SidebarItem>
+          </SidebarGroup>
+        </SidebarContent>
+      </Sidebar>,
+    );
+    expectStyled(container.querySelector("nav, aside"));
+  });
+
+  it("Scrollspy", () => {
+    const { container } = render(
+      <Scrollspy
+        label="در این صفحه"
+        items={[
+          { id: "install", label: "نصب" },
+          { id: "usage", label: "استفاده" },
+        ]}
+      />,
+    );
+    expectStyled(container.querySelector("nav a"));
+  });
+
+  it("Resizable", () => {
+    const { container } = render(
+      <Resizable
+        locale="fa-IR"
+        label="تغییر اندازهٔ ستون‌ها"
+        sizeLabel={(size) => `${size} درصد`}
+        startPanel={<p>درخت</p>}
+        endPanel={<p>ویرایشگر</p>}
+      />,
+    );
+    expectStyled(container.querySelector('[role="separator"]'));
+  });
+
+  it("PhoneInput", () => {
+    const { container } = render(<PhoneInput label="شمارهٔ موبایل" countryLabel="کشور" locale="fa-IR" />);
+    // The root's classes belong to the composed Field; the ROW holding the
+    // country select beside the number is what this module styles itself.
+    expectStyled(container.querySelector("bdi[data-lumo-latn]"));
+  });
+
+  it("Menubar", () => {
+    const { container } = render(
+      <Menubar label="نوار منو">
+        <MenuTrigger>
+          <MenubarButton>پرونده</MenubarButton>
+          <MenuPopover>
+            <Menu aria-label="پرونده" onAction={() => undefined}>
+              <MenuItem id="new">سند تازه</MenuItem>
+            </Menu>
+          </MenuPopover>
+        </MenuTrigger>
+      </Menubar>,
+    );
+    expectStyled(container.querySelector('[role="menubar"]'));
+  });
+
+  it("NavigationMenu", () => {
+    const { container } = render(
+      <NavigationMenu label="ناوبری اصلی">
+        <NavigationMenuLink href="/pricing">قیمت‌ها</NavigationMenuLink>
+      </NavigationMenu>,
+    );
+    // The <nav> itself is classless by design; the module's own classes sit
+    // on the row wrapper inside it.
+    expectStyled(container.querySelector("nav > div"));
+  });
+
+  it("Sortable", () => {
+    const { container } = render(
+      <Sortable
+        label="ترتیب وظیفه‌ها"
+        locale="fa-IR"
+        items={[
+          { id: "a", label: "اول" },
+          { id: "b", label: "دوم" },
+        ]}
+        onReorder={() => undefined}
+        strings={{
+          handleRoleDescription: "دستگیرهٔ جابه‌جایی",
+          handleLabel: "جابه‌جایی",
+          pickedUp: "برداشته شد",
+          dropped: "رها شد",
+          cancelled: "لغو شد",
+          position: (index, total) => `${index} از ${total}`,
+        }}
+      >
+        {(task: { id: string; label: string }) => <span>{task.label}</span>}
+      </Sortable>,
+    );
+    expectStyled(container.querySelector("li, [role='list'] > *, ul"));
+  });
+
+  it("ToastRegion", () => {
+    const queue = createToastQueue();
+    queue.add({ title: "ذخیره شد" });
+    render(<ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />);
+    // The region portals to <body>, so the render container stays empty.
+    expectStyled(document.querySelector('[aria-label="اعلان‌ها"]'));
+  });
+
   it("Pagination", () => {
     const { container } = render(
       <Pagination
@@ -320,5 +440,89 @@ describe("styling floor — modules whose visual mutant previously survived", ()
       />,
     );
     expectStyled(container.querySelector("nav"));
+  });
+
+  it("Questionnaire", () => {
+    const { container } = render(
+      <Questionnaire
+        locale="fa-IR"
+        items={[
+          {
+            id: "role",
+            title: "نقش شما چیست؟",
+            choices: [
+              { value: "design", label: "طراح" },
+              { value: "dev", label: "توسعه‌دهنده" },
+            ],
+          },
+        ]}
+        strings={{
+          progressLabel: "پیشرفت",
+          progressTemplate: "پرسش {current} از {total}",
+          previous: "قبلی",
+          next: "بعدی",
+          skip: "رد شدن",
+          submit: "ارسال",
+        }}
+      />,
+    );
+    expectStyled(container.querySelector("form"));
+  });
+
+  it("TransferList", () => {
+    const { container } = render(
+      <TransferList
+        items={[
+          { id: "a", textValue: "تهران", children: "تهران" },
+          { id: "b", textValue: "اصفهان", children: "اصفهان" },
+        ]}
+        strings={{
+          availableLabel: "موجود",
+          selectedLabel: "انتخاب‌شده",
+          addSelected: "افزودن",
+          removeSelected: "برداشتن",
+          moveUp: "بالا",
+          moveDown: "پایین",
+          moved: (count, destination) => `${count} به ${destination} منتقل شد`,
+        }}
+      />,
+    );
+    expectStyled(container.firstElementChild);
+  });
+
+  it("DateSelector", () => {
+    const { container } = render(
+      <DateSelector
+        label="بازهٔ گزارش"
+        panelLabel="انتخاب بازهٔ تاریخ"
+        presetsLabel="بازه‌های آماده"
+        calendarLabel="انتخاب بازهٔ دلخواه"
+        placeholder="بازه‌ای انتخاب نشده"
+        formatRange={(from, to) => (to === undefined ? from : `${from} تا ${to}`)}
+        today={new CalendarDate(new PersianCalendar(), 1405, 5, 21)}
+        presets={[{ id: "today", label: "امروز", range: { kind: "today" } }]}
+      />,
+    );
+    expectStyled(container.querySelector("button"));
+  });
+
+  it("HoverCard opens on focus and its popup carries the module's own classes", async () => {
+    render(
+      <HoverCard label="نمای کوتاه نمایه" trigger={<a href="/u/k">کامیاب</a>}>
+        <p>زیست‌نامه</p>
+      </HoverCard>,
+    );
+    // Closed, the module renders only the caller's trigger — every class it
+    // owns lives in the popup, so the observation must open it. Focus opens
+    // after the shared intent delay.
+    fireEvent.focus(screen.getByRole("link"));
+    await waitFor(
+      () => {
+        expect(screen.getByText("زیست‌نامه")).toBeTruthy();
+      },
+      { timeout: 3000 },
+    );
+    const popup = screen.getByText("زیست‌نامه").closest("[class]");
+    expect(popup?.getAttribute("class")).toBeTruthy();
   });
 });

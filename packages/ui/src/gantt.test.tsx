@@ -896,3 +896,17 @@ describe("every announced string is a required prop", () => {
  *    scrolling that a real browser performs to bring a focused bar into view is
  *    not observable here.
  */
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the gantt root carries its own classes", () => {
+    const { container } = render(
+      <Gantt label="برنامه" locale="fa-IR" tasks={[SPRINT]} strings={STRINGS} />,
+    );
+    expect(container.firstElementChild?.getAttribute("class")).toBeTruthy();
+  });
+});

@@ -252,3 +252,12 @@ describe("CommandDialog — the title and description are Persian and required",
     expect(status.getAttribute("aria-live")).toBe("polite");
   });
 });
+
+describe("styling delivery", () => {
+  it("the command box carries the module's own classes", () => {
+    const { container } = render(<Palette />);
+    expect(
+      container.querySelector('[data-slot="command"]')?.getAttribute("class"),
+    ).toBeTruthy();
+  });
+});

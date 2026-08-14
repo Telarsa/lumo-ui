@@ -112,3 +112,15 @@ describe("ContextMenu — opened at the pointer", () => {
     expect(await screen.findByRole("menu")).toBeDefined();
   });
 });
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the trigger wrapper carries the module's contents class", () => {
+    const { container } = render(composed());
+    expect(container.querySelector(".contents")).toBeTruthy();
+  });
+});

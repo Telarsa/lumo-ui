@@ -1111,3 +1111,23 @@ describe("ColumnResizer — a grid with resizable columns is still ONE tab stop"
     }
   });
 });
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the table and its header carry the module's own classes", () => {
+    const { container } = render(
+      <Table label="سفارش‌ها" locale="fa-IR">
+        <TableHeader>
+          <Column id="name" isRowHeader>نام</Column>
+        </TableHeader>
+        <TableBody>{null}</TableBody>
+      </Table>,
+    );
+    expect(container.querySelector("table")?.getAttribute("class")).toBeTruthy();
+    expect(container.querySelector("thead")?.getAttribute("class")).toBeTruthy();
+  });
+});

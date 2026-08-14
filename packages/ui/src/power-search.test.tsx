@@ -395,3 +395,17 @@ describe("PowerSearch", () => {
     expect(option.textContent).toContain("فقط مدیر می‌تواند این فیلد را تغییر دهد");
   });
 });
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the typeahead input carries the module's own classes", () => {
+    render(<PowerSearch fields={fields} strings={strings} />);
+    expect(
+      screen.getByRole("combobox", { name: strings.inputLabel }).getAttribute("class"),
+    ).toBeTruthy();
+  });
+});

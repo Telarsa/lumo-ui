@@ -1445,3 +1445,35 @@ describe("the bounds are DAYS, and a day before one cannot be selected", () => {
     expect(next.getAttribute("aria-disabled")).toBeNull();
   });
 });
+
+describe("the date family delivers its own styling classes", () => {
+  /*
+   * The mutation campaign's visual mutant strips a module's `className`
+   * assignments; these fixtures reuse the matrix above and assert an element
+   * EACH MODULE styles itself, so a composed child's classes cannot vouch
+   * for the parent's. `date-input.tsx` is observed through the segments it
+   * renders inside every field; the fields are observed through their roots.
+   */
+  it("fields and pickers style their roots, segments style themselves", () => {
+    const casesWithRoots: [string, React.ReactElement][] = [
+      ["DateField", <DateField label="تاریخ" />],
+      ["TimeField", <TimeField label="ساعت" />],
+      ["DatePicker", <DatePicker {...LABELS} />],
+      ["DateRangePicker", <DateRangePicker {...RANGE_LABELS} />],
+      ["RangeCalendar", <RangeCalendar {...CAL} today={RANGE_TODAY} />],
+    ];
+    for (const [name, element] of casesWithRoots) {
+      cleanup();
+      const { container } = render(element);
+      const root = container.firstElementChild;
+      expect(root, `${name} rendered nothing`).toBeTruthy();
+      expect(root?.getAttribute("class"), `${name} root carries no class`).toBeTruthy();
+    }
+    // The segments come from date-input.tsx, whichever field hosts them.
+    cleanup();
+    const { container } = render(<DateField label="تاریخ" />);
+    const segment = container.querySelector('[role="spinbutton"]');
+    expect(segment).toBeTruthy();
+    expect(segment?.getAttribute("class")).toBeTruthy();
+  });
+});

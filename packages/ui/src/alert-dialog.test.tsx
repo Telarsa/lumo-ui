@@ -121,3 +121,18 @@ describe("AlertDialog — open, named and clean", () => {
     expect(screen.queryByRole("alertdialog")).toBeNull();
   });
 });
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the open alert dialog and its footer carry the module's own classes", () => {
+    render(composed());
+    const dialog = screen.getByRole("alertdialog");
+    expect(dialog.getAttribute("class")).toBeTruthy();
+    const footer = dialog.querySelector("div:has(button)") ?? dialog.lastElementChild;
+    expect(footer?.getAttribute("class")).toBeTruthy();
+  });
+});

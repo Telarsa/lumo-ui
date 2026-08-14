@@ -886,3 +886,18 @@ describe("the four views answer four questions", () => {
     expect(screen.getByText("۳ رویداد دیگر")).toBeTruthy();
   });
 });
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the calendar grid carries the module's own classes", () => {
+    const { container } = mount("fa-IR", calendarFor("fa-IR"));
+    expect(
+      container.querySelector('[role="grid"]')?.getAttribute("class") ??
+        container.firstElementChild?.getAttribute("class"),
+    ).toBeTruthy();
+  });
+});
