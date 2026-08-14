@@ -4,15 +4,22 @@ import * as React from "react";
 import { cn } from "@lumo-ui/core";
 
 export interface ColorSwatch {
+  /** The CSS color this swatch paints and submits. */
   value: string;
+  /** The accessible name announced for this swatch. */
   label: string;
 }
 
 export interface ColorPickerProps {
+  /** The accessible name announced for the swatch radio group. */
   label: string;
+  /** The swatch collection: each entry is a CSS color value with an accessible label. */
   swatches: readonly ColorSwatch[];
+  /** The selected swatch value, when controlled. */
   value?: string;
+  /** The initially selected swatch value, when uncontrolled. */
   defaultValue?: string;
+  /** Called with the chosen swatch value. */
   onValueChange?: (value: string) => void;
   isDisabled?: boolean;
   className?: string;

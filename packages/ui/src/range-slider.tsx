@@ -14,19 +14,32 @@ import {
 
 export interface RangeSliderProps {
   locale: Locale;
+  /** The accessible name of the slider group. */
   label: string;
+  /** The accessible name announced for the start thumb. */
   startLabel: string;
+  /** The accessible name announced for the end thumb. */
   endLabel: string;
+  /** The [start, end] pair, when controlled. */
   value?: readonly [number, number];
+  /** The initial [start, end] pair, when uncontrolled. */
   defaultValue?: readonly [number, number];
+  /** Called with the pair on every movement while dragging. */
   onChange?: (value: readonly [number, number]) => void;
+  /** Called with the pair once interaction settles. */
   onChangeEnd?: (value: readonly [number, number]) => void;
+  /** The smallest selectable value. Defaults to 0. */
   minValue?: number;
+  /** The largest selectable value. Defaults to 100. */
   maxValue?: number;
+  /** The granularity both thumbs snap to. Defaults to 1. */
   step?: number;
+  /** Intl.NumberFormat options for the announced and displayed values. */
   formatOptions?: Intl.NumberFormatOptions;
   isDisabled?: boolean;
+  /** Submitted field name; the pair posts as two inputs. */
   name?: string;
+  /** Associates the posted inputs with a form by id. */
   form?: string;
   className?: string;
 }

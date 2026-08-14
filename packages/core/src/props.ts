@@ -688,10 +688,15 @@ export type GlobalDOMEvents<T = Element> = Pick<
 
 /** Global attributes plus global events. `id` is handled by `DOMProps`. */
 export interface GlobalDOMAttributes<T = Element> extends GlobalDOMEvents<T> {
+  /** The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`. */
   dir?: string | undefined;
+  /** The element's `lang` attribute, when this subtree's language differs from the page's. */
   lang?: string | undefined;
+  /** The DOM `hidden` attribute: removes the element from rendering and the accessibility tree. */
   hidden?: boolean | undefined;
+  /** The DOM `inert` attribute: the subtree cannot be focused, clicked, or read by assistive technology. */
   inert?: boolean | undefined;
+  /** The DOM `translate` attribute: whether machine translation may rewrite this subtree's text. */
   translate?: "yes" | "no" | undefined;
 }
 

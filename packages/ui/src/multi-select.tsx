@@ -15,18 +15,30 @@ export interface MultiSelectOption {
 
 export interface MultiSelectProps {
   locale: Locale;
+  /** The accessible name of the field, rendered as its visible label. */
   label: string;
+  /** Text shown in the empty input before any option is chosen. */
   placeholder: string;
+  /** The accessible name announced for the suggestions list. */
   suggestionsLabel: string;
+  /** Builds the accessible name of each chip's remove button from the chip's label. */
   removeLabel: (label: string) => string;
+  /** The options offered, each a stable string value with a display label. */
   options: readonly MultiSelectOption[];
+  /** The selected option values, when selection is controlled. */
   value?: readonly string[];
+  /** The initially selected option values, when selection is uncontrolled. */
   defaultValue?: readonly string[];
+  /** Called with the full selected value list after every change. */
   onValueChange?: (value: readonly string[]) => void;
+  /** Upper bound on how many options may be selected; further selections are ignored. */
   maxValues?: number;
+  /** Removes already-selected options from the suggestions list. */
   hideSelectedOptions?: boolean;
   isDisabled?: boolean;
+  /** Marks the field required for form submission and announces it as such. */
   isRequired?: boolean;
+  /** Submitted field name when the control sits inside a form. */
   name?: string;
   className?: string;
 }

@@ -17,17 +17,28 @@ export function normalizeColor(value: string, format: ColorFormat = "hex"): stri
 }
 
 export interface ColorInputProps {
+  /** The accessible name of the text field, rendered as its visible label. */
   label: string;
+  /** The accessible name announced for the swatch group beside the field. */
   pickerLabel: string;
+  /** The error announced when the typed text is not a parseable color. */
   invalidColorMessage: string;
+  /** Help text rendered under the field and linked to it. */
   description?: string;
+  /** The color text, when controlled. */
   value?: string;
+  /** The initial color text, when uncontrolled. */
   defaultValue?: string;
+  /** Called with the normalized color after each valid change. */
   onValueChange?: (value: string) => void;
+  /** The color notation the field normalizes into. */
   format?: ColorFormat;
+  /** Preset colors offered beside the field. */
   swatches?: readonly ColorSwatch[];
   isDisabled?: boolean;
+  /** Marks the field required for form submission and announces it as such. */
   isRequired?: boolean;
+  /** Submitted field name when the control sits inside a form. */
   name?: string;
   className?: string;
 }

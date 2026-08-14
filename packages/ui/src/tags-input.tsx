@@ -5,16 +5,26 @@ import { X } from "lucide-react";
 import { cn } from "@lumo-ui/core";
 
 interface TagsInputBaseProps {
+  /** The accessible name of the field, rendered as its visible label. */
   label: string;
+  /** Text shown in the empty input before any tag exists. */
   placeholder: string;
+  /** Builds the accessible name of each tag's remove button from the tag's text. */
   removeLabel: (tag: string) => string;
+  /** The current tags, when the list is controlled. */
   value?: readonly string[];
+  /** The initial tags, when the list is uncontrolled. */
   defaultValue?: readonly string[];
+  /** Called with the full tag list after every addition or removal. */
   onValueChange?: (value: readonly string[]) => void;
+  /** Characters that split typed or pasted text into separate tags. Defaults to the comma. */
   splitCharacters?: readonly string[];
+  /** Decides whether a candidate tag already exists; duplicates are not added. */
   isDuplicate?: (candidate: string, current: readonly string[]) => boolean;
+  /** Upper bound on how many tags may exist; further additions are ignored. */
   maxTags?: number;
   isDisabled?: boolean;
+  /** Submitted field name when the control sits inside a form; one hidden input is posted per tag. */
   name?: string;
   className?: string;
 }

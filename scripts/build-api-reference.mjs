@@ -85,10 +85,55 @@ function isOnlyUndefined(type) {
   return type.isUnion() && type.types.every((member) => (member.flags & ts.TypeFlags.Undefined) !== 0);
 }
 
+/*
+ * Undocumented props, split by WHO owes the documentation.
+ *
+ * The old single filler — "Inherited DOM or shared Lumo prop." — was applied
+ * to 1,191 of 2,520 props, and for Lumo-authored ones it was simply false:
+ * `MultiSelectProps.maxValues` is not inherited from anything. An inherited
+ * external prop legitimately points at the platform's documentation; a
+ * Lumo-authored prop with no docblock is documentation DEBT, named as such
+ * and counted, so the number can only be ratcheted down (see the check
+ * against `api-docs.floor.json` below).
+ */
+let undocumentedLumoProps = 0;
+/*
+ * House-vocabulary names whose meaning is a LIBRARY RULE, not a per-component
+ * decision — so one sentence is accurate at every declaration site. Only
+ * names with genuinely uniform semantics belong here: `children` is absent
+ * because several components take render-prop children, and `value`/`size`/
+ * `variant` are absent because they mean different things per component.
+ * A prop's own docblock always wins; this is the fallback.
+ */
+const HOUSE_VOCABULARY = new Map([
+  ["className", "Additional classes merged onto the component's root element."],
+  ["isDisabled", "Disables the control: it cannot be interacted with and is announced as disabled."],
+  ["locale", "The BCP-47 locale this component renders in. Drives direction, calendar system, and digit shaping."],
+  ["ref", "A ref to the component's root element."],
+  ["aria-controls", "Standard ARIA attribute, forwarded to the element that carries the role."],
+  ["aria-haspopup", "Standard ARIA attribute, forwarded to the element that carries the role."],
+  ["aria-expanded", "Standard ARIA attribute, forwarded to the element that carries the role."],
+  ["aria-disabled", "Standard ARIA attribute, forwarded to the element that carries the role."],
+  ["aria-pressed", "Standard ARIA attribute, forwarded to the element that carries the role."],
+  ["aria-current", "Standard ARIA attribute, forwarded to the element that carries the role."],
+  ["aria-describedby", "Standard ARIA attribute, forwarded to the element that carries the role."],
+  ["formAction", "Standard form-submission override, forwarded to the underlying control."],
+  ["formEncType", "Standard form-submission override, forwarded to the underlying control."],
+  ["formMethod", "Standard form-submission override, forwarded to the underlying control."],
+  ["formNoValidate", "Standard form-submission override, forwarded to the underlying control."],
+  ["formTarget", "Standard form-submission override, forwarded to the underlying control."],
+]);
 /** @param {ts.Symbol} symbol */
 function descriptionOf(symbol) {
   const own = ts.displayPartsToString(symbol.getDocumentationComment(checker)).trim();
-  return own.length > 0 ? own : "Inherited DOM or shared Lumo prop.";
+  if (own.length > 0) return own;
+  if (isLumoAuthored(symbol)) {
+    const shared = HOUSE_VOCABULARY.get(symbol.name);
+    if (shared !== undefined) return shared;
+    undocumentedLumoProps += 1;
+    return "Lumo prop — docblock pending.";
+  }
+  return "Inherited from the DOM surface of the element this component renders.";
 }
 
 /** @type {Record<string, Array<{name: string, props: Array<{name: string, type: string, required: boolean}>}>>} */
@@ -136,6 +181,27 @@ for (const [moduleName, propsNames] of [...propsByModule].sort(([a], [b]) => a.l
 }
 
 const generated = `${JSON.stringify({ version: 1, modules }, null, 2)}\n`;
+
+/*
+ * The documentation-debt ratchet. `api-docs.floor.json` holds the highest
+ * tolerated count of Lumo-authored props without a docblock. Adding an
+ * undocumented prop fails the build; documenting props lets the floor be
+ * lowered, and lowering it is a reviewed line in the diff — the same
+ * one-way arrangement the digit floors use.
+ */
+const FLOOR_PATH = join(ROOT, "api-docs.floor.json");
+const floor = JSON.parse(await readFile(FLOOR_PATH, "utf8"));
+if (undocumentedLumoProps > floor.maxUndocumentedLumoProps) {
+  console.error(
+    `  api-reference: ${undocumentedLumoProps} Lumo-authored props lack a docblock, ` +
+      `above the floor of ${floor.maxUndocumentedLumoProps}. Document the new ones.`,
+  );
+  process.exit(1);
+}
+console.log(
+  `  api-reference: ${undocumentedLumoProps}/${floor.maxUndocumentedLumoProps} undocumented Lumo props (ratchet)`,
+);
+
 if (checkOnly) {
   const existing = await readFile(OUTPUT, "utf8").catch(() => "");
   if (existing !== generated) {

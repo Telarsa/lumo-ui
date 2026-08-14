@@ -28,15 +28,24 @@ export function treeSelectionState(
 }
 
 export interface TreeSelectProps {
+  /** The accessible name of the field, rendered as its visible label. */
   label: string;
+  /** The accessible name announced for the popup tree. */
   treeLabel: string;
+  /** Text shown on the trigger before anything is selected. */
   placeholder: string;
+  /** The option tree; parents in checkbox mode select their descendants. */
   options: readonly TreeSelectOption[];
+  /** single commits one radio value; multiple and checkbox commit a value list, checkbox cascading to descendants. */
   mode?: "single" | "multiple" | "checkbox";
+  /** The selected value or values, when controlled. */
   value?: string | readonly string[] | null;
+  /** The initial selection, when uncontrolled. */
   defaultValue?: string | readonly string[] | null;
+  /** Called with the committed value (single) or value list (multiple, checkbox). */
   onValueChange?: (value: string | readonly string[] | null) => void;
   isDisabled?: boolean;
+  /** Submitted field name; one hidden input is posted per selected key. */
   name?: string;
   className?: string;
 }

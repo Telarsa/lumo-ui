@@ -30,15 +30,24 @@ export function resolveCascaderPath(
 
 export interface CascaderProps {
   locale: Locale;
+  /** The accessible name of the field, rendered as its visible label. */
   label: string;
+  /** The accessible name announced for the drill-down popup and its columns. */
   columnsLabel: string;
+  /** Text shown on the trigger before any path is chosen. */
   placeholder: string;
+  /** The option tree; each node may carry children, forming one popup column per level. */
   options: readonly CascaderOption[];
+  /** The selected path of option values from root to leaf, when controlled. */
   value?: readonly string[] | null;
+  /** The initially selected path, when uncontrolled. */
   defaultValue?: readonly string[] | null;
+  /** Called with the committed path and its resolved option objects. */
   onValueChange?: (path: readonly string[] | null, options: readonly CascaderOption[]) => void;
+  /** Commits at every level rather than only at a leaf. */
   changeOnSelect?: boolean;
   isDisabled?: boolean;
+  /** Submitted field name; the path is posted joined with '/'. */
   name?: string;
   className?: string;
 }
