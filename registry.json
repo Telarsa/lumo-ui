@@ -1027,7 +1027,7 @@
       "name": "heatmap-chart",
       "type": "registry:ui",
       "title": "Heatmap Chart",
-      "description": "A labelled ordinal matrix with a semantic table in the served bytes.",
+      "description": "The accessible name announced for the chart.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1685,7 +1685,7 @@
       "name": "radar-chart",
       "type": "registry:ui",
       "title": "Radar Chart",
-      "description": "A comparative radar profile with explicit domains and tabular parity.",
+      "description": "The accessible name announced for the chart.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1821,7 +1821,7 @@
       "name": "sankey-chart",
       "type": "registry:ui",
       "title": "Sankey Chart",
-      "description": "A validated proportional-flow diagram with semantic source/target rows.",
+      "description": "The accessible name announced for the chart, and the source column's name.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
