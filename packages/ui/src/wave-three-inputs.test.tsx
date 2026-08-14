@@ -74,7 +74,7 @@ describe("Wave 3 product inputs", () => {
         locale="en-US"
         label="Libraries"
         placeholder="Choose"
-        suggestionsLabel="Library suggestions"
+        suggestionsLabel="Library suggestions" dismissLabel="بستن پیشنهادها"
         removeLabel={(label) => `Remove ${label}`}
         options={[{ value: "react", label: "React" }]}
       />,
@@ -190,7 +190,7 @@ describe("Wave 3 product inputs", () => {
         locale="en-US"
         label="Libraries"
         placeholder="Choose libraries"
-        suggestionsLabel="Library suggestions"
+        suggestionsLabel="Library suggestions" dismissLabel="بستن پیشنهادها"
         removeLabel={(label) => `Remove ${label}`}
         options={[
           { value: "react", label: "React" },
@@ -210,7 +210,7 @@ describe("Wave 3 product inputs", () => {
         locale="en-US"
         label="Libraries"
         placeholder="Choose libraries"
-        suggestionsLabel="Library suggestions"
+        suggestionsLabel="Library suggestions" dismissLabel="بستن پیشنهادها"
         removeLabel={(label) => `Remove ${label}`}
         options={[
           { value: "react", label: "React" },

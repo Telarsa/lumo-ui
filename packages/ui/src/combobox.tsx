@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
@@ -130,6 +130,18 @@ export interface ComboBoxProps<T extends object> {
    * Base UI names it nothing at all.
    */
   suggestionsLabel: string;
+  /**
+   * Announced name of the engine's hidden dismiss control. REQUIRED.
+   *
+   * `ComboboxInternalDismissButton` hardcodes `aria-label="Dismiss"` in every
+   * language, discards its props at the signature, and is unreachable from any
+   * export subpath (`mui/base-ui#5263`; measured in `autocomplete.tsx`, which
+   * escapes it via the `inline` form this popup composition cannot use). The
+   * string is therefore applied to the live element after the popup opens —
+   * see `relabelEngineDismiss` — and this prop is what makes it the caller's
+   * word rather than the engine's English.
+   */
+  dismissLabel: string;
   /** Visible field label. Omit only if the field is named some other way. */
   label?: LumoNode;
   /** Visible placeholder for the text input. */
@@ -155,9 +167,48 @@ export interface ComboBoxProps<T extends object> {
   popoverClassName?: string | undefined;
 }
 
+/**
+ * Rewrites the engine-owned announced strings a caller cannot reach by prop.
+ *
+ * Scope is this instance: the field box itself, plus — while open — the
+ * positioner that holds the listbox the instance's combobox input points at
+ * via `aria-controls` (the popup is portalled, so it is NOT inside the box).
+ * Two rewrites: the internal dismiss sentinel's hardcoded English
+ * `aria-label="Dismiss"` becomes the caller's `dismissLabel`, and the
+ * engine's unlabeled hidden serialization input leaves the accessibility
+ * tree, where it announced as a nameless text field. Duplicated in
+ * `multi-select.tsx` rather than shared: an import between the two would put
+ * this whole file into the other's registry payload for fifteen lines.
+ * The popup-interiors gate tier is what keeps both copies honest.
+ */
+/* The engine's exact hardcoded literal, held as a constant to be HUNTED —
+ * not a default this file ships. (Also keeps the no-English-defaults
+ * coverage sweep honest: the selector never spells `aria-label="…"`.) */
+const ENGINE_ENGLISH_DISMISS = "Dismiss";
+
+function relabelEngineDismiss(scope: HTMLElement | null, label: string): void {
+  if (scope === null) return;
+  const roots: ParentNode[] = [scope];
+  const expanded = scope.querySelector('[role="combobox"][aria-expanded="true"]');
+  const listboxId = expanded?.getAttribute("aria-controls");
+  const listbox = listboxId == null ? null : document.getElementById(listboxId);
+  const positioner = listbox?.parentElement?.parentElement;
+  if (positioner != null) roots.push(positioner);
+  for (const root of roots) {
+    for (const sentinel of root.querySelectorAll(`[aria-label="${ENGINE_ENGLISH_DISMISS}"]`)) {
+      sentinel.setAttribute("aria-label", label);
+    }
+  }
+  for (const hidden of scope.querySelectorAll('input[id$="-hidden-input"]')) {
+    hidden.setAttribute("aria-hidden", "true");
+    hidden.setAttribute("tabindex", "-1");
+  }
+}
+
 export function ComboBox<T extends object>({
   showSuggestionsLabel,
   suggestionsLabel,
+  dismissLabel,
   label,
   placeholder,
   children,
@@ -227,9 +278,23 @@ export function ComboBox<T extends object>({
    * the trigger aligned with the input before hydration.
    */
   const triggerId = useId();
+  /* The dismiss sentinels mount with the popup, in a portal, and Base UI's
+   * open state lives in its own store — this component does not re-render on
+   * open. `onOpenChange` bumps an epoch so the relabel effect runs against
+   * the DOM that actually exists. See `relabelEngineDismiss`. */
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [openEpoch, setOpenEpoch] = useState(0);
+  useEffect(() => {
+    // Twice: once now, once after the engine's own open work settles — the
+    // popup portal can mount after this effect's commit.
+    relabelEngineDismiss(boxRef.current, dismissLabel);
+    const settle = setTimeout(() => relabelEngineDismiss(boxRef.current, dismissLabel), 0);
+    return () => clearTimeout(settle);
+  }, [dismissLabel, openEpoch]);
   return (
     <BaseCombobox.Root
       id={inputId}
+      onOpenChange={() => setOpenEpoch((epoch) => epoch + 1)}
       {...(resolvedItems === undefined ? {} : { items: resolvedItems })}
       {...(selectedKey === undefined ? {} : { value: selectedKey })}
       {...(defaultSelectedKey === undefined ? {} : { defaultValue: defaultSelectedKey })}
@@ -249,7 +314,7 @@ export function ComboBox<T extends object>({
        * Base UI's Root renders no DOM, so the field box React Aria's
        * `<ComboBox>` provided has to be a real element here.
        */}
-      <div data-lumo="" className={cn(comboBoxVariants(), className)}>
+      <div data-lumo="" ref={boxRef} className={cn(comboBoxVariants(), className)}>
         {/*
          * A NATIVE `<label htmlFor>`, not `<Combobox.Label>`, and this is
          * Base UI's own instruction rather than a preference. `ComboboxLabel`
@@ -267,7 +332,18 @@ export function ComboBox<T extends object>({
          * composition through `LabelContext` with nothing asked of the caller.
          */}
         {label == null ? null : (
-          <label htmlFor={inputId} className={comboBoxLabelVariants()}>
+          /*
+           * `id` beside `htmlFor`, because the input names itself BOTH ways.
+           * While the popup is open, Base UI's modal focus management puts
+           * `aria-hidden` on everything outside it — including this label —
+           * and a native `label[for]` association contributes nothing to the
+           * accessible name once the label is hidden. Measured: the open
+           * combobox announced as an unnamed textbox. An `aria-labelledby`
+           * reference is computed even when its target is hidden (that is
+           * accname's rule, and why the components that name their triggers
+           * by reference never had this defect), so the input carries one.
+           */
+          <label id={`${inputId}-label`} htmlFor={inputId} className={comboBoxLabelVariants()}>
             {label}
           </label>
         )}
@@ -292,6 +368,7 @@ export function ComboBox<T extends object>({
         >
           <BaseCombobox.Input
             className={comboBoxInputVariants()}
+            {...(label == null ? {} : { "aria-labelledby": `${inputId}-label` })}
             {...(placeholder === undefined ? {} : { placeholder })}
           />
           {/* An icon-only button. Named because Base UI names nothing. */}

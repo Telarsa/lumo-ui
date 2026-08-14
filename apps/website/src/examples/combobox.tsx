@@ -35,6 +35,7 @@ const t = {
   cityPlaceholder: { "fa-IR": "نام شهر را بنویسید", "en-US": "Type a city name" },
   showSuggestions: { "fa-IR": "نمایش پیشنهادها", "en-US": "Show suggestions" },
   suggestions: { "fa-IR": "پیشنهادها", "en-US": "Suggestions" },
+  dismissSuggestions: { "fa-IR": "بستن پیشنهادها", "en-US": "Dismiss suggestions" },
 
   tehran: { "fa-IR": "تهران", "en-US": "Tehran" },
   mashhad: { "fa-IR": "مشهد", "en-US": "Mashhad" },
@@ -67,6 +68,7 @@ function BasicExample(l: Locale) {
       placeholder={t.cityPlaceholder[l]}
       showSuggestionsLabel={t.showSuggestions[l]}
       suggestionsLabel={t.suggestions[l]}
+      dismissLabel={t.dismissSuggestions[l]}
     >
       <ComboBoxItem id="thr">{t.tehran[l]}</ComboBoxItem>
       <ComboBoxItem id="mhd">{t.mashhad[l]}</ComboBoxItem>
@@ -84,6 +86,7 @@ function PreselectedExample(l: Locale) {
       defaultSelectedKey="isf"
       showSuggestionsLabel={t.showSuggestions[l]}
       suggestionsLabel={t.suggestions[l]}
+      dismissLabel={t.dismissSuggestions[l]}
     >
       <ComboBoxItem id="thr">{t.tehran[l]}</ComboBoxItem>
       <ComboBoxItem id="mhd">{t.mashhad[l]}</ComboBoxItem>
@@ -100,6 +103,7 @@ function DisabledOptionExample(l: Locale) {
       label={t.courier[l]}
       showSuggestionsLabel={t.showCouriers[l]}
       suggestionsLabel={t.courierSuggestions[l]}
+      dismissLabel={t.dismissSuggestions[l]}
     >
       <ComboBoxItem id="bike">{t.bike[l]}</ComboBoxItem>
       <ComboBoxItem id="post">{t.post[l]}</ComboBoxItem>
@@ -118,6 +122,7 @@ function LongListExample(l: Locale) {
       placeholder={t.cityPlaceholder[l]}
       showSuggestionsLabel={t.showRegions[l]}
       suggestionsLabel={t.regionSuggestions[l]}
+      dismissLabel={t.dismissSuggestions[l]}
     >
       <ComboBoxItem id="thr">{t.tehran[l]}</ComboBoxItem>
       <ComboBoxItem id="mhd">{t.mashhad[l]}</ComboBoxItem>
@@ -142,6 +147,7 @@ function DisabledExample(l: Locale) {
       isDisabled
       showSuggestionsLabel={t.showRegions[l]}
       suggestionsLabel={t.regionSuggestions[l]}
+      dismissLabel={t.dismissSuggestions[l]}
     >
       <ComboBoxItem id="thr">{t.tehran[l]}</ComboBoxItem>
       <ComboBoxItem id="mhd">{t.mashhad[l]}</ComboBoxItem>

@@ -10,6 +10,7 @@ const t = {
   value: { "fa-IR": "مقدار", "en-US": "Value" },
   remove: { "fa-IR": "حذف فیلتر: {field}", "en-US": "Remove filter: {field}" },
   valueSuggestions: { "fa-IR": "مقدارهای موجود", "en-US": "Available values" },
+  dismissSuggestions: { "fa-IR": "بستن پیشنهادها", "en-US": "Dismiss suggestions" },
   removeValue: { "fa-IR": "حذف مقدار: {value}", "en-US": "Remove value: {value}" },
   invalid: { "fa-IR": "برای این فیلتر مقدار انتخاب کنید", "en-US": "Choose a value for this filter" },
   status: { "fa-IR": "وضعیت", "en-US": "Status" },
@@ -28,6 +29,7 @@ function strings(l: Locale) {
     regionLabel: t.region[l], addFilter: t.add[l], fieldLabel: t.field[l],
     operatorLabel: t.operator[l], valueLabel: t.value[l],
     removeFilterTemplate: t.remove[l], valueSuggestionsLabel: t.valueSuggestions[l],
+    dismissSuggestionsLabel: t.dismissSuggestions[l],
     removeValueTemplate: t.removeValue[l], invalidFilter: t.invalid[l],
   };
 }

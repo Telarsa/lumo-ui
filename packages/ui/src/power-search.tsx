@@ -112,6 +112,8 @@ export interface PowerSearchStrings {
   inputLabel: string;
   inputPlaceholder: string;
   suggestionsLabel: string;
+  /** Announced name for the engine's hidden dismiss control — see MultiSelect.dismissLabel. */
+  dismissSuggestionsLabel: string;
   noFields: string;
   /** `{field}` is replaced with the field label. */
   editFilterTemplate: string;
@@ -275,6 +277,7 @@ interface ValueEditorProps {
   describedBy: string | undefined;
   locale: Locale;
   suggestionsLabel: string;
+  dismissSuggestionsLabel: string;
   removeValueTemplate: string;
 }
 
@@ -288,6 +291,7 @@ function ValueEditor({
   describedBy,
   locale,
   suggestionsLabel,
+  dismissSuggestionsLabel,
   removeValueTemplate,
 }: ValueEditorProps) {
   const common = {
@@ -314,6 +318,7 @@ function ValueEditor({
         label={label}
         placeholder={label}
         suggestionsLabel={suggestionsLabel}
+        dismissLabel={dismissSuggestionsLabel}
         removeLabel={(optionLabel) =>
           removeValueTemplate.replaceAll("{value}", optionLabel)
         }
@@ -490,6 +495,7 @@ function PowerSearchToken({
                 describedBy={error === null ? undefined : errorId}
                 locale={locale}
                 suggestionsLabel={strings.valueSuggestionsLabel}
+                dismissSuggestionsLabel={strings.dismissSuggestionsLabel}
                 removeValueTemplate={strings.removeValueTemplate}
               />
             </label>

@@ -24,7 +24,7 @@ const strings: PowerSearchStrings = {
   fieldLabel: "فیلد",
   operatorLabel: "عملگر",
   valueLabel: "مقدار",
-  valueSuggestionsLabel: "مقدارهای موجود",
+  valueSuggestionsLabel: "مقدارهای موجود", dismissSuggestionsLabel: "بستن پیشنهادها",
   apply: "اعمال",
   cancel: "انصراف",
   invalidFilter: "مقدار این فیلتر معتبر نیست",

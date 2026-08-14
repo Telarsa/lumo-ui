@@ -21,6 +21,13 @@ export interface MultiSelectProps {
   placeholder: string;
   /** The accessible name announced for the suggestions list. */
   suggestionsLabel: string;
+  /**
+   * Announced name of the engine's hidden dismiss control. REQUIRED.
+   * Base UI hardcodes `aria-label="Dismiss"` on it in every language and no
+   * prop reaches it (`mui/base-ui#5263`) — see `relabelEngineDismiss` below,
+   * and the twin note in `combobox.tsx`.
+   */
+  dismissLabel: string;
   /** Builds the accessible name of each chip's remove button from the chip's label. */
   removeLabel: (label: string) => string;
   /** The options offered, each a stable string value with a display label. */
@@ -44,6 +51,38 @@ export interface MultiSelectProps {
 }
 
 /**
+ * Rewrites the engine-owned announced strings a caller cannot reach by prop:
+ * the internal dismiss sentinel's hardcoded English `aria-label="Dismiss"`
+ * and the unlabeled hidden serialization input. Deliberately duplicated from
+ * `combobox.tsx` — importing it would put that whole file into this item's
+ * registry payload for fifteen lines. The popup-interiors gate tier keeps
+ * both copies honest.
+ */
+/* The engine's exact hardcoded literal, held as a constant to be HUNTED —
+ * not a default this file ships. (Also keeps the no-English-defaults
+ * coverage sweep honest: the selector never spells `aria-label="…"`.) */
+const ENGINE_ENGLISH_DISMISS = "Dismiss";
+
+function relabelEngineDismiss(scope: HTMLElement | null, label: string): void {
+  if (scope === null) return;
+  const roots: ParentNode[] = [scope];
+  const expanded = scope.querySelector('[role="combobox"][aria-expanded="true"]');
+  const listboxId = expanded?.getAttribute("aria-controls");
+  const listbox = listboxId == null ? null : document.getElementById(listboxId);
+  const positioner = listbox?.parentElement?.parentElement;
+  if (positioner != null) roots.push(positioner);
+  for (const root of roots) {
+    for (const sentinel of root.querySelectorAll(`[aria-label="${ENGINE_ENGLISH_DISMISS}"]`)) {
+      sentinel.setAttribute("aria-label", label);
+    }
+  }
+  for (const hidden of scope.querySelectorAll('input[id$="-hidden-input"]')) {
+    hidden.setAttribute("aria-hidden", "true");
+    hidden.setAttribute("tabindex", "-1");
+  }
+}
+
+/**
  * A searchable multiple selection field.
  *
  * Base UI owns focus, chip navigation, option highlighting, outside press and
@@ -55,6 +94,7 @@ export function MultiSelect({
   label,
   placeholder,
   suggestionsLabel,
+  dismissLabel,
   removeLabel,
   options,
   value,
@@ -68,6 +108,19 @@ export function MultiSelect({
   className,
 }: MultiSelectProps) {
   const inputId = React.useId();
+  /* The dismiss sentinels mount with the popup, in a portal, and Base UI's
+   * open state lives in its own store — this component does not re-render on
+   * open. `onOpenChange` bumps an epoch so the relabel effect runs against
+   * the DOM that actually exists. */
+  const boxRef = React.useRef<HTMLDivElement | null>(null);
+  const [openEpoch, setOpenEpoch] = React.useState(0);
+  React.useEffect(() => {
+    // Twice: once now, once after the engine's own open work settles — the
+    // popup portal can mount after this effect's commit.
+    relabelEngineDismiss(boxRef.current, dismissLabel);
+    const settle = setTimeout(() => relabelEngineDismiss(boxRef.current, dismissLabel), 0);
+    return () => clearTimeout(settle);
+  }, [dismissLabel, openEpoch]);
   const [internal, setInternal] = React.useState<readonly string[]>(defaultValue);
   const selectedKeys = value ?? internal;
   const selectedOptions = selectedKeys.flatMap((key) => {
@@ -104,10 +157,14 @@ export function MultiSelect({
       filter={matches}
       disabled={isDisabled ?? false}
       required={isRequired ?? false}
+      onOpenChange={() => setOpenEpoch((epoch) => epoch + 1)}
       {...(name === undefined ? {} : { name })}
     >
-      <div data-lumo="" className={cn("flex w-full flex-col gap-1.5", className)}>
-        <label htmlFor={inputId} className="text-sm font-medium text-fg">
+      <div data-lumo="" ref={boxRef} className={cn("flex w-full flex-col gap-1.5", className)}>
+        {/* `id` beside `htmlFor`: while the popup is open the engine hides
+          * everything outside it, label included, and only an aria-labelledby
+          * reference survives a hidden target — see the note in combobox.tsx. */}
+        <label id={`${inputId}-label`} htmlFor={inputId} className="text-sm font-medium text-fg">
           {label}
         </label>
         <BaseCombobox.InputGroup className="flex min-h-control-md w-full items-center rounded-md border border-border-control bg-surface px-2 py-1 focus-within:border-border-strong data-disabled:pointer-events-none data-disabled:opacity-50">
@@ -132,6 +189,7 @@ export function MultiSelect({
                   ))}
                   <BaseCombobox.Input
                     id={inputId}
+                    aria-labelledby={`${inputId}-label`}
                     placeholder={current.length === 0 ? placeholder : ""}
                     className="min-w-24 flex-1 bg-transparent py-1 text-sm text-fg outline-none placeholder:text-fg-subtle"
                   />

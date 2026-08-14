@@ -82,7 +82,7 @@ const powerStrings = {
   fieldLabel: "فیلد",
   operatorLabel: "عملگر",
   valueLabel: "مقدار",
-  valueSuggestionsLabel: "مقدارهای موجود",
+  valueSuggestionsLabel: "مقدارهای موجود", dismissSuggestionsLabel: "بستن پیشنهادها",
   removeValueTemplate: "حذف مقدار: {value}",
   apply: "اعمال",
   cancel: "انصراف",

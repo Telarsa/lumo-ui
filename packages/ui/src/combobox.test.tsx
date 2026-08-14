@@ -65,7 +65,7 @@ const COMBO = (
   <ComboBox
     label="شهر"
     showSuggestionsLabel="نمایش پیشنهادها"
-    suggestionsLabel="پیشنهادها"
+    suggestionsLabel="پیشنهادها" dismissLabel="بستن پیشنهادها"
   >
     <ComboBoxItem id="thr">تهران</ComboBoxItem>
     <ComboBoxItem id="isf">اصفهان</ComboBoxItem>
@@ -122,7 +122,7 @@ describe("ComboBox — shared async collection presentation", () => {
       <ComboBox
         label="شهر"
         showSuggestionsLabel="نمایش پیشنهادها"
-        suggestionsLabel="پیشنهادها"
+        suggestionsLabel="پیشنهادها" dismissLabel="بستن پیشنهادها"
         asyncState={{ status: "loading", text: "در حال دریافت شهرها" }}
       />,
     );
@@ -140,7 +140,7 @@ describe("ComboBox — shared async collection presentation", () => {
       <ComboBox
         label="شهر"
         showSuggestionsLabel="نمایش پیشنهادها"
-        suggestionsLabel="پیشنهادها"
+        suggestionsLabel="پیشنهادها" dismissLabel="بستن پیشنهادها"
         asyncState={{
           status: "error",
           text: "دریافت شهرها ناموفق بود",
@@ -161,7 +161,7 @@ describe("ComboBox — shared async collection presentation", () => {
       <ComboBox
         label="شهر"
         showSuggestionsLabel="نمایش پیشنهادها"
-        suggestionsLabel="پیشنهادها"
+        suggestionsLabel="پیشنهادها" dismissLabel="بستن پیشنهادها"
         items={[]}
         asyncState={{ status: "ready", emptyText: "شهری پیدا نشد" }}
       >

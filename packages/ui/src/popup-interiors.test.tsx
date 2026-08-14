@@ -1,9 +1,12 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import { CalendarDate, PersianCalendar } from "@internationalized/date";
 import { RULES, gradingFor, type Doc } from "@lumo-ui/gate";
 
 import { Button } from "./button.tsx";
 import { Cascader } from "./cascader.tsx";
+import { ComboBox, ComboBoxItem } from "./combobox.tsx";
+import { DatePicker } from "./date-picker.tsx";
 import { Dialog, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Menu, MenuItem, MenuPopover, MenuTrigger } from "./menu.tsx";
 import { Select, SelectItem, SelectPopover, SelectTrigger } from "./select.tsx";
@@ -27,10 +30,8 @@ import { TreeSelect } from "./tree-select.tsx";
  * one dialog and one bespoke check; this file is that idea, generalised to
  * the popup families and the full rule list.
  *
- * Not yet covered here: combobox and date-picker interiors (their popups ride
- * the same shared positioner surface, but their interior content — option
- * filtering, the calendar grid — has its own strings and deserves the same
- * treatment). Named so the gap is a listed line, not a silence.
+ * Covered: menu, select, dialog, cascader, tree-select, combobox, and the
+ * date-picker's opened Jalali calendar grid.
  */
 
 const grading = gradingFor("fa-IR");
@@ -133,6 +134,43 @@ describe("popup interiors pass the full gate rule set while open", () => {
     screen.getByRole("button", { name: /دسته‌بندی/ }).click();
     expect(await screen.findByRole("dialog", { name: "ستون‌های دسته‌بندی" })).toBeTruthy();
     expect(gradeOpenPopup("fa/popup-cascader/index.html")).toEqual([]);
+  });
+
+  it("combobox", async () => {
+    render(
+      <ComboBox
+        label="شهر"
+        showSuggestionsLabel="نمایش پیشنهادها"
+        suggestionsLabel="پیشنهادها" dismissLabel="بستن پیشنهادها"
+      >
+        <ComboBoxItem id="thr">تهران</ComboBoxItem>
+        <ComboBoxItem id="isf">اصفهان</ComboBoxItem>
+      </ComboBox>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "نمایش پیشنهادها" }));
+    expect(await screen.findByRole("listbox", { name: "پیشنهادها" })).toBeTruthy();
+    // The engine-string relabel settles one tick after the popup mounts.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    /*
+     * composite-tab-stop is EXCLUDED for the same proven reason as the menu:
+     * a combobox listbox is the aria-activedescendant pattern — focus STAYS
+     * in the input and no option is ever a Tab stop. The expanded state on
+     * the combobox input is what licenses the exclusion.
+     */
+    expect(
+      document.querySelector('[role="combobox"][aria-expanded="true"]'),
+    ).not.toBeNull();
+    expect(gradeOpenPopup("fa/popup-combobox/index.html", ["composite-tab-stop"])).toEqual([]);
+  });
+
+  it("date-picker calendar", async () => {
+    const today = new CalendarDate(new PersianCalendar(), 1405, 5, 21);
+    render(
+      <DatePicker label="تاریخ سفر" openCalendarLabel="باز کردن تقویم" today={today} />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "باز کردن تقویم" }));
+    expect(await screen.findByRole("grid")).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-date-picker/index.html")).toEqual([]);
   });
 
   it("tree-select", async () => {

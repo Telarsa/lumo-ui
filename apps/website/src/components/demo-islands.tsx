@@ -43,6 +43,7 @@ export interface MultiSelectIslandProps {
   label: string;
   placeholder: string;
   suggestionsLabel: string;
+  dismissLabel: string;
   removePrefix: string;
   options: readonly { value: string; label: string }[];
   defaultValue?: readonly string[];
@@ -53,6 +54,7 @@ export function MultiSelectIsland({
   label,
   placeholder,
   suggestionsLabel,
+  dismissLabel,
   removePrefix,
   options,
   defaultValue,
@@ -64,6 +66,7 @@ export function MultiSelectIsland({
       label={label}
       placeholder={placeholder}
       suggestionsLabel={suggestionsLabel}
+      dismissLabel={dismissLabel}
       removeLabel={(item) => `${removePrefix} ${item}`}
       options={options}
       value={value}

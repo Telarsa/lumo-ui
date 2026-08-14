@@ -813,6 +813,7 @@ const DEMOS: Demo[] = [
         placeholder={copy.cityPlaceholder[l]}
         showSuggestionsLabel={stringsFor(l).comboBox.showSuggestions}
         suggestionsLabel={copy.suggestions[l]}
+        dismissLabel={stringsFor(l).comboBox.dismissSuggestions}
       >
         <ComboBoxItem id="thr">{copy.tehran[l]}</ComboBoxItem>
         <ComboBoxItem id="isf">{copy.isfahan[l]}</ComboBoxItem>

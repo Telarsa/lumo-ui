@@ -107,7 +107,7 @@ describe("server-rendered markup carries no English", () => {
 
   it("ComboBox closes both of RAC's English aria-labels", () => {
     const html = renderToStaticMarkup(
-      <ComboBox label="شهر" showSuggestionsLabel="نمایش پیشنهادها" suggestionsLabel="پیشنهادها">
+      <ComboBox label="شهر" showSuggestionsLabel="نمایش پیشنهادها" suggestionsLabel="پیشنهادها" dismissLabel="بستن پیشنهادها">
         <ComboBoxItem id="thr">تهران</ComboBoxItem>
       </ComboBox>,
     );

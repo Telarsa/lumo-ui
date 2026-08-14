@@ -1,0 +1,808 @@
+{
+  "generatedAt": "2026-08-14T07:33:57.031Z",
+  "population": 111,
+  "killed": 45,
+  "survived": 62,
+  "unobserved": 4,
+  "invalid": 0,
+  "results": [
+    {
+      "file": "alert-dialog.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2404,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·····\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  09:27:37\n   Duration  1.16s (transform 54ms, setup 101ms, import 238ms, tests 154ms, environment 570ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "alert.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2008
+    },
+    {
+      "file": "aspect-ratio.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1634
+    },
+    {
+      "file": "attachment.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1798
+    },
+    {
+      "file": "autocomplete.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3526,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·······························································································\n\n Test Files  8 passed (8)\n      Tests  95 passed (95)\n   Start at  09:27:45\n   Duration  2.40s (transform 815ms, setup 942ms, import 3.89s, tests 1.97s, environment 4.90s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "avatar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1904
+    },
+    {
+      "file": "badge.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1758,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·············································································································································································\n\n Test Files  1 passed (1)\n      Tests  173 passed (173)\n   Start at  09:27:51\n   Duration  616ms (transform 54ms, setup 55ms, import 122ms, tests 25ms, environment 320ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "breadcrumbs.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2360
+    },
+    {
+      "file": "bubble.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1923
+    },
+    {
+      "file": "button-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1757
+    },
+    {
+      "file": "button.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 11813
+    },
+    {
+      "file": "calendar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 5166
+    },
+    {
+      "file": "card.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2082
+    },
+    {
+      "file": "carousel.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1860
+    },
+    {
+      "file": "cascader.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2451
+    },
+    {
+      "file": "chart.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2782
+    },
+    {
+      "file": "checkbox.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 4783
+    },
+    {
+      "file": "color-input.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2206
+    },
+    {
+      "file": "color-picker.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2515,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n················\n\n Test Files  1 passed (1)\n      Tests  16 passed (16)\n   Start at  09:28:32\n   Duration  1.33s (transform 147ms, setup 74ms, import 490ms, tests 258ms, environment 406ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "combobox.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3556
+    },
+    {
+      "file": "command.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2416,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···················\n\n Test Files  2 passed (2)\n      Tests  19 passed (19)\n   Start at  09:28:38\n   Duration  1.16s (transform 135ms, setup 157ms, import 596ms, tests 404ms, environment 944ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "context-menu.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2548,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n····\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  09:28:40\n   Duration  1.29s (transform 118ms, setup 111ms, import 354ms, tests 293ms, environment 425ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "data-grid.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3676
+    },
+    {
+      "file": "date-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 7033,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n················································································\n\n Test Files  2 passed (2)\n      Tests  80 passed (80)\n   Start at  09:28:47\n   Duration  5.34s (transform 232ms, setup 207ms, import 3.08s, tests 1.82s, environment 966ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "date-input.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 6950,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·····················································································\n\n Test Files  3 passed (3)\n      Tests  85 passed (85)\n   Start at  09:28:54\n   Duration  5.46s (transform 414ms, setup 319ms, import 6.34s, tests 2.24s, environment 1.47s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "date-picker.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 5976
+    },
+    {
+      "file": "date-range-picker.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 6500,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·································································\n\n Test Files  1 passed (1)\n      Tests  65 passed (65)\n   Start at  09:29:06\n   Duration  5.19s (transform 169ms, setup 59ms, import 3.11s, tests 1.59s, environment 337ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "date-selector.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 5305,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···························\n\n Test Files  1 passed (1)\n      Tests  27 passed (27)\n   Start at  09:29:13\n   Duration  4.09s (transform 99ms, setup 57ms, import 2.24s, tests 1.36s, environment 331ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "description-list.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2947
+    },
+    {
+      "file": "dialog.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 9595
+    },
+    {
+      "file": "disclosure.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3075,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·······················\n\n Test Files  4 passed (4)\n      Tests  23 passed (23)\n   Start at  09:29:31\n   Duration  1.69s (transform 502ms, setup 818ms, import 1.57s, tests 426ms, environment 2.86s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "drawer.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3174
+    },
+    {
+      "file": "empty-state.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "unobserved",
+      "durationMs": 1236,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n\nNo test files found, exiting with code 0\n\n",
+      "stderr": "include: **/*.{test,spec}.?(c|m)[jt]s?(x)\nexclude:  **/node_modules/**, **/.git/**\n\n"
+    },
+    {
+      "file": "event-calendar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2392,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···············································\n\n Test Files  1 passed (1)\n      Tests  47 passed (47)\n   Start at  09:29:38\n   Duration  1.22s (transform 74ms, setup 62ms, import 163ms, tests 565ms, environment 332ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "file-upload.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2798,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n····························\n\n Test Files  2 passed (2)\n      Tests  28 passed (28)\n   Start at  09:29:41\n   Duration  1.57s (transform 94ms, setup 155ms, import 968ms, tests 464ms, environment 757ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "filters.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2820,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n········\n\n Test Files  1 passed (1)\n      Tests  8 passed (8)\n   Start at  09:29:44\n   Duration  1.14s (transform 83ms, setup 60ms, import 344ms, tests 260ms, environment 361ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "form-state.tsx",
+      "operator": "remove submit cancellation",
+      "status": "survived",
+      "durationMs": 2026,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·····································\n\n Test Files  1 passed (1)\n      Tests  37 passed (37)\n   Start at  09:29:46\n   Duration  820ms (transform 73ms, setup 62ms, import 237ms, tests 83ms, environment 344ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "form.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 16737
+    },
+    {
+      "file": "frame.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1831,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···············\n\n Test Files  1 passed (1)\n      Tests  15 passed (15)\n   Start at  09:30:05\n   Duration  616ms (transform 31ms, setup 58ms, import 39ms, tests 95ms, environment 326ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "gantt.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1939,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n········································\n\n Test Files  1 passed (1)\n      Tests  40 passed (40)\n   Start at  09:30:07\n   Duration  801ms (transform 51ms, setup 58ms, import 68ms, tests 253ms, environment 331ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "heatmap-chart.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1914,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·········\n\n Test Files  1 passed (1)\n      Tests  9 passed (9)\n   Start at  09:30:09\n   Duration  775ms (transform 51ms, setup 60ms, import 209ms, tests 71ms, environment 339ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "hover-card.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2010,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·········\n\n Test Files  1 passed (1)\n      Tests  9 passed (9)\n   Start at  09:30:11\n   Duration  814ms (transform 50ms, setup 63ms, import 163ms, tests 128ms, environment 367ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "icon-stack.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2143,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···············\n\n Test Files  1 passed (1)\n      Tests  15 passed (15)\n   Start at  09:30:13\n   Duration  813ms (transform 45ms, setup 87ms, import 64ms, tests 138ms, environment 409ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "icon-tile.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2552,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n····························································································································································································\n\n Test Files  2 passed (2)\n      Tests  188 passed (188)\n   Start at  09:30:15\n   Duration  1.15s (transform 240ms, setup 280ms, import 371ms, tests 221ms, environment 1.13s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "input-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3071
+    },
+    {
+      "file": "input-otp.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2062,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···············\n\n Test Files  1 passed (1)\n      Tests  15 passed (15)\n   Start at  09:30:20\n   Duration  783ms (transform 48ms, setup 61ms, import 107ms, tests 156ms, environment 361ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "item.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2686
+    },
+    {
+      "file": "json-input.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2559,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n················\n\n Test Files  1 passed (1)\n      Tests  16 passed (16)\n   Start at  09:30:25\n   Duration  1.36s (transform 97ms, setup 63ms, import 433ms, tests 359ms, environment 412ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "kanban.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3027
+    },
+    {
+      "file": "kbd.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2089,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  09:30:31\n   Duration  589ms (transform 25ms, setup 60ms, import 24ms, tests 25ms, environment 384ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "link.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3288,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n········································································································\n\n Test Files  5 passed (5)\n      Tests  104 passed (104)\n   Start at  09:30:33\n   Duration  2.00s (transform 701ms, setup 637ms, import 2.32s, tests 1.60s, environment 3.38s)\n\n",
+      "stderr": "stderr | src/inert-affordances.test.tsx > Popover's isKeyboardDismissDisabled > is gone from the surface, so passing it there does not compile\nReact does not recognize the `isKeyboardDismissDisabled` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `iskeyboarddismissdisabled` instead. If you accidentally passed it from a parent component, remove it from the DOM element.\n\n"
+    },
+    {
+      "file": "list-box.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3172,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n··························································\n\n Test Files  5 passed (5)\n      Tests  58 passed (58)\n   Start at  09:30:36\n   Duration  1.91s (transform 594ms, setup 613ms, import 2.90s, tests 943ms, environment 3.77s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "marker.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1763
+    },
+    {
+      "file": "mask-input.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2215
+    },
+    {
+      "file": "menu.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 7500
+    },
+    {
+      "file": "menubar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2241,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n········\n\n Test Files  1 passed (1)\n      Tests  8 passed (8)\n   Start at  09:30:51\n   Duration  923ms (transform 63ms, setup 73ms, import 212ms, tests 151ms, environment 383ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "message-scroller.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 1955
+    },
+    {
+      "file": "message.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2019
+    },
+    {
+      "file": "multi-select.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2978
+    },
+    {
+      "file": "navigation-menu.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2317,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·······\n\n Test Files  1 passed (1)\n      Tests  7 passed (7)\n   Start at  09:31:00\n   Duration  1.04s (transform 56ms, setup 65ms, import 275ms, tests 185ms, environment 400ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "num.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1716,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n··\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  09:31:02\n   Duration  543ms (transform 26ms, setup 60ms, import 30ms, tests 23ms, environment 335ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "number-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3624
+    },
+    {
+      "file": "overflow-list.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1763,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·····\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  09:31:08\n   Duration  586ms (transform 32ms, setup 66ms, import 40ms, tests 42ms, environment 342ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "pagination.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3011,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···················································································\n\n Test Files  3 passed (3)\n      Tests  83 passed (83)\n   Start at  09:31:09\n   Duration  1.84s (transform 339ms, setup 361ms, import 1.82s, tests 905ms, environment 1.39s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "phone-input.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2205,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n··························\n\n Test Files  1 passed (1)\n      Tests  26 passed (26)\n   Start at  09:31:12\n   Duration  1.00s (transform 68ms, setup 60ms, import 286ms, tests 203ms, environment 345ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "popover.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 14549
+    },
+    {
+      "file": "power-search.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2575,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n··········\n\n Test Files  1 passed (1)\n      Tests  10 passed (10)\n   Start at  09:31:29\n   Duration  1.33s (transform 84ms, setup 64ms, import 327ms, tests 430ms, environment 420ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "progress.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1921,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·························\n\n Test Files  2 passed (2)\n      Tests  25 passed (25)\n   Start at  09:31:32\n   Duration  764ms (transform 98ms, setup 163ms, import 152ms, tests 234ms, environment 768ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "provider.tsx",
+      "operator": "disconnect direction from locale",
+      "status": "killed",
+      "durationMs": 2751
+    },
+    {
+      "file": "questionnaire.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1979,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n······\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  09:31:36\n   Duration  756ms (transform 51ms, setup 60ms, import 73ms, tests 174ms, environment 333ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "radar-chart.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2007,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·········\n\n Test Files  1 passed (1)\n      Tests  9 passed (9)\n   Start at  09:31:38\n   Duration  817ms (transform 62ms, setup 61ms, import 236ms, tests 85ms, environment 340ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "radio-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2211
+    },
+    {
+      "file": "range-calendar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 5716,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n····························································································\n\n Test Files  2 passed (2)\n      Tests  92 passed (92)\n   Start at  09:31:43\n   Duration  4.57s (transform 210ms, setup 151ms, import 4.91s, tests 2.44s, environment 757ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "range-slider.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2314,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n················\n\n Test Files  1 passed (1)\n      Tests  16 passed (16)\n   Start at  09:31:48\n   Duration  1.08s (transform 81ms, setup 63ms, import 370ms, tests 196ms, environment 348ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "rating.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "unobserved",
+      "durationMs": 1172,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n\nNo test files found, exiting with code 0\n\n",
+      "stderr": "include: **/*.{test,spec}.?(c|m)[jt]s?(x)\nexclude:  **/node_modules/**, **/.git/**\n\n"
+    },
+    {
+      "file": "resizable.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1737,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·········\n\n Test Files  1 passed (1)\n      Tests  9 passed (9)\n   Start at  09:31:52\n   Duration  615ms (transform 28ms, setup 57ms, import 36ms, tests 101ms, environment 326ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "sankey-chart.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1855,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·········\n\n Test Files  1 passed (1)\n      Tests  9 passed (9)\n   Start at  09:31:53\n   Duration  731ms (transform 48ms, setup 58ms, import 179ms, tests 71ms, environment 330ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "scroll-area.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1660,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n····\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  09:31:55\n   Duration  515ms (transform 24ms, setup 57ms, import 30ms, tests 9ms, environment 327ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "scrollspy.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1720,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···········\n\n Test Files  1 passed (1)\n      Tests  11 passed (11)\n   Start at  09:31:57\n   Duration  617ms (transform 26ms, setup 64ms, import 38ms, tests 95ms, environment 327ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "search-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2831
+    },
+    {
+      "file": "segmented-control.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2595,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n······························\n\n Test Files  1 passed (1)\n      Tests  30 passed (30)\n   Start at  09:32:02\n   Duration  1.42s (transform 84ms, setup 64ms, import 603ms, tests 236ms, environment 397ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "select.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 10665
+    },
+    {
+      "file": "separator.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 4366,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···························································································\n\n Test Files  5 passed (5)\n      Tests  91 passed (91)\n   Start at  09:32:15\n   Duration  2.91s (transform 838ms, setup 689ms, import 2.42s, tests 1.69s, environment 6.04s)\n\n",
+      "stderr": "stderr | src/inert-affordances.test.tsx > Popover's isKeyboardDismissDisabled > is gone from the surface, so passing it there does not compile\nReact does not recognize the `isKeyboardDismissDisabled` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `iskeyboarddismissdisabled` instead. If you accidentally passed it from a parent component, remove it from the DOM element.\n\n"
+    },
+    {
+      "file": "sidebar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2139,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n··········\n\n Test Files  1 passed (1)\n      Tests  10 passed (10)\n   Start at  09:32:19\n   Duration  774ms (transform 78ms, setup 59ms, import 113ms, tests 168ms, environment 340ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "skeleton-presets.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2001,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n··\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  09:32:22\n   Duration  597ms (transform 27ms, setup 61ms, import 36ms, tests 11ms, environment 357ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "skeleton.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1751,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n··\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  09:32:23\n   Duration  580ms (transform 32ms, setup 69ms, import 40ms, tests 13ms, environment 361ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "slider.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 4563
+    },
+    {
+      "file": "sortable.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3112,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n······································································································································································································\n\n Test Files  2 passed (2)\n      Tests  198 passed (198)\n   Start at  09:32:30\n   Duration  1.41s (transform 135ms, setup 206ms, import 338ms, tests 477ms, environment 1.17s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "spinner.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "unobserved",
+      "durationMs": 1290,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n\nNo test files found, exiting with code 0\n\n",
+      "stderr": "include: **/*.{test,spec}.?(c|m)[jt]s?(x)\nexclude:  **/node_modules/**, **/.git/**\n\n"
+    },
+    {
+      "file": "stack.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2226,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n··········\n\n Test Files  1 passed (1)\n      Tests  10 passed (10)\n   Start at  09:32:34\n   Duration  910ms (transform 91ms, setup 59ms, import 294ms, tests 49ms, environment 387ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "steps.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3207,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n······························\n\n Test Files  1 passed (1)\n      Tests  30 passed (30)\n   Start at  09:32:37\n   Duration  1.77s (transform 88ms, setup 72ms, import 863ms, tests 283ms, environment 432ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "switch.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3358
+    },
+    {
+      "file": "table.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3434,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n····································································································································\n\n Test Files  4 passed (4)\n      Tests  132 passed (132)\n   Start at  09:32:43\n   Duration  2.24s (transform 699ms, setup 389ms, import 1.99s, tests 1.57s, environment 2.63s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "tabs.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 4924,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·······························································································································································································································\n\n Test Files  3 passed (3)\n      Tests  223 passed (223)\n   Start at  09:32:46\n   Duration  3.38s (transform 733ms, setup 627ms, import 2.38s, tests 1.83s, environment 2.76s)\n\n",
+      "stderr": "stderr | src/tabs.test.tsx > Tabs — the default selection has to survive to the first byte > renders an items collection through its function child\nEach child in a list should have a unique \"key\" prop.\n\nCheck the render method of `CompositeRoot`. It was passed a child from TabList. See https://react.dev/link/warning-keys for more information.\n\nstderr | src/tabs.test.tsx > Tabs — the default selection has to survive to the first byte > derives the first selection from a function-child collection\nEach child in a list should have a unique \"key\" prop.\n\nCheck the render method of `CompositeRoot`. It was passed a child from TabList. See https://react.dev/link/warning-keys for more information.\n\n"
+    },
+    {
+      "file": "tag-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 4875,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n···············································\n\n Test Files  2 passed (2)\n      Tests  47 passed (47)\n   Start at  09:32:52\n   Duration  2.81s (transform 311ms, setup 437ms, import 2.30s, tests 510ms, environment 1.70s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "tag.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "unobserved",
+      "durationMs": 1336,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n\nNo test files found, exiting with code 0\n\n",
+      "stderr": "include: **/*.{test,spec}.?(c|m)[jt]s?(x)\nexclude:  **/node_modules/**, **/.git/**\n\n"
+    },
+    {
+      "file": "tags-input.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2647
+    },
+    {
+      "file": "text-area.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2430,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·····································\n\n Test Files  1 passed (1)\n      Tests  37 passed (37)\n   Start at  09:33:00\n   Duration  1.20s (transform 117ms, setup 72ms, import 391ms, tests 260ms, environment 376ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "text-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 6070,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n············································································································\n\n Test Files  5 passed (5)\n      Tests  108 passed (108)\n   Start at  09:33:03\n   Duration  4.74s (transform 1.51s, setup 904ms, import 6.64s, tests 6.68s, environment 4.38s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "time-field.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 12311,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·································································\n\n Test Files  1 passed (1)\n      Tests  65 passed (65)\n   Start at  09:33:12\n   Duration  7.99s (transform 232ms, setup 154ms, import 3.88s, tests 2.24s, environment 1.38s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "timeline.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 4082
+    },
+    {
+      "file": "toast.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3505,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n······························\n\n Test Files  1 passed (1)\n      Tests  30 passed (30)\n   Start at  09:33:25\n   Duration  2.00s (transform 148ms, setup 72ms, import 1.09s, tests 340ms, environment 360ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "toggle-group.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3267,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n························\n\n Test Files  2 passed (2)\n      Tests  24 passed (24)\n   Start at  09:33:29\n   Duration  1.41s (transform 161ms, setup 277ms, import 303ms, tests 406ms, environment 1.42s)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "toggle.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 2933
+    },
+    {
+      "file": "toolbar.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 3763,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·································\n\n Test Files  2 passed (2)\n      Tests  33 passed (33)\n   Start at  09:33:35\n   Duration  1.93s (transform 232ms, setup 200ms, import 864ms, tests 704ms, environment 973ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "tooltip.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3272
+    },
+    {
+      "file": "transfer-list.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 2238,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·····\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  09:33:42\n   Duration  926ms (transform 71ms, setup 59ms, import 268ms, tests 156ms, environment 343ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "tree-select.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 6917
+    },
+    {
+      "file": "tree.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "killed",
+      "durationMs": 3017
+    },
+    {
+      "file": "treemap-chart.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1964,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n·········\n\n Test Files  1 passed (1)\n      Tests  9 passed (9)\n   Start at  09:33:54\n   Duration  777ms (transform 50ms, setup 61ms, import 207ms, tests 70ms, environment 342ms)\n\n",
+      "stderr": ""
+    },
+    {
+      "file": "virtual-list.tsx",
+      "operator": "remove rendered class assignments",
+      "status": "survived",
+      "durationMs": 1872,
+      "stdout": "\n RUN  v4.1.10 /Users/kamyabnazari/Documents/personal-projects/projects/telarsa-projects/lumo-ui-project/lumo-ui/packages/ui\n\n················\n\n Test Files  1 passed (1)\n      Tests  16 passed (16)\n   Start at  09:33:56\n   Duration  689ms (transform 34ms, setup 63ms, import 44ms, tests 122ms, environment 356ms)\n\n",
+      "stderr": ""
+    }
+  ]
+}

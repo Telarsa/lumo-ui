@@ -3123,6 +3123,12 @@
         "name": "ComboBoxProps",
         "props": [
           {
+            "name": "dismissLabel",
+            "type": "string",
+            "required": true,
+            "description": "Announced name of the engine's hidden dismiss control. REQUIRED.\n\n`ComboboxInternalDismissButton` hardcodes `aria-label=\"Dismiss\"` in every\nlanguage, discards its props at the signature, and is unreachable from any\nexport subpath (`mui/base-ui#5263`; measured in `autocomplete.tsx`, which\nescapes it via the `inline` form this popup composition cannot use). The\nstring is therefore applied to the live element after the popup opens —\nsee `relabelEngineDismiss` — and this prop is what makes it the caller's\nword rather than the engine's English."
+          },
+          {
             "name": "showSuggestionsLabel",
             "type": "string",
             "required": true,
@@ -8667,6 +8673,12 @@
       {
         "name": "MultiSelectProps",
         "props": [
+          {
+            "name": "dismissLabel",
+            "type": "string",
+            "required": true,
+            "description": "Announced name of the engine's hidden dismiss control. REQUIRED.\nBase UI hardcodes `aria-label=\"Dismiss\"` on it in every language and no\nprop reaches it (`mui/base-ui#5263`) — see `relabelEngineDismiss` below,\nand the twin note in `combobox.tsx`."
+          },
           {
             "name": "label",
             "type": "string",

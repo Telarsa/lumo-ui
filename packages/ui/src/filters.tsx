@@ -86,6 +86,8 @@ export interface FiltersStrings {
   removeFilterTemplate: string;
   /** Announced name for the multi-value suggestion list. */
   valueSuggestionsLabel: string;
+  /** Announced name for the engine's hidden dismiss control — see MultiSelect.dismissLabel. */
+  dismissSuggestionsLabel: string;
   /** Full localized sentence. `{value}` is replaced with the option label. */
   removeValueTemplate: string;
   /** Caller-owned fallback when a value-taking operator has no value. */
@@ -270,6 +272,7 @@ export function Filters({
                       label={strings.valueLabel}
                       placeholder={strings.valueLabel}
                       suggestionsLabel={strings.valueSuggestionsLabel}
+                      dismissLabel={strings.dismissSuggestionsLabel}
                       removeLabel={(label) =>
                         strings.removeValueTemplate.replaceAll("{value}", label)
                       }

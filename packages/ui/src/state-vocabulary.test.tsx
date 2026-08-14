@@ -678,7 +678,7 @@ describe("collection focus cursor", () => {
     cleanup();
 
     render(
-      <ComboBox label="شهر" showSuggestionsLabel="نمایش پیشنهادها" suggestionsLabel="پیشنهادها">
+      <ComboBox label="شهر" showSuggestionsLabel="نمایش پیشنهادها" suggestionsLabel="پیشنهادها" dismissLabel="بستن پیشنهادها">
         <ComboBoxItem id="a">تهران</ComboBoxItem>
       </ComboBox>,
     );
@@ -774,7 +774,7 @@ describe("no React Aria state vocabulary survives", () => {
     ],
     [
       "combobox",
-      <ComboBox key="cb" label="شهر" showSuggestionsLabel="نمایش" suggestionsLabel="پیشنهادها">
+      <ComboBox key="cb" label="شهر" showSuggestionsLabel="نمایش" suggestionsLabel="پیشنهادها" dismissLabel="بستن پیشنهادها">
         <ComboBoxItem id="a">تهران</ComboBoxItem>
       </ComboBox>,
     ],

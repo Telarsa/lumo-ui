@@ -152,6 +152,8 @@ export interface LumoStrings {
      * ComboBox's `<Button>`.
      */
     showSuggestions: string;
+    /** Announced name of the engine's hidden dismiss control — see ComboBox.dismissLabel. */
+    dismissSuggestions: string;
   };
 
   searchField: {
@@ -282,7 +284,7 @@ export interface LumoStrings {
  * form exists so a locale whose grammar does not match can reorder freely.
  */
 export const fa: LumoStrings = {
-  comboBox: { showSuggestions: "نمایش پیشنهادها" },
+  comboBox: { showSuggestions: "نمایش پیشنهادها", dismissSuggestions: "بستن پیشنهادها" },
   searchField: { clear: "پاک کردن جستجو" },
   numberField: {
     decrease: (l) => `کاهش ${l}`,
@@ -306,7 +308,7 @@ export const fa: LumoStrings = {
 };
 
 export const en: LumoStrings = {
-  comboBox: { showSuggestions: "Show suggestions" },
+  comboBox: { showSuggestions: "Show suggestions", dismissSuggestions: "Dismiss suggestions" },
   searchField: { clear: "Clear search" },
   numberField: {
     decrease: (l) => `Decrease ${l}`,

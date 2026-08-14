@@ -38,7 +38,7 @@ const strings = {
   operatorLabel: "عملگر",
   valueLabel: "مقدار",
   removeFilterTemplate: "حذف فیلتر: {field}",
-  valueSuggestionsLabel: "مقدارهای موجود",
+  valueSuggestionsLabel: "مقدارهای موجود", dismissSuggestionsLabel: "بستن پیشنهادها",
   removeValueTemplate: "حذف مقدار: {value}",
   invalidFilter: "مقدار این فیلتر معتبر نیست",
 };
