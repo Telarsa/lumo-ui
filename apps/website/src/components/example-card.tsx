@@ -26,8 +26,16 @@ export interface ExampleCardProps {
   id: string;
   title: string;
   description?: string | undefined;
-  /** The rendered example. */
-  children: LumoNode;
+  /**
+   * The rendered example. OPTIONAL, and its absence is a specific shape: the
+   * page's FIRST example is rendered once already, as the preview at the top
+   * (`catalog.ts` builds the demo from `first.render`), so its card carries
+   * only the source. Rendering it here too duplicated every id in it —
+   * `unique-ids` measured `spy-usage` twice on the scrollspy page — and
+   * omitting the card entirely left single-example components with no usage
+   * listing on the page at all.
+   */
+  children?: LumoNode | undefined;
   /**
    * Shiki output for the example's source.
    *
@@ -67,18 +75,20 @@ export function ExampleCard({
          * bordered box, the exhibit centred, intrinsic-width demos centred on
          * the inline axis while full-width ones still span the cell.
          */}
-        <div className="grid min-h-44 place-items-center rounded-lg border border-border bg-bg p-6 sm:p-8">
-          {/*
-           * `min-w-0` for the reason `preview-toolbar.tsx` measures in full: a
-           * grid item's `min-width: auto` floors it at its content's min-content
-           * width, so an example whose content cannot shrink pushed this cell
-           * past the canvas border rather than being held inside it. Keeping
-           * the two stages identical here is deliberate — they are the same
-           * anatomy at two scales, and a fix that landed on only one of them
-           * would show up as examples behaving differently from the preview.
-           */}
-          <div className="flex w-full min-w-0 max-w-2xl flex-col items-center">{children}</div>
-        </div>
+        {children !== undefined ? (
+          <div className="grid min-h-44 place-items-center rounded-lg border border-border bg-bg p-6 sm:p-8">
+            {/*
+             * `min-w-0` for the reason `preview-toolbar.tsx` measures in full: a
+             * grid item's `min-width: auto` floors it at its content's min-content
+             * width, so an example whose content cannot shrink pushed this cell
+             * past the canvas border rather than being held inside it. Keeping
+             * the two stages identical here is deliberate — they are the same
+             * anatomy at two scales, and a fix that landed on only one of them
+             * would show up as examples behaving differently from the preview.
+             */}
+            <div className="flex w-full min-w-0 max-w-2xl flex-col items-center">{children}</div>
+          </div>
+        ) : null}
         <ViewCode label={viewLabel} expandedLabel={hideLabel}>
           <CodePanel html={html} label={copyLabel} copiedLabel={copiedLabel} />
         </ViewCode>

@@ -218,10 +218,10 @@ function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
     { id: "installation", label: c.rail.installation },
   ];
   if (loaded !== undefined) {
-    // `.slice(1)` for the same reason the page body does it: the first example
-    // IS the preview, so it has no card of its own and a rail entry for it
-    // would scroll to nothing. The two slices are the one definition.
-    for (const example of loaded.examples.slice(1)) {
+    // Every example has a card now, including the first: its card is
+    // source-only (the preview above IS its render), so the anchor exists and
+    // a rail entry scrolls to something. See the card loop in the page body.
+    for (const example of loaded.examples) {
       list.push({ id: `example-${example.id}`, label: example.title[lang] });
     }
     if (loaded.composition !== undefined) {
@@ -516,29 +516,33 @@ export default async function ComponentPage({
   const exampleCards: Array<{
     example: LoadedComponentExamples["examples"][number];
     html: string;
+    /** False only for the first example — the preview above IS its render. */
+    withStage: boolean;
   }> = [];
   if (loaded !== undefined) {
     /*
-     * ── THE FIRST EXAMPLE IS THE PREVIEW, SO IT IS NOT ALSO A CARD ───────────
+     * ── THE FIRST EXAMPLE IS THE PREVIEW, SO ITS CARD IS SOURCE-ONLY ─────────
      *
      * `catalog.ts` builds a component's demo as `render: first.render` — the
-     * preview at the top of this page IS the first example. Rendering the full
-     * list below it therefore drew that example twice, which was redundant to
-     * a reader and, less visibly, DUPLICATED EVERY ID IN IT.
+     * preview at the top of this page IS the first example. Rendering it
+     * again in a card DUPLICATED EVERY ID IN IT: `unique-ids` found
+     * `spy-usage` twice on the scrollspy page and the table page's row ids
+     * five times over, and a duplicated id breaks `<label for>` and
+     * `aria-labelledby`, which resolve by document order.
      *
-     * That is not hypothetical: `unique-ids` found `spy-usage` twice on the
-     * scrollspy page (once under `#preview`, once under `#example-contents`)
-     * and the table page's row ids five times over. A duplicated id breaks
-     * `<label for>` and `aria-labelledby`, which resolve by document order —
-     * so the second copy of a control was labelled by the first copy's label.
-     * `resolved-idrefs` cannot see it, because a duplicate still resolves.
-     *
-     * `slice(1)` and not a filter on identity: the preview is defined as the
-     * FIRST example, so the card list is defined the same way. If that
-     * definition ever moves, both move together.
+     * The previous answer was `slice(1)` — no card at all — which quietly
+     * removed the first example's USAGE SOURCE from the page: the Code tab
+     * above holds the component's implementation, not the call site. On the
+     * eighteen single-example components that meant a page with no usage
+     * listing anywhere. So the first example keeps its titled, anchored card
+     * and only the stage is omitted; both invariants hold at once.
      */
-    for (const example of loaded.examples.slice(1)) {
-      exampleCards.push({ example, html: await highlight(example.source, "tsx") });
+    for (const [index, example] of loaded.examples.entries()) {
+      exampleCards.push({
+        example,
+        html: await highlight(example.source, "tsx"),
+        withStage: index > 0,
+      });
     }
   }
   const compositionHtml =
@@ -725,7 +729,7 @@ export default async function ComponentPage({
            * no [data-lumo-demo-root]: that marker stays unique to the preview
            * stage the evidence injector reads.
            */}
-          {exampleCards.map(({ example, html }) => (
+          {exampleCards.map(({ example, html, withStage }) => (
             <ExampleCard
               key={example.id}
               id={`example-${example.id}`}
@@ -737,7 +741,9 @@ export default async function ComponentPage({
               copyLabel={c.exampleCopy}
               copiedLabel={c.exampleCopied}
             >
-              <div className="flex w-full flex-col items-center">{example.render(lang)}</div>
+              {withStage ? (
+                <div className="flex w-full flex-col items-center">{example.render(lang)}</div>
+              ) : undefined}
             </ExampleCard>
           ))}
 
