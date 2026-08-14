@@ -124,6 +124,15 @@ export function TagsInput({
           }}
         />
       </div>
+      {/*
+        * Deliberately NOT the shared `Popover`: that surface is a focus-managed
+        * `role="dialog"`, and this list is a combobox suggestion listbox driven
+        * by `aria-activedescendant` — focus must STAY in the input while
+        * Up/Down move the active option. Escape and blur dismissal are handled
+        * on the input above. What this trades away is collision handling: an
+        * anchored suggestion list under an input extends downward by design,
+        * the same trade `tags-input` implementations make elsewhere.
+        */}
       {open && availableSuggestions.length > 0 ? (
         <div
           id={`${id}-suggestions`}

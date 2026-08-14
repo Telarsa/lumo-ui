@@ -4,6 +4,8 @@ import * as React from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@lumo-ui/core";
 
+import { Popover, PopoverTrigger } from "./popover.tsx";
+
 export interface TreeSelectOption {
   value: string;
   label: string;
@@ -63,7 +65,7 @@ export function TreeSelect({
     if (value === undefined) setInternal(next);
     onValueChange?.(next);
   };
-  const renderNodes = (nodes: readonly TreeSelectOption[], depth = 0): React.ReactNode => (
+  const renderNodes = (nodes: readonly TreeSelectOption[], depth = 0): React.JSX.Element => (
     <ul role={depth === 0 ? "tree" : "group"} aria-label={depth === 0 ? treeLabel : undefined} className={depth === 0 ? "p-1" : "ps-5"}>
       {nodes.map((node) => {
         const state = treeSelectionState(node, selected);
@@ -95,15 +97,28 @@ export function TreeSelect({
       })}
     </ul>
   );
+  /*
+   * The popup rides the shared `Popover`/`PopoverTrigger` pair rather than a
+   * hand-rolled `absolute` div — the hand-rolled form forfeited Escape,
+   * outside-press dismissal, focus return, portalling and collision handling
+   * at once, which an independent review measured as the exact gap. The tree
+   * itself stays a form of native radios/checkboxes: Tab reaches every row,
+   * and the native inputs carry the selection semantics a hand-rolled
+   * `aria-activedescendant` tree would have to re-earn.
+   */
   return (
-    <div data-lumo="" className={cn("relative flex w-full flex-col gap-1.5", className)}>
+    <div data-lumo="" className={cn("flex w-full flex-col gap-1.5", className)}>
       <label id={`${id}-label`} className="text-sm font-medium text-fg">{label}</label>
-      <button type="button" aria-labelledby={`${id}-label ${id}-value`} aria-expanded={open} aria-haspopup="tree" disabled={isDisabled} className="flex h-control-md items-center justify-between rounded-md border border-border-control bg-surface px-3 text-start text-sm" onClick={() => setOpen((current) => !current)}>
-        <span id={`${id}-value`}>{labels.length ? labels.join(", ") : placeholder}</span>
-        <ChevronDown aria-hidden="true" className="size-4" />
-      </button>
+      <PopoverTrigger isOpen={open} onOpenChange={setOpen}>
+        <button type="button" aria-labelledby={`${id}-label ${id}-value`} disabled={isDisabled} className="flex h-control-md items-center justify-between rounded-md border border-border-control bg-surface px-3 text-start text-sm">
+          <span id={`${id}-value`}>{labels.length ? labels.join(", ") : placeholder}</span>
+          <ChevronDown aria-hidden="true" className="size-4" />
+        </button>
+        <Popover aria-label={treeLabel} padded={false} className="max-h-72 w-[var(--anchor-width)] overflow-auto">
+          {renderNodes(options)}
+        </Popover>
+      </PopoverTrigger>
       {mode !== "single" && name ? [...selected].map((key) => <input key={key} type="hidden" name={name} value={key} />) : null}
-      {open ? <div className="absolute inset-x-0 top-full z-50 mt-1 max-h-72 overflow-auto rounded-md border border-border bg-surface shadow-raised">{renderNodes(options)}</div> : null}
     </div>
   );
 }

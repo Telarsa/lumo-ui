@@ -47,7 +47,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
  * A `RefObject` is stable by construction. The effect below has no reason to
  * re-run and cannot be made to by a caller writing the obvious thing.
  *
- * ── 3. DIRECTION IS DERIVED, AND THERE IS NO `isRtl` TO GET WRONG ──────────
+ * ── 3. DIRECTION: READS ARE SIGN-FREE, WRITES ARE NOT ──────────────────────
  *
  * TanStack reads the scroll offset as `el.scrollLeft * (isRtl ? -1 : 1)`, and
  * `isRtl` defaults to `false`. A horizontal list in a Persian document
@@ -55,9 +55,13 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
  * the wrong end of the data — while looking, to anyone who does not read
  * Persian, like a list that simply starts somewhere odd.
  *
- * This file reads `Math.abs(el.scrollLeft)` and takes no direction option at
- * all. That is not a shortcut; it is correct for strictly more browsers than
- * the signed form:
+ * This file READS `Math.abs(el.scrollLeft)`, which needs no direction input.
+ * WRITING an offset is different: `scrollTo` must hand the browser a signed
+ * physical value, so `scrollToOffset` negates under the RTL negative model —
+ * that is what the `rtl` option below exists for, and it is derived by the
+ * caller from the locale contract, never accepted as a free boolean from a
+ * page. The abs read is not a shortcut; it is correct for strictly more
+ * browsers than the signed form:
  *
  *     model      scrollLeft at the reading start … end      abs() correct?
  *     negative    0 → −max   (Chrome ≥85, Firefox, Safari)      yes
