@@ -356,6 +356,36 @@ export function gradeSource(
     set.add(name);
     mentions.set(owner, set);
   };
+  /*
+   * ── A PROPERTY ACCESSED ON SOMETHING ELSE IS NOT THIS COMPONENT'S PROP ────
+   *
+   * `barIndexById.size` is `Map.prototype.size`. It says nothing about a prop
+   * named `size` — and counting it cleared every prop whose name any object in
+   * the file happens to have. MEASURED with controlled probes on `gantt.tsx`:
+   * a dead prop named `zzprobelumo` fired, dead `variant` and `tone` fired,
+   * and dead `size` was silently cleared by `barIndexById.size` two lines
+   * away. The hole is any prop whose name appears as a property access —
+   * `size`, `count`, `type`, `value`, `length`, `key` — which is most of the
+   * short English words props are named with.
+   *
+   * The narrowing keeps the imprecision one-directional: the access still
+   * counts when its base (casts unwrapped) is a props/rest binding, so
+   * `props.size` and `bag.size` inside a consumer remain delivery. Only an
+   * access rooted somewhere else stops being evidence.
+   */
+  const propsBindings = new Set<string>();
+  for (const c of consumers) if (c.restName !== undefined) propsBindings.add(c.restName);
+  const isPropsBase = (expression: ts.Expression): boolean => {
+    let current = expression;
+    while (
+      ts.isAsExpression(current) ||
+      ts.isParenthesizedExpression(current) ||
+      ts.isSatisfiesExpression(current) ||
+      ts.isNonNullExpression(current) ||
+      ts.isTypeAssertionExpression(current)
+    ) current = current.expression;
+    return ts.isIdentifier(current) && propsBindings.has(current.text);
+  };
   const collect = (n: ts.Node, owner: ts.Node | null) => {
     const here = consumerNodes.has(n) ? n : owner;
     /*
@@ -383,6 +413,20 @@ export function gradeSource(
       n.parent !== undefined &&
       (ts.isPropertyAssignment(n.parent) || ts.isMethodDeclaration(n.parent)) &&
       n.parent.name === n;
+    /* See the propsBindings note above: `.size` on a Map is not prop delivery,
+     * `.size` on a props binding is. Element access with a literal key follows
+     * the same rule: `props["size"]` clears, `lookup["size"]` does not. */
+    const isForeignPropertyAccessName =
+      n.parent !== undefined &&
+      ts.isPropertyAccessExpression(n.parent) &&
+      n.parent.name === n &&
+      !isPropsBase(n.parent.expression);
+    const isForeignElementAccessKey =
+      n.parent !== undefined &&
+      ts.isElementAccessExpression(n.parent) &&
+      n.parent.argumentExpression === n &&
+      ts.isStringLiteral(n) &&
+      !isPropsBase(n.parent.expression);
     /*
      * ── AND A DECLARATION IS NOT A REFERENCE EITHER ─────────────────────────
      *
@@ -403,6 +447,8 @@ export function gradeSource(
       !inPropDecl(n) &&
       !isJsxAttrName &&
       !isObjectPropertyName &&
+      !isForeignPropertyAccessName &&
+      !isForeignElementAccessKey &&
       // PARAMETER names only, not binding elements. A binding element IS how a
       // prop is consumed — `toggle.tsx` destructures `preventFocusOnPress` in a
       // HELPER to discard it, and `bound` only tracks consumer components, so

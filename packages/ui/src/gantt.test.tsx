@@ -160,6 +160,26 @@ describe("Gantt enterprise planning engine", () => {
     expect(rtl).toMatch(/^M 60 92 C/);
   });
 
+  it("anchors each dependency type at the bar edges its name declares", () => {
+    const geometry = ganttGeometry(tasks, "day", "en-US", {
+      start: ganttDate("2026-01-01"),
+      end: ganttDate("2026-01-05"),
+    });
+    const path = (type: Parameters<typeof ganttDependencyPath>[6]) =>
+      ganttDependencyPath(tasks[1]!, tasks[2]!, 1, 2, geometry, "en-US", type);
+    // On this 5-day geometry tasks[1] has start x=0 and finish x=40; tasks[2]
+    // has start x=40 and finish x=100 (its end is the geometry's last day).
+    expect(path("finish-to-start")).toMatch(/^M 40 92 C .*, 40 132$/);
+    expect(path("start-to-start")).toMatch(/^M 0 92 C .*, 40 132$/);
+    expect(path("finish-to-finish")).toMatch(/^M 40 92 C .*, 100 132$/);
+    expect(path("start-to-finish")).toMatch(/^M 0 92 C .*, 100 132$/);
+    // The four declared types must be observably distinct connectors.
+    const drawn = new Set(
+      (["finish-to-start", "start-to-start", "finish-to-finish", "start-to-finish"] as const).map(path),
+    );
+    expect(drawn.size).toBe(4);
+  });
+
   it("clamps continuous zoom and exposes a keyboard-resizable split", () => {
     expect(ganttZoom(1, 0.25)).toBe(1.25);
     expect(ganttZoom(3.9, 1)).toBe(4);

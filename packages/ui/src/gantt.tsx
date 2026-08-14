@@ -326,13 +326,20 @@ export function ganttDependencyPath(
   toRow: number,
   geometry: GanttGeometry,
   locale: Locale,
+  type: GanttDependency["type"] = "finish-to-start",
 ): string {
   if (geometry.totalDays <= 0) return "";
-  const endRatio = (ganttDateIn(from.end, locale).compare(geometry.start) + 1) / geometry.totalDays;
-  const startRatio = ganttDateIn(to.start, locale).compare(geometry.start) / geometry.totalDays;
+  // The dependency type names the two bar edges the connector joins. The end
+  // date is inclusive, so the finish edge sits one day past its compare value.
+  const edgeRatio = (task: GanttTask, edge: "start" | "finish") =>
+    edge === "finish"
+      ? (ganttDateIn(task.end, locale).compare(geometry.start) + 1) / geometry.totalDays
+      : ganttDateIn(task.start, locale).compare(geometry.start) / geometry.totalDays;
+  const fromEdge = type === "start-to-start" || type === "start-to-finish" ? "start" : "finish";
+  const toEdge = type === "finish-to-finish" || type === "start-to-finish" ? "finish" : "start";
   const physical = (ratio: number) => (direction(locale) === "rtl" ? 100 - ratio * 100 : ratio * 100);
-  const startX = Number(physical(endRatio).toFixed(4));
-  const endX = Number(physical(startRatio).toFixed(4));
+  const startX = Number(physical(edgeRatio(from, fromEdge)).toFixed(4));
+  const endX = Number(physical(edgeRatio(to, toEdge)).toFixed(4));
   const startY = 32 + (fromRow + 0.5) * 40;
   const endY = 32 + (toRow + 0.5) * 40;
   const middle = Number(((startX + endX) / 2).toFixed(4));
@@ -1274,7 +1281,7 @@ export function Gantt<T extends GanttTask>({
                   return (
                     <path
                       key={`${dependency.from}-${dependency.to}-${dependency.type}`}
-                      d={ganttDependencyPath(from, to, fromRow, toRow, geometry, locale)}
+                      d={ganttDependencyPath(from, to, fromRow, toRow, geometry, locale, dependency.type)}
                       fill="none"
                       stroke="currentColor"
                       strokeWidth="0.35"

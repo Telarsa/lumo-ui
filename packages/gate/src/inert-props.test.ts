@@ -451,3 +451,54 @@ describe("the root contract is actually invoked", () => {
     expect(cli).toContain("process.exit(total ? 1 : 0)");
   });
 });
+
+/**
+ * The property-access hole, closed after controlled probes on `gantt.tsx`
+ * measured it: a dead prop named `zzprobelumo` fired, dead `variant` and
+ * `tone` fired, and dead `size` was silently cleared by `barIndexById.size`
+ * — `Map.prototype.size`, a property of a different object entirely. The
+ * mute set was not a word list but every name that appears as a property
+ * access anywhere in the file: `size`, `count`, `type`, `value`, `length`.
+ */
+describe("a property accessed on something else is not delivery", () => {
+  it("does not let Map.prototype.size clear a dropped prop named size", () => {
+    const src = `
+export interface ProbeProps { size?: string; }
+export function Probe({ ...props }: ProbeProps) {
+  const barIndexById = new Map<string, number>();
+  const total = barIndexById.size;
+  return <div data-total={total} />;
+}
+`;
+    const v = gradeSource("probe.tsx", src);
+    expect(v.map((x) => x.prop)).toContain("ProbeProps.size");
+  });
+
+  it("still clears a prop read off the props binding itself", () => {
+    const src = `
+export interface ProbeProps { size?: string; }
+export function Probe(props: ProbeProps) {
+  return <div data-size={props.size} />;
+}
+`;
+    expect(gradeSource("probe.tsx", src)).toEqual([]);
+  });
+
+  it("element access follows the same rule: props['size'] clears, lookup['size'] does not", () => {
+    const cleared = `
+export interface ProbeProps { size?: string; }
+export function Probe(props: ProbeProps) {
+  return <div data-size={props["size"]} />;
+}
+`;
+    const notCleared = `
+const lookup: Record<string, number> = {};
+export interface ProbeProps { size?: string; }
+export function Probe({ ...props }: ProbeProps) {
+  return <div data-size={lookup["size"]} />;
+}
+`;
+    expect(gradeSource("probe.tsx", cleared)).toEqual([]);
+    expect(gradeSource("probe.tsx", notCleared).map((x) => x.prop)).toContain("ProbeProps.size");
+  });
+});

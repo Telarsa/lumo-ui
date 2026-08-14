@@ -71,6 +71,28 @@ describe("DataGrid enterprise operations", () => {
     ).toEqual({ total: 30, owner: 2 });
   });
 
+  it("aggregates min and max, and never leaks ±Infinity for empty columns", () => {
+    expect(
+      aggregateDataGrid(
+        [{ total: 10 }, { total: 15 }, { total: 5 }],
+        { total: "min" },
+      ),
+    ).toEqual({ total: 5 });
+    expect(
+      aggregateDataGrid(
+        [{ total: 10 }, { total: 15 }, { total: 5 }],
+        { total: "max" },
+      ),
+    ).toEqual({ total: 15 });
+    // No rows, or no numeric values: Math.min()/Math.max() over an empty
+    // spread are +∞/−∞ — an aggregate row must show 0, matching mean.
+    expect(aggregateDataGrid([], { total: "min" })).toEqual({ total: 0 });
+    expect(aggregateDataGrid([], { total: "max" })).toEqual({ total: 0 });
+    expect(
+      aggregateDataGrid([{ total: "n/a" }, { total: "—" }], { total: "min" }),
+    ).toEqual({ total: 0 });
+  });
+
   it("keeps 100k-row pure operations inside the documented one-second envelope", () => {
     const rows = Array.from({ length: 100_000 }, (_, index) => ({
       id: `row-${index}`,

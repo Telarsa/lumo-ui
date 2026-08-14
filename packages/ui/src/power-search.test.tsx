@@ -330,7 +330,9 @@ describe("PowerSearch", () => {
     );
 
     expect(screen.getAllByRole("button", { name: /ویرایش فیلتر:/ })).toHaveLength(2);
-    fireEvent.click(screen.getByRole("button", { name: "نمایش 1 فیلتر دیگر" }));
+    // The count must be in the page's numbering system: «۱», never Latin "1".
+    // This assertion previously pinned the Latin digit as correct.
+    fireEvent.click(screen.getByRole("button", { name: "نمایش ۱ فیلتر دیگر" }));
     expect(screen.getAllByRole("button", { name: /ویرایش فیلتر:/ })).toHaveLength(3);
     expect(screen.getByRole("button", { name: strings.collapseFilters })).toBeTruthy();
   });

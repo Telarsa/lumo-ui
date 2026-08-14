@@ -921,7 +921,7 @@ export function PowerSearch({
           ))}
           {hiddenCount > 0 ? (
             <Button variant="ghost" size="sm" onPress={() => setExpanded(true)}>
-              {replace(strings.overflowTemplate, { count: String(hiddenCount) })}
+              {replace(strings.overflowTemplate, { count: formatNumber(hiddenCount, locale) })}
             </Button>
           ) : expanded && clauses.length > maxVisibleFilters ? (
             <Button variant="ghost" size="sm" onPress={() => setExpanded(false)}>

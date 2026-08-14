@@ -70,9 +70,15 @@ export function aggregateDataGrid<Row extends Record<string, unknown>>(
           : reducer === "sum"
             ? numbers.reduce((sum, value) => sum + value, 0)
             : reducer === "min"
-              ? Math.min(...numbers)
+              ? // Spreading an empty array into Math.min yields Infinity — an
+                // empty column must aggregate to 0 like mean does, not ±∞.
+                numbers.length === 0
+                ? 0
+                : Math.min(...numbers)
               : reducer === "max"
-                ? Math.max(...numbers)
+                ? numbers.length === 0
+                  ? 0
+                  : Math.max(...numbers)
                 : numbers.length === 0
                   ? 0
                   : numbers.reduce((sum, value) => sum + value, 0) / numbers.length;
