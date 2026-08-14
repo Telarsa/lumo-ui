@@ -2,8 +2,20 @@
 
 /**
  * Apply one visual/behavioral mutation to every @lumo-ui/ui implementation
- * module, one process at a time, and require the mutation floor to kill it.
- * Source is restored byte-for-byte in a finally block after every probe.
+ * module, one process at a time, and require the tests that import that module
+ * to kill it. Source is restored byte-for-byte in a finally block after every
+ * probe.
+ *
+ * The kill oracle is `vitest related <module>`: only tests that transitively
+ * import the mutated file can grade it. The mutation floor test grades source
+ * text with `fs`, not imports, so it can never certify its own mutation — an
+ * earlier version of this campaign counted exactly that as a kill, which made
+ * every result circular. A module whose mutant no related test observes is
+ * reported as `unobserved`, not `killed`: the campaign's job is to name the
+ * gap, not to round it away.
+ *
+ * Not part of `verify` or CI: a full run spawns one vitest process per module.
+ * Run it as a campaign: `pnpm run mutation:components`.
  */
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -12,13 +24,21 @@ import { spawnSync } from "node:child_process";
 
 const repository = resolve(import.meta.dirname, "..");
 const sourceDirectory = join(repository, "packages/ui/src");
-const testFile = "src/component-mutation-floor.test.ts";
 const files = readdirSync(sourceDirectory)
   .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
   .sort();
 
-if (files.length !== 99) {
-  throw new Error(`Expected 99 implementation modules, found ${files.length}`);
+// The registry is the declared catalogue. A hardcoded count rotted once
+// already (asserted 99 against a directory that had grown to 111, which
+// meant the campaign could not execute at all and nobody noticed), so the
+// invariant is directory ↔ registry agreement, which updates itself.
+const registry = JSON.parse(readFileSync(join(repository, "registry.json"), "utf8"));
+const declared = registry.items.filter((item) => item.type === "registry:ui").length;
+if (files.length !== declared) {
+  throw new Error(
+    `packages/ui/src has ${files.length} implementation modules but ` +
+      `registry.json declares ${declared} registry:ui items`,
+  );
 }
 
 /**
@@ -51,14 +71,19 @@ function mutate(file, source) {
  * @type {Array<{
  *   file: string;
  *   operator: string;
- *   status: "killed" | "survived" | "invalid";
+ *   status: "killed" | "survived" | "unobserved" | "invalid";
  *   durationMs: number;
  *   stdout?: string;
  *   stderr?: string;
  * }>}
  */
 const results = [];
+const only = process.argv.includes("--only")
+  ? process.argv[process.argv.indexOf("--only") + 1]?.split(",")
+  : undefined;
+
 for (const file of files) {
+  if (only && !only.includes(file)) continue;
   const path = join(sourceDirectory, file);
   const original = readFileSync(path, "utf8");
   const mutant = mutate(file, original);
@@ -74,7 +99,7 @@ for (const file of files) {
     writeFileSync(path, mutant.source);
     run = spawnSync(
       "pnpm",
-      ["exec", "vitest", "run", testFile, "--reporter=dot"],
+      ["exec", "vitest", "related", `src/${file}`, "--run", "--reporter=dot"],
       {
         cwd: join(repository, "packages/ui"),
         encoding: "utf8",
@@ -85,27 +110,28 @@ for (const file of files) {
     writeFileSync(path, original);
   }
 
-  const killed = run?.status !== 0;
+  const output = `${run?.stdout ?? ""}${run?.stderr ?? ""}`;
+  const unobserved = /No test files found/i.test(output);
+  const killed = !unobserved && run?.status !== 0;
+  const status = unobserved ? "unobserved" : killed ? "killed" : "survived";
   results.push({
     file,
     operator: mutant.operator,
-    status: killed ? "killed" : "survived",
+    status,
     durationMs: Math.round(performance.now() - started),
-    ...(killed
+    ...(status === "killed"
       ? {}
-      : {
-          stdout: String(run?.stdout ?? ""),
-          stderr: String(run?.stderr ?? ""),
-        }),
+      : { stdout: String(run?.stdout ?? ""), stderr: String(run?.stderr ?? "") }),
   });
-  process.stdout.write(`${killed ? "KILLED" : "SURVIVED"} ${file}\n`);
+  process.stdout.write(`${status.toUpperCase()} ${file}\n`);
 }
 
 const summary = {
   generatedAt: new Date().toISOString(),
-  population: files.length,
+  population: results.length,
   killed: results.filter((result) => result.status === "killed").length,
   survived: results.filter((result) => result.status === "survived").length,
+  unobserved: results.filter((result) => result.status === "unobserved").length,
   invalid: results.filter((result) => result.status === "invalid").length,
   results,
 };
@@ -118,8 +144,10 @@ if (outputFlag >= 0) {
 }
 
 process.stdout.write(
-  `\n${summary.killed}/${summary.population} killed; ` +
-    `${summary.survived} survived; ${summary.invalid} invalid\n`,
+  `\n${summary.killed}/${summary.population} killed; ${summary.survived} survived; ` +
+    `${summary.unobserved} unobserved; ${summary.invalid} invalid\n`,
 );
 
-if (summary.survived > 0 || summary.invalid > 0) process.exitCode = 1;
+if (summary.survived > 0 || summary.unobserved > 0 || summary.invalid > 0) {
+  process.exitCode = 1;
+}

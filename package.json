@@ -24,7 +24,8 @@
     "gate:registry": "node scripts/build-registry.mjs --check",
     "build:api": "node scripts/build-api-reference.mjs",
     "gate:api": "node scripts/build-api-reference.mjs --check",
-    "gate:smoke": "node scripts/smoke-consumer.mjs"
+    "gate:smoke": "node scripts/smoke-consumer.mjs",
+    "mutation:components": "node scripts/mutate-components.mjs --output mutation-report.json"
   },
   "devDependencies": {
     "@lumo-ui/config": "workspace:*",

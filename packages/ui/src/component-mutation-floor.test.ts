@@ -1,16 +1,18 @@
 /**
- * Breadth floor for the 111-module mutation campaign.
+ * Anchor drift guard for the component mutation campaign.
  *
- * Ninety-seven implementation modules render styled DOM and therefore contain
- * JSX `className` assignments. Removing those assignments from one module is an
- * observable visual mutation: the affected part loses its component styling.
- * The two honest non-visual modules have behavior-specific anchors instead:
- * FormState owns submit cancellation, and Provider derives Base UI direction
- * from locale. The campaign rewrites one anchor at a time and requires this
- * suite to name and kill every mutant.
+ * `scripts/mutate-components.mjs` rewrites one anchor per module — JSX
+ * `className` assignments for visual modules, a behavior-specific anchor for
+ * the two honest non-visual modules — and grades each mutant with
+ * `vitest related`, so only tests that import the module can kill it. This
+ * suite is NOT the kill oracle: it reads source text with `fs`, so counting
+ * its failures as kills would be circular (an earlier version of the campaign
+ * did exactly that). Its only job is to fail loudly when a module loses its
+ * anchor, which would silently shrink the campaign's reach.
  *
- * This is a floor, not a mutation score. It proves one comparable mutation per
- * module; deeper component tests remain responsible for state and interaction.
+ * The catalogue size is derived from registry.json rather than hardcoded: a
+ * hardcoded count rotted once already (99 against a directory of 111), and
+ * the real invariant is directory ↔ registry agreement.
  */
 
 import { readdirSync, readFileSync } from "node:fs";
@@ -23,14 +25,21 @@ const componentFiles = readdirSync(sourceDirectory)
   .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
   .sort();
 
+const registry = JSON.parse(
+  readFileSync(join(sourceDirectory, "../../../registry.json"), "utf8"),
+) as { items: Array<{ type: string }> };
+const declaredModules = registry.items.filter(
+  (item) => item.type === "registry:ui",
+).length;
+
 const behaviorAnchors: Readonly<Record<string, string>> = {
   "form-state.tsx": "event.preventDefault();",
   "provider.tsx": "<DirectionProvider direction={direction(locale)}>",
 };
 
 describe("the systematic component mutation floor", () => {
-  it("grades the declared 111-module catalogue", () => {
-    expect(componentFiles).toHaveLength(111);
+  it("matches the registry-declared catalogue", () => {
+    expect(componentFiles).toHaveLength(declaredModules);
   });
 
   it.each(componentFiles)("%s preserves its campaign anchor", (file) => {

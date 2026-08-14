@@ -10,21 +10,19 @@
 # ci/node-ci.template.yml. Copy it; do not reference it.
 name: CI
 
+# No paths-ignore. It used to skip '**/*.md', which exempted exactly the
+# change class that kept shipping stale claims: documentation counts that no
+# gate ever re-derived. A doc-only push costs one 20-minute runner; a wrong
+# public number costs trust.
+#
+# 'experiment/**' is included because the Base UI migration lived on
+# experiment/base-ui for weeks with zero CI — every gate in this file was
+# advisory there. Long-lived branches get graded, not just protected ones.
 on:
   push:
-    branches: [main, develop]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'LICENSE'
-      - '.gitignore'
+    branches: [main, develop, 'experiment/**']
   pull_request:
     branches: [main, develop]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'LICENSE'
-      - '.gitignore'
 
 concurrency:
   group: ci-${{ github.ref }}
