@@ -32,14 +32,15 @@
     "maska": "catalog:"
   },
   "devDependencies": {
+    "@lumo-ui/gate": "workspace:*",
     "@testing-library/react": "catalog:",
     "@types/culori": "catalog:",
-    "react-aria-components": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "jsdom": "catalog:",
     "react": "catalog:",
+    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

@@ -74,8 +74,31 @@ export function TreeSelect({
     if (value === undefined) setInternal(next);
     onValueChange?.(next);
   };
+  /* Roving tabindex over the tree's inputs: the whole tree is ONE Tab stop
+   * (the first enabled row, or the checked one), and the arrow keys move
+   * between rows. Without it every native input was its own stop, which this
+   * repo's own composite-single-tab-stop rule flags on the served DOM. */
+  const flatEnabled = flat(options).filter((node) => !(isDisabled ?? false) && node.disabled !== true);
+  const stopValue =
+    flatEnabled.find((node) => selected.has(node.value))?.value ?? flatEnabled[0]?.value;
+  const onTreeKeyDown = (event: React.KeyboardEvent<HTMLUListElement>) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    const tree = (event.target as HTMLElement).closest('[role="tree"]');
+    if (!tree) return;
+    const inputs = [...tree.querySelectorAll<HTMLInputElement>("input:not(:disabled)")];
+    const current = inputs.indexOf(event.target as HTMLInputElement);
+    if (current === -1) return;
+    const next =
+      event.key === "Home"
+        ? 0
+        : event.key === "End"
+          ? inputs.length - 1
+          : (current + (event.key === "ArrowDown" ? 1 : -1) + inputs.length) % inputs.length;
+    inputs[next]?.focus();
+    event.preventDefault();
+  };
   const renderNodes = (nodes: readonly TreeSelectOption[], depth = 0): React.JSX.Element => (
-    <ul role={depth === 0 ? "tree" : "group"} aria-label={depth === 0 ? treeLabel : undefined} className={depth === 0 ? "p-1" : "ps-5"}>
+    <ul role={depth === 0 ? "tree" : "group"} aria-label={depth === 0 ? treeLabel : undefined} className={depth === 0 ? "p-1" : "ps-5"} {...(depth === 0 ? { onKeyDown: onTreeKeyDown } : {})}>
       {nodes.map((node) => {
         const state = treeSelectionState(node, selected);
         const checked = mode === "single" ? selected.has(node.value) : state === "checked";
@@ -88,6 +111,7 @@ export function TreeSelect({
                 value={node.value}
                 checked={checked}
                 disabled={isDisabled || node.disabled}
+                tabIndex={node.value === stopValue ? 0 : -1}
                 ref={(element) => { if (element) element.indeterminate = mode === "checkbox" && state === "mixed"; }}
                 onChange={() => {
                   if (mode === "single") { commit(node.value); setOpen(false); return; }
