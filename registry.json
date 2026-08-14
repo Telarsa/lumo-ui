@@ -320,7 +320,7 @@
       "name": "cascader",
       "type": "registry:ui",
       "title": "Cascader",
-      "description": "A drill-down selector over a tree of options, one column per level.",
+      "description": "The accessible name of the field, rendered as its visible label.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1409,7 +1409,7 @@
       "name": "multi-select",
       "type": "registry:ui",
       "title": "Multi Select",
-      "description": "A searchable multiple selection field.",
+      "description": "The accessible name of the field, rendered as its visible label.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1757,7 +1757,7 @@
       "name": "range-slider",
       "type": "registry:ui",
       "title": "Range Slider",
-      "description": "Two ordered values with independently named, locale-formatted thumbs.",
+      "description": "The accessible name of the slider group.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",

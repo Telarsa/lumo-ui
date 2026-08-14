@@ -195,7 +195,7 @@ export function Cascader({
                       tabIndex={stop ? 0 : -1}
                       aria-selected={active}
                       disabled={option.disabled}
-                      className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-start text-sm outline-none focus-visible:bg-surface-hover", active && "bg-surface-hover")}
+                      className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-start text-sm", active && "bg-surface-hover")}
                       onClick={() => {
                         const next = [...draftPath.slice(0, columnIndex), option.value];
                         setDraftPath(next);

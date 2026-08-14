@@ -32,6 +32,7 @@ const files = readdirSync(sourceDirectory)
 // already (asserted 99 against a directory that had grown to 111, which
 // meant the campaign could not execute at all and nobody noticed), so the
 // invariant is directory ↔ registry agreement, which updates itself.
+/** @type {{ items: Array<{ type: string }> }} */
 const registry = JSON.parse(readFileSync(join(repository, "registry.json"), "utf8"));
 const declared = registry.items.filter((item) => item.type === "registry:ui").length;
 if (files.length !== declared) {

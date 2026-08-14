@@ -243,7 +243,7 @@ describe("mutation survivors, now observed", () => {
 
   it("the uploading progressbar serves clamped ARIA values and its caller-authored name", () => {
     render(
-      <FileUploadList label="پرونده‌ها">
+      <FileUploadList aria-label="پرونده‌ها">
         <FileUploadItem
           name="گزارش.pdf"
           size={10}
