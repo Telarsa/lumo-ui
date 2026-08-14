@@ -5,6 +5,7 @@ import { sankeyDiagram } from "@tanstack/charts/network/sankey";
 import type { Locale } from "@lumo-ui/core";
 
 import { ChartContainer, defineChart, type ChartConfig } from "./chart.tsx";
+import { chartMirror } from "./chart.variants.ts";
 
 export interface SankeyNodeDatum {
   id: string;
@@ -48,6 +49,17 @@ export function SankeyChart({
   const nodeRows = nodes.map((node) => ({ ...node }));
   const linkRows = links.map((flow) => ({ ...flow }));
   const labels = new Map(nodeRows.map((node) => [node.id, node.label]));
+  /*
+   * A flow diagram READS: sources at the reading start, targets at the reading
+   * end. The engine's sankey always lays out left-to-right and its `align`
+   * speaks physical sides, so the mirror has two halves and both are derived
+   * from the same locale contract: the alignment side flips, and every
+   * computed x reflects about the plot bounds the marks callback is handed.
+   * Under LTR `flip` is the identity, so the mirrored path and the plain path
+   * are the same code — the arrangement in which the mirrored one stays
+   * working.
+   */
+  const rtl = chartMirror(locale).direction === "rtl";
   const definition = defineChart({
     marks: [
       sankeyDiagram({
@@ -58,16 +70,17 @@ export function SankeyChart({
         target: "target",
         value: "value",
         linkKey: "id",
-        align: "left",
+        align: rtl ? "right" : "left",
         nodePadding: 20,
         inset: { left: 18, right: 18, top: 28, bottom: 12 },
-        marks: ({ nodes: layoutNodes, links: layoutLinks }) =>
-          [
+        marks: ({ chart, nodes: layoutNodes, links: layoutLinks }) => {
+          const flip = (x: number) => (rtl ? 2 * chart.x + chart.width - x : x);
+          return [
             link(layoutLinks, {
               id: "sankey-links",
-              x1: "x1",
+              x1: (flow) => flip(flow.x1),
               y1: "y1",
-              x2: "x2",
+              x2: (flow) => flip(flow.x2),
               y2: "y2",
               key: "key",
               stroke: "var(--color-accent)",
@@ -77,8 +90,10 @@ export function SankeyChart({
             }),
             rect(layoutNodes, {
               id: "sankey-nodes",
-              x1: "x0",
-              x2: "x1",
+              // Reflection reverses edge order, so take lo/hi rather than
+              // assuming x0 stays the left edge.
+              x1: (node) => Math.min(flip(node.x0), flip(node.x1)),
+              x2: (node) => Math.max(flip(node.x0), flip(node.x1)),
               y1: "y0",
               y2: "y1",
               key: "key",
@@ -88,7 +103,7 @@ export function SankeyChart({
             }),
             text(layoutNodes, {
               id: "sankey-labels",
-              x: "x",
+              x: (node) => flip(node.x),
               y: (node) => node.y0 - 8,
               text: (node) => node.data.label,
               key: "key",
@@ -96,7 +111,8 @@ export function SankeyChart({
               fontSize: 12,
               fontWeight: 650,
             }),
-          ] as const,
+          ] as const;
+        },
       }),
     ],
     x: null,

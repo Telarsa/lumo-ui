@@ -6,6 +6,7 @@ import { scaleBand } from "@tanstack/charts/scales/band";
 import { formatNumber, type Locale } from "@lumo-ui/core";
 
 import { ChartContainer, defineChart, type ChartConfig } from "./chart.tsx";
+import { chartMirror } from "./chart.variants.ts";
 
 export interface HeatmapDatum {
   id: string;
@@ -64,13 +65,22 @@ export function HeatmapChart({
             radius: 3,
           }),
         ],
+        // The x axis carries CATEGORIES, so it takes the same mirror the
+        // shared category-axis builder applies: under RTL the scale range
+        // reverses and the first column sits at the reading start. The y
+        // axis is vertical and direction-neutral, but its tick labels sit
+        // beside the plot like a value axis's, so they take the same anchor.
         x: {
           scale: () => scaleBand<string>().domain(xDomain).padding(0.04),
+          ...chartMirror(locale).categoryAxis,
           axis: { label: xAxisLabel },
         },
         y: {
           scale: () => scaleBand<string>().domain(yDomain).padding(0.04),
-          axis: { label: yAxisLabel },
+          axis: {
+            label: yAxisLabel,
+            tickLabels: { anchor: chartMirror(locale).valueTickAnchor },
+          },
         },
         color: {
           domain: [min, max],

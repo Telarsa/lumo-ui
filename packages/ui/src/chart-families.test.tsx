@@ -130,3 +130,131 @@ describe("advanced chart families", () => {
     expect(html).toContain("۴۲");
   });
 });
+
+/**
+ * The RTL mirror, graded on SERVED GEOMETRY rather than on configuration.
+ *
+ * Every assertion reads the `x` the SSR pass actually wrote next to a
+ * `data-ts-key` that names the datum, and compares the same datum across the
+ * two locales. These four families each bypass the shared category-axis
+ * builders, which is exactly how all four shipped without the mirror the rest
+ * of the chart system has — so the pin is on the output, where a regression
+ * cannot hide behind an unwired option.
+ */
+describe("chart families mirror under RTL", () => {
+  const xOf = (html: string, keyPart: string): number => {
+    const tag = [...html.matchAll(/<(?:rect|text)\b[^>]*>/g)]
+      .map((m) => m[0])
+      .find((t) => t.includes(keyPart));
+    const x = /\bx="([-\d.]+)"/.exec(tag ?? "");
+    expect(x, `no x found for ${keyPart}`).toBeTruthy();
+    return Number(x?.[1]);
+  };
+
+  it("sankey: sources sit at the reading start — right under fa-IR, left under en-US", () => {
+    const render = (locale: "en-US" | "fa-IR") =>
+      renderToStaticMarkup(
+        <SankeyChart
+          locale={locale}
+          label="Flow"
+          dataCaption="Flow data"
+          targetLabel="Target"
+          valueLabel="Value"
+          initialWidth={400}
+          nodes={[
+            { id: "a", label: "AlphaNode" },
+            { id: "b", label: "BetaNode" },
+          ]}
+          links={[{ id: "ab", source: "a", target: "b", value: 10 }]}
+        />,
+      );
+    const ltr = render("en-US");
+    const rtl = render("fa-IR");
+    expect(xOf(ltr, "sankey-nodes") !== undefined).toBe(true);
+    expect(xOf(ltr, ":a")).toBeLessThan(xOf(ltr, ":b"));
+    expect(xOf(rtl, ":a")).toBeGreaterThan(xOf(rtl, ":b"));
+    // The reflection is exact: the source node lands where the target was.
+    expect(xOf(rtl, ":a")).toBeCloseTo(xOf(ltr, ":b"), 3);
+    expect(xOf(rtl, ":b")).toBeCloseTo(xOf(ltr, ":a"), 3);
+  });
+
+  it("heatmap: the first x category sits at the reading start in both directions", () => {
+    const render = (locale: "en-US" | "fa-IR") =>
+      renderToStaticMarkup(
+        <HeatmapChart
+          locale={locale}
+          label="Intensity"
+          dataCaption="Intensity data"
+          xAxisLabel="Quarter"
+          yAxisLabel="Team"
+          valueLabel="Sales"
+          initialWidth={400}
+          data={[
+            { id: "first-col", x: "Q1", y: "Core", value: 10 },
+            { id: "second-col", x: "Q2", y: "Core", value: 20 },
+          ]}
+        />,
+      );
+    const ltr = render("en-US");
+    const rtl = render("fa-IR");
+    expect(xOf(ltr, ":first-col")).toBeLessThan(xOf(ltr, ":second-col"));
+    expect(xOf(rtl, ":first-col")).toBeGreaterThan(xOf(rtl, ":second-col"));
+  });
+
+  it("treemap: the largest tile opens at the reading start in both directions", () => {
+    const render = (locale: "en-US" | "fa-IR") =>
+      renderToStaticMarkup(
+        <TreemapChart
+          locale={locale}
+          label="Share"
+          dataCaption="Share data"
+          parentLabel="Parent"
+          valueLabel="Value"
+          initialWidth={400}
+          data={[
+            { id: "root", parentId: null, label: "All", value: 0 },
+            { id: "big", parentId: "root", label: "Big", value: 70 },
+            { id: "small", parentId: "root", label: "Small", value: 30 },
+          ]}
+        />,
+      );
+    const ltr = render("en-US");
+    const rtl = render("fa-IR");
+    expect(xOf(ltr, ":big")).toBeLessThan(xOf(ltr, ":small"));
+    expect(xOf(rtl, ":big")).toBeGreaterThan(xOf(rtl, ":small"));
+  });
+
+  it("radar: dimensions proceed the other way round while the first stays on top", () => {
+    const render = (locale: "en-US" | "fa-IR") =>
+      renderToStaticMarkup(
+        <RadarChart
+          locale={locale}
+          label="Profile"
+          dataCaption="Profile data"
+          dimensionLabel="Dimension"
+          maxValue={100}
+          initialWidth={400}
+          series={[{ key: "one", label: "One", color: "var(--color-accent)" }]}
+          data={[
+            { dimension: "Top", one: 50 },
+            { dimension: "Second", one: 50 },
+            { dimension: "Third", one: 50 },
+          ]}
+        />,
+      );
+    const angleLabelX = (html: string, label: string): number => {
+      const tag = [...html.matchAll(/<text\b[^>]*>([^<]*)<\/text>/g)].find((m) => m[1] === label);
+      const x = /\bx="([-\d.]+)"/.exec(tag?.[0] ?? "");
+      expect(x, `no angle label ${label}`).toBeTruthy();
+      return Number(x?.[1]);
+    };
+    const ltr = render("en-US");
+    const rtl = render("fa-IR");
+    // Clockwise in LTR: the second dimension sits on the right of the third.
+    expect(angleLabelX(ltr, "Second")).toBeGreaterThan(angleLabelX(ltr, "Third"));
+    // Mirrored in RTL: the second dimension now sits on the left of the third.
+    expect(angleLabelX(rtl, "Second")).toBeLessThan(angleLabelX(rtl, "Third"));
+    // The first dimension does not move: a cycle's mirror fixes its axis.
+    expect(angleLabelX(rtl, "Top")).toBeCloseTo(angleLabelX(ltr, "Top"), 1);
+  });
+});
