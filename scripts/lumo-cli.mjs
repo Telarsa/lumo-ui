@@ -102,7 +102,7 @@ async function info() {
     for (const s of item.requiredAnnouncedStrings) console.log(`    ${s}`);
   }
   if (item.requiredProps?.length) console.log(`  Required props: ${item.requiredProps.join(", ")}`);
-  if (item.composition) console.log(`\n  Composition:\n${item.composition.split("\n").map((l) => "    " + l).join("\n")}`);
+  if (item.composition) console.log(`\n  Composition:\n${item.composition.split("\n").map((/** @type {string} */ l) => "    " + l).join("\n")}`);
   console.log(`\n  Files: ${(reg?.files ?? []).map((f) => f.path).join(", ")}`);
   console.log(`  npm dependencies: ${(reg?.dependencies ?? []).join(", ") || "—"}`);
   console.log(`  registry dependencies: ${(reg?.registryDependencies ?? []).join(", ") || "—"}`);

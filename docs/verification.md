@@ -10,6 +10,7 @@
 | `gate:no-css-modules` | Tailwind only | — |
 | `gate:test` | ~3,000 tests across packages, including the popup-interiors tier (18 families opened live and graded with the HTML rules) and the styling floor | Layout, real browsers, real assistive technology |
 | `gate:registry` / `gate:api` | Generated artifacts are current; API docs debt is 0 (ratchet in `api-docs.floor.json`); README/site counts equal the registry | Description accuracy |
+| `gate:catalog` | `catalog.json` (title/intro/usage/tier/required strings per item, both locales) is regenerated from the examples' meta + registry + api reference and matches the commit — what `lumo search`/`info` and consumer sessions read | Whether the copy is *good*; the human review of `usage` |
 | `gate:smoke` | Every registry item type-checks in a bare consumer project under TWO resolutions: bundler (Vite / Next) and Node ESM (`NodeNext`) | Runtime install path |
 | `gate:html` | 594 static documents graded with the 14 rules; 63 Persian routes carry digit floors | Anything a popup renders (see popup tier) |
 | `mutation:components` (CI job) | 111 modules each kill one mutant via `vitest related` — a floor of one operator per module: behavioural operators for 104 modules; 7 presentational modules keep the class-strip floor and are listed in scripts/mutate-components.mjs | Behavioral mutation breadth |
