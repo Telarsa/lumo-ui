@@ -184,7 +184,7 @@ export interface PowerSearchProps
   savedViews?: readonly PowerSearchSavedView[] | undefined;
   /** Called when the reader applies a saved view. */
   onSavedViewChange?: ((view: PowerSearchSavedView) => void) | undefined;
-  /** Already-localized display count. */
+  /** The result count. A number is formatted in the locale's digits; a string is shown as given (already localized). */
   resultCount?: number | string | undefined;
   /** Caller-authored result status line, e.g. a result count. */
   status?: PowerSearchStatus | undefined;
@@ -783,7 +783,9 @@ export function PowerSearch({
   const statusText = [
     resultCount === undefined
       ? null
-      : replace(strings.resultCountTemplate, { count: String(resultCount) }),
+      : replace(strings.resultCountTemplate, {
+          count: typeof resultCount === "number" ? formatNumber(resultCount, locale) : resultCount,
+        }),
     status?.text ?? null,
   ]
     .filter((item): item is string => item !== null)

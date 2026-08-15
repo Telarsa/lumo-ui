@@ -1214,3 +1214,19 @@ Also this tranche: a behavioural mutation operator for every module that owns be
 3. **Every component page carries `usage` (when / when not, both locales, naming the alternative in backticks; every named alternative is validated against the barrel).** 112 pages.
 4. **Field parity.** ComboBox, MultiSelect, TagsInput and Slider connect `description`/`errorMessage` to the control the reader lands on, in the first byte. Slider carries no `aria-invalid`: the engine forwards `aria-describedby` to its range input but not `aria-invalid`, and a flag on the thumb's div would name the wrong element — recorded rather than faked.
 5. **Snapshots and names.** Playwright aria snapshots are partial matchers; recorded with `--update-snapshots all`, and popup names are asserted with the engine's own `toHaveAccessibleName` — the DOM approximation that had passed an unnamed Select listbox is gone (§ evaluations, second pass).
+
+---
+
+## 24. What the fourth blind pass settled — and one thing it left open
+
+**Decided 16 August 2026.**
+
+- **A number-typed prop is formatted by the component, never stringified.** `PowerSearch.resultCount` was `number | string`, documented "already-localized", and served `1234 نتیجه` under `fa-IR`; a number now goes through `formatNumber(locale)`, a string is shown as given. The rule for every family: if a prop can be a number, the component owns its digits.
+- **Announced values are formatted like visible ones.** Gantt's zoom range and split separator carry `aria-valuetext` in the reader's digits (they announced raw Latin numbers).
+- **File names island themselves only when Latin** — `AttachmentName` applies the same rule as `FileUploadItem`.
+- **The gate reads digits wherever a reader meets them:** text nodes, and now `value`, `aria-valuetext`, `placeholder`, `alt`, `title`, `aria-label`, `aria-description`, `aria-roledescription` (Latin-by-nature and machine-value inputs skipped). Blocks are graded with the full rule set, not two rules.
+- **`dir` is not a prop of any Lumo component.** It left `GlobalDOMAttributes` in `@lumo-ui/core`; the whole workspace still compiles, which proves nothing depended on it. Direction is `direction(locale)`; islands set `dir` on their own host elements.
+- **Licence field.** The packages declared `MIT` with no LICENSE file on a private, unpublished library; they now say `UNLICENSED`, which is what is true today. Choosing an actual licence (for a public future or for consumers' legal comfort) is the owner's decision.
+
+**Left open, recorded (rubric B3 counts it until it moves):** the date family disagrees on calendar. `Calendar`, `Gantt`, `EventCalendar` display a Gregorian `CalendarDate` in the reader's calendar (Jalali under `fa-IR`); `DateField`/`DatePicker`/`DateRangePicker` keep the VALUE's calendar ("it wins; converting would lose data" — `date-field-state.ts`), so a `fa-IR` field can announce «۲۰۲۶» while its own popup grid captions «۱۴۰۵ مرداد». The right shape is display-and-edit in the reader's calendar with a round-trip back to the caller's calendar on change (`toCalendar` both ways loses nothing). It touches the whole date family and its tests, so it is scheduled, not rushed; and gate rule 8 cannot see a numeric Gregorian year — that rule needs the same repair.
+

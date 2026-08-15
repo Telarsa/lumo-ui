@@ -11,7 +11,7 @@
     "rtl",
     "react-server-components"
   ],
-  "license": "MIT",
+  "license": "UNLICENSED",
   "type": "module",
   "sideEffects": false,
   "exports": {

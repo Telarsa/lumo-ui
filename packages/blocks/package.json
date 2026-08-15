@@ -2,7 +2,7 @@
   "name": "@lumo-ui/blocks",
   "version": "0.0.0",
   "description": "Whole screen sections composed from shipped Lumo components. Every user-facing string is a required prop.",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "type": "module",
   "sideEffects": false,
   "exports": { ".": "./src/index.ts" },

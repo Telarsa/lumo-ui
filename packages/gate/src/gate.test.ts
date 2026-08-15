@@ -1147,6 +1147,7 @@ describe("no-latin-digits — attributes a reader sees or hears", () => {
     expect(fired('<div role="slider" tabindex="0" aria-label="بودجه" aria-valuenow="40" aria-valuetext="40 درصد"></div>')).toContain("no-latin-digits");
     expect(fired('<input aria-label="سن" placeholder="18" />')).toEqual(["no-latin-digits"]);
     expect(fired('<img alt="فاکتور 12" src="x.png" />')).toEqual(["no-latin-digits"]);
+    expect(fired('<button type="button" aria-label="حذف ردیف 3">×</button>')).toEqual(["no-latin-digits"]);
   });
 
   it("does NOT fire on Latin-by-nature inputs, islands, hidden nodes or Persian digits", () => {

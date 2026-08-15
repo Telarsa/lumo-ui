@@ -260,13 +260,13 @@ export const noLatinDigits: Rule = {
       "email", "url", "tel", "password", "hidden", "search", "number",
       "radio", "checkbox", "range", "color", "file", "submit", "button", "reset", "image",
     ]);
-    for (const el of Array.from(doc.document.querySelectorAll("[value],[aria-valuetext],[placeholder],[alt],[title]"))) {
+    for (const el of Array.from(doc.document.querySelectorAll("[value],[aria-valuetext],[placeholder],[alt],[title],[aria-label],[aria-description],[aria-roledescription]"))) {
       if (el.closest?.("[data-lumo-latn]")) continue;
       if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
       const tag = el.tagName.toLowerCase();
       if (tag === "input" && LATIN_INPUT.has((el.getAttribute("type") ?? "text").toLowerCase())) continue;
       if (tag === "option" || tag === "meta" || tag === "param" || tag === "li" || tag === "data" || tag === "progress" || tag === "meter") continue;
-      for (const attr of ["value", "aria-valuetext", "placeholder", "alt", "title"]) {
+      for (const attr of ["value", "aria-valuetext", "placeholder", "alt", "title", "aria-label", "aria-description", "aria-roledescription"]) {
         if (attr === "value" && tag !== "input" && tag !== "textarea") continue;
         const text = el.getAttribute(attr);
         if (text !== null && ASCII_DIGIT.test(text)) {

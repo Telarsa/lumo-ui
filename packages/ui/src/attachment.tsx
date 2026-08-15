@@ -125,14 +125,23 @@ export interface AttachmentNameProps
   className?: string | undefined;
 }
 
-/** The filename. `dir="auto"`: filenames are the classic mixed-script run, and only first-strong gets both right. */
-export function AttachmentName({ className, ...props }: AttachmentNameProps) {
+/**
+ * The filename. `dir="auto"`: filenames are the classic mixed-script run, and
+ * only first-strong gets both right. A name whose letters are all Latin declares
+ * itself an island — the same rule `FileUploadItem` applies — so `photo.png` is
+ * graded as the Latin content it is and «گزارش.pdf» is not forced LTR.
+ */
+export function AttachmentName({ className, children, ...props }: AttachmentNameProps) {
+  const latin = typeof children === "string" && !/(?=\p{L})[^\p{Script=Latin}]/u.test(children);
   return (
     <span
       dir="auto"
+      {...(latin ? { "data-lumo-latn": "" } : {})}
       className={cn("block max-w-full min-w-0 truncate text-sm font-medium", className)}
       {...props}
-    />
+    >
+      {children}
+    </span>
   );
 }
 

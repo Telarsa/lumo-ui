@@ -927,6 +927,8 @@ export function Gantt<T extends GanttTask>({
           max={4}
           step={0.25}
           value={activeZoom}
+          // What is ANNOUNCED: the reader's digits, never the range's raw Latin value.
+          aria-valuetext={`${formatNumber(activeZoom, locale)}×`}
           onChange={(event) => {
             const next = Number(event.currentTarget.value);
             if (zoom === undefined) setUncontrolledZoom(next);
@@ -977,6 +979,7 @@ export function Gantt<T extends GanttTask>({
           aria-valuemin={160}
           aria-valuemax={480}
           aria-valuenow={activeSplit}
+          aria-valuetext={formatNumber(activeSplit, locale)}
           tabIndex={0}
           className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-accent"
           onKeyDown={(event) => {

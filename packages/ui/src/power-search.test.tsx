@@ -359,7 +359,8 @@ describe("PowerSearch", () => {
     expect(screen.getByRole("region", { name: strings.regionLabel }).getAttribute("aria-busy")).toBe(
       "true",
     );
-    expect(screen.getByRole("status").textContent).toContain("12 نتیجه");
+    // A NUMBER count is formatted in the locale — the fourth blind pass found "1234 نتیجه" served under fa-IR.
+    expect(screen.getByRole("status").textContent).toContain("۱۲ نتیجه");
     expect(screen.getByRole("status").textContent).toContain("در حال دریافت نتیجه‌ها");
     expect(screen.getByRole("combobox", { name: strings.savedViewsLabel }).tagName).toBe("BUTTON");
     expect(document.querySelector("select")).toBeNull();

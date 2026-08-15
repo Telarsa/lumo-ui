@@ -45,12 +45,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { ReactElement } from "react";
-import {
-  gradeHtml,
-  namedControls,
-  noLatinDigits,
-  persianDigitFloor,
-} from "../../gate/src/index.ts";
+import { gradeHtml, persianDigitFloor } from "../../gate/src/index.ts";
 
 import { ActivityFeed } from "./activity-feed.tsx";
 import { AppShell } from "./app-shell.tsx";
@@ -907,7 +902,9 @@ const BLOCKS: readonly (readonly [string, () => ReactElement])[] = [
 function renderAndGrade(element: ReactElement): { html: string; violations: string[] } {
   const body = renderToStaticMarkup(element);
   const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
-  const violations = gradeHtml(`fa-IR/block.html`, html, [noLatinDigits, namedControls]).map(
+  // The FULL rule set, as the site's export is graded — a bare-fragment document
+  // is exactly what the fourth blind pass found this grader skipping (2 of 14 rules).
+  const violations = gradeHtml(`fa-IR/block.html`, html).map(
     (v) => `${v.rule}: ${v.detail}${v.snippet === undefined ? "" : ` — ${v.snippet}`}`,
   );
   return { html: body, violations };

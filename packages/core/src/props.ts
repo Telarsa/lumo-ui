@@ -395,10 +395,14 @@ export type GlobalDOMEvents<T = Element> = Pick<
   | "onTransitionStartCapture"
 >;
 
-/** Global attributes plus global events. `id` is handled by `DOMProps`. */
+/**
+ * Global attributes plus global events. `id` is handled by `DOMProps`. There is
+ * NO `dir` here, on purpose: direction is `direction(locale)` from `LumoProvider`,
+ * and a component that needs an LTR island sets `dir` on its own host element
+ * (Kbd, InputOtp, the phone run). Since 16 Aug 2026 — it was declared and
+ * forwarded on ~40 interfaces while the docs said "no dir prop".
+ */
 export interface GlobalDOMAttributes<T = Element> extends GlobalDOMEvents<T> {
-  /** The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`. */
-  dir?: string | undefined;
   /** The element's `lang` attribute, when this subtree's language differs from the page's. */
   lang?: string | undefined;
   /** The DOM `hidden` attribute: removes the element from rendering and the accessibility tree. */

@@ -36,12 +36,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -397,12 +391,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "form",
@@ -1187,12 +1175,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -1430,12 +1412,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "form",
@@ -1957,12 +1933,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "form",
@@ -2498,12 +2468,6 @@
             "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
@@ -2681,12 +2645,6 @@
             "type": "LumoNode",
             "required": false,
             "description": "Help text under the checkbox."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "errorMessage",
@@ -3784,12 +3742,6 @@
             "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -4600,12 +4552,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -4657,12 +4603,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -4728,12 +4668,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -4844,12 +4778,6 @@
             "description": "Initially expanded section keys. Maps to Base UI's `defaultValue`."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "expandedKeys",
             "type": "Iterable<string> | undefined",
             "required": false,
@@ -4945,12 +4873,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -5014,12 +4936,6 @@
             "type": "boolean",
             "required": false,
             "description": "Whether the section is expanded by default (uncontrolled)."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -5157,12 +5073,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "form",
@@ -5310,12 +5220,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -5367,12 +5271,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -5933,12 +5831,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -6581,12 +6473,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -6836,12 +6722,6 @@
             "type": "LumoNode",
             "required": false,
             "description": "Help text, wired into `aria-describedby` by the description slot."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "enterKeyHint",
@@ -8242,12 +8122,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -8924,12 +8798,6 @@
             "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
@@ -9438,12 +9306,6 @@
             "description": "The additional offset applied along the cross axis."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -9656,7 +9518,7 @@
             "name": "resultCount",
             "type": "string | number | undefined",
             "required": false,
-            "description": "Already-localized display count."
+            "description": "The result count. A number is formatted in the locale's digits; a string is shown as given (already localized)."
           },
           {
             "name": "savedViews",
@@ -10064,12 +9926,6 @@
             "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
@@ -10259,12 +10115,6 @@
             "type": "LumoNode",
             "required": false,
             "description": "Help text under this option."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -11211,12 +11061,6 @@
             "type": "LumoNode",
             "required": false,
             "description": "Help text rendered under the field and linked to it via aria-describedby."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "enterKeyHint",
@@ -12282,12 +12126,6 @@
             "description": "Help text, connected to the thumb by `aria-describedby` in the first byte."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
@@ -12792,12 +12630,6 @@
             "type": "LumoNode",
             "required": false,
             "description": "Help text under the switch."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "errorMessage",
@@ -13484,12 +13316,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -13573,12 +13399,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -13660,12 +13480,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "Additional classes merged onto the component's root element."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -13761,12 +13575,6 @@
             "type": "Key",
             "required": false,
             "description": "The selected tab's key (uncontrolled)."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "disabledKeys",
@@ -14190,12 +13998,6 @@
             "description": "Help text rendered under the field and linked to it via aria-describedby."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "enterKeyHint",
             "type": "\"search\" | \"enter\" | \"done\" | \"go\" | \"next\" | \"previous\" | \"send\"",
             "required": false,
@@ -14495,12 +14297,6 @@
             "type": "LumoNode",
             "required": false,
             "description": "Help text, wired into `aria-describedby` during render — not after hydration."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "enterKeyHint",
@@ -15235,12 +15031,6 @@
             "description": "Whether the toggle is on by default (uncontrolled)."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -15430,12 +15220,6 @@
             "type": "boolean",
             "required": false,
             "description": "Whether the toggle is on by default (uncontrolled)."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -15631,12 +15415,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -15725,12 +15503,6 @@
             "type": "number",
             "required": false,
             "description": "The additional offset applied along the cross axis."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "hidden",
@@ -15981,12 +15753,6 @@
             "description": "Additional classes merged onto the component's root element."
           },
           {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
             "name": "hasChildItems",
             "type": "boolean",
             "required": false,
@@ -16152,12 +15918,6 @@
             "type": "\"all\" | Iterable<Key>",
             "required": false,
             "description": "The initial selected keys in the collection (uncontrolled)."
-          },
-          {
-            "name": "dir",
-            "type": "string | undefined",
-            "required": false,
-            "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
             "name": "disabledKeys",

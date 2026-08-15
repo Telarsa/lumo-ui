@@ -2,7 +2,7 @@
   "name": "@lumo-ui/theme",
   "version": "0.0.0",
   "description": "Lumo's token contract: three tiers of CSS custom properties, a Tailwind v4 bridge, and the Persian typography rules.",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "type": "module",
   "exports": {
     "./tokens.css": "./src/tokens.css",
