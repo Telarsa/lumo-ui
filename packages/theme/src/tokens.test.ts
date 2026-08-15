@@ -431,6 +431,34 @@ describe("tokens — the swept contrast matrix", () => {
   });
 });
 
+describe("tokens — status text on its OWN tint", () => {
+  /*
+   * The chips: `bg-positive/10 text-positive` (badge, tag, alert). The swept
+   * matrix grades status text on the plain surfaces; the browser evidence job
+   * (axe in Chromium, 15 Aug 2026) measured the chip ground — the token at 10%
+   * composited over the surface — at 4.47 / 4.25 / 4.43 for positive / critical
+   * / caution in light. Browsers composite alpha in GAMMA sRGB, not linear, so
+   * the blend below does too; that is why the 0.970 "wash" model above passed
+   * what axe failed.
+   */
+  const toGamma = (v: number) => (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055);
+  const toLinear = (v: number) => (v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4));
+  const tint = (mark: [number, number, number], ground: [number, number, number], alpha: number) =>
+    mark.map((c, i) => toLinear(alpha * toGamma(c) + (1 - alpha) * toGamma(ground[i]!))) as [number, number, number];
+
+  const cases = THEMES.flatMap(([themeName]) =>
+    STATUS_GROUNDS.flatMap((status) => SURFACES.map((surface) => [themeName, status, surface] as const)),
+  );
+
+  it.each(cases)("%s: %s on its own 10% tint over %s", (themeName, status, surface) => {
+    const theme = THEMES.find(([n]) => n === themeName)![1];
+    const mark = colourOf(theme, status);
+    const ground = tint(mark, colourOf(theme, surface), 0.1);
+    const r = ratio(mark, ground);
+    expect(r, `${status} on its own 10% tint over ${surface} is ${r.toFixed(2)}:1, needs 4.5:1`).toBeGreaterThanOrEqual(4.5);
+  });
+});
+
 describe("tokens — no mark resolves to the ground it sits on", () => {
   /*
    * B3 in one assertion, and the reason it is separate from the ratio sweep:

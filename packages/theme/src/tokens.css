@@ -158,11 +158,18 @@
      * the wash at 4.73:1 and did not move. The dark trio clears its worst ground
      * — `surface-hover` at L 0.269 — at 5.23:1 / 7.41:1 / 6.03:1 and did not
      * move either. positive/caution have no Nova counterpart. */
-    --lumo-ref-positive: oklch(0.520 0.130 155);
+    /* 15 Aug 2026, from the browser evidence job (axe in Chromium on the built
+     * site): status TEXT on its own 10% tint (`bg-positive/10 text-positive`,
+     * the badge/tag chips) measured 4.47 / 4.25 / 4.43 — the tint composited
+     * over the surface is darker than the 0.970 wash modelled above. Lightness
+     * lowered until text-on-own-tint clears 4.5 over every light surface, and
+     * that ground is now measured in tokens.test.ts:
+     *   positive 0.520 → 0.495 · critical 0.555 → 0.470 · caution 0.545 → 0.515 */
+    --lumo-ref-positive: oklch(0.495 0.130 155);
     --lumo-ref-positive-dark: oklch(0.700 0.150 155);
-    --lumo-ref-critical: oklch(0.555 0.245 27.325);
+    --lumo-ref-critical: oklch(0.470 0.245 27.325);
     --lumo-ref-critical-dark: oklch(0.704 0.191 22.216);
-    --lumo-ref-caution: oklch(0.545 0.120 75);
+    --lumo-ref-caution: oklch(0.515 0.120 75);
     --lumo-ref-caution-dark: oklch(0.780 0.140 75);
 
     /* ---- elevation, and the scrim -------------------------------------- *

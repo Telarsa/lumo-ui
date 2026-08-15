@@ -1,0 +1,5 @@
+- menu "پرونده":
+  - menuitem "سند تازه"
+  - menuitem "باز کردن…"
+  - separator
+  - menuitem "ذخیره"

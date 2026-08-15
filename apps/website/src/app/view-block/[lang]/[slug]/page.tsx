@@ -21,5 +21,10 @@ export default async function ViewBlock({
   const lang = assertLocale(raw);
   const block = blockById(slug);
   if (!block) notFound();
-  return <>{block.render(lang)}</>;
+  return (
+    <>
+      <title>{block.title[lang]}</title>
+      {block.render(lang)}
+    </>
+  );
 }

@@ -1,0 +1,5 @@
+- menu "کارهای این پرونده":
+  - menuitem "رونوشت"
+  - menuitem "تغییر نام"
+  - separator
+  - menuitem "حذف"

@@ -1,0 +1,9 @@
+- navigation "ناوبری اصلی":
+  - button "محصولات" [expanded]
+  - link "لومو سیستم طراحی فارسی‌محور روی React Aria":
+    - /url: "#lumo"
+  - link "خروس رزرو اقامتگاه، از جست‌وجو تا پرداخت":
+    - /url: "#khroos"
+  - button "منابع"
+  - link "قیمت‌ها":
+    - /url: "#pricing"

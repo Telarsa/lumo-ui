@@ -9,6 +9,9 @@ import { LumoHtml } from "@lumo-ui/core";
 export default function NotFound() {
   return (
     <LumoHtml lang="fa-IR">
+      <head>
+        <title>صفحه پیدا نشد</title>
+      </head>
       <body className="grid min-h-dvh place-items-center p-8 text-center">
         <div>
           <h1 className="text-2xl font-semibold text-fg">صفحه پیدا نشد</h1>

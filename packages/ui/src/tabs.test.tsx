@@ -280,3 +280,31 @@ describe("Tabs — the served tab list can be reached with the Tab key", () => {
     expect(after.filter((t) => t === "0")).toHaveLength(1);
   });
 });
+
+describe("Tabs — every IDREF the live tab list carries resolves", () => {
+  afterEach(cleanup);
+
+  it("the selected tab's aria-controls is the id of the panel that is actually mounted", () => {
+    render(
+      <Tabs>
+        <TabList label="بخش‌های حساب">
+          <Tab id="a">الف</Tab>
+          <Tab id="b">ب</Tab>
+        </TabList>
+        <TabPanel id="a">محتوای الف</TabPanel>
+        <TabPanel id="b">محتوای ب</TabPanel>
+      </Tabs>,
+    );
+    // Found by the browser evidence job: the engine writes `aria-controls` with the
+    // panel id IT minted; a Lumo-minted panel id left every tab pointing at nothing.
+    for (const tab of Array.from(document.querySelectorAll('[role="tab"]'))) {
+      const controls = tab.getAttribute("aria-controls");
+      if (controls === null) continue;
+      expect(document.getElementById(controls), `${tab.id} → ${controls}`).not.toBeNull();
+    }
+    const selected = document.querySelector('[role="tab"][aria-selected="true"]');
+    const panel = document.querySelector('[role="tabpanel"]');
+    expect(selected?.getAttribute("aria-controls")).toBe(panel?.id);
+    expect(panel?.getAttribute("aria-labelledby")).toBe(selected?.id);
+  });
+});

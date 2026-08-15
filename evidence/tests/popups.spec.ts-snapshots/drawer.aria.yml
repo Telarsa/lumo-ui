@@ -1,0 +1,12 @@
+- dialog "بخش‌های حساب":
+  - button "بستن"
+  - heading "بخش‌های حساب" [level=2]
+  - navigation:
+    - link "سفارش‌ها":
+      - /url: "#orders"
+    - link "نشانی‌ها":
+      - /url: "#addresses"
+    - link "روش‌های پرداخت":
+      - /url: "#payments"
+    - link "تنظیمات":
+      - /url: "#settings"

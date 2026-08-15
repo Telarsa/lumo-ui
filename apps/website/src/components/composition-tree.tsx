@@ -142,7 +142,8 @@ export function PropsTable({
               {group.name}
             </code>
           </summary>
-          <div className="overflow-x-auto border-t border-border">
+          {/* A wide props table scrolls sideways; the scroller must be reachable by keyboard (axe scrollable-region-focusable). */}
+          <div tabIndex={0} className="overflow-x-auto border-t border-border">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border bg-surface-sunken">

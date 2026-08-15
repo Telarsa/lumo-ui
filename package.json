@@ -25,10 +25,14 @@
     "build:api": "node scripts/build-api-reference.mjs",
     "gate:api": "node scripts/build-api-reference.mjs --check",
     "gate:smoke": "node scripts/smoke-consumer.mjs",
-    "mutation:components": "node scripts/mutate-components.mjs --output mutation-report.json"
+    "mutation:components": "node scripts/mutate-components.mjs --output mutation-report.json",
+    "evidence": "playwright test -c evidence/playwright.config.ts",
+    "evidence:types": "tsc -p evidence/tsconfig.json"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@lumo-ui/config": "workspace:*",
+    "@playwright/test": "^1.62.1",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-react-hooks": "catalog:",

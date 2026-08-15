@@ -15,3 +15,6 @@ out/
 *.tsbuildinfo
 mutation-report.json
 graphify-out/
+
+# Browser evidence output
+.evidence/

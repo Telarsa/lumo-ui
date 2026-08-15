@@ -57,6 +57,8 @@ export function CodePanel({
           dir="ltr"
           lang="en"
           data-lumo-latn=""
+          // A listing that scrolls must be reachable by keyboard (axe scrollable-region-focusable).
+          tabIndex={0}
           className={cn(
             "max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken text-start text-xs leading-relaxed [&_pre]:m-0 [&_pre]:bg-transparent! [&_pre]:p-4 [&_pre]:pe-12",
             SCROLLBAR,
@@ -68,6 +70,7 @@ export function CodePanel({
           dir="ltr"
           lang="en"
           data-lumo-latn=""
+          tabIndex={0}
           className={cn(
             "max-h-128 overflow-auto rounded-lg border border-border bg-surface-sunken p-4 pe-12 text-start text-xs leading-relaxed",
             SCROLLBAR,

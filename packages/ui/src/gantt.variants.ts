@@ -12,12 +12,15 @@ export const ganttVariants = cva("flex max-w-full flex-col gap-3");
 export const ganttScaleGroupVariants = cva("flex items-center gap-1");
 
 export const ganttScaleButtonVariants = cva(
-  "rounded-md px-3 py-1 text-xs text-fg-subtle transition-colors hover:bg-surface-hover hover:text-fg",
+  "rounded-md px-3 py-1 text-xs transition-colors",
   {
     variants: {
       active: {
+        // The colour lives in the variant, not the base: `text-fg-subtle` in the base
+        // outranked `text-accent-fg` in the emitted CSS, so the pressed scale button
+        // rendered grey on the accent fill (3.56:1 — browser evidence job).
         true: "bg-accent text-accent-fg hover:bg-accent-hover hover:text-accent-fg",
-        false: "",
+        false: "text-fg-subtle hover:bg-surface-hover hover:text-fg",
       },
     },
     defaultVariants: { active: false },

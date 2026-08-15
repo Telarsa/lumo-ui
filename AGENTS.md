@@ -7,6 +7,7 @@ Persian-first, RTL-honest React 19 component library on Base UI. Private, `0.0.0
 - Focused checks while working: `pnpm --filter @lumo-ui/ui exec vitest run src/<file>.test.tsx`, `pnpm --filter @lumo-ui/ui exec tsc --noEmit`, `pnpm run gate:props`.
 - Regenerate artifacts after touching component props/files: `node scripts/build-registry.mjs && node scripts/build-api-reference.mjs`.
 - Mutation floor: `pnpm run mutation:components` (~20 min; do not edit the tree while it runs).
+- Browser evidence: `pnpm run evidence` (Playwright: Chromium/WebKit/Firefox over the built site; ~25 min; browsers via `pnpm exec playwright install chromium webkit firefox`; never alongside verify or mutation). What it proves: `docs/evidence/README.md`.
 - Knowledge graph (use it first, it is cheaper than grep): `graphify query "<question>"` to orient, `graphify path "<A>" "<B>"` for how two things connect, `graphify explain "<concept>"` for one seam; `graphify update .` after code changes (AST-only, free).
 
 ## Non-negotiable rules
@@ -24,7 +25,7 @@ Every evaluation — blind, post-fix, or against another library — fills in `d
 Filing upstream issues · publishing or making anything public · force-pushing / touching protected branches · adding a paid service · adding a runtime dependency.
 
 ## Do not claim
-Browser, NVDA, JAWS, VoiceOver, TalkBack, Firefox, Safari, or hosted CI results you did not actually run.
+NVDA, JAWS, VoiceOver, TalkBack, or hosted CI results you did not actually run. Chromium/WebKit/Firefox facts come only from the `evidence` job's output — cite the run.
 
 ## Layout
 `packages/core` contracts · `packages/theme` tokens · `packages/base-ui-ssr` engine SSR fixes · `packages/ui` components · `packages/blocks` compositions · `packages/gate` graders · `apps/website` docs site · `scripts/` generators. Details: `docs/codebase.md`, `docs/architecture.md`, `docs/verification.md`, `docs/i18n-and-rtl.md`.

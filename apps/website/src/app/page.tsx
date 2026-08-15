@@ -9,6 +9,7 @@ export default function Root() {
   return (
     <LumoHtml lang="fa-IR">
       <head>
+        <title>لومو</title>
         <meta httpEquiv="refresh" content="0; url=/fa/" />
         <link rel="canonical" href="/fa/" />
       </head>

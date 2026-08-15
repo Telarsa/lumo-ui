@@ -120,7 +120,7 @@ interface TabsContextValue {
 const TabsIdContext = createContext<TabsContextValue | undefined>(undefined);
 
 /** `base-tab-profile` / `base-tabpanel-profile`, or `undefined` outside a `Tabs`. */
-function partId(base: string | undefined, part: "tab" | "tabpanel", key: unknown) {
+function partId(base: string | undefined, part: "tab", key: unknown) {
   if (base === undefined || key === undefined || key === null) return undefined;
   return `${base}-${part}-${String(key)}`;
 }
@@ -339,13 +339,15 @@ export function TabPanel({
 }: TabPanelProps) {
   // `data-lumo`: the panel is a focus stop when it holds no focusable content.
   // `aria-labelledby` points at the tab with the same `id`, which is always rendered.
+  // The panel's OWN id is Base UI's: the engine writes `aria-controls` on the
+  // selected tab with the id IT minted, so overriding it here left every tab
+  // pointing at nothing after hydration (found by the browser evidence job).
   const base = useContext(TabsIdContext)?.base;
   return (
     <BaseTabs.Panel
       data-lumo=""
       className={cn(tabPanelVariants(), className)}
       {...attr("value", id)}
-      {...attr("id", partId(base, "tabpanel", id))}
       {...attr("aria-labelledby", partId(base, "tab", id))}
       {...attr("keepMounted", shouldForceMount)}
       {...(rest as BaseTabs.Panel.Props)}

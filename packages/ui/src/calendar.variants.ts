@@ -103,7 +103,7 @@ export const calendarCellVariants = cva(
     "data-selected:bg-accent data-selected:text-accent-fg " +
     "data-selected:hover:bg-accent " +
     "data-disabled:pointer-events-none data-disabled:text-fg-subtle " +
-    "data-outside:text-fg-subtle data-outside:opacity-60 " +
+    "data-outside:text-fg-subtle " +
     "data-hidden:invisible data-hidden:pointer-events-none " +
     "data-today:font-semibold data-today:text-accent " +
     "data-today:data-selected:text-accent-fg",
@@ -128,7 +128,7 @@ export const rangeCalendarCellVariants = cva(
     "rounded-none " +
     "hover:bg-surface-hover " +
     "data-disabled:pointer-events-none data-disabled:text-fg-subtle " +
-    "data-outside:text-fg-subtle data-outside:opacity-60 " +
+    "data-outside:text-fg-subtle " +
     "data-hidden:invisible data-hidden:pointer-events-none " +
     "data-today:font-semibold",
 );
