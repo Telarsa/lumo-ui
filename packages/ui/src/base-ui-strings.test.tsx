@@ -1,48 +1,42 @@
 /**
- * EXPERIMENT (branch `experiment/base-ui`). The i18n layer's conformance suite.
+ * The i18n layer's conformance suite for the Base UI engine strings.
  *
  * ── WHAT THIS PINS, AND WHY IT IS A PERMANENT TEST RATHER THAN A PROBE ──────
  *
- * The migration probe MEASURED that seven of Base UI's
- * eight English strings can be reached by a prop. A measurement is true on the
- * day it is taken. This file makes it true on every day after, because all seven
- * reach through `mergeProps` precedence and `?? default` fallbacks — internal
- * choices with no compatibility promise attached. A minor version that moves one
- * literal after the spread turns a Persian page English with a green build, no
- * type error and no visible change. That is the failure mode `patch.test.tsx`
- * exists for on the React Aria side, and this is its Base UI counterpart.
+ * The migration probe MEASURED that seven of Base UI's eight English strings
+ * can be reached by a prop. A measurement is true on the day it is taken. This
+ * file makes it true on every day after, because all seven reach through
+ * `mergeProps` precedence and `?? default` fallbacks — internal choices with no
+ * compatibility promise attached. A minor version that moves one literal after
+ * the spread turns a Persian page English with a green build, no type error and
+ * no visible change. This file is the tripwire for that.
  *
  * ── EVERY ASSERTION IS AGAINST A SERVER RENDER ──────────────────────────────
  *
  * `renderToStaticMarkup`, never jsdom. The point of the whole layer is that it
- * resolves in the FIRST BYTE — the thing React Aria's `LocalizedStringProvider`
- * could not do (it renders no children and only sets a `window` symbol; measured
- * at zero reach in `core/src/strings.ts`) and the thing Base UI's own naming
- * routes cannot do either (both are layout effects; see `base-ui-adapter.ts`).
- * An assertion made in jsdom would pass on a client render and tell us nothing
- * about the bytes a crawler or a no-JS reader receives.
+ * resolves in the FIRST BYTE — Base UI's own naming routes are layout effects
+ * and cannot (see `@lumo-ui/base-ui-ssr`). An assertion made in jsdom would
+ * pass on a client render and tell us nothing about the bytes a crawler or a
+ * no-JS reader receives.
  *
  * ── THE TWO SHAPES OF CASE BELOW ────────────────────────────────────────────
  *
- *   Lumo components   `Slider` and `NumberField` are rebuilt on Base UI, so the
- *                     string is asserted through Lumo's own public API.
+ *   Lumo components   `Slider` and `NumberField` are asserted through Lumo's
+ *                     own public API.
  *   Bare carriers     `Progress.Root`, `Toast.Viewport` and a two-thumb
- *                     `Slider.Thumb` are rendered directly rather than through
- *                     a Lumo component. toast.tsx is still React Aria and Lumo
- *                     ships no range slider; progress.tsx IS on Base UI now, and
- *                     its own suite (progress.test.tsx) makes the stronger
- *                     claim — this file keeps the bare case because it grades
- *                     the catalogue rather than any one component. They are rendered directly,
- *                     wired the way the catalogue says to wire them. That is a
- *                     weaker claim than a component test and it is labelled as
- *                     such: it proves the catalogue reaches the attribute, not
- *                     that a Lumo component threads it.
+ *                     `Slider.Thumb` are rendered directly, wired the way the
+ *                     catalogue says to wire them. Lumo's own progress, toast
+ *                     and range-slider suites make the stronger per-component
+ *                     claim; this file keeps the bare case because it grades
+ *                     the CATALOGUE rather than any one component — it proves
+ *                     the catalogue reaches the attribute, not that a Lumo
+ *                     component threads it.
  *
  * Both shapes assert the SAME two things, and the negative one is the load
  * bearing half: the Persian string is present AND the English string Base UI
  * would otherwise have emitted is absent. Asserting only the first passes on a
- * page carrying both values on the same attribute — which is not hypothetical,
- * `strings.ts` records React Aria's NumberField `<Group>` doing exactly that.
+ * page carrying both values on the same attribute — not hypothetical: the
+ * React Aria era's NumberField `<Group>` did exactly that.
  */
 
 import { describe, expect, it } from "vitest";

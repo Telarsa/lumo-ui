@@ -274,11 +274,11 @@ export const persianDigitFloor = (floors: Record<string, number>): Rule => ({
 export const noLatinAria: Rule = {
   id: "no-latin-aria",
   because:
-    "React Aria ships 34 locales without Persian. Measured, 8 English strings " +
-    "leak on a Persian page; 5 are fixable by prop. This catches the ones nobody " +
-    "remembered to pass.",
+    "Engines and product code both leak English into announced strings; a " +
+    "required prop that nobody passed a translation for is still English. Keyed " +
+    "on the reader's SCRIPT, not direction: an LTR non-Latin locale is graded too.",
   run: (doc) => {
-    if (doc.direction !== "rtl") return [];
+    if (doc.script.property === "Latin") return [];
     const v: Violation[] = [];
     for (const { attr, on } of SPOKEN) {
       const selector = on === undefined ? `[${attr}]` : on.split(",").map((s) => `${s}[${attr}]`).join(",");

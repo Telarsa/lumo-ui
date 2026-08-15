@@ -1178,3 +1178,13 @@ score; no local Windows VM work is in scope.
 **Decided 15 August 2026.** The public API is Lumo's own. The `?: undefined` compatibility carriers, underscore discards, `SlotProps`, `excludeFromTabOrder` (now a real `tabIndex`), `routerOptions`, `isPending` and `preventFocusOnPress` are gone: on a private `0.0.0` library they protected no consumer and kept producing accepted-and-inert props (a `slot="close"` cancel button that closed nothing; `hrefLang` served on a `<button>`). `DialogClose` is the supported way to close a dialog from its footer.
 
 The same day: root documents moved under `docs/`, review reports were retired into `docs/history/evaluations.md`, agent guides were added (`AGENTS.md`, layered `CLAUDE.md`), and the inline comment volume was reduced from roughly 45% of lines to roughly 20% across the tree — comments only, verified by comparing every modified file's TypeScript token stream against HEAD (220 files, zero differences). Long-form rationale now lives in this log and in `docs/`, not between the `if` and the `else`.
+
+---
+
+## 21. Complexity pass: one registration system, one dismiss relabel, no dead string catalogue
+
+**Decided 15 August 2026.** The website had two registries for one catalog (`lib/demos.tsx` and `examples/<slug>.tsx`, merged by `catalog.ts`); the merge is the mechanism that once let eleven components ship without pages. `demos.tsx` is gone; an examples file IS the registration, and `catalog.ts` derives everything (title, intro, tier, preview, whether the module is `"use client"`) from it. `scripts/build-registry.mjs` reads item descriptions from `meta.intro` only.
+
+`relabelEngineDismiss` (mui/base-ui#5263) lives once, in `@lumo-ui/base-ui-ssr`, where engine compensations belong. `LumoStrings` in `@lumo-ui/core` keeps the two groups that are read (`dateField`, `numberField`); the React-Aria-era leak groups (`comboBox`, `searchField`, `calendar`, `datePicker`) had no reader on Base UI — the required-prop rule is the mechanism, not a dictionary. `no-latin-aria` is keyed on the reader's script, like rules 10 and 11, not on direction: an LTR non-Latin locale is graded too.
+
+Kept deliberately: `demo-islands.tsx` (one `"use client"` boundary for 46 stateful demos — cohesion, not duplication), `vendor-from-shadcn.mjs` (a documented workflow), and the generated `registry.json` / `api-reference.json` (diff-checked, they are the ratchets). Complexity is high and mostly earned; the remaining unearned part is the mutation campaign's one-operator floor for 104 of 111 modules and the optional container names on `Menu`/`ListBox`/`Tree`, both recorded as follow-ups.
