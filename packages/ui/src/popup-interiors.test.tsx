@@ -329,7 +329,10 @@ describe("popup interiors pass the full gate rule set while open", () => {
         <Tooltip>توضیح کوتاه</Tooltip>
       </TooltipTrigger>,
     );
-    expect(screen.getByRole("tooltip")).toBeTruthy();
+    const tip = screen.getByRole("tooltip");
+    // The open tooltip DESCRIBES its trigger: the reader hears «راهنما, توضیح کوتاه».
+    expect(tip.id).not.toBe("");
+    expect(screen.getByRole("button", { name: "راهنما" }).getAttribute("aria-describedby")).toBe(tip.id);
     expect(gradeOpenPopup("fa/popup-tooltip/index.html")).toEqual([]);
   });
 

@@ -10,7 +10,7 @@
 
 import type { ReactElement } from "react";
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import { LumoProvider } from "./provider.tsx";
@@ -68,6 +68,17 @@ describe("Toggle — the state is an attribute, not a change of name", () => {
     const button = container.querySelector("button")!;
     expect(button.hasAttribute("data-pressed")).toBe(false);
     expect(button.getAttribute("aria-pressed")).toBe("false");
+  });
+
+  it("reports the flip through onChange, and the attribute follows", () => {
+    const seen: boolean[] = [];
+    fa(<Toggle onChange={(next) => seen.push(next)}>پررنگ</Toggle>);
+    const button = screen.getByRole("button", { name: "پررنگ" });
+    fireEvent.click(button);
+    expect(seen).toEqual([true]);
+    expect(button.getAttribute("aria-pressed")).toBe("true");
+    fireEvent.click(button);
+    expect(seen).toEqual([true, false]);
   });
 
   it("is a plain button role — a toggle is not a switch and not a checkbox", () => {

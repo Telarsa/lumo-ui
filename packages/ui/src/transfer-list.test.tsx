@@ -38,6 +38,17 @@ describe("TransferList", () => {
     expect(screen.getByRole("status").textContent).toContain("1 moved to Visible fields");
   });
 
+  it("announces the moved count in the reader's numerals", () => {
+    render(
+      <LumoProvider locale="fa-IR">
+        <TransferList items={items} strings={strings} defaultValue={["name"]} />
+      </LumoProvider>,
+    );
+    fireEvent.click(screen.getByRole("option", { name: "Owner" }));
+    fireEvent.click(screen.getByRole("button", { name: "Add selected" }));
+    expect(screen.getByRole("status").textContent).toContain("۱ moved to Visible fields");
+  });
+
   it("preserves controlled ownership and reports the ordered next value", () => {
     const onValueChange = vi.fn();
     renderList({ value: ["name"], onValueChange });

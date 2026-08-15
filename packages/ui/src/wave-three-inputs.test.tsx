@@ -99,8 +99,8 @@ describe("Wave 3 product inputs", () => {
       />,
     );
     expect(html).toContain("رنگ برند");
-    expect(html).toContain('type="color"');
-    expect(html).toContain("انتخاب رنگ");
+    // The native picker is NAMED by the required prop — a `title` alone is a tooltip, not a name.
+    expect(html).toContain('type="color" aria-label="انتخاب رنگ"');
   });
 
   it("publishes a labelled swatch collection", () => {
@@ -113,7 +113,7 @@ describe("Wave 3 product inputs", () => {
         ]}
       />,
     );
-    expect(html).toContain('role="radiogroup"');
+    expect(html).toContain('role="radiogroup" aria-label="رنگ‌های مجاز"');
     expect(html).toContain("قرمز");
     expect(html).toContain("آبی");
     expect((html.match(/tabindex="0"/g) ?? [])).toHaveLength(1);
@@ -163,6 +163,9 @@ describe("Wave 3 product inputs", () => {
     );
     fireEvent.input(screen.getByLabelText("Phone"), { target: { value: "1234" } });
     expect(onValueChange).toHaveBeenLastCalledWith("1234", "(123) 4", false);
+    // …and COMPLETION is reported once the last slot fills, not left permanently false.
+    fireEvent.input(screen.getByLabelText("Phone"), { target: { value: "1234567890" } });
+    expect(onValueChange).toHaveBeenLastCalledWith("1234567890", "(123) 456-7890", true);
   });
 
   it("delegates mid-string caret repair to the mask engine", () => {
@@ -268,6 +271,9 @@ describe("Wave 3 product inputs", () => {
     fireEvent.change(input, { target: { value: "two" } });
     fireEvent.keyDown(input, { key: "Enter" });
     expect(onValueChange).toHaveBeenLastCalledWith(["one", "two"]);
+    // Removal goes through a button NAMED by the required `removeLabel` — an unnamed ✕ is not a control.
+    fireEvent.click(screen.getByRole("button", { name: "Remove one" }));
+    expect(onValueChange).toHaveBeenLastCalledWith([]);
   });
 
   it("uses a named Lumo suggestions popup instead of the browser datalist", () => {

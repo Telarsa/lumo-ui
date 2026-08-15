@@ -9,7 +9,7 @@
  */
 
 import { afterEach, describe, expect, it } from "vitest";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 
 import {
@@ -79,8 +79,11 @@ describe("Disclosure — an expanded panel is a NAMED region", () => {
      * multi-open one, with nothing red anywhere — so both directions are pinned.
      */
     render(group());
-    // Only one panel exists at a time in single mode.
+    // Only one panel exists at a time in single mode — opening the second CLOSES the first.
     expect(screen.getAllByRole("region")).toHaveLength(1);
+    fireEvent.click(screen.getByRole("button", { name: "بازگشت کالا" }));
+    expect(screen.getAllByRole("region")).toHaveLength(1);
+    expect(screen.getByRole("region", { name: "بازگشت کالا" })).toBeTruthy();
     cleanup();
 
     render(

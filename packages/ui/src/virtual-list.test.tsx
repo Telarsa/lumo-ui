@@ -120,6 +120,8 @@ describe("VirtualList — the set size is the corpus", () => {
     const html = list();
     expect(html).toContain('aria-setsize="10000"');
     expect(html).toContain('aria-posinset="1"');
+    // 1-based, like aria-setsize: a zero here would announce the first row as the row before the first.
+    expect(html).not.toContain('aria-posinset="0"');
     // The window is a window: the last rendered row is not the last row.
     expect(html).not.toContain('aria-posinset="10000"');
   });
