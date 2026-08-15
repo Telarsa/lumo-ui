@@ -561,7 +561,9 @@ describe("Steps — server-rendered, numbered and stated in words", () => {
   });
 
   it("carries no English in an announced attribute", () => {
-    expect(markup()).not.toMatch(/aria-label="[^"]*[A-Za-z]{3,}/);
+    const html = markup();
+    expect(html).toMatch(/aria-label="[^"]+"/); // vacuity guard: there ARE announced attributes
+    expect(html).not.toMatch(/aria-label="[^"]*[A-Za-z]{3,}/);
   });
 });
 

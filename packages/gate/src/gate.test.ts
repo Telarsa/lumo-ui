@@ -819,6 +819,11 @@ describe("native-script-name — what is ANNOUNCED, not what is in an attribute"
     expect(fired('<ul role="listbox" aria-label="سال"><li role="option" tabindex="0">۱۴۰۳</li></ul>')).toEqual([]);
   });
 
+  it("grades an unnamed radiogroup; a plain role=group may stay unnamed", () => {
+    expect(fired('<div role="radiogroup"><div role="radio" aria-checked="true" tabindex="0">الف</div></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="group"><button>الف</button></div>')).toEqual([]);
+  });
+
   it("grades unnamed dialog, tablist and region roles", () => {
     expect(fired('<div role="dialog"></div>')).toEqual(["named-controls"]);
     expect(fired('<div role="alertdialog"></div>')).toEqual(["named-controls"]);
@@ -1074,6 +1079,15 @@ describe("latn-island-purity — the exemption cannot hide the reader's own pros
     expect(
       fired('<figcaption dir="ltr" lang="en" data-lumo-latn=""><code>lang="fa-IR" dir="rtl"</code><a href="/x/">باز کردن تمام‌صفحه</a></figcaption>'),
     ).toEqual(["latn-island-purity"]);
+  });
+
+  it("does NOT fire on a Persian-named control inside a bare bidi island (no lang): PhoneInput's tel input", () => {
+    expect(fired('<bdi dir="ltr" data-lumo-latn=""><span aria-hidden="true">+۹۸</span><input type="tel" aria-label="شمارهٔ موبایل" /></bdi>')).toEqual([]);
+  });
+
+  it("reads a control's aria-label, and ignores hidden controls", () => {
+    expect(fired('<div dir="ltr" lang="en" data-lumo-latn=""><code>pnpm add</code><button aria-label="کپی کردن دستور">⧉</button></div>')).toEqual(["latn-island-purity"]);
+    expect(fired('<div dir="ltr" lang="en" data-lumo-latn=""><code>pnpm add @lumo-ui/ui</code><a hidden href="/x/">باز کردن تمام‌صفحه</a></div>')).toEqual([]);
   });
 
   it("does NOT fire on English documentation prose that quotes Persian strings", () => {

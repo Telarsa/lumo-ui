@@ -14946,9 +14946,9 @@
         "props": [
           {
             "name": "aria-label",
-            "type": "string | undefined",
-            "required": false,
-            "description": "Announced name of the group."
+            "type": "string",
+            "required": true,
+            "description": "Announced name of the group, e.g. «چیدمان». Required: the engine renders `role=\"group\"`, which names nothing."
           },
           {
             "name": "children",

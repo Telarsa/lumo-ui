@@ -38,8 +38,8 @@ export interface ToggleButtonGroupProps {
   isDisabled?: boolean | undefined;
   /** The axis the buttons are laid along. */
   orientation?: "horizontal" | "vertical" | undefined;
-  /** Announced name of the group. */
-  "aria-label"?: string | undefined;
+  /** Announced name of the group, e.g. «چیدمان». Required: the engine renders `role="group"`, which names nothing. */
+  "aria-label": string;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -115,7 +115,7 @@ export function ToggleButtonGroup({
       multiple={selectionMode === "multiple"}
       {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
       {...(orientation === undefined ? {} : { orientation })}
-      {...(ariaLabel === undefined ? {} : { "aria-label": ariaLabel })}
+      aria-label={ariaLabel}
       onValueChange={(next, details) => {
         // The `disallowEmptySelection` floor: `cancel()` drops the un-press before it reaches state.
         if (disallowEmptySelection === true && next.length === 0) {

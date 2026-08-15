@@ -3,7 +3,7 @@
 Lumo is Persian-first with English second; the rules below are what make that true in served bytes, not only after hydration.
 
 ## Four independent properties per locale
-Direction, digit system, calendar, and script are graded separately (`packages/gate/src/index.ts`): Persian is rtl / arabext / persian / Arabic script; Arabic is rtl / arab / islamic-umalqura / Arabic script; English is ltr / latn / gregory / Latin. None is derived from another — deriving digits from direction is how a rule goes silently Persian-only.
+Direction, digit system, calendar, and script are graded separately (`packages/gate/src/index.ts`): Persian is rtl / arabext / persian / Arabic script; Arabic is rtl / arab / islamic-umalqura / Arabic script; English is ltr / latn / gregory / Latin. None is derived from another — deriving digits from direction is how a rule goes silently Persian-only. The GATE knows the Arabic profile so a future `ar-SA` route is graded correctly on day one; the COMPONENTS ship `Locale = "fa-IR" | "en-US"` today (`packages/core/src/types.ts`) — adding a locale is a core change, not a config flag.
 
 ## Rules that are compile-time
 - Every announced string is a required prop (`label`, `closeLabel`, `dismissLabel`, `strings` objects). No defaults.

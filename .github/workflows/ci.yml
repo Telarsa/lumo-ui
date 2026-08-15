@@ -157,6 +157,13 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Component mutation floor
         run: pnpm run mutation:components
+      - name: Publish the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: mutation-report.json
+          retention-days: 30
 
   # Real layout and accessibility-tree engines over the built site. What each
   # spec proves — and does not — is in docs/evidence/README.md. Not a

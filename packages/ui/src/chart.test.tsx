@@ -170,6 +170,9 @@ describe("chart — the plot IS served now, and so are the figures", () => {
     const html = chart();
     // Attributes are full of geometry, so grade the text nodes the gate grades.
     const visible = [...texts(html), ...(html.match(/<t[dh][^>]*>([^<]*)</g) ?? [])];
+    // Vacuity guard: an empty render has no digits either.
+    expect(visible.length).toBeGreaterThan(3);
+    expect(visible.join(" ")).toMatch(/[۰-۹]/);
     expect(visible.join(" ")).not.toMatch(/[0-9]/);
   });
 
@@ -178,7 +181,9 @@ describe("chart — the plot IS served now, and so are the figures", () => {
     // the table from the gate AND from the screen reader at once, which is the
     // difference between an equivalent and a hiding place.
     const html = chart();
-    const table = html.slice(html.indexOf('data-slot="chart-data"'));
+    const at = html.indexOf('data-slot="chart-data"');
+    expect(at, "the data table is rendered at all").toBeGreaterThan(-1);
+    const table = html.slice(at);
     expect(table.slice(0, 200)).not.toContain("aria-hidden");
   });
 

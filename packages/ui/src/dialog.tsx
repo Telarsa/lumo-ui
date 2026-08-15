@@ -246,7 +246,17 @@ function popupRole(children: unknown): "dialog" | "alertdialog" | undefined {
  */
 export function dialogPopupName(children: unknown): string | undefined {
   const surface = dialogSurfaceProps(children);
-  if (surface === undefined) return undefined;
+  if (surface === undefined) {
+    // A wrapper COMPONENT around <Dialog> hides it from the lift and the popup ships unnamed.
+    // Loud on purpose (no env check: components must not read `process`; the consumer smoke
+    // compiles them in a bare project) — an unnamed dialog is a defect in every environment.
+    console.error(
+      "[lumo] DialogModal/Drawer found no <Dialog> or <AlertDialog> among its direct children " +
+        "(host elements and fragments are looked through; other components are not), so the " +
+        "role=dialog popup has no name. Put <Dialog label=…> directly inside, or give the popup a DialogHeading.",
+    );
+    return undefined;
+  }
   const name = "closeLabel" in surface ? surface["label"] : surface["title"];
   return typeof name === "string" && name.trim() !== "" ? name : undefined;
 }

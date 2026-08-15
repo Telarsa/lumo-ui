@@ -145,7 +145,7 @@ const INTERACTIVE =
   '[role=spinbutton],[role=textbox],' +
   // Composite widgets and named container roles name nothing by themselves.
   '[role=menu],[role=listbox],[role=tree],[role=treegrid],[role=grid],' +
-  '[role=dialog],[role=alertdialog],[role=tablist],[role=region]';
+  '[role=dialog],[role=alertdialog],[role=tablist],[role=region],[role=radiogroup]';
 
 function visibleTextNodes(doc: Document): Text[] {
   const out: Text[] = [];
@@ -811,8 +811,15 @@ export const latnIslandPurity: Rule = {
       // inside a Latin island is a UI string in the wrong language container, however
       // short — that was the first live finding (a «باز کردن تمام‌صفحه» link in a
       // `lang="en" dir="ltr"` caption on every block page).
-      const control = Array.from(island.querySelectorAll(INTERACTIVE)).find((el) => {
-        const own = el.textContent ?? "";
+      // Only an island that also declares a foreign `lang` makes a control's language wrong:
+      // a bare data-lumo-latn `<bdi>` around a phone run is a bidi/digit exemption, and the
+      // Persian-named <input> inside it is exactly right.
+      const declaresForeignLang =
+        island.hasAttribute("lang") && !(island.getAttribute("lang") ?? "").toLowerCase().startsWith(doc.locale.slice(0, 2).toLowerCase());
+      const control = !declaresForeignLang ? undefined : Array.from(island.querySelectorAll(INTERACTIVE)).find((el) => {
+        if (el.closest?.('[aria-hidden="true"],[hidden]')) return false;
+        // What the control announces: its aria-label first, else its text.
+        const own = el.getAttribute("aria-label") ?? el.textContent ?? "";
         const r = (own.match(readerLetter) ?? []).length;
         return r >= 3 && r > (own.match(latinLetter) ?? []).length;
       });

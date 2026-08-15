@@ -217,7 +217,7 @@ describe("styling floor — modules whose visual mutant previously survived", ()
 
   it("ToggleButtonGroup", () => {
     const { container } = render(
-      <ToggleButtonGroup selectionMode="single" defaultSelectedKeys={["list"]}>
+      <ToggleButtonGroup aria-label="چیدمان" selectionMode="single" defaultSelectedKeys={["list"]}>
         <ToggleButton id="list">فهرست</ToggleButton>
         <ToggleButton id="grid">شبکه</ToggleButton>
       </ToggleButtonGroup>,

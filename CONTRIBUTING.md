@@ -91,7 +91,7 @@ export interface IconButtonProps {
 **Never write `<html>`.** Use `LumoHtml` from `@lumo-ui/core`. It derives `dir`
 from the locale, so there is no way to pass a wrong one.
 
-**State comes from RAC's `data-*` attributes**, styled with Tailwind `data-`
+**State comes from Base UI's `data-*` attributes (`data-open`, `data-checked`, `data-disabled`, `data-focused`…)**, styled with Tailwind `data-`
 variants. Do not mirror state React already tracks:
 
 ```tsx

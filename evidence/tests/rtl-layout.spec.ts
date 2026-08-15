@@ -12,16 +12,15 @@ import { demoRoot, routes } from "./helpers";
 
 /** Two siblings whose reading order must flip with the document direction. */
 const MIRRORS: Array<{ slug: string; items: string }> = [
-  { slug: "breadcrumbs", items: "nav li" },
   { slug: "tabs", items: '[role="tab"]' },
   { slug: "toggle-group", items: '[role="radiogroup"] button, [role="group"] button' },
   { slug: "button-group", items: "button" },
   { slug: "pagination", items: "nav button, nav a" },
   { slug: "steps", items: "ol li" },
   { slug: "toolbar", items: '[role="toolbar"] button' },
-  { slug: "segmented-control", items: '[role="radiogroup"] label, [role="radiogroup"] button' },
   { slug: "menubar", items: '[role="menubar"] button' },
-  { slug: "stack", items: "[data-lumo] > *" },
+  // breadcrumbs, segmented-control and stack: their first-example markup does not put two items on one row
+  // with a stable selector; they are NOT in this list rather than silently skipped. Add them with a proved selector.
 ];
 
 async function firstTwoBoxes(page: Page, items: string) {
@@ -43,7 +42,9 @@ for (const { slug, items } of MIRRORS) {
     const fa = await firstTwoBoxes(page, items);
     await page.goto(`/en/components/${slug}/`);
     const en = await firstTwoBoxes(page, items);
-    test.skip(fa === null || en === null, `${slug}: fewer than two same-row items matched "${items}"`);
+    // The list is curated: a family that no longer renders two same-row items is a finding, not a skip.
+    expect(fa, `${slug} fa: fewer than two same-row items matched "${items}"`).not.toBeNull();
+    expect(en, `${slug} en: fewer than two same-row items matched "${items}"`).not.toBeNull();
     expect(fa!.a.x, `${slug} fa: first item should sit to the RIGHT of the second`).toBeGreaterThan(fa!.b.x);
     expect(en!.a.x, `${slug} en: first item should sit to the LEFT of the second`).toBeLessThan(en!.b.x);
   });
