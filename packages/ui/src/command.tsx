@@ -228,6 +228,7 @@ export function CommandDialog({
            */}
           <Dialog
             closeLabel={closeLabel}
+            label={title}
             className={cn(
               "gap-0 p-0",
               "[&>button[data-lumo]]:z-10",

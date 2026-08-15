@@ -64,7 +64,7 @@ describe("server-rendered markup carries no English", () => {
           <Button>باز کردن</Button>
           <DialogOverlay>
             <DialogModal>
-              <Dialog closeLabel="بستن">
+              <Dialog closeLabel="بستن" label="ویرایش پروفایل">
                 <DialogHeading>ویرایش پروفایل</DialogHeading>
               </Dialog>
             </DialogModal>
@@ -73,8 +73,8 @@ describe("server-rendered markup carries no English", () => {
         <DialogTrigger>
           <Button>منو</Button>
           <DrawerOverlay>
-            <Drawer side="end" size="lg">
-              <Dialog closeLabel="بستن">محتوا</Dialog>
+            <Drawer side="end" size="lg" label="کشو">
+              <Dialog closeLabel="بستن" label="کشو">محتوا</Dialog>
             </Drawer>
           </DrawerOverlay>
         </DialogTrigger>
@@ -264,7 +264,7 @@ describe("open-state English, counted rather than assumed", () => {
         <Button>باز</Button>
         <DialogOverlay>
           <DialogModal>
-            <Dialog closeLabel="بستن">
+            <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading>عنوان</DialogHeading>
             </Dialog>
           </DialogModal>
@@ -279,7 +279,7 @@ describe("open-state English, counted rather than assumed", () => {
         <Button>باز</Button>
         <DialogOverlay isDismissable>
           <DialogModal>
-            <Dialog closeLabel="بستن">
+            <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading>عنوان</DialogHeading>
             </Dialog>
           </DialogModal>
@@ -303,7 +303,7 @@ describe("open-state English, counted rather than assumed", () => {
         <Button>باز</Button>
         <DialogOverlay>
           <DialogModal>
-            <Dialog closeLabel="بستن">
+            <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading level={4}>عنوان</DialogHeading>
             </Dialog>
           </DialogModal>
@@ -320,8 +320,8 @@ describe("open-state English, counted rather than assumed", () => {
       <DialogTrigger defaultOpen>
         <Button>باز</Button>
         <DrawerOverlay>
-          <Drawer side="end">
-            <Dialog closeLabel="بستن">
+          <Drawer side="end" label="کشو">
+            <Dialog closeLabel="بستن" label="کشو">
               <DialogHeading>کشو</DialogHeading>
             </Dialog>
           </Drawer>

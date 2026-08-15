@@ -16,7 +16,7 @@ import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { Command, CommandDialog, CommandInput, CommandItem, CommandList } from "./command.tsx";
 import { ContextMenu, ContextMenuTrigger } from "./context-menu.tsx";
 import { DatePicker } from "./date-picker.tsx";
-import { Dialog, DialogHeading, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
+import { Dialog, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Drawer, DrawerOverlay } from "./drawer.tsx";
 import { HoverCard } from "./hover-card.tsx";
 import { Menu, MenuItem, MenuPopover, MenuTrigger } from "./menu.tsx";
@@ -134,14 +134,14 @@ describe("popup interiors pass the full gate rule set while open", () => {
         <Button>باز کردن</Button>
         <DialogOverlay>
           <DialogModal>
-            <Dialog closeLabel="بستن" aria-label="گفتگو">
+            <Dialog closeLabel="بستن" label="گفتگو">
               محتوای فارسی با ۱۲ مورد
             </Dialog>
           </DialogModal>
         </DialogOverlay>
       </DialogTrigger>,
     );
-    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByRole("dialog", { name: "گفتگو" })).toBeTruthy();
     expect(gradeOpenPopup("fa/popup-dialog/index.html")).toEqual([]);
   });
 
@@ -338,9 +338,9 @@ describe("popup interiors pass the full gate rule set while open", () => {
       <DialogTrigger defaultOpen>
         <Button>باز کردن فهرست</Button>
         <DrawerOverlay>
-          <Drawer side="start">
-            <Dialog closeLabel="بستن">
-              <DialogHeading>فهرست</DialogHeading>
+          <Drawer side="start" label="فهرست">
+            <Dialog closeLabel="بستن" label="فهرست">
+              محتوای فهرست
             </Dialog>
           </Drawer>
         </DrawerOverlay>

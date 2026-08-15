@@ -370,7 +370,7 @@ function DialogUnderTest(props: { isKeyboardDismissDisabled?: boolean; onOpenCha
       <Button>ویرایش</Button>
       <DialogOverlay>
         <DialogModal>
-          <Dialog closeLabel="بستن">
+          <Dialog closeLabel="بستن" label="ویرایش پروفایل">
             <DialogHeading>ویرایش پروفایل</DialogHeading>
           </Dialog>
         </DialogModal>
@@ -384,8 +384,8 @@ function DrawerUnderTest(props: { isKeyboardDismissDisabled?: boolean }) {
     <DialogTrigger defaultOpen {...props}>
       <Button>منو</Button>
       <DrawerOverlay>
-        <Drawer side="start">
-          <Dialog closeLabel="بستن">
+        <Drawer side="start" label="فهرست">
+          <Dialog closeLabel="بستن" label="فهرست">
             <DialogHeading>فهرست</DialogHeading>
           </Dialog>
         </Drawer>
@@ -410,7 +410,7 @@ describe("Dialog and Drawer's isKeyboardDismissDisabled", () => {
         <DialogOverlay isKeyboardDismissDisabled>
           {/* @ts-expect-error dismissal lives on DialogTrigger, not on the panel */}
           <DialogModal isKeyboardDismissDisabled>
-            <Dialog closeLabel="بستن">
+            <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading>عنوان</DialogHeading>
             </Dialog>
           </DialogModal>
@@ -426,8 +426,8 @@ describe("Dialog and Drawer's isKeyboardDismissDisabled", () => {
         {/* @ts-expect-error dismissal lives on DialogTrigger, not on the overlay */}
         <DrawerOverlay isKeyboardDismissDisabled>
           {/* @ts-expect-error dismissal lives on DialogTrigger, not on the panel */}
-          <Drawer side="start" isKeyboardDismissDisabled>
-            <Dialog closeLabel="بستن">
+          <Drawer side="start" label="فهرست" isKeyboardDismissDisabled>
+            <Dialog closeLabel="بستن" label="فهرست">
               <DialogHeading>فهرست</DialogHeading>
             </Dialog>
           </Drawer>

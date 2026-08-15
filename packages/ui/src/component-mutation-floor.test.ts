@@ -40,9 +40,11 @@ const behaviorAnchors: Readonly<Record<string, string>> = {
   "tree-select.tsx": 'mode === "checkbox" ? state === "checked" : selected.has(node.value)',
   "combobox.tsx": "relabelEngineDismiss(boxRef.current, dismissLabel)",
   "multi-select.tsx": "relabelEngineDismiss(boxRef.current, dismissLabel)",
-  "dialog.tsx": '{...attr("role", popupRole(children))}',
+  "dialog.tsx": '{...attr("aria-label", popupName(children))}',
+  "drawer.tsx": "aria-label={label}",
   "menu.tsx": 'findChildProp(children, "aria-label") as string | undefined',
   "select.tsx": "{...listName}",
+  "phone-input.tsx": "onChange?.(nextValue);",
   "table.tsx": "const jump = arrow.jump(event.key, event.ctrlKey || event.metaKey);",
 };
 

@@ -209,7 +209,7 @@ describe("focus ring — WCAG 2.4.7", () => {
         <Button>باز</Button>
         <DialogOverlay>
           <DialogModal>
-            <Dialog closeLabel="بستن">
+            <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading>عنوان</DialogHeading>
             </Dialog>
           </DialogModal>
@@ -218,8 +218,8 @@ describe("focus ring — WCAG 2.4.7", () => {
       <DialogTrigger key="drawer" defaultOpen>
         <Button>منو</Button>
         <DrawerOverlay>
-          <Drawer side="start">
-            <Dialog closeLabel="بستن">
+          <Drawer side="start" label="عنوان">
+            <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading>عنوان</DialogHeading>
             </Dialog>
           </Drawer>
@@ -619,7 +619,7 @@ describe("overlay transitions", () => {
         <Button>باز</Button>
         <DialogOverlay>
           <DialogModal>
-            <Dialog closeLabel="بستن">
+            <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading>عنوان</DialogHeading>
             </Dialog>
           </DialogModal>
@@ -784,7 +784,7 @@ describe("no React Aria state vocabulary survives", () => {
         <Button>باز</Button>
         <DialogOverlay>
           <DialogModal>
-            <Dialog closeLabel="بستن">
+            <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading>عنوان</DialogHeading>
             </Dialog>
           </DialogModal>

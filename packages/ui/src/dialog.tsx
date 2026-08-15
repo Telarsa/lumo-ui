@@ -23,7 +23,7 @@ import { IconButton } from "./button.tsx";
  *       <Button>ویرایش</Button>
  *       <DialogOverlay>
  *         <DialogModal size="md">
- *           <Dialog closeLabel="بستن">
+ *           <Dialog closeLabel="بستن" label="ویرایش پروفایل">
  *             <DialogHeading>ویرایش پروفایل</DialogHeading>
  *           </Dialog>
  *         </DialogModal>
@@ -216,6 +216,14 @@ function popupRole(children: unknown): "dialog" | "alertdialog" | undefined {
   return findChildProp(children, "confirmLabel") === undefined ? undefined : "alertdialog";
 }
 
+/** The caller-authored name carried by Dialog.label or AlertDialog.title. */
+function popupName(children: unknown): string | undefined {
+  const dialogLabel = findChildProp(children, "label");
+  if (typeof dialogLabel === "string" && dialogLabel.trim() !== "") return dialogLabel;
+  const alertTitle = findChildProp(children, "title");
+  return typeof alertTitle === "string" && alertTitle.trim() !== "" ? alertTitle : undefined;
+}
+
 export function DialogModal({
   className,
   size,
@@ -227,6 +235,7 @@ export function DialogModal({
       // The focus stop carries the marker so the library's ring applies here as in the drawer.
       data-lumo=""
       {...attr("role", popupRole(children))}
+      {...attr("aria-label", popupName(children))}
       className={cn("fixed inset-0 z-50 m-auto h-fit", dialogModalVariants({ size }), className)}
       {...rest}
     >
@@ -240,9 +249,15 @@ export function DialogModal({
  * is REQUIRED: an ✕ is not a name. The ✕ is an `IconButton` handed to `Dialog.Close`,
  * which merges `onClick` onto it (Base UI has no slots).
  */
-interface DialogSupportedProps extends Omit<DialogPropsBase, "slot"> {}
+interface DialogSupportedProps
+  extends Omit<
+    DialogPropsBase,
+    "slot" | "aria-label" | "aria-labelledby" | "aria-describedby" | "aria-details"
+  > {}
 
 export interface DialogProps extends DialogSupportedProps {
+  /** Announced name lifted onto the role=dialog popup. Required. */
+  label: string;
   /** Announced name of the ✕ button. Required: an icon is not a name. */
   closeLabel: string;
   children?: LumoNode;
@@ -250,6 +265,7 @@ export interface DialogProps extends DialogSupportedProps {
 }
 
 export function Dialog({
+  label: _label,
   closeLabel,
   className,
   children,

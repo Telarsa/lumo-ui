@@ -101,8 +101,13 @@ export function DrawerOverlay({
 }
 
 export interface DrawerProps
-  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys | UnsupportedDrawerProp | "isDismissable">,
+  extends Omit<
+      ModalOverlayPropsBase,
+      OverlayOpenStateKeys | UnsupportedDrawerProp | "isDismissable" | "aria-label" | "aria-labelledby"
+    >,
     VariantProps<typeof drawerVariants> {
+  /** Announced name of the role=dialog panel. Required. */
+  label: string;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -113,6 +118,7 @@ export interface DrawerProps
  * of this prop that names a physical edge.
  */
 export function Drawer({
+  label,
   className,
   side,
   size,
@@ -124,6 +130,7 @@ export function Drawer({
       // This element IS the focus stop and has `outline-none`; `data-lumo`
       // gives it the one library ring under `:focus-visible` (WCAG 2.4.7).
       data-lumo=""
+      aria-label={label}
       className={cn(drawerVariants({ side, size }), className)}
       {...rest}
     >

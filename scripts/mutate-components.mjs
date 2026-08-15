@@ -76,8 +76,17 @@ function mutate(file, source) {
   }
   if (file === "dialog.tsx") {
     return {
-      operator: "stop lifting the alert dialog's role onto the popup",
-      source: source.replace('{...attr("role", popupRole(children))}', '{...attr("role", undefined)}'),
+      operator: "drop the caller-authored dialog name before it reaches the popup",
+      source: source.replace(
+        '{...attr("aria-label", popupName(children))}',
+        '{...attr("aria-label", undefined)}',
+      ),
+    };
+  }
+  if (file === "drawer.tsx") {
+    return {
+      operator: "drop the drawer's required name from its dialog surface",
+      source: source.replace("aria-label={label}", "aria-label={undefined}"),
     };
   }
   if (file === "menu.tsx") {
@@ -90,6 +99,12 @@ function mutate(file, source) {
     return {
       operator: "leave the listbox unnamed",
       source: source.replace("{...listName}", ""),
+    };
+  }
+  if (file === "phone-input.tsx") {
+    return {
+      operator: "stop country changes from emitting the corresponding E.164 value",
+      source: source.replace("onChange?.(nextValue);", "void nextValue;"),
     };
   }
   if (file === "table.tsx") {

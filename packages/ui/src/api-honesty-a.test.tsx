@@ -1,7 +1,8 @@
 import { describe, it } from "vitest";
 import { Checkbox, CheckboxGroup } from "./checkbox.tsx";
-import { DialogModal, DialogOverlay } from "./dialog.tsx";
+import { Dialog, DialogModal, DialogOverlay, type DialogProps } from "./dialog.tsx";
 import { DisclosureTrigger } from "./disclosure.tsx";
+import { Drawer } from "./drawer.tsx";
 
 describe("component-specific types refuse inherited no-ops", () => {
   it("DisclosureTrigger refuses interaction contracts its engine cannot deliver", () => {
@@ -37,6 +38,18 @@ describe("component-specific types refuse inherited no-ops", () => {
   });
 
   it("Dialog surfaces refuse engine-owned transition and portal contracts", () => {
+    // @ts-expect-error the role=dialog popup needs a caller-authored announced name
+    void <Dialog closeLabel="بستن" />;
+    // JSX deliberately permits any aria-* attribute, even on a custom component,
+    // so object-literal excess-property checks are the honest public-type proof.
+    // @ts-expect-error role-level description idrefs cannot land on Dialog's descendant div
+    const described: DialogProps = { closeLabel: "بستن", label: "گفتگو", "aria-describedby": "body" };
+    // @ts-expect-error role-level details idrefs cannot land on Dialog's descendant div
+    const detailed: DialogProps = { closeLabel: "بستن", label: "گفتگو", "aria-details": "details" };
+    void described;
+    void detailed;
+    // @ts-expect-error a drawer is itself role=dialog and needs a caller-authored name
+    void <Drawer />;
     // @ts-expect-error entering is engine-owned state
     void <DialogOverlay isEntering />;
     // @ts-expect-error outside-interaction filtering has no Base UI part seam here

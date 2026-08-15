@@ -104,7 +104,7 @@ export function DangerZone({
 
             <DialogOverlay>
               <DialogModal size="md">
-                <Dialog closeLabel={strings.closeLabel}>
+                <Dialog closeLabel={strings.closeLabel} label={strings.dialogTitle}>
                   <DialogHeading>{strings.dialogTitle}</DialogHeading>
 
                   <Alert tone="critical">{strings.dialogDescription}</Alert>

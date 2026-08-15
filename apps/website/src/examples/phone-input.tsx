@@ -166,9 +166,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "PhoneInput",
         description: {
           "fa-IR":
-            "کل میدان: یک انتخابگر بومیِ کشور کنار یک ورودی tel. انتخابگر بومی است چون این فهرستی بلند از نام کشورهاست روی فرمی که غالباً با گوشی پر می‌شود، و انتخابگر خودِ سکو تنها کنترلی است که با یک دست کار می‌کند.",
+            "کل میدان: یک انتخابگر فشردهٔ Lumo برای کشور کنار یک ورودی tel. فهرست سفارشی با جست‌وجوی صفحه‌کلید، نام دسترس‌پذیرِ نوشته‌شده به زبان صفحه و ظاهر یکسان در مرورگرها باز می‌شود؛ برنامه باید فهرست کشورها را به اندازهٔ دامنهٔ خودش محدود کند.",
           "en-US":
-            "The whole field: a native country selector beside a tel input. Native because this is a long list of country names on a form that is very often filled on a phone, and the platform's own picker is the control that works one-handed.",
+            "The whole field: a compact Lumo country selector beside a tel input. Its custom list provides keyboard search, a caller-authored localized accessible name, and consistent browser styling; applications should keep the country list scoped to their domain.",
         },
       },
       {

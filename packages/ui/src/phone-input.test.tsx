@@ -65,6 +65,24 @@ describe("digits", () => {
 });
 
 describe("what the reader sees vs what the caller gets", () => {
+  it("connects its visible help and error text to the telephone input in the first byte", () => {
+    const html = renderToStaticMarkup(
+      <PhoneInput
+        {...LABELS}
+        locale="fa-IR"
+        description="کد کشور را جداگانه انتخاب کنید"
+        errorMessage="شماره کامل نیست"
+      />,
+    );
+    const input = /<input[^>]*type="tel"[^>]*>/.exec(html)?.[0] ?? "";
+    const describedBy = /aria-describedby="([^"]+)"/.exec(input)?.[1]?.split(" ") ?? [];
+
+    expect(describedBy).toHaveLength(2);
+    expect(describedBy.every((id) => html.includes(`id="${id}"`))).toBe(true);
+    expect(html).toContain("کد کشور را جداگانه انتخاب کنید");
+    expect(html).toContain("شماره کامل نیست");
+  });
+
   it("shows the national number in Persian numerals", () => {
     render(<PhoneInput {...LABELS} locale="fa-IR" value="+989121234567" />);
     // The number the reader can check against the one in their head — national
@@ -140,9 +158,11 @@ describe("the country list", () => {
     const option = screen.getByRole("option", { name: "UAE +971" });
     fireEvent.pointerDown(option, { pointerType: "mouse" });
     fireEvent.click(option);
-    // The dial code shown moves to +971. The digits the user typed are theirs
-    // and are not silently rewritten.
-    expect(screen.getByLabelText("شمارهٔ موبایل")).toBeTruthy();
+    // The dial code changes, while the national digits remain the user's. The
+    // caller receives the new canonical value so a controlled field cannot show
+    // one country while retaining another country's value.
+    expect(screen.getByRole("combobox", { name: "کشور" }).textContent).toContain("UAE +971");
+    expect(onChange).toHaveBeenCalledWith("+9719121234567");
   });
 });
 

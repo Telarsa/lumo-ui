@@ -3,7 +3,7 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
-import { Description, Field, FieldError, Label } from "./form.tsx";
+import { Description, Field, FieldError, FieldInput, Label } from "./form.tsx";
 import { SelectField } from "./select.tsx";
 
 /**
@@ -176,6 +176,7 @@ export function PhoneInput({
   return (
     <Field
       label={label}
+      explicit={{ "aria-label": label }}
       {...(description != null ? { description } : {})}
       {...(errorMessage != null ? { errorMessage } : {})}
       {...(isDisabled === undefined ? {} : { isDisabled })}
@@ -189,7 +190,13 @@ export function PhoneInput({
           placeholder={countryLabel}
           selectedKey={country?.code ?? countryCode}
           onSelectionChange={(key) => {
-            if (key !== null) setCountryCode(key);
+            if (key === null) return;
+            const nextCountry = countries.find((candidate) => candidate.code === key);
+            setCountryCode(key);
+            if (value !== undefined && nextCountry !== undefined) {
+              const nextValue = national === "" ? "" : `+${nextCountry.dial}${national}`;
+              onChange?.(nextValue);
+            }
           }}
           isDisabled={isDisabled}
           className="w-36 shrink-0 sm:w-44"
@@ -205,8 +212,7 @@ export function PhoneInput({
           <span aria-hidden="true" className="shrink-0 text-sm text-fg-muted">
             {`+${renderDigits(dial, locale)}`}
           </span>
-          <input
-            data-lumo=""
+          <FieldInput
             // `tel`, never `number`: `<input type="number">` rejects Persian digits and the `+`.
             type="tel"
             inputMode="tel"

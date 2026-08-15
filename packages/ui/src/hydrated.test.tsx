@@ -70,7 +70,7 @@ describe("hydrated — an OPEN dialog announces no English", () => {
           <Button>باز کردن</Button>
           <DialogOverlay>
             <DialogModal>
-              <Dialog closeLabel="بستن" aria-label="گفتگو">
+              <Dialog closeLabel="بستن" label="گفتگو">
                 محتوای فارسی
               </Dialog>
             </DialogModal>
@@ -93,7 +93,7 @@ describe("hydrated — an OPEN dialog announces no English", () => {
           <Button>باز کردن</Button>
           <DialogOverlay>
             <DialogModal>
-              <Dialog closeLabel="بستن" aria-label="گفتگو">
+              <Dialog closeLabel="بستن" label="گفتگو">
                 محتوا
               </Dialog>
             </DialogModal>
@@ -134,7 +134,7 @@ describe("DialogClose closes the dialog it sits in", () => {
         <Button>باز کردن</Button>
         <DialogOverlay>
           <DialogModal>
-            <Dialog closeLabel="بستن" aria-label="گفتگو">
+            <Dialog closeLabel="بستن" label="گفتگو">
               <DialogClose>
                 <Button variant="ghost">انصراف</Button>
               </DialogClose>

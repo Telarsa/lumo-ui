@@ -818,6 +818,14 @@ describe("native-script-name — what is ANNOUNCED, not what is in an attribute"
     expect(fired('<ul role="listbox" aria-label="سال"><li role="option" tabindex="0">۱۴۰۳</li></ul>')).toEqual([]);
   });
 
+  it("grades unnamed dialog, tablist and region roles", () => {
+    expect(fired('<div role="dialog"></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="alertdialog"></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="tablist"></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="region"></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="dialog" aria-label="گفتگو"></div>')).toEqual([]);
+  });
+
   it("is vacuous on a Latin-script locale", () => {
     const html =
       '<!doctype html><html lang="en-US" dir="ltr"><body><button>Save</button></body></html>';

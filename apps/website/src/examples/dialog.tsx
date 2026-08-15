@@ -63,7 +63,7 @@ function BasicExample(l: Locale) {
       <Button>{t.editProfile[l]}</Button>
       <DialogOverlay>
         <DialogModal size="md">
-          <Dialog closeLabel={t.close[l]}>
+          <Dialog closeLabel={t.close[l]} label={t.editProfile[l]}>
             <DialogHeading>{t.editProfile[l]}</DialogHeading>
             <DialogDescription>{t.dialogBody[l]}</DialogDescription>
             <div className="flex justify-end gap-2">
@@ -96,7 +96,7 @@ function FormExample(l: Locale) {
       <Button variant="outline">{t.editProfile[l]}</Button>
       <DialogOverlay>
         <DialogModal size="md">
-          <Dialog closeLabel={t.close[l]}>
+          <Dialog closeLabel={t.close[l]} label={t.editProfile[l]}>
             <DialogHeading>{t.editProfile[l]}</DialogHeading>
             <div className="flex flex-col gap-4">
               <TextField label={t.fullName[l]} />
@@ -124,7 +124,7 @@ function SizesExample(l: Locale) {
         <Button variant="outline">{t.small[l]}</Button>
         <DialogOverlay>
           <DialogModal size="sm">
-            <Dialog closeLabel={t.close[l]}>
+            <Dialog closeLabel={t.close[l]} label={t.quickNote[l]}>
               <DialogHeading>{t.quickNote[l]}</DialogHeading>
               <DialogDescription>{t.quickNoteBody[l]}</DialogDescription>
             </Dialog>
@@ -135,7 +135,7 @@ function SizesExample(l: Locale) {
         <Button variant="outline">{t.large[l]}</Button>
         <DialogOverlay>
           <DialogModal size="lg">
-            <Dialog closeLabel={t.close[l]}>
+            <Dialog closeLabel={t.close[l]} label={t.releaseNotes[l]}>
               <DialogHeading>{t.releaseNotes[l]}</DialogHeading>
               <DialogDescription>{t.releaseNotesBody[l]}</DialogDescription>
             </Dialog>
@@ -152,7 +152,7 @@ function ScrollingExample(l: Locale) {
       <Button variant="outline">{t.terms[l]}</Button>
       <DialogOverlay>
         <DialogModal size="md">
-          <Dialog closeLabel={t.close[l]}>
+          <Dialog closeLabel={t.close[l]} label={t.terms[l]}>
             <DialogHeading>{t.terms[l]}</DialogHeading>
             {/*
               * `render={<div />}`: the description here is ten paragraphs, and
@@ -189,7 +189,7 @@ export const EXAMPLES: ComponentExamples = {
       `  <Button>…</Button>`,
       `  <DialogOverlay>`,
       `    <DialogModal size="…">`,
-      `      <Dialog closeLabel="…">`,
+      `      <Dialog closeLabel="…" label="…">`,
       `        <DialogHeading>…</DialogHeading>       ← aria-labelledby`,
       `        <DialogDescription>…</DialogDescription>  ← aria-describedby`,
       `      </Dialog>`,
