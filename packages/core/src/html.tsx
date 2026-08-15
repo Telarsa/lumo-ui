@@ -1,5 +1,5 @@
-import type { LumoNode, Locale } from "./types";
-import { direction } from "./types";
+import type { LumoNode, Locale } from "./types.ts";
+import { direction } from "./types.ts";
 
 export interface LumoHtmlProps {
   /** The document's locale. A closed union — there is no `string` escape hatch. */

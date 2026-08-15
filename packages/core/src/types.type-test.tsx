@@ -8,8 +8,8 @@
  * pass silently, which is the whole point — this is guarding against exactly
  * the class of defect that renders correctly and reads wrong.
  */
-import type { LumoNode, Locale } from "./types";
-import type { LinkDOMProps } from "./props";
+import type { LumoNode, Locale } from "./types.ts";
+import type { LinkDOMProps } from "./props.ts";
 
 declare function Cell(props: { children: LumoNode }): null;
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { LOCALES } from "./types";
-import { STRINGS, stringsFor, type LumoStrings } from "./strings";
+import { LOCALES } from "./types.ts";
+import { STRINGS, stringsFor, type LumoStrings } from "./strings.ts";
 
 /**
  * Structural parity, checked at runtime as well as by `satisfies`.

@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { cn } from "./cn";
+import { cn } from "./cn.ts";
 
 /**
  * These are version-skew detectors, not unit tests of clsx.

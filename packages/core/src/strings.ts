@@ -1,4 +1,4 @@
-import type { Locale } from "./types";
+import type { Locale } from "./types.ts";
 
 /**
  * The two string sets Lumo authors itself: the segmented date field's names

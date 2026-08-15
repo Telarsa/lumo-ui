@@ -11,22 +11,22 @@
  */
 
 // the SSR accessibility fixes
-export { useFieldWiring } from "./field-wiring";
-export type { FieldWiring, FieldWiringInput, FieldWiringMode } from "./field-wiring";
-export { useOpenMirror } from "./open-mirror";
-export { useCompositeTabStop } from "./composite-tab-stop";
+export { useFieldWiring } from "./field-wiring.ts";
+export type { FieldWiring, FieldWiringInput, FieldWiringMode } from "./field-wiring.ts";
+export { useOpenMirror } from "./open-mirror.ts";
+export { useCompositeTabStop } from "./composite-tab-stop.ts";
 export {
   ComboboxWiringProvider,
   useComboboxInputWiring,
   useComboboxListId,
   useComboboxListWiring,
-} from "./combobox-wiring";
+} from "./combobox-wiring.ts";
 
 // the i18n layer
-export { BASE_UI_STRINGS, baseUiStringsFor } from "./strings";
-export type { BaseUiStrings, BaseUiStringTemplates } from "./strings";
+export { BASE_UI_STRINGS, baseUiStringsFor } from "./strings.ts";
+export type { BaseUiStrings, BaseUiStringTemplates } from "./strings.ts";
 
 // composition plumbing the fixes need
-export { findChildProp } from "./children";
-export { attr } from "./attr";
-export { relabelEngineDismiss } from "./dismiss-label";
+export { findChildProp } from "./children.ts";
+export { attr } from "./attr.ts";
+export { relabelEngineDismiss } from "./dismiss-label.ts";

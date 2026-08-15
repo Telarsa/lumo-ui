@@ -1,6 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // Explicit `.ts` extensions in every internal import — the contract packages travel as SOURCE
+    // (git dependency), and a Node-ESM consumer (`moduleResolution: NodeNext`) rejects extensionless
+    // relative imports. Same convention as packages/ui. Proved by the second consumer profile in
+    // scripts/smoke-consumer.mjs.
+    "allowImportingTsExtensions": true,
     // `["node"]` like every sibling package. It was `[]` — core is a
     // DOM/Node-free module and that was the point — but `src/cn.test.ts`
     // (added 12 Aug 2026) reads `tailwind-merge`'s package.json off disk to

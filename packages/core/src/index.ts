@@ -1,5 +1,5 @@
-export type { LumoNode, Locale, Direction } from "./types";
-export { LOCALES, FORMAT_LOCALE, direction } from "./types";
+export type { LumoNode, Locale, Direction } from "./types.ts";
+export { LOCALES, FORMAT_LOCALE, direction } from "./types.ts";
 // The prop SHAPES the public API is pinned to (see `props.ts`).
 export type {
   AriaLabelingProps,
@@ -54,11 +54,11 @@ export type {
   ValidationResult,
   Validation,
   ValueBase,
-} from "./props";
-export { cn } from "./cn";
-export { LumoHtml } from "./html";
-export type { LumoHtmlProps } from "./html";
-export { formatNumber, formatDate, parseNumber } from "./format";
-export { STRINGS, stringsFor, fa, en } from "./strings";
-export type { LumoStrings } from "./strings";
+} from "./props.ts";
+export { cn } from "./cn.ts";
+export { LumoHtml } from "./html.tsx";
+export type { LumoHtmlProps } from "./html.tsx";
+export { formatNumber, formatDate, parseNumber } from "./format.ts";
+export { STRINGS, stringsFor, fa, en } from "./strings.ts";
+export type { LumoStrings } from "./strings.ts";
 // The Base UI string catalogue lives in `@lumo-ui/base-ui-ssr`, not here.

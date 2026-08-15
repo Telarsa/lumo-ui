@@ -1,5 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "types": [] },
+  "compilerOptions": {
+    // Explicit `.ts` extensions in every internal import — the contract packages travel as SOURCE
+    // (git dependency), and a Node-ESM consumer (`moduleResolution: NodeNext`) rejects extensionless
+    // relative imports. Same convention as packages/ui. Proved by the second consumer profile in
+    // scripts/smoke-consumer.mjs.
+    "allowImportingTsExtensions": true, "types": [] },
   "include": ["src/**/*"]
 }

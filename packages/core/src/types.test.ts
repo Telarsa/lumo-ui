@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { direction, FORMAT_LOCALE, LOCALES } from "./types";
-import { formatDate, formatNumber, parseNumber } from "./format";
+import { direction, FORMAT_LOCALE, LOCALES } from "./types.ts";
+import { formatDate, formatNumber, parseNumber } from "./format.ts";
 
 /**
  * The environment assertions. These must run on the CI RUNNER, not only on a

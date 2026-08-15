@@ -150,6 +150,17 @@ try {
   // the root has no `react` at all.
   await symlink(join(ROOT, "packages/ui/node_modules"), join(dir, "node_modules"), "dir");
 
+  /**
+   * Two consumers, not one: a bundler (Vite, Next — `moduleResolution: bundler`)
+   * and Node ESM (`NodeNext`, which is strict about file extensions and package
+   * `exports`). An item that compiles under one and not the other is a
+   * distribution defect a single profile would hide.
+   */
+  const PROFILES = [
+    { name: "bundler (Vite / Next)", module: "preserve", moduleResolution: "bundler" },
+    { name: "Node ESM (NodeNext)", module: "NodeNext", moduleResolution: "NodeNext" },
+  ];
+  for (const profile of PROFILES) {
   await writeFile(
     join(dir, "tsconfig.json"),
     JSON.stringify(
@@ -157,8 +168,8 @@ try {
         compilerOptions: {
           target: "ES2023",
           lib: ["ES2023", "DOM", "DOM.Iterable"],
-          module: "preserve",
-          moduleResolution: "bundler",
+          module: profile.module,
+          moduleResolution: profile.moduleResolution,
           jsx: "react-jsx",
           strict: true,
           noEmit: true,
@@ -181,14 +192,17 @@ try {
     ),
   );
 
-  console.log(`  smoke: ${registry.items.length} item dependency graph(s) validated`);
-  console.log(`  smoke: ${registry.items.length} item payload(s) copied into a bare project`);
+  if (profile === PROFILES[0]) {
+    console.log(`  smoke: ${registry.items.length} item dependency graph(s) validated`);
+    console.log(`  smoke: ${registry.items.length} item payload(s) copied into a bare project`);
+  }
 
   execFileSync(join(ROOT, "node_modules/.bin/tsc"), ["--noEmit", "-p", dir], {
     stdio: "inherit",
     cwd: ROOT,
   });
-  console.log("  smoke: every registry item type-checks outside the workspace");
+  console.log(`  smoke: every registry item type-checks outside the workspace — ${profile.name}`);
+  }
 } catch {
   failed = true;
   console.error(

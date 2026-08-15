@@ -24,7 +24,7 @@ import { Field } from "@base-ui/react/field";
 import { Progress } from "@base-ui/react/progress";
 import { Slider } from "@base-ui/react/slider";
 import { Toast } from "@base-ui/react/toast";
-import { attr, baseUiStringsFor, findChildProp, useFieldWiring } from "./index";
+import { attr, baseUiStringsFor, findChildProp, useFieldWiring } from "./index.ts";
 
 /** The first element carrying `role`, as a raw tag string. */
 function tag(html: string, role: string): string {

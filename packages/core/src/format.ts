@@ -1,4 +1,4 @@
-import { FORMAT_LOCALE, type Locale } from "./types";
+import { FORMAT_LOCALE, type Locale } from "./types.ts";
 
 /**
  * Number and date formatting, locale-aware by construction — the sanctioned way
