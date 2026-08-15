@@ -66,8 +66,8 @@ const FAMILIES: Family[] = [
   { slug: "date-range-picker", open: click('button[aria-label]'), popup: '[role="dialog"]' },
   { slug: "date-selector", open: click("button"), popup: '[role="dialog"], [role="listbox"]' },
   { slug: "tooltip", open: hover("button[aria-label]"), popup: '[role="tooltip"]', unnamedOk: true },
-  // A preview card is supplementary content; Base UI gives its popup no role and it needs no name.
-  { slug: "hover-card", open: hover("a[href]"), popup: '[data-open] [data-lumo], [data-open][data-lumo]', unnamedOk: true },
+  // Lumo's hover card popup is role=dialog with a required label — named like any dialog.
+  { slug: "hover-card", open: hover("a[href]"), popup: '[data-open] [role="dialog"], [data-open][role="dialog"]' },
   {
     slug: "navigation-menu",
     open: click("button[aria-expanded]"),

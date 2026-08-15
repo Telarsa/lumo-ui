@@ -9,6 +9,8 @@ import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { MultiSelect } from "./multi-select.tsx";
 import { TagsInput } from "./tags-input.tsx";
 import { Slider } from "./slider.tsx";
+import { NumberField } from "./number-field.tsx";
+import { LumoProvider } from "./provider.tsx";
 
 function describedBy(html: string, inputMatch: RegExp): string[] {
   const input = inputMatch.exec(html)?.[0] ?? "";
@@ -49,5 +51,30 @@ describe("description and error reach the input in the first byte", () => {
     const ids = /aria-describedby="([^"]+)"/.exec(input)?.[1]?.split(" ") ?? [];
     expect(ids).toHaveLength(2);
     for (const id of ids) expect(html).toContain(`id="${id}"`);
+  });
+});
+
+describe("NumberField serves the reader's digits", () => {
+  it("under fa-IR the served value is Persian digits with Persian grouping — not \"1,234\"", () => {
+    // Third blind pass (16 Aug): the engine formats in the RUNTIME locale unless told
+    // otherwise, and nothing told it — value="1,234" was served under fa-IR.
+    const html = renderToStaticMarkup(
+      <LumoProvider locale="fa-IR">
+        <NumberField label="مبلغ" incrementLabel="افزایش" decrementLabel="کاهش" roleDescription="فیلد عددی" defaultValue={1234} />
+      </LumoProvider>,
+    );
+    const input = /<input[^>]*role="textbox"[^>]*>|<input[^>]*inputmode="[^"]*"[^>]*>/i.exec(html)?.[0] ?? (/<input[^>]*aria-roledescription[^>]*>/.exec(html)?.[0] ?? "");
+    const value = /value="([^"]*)"/.exec(input)?.[1] ?? /value="([^"]*)"/.exec(html)?.[1] ?? "";
+    expect(value).not.toMatch(/[0-9]/);
+    expect(value).toMatch(/[۰-۹]/);
+    expect(value).toContain("۱");
+  });
+  it("an explicit locale prop wins over the provider", () => {
+    const html = renderToStaticMarkup(
+      <LumoProvider locale="fa-IR">
+        <NumberField locale="en-US" label="مبلغ" incrementLabel="افزایش" decrementLabel="کاهش" roleDescription="فیلد عددی" defaultValue={1234} />
+      </LumoProvider>,
+    );
+    expect(/value="([^"]*)"/.exec(html)?.[1]).toBe("1,234");
   });
 });

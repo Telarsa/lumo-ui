@@ -234,7 +234,7 @@ describe("async collection presentation and grouping", () => {
   });
 });
 
-describe("presentQueryResult — an app's TanStack Query / SWR result becomes asyncState", () => {
+describe("presentQueryResult — an app's TanStack Query result becomes asyncState", () => {
   const messages = {
     loading: "در حال بارگذاری",
     refreshing: "به‌روزرسانی",

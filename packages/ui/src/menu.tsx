@@ -13,6 +13,7 @@ import { Menu as BaseMenu } from "@base-ui/react/menu";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { attr, findChildProp, useOpenMirror } from "@lumo-ui/base-ui-ssr";
 import { placementToSideAlign, popoverVariants, type LumoPlacement } from "./popover.tsx";
+import { useLinkComponent } from "./link-context.ts";
 
 /**
  * A menu of actions, on Base UI's `Menu` with the React Aria-shaped public API.
@@ -236,6 +237,7 @@ export function MenuItem<T extends object = object>({
   newTabLabel,
   isCurrent,
 }: MenuItemProps<T>) {
+  const Anchor = useLinkComponent();
   const onAction = useContext(MenuActionContext);
   const isSubmenuTrigger = useContext(SubmenuLevelContext);
   const resolvedTextValue = textValue ?? (typeof children === "string" ? children : undefined);
@@ -293,6 +295,8 @@ export function MenuItem<T extends object = object>({
     return (
       <BaseMenu.LinkItem
         {...shared}
+        // The app's router link when LumoProvider provides one (the same seam Item and Command use).
+        {...(Anchor === "a" ? {} : { render: <Anchor href={href} /> })}
         href={href}
         {...(hrefLang === undefined ? {} : { hrefLang })}
         {...(isDisabled !== true && newTab === true

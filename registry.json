@@ -1366,6 +1366,11 @@
           "path": "packages/ui/src/menu.tsx",
           "type": "registry:ui",
           "target": "components/ui/menu.tsx"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -1523,6 +1528,11 @@
           "path": "packages/ui/src/base-ui-adapter.ts",
           "type": "registry:ui",
           "target": "components/ui/base-ui-adapter.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },

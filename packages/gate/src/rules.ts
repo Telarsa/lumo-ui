@@ -239,7 +239,7 @@ export const noLatinDigits: Rule = {
     "It is visible to a sighted reader and invisible to an aria-label audit.",
   run: (doc) => {
     if (numbersInLatin(doc.digits)) return [];
-    return visibleTextNodes(doc.document)
+    const v: Violation[] = visibleTextNodes(doc.document)
       .filter((t) => ASCII_DIGIT.test(t.data))
       .map((t) => ({
         rule: "no-latin-digits",
@@ -247,6 +247,39 @@ export const noLatinDigits: Rule = {
         detail: `Latin digits in visible text: ${JSON.stringify(t.data.trim().slice(0, 40))}`,
         snippet: (t.parentElement as Element | null)?.outerHTML?.slice(0, 120),
       }));
+    // The digits a reader SEES or HEARS that are not text nodes: an input's served
+    // value (a NumberField serving "1,234" under fa-IR was invisible here until 16 Aug
+    // 2026), aria-valuetext, placeholder, alt, title. Inputs whose content is Latin by
+    // nature (email, url, tel, password, hidden) and declared islands are skipped.
+    // Latin by nature (email, url, tel, password, search) or a machine value no reader
+    // sees (radio, checkbox, range, color, file, buttons — what they announce is graded
+    // elsewhere: aria-valuetext, the label).
+    // `number`: the HTML spec requires an ASCII floating-point value; the browser
+    // localises what it SHOWS. (Lumo's own NumberField is a `text` input and IS graded.)
+    const LATIN_INPUT = new Set([
+      "email", "url", "tel", "password", "hidden", "search", "number",
+      "radio", "checkbox", "range", "color", "file", "submit", "button", "reset", "image",
+    ]);
+    for (const el of Array.from(doc.document.querySelectorAll("[value],[aria-valuetext],[placeholder],[alt],[title]"))) {
+      if (el.closest?.("[data-lumo-latn]")) continue;
+      if (el.closest?.('[aria-hidden="true"],[hidden]')) continue;
+      const tag = el.tagName.toLowerCase();
+      if (tag === "input" && LATIN_INPUT.has((el.getAttribute("type") ?? "text").toLowerCase())) continue;
+      if (tag === "option" || tag === "meta" || tag === "param" || tag === "li" || tag === "data" || tag === "progress" || tag === "meter") continue;
+      for (const attr of ["value", "aria-valuetext", "placeholder", "alt", "title"]) {
+        if (attr === "value" && tag !== "input" && tag !== "textarea") continue;
+        const text = el.getAttribute(attr);
+        if (text !== null && ASCII_DIGIT.test(text)) {
+          v.push({
+            rule: "no-latin-digits",
+            path: doc.path,
+            detail: `Latin digits in ${attr}: ${JSON.stringify(text.slice(0, 40))} — the reader sees or hears this the way they see text`,
+            snippet: el.outerHTML.slice(0, 120),
+          });
+        }
+      }
+    }
+    return v;
   },
 };
 

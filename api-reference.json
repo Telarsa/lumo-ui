@@ -7573,7 +7573,7 @@
             "name": "linkComponent",
             "type": "LumoLinkComponent | undefined",
             "required": false,
-            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command`, `NavigationMenuLink`, `Pagination`) inject it from the provider themselves."
+            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command` rows, `MenuItem href`, `NavigationMenuLink`, `SidebarItem`) inject it from the provider themselves."
           },
           {
             "name": "newTab",
@@ -8689,7 +8689,7 @@
             "name": "linkComponent",
             "type": "LumoLinkComponent | undefined",
             "required": false,
-            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command`, `NavigationMenuLink`, `Pagination`) inject it from the provider themselves."
+            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command` rows, `MenuItem href`, `NavigationMenuLink`, `SidebarItem`) inject it from the provider themselves."
           },
           {
             "name": "newTab",
@@ -9006,6 +9006,12 @@
             "type": "string | undefined",
             "required": false,
             "description": "The element's `lang` attribute, when this subtree's language differs from the page's."
+          },
+          {
+            "name": "locale",
+            "type": "Locale | undefined",
+            "required": false,
+            "description": "The locale the value is formatted in — its digits and grouping. Defaults to `LumoProvider`'s."
           },
           {
             "name": "maxValue",
@@ -11995,7 +12001,7 @@
             "name": "linkComponent",
             "type": "LumoLinkComponent | undefined",
             "required": false,
-            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command`, `NavigationMenuLink`, `Pagination`) inject it from the provider themselves."
+            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command` rows, `MenuItem href`, `NavigationMenuLink`, `SidebarItem`) inject it from the provider themselves."
           },
           {
             "name": "newTab",

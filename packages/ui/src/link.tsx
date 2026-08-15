@@ -69,7 +69,7 @@ interface LinkBaseProps
    * The app's own link component (Next's `Link`, a router's) rendered instead
    * of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider
    * linkComponent`; pass it here in server-rendered trees — client families
-   * (`Item`, `Command`, `NavigationMenuLink`, `Pagination`) inject it from the
+   * (`Item`, `Command` rows, `MenuItem href`, `NavigationMenuLink`, `SidebarItem`) inject it from the
    * provider themselves.
    */
   linkComponent?: LumoLinkComponent | undefined;

@@ -3,5 +3,11 @@
   <body>
     <h1>مرداد ۱۴۰۵</h1>
     <table><tr><td>12</td><td>13</td><td>14</td></tr></table>
+    <!-- POISON: the digits a reader sees in an INPUT's served value (a NumberField
+         formatting in the runtime locale served exactly this under fa-IR). -->
+    <input aria-label="مبلغ" value="1,234" />
+    <!-- NOT violations: Latin-by-nature inputs, and a declared island. -->
+    <input type="tel" aria-label="تلفن" value="+98 912" />
+    <input aria-label="کد سفارش" data-lumo-latn value="KH-4825" />
   </body>
 </html>

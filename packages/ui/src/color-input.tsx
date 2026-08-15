@@ -71,6 +71,9 @@ function ColorControls({
       <div className="flex items-center gap-2">
         <FieldInput
           {...wiring}
+          // A CSS colour string is CODE: Latin, LTR, exempt from the digit rules by declaration.
+          data-lumo-latn=""
+          dir="ltr"
           className={cn(inputVariants({ size: "md" }), "font-mono")}
           value={text}
           disabled={isDisabled}

@@ -18,9 +18,12 @@ import {
   type TextInputDOMEvents,
   type Validation,
   type ValueBase,
+  FORMAT_LOCALE,
+  type Locale,
 } from "@lumo-ui/core";
 import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
 import { asAriaKeyboardEvent } from "./base-ui-adapter.ts";
+import { useLumoLocale } from "./locale.ts";
 import {
   Description,
   Label,
@@ -78,11 +81,11 @@ export const stepperVariants = cva(
  * steppers, `aria-roledescription="Number field"` on the input) are all
  * prop-reachable and all REQUIRED props here (`incrementLabel`, `decrementLabel`,
  * `roleDescription`), so `@lumo-ui/base-ui-ssr`'s catalogue never fires for
- * this component. DOWNGRADE, recorded: Base UI has no locale context, so digits
- * format in the RUNTIME locale unless the caller passes `locale` through the
- * spread; `locale` is not made a required prop because the public API may not
- * change. Long form: `docs/history/base-ui-migration/verdict-2026-08-10.md`,
- * `docs/decisions/log.md`.
+ * this component. Digits: Base UI has no locale context and formats in the
+ * RUNTIME locale by default — under `fa-IR` that served `value="1,234"` until
+ * 16 Aug 2026 (third blind pass). The locale now comes from `LumoProvider`
+ * (`useLumoLocale`), overridable by a `locale` prop, and is handed to the engine
+ * as `locale` so the served value carries the reader's digits.
  */
 /**
  * The numeric field's own props, minus its children, class and the two stepper
@@ -103,6 +106,8 @@ interface NumberFieldPropsBase
     GlobalDOMAttributes<HTMLDivElement> {
   /** Passed to `Intl.NumberFormat` for the visible value and `aria-valuetext`. */
   formatOptions?: Intl.NumberFormatOptions;
+  /** The locale the value is formatted in — its digits and grouping. Defaults to `LumoProvider`'s. */
+  locale?: Locale | undefined;
   /** The smallest value allowed. */
   minValue?: number;
   /** The largest value allowed. */
@@ -143,6 +148,7 @@ export interface NumberFieldProps
 
 export function NumberField({
   label,
+  locale: localeProp,
   decrementLabel,
   incrementLabel,
   roleDescription,
@@ -189,9 +195,13 @@ export function NumberField({
   // The spread below is `as unknown as`: RAC types the global DOM handlers
   // against `HTMLInputElement`, Base UI's Root against `HTMLDivElement` in
   // `BaseUIEvent` — same handlers at runtime, mutually unassignable in type.
+  const contextLocale = useLumoLocale();
+  const locale = localeProp ?? contextLocale;
   return (
     <BaseNumberField.Root
       data-lumo=""
+      // The reader's digits and grouping in the served value: `fa-IR` → «۱٬۲۳۴», not "1,234".
+      locale={FORMAT_LOCALE[locale]}
       // `group/field` exists for one rule: the input's invalid border (see `numberInputVariants`).
       className={cn("group/field", fieldVariants(), className)}
       {...attr("min", minValue)}

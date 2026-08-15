@@ -305,7 +305,7 @@ export function groupCollection<T, GroupKey extends string | number>(
 }
 
 /**
- * The shape of a TanStack Query / SWR result, structurally — no dependency on
+ * The shape of a TanStack Query result (`useQuery` / `useInfiniteQuery`), structurally — no dependency on
  * either library. `fetchStatus` (TanStack) tells a background refetch from a
  * first load; without it a refetch reads as a first load.
  */
@@ -324,7 +324,7 @@ export interface QueryLikeResult {
 
 /**
  * The adapter for apps that already own their data layer: a TanStack Query (or
- * SWR-shaped) result becomes the `asyncState` every Lumo collection accepts,
+ * `useInfiniteQuery`-shaped) result becomes the `asyncState` every Lumo collection accepts,
  * with the same required, caller-authored copy `presentAsyncCollection` takes.
  * Use it where `useAsyncCollection` would double-fetch what the app has.
  */

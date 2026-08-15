@@ -1137,3 +1137,23 @@ describe("no-latin-aria — mixed Persian is Persian", () => {
     expect(fired('<input aria-label="مبلغ" aria-roledescription="Number field" />')).toEqual(["no-latin-aria"]);
   });
 });
+
+describe("no-latin-digits — attributes a reader sees or hears", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+  const fired = (body: string) => gradeHtml("fa-IR/index.html", fa(body)).map((v) => v.rule);
+
+  it("fires on an input's served value, aria-valuetext, placeholder and alt", () => {
+    expect(fired('<input aria-label="مبلغ" value="1,234" />')).toEqual(["no-latin-digits"]);
+    expect(fired('<div role="slider" tabindex="0" aria-label="بودجه" aria-valuenow="40" aria-valuetext="40 درصد"></div>')).toContain("no-latin-digits");
+    expect(fired('<input aria-label="سن" placeholder="18" />')).toEqual(["no-latin-digits"]);
+    expect(fired('<img alt="فاکتور 12" src="x.png" />')).toEqual(["no-latin-digits"]);
+  });
+
+  it("does NOT fire on Latin-by-nature inputs, islands, hidden nodes or Persian digits", () => {
+    expect(fired('<input type="tel" aria-label="تلفن" value="+98 912" /><input type="email" aria-label="ایمیل" value="a2@x.com" />')).toEqual([]);
+    expect(fired('<input aria-label="کد سفارش" data-lumo-latn value="KH-4825" />')).toEqual([]);
+    expect(fired('<input hidden aria-label="x" value="42" />')).toEqual([]);
+    expect(fired('<input type="number" aria-label="مبلغ" value="100" />')).toEqual([]);
+    expect(fired('<input aria-label="مبلغ" value="۱٬۲۳۴" placeholder="۱۸" />')).toEqual([]);
+  });
+});

@@ -91,6 +91,10 @@ export function MaskInput({
       <label htmlFor={inputId} className="text-sm font-medium text-fg">{label}</label>
       <input
         {...props}
+        // A maska pattern accepts ASCII digits only ('#'), so a masked value — card,
+        // phone, ID — is Latin, LTR content by nature: declared, not exempted by accident.
+        data-lumo-latn=""
+        dir="ltr"
         ref={(node) => {
           inputRef.current = node;
           if (typeof forwardedRef === "function") forwardedRef(node);

@@ -10,6 +10,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { LumoProvider } from "./provider.tsx";
 import { Link } from "./link.tsx";
 import { Item } from "./item.tsx";
+import { Menu, MenuItem, MenuPopover, MenuTrigger } from "./menu.tsx";
+import { Button } from "./button.tsx";
 import { Sidebar, SidebarContent, SidebarGroup, SidebarItem } from "./sidebar.tsx";
 import type { LumoLinkRenderProps } from "./link-context.ts";
 
@@ -55,6 +57,24 @@ describe("the app's link component reaches every anchor Lumo renders", () => {
     const links = screen.getAllByRole("link");
     expect(links.length).toBeGreaterThanOrEqual(2);
     for (const link of links) expect(link.hasAttribute("data-router-link"), link.outerHTML).toBe(true);
+  });
+
+  it("MenuItem href renders through it too", async () => {
+    render(
+      <LumoProvider locale="fa-IR" linkComponent={RouterLink}>
+        <MenuTrigger defaultOpen>
+          <Button>گزینه‌ها</Button>
+          <MenuPopover>
+            <Menu aria-label="گزینه‌ها">
+              <MenuItem id="docs" href="/docs">مستندات</MenuItem>
+            </Menu>
+          </MenuPopover>
+        </MenuTrigger>
+      </LumoProvider>,
+    );
+    const item = await screen.findByRole("menuitem", { name: "مستندات" });
+    expect(item.hasAttribute("data-router-link")).toBe(true);
+    expect(item.getAttribute("href")).toBe("/docs");
   });
 
   it("without the prop everything is a platform <a>, in the first byte", () => {
