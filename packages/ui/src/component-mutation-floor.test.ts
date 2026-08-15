@@ -22,7 +22,7 @@ import { describe, expect, it } from "vitest";
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
 const componentFiles = readdirSync(sourceDirectory)
-  .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
+  .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx") && !file.endsWith(".type-test.tsx"))
   .sort();
 
 const registry = JSON.parse(

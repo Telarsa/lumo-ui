@@ -27,7 +27,7 @@ import { spawnSync } from "node:child_process";
 const repository = resolve(import.meta.dirname, "..");
 const sourceDirectory = join(repository, "packages/ui/src");
 const files = readdirSync(sourceDirectory)
-  .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx"))
+  .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx") && !file.endsWith(".type-test.tsx"))
   .sort();
 
 // The registry is the declared catalogue. A hardcoded count rotted once
