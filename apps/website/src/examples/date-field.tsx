@@ -88,6 +88,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "تاریخی که بخش‌به‌بخش تایپ می‌شود، بی‌شبکه: تاریخ تولد، تاریخی معلوم، فرم‌های فشرده.",
+        "en-US": "A date typed segment by segment, with no grid: a birth date, a date already known, dense forms.",
+      },
+      whenNot: {
+        "fa-IR": "شبکه‌ای دیدنی برای برداشتن — `DatePicker` پشت دکمه، یا `Calendar` روی صفحه. دو تاریخ که یک بازه‌اند — `DateRangePicker`. ساعت — `TimeField`.",
+        "en-US": "A visible grid to pick from — `DatePicker` behind a button, or `Calendar` on the page. Two dates that form a span — `DateRangePicker`. A time — `TimeField`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "فیلد تاریخ", "en-US": "Date field" },

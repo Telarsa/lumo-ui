@@ -96,6 +96,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک دکمه که فشرده می‌ماند: ضخیم، بی‌صدا، سنجاق‌شده، دنبال‌شده — با `IconToggle` برای شکل فقط‌آیکون.",
+        "en-US": "One button that stays down: bold, muted, pinned, watching — with `IconToggle` for the icon-only form.",
+      },
+      whenNot: {
+        "fa-IR": "تنظیمی که با تغییر ذخیره می‌شود — `Switch`. چندتا در یک نوار — `ToggleButtonGroup`. یک انتخاب در فرم — `Checkbox`.",
+        "en-US": "A setting saved on change — `Switch`. Several in a strip — `ToggleButtonGroup`. A choice in a form — `Checkbox`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "کلید دوحالته", "en-US": "Toggle" },

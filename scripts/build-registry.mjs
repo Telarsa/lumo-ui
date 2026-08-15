@@ -48,6 +48,8 @@ const SHARED_COMPANIONS = new Set([
   "filters.shared.ts",
   // Shared remote-collection controller ListBox's presentation shape depends on.
   "async-collection.ts",
+  // The router-link seam (`LumoProvider linkComponent`) every anchor-rendering family reads.
+  "link-context.ts",
 ]);
 
 /** Packages a consumer must install; everything else is workspace-internal. */

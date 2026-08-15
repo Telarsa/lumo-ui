@@ -138,6 +138,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ردیفی از تگ‌ها: فیلترها، کلیدواژه‌ها، مقدارهای برگزیده — ایستا یا حذف‌شدنی به‌شکل یک نوار ابزار.",
+        "en-US": "A row of tags: filters, keywords, chosen values — static, or removable as one toolbar.",
+      },
+      whenNot: {
+        "fa-IR": "یک تراشهٔ تنها — `Tag`. مقدارهایی که با تایپ وارد می‌شوند — `TagsInput`. انتخاب از فهرست با تراشه — `MultiSelect`. نشانگر وضعیت — `Badge`.",
+        "en-US": "A single chip — `Tag`. Values entered by typing — `TagsInput`. Choosing from a list with chips — `MultiSelect`. A status marker — `Badge`.",
+      },
+    },
     tier: "display",
     title: { "fa-IR": "گروه برچسب", "en-US": "Tag group" },
     intro: {

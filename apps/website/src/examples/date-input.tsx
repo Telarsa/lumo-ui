@@ -102,6 +102,16 @@ function ReadOnlyExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ساختن سطح تاریخ یا ساعت خودتان: ورودی بخش‌بندی‌شده و مستقل از حالت که همهٔ انتخابگرهای این کتابخانه روی آن سوارند.",
+        "en-US": "Building your own date or time surface: the segmented, state-agnostic input every picker in this library already sits on.",
+      },
+      whenNot: {
+        "fa-IR": "فیلد تاریخ آماده — `DateField`. ساعت — `TimeField`. فیلدی با تقویم پشت دکمه — `DatePicker`.",
+        "en-US": "A finished date field — `DateField`. A time — `TimeField`. A field with a calendar behind a button — `DatePicker`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "ورودی بخش‌بخش تاریخ", "en-US": "Date input" },

@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import {
+  presentQueryResult,
   groupCollection,
   presentAsyncCollection,
   useAsyncCollection,
@@ -230,5 +231,39 @@ describe("async collection presentation and grouping", () => {
       { key: "b", items: [{ id: "1", label: "One", group: "b" }, { id: "3", label: "Three", group: "b" }] },
       { key: "a", items: [{ id: "2", label: "Two", group: "a" }] },
     ]);
+  });
+});
+
+describe("presentQueryResult — an app's TanStack Query / SWR result becomes asyncState", () => {
+  const messages = {
+    loading: "در حال بارگذاری",
+    refreshing: "به‌روزرسانی",
+    loadingMore: "بارگذاری بیشتر",
+    empty: "چیزی نیست",
+    retry: "تلاش دوباره",
+    loadMore: "بیشتر",
+    error: (reason: unknown) => (reason instanceof Error ? reason.message : "خطا"),
+  };
+
+  it("first load, background refetch, error with retry, ready with load-more", () => {
+    const refetch = vi.fn();
+    const fetchNextPage = vi.fn();
+    expect(presentQueryResult({ isPending: true, isError: false, refetch }, messages)).toEqual({ status: "loading", text: "در حال بارگذاری" });
+    expect(presentQueryResult({ isPending: false, isError: false, data: [1], fetchStatus: "fetching", refetch }, messages)).toEqual({ status: "loading", text: "به‌روزرسانی" });
+    const errored = presentQueryResult({ isPending: false, isError: true, error: new Error("آفلاین"), refetch }, messages);
+    expect(errored.status).toBe("error");
+    if (errored.status === "error") {
+      expect(errored.text).toBe("آفلاین");
+      errored.action?.onPress();
+      expect(refetch).toHaveBeenCalledTimes(1);
+    }
+    const ready = presentQueryResult({ isPending: false, isError: false, data: [1], fetchStatus: "idle", refetch, hasNextPage: true, fetchNextPage }, messages);
+    expect(ready.status).toBe("ready");
+    if (ready.status === "ready") {
+      expect(ready.emptyText).toBe("چیزی نیست");
+      ready.loadMore?.onPress();
+      expect(fetchNextPage).toHaveBeenCalledTimes(1);
+    }
+    expect(presentQueryResult({ isPending: false, isError: false, data: [1], refetch, isFetchingNextPage: true }, messages)).toEqual({ status: "loading", text: "بارگذاری بیشتر" });
   });
 });

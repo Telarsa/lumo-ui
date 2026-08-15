@@ -15,6 +15,7 @@ import {
   sidebarItemVariants,
   sidebarVariants,
 } from "./sidebar.variants.ts";
+import { useLinkComponent } from "./link-context.ts";
 
 export {
   sidebarBadgeVariants,
@@ -166,10 +167,12 @@ export type SidebarItemProps = DistributiveOmit<LinkProps, "variant" | "size"> &
  */
 export function SidebarItem(props: SidebarItemProps) {
   const { icon, badge, children, className, newTab, newTabLabel, isCurrent, ...rest } = props;
+  const Anchor = useLinkComponent();
   return (
     <Link
       variant="quiet"
       size="sm"
+      {...(Anchor === "a" ? {} : { linkComponent: Anchor })}
       className={cn(sidebarItemVariants(), className)}
       {...(isCurrent === undefined || isCurrent === false ? {} : { isCurrent })}
       {...(newTab === true && newTabLabel !== undefined

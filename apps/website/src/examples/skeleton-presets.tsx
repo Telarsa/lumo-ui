@@ -106,6 +106,16 @@ function BusyTableExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "جانگهدارهای آمادهٔ یک صفحهٔ واقعی هنگام بارگذاری: پاراگراف، ردیف خوراک، کارت، فرم، جدول.",
+        "en-US": "The composed placeholders of a real screen while it loads: a paragraph, a feed row, a card, a form, a table.",
+      },
+      whenNot: {
+        "fa-IR": "یک شکل سفارشی — `Skeleton`. عملیاتی در جریان با نامی که خوانده شود — `Spinner`. وقتی چیزی برای نمایش نیست — `EmptyState`.",
+        "en-US": "One custom shape — `Skeleton`. An operation in flight with a spoken name — `Spinner`. Nothing to show at all — `EmptyState`.",
+      },
+    },
     tier: "feedback",
     title: { "fa-IR": "قالب‌های آماده", "en-US": "Skeleton presets" },
     intro: {

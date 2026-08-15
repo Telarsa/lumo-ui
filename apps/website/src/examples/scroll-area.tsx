@@ -65,6 +65,16 @@ function HorizontalExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ناحیه‌ای که بومی می‌پیماید و نوارهایش رنگ توکن دارند: نوار کناری، پنل کد، منوی بلند در ارتفاعی ثابت.",
+        "en-US": "A region that scrolls natively with token-coloured bars: a sidebar, a code panel, a long menu in a fixed height.",
+      },
+      whenNot: {
+        "fa-IR": "ده‌هزار ردیف — `VirtualList`. گفتگویی که دنبال تازه‌ترین پیام می‌رود — `MessageScroller`. پنجرک‌هایی که خواننده اندازه می‌دهد — `Resizable`.",
+        "en-US": "Ten thousand rows — `VirtualList`. A transcript that follows the newest message — `MessageScroller`. Panes the reader resizes — `Resizable`.",
+      },
+    },
     // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "layout",
     title: { "fa-IR": "ناحیهٔ پیمایش", "en-US": "Scroll area" },

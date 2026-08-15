@@ -107,6 +107,16 @@ function SectionsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ردیفی افقی از منوها مثل برنامه‌های دسکتاپ: پرونده، ویرایش، نما.",
+        "en-US": "A horizontal row of menus like a desktop application: File, Edit, View.",
+      },
+      whenNot: {
+        "fa-IR": "یک منو پشت یک دکمه — `Menu`. ناوبری سایت با پنل محتوا — `NavigationMenu`. دکمه‌ها به‌جای منو، با یک ایست تبی — `Toolbar`.",
+        "en-US": "One menu behind one button — `Menu`. Site navigation with content panels — `NavigationMenu`. Buttons rather than menus, under one Tab stop — `Toolbar`.",
+      },
+    },
     // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "میلهٔ منو", "en-US": "Menubar" },

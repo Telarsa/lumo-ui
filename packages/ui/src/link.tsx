@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
+import type { LumoLinkComponent, LumoLinkRenderProps } from "./link-context.ts";
 
 /**
  * A navigational link. NO ENGINE and NO `"use client"`: Base UI has no link
@@ -64,6 +65,14 @@ interface LinkBaseProps
       | "aria-current"
     >,
     VariantProps<typeof linkVariants> {
+  /**
+   * The app's own link component (Next's `Link`, a router's) rendered instead
+   * of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider
+   * linkComponent`; pass it here in server-rendered trees — client families
+   * (`Item`, `Command`, `NavigationMenuLink`, `Pagination`) inject it from the
+   * provider themselves.
+   */
+  linkComponent?: LumoLinkComponent | undefined;
   children?: LumoNode;
   className?: string | undefined;
   /**
@@ -103,6 +112,7 @@ export function Link({
   isCurrent,
   isDisabled,
   href,
+  linkComponent,
   ...props
 }: LinkProps) {
   const classes = cn(linkVariants({ variant, size }), className);
@@ -141,9 +151,10 @@ export function Link({
     );
   }
 
+  const Anchor: LumoLinkComponent | "a" = linkComponent ?? "a";
   return (
-    <a
-      {...props}
+    <Anchor
+      {...(props as LumoLinkRenderProps)}
       data-lumo=""
       role={undefined}
       aria-disabled={undefined}
@@ -154,6 +165,6 @@ export function Link({
       {...(newTab === true ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {})}
     >
       {content}
-    </a>
+    </Anchor>
   );
 }

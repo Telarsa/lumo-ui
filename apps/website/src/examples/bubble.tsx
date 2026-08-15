@@ -31,6 +31,16 @@ const copy = {
 } satisfies Record<string, Record<Locale, string>>;
 
 export const meta = {
+  usage: {
+    when: {
+      "fa-IR": "خودِ حباب یک پیام گفتگو: ارسالی به انتهای درون‌خطی می‌چسبد و دریافتی به آغاز آن؛ گروه‌بندی و واکنش‌ها روی همان حباب.",
+      "en-US": "The bubble of one chat message itself: sent hugs the inline end, received the start; grouping and reactions live on it.",
+    },
+    whenNot: {
+      "fa-IR": "ردیف کامل با آواتار، سربرگ و زمان — `Message`. ظرف پیمایشی کل گفتگو — `MessageScroller`. خط میان پیام‌ها مثل «دیروز» — `Marker`.",
+      "en-US": "The complete row with avatar, header and time — `Message`. The scroll container of the whole transcript — `MessageScroller`. A line between messages such as «yesterday» — `Marker`.",
+    },
+  },
   id: "bubble",
   tier: "display",
   title: { "fa-IR": "حباب گفتگو", "en-US": "Bubble" },

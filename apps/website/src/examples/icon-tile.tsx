@@ -154,6 +154,16 @@ function LabelledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "آیکونی تزئینی در مربعی رنگی بالای عنوانی که خودش معنا را می‌گوید: شبکهٔ قابلیت‌ها، بخش‌های تنظیمات.",
+        "en-US": "A decorative icon in a tinted square above a heading that already names it: feature grids, settings sections.",
+      },
+      whenNot: {
+        "fa-IR": "یک شخص — `Avatar`. آیکونی که کاری می‌کند — `IconButton`. نشانگر کوتاه وضعیت — `Badge`.",
+        "en-US": "A person — `Avatar`. An icon that does something — `IconButton`. A short status marker — `Badge`.",
+      },
+    },
     tier: "display",
     isNew: true,
     title: { "fa-IR": "کاشی آیکون", "en-US": "Icon tile" },

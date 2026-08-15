@@ -129,6 +129,16 @@ function DisabledItemExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ورودی متنی که مجموعه‌ای همیشه‌پیدا را فیلتر می‌کند: پنل کناری قابل جست‌وجو، فهرست تنظیمات، پایهٔ یک پالت فرمان.",
+        "en-US": "A text field that filters a collection that stays visible: a searchable side panel, a settings list, the primitive under a command palette.",
+      },
+      whenNot: {
+        "fa-IR": "یک انتخاب از پاپ‌آپی که بسته می‌شود — `ComboBox`. گزینه‌های کم و شناخته بدون تایپ — `Select`. اجرای کنش‌ها از یک گفت‌وگو با صفحه‌کلید — `Command`.",
+        "en-US": "One choice from a popup that closes — `ComboBox`. Few known options with no typing — `Select`. Running actions from a dialog by keyboard — `Command`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "تکمیل خودکار", "en-US": "Autocomplete" },
     intro: {

@@ -25,6 +25,16 @@ function MatrixExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ماتریسی از مقدارها که با رنگ رمز شده‌اند: فعالیت بر حسب روز و ساعت، شبکهٔ همبستگی.",
+        "en-US": "A matrix of values encoded as colour: activity by day and hour, a correlation grid.",
+      },
+      whenNot: {
+        "fa-IR": "مقدارها روی محوری پیوسته — `ChartContainer`. سلسله‌مراتب به‌شکل مساحت — `TreemapChart`. فقط اعداد — `Table`.",
+        "en-US": "Values over a continuous axis — `ChartContainer`. Hierarchy as area — `TreemapChart`. Plain numbers — `Table`.",
+      },
+    },
     isNew: true,
     tier: "data",
     title: { "fa-IR": "نمودار نقشهٔ گرمایی", "en-US": "Heatmap chart" },

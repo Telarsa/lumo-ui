@@ -98,6 +98,16 @@ function RangeExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "عملیاتی در جریان (`ProgressBar`) یا کمیتی در یک بازه (`Meter`): بارگذاری، فضای مصرف‌شده، قوت گذرواژه.",
+        "en-US": "An operation in flight (`ProgressBar`) or a quantity within a range (`Meter`): an upload, storage used, password strength.",
+      },
+      whenNot: {
+        "fa-IR": "انتظاری با طول نامعلوم — `Spinner`. محتوایی که هنوز نرسیده — `Skeleton`. مقداری که کاربر تنظیم می‌کند — `Slider`.",
+        "en-US": "A wait of unknown length — `Spinner`. Content not yet loaded — `Skeleton`. A value the user sets — `Slider`.",
+      },
+    },
     tier: "feedback",
     title: { "fa-IR": "نوار پیشرفت و سنجه", "en-US": "Progress bar and meter" },
     intro: {

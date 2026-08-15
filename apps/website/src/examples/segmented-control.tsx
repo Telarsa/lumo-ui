@@ -111,6 +111,16 @@ function DisabledOptionExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "دو تا چهار نمای ناسازگار از یک چیز، همه دیدنی و همیشه یکی برگزیده: فهرست/شبکه، روز/هفته/ماه.",
+        "en-US": "Two to four mutually exclusive views of one thing, all visible, one always selected: list/grid, day/week/month.",
+      },
+      whenNot: {
+        "fa-IR": "گزینه‌ای که می‌تواند هیچ‌کدام باشد — `RadioGroup`. چند دکمهٔ مستقل روشن/خاموش — `ToggleButtonGroup`. پنل‌های محتوا با نشانی خودشان یا گزینه‌های زیاد — `Tabs`.",
+        "en-US": "An option that can be none — `RadioGroup`. Several independent on/off buttons — `ToggleButtonGroup`. Content panels with their own URLs or many options — `Tabs`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "کنترل بخش‌بندی‌شده", "en-US": "Segmented control" },
     intro: {

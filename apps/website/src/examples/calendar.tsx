@@ -139,6 +139,16 @@ function MonthDropdownExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک تاریخ از شبکهٔ ماهی که روی صفحه دیده می‌شود: رزرو، نوبت، تاریخی که خواننده باید ببیند و بردارد.",
+        "en-US": "One date picked from a month grid that is visible on the page: a booking, an appointment, a date the reader should see and pick.",
+      },
+      whenNot: {
+        "fa-IR": "بازه‌ای از روزها — `RangeCalendar`. شبکه پشت یک فیلد و دکمه — `DatePicker`. تایپ تاریخ بدون شبکه — `DateField`. رویدادها روی روزها — `EventCalendar`.",
+        "en-US": "A span of days — `RangeCalendar`. The grid behind a field and a button — `DatePicker`. Typing a date with no grid — `DateField`. Events laid on days — `EventCalendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "تقویم", "en-US": "Calendar" },

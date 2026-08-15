@@ -74,6 +74,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "نشانگر مشغولی با نامی که خوانده می‌شود، برای انتظاری با طول نامعلوم: ارسال، بارگذاری یک پنل، دکمه‌ای در جریان.",
+        "en-US": "A busy indicator with a spoken name, for a wait of unknown length: sending, loading a panel, a button in flight.",
+      },
+      whenNot: {
+        "fa-IR": "کسری معلوم — `ProgressBar`. محتوایی که شکلش معلوم است — `Skeleton`. نمایی که کلاً خالی است — `EmptyState`.",
+        "en-US": "A known fraction — `ProgressBar`. Content whose shape is known — `Skeleton`. A view that is entirely empty — `EmptyState`.",
+      },
+    },
     tier: "feedback",
     title: { "fa-IR": "چرخنده", "en-US": "Spinner" },
     intro: {

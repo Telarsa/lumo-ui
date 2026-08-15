@@ -303,3 +303,57 @@ export function groupCollection<T, GroupKey extends string | number>(
   }
   return Array.from(groups, ([key, groupedItems]) => ({ key, items: groupedItems }));
 }
+
+/**
+ * The shape of a TanStack Query / SWR result, structurally — no dependency on
+ * either library. `fetchStatus` (TanStack) tells a background refetch from a
+ * first load; without it a refetch reads as a first load.
+ */
+export interface QueryLikeResult {
+  isPending: boolean;
+  isError: boolean;
+  error?: unknown;
+  data?: unknown;
+  fetchStatus?: "fetching" | "paused" | "idle" | undefined;
+  refetch: () => unknown;
+  /** Infinite queries: whether another page exists and how to ask for it. */
+  hasNextPage?: boolean | undefined;
+  fetchNextPage?: (() => unknown) | undefined;
+  isFetchingNextPage?: boolean | undefined;
+}
+
+/**
+ * The adapter for apps that already own their data layer: a TanStack Query (or
+ * SWR-shaped) result becomes the `asyncState` every Lumo collection accepts,
+ * with the same required, caller-authored copy `presentAsyncCollection` takes.
+ * Use it where `useAsyncCollection` would double-fetch what the app has.
+ */
+export function presentQueryResult(
+  query: QueryLikeResult,
+  messages: AsyncCollectionMessages,
+): AsyncCollectionPresentation {
+  const hasData = query.data !== undefined;
+  const status: AsyncCollectionStatus = query.isError
+    ? "error"
+    : query.isFetchingNextPage === true
+      ? "loading-more"
+      : query.isPending || (!hasData && query.fetchStatus === "fetching")
+        ? "loading"
+        : query.fetchStatus === "fetching"
+          ? "refreshing"
+          : "ready";
+  return presentAsyncCollection(
+    {
+      status,
+      error: query.error,
+      hasMore: query.hasNextPage === true,
+      retry: async () => {
+        await query.refetch();
+      },
+      loadMore: async () => {
+        await query.fetchNextPage?.();
+      },
+    },
+    messages,
+  );
+}

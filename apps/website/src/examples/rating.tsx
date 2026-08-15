@@ -86,6 +86,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "امتیازی از چند ستاره: کنار محصول (تصویری از یک عدد) یا داده‌شده از سوی خواننده (یک گروه رادیویی).",
+        "en-US": "A score out of stars: shown beside a product (a picture of a number) or given by the reader (a radio group).",
+      },
+      whenNot: {
+        "fa-IR": "یکی از چند گزینهٔ برچسب‌دار — `RadioGroup`. کمیتی در یک بازه — `Meter`. عددی تایپ‌شده — `NumberField`.",
+        "en-US": "One of a few labelled options — `RadioGroup`. A quantity within a range — `Meter`. A number typed — `NumberField`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "امتیاز", "en-US": "Rating" },
     intro: {

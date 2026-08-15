@@ -108,6 +108,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ورودی جست‌وجو با ذره‌بین و دکمهٔ پاک‌کردن — برای یک عبارت روی یک فهرست یا یک سایت.",
+        "en-US": "A search input with a magnifier and a clear button — for one term against a list or a site.",
+      },
+      whenNot: {
+        "fa-IR": "بندهای فیلدآگاه و نماهای ذخیره‌شده — `PowerSearch`. فیلتر کردن فهرستی دیدنی — `Autocomplete`. کنش‌ها با صفحه‌کلید — `Command`. متن ساده — `TextField`.",
+        "en-US": "Field-aware clauses and saved views — `PowerSearch`. Filtering a visible list — `Autocomplete`. Actions by keyboard — `Command`. Plain text — `TextField`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "میدان جست‌وجو", "en-US": "Search field" },
     intro: {

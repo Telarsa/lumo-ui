@@ -162,6 +162,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "پیش‌نمایشی تکمیلی وقتی اشاره‌گر روی پیوندی می‌ایستد یا صفحه‌کلید آن را فوکوس می‌کند: کارت نمایه، خلاصهٔ سند.",
+        "en-US": "A supplementary preview when the pointer rests on a link or the keyboard focuses it: a profile card, a document summary.",
+      },
+      whenNot: {
+        "fa-IR": "نام سادهٔ یک آیکون — `Tooltip`. محتوایی که با کلیک باز می‌شود و کنترل دارد — `Popover`. هرچه کاربر لمسی باید به آن برسد — روی خود صفحه.",
+        "en-US": "The plain-text name of an icon — `Tooltip`. Content opened by a click, with controls — `Popover`. Anything a touch user must reach — on the page itself.",
+      },
+    },
     tier: "overlay",
     title: { "fa-IR": "کارت شناور", "en-US": "Hover card" },
     intro: {

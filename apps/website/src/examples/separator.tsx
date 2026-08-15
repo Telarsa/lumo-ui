@@ -110,6 +110,16 @@ function StretchExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "خطی میان دو گروه محتوا، افقی یا عمودی: میان بخش‌های منو، گروه‌های نوار ابزار، پاره‌های صفحه.",
+        "en-US": "A rule between two groups of content, horizontal or vertical: between menu sections, toolbar groups, page parts.",
+      },
+      whenNot: {
+        "fa-IR": "خط برچسب‌دار میان پیام‌ها — `Marker`. فاصله بی‌خط — `Stack`. داخل منو — `MenuSeparator`.",
+        "en-US": "A labelled line between messages — `Marker`. Space without a line — `Stack`. Inside a menu — `MenuSeparator`.",
+      },
+    },
     tier: "layout",
     title: { "fa-IR": "جداکننده", "en-US": "Separator" },
     intro: {

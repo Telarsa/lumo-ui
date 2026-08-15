@@ -134,6 +134,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "چند گزینهٔ ناسازگار که همه یک‌جا دیده می‌شوند و دقیقاً یکی درست است: روش ارسال، طرح اشتراک.",
+        "en-US": "A few mutually exclusive options all visible at once, exactly one true: delivery method, plan.",
+      },
+      whenNot: {
+        "fa-IR": "بیش از حدود ۶ گزینه — `Select`. چند انتخاب هم‌زمان — `CheckboxGroup`. دو تا چهار نمای یک چیز — `SegmentedControl`. روشن/خاموش — `Switch`.",
+        "en-US": "More than about 6 options — `Select`. Several choices at once — `CheckboxGroup`. Two to four views of one thing — `SegmentedControl`. On/off — `Switch`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "گروه رادیویی", "en-US": "Radio group" },
     intro: {

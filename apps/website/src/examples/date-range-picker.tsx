@@ -83,6 +83,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "آغاز و پایانی که در دو فیلد تایپ می‌شوند، با شبکهٔ بازه پشت یک دکمه: تاریخ سفر، دورهٔ یک فیلتر.",
+        "en-US": "A start and an end typed in two fields, with a range grid behind one button: trip dates, the period of a filter.",
+      },
+      whenNot: {
+        "fa-IR": "بازه‌های آماده مثل «۷ روز گذشته» کنار شبکه — `DateSelector`. یک تاریخ — `DatePicker`. شبکه‌ای روی خود صفحه — `RangeCalendar`.",
+        "en-US": "Presets such as «last 7 days» beside the grid — `DateSelector`. One date — `DatePicker`. A grid on the page itself — `RangeCalendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "انتخابگر بازهٔ تاریخ", "en-US": "Date range picker" },

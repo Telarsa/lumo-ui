@@ -128,6 +128,16 @@ function ListExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "نشانگر کوتاه وضعیت کنار چیزی دیگر: شمارنده روی یک زبانه، وضعیت روی یک ردیف، «جدید» کنار یک گزینه. ایستا و بی‌تعامل.",
+        "en-US": "A short status marker beside something else: a count on a tab, a state on a row, «new» beside a menu item. Static, no interaction.",
+      },
+      whenNot: {
+        "fa-IR": "تراشهٔ حذف‌شدنی یا انتخاب‌شدنی — `Tag` یا `TagGroup`. پیامی با بدنه — `Alert`. خطی میان پیام‌های گفتگو — `Marker`.",
+        "en-US": "A removable or selectable chip — `Tag` or `TagGroup`. A message with a body — `Alert`. A line between chat messages — `Marker`.",
+      },
+    },
     tier: "display",
     title: { "fa-IR": "نشان", "en-US": "Badge" },
     intro: {

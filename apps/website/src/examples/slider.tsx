@@ -118,6 +118,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک مقدار از یک بازه، جایی که حس بیش از رقم مهم است: صدا، روشنایی، بودجهٔ تقریبی.",
+        "en-US": "One value from a range where the feel matters more than the digit: volume, brightness, a rough budget.",
+      },
+      whenNot: {
+        "fa-IR": "دو مقدار — `RangeSlider`. عدد دقیق — `NumberField`. کمیتی که نمایش داده می‌شود نه تنظیم — `Meter`.",
+        "en-US": "Two values — `RangeSlider`. An exact number — `NumberField`. A quantity displayed, not set — `Meter`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "لغزنده", "en-US": "Slider" },
     intro: {

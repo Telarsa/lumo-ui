@@ -171,6 +171,16 @@ function NestedExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک بار در ریشهٔ هر برنامهٔ لومو، با زبان — هیچ جزئی بی‌آن درست رندر نمی‌شود.",
+        "en-US": "Once at the root of every Lumo application, with the locale — nothing renders correctly without it.",
+      },
+      whenNot: {
+        "fa-IR": "نه برای یک جزء یا جزیرهٔ تنها — برنامه را یک بار بپیچید. ناحیه‌ای به زبان دیگر یک `LumoProvider` دوم تو در تو می‌گیرد؛ ویژگی جهت وجود ندارد که به‌سراغش بروید.",
+        "en-US": "Not for a single component or island — wrap the application once. A region in the other locale nests a second `LumoProvider`; there is no direction prop to reach for.",
+      },
+    },
     tier: "layout",
     title: { "fa-IR": "فراهم‌کنندهٔ لومو", "en-US": "Lumo provider" },
     intro: {

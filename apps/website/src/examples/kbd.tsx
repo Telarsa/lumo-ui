@@ -105,6 +105,16 @@ function SeparatorExample(_l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک میان‌بر صفحه‌کلید به‌شکل کلیدها: در منوها، در راهنمای ابزار، در برگهٔ میان‌برها.",
+        "en-US": "One keyboard shortcut shown as keys: in menus, in tooltips, in a shortcut cheat sheet.",
+      },
+      whenNot: {
+        "fa-IR": "میان‌بر داخل ردیف پالت فرمان — `CommandShortcut`. نشانگر وضعیت — `Badge`.",
+        "en-US": "A shortcut inside a command-palette row — `CommandShortcut`. A status marker — `Badge`.",
+      },
+    },
     tier: "display",
     title: { "fa-IR": "کلید میان‌بر", "en-US": "Keyboard shortcut" },
     intro: {

@@ -39,6 +39,16 @@ const copy = {
 } satisfies Record<string, Record<Locale, string>>;
 
 export const meta = {
+  usage: {
+    when: {
+      "fa-IR": "ردیف عمومی با رسانه، محتوا و کنش — به‌شکل پیوند، دکمه یا ردیف ایستا: ردیف تنظیمات، نتیجه، مورد فهرست.",
+      "en-US": "The generic row with media, content and actions — as a link, a button or a static row: settings rows, results, list entries.",
+    },
+    whenNot: {
+      "fa-IR": "سطحی با سربرگ، بدنه و پابرگ — `Card`. جفت‌های نام/مقدار — `DescriptionList`. پرونده‌ای در گفتگو — `Attachment`.",
+      "en-US": "A surface with header, body and footer — `Card`. Name/value pairs — `DescriptionList`. A file in a conversation — `Attachment`.",
+    },
+  },
   id: "item",
   tier: "display",
   title: { "fa-IR": "آیتم", "en-US": "Item" },

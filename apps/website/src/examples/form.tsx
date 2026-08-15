@@ -161,6 +161,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "پوسته‌ای که هر کنترل برچسب‌دار از آن ساخته می‌شود — `Field`، `Label`، `Description`، `FieldError` و خودِ عنصر فرم.",
+        "en-US": "The chrome every labelled control is built from — `Field`, `Label`, `Description`, `FieldError` and the form element itself.",
+      },
+      whenNot: {
+        "fa-IR": "مقدارها، اعتبارسنجی و منطق ارسال — `LumoForm`. پرسش‌نامهٔ گام‌به‌گام — `Questionnaire`.",
+        "en-US": "Values, validation and submission logic — `LumoForm`. A step-by-step survey — `Questionnaire`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "میدان و فرم", "en-US": "Field and form" },
     intro: {

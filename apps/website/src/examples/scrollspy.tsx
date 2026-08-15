@@ -159,6 +159,16 @@ function LinksOnlyExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "فهرست مطالبی که بخش جاری خواننده را نشان می‌کند: صفحه‌های مستندات، مقاله‌های بلند، صفحهٔ تنظیمات.",
+        "en-US": "A table of contents that marks the section the reader is in: docs pages, long articles, a settings page.",
+      },
+      whenNot: {
+        "fa-IR": "میان صفحه‌ها — `Breadcrumbs` یا `NavigationMenu`. ناوبری برنامه — `Sidebar`. مراحل یک جریان — `Steps`.",
+        "en-US": "Between pages — `Breadcrumbs` or `NavigationMenu`. Application navigation — `Sidebar`. Steps in a flow — `Steps`.",
+      },
+    },
     tier: "navigation",
     isNew: true,
     title: { "fa-IR": "ردیاب پیمایش", "en-US": "Scrollspy" },

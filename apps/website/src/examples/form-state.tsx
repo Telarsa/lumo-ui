@@ -79,6 +79,16 @@ function ValidatingFormExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "مقدارها، اعتبارسنجی و ارسال یک فرم — `LumoForm` روی TanStack Form با اعتبارسنج‌هایی که ارقام فارسی را می‌فهمند.",
+        "en-US": "A form's values, validation and submission — `LumoForm` over TanStack Form, with validators that survive Persian digits.",
+      },
+      whenNot: {
+        "fa-IR": "فقط پوستهٔ برچسب، توضیح و خطا — `Form` و `Field`. یک کنترل تنها که حالت فرم نمی‌خواهد — خودِ کنترل. جریان پرسش‌به‌پرسش — `Questionnaire`.",
+        "en-US": "Only the chrome of label, description and error — `Form` and `Field`. A single control that needs no form state — the control itself. A question-by-question flow — `Questionnaire`.",
+      },
+    },
     title: { "fa-IR": "وضعیت فرم", "en-US": "Form state" },
     intro: {
       "fa-IR":

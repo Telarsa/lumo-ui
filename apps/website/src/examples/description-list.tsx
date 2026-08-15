@@ -153,6 +153,16 @@ function MixedExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "جفت‌های نام/مقدار که با هم خوانده می‌شوند: خلاصهٔ سفارش، مشخصات نمایه، جمع‌های فاکتور.",
+        "en-US": "Name/value pairs read together: an order summary, a profile's details, invoice totals.",
+      },
+      whenNot: {
+        "fa-IR": "رکوردهای زیاد با ستون‌های یکسان — `Table`. مرتب‌سازی، فیلتر و ویرایش — `DataGrid`. ردیف‌هایی با رسانه و کنش — `Item`.",
+        "en-US": "Many records with the same columns — `Table`. Sorting, filtering and editing — `DataGrid`. Rows with media and actions — `Item`.",
+      },
+    },
     tier: "data",
     title: { "fa-IR": "فهرست توصیفی", "en-US": "Description list" },
     intro: {

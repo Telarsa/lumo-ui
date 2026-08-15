@@ -37,6 +37,16 @@ const SENT_AT = new Date("2026-08-10T14:09:00+03:30");
 const TIME: Intl.DateTimeFormatOptions = { hour: "2-digit", minute: "2-digit" };
 
 export const meta = {
+  usage: {
+    when: {
+      "fa-IR": "ردیف کامل یک پیام گفتگو: آواتار، حباب‌ها و زمان، ارسالی یا دریافتی.",
+      "en-US": "The composed row of one chat message: avatar, bubbles and time, sent or received.",
+    },
+    whenNot: {
+      "fa-IR": "فقط حباب — `Bubble`. خط‌های میان پیام‌ها — `Marker`. ظرف کل گفتگو — `MessageScroller`. ردیف عمومی — `Item`.",
+      "en-US": "Only the bubble — `Bubble`. Lines between messages — `Marker`. The transcript container — `MessageScroller`. A generic row — `Item`.",
+    },
+  },
   id: "message",
   tier: "display",
   title: { "fa-IR": "پیام", "en-US": "Message" },

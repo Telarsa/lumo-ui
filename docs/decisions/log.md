@@ -1202,3 +1202,15 @@ Kept deliberately: `demo-islands.tsx` (one `"use client"` boundary for 46 statef
 3. **`data-lumo-latn` is graded, not just trusted.** Rule 14, `latn-island-purity`: an island holding more letters of the reader's script than Latin is a misplaced exemption and fails. Its first run found a Persian link inside an `lang="en" dir="ltr"` island on all 34 block pages. The exemption share stays disclosed in the coverage report; this rule is its containment.
 
 Also this tranche: a behavioural mutation operator for every module that owns behaviour (104 of 111; the 7 presentational modules are listed with reasons and the campaign refuses an unclassified module); the popup tier grades 22 families (+ date-range-picker, date-selector, power-search editor, toast); InputOtp joined the shared field wiring (its help/error text now reaches the input — the PhoneInput class of defect, found by the #7 audit).
+
+---
+
+## 23. Adapters at one seam; every page says when to use it; the field-shaped inputs are all wired
+
+**Decided 16 August 2026.**
+
+1. **Router link.** `LumoProvider linkComponent` is the one seam for the app's link (Next's `Link`, a router's). Client families that render an anchor — `Item`, `Command` rows, `NavigationMenuLink`, `SidebarItem` — read it from context. `Link` and `Breadcrumbs` are SERVER components and cannot read a client context; `Link` takes `linkComponent` as a prop for server-rendered trees, and the client wrappers inject the context value into it. Default everywhere: the platform `<a>`, proved in the first byte. The render props are picked from React's own `<a>` props plus a string `href` — the anchor's DOM surface, not a Lumo vocabulary.
+2. **Data layer.** `presentQueryResult(result, messages)` maps a TanStack Query / SWR-shaped result onto the `asyncState` every collection accepts, structurally (no dependency), with the same required copy as `presentAsyncCollection`. Apps that own their data layer stop double-fetching.
+3. **Every component page carries `usage` (when / when not, both locales, naming the alternative in backticks; every named alternative is validated against the barrel).** 112 pages.
+4. **Field parity.** ComboBox, MultiSelect, TagsInput and Slider connect `description`/`errorMessage` to the control the reader lands on, in the first byte. Slider carries no `aria-invalid`: the engine forwards `aria-describedby` to its range input but not `aria-invalid`, and a flag on the thumb's div would name the wrong element — recorded rather than faked.
+5. **Snapshots and names.** Playwright aria snapshots are partial matchers; recorded with `--update-snapshots all`, and popup names are asserted with the engine's own `toHaveAccessibleName` — the DOM approximation that had passed an unnamed Select listbox is gone (§ evaluations, second pass).

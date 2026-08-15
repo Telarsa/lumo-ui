@@ -5,6 +5,7 @@ import { DirectionProvider } from "@base-ui/react/direction-provider";
 import type { Locale, LumoNode } from "@lumo-ui/core";
 import { direction } from "@lumo-ui/core";
 import { LumoLocaleContext } from "./locale.ts";
+import { LumoLinkContext, type LumoLinkComponent } from "./link-context.ts";
 
 /**
  * Mount this once, high in every Lumo application. It is not optional.
@@ -22,14 +23,23 @@ import { LumoLocaleContext } from "./locale.ts";
 export interface LumoProviderProps {
   /** The document's locale. Same value given to `LumoHtml`. No `direction` sibling: it is `direction(locale)`. */
   locale: Locale;
+  /**
+   * The app's own link component (Next's `Link`, TanStack Router's `Link`, …),
+   * used by every Lumo family that renders an anchor — `Link`, `Item`, `Command`
+   * rows, `NavigationMenuLink`. Omit for the platform `<a>`. It receives the
+   * anchor's props (`href`, `className`, `aria-*`, `target`/`rel`, handlers).
+   */
+  linkComponent?: LumoLinkComponent | undefined;
   children: LumoNode;
 }
 
 /** The root provider: derives direction from `locale`, mounts Base UI's direction context, and hosts the managed overlay surfaces. */
-export function LumoProvider({ locale, children }: LumoProviderProps) {
+export function LumoProvider({ locale, linkComponent, children }: LumoProviderProps) {
   return (
     <LumoLocaleContext.Provider value={locale}>
-      <DirectionProvider direction={direction(locale)}>{children}</DirectionProvider>
+      <LumoLinkContext.Provider value={linkComponent ?? null}>
+        <DirectionProvider direction={direction(locale)}>{children}</DirectionProvider>
+      </LumoLinkContext.Provider>
     </LumoLocaleContext.Provider>
   );
 }

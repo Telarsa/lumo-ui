@@ -21,6 +21,7 @@ import {
   DialogOverlay,
   DialogTrigger,
 } from "./dialog.tsx";
+import { useLinkComponent } from "./link-context.ts";
 
 /**
  * A command palette — a filtered list of actions, keyboard-first. BASE UI ENGINE.
@@ -432,6 +433,7 @@ export function CommandItem({
   className,
   children,
 }: CommandItemProps) {
+  const Anchor = useLinkComponent();
   return (
     <BaseAutocomplete.Item
       data-lumo=""
@@ -444,7 +446,7 @@ export function CommandItem({
       {...(onAction === undefined ? {} : { onClick: () => onAction() })}
       {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
       // No `target`/`rel`: a new tab needs an announced warning and a row has no slot for one.
-      {...(href === undefined ? {} : { render: <a href={href} /> })}
+      {...(href === undefined ? {} : { render: Anchor === "a" ? <a href={href} /> : <Anchor href={href} /> })}
     >
       {children}
       {isSelected === true ? (

@@ -148,6 +148,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "عددی که کاربر با دو دکمهٔ گام تایپ می‌کند: تعداد، سن، درصد.",
+        "en-US": "A number the user types, with two stepper buttons: quantity, age, a percentage.",
+      },
+      whenNot: {
+        "fa-IR": "مقداری که از یک بازه برداشته می‌شود — `Slider`. عدد فقط برای نمایش — `Num`. شمارهٔ تلفن — `PhoneInput`. کد یک‌بارمصرف — `InputOtp`.",
+        "en-US": "A value picked from a range — `Slider`. A number only displayed — `Num`. A phone number — `PhoneInput`. A one-time code — `InputOtp`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "ورودی عددی", "en-US": "Number field" },
     intro: {

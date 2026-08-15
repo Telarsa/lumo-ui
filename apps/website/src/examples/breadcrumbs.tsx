@@ -162,6 +162,16 @@ function CurrentOverrideExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "جای این صفحه در یک سلسله‌مراتب، با هر نیا به‌شکل پیوندی واقعی: درخت محتوا، مسیر پرونده، بخش‌های تنظیمات.",
+        "en-US": "This page's place in a hierarchy, with every ancestor as a real link: a content tree, a file path, settings sections.",
+      },
+      whenNot: {
+        "fa-IR": "جای خواننده در جریانی خطی که باید تمامش کند — `Steps`. بخش‌های بالای سایت — `NavigationMenu`. فهرست مطالب همین صفحه — `Scrollspy`.",
+        "en-US": "Where the reader is in a linear flow they must finish — `Steps`. Site-top sections — `NavigationMenu`. The table of contents of this page — `Scrollspy`.",
+      },
+    },
     tier: "navigation",
     title: { "fa-IR": "مسیر راهنما", "en-US": "Breadcrumbs" },
     intro: {

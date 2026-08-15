@@ -164,6 +164,16 @@ function KeepMountedExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "بخش‌هایی که باز و بسته می‌شوند، تنها یا در آکاردئون: پرسش‌های پرتکرار، تنظیمات پیشرفته، فرم بلند در چند پاره.",
+        "en-US": "Sections that open and close, alone or grouped as an accordion: FAQs, advanced settings, a long form in parts.",
+      },
+      whenNot: {
+        "fa-IR": "نماهای موازی که همیشه یکی‌شان دیده می‌شود — `Tabs`. سلسله‌مراتب تودرتو با ناوبری صفحه‌کلید — `Tree`. پنلی که روی صفحه باز می‌شود — `Drawer` یا `Dialog`.",
+        "en-US": "Parallel views where one is always shown — `Tabs`. Nested hierarchy with keyboard navigation — `Tree`. A panel that opens over the page — `Drawer` or `Dialog`.",
+      },
+    },
     tier: "display",
     title: { "fa-IR": "بخش تاشو", "en-US": "Disclosure" },
     intro: {

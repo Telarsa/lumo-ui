@@ -179,6 +179,16 @@ function CriticalExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "دنباله‌ای از رویدادها در امتداد یک ریل: تاریخچهٔ سفارش، ردّ ممیزی، یادداشت‌های انتشار.",
+        "en-US": "A sequence of events down a rail: an order history, an audit trail, release notes.",
+      },
+      whenNot: {
+        "fa-IR": "جریانی رو به جلو با مرحلهٔ جاری — `Steps`. کارهایی با مدت — `Gantt`. پیام‌های گفتگو — `Message`.",
+        "en-US": "A forward flow with a current step — `Steps`. Tasks with duration — `Gantt`. Chat messages — `Message`.",
+      },
+    },
     tier: "display",
     isNew: true,
     title: { "fa-IR": "خط زمان", "en-US": "Timeline" },

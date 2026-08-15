@@ -7528,6 +7528,19 @@
         ]
       }
     ],
+    "link-context.ts": [
+      {
+        "name": "LumoLinkRenderProps",
+        "props": [
+          {
+            "name": "href",
+            "type": "string",
+            "required": true,
+            "description": "Where the link goes. Always a string; the app's router turns it into navigation."
+          }
+        ]
+      }
+    ],
     "link.tsx": [
       {
         "name": "LinkProps",
@@ -7555,6 +7568,12 @@
             "type": "boolean | undefined",
             "required": false,
             "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable."
+          },
+          {
+            "name": "linkComponent",
+            "type": "LumoLinkComponent | undefined",
+            "required": false,
+            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command`, `NavigationMenuLink`, `Pagination`) inject it from the provider themselves."
           },
           {
             "name": "newTab",
@@ -8665,6 +8684,12 @@
             "type": "boolean | undefined",
             "required": false,
             "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable."
+          },
+          {
+            "name": "linkComponent",
+            "type": "LumoLinkComponent | undefined",
+            "required": false,
+            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command`, `NavigationMenuLink`, `Pagination`) inject it from the provider themselves."
           },
           {
             "name": "newTab",
@@ -9801,6 +9826,12 @@
             "type": "Locale",
             "required": true,
             "description": "The document's locale. Same value given to `LumoHtml`. No `direction` sibling: it is `direction(locale)`."
+          },
+          {
+            "name": "linkComponent",
+            "type": "LumoLinkComponent | undefined",
+            "required": false,
+            "description": "The app's own link component (Next's `Link`, TanStack Router's `Link`, …), used by every Lumo family that renders an anchor — `Link`, `Item`, `Command` rows, `NavigationMenuLink`. Omit for the platform `<a>`. It receives the anchor's props (`href`, `className`, `aria-*`, `target`/`rel`, handlers)."
           }
         ]
       },
@@ -11961,6 +11992,12 @@
             "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable."
           },
           {
+            "name": "linkComponent",
+            "type": "LumoLinkComponent | undefined",
+            "required": false,
+            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command`, `NavigationMenuLink`, `Pagination`) inject it from the provider themselves."
+          },
+          {
             "name": "newTab",
             "type": "boolean | undefined",
             "required": false,
@@ -12233,10 +12270,22 @@
             "description": "The default value (uncontrolled)."
           },
           {
+            "name": "description",
+            "type": "LumoNode",
+            "required": false,
+            "description": "Help text, connected to the thumb by `aria-describedby` in the first byte."
+          },
+          {
             "name": "dir",
             "type": "string | undefined",
             "required": false,
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
+          },
+          {
+            "name": "errorMessage",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The error, connected like the description. No `aria-invalid`: the engine forwards `aria-describedby` to its range input but not `aria-invalid`, and a flag on the thumb's div would name the wrong element."
           },
           {
             "name": "form",

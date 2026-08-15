@@ -107,6 +107,16 @@ function VariantsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ناوبری به صفحه یا بخشی دیگر روی یک لنگر واقعی: در متن، در پابرگ، در جدول.",
+        "en-US": "Navigation to another page or section on a real anchor: in prose, in footers, in tables.",
+      },
+      whenNot: {
+        "fa-IR": "کنشی که حالت را تغییر می‌دهد — `Button`. ناوبری بالای سایت با پنل — `NavigationMenu`. مسیر رسیدن به این صفحه — `Breadcrumbs`.",
+        "en-US": "An action that changes state — `Button`. Site-top navigation with panels — `NavigationMenu`. The trail to this page — `Breadcrumbs`.",
+      },
+    },
     tier: "navigation",
     title: { "fa-IR": "پیوند", "en-US": "Link" },
     intro: {

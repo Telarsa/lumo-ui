@@ -343,6 +343,16 @@ function AllDayExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "رویدادها روی روزها و ساعت‌ها: زمان‌بندی، رزرو، برنامهٔ شیفت — در نمای ماه، هفته، روز و دستور کار.",
+        "en-US": "Events laid on days and hours: scheduling, bookings, shift plans — in month, week, day and agenda views.",
+      },
+      whenNot: {
+        "fa-IR": "برداشتن یک تاریخ — `Calendar` یا `DatePicker`. کارها روی بازهٔ تاریخ به‌شکل میله — `Gantt`. کارت‌هایی که میان وضعیت‌ها جابه‌جا می‌شوند — `Kanban`.",
+        "en-US": "Picking a date — `Calendar` or `DatePicker`. Tasks over a date range as bars — `Gantt`. Cards moved between states — `Kanban`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "تقویم رویداد", "en-US": "Event calendar" },

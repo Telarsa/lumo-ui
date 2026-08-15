@@ -64,6 +64,16 @@ function NativeFormExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "سازندهٔ پرس‌وجوی نوع‌دار فیلد–عملگر–مقدار برای یک فهرست، کنترل‌شده یا ارسال‌شده از راه فرم بومی.",
+        "en-US": "A typed field–operator–value query builder for a list, controlled or submitted through a native form.",
+      },
+      whenNot: {
+        "fa-IR": "جعبهٔ جست‌وجو با بندهای ویرایش‌پذیر و نمای ذخیره‌شده — `PowerSearch`. یک عبارت جست‌وجو — `SearchField`. دو تا چهار نمای ثابت — `SegmentedControl`.",
+        "en-US": "A search box with editable clauses and saved views — `PowerSearch`. One search term — `SearchField`. Two to four fixed views — `SegmentedControl`.",
+      },
+    },
     title: { "fa-IR": "فیلترها", "en-US": "Filters" },
     intro: {
       "fa-IR": "سازندهٔ عبارت فیلتر با فیلد، عملگر و مقدارِ نوع‌دار. مدل می‌تواند کنترل‌شده باشد یا به‌صورت JSON در یک فرم بومی ارسال شود.",

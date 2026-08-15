@@ -128,6 +128,16 @@ function InRowExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "آواتارهای روی‌هم با شمارندهٔ باقی‌مانده: چه کسانی در گفتگو هستند، چه کسانی سند را ویرایش کرده‌اند.",
+        "en-US": "Overlapping avatars with a count for the rest: who is in a conversation, who edited a document.",
+      },
+      whenNot: {
+        "fa-IR": "یک نفر — `Avatar`. آیکون قابلیت در جعبهٔ رنگی — `IconTile`. فقط یک شمارنده — `Badge`.",
+        "en-US": "One person — `Avatar`. A feature icon in a tinted square — `IconTile`. A count on its own — `Badge`.",
+      },
+    },
     tier: "display",
     isNew: true,
     title: { "fa-IR": "پشتهٔ آیکون", "en-US": "Icon stack" },

@@ -86,6 +86,16 @@ function CountsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک تراشه: فیلتر، مقدار برگزیده، کلیدواژه — به‌دلخواه حذف‌شدنی.",
+        "en-US": "A chip: a filter, a selected value, a keyword — optionally removable.",
+      },
+      whenNot: {
+        "fa-IR": "چندتا در یک ردیف — `TagGroup`. نشانگر وضعیت فقط‌خواندنی — `Badge`. مقدارهای آزاد تایپ‌شده — `TagsInput`.",
+        "en-US": "Several in a row — `TagGroup`. A read-only status marker — `Badge`. Free-form values typed in — `TagsInput`.",
+      },
+    },
     tier: "display",
     title: { "fa-IR": "برچسب", "en-US": "Tag" },
     intro: {

@@ -162,6 +162,16 @@ function BareExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "پنل جایی که محتوا باید باشد و هنوز نیست: صندوق خالی، جست‌وجوی بی‌نتیجه، صفحهٔ نخستین اجرا. با یک کنش.",
+        "en-US": "The panel where content should be and is not yet: an empty inbox, a search with no results, a first-run screen. With one action.",
+      },
+      whenNot: {
+        "fa-IR": "محتوایی که هنوز در راه است — `Skeleton`. پیامی کنار محتوایی که وجود دارد — `Alert`. عملیاتی در جریان — `Spinner`.",
+        "en-US": "Content still on its way — `Skeleton`. A message beside content that exists — `Alert`. An operation in flight — `Spinner`.",
+      },
+    },
     tier: "feedback",
     title: { "fa-IR": "حالت خالی", "en-US": "Empty state" },
     intro: {

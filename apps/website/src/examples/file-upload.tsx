@@ -214,6 +214,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "انتخاب پرونده با ناحیهٔ رهاکردن، انتخابگر و فهرست آنچه برگزیده شده، با پیشرفت و ردشدن.",
+        "en-US": "Choosing files with a drop area, a picker and the list of what was chosen, with progress and rejection.",
+      },
+      whenNot: {
+        "fa-IR": "پرونده‌ای که در گفتگو پیش یا پس از ارسال نشان داده می‌شود — `Attachment`. مقدارهای آزاد به‌شکل تراشه — `TagsInput`.",
+        "en-US": "A file shown in a conversation before or after sending — `Attachment`. Free-form values entered as chips — `TagsInput`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "بارگذاری پرونده", "en-US": "File upload" },
     intro: {

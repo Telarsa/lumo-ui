@@ -85,6 +85,16 @@ function ListExample(_l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "شکل خالی محتوایی که هنوز نرسیده، به اندازه‌ای که خواهد گرفت.",
+        "en-US": "The empty shape of content that has not arrived, drawn to the size it will take.",
+      },
+      whenNot: {
+        "fa-IR": "یک پاراگراف، کارت، فرم یا جدول کامل — پیش‌ساخته‌های `SkeletonText`، `SkeletonCard`، `SkeletonForm`، `SkeletonTable`. انتظار برای یک عملیات — `Spinner`. پیشرفت معلوم — `ProgressBar`.",
+        "en-US": "A whole paragraph, card, form or table — the presets `SkeletonText`, `SkeletonCard`, `SkeletonForm`, `SkeletonTable`. Waiting on an operation — `Spinner`. A known progress — `ProgressBar`.",
+      },
+    },
     tier: "feedback",
     title: { "fa-IR": "اسکلت", "en-US": "Skeleton" },
     intro: {

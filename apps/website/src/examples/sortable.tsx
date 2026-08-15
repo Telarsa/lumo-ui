@@ -137,6 +137,16 @@ function ShortExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "فهرستی که خواننده بازمی‌چیند، اول با صفحه‌کلید: اولویت‌ها، ترتیب فهرست پخش، فیلدهای فرم.",
+        "en-US": "A list the reader reorders, keyboard first: priorities, playlist order, form fields.",
+      },
+      whenNot: {
+        "fa-IR": "کارت‌هایی که میان ستون‌ها می‌روند — `Kanban`. برگزیدن زیرمجموعه میان دو فهرست — `TransferList`. فهرست بی‌بازچینی — `ListBox`.",
+        "en-US": "Cards moving between columns — `Kanban`. Choosing a subset across two lists — `TransferList`. A list with no reordering — `ListBox`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "فهرست مرتب‌شونده", "en-US": "Sortable" },

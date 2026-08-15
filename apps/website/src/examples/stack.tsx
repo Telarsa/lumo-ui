@@ -126,6 +126,16 @@ function SemanticTagExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "چیدن فرزندان با فاصله روی فلکس یا گرید، و اندازهٔ صفحه: `Stack`، `Grid`، `Container`.",
+        "en-US": "Laying out children with gaps on flex or grid, and the page measure: `Stack`, `Grid`, `Container`.",
+      },
+      whenNot: {
+        "fa-IR": "سطحی با سربرگ و پابرگ — `Card`. پنجرک‌هایی که خواننده اندازه می‌دهد — `Resizable`. ردیفی که سرریز را پنهان می‌کند — `OverflowList`.",
+        "en-US": "A surface with header and footer — `Card`. Panes the reader resizes — `Resizable`. A row that hides its overflow — `OverflowList`.",
+      },
+    },
     tier: "layout",
     title: { "fa-IR": "چیدمان", "en-US": "Layout primitives" },
     intro: {

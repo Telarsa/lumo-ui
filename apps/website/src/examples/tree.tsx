@@ -159,6 +159,16 @@ function MultipleExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "فهرستی تودرتو که در جای خود با صفحه‌کلید و تایپ‌یاب مرور می‌شود: درخت پرونده، طرح کلی دسته‌ها.",
+        "en-US": "A nested list browsed in place with keyboard and typeahead: a file tree, a category outline.",
+      },
+      whenNot: {
+        "fa-IR": "انتخاب برای یک فیلد فرم — `TreeSelect`. یک مسیر — `Cascader`. بخش‌هایی که باز و بسته می‌شوند — `Disclosure`. ناوبری برنامه — `Sidebar`.",
+        "en-US": "Selecting into a form field — `TreeSelect`. One path — `Cascader`. Sections that open and close — `Disclosure`. Application navigation — `Sidebar`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "درخت", "en-US": "Tree" },

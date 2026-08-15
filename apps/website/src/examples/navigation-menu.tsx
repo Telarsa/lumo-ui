@@ -77,6 +77,16 @@ function BasicExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ناوبری بالای سایت با پنل محتوا: بخش‌های محصول، منوهای بزرگ. پیوندها پیوند می‌مانند.",
+        "en-US": "Site-top navigation with content panels: product sections, mega menus. Links stay links.",
+      },
+      whenNot: {
+        "fa-IR": "ناوبری کناری یک برنامه — `Sidebar`. کنش‌ها پشت یک دکمه — `Menu`. ردیف منوهای دسکتاپی — `Menubar`.",
+        "en-US": "An application's side navigation — `Sidebar`. Actions behind a button — `Menu`. Desktop-style rows of menus — `Menubar`.",
+      },
+    },
     // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "منوی ناوبری", "en-US": "Navigation menu" },

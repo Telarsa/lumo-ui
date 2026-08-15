@@ -160,6 +160,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک شخص یا حساب، به‌صورت تصویر یا حروف اول: سربرگ پیام، فهرست اعضا، منوی حساب.",
+        "en-US": "A person or an account, as a picture or initials: a message header, a member list, the account menu.",
+      },
+      whenNot: {
+        "fa-IR": "چند نفر روی هم با شمارندهٔ باقی‌مانده — `IconStack`. آیکون یک قابلیت در جعبهٔ رنگی — `IconTile`. نشانگر وضعیت — `Badge`.",
+        "en-US": "Several people overlapping with a count for the rest — `IconStack`. A feature's icon in a tinted box — `IconTile`. A status marker — `Badge`.",
+      },
+    },
     tier: "display",
     title: { "fa-IR": "آواتار", "en-US": "Avatar" },
     intro: {

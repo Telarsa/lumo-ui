@@ -90,6 +90,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "کد یک‌بارمصرف در ردیفی از خانه‌ها: تأیید پیامکی، رمز کارت، ورود دومرحله‌ای.",
+        "en-US": "A one-time code in a row of boxes: SMS verification, a card PIN, two-factor sign-in.",
+      },
+      whenNot: {
+        "fa-IR": "شمارهٔ تلفن — `PhoneInput`. قالب ثابت دیگر — `MaskInput`. عدد با گام — `NumberField`.",
+        "en-US": "A phone number — `PhoneInput`. Another fixed pattern — `MaskInput`. A number with steppers — `NumberField`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "کد یک‌بارمصرف", "en-US": "One-time code" },

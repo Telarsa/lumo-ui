@@ -130,6 +130,16 @@ function VerticalExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ردیفی از دکمه‌های هم‌خانواده که به یک کنترل دیداری چسبیده‌اند: ذخیره/ذخیره با نام، قبلی/بعدی، کنش اصلی با منوی کنارش. هر دکمه فشار جداگانه‌ای است.",
+        "en-US": "A row of related buttons joined into one visual control: save/save as, previous/next, a main action with its menu beside it. Each button is a separate press.",
+      },
+      whenNot: {
+        "fa-IR": "گزینه‌هایی که فشرده می‌مانند (ضخیم، مورب) — `ToggleButtonGroup`. دقیقاً یک نما از دو تا چهار — `SegmentedControl`. کنترل‌های زیاد با یک ایست تبی — `Toolbar`.",
+        "en-US": "Options that stay pressed (bold, italic) — `ToggleButtonGroup`. Exactly one view of two to four — `SegmentedControl`. Many controls under one Tab stop — `Toolbar`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "گروه دکمه", "en-US": "Button group" },
     intro: {

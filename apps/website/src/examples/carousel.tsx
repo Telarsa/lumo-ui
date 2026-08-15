@@ -191,6 +191,16 @@ function VerticalExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "نواری از اسلایدها که خواننده یکی‌یکی از آن می‌گذرد: گالری، موارد برگزیده، معرفی اولیه.",
+        "en-US": "A strip of slides the reader moves through one at a time: a gallery, featured items, an onboarding walk.",
+      },
+      whenNot: {
+        "fa-IR": "ردیفی افقی که هرچه جا شود نگه می‌دارد و بقیه را پنهان می‌کند — `OverflowList`. فهرست بلند برای پیمایش — `VirtualList` یا `ScrollArea`. مراحل جریانی اجباری — `Steps`.",
+        "en-US": "A horizontal row that keeps what fits and hides the rest — `OverflowList`. A long list to scroll — `VirtualList` or `ScrollArea`. Steps in a required flow — `Steps`.",
+      },
+    },
     tier: "display",
     title: { "fa-IR": "چرخ‌فلک", "en-US": "Carousel" },
     intro: {

@@ -109,6 +109,16 @@ function EdgeExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "جابه‌جایی میان صفحه‌های یک نتیجهٔ بلند: جست‌وجو، جدول، بایگانی.",
+        "en-US": "Moving between pages of a long result set: a search, a table, an archive.",
+      },
+      whenNot: {
+        "fa-IR": "شبکه‌ای با صفحه‌بندی داخلی — `DataGrid`. مراحل یک جریان — `Steps`. همه‌چیز در یک پیمایشگر — `VirtualList`.",
+        "en-US": "A grid with paging built in — `DataGrid`. Steps in a flow — `Steps`. Everything in one scroller — `VirtualList`.",
+      },
+    },
     tier: "navigation",
     title: { "fa-IR": "صفحه‌بندی", "en-US": "Pagination" },
     intro: {

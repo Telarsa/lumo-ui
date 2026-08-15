@@ -188,6 +188,16 @@ function MotionExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "میله، خط و ناحیه برای دادهٔ کمّی روی یک محور، با همان ردیف‌ها در جدولی که روی سرور رندر می‌شود.",
+        "en-US": "Bars, lines and areas of quantitative data over an axis, with the same rows in a server-rendered table.",
+      },
+      whenNot: {
+        "fa-IR": "ماتریس مقدارها با رنگ — `HeatmapChart`. مقایسهٔ نیم‌رخ‌ها روی چند محور — `RadarChart`. مساحت تناسبی یک سلسله‌مراتب — `TreemapChart`. جریان میان گره‌ها — `SankeyChart`. فقط خودِ اعداد — `Table` یا `DataGrid`.",
+        "en-US": "A matrix of values as colour — `HeatmapChart`. Profiles compared over axes — `RadarChart`. Proportional area of a hierarchy — `TreemapChart`. Flow between nodes — `SankeyChart`. Just the numbers — `Table` or `DataGrid`.",
+      },
+    },
     title: { "fa-IR": "نمودار", "en-US": "Chart" },
     intro: {
       "fa-IR": "کتابخانهٔ نمودار روی سرور هیچ نمی‌کشد. پس ChartContainer خودش یک جدول می‌سازد: همان داده‌ها، در بایت‌های ارسالی، با ارقام فارسی. گیت آن جدول را می‌بیند و می‌سنجد. نموداری که روی سرور رسم شود هم فقط خطوط محور را می‌فرستد، نه اعداد را.",

@@ -33,6 +33,16 @@ function LeadingExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ردیفی از کنش‌ها که هرچه جا شود نگه می‌دارد و بقیه را به یک کنترل سرریز می‌سپارد: نوار ابزار، نوار زبانه، ردیف برچسب.",
+        "en-US": "A row of actions that keeps what fits and hands the rest to an overflow control: toolbars, tab strips, tag rows.",
+      },
+      whenNot: {
+        "fa-IR": "نواری که خواننده ورق می‌زند — `Carousel`. نوار ابزار گروه‌بندی‌شده با کلیدهای جهت — `Toolbar`. تراشه‌هایی که به خط بعد می‌شکنند — `TagGroup`.",
+        "en-US": "A strip the reader pages through — `Carousel`. A grouped toolbar with arrow keys — `Toolbar`. Chips that wrap — `TagGroup`.",
+      },
+    },
     tier: "layout",
     isNew: true,
     title: { "fa-IR": "فهرست سرریز", "en-US": "Overflow list" },

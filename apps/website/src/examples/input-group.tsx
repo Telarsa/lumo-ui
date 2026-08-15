@@ -129,6 +129,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ورودی متن با زائده‌هایی روی لبه‌های خواندن: نشان واحد پول، یکا، پسوند دامنه، یک دکمه.",
+        "en-US": "A text field with adornments on its reading edges: a currency sign, a unit, a domain suffix, a button.",
+      },
+      whenNot: {
+        "fa-IR": "فیلد ساده — `TextField`. جست‌وجو با ذره‌بین و پاک‌کردن — `SearchField`. عدد با گام — `NumberField`. چند دکمهٔ چسبیده — `ButtonGroup`.",
+        "en-US": "A plain field — `TextField`. Search with a magnifier and clear — `SearchField`. A number with steppers — `NumberField`. Several joined buttons — `ButtonGroup`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "ورودی آذین‌دار", "en-US": "Input group" },
     intro: {

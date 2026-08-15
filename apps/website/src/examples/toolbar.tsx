@@ -180,6 +180,16 @@ function GroupsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "گروهی از کنترل‌ها در یک ایست تبی که با کلیدهای جهت پیموده می‌شوند: ابزارهای ویرایشگر، کنش‌های جدول.",
+        "en-US": "A group of controls in one Tab stop, navigated with the arrow keys: an editor's tools, a table's actions.",
+      },
+      whenNot: {
+        "fa-IR": "دکمه‌های چسبیده با ایست‌های جداگانه — `ButtonGroup`. منوها در یک ردیف — `Menubar`. کنش‌هایی که سرریز می‌کنند — `OverflowList`.",
+        "en-US": "Buttons joined visually with separate stops — `ButtonGroup`. Menus in a row — `Menubar`. Actions that overflow — `OverflowList`.",
+      },
+    },
     tier: "navigation",
     title: { "fa-IR": "نوار ابزار", "en-US": "Toolbar" },
     intro: {

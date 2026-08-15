@@ -135,6 +135,16 @@ function CustomOnlyExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "دورهٔ گزارش در گوشهٔ داشبورد: بازه‌های نام‌دار (این ماه، ۷ روز گذشته) کنار شبکهٔ بازه، پشت یک دکمه.",
+        "en-US": "The report period in a dashboard's corner: named ranges (this month, last 7 days) beside a range grid, behind one button.",
+      },
+      whenNot: {
+        "fa-IR": "دو تاریخ تایپ‌شده بی‌بازهٔ آماده — `DateRangePicker`. یک تاریخ — `DatePicker`. انتخاب روی شبکه بدون حساب بازه — `RangeCalendar`.",
+        "en-US": "Two typed dates with no presets — `DateRangePicker`. One date — `DatePicker`. Picking on a grid with no preset arithmetic — `RangeCalendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "انتخابگر بازه", "en-US": "Date selector" },

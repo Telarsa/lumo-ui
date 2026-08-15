@@ -289,6 +289,16 @@ function RemoteDataGridExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "جست‌وجوی فیلدآگاه: بندهای ویرایش‌پذیر، ویرایشگرهای نوع‌دار، نماهای ذخیره‌شده — همان پرس‌وجویی که `DataGrid` اجرا می‌کند.",
+        "en-US": "Field-aware search: editable clauses, typed editors, saved views — the same query `DataGrid` executes.",
+      },
+      whenNot: {
+        "fa-IR": "سازندهٔ ردیف‌های فیلد–عملگر–مقدار در یک فرم — `Filters`. یک عبارت — `SearchField`. کنش‌ها — `Command`.",
+        "en-US": "A builder of field–operator–value rows in a form — `Filters`. One term — `SearchField`. Actions — `Command`.",
+      },
+    },
     title: t.title,
     intro: t.intro,
     tier: "form",

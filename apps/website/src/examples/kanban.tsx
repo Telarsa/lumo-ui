@@ -150,6 +150,16 @@ function EmptyColumnExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "کارت‌هایی که میان ستون‌هایی به‌معنای وضعیت جابه‌جا می‌شوند: تختهٔ کارها، خط لولهٔ فروش، مراحل استخدام.",
+        "en-US": "Cards moved between columns that stand for states: task boards, sales pipelines, hiring stages.",
+      },
+      whenNot: {
+        "fa-IR": "بازچینی یک فهرست — `Sortable`. برگزیدن زیرمجموعه‌ای میان دو فهرست — `TransferList`. کارها روی تاریخ — `Gantt`.",
+        "en-US": "Reordering one list — `Sortable`. Choosing a subset across two lists — `TransferList`. Tasks on dates — `Gantt`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "تختهٔ کانبان", "en-US": "Kanban" },

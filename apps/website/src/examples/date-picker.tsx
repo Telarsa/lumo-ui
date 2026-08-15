@@ -117,6 +117,16 @@ function BirthDateExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک تاریخ در فرم، تایپ‌شده یا برداشته از تقویمی پشت دکمه — کنترل همه‌منظورهٔ تاریخ.",
+        "en-US": "One date in a form, typed or picked from a calendar behind a button — the general-purpose date control.",
+      },
+      whenNot: {
+        "fa-IR": "فقط تایپ، بی‌شبکه — `DateField`. یک بازه — `DateRangePicker`. بازه‌های نام‌دار مثل «این ماه» برای گزارش — `DateSelector`. شبکه‌ای همیشه‌پیدا — `Calendar`.",
+        "en-US": "Typing only, no grid — `DateField`. A span — `DateRangePicker`. Named ranges such as «this month» for a report — `DateSelector`. A grid that is always visible — `Calendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "انتخابگر تاریخ", "en-US": "Date picker" },

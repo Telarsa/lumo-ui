@@ -136,6 +136,16 @@ function DismissableExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "فهرست فیلترشدهٔ کنش‌ها درون گفت‌وگویی که با میان‌بر باز می‌شود — پالت «برو هرجا، هر کاری بکن» یک برنامه.",
+        "en-US": "A filtered list of actions inside a dialog opened by a shortcut — the «go anywhere, do anything» palette of an application.",
+      },
+      whenNot: {
+        "fa-IR": "فیلتر کردن فهرستی که روی صفحه می‌ماند — `Autocomplete`. انتخاب یک مقدار در فرم — `ComboBox` یا `Select`. جست‌وجوی فیلدآگاه با بند و نمای ذخیره‌شده — `PowerSearch`.",
+        "en-US": "Filtering a list that stays on the page — `Autocomplete`. Picking a value in a form — `ComboBox` or `Select`. Field-aware search with clauses and saved views — `PowerSearch`.",
+      },
+    },
     title: { "fa-IR": "پالت فرمان", "en-US": "Command palette" },
     intro: {
       "fa-IR": "فهرست فیلترشوندهٔ کنش‌ها درون یک گفت‌وگو. مثل هر لایهٔ دیگر، آنچه در نخستین بایت هست تنها کلید بازکردن آن است.",

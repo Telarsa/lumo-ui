@@ -20,6 +20,7 @@ import {
   type ItemMediaVariantProps,
   type ItemVariantProps,
 } from "./item.variants.ts";
+import { useLinkComponent, type LumoLinkRenderProps } from "./link-context.ts";
 
 /**
  * The generic row: media, content, actions. One row, three renderings decided
@@ -62,13 +63,15 @@ export interface ItemStaticProps
 export type ItemProps = ItemLinkProps | ItemButtonProps | ItemStaticProps;
 
 export function Item(props: ItemProps) {
+  // The app's router link when LumoProvider provides one; the platform anchor otherwise.
+  const Anchor = useLinkComponent();
   if (props.href !== undefined) {
     const { variant, size, className, ...link } = props;
     return (
-      <a
+      <Anchor
         data-lumo=""
         className={cn(itemVariants({ variant, size, interactive: true }), className)}
-        {...link}
+        {...(link as LumoLinkRenderProps)}
       />
     );
   }

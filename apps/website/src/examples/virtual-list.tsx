@@ -153,6 +153,16 @@ function InfiniteExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "هزاران ردیف در یک پیمایشگر که فقط پنجره‌ای از آن رندر می‌شود: لاگ‌ها، پوشه‌های بلند، نتیجه‌های بزرگ.",
+        "en-US": "Thousands of rows in one scroller with only a window rendered: logs, long directories, big result sets.",
+      },
+      whenNot: {
+        "fa-IR": "چند صد ردیف — `ScrollArea`. ردیف‌هایی با ستون — `DataGrid`. انتخاب از فهرست — `ListBox`. گفتگوی زنده — `MessageScroller`.",
+        "en-US": "A few hundred rows — `ScrollArea`. Rows with columns — `DataGrid`. Selection from a list — `ListBox`. A live transcript — `MessageScroller`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "فهرست مجازی", "en-US": "Virtual list" },

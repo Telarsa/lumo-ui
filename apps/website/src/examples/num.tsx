@@ -153,6 +153,16 @@ function InSentenceExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "هر عدد یا تاریخی که به‌صورت متن رندر می‌شود: جمع، قیمت، شمارنده، تاریخ در تقویم خود خواننده.",
+        "en-US": "Any number or date rendered as text: totals, prices, counts, dates in the reader's own calendar.",
+      },
+      whenNot: {
+        "fa-IR": "عددی که کاربر وارد می‌کند — `NumberField`. تاریخی که کاربر وارد می‌کند — `DateField`. شمارنده به‌شکل نشانگر — `Badge` با `Num` درونش.",
+        "en-US": "A number the user enters — `NumberField`. A date the user enters — `DateField`. A count as a marker — `Badge` with `Num` inside.",
+      },
+    },
     tier: "data",
     title: { "fa-IR": "عدد و تاریخ", "en-US": "Number and date" },
     intro: {

@@ -193,6 +193,16 @@ function YearExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "کارها روی بازهٔ تاریخ به‌شکل میله با وابستگی، در تقویم خود خواننده: برنامهٔ پروژه، نقشهٔ راه.",
+        "en-US": "Tasks over a date range as bars with dependencies, in the reader's own calendar: project plans, roadmaps.",
+      },
+      whenNot: {
+        "fa-IR": "رویدادها روی روز و ساعت — `EventCalendar`. دنباله‌ای از رویدادها بی‌مدت — `Timeline`. کارت‌ها بر پایهٔ وضعیت — `Kanban`.",
+        "en-US": "Events on days and hours — `EventCalendar`. A sequence of events with no duration — `Timeline`. Cards by status — `Kanban`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "نمودار گانت", "en-US": "Gantt" },

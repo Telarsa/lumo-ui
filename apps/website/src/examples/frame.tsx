@@ -115,6 +115,16 @@ function PlainExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "قاب دستگاه دور یک پیش‌نمایش: نوار مرورگر یا لبهٔ گوشی دور نماگرفت یا نمونهٔ زنده.",
+        "en-US": "Device chrome around a preview: a browser bar or a phone bezel around a screenshot or a live demo.",
+      },
+      whenNot: {
+        "fa-IR": "نگه‌داشتن نسبت بی‌هیچ قابی — `AspectRatio`. سطح محتوایی با سربرگ و پابرگ — `Card`.",
+        "en-US": "Holding a proportion with no chrome — `AspectRatio`. A content surface with header and footer — `Card`.",
+      },
+    },
     tier: "layout",
     isNew: true,
     title: { "fa-IR": "قاب دستگاه", "en-US": "Frame" },

@@ -143,6 +143,16 @@ function StandaloneExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "نواری از دکمه‌ها که هرکدام روشن یا خاموش‌اند، تکی یا چندتایی: ضخیم/مورب/زیرخط، ترازبندی.",
+        "en-US": "A strip of buttons that are each on or off, single or multiple: bold/italic/underline, alignment.",
+      },
+      whenNot: {
+        "fa-IR": "دقیقاً یکی از دو تا چهار، هرگز هیچ‌کدام — `SegmentedControl`. فشارهای جداگانه — `ButtonGroup`. یک دکمهٔ تنها — `Toggle`. یک تنظیم — `Switch`.",
+        "en-US": "Exactly one of two to four, never none — `SegmentedControl`. Separate presses — `ButtonGroup`. One button on its own — `Toggle`. A setting — `Switch`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "گروه دکمهٔ حالتی", "en-US": "Toggle group" },
     intro: {

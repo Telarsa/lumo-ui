@@ -160,6 +160,7 @@ export type {
 export {
   groupCollection,
   presentAsyncCollection,
+  presentQueryResult,
   useAsyncCollection,
 } from "./async-collection.ts";
 export type {
@@ -1446,3 +1447,5 @@ export type {
   EventCalendarDayCellVariantProps,
   EventCalendarViewButtonVariantProps,
 } from "./event-calendar.variants.ts";
+export { useLinkComponent } from "./link-context.ts";
+export type { LumoLinkComponent, LumoLinkRenderProps } from "./link-context.ts";

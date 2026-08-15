@@ -48,6 +48,16 @@ function SingleQuestionExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "جریان پرسش‌به‌پرسش: نظرسنجی، آشنایی اولیه، فرم پذیرش — با رد کردن، پیشرفت و از سر گرفتن.",
+        "en-US": "A question-by-question flow: surveys, onboarding, intake — with skipping, progress and resuming.",
+      },
+      whenNot: {
+        "fa-IR": "فرمی که یک‌جا نشان داده می‌شود — `Form` با `LumoForm`. جای خواننده در دنباله‌ای ثابت — `Steps`. یک انتخاب تنها — `RadioGroup`.",
+        "en-US": "A form shown all at once — `Form` with `LumoForm`. Where the reader is in a fixed sequence — `Steps`. One choice on its own — `RadioGroup`.",
+      },
+    },
     title: { "fa-IR": "پرسش‌نامه", "en-US": "Questionnaire" },
     intro: {
       "fa-IR": "گردشِ پرسش‌به‌پرسش با پاسخ‌های تکی و چندتایی، اعتبارسنجی، ردکردن، پیشرفت، بازگشت و ارسالِ بومی فرم.",

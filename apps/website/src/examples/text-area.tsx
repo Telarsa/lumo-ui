@@ -109,6 +109,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "چند خط متن: توضیح، دیدگاه، بدنهٔ پیام.",
+        "en-US": "Several lines of text: a description, a comment, a message body.",
+      },
+      whenNot: {
+        "fa-IR": "یک خط — `TextField`. جی‌سون با اعتبارسنجی — `JsonInput`. جست‌وجو — `SearchField`.",
+        "en-US": "One line — `TextField`. JSON with validation — `JsonInput`. A search — `SearchField`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "ناحیهٔ متن", "en-US": "Text area" },
     intro: {

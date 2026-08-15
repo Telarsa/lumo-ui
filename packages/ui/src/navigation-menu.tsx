@@ -8,6 +8,7 @@ import { cn, type LumoNode } from "@lumo-ui/core";
 import { attr } from "@lumo-ui/base-ui-ssr";
 import { Link, type LinkProps } from "./link.tsx";
 import { placementToSideAlign, type LumoPlacement } from "./popover.tsx";
+import { useLinkComponent } from "./link-context.ts";
 
 /**
  * The marketing-site top navigation: a row of links and triggers whose triggers open
@@ -219,10 +220,12 @@ export type NavigationMenuLinkProps = DistributiveOmit<LinkProps, "variant" | "s
  */
 export function NavigationMenuLink(props: NavigationMenuLinkProps) {
   const { className, children, description, newTab, newTabLabel, isCurrent, ...rest } = props;
+  const Anchor = useLinkComponent();
   return (
     <Link
       variant="quiet"
       size="sm"
+      {...(Anchor === "a" ? {} : { linkComponent: Anchor })}
       className={cn(
         navigationMenuLinkVariants(),
         "no-underline hover:no-underline",

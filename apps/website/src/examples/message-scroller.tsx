@@ -173,6 +173,16 @@ function LogExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ظرف پیمایشی یک گفتگوی زنده که تا وقتی خواننده برنگشته، دنبال تازه‌ترین پیام می‌رود.",
+        "en-US": "The scroll container of a live transcript that follows the newest message until the reader scrolls back.",
+      },
+      whenNot: {
+        "fa-IR": "فهرست بلند ایستا — `VirtualList` یا `ScrollArea`. یک ردیف پیام — `Message`.",
+        "en-US": "A long static list — `VirtualList` or `ScrollArea`. One message row — `Message`.",
+      },
+    },
     tier: "display",
     isNew: true,
     title: { "fa-IR": "پیمایشگر گفت‌وگو", "en-US": "Message scroller" },

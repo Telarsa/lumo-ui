@@ -483,6 +483,11 @@
           "path": "packages/ui/src/locale.ts",
           "type": "registry:ui",
           "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -1185,6 +1190,11 @@
           "path": "packages/ui/src/base-ui-adapter.ts",
           "type": "registry:ui",
           "target": "components/ui/base-ui-adapter.ts"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -1257,6 +1267,11 @@
           "path": "packages/ui/src/link.tsx",
           "type": "registry:ui",
           "target": "components/ui/link.tsx"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -1457,6 +1472,11 @@
           "path": "packages/ui/src/navigation-menu.tsx",
           "type": "registry:ui",
           "target": "components/ui/navigation-menu.tsx"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -1666,6 +1686,11 @@
           "path": "packages/ui/src/locale.ts",
           "type": "registry:ui",
           "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -1997,6 +2022,11 @@
           "path": "packages/ui/src/sidebar.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/sidebar.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -2050,6 +2080,9 @@
         "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "form"
       ],
       "files": [
         {

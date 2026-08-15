@@ -96,6 +96,16 @@ function RailExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ناوبری کناری یک برنامه: گروه‌ها، گزینه‌های آیکون‌ونشان‌دار، ریل جمع‌شده.",
+        "en-US": "An application's side navigation: groups, icon-and-badge items, a collapsed rail.",
+      },
+      whenNot: {
+        "fa-IR": "ناوبری بالای سایت — `NavigationMenu`. کشویی که روی محتوا باز می‌شود — `Drawer`. فهرست مطالب یک صفحه — `Scrollspy`.",
+        "en-US": "Site-top navigation — `NavigationMenu`. A drawer opened over content — `Drawer`. The table of contents of one page — `Scrollspy`.",
+      },
+    },
     // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "نوار کناری", "en-US": "Sidebar" },

@@ -238,6 +238,16 @@ function MetricExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "سطحی خودبسنده با سربرگ، بدنه و پابرگ اختیاری: کاشی خلاصه، بخش تنظیمات، طرح قیمت.",
+        "en-US": "A self-contained surface with an optional header, body and footer: a summary tile, a settings section, a pricing plan.",
+      },
+      whenNot: {
+        "fa-IR": "ردیف تکرارشونده در فهرست با رسانه و کنش — `Item`. پنل حالت خالی با یک کنش — `EmptyState`. فقط فاصله میان فرزندان — `Stack`.",
+        "en-US": "A repeated row in a list with media and actions — `Item`. A blank-state panel with one action — `EmptyState`. Just spacing between children — `Stack`.",
+      },
+    },
     tier: "layout",
     title: { "fa-IR": "کارت", "en-US": "Card" },
     intro: {

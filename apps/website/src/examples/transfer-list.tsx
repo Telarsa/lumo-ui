@@ -44,6 +44,16 @@ function FieldSelectorExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "برگزیدن و مرتب کردن زیرمجموعه‌ای میان دو فهرست نام‌دار: اعضای یک گروه، ستون‌های نمایش.",
+        "en-US": "Choosing and ordering a subset across two named lists: members of a group, columns to show.",
+      },
+      whenNot: {
+        "fa-IR": "چند مقدار با تراشه — `MultiSelect`. بازچینی یک فهرست — `Sortable`. دادهٔ تودرتو — `TreeSelect`.",
+        "en-US": "A few values with chips — `MultiSelect`. Reordering one list — `Sortable`. Nested data — `TreeSelect`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "فهرست انتقال", "en-US": "Transfer list" },

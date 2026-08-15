@@ -89,6 +89,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ساعتی که بخش‌به‌بخش تایپ می‌شود: ساعت نوبت، یادآور، ساعت کاری.",
+        "en-US": "A time typed segment by segment: an appointment hour, a reminder, opening hours.",
+      },
+      whenNot: {
+        "fa-IR": "تاریخ — `DateField`. تاریخ با تقویم — `DatePicker`. رویدادها روی ساعت‌ها — `EventCalendar`.",
+        "en-US": "A date — `DateField`. A date with a calendar — `DatePicker`. Events on hours — `EventCalendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "فیلد ساعت", "en-US": "Time field" },

@@ -141,6 +141,16 @@ function CustomListExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "شمارهٔ تلفنی که همان‌طور که مردم می‌نویسند تایپ می‌شود و به شکل استاندارد بین‌المللی برمی‌گردد: ثبت‌نام، فرم تماس، تأیید دومرحله‌ای.",
+        "en-US": "A phone number typed the way people write it, returned as E.164: sign-up, contact forms, two-factor.",
+      },
+      whenNot: {
+        "fa-IR": "کد یک‌بارمصرف — `InputOtp`. قالب ثابت دیگر — `MaskInput`. متن آزاد — `TextField`.",
+        "en-US": "A one-time code — `InputOtp`. Another fixed pattern — `MaskInput`. Free text — `TextField`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "ورودی شمارهٔ تلفن", "en-US": "Phone input" },

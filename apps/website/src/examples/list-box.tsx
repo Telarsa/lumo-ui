@@ -161,6 +161,16 @@ function AsyncExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "فهرستی که از آن انتخاب می‌کنید و روی صفحه می‌ماند، با یک ایست تبی: پنل اصلی صفحهٔ فهرست/جزئیات، انتخابگری بی‌پاپ‌آپ.",
+        "en-US": "A list you select from that stays on the page as one Tab stop: the master pane of a list/detail screen, a picker with no popup.",
+      },
+      whenNot: {
+        "fa-IR": "انتخابی که در پاپ‌آپ زندگی می‌کند — `Select` یا `ComboBox`. برگزیدن میان دو فهرست — `TransferList`. دادهٔ تودرتو — `Tree`. ده‌هزار ردیف — `VirtualList`.",
+        "en-US": "A selection that lives in a popup — `Select` or `ComboBox`. Choosing across two lists — `TransferList`. Nested data — `Tree`. Ten thousand rows — `VirtualList`.",
+      },
+    },
     tier: "data",
     title: { "fa-IR": "فهرست انتخابی", "en-US": "List box" },
     intro: {

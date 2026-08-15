@@ -79,6 +79,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "بازه‌ای از روزها روی شبکه‌ای دیدنی: مدت اقامت، دورهٔ فیلتری که خواننده همان‌جا تنظیم می‌کند.",
+        "en-US": "A span of days on a visible grid: a stay, a filter period the reader adjusts in place.",
+      },
+      whenNot: {
+        "fa-IR": "پشت دکمه، با فیلدهای تایپ‌شدنی — `DateRangePicker`. با بازه‌های آماده — `DateSelector`. یک روز — `Calendar`.",
+        "en-US": "Behind a button, with typed fields — `DateRangePicker`. With named presets — `DateSelector`. One day — `Calendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "تقویم بازه‌ای", "en-US": "Range calendar" },

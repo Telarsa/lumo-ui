@@ -31,6 +31,16 @@ function BasicExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "دکمه‌ای که فقط آیکون است و نامش ویژگی اجباری: بستن، ویرایش، بیشتر.",
+        "en-US": "A button that is only an icon, with its name as a required prop: close, edit, more.",
+      },
+      whenNot: {
+        "fa-IR": "دکمه‌ای با متن دیدنی — `Button`. آیکونی که فشرده می‌ماند — `IconToggle`. آیکون تزئینی در جعبهٔ رنگی — `IconTile`.",
+        "en-US": "A button with visible text — `Button`. An icon that stays pressed — `IconToggle`. A decorative icon in a tinted square — `IconTile`.",
+      },
+    },
     title: { "fa-IR": "دکمهٔ آیکونی", "en-US": "Icon button" },
     intro: {
       "fa-IR": "دکمه‌ای که فقط آیکون دارد. چون آیکون نام نیست، ویژگی label اجباری است و کامپایلر آن را الزام می‌کند.",

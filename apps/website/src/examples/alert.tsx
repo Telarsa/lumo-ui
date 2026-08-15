@@ -169,6 +169,16 @@ function DismissExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "پیامی که کنار محتوای مربوط به خودش می‌ماند و از صفحه نمی‌رود: هشداری بالای یک بخش فرم، اطلاعیه‌ای روی پنل تنظیمات، خطای بازیابی‌شدنی. درون‌خطی و ماندگار.",
+        "en-US": "A message that stays beside the content it is about: a warning above a form section, a notice on a settings panel, a recoverable error. Inline and persistent.",
+      },
+      whenNot: {
+        "fa-IR": "تأیید کوتاه و گذرای یک کار — `Toast`. تصمیمی که باید پیش از ادامه گرفته شود — `AlertDialog`. نمایی که هنوز هیچ محتوایی ندارد — `EmptyState`.",
+        "en-US": "A short, transient confirmation of an action — `Toast`. A decision that must be taken before continuing — `AlertDialog`. A view with no content yet — `EmptyState`.",
+      },
+    },
     tier: "feedback",
     title: { "fa-IR": "هشدار", "en-US": "Alert" },
     intro: {

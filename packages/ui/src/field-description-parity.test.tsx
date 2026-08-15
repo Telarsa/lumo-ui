@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { MultiSelect } from "./multi-select.tsx";
 import { TagsInput } from "./tags-input.tsx";
+import { Slider } from "./slider.tsx";
 
 function describedBy(html: string, inputMatch: RegExp): string[] {
   const input = inputMatch.exec(html)?.[0] ?? "";
@@ -39,5 +40,14 @@ describe("description and error reach the input in the first byte", () => {
       <TagsInput label="برچسب‌ها" placeholder="افزودن" removeLabel={(t) => `حذف ${t}`} description="با ویرگول جدا کنید" errorMessage="حداکثر پنج" />,
     );
     expect(describedBy(html, /<input[^>]*role="combobox"[^>]*>/)).toHaveLength(2);
+  });
+  it("Slider — on the range input the reader lands on (the engine forwards describedby, not invalid)", () => {
+    const html = renderToStaticMarkup(
+      <Slider label="بودجه" locale="fa-IR" defaultValue={40} description="به میلیون تومان" errorMessage="بیش از سقف" />,
+    );
+    const input = /<input[^>]*aria-label="بودجه"[^>]*>/.exec(html)?.[0] ?? "";
+    const ids = /aria-describedby="([^"]+)"/.exec(input)?.[1]?.split(" ") ?? [];
+    expect(ids).toHaveLength(2);
+    for (const id of ids) expect(html).toContain(`id="${id}"`);
   });
 });

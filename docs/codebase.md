@@ -37,3 +37,9 @@ Generated, committed, and diff-checked in CI: `registry.json`, `api-reference.js
 ## Hubs (from the knowledge graph)
 
 Most-imported inside `ui`: `form.tsx`, `chart.variants.ts`, `dialog.tsx`, `table.tsx`, `menu.tsx`, `popover.tsx`. Highest fan-out: `event-calendar.tsx`, `chart.tsx`, `table.tsx`, the date family. Core symbols the whole tree leans on: `cn`, `LumoNode`, `Locale`, `formatNumber`, `direction`.
+
+## Integrations (adapters)
+
+- **Router link** — `LumoProvider linkComponent={NextLink}` (or any component taking `LumoLinkRenderProps`). Client families that render an anchor (`Item`, `Command` rows, `NavigationMenuLink`, `SidebarItem`) read it from context. `Link` and `Breadcrumbs` are server components and cannot read a client context: pass `linkComponent` to `Link` explicitly in server-rendered trees. Default everywhere: the platform `<a>`.
+- **Data layer** — `presentQueryResult(queryResult, messages)` turns a TanStack Query / SWR-shaped result (`isPending`, `isError`, `data`, `fetchStatus`, `refetch`, infinite-query fields) into the `asyncState` every collection accepts, with the same required, caller-authored copy as `presentAsyncCollection`. Structural — no dependency on either library. Use it where `useAsyncCollection` would double-fetch what the app already owns.
+- **Forms** — `Form`, `Field`, `FieldInput` and `useFieldControl()` are the wiring; TanStack Form is used through `form-state.tsx`; every input on the shared wiring gets label/description/error connected in the first byte (`field-description-parity.test.tsx` covers the self-wired ones: ComboBox, MultiSelect, TagsInput, Slider).

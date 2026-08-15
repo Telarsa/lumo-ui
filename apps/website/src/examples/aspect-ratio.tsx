@@ -120,6 +120,16 @@ function CardMediaExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "رسانه یا جاسازی‌ای که پهنایش نرم است اما نسبتش باید ثابت بماند: بندانگشتی، پخش‌کنندهٔ ویدیو، پیش‌نمایش نقشه.",
+        "en-US": "Media or an embed whose width flexes but whose proportion must hold: a thumbnail, a video player, a map preview.",
+      },
+      whenNot: {
+        "fa-IR": "قاب دستگاه دور یک پیش‌نمایش — `Frame`. چیدن چند جعبه کنار هم — `Stack` یا `Grid`. ارتفاع ثابت با پیمایش — `ScrollArea`.",
+        "en-US": "Device chrome around a preview — `Frame`. Laying out several boxes — `Stack` or `Grid`. A fixed height that scrolls — `ScrollArea`.",
+      },
+    },
     tier: "layout",
     title: { "fa-IR": "نسبت ابعاد", "en-US": "Aspect ratio" },
     intro: {

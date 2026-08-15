@@ -153,6 +153,16 @@ function TwoDigitExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "جای خواننده در دنباله‌ای که باید تمامش کند: پرداخت، جادوگر تنظیمات، آشنایی اولیه.",
+        "en-US": "Where the reader is in a sequence they must finish: checkout, a setup wizard, onboarding.",
+      },
+      whenNot: {
+        "fa-IR": "جای صفحه در یک سلسله‌مراتب — `Breadcrumbs`. نماهای موازی — `Tabs`. رویدادهای گذشته — `Timeline`. خودِ جریان با پرسش‌ها — `Questionnaire`.",
+        "en-US": "A page's place in a hierarchy — `Breadcrumbs`. Parallel views — `Tabs`. Events in the past — `Timeline`. The flow itself with its questions — `Questionnaire`.",
+      },
+    },
     tier: "navigation",
     title: { "fa-IR": "مراحل", "en-US": "Steps" },
     intro: {

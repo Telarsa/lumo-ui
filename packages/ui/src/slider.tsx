@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Slider as BaseSlider } from "@base-ui/react/slider";
 import { DirectionProvider } from "@base-ui/react/direction-provider";
@@ -13,9 +14,11 @@ import {
   type GlobalDOMAttributes,
   type Locale,
   type StyleProps,
+  type LumoNode,
   type ValueBase,
 } from "@lumo-ui/core";
 import { attr, baseUiStringsFor } from "@lumo-ui/base-ui-ssr";
+import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
 
 /**
  * A single value chosen from a range, on the Base UI engine.
@@ -130,6 +133,14 @@ export interface SliderProps extends SliderPropsBase, SliderVariantProps {
   formatOptions?: Intl.NumberFormatOptions | undefined;
   /** Hide the label/value row and keep only the track. The name stays. */
   hideValue?: boolean | undefined;
+  /** Help text, connected to the thumb by `aria-describedby` in the first byte. */
+  description?: LumoNode;
+  /**
+   * The error, connected like the description. No `aria-invalid`: the engine
+   * forwards `aria-describedby` to its range input but not `aria-invalid`, and a
+   * flag on the thumb's div would name the wrong element.
+   */
+  errorMessage?: LumoNode;
   className?: string | undefined;
 }
 
@@ -138,6 +149,8 @@ export function Slider({
   locale,
   formatOptions,
   hideValue = false,
+  description,
+  errorMessage,
   size,
   className,
   // — translated onto Slider.Root —
@@ -151,6 +164,11 @@ export function Slider({
   // `slot` is destructured so it does not reach the DOM.
   ...rest
 }: SliderProps) {
+  const noteId = useId();
+  const describedBy =
+    [description == null ? null : `${noteId}-description`, errorMessage == null ? null : `${noteId}-error`]
+      .filter((id): id is string => id !== null)
+      .join(" ") || undefined;
   return (
     // Direction and locale are separate in Base UI; both derived from one prop here.
     <DirectionProvider direction={direction(locale)}>
@@ -200,12 +218,19 @@ export function Slider({
               // Opt-in for `theme.css`'s proxy-focus ring: only a component that hides its control knows it does.
               data-lumo-proxy-focus=""
               aria-label={label}
+              {...(describedBy === undefined ? {} : { "aria-describedby": describedBy })}
               // No explicit `index`: a single thumb resolves to 0; a SECOND thumb needs one.
               getAriaValueText={thumbValueText(locale, formatOptions, 1)}
               className={cn(sliderThumbVariants({ size }))}
             />
           </BaseSlider.Track>
         </BaseSlider.Control>
+        {description == null ? null : (
+          <p id={`${noteId}-description`} className={descriptionVariants()}>{description}</p>
+        )}
+        {errorMessage == null ? null : (
+          <p id={`${noteId}-error`} className={fieldErrorVariants()}>{errorMessage}</p>
+        )}
       </BaseSlider.Root>
     </DirectionProvider>
   );

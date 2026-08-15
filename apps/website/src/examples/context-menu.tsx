@@ -165,6 +165,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "منوی میان‌بر روی یک مورد با کلیک راست، فشار طولانی یا کلید منو؛ هر کنشش از جایی دیدنی هم در دسترس است.",
+        "en-US": "A shortcut menu over an item on right-click, long-press or the menu key; every action in it is also reachable from something visible.",
+      },
+      whenNot: {
+        "fa-IR": "منویی پشت دکمه‌ای دیدنی — `Menu`. ردیفی از منوها بالای پنجره — `Menubar`. محتوایی که با شناور شدن باز می‌شود — `HoverCard`.",
+        "en-US": "A menu behind a visible button — `Menu`. A row of menus at the top of a window — `Menubar`. Content that opens on hover — `HoverCard`.",
+      },
+    },
     tier: "overlay",
     title: { "fa-IR": "منوی راست‌کلیک", "en-US": "Context menu" },
     intro: {
