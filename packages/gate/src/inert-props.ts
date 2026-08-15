@@ -176,6 +176,12 @@ const DOM_PROPS: ReadonlySet<string> = new Set([
  *  `DOM_PROPS` or it is a leak. */
 const DOM_PATTERN = /^(aria-|data-|on[A-Z])/;
 
+/** Attributes only an `<a>`/`<area>` understands. Legitimate on a link
+ *  component; a leak on anything else, even via an engine's spread. */
+const LINK_ONLY_PROPS: ReadonlySet<string> = new Set([
+  "hrefLang", "ping", "referrerPolicy", "download",
+]);
+
 /** The JSDoc tag that claims a destination for a rest-forwarded prop. */
 const FORWARDED_TAG = "forwarded";
 
@@ -839,6 +845,27 @@ function classify(
       // The local declaration cannot carry an `@forwarded` annotation because
       // it does not own the property; transport is the strongest claim this
       // source gate can make. Explicit underscore discards were handled above.
+      //
+      // ── EXCEPT WHEN THE ENGINE FORWARDS UNKNOWNS TO THE DOM ──────────────
+      // Base UI passes what it does not recognise straight through to the
+      // element it renders. So an inherited LINK name riding `...rest` onto
+      // `<BaseTabs.Tab>` — a `<button>` — is not delivery, it is a leak with
+      // one more hop: `<Tab hrefLang="fa">` served `<button hrefLang="fa">`,
+      // PROVED by the reevaluation after this branch cleared it. Inherited
+      // link/anchor names on a component spread therefore need the same
+      // evidence a declared prop needs; the DOM globals still pass on their
+      // own name.
+      if (LINK_ONLY_PROPS.has(p.name)) {
+        return {
+          verdict: "dom-leak",
+          detail:
+            `${c.fnName}(${c.paramType}) transports \`...${c.restName}\` (onto ` +
+            `${c.componentSpreads[0] !== undefined ? `<${c.componentSpreads[0]}>` : "a call or object spread"}) and ` +
+            `\`${p.name}\` is an anchor-only attribute inherited from a link base. Base UI forwards ` +
+            `unknown props to the element it renders, so on a non-anchor this reaches the DOM as an ` +
+            `invalid attribute. Make it a carrier (\`?: undefined\`) or render an anchor.`,
+        };
+      }
       continue;
     }
     needsClaim = true;

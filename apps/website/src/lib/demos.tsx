@@ -40,6 +40,7 @@ import {
   DialogHeading,
   DialogModal,
   DialogOverlay,
+  DialogClose,
   DialogTrigger,
   Disclosure,
   DisclosureGroup,
@@ -841,10 +842,12 @@ const DEMOS: Demo[] = [
               <DialogHeading>{copy.editProfile[l]}</DialogHeading>
               <p className="text-sm text-fg-muted">{copy.dialogBody[l]}</p>
               <div className="flex justify-end gap-2">
-                <Button variant="ghost" slot="close">
-                  {copy.cancel[l]}
-                </Button>
-                <Button slot="close">{copy.save[l]}</Button>
+                <DialogClose>
+                  <Button variant="ghost">{copy.cancel[l]}</Button>
+                </DialogClose>
+                <DialogClose>
+                  <Button>{copy.save[l]}</Button>
+                </DialogClose>
               </div>
             </Dialog>
           </DialogModal>

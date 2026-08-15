@@ -784,7 +784,7 @@
       "name": "disclosure",
       "type": "registry:ui",
       "title": "Disclosure",
-      "description": "One section.",
+      "description": "A section that opens and closes, and the accordion that groups several.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1222,7 +1222,7 @@
       "name": "kbd",
       "type": "registry:ui",
       "title": "Kbd",
-      "description": "No \"use client\": Kbd is presentational and renders on the server, so a consumer pays no hydration for it.",
+      "description": "A keyboard shortcut rendered as key caps, kept as an LTR island so Latin glyphs and separators never mirror.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1641,7 +1641,7 @@
       "name": "provider",
       "type": "registry:ui",
       "title": "Provider",
-      "description": "Mounted once, high in every Lumo application, and not optional.",
+      "description": "The root provider: derives direction from `locale`, mounts Base UI's direction context, and hosts the managed overlay surfaces.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2092,7 +2092,7 @@
       "name": "stack",
       "type": "registry:ui",
       "title": "Stack",
-      "description": "No \"use client\": these are layout primitives with no interaction, so they render on the server and cost a consumer no hydration.",
+      "description": "A one-axis flex layout: a logical row that mirrors under RTL, or a column, with a gap from the spacing scale.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2194,7 +2194,7 @@
       "name": "tabs",
       "type": "registry:ui",
       "title": "Tabs",
-      "description": "Tabs.",
+      "description": "A tab list and its panels: one panel visible at a time, arrows moving the tab focus in the reading direction.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2214,7 +2214,7 @@
       "name": "tag-group",
       "type": "registry:ui",
       "title": "Tag Group",
-      "description": "The group.",
+      "description": "A keyboard-navigable group of tags: filters, keywords, or selected values, removable when told how.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2370,7 +2370,7 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "One toast.",
+      "description": "The toast region writes its own dir onto a portal, so locale is required — without it a correct Persian page lays its toasts out left to right.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2945,7 +2945,7 @@
       "name": "listing-grid",
       "type": "registry:block",
       "title": "Listing Grid",
-      "description": "A grid of fully-linked cards, with no \"use client\" — each listing is a real a href, so a crawler sees it with no JavaScript at all.",
+      "description": "A responsive card grid of listings — image, title, price and rating — with the empty state built in.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",

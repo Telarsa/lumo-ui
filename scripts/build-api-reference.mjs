@@ -132,7 +132,16 @@ const HOUSE_VOCABULARY = new Map([
 ]);
 /** @param {ts.Symbol} symbol @param {string} typeText */
 function descriptionOf(symbol, typeText) {
-  const own = ts.displayPartsToString(symbol.getDocumentationComment(checker)).trim();
+  /*
+   * The public description is the docblock's FIRST PARAGRAPH — the summary,
+   * by JSDoc convention. Later paragraphs are engineering notes for the next
+   * maintainer ("Redeclared from the variants because the checker loses…",
+   * the upstream-issue reasoning behind `dismissLabel`) and the reevaluation
+   * found them rendered verbatim into the docs table. Accurate, but not
+   * documentation. Line breaks inside the paragraph collapse to spaces.
+   */
+  const full = ts.displayPartsToString(symbol.getDocumentationComment(checker)).trim();
+  const own = full.split(/\n\s*\n/)[0]?.replace(/\s*\n\s*/g, " ").trim() ?? "";
   if (own.length > 0) return own;
   if (isLumoAuthored(symbol)) {
     const shared = HOUSE_VOCABULARY.get(symbol.name);

@@ -99,8 +99,10 @@ export interface SpinnerProps
     VariantProps<typeof spinnerVariants> {
   /**
    * Where the ring takes its color from: the current text color, the accent,
-   * or muted. Redeclared from the variants (same derived type) only because
-   * the checker loses the cva key's docblock across this intersection.
+   * or muted.
+   *
+   * Redeclared from the variants (same derived type) only because the checker
+   * loses the cva key's docblock across this intersection.
    */
   color?: VariantProps<typeof spinnerVariants>["color"];
   /**

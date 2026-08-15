@@ -502,3 +502,31 @@ export function Probe({ ...props }: ProbeProps) {
     expect(gradeSource("probe.tsx", notCleared).map((x) => x.prop)).toContain("ProbeProps.size");
   });
 });
+
+/**
+ * Anchor-only attributes inherited by a non-anchor. PROVED by the post-4eaf8ec
+ * reevaluation: `<Tab hrefLang="fa">` served `<button … hrefLang="fa">`. Two
+ * holes stacked — `LinkDOMProps` was not among the graded core owners at all,
+ * and inherited-and-transported passed regardless of destination. Both are
+ * closed; this fixture pins the second (the first is a CLI list).
+ */
+describe("anchor-only names inherited by a non-anchor are leaks, however transported", () => {
+  const src = `
+export interface XProps { label: string; }
+export function X({ label, ...rest }: XProps) {
+  const merged = { role: "tab", ...rest };
+  return <Engine.Item {...merged}>{label}</Engine.Item>;
+}
+`;
+  const inherited = [{ iface: "XProps", name: "hrefLang", typeText: "string | undefined", line: 2 }];
+
+  it("flags hrefLang riding a rest into an object spread that reaches an engine component", () => {
+    const v = gradeSource("x.tsx", src, inherited);
+    expect(v.map((x) => `${x.verdict}:${x.prop}`)).toEqual(["dom-leak:XProps.hrefLang"]);
+  });
+
+  it("does not flag an ordinary inherited DOM global on the same path", () => {
+    const v = gradeSource("x.tsx", src, [{ iface: "XProps", name: "id", typeText: "string | undefined", line: 2 }]);
+    expect(v).toEqual([]);
+  });
+});

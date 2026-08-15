@@ -239,7 +239,7 @@ describe("popup interiors pass the full gate rule set while open", () => {
     );
     expect(await screen.findByRole("dialog", { name: "پالت فرمان" })).toBeTruthy();
     expect(screen.getByRole("listbox", { name: "فرمان‌ها" })).toBeTruthy();
-    expect(gradeOpenPopup("fa/popup-command/index.html", ["composite-tab-stop"])).toEqual([]);
+    expect(gradeOpenPopup("fa/popup-command/index.html")).toEqual([]);
   });
 
   it("multi-select", async () => {
@@ -259,7 +259,7 @@ describe("popup interiors pass the full gate rule set while open", () => {
     fireEvent.keyDown(input, { key: "ArrowDown" });
     expect(await screen.findByRole("listbox", { name: "پیشنهادهای کتابخانه" })).toBeTruthy();
     await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(gradeOpenPopup("fa/popup-multi-select/index.html", ["composite-tab-stop"])).toEqual([]);
+    expect(gradeOpenPopup("fa/popup-multi-select/index.html")).toEqual([]);
   });
 
   it("autocomplete's always-mounted collection", () => {
@@ -277,7 +277,7 @@ describe("popup interiors pass the full gate rule set while open", () => {
       </LumoProvider>,
     );
     expect(screen.getByRole("listbox", { name: "نتیجه‌ها" })).toBeTruthy();
-    expect(gradeOpenPopup("fa/popup-autocomplete/index.html", ["composite-tab-stop"])).toEqual([]);
+    expect(gradeOpenPopup("fa/popup-autocomplete/index.html")).toEqual([]);
   });
 
   it("context menu", async () => {
@@ -292,6 +292,16 @@ describe("popup interiors pass the full gate rule set while open", () => {
     fireEvent.contextMenu(screen.getByTestId("context-surface"), { clientX: 20, clientY: 20 });
     const menu = await screen.findByRole("menu");
     expect(menu).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    /*
+     * composite-tab-stop is EXCLUDED here for the same proved reason as the
+     * Menu case: Base UI parks focus on the menu surface itself until an arrow
+     * key highlights an item, so mid-interaction no item needs a Tab stop.
+     * The assertion below licenses the exclusion — the reevaluation found this
+     * exclusion unproved (a bare mute), and three sibling exclusions dead.
+     */
+    const popup = menu.closest("[tabindex]") ?? menu;
+    expect(popup.contains(document.activeElement)).toBe(true);
     expect(gradeOpenPopup("fa/popup-context-menu/index.html", ["composite-tab-stop"])).toEqual([]);
   });
 

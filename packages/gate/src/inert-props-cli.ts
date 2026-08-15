@@ -104,6 +104,10 @@ const GRADED_CORE_OWNERS = new Set([
   "Expandable",
   "ButtonAriaProps",
   "ButtonPropsBase",
+  // Added after the reevaluation PROVED `<Tab hrefLang="fa">` serving
+  // `<button hrefLang="fa">`: link attributes inherited by non-anchor
+  // components were never in the graded set, so no rule could see them.
+  "LinkDOMProps",
 ]);
 
 const resolvedInheritedProps = (source: ts.SourceFile) => {

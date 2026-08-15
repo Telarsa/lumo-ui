@@ -89,6 +89,7 @@ export interface KbdProps
   className?: string | undefined;
 }
 
+/** A keyboard shortcut rendered as key caps, kept as an LTR island so Latin glyphs and separators never mirror. */
 export function Kbd({ keys, separator = "+", size, className, ...props }: KbdProps) {
   return (
     <span

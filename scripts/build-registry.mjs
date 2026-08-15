@@ -316,8 +316,15 @@ const proseSentence = (block) => {
     .replace(/\s+/g, " ")
     .trim();
   if (prose.length === 0) return undefined;
-  const sentence = prose.match(/^.*?[.!?…](?:\s|$)/)?.[0]?.trim();
-  return sentence ?? `${prose}.`;
+  const sentence = prose.match(/^.*?[.!?…](?:\s|$)/)?.[0]?.trim() ?? `${prose}.`;
+  // A build directive ("No \"use client\": …"), a `"use client"` note, or a
+  // one/two-word fragment ("The group.", "Tabs.") is not a description of
+  // the item — the reevaluation found all three in registry.json. Refuse
+  // them so the resolver falls through to the website's hand-written intro.
+  // Terse-but-complete sentences ("A status marker.") are fine.
+  if (/^no\s+["“]?use client|^["“]use client|^"use client"/i.test(sentence)) return undefined;
+  if (sentence.split(/\s+/).length <= 2) return undefined;
+  return sentence;
 };
 
 /** @param {string} source @param {string} name */
@@ -339,11 +346,14 @@ const registryDescription = (source, name) => {
       (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
     );
     if (exported !== true) continue;
+    // `provider.tsx` exports `LumoProvider`, `form.tsx` may export `LumoForm`:
+    // the house prefix for root-level components. Accept both spellings.
+    const candidates = new Set([pascal, `Lumo${pascal}`]);
     const declaresNamedExport =
-      (ts.isFunctionDeclaration(statement) && statement.name?.text === pascal) ||
+      (ts.isFunctionDeclaration(statement) && candidates.has(statement.name?.text ?? "")) ||
       (ts.isVariableStatement(statement) &&
         statement.declarationList.declarations.some(
-          (declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === pascal,
+          (declaration) => ts.isIdentifier(declaration.name) && candidates.has(declaration.name.text),
         ));
     if (!declaresNamedExport) continue;
     const doc = ts.getJSDocCommentsAndTags(statement).find(ts.isJSDoc);

@@ -257,7 +257,7 @@ interface StaticTagGroupProps extends TagGroupBaseProps {
 export type TagGroupProps = RemovableTagGroupProps | StaticTagGroupProps;
 
 /**
- * The group.
+ * A keyboard-navigable group of tags: filters, keywords, or selected values, removable when told how.
  *
  * Two different elements by shape, argued in the file header: a `role="toolbar"`
  * when there is something to operate, and nothing at all when there is not — the

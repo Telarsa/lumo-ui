@@ -332,6 +332,7 @@ export {
 export type { BoxTag, ContainerProps, GridProps, StackProps } from "./stack.tsx";
 
 export {
+  DialogClose,
   Dialog,
   DialogDescription,
   DialogHeading,
@@ -343,6 +344,7 @@ export {
   dialogVariants,
 } from "./dialog.tsx";
 export type {
+  DialogCloseProps,
   DialogDescriptionProps,
   DialogHeadingProps,
   DialogModalProps,

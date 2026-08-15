@@ -141,6 +141,7 @@ export interface StackProps
   className?: string | undefined;
 }
 
+/** A one-axis flex layout: a logical row that mirrors under RTL, or a column, with a gap from the spacing scale. */
 export function Stack({
   tag = "div",
   direction,

@@ -332,6 +332,34 @@ export interface DialogOverlayProps
   className?: string | undefined;
 }
 
+export interface DialogCloseProps {
+  /**
+   * The control that closes the dialog — usually a `<Button>`. Rendered
+   * through Base UI's own `Dialog.Close`, which merges the close behaviour
+   * onto the caller's element rather than wrapping it in a second button.
+   */
+  children: React.ReactElement;
+}
+
+/**
+ * A footer control that closes the dialog it sits in.
+ *
+ * ── WHY THIS PART EXISTS ─────────────────────────────────────────────────────
+ *
+ * React Aria closed a dialog from any button carrying `slot="close"`, wired
+ * through a context the Dialog published. Base UI has no slot mechanism, so
+ * `slot` became a compile-time carrier — and the moment it did, the compiler
+ * found `blocks/danger-zone.tsx` still writing `<Button slot="close">` for its
+ * cancel action: a cancel button that, under Base UI, closed nothing. Until
+ * this part, a consumer had no supported way to close a Lumo dialog from its
+ * own footer at all; the only close was the corner IconButton this file
+ * renders. `AlertDialog` already composes `BaseAlertDialog.Close render={…}`
+ * for both of its verbs; this is the same composition, exported.
+ */
+export function DialogClose({ children }: DialogCloseProps) {
+  return <BaseDialog.Close render={children} />;
+}
+
 export function DialogOverlay({
   className,
   children,

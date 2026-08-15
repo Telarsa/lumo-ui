@@ -38,7 +38,6 @@ import {
   type HoverEvents,
   type GlobalDOMAttributes,
   type Key,
-  type LinkDOMProps,
   type LumoNode,
   type MultipleSelection,
   type PressEvents,
@@ -940,14 +939,34 @@ export function Tree<T extends object>({
  * the sense that the interface restates it — see the doc on it there.
  */
 interface TreeItemPropsBase<T extends object>
-  extends LinkDOMProps,
-    HoverEvents,
+  /*
+   * NOT `LinkDOMProps` any more. A tree row is a `<div role="treeitem">` and
+   * TreeItem spreads nothing onto it, so `href`, `hrefLang`, `target`, `rel`,
+   * `download` and `ping` were accepted, read by nobody, and delivered
+   * nowhere — the accept-and-drop shape this repository's gate exists to
+   * forbid, cleared only because the names are inherited. They are carriers
+   * now: passing a value is a compile error, and the intent (a link row) is
+   * a feature request, not a silently ignored prop.
+   */
+  extends HoverEvents,
     PressEvents,
     StyleProps,
     // `onClick` is the press API's; see `@lumo-ui/core`'s `ButtonPropsBase`.
     Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
   /** The row's collection key. */
   id?: Key;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
+  href?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
+  hrefLang?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
+  target?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
+  rel?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
+  download?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
+  ping?: undefined;
   /**
    * TYPE CARRIER, NOT A PROP — React Aria's `TreeItemProps<T>` used `T` for the
    * item object a dynamic collection rendered a row from. This file has no

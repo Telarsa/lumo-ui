@@ -291,6 +291,7 @@ function search(children: LumoNode, requireList: boolean): string | number | und
   return undefined;
 }
 
+/** A tab list and its panels: one panel visible at a time, arrows moving the tab focus in the reading direction. */
 export function Tabs({
   className,
   // — translated onto Tabs.Root —
@@ -426,6 +427,7 @@ interface TabPropsBase
 
 type UnsupportedTabCompatibilityProp =
   | "href"
+  | "hrefLang"
   | "target"
   | "rel"
   | "download"
@@ -448,6 +450,14 @@ export interface TabProps extends Omit<TabPropsBase, UnsupportedTabCompatibility
   className?: string | undefined;
   /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
   href?: undefined;
+  /**
+   * UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link.
+   * Missed by the first carrier pass and PROVED leaking by the reevaluation —
+   * `<Tab hrefLang="fa">` served `<button … hrefLang="fa">` because the name
+   * rode `...rest` and the inert-prop gate clears inherited-and-transported
+   * props. Every link name from `LinkDOMProps` is now listed here.
+   */
+  hrefLang?: undefined;
   /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
   target?: undefined;
   /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */

@@ -162,7 +162,27 @@ export interface GridArrow {
    * be added to later.
    */
   step: (key: string) => GridStep | null;
+  /**
+   * The edge a jump key means, or `null` for a key that is not a jump.
+   *
+   * WAI-ARIA grid pattern: Home/End move to the first/last cell IN THE ROW;
+   * with Ctrl they move to the first/last cell OF THE GRID; PageUp/PageDown
+   * move by a page of rows. Home and End are logical — the first cell of a
+   * row is the reading-start cell in both directions, so unlike the arrows
+   * they need no mirroring. `ctrl` is the modifier the caller read off the
+   * event; how many rows a page is stays the caller's decision.
+   */
+  jump: (key: string, ctrl: boolean) => GridJump | null;
 }
+
+/** Where a jump key sends the roving stop. */
+export type GridJump =
+  | "row-start"
+  | "row-end"
+  | "grid-start"
+  | "grid-end"
+  | "page-up"
+  | "page-down";
 
 /**
  * What each arrow key means in this locale.
@@ -193,6 +213,20 @@ export function gridArrow(locale: Locale): GridArrow {
           return { row: 1, col: 0 };
         case "ArrowUp":
           return { row: -1, col: 0 };
+        default:
+          return null;
+      }
+    },
+    jump: (key: string, ctrl: boolean) => {
+      switch (key) {
+        case "Home":
+          return ctrl ? "grid-start" : "row-start";
+        case "End":
+          return ctrl ? "grid-end" : "row-end";
+        case "PageUp":
+          return "page-up";
+        case "PageDown":
+          return "page-down";
         default:
           return null;
       }

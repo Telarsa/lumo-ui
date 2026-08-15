@@ -110,6 +110,7 @@ export interface ListingGridProps {
 
 const RATING_FORMAT: Intl.NumberFormatOptions = { maximumFractionDigits: 1 };
 
+/** A responsive card grid of listings — image, title, price and rating — with the empty state built in. */
 export function ListingGrid({
   strings,
   items,

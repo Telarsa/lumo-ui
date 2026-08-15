@@ -725,11 +725,56 @@ export function Table({
       }
     }
 
-    const step = arrow.step(event.key);
-    if (step === null) return;
-
     const grid = ref.current;
     if (!grid) return;
+
+    /*
+     * Home / End / Ctrl+Home / Ctrl+End / PageUp / PageDown — the WAI-ARIA
+     * grid pattern's jump keys, resolved against RENDERED cells so a hidden
+     * column or a virtualized window cannot make an edge land on nothing.
+     * A page is the count of currently rendered body rows, which is the
+     * honest answer without a layout engine: it is what the reader can see.
+     */
+    const jump = arrow.jump(event.key, event.ctrlKey || event.metaKey);
+    if (jump !== null) {
+      const cells = [...grid.querySelectorAll<HTMLElement>("[data-row-index][data-col-index]")];
+      const coord = (cell: HTMLElement) => ({
+        row: Number(cell.dataset["rowIndex"]),
+        col: Number(cell.dataset["colIndex"]),
+      });
+      const rows = [...new Set(cells.map((cell) => coord(cell).row))].sort((a, b) => a - b);
+      const inRow = (row: number) => cells.filter((cell) => coord(cell).row === row).map(coord).sort((a, b) => a.col - b.col);
+      let jumpTarget: { row: number; col: number } | undefined;
+      const current = inRow(active.row);
+      switch (jump) {
+        case "row-start": jumpTarget = current[0]; break;
+        case "row-end": jumpTarget = current[current.length - 1]; break;
+        case "grid-start": jumpTarget = inRow(rows[0] ?? active.row)[0]; break;
+        case "grid-end": { const last = inRow(rows[rows.length - 1] ?? active.row); jumpTarget = last[last.length - 1]; break; }
+        case "page-up":
+        case "page-down": {
+          const index = rows.indexOf(active.row);
+          const page = Math.max(1, rows.length - 1);
+          const rowIndex = Math.min(rows.length - 1, Math.max(0, index + (jump === "page-up" ? -page : page)));
+          const row = rows[rowIndex];
+          const targetRowCells = row === undefined ? [] : inRow(row);
+          jumpTarget = targetRowCells.find((cell) => cell.col === active.col) ?? targetRowCells[0];
+          break;
+        }
+      }
+      if (jumpTarget === undefined) return;
+      const jumpCell = grid.querySelector<HTMLElement>(
+        `[data-row-index="${jumpTarget.row}"][data-col-index="${jumpTarget.col}"]`,
+      );
+      if (jumpCell === null) return;
+      event.preventDefault();
+      setActive(jumpTarget);
+      focusStop(jumpCell);
+      return;
+    }
+
+    const step = arrow.step(event.key);
+    if (step === null) return;
 
     let next = { row: active.row + step.row, col: active.col + step.col };
     let target: HTMLElement | null = null;
@@ -751,8 +796,8 @@ export function Table({
       next = { row: next.row + step.row, col: next.col + step.col };
     }
     // No wrap-around and no clamping: at an edge the key simply does nothing,
-    // which is what a grid does. Silently clamping would make Home and End
-    // (not implemented) look broken when they arrive.
+    // which is what a grid does. Home/End/PageUp/PageDown are the jump keys
+    // above, resolved against rendered cells rather than by clamping a step.
     if (target === null) return;
 
     event.preventDefault();
@@ -784,10 +829,15 @@ export function Table({
      * not re-rendered yet, so at this instant the target cell's control is
      * still at `-1`. The query is for the control, not for the stop.
      */
-    const widget = target.hasAttribute("data-lumo-widget-cell")
-      ? target.querySelector<HTMLElement>("button,a[href],input,select,textarea")
+    focusStop(target);
+  }
+
+  /** The cell if the cell is the focusable thing, the control inside if it is not — see above. */
+  function focusStop(cell: HTMLElement) {
+    const widget = cell.hasAttribute("data-lumo-widget-cell")
+      ? cell.querySelector<HTMLElement>("button,a[href],input,select,textarea")
       : null;
-    (widget ?? target).focus();
+    (widget ?? cell).focus();
   }
 
   const value = useMemo<TableContextValue>(

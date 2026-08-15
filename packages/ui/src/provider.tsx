@@ -102,6 +102,7 @@ export interface LumoProviderProps {
   children: LumoNode;
 }
 
+/** The root provider: derives direction from `locale`, mounts Base UI's direction context, and hosts the managed overlay surfaces. */
 export function LumoProvider({ locale, children }: LumoProviderProps) {
   return (
     <LumoLocaleContext.Provider value={locale}>

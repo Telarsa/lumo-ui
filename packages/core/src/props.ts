@@ -517,13 +517,15 @@ export interface InputDOMProps {
 
 export interface SlotProps {
   /**
-   * A slot name for the component.
-   *
-   * ACCEPTED AND UNREACHABLE: slots were React Aria's context-plumbing
-   * mechanism and Base UI has no equivalent. Kept because removing a prop is
-   * an API change.
+   * UNREPRESENTABLE COMPATIBILITY CARRIER. Slots were React Aria's
+   * context-plumbing mechanism and Base UI has no equivalent, so a value here
+   * could reach nothing. It was typed `string | null` and "kept because
+   * removing a prop is an API change" — which on a `0.0.0` library made it a
+   * knowingly inert public prop, the exact class the inert-prop gate forbids.
+   * The FIELD stays so a consumer's `SlotProps` annotation compiles; passing
+   * a value is now a compile error, per the `isPending` precedent above.
    */
-  slot?: string | null;
+  slot?: undefined;
 }
 
 export interface StyleProps {
@@ -583,7 +585,7 @@ export interface TextInputDOMProps<T = HTMLInputElement>
   type?: "text" | "search" | "url" | "tel" | "email" | "password" | (string & {});
   /** Hints at the type of data that might be entered by the user. */
   inputMode?: "none" | "text" | "tel" | "url" | "email" | "numeric" | "decimal" | "search";
-  /** What, if any, autocomplete functionality the input should provide. */
+  /** Whether the browser may auto-correct typed text: `"on"` or `"off"`. */
   autoCorrect?: string;
   /** Whether the element may be checked for spelling errors. */
   spellCheck?: string;

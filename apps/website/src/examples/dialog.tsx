@@ -2,6 +2,7 @@ import type { Locale } from "@lumo-ui/core";
 import {
   Button,
   Dialog,
+  DialogClose,
   DialogDescription,
   DialogHeading,
   DialogModal,
@@ -66,10 +67,12 @@ function BasicExample(l: Locale) {
             <DialogHeading>{t.editProfile[l]}</DialogHeading>
             <DialogDescription>{t.dialogBody[l]}</DialogDescription>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" slot="close">
-                {t.cancel[l]}
-              </Button>
-              <Button slot="close">{t.save[l]}</Button>
+              <DialogClose>
+              <Button variant="ghost">{t.cancel[l]}</Button>
+            </DialogClose>
+              <DialogClose>
+              <Button>{t.save[l]}</Button>
+            </DialogClose>
             </div>
           </Dialog>
         </DialogModal>
@@ -100,10 +103,12 @@ function FormExample(l: Locale) {
               <TextField label={t.email[l]} type="email" />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" slot="close">
-                {t.cancel[l]}
-              </Button>
-              <Button slot="close">{t.save[l]}</Button>
+              <DialogClose>
+              <Button variant="ghost">{t.cancel[l]}</Button>
+            </DialogClose>
+              <DialogClose>
+              <Button>{t.save[l]}</Button>
+            </DialogClose>
             </div>
           </Dialog>
         </DialogModal>
@@ -160,7 +165,9 @@ function ScrollingExample(l: Locale) {
               ))}
             </DialogDescription>
             <div className="flex justify-end">
-              <Button slot="close">{t.close[l]}</Button>
+              <DialogClose>
+              <Button>{t.close[l]}</Button>
+            </DialogClose>
             </div>
           </Dialog>
         </DialogModal>

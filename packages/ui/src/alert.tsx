@@ -222,6 +222,7 @@ interface AlertBaseProps
     VariantProps<typeof alertVariants> {
   /**
    * The semantic color: neutral, accent, positive, caution, or critical.
+   *
    * Redeclared from the variants (same derived type) only because the
    * intersection of the two cva `tone` keys loses their docblocks.
    */
@@ -276,7 +277,11 @@ interface AlertBaseProps
 interface DismissibleAlertProps {
   /** Called when the reader dismisses the alert. Owning the removal is the caller's. */
   onClose: () => void;
-  /** Announced name of the dismiss button, e.g. «بستن». Required — see above. */
+  /**
+   * Announced name of the dismiss button, e.g. «بستن». Required whenever
+   * `onClose` is passed, and unrepresentable without it — the generated
+   * reference flattens this union to "optional", so read the two together.
+   */
   closeLabel: string;
 }
 

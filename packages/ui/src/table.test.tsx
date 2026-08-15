@@ -150,6 +150,19 @@ describe("gridArrow — the mapping React Aria used to own", () => {
     expect(gridArrow("en-US").step("ArrowLeft")).toEqual({ row: 0, col: -1 });
   });
 
+  it("the jump keys are logical: identical in both directions, Ctrl selects the grid edge", () => {
+    for (const locale of ["fa-IR", "en-US"] as const) {
+      const { jump } = gridArrow(locale);
+      expect(jump("Home", false)).toBe("row-start");
+      expect(jump("End", false)).toBe("row-end");
+      expect(jump("Home", true)).toBe("grid-start");
+      expect(jump("End", true)).toBe("grid-end");
+      expect(jump("PageUp", false)).toBe("page-up");
+      expect(jump("PageDown", false)).toBe("page-down");
+      expect(jump("ArrowLeft", false)).toBeNull();
+    }
+  });
+
   it("and ArrowRight is its mirror in both", () => {
     expect(gridArrow("fa-IR").step("ArrowRight")).toEqual({ row: 0, col: -1 });
     expect(gridArrow("en-US").step("ArrowRight")).toEqual({ row: 0, col: 1 });
@@ -609,6 +622,33 @@ describe("Table — the grid the two libraries build together", () => {
     fireEvent.keyDown(grid, { key: "ArrowLeft" });
     expect(at(0, 1)?.getAttribute("tabindex")).toBe("0");
     expect(at(0, 0)?.getAttribute("tabindex")).toBe("-1");
+  });
+
+  it("Home/End jump within the row, Ctrl+Home/End across the grid, PageDown by a page of rows", () => {
+    // WAI-ARIA grid pattern. This was an admitted gap ("Home and End (not
+    // implemented)") until the post-4eaf8ec reevaluation named it; the jump
+    // keys are logical, so unlike the arrows they read the same in fa-IR.
+    const { container } = render(<People />);
+    const grid = container.querySelector('[role="grid"]') as HTMLElement;
+    const stop = () => {
+      const cell = grid.querySelector('[tabindex="0"]') as HTMLElement;
+      return `${cell.getAttribute("data-row-index")},${cell.getAttribute("data-col-index")}`;
+    };
+    const cols = grid.querySelectorAll('[data-row-index="0"][data-col-index]').length;
+    const rows = new Set([...grid.querySelectorAll("[data-row-index]")].map((c) => c.getAttribute("data-row-index"))).size;
+    expect(stop()).toBe("0,0");
+    fireEvent.keyDown(grid, { key: "End" });
+    expect(stop()).toBe(`0,${cols - 1}`);
+    fireEvent.keyDown(grid, { key: "Home" });
+    expect(stop()).toBe("0,0");
+    fireEvent.keyDown(grid, { key: "End", ctrlKey: true });
+    expect(stop()).toBe(`${rows - 1},${cols - 1}`);
+    fireEvent.keyDown(grid, { key: "Home", ctrlKey: true });
+    expect(stop()).toBe("0,0");
+    fireEvent.keyDown(grid, { key: "PageDown" });
+    expect(stop()).toBe(`${rows - 1},0`);
+    fireEvent.keyDown(grid, { key: "PageUp" });
+    expect(stop()).toBe("0,0");
   });
 
   it("and the other way in English (guards a vacuous pass)", () => {

@@ -14,6 +14,7 @@ import {
   DialogHeading,
   DialogModal,
   DialogOverlay,
+  DialogClose,
   DialogTrigger,
   TextField,
   optional,
@@ -172,13 +173,16 @@ export function DangerZone({
                    */}
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     {/*
-                     * `slot="close"` is RAC's own wiring: the Dialog publishes
-                     * a ButtonContext whose `close` slot carries
-                     * `onPress: () => state.close()`. No state, no refs.
+                     * `DialogClose` is Base UI's own wiring, merged onto the
+                     * button. This used to be RAC's `slot="close"`, which
+                     * survived the engine migration as an accepted-and-inert
+                     * prop — a cancel button that closed nothing — until
+                     * `slot` became a compile-time carrier and the compiler
+                     * pointed here.
                      */}
-                    <Button slot="close" variant="outline">
-                      {strings.cancel}
-                    </Button>
+                    <DialogClose>
+                      <Button variant="outline">{strings.cancel}</Button>
+                    </DialogClose>
                     <Button
                       variant="critical"
                       isDisabled={!matches || isPending}
