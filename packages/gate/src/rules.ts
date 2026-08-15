@@ -779,4 +779,66 @@ export const namedRoledescription: Rule = {
   },
 };
 
-export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop, compositeSingleTabStop, nativeCalendar, uniqueIds, nativeScriptText, nativeScriptName, namedRoledescription];
+/**
+ * Rule 13 — a `data-lumo-latn` island must actually be Latin. The island is the
+ * hatch every digit and script rule honours, and on Persian routes it exempts
+ * ~75% of text nodes (code samples). That share is disclosed by the coverage
+ * report; this rule CONTAINS it: an island whose visible text carries more
+ * letters of the reader's script than Latin letters is a Persian paragraph
+ * someone wrapped to silence a rule, and it fails here instead. Letters only —
+ * a phone run in Persian digits or an order id has no letters and is exactly
+ * what the hatch is for. Outermost islands only.
+ */
+export const latnIslandPurity: Rule = {
+  id: "latn-island-purity",
+  because:
+    "The exemption that keeps code samples out of the script and digit rules could " +
+    "just as well hide a Persian paragraph; a rule that reads 25% of a page must be " +
+    "able to prove the other 75% is what it claims to be.",
+  run: (doc) => {
+    if (doc.script.property === "Latin") return [];
+    const v: Violation[] = [];
+    const readerLetter = new RegExp(`(?=\\p{L})${doc.script.pattern.source}`, "gu");
+    const latinLetter = /(?=\p{L})\p{Script=Latin}/gu;
+    for (const island of Array.from(doc.document.querySelectorAll("[data-lumo-latn]"))) {
+      if (island.parentElement?.closest("[data-lumo-latn]")) continue;
+      if (island.closest?.('[aria-hidden="true"],[hidden]')) continue;
+      const text = island.textContent ?? "";
+      const reader = (text.match(readerLetter) ?? []).length;
+      const latin = (text.match(latinLetter) ?? []).length;
+      // Prose: English documentation that QUOTES Persian strings is still English, so a
+      // clear majority is required. A control is different: a Persian button or link
+      // inside a Latin island is a UI string in the wrong language container, however
+      // short — that was the first live finding (a «باز کردن تمام‌صفحه» link in a
+      // `lang="en" dir="ltr"` caption on every block page).
+      const control = Array.from(island.querySelectorAll(INTERACTIVE)).find((el) => {
+        const own = el.textContent ?? "";
+        const r = (own.match(readerLetter) ?? []).length;
+        return r >= 3 && r > (own.match(latinLetter) ?? []).length;
+      });
+      if (control !== undefined) {
+        v.push({
+          rule: "latn-island-purity",
+          path: doc.path,
+          detail:
+            `a ${doc.script.name}-script control inside a data-lumo-latn island: its text is in the ` +
+            `reader's language but the island declares it Latin. Move the control outside the island.`,
+          snippet: control.outerHTML.slice(0, 120),
+        });
+      } else if (reader >= 10 && reader > latin * 1.5) {
+        v.push({
+          rule: "latn-island-purity",
+          path: doc.path,
+          detail:
+            `data-lumo-latn island holds ${String(reader)} ${doc.script.name} letters against ` +
+            `${String(latin)} Latin: this is ${doc.script.name} prose, not a Latin island. ` +
+            `Unwrap it so the script and digit rules read it, or shrink the island to the Latin run.`,
+          snippet: island.outerHTML.slice(0, 120),
+        });
+      }
+    }
+    return v;
+  },
+};
+
+export const RULES: Rule[] = [langDir, noLatinDigits, noLatinAria, namedControls, resolvedIdrefs, compositeTabStop, compositeSingleTabStop, nativeCalendar, uniqueIds, nativeScriptText, nativeScriptName, namedRoledescription, latnIslandPurity];

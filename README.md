@@ -155,6 +155,7 @@ and the first paint receive. No browser, so it runs anywhere.
 | `native-script-text` | a run of visible text with no character of the reader's script in it, which is how `thr` reached three Persian routes |
 | `native-script-name` | the COMPUTED accessible name is in a script the reader does not read — the name most controls actually have, which no attribute carries |
 | `named-roledescription` | an `aria-roledescription` with no accessible name, so the element is announced as that one word and nothing else |
+| `latn-island-purity` | a `data-lumo-latn` island holding more letters of the reader's script than Latin — the exemption used to hide Persian prose; on the day it shipped it found a Persian link inside an `lang="en"` island on all 34 block pages |
 
 The last four landed together in Phase 3 and three of them had live findings on
 the export the day they shipped: 14 duplicated ids, 138 pure-foreign text runs

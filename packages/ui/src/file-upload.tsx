@@ -33,6 +33,11 @@ import {
  * file with the measurement that shaped it («۱٫۲ MB» is a Latin unit).
  */
 
+/** True when the name has no letter outside the Latin script — the only case a Latin island is honest. */
+function isLatinName(name: string): boolean {
+  return !/(?=\p{L})[^\p{Script=Latin}]/u.test(name);
+}
+
 export interface FileUploadProps
   /* OWNED: `role`/`aria-label` (the group and its name) and the four drag
    * handlers, which carry the depth counter; `{...props}` is also spread FIRST. */
@@ -469,10 +474,12 @@ export function FileUploadItem({
       <Paperclip aria-hidden="true" className="size-4 shrink-0 text-fg-muted" />
 
       {/* `<bdi>`, not `<span>`: a file name's script is unpredictable, and a bare
-          span renders `pdf.گزارش`. `data-lumo-latn` marks genuinely-Latin content. */}
+          span renders `pdf.گزارش`. `data-lumo-latn` only when the name really IS
+          Latin — a Persian name forced LTR and exempted from the script rules was
+          the first thing the island-purity gate found. */}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <div className="flex min-w-0 items-center gap-3">
-          <bdi data-lumo-latn="" className="min-w-0 flex-1 truncate">
+          <bdi {...(isLatinName(name) ? { "data-lumo-latn": "" } : {})} className="min-w-0 flex-1 truncate">
             {name}
           </bdi>
 

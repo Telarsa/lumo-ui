@@ -504,6 +504,7 @@ describe("fa-IR grading is unchanged by the parametrisation", () => {
       "native-script-text",
       "native-script-name",
       "named-roledescription",
+      "latn-island-purity",
     ]);
     expect(persianDigitFloor({}).id).toBe("persian-digit-floor");
   });
@@ -1056,5 +1057,53 @@ describe("coverage census", () => {
   it("reports the floor's coverage against the same denominator", () => {
     const c = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa("<p>سلام</p>"));
     expect(formatCoverage(c, 12)).toContain("armed on 12 of 1 route(s)");
+  });
+});
+
+describe("latn-island-purity — the exemption cannot hide the reader's own prose", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+  const fired = (body: string) => gradeHtml("fa-IR/index.html", fa(body)).map((v) => v.rule);
+
+  it("fires on a Persian paragraph inside a data-lumo-latn island", () => {
+    expect(
+      fired('<p data-lumo-latn dir="ltr">این پاراگراف فارسی است و نباید در جزیرهٔ لاتین باشد؛ چون قاعده‌ها آن را نمی‌خوانند.</p>'),
+    ).toEqual(["latn-island-purity"]);
+  });
+
+  it("fires on a Persian CONTROL inside an English island, however short", () => {
+    expect(
+      fired('<figcaption dir="ltr" lang="en" data-lumo-latn=""><code>lang="fa-IR" dir="rtl"</code><a href="/x/">باز کردن تمام‌صفحه</a></figcaption>'),
+    ).toEqual(["latn-island-purity"]);
+  });
+
+  it("does NOT fire on English documentation prose that quotes Persian strings", () => {
+    expect(
+      fired('<td dir="ltr" lang="en" data-lumo-latn="">The label announced when the list is empty, e.g. «هیچ موردی پیدا نشد» or «فهرست خالی است».</td>'),
+    ).toEqual([]);
+  });
+
+  it("does NOT fire on a code sample that quotes a short Persian string", () => {
+    expect(
+      fired('<pre data-lumo-latn dir="ltr"><code>&lt;Button label="ذخیره کنید"&gt;ذخیره&lt;/Button&gt; // pnpm add @lumo-ui/ui</code></pre>'),
+    ).toEqual([]);
+  });
+
+  it("does NOT fire on digit-only islands (phone runs, ids) — letters are what count", () => {
+    expect(fired('<bdi data-lumo-latn dir="ltr">+۹۸ ۹۱۲ ۱۲۳ ۴۵۶۷</bdi><span data-lumo-latn dir="ltr">KH-4825</span>')).toEqual([]);
+  });
+
+  it("grades outermost islands only, and skips hidden ones", () => {
+    // The nested island alone would fire; it is not graded because its outer island is, and the outer one is Latin-dominant.
+    expect(
+      fired(
+        '<pre data-lumo-latn dir="ltr"><code>import { Button } from "@lumo-ui/ui"; export function Save() { return &lt;Button variant="primary" size="md"&gt;' +
+          '<span data-lumo-latn>این هم فارسی است ولی درون کد</span>&lt;/Button&gt;; }</code></pre>',
+      ),
+    ).toEqual([]);
+    expect(fired('<p hidden data-lumo-latn dir="ltr">این پاراگراف فارسی پنهان است و نباید گزارش شود چون خوانده نمی‌شود.</p>')).toEqual([]);
+  });
+
+  it("is vacuous on a Latin-script locale", () => {
+    expect(gradeHtml("en-US/index.html", '<!doctype html><html lang="en-US" dir="ltr"><body><p data-lumo-latn>Plain English prose is fine here.</p></body></html>')).toEqual([]);
   });
 });

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { CalendarDate, PersianCalendar } from "@internationalized/date";
 import { RULES, gradingFor, type Doc } from "@lumo-ui/gate";
@@ -16,6 +16,10 @@ import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { Command, CommandDialog, CommandInput, CommandItem, CommandList } from "./command.tsx";
 import { ContextMenu, ContextMenuTrigger } from "./context-menu.tsx";
 import { DatePicker } from "./date-picker.tsx";
+import { DateRangePicker } from "./date-range-picker.tsx";
+import { DateSelector, type DateSelectorPreset } from "./date-selector.tsx";
+import { PowerSearch, createFilter, type PowerSearchField, type PowerSearchStrings } from "./power-search.tsx";
+import { ToastRegion, createToastQueue } from "./toast.tsx";
 import { Dialog, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Drawer, DrawerOverlay } from "./drawer.tsx";
 import { HoverCard } from "./hover-card.tsx";
@@ -429,5 +433,104 @@ describe("popup interiors pass the full gate rule set while open", () => {
     fireEvent.focus(trigger);
     expect(await screen.findByRole("dialog", { name: "نمای کوتاه نمایه" })).toBeTruthy();
     expect(gradeOpenPopup("fa/popup-hover-card/index.html")).toEqual([]);
+  });
+
+  it("date-range-picker calendar (two grids, one dialog)", async () => {
+    const today = new CalendarDate(new PersianCalendar(), 1405, 5, 21);
+    render(
+      <DateRangePicker
+        label="بازهٔ سفر"
+        startLabel="تاریخ شروع"
+        endLabel="تاریخ پایان"
+        openCalendarLabel="باز کردن تقویم"
+        today={today}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "باز کردن تقویم" }));
+    expect(await screen.findByRole("grid")).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-date-range-picker/index.html")).toEqual([]);
+  });
+
+  it("date-selector panel (presets beside a range calendar)", async () => {
+    const today = new CalendarDate(new PersianCalendar(), 1405, 5, 21);
+    const presets: readonly DateSelectorPreset[] = [
+      { id: "today", label: "امروز", range: { kind: "today" } },
+      { id: "d7", label: "۷ روز گذشته", range: { kind: "lastDays", days: 7 } },
+      { id: "month", label: "این ماه", range: { kind: "thisMonth" } },
+    ];
+    render(
+      <DateSelector
+        today={today}
+        label="بازهٔ گزارش"
+        panelLabel="انتخاب بازهٔ تاریخ"
+        presetsLabel="بازه‌های آماده"
+        calendarLabel="انتخاب بازهٔ دلخواه"
+        placeholder="بازه‌ای انتخاب نشده"
+        formatRange={(from, to) => (to ? `${from} تا ${to}` : from)}
+        presets={presets}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /بازهٔ گزارش/ }));
+    expect(await screen.findByRole("dialog", { name: "انتخاب بازهٔ تاریخ" })).toBeTruthy();
+    expect(screen.getAllByRole("grid").length).toBeGreaterThan(0);
+    expect(gradeOpenPopup("fa/popup-date-selector/index.html")).toEqual([]);
+  });
+
+  it("power-search filter editor", () => {
+    const strings: PowerSearchStrings = {
+      regionLabel: "جست‌وجوی پیشرفته",
+      inputLabel: "افزودن فیلتر",
+      inputPlaceholder: "فیلد را پیدا کنید",
+      suggestionsLabel: "فیلدهای جست‌وجو",
+      noFields: "فیلدی پیدا نشد",
+      editFilterTemplate: "ویرایش فیلتر: {field}",
+      removeFilterTemplate: "حذف فیلتر: {field}",
+      removeValueTemplate: "حذف مقدار: {value}",
+      fieldLabel: "فیلد",
+      operatorLabel: "عملگر",
+      valueLabel: "مقدار",
+      valueSuggestionsLabel: "مقدارهای موجود",
+      dismissSuggestionsLabel: "بستن پیشنهادها",
+      apply: "اعمال",
+      cancel: "انصراف",
+      invalidFilter: "مقدار این فیلتر معتبر نیست",
+      savedViewsLabel: "نمای ذخیره‌شده",
+      savedViewsPlaceholder: "انتخاب نما",
+      resultCountTemplate: "{count} نتیجه",
+      overflowTemplate: "نمایش {count} فیلتر دیگر",
+      collapseFilters: "نمایش فیلترهای کمتر",
+      tokenTemplate: "{field}، {operator}، {value}",
+      emptyValue: "بدون مقدار",
+      valueSeparator: "، ",
+      groupLabelTemplate: "گروه {combinator}",
+      andLabel: "همه",
+      orLabel: "هرکدام",
+      addGroup: "افزودن گروه",
+      removeGroup: "حذف گروه",
+    };
+    const fields: readonly PowerSearchField[] = [
+      { id: "total", label: "مبلغ", type: "number", operators: [{ id: "gte", label: "حداقل" }] },
+    ];
+    render(
+      <PowerSearch
+        fields={fields}
+        strings={strings}
+        defaultValue={[createFilter("total", "gte", ["100"], "total-1")]}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "ویرایش فیلتر: مبلغ" }));
+    expect(screen.getByRole("dialog", { name: "ویرایش فیلتر: مبلغ" })).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-power-search/index.html")).toEqual([]);
+  });
+
+  it("toast region with a live toast", async () => {
+    const queue = createToastQueue();
+    render(<ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />);
+    await act(async () => {
+      queue.add({ title: "ذخیره شد", description: "۳ مورد ذخیره شد", tone: "positive" });
+    });
+    expect(screen.getByRole("region", { name: "اعلان‌ها" })).toBeTruthy();
+    expect(screen.getByText("ذخیره شد")).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-toast/index.html")).toEqual([]);
   });
 });

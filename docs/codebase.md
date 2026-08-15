@@ -8,7 +8,7 @@ packages/theme/src       CSS tokens (--lumo-ref-* → --lumo-sys-* → --lumo-cm
 packages/base-ui-ssr/src Base UI compensations: first-byte naming (resolved in render, not layout effects) and the live dismiss-sentinel relabel
 packages/ui/src          111 components; one file per component, optional <name>.variants.ts (cva, directive-free), tests beside
 packages/blocks/src      30 product compositions built only from ui
-packages/gate/src        rules.ts (13 served-HTML rules), inert-props.ts (source gate), cli.ts, index.ts (locale grading table)
+packages/gate/src        rules.ts (14 served-HTML rules), inert-props.ts (source gate), cli.ts, index.ts (locale grading table)
 packages/config          ESLint policy (no physical left/right utilities in shared components)
 apps/website             Static export docs site; examples in src/examples/<name>.tsx; islands for interactive demos
 scripts/                 build-registry.mjs, build-api-reference.mjs, mutate-components.mjs, smoke-consumer.mjs

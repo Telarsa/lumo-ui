@@ -151,13 +151,9 @@ function BlockFrame({
   const href = `/view-block/${segmentFor(lang)}/${slug}/`;
   return (
     <figure className="m-0 overflow-hidden rounded-lg border border-border">
-      <figcaption
-        dir="ltr"
-        lang="en"
-        data-lumo-latn=""
-        className="flex items-center justify-between gap-3 border-b border-border bg-surface-sunken px-3 py-1.5 text-xs text-fg-muted"
-      >
-        <code>{`lang="${lang}" dir="${direction(lang)}"`}</code>
+      {/* The island wraps the code ONLY: the link is page-language prose and must be graded as such. */}
+      <figcaption className="flex items-center justify-between gap-3 border-b border-border bg-surface-sunken px-3 py-1.5 text-xs text-fg-muted">
+        <code dir="ltr" lang="en" data-lumo-latn="">{`lang="${lang}" dir="${direction(lang)}"`}</code>
         <a href={href} className="shrink-0 underline">
           {c.openFullPage}
         </a>

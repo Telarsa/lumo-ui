@@ -5,7 +5,7 @@ import { cva } from "class-variance-authority";
 // No `cn` here: `className` belongs to the FIELD, which `form.tsx` merges; the row and
 // boxes are internal geometry, and a caller composes the exported cvas directly.
 import { formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
-import { Description, Field, FieldError, Label } from "./form.tsx";
+import { Description, Field, FieldError, FieldInput, Label } from "./form.tsx";
 
 /**
  * A one-time code, entered into a row of boxes.
@@ -138,6 +138,7 @@ export function InputOtp({
   return (
     <Field
       label={label}
+      explicit={{ "aria-label": label }}
       {...(description != null ? { description } : {})}
       {...(errorMessage != null ? { errorMessage } : {})}
       {...(isDisabled === undefined ? {} : { isDisabled })}
@@ -172,9 +173,8 @@ export function InputOtp({
           );
         })}
 
-        <input
+        <FieldInput
           ref={controlRef}
-          data-lumo=""
           // `text`, never `number`: `<input type="number">` REJECTS Persian digits outright.
           type="text"
           inputMode="numeric"

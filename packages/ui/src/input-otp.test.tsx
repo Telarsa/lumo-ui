@@ -171,3 +171,20 @@ describe("state", () => {
     expect(screen.getByText("کد نادرست است")).toBeTruthy();
   });
 });
+
+describe("help and error text reach the input", () => {
+  afterEach(cleanup);
+
+  it("connects description and error to the one input in the first byte (two resolving idrefs)", () => {
+    // The field-wiring audit (docs/goals.md #7): InputOtp rendered `<Field description errorMessage>`
+    // around a raw `<input>`, so its texts were visible but never announced with the control.
+    const html = renderToStaticMarkup(
+      <InputOtp label="کد پیامک‌شده" locale="fa-IR" description="کد شش‌رقمی" errorMessage="کد اشتباه است" />,
+    );
+    const input = /<input[^>]*autoComplete="one-time-code"[^>]*>/.exec(html)?.[0] ?? "";
+    const ids = /aria-describedby="([^"]+)"/.exec(input)?.[1]?.split(" ") ?? [];
+    expect(ids).toHaveLength(2);
+    for (const id of ids) expect(html).toContain(`id="${id}"`);
+    expect(input).toContain('aria-invalid="true"');
+  });
+});
