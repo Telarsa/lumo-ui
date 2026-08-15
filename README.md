@@ -6,7 +6,7 @@ Right-to-left is the easy half. Lumo exists for the other half: the calendar is
 Jalali, the digits are ۱۴۰۵, and the accessible name is Persian too — in the
 served bytes, before any JavaScript runs.
 
-Private to Telarsa. See `DECISIONS.md §0.2`.
+Private to Telarsa. See `docs/decisions/log.md §0.2`.
 
 ---
 
@@ -39,7 +39,7 @@ apps/website      the showcase, and the first thing the gate runs against
 **Current state.** 111 components, 30 blocks and 141 generated registry items.
 The exact test and document totals are printed by `pnpm run verify`; they are not
 hand-copied here because they change whenever a regression test or example is
-added. See `ROADMAP.md` for what is still open.
+added. See `docs/history/roadmap-2026-08.md` for the retired roadmap and `docs/README.md` for current documentation.
 
 ## Getting started
 
@@ -188,7 +188,7 @@ make the rules silent on the exact defect they exist for.
 
 ## Where to look next
 
-- `DECISIONS.md` — what was chosen, with the evidence, including superseded
+- `docs/decisions/log.md` — what was chosen, with the evidence, including superseded
   decisions kept struck through
-- `ROADMAP.md` — the road to 1.0
+- `docs/` — architecture, codebase map, locale contract, verification; `docs/history/` for retired plans
 - `packages/core/src/strings.ts` — the measurement that shaped the i18n design

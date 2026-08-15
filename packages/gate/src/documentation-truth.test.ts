@@ -7,7 +7,7 @@ const read = (...parts: string[]) => readFileSync(join(ROOT, ...parts), "utf8");
 
 describe("current public documentation", () => {
   it("describes the React/Base UI architecture rather than the superseded Preact scaffold", () => {
-    const architecture = read("ARCHITECTURE.md");
+    const architecture = read("docs/architecture.md");
     expect(architecture).toContain("React 19");
     expect(architecture).toContain("Base UI");
     expect(architecture).toContain("111 registry components");

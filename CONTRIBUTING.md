@@ -28,7 +28,7 @@ registry.json                              generated — run scripts/build-regis
 
 ## Taking a component from shadcn
 
-**Do not hand-type something upstream already has.** See ROADMAP.md for which of
+**Do not hand-type something upstream already has.** See docs/history/roadmap-2026-08.md for which of
 the remaining components exist in shadcn's `aria-vega` style — most of them do.
 
 ```bash
@@ -57,7 +57,7 @@ will not see.
 That sentence was **false until 12 Aug 2026**: the policy in
 `packages/config/eslint/lumo.mjs` was real and nothing ran it. It runs now, over
 every package and the site, as `pnpm lint` and as `gate:lint` inside `verify`.
-Read DECISIONS.md §16 before adding a rule to it — the first real run was 34
+Read docs/decisions/log.md §16 before adding a rule to it — the first real run was 34
 parts prose to 3 parts false positive, and what it MISSED (`md:ml-4`) mattered
 more than what it found.
 
@@ -195,7 +195,7 @@ a `<pre>`/`<code>` carve-out that turned out to be a no-op — 0 of 8,846 elemen
 carrying an `id` are inside one, because a highlighted listing renders `id="…"`
 as text and never as an attribute — so the carve-out was not written, and the
 measurement was written into the rule's header instead. An exemption needs
-evidence, not plausibility (DECISIONS §13).
+evidence, not plausibility (docs/decisions/log.md §13).
 
 **A rule that would need many exemptions to be usable grades nothing — say so
 and do not ship it.** The bar is not "the export is green". Three of the four
@@ -384,7 +384,7 @@ remaining   404   blocks.tsx (402) · demo-frame.tsx (2)
 Until those are converted, adding a third locale would compile and hand German
 the English half of four hundred block strings. **Anyone adding a locale must
 finish this sweep first** — it is a prerequisite, not a cleanup task, and it is
-listed as such in ROADMAP.md.
+listed as such in docs/history/roadmap-2026-08.md.
 
 There is no partial locale and no fallback. A fallback is what puts an English
 word in a Persian sentence.
