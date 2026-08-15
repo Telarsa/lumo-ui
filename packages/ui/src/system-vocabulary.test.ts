@@ -56,15 +56,29 @@
  */
 
 import { readFileSync, readdirSync } from "node:fs";
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
 const SRC = import.meta.dirname;
 
-/** Blanks comments, preserving offsets so a reported line number is real. */
+/**
+ * Blanks comments while preserving offsets, using the TypeScript scanner so a
+ * `"/*"` inside a string literal (file-upload's MIME matching) is not mistaken
+ * for a comment opener — the regex this replaced swallowed 3 KB of JSX that way.
+ */
 function code(source: string): string {
-  return source
-    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
-    .replace(/^\s*\/\/.*$/gm, (m) => " ".repeat(m.length));
+  const out = source.split("");
+  const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.JSX, source);
+  let kind = scanner.scan();
+  while (kind !== ts.SyntaxKind.EndOfFileToken) {
+    if (kind === ts.SyntaxKind.SingleLineCommentTrivia || kind === ts.SyntaxKind.MultiLineCommentTrivia) {
+      for (let i = scanner.getTokenStart(); i < scanner.getTokenEnd(); i++) {
+        if (out[i] !== "\n") out[i] = " ";
+      }
+    }
+    kind = scanner.scan();
+  }
+  return out.join("");
 }
 
 interface Chunk {
@@ -166,12 +180,26 @@ describe("the sweep is not vacuous", () => {
 
   it("strips comments, so prose about a retired spelling cannot fail a rule", () => {
     // Every rule below forbids a string, and the arguments for forbidding it
-    // quote the string. `button.variants.ts` names all four press candidates in
-    // its header; if comments leaked, the file that explains the rule would be
-    // the file that breaks it.
-    const stripped = code(readFileSync(`${SRC}/button.variants.ts`, "utf8"));
-    expect(readFileSync(`${SRC}/button.variants.ts`, "utf8")).toContain("active:opacity-80");
+    // quote the string; if comments leaked, the file that explains a rule would
+    // be the file that breaks it. Self-contained poison rather than a decoy
+    // comment in a real source file: the guard used to depend on
+    // button.variants.ts's header quoting `active:opacity-80`, and a comment
+    // trim removed it. A string literal is also included to prove the stripper
+    // does not mistake `"/*"` in code for a comment opener (file-upload's MIME
+    // matching), which the regex stripper it replaced did.
+    const poison = [
+      "const a = 1; // active:opacity-80 in a line comment",
+      "/* active:opacity-80 in a block comment */",
+      "const mime = \"image/*\"; const later = \"*/\";",
+      "{/* active:opacity-80 in a JSX comment */}",
+      "const real = \"active:translate-y-px\";",
+    ].join("\n");
+    const stripped = code(poison);
     expect(stripped).not.toContain("active:opacity-80");
+    expect(stripped).toContain("active:translate-y-px");
+    expect(stripped).toContain("image/*");
+    // Offsets are preserved: a reported line number is a real line number.
+    expect(stripped.split("\n").length).toBe(poison.split("\n").length);
   });
 });
 
