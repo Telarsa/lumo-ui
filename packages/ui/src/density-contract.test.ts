@@ -1,30 +1,10 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import ts from "typescript";
 import { describe, expect, it } from "vitest";
+import { code } from "./source-text.test-utils.ts";
 
 const SRC = dirname(fileURLToPath(import.meta.url));
-
-/**
- * Blanks comments while preserving offsets, using the TypeScript scanner so a
- * `"/*"` inside a string literal (file-upload's MIME matching) is not mistaken
- * for a comment opener — the regex this replaced swallowed 3 KB of JSX that way.
- */
-function code(source: string): string {
-  const out = source.split("");
-  const scanner = ts.createScanner(ts.ScriptTarget.Latest, false, ts.LanguageVariant.JSX, source);
-  let kind = scanner.scan();
-  while (kind !== ts.SyntaxKind.EndOfFileToken) {
-    if (kind === ts.SyntaxKind.SingleLineCommentTrivia || kind === ts.SyntaxKind.MultiLineCommentTrivia) {
-      for (let i = scanner.getTokenStart(); i < scanner.getTokenEnd(); i++) {
-        if (out[i] !== "\n") out[i] = " ";
-      }
-    }
-    kind = scanner.scan();
-  }
-  return out.join("");
-}
 
 function hardcodedTallGeometry(file: string, source: string): string[] {
   const found = new Set<string>();

@@ -5,7 +5,7 @@
 ```
 packages/core/src        Locale, direction(), LumoNode, formatNumber/formatDate, prop vocabulary (props.ts), string catalog (strings.ts)
 packages/theme/src       CSS tokens (--lumo-ref-* → --lumo-sys-* → --lumo-cmp-*), Tailwind bridge, base layer
-packages/base-ui-ssr/src First-byte compensations for Base UI (naming resolved in render, not layout effects)
+packages/base-ui-ssr/src Base UI compensations: first-byte naming (resolved in render, not layout effects) and the live dismiss-sentinel relabel
 packages/ui/src          111 components; one file per component, optional <name>.variants.ts (cva, directive-free), tests beside
 packages/blocks/src      30 product compositions built only from ui
 packages/gate/src        rules.ts (13 served-HTML rules), inert-props.ts (source gate), cli.ts, index.ts (locale grading table)

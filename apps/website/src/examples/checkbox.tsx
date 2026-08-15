@@ -88,6 +88,12 @@ function ChoiceCardExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "چک‌باکس", "en-US": "Checkbox" },
+    intro: {
+      "fa-IR": "چک‌باکس تکی و گروه چک‌باکس. برچسب گروه اجباری است و نشانگر با خط متن هم‌تراز می‌ماند، نه با بالای آن.",
+      "en-US": "A single checkbox and a checkbox group. The group's label is required, and the indicator centres on the line rather than its top.",
+    },
+    tier: "form",
     composition: [
       `<CheckboxGroup label="…" description="…" errorMessage="…">`,
       `  <Checkbox value="…">…</Checkbox>`,

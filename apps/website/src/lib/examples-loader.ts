@@ -61,11 +61,16 @@ export interface LoadedExample {
 
 export interface LoadedComponentExamples {
   slug: string;
-  /** Page identity, for components with no demos.tsx entry (see catalog.ts). */
+  /** Page identity — title and intro become the page header, tier places it in the sidebar (see catalog.ts). */
   title?: Record<Locale, string> | undefined;
   intro?: Record<Locale, string> | undefined;
   tier?: "form" | "display" | "overlay" | "navigation" | "feedback" | "layout" | "data" | undefined;
   isNew: boolean;
+  /**
+   * The component's module inside `packages/ui/src` — `meta.sourceFile` when
+   * set, else `<slug>.tsx`. The catalog reads the source panel's bytes from it.
+   */
+  module: string;
   composition?: string | undefined;
   /** Value exports of the component's own module — the derived parts list. */
   moduleParts: readonly string[];
@@ -147,8 +152,8 @@ const cache = new Map<string, Promise<LoadedComponentExamples>>();
 
 /**
  * Loads, validates and source-slices one component's examples file.
- * Returns `undefined` when the component has none — the caller falls back to
- * its single `demos.tsx` demo, which is the contract's stated default.
+ * Returns `undefined` when the component has none — and a component with no
+ * examples file has no page (see catalog.ts).
  */
 export function loadExamplesFor(slug: string): Promise<LoadedComponentExamples> | undefined {
   const path = sourceOf(slug);
@@ -332,6 +337,7 @@ async function loadAndValidate(
     intro: spec.meta.intro,
     tier: spec.meta.tier,
     isNew: spec.meta.isNew === true,
+    module: moduleName,
     composition: spec.meta.composition,
     moduleParts,
     api,

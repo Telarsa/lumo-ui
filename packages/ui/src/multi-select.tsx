@@ -5,6 +5,7 @@ import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import { Check, ChevronDown, X } from "lucide-react";
 import { cn, type Locale } from "@lumo-ui/core";
 
+import { relabelEngineDismiss } from "@lumo-ui/base-ui-ssr";
 import { popoverVariants } from "./popover.tsx";
 
 export interface MultiSelectOption {
@@ -24,7 +25,7 @@ export interface MultiSelectProps {
   /**
    * Announced name of the engine's hidden dismiss control. REQUIRED.
    * Base UI hardcodes `aria-label="Dismiss"` on it in every language and no
-   * prop reaches it (`mui/base-ui#5263`) — see `relabelEngineDismiss` below,
+   * prop reaches it (`mui/base-ui#5263`) — see `relabelEngineDismiss` in `@lumo-ui/base-ui-ssr`,
    * and the twin note in `combobox.tsx`.
    */
   dismissLabel: string;
@@ -48,42 +49,6 @@ export interface MultiSelectProps {
   /** Submitted field name when the control sits inside a form. */
   name?: string;
   className?: string;
-}
-
-/**
- * Rewrites the engine-owned announced strings a caller cannot reach by prop:
- * the internal dismiss sentinel's hardcoded English `aria-label="Dismiss"`
- * and the unlabeled hidden serialization input. Deliberately duplicated from
- * `combobox.tsx` — importing it would put that whole file into this item's
- * registry payload for fifteen lines. The popup-interiors gate tier keeps
- * both copies honest.
- */
-/* The engine's exact hardcoded literal, held as a constant to be HUNTED —
- * not a default this file ships. (Also keeps the no-English-defaults
- * coverage sweep honest: the selector never spells `aria-label="…"`.) */
-const ENGINE_ENGLISH_DISMISS = "Dismiss";
-const ENGINE_DISMISS_MARKER = "data-lumo-engine-dismiss";
-
-function relabelEngineDismiss(scope: HTMLElement | null, label: string): void {
-  if (scope === null) return;
-  const roots: ParentNode[] = [scope];
-  const expanded = scope.querySelector('[role="combobox"][aria-expanded="true"]');
-  const listboxId = expanded?.getAttribute("aria-controls");
-  const listbox = listboxId == null ? null : document.getElementById(listboxId);
-  const positioner = listbox?.parentElement?.parentElement;
-  if (positioner != null) roots.push(positioner);
-  for (const root of roots) {
-    for (const sentinel of root.querySelectorAll(
-      `[aria-label="${ENGINE_ENGLISH_DISMISS}"], [${ENGINE_DISMISS_MARKER}]`,
-    )) {
-      sentinel.setAttribute(ENGINE_DISMISS_MARKER, "");
-      sentinel.setAttribute("aria-label", label);
-    }
-  }
-  for (const hidden of scope.querySelectorAll('input[id$="-hidden-input"]')) {
-    hidden.setAttribute("aria-hidden", "true");
-    hidden.setAttribute("tabindex", "-1");
-  }
 }
 
 /**

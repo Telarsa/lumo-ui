@@ -3,8 +3,7 @@ import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { ComponentGallery, type GalleryItem } from "@/components/component-gallery";
 import { assertLocale, localeParams, site } from "@/lib/locale";
-import { allCatalog } from "@/lib/catalog";
-import { TIERS, tierLabel } from "@/lib/demos";
+import { allCatalog, TIERS, tierLabel } from "@/lib/catalog";
 
 export function generateStaticParams() {
   return localeParams;

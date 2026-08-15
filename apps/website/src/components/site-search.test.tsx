@@ -137,7 +137,7 @@ describe("SiteSearch — the server render, which is what the HTML gate grades",
   // `site-shell.tsx` puts this trigger in the header of ~every page the site
   // serves, so this is the one part of the palette lumo-gate actually sees —
   // CommandDialog's overlay returns null during SSR (see command-palette's own
-  // demo entry in demos.tsx for the same fact about every other overlay), so
+  // examples file, `examples/command.tsx`, for the same fact about every other overlay), so
   // the dialog's interior never reaches prerendered bytes at all.
   it("server-renders the fa-IR trigger with a Persian name and no ASCII digits", () => {
     const html = renderToStaticMarkup(

@@ -152,7 +152,7 @@ describe("buildSearchIndex", () => {
     // Regression guard for the file header's central claim: buildSearchIndex
     // is pure data transformation, so this file has zero fs-dependent
     // imports. There is nothing to assert at runtime beyond "it ran without
-    // one" — the real check is the absence of `node:fs`/`@/lib/demos` in this
+    // one" — the real check is the absence of `node:fs`/`@/lib/catalog` in this
     // module's own import list, which TypeScript and the bundler enforce.
     expect(buildSearchIndex([], [])).toEqual([]);
   });

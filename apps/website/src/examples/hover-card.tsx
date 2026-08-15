@@ -33,7 +33,7 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  */
 
 const t = {
-  intro: {
+  reviewedBy: {
     "fa-IR": "این گزارش را ",
     "en-US": "This report was reviewed by ",
   },
@@ -92,7 +92,7 @@ const t = {
 function ProfileExample(l: Locale) {
   return (
     <p className="max-w-md text-sm leading-relaxed text-fg">
-      {t.intro[l]}
+      {t.reviewedBy[l]}
       <HoverCard
         label={t.personCard[l]}
         trigger={<Link href="#samira">{t.person[l]}</Link>}

@@ -77,8 +77,7 @@ function BasicExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
-    // Page identity — this component has no demos.tsx entry, so the catalog
-    // builds its page from these three fields (see lib/catalog.ts).
+    // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "منوی ناوبری", "en-US": "Navigation menu" },
     intro: { "fa-IR": "ناوبری بالای سایت با پنل‌های محتوایی. پنل‌ها پاپ‌اورند نه منو، پس پیوندها پیوند می‌مانند؛ جای پنل با خواص منطقی تعیین می‌شود و در فارسی خودبه‌خود آینه می‌شود.", "en-US": "Site-top navigation with content panels. Panels are popovers, not menus, so links stay links; placement is logical and mirrors on its own in Persian." },

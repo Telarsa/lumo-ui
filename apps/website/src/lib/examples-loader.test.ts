@@ -164,8 +164,15 @@ describe("parseExportedNames", () => {
     const parsed = parseExportedNames(
       readFileSync(join(process.cwd(), "..", "..", "packages", "ui", "src", "index.ts"), "utf8"),
     );
+    // The same resolution the loader does: `meta.sourceFile` when the file
+    // names one (icon-button documents button.tsx), else `<slug>.tsx`.
+    const moduleOf = (slug: string) => {
+      const path = sourceOf(slug);
+      const text = path === undefined ? "" : readFileSync(path, "utf8");
+      return /sourceFile:\s*"([^"]+)"/.exec(text)?.[1] ?? `${slug}.tsx`;
+    };
     const missing = exampleSlugs().filter(
-      (slug) => !parsed.byModule.has(`${slug}.tsx`) && sourceOf(slug) !== undefined,
+      (slug) => sourceOf(slug) !== undefined && !parsed.byModule.has(moduleOf(slug)),
     );
     expect(missing).toEqual([]);
   });

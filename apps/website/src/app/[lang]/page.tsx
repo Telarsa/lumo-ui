@@ -17,8 +17,7 @@ import {
 } from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
 import { assertLocale, localeParams, site, segmentFor} from "@/lib/locale";
-import { demoById } from "@/lib/demos";
-import { allCatalog } from "@/lib/catalog";
+import { allCatalog, type CatalogEntry } from "@/lib/catalog";
 import { allBlocks } from "@/lib/blocks";
 
 export function generateStaticParams() {
@@ -135,8 +134,9 @@ const home = {
 const HERO_PARTS = ["card", "tabs", "switch", "slider", "button"] as const;
 const MINOR_EXHIBITS = ["number-field", "rating", "badge"] as const;
 
-function Showcase({ lang }: { lang: Locale }) {
+function Showcase({ lang, catalog }: { lang: Locale; catalog: readonly CatalogEntry[] }) {
   const h = home[lang];
+  const byId = (id: string) => catalog.find((e) => e.id === id);
   return (
     <section className="mt-16">
       <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
@@ -200,7 +200,7 @@ function Showcase({ lang }: { lang: Locale }) {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-bs border-border px-4 py-2.5 text-xs text-fg-muted">
             <span>{h.builtFrom}</span>
             {HERO_PARTS.map((id) => {
-              const demo = demoById(id);
+              const demo = byId(id);
               if (!demo) return null;
               return (
                 <Link
@@ -218,7 +218,7 @@ function Showcase({ lang }: { lang: Locale }) {
         {/* ── The flank: three small exhibits ────────────────────────────── */}
         <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
           {MINOR_EXHIBITS.map((id) => {
-            const demo = demoById(id);
+            const demo = byId(id);
             if (!demo) return null;
             return (
               <div
@@ -313,7 +313,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </div>
       </section>
 
-      <Showcase lang={lang} />
+      <Showcase lang={lang} catalog={demos} />
 
       <section className="mt-14 border-bs border-border pbs-10">
         <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">

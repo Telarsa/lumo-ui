@@ -23,8 +23,7 @@ import { ExampleCard } from "@/components/example-card";
 import { CompositionTree, PartsTable, PropsTable } from "@/components/composition-tree";
 
 export async function generateStaticParams() {
-  // The CATALOG, not demos.tsx alone: components registered only by an examples
-  // file would otherwise get no page. See lib/catalog.ts.
+  // The CATALOG: every component with an examples file, and nothing else. See lib/catalog.ts.
   const entries = await allCatalog();
   return LOCALES.flatMap((lang) => entries.map((d) => ({ lang: segmentFor(lang), slug: d.id })));
 }

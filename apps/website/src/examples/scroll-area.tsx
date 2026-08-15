@@ -65,8 +65,7 @@ function HorizontalExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
-    // Page identity — this component has no demos.tsx entry, so the catalog
-    // builds its page from these three fields (see lib/catalog.ts).
+    // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "layout",
     title: { "fa-IR": "ناحیهٔ پیمایش", "en-US": "Scroll area" },
     intro: { "fa-IR": "پیمایش بومی با نوارِ هم‌رنگِ توکن‌ها — بدون بازسازی دستگیرهٔ اسکرول با جاوااسکریپت. ناحیه نام‌دار است و با صفحه‌کلید قابل‌رسیدن.", "en-US": "Native scrolling with token-coloured bars — no JavaScript thumb reconstruction. The region is named and keyboard-reachable." },

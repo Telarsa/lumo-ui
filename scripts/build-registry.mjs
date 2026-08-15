@@ -114,10 +114,7 @@ const importSpecifiers = (source, fileName) => {
  * English intro. Taking "the first docblock in the file" described `table` by
  * a helper's comment.
  */
-const WEBSITE_INTRO_SOURCES = [
-  join(ROOT, "apps/website/src/lib/demos.tsx"),
-  join(ROOT, "apps/website/src/lib/blocks.tsx"),
-];
+const WEBSITE_INTRO_SOURCES = [join(ROOT, "apps/website/src/lib/blocks.tsx")];
 const websiteIntros = new Map();
 for (const introPath of WEBSITE_INTRO_SOURCES) {
   const text = await readFile(introPath, "utf8").catch(() => "");
@@ -152,7 +149,8 @@ for (const introPath of WEBSITE_INTRO_SOURCES) {
   };
   collectIntros(sf);
 }
-/* The examples files carry the same intro under `meta:`, keyed by file name. */
+/* The examples files carry the intro under `meta:`, keyed by file name. Only
+ * `meta.intro` counts: several files also have an `intro` key in their copy tables. */
 const EXAMPLES_DIR = join(ROOT, "apps/website/src/examples");
 for (const exampleFile of (await readdir(EXAMPLES_DIR).catch(() => [])).filter(
   (f) => f.endsWith(".tsx") && !f.endsWith(".test.tsx"),
@@ -162,27 +160,54 @@ for (const exampleFile of (await readdir(EXAMPLES_DIR).catch(() => [])).filter(
   const text = await readFile(join(EXAMPLES_DIR, exampleFile), "utf8").catch(() => "");
   if (text === "") continue;
   const sf = ts.createSourceFile(exampleFile, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+  /**
+   * @param {import("typescript").Node} node
+   * @param {string} name
+   * @returns {import("typescript").PropertyAssignment | undefined}
+   */
+  const property = (node, name) =>
+    ts.isAsExpression(node) || ts.isSatisfiesExpression(node)
+      ? property(node.expression, name)
+      : ts.isObjectLiteralExpression(node)
+      ? node.properties
+          .filter(ts.isPropertyAssignment)
+          .find((prop) => prop.name.getText(sf).replace(/["']/g, "") === name)
+      : undefined;
+  /* `intro: t.intro` — a copy-table reference; resolve it through the table's declaration. */
+  /** @param {import("typescript").Node} node */
+  const resolve = (node) => {
+    if (!ts.isPropertyAccessExpression(node) || !ts.isIdentifier(node.expression)) return node;
+    const table = node.expression.text;
+    /** @type {import("typescript").Node | undefined} */
+    let declaration;
+    /** @param {import("typescript").Node} candidate */
+    const findTable = (candidate) => {
+      if (ts.isVariableDeclaration(candidate) && candidate.name.getText(sf) === table) {
+        declaration = candidate.initializer;
+      }
+      if (declaration === undefined) ts.forEachChild(candidate, findTable);
+    };
+    findTable(sf);
+    return declaration === undefined ? node : (property(declaration, node.name.text)?.initializer ?? node);
+  };
   /** @type {string | undefined} */
   let intro;
   /** @param {import("typescript").Node} node */
-  const findIntro = (node) => {
-    if (intro === undefined && ts.isPropertyAssignment(node)) {
-      const key = node.name.getText(sf).replace(/["']/g, "");
-      if (key === "intro" && ts.isObjectLiteralExpression(node.initializer)) {
-        for (const localeProp of node.initializer.properties) {
-          if (
-            ts.isPropertyAssignment(localeProp) &&
-            localeProp.name.getText(sf).includes("en-US") &&
-            ts.isStringLiteral(localeProp.initializer)
-          ) {
-            intro = localeProp.initializer.text;
-          }
-        }
-      }
+  const findMetaIntro = (node) => {
+    if (intro !== undefined) return;
+    const isMeta =
+      (ts.isPropertyAssignment(node) || ts.isVariableDeclaration(node)) &&
+      node.name.getText(sf) === "meta" &&
+      node.initializer !== undefined;
+    if (isMeta) {
+      const introProp = property(node.initializer, "intro");
+      const en = introProp === undefined ? undefined : property(resolve(introProp.initializer), "en-US");
+      if (en !== undefined && ts.isStringLiteral(en.initializer)) intro = en.initializer.text;
+      return;
     }
-    ts.forEachChild(node, findIntro);
+    ts.forEachChild(node, findMetaIntro);
   };
-  findIntro(sf);
+  findMetaIntro(sf);
   if (intro !== undefined) websiteIntros.set(exampleName, intro);
 }
 

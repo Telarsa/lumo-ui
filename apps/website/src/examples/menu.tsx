@@ -18,7 +18,7 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * render is a named top-level function so the loader can slice its source.
  *
  * Like every overlay, the first byte holds the trigger; the popover exists
- * only after it opens (demos.tsx's header records why).
+ * only after it opens (the contract in _system/types.ts records why).
  */
 
 const t = {
@@ -178,6 +178,12 @@ function SelectionExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "منو", "en-US": "Menu" },
+    intro: {
+      "fa-IR": "منوی کنش‌ها با بخش و جداکننده. پیکان زیرمنو نویسهٔ › است تا موتور متن خودش آن را قرینه کند.",
+      "en-US": "A menu of actions with sections and separators. The submenu arrow is the character ›, which the text engine mirrors itself.",
+    },
+    tier: "overlay",
     composition: [
       `<MenuTrigger>`,
       `  <Button>…</Button>`,

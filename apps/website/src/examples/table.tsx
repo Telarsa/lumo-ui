@@ -343,6 +343,12 @@ function EmptyExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "جدول داده", "en-US": "Table" },
+    intro: {
+      "fa-IR": "یک گرید واقعی: نام گرید، نام هر چک‌باکس و جهت مرتب‌سازی همگی ویژگی اجباری‌اند، و پیکان‌ها با جهت سند حل می‌شوند.",
+      "en-US": "A real ARIA grid. The grid's name, each checkbox's name and the sort direction are all required props, and the arrow keys resolve against the document direction.",
+    },
+    tier: "data",
     composition: [
       `const table = useLumoTable({ locale, data, columns, enableRowSelection: true })`,
       ``,

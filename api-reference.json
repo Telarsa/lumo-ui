@@ -8532,7 +8532,7 @@
             "name": "dismissLabel",
             "type": "string",
             "required": true,
-            "description": "Announced name of the engine's hidden dismiss control. REQUIRED. Base UI hardcodes `aria-label=\"Dismiss\"` on it in every language and no prop reaches it (`mui/base-ui#5263`) — see `relabelEngineDismiss` below, and the twin note in `combobox.tsx`."
+            "description": "Announced name of the engine's hidden dismiss control. REQUIRED. Base UI hardcodes `aria-label=\"Dismiss\"` on it in every language and no prop reaches it (`mui/base-ui#5263`) — see `relabelEngineDismiss` in `@lumo-ui/base-ui-ssr`, and the twin note in `combobox.tsx`."
           },
           {
             "name": "label",

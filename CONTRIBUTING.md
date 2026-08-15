@@ -21,7 +21,7 @@ than as a warning.
 ```
 packages/ui/src/<name>.tsx                 the component
 packages/ui/src/<name>.test.tsx            behaviour under fa-IR
-apps/website/src/lib/demos.tsx             a registry entry (title + intro, both locales)
+apps/website/src/examples/<name>.tsx       the page: meta (title + intro + tier, both locales) and examples
 packages/ui/src/index.ts                   the export
 registry.json                              generated — run scripts/build-registry.mjs
 ```
@@ -162,8 +162,9 @@ combobox-family popup (mui/base-ui#5263). Lumo relabels it live from a REQUIRED
 1. Prove it: render the OPEN state under `fa-IR` (the popup-interiors tier does
    this for 18 families) and read the served/live attributes — do not assume.
 2. If a prop reaches it, add the string to `LumoStrings` and make it required.
-3. If nothing reaches it, relabel the live element the way `combobox.tsx` does,
-   record the defect in `docs/upstream/`, and do not paper over it with a
+3. If nothing reaches it, relabel the live element the way `relabelEngineDismiss`
+   in `@lumo-ui/base-ui-ssr` does (called from `combobox.tsx` and
+   `multi-select.tsx`), record the defect in `docs/upstream/`, and do not paper over it with a
    client dictionary — anything that only runs after hydration cannot fix the
    first byte.
 

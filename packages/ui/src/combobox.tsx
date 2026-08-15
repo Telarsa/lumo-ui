@@ -5,6 +5,7 @@ import { cva } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import { cn, type LumoNode } from "@lumo-ui/core";
+import { relabelEngineDismiss } from "@lumo-ui/base-ui-ssr";
 import { popoverVariants } from "./popover.tsx";
 import type { AsyncCollectionPresentation } from "./async-collection.ts";
 import { Button } from "./button.tsx";
@@ -105,38 +106,6 @@ export interface ComboBoxProps<T extends object> {
   className?: string | undefined;
   /** Class for the popover surface. */
   popoverClassName?: string | undefined;
-}
-
-/**
- * Rewrites the engine-owned announced strings a caller cannot reach by prop:
- * the portalled dismiss sentinel's "Dismiss" becomes `dismissLabel`, and the
- * unlabeled hidden serialization input leaves the accessibility tree.
- * Duplicated in `multi-select.tsx` rather than shared (registry payload).
- */
-/* The engine's exact literal, held as a constant to be HUNTED — not a default this file ships. */
-const ENGINE_ENGLISH_DISMISS = "Dismiss";
-const ENGINE_DISMISS_MARKER = "data-lumo-engine-dismiss";
-
-function relabelEngineDismiss(scope: HTMLElement | null, label: string): void {
-  if (scope === null) return;
-  const roots: ParentNode[] = [scope];
-  const expanded = scope.querySelector('[role="combobox"][aria-expanded="true"]');
-  const listboxId = expanded?.getAttribute("aria-controls");
-  const listbox = listboxId == null ? null : document.getElementById(listboxId);
-  const positioner = listbox?.parentElement?.parentElement;
-  if (positioner != null) roots.push(positioner);
-  for (const root of roots) {
-    for (const sentinel of root.querySelectorAll(
-      `[aria-label="${ENGINE_ENGLISH_DISMISS}"], [${ENGINE_DISMISS_MARKER}]`,
-    )) {
-      sentinel.setAttribute(ENGINE_DISMISS_MARKER, "");
-      sentinel.setAttribute("aria-label", label);
-    }
-  }
-  for (const hidden of scope.querySelectorAll('input[id$="-hidden-input"]')) {
-    hidden.setAttribute("aria-hidden", "true");
-    hidden.setAttribute("tabindex", "-1");
-  }
 }
 
 export function ComboBox<T extends object>({

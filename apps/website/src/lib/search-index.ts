@@ -4,7 +4,7 @@ import type { Locale } from "@lumo-ui/core";
  * The ⌘K search index: the plain-data shape, the builder, and the normaliser that makes
  * Persian queries actually find anything.
  *
- * This file NEVER imports `@/lib/demos` or `@/lib/blocks`: both read `node:fs` at module
+ * This file NEVER imports `@/lib/catalog` or `@/lib/blocks`: both read `node:fs` at module
  * scope, and `site-search.tsx` (`"use client"`) imports `normalize`/`matches` from here. So
  * `buildSearchIndex` takes already-read arrays; `site-shell.tsx` (server) supplies them.
  */

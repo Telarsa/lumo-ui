@@ -76,8 +76,8 @@ function mutate(file, source) {
   }
   if (file === "combobox.tsx" || file === "multi-select.tsx") {
     return {
-      operator: "make an already-relabelled dismiss sentinel unreachable on prop updates",
-      source: source.replace(', [${ENGINE_DISMISS_MARKER}]', ""),
+      operator: "leave the engine's English dismiss sentinel unrelabelled",
+      source: source.replaceAll("relabelEngineDismiss(boxRef.current, dismissLabel)", "void dismissLabel"),
     };
   }
   return {

@@ -172,6 +172,12 @@ function InFormExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "انتخابگر", "en-US": "Select" },
+    intro: {
+      "fa-IR": "فهرست تک‌انتخابی درون یک پاپ‌اور. متن جای‌نما اجباری است، چون پیش‌فرض ری‌اکت‌آریا یک عبارت انگلیسیِ دیدنی است.",
+      "en-US": "A single-select listbox in a popover. The placeholder is required, because React Aria's fallback is a visible English phrase.",
+    },
+    tier: "form",
     composition: [
       `<Select placeholder="…" validate={key => …}>`,
       `  <Label>…</Label>`,

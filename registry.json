@@ -7,7 +7,7 @@
       "name": "alert-dialog",
       "type": "registry:ui",
       "title": "Alert Dialog",
-      "description": "A dialog that demands a decision.",
+      "description": "A dialog that interrupts to force a decision and offers exactly two ways out.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -53,7 +53,7 @@
       "name": "aspect-ratio",
       "type": "registry:ui",
       "title": "Aspect Ratio",
-      "description": "A box that keeps its width-to-height ratio.",
+      "description": "A box that holds a fixed width-to-height ratio while its width flexes.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -94,7 +94,7 @@
       "name": "autocomplete",
       "type": "registry:ui",
       "title": "Autocomplete",
-      "description": "An input bound to the collection it filters.",
+      "description": "A text field bound to a collection it filters: the primitive underneath a command palette, a filterable side panel, or a list that shrinks as you type.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -119,7 +119,7 @@
       "name": "avatar",
       "type": "registry:ui",
       "title": "Avatar",
-      "description": "A person as a picture or as initials.",
+      "description": "A person, as a picture or as initials.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -137,7 +137,7 @@
       "name": "badge",
       "type": "registry:ui",
       "title": "Badge",
-      "description": "A status marker.",
+      "description": "A status marker: a «span» with tokens on it.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -194,7 +194,7 @@
       "name": "button-group",
       "type": "registry:ui",
       "title": "Button Group",
-      "description": "Sibling buttons joined into one control.",
+      "description": "A row of related buttons joined into one visual control.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -280,7 +280,7 @@
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
-      "description": "A surface with a header, a body and a footer.",
+      "description": "A surface with a header, a body and a footer — seven components and no state.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -298,7 +298,7 @@
       "name": "carousel",
       "type": "registry:ui",
       "title": "Carousel",
-      "description": "embla takes its direction from locale; without it the slides and the buttons disagree about which way next is — a defect a screenshot cannot show.",
+      "description": "A strip of slides over embla.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -341,7 +341,7 @@
       "name": "chart",
       "type": "registry:ui",
       "title": "Chart",
-      "description": "recharts draws nothing on the server.",
+      "description": "The chart engine draws nothing on the server.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -429,10 +429,11 @@
       "name": "combobox",
       "type": "registry:ui",
       "title": "Combobox",
-      "description": "A text input that filters a list.",
+      "description": "A text input that filters a list of options.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react"
@@ -488,7 +489,7 @@
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",
-      "description": "A right-click menu built on the existing menu; it anchors at the pointer and opens from the keyboard too.",
+      "description": "A menu opened by right-click, long-press or the menu key, anchored at the pointer itself.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -742,7 +743,7 @@
       "name": "description-list",
       "type": "registry:ui",
       "title": "Description List",
-      "description": "Name and value pairs.",
+      "description": "Name/value pairs, with the «dl», «dt» and «dd» they should be.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -824,7 +825,7 @@
       "name": "empty-state",
       "type": "registry:ui",
       "title": "Empty State",
-      "description": "The nothing-here panel: icon, title, explanation, one action.",
+      "description": "The \"there is nothing here yet\" panel: an icon, a title, an explanation and one action.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -878,7 +879,7 @@
       "name": "file-upload",
       "type": "registry:ui",
       "title": "File Upload",
-      "description": "A drop area and a picker.",
+      "description": "A drop area, a file picker and the list of what was chosen.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -960,7 +961,7 @@
       "name": "form",
       "type": "registry:ui",
       "title": "Form",
-      "description": "Field chrome: label, help text, error.",
+      "description": "The chrome every labelled control in this library is built from: the wrapper, the label, the help text, the error and the `<form>` itself.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1048,7 +1049,7 @@
       "name": "hover-card",
       "type": "registry:ui",
       "title": "Hover Card",
-      "description": "A preview that opens when the pointer rests.",
+      "description": "A preview that opens when the pointer rests on a link — or when the keyboard focuses it.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1240,7 +1241,7 @@
       "name": "link",
       "type": "registry:ui",
       "title": "Link",
-      "description": "A navigational link.",
+      "description": "A navigational link on a real «a», with no engine at all.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1258,7 +1259,7 @@
       "name": "list-box",
       "type": "registry:ui",
       "title": "List Box",
-      "description": "A selectable list with no popover.",
+      "description": "A list you select from, with no popover and no trigger — and that absence is the whole reason it exists.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/base-ui-ssr",
@@ -1413,6 +1414,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "lucide-react"
       ],
@@ -1456,7 +1458,7 @@
       "name": "num",
       "type": "registry:ui",
       "title": "Num",
-      "description": "The sanctioned way to render a number.",
+      "description": "Renders a number in the reader's own numbering system and a date in their own calendar.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core"
@@ -1473,7 +1475,7 @@
       "name": "number-field",
       "type": "registry:ui",
       "title": "Number Field",
-      "description": "A number input with three required strings: the decrement name, the increment name and the input's own role description.",
+      "description": "A number input with two stepper buttons.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1520,7 +1522,7 @@
       "name": "pagination",
       "type": "registry:ui",
       "title": "Pagination",
-      "description": "Everything visible here is a number.",
+      "description": "A page selector in which every visible thing is a NUMBER — which is its whole risk profile: a bare number in JSX compiles, looks right, and ships Latin digits into a page whose every other figure is Persian.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1566,7 +1568,7 @@
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
-      "description": "A positioned overlay with logical placement.",
+      "description": "A floating surface anchored to a control and opened by pressing it.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1621,7 +1623,7 @@
       "name": "progress",
       "type": "registry:ui",
       "title": "Progress",
-      "description": "A progress bar and a meter.",
+      "description": "Two things that look alike and are not: a progress bar is an operation in flight, a meter is a quantity within a range.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1706,7 +1708,7 @@
       "name": "radio-group",
       "type": "registry:ui",
       "title": "Radio Group",
-      "description": "Mutually exclusive options under one question.",
+      "description": "A few mutually exclusive options, exactly one of which is true.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1779,7 +1781,7 @@
       "name": "rating",
       "type": "registry:ui",
       "title": "Rating",
-      "description": "A star has no text, so each name is composed — from an already-formatted number, so «۳ ستاره» is what is announced and a Latin digit is never in scope.",
+      "description": "A star has no text, so its name has to be COMPOSED — and from an already-formatted number, so «۳ ستاره» is what is announced and a Latin digit is never in scope.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1878,7 +1880,7 @@
       "name": "search-field",
       "type": "registry:ui",
       "title": "Search Field",
-      "description": "A search input.",
+      "description": "A search input with a magnifier at the reading start and a clear button at the reading end.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1901,7 +1903,7 @@
       "name": "segmented-control",
       "type": "registry:ui",
       "title": "Segmented Control",
-      "description": "A few mutually exclusive options, all visible at once.",
+      "description": "Two to four mutually exclusive options for one thing, all visible at once.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1951,7 +1953,7 @@
       "name": "separator",
       "type": "registry:ui",
       "title": "Separator",
-      "description": "A rule between two groups of content.",
+      "description": "A rule between two groups of content — and the whole component is one ternary, with no engine at all.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2017,7 +2019,7 @@
       "name": "skeleton",
       "type": "registry:ui",
       "title": "Skeleton",
-      "description": "The placeholder family: text, avatar, form, card and table presets over one atom.",
+      "description": "The empty shape of content that has not arrived.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2035,7 +2037,7 @@
       "name": "slider",
       "type": "registry:ui",
       "title": "Slider",
-      "description": "One value from a range.",
+      "description": "One value chosen from a range.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2074,7 +2076,7 @@
       "name": "spinner",
       "type": "registry:ui",
       "title": "Spinner",
-      "description": "A busy indicator that says so out loud.",
+      "description": "A busy indicator that says out loud what is being waited for.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2110,7 +2112,7 @@
       "name": "steps",
       "type": "registry:ui",
       "title": "Steps",
-      "description": "Where you are in a sequence.",
+      "description": "Where you are in a sequence you have to finish.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2234,7 +2236,7 @@
       "name": "tag",
       "type": "registry:ui",
       "title": "Tag",
-      "description": "A chip for a filter or a selected value.",
+      "description": "A chip: a filter, a selected value, a keyword — optionally removable.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2270,7 +2272,7 @@
       "name": "text-area",
       "type": "registry:ui",
       "title": "Text Area",
-      "description": "A multi-line input.",
+      "description": "A multi-line text field.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2370,7 +2372,7 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "The toast region writes its own dir onto a portal, so locale is required — without it a correct Persian page lays its toasts out left to right.",
+      "description": "Short messages that stack in a corner.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2392,7 +2394,7 @@
       "name": "toggle-group",
       "type": "registry:ui",
       "title": "Toggle Group",
-      "description": "A segmented control.",
+      "description": "A strip of buttons that are each on or off.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2447,7 +2449,7 @@
       "name": "toolbar",
       "type": "registry:ui",
       "title": "Toolbar",
-      "description": "A group of controls with arrow-key navigation and one tab stop.",
+      "description": "A group of controls that collapse into a single Tab stop and are navigated with the arrow keys.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2467,7 +2469,7 @@
       "name": "tooltip",
       "type": "registry:ui",
       "title": "Tooltip",
-      "description": "A description shown on hover or focus.",
+      "description": "A short sentence that appears on hover or focus.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",

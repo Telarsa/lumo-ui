@@ -91,6 +91,12 @@ function TouchSizeExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "کلید", "en-US": "Switch" },
+    intro: {
+      "fa-IR": "کلید روشن و خاموش. انگشتی با inset-inline-start جابه‌جا می‌شود، نه translate-x، که در فارسی به‌سوی آغاز خط برمی‌گشت.",
+      "en-US": "An on/off switch. The thumb moves with inset-inline-start, not translate-x, which would slide it backwards in Persian.",
+    },
+    tier: "form",
     composition: [
       `<Switch description="…" errorMessage="…">`,
       `  …`,

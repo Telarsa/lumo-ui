@@ -96,8 +96,7 @@ function RailExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
-    // Page identity — this component has no demos.tsx entry, so the catalog
-    // builds its page from these three fields (see lib/catalog.ts).
+    // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "نوار کناری", "en-US": "Sidebar" },
     intro: { "fa-IR": "نوار کناریِ برنامه: گروه‌ها، آیتم‌ها با آیکون و نشان، و حالت جمع‌شده. کامپوننت است، نه بلوک — بلوکِ پوستهٔ برنامه می‌تواند رویش بنشیند.", "en-US": "The app sidebar: groups, icon-and-badge items, and a collapsed rail. A component, not a block — the app-shell block can adopt it." },

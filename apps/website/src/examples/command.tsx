@@ -136,6 +136,12 @@ function DismissableExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "پالت فرمان", "en-US": "Command palette" },
+    intro: {
+      "fa-IR": "فهرست فیلترشوندهٔ کنش‌ها درون یک گفت‌وگو. مثل هر لایهٔ دیگر، آنچه در نخستین بایت هست تنها کلید بازکردن آن است.",
+      "en-US": "A filtered list of actions inside a dialog. Like every other overlay, what exists in the first byte is the control that opens it.",
+    },
+    tier: "overlay",
     isNew: true,
     composition: [
       `<CommandDialog title="…" description="…" closeLabel="…" trigger={…}>`,

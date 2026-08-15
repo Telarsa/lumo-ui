@@ -79,6 +79,12 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "ورودی متن", "en-US": "Text field" },
+    intro: {
+      "fa-IR": "ورودی تک‌خطی. برچسبِ رشته‌ای اجباری است، چون قرارداد «هر فیلد برچسب دارد» پیش‌تر شکست خورده است.",
+      "en-US": "A single-line input. The label is a required string, because the convention that every field has one has already failed.",
+    },
+    tier: "form",
     composition: [
       `<TextField`,
       `  label="…"`,

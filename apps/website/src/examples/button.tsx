@@ -148,6 +148,12 @@ function BusyExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "دکمه", "en-US": "Button" },
+    intro: {
+      "fa-IR": "کنش اصلی. چهار گونه و چهار اندازه، با فاصله‌گذاری منطقی که در راست‌چین قرینه می‌شود.",
+      "en-US": "The primary action. Four variants and four sizes, with logical spacing that mirrors under RTL.",
+    },
+    tier: "form",
     composition: [
       `<Button variant="…" size="…">…</Button>`,
       ``,

@@ -107,8 +107,7 @@ function SectionsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
-    // Page identity — this component has no demos.tsx entry, so the catalog
-    // builds its page from these three fields (see lib/catalog.ts).
+    // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "میلهٔ منو", "en-US": "Menubar" },
     intro: { "fa-IR": "ردیفی افقی از منوها با پیمایش پیکانی. تا وقتی React Aria نقش menubar واقعی نداشته باشد، صادقانه یک Toolbar از دکمه‌های منو است — این در سرصفحهٔ کامپوننت پین شده.", "en-US": "A horizontal row of menus with arrow-key roving. Until React Aria ships a real menubar role, it is honestly a Toolbar of menu triggers — pinned in the component header." },

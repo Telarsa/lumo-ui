@@ -29,3 +29,4 @@ export type { BaseUiStrings, BaseUiStringTemplates } from "./strings";
 // composition plumbing the fixes need
 export { findChildProp } from "./children";
 export { attr } from "./attr";
+export { relabelEngineDismiss } from "./dismiss-label";

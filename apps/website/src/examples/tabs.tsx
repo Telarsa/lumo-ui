@@ -209,6 +209,12 @@ function CountsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "زبانه‌ها", "en-US": "Tabs" },
+    intro: {
+      "fa-IR": "زبانه‌ها. نام فهرست زبانه اجباری است، و کلیدهای پیکان را ری‌اکت‌آریا با جهت سند حل می‌کند.",
+      "en-US": "Tabs. The tab list's name is required, and React Aria resolves the arrow keys against the document direction.",
+    },
+    tier: "navigation",
     composition: [
       `<Tabs orientation="…">`,
       `  <TabList label="…">`,

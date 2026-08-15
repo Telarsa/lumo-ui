@@ -18,7 +18,7 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  *
  * Like every overlay demo on this site, what exists in the first byte is the
  * TRIGGER — a closed Base UI Dialog renders nothing at all, so the modal itself
- * cannot contribute to the graded bytes (see demos.tsx's header).
+ * cannot contribute to the graded bytes (see the contract in _system/types.ts).
  *
  * Every body paragraph here is a `DialogDescription` rather than a hand-written
  * `<p className="text-sm text-fg-muted">`. That is not a styling tidy-up: the
@@ -178,6 +178,12 @@ function ScrollingExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "گفت‌وگو", "en-US": "Dialog" },
+    intro: {
+      "fa-IR": "پنجرهٔ مودال در چهار لایه. نام دکمهٔ بستن ویژگی اجباری است، چون یک ✕ نام نیست.",
+      "en-US": "A modal dialog in four layers. The close button's name is a required prop, because an ✕ is not a name.",
+    },
+    tier: "overlay",
     composition: [
       `<DialogTrigger>`,
       `  <Button>…</Button>`,

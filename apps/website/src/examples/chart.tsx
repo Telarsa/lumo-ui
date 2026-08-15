@@ -188,6 +188,12 @@ function MotionExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    title: { "fa-IR": "نمودار", "en-US": "Chart" },
+    intro: {
+      "fa-IR": "کتابخانهٔ نمودار روی سرور هیچ نمی‌کشد. پس ChartContainer خودش یک جدول می‌سازد: همان داده‌ها، در بایت‌های ارسالی، با ارقام فارسی. گیت آن جدول را می‌بیند و می‌سنجد. نموداری که روی سرور رسم شود هم فقط خطوط محور را می‌فرستد، نه اعداد را.",
+      "en-US": "The chart engine draws nothing on the server. So ChartContainer renders a table itself — the same rows, in the served bytes, in Persian digits. The gate grades that table. Even a chart that did server-render would ship axis ticks, not the data.",
+    },
+    tier: "data",
     composition: [
       `const definition = defineChart({`,
       `  marks: [barY(data, { id: "sales", x: "month", y: "sales", fill: chartColor("sales") })],`,
