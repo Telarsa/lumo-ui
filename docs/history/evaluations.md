@@ -14,3 +14,4 @@ Kept because the conclusions changed the codebase; the reports themselves were r
 
 **Standing limits:** no browser or assistive-technology evidence exists; the mutation floor is one operator per module; distribution is private by decision.
 - The site kept two registries for one catalog and `LumoStrings` carried four React-Aria-era groups nobody read → `demos.tsx` retired (examples files are the registration), the groups deleted, `no-latin-aria` keyed on script (decision §21).
+- **15 Aug 2026 — adversarial pass at `709f792`: blind 7.8/10, post-fix 7.9/10; fix range `709f792..8b3e770`.** PhoneInput field/value semantics, required Dialog/Drawer popup names, named-role gate coverage, inert Dialog idrefs, and stale docs were closed; the parked registry endpoint remains an explicit owner decision.
