@@ -428,7 +428,13 @@ export function ListBox<T extends object>({
       case "PageDown": {
         event.preventDefault();
         typed.current = null;
-        move(from, (event.key === "PageDown" ? 1 : -1) * pageSize());
+        // APG: a page down or TO THE LAST option — clamped, never wrapped, never a no-op
+        // near the end (the audit of 15 Aug 2026 found `move` returning null there).
+        const order = enabledIndices();
+        const at = Math.max(0, order.indexOf(from));
+        const step = (event.key === "PageDown" ? 1 : -1) * pageSize();
+        const target = order[Math.min(order.length - 1, Math.max(0, at + step))];
+        if (target !== undefined) focusIndex(target);
         return;
       }
       case "Enter":
