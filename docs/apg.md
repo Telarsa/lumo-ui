@@ -4,19 +4,19 @@ Generated 15 Aug 2026 from `packages/ui/src` by `scripts/apg-matrix.mjs` + `scri
 
 | Family | Engine-provided (per APG) | Lumo-owned keys | Proved by a direct test | Holes (owned, unproved) | Direct tests |
 |---|---|---|---|---|---:|
-| menu | Arrows, Home/End, typeahead, Escape, Enter/Space | — | Escape, ArrowDown, Tab | — | 8 |
-| select | Arrows, Home/End, typeahead, Escape, Enter/Space | — | ArrowDown, Tab | — | 6 |
+| menu | Arrows, Home/End, typeahead, Escape, Enter/Space | — | Escape, ArrowDown, Tab | — | 9 |
+| select | Arrows, Home/End, typeahead, Escape, Enter/Space | — | ArrowDown, Tab | — | 7 |
 | combobox | Arrows, Home/End, Escape, Enter | — | ArrowDown, Tab | — | 5 |
 | multi-select | Arrows, Escape, Enter, Backspace on chips | — | ArrowDown, Enter | — | 2 |
 | autocomplete | Arrows, Escape, Enter | — | ArrowDown | — | 3 |
 | list-box | — | Home, End, PageUp, PageDown, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Enter, Space | Home, End, PageUp, PageDown, Enter, Backspace, ArrowLeft, ArrowRight, ArrowDown, Space | **ArrowUp** | 5 |
-| tabs | Arrows (orientation-aware), Home/End | — | Tab, ArrowRight | — | 4 |
+| tabs | Arrows (orientation-aware), Home/End | — | Tab, ArrowRight | — | 5 |
 | tree | — | Home, End, ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Enter, Space | ArrowLeft, ArrowRight, ArrowDown, Space | **Home, End, ArrowUp, Enter** | 2 |
 | tree-select | — | Home, End, ArrowUp, ArrowDown | ArrowDown, Escape, Enter | **Home, End, ArrowUp** | 3 |
 | cascader | — | Home, End, ArrowLeft, ArrowRight, ArrowUp, ArrowDown | ArrowLeft, ArrowRight, ArrowUp, ArrowDown, Escape, Enter | **Home, End** | 3 |
 | table | — | Home, End, ArrowLeft, ArrowRight, Escape, Enter, Space | ArrowLeft, Escape, Enter, Home, End, PageUp, PageDown, ArrowRight, ArrowDown, Space | — | 4 |
 | data-grid | — | Escape, Enter | ArrowLeft, Escape, Enter | — | 1 |
-| slider | Arrows, Home/End, PageUp/PageDown | — | Tab | — | 3 |
+| slider | Arrows, Home/End, PageUp/PageDown | — | Tab | — | 4 |
 | range-slider | Arrows, Home/End, PageUp/PageDown per thumb | — | ArrowDown, Enter | — | 2 |
 | dialog | Escape, focus trap, Tab cycle | — | Escape, ArrowDown, Tab | — | 8 |
 | alert-dialog | Escape, focus trap | — | ArrowDown | — | 3 |
@@ -24,9 +24,9 @@ Generated 15 Aug 2026 from `packages/ui/src` by `scripts/apg-matrix.mjs` + `scri
 | popover | Escape, Tab out | — | Escape, ArrowDown, Tab | — | 4 |
 | tooltip | Escape | — | ArrowDown, Tab | — | 3 |
 | disclosure | Enter/Space | — | — | — | 3 |
-| toolbar | Arrows, Home/End (roving) | — | — | — | 3 |
-| toggle-group | Arrows (roving), Space | — | — | — | 3 |
-| radio-group | Arrows (roving), Space | — | Escape, Tab | — | 1 |
+| toolbar | Arrows, Home/End (roving) | — | — | — | 4 |
+| toggle-group | Arrows (roving), Space | — | — | — | 4 |
+| radio-group | Arrows (roving), Space | — | Escape, Tab | — | 2 |
 | checkbox | Space | — | Tab | — | 4 |
 | switch | Space | — | Tab | — | 3 |
 | menubar | Arrows across menus, Home/End | — | ArrowDown | — | 3 |
@@ -63,5 +63,5 @@ Generated 15 Aug 2026 from `packages/ui/src` by `scripts/apg-matrix.mjs` + `scri
 - **ListBox PageUp/PageDown** are clamped to the first/last option (fixed 15 Aug 2026 — near the ends they were a no-op). Page size = viewport ÷ option height; 10 in jsdom.
 - **Home/End are never mirrored** in any family: first/last in reading order under both directions (`list-box.test.tsx`, `date-input`).
 - **Horizontal arrows are mirrored** wherever Lumo owns them (list-box, tree, sortable, kanban, resizable, carousel, date-input, event-calendar, gantt): the *forward* key is ArrowLeft under `fa-IR`; each has a behavioural mutation operator that un-mirrors it and dies.
-- **Menu, Select, ComboBox, Tabs, Slider, Toolbar, ToggleGroup, RadioGroup, Menubar, TagGroup keys belong to the engine.** Their suites exercise them only as far as each family's own concerns reach; Home/End/typeahead/PageUp/PageDown on those families are **not pinned** — the next tranche adds engine tripwires so a Base UI change cannot silently remove them.
+- **Engine keys are pinned as tripwires** in `apg-engine-keys.test.tsx`: Menu Home/End, Select Home/End, Tabs Home/End, Slider Home/End/PageUp/PageDown, Toolbar arrows (mirrored under fa-IR), ToggleButtonGroup arrows, RadioGroup arrows — asserted through Lumo's public API so a Base UI minor cannot silently drop one. **Engine deviation:** Base UI 1.7.0's Toolbar composite does not handle Home/End (APG lists them); typeahead on Menu/Select and Menubar/TagGroup keys are still unpinned.
 - **Still unproved (owned):** date-input Delete; event-calendar End/PageUp/ArrowRight/ArrowUp/Enter/Space; gantt ArrowUp/ArrowDown/Enter; kanban Enter; tree Home/End/ArrowUp/Enter; tree-select Home/End/ArrowUp; cascader Home/End; tags-input ArrowUp/Escape; carousel ArrowLeft/ArrowRight (covered indirectly by its mutation operator's killing test, not by a direct key test). Listed so the table is not read as complete.
