@@ -174,9 +174,9 @@ around — see below.
 
 ## Install and use
 
-```bash
-pnpm add @lumo-ui/base-ui-ssr
-```
+This package is private and currently consumed from the Lumo monorepo as a
+workspace dependency. It is not available through the public npm registry; a
+standalone consumer must use the organisation's pinned git/workspace setup.
 
 ```tsx
 import { useFieldWiring } from "@lumo-ui/base-ui-ssr";

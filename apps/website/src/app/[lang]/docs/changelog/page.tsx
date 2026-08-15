@@ -6,11 +6,9 @@ import { Bullets, DocSection, DocsShell, P, Term } from "../docs-shell";
  * /docs/changelog — dated history, derived from `git log`, with no version
  * numbers because nothing has been released.
  *
- * Every entry below corresponds to commits that exist on this branch; the
- * grouping is by author date. The honesty stance is deliberate and stated on
- * the page itself: the first commit (30 July 2026) contained only the plan and
- * the spike evidence, and everything that runs was written across 8–10 August
- * 2026. A changelog that dressed that up as "v0.1.0 … v0.5.0" releases would
+ * Every entry below corresponds to commits that exist on this branch. These
+ * are selected dated milestones, not an exhaustive transcription of every
+ * commit. A changelog that dressed them up as "v0.1.0 … v0.5.0" releases would
  * be inventing a history the repository does not have.
  */
 
@@ -20,7 +18,7 @@ export function generateStaticParams() {
 }
 
 /** Days, newest first. Both the rail and the `<h2>`s derive from this list. */
-const DAYS = ["d20260810", "d20260809", "d20260808", "d20260730"] as const;
+const DAYS = ["d20260815", "d20260810", "d20260809", "d20260808", "d20260730"] as const;
 type DayId = (typeof DAYS)[number];
 
 /**
@@ -49,12 +47,14 @@ const COPY = {
     title: "تاریخچهٔ تغییرات",
     intro: "تاریخ به‌جای شماره‌نسخه — چون هنوز نسخه‌ای منتشر نشده است.",
     railLabel: {
+      d20260815: "۲۴ مرداد ۱۴۰۵",
       d20260810: "۱۹ مرداد ۱۴۰۵",
       d20260809: "۱۸ مرداد ۱۴۰۵",
       d20260808: "۱۷ مرداد ۱۴۰۵",
       d20260730: "۸ مرداد ۱۴۰۵",
     },
     heading: {
+      d20260815: "۲۴ مرداد ۱۴۰۵ — ۱۵ اوت ۲۰۲۶",
       d20260810: "۱۹ مرداد ۱۴۰۵ — ۱۰ اوت ۲۰۲۶",
       d20260809: "۱۸ مرداد ۱۴۰۵ — ۹ اوت ۲۰۲۶",
       d20260808: "۱۷ مرداد ۱۴۰۵ — ۸ اوت ۲۰۲۶",
@@ -63,13 +63,26 @@ const COPY = {
     lead: (
       <>
         این مخزن جوان است و این صفحه وانمود نمی‌کند که نیست. نخستین کامیت — ۸ مرداد ۱۴۰۵،
-        برابر ۳۰ ژوئیهٔ ۲۰۲۶ — فقط برنامه و شواهدِ تصمیم‌ها بود؛ همهٔ کدی که امروز اجرا می‌شود
-        در سه روز، از ۱۷ تا ۱۹ مرداد، نوشته شده است. آنچه در ادامه می‌آید مستقیم از{" "}
-        <Term>git log</Term> استخراج شده، به تفکیک روز — و شماره‌نسخه‌ای در کار نیست، چون
-        انتشاری در کار نبوده که شماره‌ای بخواهد.
+        برابر ۳۰ ژوئیهٔ ۲۰۲۶ — فقط برنامه و شواهدِ تصمیم‌ها بود. آنچه در ادامه می‌آید
+        گزیده‌ای از نقطه‌های عطفِ ثبت‌شده در <Term>git log</Term> است — نه فهرست همهٔ
+        کامیت‌ها و نه نسخه‌های ساختگی؛ چون هنوز انتشاری در کار نبوده که شماره‌ای بخواهد.
       </>
     ),
     entries: {
+      d20260815: [
+        {
+          key: "engines",
+          body: "مهاجرت Base UI و TanStack کامل شد، سطح سازگاری React Aria حذف شد، و مجموعه به ۱۱۱ کامپوننت و ۳۰ بلوک رسید؛ از تقویم رویداد و گانت تا شبکهٔ داده، بارگذاری، جست‌وجوی قدرتمند و چهار خانوادهٔ نمودار.",
+        },
+        {
+          key: "verification",
+          body: "دروازهٔ بایت خروجی، سنجش پنجره‌های باز، مرجع API و کارزار جهش سراسری سخت‌تر شدند؛ بازبینی‌های مستقل چند ادعای قبلی را رد کردند و نقص‌های اثبات‌شده را با آزمون قرمز/سبز بستند.",
+        },
+        {
+          key: "docs",
+          body: "اسناد در یک ساختار واحد ادغام شدند، تز و نقشهٔ راه با وضعیت واقعی بازنویسی شدند، و محدودیت‌های باقی‌مانده — نبود شواهد AT چندسکویی و توزیع خصوصی — صریح ماندند.",
+        },
+      ],
       d20260810: [
         {
           key: "theme",
@@ -170,12 +183,14 @@ const COPY = {
     title: "Changelog",
     intro: "Dates instead of version numbers — because nothing has been released yet.",
     railLabel: {
+      d20260815: "15 August 2026",
       d20260810: "10 August 2026",
       d20260809: "9 August 2026",
       d20260808: "8 August 2026",
       d20260730: "30 July 2026",
     },
     heading: {
+      d20260815: "15 August 2026",
       d20260810: "10 August 2026",
       d20260809: "9 August 2026",
       d20260808: "8 August 2026",
@@ -184,13 +199,27 @@ const COPY = {
     lead: (
       <>
         This repository is young and this page does not pretend otherwise. The first commit —
-        30 July 2026 — contained only the plan and the evidence behind the decisions; all of
-        the code that runs today was written across three days, 8–10 August. What follows is
-        derived directly from <Term>git log</Term>, grouped by day — and there are no version
-        numbers, because there has been no release to number.
+        30 July 2026 — contained only the plan and the evidence behind the decisions. What
+        follows is a selection of milestones recorded in <Term>git log</Term>, not every
+        commit and not invented releases; there are no version numbers because there has been
+        no release to number.
       </>
     ),
     entries: {
+      d20260815: [
+        {
+          key: "engines",
+          body: "The Base UI and TanStack migration completed, the React Aria compatibility surface was removed, and the catalogue reached 111 components plus 30 blocks—from EventCalendar and Gantt to DataGrid, upload, PowerSearch, and four chart families.",
+        },
+        {
+          key: "verification",
+          body: "The served-byte gate, open-popup sweep, API reference, and repository-wide mutation campaign were hardened; independent reviews rejected several earlier claims and closed proved defects with red/green assertions.",
+        },
+        {
+          key: "docs",
+          body: "Documentation was consolidated, the thesis and roadmap were reconciled with the shipped code, and the remaining limits—no cross-platform AT evidence and private distribution—stayed explicit.",
+        },
+      ],
       d20260810: [
         {
           key: "theme",
@@ -302,6 +331,10 @@ export default async function ChangelogPage({
   return (
     <DocsShell lang={lang} slug="changelog" title={t.title} intro={t.intro} sections={sections}>
       <P>{t.lead}</P>
+
+      <DocSection id="d20260815" title={t.heading.d20260815} dualCalendar>
+        <Bullets items={t.entries.d20260815} />
+      </DocSection>
 
       <DocSection id="d20260810" title={t.heading.d20260810} dualCalendar>
         <Bullets items={t.entries.d20260810} />
