@@ -117,6 +117,8 @@ jobs:
       # from Registry makes a stale API artifact name itself in CI.
       - name: API reference
         run: pnpm run gate:api
+      - name: Catalog
+        run: pnpm run gate:catalog
 
       # Two minutes standing between us and publishing a registry nobody has
       # ever installed from. Copies every item into a bare project and compiles

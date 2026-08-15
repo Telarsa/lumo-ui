@@ -1,0 +1,21 @@
+# Lumo UI
+
+> Private, Persian-first, RTL-honest React 19 component library on Base UI, owned by Telarsa. Components are copied into consuming apps (shadcn-style); three contract packages are installed from git.
+
+## For an agent working in ANOTHER project
+- docs/agent-consumer.md — the whole workflow: find (lumo search/info), get (lumo add), the five non-negotiable rules, customise, upgrade (3-way merge), report defects
+- skills/lumo-ui/SKILL.md — the same as a skill
+- catalog.json — every item: title/intro/usage (fa-IR + en-US), tier, required announced strings, required props, files, deps
+- api-reference.json — every prop with its docblock, per module
+- registry.json — files, npm dependencies, registry closure
+- CHANGELOG.md — per-version changes and migration notes
+
+## For an agent working IN this repository
+- AGENTS.md — commands, non-negotiable rules, ask-before list, layout
+- docs/README.md — map of the docs; docs/rubric.md — how it is rated; docs/goals.md — what is next
+- docs/i18n-and-rtl.md — the contract (incl. Latin words inside Persian content); docs/verification.md — every gate and what it proves
+- docs/apg.md — keyboard matrix; docs/evidence/README.md — what the browser job proves; docs/decisions/log.md — why
+
+## Commands
+- pnpm run verify (everything, ~15 min) · pnpm run evidence (three real engines) · pnpm run mutation:components
+- node scripts/lumo-cli.mjs <search|info|list|deps|add|diff|upgrade|gate|doctor>

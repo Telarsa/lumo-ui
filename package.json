@@ -11,7 +11,7 @@
     "build": "pnpm -r --if-present run build",
     "start": "node scripts/serve-static.mjs",
     "preview": "pnpm run build && pnpm run start",
-    "verify": "pnpm run gate:types && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:smoke && pnpm run gate:html",
+    "verify": "pnpm run gate:types && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
     "gate:props": "node --experimental-strip-types packages/gate/src/inert-props-cli.ts packages/ui/src packages/blocks/src",
     "lint": "eslint .",
@@ -27,7 +27,9 @@
     "gate:smoke": "node scripts/smoke-consumer.mjs",
     "mutation:components": "node scripts/mutate-components.mjs --output mutation-report.json",
     "evidence": "playwright test -c evidence/playwright.config.ts",
-    "evidence:types": "tsc -p evidence/tsconfig.json"
+    "evidence:types": "tsc -p evidence/tsconfig.json",
+    "catalog": "node scripts/build-catalog.mjs",
+    "gate:catalog": "node scripts/build-catalog.mjs --check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -38,5 +40,8 @@
     "eslint-plugin-react-hooks": "catalog:",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:"
+  },
+  "bin": {
+    "lumo": "scripts/lumo-cli.mjs"
   }
 }
