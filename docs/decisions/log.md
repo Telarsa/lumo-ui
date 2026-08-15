@@ -1,6 +1,8 @@
 # Decisions, and the evidence for them
 
-Originally dated 30 July 2026, amended 9 August 2026. Each of these was checked
+> **Reading this log:** it is append-only. Superseded decisions stay, struck through, so a reversal can be told from a drift — which means the early sections describe plans (Zag, Preact, Tessalor-first) that no longer hold. For the current architecture read `docs/architecture.md`; for what the library is now, `docs/thesis.md`.
+
+Originally dated 30 July 2026, amended 9 August 2026 and 15 August 2026. Each of these was checked
 rather than recalled; where a thing is unverified it says so. Superseded
 decisions are struck through and kept, never deleted — the reasoning that was
 once correct is how you tell a reversal from a drift.
@@ -1168,3 +1170,11 @@ OS-agnostic workflow. A DOM accessibility tree, ARIA snapshot or synthetic
 speech test is useful supporting evidence but is not a substitute for the real
 reader. Until then, the matrix remains explicitly unproved and contributes no
 score; no local Windows VM work is in scope.
+
+---
+
+## 20. React Aria compatibility surface removed; documentation and comments consolidated
+
+**Decided 15 August 2026.** The public API is Lumo's own. The `?: undefined` compatibility carriers, underscore discards, `SlotProps`, `excludeFromTabOrder` (now a real `tabIndex`), `routerOptions`, `isPending` and `preventFocusOnPress` are gone: on a private `0.0.0` library they protected no consumer and kept producing accepted-and-inert props (a `slot="close"` cancel button that closed nothing; `hrefLang` served on a `<button>`). `DialogClose` is the supported way to close a dialog from its footer.
+
+The same day: root documents moved under `docs/`, review reports were retired into `docs/history/evaluations.md`, agent guides were added (`AGENTS.md`, layered `CLAUDE.md`), and the inline comment volume was reduced from roughly 45% of lines to roughly 20% across the tree — comments only, verified by comparing every modified file's TypeScript token stream against HEAD (220 files, zero differences). Long-form rationale now lives in this log and in `docs/`, not between the `if` and the `else`.
