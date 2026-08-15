@@ -3,9 +3,10 @@
 import * as React from "react";
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import { Check, ChevronDown, X } from "lucide-react";
-import { cn, type Locale } from "@lumo-ui/core";
+import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 
 import { relabelEngineDismiss } from "@lumo-ui/base-ui-ssr";
+import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
 import { popoverVariants } from "./popover.tsx";
 
 export interface MultiSelectOption {
@@ -18,6 +19,10 @@ export interface MultiSelectProps {
   locale: Locale;
   /** The accessible name of the field, rendered as its visible label. */
   label: string;
+  /** Help text, connected to the input by `aria-describedby` in the first byte. */
+  description?: LumoNode;
+  /** The error, connected like the description; also sets `aria-invalid`. */
+  errorMessage?: LumoNode;
   /** Text shown in the empty input before any option is chosen. */
   placeholder: string;
   /** The accessible name announced for the suggestions list. */
@@ -61,6 +66,8 @@ export interface MultiSelectProps {
 export function MultiSelect({
   locale,
   label,
+  description,
+  errorMessage,
   placeholder,
   suggestionsLabel,
   dismissLabel,
@@ -77,6 +84,10 @@ export function MultiSelect({
   className,
 }: MultiSelectProps) {
   const inputId = React.useId();
+  const describedBy =
+    [description == null ? null : `${inputId}-description`, errorMessage == null ? null : `${inputId}-error`]
+      .filter((id): id is string => id !== null)
+      .join(" ") || undefined;
   /* The dismiss sentinels mount with the popup, in a portal, and Base UI's
    * open state lives in its own store — this component does not re-render on
    * open. `onOpenChange` bumps an epoch so the relabel effect runs against
@@ -159,6 +170,8 @@ export function MultiSelect({
                   <BaseCombobox.Input
                     id={inputId}
                     aria-labelledby={`${inputId}-label`}
+                    {...(describedBy === undefined ? {} : { "aria-describedby": describedBy })}
+                    {...(errorMessage == null ? {} : { "aria-invalid": true })}
                     placeholder={current.length === 0 ? placeholder : ""}
                     className="min-w-24 flex-1 bg-transparent py-1 text-sm text-fg outline-none placeholder:text-fg-subtle"
                   />
@@ -168,6 +181,12 @@ export function MultiSelect({
           </BaseCombobox.Chips>
           <ChevronDown aria-hidden="true" className="size-4 shrink-0 text-fg-muted" />
         </BaseCombobox.InputGroup>
+        {description == null ? null : (
+          <p id={`${inputId}-description`} className={descriptionVariants()}>{description}</p>
+        )}
+        {errorMessage == null ? null : (
+          <p id={`${inputId}-error`} className={fieldErrorVariants()}>{errorMessage}</p>
+        )}
       </div>
       <BaseCombobox.Portal>
         <BaseCombobox.Positioner className="isolate z-50" side="bottom" align="start" sideOffset={4}>

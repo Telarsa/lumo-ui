@@ -184,8 +184,8 @@ export const EXAMPLES: ComponentExamples = {
     },
     title: { "fa-IR": "انتخابگر", "en-US": "Select" },
     intro: {
-      "fa-IR": "فهرست تک‌انتخابی درون یک پاپ‌اور. متن جای‌نما اجباری است، چون پیش‌فرض ری‌اکت‌آریا یک عبارت انگلیسیِ دیدنی است.",
-      "en-US": "A single-select listbox in a popover. The placeholder is required, because React Aria's fallback is a visible English phrase.",
+      "fa-IR": "فهرست تک‌انتخابی درون یک پاپ‌اور. متن جای‌نما اجباری است، چون پیش‌فرض موتور یک عبارت انگلیسیِ دیدنی است.",
+      "en-US": "A single-select listbox in a popover. The placeholder is required, because an engine fallback would be a visible English phrase.",
     },
     tier: "form",
     composition: [

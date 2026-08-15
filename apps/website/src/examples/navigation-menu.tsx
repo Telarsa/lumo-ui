@@ -21,8 +21,8 @@ const t = {
   products: { "fa-IR": "محصولات", "en-US": "Products" },
   lumo: { "fa-IR": "لومو", "en-US": "Lumo" },
   lumoDesc: {
-    "fa-IR": "سیستم طراحی فارسی‌محور روی React Aria",
-    "en-US": "The Persian-first design system on React Aria",
+    "fa-IR": "سیستم طراحی فارسی‌محور روی Base UI",
+    "en-US": "The Persian-first design system on Base UI",
   },
   khroos: { "fa-IR": "خروس", "en-US": "Khroos" },
   khroosDesc: {
@@ -111,8 +111,8 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "NavigationMenuTrigger",
         description: {
-          "fa-IR": "دکمهٔ پنل با aria-expanded از خود RAC و شورون محور بلوکی که با چرخش ۱۸۰ درجه در هر دو خط یکسان است.",
-          "en-US": "The panel's button with RAC's own aria-expanded and a block-axis chevron whose half turn reads the same in both scripts.",
+          "fa-IR": "دکمهٔ پنل با aria-expanded از خودِ موتور و شورون محور بلوکی که با چرخش ۱۸۰ درجه در هر دو خط یکسان است.",
+          "en-US": "The panel's button with the engine's own aria-expanded and a block-axis chevron whose half turn reads the same in both scripts.",
         },
       },
       {

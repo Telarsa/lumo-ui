@@ -221,8 +221,8 @@ export const EXAMPLES: ComponentExamples = {
     },
     title: { "fa-IR": "زبانه‌ها", "en-US": "Tabs" },
     intro: {
-      "fa-IR": "زبانه‌ها. نام فهرست زبانه اجباری است، و کلیدهای پیکان را ری‌اکت‌آریا با جهت سند حل می‌کند.",
-      "en-US": "Tabs. The tab list's name is required, and React Aria resolves the arrow keys against the document direction.",
+      "fa-IR": "زبانه‌ها. نام فهرست زبانه اجباری است، و کلیدهای پیکان را موتور با جهت سند حل می‌کند.",
+      "en-US": "Tabs. The tab list's name is required, and the engine resolves the arrow keys against the document direction.",
     },
     tier: "navigation",
     composition: [

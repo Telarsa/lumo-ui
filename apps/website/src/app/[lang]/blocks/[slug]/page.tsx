@@ -24,6 +24,14 @@ export function generateStaticParams() {
   return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang: segmentFor(lang), slug: b.id })));
 }
 
+/** One `<title>` per page (WCAG 2.4.2): the block's own name, then the site's. */
+export async function generateMetadata({ params }: { params: Promise<{ lang: string; slug: string }> }) {
+  const { lang: raw, slug } = await params;
+  const lang = assertLocale(raw);
+  const block = blockById(slug);
+  return { title: block === undefined ? site[lang].title : `${block.title[lang]} — ${site[lang].title}` };
+}
+
 /**
  * The page's own copy, keyed by locale — a `Record<Locale, …>`, not a two-branch ternary
  * that would hand a third locale English silently (CONTRIBUTING's "Adding a locale").

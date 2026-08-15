@@ -180,7 +180,7 @@ export const EXAMPLES: ComponentExamples = {
         name: "Tree",
         description: {
           "fa-IR":
-            "خودِ درخت. label الزامی است چون ری‌اکت‌آریا این ناحیه را بی‌نام می‌سازد و یک درختِ بی‌نام فقط «جدول درختی» خوانده می‌شود.",
+            "خودِ درخت. label الزامی است چون موتور این ناحیه را بی‌نام می‌سازد و یک درختِ بی‌نام فقط «جدول درختی» خوانده می‌شود.",
           "en-US":
             "The tree itself. label is required because React Aria leaves the region unnamed, and an unnamed one is announced as bare «tree grid».",
         },
@@ -202,7 +202,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "پایه", "en-US": "Basic" },
       description: {
         "fa-IR":
-          "تورفتگی از ویژگی سفارشی خودِ ری‌اکت‌آریا می‌آید و روی محور منطقی اعمال می‌شود، پس در فارسی از راست پله می‌خورد بدون هیچ قاعدهٔ جداگانه.",
+          "تورفتگی از ویژگی سفارشی خودِ موتور می‌آید و روی محور منطقی اعمال می‌شود، پس در فارسی از راست پله می‌خورد بدون هیچ قاعدهٔ جداگانه.",
         "en-US":
           "The indent comes from React Aria's own custom property and is applied on the logical axis, so a Persian tree steps in from the right with no separate rule.",
       },

@@ -120,7 +120,7 @@ export const EXAMPLES: ComponentExamples = {
         name: "DateInput",
         description: {
           "fa-IR":
-            "همان ورودیِ بخش‌بندی‌شده که فیلد تاریخ به کار می‌برد. ساعت و روز یک نوع بخش‌اند، پس یک پیاده‌سازی دارند — و پیش از این دو تا داشتند، چون این پرونده روی ری‌اکت‌آریا مانده بود.",
+            "همان ورودیِ بخش‌بندی‌شده که فیلد تاریخ به کار می‌برد. ساعت و روز یک نوع بخش‌اند، پس یک پیاده‌سازی دارند — و پیش از این دو تا داشتند، چون این پرونده روی موتور مانده بود.",
           "en-US":
             "The same segmented input the date field uses. An hour slot and a day slot are one kind of thing, so they have one implementation — and until this migration they had two, because this file was still on React Aria.",
         },
@@ -153,7 +153,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "نامعتبر", "en-US": "Invalid" },
       description: {
         "fa-IR":
-          "دادن پیام خطا خودش فیلد را نامعتبر می‌کند، و تنها راهی است که جملهٔ انگلیسی ری‌اکت‌آریا هرگز نمایش داده نشود.",
+          "دادن پیام خطا خودش فیلد را نامعتبر می‌کند، و تنها راهی است که جملهٔ انگلیسی موتور هرگز نمایش داده نشود.",
         "en-US":
           "Supplying a message marks the field invalid itself, and is the only thing that keeps React Aria's English sentence off the page.",
       },

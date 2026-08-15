@@ -15,7 +15,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { Select as BaseSelect } from "@base-ui/react/select";
 import { cn, type LumoNode, type ValidationError } from "@lumo-ui/core";
 import { popoverVariants } from "./popover.tsx";
-import { Description, Field, FieldError, Label, optional, useFieldControl } from "./form.tsx";
+import { Description, Field, FieldError, Label, optional, useFieldControl, useFieldLabelId } from "./form.tsx";
 import type { AsyncCollectionPresentation } from "./async-collection.ts";
 import { Button } from "./button.tsx";
 
@@ -488,13 +488,17 @@ export function SelectPopover<T extends object>({
   children,
 }: SelectPopoverProps<T>) {
   const field = useContext(SelectFieldContext);
-  // The listbox names nothing by itself: the select's own name, else the trigger's.
-  const control = useFieldControl();
+  // The listbox names nothing by itself. Never point it at the TRIGGER: a
+  // role=combobox's accessible name is its VALUE (accname §2E), so the open list
+  // would be named after the chosen option — or nothing, with a placeholder
+  // (found in the browser evidence job's committed ARIA snapshot). Point it at
+  // the same label the trigger is named by, or carry the select's own name.
+  const labelId = useFieldLabelId();
   const listName =
     field?.label !== undefined
       ? { "aria-label": field.label }
-      : control.id !== undefined
-        ? { "aria-labelledby": control.id }
+      : labelId !== undefined
+        ? { "aria-labelledby": labelId }
         : {};
   const stateText =
     field?.asyncState?.status === "loading" || field?.asyncState?.status === "error"

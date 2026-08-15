@@ -88,7 +88,7 @@ export const EXAMPLES: ComponentExamples = {
     title: { "fa-IR": "انتخابگر بازهٔ تاریخ", "en-US": "Date range picker" },
     intro: {
       "fa-IR":
-        "دو تاریخ تایپ‌شدنی و یک شبکهٔ بازه‌ای پشت یک دکمه. تنها خطایی که مخصوص بازه است — پایانِ پیش از شروع — همان جایی است که ری‌اکت‌آریا انگلیسی حرف می‌زند، پس پیامش را نویسنده می‌نویسد.",
+        "دو تاریخ تایپ‌شدنی و یک شبکهٔ بازه‌ای پشت یک دکمه. تنها خطایی که مخصوص بازه است — پایانِ پیش از شروع — همان جایی است که موتور انگلیسی حرف می‌زند، پس پیامش را نویسنده می‌نویسد.",
       "en-US":
         "Two typed dates and a range grid behind one button. The one failure a range has to itself — an end before a start — is exactly where React Aria speaks English, so the author writes its message.",
     },
@@ -105,7 +105,7 @@ export const EXAMPLES: ComponentExamples = {
         name: "DateRangePicker",
         description: {
           "fa-IR":
-            "دو فیلد و یک شبکهٔ بازه‌ای زیر یک برچسب. هر بخش خودش می‌گوید به کدام سر بازه تعلق دارد، و پیام خطای بازهٔ وارونه را نویسنده می‌نویسد چون رشتهٔ خودِ ری‌اکت‌آریا انگلیسی است.",
+            "دو فیلد و یک شبکهٔ بازه‌ای زیر یک برچسب. هر بخش خودش می‌گوید به کدام سر بازه تعلق دارد، و پیام خطای بازهٔ وارونه را نویسنده می‌نویسد چون رشتهٔ خودِ موتور انگلیسی است.",
           "en-US":
             "Two fields and a range grid under one label. Every segment says which end it belongs to, and the reversed-range message is authored because React Aria's own is English.",
         },
@@ -138,7 +138,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "نام دو نیمه", "en-US": "Naming the halves" },
       description: {
         "fa-IR":
-          "دوازده بخشِ خوانده‌شده روی یک صفحهٔ فارسی، هیچ‌کدام انگلیسی — این از بستهٔ زبان وصله‌خوردهٔ ری‌اکت‌آریا می‌آید، نه از یک ویژگی.",
+          "دوازده بخشِ خوانده‌شده روی یک صفحهٔ فارسی، هیچ‌کدام انگلیسی — این از بستهٔ زبان وصله‌خوردهٔ موتور می‌آید، نه از یک ویژگی.",
         "en-US":
           "Twelve announced segment names on a Persian page, none of them English — that comes from React Aria's patched language bundle, not from a prop.",
       },
@@ -149,7 +149,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "بازهٔ وارونه", "en-US": "A reversed range" },
       description: {
         "fa-IR":
-          "جملهٔ آمادهٔ ری‌اکت‌آریا از navigator.language انتخاب می‌شود نه از provider، پس روی رندر سمت سرور همیشه انگلیسی است و هیچ وصله‌ای به آن نمی‌رسد.",
+          "جملهٔ آمادهٔ موتور از navigator.language انتخاب می‌شود نه از provider، پس روی رندر سمت سرور همیشه انگلیسی است و هیچ وصله‌ای به آن نمی‌رسد.",
         "en-US":
           "React Aria picks its own sentence from navigator.language rather than from the provider, so on a server render it is always English and no patch reaches it.",
       },

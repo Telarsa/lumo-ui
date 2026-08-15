@@ -28,6 +28,14 @@ export async function generateStaticParams() {
   return LOCALES.flatMap((lang) => entries.map((d) => ({ lang: segmentFor(lang), slug: d.id })));
 }
 
+/** One `<title>` per page (WCAG 2.4.2): the component's own name, then the site's. */
+export async function generateMetadata({ params }: { params: Promise<{ lang: string; slug: string }> }) {
+  const { lang: raw, slug } = await params;
+  const lang = assertLocale(raw);
+  const demo = await catalogById(slug);
+  return { title: demo === undefined ? site[lang].title : `${demo.title[lang]} — ${site[lang].title}`, description: demo?.intro[lang] };
+}
+
 /**
  * The page's own copy, keyed by locale — a `Record<Locale, …>`, never a binary
  * ternary, so a third locale is a compile error listing every string still to

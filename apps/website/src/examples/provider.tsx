@@ -175,7 +175,7 @@ export const EXAMPLES: ComponentExamples = {
     title: { "fa-IR": "فراهم‌کنندهٔ لومو", "en-US": "Lumo provider" },
     intro: {
       "fa-IR":
-        "یک بار، بالای هر برنامهٔ لومو، و اختیاری نیست. یک ویژگی می‌گیرد — locale — و سه بافت بیرون می‌دهد: زبانِ نیمهٔ بیس‌یو‌آی و رشته‌هایش، قالب‌بندهای نیمهٔ ری‌اکت‌آریا، و جهت. ویژگیِ direction ندارد و نخواهد داشت: جهت از خودِ زبان مشتق می‌شود، پس دو اهرمی که بتوانند با هم اختلاف پیدا کنند وجود ندارد. بافت هنگام رندر خوانده می‌شود، پس اثرش در بایت اول هست و نه پس از هیدراسیون — و همین است که این صفحه را قابلِ ارزیابی می‌کند.",
+        "یک بار، بالای هر برنامهٔ لومو، و اختیاری نیست. یک ویژگی می‌گیرد — locale — و سه بافت بیرون می‌دهد: زبانِ نیمهٔ بیس‌یو‌آی و رشته‌هایش، قالب‌بندهای نیمهٔ موتور، و جهت. ویژگیِ direction ندارد و نخواهد داشت: جهت از خودِ زبان مشتق می‌شود، پس دو اهرمی که بتوانند با هم اختلاف پیدا کنند وجود ندارد. بافت هنگام رندر خوانده می‌شود، پس اثرش در بایت اول هست و نه پس از هیدراسیون — و همین است که این صفحه را قابلِ ارزیابی می‌کند.",
       "en-US":
         "Mounted once, high in every Lumo application, and not optional. It takes ONE prop — `locale` — and publishes three contexts: the Base UI half's locale and strings, the React Aria half's formatters, and the direction. It has no `direction` prop and will not get one: direction is derived from the language, so there are not two levers that can disagree. The context is read DURING render, so its effect is in the first byte rather than after hydration — which is what makes this page gradable at all.",
     },
@@ -243,7 +243,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "یک ویژگی، دو فیلد", "en-US": "One prop, two fields" },
       description: {
         "fa-IR":
-          "هیچ‌کدام از این دو فیلد ویژگیِ زبان نمی‌گیرند. تقویم، ارقام، نام بخش‌ها، چرخهٔ ساعت و جهتِ کلیدهای جهت همه از همین یک ویژگی می‌آیند — و چون بافت هنگام رندر خوانده می‌شود، همه‌شان در بایت اول حاضرند. برداشتنِ فراهم‌کننده هیچ خطایی نمی‌سازد؛ فقط ری‌اکت‌آریا به زبانِ مرورگر می‌افتد، که روی سرور اصلاً وجود ندارد و به انگلیسی برمی‌گردد.",
+          "هیچ‌کدام از این دو فیلد ویژگیِ زبان نمی‌گیرند. تقویم، ارقام، نام بخش‌ها، چرخهٔ ساعت و جهتِ کلیدهای جهت همه از همین یک ویژگی می‌آیند — و چون بافت هنگام رندر خوانده می‌شود، همه‌شان در بایت اول حاضرند. برداشتنِ فراهم‌کننده هیچ خطایی نمی‌سازد؛ فقط موتور به زبانِ مرورگر می‌افتد، که روی سرور اصلاً وجود ندارد و به انگلیسی برمی‌گردد.",
         "en-US":
           "Neither field takes a language prop. The calendar, the digits, the segment names, the hour cycle and the arrow-key direction all come from that one prop — and because the context is read during render, all of them are in the first byte. Removing the provider raises no error; React Aria simply falls back to the browser's language, which does not exist on a server at all and resolves to English.",
       },

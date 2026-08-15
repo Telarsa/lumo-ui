@@ -122,9 +122,9 @@ export const EXAMPLES: ComponentExamples = {
     title: { "fa-IR": "انتخابگر تاریخ", "en-US": "Date picker" },
     intro: {
       "fa-IR":
-        "فیلد تاریخ به‌علاوهٔ یک تقویم پشت دکمه. چهار رشتهٔ خوانده‌شده اجباری است، و نام دکمهٔ تقویم رشتهٔ خودِ ری‌اکت‌آریا را جایگزین می‌کند نه اینکه کنارش بنشیند.",
+        "فیلد تاریخ به‌علاوهٔ یک تقویم پشت دکمه. چهار رشتهٔ خوانده‌شده اجباری است، و نام دکمهٔ تقویم رشتهٔ خودِ موتور را جایگزین می‌کند نه اینکه کنارش بنشیند.",
       "en-US":
-        "A date field plus a calendar behind a button. Four announced strings are required, and the trigger's name replaces React Aria's rather than sitting beside it.",
+        "A date field plus a calendar behind a button. Four announced strings are required, and the trigger's name is the caller's own — nothing engine-authored sits beside it.",
     },
     composition: [
       `<DatePicker label openCalendarLabel`,
@@ -147,9 +147,9 @@ export const EXAMPLES: ComponentExamples = {
         name: "DateInput",
         description: {
           "fa-IR":
-            "نیمهٔ تایپی: همان ورودیِ بخش‌بندی‌شده که فیلد تاریخ هم به کار می‌برد. جای renderPickerCell و renderPickerHeaderCell را گرفته، که هر دو نشانه‌گذاریِ ری‌اکت‌آریا بودند.",
+            "نیمهٔ تایپی: همان ورودیِ بخش‌بندی‌شده که فیلد تاریخ هم به کار می‌برد. جای renderPickerCell و renderPickerHeaderCell را گرفته، که هر دو نشانه‌گذاریِ موتور بودند.",
           "en-US":
-            "The typed half: the same segmented input the date field uses. It replaced renderPickerCell and renderPickerHeaderCell, which were both React Aria's markup.",
+            "The typed half: the same segmented input the date field uses. Lumo's own segmented input, so the segments announce Persian names and Jalali values in the first byte.",
         },
       },
       {

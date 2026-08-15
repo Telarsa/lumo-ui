@@ -2,11 +2,16 @@
 
 import * as React from "react";
 import { X } from "lucide-react";
-import { cn } from "@lumo-ui/core";
+import { cn, type LumoNode } from "@lumo-ui/core";
+import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
 
 interface TagsInputBaseProps {
   /** The accessible name of the field, rendered as its visible label. */
   label: string;
+  /** Help text, connected to the input by `aria-describedby` in the first byte. */
+  description?: LumoNode;
+  /** The error, connected like the description; also sets `aria-invalid`. */
+  errorMessage?: LumoNode;
   /** Text shown in the empty input before any tag exists. */
   placeholder: string;
   /** Builds the accessible name of each tag's remove button from the tag's text. */
@@ -42,6 +47,8 @@ export type TagsInputProps = TagsInputBaseProps &
 
 export function TagsInput({
   label,
+  description,
+  errorMessage,
   placeholder,
   removeLabel,
   value,
@@ -57,6 +64,10 @@ export function TagsInput({
   className,
 }: TagsInputProps) {
   const id = React.useId();
+  const describedBy =
+    [description == null ? null : `${id}-description`, errorMessage == null ? null : `${id}-error`]
+      .filter((x): x is string => x !== null)
+      .join(" ") || undefined;
   const [internal, setInternal] = React.useState<readonly string[]>(defaultValue);
   const [draft, setDraft] = React.useState("");
   const [open, setOpen] = React.useState(false);
@@ -97,6 +108,8 @@ export function TagsInput({
         <input
           id={id}
           role="combobox"
+          {...(describedBy === undefined ? {} : { "aria-describedby": describedBy })}
+          {...(errorMessage == null ? {} : { "aria-invalid": true })}
           aria-expanded={open && availableSuggestions.length > 0}
           aria-controls={open && availableSuggestions.length > 0 ? `${id}-suggestions` : undefined}
           aria-activedescendant={
@@ -174,6 +187,12 @@ export function TagsInput({
           ))}
         </div>
       ) : null}
+      {description == null ? null : (
+        <p id={`${id}-description`} className={descriptionVariants()}>{description}</p>
+      )}
+      {errorMessage == null ? null : (
+        <p id={`${id}-error`} className={fieldErrorVariants()}>{errorMessage}</p>
+      )}
       {name === undefined ? null : tags.map((tag, index) => <input key={`${tag}-${index}`} type="hidden" name={name} value={tag} />)}
     </div>
   );

@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
-import { authoredName, demoRoot, latinSpoken } from "./helpers";
+import { demoRoot, latinSpoken } from "./helpers";
 
 /**
  * Popup interiors, opened FOR REAL in a browser on the built fa pages, then:
@@ -94,11 +94,14 @@ for (const family of FAMILIES) {
     // 2. nothing spoken in Latin
     expect(await latinSpoken(popup), `${family.slug}: Latin in a spoken attribute`).toEqual([]);
 
-    // 3. an authored name where the role needs one
+    // 3. a computed accessible name where the role needs one — the ENGINE's accname
+    //    (Playwright's matcher), not a DOM approximation: the second blind pass showed a
+    //    listbox whose aria-labelledby pointed at a role=combobox trigger, which names by
+    //    VALUE, so every attribute-reading check said "named" while the tree said nothing.
     if (!family.unnamedOk) {
       const role = await popup.getAttribute("role");
       if (role !== null && role !== "tooltip") {
-        expect(await authoredName(popup), `${family.slug}: role=${role} has no authored name`).not.toBe("");
+        await expect(popup, `${family.slug}: role=${role} has no computed accessible name`).toHaveAccessibleName(/\S/);
       }
     }
 

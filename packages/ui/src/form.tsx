@@ -78,6 +78,16 @@ export function useFieldControl(): FieldWiring["controlProps"] {
 }
 
 /**
+ * The id of the field's rendered `<Label>`, in either wiring mode — for a part
+ * that must be named by the SAME label as the control but cannot be its
+ * `htmlFor` target (a Select's portalled listbox). `undefined` when no label
+ * renders.
+ */
+export function useFieldLabelId(): string | undefined {
+  return useContext(FieldChromeContext)?.labelProps.id;
+}
+
+/**
  * The `<input>` for a text-shaped field, already wired. Its own component
  * because the component that RENDERS `<Field>` cannot read the context it
  * provides. `data-lumo` here because this is the element that takes focus.

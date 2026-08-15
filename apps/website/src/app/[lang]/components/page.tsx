@@ -9,6 +9,11 @@ export function generateStaticParams() {
   return localeParams;
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
+  const lang = assertLocale((await params).lang);
+  return { title: `${site[lang].components} — ${site[lang].title}` };
+}
+
 const index = {
   "fa-IR": {
     intro: "همهٔ کامپوننت‌ها با پیش‌نمایش زنده. جست‌وجو کنید یا بر اساس دسته فیلتر بزنید.",

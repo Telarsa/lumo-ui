@@ -1,4 +1,4 @@
-- listbox:
+- listbox "شهر":
   - option "تهران"
   - option "اصفهان"
   - option "تبریز"

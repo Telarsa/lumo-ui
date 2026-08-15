@@ -3051,6 +3051,12 @@
             "description": "Announced name of the engine's hidden dismiss control. REQUIRED — Base UI hardcodes \"Dismiss\" and no prop reaches it, so it is relabelled live (`relabelEngineDismiss`)."
           },
           {
+            "name": "label",
+            "type": "LumoNode",
+            "required": true,
+            "description": "Visible field label — the input's accessible name. Required: nothing else names this field."
+          },
+          {
             "name": "showSuggestionsLabel",
             "type": "string",
             "required": true,
@@ -3093,6 +3099,18 @@
             "description": "The initially selected key, when selection is uncontrolled."
           },
           {
+            "name": "description",
+            "type": "LumoNode",
+            "required": false,
+            "description": "Help text, connected to the input by `aria-describedby` in the first byte."
+          },
+          {
+            "name": "errorMessage",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The error, connected like the description; also sets `aria-invalid`."
+          },
+          {
             "name": "inputValue",
             "type": "string | undefined",
             "required": false,
@@ -3115,12 +3133,6 @@
             "type": "Iterable<T> | undefined",
             "required": false,
             "description": "The collection the render-function form iterates and filters."
-          },
-          {
-            "name": "label",
-            "type": "LumoNode",
-            "required": false,
-            "description": "Visible field label. Omit only if the field is named some other way."
           },
           {
             "name": "name",
@@ -8541,6 +8553,18 @@
             "description": "The initially selected option values, when selection is uncontrolled."
           },
           {
+            "name": "description",
+            "type": "LumoNode",
+            "required": false,
+            "description": "Help text, connected to the input by `aria-describedby` in the first byte."
+          },
+          {
+            "name": "errorMessage",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The error, connected like the description; also sets `aria-invalid`."
+          },
+          {
             "name": "hideSelectedOptions",
             "type": "boolean",
             "required": false,
@@ -13942,6 +13966,18 @@
             "description": "The initial tags, when the list is uncontrolled."
           },
           {
+            "name": "description",
+            "type": "LumoNode",
+            "required": false,
+            "description": "Help text, connected to the input by `aria-describedby` in the first byte."
+          },
+          {
+            "name": "errorMessage",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The error, connected like the description; also sets `aria-invalid`."
+          },
+          {
             "name": "isDisabled",
             "type": "boolean",
             "required": false,
@@ -14882,7 +14918,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale the region is rendered for. NOW INERT — Base UI writes no `dir` on its portal. Kept required because the public API may not change."
+            "description": "The locale the region is rendered for: Base UI writes no `dir` on its portal, so the region sets `dir={direction(locale)}` itself — a toast that arrives from outside the provider tree still reads in the right direction."
           },
           {
             "name": "queue",

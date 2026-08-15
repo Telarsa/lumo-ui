@@ -8,6 +8,11 @@ export function generateStaticParams() {
   return localeParams;
 }
 
+export async function generateMetadata({ params }: { params: Promise<{ lang: string }> }) {
+  const lang = assertLocale((await params).lang);
+  return { title: `${site[lang].blocks} — ${site[lang].title}` };
+}
+
 /**
  * The blocks gallery — a card per block, grouped by `ROADMAP.md`'s v0.4 categories,
  * each linking to the block's OWN page (`[slug]/page.tsx`) for the full-width preview.

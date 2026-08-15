@@ -104,8 +104,8 @@ export const examples: Array<{
     id: "collapse",
     title: { "fa-IR": "متن بلند جمع‌شونده", "en-US": "Collapsible long content" },
     intro: {
-      "fa-IR": "ترکیب با Disclosure؛ دکمهٔ بازکردن متن فارسیِ اجباری دارد و وضعیتش را ری‌اکت‌آریا نگه می‌دارد.",
-      "en-US": "Composed from Disclosure; the trigger takes required Persian text and React Aria keeps its state.",
+      "fa-IR": "ترکیب با Disclosure؛ دکمهٔ بازکردن متن فارسیِ اجباری دارد و وضعیتش را موتور نگه می‌دارد.",
+      "en-US": "Composed from Disclosure; the trigger takes required Persian text and the engine keeps its state.",
     },
     render: (l) => (
       <BubbleGroup variant="sent" className="max-w-sm">

@@ -6,6 +6,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { relabelEngineDismiss } from "@lumo-ui/base-ui-ssr";
+import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
 import { popoverVariants } from "./popover.tsx";
 import type { AsyncCollectionPresentation } from "./async-collection.ts";
 import { Button } from "./button.tsx";
@@ -76,8 +77,12 @@ export interface ComboBoxProps<T extends object> {
    * hardcodes "Dismiss" and no prop reaches it, so it is relabelled live (`relabelEngineDismiss`).
    */
   dismissLabel: string;
-  /** Visible field label. Omit only if the field is named some other way. */
-  label?: LumoNode;
+  /** Visible field label — the input's accessible name. Required: nothing else names this field. */
+  label: LumoNode;
+  /** Help text, connected to the input by `aria-describedby` in the first byte. */
+  description?: LumoNode;
+  /** The error, connected like the description; also sets `aria-invalid`. */
+  errorMessage?: LumoNode;
   /** Visible placeholder for the text input. */
   placeholder?: string | undefined;
   /** Options: static children, or a render function over `items`. */
@@ -113,6 +118,8 @@ export function ComboBox<T extends object>({
   suggestionsLabel,
   dismissLabel,
   label,
+  description,
+  errorMessage,
   placeholder,
   children,
   items,
@@ -140,6 +147,10 @@ export function ComboBox<T extends object>({
     asyncState?.status === "ready" ? asyncState.loadMore : asyncState?.action;
   // The input's id, minted here (SSR-stable) so the visible label can point at it in the first byte.
   const inputId = useId();
+  const describedBy =
+    [description == null ? null : `${inputId}-description`, errorMessage == null ? null : `${inputId}-error`]
+      .filter((id): id is string => id !== null)
+      .join(" ") || undefined;
   // The trigger's own id: without it Base UI's server render copies the root's
   // id onto the trigger (a layout-effect-corrected store field), so input and
   // button served the same id and `<label for>` named whichever came first.
@@ -193,6 +204,8 @@ export function ComboBox<T extends object>({
           <BaseCombobox.Input
             className={comboBoxInputVariants()}
             {...(label == null ? {} : { "aria-labelledby": `${inputId}-label` })}
+            {...(describedBy === undefined ? {} : { "aria-describedby": describedBy })}
+            {...(errorMessage == null ? {} : { "aria-invalid": true })}
             {...(placeholder === undefined ? {} : { placeholder })}
           />
           {/* An icon-only button. Named because Base UI names nothing. */}
@@ -243,6 +256,12 @@ export function ComboBox<T extends object>({
             </BaseCombobox.Popup>
           </BaseCombobox.Positioner>
         </BaseCombobox.Portal>
+        {description == null ? null : (
+          <p id={`${inputId}-description`} className={descriptionVariants()}>{description}</p>
+        )}
+        {errorMessage == null ? null : (
+          <p id={`${inputId}-error`} className={fieldErrorVariants()}>{errorMessage}</p>
+        )}
       </div>
     </BaseCombobox.Root>
   );

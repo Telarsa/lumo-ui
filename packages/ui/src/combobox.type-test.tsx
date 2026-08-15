@@ -22,4 +22,7 @@ void (
     <ComboBoxItem id="a">الف</ComboBoxItem>
   </ComboBox>
 );
-void <ComboBox showSuggestionsLabel="نمایش" suggestionsLabel="پیشنهادها" dismissLabel="بستن" isRequired name="city" />;
+void <ComboBox label="شهر" showSuggestionsLabel="نمایش" suggestionsLabel="پیشنهادها" dismissLabel="بستن" isRequired name="city" />;
+// The second blind pass (15 Aug) found `label` optional with no other naming path — required since.
+// @ts-expect-error label is required: nothing else names the field
+void <ComboBox showSuggestionsLabel="نمایش" suggestionsLabel="پیشنهادها" dismissLabel="بستن" />;

@@ -64,6 +64,7 @@ export {
   labelVariants,
   optional,
   useFieldControl,
+  useFieldLabelId,
 } from "./form.tsx";
 export type {
   DescriptionProps,

@@ -243,8 +243,9 @@ export interface ToastRegionProps extends VariantProps<typeof toastRegionVariant
   /** The queue from `createToastQueue()`. */
   queue: LumoToastQueue;
   /**
-   * The locale the region is rendered for. NOW INERT — Base UI writes no `dir`
-   * on its portal. Kept required because the public API may not change.
+   * The locale the region is rendered for: Base UI writes no `dir` on its
+   * portal, so the region sets `dir={direction(locale)}` itself — a toast that
+   * arrives from outside the provider tree still reads in the right direction.
    */
   locale: Locale;
   /** Announced name of the notification landmark, e.g. «اعلان‌ها». REQUIRED — Base UI's default is English. */

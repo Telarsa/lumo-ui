@@ -255,7 +255,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "در حال کار", "en-US": "Busy" },
       description: {
         "fa-IR":
-          "دکمهٔ مشغول در این کتابخانه یک ویژگی نیست، یک ترکیب است. ری‌اکت‌آریا یک isPending داشت؛ لومو ندارد، چون Base UI حالت pending ندارد که به آن پاس داده شود و ویژگی‌ای که به جایی نمی‌رسد اعلام نمی‌شود. آنچه واقعاً می‌نویسید همین است: isDisabled جلوی ارسال دوم را می‌گیرد، Spinner انتظار را با متن واقعی درون role=status اعلام می‌کند، و دکمه برچسب خودش را نگه می‌دارد — دکمه‌ای که متنش را با یک حلقه عوض کند، درست به‌اندازهٔ طول همان درخواست بی‌نام می‌ماند. دکمهٔ انصراف عمداً فعال مانده: کنش مشغول است، راه خروج نه.",
+          "دکمهٔ مشغول در این کتابخانه یک ویژگی نیست، یک ترکیب است. موتور یک isPending داشت؛ لومو ندارد، چون Base UI حالت pending ندارد که به آن پاس داده شود و ویژگی‌ای که به جایی نمی‌رسد اعلام نمی‌شود. آنچه واقعاً می‌نویسید همین است: isDisabled جلوی ارسال دوم را می‌گیرد، Spinner انتظار را با متن واقعی درون role=status اعلام می‌کند، و دکمه برچسب خودش را نگه می‌دارد — دکمه‌ای که متنش را با یک حلقه عوض کند، درست به‌اندازهٔ طول همان درخواست بی‌نام می‌ماند. دکمهٔ انصراف عمداً فعال مانده: کنش مشغول است، راه خروج نه.",
         "en-US":
           "A busy button is a composition here, not a prop. React Aria had an isPending; Lumo does not, because Base UI has no pending state to forward it to and a prop that reaches nothing is not declared. What you actually write is this: isDisabled blocks a second submit, Spinner announces the wait as real text inside role=status, and the button keeps its own label — a button that swaps its text for a ring is nameless for exactly as long as the request runs. The cancel button stays live on purpose: the action is busy, the escape route is not.",
       },

@@ -44,25 +44,6 @@ export async function latinSpoken(root: Locator): Promise<string[]> {
   }, SPOKEN as unknown as string[]);
 }
 
-/** The accessible name of `el` as its author wrote it: `aria-label`, or the text of its `aria-labelledby` targets. */
-export async function authoredName(el: Locator): Promise<string> {
-  return el.evaluate((node) => {
-    const label = node.getAttribute("aria-label");
-    if (label) return label;
-    const ids = node.getAttribute("aria-labelledby");
-    if (!ids) return "";
-    // An `aria-labelledby` target contributes its own aria-label before its text (accname step 2B→2C).
-    return ids
-      .split(/\s+/)
-      .map((id) => {
-        const target = document.getElementById(id);
-        return target?.getAttribute("aria-label") ?? target?.textContent?.trim() ?? "";
-      })
-      .join(" ")
-      .trim();
-  });
-}
-
 /** The first example's stage on a component page. */
 export function demoRoot(page: Page): Locator {
   return page.locator("[data-lumo-demo-root]").first();

@@ -117,7 +117,7 @@ export const EXAMPLES: ComponentExamples = {
         name: "DateInput",
         description: {
           "fa-IR":
-            "همان ورودیِ بخش‌بندی‌شده که کل خانوادهٔ تاریخ به کار می‌برد: مدلِ صفحه‌کلید، یک‌بار. کلیدهای جهت از روی جهتِ صفحه تفسیر می‌شوند، پس در فارسی چپ به بخشِ بعدی می‌رود. جای renderSegment قدیمی را گرفته، که ری‌اکت‌آریا بود.",
+            "همان ورودیِ بخش‌بندی‌شده که کل خانوادهٔ تاریخ به کار می‌برد: مدلِ صفحه‌کلید، یک‌بار. کلیدهای جهت از روی جهتِ صفحه تفسیر می‌شوند، پس در فارسی چپ به بخشِ بعدی می‌رود. جای renderSegment قدیمی را گرفته، که موتور بود.",
           "en-US":
             "The same segmented input the whole date family uses: the keyboard model, once. The arrow keys are resolved from the page's direction, so in Persian the left one moves to the NEXT segment. It replaced renderSegment, which was React Aria's.",
         },
@@ -152,7 +152,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "نامعتبر", "en-US": "Invalid" },
       description: {
         "fa-IR":
-          "پیام خطا را نویسنده می‌نویسد. پیام آمادهٔ ری‌اکت‌آریا انگلیسی است و تاریخ داخلش میلادی با ارقام لاتین.",
+          "پیام خطا را نویسنده می‌نویسد. پیام آمادهٔ موتور انگلیسی است و تاریخ داخلش میلادی با ارقام لاتین.",
         "en-US":
           "The author writes the message. React Aria's own is English, with a Gregorian date in Latin digits inside it.",
       },

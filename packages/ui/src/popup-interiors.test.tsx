@@ -36,6 +36,7 @@ import {
 import { Popover, PopoverDescription, PopoverTrigger } from "./popover.tsx";
 import { LumoProvider } from "./provider.tsx";
 import { Select, SelectItem, SelectPopover, SelectTrigger } from "./select.tsx";
+import { Label } from "./form.tsx";
 import { Tooltip, TooltipTrigger } from "./tooltip.tsx";
 import { TreeSelect } from "./tree-select.tsx";
 
@@ -128,8 +129,28 @@ describe("popup interiors pass the full gate rule set while open", () => {
         </SelectPopover>
       </Select>,
     );
-    expect(screen.getByRole("listbox")).toBeTruthy();
+    expect(screen.getByRole("listbox", { name: "سال" })).toBeTruthy();
     expect(gradeOpenPopup("fa/popup-select/index.html")).toEqual([]);
+  });
+
+  it("select named by a <Label> — the shape the docs use — names its listbox by the SAME label", () => {
+    // The second blind pass (15 Aug) read the committed browser snapshot: the listbox pointed
+    // `aria-labelledby` at its role=combobox trigger, whose accessible name is its VALUE — so
+    // with a placeholder the open list had no name. It points at the label's id now.
+    render(
+      <Select placeholder="شهر را انتخاب کنید" defaultOpen>
+        <Label>شهر</Label>
+        <SelectTrigger />
+        <SelectPopover>
+          <SelectItem id="thr">تهران</SelectItem>
+        </SelectPopover>
+      </Select>,
+    );
+    const list = screen.getByRole("listbox", { name: "شهر" });
+    const labelledBy = list.getAttribute("aria-labelledby");
+    expect(labelledBy).not.toBeNull();
+    expect(document.getElementById(labelledBy!)?.tagName).toBe("LABEL");
+    expect(gradeOpenPopup("fa/popup-select-labelled/index.html")).toEqual([]);
   });
 
   it("dialog", () => {

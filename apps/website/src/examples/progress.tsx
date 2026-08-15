@@ -163,7 +163,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "شمارندهٔ حجم", "en-US": "A byte counter" },
       description: {
         "fa-IR":
-          "با formatOptions غیردرصدی، مقدار خام قالب‌بندی می‌شود نه کسر — همان انشعابی که ری‌اکت‌آریا و موتور فعلی هر دو دارند، پس رفتار مطابق مستندات هر دو است. یکا هم از Intl می‌آید، پس ارقام روی مسیر فارسی فارسی می‌مانند.",
+          "با formatOptions غیردرصدی، مقدار خام قالب‌بندی می‌شود نه کسر — همان انشعابی که موتور و موتور فعلی هر دو دارند، پس رفتار مطابق مستندات هر دو است. یکا هم از Intl می‌آید، پس ارقام روی مسیر فارسی فارسی می‌مانند.",
         "en-US":
           "With a non-percent formatOptions the RAW value is formatted rather than the fraction — the same branch React Aria and the current engine both take, so the behaviour matches both libraries' documentation. The unit comes from Intl too, so the digits stay Persian on the fa route.",
       },

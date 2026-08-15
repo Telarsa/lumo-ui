@@ -110,7 +110,7 @@ export const EXAMPLES: ComponentExamples = {
     // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "میلهٔ منو", "en-US": "Menubar" },
-    intro: { "fa-IR": "ردیفی افقی از منوها با پیمایش پیکانی. تا وقتی React Aria نقش menubar واقعی نداشته باشد، صادقانه یک Toolbar از دکمه‌های منو است — این در سرصفحهٔ کامپوننت پین شده.", "en-US": "A horizontal row of menus with arrow-key roving. Until React Aria ships a real menubar role, it is honestly a Toolbar of menu triggers — pinned in the component header." },
+    intro: { "fa-IR": "ردیفی افقی از منوها با پیمایش پیکانی. روی نقش واقعی menubar از Base UI؛ هر دکمه یک منو باز می‌کند و پیکان‌ها بین منوها می‌گردند.", "en-US": "A horizontal row of menus with arrow-key roving. On Base UI's real role=menubar: each button opens a menu and the arrows rove between menus." },
     isNew: true,
     composition: [
       `<Menubar label="…">`,

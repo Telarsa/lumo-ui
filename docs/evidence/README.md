@@ -16,7 +16,10 @@ Rules:
 - A finding here is a defect in the component or a documented engine defect in
   `docs/upstream/` with a `test.fixme` that links it — never an allowlist.
 - Snapshot files are reviewed like code: a diff in `*.aria.yml` is an API change
-  to what assistive technology receives.
+  to what assistive technology receives. They are PARTIAL matchers (an expected node
+  without a name matches a named one), so record them with `--update-snapshots all`
+  and never read a missing name in the file as proof of absence — the spec asserts
+  names separately with `toHaveAccessibleName`.
 - Screenshots are deliberately not used: font rasterisation differs per OS, so
   pixel baselines would fail on the next machine and teach people to update
   them blindly. Geometry does not.

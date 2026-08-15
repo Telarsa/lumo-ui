@@ -225,9 +225,9 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "روزهای در دسترس نبودن", "en-US": "Unavailable days" },
       description: {
         "fa-IR":
-          "به‌محض دادن یک محدودیت، پیام خطا هم اجباری می‌شود؛ وگرنه ری‌اکت‌آریا جملهٔ انگلیسی خودش را نشان می‌دهد.",
+          "به‌محض دادن یک محدودیت، پیام خطا هم اجباری می‌شود؛ وگرنه موتور جملهٔ انگلیسی خودش را نشان می‌دهد.",
         "en-US":
-          "The moment a constraint exists the error message becomes required too, or React Aria shows its own English sentence.",
+          "The moment a constraint exists the error message becomes required too, or the engine shows its own English sentence.",
       },
       render: UnavailableExample,
     },
@@ -244,8 +244,8 @@ export const EXAMPLES: ComponentExamples = {
       id: "disabled",
       title: { "fa-IR": "غیرفعال", "en-US": "Disabled" },
       description: {
-        "fa-IR": "حالت غیرفعال از data-disabled خودِ ری‌اکت‌آریا می‌آید، نه از یک متغیر حالت.",
-        "en-US": "The disabled treatment comes from React Aria's own data-disabled, not from a state variable.",
+        "fa-IR": "حالت غیرفعال از data-disabled خودِ موتور می‌آید، نه از یک متغیر حالت.",
+        "en-US": "The disabled treatment comes from the engine's own data-disabled, not from a state variable.",
       },
       render: DisabledExample,
     },
