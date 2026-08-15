@@ -79,7 +79,7 @@ const COPY = {
       ),
       registryManifest: (
         <>
-          <Term>registry.json</Term> — امروز ۸۵ آیتم — هرگز با دست نگه‌داری نمی‌شود؛{" "}
+          <Term>registry.json</Term> — امروز ۱۴۱ آیتم — هرگز با دست نگه‌داری نمی‌شود؛{" "}
           <Term>scripts/build-registry.mjs</Term> آن را از روی کامپوننت‌هایی که واقعاً وجود
           دارند تولید می‌کند. دروازهٔ <Term>gate:registry</Term> همین تولید را دوباره اجرا
           می‌کند و با <Term>git diff --exit-code</Term> می‌سنجد: اگر مانیفست از کد قابلِ
@@ -99,8 +99,9 @@ const COPY = {
       vendorRule: (
         <>
           قاعده: چیزی را که بالادست از قبل دارد، با دست تایپ نکن. shadcn سبکِ{" "}
-          <Term>aria-vega</Term> را منتشر می‌کند — زیرش همان React Aria است که لومو اجاره کرده —
-          پس بیشتر آنچه لازم می‌شود، آن‌جا آماده است:
+          <Term>base-vega</Term> را منتشر می‌کند، اما نام سبک تضمین نمی‌کند که هر آیتم از Base UI
+          استفاده کند — برای نمونه Command آن از cmdk می‌آید. پس موتور و قرارداد هر خروجی پیش از
+          ورود بررسی می‌شود:
         </>
 
       ),
@@ -210,7 +211,7 @@ const COPY = {
       ),
       registryManifest: (
         <>
-          <Term>registry.json</Term> — 128 items today — is never hand-kept:{" "}
+          <Term>registry.json</Term> — 141 items today — is never hand-kept:{" "}
           <Term>scripts/build-registry.mjs</Term> generates it from the components that actually
           exist. <Term>gate:registry</Term> re-runs that generation and checks it with{" "}
           <Term>git diff --exit-code</Term>: if the manifest is not reproducible from the code,
@@ -230,8 +231,9 @@ const COPY = {
       vendorRule: (
         <>
           The rule: never hand-type a component upstream already has. shadcn publishes the{" "}
-          <Term>aria-vega</Term> style — React Aria underneath, the same base Lumo rents — so
-          most of what is needed already exists there:
+          <Term>base-vega</Term> style, but a style name does not guarantee every item uses Base
+          UI — its Command item uses cmdk, for example. Inspect each emitted engine and contract
+          before bringing it in:
         </>
 
       ),

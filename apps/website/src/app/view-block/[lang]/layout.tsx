@@ -13,11 +13,10 @@ import "../../globals.css";
  * is a genuinely Persian (or English) document rather than a styled div
  * pretending to be one, and `lumo-gate` grades it exactly like any other page.
  *
- * `LumoProvider` is not optional here either. Without it React Aria resolves
- * its locale from `navigator.language` — absent during server rendering — and
- * falls back to `en-US`, so a block like `AppShell` or `ProductDetail` would
- * render its interactive parts (a NumberField stepper, a RadioGroup) LTR on a
- * `dir="rtl"` page. See `README.md` rule 3.
+ * `LumoProvider` is not optional here either. Without it Base UI's direction
+ * context defaults to `ltr`, so a block like `AppShell` or `ProductDetail`
+ * could render its interactive parts (a NumberField stepper, a RadioGroup)
+ * LTR on a `dir="rtl"` page. See `README.md` rule 3.
  *
  * `place-items-center` but NO padding, unlike the component preview layout.
  * Every block root carries `w-full` (checked across packages/blocks/src), and

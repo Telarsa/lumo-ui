@@ -692,7 +692,7 @@ export default async function ComponentPage({
                 </PreviewToolbar>
               </TabPanel>
               {/*
-               * `shouldForceMount`: without it React Aria mounts ONLY the
+               * `shouldForceMount`: without it the Tabs engine mounts ONLY the
                * selected panel, and the review of the built bytes caught the
                * consequence — the component source vanished from the served
                * HTML entirely, on a site whose first claim is "in the served
@@ -780,6 +780,7 @@ export default async function ComponentPage({
                   groups={loaded.api}
                   propHeader={c.propHeader}
                   typeHeader={c.typeHeader}
+                  descriptionHeader={c.descriptionHeader}
                   requirementHeader={c.requirementHeader}
                   requiredLabel={c.requiredLabel}
                   optionalLabel={c.optionalLabel}

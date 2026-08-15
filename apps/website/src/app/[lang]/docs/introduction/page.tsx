@@ -6,8 +6,8 @@ import { Bullets, DocSection, DocsShell, P, Term } from "../docs-shell";
  * /docs/introduction — what Lumo is and why its rules are enforced.
  *
  * The substance is README.md's, retold as documentation: the claims here are
- * the repository's own measured claims, and the counts (۵۷ components, ۲۸
- * blocks, ۸۵ registry items) were verified against the tree rather than
+ * the repository's own measured claims, and the counts (۱۱۱ components, ۳۰
+ * blocks, ۱۴۱ registry items) were verified against the tree rather than
  * recalled. Both locales are complete by construction — the copy is a
  * `satisfies Record<Locale, …>` table, so a missing Persian paragraph is a
  * compile error, which is this site practising what the page preaches.
@@ -67,8 +67,8 @@ const COPY = {
         "راست‌به‌چپ کردنِ صفحه نیمهٔ آسان کار است. لومو برای نیمهٔ دیگر ساخته شده است: تقویمی که جلالی است، ارقامی که ۱۴۰۵ نوشته می‌شوند، و نام دسترس‌پذیری که آن هم فارسی است — در همان بایت‌هایی که سرور می‌فرستد، پیش از آن‌که حتی یک خط جاوااسکریپت اجرا شود.",
       whatMachinery: (
         <>
-          رفتار از <Term>React Aria Components</Term> اجاره شده است — مدیریت فوکوس، مجموعه‌ها و
-          لایه‌های شناور را ما نمی‌نویسیم. استایل با Tailwind نسخهٔ ۴ است، تماماً در CSS و بدون
+          رفتارِ پایه از <Term>Base UI</Term> اجاره شده است — مدیریت فوکوس، مجموعه‌ها و
+          لایه‌های شناور را از نو نمی‌نویسیم؛ قرارداد فارسی و SSR را لومو روی آن اعمال می‌کند. استایل با Tailwind نسخهٔ ۴ است، تماماً در CSS و بدون
           فایل پیکربندی. توزیع دو نیمه دارد: کامپوننت‌ها کپی‌شدنی‌اند چون قرار است ویرایش شوند؛
           اما توکن‌ها، قرارداد زبان و دروازهٔ سنجش، بسته‌اند — چون ویرایش آن‌ها یک باگ است، نه یک
           شخصی‌سازی.
@@ -108,10 +108,10 @@ const COPY = {
           body: (
             <>
               هر رشته‌ای که خوانده یا اعلام می‌شود، یک پراپ اجباری است — بدون پیش‌فرض انگلیسی.
-              اندازه‌گیری شد: React Aria روی یک صفحهٔ فارسی ۸ رشتهٔ انگلیسی نشت می‌دهد؛ ۵ مورد از
-              راه پراپ دست‌یافتنی است و در <Term>packages/core/src/strings.ts</Term> تایپ شده؛
-              بقیه با وصله‌ای که بسته‌های زبانی <Term>fa-IR</Term> را به خود react-aria اضافه
-              می‌کند بسته شده‌اند.
+              اندازه‌گیری روی موتور پیشین نشان داد رشتهٔ پیش‌فرض چگونه به صفحهٔ فارسی نشت می‌کند؛
+              همان یافته امروز در <Term>packages/core/src/strings.ts</Term> و پراپ‌های اجباری
+              اجرا می‌شود. رشته‌های درونی Base UI نیز روی پاپ‌آپِ باز با همان قواعد دروازه
+              سنجیده می‌شوند.
             </>
           ),
         },
@@ -119,11 +119,10 @@ const COPY = {
           key: "provider",
           body: (
             <>
-              <Term>LumoProvider</Term> اختیاری نیست. بدون آن، React Aria زبانش را از{" "}
-              <Term>navigator.language</Term> می‌گیرد که هنگام رندر سرور وجود ندارد و به{" "}
-              <Term>en-US</Term> برمی‌گردد — اندازه‌گیری شد: دستگیرهٔ اسلایدر در مقدار ۴۰ به‌جای{" "}
-              <Term>left: 60%</Term> در <Term>left: 40%</Term> می‌نشیند؛ تصویرِ آینه‌ایِ جای
-              درستش.
+              <Term>LumoProvider</Term> اختیاری نیست. یک <Term>locale</Term> می‌گیرد و هم زمینهٔ
+              زبان لومو و هم <Term>DirectionProvider</Term> موتور Base UI را از آن می‌سازد.
+              Base UI بدون این زمینه جهت را <Term>ltr</Term> فرض می‌کند؛ لومو اجازه نمی‌دهد
+              زبان فارسی و هندسهٔ صفحه دو مقدار مستقل و ناسازگار باشند.
             </>
           ),
         },
@@ -171,7 +170,7 @@ const COPY = {
       ],
       stateCounts: (
         <>
-          امروز ۵۷ کامپوننت، ۲۸ بلوکِ تمام‌صفحه و ۸۵ آیتم رجیستری در مخزن هست، با هر دو زبان
+          امروز ۱۱۱ کامپوننت، ۳۰ بلوکِ تمام‌صفحه و ۱۴۱ آیتم رجیستری در مخزن هست، با هر دو زبان
           کامل. قراردادِ کامل‌بودن یک دستور است: <Term>pnpm verify</Term> — تایپ‌ها، ممنوعیت
           CSS Modules، تست‌ها، ساخت و دروازهٔ HTML را پشت سر هم اجرا می‌کند و اگر سبز باشد،
           خروجی قابل عرضه است.
@@ -180,9 +179,9 @@ const COPY = {
       stateScope: (
         <>
           لومو خصوصی و درون‌سازمانیِ تلارسا است — انتشار عمومی تصمیمی است برای بعد، و همه‌چیز
-          طوری ساخته شده که آن در باز بماند (<Term>DECISIONS.md §0.2</Term>). خانوادهٔ تاریخ —
-          Calendar و DatePicker و خویشاوندانشان — هنوز باز است و در نقشهٔ راه برای نسخهٔ ۰٫۷
-          برنامه‌ریزی شده؛ فهرست کامل در <Term>ROADMAP.md</Term> است.
+          طوری ساخته شده که آن در باز بماند (<Term>DECISIONS.md §0.2</Term>). مسیر انتشار عمومی،
+          بستهٔ Native و ماتریس واقعی مرورگر/فناوری یاری‌رسان هنوز بازند؛ فهرست کامل و جاری در
+          <Term>ROADMAP.md</Term> است.
         </>
       ),
     },
@@ -201,8 +200,9 @@ const COPY = {
         "Right-to-left is the easy half. Lumo exists for the other half: the calendar is Jalali, the digits are ۱۴۰۵, and the accessible name is Persian too — in the served bytes, before any JavaScript runs.",
       whatMachinery: (
         <>
-          Behaviour is rented from <Term>React Aria Components</Term> — focus management,
-          collections and overlay positioning are not written here. Styling is Tailwind v4,
+          Behaviour is rented from <Term>Base UI</Term> — focus management, collections and
+          overlay positioning are not rewritten here; Lumo applies its Persian and SSR contract
+          around that engine. Styling is Tailwind v4,
           CSS-first, with no config file. Distribution has two halves: components are copy-in
           because they are meant to be edited; the tokens, the locale contract and the gate are
           packages, because an edit to them is a bug, not a customisation.
@@ -241,10 +241,10 @@ const COPY = {
           key: "strings",
           body: (
             <>
-              Every announced string is a required prop — no English defaults. Measured: React
-              Aria leaks 8 English strings on a Persian page; 5 are reachable by prop and typed
-              in <Term>packages/core/src/strings.ts</Term>; the rest are closed by a patch that
-              adds <Term>fa-IR</Term> bundles to react-aria&rsquo;s own intl packages.
+              Every announced string is a required prop — no English defaults. Measurements of
+              the retired engine established how fallback strings leak into Persian pages; that
+              finding now lives in <Term>packages/core/src/strings.ts</Term> and required props.
+              Base UI&rsquo;s internal strings are graded against the same rules while popups are open.
             </>
           ),
         },
@@ -252,11 +252,10 @@ const COPY = {
           key: "provider",
           body: (
             <>
-              <Term>LumoProvider</Term> is not optional. Without it React Aria resolves its
-              locale from <Term>navigator.language</Term> — absent during server rendering — and
-              falls back to <Term>en-US</Term>. Measured: a slider thumb at value 40 sits at{" "}
-              <Term>left: 40%</Term> instead of <Term>left: 60%</Term>, the mirror image of
-              where it belongs.
+              <Term>LumoProvider</Term> is not optional. It takes one <Term>locale</Term> and
+              derives both Lumo&rsquo;s locale context and Base UI&rsquo;s <Term>DirectionProvider</Term>.
+              Base UI otherwise defaults that context to <Term>ltr</Term>; Lumo does not let a
+              Persian locale and the engine&rsquo;s keyboard geometry become independent values.
             </>
           ),
         },
@@ -304,7 +303,7 @@ const COPY = {
       ],
       stateCounts: (
         <>
-          Today the tree holds 57 components, 28 whole-screen blocks and 85 registry items, with
+          Today the tree holds 111 components, 30 whole-screen blocks and 141 registry items, with
           both locales complete. The whole contract is one command: <Term>pnpm verify</Term> —
           types, the no-CSS-Modules check, the tests, the build and the HTML gate in sequence.
           If it is green, the thing is shippable.
@@ -313,9 +312,9 @@ const COPY = {
       stateScope: (
         <>
           Lumo is private to Telarsa — publishing is a later decision, and everything is built
-          so that door stays open (<Term>DECISIONS.md §0.2</Term>). The date family — Calendar,
-          DatePicker and their relatives — is still open, scheduled as v0.7; the full ledger of
-          what remains is <Term>ROADMAP.md</Term>.
+          so that door stays open (<Term>DECISIONS.md §0.2</Term>). Public distribution, the
+          native package and a real browser/assistive-technology matrix remain open; the current
+          ledger is <Term>ROADMAP.md</Term>.
         </>
       ),
     },

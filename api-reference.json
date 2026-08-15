@@ -2442,7 +2442,7 @@
             "name": "onActiveDatum",
             "type": "((row: ChartRow | undefined) => void) | undefined",
             "required": false,
-            "description": "The ACTIVE datum changed — hover moved to another band, or an arrow key did.\n\nReceives the caller's own row, not a `ChartPoint`: `point.datum` is the\nobject that went into the mark, so this hands back the same shape `data`\nholds, and `undefined` when nothing is active. Named `…Datum` rather than\n`onActiveChange` for two reasons — 0.9.0 HAS no `onActiveChange` (its\ncallback is `onFocusChange`), and `React.ComponentProps<\"div\">` already has\na real DOM `onSelect`, so a prop called `onSelect` here would be a silent\ncollision with an attribute that lands on the wrapper element."
+            "description": "The ACTIVE datum changed — hover moved to another band, or an arrow key did.\n\nReceives the caller's own row, not a `ChartPoint`: `point.datum` is the\nobject that went into the mark, so this hands back the same shape `data`\nholds, and `undefined` when nothing is active. Named `…Datum` rather than\n`onActiveChange` for two reasons — 0.11.1 HAS no `onActiveChange` (its\ncallback is `onFocusChange`), and `React.ComponentProps<\"div\">` already has\na real DOM `onSelect`, so a prop called `onSelect` here would be a silent\ncollision with an attribute that lands on the wrapper element."
           },
           {
             "name": "onSelectDatum",
@@ -13806,22 +13806,10 @@
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
-            "name": "download",
-            "type": "string | boolean",
-            "required": false,
-            "description": "Causes the browser to download the linked URL."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
             "description": "The DOM `hidden` attribute: removes the element from rendering and the accessibility tree."
-          },
-          {
-            "name": "href",
-            "type": "string",
-            "required": false,
-            "description": "A URL to link to."
           },
           {
             "name": "hrefLang",
@@ -13864,90 +13852,6 @@
             "type": "(e: ReactFocusEvent<Element, Element>) => void",
             "required": false,
             "description": "Handler that is called when the element receives focus."
-          },
-          {
-            "name": "onFocusChange",
-            "type": "(isFocused: boolean) => void",
-            "required": false,
-            "description": "Handler that is called when the element's focus status changes."
-          },
-          {
-            "name": "onHoverChange",
-            "type": "(isHovering: boolean) => void",
-            "required": false,
-            "description": "Handler that is called when the hover state changes."
-          },
-          {
-            "name": "onHoverEnd",
-            "type": "(e: HoverEvent) => void",
-            "required": false,
-            "description": "Handler that is called when a hover interaction ends."
-          },
-          {
-            "name": "onHoverStart",
-            "type": "(e: HoverEvent) => void",
-            "required": false,
-            "description": "Handler that is called when a hover interaction starts."
-          },
-          {
-            "name": "onPress",
-            "type": "(e: PressEvent) => void",
-            "required": false,
-            "description": "Handler that is called when the press is released over the target."
-          },
-          {
-            "name": "onPressChange",
-            "type": "(isPressed: boolean) => void",
-            "required": false,
-            "description": "Handler that is called when the press state changes."
-          },
-          {
-            "name": "onPressEnd",
-            "type": "(e: PressEvent) => void",
-            "required": false,
-            "description": "Handler that is called when a press interaction ends."
-          },
-          {
-            "name": "onPressStart",
-            "type": "(e: PressEvent) => void",
-            "required": false,
-            "description": "Handler that is called when a press interaction starts."
-          },
-          {
-            "name": "onPressUp",
-            "type": "(e: PressEvent) => void",
-            "required": false,
-            "description": "Handler that is called when a press is released over any element."
-          },
-          {
-            "name": "ping",
-            "type": "string",
-            "required": false,
-            "description": "A space-separated list of URLs to ping when the link is followed."
-          },
-          {
-            "name": "referrerPolicy",
-            "type": "HTMLAttributeReferrerPolicy",
-            "required": false,
-            "description": "How much of the referrer to send when following the link."
-          },
-          {
-            "name": "rel",
-            "type": "string",
-            "required": false,
-            "description": "The relationship between the linked resource and the current page."
-          },
-          {
-            "name": "style",
-            "type": "CSSProperties",
-            "required": false,
-            "description": "The inline style for the element."
-          },
-          {
-            "name": "target",
-            "type": "HTMLAttributeAnchorTarget",
-            "required": false,
-            "description": "The target window for the link."
           },
           {
             "name": "translate",

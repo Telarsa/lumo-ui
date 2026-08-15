@@ -424,9 +424,62 @@ interface TabPropsBase
   isDisabled?: boolean;
 }
 
-export interface TabProps extends TabPropsBase {
+type UnsupportedTabCompatibilityProp =
+  | "href"
+  | "target"
+  | "rel"
+  | "download"
+  | "ping"
+  | "referrerPolicy"
+  | "routerOptions"
+  | "onPress"
+  | "onPressStart"
+  | "onPressEnd"
+  | "onPressChange"
+  | "onPressUp"
+  | "onHoverStart"
+  | "onHoverEnd"
+  | "onHoverChange"
+  | "onFocusChange"
+  | "style";
+
+export interface TabProps extends Omit<TabPropsBase, UnsupportedTabCompatibilityProp> {
   children?: LumoNode;
   className?: string | undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
+  href?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
+  target?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
+  rel?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
+  download?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
+  ping?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
+  referrerPolicy?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI has no router-aware link tab. */
+  routerOptions?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
+  onPress?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
+  onPressStart?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
+  onPressEnd?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
+  onPressChange?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
+  onPressUp?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria hover events. */
+  onHoverStart?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria hover events. */
+  onHoverEnd?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria hover events. */
+  onHoverChange?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria focus events. */
+  onFocusChange?: undefined;
+  /** UNREPRESENTABLE COMPATIBILITY CARRIER: inline style is not part of Lumo's Tab contract. */
+  style?: undefined;
 }
 
 export function Tab({

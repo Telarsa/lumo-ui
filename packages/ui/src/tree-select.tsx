@@ -101,7 +101,7 @@ export function TreeSelect({
     <ul role={depth === 0 ? "tree" : "group"} aria-label={depth === 0 ? treeLabel : undefined} className={depth === 0 ? "p-1" : "ps-5"} {...(depth === 0 ? { onKeyDown: onTreeKeyDown } : {})}>
       {nodes.map((node) => {
         const state = treeSelectionState(node, selected);
-        const checked = mode === "single" ? selected.has(node.value) : state === "checked";
+        const checked = mode === "checkbox" ? state === "checked" : selected.has(node.value);
         return (
           <li key={node.value} role="treeitem" aria-selected={selected.has(node.value)} aria-expanded={node.children?.length ? true : undefined} className="text-sm">
             <label className="flex min-h-8 items-center gap-2 rounded px-2 hover:bg-surface-hover">
@@ -117,7 +117,7 @@ export function TreeSelect({
                   if (mode === "single") { commit(node.value); setOpen(false); return; }
                   const next = new Set(selected);
                   const affected = mode === "checkbox" ? descendantKeys(node) : [node.value];
-                  const shouldAdd = state !== "checked";
+                  const shouldAdd = mode === "checkbox" ? state !== "checked" : !selected.has(node.value);
                   for (const key of affected) shouldAdd ? next.add(key) : next.delete(key);
                   commit([...next]);
                 }}

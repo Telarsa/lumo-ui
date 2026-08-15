@@ -192,6 +192,7 @@ export interface ComboBoxProps<T extends object> {
  * not a default this file ships. (Also keeps the no-English-defaults
  * coverage sweep honest: the selector never spells `aria-label="…"`.) */
 const ENGINE_ENGLISH_DISMISS = "Dismiss";
+const ENGINE_DISMISS_MARKER = "data-lumo-engine-dismiss";
 
 function relabelEngineDismiss(scope: HTMLElement | null, label: string): void {
   if (scope === null) return;
@@ -202,7 +203,10 @@ function relabelEngineDismiss(scope: HTMLElement | null, label: string): void {
   const positioner = listbox?.parentElement?.parentElement;
   if (positioner != null) roots.push(positioner);
   for (const root of roots) {
-    for (const sentinel of root.querySelectorAll(`[aria-label="${ENGINE_ENGLISH_DISMISS}"]`)) {
+    for (const sentinel of root.querySelectorAll(
+      `[aria-label="${ENGINE_ENGLISH_DISMISS}"], [${ENGINE_DISMISS_MARKER}]`,
+    )) {
+      sentinel.setAttribute(ENGINE_DISMISS_MARKER, "");
       sentinel.setAttribute("aria-label", label);
     }
   }

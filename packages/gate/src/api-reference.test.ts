@@ -24,6 +24,15 @@ describe("generated API reference gate", () => {
     expect(workflow).toContain("run: pnpm run gate:api");
   });
 
+  it("runs the component mutation campaign in its own CI job", () => {
+    const workflow = readFileSync(join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
+    expect(workflow).toMatch(/\n  mutation:\n/);
+    expect(workflow).toContain("run: pnpm run mutation:components");
+    expect(workflow.indexOf("\n  mutation:\n")).toBeLessThan(
+      workflow.indexOf("run: pnpm run mutation:components"),
+    );
+  });
+
   it("publishes source documentation for every generated prop", () => {
     const api = JSON.parse(readFileSync(join(ROOT, "api-reference.json"), "utf8")) as {
       modules: Record<string, { name: string; props: { name: string; description?: string }[] }[]>;
@@ -36,6 +45,39 @@ describe("generated API reference gate", () => {
       ),
     );
     expect(undocumented).toEqual([]);
+  });
+
+  it("makes unsupported Tab compatibility props unrepresentable and documents why", () => {
+    const api = JSON.parse(readFileSync(join(ROOT, "api-reference.json"), "utf8")) as {
+      modules: Record<string, { name: string; props: { name: string; type: string; description: string }[] }[]>;
+    };
+    const tabProps = api.modules["tabs.tsx"]?.find((group) => group.name === "TabProps");
+    const source = readFileSync(join(ROOT, "packages", "ui", "src", "tabs.tsx"), "utf8");
+    const unreachable = [
+      "href",
+      "target",
+      "rel",
+      "download",
+      "ping",
+      "referrerPolicy",
+      "routerOptions",
+      "onPress",
+      "onPressStart",
+      "onPressEnd",
+      "onPressChange",
+      "onPressUp",
+      "onHoverStart",
+      "onHoverEnd",
+      "onHoverChange",
+      "onFocusChange",
+      "style",
+    ];
+    for (const name of unreachable) {
+      expect(source, name).toMatch(
+        new RegExp(`UNREPRESENTABLE COMPATIBILITY CARRIER:[^\\n]*\\n  ${name}\\?: undefined;`),
+      );
+      expect(tabProps?.props.some((candidate) => candidate.name === name), name).toBe(false);
+    }
   });
 
   it("rejects stale output and accepts only checker-generated content", () => {

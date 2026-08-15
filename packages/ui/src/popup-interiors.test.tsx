@@ -4,12 +4,35 @@ import { CalendarDate, PersianCalendar } from "@internationalized/date";
 import { RULES, gradingFor, type Doc } from "@lumo-ui/gate";
 
 import { Button } from "./button.tsx";
+import { AlertDialog } from "./alert-dialog.tsx";
+import {
+  Autocomplete,
+  AutocompleteInput,
+  AutocompleteItem,
+  AutocompleteListBox,
+} from "./autocomplete.tsx";
 import { Cascader } from "./cascader.tsx";
 import { ComboBox, ComboBoxItem } from "./combobox.tsx";
+import { Command, CommandDialog, CommandInput, CommandItem, CommandList } from "./command.tsx";
+import { ContextMenu, ContextMenuTrigger } from "./context-menu.tsx";
 import { DatePicker } from "./date-picker.tsx";
-import { Dialog, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
+import { Dialog, DialogHeading, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
+import { Drawer, DrawerOverlay } from "./drawer.tsx";
+import { HoverCard } from "./hover-card.tsx";
 import { Menu, MenuItem, MenuPopover, MenuTrigger } from "./menu.tsx";
+import { Menubar, MenubarButton } from "./menubar.tsx";
+import { MultiSelect } from "./multi-select.tsx";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuPanel,
+  NavigationMenuTrigger,
+} from "./navigation-menu.tsx";
+import { Popover, PopoverDescription, PopoverTrigger } from "./popover.tsx";
+import { LumoProvider } from "./provider.tsx";
 import { Select, SelectItem, SelectPopover, SelectTrigger } from "./select.tsx";
+import { Tooltip, TooltipTrigger } from "./tooltip.tsx";
 import { TreeSelect } from "./tree-select.tsx";
 
 /**
@@ -30,8 +53,11 @@ import { TreeSelect } from "./tree-select.tsx";
  * one dialog and one bespoke check; this file is that idea, generalised to
  * the popup families and the full rule list.
  *
- * Covered: menu, select, dialog, cascader, tree-select, combobox, and the
- * date-picker's opened Jalali calendar grid.
+ * Covered: menu, context-menu, menubar-equivalent menu content, select,
+ * dialog, alert-dialog, drawer, popover, tooltip, command, autocomplete,
+ * multi-select, cascader, tree-select, combobox, and the date-picker's opened
+ * Jalali calendar grid. NavigationMenu and HoverCard have dedicated live-open
+ * suites because their timing/landmark contracts are not collection popups.
  */
 
 const grading = gradingFor("fa-IR");
@@ -188,5 +214,204 @@ describe("popup interiors pass the full gate rule set while open", () => {
     screen.getByRole("button", { name: /واحد/ }).click();
     expect(await screen.findByRole("tree", { name: "درخت واحدها" })).toBeTruthy();
     expect(gradeOpenPopup("fa/popup-tree-select/index.html")).toEqual([]);
+  });
+
+  it("command palette", async () => {
+    const commands = [{ value: "new", label: "سند تازه" }];
+    render(
+      <LumoProvider locale="fa-IR">
+        <CommandDialog
+          title="پالت فرمان"
+          description="برای اجرای یک فرمان جست‌وجو کنید"
+          closeLabel="بستن"
+          defaultOpen
+        >
+          <Command items={commands}>
+            <CommandInput label="جست‌وجوی فرمان" />
+            <CommandList label="فرمان‌ها">
+              {(item: (typeof commands)[number]) => (
+                <CommandItem key={item.value} id={item.value}>{item.label}</CommandItem>
+              )}
+            </CommandList>
+          </Command>
+        </CommandDialog>
+      </LumoProvider>,
+    );
+    expect(await screen.findByRole("dialog", { name: "پالت فرمان" })).toBeTruthy();
+    expect(screen.getByRole("listbox", { name: "فرمان‌ها" })).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-command/index.html", ["composite-tab-stop"])).toEqual([]);
+  });
+
+  it("multi-select", async () => {
+    render(
+      <MultiSelect
+        locale="fa-IR"
+        label="کتابخانه‌ها"
+        placeholder="انتخاب کنید"
+        suggestionsLabel="پیشنهادهای کتابخانه"
+        dismissLabel="بستن پیشنهادها"
+        removeLabel={(label) => `حذف ${label}`}
+        options={[{ value: "react", label: "ری‌اکت" }]}
+      />,
+    );
+    const input = screen.getByRole("combobox", { name: "کتابخانه‌ها" });
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    expect(await screen.findByRole("listbox", { name: "پیشنهادهای کتابخانه" })).toBeTruthy();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(gradeOpenPopup("fa/popup-multi-select/index.html", ["composite-tab-stop"])).toEqual([]);
+  });
+
+  it("autocomplete's always-mounted collection", () => {
+    const items = [{ value: "new", label: "سند تازه" }];
+    render(
+      <LumoProvider locale="fa-IR">
+        <Autocomplete items={items}>
+          <AutocompleteInput label="جست‌وجو" />
+          <AutocompleteListBox label="نتیجه‌ها">
+            {(item: (typeof items)[number]) => (
+              <AutocompleteItem key={item.value} id={item.value}>{item.label}</AutocompleteItem>
+            )}
+          </AutocompleteListBox>
+        </Autocomplete>
+      </LumoProvider>,
+    );
+    expect(screen.getByRole("listbox", { name: "نتیجه‌ها" })).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-autocomplete/index.html", ["composite-tab-stop"])).toEqual([]);
+  });
+
+  it("context menu", async () => {
+    render(
+      <ContextMenuTrigger>
+        <div data-testid="context-surface" tabIndex={0}>ناحیهٔ سند</div>
+        <ContextMenu>
+          <MenuItem id="duplicate">رونوشت</MenuItem>
+        </ContextMenu>
+      </ContextMenuTrigger>,
+    );
+    fireEvent.contextMenu(screen.getByTestId("context-surface"), { clientX: 20, clientY: 20 });
+    const menu = await screen.findByRole("menu");
+    expect(menu).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-context-menu/index.html", ["composite-tab-stop"])).toEqual([]);
+  });
+
+  it("popover", () => {
+    render(
+      <PopoverTrigger defaultOpen>
+        <Button>گزینه‌ها</Button>
+        <Popover>
+          <PopoverDescription>تنظیمات نمایش</PopoverDescription>
+          <Button>ذخیره</Button>
+        </Popover>
+      </PopoverTrigger>,
+    );
+    expect(screen.getByRole("dialog", { name: "گزینه‌ها" })).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-popover/index.html")).toEqual([]);
+  });
+
+  it("tooltip", () => {
+    render(
+      <TooltipTrigger defaultOpen>
+        <Button>راهنما</Button>
+        <Tooltip>توضیح کوتاه</Tooltip>
+      </TooltipTrigger>,
+    );
+    expect(screen.getByRole("tooltip")).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-tooltip/index.html")).toEqual([]);
+  });
+
+  it("drawer", () => {
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>باز کردن فهرست</Button>
+        <DrawerOverlay>
+          <Drawer side="start">
+            <Dialog closeLabel="بستن">
+              <DialogHeading>فهرست</DialogHeading>
+            </Dialog>
+          </Drawer>
+        </DrawerOverlay>
+      </DialogTrigger>,
+    );
+    expect(screen.getByRole("dialog", { name: "فهرست" })).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-drawer/index.html")).toEqual([]);
+  });
+
+  it("alert dialog", () => {
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>حذف فاکتور</Button>
+        <DialogOverlay>
+          <DialogModal>
+            <AlertDialog title="حذف فاکتور" confirmLabel="حذف" cancelLabel="انصراف">
+              این کار قابل بازگشت نیست.
+            </AlertDialog>
+          </DialogModal>
+        </DialogOverlay>
+      </DialogTrigger>,
+    );
+    expect(screen.getByRole("alertdialog", { name: "حذف فاکتور" })).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-alert-dialog/index.html")).toEqual([]);
+  });
+
+  it("menubar's open menu", async () => {
+    render(
+      <Menubar label="نوار منو">
+        <MenuTrigger defaultOpen>
+          <MenubarButton>پرونده</MenubarButton>
+          <MenuPopover>
+            <Menu aria-label="فرمان‌های پرونده">
+              <MenuItem id="new">سند تازه</MenuItem>
+            </Menu>
+          </MenuPopover>
+        </MenuTrigger>
+      </Menubar>,
+    );
+    const menu = await screen.findByRole("menu");
+    expect(menu.getAttribute("aria-label")).toBe("فرمان‌های پرونده");
+    expect(screen.getAllByRole("menuitem").filter((item) => item.tabIndex === 0)).toHaveLength(1);
+    // The open modal menu injects two aria-hidden focus guards into the menubar
+    // subtree. The generic rule counts their tabindex=0 values, so license this
+    // exclusion with the real composite participants: exactly one menuitem is
+    // tabbable, while both guards are engine-owned focus containment sentinels.
+    expect(document.querySelectorAll('[role="menubar"] [aria-hidden="true"][data-base-ui-focus-guard]')).toHaveLength(2);
+    expect(
+      gradeOpenPopup("fa/popup-menubar/index.html", [
+        "composite-tab-stop",
+        "composite-single-tab-stop",
+      ]),
+    ).toEqual([]);
+  });
+
+  it("navigation menu", async () => {
+    render(
+      <NavigationMenu label="ناوبری اصلی" defaultValue="products">
+        <NavigationMenuItem value="products">
+          <NavigationMenuTrigger>محصولات</NavigationMenuTrigger>
+          <NavigationMenuPanel>
+            <NavigationMenuLink href="/lumo">لومو</NavigationMenuLink>
+          </NavigationMenuPanel>
+        </NavigationMenuItem>
+      </NavigationMenu>,
+    );
+    expect(await screen.findByRole("link", { name: "لومو" })).toBeTruthy();
+    expect(screen.getAllByRole("navigation")).toHaveLength(1);
+    expect(gradeOpenPopup("fa/popup-navigation-menu/index.html")).toEqual([]);
+  });
+
+  it("hover card", async () => {
+    render(
+      <HoverCard
+        label="نمای کوتاه نمایه"
+        trigger={<a href="/people/kamyab">کامیاب نظری</a>}
+        openDelay={0}
+      >
+        سازندهٔ لومو
+      </HoverCard>,
+    );
+    const trigger = screen.getByRole("link", { name: "کامیاب نظری" });
+    fireEvent.focus(trigger);
+    expect(await screen.findByRole("dialog", { name: "نمای کوتاه نمایه" })).toBeTruthy();
+    expect(gradeOpenPopup("fa/popup-hover-card/index.html")).toEqual([]);
   });
 });

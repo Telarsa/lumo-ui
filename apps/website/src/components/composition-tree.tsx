@@ -130,6 +130,7 @@ export interface PropsTableProps {
   groups: readonly GeneratedApiGroup[];
   propHeader: string;
   typeHeader: string;
+  descriptionHeader: string;
   requirementHeader: string;
   requiredLabel: string;
   optionalLabel: string;
@@ -145,6 +146,7 @@ export function PropsTable({
   groups,
   propHeader,
   typeHeader,
+  descriptionHeader,
   requirementHeader,
   requiredLabel,
   optionalLabel,
@@ -173,6 +175,9 @@ export function PropsTable({
                     {typeHeader}
                   </th>
                   <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
+                    {descriptionHeader}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
                     {requirementHeader}
                   </th>
                 </tr>
@@ -194,6 +199,14 @@ export function PropsTable({
                       >
                         {prop.type}
                       </code>
+                    </td>
+                    <td
+                      dir="ltr"
+                      lang="en"
+                      data-lumo-latn=""
+                      className="min-w-64 max-w-2xl px-3 py-2 text-start text-fg-muted"
+                    >
+                      {prop.description}
                     </td>
                     <td className="whitespace-nowrap px-3 py-2 text-fg-muted">
                       {prop.required ? requiredLabel : optionalLabel}

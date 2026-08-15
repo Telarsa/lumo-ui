@@ -54,6 +54,29 @@ describe("Cascader", () => {
     expect(dialog).not.toBeNull();
   });
 
+  it("announces Persian column numbers on a Persian surface", async () => {
+    renderCascader();
+    fireEvent.click(screen.getByRole("button", { name: /دسته‌بندی/ }));
+    expect(
+      await screen.findByRole("listbox", { name: "ستون‌های دسته‌بندی ۱" }),
+    ).toBeTruthy();
+    expect(screen.queryByRole("listbox", { name: "ستون‌های دسته‌بندی 1" })).toBeNull();
+  });
+
+  it("gives the column's roving tab stop to its first enabled option", async () => {
+    renderCascader({
+      options: [
+        { value: "disabled", label: "غیرفعال", disabled: true },
+        { value: "enabled", label: "فعال" },
+      ],
+    });
+    fireEvent.click(screen.getByRole("button", { name: /دسته‌بندی/ }));
+    const disabled = await screen.findByRole("option", { name: "غیرفعال" });
+    const enabled = screen.getByRole("option", { name: "فعال" });
+    expect(disabled.getAttribute("tabindex")).toBe("-1");
+    expect(enabled.getAttribute("tabindex")).toBe("0");
+  });
+
   it("dismisses on Escape — the capability the hand-rolled popup forfeited", async () => {
     renderCascader();
     fireEvent.click(screen.getByRole("button", { name: /دسته‌بندی/ }));

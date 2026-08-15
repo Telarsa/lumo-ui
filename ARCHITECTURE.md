@@ -1,75 +1,97 @@
 # Lumo UI — how the pieces fit
 
-One repository, four packages and a site. Same brand and GitHub organisation as
-Tessalor; the name is a placeholder the owner will change.
+Lumo is a Persian-first component library for React 19. Components are copied
+into a product through a shadcn-compatible registry; the locale, type, token and
+verification contracts stay packaged so consumers cannot silently fork the
+rules that make Persian output correct.
+
+## Repository map
 
 ```
-packages/core     @lumo-ui/core     headless primitives. No styles, no deps.
-                                  State on data attributes.
-packages/theme    @lumo-ui/theme    the token contract + a generator that emits
-                                  CSS custom properties, and the base reset
-packages/ui       @lumo-ui/ui       styled components on top of core.
-                                  Copy-in, like shadcn — you own the code
-packages/blocks   @lumo-ui/blocks   larger compositions: forms, panels,
-                                  empty states, assembled from ui
-apps/website         the landing page and documentation
+packages/core          @lumo-ui/core          locale/types/formatting contracts
+packages/theme         @lumo-ui/theme         tokens, Tailwind bridge, base CSS
+packages/ui            @lumo-ui/ui            111 registry components
+packages/blocks        @lumo-ui/blocks        30 product compositions
+packages/base-ui-ssr   @lumo-ui/base-ui-ssr   first-byte Base UI compensations
+packages/gate          @lumo-ui/gate          source and built-HTML graders
+packages/config        @lumo-ui/config        executable ESLint policy
+packages/native        @lumo-ui/native        unstarted React Native probe
+apps/website                                   static showcase and documentation
 ```
 
-## The layering rule
+## Dependency direction
 
-Each layer may only reach one layer down. `blocks` uses `ui`, `ui` uses `core`
-and `theme`, `core` uses nothing but Preact. A violation is the thing that turns
-a component library into a tangle, so it is worth stating before there is
-anything to tangle.
+The dependency graph is deliberate rather than a one-layer slogan:
 
-**`core` never imports `theme`.** The headless layer has to work for somebody who
-throws our design away entirely — that is what makes it headless, and it is what
-makes `ui` an honest demonstration rather than a privileged consumer.
+- `core` has React as a peer and owns `LumoNode`, `Locale`, direction,
+  formatting, shared prop vocabulary and required string catalogues. Its only
+  runtime helpers are `clsx` and `tailwind-merge`; it does not import `ui` or
+  `theme`.
+- `theme` is CSS and token contracts with no runtime dependency on components.
+- `base-ui-ssr` depends on `core` and contains version-specific workarounds for
+  Base UI behavior that is wrong in server-rendered bytes.
+- `ui` depends on `core`, `base-ui-ssr`, Base UI and the few named product
+  engines used by dates, charts, tables, forms and inputs. It does not depend on
+  `blocks` or the website.
+- `blocks` composes `ui`; the website consumes both. `gate` and `config` grade
+  the graph without becoming runtime dependencies of copied components.
 
-## The docs site is built with the library
+This direction is checked by TypeScript, registry derivation and a clean-room
+consumer compile for every generated item.
 
-`apps/website` uses `@lumo-ui/ui` for its own interface — every button, dialog and
-select on the documentation site is the component being documented.
+## Component engine and public contract
 
-This is not a cute detail. It is the only mechanism that reliably catches a
-component that is technically correct and unpleasant to use. A library whose own
-site is built with something else has no such feedback, and it shows.
+Interactive primitives run on Base UI 1.7.0. Lumo keeps its own public React
+contract: `isDisabled`, value-first change callbacks, locale-derived direction
+and required caller-authored announced strings. Adapters translate that contract
+to Base UI and isolate engine-specific SSR fixes in `@lumo-ui/base-ui-ssr`.
 
-## Why `data-*` and not a `classes` prop
+React Aria Components is not a runtime engine. It remains a development-only
+comparison dependency for poison-twin measurements against the retired
+implementation.
 
-```css
-[data-lumo-trigger][data-state="open"] { border-color: var(--lumo-ring); }
-[data-lumo-option][data-highlighted]   { background: var(--lumo-muted); }
-```
+## Styling and ownership
 
-A library that emits utility classes forces every consumer onto the same
-toolchain and the same major version of it. A library that emits
-`data-state="open"` forces nothing — it works with Tailwind, plain CSS, cascade
-layers, or a `<style>` block.
+Components use Tailwind v4 utilities, usually assembled through `cva()`, and
+merge the caller's `className` last. Base UI and Lumo state are exposed through
+semantic and `data-*` attributes so variants can respond without a parallel
+JavaScript `classes` object. Inline-axis spacing and placement use logical
+utilities; lint rejects physical left/right utilities in shared components.
 
-It also puts styling back where the cascade can reach it. A `classes` prop
-threaded through six sub-components — the Radix-era pattern — moves styling
-decisions into JavaScript, where specificity, layers and media queries cannot
-help.
+The token flow is `--lumo-ref-*` → `--lumo-sys-*` → `--lumo-cmp-*`. Consumers
+may theme the system tier, while components consume semantic tokens rather than
+raw palette values.
 
-## Why it exists at all
+## Distribution boundary
 
-Preact has no mature headless UI library. React has Base UI, Radix and Ariakit;
-Solid has Kobalte; Svelte has Bits UI. Preact applications hand-roll their
-primitives, ship `preact/compat` to borrow React's, or give up and use platform
-controls.
+The registry copies component and block source because product teams are
+expected to edit those surfaces. `@lumo-ui/core`, `@lumo-ui/theme` and the SSR
+adapter remain packages because a local edit to locale, token or engine-patch
+contracts would create incompatible Lumo dialects. `registry.json` derives file
+and dependency closure from source, and the smoke gate compiles every copied
+payload outside the workspace.
 
-The compat route is worse than it sounds, and it was measured rather than
-assumed: **Base UI under `preact/compat` crashes during server rendering** —
-`Cannot read properties of null (reading 'useContext')` — and installing it
-pulls real `react` and `react-dom` as peers. It is React with an alias, at
-React's price, on every page.
+Lumo is private to Telarsa. It is not published to npm and does not currently
+serve a public registry.
 
-## Status
+## First-byte verification
 
-`@lumo-ui/ui` has `Select`, implementing the full WAI-ARIA listbox pattern.
-Lumo product surfaces use that component across pointer types, so the same
-localized styling, validation wiring and option behavior is available on every
-device instead of silently falling back to an unrelated native dropdown.
+`apps/website` is a Next.js static export built with Lumo itself. This is both a
+showcase and a test consumer. `lumo-gate` grades the exported HTML before
+hydration for locale/direction, Persian digits, accessible names, calendar
+identity, id references and composite tab stops. Unit tests cover hydrated
+interaction and popup interiors that portals cannot place in static markup.
 
-Everything else is scaffolding.
+The complete local contract is `pnpm run verify`: types, inert/root props,
+lint, styling policy, package tests, registry/API freshness, clean-room consumer
+compiles and the built-HTML gate.
+
+## Current state
+
+The generated catalogue contains 111 registry components and 30 blocks, 141
+items in total. The deepest product surfaces include Jalali date entry and
+calendars, DataGrid/Table, Gantt, EventCalendar, upload lifecycle, virtual and
+async collections, filters, questionnaires and four advanced chart families.
+The remaining adoption constraints are explicit: no public distribution, no
+completed native package, and no claimed cross-browser assistive-technology
+matrix.

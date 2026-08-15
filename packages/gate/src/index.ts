@@ -288,6 +288,53 @@ export function addCoverage(into: Coverage, path: string, html: string): Coverag
   };
 }
 
+/**
+ * Counts visible, non-exempt digits in the numbering system assigned to a
+ * route. This is deliberately the same corpus the digit rules inspect: code
+ * samples opt out with `data-lumo-latn`, and script/style bytes are not visible.
+ */
+export function countNativeDigits(path: string, html: string): number {
+  const { locale } = localeForPath(path);
+  const digits = gradingFor(locale).digits;
+  if (digits.numberingSystem === "latn") return 0;
+
+  const { document } = parseHTML(html);
+  const walker = (document as unknown as Document).createTreeWalker(
+    (document as unknown as Document).body ?? (document as unknown as Document),
+    4,
+  );
+  let count = 0;
+  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+    const parent = node.parentElement;
+    const tag = parent?.tagName?.toLowerCase();
+    if (tag === "script" || tag === "style" || parent?.closest?.("[data-lumo-latn]")) continue;
+    count += (node.nodeValue?.match(digits.pattern) ?? []).length;
+  }
+  return count;
+}
+
+/**
+ * The executable sampling policy for the per-route digit-floor ledger.
+ *
+ * Every non-Latin route with at least 30 visible native digits must have a
+ * committed floor. Existing floors are never removed automatically: if a
+ * floored route regresses from many digits to none, `persianDigitFloor` still
+ * catches it. Conversely, a new number-dense route makes the build fail until
+ * its measured baseline is reviewed and added. The threshold excludes the
+ * shared documentation chrome (currently about 23 digits per page).
+ */
+export function missingDenseDigitFloors(
+  pages: ReadonlyArray<{ path: string; html: string }>,
+  floors: Readonly<Record<string, number>>,
+  threshold = 30,
+): Array<{ path: string; found: number }> {
+  return pages.flatMap((page) => {
+    if (Object.hasOwn(floors, page.path)) return [];
+    const found = countNativeDigits(page.path, page.html);
+    return found >= threshold ? [{ path: page.path, found }] : [];
+  });
+}
+
 export { EMPTY_COVERAGE };
 
 /** The scope line, printed beside the violation count. */

@@ -95,7 +95,7 @@ export type { ChartAxisSpecOptions, ChartConfig, ChartMirror, ChartPieSweep };
 export { areaY, barY, dot, lineY, scaleBand, scaleLinear, scalePoint };
 
 /**
- * Charts, on `@tanstack/charts` 0.9.0.
+ * Charts, re-verified against `@tanstack/charts` 0.11.1.
  *
  *     const definition = defineChart({
  *       marks: [barY(data, { id: "sales", x: "month", y: "sales", fill: chartColor("sales") })],
@@ -207,7 +207,7 @@ export { areaY, barY, dot, lineY, scaleBand, scaleLinear, scalePoint };
  * Both live in `chart.variants.ts` with their evidence:
  * `chartRenderSvg(locale)` closes `aria-roledescription="chart"` through the
  * public `renderSvg` prop; `CHART_VALUE_AXIS_TRAILING_EDGE` records that the
- * value axis cannot be moved to the reading edge at 0.9.0 and states how that
+ * value axis cannot be moved to the reading edge at 0.11.1 and states how that
  * is handled.
  *
  * ═══ MOTION AND INTERACTION, AGAINST WHAT A RECHARTS READER EXPECTS ═════════
@@ -273,7 +273,7 @@ export { areaY, barY, dot, lineY, scaleBand, scaleLinear, scalePoint };
  *     consumer we refuse to mount would be documentation for a lie.
  *
  *  3. **There is no `onActiveChange`.** A reader coming from a charting library
- *     that has one will look for it; 0.9.0's callbacks are exactly
+ *     that has one will look for it; 0.11.1's callbacks are exactly
  *     `onFocusChange`, `onFocusGroupChange`, `onSelect` and `onRender`
  *     (`react/Chart.d.ts`). Lumo surfaces the first and third as
  *     `onActiveDatum` / `onSelectDatum`, in Lumo's own vocabulary and handing
@@ -400,7 +400,7 @@ export interface ChartContainerProps
    * Receives the caller's own row, not a `ChartPoint`: `point.datum` is the
    * object that went into the mark, so this hands back the same shape `data`
    * holds, and `undefined` when nothing is active. Named `…Datum` rather than
-   * `onActiveChange` for two reasons — 0.9.0 HAS no `onActiveChange` (its
+   * `onActiveChange` for two reasons — 0.11.1 HAS no `onActiveChange` (its
    * callback is `onFocusChange`), and `React.ComponentProps<"div">` already has
    * a real DOM `onSelect`, so a prop called `onSelect` here would be a silent
    * collision with an attribute that lands on the wrapper element.

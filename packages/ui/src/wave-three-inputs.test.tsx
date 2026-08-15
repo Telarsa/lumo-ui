@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
@@ -224,6 +224,33 @@ describe("Wave 3 product inputs", () => {
     const activeId = input.getAttribute("aria-activedescendant");
     expect(activeId).toBeTruthy();
     expect(document.getElementById(activeId!)?.getAttribute("role")).toBe("option");
+  });
+
+  it("updates MultiSelect's engine-owned dismiss name while suggestions remain open", async () => {
+    const multiSelect = (dismissLabel: string) => (
+      <MultiSelect
+        locale="fa-IR"
+        label="کتابخانه‌ها"
+        placeholder="انتخاب کنید"
+        suggestionsLabel="پیشنهادهای کتابخانه"
+        dismissLabel={dismissLabel}
+        removeLabel={(label) => `حذف ${label}`}
+        options={[{ value: "react", label: "ری‌اکت" }]}
+      />
+    );
+    const view = render(multiSelect("بستن پیشنهادها"));
+    const input = screen.getByRole("combobox", { name: "کتابخانه‌ها" });
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    await waitFor(() => {
+      expect(document.querySelectorAll('[aria-label="بستن پیشنهادها"]').length).toBeGreaterThan(0);
+    });
+
+    view.rerender(multiSelect("خروج از پیشنهادها"));
+    await waitFor(() => {
+      expect(document.querySelectorAll('[aria-label="بستن پیشنهادها"]')).toHaveLength(0);
+      expect(document.querySelectorAll('[aria-label="خروج از پیشنهادها"]').length).toBeGreaterThan(0);
+    });
   });
 
   it("creates and removes ordered tags", () => {

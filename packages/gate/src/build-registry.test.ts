@@ -17,6 +17,49 @@ describe("registry freshness gate", () => {
     expect(incomplete.map(({ name }) => name)).toEqual([]);
   });
 
+  it("takes a component description from its named export, not an earlier helper", () => {
+    const registry = JSON.parse(readFileSync(join(ROOT, "registry.json"), "utf8")) as {
+      items: { name: string; description: string }[];
+    };
+    expect(registry.items.find(({ name }) => name === "treemap-chart")?.description).toBe(
+      "A responsive hierarchical area chart; authored rows are never mutated.",
+    );
+  });
+
+  it("keeps public catalogue counts synchronized with the generated registry", () => {
+    const registry = JSON.parse(readFileSync(join(ROOT, "registry.json"), "utf8")) as {
+      items: { type: string }[];
+    };
+    const components = registry.items.filter(({ type }) => type === "registry:ui").length;
+    const blocks = registry.items.filter(({ type }) => type === "registry:block").length;
+    const total = registry.items.length;
+    const fa = (value: number) => new Intl.NumberFormat("fa-IR", { useGrouping: false }).format(value);
+
+    const readme = readFileSync(join(ROOT, "README.md"), "utf8");
+    expect(readme).toContain(`packages/ui       ${components} registry components`);
+    expect(readme).toContain(
+      `**Current state.** ${components} components, ${blocks} blocks and ${total} generated registry items.`,
+    );
+
+    const introduction = readFileSync(
+      join(ROOT, "apps", "website", "src", "app", "[lang]", "docs", "introduction", "page.tsx"),
+      "utf8",
+    );
+    expect(introduction).toContain(
+      `Today the tree holds ${components} components, ${blocks} whole-screen blocks and ${total} registry items`,
+    );
+    expect(introduction).toContain(
+      `امروز ${fa(components)} کامپوننت، ${fa(blocks)} بلوکِ تمام‌صفحه و ${fa(total)} آیتم رجیستری`,
+    );
+
+    const cli = readFileSync(
+      join(ROOT, "apps", "website", "src", "app", "[lang]", "docs", "cli", "page.tsx"),
+      "utf8",
+    );
+    expect(cli).toContain(`<Term>registry.json</Term> — ${total} items today`);
+    expect(cli).toContain(`<Term>registry.json</Term> — امروز ${fa(total)} آیتم`);
+  });
+
   it("checks generated content against the requested file without relying on git state", () => {
     const dir = mkdtempSync(join(tmpdir(), "lumo-registry-fixture-"));
     try {

@@ -33,7 +33,7 @@
  *    different reason is worse evidence than a red one.
  *
  * A real application still mounts `LumoProvider`, which sets this context and
- * React Aria's together for as long as both libraries are present.
+ * derives Base UI's direction from the same locale.
  */
 
 import { createContext, useContext } from "react";

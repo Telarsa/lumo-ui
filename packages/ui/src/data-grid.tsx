@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useId, useState, type CSSProperties, type ReactNode } from "react";
 import { ColumnsIcon } from "lucide-react";
 import { cn, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
@@ -111,30 +111,39 @@ export function DataGridEditableCell({
   isDisabled,
   className,
 }: DataGridEditableCellProps) {
+  const errorId = useId();
   const [draft, setDraft] = useState(value);
   useEffect(() => setDraft(value), [value]);
   const error = validate?.(draft) ?? null;
   return (
-    <input
-      data-lumo=""
-      aria-label={label}
-      aria-keyshortcuts="Enter Escape"
-      aria-description={cancelLabel}
-      aria-invalid={error !== null || undefined}
-      disabled={isDisabled}
-      value={draft}
-      onChange={(event) => setDraft(event.currentTarget.value)}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          setDraft(value);
-        } else if (event.key === "Enter" && error === null) {
-          event.preventDefault();
-          onCommit(draft);
-        }
-      }}
-      className={cn("min-w-0 bg-transparent px-2 py-1 outline-none", className)}
-    />
+    <>
+      <input
+        data-lumo=""
+        aria-label={label}
+        aria-keyshortcuts="Enter Escape"
+        aria-description={cancelLabel}
+        aria-invalid={error !== null || undefined}
+        aria-errormessage={error === null ? undefined : errorId}
+        disabled={isDisabled}
+        value={draft}
+        onChange={(event) => setDraft(event.currentTarget.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            setDraft(value);
+          } else if (event.key === "Enter" && error === null) {
+            event.preventDefault();
+            onCommit(draft);
+          }
+        }}
+        className={cn("min-w-0 bg-transparent px-2 py-1 outline-none", className)}
+      />
+      {error === null ? null : (
+        <span id={errorId} role="alert" className="mt-1 block text-xs text-critical">
+          {error}
+        </span>
+      )}
+    </>
   );
 }
 

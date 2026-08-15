@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { addCoverage, EMPTY_COVERAGE, format, formatCoverage, gradeHtml } from "./index.ts";
+import {
+  addCoverage,
+  EMPTY_COVERAGE,
+  format,
+  formatCoverage,
+  gradeHtml,
+  missingDenseDigitFloors,
+} from "./index.ts";
 import { RULES, persianDigitFloor } from "./rules.ts";
 
 const root = process.argv[2];
@@ -37,15 +44,16 @@ async function readFloors(path: string): Promise<Record<string, number>> {
 
 const rules = [...RULES];
 let floorCount = 0;
+let floorLedger: Record<string, number> = {};
 if (floorsPath) {
-  const floors = await readFloors(floorsPath);
-  const entries = Object.keys(floors).length;
+  floorLedger = await readFloors(floorsPath);
+  const entries = Object.keys(floorLedger).length;
   if (entries === 0) {
     console.error(`  ${floorsPath} declares no floors. An empty floors file is`);
     console.error("  the vacuous pass this rule exists to prevent.");
     process.exit(2);
   }
-  rules.push(persianDigitFloor(floors));
+  rules.push(persianDigitFloor(floorLedger));
   floorCount = entries;
   console.log(`  persian-digit-floor armed for ${entries} route(s)`);
 }
@@ -73,11 +81,13 @@ if (files.length === 0) {
 
 const violations = [];
 const graded = new Set<string>();
+const pages: Array<{ path: string; html: string }> = [];
 let coverage = EMPTY_COVERAGE;
 for (const file of files) {
   const rel = relative(root, file);
   graded.add(rel);
   const html = await readFile(file, "utf8");
+  pages.push({ path: rel, html });
   violations.push(...gradeHtml(rel, html, rules));
   // Same read, second question: how much of it did the rules actually look at.
   // See `addCoverage` — this prints, it never fails.
@@ -87,8 +97,7 @@ for (const file of files) {
 // A floor keyed to a path that no longer exists is a rule that silently
 // stopped grading — the same hole as an unwired rule, one rename later.
 if (floorsPath) {
-  const floors = await readFloors(floorsPath);
-  for (const declared of Object.keys(floors)) {
+  for (const declared of Object.keys(floorLedger)) {
     if (!graded.has(declared)) {
       violations.push({
         rule: "persian-digit-floor",
@@ -96,6 +105,15 @@ if (floorsPath) {
         detail: "floor declared for a path the build did not produce — stale floors file",
       });
     }
+  }
+  for (const missing of missingDenseDigitFloors(pages, floorLedger)) {
+    violations.push({
+      rule: "persian-digit-floor",
+      path: missing.path,
+      detail:
+        `number-dense route has ${String(missing.found)} visible native digits but no committed floor; ` +
+        "add a reviewed baseline at about 55% of this count",
+    });
   }
 }
 

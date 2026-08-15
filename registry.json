@@ -155,7 +155,7 @@
       "name": "breadcrumbs",
       "type": "registry:ui",
       "title": "Breadcrumbs",
-      "description": "A breadcrumb trail.",
+      "description": "Renders the `<ol>` only.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -215,7 +215,7 @@
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
-      "description": "THE COMPONENT SHAPE.",
+      "description": "The React Aria → Base UI prop translation, stated once.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -320,7 +320,7 @@
       "name": "cascader",
       "type": "registry:ui",
       "title": "Cascader",
-      "description": "The accessible name of the field, rendered as its visible label.",
+      "description": "A drill-down selector over a tree of options, one column per level.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -545,7 +545,7 @@
       "name": "date-field",
       "type": "registry:ui",
       "title": "Date Field",
-      "description": "A date typed segment by segment: ۱۴۰۵ / ۵ / ۱۹.",
+      "description": "The public surface is intentionally honest after the Base UI rebuild.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -784,7 +784,7 @@
       "name": "disclosure",
       "type": "registry:ui",
       "title": "Disclosure",
-      "description": "A collapsible section, and the accordion that groups several of them.",
+      "description": "One section.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -805,7 +805,7 @@
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",
-      "description": "A modal that slides in from an INLINE edge.",
+      "description": "The panel, and — under Base UI — the `role=\"dialog\"` element itself.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1027,7 +1027,7 @@
       "name": "heatmap-chart",
       "type": "registry:ui",
       "title": "Heatmap Chart",
-      "description": "The accessible name announced for the chart.",
+      "description": "A labelled ordinal matrix with a semantic table in the served bytes.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1133,7 +1133,7 @@
       "name": "input-otp",
       "type": "registry:ui",
       "title": "Input Otp",
-      "description": "A one-time code, entered into a row of boxes.",
+      "description": "A one-time-code entry row: one real input, per-digit slots, and Persian digits on Persian pages.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1409,7 +1409,7 @@
       "name": "multi-select",
       "type": "registry:ui",
       "title": "Multi Select",
-      "description": "The accessible name of the field, rendered as its visible label.",
+      "description": "A searchable multiple selection field.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1685,7 +1685,7 @@
       "name": "radar-chart",
       "type": "registry:ui",
       "title": "Radar Chart",
-      "description": "The accessible name announced for the chart.",
+      "description": "A comparative radar profile with explicit domains and tabular parity.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1757,7 +1757,7 @@
       "name": "range-slider",
       "type": "registry:ui",
       "title": "Range Slider",
-      "description": "The accessible name of the slider group.",
+      "description": "Two ordered values with independently named, locale-formatted thumbs.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -1821,7 +1821,7 @@
       "name": "sankey-chart",
       "type": "registry:ui",
       "title": "Sankey Chart",
-      "description": "The accessible name announced for the chart, and the source column's name.",
+      "description": "A validated proportional-flow diagram with semantic source/target rows.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2214,7 +2214,7 @@
       "name": "tag-group",
       "type": "registry:ui",
       "title": "Tag Group",
-      "description": "A keyboard-navigable list of filters, keywords or selected values.",
+      "description": "The group.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2370,7 +2370,7 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "Transient notifications.",
+      "description": "One toast.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",
@@ -2578,7 +2578,7 @@
       "name": "treemap-chart",
       "type": "registry:ui",
       "title": "Treemap Chart",
-      "description": "What a tiler actually touches on a hierarchy node: the aggregated value it reads and the rectangle it writes.",
+      "description": "A responsive hierarchical area chart; authored rows are never mutated.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",

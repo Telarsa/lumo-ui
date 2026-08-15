@@ -26,7 +26,7 @@
  */
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import {
@@ -113,6 +113,33 @@ describe("ComboBox — ids are unique in the first byte", () => {
       </div>,
     );
     expect(duplicates(html)).toEqual([]);
+  });
+});
+
+describe("ComboBox — caller-authored popup announcements", () => {
+  const combo = (dismissLabel: string) => (
+    <ComboBox
+      label="شهر"
+      showSuggestionsLabel="نمایش پیشنهادها"
+      suggestionsLabel="پیشنهادها"
+      dismissLabel={dismissLabel}
+    >
+      <ComboBoxItem id="thr">تهران</ComboBoxItem>
+    </ComboBox>
+  );
+
+  it("updates the engine-owned dismiss name while the popup remains open", async () => {
+    const view = render(combo("بستن پیشنهادها"));
+    fireEvent.click(screen.getByRole("button", { name: "نمایش پیشنهادها" }));
+    await waitFor(() => {
+      expect(document.querySelectorAll('[aria-label="بستن پیشنهادها"]').length).toBeGreaterThan(0);
+    });
+
+    view.rerender(combo("خروج از پیشنهادها"));
+    await waitFor(() => {
+      expect(document.querySelectorAll('[aria-label="بستن پیشنهادها"]')).toHaveLength(0);
+      expect(document.querySelectorAll('[aria-label="خروج از پیشنهادها"]').length).toBeGreaterThan(0);
+    });
   });
 });
 

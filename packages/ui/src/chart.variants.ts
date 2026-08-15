@@ -21,7 +21,7 @@ import type { ComponentType } from "react";
  * That is why `chartCategoryAxis` and `chartValueAxis` are functions here rather
  * than components in `chart.tsx`. See the API-change note in that file.
  *
- * ═══ WHAT WAS MEASURED ABOUT `@tanstack/charts` 0.9.0 ═══════════════════════
+ * ═══ WHAT WAS RE-VERIFIED ABOUT `@tanstack/charts` 0.11.1 ═══════════════════
  *
  * Full harness output in `experiments/measurements/tanstack-charts.json`; the
  * numbers that decided the switch and the four that constrain this file:
@@ -63,7 +63,7 @@ import type { ComponentType } from "react";
  * `label` and `motion` — there is no `orient`, `side`, `position` or `placement`
  * field anywhere in the axis types, and a grep for those names over the whole
  * type surface returns nothing. recharts had `orientation="right"`; TanStack
- * has no equivalent at 0.9.0.
+ * has no equivalent at 0.11.1.
  *
  * **How it is handled, in four parts, none of which pretends it is fixed:**
  *
@@ -286,7 +286,7 @@ export function chartTickFormatter(
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * **The one RTL criterion `@tanstack/charts` 0.9.0 cannot meet.** See the long
+ * **The one RTL criterion `@tanstack/charts` 0.11.1 cannot meet.** See the long
  * note in this file's header for the evidence and for the four-part handling.
  *
  * A named constant rather than an inline `false`, so the day upstream ships an
@@ -423,7 +423,7 @@ export function chartValueAxis(locale: Locale, options: ChartAxisSpecOptions) {
  * ═══════════════════════════════════════════════════════════════════════════ */
 
 /**
- * The exact literal `@tanstack/charts` 0.9.0 writes into its root `<svg>`.
+ * The exact literal `@tanstack/charts` 0.11.1 writes into its root `<svg>`.
  *
  * `svg-renderer.js:19`, inside a template literal, after the class and before
  * `aria-label`. Kept as a named constant so the conformance test can assert
@@ -582,7 +582,7 @@ export const chartPieCenterVariants = cva("select-none", {
  *
  * ── WHY THIS IS NOT `svgAnimation`, WHICH IS THE OBVIOUS ANSWER ─────────────
  *
- * `@tanstack/charts` 0.9.0 refuses to animate a chart's first paint, and it
+ * `@tanstack/charts` 0.11.1 refuses to animate a chart's first paint, and it
  * does so twice, on two independent code paths. Both were read in the installed
  * dist and both were driven under jsdom:
  *
@@ -773,7 +773,7 @@ export function chartMotionStyleSheet(id: string): string {
 
 /**
  * **`Home`/`End` and the keyboard ENTRY POINT are physical, not logical, and at
- * 0.9.0 that cannot be fixed without breaking the arrow keys.**
+ * 0.11.1 that cannot be fixed without breaking the arrow keys.**
  *
  * A named constant on exactly the pattern `CHART_VALUE_AXIS_TRAILING_EDGE` set:
  * the day upstream separates the two orders, this is the one line that changes

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { ChevronRight } from "lucide-react";
-import { cn, direction, type Locale } from "@lumo-ui/core";
+import { cn, direction, formatNumber, type Locale } from "@lumo-ui/core";
 
 import { Popover, PopoverTrigger } from "./popover.tsx";
 
@@ -177,39 +177,47 @@ export function Cascader({
         </button>
         <Popover aria-label={columnsLabel} padded={false} className="p-1">
           <div ref={columnsRef} onKeyDown={onColumnsKeyDown} className="flex max-w-[var(--available-width)] overflow-auto">
-            {columns.map((column, columnIndex) => (
-              <div key={columnIndex} role="listbox" aria-label={`${columnsLabel} ${columnIndex + 1}`} className="min-w-40 border-e border-border p-1 last:border-0">
-                {column.map((option, optionIndex) => {
-                  const active = draftPath[columnIndex] === option.value;
-                  // Roving tabindex: one stop per column — the drilled option,
-                  // or the first option where nothing is drilled. Arrow keys
-                  // move within; without this every option was its own Tab
-                  // stop, which this repo's own composite-tab-stop rule flags.
-                  const stop = draftPath[columnIndex] === undefined ? optionIndex === 0 : active;
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      role="option"
-                      data-value={option.value}
-                      tabIndex={stop ? 0 : -1}
-                      aria-selected={active}
-                      disabled={option.disabled}
-                      className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-start text-sm", active && "bg-surface-hover")}
-                      onClick={() => {
-                        const next = [...draftPath.slice(0, columnIndex), option.value];
-                        setDraftPath(next);
-                        const resolved = resolveCascaderPath(options, next);
-                        if (changeOnSelect || !option.children?.length) { commit(next, resolved); if (!option.children?.length) setOpen(false); }
-                      }}
-                    >
-                      {option.label}
-                      {option.children?.length ? <ChevronRight aria-hidden="true" className={cn("size-4", direction(locale) === "rtl" && "rotate-180")} /> : null}
-                    </button>
-                  );
-                })}
-              </div>
-            ))}
+            {columns.map((column, columnIndex) => {
+              const activeValue = draftPath[columnIndex];
+              const stopValue =
+                column.some((option) => option.value === activeValue && option.disabled !== true)
+                  ? activeValue
+                  : column.find((option) => option.disabled !== true)?.value;
+              return (
+                <div key={columnIndex} role="listbox" aria-label={`${columnsLabel} ${formatNumber(columnIndex + 1, locale)}`} className="min-w-40 border-e border-border p-1 last:border-0">
+                  {column.map((option) => {
+                    const active = draftPath[columnIndex] === option.value;
+                    // Roving tabindex: one stop per column — the drilled option,
+                    // or the first ENABLED option where nothing usable is drilled.
+                    // A disabled first item cannot own the only stop. Arrow keys
+                    // move within; without this every option was its own Tab stop,
+                    // which this repo's own composite-tab-stop rule flags.
+                    const stop = option.value === stopValue;
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        role="option"
+                        data-value={option.value}
+                        tabIndex={stop ? 0 : -1}
+                        aria-selected={active}
+                        disabled={option.disabled}
+                        className={cn("flex w-full items-center justify-between gap-2 rounded px-2 py-1.5 text-start text-sm", active && "bg-surface-hover")}
+                        onClick={() => {
+                          const next = [...draftPath.slice(0, columnIndex), option.value];
+                          setDraftPath(next);
+                          const resolved = resolveCascaderPath(options, next);
+                          if (changeOnSelect || !option.children?.length) { commit(next, resolved); if (!option.children?.length) setOpen(false); }
+                        }}
+                      >
+                        {option.label}
+                        {option.children?.length ? <ChevronRight aria-hidden="true" className={cn("size-4", direction(locale) === "rtl" && "rotate-180")} /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
           </div>
         </Popover>
       </PopoverTrigger>

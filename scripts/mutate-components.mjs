@@ -14,8 +14,10 @@
  * reported as `unobserved`, not `killed`: the campaign's job is to name the
  * gap, not to round it away.
  *
- * Not part of `verify` or CI: a full run spawns one vitest process per module.
- * Run it as a campaign: `pnpm run mutation:components`.
+ * Not part of the local `verify` chain: a full run spawns one vitest process
+ * per module. CI runs it in a separate job so this expensive floor remains
+ * enforced without doubling the critical path of the normal verification job.
+ * Run it locally as a campaign: `pnpm run mutation:components`.
  */
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -60,6 +62,36 @@ function mutate(file, source) {
         "<DirectionProvider direction={direction(locale)}>",
         '<DirectionProvider direction={"ltr"}>',
       ),
+    };
+  }
+  if (file === "cascader.tsx") {
+    return {
+      operator: "replace locale-shaped column number with a raw JavaScript number",
+      source: source.replace("formatNumber(columnIndex + 1, locale)", "String(columnIndex + 1)"),
+    };
+  }
+  if (file === "data-grid.tsx") {
+    return {
+      operator: "disconnect the validation reason from its invalid editor",
+      source: source.replace(
+        "aria-errormessage={error === null ? undefined : errorId}",
+        "aria-errormessage={undefined}",
+      ),
+    };
+  }
+  if (file === "tree-select.tsx") {
+    return {
+      operator: "derive multiple-mode parent state from descendants instead of its value",
+      source: source.replace(
+        'mode === "checkbox" ? state === "checked" : selected.has(node.value)',
+        'state === "checked"',
+      ),
+    };
+  }
+  if (file === "combobox.tsx" || file === "multi-select.tsx") {
+    return {
+      operator: "make an already-relabelled dismiss sentinel unreachable on prop updates",
+      source: source.replace(', [${ENGINE_DISMISS_MARKER}]', ""),
     };
   }
   return {

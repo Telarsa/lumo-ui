@@ -326,12 +326,32 @@ const registryDescription = (source, name) => {
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join("");
-  const attached = new RegExp(
-    `\\/\\*\\*([\\s\\S]*?)\\*\\/\\s*export (?:function|const) ${pascal}\\b`,
-  ).exec(source)?.[1];
-  if (attached !== undefined) {
-    const sentence = proseSentence(attached);
-    if (sentence !== undefined) return sentence;
+  const sourceFile = ts.createSourceFile(
+    `${name}.tsx`,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.TSX,
+  );
+  for (const statement of sourceFile.statements) {
+    const modifiers = ts.canHaveModifiers(statement) ? ts.getModifiers(statement) : undefined;
+    const exported = modifiers?.some(
+      (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword,
+    );
+    if (exported !== true) continue;
+    const declaresNamedExport =
+      (ts.isFunctionDeclaration(statement) && statement.name?.text === pascal) ||
+      (ts.isVariableStatement(statement) &&
+        statement.declarationList.declarations.some(
+          (declaration) => ts.isIdentifier(declaration.name) && declaration.name.text === pascal,
+        ));
+    if (!declaresNamedExport) continue;
+    const doc = ts.getJSDocCommentsAndTags(statement).find(ts.isJSDoc);
+    if (doc !== undefined) {
+      const block = doc.getText(sourceFile).replace(/^\/\*\*/, "").replace(/\*\/$/, "");
+      const sentence = proseSentence(block);
+      if (sentence !== undefined) return sentence;
+    }
   }
   const head = /\/\*\*([\s\S]*?)\*\//.exec(source);
   const firstImport = source.search(/^import /m);

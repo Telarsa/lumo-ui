@@ -161,6 +161,33 @@ describe("DataGrid enterprise operations", () => {
     expect((screen.getByRole("textbox") as HTMLInputElement).value).toBe("10");
     expect(commit).toHaveBeenCalledTimes(1);
   });
+
+  it("associates the caller-authored validation reason and blocks an invalid commit", () => {
+    const commit = vi.fn();
+    render(
+      <DataGridEditableCell
+        label="ویرایش مبلغ"
+        value="10"
+        onCommit={commit}
+        cancelLabel="لغو ویرایش"
+        validate={(candidate) => (candidate.trim() === "" ? "مبلغ لازم است" : null)}
+      />,
+    );
+
+    const editor = screen.getByRole("textbox", { name: "ویرایش مبلغ" });
+    fireEvent.change(editor, { target: { value: "" } });
+    const error = screen.getByRole("alert");
+    expect(error.textContent).toBe("مبلغ لازم است");
+    expect(editor.getAttribute("aria-invalid")).toBe("true");
+    expect(editor.getAttribute("aria-errormessage")).toBe(error.id);
+    fireEvent.keyDown(editor, { key: "Enter" });
+    expect(commit).not.toHaveBeenCalled();
+
+    fireEvent.change(editor, { target: { value: "20" } });
+    expect(screen.queryByRole("alert")).toBeNull();
+    fireEvent.keyDown(editor, { key: "Enter" });
+    expect(commit).toHaveBeenCalledWith("20");
+  });
 });
 
 /* ════════════════════════════════════════════════════════════════════════════

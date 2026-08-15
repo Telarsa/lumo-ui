@@ -51,6 +51,7 @@ export interface GeneratedApiProp {
   name: string;
   type: string;
   required: boolean;
+  description: string;
 }
 
 export interface GeneratedApiGroup {

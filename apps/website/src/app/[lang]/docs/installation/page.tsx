@@ -186,14 +186,14 @@ const COPY = {
       ),
       provider: (
         <>
-          Never write <Term>{"<html>"}</Term> yourself — <Term>LumoHtml</Term> is the only thing
-          that writes it, and because it derives <Term>dir</Term> from the locale, a wrong
-          direction cannot be passed. And <Term>LumoProvider</Term> is not optional: without it
-          React Aria resolves its locale from <Term>navigator.language</Term> — absent during
-          server rendering — and falls back to <Term>en-US</Term>. Measured: a slider thumb at
-          value 40 sits at <Term>left: 40%</Term> instead of <Term>left: 60%</Term>, and no
-          gate catches it, because it is valid HTML with plausible inline styles. That is why
-          the provider is a component with a required prop rather than a line of documentation.
+         Never write <Term>{"<html>"}</Term> yourself — <Term>LumoHtml</Term> is the only thing
+         that writes it, and because it derives <Term>dir</Term> from the locale, a wrong
+         direction cannot be passed. And <Term>LumoProvider</Term> is not optional: without it
+          Base UI&rsquo;s direction context defaults to <Term>ltr</Term>. LumoProvider sends the
+          same required locale to Lumo&rsquo;s formatter/string context and to Base UI&rsquo;s{" "}
+          <Term>DirectionProvider</Term>, so Persian text, digits, arrows and keyboard geometry
+          cannot disagree. That is why the provider is a component with a required prop rather
+          than a line of documentation.
         </>
       ),
       addCommand: (

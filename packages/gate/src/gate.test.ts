@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { addCoverage, EMPTY_COVERAGE, formatCoverage, gradeHtml, gradingFor, knownLocales, localeForPath } from "./index.ts";
 import { RULES, compositeSingleTabStop, digitSystem, nativeCalendar, persianDigitFloor, resolvedIdrefs } from "./rules.ts";
+import { missingDenseDigitFloors } from "./index.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "fixtures");
 const read = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -962,6 +963,19 @@ describe("persian-digit-floor is actually armed where it matters", () => {
     // document and the fixture suite would go red — this states why it is out.
     expect(RULES.map((r) => r.id)).not.toContain("persian-digit-floor");
     expect(persianDigitFloor({ "fa/index.html": 1 }).id).toBe("persian-digit-floor");
+  });
+
+  it("requires every newly number-dense Persian route to join the floor ledger", () => {
+    const dense = fa(`<p>${"۱".repeat(30)}</p>`);
+    const exempt = fa(`<pre data-lumo-latn><code>${"۱".repeat(40)}</code></pre>`);
+    expect(missingDenseDigitFloors([
+      { path: "fa/components/new/index.html", html: dense },
+      { path: "fa/components/code/index.html", html: exempt },
+      { path: "en/components/new/index.html", html: dense.replace('lang="fa-IR" dir="rtl"', 'lang="en-US" dir="ltr"') },
+    ], {})).toEqual([{ path: "fa/components/new/index.html", found: 30 }]);
+    expect(missingDenseDigitFloors([
+      { path: "fa/components/new/index.html", html: dense },
+    ], { "fa/components/new/index.html": 16 })).toEqual([]);
   });
 });
 

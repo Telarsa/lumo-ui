@@ -69,4 +69,17 @@ describe("TreeSelect", () => {
     );
     expect(hidden.sort()).toEqual(["design", "engineering", "team"]);
   });
+
+  it("multiple mode round-trips a selected parent as its own independent value", async () => {
+    const changes = vi.fn();
+    renderTree({ mode: "multiple", defaultValue: ["team"], onValueChange: changes });
+    fireEvent.click(screen.getByRole("button", { name: /واحد/ }));
+    const parent = await screen.findByRole("checkbox", { name: "تیم" });
+    const child = screen.getByRole("checkbox", { name: "طراحی" });
+    expect((parent as HTMLInputElement).checked).toBe(true);
+    expect((child as HTMLInputElement).checked).toBe(false);
+
+    fireEvent.click(parent);
+    expect(changes).toHaveBeenCalledWith([]);
+  });
 });
