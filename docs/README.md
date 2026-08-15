@@ -13,4 +13,6 @@ Start with `architecture.md`, then `codebase.md` for where things live. Everythi
 | [history/](history/) | Retired planning and audit documents, kept for the record |
 | [history/evaluations.md](history/evaluations.md) | The independent-review arc of August 2026 and what it changed |
 
+Rating: `rubric.md` — the fixed weighted sheet every evaluation and comparison uses.
+
 Knowledge graph: `graphify query "<question>"` (built into `graphify-out/`, gitignored; rebuild with `/graphify .` or `graphify update .`).

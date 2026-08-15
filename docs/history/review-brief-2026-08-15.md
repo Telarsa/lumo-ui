@@ -16,7 +16,7 @@ The thesis: RTL and i18n defects hide from ordinary review (English `aria-label`
 - Read first, in this order: `AGENTS.md`, `docs/README.md`, `docs/architecture.md`, `docs/codebase.md`, `docs/i18n-and-rtl.md`, `docs/verification.md`, `docs/thesis.md`, `docs/decisions/log.md` (§19–§21 are the latest decisions), `CONTRIBUTING.md`.
 - **Do NOT read `docs/history/evaluations.md` or the other `docs/history/*` files before you have written your own rating.** They contain earlier scores and would anchor you. Read them afterwards to check whether you found something they missed — or the reverse.
 - 111 components (`packages/ui/src/*.tsx`), 30 blocks, 13 gate rules, 3,038 tests, 594 built documents at 0 violations, 63 Persian-digit floors armed. `pnpm run verify` is the whole chain (types → props → lint → no-css-modules → test → registry → api → smoke → html), ~15 min.
-- A code graph exists: `graphify query "<question>"`, `graphify path "<A>" "<B>"`, `graphify explain "<concept>"` — use it before broad grep. Run `graphify update .` after you change code (AST-only, free).
+- A code graph exists and you are expected to use it first: `graphify query "<question>"` to orient, `graphify path "<A>" "<B>"` for how two things connect, `graphify explain "<concept>"` for one seam — before broad grep or reading whole files. Run `graphify update .` after you change code (AST-only, free).
 
 ## 2. Standing constraints — not yours to relax
 
@@ -32,7 +32,7 @@ The thesis: RTL and i18n defects hide from ordinary review (English `aria-label`
 
 ## 3. Phase A — evaluate (read-only, ~1 hour of effort)
 
-Score each dimension 0–10 with 1–3 sentences of **concrete evidence** (`file:line`, or a command and its output). Anchors: **shadcn/ui = 8**, **Mantine = 8**, **Ark UI = 7.5**, a typical company-internal component library = 5. Do not penalise the private/unpublished status itself — that is a decision, not a defect — but do penalise anything that would break the day it is consumed.
+**Use `docs/rubric.md`** — fill in every criterion of its §2 sheet with the fixed weights and level anchors, one line of **concrete evidence** per criterion (`file:line`, or a command and its output). Do not invent dimensions or anchors; do not blend the public-OSS column into the primary score. Adoption and bus factor carry no weight (recorded only). Report the weighted overall *and* the per-criterion delta against the last dated sheet in `docs/history/`. The dimensions below are the reading guide for gathering evidence; the scoring is the rubric's.
 
 1. **Core promise** — RTL + Persian-first + first-byte truth + no English defaults. Pick 3 components at random (`ls packages/ui/src/*.tsx | grep -v test | shuf -n 3`), check that announced strings are required props, digits go through `formatNumber`, no `dir` prop, LTR islands use `data-lumo-latn`. Read `packages/gate/src/rules.ts` and say what each rule actually catches and what it structurally cannot (popups do not SSR; `data-lumo-latn` exempts 75% of text nodes on fa routes — is that too much?).
 2. **Architecture & complexity** — six packages + website + scripts. Where is duplication? Which abstractions do not earn their keep? Rate complexity separately: high/medium/low, justified/partly/not.
@@ -43,7 +43,7 @@ Score each dimension 0–10 with 1–3 sentences of **concrete evidence** (`file
 
 Be adversarial. Try to: render a component under `fa-IR` and find an English string in the output; find a required-looking prop that has a default; find a component whose accessible name can be empty without a compile error **and** without a gate violation (composite roles `menu/listbox/tree/treegrid/grid` were added to the gate's `named-controls` on 15 Aug — is anything still outside it? `tablist`? `dialog`? `region`?); find a test whose assertion would still hold if the component rendered `null`. Report what you tried and what happened, including your own probes that failed.
 
-Deliver Phase A as `docs/history/evaluation-<YYYY-MM-DD>.md`: dimension scores, (a) 3 strongest facts, (b) 5 most important weaknesses with evidence, (c) real bugs with `file:line` and how you know, then **`OVERALL: X.X/10`** and **`COMPLEXITY: <high|medium|low>, <justified|partly justified|not justified>`**. Only now read `docs/history/evaluations.md` and add one paragraph: what you found that earlier reviewers missed, and what they found that you did not.
+Deliver Phase A as `docs/history/evaluation-<YYYY-MM-DD>.md`: the filled rubric sheet, (a) 3 strongest facts, (b) 5 most important weaknesses with evidence, (c) real bugs with `file:line` and how you know, then **`OVERALL: X.X/10`** and **`COMPLEXITY: <high|medium|low>, <justified|partly justified|not justified>`**. Only now read `docs/history/evaluations.md` and add one paragraph: what you found that earlier reviewers missed, and what they found that you did not.
 
 ## 4. Phase B — improve (only what Phase A proved)
 
