@@ -288,7 +288,10 @@ export const noLatinAria: Rule = {
       for (const el of Array.from(doc.document.querySelectorAll(selector))) {
         if (el.closest?.("[data-lumo-latn]")) continue;
         const value = el.getAttribute(attr) ?? "";
-        if (LATIN_WORD.test(value)) {
+        // Purity, like the visible-text rule: «دانلود PDF» or «ورود با Google» is a Persian
+        // phrase with a foreign token and belongs to a translator, not to this rule. Only a
+        // value with a Latin word and NO character of the reader's script is graded.
+        if (LATIN_WORD.test(value) && !doc.script.pattern.test(value)) {
           v.push({ rule: "no-latin-aria", path: doc.path, detail: `${attr}=${JSON.stringify(value)}`, snippet: el.outerHTML.slice(0, 120) });
         }
       }

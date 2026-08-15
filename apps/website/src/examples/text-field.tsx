@@ -79,6 +79,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک خط متن: نام، نشانی رایانامه، عنوان. برچسب، توضیح و خطا از یک سیم‌کشی می‌آیند و در همان بایت اول به ورودی وصل‌اند.",
+        "en-US": "One line of text: a name, an email address, a title. Label, description and error come from one wiring and reach the input in the first byte.",
+      },
+      whenNot: {
+        "fa-IR": "چند خط — `TextArea`. عدد با گام — `NumberField`. جست‌وجو با پاک‌کردن — `SearchField`. شمارهٔ تلفن، کد یک‌بارمصرف یا قالب ثابت — `PhoneInput`، `InputOtp`، `MaskInput`.",
+        "en-US": "Several lines — `TextArea`. A number with steps — `NumberField`. Search with clear — `SearchField`. A phone number, one-time code or fixed pattern — `PhoneInput`, `InputOtp`, `MaskInput`.",
+      },
+    },
     title: { "fa-IR": "ورودی متن", "en-US": "Text field" },
     intro: {
       "fa-IR": "ورودی تک‌خطی. برچسبِ رشته‌ای اجباری است، چون قرارداد «هر فیلد برچسب دارد» پیش‌تر شکست خورده است.",

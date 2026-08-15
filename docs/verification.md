@@ -4,7 +4,7 @@
 
 | Gate | What it proves | What it cannot |
 | --- | --- | --- |
-| `gate:types` | Whole workspace type-checks; `?: undefined` carriers and `@ts-expect-error` pins reject at compile time | Runtime behavior |
+| `gate:types` | Whole workspace type-checks; `?: undefined` carriers and `@ts-expect-error` pins reject at compile time; a `.type-test.tsx` per family pins required strings, all-or-nothing unions and rejected inherited props (49 files) | Runtime behavior |
 | `gate:props` | No prop is typed-but-undelivered (AST, fails closed); root contract for `ref`/`id`; anchor-only names never leak from non-anchors | Names that collide with a same-named local; destinations behind a call |
 | `gate:lint` | No physical left/right utilities in shared components; conditional hooks | — |
 | `gate:no-css-modules` | Tailwind only | — |

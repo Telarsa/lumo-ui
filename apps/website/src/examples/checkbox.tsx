@@ -88,6 +88,16 @@ function ChoiceCardExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک گزینهٔ مستقل بله/خیر که ذخیره‌اش با ارسال فرم انجام می‌شود، یا چند گزینهٔ هم‌زمان در یک `CheckboxGroup`.",
+        "en-US": "An independent yes/no whose saving happens with the form's submit, or several at once in a `CheckboxGroup`.",
+      },
+      whenNot: {
+        "fa-IR": "تغییر باید فوراً اعمال شود — `Switch`. تنها یکی از چند — `RadioGroup`.",
+        "en-US": "The change must apply immediately — `Switch`. Only one of several — `RadioGroup`.",
+      },
+    },
     title: { "fa-IR": "چک‌باکس", "en-US": "Checkbox" },
     intro: {
       "fa-IR": "چک‌باکس تکی و گروه چک‌باکس. برچسب گروه اجباری است و نشانگر با خط متن هم‌تراز می‌ماند، نه با بالای آن.",

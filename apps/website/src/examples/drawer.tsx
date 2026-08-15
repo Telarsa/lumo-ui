@@ -171,6 +171,16 @@ function DismissableExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "پنلی کناری با ناوبری، پالایه‌ها یا جزئیات یک مورد که کاربر می‌خواهد کنار صفحه ببیند و ببندد. از لبهٔ start یا end می‌آید و در هر دو جهت درست است.",
+        "en-US": "A side panel with navigation, filters or an item's details the user wants beside the page and then dismissed. It comes from the start or end edge and is right in both directions.",
+      },
+      whenNot: {
+        "fa-IR": "تصمیمی کوتاه لازم است — `Dialog` یا `AlertDialog`. محتوایی که همیشه باید دیده شود، پنل ثابت صفحه است نه کشو.",
+        "en-US": "A short decision is needed — `Dialog` or `AlertDialog`. Content that must always be visible belongs in a fixed page panel, not a drawer.",
+      },
+    },
     tier: "overlay",
     title: { "fa-IR": "کشو", "en-US": "Drawer" },
     intro: {

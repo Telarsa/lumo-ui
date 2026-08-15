@@ -145,7 +145,7 @@ and the first paint receive. No browser, so it runs anywhere.
 | `lang-dir` | `<html lang>` and `dir` do not match the route's locale |
 | `no-latin-digits` | Latin digits in visible text on a locale that numbers in its own |
 | `persian-digit-floor` | a page that renders no native digits at all — because "zero Latin digits" passes trivially on a page with no data |
-| `no-latin-aria` | a Latin word in any of the nine attributes a reader speaks, including `alt` and a native `placeholder` |
+| `no-latin-aria` | an announced string (`aria-label`, roledescription, valuetext, placeholder, title) that is purely Latin — a Persian phrase carrying a foreign token («دانلود PDF») passes; the untranslated engine string does not |
 | `named-controls` | an interactive control with no accessible name |
 | `resolved-idrefs` | a dangling `aria-labelledby` / `controls` / `describedby` / `errormessage` |
 | `composite-tab-stop` | a roving-tabindex widget with NO tab stop — unreachable by keyboard in the served bytes |

@@ -204,6 +204,16 @@ function PlacementExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "پیام کوتاهی که پس از یک کنش می‌آید و خودش می‌رود: ذخیره شد، ارسال شد؛ با یک کنش برگشت در صورت نیاز.",
+        "en-US": "A short message after an action that leaves on its own: saved, sent; with an undo action when needed.",
+      },
+      whenNot: {
+        "fa-IR": "کاربر باید پیام را بخواند یا تصمیم بگیرد — `Alert` در صفحه یا `AlertDialog`. خطای یک میدان — همان‌جا کنار میدان.",
+        "en-US": "The user must read it or decide — an inline `Alert` or an `AlertDialog`. A field's error — beside the field.",
+      },
+    },
     tier: "feedback",
     title: { "fa-IR": "اعلان گذرا", "en-US": "Toast" },
     intro: {

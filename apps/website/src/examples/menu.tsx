@@ -178,6 +178,16 @@ function SelectionExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "فهرستی از کنش‌ها پشت یک دکمه: ویرایش، رونوشت، حذف. هر مورد یک فعل است و با انتخابش بسته می‌شود.",
+        "en-US": "A list of actions behind one button: edit, duplicate, delete. Every item is a verb and the menu closes on choice.",
+      },
+      whenNot: {
+        "fa-IR": "کاربر یک مقدار را از چند گزینه برمی‌گزیند و آن مقدار باید دیده بماند — `Select`. ناوبری بین بخش‌های سایت — `NavigationMenu`. کلیک راست روی یک ناحیه — `ContextMenu`.",
+        "en-US": "The user picks a value from options and that value must stay visible — `Select`. Site navigation — `NavigationMenu`. Right-click on an area — `ContextMenu`.",
+      },
+    },
     title: { "fa-IR": "منو", "en-US": "Menu" },
     intro: {
       "fa-IR": "منوی کنش‌ها با بخش و جداکننده. پیکان زیرمنو نویسهٔ › است تا موتور متن خودش آن را قرینه کند.",

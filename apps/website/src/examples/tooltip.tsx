@@ -148,6 +148,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "نام یا توضیح کوتاه یک کنترل بدون برچسب دیده‌شدنی (دکمهٔ آیکونی) که با شناور شدن یا فوکوس می‌آید. محتوا متن ساده است.",
+        "en-US": "The name or a short description of a control without a visible label (an icon button), shown on hover or focus. Plain text only.",
+      },
+      whenNot: {
+        "fa-IR": "محتوا تعامل دارد یا بلند است — `Popover` یا `HoverCard`. اطلاعات مهم که همیشه باید دیده شود — برچسب یا `Description` واقعی.",
+        "en-US": "The content is interactive or long — `Popover` or `HoverCard`. Information that must always be visible — a real label or `Description`.",
+      },
+    },
     tier: "overlay",
     title: { "fa-IR": "راهنمای ابزار", "en-US": "Tooltip" },
     intro: {

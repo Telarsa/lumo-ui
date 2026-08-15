@@ -22,7 +22,11 @@ export { alertDialogFooterVariants };
 
 export type AlertDialogTone = "accent" | "critical";
 
-export interface AlertDialogProps extends Omit<DialogPropsBase, "role"> {
+export interface AlertDialogProps
+  extends Omit<
+    DialogPropsBase,
+    "role" | "aria-label" | "aria-labelledby" | "aria-describedby" | "aria-details"
+  > {
   /** Announced name of the dialog. Required: an unnamed interruption is noise. */
   title: string;
   /** The confirming verb — «حذف», not «بله». Required. */

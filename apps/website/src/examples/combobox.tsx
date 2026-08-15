@@ -157,6 +157,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "فهرست بلند است یا از سرور می‌آید و کاربر با نوشتن آن را کوتاه می‌کند؛ مقدار نهایی یکی از گزینه‌هاست.",
+        "en-US": "The list is long or comes from a server and the user narrows it by typing; the final value is one of the options.",
+      },
+      whenNot: {
+        "fa-IR": "فهرست کوتاه و ثابت است — `Select`. متن آزاد با پیشنهاد اختیاری — `Autocomplete`. چند مقدار — `MultiSelect`.",
+        "en-US": "The list is short and fixed — `Select`. Free text with optional suggestions — `Autocomplete`. Several values — `MultiSelect`.",
+      },
+    },
     tier: "form",
     title: { "fa-IR": "جعبهٔ ترکیبی", "en-US": "Combo box" },
     intro: {

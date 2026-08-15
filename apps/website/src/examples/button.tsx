@@ -148,6 +148,16 @@ function BusyExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک کنش را آغاز می‌کند: ذخیره، ارسال، باز کردن گفتگو. برچسبش فعل است و همان کاری را می‌گوید که انجام می‌دهد.",
+        "en-US": "It starts an action: save, submit, open a dialog. Its label is a verb that says what happens.",
+      },
+      whenNot: {
+        "fa-IR": "کاربر را به صفحهٔ دیگری می‌برد — این کار `Link` است. برای انتخاب یک حالت از چند حالت، `ToggleButtonGroup` یا `SegmentedControl` را به کار ببرید.",
+        "en-US": "It takes the user to another page — that is `Link`. For choosing one state among a few, use `ToggleButtonGroup` or `SegmentedControl`.",
+      },
+    },
     title: { "fa-IR": "دکمه", "en-US": "Button" },
     intro: {
       "fa-IR": "کنش اصلی. چهار گونه و چهار اندازه، با فاصله‌گذاری منطقی که در راست‌چین قرینه می‌شود.",

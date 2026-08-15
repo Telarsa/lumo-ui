@@ -36,6 +36,7 @@ export async function generateStaticParams() {
 interface PageCopy {
   rail: {
     preview: string;
+    usage: string;
     composition: string;
     api: string;
     evidence: string;
@@ -59,6 +60,8 @@ interface PageCopy {
   exampleCopy: string;
   exampleCopied: string;
   compositionIntro: string;
+  usageWhen: string;
+  usageWhenNot: string;
   copyComposition: string;
   compositionCopied: string;
   exportedParts: string;
@@ -81,6 +84,7 @@ const COPY = {
   "fa-IR": {
     rail: {
       preview: "پیش‌نمایش",
+      usage: "کِی به کارش بگیریم",
       composition: "ترکیب اجزا",
       api: "مرجع API",
       evidence: "شواهد دسترس‌پذیری",
@@ -102,6 +106,8 @@ const COPY = {
     exampleCopied: "کد نمونه کپی شد",
     compositionIntro:
       "درخت اجزا، آمادهٔ کپی — هر تگ آن هنگام ساخت با خروجی‌های واقعی کتابخانه تطبیق داده شده است.",
+    usageWhen: "به کارش بگیرید وقتی",
+    usageWhenNot: "سراغش نروید وقتی",
     copyComposition: "کپی درخت اجزا",
     compositionCopied: "درخت اجزا کپی شد",
     exportedParts: "اجزای صادرشده",
@@ -123,6 +129,7 @@ const COPY = {
   "en-US": {
     rail: {
       preview: "Preview",
+      usage: "When to use it",
       composition: "Composition",
       api: "API reference",
       evidence: "Accessibility evidence",
@@ -144,6 +151,8 @@ const COPY = {
     exampleCopied: "Example code copied",
     compositionIntro:
       "The parts tree, ready to copy — every tag in it is checked against the library's real exports at build time.",
+    usageWhen: "Use it when",
+    usageWhenNot: "Do not use it when",
     copyComposition: "Copy the composition tree",
     compositionCopied: "Composition tree copied",
     exportedParts: "Exported parts",
@@ -186,6 +195,9 @@ function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
     // Every example has a card, including the first (source-only), so each rail entry scrolls to something.
     for (const example of loaded.examples) {
       list.push({ id: `example-${example.id}`, label: example.title[lang] });
+    }
+    if (loaded.usage !== undefined) {
+      list.push({ id: "usage", label: c.rail.usage });
     }
     if (loaded.composition !== undefined) {
       list.push({ id: "composition", label: c.rail.composition });
@@ -596,6 +608,22 @@ export default async function ComponentPage({
               ) : undefined}
             </ExampleCard>
           ))}
+
+          {loaded?.usage !== undefined ? (
+            <section id="usage" className="mt-10 scroll-mt-24">
+              <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">{c.rail.usage}</h2>
+              <dl className="mt-3 grid max-w-2xl gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <dt className="text-sm font-medium text-fg">{c.usageWhen}</dt>
+                  <dd className="mt-1 text-sm text-fg-muted">{loaded.usage.when[lang]}</dd>
+                </div>
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <dt className="text-sm font-medium text-fg">{c.usageWhenNot}</dt>
+                  <dd className="mt-1 text-sm text-fg-muted">{loaded.usage.whenNot[lang]}</dd>
+                </div>
+              </dl>
+            </section>
+          ) : null}
 
           {loaded !== undefined &&
           loaded.composition !== undefined &&

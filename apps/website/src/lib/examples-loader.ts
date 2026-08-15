@@ -66,6 +66,7 @@ export interface LoadedComponentExamples {
   intro?: Record<Locale, string> | undefined;
   tier?: "form" | "display" | "overlay" | "navigation" | "feedback" | "layout" | "data" | undefined;
   isNew: boolean;
+  usage?: { when: Record<Locale, string>; whenNot: Record<Locale, string> } | undefined;
   /**
    * The component's module inside `packages/ui/src` — `meta.sourceFile` when
    * set, else `<slug>.tsx`. The catalog reads the source panel's bytes from it.
@@ -202,9 +203,11 @@ function normalizeModule(
       title?: Record<Locale, string>;
       intro?: Record<Locale, string>;
       tier?: ComponentExamples["meta"]["tier"];
+      usage?: ComponentExamples["meta"]["usage"];
     };
     return {
       meta: {
+        ...(m.usage !== undefined ? { usage: m.usage } : {}),
         ...(m.title !== undefined ? { title: m.title } : {}),
         ...(m.intro !== undefined ? { intro: m.intro } : {}),
         ...(m.tier !== undefined ? { tier: m.tier } : {}),
@@ -337,6 +340,7 @@ async function loadAndValidate(
     intro: spec.meta.intro,
     tier: spec.meta.tier,
     isNew: spec.meta.isNew === true,
+    usage: spec.meta.usage,
     module: moduleName,
     composition: spec.meta.composition,
     moduleParts,

@@ -269,6 +269,16 @@ function AsyncRowsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "مجموعه‌ای بزرگ که ویرایش سلولی، انتخاب چندگانه، منوی ستون، صفحه‌بندی و وضعیت غیرهمگام می‌خواهد و اعتبارسنجی هر سلول باید اعلام شود.",
+        "en-US": "A large collection that needs cell editing, multi-selection, column menus, pagination and async state, where each cell's validation must be announced.",
+      },
+      whenNot: {
+        "fa-IR": "صد ردیف خواندنی با چند ستون — `Table` ساده‌تر و سبک‌تر است. سلسله‌مراتب — `Tree`.",
+        "en-US": "A hundred readable rows with a few columns — `Table` is simpler and lighter. A hierarchy — `Tree`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "شبکهٔ داده", "en-US": "Data grid" },

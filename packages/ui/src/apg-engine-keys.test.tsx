@@ -15,6 +15,7 @@ import { Slider } from "./slider.tsx";
 import { Toolbar, ToolbarItem } from "./toolbar.tsx";
 import { ToggleButton, ToggleButtonGroup } from "./toggle-group.tsx";
 import { Radio, RadioGroup } from "./radio-group.tsx";
+import { TagGroup, TagItem, TagList } from "./tag-group.tsx";
 import { LumoProvider } from "./provider.tsx";
 
 afterEach(cleanup);
@@ -169,5 +170,65 @@ describe("ToggleButtonGroup and RadioGroup — roving arrows (engine)", () => {
     act(() => radios[0]!.focus());
     key(radios[0]!, "ArrowDown");
     expect(stop(radios)).toBe(1);
+  });
+});
+
+describe("Menu and Select — typeahead in the reader's script (engine)", () => {
+  it("Menu: typing «ح» moves the highlight to the first item starting with it", async () => {
+    render(
+      <LumoProvider locale="fa-IR">
+        <MenuTrigger defaultOpen>
+          <Button>گزینه‌ها</Button>
+          <MenuPopover>
+            <Menu aria-label="گزینه‌ها">
+              <MenuItem id="a">ویرایش</MenuItem>
+              <MenuItem id="b">رونوشت</MenuItem>
+              <MenuItem id="c">حذف</MenuItem>
+            </Menu>
+          </MenuPopover>
+        </MenuTrigger>
+      </LumoProvider>,
+    );
+    const menu = await screen.findByRole("menu");
+    key(menu, "ح");
+    const items = screen.getAllByRole("menuitem");
+    expect(items.find((el) => el.getAttribute("tabindex") === "0" || el === document.activeElement)).toBe(items[2]);
+  });
+  it("Select: typing «ت» highlights the first option starting with it", async () => {
+    render(
+      <LumoProvider locale="fa-IR">
+        <Select placeholder="شهر" aria-label="شهر" defaultOpen>
+          <SelectTrigger />
+          <SelectPopover>
+            <SelectItem id="1">اصفهان</SelectItem>
+            <SelectItem id="2">شیراز</SelectItem>
+            <SelectItem id="3">تهران</SelectItem>
+          </SelectPopover>
+        </Select>
+      </LumoProvider>,
+    );
+    const list = await screen.findByRole("listbox");
+    key(list, "ت");
+    const options = screen.getAllByRole("option");
+    expect(options.find((el) => el.getAttribute("tabindex") === "0" || el === document.activeElement || el.getAttribute("data-highlighted") !== null)).toBe(options[2]);
+  });
+});
+
+describe("TagGroup — roving arrows (engine composite)", () => {
+  it("ArrowLeft moves the stop forward under fa-IR", () => {
+    render(
+      <LumoProvider locale="fa-IR">
+        <TagGroup label="فیلترهای فعال" onRemove={() => {}} removeLabel={(tag) => `حذف ${tag}`}>
+          <TagList>
+            <TagItem id="thr" textValue="تهران" />
+            <TagItem id="isf" textValue="اصفهان" />
+          </TagList>
+        </TagGroup>
+      </LumoProvider>,
+    );
+    const stops = screen.getAllByRole("button");
+    act(() => stops[0]!.focus());
+    key(stops[0]!, "ArrowLeft");
+    expect(stop(stops)).toBe(1);
   });
 });

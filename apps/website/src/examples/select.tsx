@@ -172,6 +172,16 @@ function InFormExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک مقدار از فهرستی شناخته‌شده و کوتاه (تا حدود هشت گزینه) که مقدار انتخاب‌شده در میدان می‌ماند.",
+        "en-US": "One value from a short, known list (up to about eight options), with the chosen value staying in the field.",
+      },
+      whenNot: {
+        "fa-IR": "گزینه‌ها زیادند یا کاربر باید بنویسد تا بیابد — `ComboBox`. چند مقدار — `MultiSelect`. سه چهار گزینهٔ همیشه‌پیدا — `RadioGroup` یا `SegmentedControl`.",
+        "en-US": "There are many options or the user needs to type to find one — `ComboBox`. Several values — `MultiSelect`. Three or four always-visible options — `RadioGroup` or `SegmentedControl`.",
+      },
+    },
     title: { "fa-IR": "انتخابگر", "en-US": "Select" },
     intro: {
       "fa-IR": "فهرست تک‌انتخابی درون یک پاپ‌اور. متن جای‌نما اجباری است، چون پیش‌فرض ری‌اکت‌آریا یک عبارت انگلیسیِ دیدنی است.",

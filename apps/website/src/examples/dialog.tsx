@@ -178,6 +178,16 @@ function ScrollingExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "کاربر باید پیش از ادامه کاری را تمام کند: فرمی کوتاه، تأییدی که به تصمیم نیاز دارد. محتوا کوتاه است و به صفحهٔ زیر وابسته نیست.",
+        "en-US": "The user must finish something before continuing: a short form, a confirmation that needs a decision. The content is short and does not depend on the page beneath.",
+      },
+      whenNot: {
+        "fa-IR": "تنها یک پرسش بله/خیر با پیامد دارید — `AlertDialog` نقش درست را اعلام می‌کند. محتوای بلند یا ناوبری، `Drawer`. اطلاعات کوتاه بدون قطع کار، `Popover`.",
+        "en-US": "You have a single yes/no with consequences — `AlertDialog` announces the right role. Long content or navigation, `Drawer`. A short note that should not interrupt, `Popover`.",
+      },
+    },
     title: { "fa-IR": "گفت‌وگو", "en-US": "Dialog" },
     intro: {
       "fa-IR": "پنجرهٔ مودال در چهار لایه. نام دکمهٔ بستن ویژگی اجباری است، چون یک ✕ نام نیست.",

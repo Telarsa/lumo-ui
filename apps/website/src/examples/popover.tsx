@@ -172,6 +172,16 @@ function UnpaddedExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "محتوای کوتاه و گاه تعاملی که به یک دکمه لنگر می‌شود: پالایه‌ای کوچک، توضیحی با پیوند. صفحه در دسترس می‌ماند.",
+        "en-US": "Short, sometimes interactive content anchored to a button: a small filter, a note with a link. The page stays reachable.",
+      },
+      whenNot: {
+        "fa-IR": "کاربر باید تصمیم بگیرد یا فرمی را تمام کند — `Dialog`. فقط نام یک کنترل — `Tooltip`. پیش‌نمایش با شناور شدن روی پیوند — `HoverCard`.",
+        "en-US": "The user must decide or finish a form — `Dialog`. Only a control's name — `Tooltip`. A preview on hovering a link — `HoverCard`.",
+      },
+    },
     tier: "overlay",
     title: { "fa-IR": "پاپ‌اور", "en-US": "Popover" },
     intro: {

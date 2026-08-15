@@ -181,6 +181,16 @@ function VerbsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "کنشی برگشت‌ناپذیر یا پرهزینه در راه است — حذف، خروج بدون ذخیره — و کاربر باید آگاهانه تأیید کند. دکمهٔ تأیید همان فعل است، نه «بله».",
+        "en-US": "An irreversible or costly action is about to happen — delete, leave without saving — and the user must confirm knowingly. The confirm button is the verb, not “Yes”.",
+      },
+      whenNot: {
+        "fa-IR": "تأیید ساده‌ای است که پیامدی ندارد؛ کنش را انجام دهید و با `Toast` امکان بازگشت بدهید. برای فرم یا محتوای بیشتر، `Dialog`.",
+        "en-US": "It is a harmless confirmation; do the action and offer undo with a `Toast`. For a form or more content, `Dialog`.",
+      },
+    },
     tier: "overlay",
     title: { "fa-IR": "گفت‌وگوی هشدار", "en-US": "Alert dialog" },
     intro: {

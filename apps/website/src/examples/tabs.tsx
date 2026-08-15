@@ -209,6 +209,16 @@ function CountsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "چند نمای هم‌سطح از یک چیز که کاربر بین‌شان جابه‌جا می‌شود و یکی همیشه انتخاب است؛ نمای انتخاب‌شده در بایت اول ارسال می‌شود.",
+        "en-US": "Several peer views of one thing the user switches between, one always selected; the selected view is served in the first byte.",
+      },
+      whenNot: {
+        "fa-IR": "بخش‌ها مراحل ترتیبی‌اند — `Steps`. محتوایی که می‌شود باز و بسته کرد — `Disclosure`. ناوبری بین صفحه‌ها — `NavigationMenu` یا `Sidebar`.",
+        "en-US": "The sections are ordered steps — `Steps`. Content that opens and closes — `Disclosure`. Navigation between pages — `NavigationMenu` or `Sidebar`.",
+      },
+    },
     title: { "fa-IR": "زبانه‌ها", "en-US": "Tabs" },
     intro: {
       "fa-IR": "زبانه‌ها. نام فهرست زبانه اجباری است، و کلیدهای پیکان را ری‌اکت‌آریا با جهت سند حل می‌کند.",

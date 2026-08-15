@@ -1121,3 +1121,19 @@ describe("latn-island-purity — the exemption cannot hide the reader's own pros
     expect(gradeHtml("en-US/index.html", '<!doctype html><html lang="en-US" dir="ltr"><body><p data-lumo-latn>Plain English prose is fine here.</p></body></html>')).toEqual([]);
   });
 });
+
+describe("no-latin-aria — mixed Persian is Persian", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+  const fired = (body: string) => gradeHtml("fa-IR/index.html", fa(body)).map((v) => v.rule);
+
+  it("passes an announced string that carries a foreign token inside a Persian phrase", () => {
+    expect(fired('<button type="button" aria-label="دانلود PDF">⬇</button>')).toEqual([]);
+    expect(fired('<button type="button" aria-label="ورود با Google">G</button>')).toEqual([]);
+    expect(fired('<input aria-label="ایمیل" aria-placeholder="نشانی مثل name@example.com" />')).toEqual([]);
+  });
+
+  it("still fails a purely Latin announced string", () => {
+    expect(fired('<button type="button" aria-label="Download">⬇</button>')).toContain("no-latin-aria");
+    expect(fired('<input aria-label="مبلغ" aria-roledescription="Number field" />')).toEqual(["no-latin-aria"]);
+  });
+});

@@ -343,6 +343,16 @@ function EmptyExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "داده‌های ردیفی با ستون‌های مقایسه‌پذیر که خواندن، مرتب‌سازی و انتخاب می‌خواهند؛ اعداد با ارقام محلی می‌آیند.",
+        "en-US": "Row data with comparable columns that needs reading, sorting and selection; numbers arrive in the reader's digits.",
+      },
+      whenNot: {
+        "fa-IR": "ویرایش درجا، انتخاب گسترده، صفحه‌بندی سرور و صفت‌بندی ستون‌ها لازم است — `DataGrid`. فهرستی از موارد با عمل — `ListBox` یا `Item`. زوج‌های نام/مقدار — `DescriptionList`.",
+        "en-US": "You need in-place editing, wide selection, server pagination and column controls — `DataGrid`. A list of items with an action — `ListBox` or `Item`. Name/value pairs — `DescriptionList`.",
+      },
+    },
     title: { "fa-IR": "جدول داده", "en-US": "Table" },
     intro: {
       "fa-IR": "یک گرید واقعی: نام گرید، نام هر چک‌باکس و جهت مرتب‌سازی همگی ویژگی اجباری‌اند، و پیکان‌ها با جهت سند حل می‌شوند.",

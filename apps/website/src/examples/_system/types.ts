@@ -99,6 +99,12 @@ export interface ExamplesMeta {
   /** Marks the component's sidebar row with the "new" dot. */
   isNew?: boolean;
   /**
+   * When to reach for this component and when not to — one or two sentences
+   * each, in both locales, naming the alternative ("use `Select` for fewer than
+   * eight known options"). Renders as its own section and rail entry.
+   */
+  usage?: { when: Record<Locale, string>; whenNot: Record<Locale, string> };
+  /**
    * The monospace parts tree, as pseudo-JSX. Rendered in a copyable code
    * block. Every capitalised tag must be a real `@lumo-ui/ui` export.
    */
