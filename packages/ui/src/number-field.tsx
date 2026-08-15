@@ -81,7 +81,7 @@ export const stepperVariants = cva(
  * this component. DOWNGRADE, recorded: Base UI has no locale context, so digits
  * format in the RUNTIME locale unless the caller passes `locale` through the
  * spread; `locale` is not made a required prop because the public API may not
- * change. Long form: `experiments/measurements/rebuild-overlays.json`,
+ * change. Long form: `docs/history/base-ui-migration/verdict-2026-08-10.md`,
  * `docs/decisions/log.md`.
  */
 /**

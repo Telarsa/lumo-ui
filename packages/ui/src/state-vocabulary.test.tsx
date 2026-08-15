@@ -29,7 +29,7 @@
  * Hover and press are CSS pseudo-classes on Base UI, and jsdom models no
  * pointer: `matches(":hover")` and `matches(":active")` are permanently false
  * regardless of what has been dispatched. Measured in
- * `experiments/measurements/probe3.testability.json`. So those two states are
+ * `docs/history/base-ui-migration/verdict-2026-08-10.md`. So those two states are
  * asserted structurally — the rule exists and is on the right element — and the
  * gap is named here rather than hidden behind a passing assertion. Under React
  * Aria both were attributes and both were fully assertable, which is a real
@@ -909,7 +909,7 @@ describe("hover and press — structural only, and the reason is measured", () =
   it("button keeps a press treatment, with the fidelity caveat recorded", () => {
     // `:active` is not `data-pressed`: the platform drops it when the pointer
     // leaves the element, React Aria did not. Partial mapping, recorded in
-    // experiments/measurements/state-vocabulary.json.
+    // docs/history/base-ui-migration/verdict-2026-08-10.md.
     //
     // The treatment is the nudge, not `active:bg-accent-hover`. It is on the
     // BASE string rather than in the `solid` variant, which is the change:

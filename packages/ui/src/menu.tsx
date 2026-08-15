@@ -21,7 +21,7 @@ import { placementToSideAlign, popoverVariants, type LumoPlacement } from "./pop
  * `MenuPopover` defaults to `bottom start` at the root and `end top` inside a
  * `SubmenuTrigger`, since Base UI publishes no per-level placement. The submenu
  * chevron is U+203A, which is `Bidi_Mirrored`, so it flips with no CSS.
- * Divergences from React Aria: `experiments/measurements/rebuild-collections.json`.
+ * Divergences from React Aria: `docs/history/base-ui-migration/comparison-2026-08-11.md`.
  */
 
 /** The floating panel a menu lives in. `padded: false`: the padding belongs to the `<Menu>` inside so a scrolling menu clips at the panel edge. */

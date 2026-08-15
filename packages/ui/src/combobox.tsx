@@ -16,7 +16,7 @@ import { Button } from "./button.tsx";
  * English one), and its one English literal — the internal dismiss sentinel's
  * `aria-label="Dismiss"`, mui/base-ui#5263 — is relabelled live from
  * `dismissLabel`. One component rather than parts, so the named elements
- * cannot be omitted. Divergences: `experiments/measurements/rebuild-collections.json`.
+ * cannot be omitted. Divergences: `docs/history/base-ui-migration/comparison-2026-08-11.md`.
  */
 
 export const comboBoxVariants = cva("group flex w-full flex-col gap-1.5");

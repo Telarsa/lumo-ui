@@ -38,7 +38,7 @@ LUMO_STYLE=aria-vega node scripts/vendor-from-shadcn.mjs chart   # the old engin
 
 **The style is `base-vega`** — Base UI underneath, the engine Lumo runs on since
 10 Aug 2026. Measured that day: **48 of Lumo's 77 components have a base-vega
-counterpart** (`experiments/measurements/base-vega-inventory.json`). Check there
+counterpart** (the shadcn base-vega inventory, recorded in `docs/history/base-ui-migration/`). Check there
 before writing anything; the 29 that are missing are the only ones that need
 authoring, and six of those are the date family.
 
@@ -152,20 +152,20 @@ on `HTMLAttributes` as a base, on a DOM surface that is inherited and never
 spread, and on an unexplained `ref`/`id` subtraction. Fixtures are in
 `packages/gate/fixtures/root-contract/`, one per verdict plus `good.tsx`.
 
-## When React Aria leaks English
+## When the engine leaks English
 
-It leaks 8 strings on a Persian page; 5 are reachable by prop and are already
-typed in `packages/core/src/strings.ts`. If you find a sixth:
+Base UI writes almost no announced strings itself; the one it hardcodes is
+`aria-label="Dismiss"` on the internal dismiss sentinel of every open
+combobox-family popup (mui/base-ui#5263). Lumo relabels it live from a REQUIRED
+`dismissLabel` prop. If you find another:
 
-1. Check whether a prop reaches it. Render with `renderToStaticMarkup` under
-   `fa-IR` and grep the output — do not assume. `aria-roledescription` on
-   NumberField sits on the `<input>`, not the `<Group>`; passing it to the wrong
-   element emits **both** and English wins.
-2. If a prop reaches it, add it to `LumoStrings` and make it required.
-3. If nothing reaches it, record it in the `strings.ts` header with the evidence
-   and open an upstream issue. Do not paper over it with a client-side
-   dictionary: `LocalizedStringProvider` renders no children and only sets a
-   `window` global, so it cannot affect server-rendered HTML at all.
+1. Prove it: render the OPEN state under `fa-IR` (the popup-interiors tier does
+   this for 18 families) and read the served/live attributes — do not assume.
+2. If a prop reaches it, add the string to `LumoStrings` and make it required.
+3. If nothing reaches it, relabel the live element the way `combobox.tsx` does,
+   record the defect in `docs/upstream/`, and do not paper over it with a
+   client dictionary — anything that only runs after hydration cannot fix the
+   first byte.
 
 ## Adding a gate rule
 
@@ -223,14 +223,15 @@ Three answers when it fires, in order of preference:
 ```tsx
 {...attr("allowWheelScrub", …)}   // TRANSLATE — the engine has it under another name
 isKeyboardDismissDisabled          // RELOCATE — to the part that owns the state
-elementType?: undefined;           // MAKE IT UNREPRESENTABLE — a type carrier
+                                   // DELETE — a prop that reaches nothing is not declared
 ```
 
-**Never `?: never`.** Under `exactOptionalPropertyTypes` a `never` field rejects
-an explicit `undefined`, so it breaks a spread that was already correct;
-`packages/core/src/props.ts` sets this out at length. And destructure the field
-out of the component as well as narrowing the type — the type protects a caller
-who compiles, the destructure protects the bytes from one who does not.
+The React Aria compatibility carriers (`?: undefined`) that used to be the third
+answer are gone (15 Aug 2026): Lumo's API is Lumo's, and a name with no
+destination is removed rather than carried. `?: undefined` remains correct for
+DISCRIMINATED-UNION ARMS (`StaticAlertProps { onClose?: undefined }` beside
+`DismissibleAlertProps { onClose: () => void }`) — never `?: never`, which under
+`exactOptionalPropertyTypes` rejects an explicit `undefined` and breaks spreads.
 
 The fourth answer is a claim, and it is checked:
 

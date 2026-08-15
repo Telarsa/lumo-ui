@@ -9,7 +9,7 @@ import type { ComponentType } from "react";
  * `"use client"`, so a server component can build the spec and hand it to the
  * client island. TanStack's axes are values in a plain object, not children.
  *
- * Measured at 0.11.1 (`experiments/measurements/tanstack-charts.json`): the
+ * Measured at 0.11.1 (record in `docs/history/base-ui-migration/`): the
  * plot is in the served bytes; tick formatters run on the server; the category
  * scale mirrors via `x.reverse`; tick text anchors via `axis.tickLabels.anchor`.
  * The value axis CANNOT be moved to the trailing edge (no `orient`/`side`

@@ -7,7 +7,7 @@ import { formatNumber, fa as lumoFa, en as lumoEn, type Locale } from "@lumo-ui/
  * core. Pure functions of a `Locale` — no provider, no effect, no `"use client"`
  * — so a server render resolves them. Engine vocabulary about ITSELF, so the
  * "announced strings are props" rule does not apply; where Lumo already has a
- * required prop, the prop wins. README and `experiments/measurements/base-ui-i18n.json`.
+ * required prop, the prop wins. README and `docs/history/base-ui-migration/verdict-2026-08-10.md`.
  */
 
 /**

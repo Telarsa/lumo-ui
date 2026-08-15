@@ -113,22 +113,14 @@ catalog:
   # `chart.tsx` on one measured axis: recharts serves 127 bytes and NO `<svg>`,
   # TanStack serves 4,717 with a real `<svg>` and Persian ticks, so `lumo-gate`
   # — which grades the SERVED HTML — stops being structurally blind to the most
-  # number-dense component in the library (experiments/measurements/
-  # tanstack-charts.json).
+  # number-dense component in the library (record in docs/history/base-ui-migration/).
   #
-  # 0.9.0 AND NOT 0.11.0, and that is the cooldown working rather than a
-  # preference. Checked at 2026-08-11T07:38Z: 0.11.0 published 06:17 earlier,
-  # 0.10.0 07:18 earlier — both inside `minimumReleaseAge: 1440`. 0.9.0
-  # published 2026-08-09T23:13Z, 32 hours old, clears it. Pinned one — two —
-  # releases behind rather than adding an exclude, per CONTRIBUTING.md.
-  #
-  # THE PIN IS LOAD-BEARING AND THE MAINTENANCE COST IS REAL. The upstream repo
-  # is 13 days old, has shipped 19 releases, self-describes its API as
-  # "pre-alpha", and has already REPLACED the axis configuration surface once
-  # (0.3.0) — the one surface Lumo's RTL work sits on. Budget a wrapper REWRITE,
-  # not a re-pin, on roughly every minor until 1.0. The React adapter is the
-  # `./react` subpath of this one package; `@tanstack/react-charts` is the dead
-  # pre-0.9.0 name and must not be added.
+  # Pinned exactly (0.11.1 as of 14 Aug 2026; the initial pin was 0.9.0, held
+  # back by the release cooldown). THE PIN IS LOAD-BEARING: the upstream API
+  # self-describes as pre-alpha, has replaced the axis surface once already, and
+  # that surface is where Lumo's RTL work sits. Budget a wrapper review, not a
+  # blind re-pin, on every minor until 1.0. The React adapter is this package's
+  # `./react` subpath; `@tanstack/react-charts` is the dead pre-0.9.0 name.
   '@tanstack/charts': 0.11.1
 
   # Product input engines. Both are deliberately framework-independent: Lumo

@@ -21,7 +21,7 @@ import { Button } from "./button.tsx";
 
 /**
  * A single-select listbox in a popover, rebuilt on Base UI (the React Aria
- * original is `experiments/baseline-rac/select.tsx`; public API unchanged).
+ * React Aria original is retired; public API unchanged).
  *
  * Load-bearing decisions: `placeholder` is REQUIRED because Base UI ships no
  * string bundle and an empty `<Select.Value>` is invisible in review;
@@ -30,7 +30,7 @@ import { Button } from "./button.tsx";
  * `SelectItemProps` is a union that requires `textValue` for markup children;
  * `<Field>` sits ABOVE `Select.Root` because `SelectRoot` reads name/disabled/
  * validation from `useFieldRootContext`. Long-form reasoning and measurements:
- * `experiments/measurements/rebuild-collections.json`, `docs/decisions/log.md`.
+ * `docs/history/base-ui-migration/comparison-2026-08-11.md`, `docs/decisions/log.md`.
  */
 
 export const selectVariants = cva("group flex w-full flex-col gap-1.5");

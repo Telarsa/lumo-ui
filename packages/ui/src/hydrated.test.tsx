@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { I18nProvider } from "react-aria-components";
+import { LumoProvider } from "./provider.tsx";
 import { Dialog, DialogClose, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Button } from "./button.tsx";
 
@@ -26,7 +26,6 @@ import { Button } from "./button.tsx";
  * this is the only place it can be caught.
  */
 
-const FA = "fa-IR-u-ca-persian-nu-arabext";
 const LATIN_WORD = /[A-Za-z]{3,}/;
 
 function announcedEnglish(root: ParentNode = document): string[] {
@@ -66,7 +65,7 @@ function danglingIdrefs(root: Document = document): string[] {
 describe("hydrated — an OPEN dialog announces no English", () => {
   it("mounts and is clean", () => {
     render(
-      <I18nProvider locale={FA}>
+      <LumoProvider locale="fa-IR">
         <DialogTrigger defaultOpen>
           <Button>باز کردن</Button>
           <DialogOverlay>
@@ -77,7 +76,7 @@ describe("hydrated — an OPEN dialog announces no English", () => {
             </DialogModal>
           </DialogOverlay>
         </DialogTrigger>
-      </I18nProvider>,
+      </LumoProvider>,
     );
 
     // Guard against a vacuous pass: if the dialog never opened, there is nothing
@@ -89,7 +88,7 @@ describe("hydrated — an OPEN dialog announces no English", () => {
 
   it("has no dangling ARIA references once live", () => {
     render(
-      <I18nProvider locale={FA}>
+      <LumoProvider locale="fa-IR">
         <DialogTrigger defaultOpen>
           <Button>باز کردن</Button>
           <DialogOverlay>
@@ -100,7 +99,7 @@ describe("hydrated — an OPEN dialog announces no English", () => {
             </DialogModal>
           </DialogOverlay>
         </DialogTrigger>
-      </I18nProvider>,
+      </LumoProvider>,
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(danglingIdrefs()).toEqual([]);

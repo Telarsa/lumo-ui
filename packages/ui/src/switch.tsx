@@ -65,7 +65,7 @@ export const switchTrackVariants = cva(
  * toward the reading START in Persian — silently. `start-*`
  * (`inset-inline-start`) animates and the browser resolves the edge. shadcn's
  * base-vega switch ships exactly that defect (quoted in
- * experiments/vendor-base-vega/switch.json, not here — Tailwind scans comments).
+ * the retired vendor snapshot, not here — Tailwind scans comments).
  *
  * Insets resolve against the PADDING box and the track wears a 1px border:
  *   resting inset = (padding-box height − thumb)/2

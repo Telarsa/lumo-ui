@@ -3,7 +3,7 @@
  *
  * ── WHAT THIS PINS, AND WHY IT IS A PERMANENT TEST RATHER THAN A PROBE ──────
  *
- * `experiments/harness/probe.base-ui-i18n.mjs` MEASURED that seven of Base UI's
+ * The migration probe MEASURED that seven of Base UI's
  * eight English strings can be reached by a prop. A measurement is true on the
  * day it is taken. This file makes it true on every day after, because all seven
  * reach through `mergeProps` precedence and `?? default` fallbacks — internal

@@ -46,7 +46,7 @@ export { dateInputVariants, dateLiteralVariants, dateSegmentVariants };
  * LAYOUT EFFECT, so the ids are minted with `useId` and wired by hand in
  * render; `Field.Root`/`Label`/`Description` are kept for structure and state
  * only, and `Field.Error` is not used (no native control). Segment digits go
- * through `formatNumber`. Cost ledger: `experiments/measurements/date-field-cost.json`.
+ * through `formatNumber`. Cost ledger: `docs/history/base-ui-migration/date-family-migration.md`.
  */
 
 /**

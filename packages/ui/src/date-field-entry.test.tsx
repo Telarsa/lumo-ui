@@ -15,7 +15,7 @@ import { LumoLocaleContext } from "./locale.ts";
  * React Aria's `useDateFieldState` was gone, so a rebuild that reports "the
  * suite is green" without them is reporting on the easy half.
  *
- * Written for the Base UI experiment (`experiments/measurements/date-field-cost.json`).
+ * Written for the Base UI migration (`docs/history/base-ui-migration/date-family-migration.md`).
  * Every case below fails against a field that has no engine underneath it.
  */
 
