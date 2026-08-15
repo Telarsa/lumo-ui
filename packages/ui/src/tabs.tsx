@@ -10,13 +10,10 @@ import {
   type DOMProps,
   type FocusEvents,
   type GlobalDOMAttributes,
-  type HoverEvents,
   type Key,
-  type LinkDOMProps,
   type LumoNode,
   type Orientation,
   type PressEvents,
-  type SlotProps,
   type StyleProps,
 } from "@lumo-ui/core";
 import { attr, useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
@@ -136,7 +133,6 @@ export const tabPanelVariants = cva("flex-1 outline-none");
 interface TabsPropsBase
   extends DOMProps,
     AriaLabelingProps,
-    SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
   /** Whether the whole tab set is disabled. */
@@ -308,7 +304,6 @@ export function Tabs({
   isDisabled,
   keyboardActivation,
   disabledKeys,
-  slot,
   ...rest
 }: TabsProps) {
   // Only consulted when the caller supplied neither key — see `firstTabId`.
@@ -341,7 +336,6 @@ export function Tabs({
         {...attr("value", selectedKey)}
         {...attr("defaultValue", defaultSelectedKey ?? derivedDefault)}
         {...attr("orientation", orientation)}
-        {...attr("slot", slot ?? undefined)}
         {...attr(
           "onValueChange",
           onSelectionChange === undefined
@@ -411,13 +405,10 @@ export function TabList<T extends object>({
 
 /** One tab's props, minus its children and class. */
 interface TabPropsBase
-  extends FocusEvents,
-    HoverEvents,
-    PressEvents,
-    LinkDOMProps,
-    AriaLabelingProps,
-    StyleProps,
+  extends Omit<FocusEvents, "onFocusChange">,
     // `onClick` is the press API's; see `@lumo-ui/core`'s `ButtonPropsBase`.
+    Pick<PressEvents, "onClick">,
+    AriaLabelingProps,
     Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
   /** The tab's collection key, which its panel is matched to. */
   id: Key;
@@ -425,71 +416,9 @@ interface TabPropsBase
   isDisabled?: boolean;
 }
 
-type UnsupportedTabCompatibilityProp =
-  | "href"
-  | "hrefLang"
-  | "target"
-  | "rel"
-  | "download"
-  | "ping"
-  | "referrerPolicy"
-  | "routerOptions"
-  | "onPress"
-  | "onPressStart"
-  | "onPressEnd"
-  | "onPressChange"
-  | "onPressUp"
-  | "onHoverStart"
-  | "onHoverEnd"
-  | "onHoverChange"
-  | "onFocusChange"
-  | "style";
-
-export interface TabProps extends Omit<TabPropsBase, UnsupportedTabCompatibilityProp> {
+export interface TabProps extends TabPropsBase {
   children?: LumoNode;
   className?: string | undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
-  href?: undefined;
-  /**
-   * UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link.
-   * Missed by the first carrier pass and PROVED leaking by the reevaluation —
-   * `<Tab hrefLang="fa">` served `<button … hrefLang="fa">` because the name
-   * rode `...rest` and the inert-prop gate clears inherited-and-transported
-   * props. Every link name from `LinkDOMProps` is now listed here.
-   */
-  hrefLang?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
-  target?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
-  rel?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
-  download?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
-  ping?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI renders a button, not a link. */
-  referrerPolicy?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI has no router-aware link tab. */
-  routerOptions?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
-  onPress?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
-  onPressStart?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
-  onPressEnd?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
-  onPressChange?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria press events. */
-  onPressUp?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria hover events. */
-  onHoverStart?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria hover events. */
-  onHoverEnd?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria hover events. */
-  onHoverChange?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: Base UI does not emit React Aria focus events. */
-  onFocusChange?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: inline style is not part of Lumo's Tab contract. */
-  style?: undefined;
 }
 
 export function Tab({
@@ -497,28 +426,6 @@ export function Tab({
   // — translated onto Tabs.Tab —
   id,
   isDisabled,
-  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
-  // `href`/`routerOptions` are React Aria's link-tab support: an RAC `Tab` can
-  // render an `<a>` and participate in client-side routing. Base UI's `Tab`
-  // renders a `<button>` and offers no link form, so a tab set used as
-  // navigation has no equivalent here.
-  href: _href,
-  target: _target,
-  rel: _rel,
-  download: _download,
-  ping: _ping,
-  referrerPolicy: _referrerPolicy,
-  routerOptions: _routerOptions,
-  onPress: _onPress,
-  onPressStart: _onPressStart,
-  onPressEnd: _onPressEnd,
-  onPressChange: _onPressChange,
-  onPressUp: _onPressUp,
-  onHoverStart: _onHoverStart,
-  onHoverEnd: _onHoverEnd,
-  onHoverChange: _onHoverChange,
-  onFocusChange: _onFocusChange,
-  style: _style,
   ...rest
 }: TabProps) {
   /*
@@ -592,7 +499,6 @@ export function TabPanel({
   // — translated onto Tabs.Panel —
   id,
   shouldForceMount,
-  style: _style,
   ...rest
 }: TabPanelProps) {
   // `data-lumo` because the panel is a focus stop when it holds no focusable

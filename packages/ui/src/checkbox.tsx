@@ -140,8 +140,12 @@ interface CheckboxSupportedProps
   extends Omit<ToggleFieldPropsBase, "validationBehavior" | "slot"> {}
 
 export interface CheckboxProps extends CheckboxSupportedProps {
-  validationBehavior?: undefined;
-  slot?: undefined;
+  /**
+   * The control's position in the sequential tab order — `-1` removes it,
+   * which is what React Aria's `excludeFromTabOrder` meant and all it meant.
+   * That name is gone (15 Aug 2026); the real attribute replaces it.
+   */
+  tabIndex?: number | undefined;
   /**
    * Whether the checkbox is in a mixed state. The one field a switch does not
    * have, which is why it is declared here and not on `ToggleFieldPropsBase`.
@@ -188,14 +192,12 @@ export function Checkbox({
   isDisabled,
   isInvalid,
   validate,
-  // — `?: undefined` carriers: rejected for typed callers —
-  validationBehavior,
+  // — translated onto the control —
   autoFocus,
-  excludeFromTabOrder,
+  tabIndex,
   onFocusChange,
   onFocus,
   onBlur,
-  slot,
   style,
   ...rest
 }: CheckboxProps) {
@@ -236,7 +238,7 @@ export function Checkbox({
           {...attr("id", id)}
           {...attr("inputRef", inputRef)}
           {...attr("autoFocus", autoFocus)}
-          {...attr("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
+          {...attr("tabIndex", tabIndex)}
           onFocus={(event) => {
             onFocus?.(event);
             onFocusChange?.(true);
@@ -310,10 +312,6 @@ export interface CheckboxGroupProps
     FieldGroupPropsBase<string[]>,
     "isInvalid" | "isReadOnly" | "isRequired" | "validationBehavior" | "slot"
   > {
-  isReadOnly?: undefined;
-  isRequired?: undefined;
-  validationBehavior?: undefined;
-  slot?: undefined;
   /** Announced and displayed name for the whole group. Required. */
   label: string;
   children?: LumoNode;
@@ -340,11 +338,6 @@ export function CheckboxGroup({
   isDisabled,
   name,
   validate,
-  // — `?: undefined` carriers: rejected for typed callers —
-  isReadOnly,
-  isRequired,
-  validationBehavior,
-  slot,
   style,
   ...rest
 }: CheckboxGroupProps) {

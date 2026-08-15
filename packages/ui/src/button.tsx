@@ -2,9 +2,10 @@
 
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent, Ref } from "react";
 import { Button as BaseButton } from "@base-ui/react/button";
-// The prop SHAPE the public API is pinned to. It was `AriaButtonProps` until
-// the type-only React Aria imports were removed; it is the same surface, owned
-// here. See `@lumo-ui/core`'s `props.ts`.
+// The prop SHAPE is Lumo's own, declared in `@lumo-ui/core`'s `props.ts`. The
+// React Aria compatibility surface (`?: undefined` carriers for RAC-only names)
+// was removed on 15 Aug 2026: private 0.0.0 library, no external consumers, and
+// the shadow API produced accepted-and-inert props.
 import { type ButtonPropsBase, cn, type LumoNode } from "@lumo-ui/core";
 // The cva definition lives in a module with no "use client" so SERVER components
 // can call it — see button.variants.ts. Re-exported here for convenience.
@@ -63,6 +64,13 @@ export type { ButtonVariantProps };
  * "not dead" cannot be satisfied by deleting the rule.
  */
 
+/**
+ * Subtracted from `ButtonPropsBase` and NOT redeclared. Base UI has no press or
+ * hover abstraction at all, so there is nothing to forward these to; inventing
+ * pointer bookkeeping here would be reimplementing `@react-aria/interactions`
+ * inside a wrapper, which is the opposite of what adopting a headless library
+ * is for.
+ */
 type UnsupportedButtonInteraction =
   | "onPressStart"
   | "onPressEnd"
@@ -76,15 +84,6 @@ type UnsupportedButtonInteraction =
 export interface ButtonProps
   extends Omit<ButtonPropsBase, UnsupportedButtonInteraction>,
     ButtonVariantProps {
-  /** Unsupported React Aria lifecycle callbacks are carriers, not silent props. */
-  onPressStart?: undefined;
-  onPressEnd?: undefined;
-  onPressUp?: undefined;
-  onPressChange?: undefined;
-  onHoverStart?: undefined;
-  onHoverEnd?: undefined;
-  onHoverChange?: undefined;
-  onFocusChange?: undefined;
   /**
    * @forwarded `...rest` → `BaseButton` → the `<button>` element.
    *
@@ -121,12 +120,8 @@ export interface ButtonProps
  * (`aria-*`, `data-*`, `onFocus`, `onKeyDown`, `id`, `type`, `form`) that both
  * libraries pass straight through, so it is spread untouched.
  *
- * The four handlers that are accepted and then DROPPED are the honest part.
- * Base UI has no press or hover abstraction at all, so there is nothing to
- * forward them to; inventing pointer bookkeeping here would be reimplementing
- * `@react-aria/interactions` inside a wrapper, which is the opposite of what
- * adopting a headless library is for. They are typed, because the API may not
- * change, and they never fire.
+ * The press/hover lifecycle callbacks are not accepted at all — see
+ * `UnsupportedButtonInteraction`.
  */
 export function Button({
   className,
@@ -136,27 +131,8 @@ export function Button({
   isDisabled,
   onPress,
   onClick,
-  excludeFromTabOrder,
   onKeyDown,
   onKeyUp,
-  // React Aria's slot is `string | null` — a NAME in a parent's context map,
-  // with `null` meaning "opt out of it". Base UI has no context-injection
-  // mechanism, so the only meaning left for this attribute is the native
-  // web-components `slot`, typed `string | undefined`. `null` cannot even be
-  // spelled. Recorded as a capability gap; it is what breaks
-  // `<Checkbox slot="selection">` in table.tsx. See checkbox.tsx.
-  slot,
-  // — accepted by the API, unreachable in Base UI. See the header note. —
-  isPending,
-  preventFocusOnPress,
-  onPressStart,
-  onPressEnd,
-  onPressUp,
-  onPressChange,
-  onHoverStart,
-  onHoverEnd,
-  onHoverChange,
-  onFocusChange,
   // Destructured only so it is not spread: `style` reaches Base UI below.
   style,
   ...rest
@@ -166,7 +142,6 @@ export function Button({
       data-lumo=""
       className={cn(buttonVariants({ variant, size }), className)}
       disabled={isDisabled ?? false}
-      {...attr("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
       // `style` is plain `CSSProperties` here. Base UI also accepts a
       // `(state) => CSSProperties` callback and Lumo does NOT expose that: the
       // React Aria API this one is frozen against took a callback of its own
@@ -174,7 +149,6 @@ export function Button({
       // form never existed. The prop is a value; see `@lumo-ui/core`'s
       // `props.ts` for the full argument.
       {...attr("style", style)}
-      {...attr("slot", slot ?? undefined)}
       {...attr(
         "onClick",
         onPress === undefined && onClick === undefined

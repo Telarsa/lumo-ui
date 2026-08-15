@@ -47,35 +47,26 @@ describe("generated API reference gate", () => {
     expect(undocumented).toEqual([]);
   });
 
-  it("makes unsupported Tab compatibility props unrepresentable and documents why", () => {
+  it("exposes no React Aria link/press/hover compatibility names on Tab", () => {
+    /*
+     * These were `?: undefined` compatibility carriers until 15 Aug 2026,
+     * when the RAC-shaped surface was removed outright: a `<Tab>` renders a
+     * `<button>`, so link attributes had no destination (one — `hrefLang` —
+     * was proved LEAKING into served bytes), and the press/hover callbacks
+     * had no engine event to bind to. Absent is stronger than unrepresentable:
+     * the names are neither declared nor generated. Compile-time rejection is
+     * pinned by `packages/ui/src/tabs.type-test.tsx`.
+     */
     const api = JSON.parse(readFileSync(join(ROOT, "api-reference.json"), "utf8")) as {
-      modules: Record<string, { name: string; props: { name: string; type: string; description: string }[] }[]>;
+      modules: Record<string, { name: string; props: { name: string }[] }[]>;
     };
     const tabProps = api.modules["tabs.tsx"]?.find((group) => group.name === "TabProps");
-    const source = readFileSync(join(ROOT, "packages", "ui", "src", "tabs.tsx"), "utf8");
-    const unreachable = [
-      "href",
-      "target",
-      "rel",
-      "download",
-      "ping",
-      "referrerPolicy",
-      "routerOptions",
-      "onPress",
-      "onPressStart",
-      "onPressEnd",
-      "onPressChange",
-      "onPressUp",
-      "onHoverStart",
-      "onHoverEnd",
-      "onHoverChange",
-      "onFocusChange",
-      "style",
-    ];
-    for (const name of unreachable) {
-      expect(source, name).toMatch(
-        new RegExp(`UNREPRESENTABLE COMPATIBILITY CARRIER:[^\\n]*\\n  ${name}\\?: undefined;`),
-      );
+    expect(tabProps, "TabProps must be in the generated reference").toBeTruthy();
+    for (const name of [
+      "href", "hrefLang", "target", "rel", "download", "ping", "referrerPolicy", "routerOptions",
+      "onPress", "onPressStart", "onPressEnd", "onPressChange", "onPressUp",
+      "onHoverStart", "onHoverEnd", "onHoverChange", "onFocusChange", "slot",
+    ]) {
       expect(tabProps?.props.some((candidate) => candidate.name === name), name).toBe(false);
     }
   });

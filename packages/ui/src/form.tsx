@@ -442,41 +442,6 @@ export function Form({ className, validationBehavior = "aria", ...props }: FormP
  */
 export interface LabelProps
   extends Omit<ComponentProps<"label">, "children" | "className"> {
-  /**
-   * TYPE CARRIER, NOT A PROP — `undefined`, so passing a value is a compile
-   * error.
-   *
-   * ── IT READ "THE ELEMENT TYPE TO RENDER" AND EMITTED AN INVALID ATTRIBUTE ──
-   *
-   * This is React Aria's `elementType`, and it outlived the engine that
-   * implemented it. Nothing in this file has ever read it: `Label` destructures
-   * `className` and `nativeLabel` and lets everything else ride `...props`, so
-   * the string went onto a REAL DOM element on both arms. Measured with
-   * `renderToStaticMarkup` before this fix, both arms, verbatim:
-   *
-   *     <label class="…" elementType="div">نام</label>          (outside a Field)
-   *     <label id="…" for="…" elementType="div" class="…">نام</label>  (inside)
-   *
-   * with React 19 logging *"React does not recognize the `elementType` prop on a
-   * DOM element."* to the console. This is the worst member of the inert-prop
-   * class rather than merely a silent one: the other twelve produce no bytes,
-   * and this one produces WRONG bytes — an invalid attribute served to every
-   * reader, on the most-used component in the library.
-   *
-   * The capability it named is real and is spelled `render` in Base UI —
-   * `<Label render={<div />}>`, which the `...props` spread below already
-   * delivers to `Field.Label`, and which `PopoverDescription` in this repo
-   * already declares explicitly for the same need. So there is nothing to
-   * implement; there is a name to stop accepting.
-   *
-   * SPELLED `?: undefined`, NOT `?: never`, and NOT deleted. `never` would
-   * reject an explicit `elementType: undefined` under this repo's
-   * `exactOptionalPropertyTypes` and break a spread that was already correct;
-   * deleting it would break a copied-in consumer's `LabelProps` annotation
-   * rather than telling them what changed. `props.ts`'s `isPending` sets both
-   * precedents and states the reasoning at length.
-   */
-  elementType?: undefined;
   children?: LumoNode;
   className?: string | undefined;
   /**
@@ -492,16 +457,6 @@ export interface LabelProps
 export function Label({
   className,
   nativeLabel,
-  /*
-   * Destructured for the SOLE purpose of not spreading it — `button.tsx` does
-   * the identical thing with `isPending`, and the reason is that the type
-   * carrier above only protects a caller who compiles. A JavaScript consumer,
-   * or a props bag typed `Record<string, unknown>` and spread, still reaches
-   * this function at runtime, and the bytes it produced were an invalid
-   * attribute on a served `<label>`. The type stops the mistake; this line stops
-   * the mistake that got past the type.
-   */
-  elementType: _elementType,
   ...props
 }: LabelProps) {
   const chrome = useContext(FieldChromeContext);
@@ -544,21 +499,11 @@ export function Label({
  */
 export interface DescriptionProps
   extends Omit<ComponentProps<"p">, "children" | "className"> {
-  /**
-   * TYPE CARRIER, NOT A PROP — see `LabelProps.elementType` for the full
-   * evidence. Same defect, same file, same `...props` spread: before this fix
-   * `<Description elementType="div">` served
-   * `<p id="…" elementType="div" class="…">توضیح</p>` inside a `<Field>` and a
-   * `<span elementType="div">` outside one. `render` is the Base UI spelling
-   * and the rest spread already carries it.
-   */
-  elementType?: undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
 
-/** `elementType` is destructured and dropped for `Label`'s reason. */
-export function Description({ className, elementType: _elementType, ...props }: DescriptionProps) {
+export function Description({ className, ...props }: DescriptionProps) {
   const chrome = useContext(FieldChromeContext);
   if (chrome === null) {
     /*
@@ -601,19 +546,6 @@ export interface FieldErrorProps
   extends DOMProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
-  /**
-   * TYPE CARRIER, NOT A PROP — see `LabelProps.elementType`.
-   *
-   * The docblock this replaces claimed a DEFAULT (*"defaults to `'span'`; set
-   * `'div'` for block-level children"*) for a prop `FieldError` never bound:
-   * the component below destructures `className` and `children` and binds no
-   * rest at all, so this one did not even leak — it was read by nothing and
-   * emitted nothing. Documented behaviour with no implementation is the founding
-   * defect DECISIONS §0.3 names, and the two siblings above show why a prose
-   * promise is not a cheap error: they made the identical claim and the identical
-   * claim was false in three different ways.
-   */
-  elementType?: undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -625,7 +557,6 @@ export interface FieldErrorProps
 export function FieldError({
   className,
   children,
-  elementType: _elementType,
   ...props
 }: FieldErrorProps) {
   const chrome = useContext(FieldChromeContext);

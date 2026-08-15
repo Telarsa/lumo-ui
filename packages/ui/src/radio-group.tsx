@@ -153,8 +153,6 @@ export interface RadioGroupProps
   className?: string | undefined;
   /** Classes for the options list — which IS the `role="radiogroup"` element. */
   listClassName?: string | undefined;
-  validationBehavior?: undefined;
-  slot?: undefined;
 }
 
 /**
@@ -215,9 +213,6 @@ export function RadioGroup({
   onChange,
   isReadOnly,
   isRequired,
-  // — accepted by the API, unreachable in Base UI. See text-field.tsx. —
-  validationBehavior,
-  slot,
   ...rest
 }: RadioGroupProps) {
   // One expression, so the served stop and the served selection cannot land on
@@ -349,7 +344,6 @@ interface RadioFieldPropsBase
    * an `INPUT` with `type="radio"`, not the visible span.
    */
   inputRef?: React.RefObject<HTMLInputElement | null>;
-  slot?: undefined;
 }
 
 export interface RadioProps extends RadioFieldPropsBase {
@@ -368,8 +362,6 @@ export function Radio({
   controlClassName,
   value,
   isDisabled,
-  // — accepted by the API, unreachable in Base UI —
-  slot,
   ...rest
 }: RadioProps) {
   const wiring = useFieldWiring({ label: children, description, explicit: rest });

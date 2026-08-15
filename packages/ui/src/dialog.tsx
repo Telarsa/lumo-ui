@@ -4,9 +4,10 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { X } from "lucide-react";
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
-// The prop SHAPES the public API is pinned to. They were
-// `react-aria-components` type imports until those were removed; the surface is
-// unchanged and now owned by Lumo. See `@lumo-ui/core`'s `props.ts`.
+// The prop SHAPES are Lumo's own, declared in `@lumo-ui/core`'s `props.ts`. The
+// React Aria compatibility surface (`?: undefined` carriers for RAC-only names)
+// was removed on 15 Aug 2026: private 0.0.0 library, no external consumers, and
+// the shadow API produced accepted-and-inert props.
 import {
   cn,
   type DialogPropsBase,
@@ -21,7 +22,7 @@ import { IconButton } from "./button.tsx";
 /**
  * Modal dialog. **BASE UI ENGINE** — see experiments/measurements/.
  *
- * The composition the caller writes is unchanged, because it may not change:
+ * The composition the caller writes:
  *
  *     <DialogTrigger>
  *       <Button>ویرایش</Button>
@@ -323,11 +324,6 @@ type UnsupportedDialogOverlayProp =
 
 export interface DialogOverlayProps
   extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys | UnsupportedDialogOverlayProp> {
-  isEntering?: undefined;
-  isExiting?: undefined;
-  shouldCloseOnInteractOutside?: undefined;
-  UNSTABLE_portalContainer?: undefined;
-  slot?: undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -363,13 +359,8 @@ export function DialogClose({ children }: DialogCloseProps) {
 export function DialogOverlay({
   className,
   children,
-  // — `?: undefined` carriers: rejected for typed callers —
+  // Read off this element's props by `DialogTrigger` — see the docblock above.
   isDismissable: _isDismissable,
-  isEntering: _isEntering,
-  isExiting: _isExiting,
-  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
-  UNSTABLE_portalContainer: _portalContainer,
-  slot: _slot,
   ...rest
 }: DialogOverlayProps) {
   return (
@@ -403,12 +394,6 @@ type UnsupportedDialogModalProp =
 export interface DialogModalProps
   extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys | UnsupportedDialogModalProp>,
     VariantProps<typeof dialogModalVariants> {
-  isDismissable?: undefined;
-  isEntering?: undefined;
-  isExiting?: undefined;
-  shouldCloseOnInteractOutside?: undefined;
-  UNSTABLE_portalContainer?: undefined;
-  slot?: undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -451,13 +436,6 @@ export function DialogModal({
   className,
   size,
   children,
-  // — `?: undefined` carriers: rejected for typed callers —
-  isDismissable: _isDismissable,
-  isEntering: _isEntering,
-  isExiting: _isExiting,
-  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
-  UNSTABLE_portalContainer: _portalContainer,
-  slot: _slot,
   ...rest
 }: DialogModalProps) {
   return (
@@ -509,7 +487,6 @@ export function DialogModal({
 interface DialogSupportedProps extends Omit<DialogPropsBase, "slot"> {}
 
 export interface DialogProps extends DialogSupportedProps {
-  slot?: undefined;
   /** Announced name of the ✕ button. Required: an icon is not a name. */
   closeLabel: string;
   children?: LumoNode;
@@ -520,9 +497,8 @@ export function Dialog({
   closeLabel,
   className,
   children,
-  // `role` is lifted by DialogModal; `slot` is a rejected type carrier.
+  // `role` is lifted by DialogModal.
   role: _role,
-  slot: _slot,
   ...rest
 }: DialogProps) {
   return (
@@ -661,8 +637,6 @@ export interface DialogDescriptionProps
 export function DialogDescription({
   className,
   render,
-  slot: _slot,
-  style: _style,
   ...rest
 }: DialogDescriptionProps) {
   return (

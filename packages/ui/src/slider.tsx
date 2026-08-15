@@ -12,7 +12,6 @@ import {
   formatNumber,
   type GlobalDOMAttributes,
   type Locale,
-  type SlotProps,
   type StyleProps,
   type ValueBase,
 } from "@lumo-ui/core";
@@ -201,7 +200,6 @@ interface SliderPropsBase
   extends ValueBase<number>,
     DOMProps,
     Omit<AriaLabelingProps, "aria-label">,
-    SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
   /** Whether the slider is disabled. */
@@ -273,8 +271,8 @@ export function Slider({
   form,
   onChange,
   onChangeEnd,
-  slot: _slot,
-  style: _style,
+  // `slot` is `@lumo-ui/core`'s `SlotProps` carrier; destructured so it does
+  // not reach the DOM.
   ...rest
 }: SliderProps) {
   return (

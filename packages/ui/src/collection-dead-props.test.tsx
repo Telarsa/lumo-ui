@@ -37,7 +37,6 @@ import { ComboBoxItem } from "./combobox.tsx";
 import { ListBox, ListBoxItem } from "./list-box.tsx";
 import { Menu, MenuItem, MenuSection } from "./menu.tsx";
 import { Select, SelectItem, SelectPopover, SelectValue } from "./select.tsx";
-import { TreeItem } from "./tree.tsx";
 
 interface City {
   id: string;
@@ -100,7 +99,6 @@ describe("the eight collection type carriers", () => {
     void (<ComboBoxItem<City> {...{ value: undefined, children: "تهران" }} />);
     void (<Breadcrumbs<City> {...{ items: undefined, label: "مسیر" }} />);
     void (<ListBoxItem<City> {...{ value: undefined, children: "تهران" }} />);
-    void (<TreeItem<City> {...{ value: undefined }} textValue="تهران" title="تهران" />);
     expect(true).toBe(true);
   });
 
@@ -125,8 +123,6 @@ describe("the eight collection type carriers", () => {
     void (<Breadcrumbs<City> items={[CITY]} label="مسیر" />);
     // @ts-expect-error idem — `ListBoxItem` binds no rest.
     void (<ListBoxItem<City> value={CITY}>تهران</ListBoxItem>);
-    // @ts-expect-error idem — `TreeItem` reads six names and spreads nothing.
-    void (<TreeItem<City> value={CITY} textValue="تهران" title="تهران" />);
     expect(true).toBe(true);
   });
 
@@ -137,9 +133,8 @@ describe("the eight collection type carriers", () => {
      * would fail on arity rather than on a name. */
     const a: import("./select.tsx").SelectProps<City> = { placeholder: "شهر" };
     const b: import("./menu.tsx").MenuItemProps<City> = { id: "thr" };
-    const c: import("./tree.tsx").TreeItemProps<City> = { textValue: "تهران", title: "تهران" };
     const d: import("./select.tsx").SelectPopoverProps<City> = {};
-    expect([a.placeholder, b.id, c.textValue, typeof d]).toEqual(["شهر", "thr", "تهران", "object"]);
+    expect([a.placeholder, b.id, typeof d]).toEqual(["شهر", "thr", "object"]);
   });
 });
 

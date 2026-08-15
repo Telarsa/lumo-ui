@@ -438,15 +438,16 @@ export function ComboBox<T extends object>({
 /**
  * One suggestion.
  *
- * `textValue` is ACCEPTED AND UNUSED, and that is deliberate rather than
- * sloppy. `Select.Item` and `Menu.Item` both take a `label` prop for keyboard
- * text matching; `Combobox.Item` takes none — Base UI matches on the ROOT,
- * through `filter` and `itemToStringLabel` over the `items` array, so there is
- * no per-item hook to route this to. Dropping the prop would break the public
- * API the experiment is holding fixed; forwarding it to `aria-label` would
- * rename every option after its own visible text and quietly change what a
- * screen reader says. Recorded as `combobox.item-text-value` in the
- * measurements file.
+ * There is NO `textValue` here, deliberately. `Select.Item` and `Menu.Item`
+ * both take a `label` prop for keyboard text matching; `Combobox.Item` takes
+ * none — Base UI matches on the ROOT, through `filter` and `itemToStringLabel`
+ * over the `items` array, so there is no per-item hook to route it to.
+ * Forwarding it to `aria-label` would rename every option after its own
+ * visible text and quietly change what a screen reader says. It was carried as
+ * a `?: undefined` React Aria compatibility field until 15 Aug 2026, when that
+ * surface was removed (private 0.0.0 library, no external consumers; the shadow
+ * API produced accepted-and-inert props). Recorded as
+ * `combobox.item-text-value` in the measurements file.
  */
 export interface ComboBoxItemProps<T extends object = object> {
   /**
@@ -460,26 +461,11 @@ export interface ComboBoxItemProps<T extends object = object> {
    * `never`, which under `exactOptionalPropertyTypes` rejects an explicit
    * `undefined` and so breaks a spread that passed no value at all. One of
    * seven sites respelled together on 12 Aug 2026; the reproduction and its
-   * control are on `SelectProps.items` in `select.tsx`. `textValue` below is
-   * the same idea already spelled the right way.
+   * control are on `SelectProps.items` in `select.tsx`.
    */
   value?: (T & never) | undefined;
   /** The item's key. Maps to Base UI's `value`. */
   id?: string | undefined;
-  /**
-   * TYPE CARRIER, NOT A PROP — the typeahead string, which has no Base UI
-   * equivalent for the reason the docblock above sets out at length.
-   *
-   * It was typed `string | undefined` and read by nothing, which is the shape
-   * the docblock above described honestly and the type described wrongly:
-   * `<ComboBoxItem textValue="تهران">` compiled and changed nothing a keyboard
-   * could notice. The prose stays because the REASON is still the interesting
-   * part — `Combobox.Item` takes no per-item label, matching happens on the Root
-   * through `filter` and `itemToStringLabel` — and the type now says the same
-   * thing in the one place a caller cannot skip. Spelled `?: undefined` rather
-   * than deleted, per `props.ts`'s `isPending`.
-   */
-  textValue?: undefined;
   isDisabled?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;

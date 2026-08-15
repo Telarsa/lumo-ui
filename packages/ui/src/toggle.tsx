@@ -11,7 +11,6 @@ import {
   type Key,
   type LumoNode,
   type PressEvents,
-  type SlotProps,
   type StyleProps,
 } from "@lumo-ui/core";
 // No `"use client"` in that module, so a SERVER component can call the variants
@@ -132,7 +131,6 @@ interface ToggleButtonPropsBase
     Omit<PressEvents, "onPressStart" | "onPressEnd" | "onPressUp" | "onPressChange">,
     AriaLabelingProps,
     Omit<ButtonAriaProps, "aria-current">,
-    SlotProps,
     StyleProps,
     // `onClick` is the press API's; see `ButtonPropsBase`.
     Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
@@ -143,11 +141,11 @@ interface ToggleButtonPropsBase
    */
   id?: Key;
   /**
-   * Whether to exclude the toggle from the sequential tab order.
-   *
-   * Translated to `tabIndex={-1}` by `toBaseToggleProps`.
+   * The toggle's position in the sequential tab order — `-1` removes it,
+   * which is what React Aria's `excludeFromTabOrder` meant and all it meant.
+   * That name is gone (15 Aug 2026); the real attribute replaces it.
    */
-  excludeFromTabOrder?: boolean;
+  tabIndex?: number | undefined;
   /** Whether the toggle is disabled. */
   isDisabled?: boolean;
   /** Whether the toggle is on (controlled). */
@@ -190,7 +188,7 @@ function toBaseToggleProps({
   onPress,
   onKeyDown,
   onKeyUp,
-  excludeFromTabOrder,
+  tabIndex,
   /**
    * React Aria types this `Key` (`string | number`) because in a
    * `ToggleButtonGroup` it doubles as the key in `selectedKeys`. Base UI types
@@ -200,7 +198,6 @@ function toBaseToggleProps({
    * this experiment.
    */
   id,
-  slot,
   style,
   // — accepted by the API, unreachable in Base UI. See button.tsx's header. —
   ...rest
@@ -211,9 +208,8 @@ function toBaseToggleProps({
     ...attr("onPressedChange", onChange),
     disabled: isDisabled ?? false,
     ...attr("id", id === undefined ? undefined : String(id)),
-    ...attr("tabIndex", excludeFromTabOrder === true ? -1 : undefined),
+    ...attr("tabIndex", tabIndex),
     ...attr("style", style),
-    ...attr("slot", slot ?? undefined),
     ...attr(
       "onClick",
       onPress === undefined

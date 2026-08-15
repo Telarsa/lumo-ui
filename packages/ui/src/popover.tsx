@@ -17,8 +17,6 @@ import {
   type OverlayTriggerProps,
   type Placement,
   type PositionProps,
-  type SlotProps,
-  type StyleProps,
 } from "@lumo-ui/core";
 import { attr } from "@lumo-ui/base-ui-ssr";
 
@@ -336,8 +334,6 @@ interface PopoverPropsBase
       "placement" | "isOpen" | "shouldFlip" | "containerPadding"
     >,
     FocusWithinEvents,
-    Omit<SlotProps, "slot">,
-    Omit<StyleProps, "style">,
     GlobalDOMAttributes<HTMLDivElement> {
   "aria-label"?: string;
   "aria-labelledby"?: string;
@@ -358,40 +354,6 @@ interface PopoverPropsBase
   "aria-describedby"?: string;
   /** @forwarded `...rest` → `Popover.Popup`. See `aria-describedby`. */
   "aria-details"?: string;
-  /** A ref to the element the popover is positioned against. */
-  triggerRef?: undefined;
-  /** A ref to the arrow element, if there is one. */
-  arrowRef?: undefined;
-  /** A ref to the scrollable region the popover repositions inside. */
-  scrollRef?: undefined;
-  /** The element the popover is constrained to. */
-  boundaryElement?: undefined;
-  /** Whether the popover keeps repositioning after it opens. */
-  shouldUpdatePosition?: undefined;
-  /** The largest height the popover may take. */
-  maxHeight?: undefined;
-  /** Offset applied to the arrow's own boundary. */
-  arrowBoundaryOffset?: undefined;
-  /** Overrides the rect the popover positions against. */
-  getTargetRect?: undefined;
-  /** Whether the popover leaves the rest of the page interactive. */
-  isNonModal?: undefined;
-  /** Decides, per element, whether an outside interaction should close it. */
-  shouldCloseOnInteractOutside?: undefined;
-  /** The slot name of the trigger this popover belongs to. */
-  trigger?: undefined;
-  /** Whether the popover is currently performing an entry animation. */
-  isEntering?: undefined;
-  /** Whether the popover is currently performing an exit animation. */
-  isExiting?: undefined;
-  /** Whether the open/close animation is skipped. */
-  shouldSkipAnimation?: undefined;
-  /** The container the popover portals into. */
-  UNSTABLE_portalContainer?: undefined;
-  shouldFlip?: undefined;
-  containerPadding?: undefined;
-  slot?: undefined;
-  style?: undefined;
 }
 
 /**
@@ -483,54 +445,6 @@ export function Popover({
   // — translated onto Popover.Positioner —
   offset,
   crossOffset,
-  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
-  // Destructured so they cannot reach the DOM as unknown attributes, and NOT
-  // emulated. Each is a recorded gap in rebuild-overlays.json.
-  //
-  //   isNonModal / shouldCloseOnInteractOutside
-  //     dismissal lives on Popover.Root under Base UI, not on the surface.
-  //     `isKeyboardDismissDisabled` was in this list and is GONE from the type:
-  //     it moved to `PopoverTrigger`, which renders the Root, and is implemented
-  //     there. See its docblock. Passing it here is now a compile error, which
-  //     is the point — `time-field.tsx` sets the precedent for preferring that
-  //     over accept-and-ignore.
-  //   isEntering / isExiting / shouldSkipAnimation
-  //     RAC animation flags; Base UI drives transitions off data-starting-style
-  //   maxHeight / scrollRef
-  //     RAC clamped the popover to the viewport itself; Base UI leaves it to CSS
-  //   arrowRef / getTargetRect
-  //     ADDED 12 Aug 2026 by the inert-prop gate, and they are the argument for
-  //     having one. This block's comment said these props "cannot reach the
-  //     DOM", and it was true of the eleven names in it and false of these two,
-  //     which were declared six lines apart from `triggerRef` and `scrollRef`
-  //     and were never destructured — so they rode `...rest` onto
-  //     `Popover.Popup`, which forwards what it does not recognise to a real
-  //     `<div>`. `AUDIT.md` §3.1 predicted exactly this: the hand-maintained
-  //     banner listed five of eleven, because a list in a comment does not move
-  //     when the code does. Base UI positions the arrow with a `Popover.Arrow`
-  //     PART and the target rect with `Popover.Positioner`'s own anchor, so
-  //     neither has a prop to translate to here.
-  arrowRef: _arrowRef,
-  getTargetRect: _getTargetRect,
-  isNonModal: _isNonModal,
-  shouldFlip: _shouldFlip,
-  triggerRef: _triggerRef,
-  isEntering: _isEntering,
-  isExiting: _isExiting,
-  shouldSkipAnimation: _shouldSkipAnimation,
-  containerPadding: _containerPadding,
-  boundaryElement: _boundaryElement,
-  scrollRef: _scrollRef,
-  maxHeight: _maxHeight,
-  shouldUpdatePosition: _shouldUpdatePosition,
-  arrowBoundaryOffset: _arrowBoundaryOffset,
-  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
-  UNSTABLE_portalContainer: _portalContainer,
-  trigger: _trigger,
-  // `render`, `slot` and `style` are RAC-shaped and collide with Base UI's own
-  // props of the same name — the spread below does not type-check without them.
-  slot: _slot,
-  style: _style,
   ...rest
 }: PopoverProps) {
   const { side, align } = PLACEMENT[placement ?? "bottom"];

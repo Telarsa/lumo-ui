@@ -15,14 +15,12 @@ import {
   type MouseEvent as ReactMouseEvent,
   type ReactNode,
 } from "react";
-// `TreeProps`/`TreeItemProps` are the frozen public API of this component —
-// every prop name a consumer already writes — so the SHAPE React Aria published
-// is kept while the ENGINE underneath is Lumo's own. It is declared in
-// `@lumo-ui/core` rather than imported from `react-aria-components`, which is
-// the last thing that made that package a consumer's dependency.
-// `date-field.tsx` keeps `@internationalized/date`'s value types for the
-// related reason: a migration that also renames props is two changes reviewed
-// as one.
+// `TreeProps`/`TreeItemProps` are Lumo's own public API. Their vocabulary is
+// declared in `@lumo-ui/core` rather than imported from `react-aria-components`,
+// which is the last thing that made that package a consumer's dependency. The
+// React Aria compatibility surface (the `?: undefined` carriers) was removed on
+// 15 Aug 2026: private 0.0.0 library, no external consumers, and the shadow API
+// produced accepted-and-inert props.
 //
 // `Key` and `Selection` come from `@lumo-ui/core` rather than from `react`
 // because they are the exact types `onSelectionChange` and `onExpandedChange`
@@ -42,7 +40,6 @@ import {
   type MultipleSelection,
   type PressEvents,
   type Selection as AriaSelection,
-  type SlotProps,
   type StyleProps,
 } from "@lumo-ui/core";
 import { useLumoLocale } from "./locale.ts";
@@ -293,14 +290,15 @@ export {
  * discarded at the cast, with no attribute, no warning and no test to notice.
  *
  * Seven of them (items 3 and 5, plus `autoFocus`) and two on `TreeItem`
- * (`focusMode`, `allowsArrowNavigation`) are now `?: undefined` type carriers.
- * Passing one is a compile error naming the prop, which is the difference
- * between a caller learning this in a paragraph they did not read and learning
- * it from `tsc`. The fields survive rather than being deleted for
- * `props.ts`'s `isPending` reason: a copied-in consumer's own
- * `TreeProps`-derived annotation keeps compiling, and only passing a VALUE
- * breaks. Found by `packages/gate/src/inert-props.ts`, which is what this list
- * would have needed a human to do for it every time the code moved.
+ * (`focusMode`, `allowsArrowNavigation`) were carried for a while as
+ * `?: undefined` type carriers. The React Aria compatibility surface was
+ * removed on 15 Aug 2026 — this is a private 0.0.0 library with no external
+ * consumers, and the shadow API only produced accepted-and-inert props — so
+ * those names are simply GONE from the type: passing one is a compile error
+ * naming the prop, which is the difference between a caller learning this in a
+ * paragraph they did not read and learning it from `tsc`. Found by
+ * `packages/gate/src/inert-props.ts`, which is what this list would have needed
+ * a human to do for it every time the code moved.
  *
  * ═══ THE THREE THINGS THIS FILE STILL DECIDES ═══════════════════════════════
  *
@@ -565,16 +563,8 @@ interface TreePropsBase<T extends object>
     Omit<CollectionStateBase<T>, "dependencies">,
     DOMProps,
     Omit<AriaLabelingProps, "aria-label">,
-    SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
-  /**
-   * TYPE CARRIER — this treegrid's tab stop starts `null` and the first byte
-   * carries `tabindex="0"` on the CONTAINER with no effect involved (see the
-   * header). Nothing here focuses a row on mount, and React Aria's
-   * `FocusStrategy` ("first" / "last") had a collection to pick that row from.
-   */
-  autoFocus?: undefined;
   /** Handler that is called when a row is activated. */
   onAction?: (key: Key) => void;
   /*
@@ -586,36 +576,6 @@ interface TreePropsBase<T extends object>
    * meant either keeping the dependency or inventing a shape nothing builds.
    * Recorded in "WHAT WAS LOST" rather than faked.
    */
-  /*
-   * ── FIVE TYPE CARRIERS: HEADER ITEM 5, MOVED OUT OF THE PROSE ─────────────
-   *
-   * Selection here is `toggle`, a disabled row is skipped by navigation and by
-   * selection both, Escape clears nothing, and the arrows are the only way
-   * between rows. Those are the behaviours, they are not switchable, and each of
-   * these five props named a switch. Every one reached `props as
-   * TreeEngineProps` and stopped there.
-   *
-   * `keyboardNavigationBehavior="tab"` is the one worth naming: it promised the
-   * Tab key would move between rows, which is a materially different keyboard
-   * contract for a treegrid, and it changed nothing at all.
-   */
-  selectionBehavior?: undefined;
-  shouldSelectOnPressUp?: undefined;
-  escapeKeyBehavior?: undefined;
-  keyboardNavigationBehavior?: undefined;
-  disabledBehavior?: undefined;
-  /**
-   * TYPE CARRIER — what to draw when the tree has no rows, which this engine
-   * never draws.
-   *
-   * The docblock this replaces said "ACCEPTED AND UNREACHABLE" in prose and then
-   * typed a callable signature, so the honest sentence and the type disagreed
-   * and the type won: `renderEmptyState={() => <Empty/>}` compiled and was never
-   * called. There is no collection layer to call it. `data-empty` is still
-   * emitted on the container, so the empty case remains STYLEABLE — that is the
-   * replacement, and `treeVariants` already centres its content.
-   */
-  renderEmptyState?: undefined;
 }
 
 export interface TreeProps<T extends object> extends TreePropsBase<T> {
@@ -688,17 +648,9 @@ export function Tree<T extends object>({
   disallowEmptySelection,
   onAction,
   asyncStatus,
-  // — accepted by the API, unreachable here. Each is documented on its
-  //   declaration in `TreePropsBase`; destructured so none reaches the DOM. —
   items,
-  slot: _slot,
-  autoFocus: _autoFocus,
-  selectionBehavior: _selectionBehavior,
-  shouldSelectOnPressUp: _shouldSelectOnPressUp,
-  escapeKeyBehavior: _escapeKeyBehavior,
-  keyboardNavigationBehavior: _keyboardNavigationBehavior,
-  disabledBehavior: _disabledBehavior,
-  renderEmptyState: _renderEmptyState,
+  // `slot` is `@lumo-ui/core`'s `SlotProps` carrier; destructured so it does
+  // not reach the DOM.
   ...rest
 }: TreeProps<T>) {
   const renderedChildren: LumoNode =
@@ -938,16 +890,7 @@ export function Tree<T extends object>({
  * `textValue` is REQUIRED here and optional on `TreeItemProps` below only in
  * the sense that the interface restates it — see the doc on it there.
  */
-interface TreeItemPropsBase<T extends object>
-  /*
-   * NOT `LinkDOMProps` any more. A tree row is a `<div role="treeitem">` and
-   * TreeItem spreads nothing onto it, so `href`, `hrefLang`, `target`, `rel`,
-   * `download` and `ping` were accepted, read by nobody, and delivered
-   * nowhere — the accept-and-drop shape this repository's gate exists to
-   * forbid, cleared only because the names are inherited. They are carriers
-   * now: passing a value is a compile error, and the intent (a link row) is
-   * a feature request, not a silently ignored prop.
-   */
+interface TreeItemPropsBase
   extends HoverEvents,
     PressEvents,
     StyleProps,
@@ -955,58 +898,6 @@ interface TreeItemPropsBase<T extends object>
     Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
   /** The row's collection key. */
   id?: Key;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
-  href?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
-  hrefLang?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
-  target?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
-  rel?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
-  download?: undefined;
-  /** UNREPRESENTABLE COMPATIBILITY CARRIER: a tree row is not a link. */
-  ping?: undefined;
-  /**
-   * TYPE CARRIER, NOT A PROP — React Aria's `TreeItemProps<T>` used `T` for the
-   * item object a dynamic collection rendered a row from. This file has no
-   * collection: `TreeItem` destructures `title`/`children`/`className`, binds
-   * `...props`, reads seven names off it — `id`, `hasChildItems`, `isDisabled`,
-   * `style`, `onAction`, `aria-label`, `textValue` — and SPREADS IT NOWHERE, so
-   * an item object handed to this prop was held by nothing and read by nobody.
-   *
-   * Keeping the field keeps the type PARAMETER, so a `TreeItemProps<FileNode>`
-   * annotation a consumer already wrote still compiles — the argument
-   * `menu.tsx`, `combobox.tsx`, `select.tsx` and `list-box.tsx` all make for
-   * their own `value`, which is now spelled the same way in all five.
-   *
-   * ── IT WAS `value?: T`, AND THE GATE COULD NOT SEE IT ──────────────────────
-   *
-   * Until 12 Aug 2026 this was typed LIVE while being just as dead as the four
-   * above, which is the worse of the two ways to be wrong: `<TreeItem
-   * value={node}>` compiled, rendered, announced nothing new, and errored
-   * never. `gate:props` did not catch it, and the reason is worth recording
-   * because it is a property of the gate rather than an accident:
-   * `inert-props.ts` matches mentions BY NAME and counts anything at module
-   * scope for every component in the file. `renderLevel` — a module-scope
-   * helper four hundred lines up, with nothing to do with an item object —
-   * writes `<TreePositionContext.Provider value={{…}}>`,
-   * and that JSX attribute is an identifier named `value`, so every prop named
-   * `value` in this file was cleared as *"referenced at module scope"*.
-   *
-   * Measured, not inferred: renaming this field to `zzprobe` and changing
-   * nothing else turned the same run from `0 violations` into
-   * `inert-prop/unverified — TreeItemPropsBase.zzprobe`. The gate's own header
-   * calls this imprecision one-directional and deliberate — it can only make
-   * the gate quieter — and this is what quieter looks like on a real file.
-   *
-   * Spelled `(T & never) | undefined`, not `T & never`: the second resolves to
-   * `never`, which under `exactOptionalPropertyTypes` rejects an explicit
-   * `undefined` too and so breaks a spread that passed no value. Seven sites in
-   * four sibling files carried that spelling and were respelled the same day;
-   * the reproduction is on `SelectProps.items` in `select.tsx`.
-   */
-  value?: (T & never) | undefined;
   /** The row's accessible name, when `title` is not a plain string. */
   "aria-label"?: string;
   /** Whether this row is disabled. */
@@ -1015,22 +906,9 @@ interface TreeItemPropsBase<T extends object>
   onAction?: () => void;
   /** Whether the row has children even before they are rendered. */
   hasChildItems?: boolean;
-  /*
-   * Two more type carriers, for the reason the five on `TreePropsBase` are.
-   * `TreeItem` reads `props.id`, `props.hasChildItems`, `props.isDisabled`,
-   * `props.style`, `props.onAction`, `props.textValue` and `props["aria-label"]`
-   * by name and spreads nothing, so these two were read by nobody. (This list used to name
-   * `props.value` as well. It was wrong: there is no `props.value` anywhere in
-   * this file, which is the whole reason `value` above is now a carrier too.)
-   * Focus lands on the row —
-   * that is what the roving tab stop in the header describes — and the arrow
-   * keys move BETWEEN rows, which is the treegrid contract this file tests.
-   */
-  focusMode?: undefined;
-  allowsArrowNavigation?: undefined;
 }
 
-export interface TreeItemProps<T extends object = object> extends TreeItemPropsBase<T> {
+export interface TreeItemProps extends TreeItemPropsBase {
   /**
    * The row's announced name AND its typeahead key. Kept required rather than
    * derived from `title`, because `title` may be an element and a name may not.
@@ -1043,12 +921,12 @@ export interface TreeItemProps<T extends object = object> extends TreeItemPropsB
   className?: string | undefined;
 }
 
-export function TreeItem<T extends object = object>({
+export function TreeItem({
   title,
   children,
   className,
   ...props
-}: TreeItemProps<T>) {
+}: TreeItemProps) {
   const treeContext = useContext(TreeContext);
   const position = useContext(TreePositionContext);
   const chevronId = useId();

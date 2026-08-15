@@ -14,7 +14,6 @@ import {
   type InputBase,
   type InputDOMProps,
   type LumoNode,
-  type SlotProps,
   type StyleProps,
   type TextInputDOMEvents,
   type Validation,
@@ -162,12 +161,12 @@ export const stepperVariants = cva(
  * this component reads NONE of them. That is deliberate and it is the one place
  * the new i18n layer stops at Lumo's own door.
  *
- * All three are already REQUIRED PROPS on Lumo's frozen public API —
+ * All three are already REQUIRED PROPS on Lumo's public API —
  * `roleDescription`, `incrementLabel`, `decrementLabel` — and the precedence
  * rule the catalogue states is *explicit prop, else catalogue*. A required prop
  * is always explicit, so the catalogue can never fire here. Routing them through
- * it instead would mean relaxing three required props to optional, which is both
- * an API change this experiment may not make and a house rule it may not weaken.
+ * it instead would mean relaxing three required props to optional, which is a
+ * house rule this library may not weaken.
  *
  * The catalogue is still where their VALUES come from: the call site reads
  * `stringsFor(locale).numberField.*`, and the catalogue deliberately
@@ -208,13 +207,17 @@ export const stepperVariants = cva(
  */
 interface NumberFieldPropsBase
   extends InputBase,
-    Omit<Validation<number>, "isInvalid">,
+    // `validationBehavior` is subtracted, not accepted-and-dropped: Base UI's
+    // `validationMode` is a different axis (WHEN to validate, not WHETHER the
+    // browser owns the message), so the Persian-page-with-an-English-browser-
+    // error defect form.tsx exists to prevent has no switch to flip here. Same
+    // gap switch.tsx records.
+    Omit<Validation<number>, "isInvalid" | "validationBehavior">,
     ValueBase<number>,
     FocusableProps,
     DOMProps,
     InputDOMProps,
     AriaLabelingProps,
-    SlotProps,
     StyleProps,
     TextInputDOMEvents<HTMLInputElement>,
     GlobalDOMAttributes<HTMLDivElement> {
@@ -307,12 +310,6 @@ export function NumberField({
   isReadOnly,
   isRequired,
   onChange,
-  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
-  //   validationBehavior  Base UI's `validationMode` is a different axis: WHEN
-  //                       to validate, not WHETHER the browser owns the message.
-  //                       So the Persian-page-with-an-English-browser-error
-  //                       defect form.tsx exists to prevent has no switch to
-  //                       flip here. Same gap switch.tsx records.
   //   onKeyDown           React Aria types it `BaseEvent<React.KeyboardEvent>`
   //                       (with `continuePropagation`), Base UI types it
   //                       `BaseUIEvent<React.KeyboardEvent>` (with
@@ -320,14 +317,13 @@ export function NumberField({
   //                       either direction; `asAriaKeyboardEvent` in
   //                       base-ui-adapter.ts exists for exactly this, and is
   //                       used here.
-  validationBehavior: _validationBehavior,
   validate,
   onKeyDown,
   // Same incompatibility as `onKeyDown`, but nothing in Lumo's API needs to
   // deliver it, so it is dropped rather than translated.
   onKeyUp: _onKeyUp,
-  slot: _slot,
-  style: _style,
+  // `slot` is `@lumo-ui/core`'s `SlotProps` carrier; destructured so it does
+  // not reach the DOM.
   ...rest
 }: NumberFieldProps) {
   const [uncontrolledValue, setUncontrolledValue] = React.useState(

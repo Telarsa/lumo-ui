@@ -14,3 +14,4 @@ out/
 .next/
 *.tsbuildinfo
 mutation-report.json
+graphify-out/

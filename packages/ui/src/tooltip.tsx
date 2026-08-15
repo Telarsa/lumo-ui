@@ -11,7 +11,6 @@ import {
   type LumoNode,
   type OverlayTriggerProps,
   type PositionProps,
-  type StyleProps,
 } from "@lumo-ui/core";
 import { attr, useOpenMirror } from "@lumo-ui/base-ui-ssr";
 import { PLACEMENT, type LumoPlacement } from "./popover.tsx";
@@ -147,8 +146,13 @@ export const tooltipVariants = cva(
 interface TooltipTriggerPropsBase extends OverlayTriggerProps {
   /** Whether the tooltip is disabled entirely. */
   isDisabled?: boolean;
-  /** What opens the tooltip. */
-  trigger?: "hover" | "focus";
+  /*
+   * There is NO `trigger?: "hover" | "focus"` here any more. React Aria's
+   * `"focus"` value meant "focus only, no hover", and Base UI's trigger has no
+   * switch that turns hover off while leaving focus on — `disabled` turns off
+   * both — so the prop was accepted and did nothing. Removed with the rest of
+   * the React Aria compatibility surface on 15 Aug 2026.
+   */
   /** The delay before the tooltip opens, in milliseconds. Base UI's `delay`. */
   delay?: number;
   /** The delay before the tooltip closes, in milliseconds. Base UI's `closeDelay`. */
@@ -172,10 +176,6 @@ export function TooltipTrigger({
   delay,
   closeDelay,
   shouldCloseOnPress,
-  // `trigger` stays unreachable: React Aria's `"focus"` value meant "focus
-  // only, no hover", and Base UI's trigger has no switch that turns hover off
-  // while leaving focus on — `disabled` turns off both.
-  trigger: _trigger,
 }: TooltipTriggerProps) {
   const items = React.Children.toArray(children as React.ReactNode);
   const [trigger, ...rest] = items;
@@ -220,9 +220,7 @@ interface TooltipPropsBase
       "placement" | "isOpen" | "shouldFlip" | "containerPadding"
     >,
     AriaLabelingProps,
-    Omit<StyleProps, "style">,
-    GlobalDOMAttributes<HTMLDivElement> {
-}
+    GlobalDOMAttributes<HTMLDivElement> {}
 
 export interface TooltipProps extends TooltipPropsBase {
   /** Logical only — see `LumoPlacement` in popover.tsx. */

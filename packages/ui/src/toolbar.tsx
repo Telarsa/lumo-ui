@@ -10,8 +10,6 @@ import {
   type GlobalDOMAttributes,
   type LumoNode,
   type Orientation,
-  type SlotProps,
-  type StyleProps,
 } from "@lumo-ui/core";
 
 /**
@@ -233,8 +231,6 @@ const ToolbarClaimContext = React.createContext<{ next: number } | null>(null);
  */
 interface ToolbarPropsBase
   extends Omit<AriaLabelingProps, "aria-label">,
-    Omit<SlotProps, "slot">,
-    Omit<StyleProps, "style">,
     GlobalDOMAttributes<HTMLDivElement> {
   /** The toolbar's layout axis. */
   orientation?: Orientation;

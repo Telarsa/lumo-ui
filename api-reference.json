@@ -429,12 +429,6 @@
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -1223,12 +1217,6 @@
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -1472,12 +1460,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
           },
           {
             "name": "form",
@@ -2005,12 +1987,6 @@
             "type": "string | undefined",
             "required": false,
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
-          },
-          {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
           },
           {
             "name": "form",
@@ -2743,12 +2719,6 @@
             "description": "An error for a STANDALONE checkbox."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -2903,6 +2873,12 @@
             "type": "CSSProperties",
             "required": false,
             "description": "The inline style for the element."
+          },
+          {
+            "name": "tabIndex",
+            "type": "number | undefined",
+            "required": false,
+            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
           },
           {
             "name": "translate",
@@ -5388,28 +5364,10 @@
             "description": "Whether pressing outside the overlay closes it."
           },
           {
-            "name": "isEntering",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether the overlay is currently performing an entry animation."
-          },
-          {
-            "name": "isExiting",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether the overlay is currently performing an exit animation."
-          },
-          {
             "name": "lang",
             "type": "string | undefined",
             "required": false,
             "description": "The element's `lang` attribute, when this subtree's language differs from the page's."
-          },
-          {
-            "name": "shouldCloseOnInteractOutside",
-            "type": "(element: Element) => boolean",
-            "required": false,
-            "description": "Decides, per element, whether an outside interaction should close it."
           },
           {
             "name": "style",
@@ -5422,12 +5380,6 @@
             "type": "\"yes\" | \"no\" | undefined",
             "required": false,
             "description": "The DOM `translate` attribute: whether machine translation may rewrite this subtree's text."
-          },
-          {
-            "name": "UNSTABLE_portalContainer",
-            "type": "Element",
-            "required": false,
-            "description": "The container the overlay portals into."
           }
         ]
       },
@@ -5465,34 +5417,10 @@
             "description": "The DOM `inert` attribute: the subtree cannot be focused, clicked, or read by assistive technology."
           },
           {
-            "name": "isDismissable",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether pressing outside the overlay closes it."
-          },
-          {
-            "name": "isEntering",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether the overlay is currently performing an entry animation."
-          },
-          {
-            "name": "isExiting",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether the overlay is currently performing an exit animation."
-          },
-          {
             "name": "lang",
             "type": "string | undefined",
             "required": false,
             "description": "The element's `lang` attribute, when this subtree's language differs from the page's."
-          },
-          {
-            "name": "shouldCloseOnInteractOutside",
-            "type": "(element: Element) => boolean",
-            "required": false,
-            "description": "Decides, per element, whether an outside interaction should close it."
           },
           {
             "name": "side",
@@ -5517,12 +5445,6 @@
             "type": "\"yes\" | \"no\" | undefined",
             "required": false,
             "description": "The DOM `translate` attribute: whether machine translation may rewrite this subtree's text."
-          },
-          {
-            "name": "UNSTABLE_portalContainer",
-            "type": "Element",
-            "required": false,
-            "description": "The container the overlay portals into."
           }
         ]
       }
@@ -6695,12 +6617,6 @@
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -6970,12 +6886,6 @@
             "description": "Supplying one marks the field invalid. See `TextField`."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -7166,12 +7076,6 @@
             "type": "(value: string) => ValidationError | true | null | undefined",
             "required": false,
             "description": "Returns a validation error, or nothing if the value is acceptable."
-          },
-          {
-            "name": "validationBehavior",
-            "type": "\"native\" | \"aria\"",
-            "required": false,
-            "description": "ACCEPTED AND UNREACHABLE under Base UI, which decides this on `<Form>` and `Field.Root` rather than per control. Kept because removing it is an API change; see `form.tsx`."
           },
           {
             "name": "value",
@@ -9197,12 +9101,6 @@
             "type": "(value: number) => ValidationError | true | null | undefined",
             "required": false,
             "description": "Returns a validation error, or nothing if the value is acceptable."
-          },
-          {
-            "name": "validationBehavior",
-            "type": "\"native\" | \"aria\"",
-            "required": false,
-            "description": "ACCEPTED AND UNREACHABLE under Base UI, which decides this on `<Form>` and `Field.Root` rather than per control. Kept because removing it is an API change; see `form.tsx`."
           },
           {
             "name": "value",
@@ -11314,12 +11212,6 @@
             "description": "Supplying one marks the field invalid. See `TextField`."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -11492,6 +11384,12 @@
             "type": "CSSProperties",
             "required": false,
             "description": "The inline style for the element."
+          },
+          {
+            "name": "tabIndex",
+            "type": "number | undefined",
+            "required": false,
+            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
           },
           {
             "name": "translate",
@@ -12871,12 +12769,6 @@
             "description": "A validation error for this switch."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -13025,6 +12917,12 @@
             "type": "CSSProperties",
             "required": false,
             "description": "The inline style for the element."
+          },
+          {
+            "name": "tabIndex",
+            "type": "number | undefined",
+            "required": false,
+            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
           },
           {
             "name": "translate",
@@ -14261,12 +14159,6 @@
             "description": "Supplying one marks the field invalid. See `TextField`."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
-          },
-          {
             "name": "form",
             "type": "string",
             "required": false,
@@ -14423,6 +14315,12 @@
             "description": "The inline style for the element."
           },
           {
+            "name": "tabIndex",
+            "type": "number | undefined",
+            "required": false,
+            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
+          },
+          {
             "name": "textAreaClassName",
             "type": "string | undefined",
             "required": false,
@@ -14566,12 +14464,6 @@
             "type": "LumoNode",
             "required": false,
             "description": "An error to display. Supplying one marks the field invalid, because a field carrying an error message and reporting itself valid is a contradiction the caller should not have to resolve by hand."
-          },
-          {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the element from the sequential tab order."
           },
           {
             "name": "form",
@@ -14734,6 +14626,12 @@
             "type": "CSSProperties",
             "required": false,
             "description": "The inline style for the element."
+          },
+          {
+            "name": "tabIndex",
+            "type": "number | undefined",
+            "required": false,
+            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
           },
           {
             "name": "translate",
@@ -15294,12 +15192,6 @@
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the toggle from the sequential tab order."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -15388,6 +15280,12 @@
             "type": "CSSProperties",
             "required": false,
             "description": "The inline style for the element."
+          },
+          {
+            "name": "tabIndex",
+            "type": "number | undefined",
+            "required": false,
+            "description": "The toggle's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
           },
           {
             "name": "translate",
@@ -15491,12 +15389,6 @@
             "description": "The element's own `dir` attribute. Rarely set directly: page direction is derived from `locale` by `LumoProvider`."
           },
           {
-            "name": "excludeFromTabOrder",
-            "type": "boolean",
-            "required": false,
-            "description": "Whether to exclude the toggle from the sequential tab order."
-          },
-          {
             "name": "hidden",
             "type": "boolean | undefined",
             "required": false,
@@ -15585,6 +15477,12 @@
             "type": "CSSProperties",
             "required": false,
             "description": "The inline style for the element."
+          },
+          {
+            "name": "tabIndex",
+            "type": "number | undefined",
+            "required": false,
+            "description": "The toggle's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
           },
           {
             "name": "translate",
@@ -15873,12 +15771,6 @@
             "type": "boolean",
             "required": false,
             "description": "Whether pressing the trigger closes the tooltip. Base UI's `closeOnClick`."
-          },
-          {
-            "name": "trigger",
-            "type": "\"focus\" | \"hover\"",
-            "required": false,
-            "description": "What opens the tooltip."
           }
         ]
       }

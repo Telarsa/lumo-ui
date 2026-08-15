@@ -157,8 +157,8 @@ describe("focus ring — WCAG 2.4.7", () => {
     expectSelfFocusRing(track);
   });
 
-  it("switch: excludeFromTabOrder reaches the focusable track", () => {
-    const { container } = render(<Switch excludeFromTabOrder>اعلان</Switch>);
+  it("switch: tabIndex reaches the focusable track", () => {
+    const { container } = render(<Switch tabIndex={-1}>اعلان</Switch>);
     expect(container.querySelector('[role="switch"]')?.getAttribute("tabindex")).toBe("-1");
   });
 

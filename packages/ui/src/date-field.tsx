@@ -13,7 +13,6 @@ import {
   type InputBase,
   type InputDOMProps,
   type LumoNode,
-  type SlotProps,
   type StyleProps,
   type Validation,
   type ValueBase,
@@ -203,40 +202,22 @@ interface DateFieldPropsBase<T extends DateValue>
     DOMProps,
     InputDOMProps,
     Omit<AriaLabelingProps, "aria-label">,
-    SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
-  /*
-   * ── FIVE TYPE CARRIERS: THE HEADER'S OWN LIST, MOVED INTO THE TYPE ────────
-   *
-   * The block below this interface has enumerated these as accepted-and-ignored
-   * since the rebuild, and opens by saying exactly why that was not enough:
-   * *"`DateFieldProps` above is UNCHANGED — the experiment freezes the public
-   * API, and `tsc` is therefore silent about everything below. That silence is
-   * the problem."* `DateField` destructures a closed list and binds no rest, so
-   * each of these was accepted by the signature and discarded at the brace.
-   *
-   * These five are the ones this FILE declares, so they are the five it can fix.
-   * The rest of that list (`name`, `form`, `validate`, `isRequired`, `minValue`,
-   * `autoFocus`, …) arrives from `@lumo-ui/core`'s shared shapes, which are
-   * shared with components that DO implement them — narrowing them here would
-   * mean forking the vocabulary, and the gate that found these deliberately does
-   * not grade inherited props for that reason.
-   *
-   * `hourCycle`, `granularity` and `hideTimeZone` are the ones with teeth: the
-   * engine emits year/month/day only, so a `CalendarDateTime` loses its time
-   * half whatever these say. A compile error naming the prop is a better way to
-   * learn that than a field that silently edits three segments.
-   */
-  autoComplete?: undefined;
   /** A date that sets the field's granularity and era before a value exists. */
   placeholderValue?: T | null;
-  hourCycle?: undefined;
-  granularity?: undefined;
-  hideTimeZone?: undefined;
-  shouldForceLeadingZeros?: undefined;
 }
 
+/**
+ * Subtracted from the shared shapes and NOT redeclared: these contracts need a
+ * native form control or a validation engine, and this field has neither. They
+ * were `?: undefined` carriers until 15 Aug 2026, when the React Aria
+ * compatibility surface was removed (private 0.0.0 library, no external
+ * consumers; the shadow API produced accepted-and-inert props). The unsupported
+ * time/leading-zero options (`hourCycle`, `granularity`, `hideTimeZone`,
+ * `shouldForceLeadingZeros`, `autoComplete`) are gone the same way — the engine
+ * emits year/month/day only.
+ */
 type UnsupportedDateFieldProps =
   | "name"
   | "form"
@@ -249,12 +230,6 @@ interface SupportedDateFieldProps<T extends DateValue>
   extends Omit<DateFieldPropsBase<T>, UnsupportedDateFieldProps> {}
 
 export interface DateFieldProps<T extends DateValue> extends SupportedDateFieldProps<T> {
-  name?: undefined;
-  form?: undefined;
-  validate?: undefined;
-  validationBehavior?: undefined;
-  isRequired?: undefined;
-  slot?: undefined;
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
   description?: LumoNode;
@@ -273,7 +248,7 @@ export interface DateFieldProps<T extends DateValue> extends SupportedDateFieldP
  * callbacks land on the segmented `role="group"`, and autofocus targets its
  * first segment. Contracts requiring a native form control or validation
  * engine (`name`, `form`, `validate`, `validationBehavior`, `isRequired`) are
- * `?: undefined` type carriers, as are unsupported time/leading-zero options.
+ * not part of the type — see `UnsupportedDateFieldProps`.
  */
 export function DateField<T extends DateValue>({
   label,

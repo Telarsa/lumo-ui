@@ -58,10 +58,13 @@ import type {
  *                 `string`; `style` is now `CSSProperties` for the same reason
  *                 rather than by oversight.
  *
- * Everything else is preserved field for field, including the props that are
- * accepted and unreachable under Base UI (`validationBehavior`,
- * `excludeFromTabOrder`, `slot`) — those are recorded in each component's
- * header and removing them WOULD be an API change.
+ * Everything else is preserved field for field. The accepted-and-unreachable
+ * compatibility props (`slot`, `excludeFromTabOrder`, `routerOptions`, the
+ * `isPending`/`preventFocusOnPress` carriers) were REMOVED on 15 Aug 2026:
+ * this is a private `0.0.0` library with no external consumers, and the RAC
+ * shadow API kept producing accepted-and-inert props — cancel buttons wired
+ * to a `slot` no engine reads, link attributes served on `<button>`s. Lumo's
+ * API is Lumo's now; a name that reaches nothing is not declared.
  *
  * ── ONE MEASURED WIDENING ───────────────────────────────────────────────────
  *
@@ -499,13 +502,6 @@ export interface DOMProps {
 }
 
 export interface FocusableDOMProps extends DOMProps {
-  /**
-   * Whether to exclude the element from the sequential tab order.
-   *
-   * ACCEPTED AND UNREACHABLE under Base UI — `tabIndex={-1}` reaches the
-   * element directly and is what this ever meant. See `text-field.tsx`.
-   */
-  excludeFromTabOrder?: boolean;
 }
 
 export interface InputDOMProps {
@@ -513,19 +509,6 @@ export interface InputDOMProps {
   name?: string;
   /** The id of the `<form>` element to associate the input with. */
   form?: string;
-}
-
-export interface SlotProps {
-  /**
-   * UNREPRESENTABLE COMPATIBILITY CARRIER. Slots were React Aria's
-   * context-plumbing mechanism and Base UI has no equivalent, so a value here
-   * could reach nothing. It was typed `string | null` and "kept because
-   * removing a prop is an API change" — which on a `0.0.0` library made it a
-   * knowingly inert public prop, the exact class the inert-prop gate forbids.
-   * The FIELD stays so a consumer's `SlotProps` annotation compiles; passing
-   * a value is now a compile error, per the `isPending` precedent above.
-   */
-  slot?: undefined;
 }
 
 export interface StyleProps {
@@ -608,8 +591,6 @@ export interface LinkDOMProps {
   /** How much of the referrer to send when following the link. */
   referrerPolicy?: HTMLAttributeReferrerPolicy;
   /** Options for the configured client side router. */
-  /** Compatibility carrier: client-router integration is not implemented. */
-  routerOptions?: undefined;
 }
 
 /**
@@ -725,7 +706,6 @@ export interface TextFieldPropsBase<T = HTMLInputElement>
     FocusableDOMProps,
     AriaLabelingProps,
     AriaValidationProps,
-    SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
   "aria-activedescendant"?: string;
@@ -756,7 +736,6 @@ export interface ToggleFieldPropsBase
     InputDOMProps,
     AriaLabelingProps,
     AriaValidationProps,
-    SlotProps,
     StyleProps,
     // `onClick` is the press API's; see `ButtonPropsBase`.
     Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
@@ -790,7 +769,6 @@ export interface FieldGroupPropsBase<TValue, TChange = TValue, TValidate = TChan
     InputDOMProps,
     AriaLabelingProps,
     AriaValidationProps,
-    SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {}
 
@@ -841,7 +819,6 @@ export type OverlayOpenStateKeys = "isOpen" | "defaultOpen" | "onOpenChange";
 export interface DialogPropsBase
   extends DOMProps,
     AriaLabelingProps,
-    SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLElement> {
   /**
@@ -877,7 +854,6 @@ export interface DialogPropsBase
  */
 export interface ModalOverlayPropsBase
   extends OverlayTriggerProps,
-    SlotProps,
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {
   /** Whether pressing outside the overlay closes it. */
@@ -1025,7 +1001,6 @@ export interface ButtonPropsBase
     AriaLabelingProps,
     ButtonAriaProps,
     ButtonFormProps,
-    SlotProps,
     StyleProps,
     // `onClick` comes from `PressEvents`, not from the global set: a button's
     // click handler is the press API's, and declaring both is a conflict.
@@ -1035,13 +1010,13 @@ export interface ButtonPropsBase
   /**
    * The button's position in the sequential tab order.
    *
-   * ── WHY A PROP THE REACT ARIA API NEVER DECLARED IS ADDED HERE ────────────
+   * ── WHY THIS IS A REAL PROP ──────────────────────────────────────────────
    *
-   * `FocusableDOMProps` above offers `excludeFromTabOrder`, and its own comment
-   * records the finding that under Base UI it is unreachable — `tabIndex={-1}`
-   * reaches the element directly and is what the flag ever meant. That covers
-   * REMOVING a button from the tab order. It cannot express the other half of a
-   * roving tabindex, which is putting the `0` BACK on exactly one member.
+   * React Aria spelled removal from the tab order as `excludeFromTabOrder`,
+   * which under Base UI was unreachable — `tabIndex={-1}` reaches the element
+   * directly and is what the flag ever meant, so that name is gone. Removal
+   * is half of a roving tabindex; the other half is putting the `0` BACK on
+   * exactly one member, and that needs the real attribute.
    *
    * A `role="grid"` needs both halves on the same control. `table.tsx` puts the
    * grid's single Tab stop on the widget inside a cell rather than on the cell
@@ -1056,61 +1031,17 @@ export interface ButtonPropsBase
    *
    * The value reaches the element: `button.tsx` leaves `tabIndex` in `...rest`
    * and spreads `rest` AFTER its own `attr("tabIndex", …)`, so a caller's value
-   * wins over `excludeFromTabOrder`, and Base UI resolves a conflict with its
-   * own default in the caller's favour. Verified by rendering — `<IconButton
+   * wins, and Base UI resolves a conflict with its own default in the caller's
+   * favour. Verified by rendering — `<IconButton
    * tabIndex={-1}>` emits `tabindex="-1"` and no `tabindex="0"`.
    *
    * Declared on the BUTTON shape alone and not on `FocusableDOMProps`, which
    * would hand it to every focusable control in the library at once. Several of
    * those destructure their props rather than spreading them, so a blanket
    * declaration would mint accepted-and-unreachable props — the exact defect
-   * `isPending` below exists to document. `CheckboxProps` still needs the same
+   * the removed `isPending` carrier used to document. `CheckboxProps` still needs the same
    * one-line fix and still has the cast in `table.tsx` recording that it does;
    * widening this shape is not evidence about that one.
    */
   tabIndex?: number | undefined;
-  /**
-   * TYPE CARRIER, NOT A PROP — `never`, so passing a value is a compile error.
-   *
-   * ── IT READ "WHETHER THE BUTTON IS IN A PENDING STATE" AND DID NOTHING ────
-   *
-   * React Aria's `Button` had a real pending state: it rendered a busy
-   * affordance and set `aria-disabled` while keeping the button focusable. Base
-   * UI has no equivalent, so `button.tsx` destructures this prop for the sole
-   * purpose of NOT spreading it onto the element. The result was the worst of
-   * the three possible behaviours: set it and nothing renders, nothing is
-   * announced, and nothing errors.
-   *
-   * That is the same defect as `isKeyboardDismissDisabled` on the overlay
-   * surfaces, and it gets the same answer — except that this one has nowhere
-   * correct to be relocated to, because the replacement is a COMPOSITION rather
-   * than a prop. See the `busy` example on the button page: `isDisabled` blocks
-   * the second submit, a `<Spinner>` announces the wait as real text inside
-   * `role="status"`, and the button keeps its own label.
-   *
-   * The field survives rather than being deleted, following
-   * `MenuItemProps.value`: keeping it is what keeps a consumer's existing
-   * `ButtonPropsBase` annotation compiling, while `never` makes the one thing
-   * that never worked into an error instead of a silence. Nothing in this
-   * repository passed it — the blocks all declare an `isPending` of their own
-   * and forward it as `isDisabled`, which is the composition above.
-   *
-   * SPELLED `?: undefined`, NOT `?: never`. Under this repo's
-   * `exactOptionalPropertyTypes: true` a `never` field rejects an EXPLICIT
-   * `undefined` too, so `<Button {...props}>` would stop compiling for any
-   * caller whose object carries `isPending: undefined` — punishing a spread
-   * that was already correct. `undefined` is the honest spelling anyway: the
-   * only value this field may hold is no value.
-   */
-  isPending?: undefined;
-  /**
-   * TYPE CARRIER, NOT A PROP — same reason as `isPending`, same evidence.
-   *
-   * React Aria's press layer could suppress the focus move; Base UI's button is
-   * a plain `<button>` and focus on press is the browser's. `button.tsx`,
-   * `menubar.tsx` and `disclosure.tsx` all destructure it purely to keep it off
-   * the element. `toggle.tsx` declares a `preventFocusOnPress` of its OWN and is
-   * not affected by this.
-   */
-  preventFocusOnPress?: undefined;
 }

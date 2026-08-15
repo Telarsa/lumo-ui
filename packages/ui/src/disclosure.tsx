@@ -4,9 +4,10 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { ChevronDown } from "lucide-react";
 import { Accordion as BaseAccordion } from "@base-ui/react/accordion";
-// The prop SHAPES the public API is pinned to. They were `react-aria-components`
-// type imports until those were removed; the surface is unchanged and now owned
-// by Lumo. See `@lumo-ui/core`'s `props.ts`.
+// The prop SHAPES are Lumo's own, declared in `@lumo-ui/core`'s `props.ts`. The
+// React Aria compatibility surface (`?: undefined` carriers for RAC-only names)
+// was removed on 15 Aug 2026: private 0.0.0 library, no external consumers, and
+// the shadow API produced accepted-and-inert props.
 import {
   type AriaLabelingProps,
   type ButtonPropsBase,
@@ -15,7 +16,6 @@ import {
   type GlobalDOMAttributes,
   type Key,
   type LumoNode,
-  type SlotProps,
   type StyleProps,
 } from "@lumo-ui/core";
 import { attr } from "@lumo-ui/base-ui-ssr";
@@ -206,10 +206,6 @@ export function DisclosureGroup({
   defaultExpandedKeys,
   onExpandedChange,
   isDisabled,
-  // ── ACCEPTED BY THE API, UNREACHABLE IN BASE UI ────────────────────────────
-  // `render` and `style` are RAC-shaped and collide with Base UI's own props of
-  // the same name; the spread below does not type-check without them.
-  style: _style,
   ...rest
 }: DisclosureGroupProps) {
   return (
@@ -249,7 +245,6 @@ export function DisclosureGroup({
 /** One section's own props, minus its children and class. */
 interface DisclosurePropsBase
   extends StyleProps,
-    SlotProps,
     GlobalDOMAttributes<HTMLDivElement> {
   /**
    * The section's collection key. A `Key`, not a DOM `id` — see the note above
@@ -287,8 +282,8 @@ export function Disclosure({
   defaultExpanded,
   onExpandedChange,
   isDisabled,
-  slot: _slot,
-  style: _style,
+  // `slot` is `@lumo-ui/core`'s `SlotProps` carrier; destructured so it does
+  // not reach the DOM.
   ...rest
 }: DisclosureProps) {
   const grouped = React.useContext(InDisclosureGroup);
@@ -332,6 +327,13 @@ export function Disclosure({
   );
 }
 
+/**
+ * Subtracted from `ButtonPropsBase` and NOT redeclared. Base UI's parts type
+ * their DOM handlers as `BaseUIEvent<…>`, which carries a `preventBaseUIHandler`
+ * escape hatch the handler shapes in `@lumo-ui/core`'s props.ts do not, so
+ * `onKeyDown`/`onKeyUp` are not assignable through the spread; the press/hover
+ * callbacks are React Aria's and have no counterpart under Base UI.
+ */
 type UnsupportedDisclosureTriggerProp =
   | "onKeyDown"
   | "onKeyUp"
@@ -350,18 +352,6 @@ interface DisclosureTriggerSupportedProps
   extends Omit<ButtonPropsBase, "slot" | UnsupportedDisclosureTriggerProp> {}
 
 export interface DisclosureTriggerProps extends DisclosureTriggerSupportedProps {
-  onKeyDown?: undefined;
-  onKeyUp?: undefined;
-  onPress?: undefined;
-  onPressStart?: undefined;
-  onPressEnd?: undefined;
-  onPressUp?: undefined;
-  onPressChange?: undefined;
-  onHoverStart?: undefined;
-  onHoverEnd?: undefined;
-  onHoverChange?: undefined;
-  onFocusChange?: undefined;
-  excludeFromTabOrder?: undefined;
   children?: LumoNode;
   className?: string | undefined;
   /** Heading level for the outline entry. Defaults to 3. */
@@ -373,26 +363,8 @@ export function DisclosureTrigger({
   children,
   level = 3,
   isDisabled,
-  // Base UI's parts type their DOM handlers as `BaseUIEvent<…>`, which carries a
-  // `preventBaseUIHandler` escape hatch the handler shapes in `@lumo-ui/core`'s
-  // props.ts do not — those restate the vocabulary this API was pinned to, so
-  // they are not assignable and the spread does not compile with them in
-  // `rest`. These are `?: undefined` carriers on the component-specific type,
-  // so typed callers cannot mistake the destructuring below for delivery.
-  onKeyDown: _onKeyDown,
-  onKeyUp: _onKeyUp,
-  onPress: _onPress,
-  onPressStart: _onPressStart,
-  onPressEnd: _onPressEnd,
-  onPressUp: _onPressUp,
-  onPressChange: _onPressChange,
-  onHoverStart: _onHoverStart,
-  onHoverEnd: _onHoverEnd,
-  onHoverChange: _onHoverChange,
-  onFocusChange: _onFocusChange,
-  isPending: _isPending,
-  preventFocusOnPress: _preventFocusOnPress,
-  excludeFromTabOrder: _excludeFromTabOrder,
+  // `@lumo-ui/core`'s `ButtonPropsBase` carriers; destructured so they do not
+  // reach the DOM.
   ...rest
 }: DisclosureTriggerProps) {
   /*
@@ -430,39 +402,7 @@ interface DisclosurePanelPropsBase
   extends DOMProps,
     StyleProps,
     AriaLabelingProps,
-    GlobalDOMAttributes<HTMLDivElement> {
-  /*
-   * ── THREE TYPE CARRIERS, AND THE MARKUP THAT MADE THEM ONE ─────────────────
-   *
-   * These are React Aria's `DisclosurePanel` props. All three survived the Base
-   * UI migration in the type and in the docblock only: `DisclosurePanel`
-   * destructures `className`, `children`, `keepMounted` and `style`, and
-   * everything else rides `...rest` into `Accordion.Panel`, which forwards what
-   * it does not recognise straight to its `<div>`. Measured with
-   * `renderToStaticMarkup` before this fix — one expanded panel, all three props
-   * set, the served attributes verbatim:
-   *
-   *     <div … aria-labelledby="base-ui-_R_0H2_" role="group"
-   *            label="برچسب" labelElementType="h4" class="pb-4 …">متن</div>
-   *
-   * So `label` and `labelElementType` are invalid attributes on a real element
-   * — `form.tsx`'s `elementType` defect, one component over — and `role` is
-   * WORSE than inert: it is delivered, and what it delivers is the removal of
-   * the `role="region"` this component exists for. `disclosure.test.tsx` opens
-   * by saying so: *"the choice of `Accordion` over `Collapsible` rests entirely
-   * on the panel carrying `role="region"` and a name"*. A public prop whose
-   * documented default (`'group'`) undoes the component's reason to exist is not
-   * an escape hatch; the panel's name comes from its own trigger through
-   * `aria-labelledby`, which is visible in the same bytes above.
-   *
-   * Spelled `?: undefined`, not deleted and not `?: never` — `props.ts`'s
-   * `isPending` argument, unchanged. They are also destructured out below, so a
-   * JavaScript caller who never sees the type cannot serve the attribute either.
-   */
-  label?: undefined;
-  labelElementType?: undefined;
-  role?: undefined;
-}
+    GlobalDOMAttributes<HTMLDivElement> {}
 
 export interface DisclosurePanelProps extends DisclosurePanelPropsBase {
   children?: LumoNode;
@@ -481,12 +421,6 @@ export function DisclosurePanel({
   className,
   children,
   keepMounted,
-  style: _style,
-  // Destructured for the sole purpose of not spreading them; the type carriers
-  // above carry the evidence and the reason.
-  label: _label,
-  labelElementType: _labelElementType,
-  role: _role,
   ...rest
 }: DisclosurePanelProps) {
   return (

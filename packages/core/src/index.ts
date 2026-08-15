@@ -49,7 +49,6 @@ export type {
   Selection,
   SelectionBehavior,
   SelectionMode,
-  SlotProps,
   StyleProps,
   TextFieldPropsBase,
   ToggleFieldPropsBase,

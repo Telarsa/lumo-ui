@@ -192,8 +192,23 @@ export const drawerVariants = cva(
   },
 );
 
+/**
+ * Subtracted from `ModalOverlayPropsBase` and NOT redeclared — the same list
+ * dialog.tsx subtracts, for the same reason: React Aria animation/portal props
+ * with no Base UI counterpart. Until 15 Aug 2026 they were accepted here and
+ * destructured into discards; the React Aria compatibility surface was removed
+ * (private 0.0.0 library, no external consumers; the shadow API produced
+ * accepted-and-inert props). `isDismissable` stays: `DialogTrigger` reads it
+ * off the overlay element.
+ */
+type UnsupportedDrawerProp =
+  | "isEntering"
+  | "isExiting"
+  | "shouldCloseOnInteractOutside"
+  | "UNSTABLE_portalContainer";
+
 export interface DrawerOverlayProps
-  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys> {
+  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys | UnsupportedDrawerProp> {
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -236,14 +251,10 @@ export interface DrawerOverlayProps
 export function DrawerOverlay({
   className,
   children,
-  // — accepted by the API, unreachable in Base UI —
+  // Read off this element's props by `DialogTrigger` — see the docblock above.
   isDismissable: _isDismissable,
-  isEntering: _isEntering,
-  isExiting: _isExiting,
-  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
-  UNSTABLE_portalContainer: _portalContainer,
-  slot: _slot,
-  style: _style,
+  // `slot` is `@lumo-ui/core`'s `SlotProps` carrier; destructured so it does
+  // not reach the DOM.
   ...rest
 }: DrawerOverlayProps) {
   return (
@@ -258,7 +269,7 @@ export function DrawerOverlay({
 }
 
 export interface DrawerProps
-  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys>,
+  extends Omit<ModalOverlayPropsBase, OverlayOpenStateKeys | UnsupportedDrawerProp | "isDismissable">,
     VariantProps<typeof drawerVariants> {
   children?: LumoNode;
   className?: string | undefined;
@@ -280,14 +291,8 @@ export function Drawer({
   side,
   size,
   children,
-  // — accepted by the API, unreachable in Base UI —
-  isDismissable: _isDismissable,
-  isEntering: _isEntering,
-  isExiting: _isExiting,
-  shouldCloseOnInteractOutside: _shouldCloseOnInteractOutside,
-  UNSTABLE_portalContainer: _portalContainer,
-  slot: _slot,
-  style: _style,
+  // `slot` is `@lumo-ui/core`'s `SlotProps` carrier; destructured so it does
+  // not reach the DOM.
   ...rest
 }: DrawerProps) {
   return (

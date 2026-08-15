@@ -3,8 +3,8 @@
 import { useId } from "react";
 import { AlertDialog as BaseAlertDialog } from "@base-ui/react/alert-dialog";
 
-// The prop SHAPE the public API is pinned to. `role` is fixed to
-// `alertdialog` by this component, so it is subtracted here.
+// The prop SHAPE is Lumo's own (`@lumo-ui/core`'s `props.ts`). `role` is fixed
+// to `alertdialog` by this component, so it is subtracted here.
 import { cn, type DialogPropsBase, type LumoNode } from "@lumo-ui/core";
 import { Button } from "./button.tsx";
 import { DialogHeading, dialogVariants } from "./dialog.tsx";
@@ -168,12 +168,8 @@ export function AlertDialog({
   onConfirm,
   children,
   className,
-  // — accepted by the API, unreachable on a plain element. Same list dialog.tsx
-  //   destructures out of `Dialog`, for the same reason: these are React Aria
-  //   render/context props with no Base UI counterpart, and letting them reach
-  //   the DOM would emit unknown attributes. —
-  slot: _slot,
-  style: _style,
+  // `slot` is `@lumo-ui/core`'s `SlotProps` carrier; destructured so it does
+  // not reach the DOM.
   ...rest
 }: AlertDialogProps) {
   const titleId = useId();

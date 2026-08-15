@@ -108,6 +108,12 @@ export const searchInputVariants = cva(
  */
 interface SearchFieldPropsBase
   extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior" | "type"> {
+  /**
+   * The control's position in the sequential tab order — `-1` removes it,
+   * which is what React Aria's `excludeFromTabOrder` meant and all it meant.
+   * That name is gone (15 Aug 2026); the real attribute replaces it.
+   */
+  tabIndex?: number | undefined;
   /** Handler that is called when the Enter key is pressed. */
   onSubmit?: (value: string) => void;
   /** Handler that is called when the clear button is pressed. */
@@ -159,7 +165,7 @@ export function SearchField({
   isRequired,
   autoFocus,
   // — accepted by the API, unreachable in Base UI. See text-field.tsx. —
-  excludeFromTabOrder,
+  tabIndex,
   ...rest
 }: SearchFieldProps) {
   /*
@@ -248,7 +254,7 @@ export function SearchField({
           {...optional("required", isRequired)}
           {...optional("autoFocus", autoFocus)}
           {...(rest as object)}
-          {...optional("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
+          {...optional("tabIndex", tabIndex)}
         />
         {/*
          * `-translate-y-1/2` is a BLOCK-axis transform. It is not mirrored by

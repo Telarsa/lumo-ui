@@ -63,7 +63,7 @@ import { inputGroupAddonVariants, inputGroupInputVariants } from "./input-group.
 export { inputGroupAddonVariants, inputGroupInputVariants };
 
 export interface InputGroupProps
-  extends Omit<TextFieldPropsBase, "isInvalid">,
+  extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior">,
     Pick<VariantProps<typeof inputGroupInputVariants>, "size"> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
@@ -107,9 +107,6 @@ export function InputGroup({
   isRequired,
   autoFocus,
   // — accepted by the API, unreachable in Base UI. See text-field.tsx. —
-  validationBehavior,
-  excludeFromTabOrder,
-  slot,
   ...rest
 }: InputGroupProps) {
   return (

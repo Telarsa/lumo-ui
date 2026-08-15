@@ -40,9 +40,9 @@ const _badLocale: Locale = "de-DE";
 
 const _goodLocale: Locale = "fa-IR";
 
-// A compatibility carrier rejects values but accepts an explicitly absent key
-// in a spread under exactOptionalPropertyTypes.
-const _linkBagWithAbsentRouter: LinkDOMProps = { routerOptions: undefined };
+// The RAC compatibility carriers are gone (15 Aug 2026); a link bag is just
+// the anchor attributes.
+const _linkBagWithAbsentRouter: LinkDOMProps = { href: "/" };
 
 // Silence unused-local diagnostics without weakening the checks above.
 void [

@@ -4,8 +4,7 @@ import * as React from "react";
 import { cva } from "class-variance-authority";
 import { Menubar as BaseMenubar } from "@base-ui/react/menubar";
 import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
-// `MenubarButtonProps` keeps the prop names the public API froze; the shape is
-// Lumo's own now. See `@lumo-ui/core`'s `props.ts`.
+// `MenubarButtonProps` is Lumo's own shape. See `@lumo-ui/core`'s `props.ts`.
 import { type ButtonPropsBase, cn, type LumoNode } from "@lumo-ui/core";
 
 /**
@@ -190,12 +189,6 @@ export interface MenubarProps {
   label: string;
   children?: LumoNode;
   className?: string | undefined;
-  /**
-   * Vertical menubars are not offered: a vertical row of menus is a menu, and
-   * menu.tsx already is one. Declared so that `Omit<ToolbarProps,"orientation">`
-   * — the old shape of this interface — keeps compiling for anyone who wrote it.
-   */
-  orientation?: undefined;
   /** Whether the whole row is disabled. */
   isDisabled?: boolean | undefined;
 }
@@ -227,6 +220,14 @@ export function Menubar({ label, className, children, isDisabled }: MenubarProps
   );
 }
 
+/**
+ * Subtracted from `ButtonPropsBase`: React Aria's press/hover callbacks have no
+ * counterpart on a plain `<button>` under Base UI, and the rest are the core
+ * shape's compatibility carriers. The React Aria compatibility surface was
+ * removed from this component on 15 Aug 2026 (private 0.0.0 library, no
+ * external consumers; the shadow API produced accepted-and-inert props), so
+ * these names are not accepted at all rather than accepted and dropped.
+ */
 type MenubarButtonInertProps =
   | "onPress"
   | "onPressStart"
@@ -244,20 +245,6 @@ type MenubarButtonInertProps =
   | "style";
 
 export interface MenubarButtonProps extends Omit<ButtonPropsBase, MenubarButtonInertProps> {
-  onPress?: undefined;
-  onPressStart?: undefined;
-  onPressEnd?: undefined;
-  onPressUp?: undefined;
-  onPressChange?: undefined;
-  onHoverStart?: undefined;
-  onHoverEnd?: undefined;
-  onHoverChange?: undefined;
-  onFocusChange?: undefined;
-  isPending?: undefined;
-  preventFocusOnPress?: undefined;
-  excludeFromTabOrder?: undefined;
-  slot?: undefined;
-  style?: undefined;
   children?: LumoNode;
   className?: string | undefined;
   /**
@@ -280,26 +267,7 @@ export interface MenubarButtonProps extends Omit<ButtonPropsBase, MenubarButtonI
 export function MenubarButton({
   className,
   children,
-  // ── ACCEPTED BY THE API, UNREACHABLE ON A PLAIN <button> ───────────────────
-  // React Aria's press/hover callbacks have no counterpart: Base UI has no press
-  // abstraction, and here the handlers belong to the composite item anyway.
-  // Destructured so they cannot reach the DOM as unknown attributes. button.tsx
-  // makes the full argument.
   isDisabled,
-  onPress: _onPress,
-  onPressStart: _onPressStart,
-  onPressEnd: _onPressEnd,
-  onPressUp: _onPressUp,
-  onPressChange: _onPressChange,
-  onHoverStart: _onHoverStart,
-  onHoverEnd: _onHoverEnd,
-  onHoverChange: _onHoverChange,
-  onFocusChange: _onFocusChange,
-  isPending: _isPending,
-  preventFocusOnPress: _preventFocusOnPress,
-  excludeFromTabOrder: _excludeFromTabOrder,
-  slot: _slot,
-  style: _style,
   // The composite's roving value, injected by `Menu.Trigger`. Intercepted here
   // rather than left in `rest`, because `rest` is spread last and would beat any
   // value this component tried to set. See the file header.

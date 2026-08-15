@@ -115,11 +115,10 @@ function DisabledExample(l: Locale) {
 
 function BusyExample(l: Locale) {
   /*
-   * There is no `isPending` here, and that is not an omission. The prop is
-   * TYPED on ButtonProps — the React Aria API this one is frozen against had it
-   * — but Base UI has no pending state to forward it to, so it is inert: set it
-   * and nothing renders, nothing is announced, and no error tells you. A busy
-   * button is therefore something you COMPOSE, and this is the composition.
+   * There is no `isPending` here, and that is not an omission. React Aria had
+   * one; Lumo does not declare it, because Base UI has no pending state to
+   * forward it to and a prop that reaches nothing is not part of this API. A
+   * busy button is therefore something you COMPOSE, and this is the composition.
    *
    * Three parts, each load-bearing:
    *   - `isDisabled` stops a second submit. It also switches pointer events
@@ -156,7 +155,7 @@ export const EXAMPLES: ComponentExamples = {
       `  <svg aria-hidden="true" />`,
       `</IconButton>`,
       ``,
-      `<Button isDisabled>                 ← busy is a COMPOSITION; isPending is inert`,
+      `<Button isDisabled>                 ← busy is a COMPOSITION, not a prop`,
       `  <Spinner size="sm" label="…" />   ← the announcement`,
       `  …                                 ← the label STAYS`,
       `</Button>`,
@@ -240,9 +239,9 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "در حال کار", "en-US": "Busy" },
       description: {
         "fa-IR":
-          "دکمهٔ مشغول در این کتابخانه یک ویژگی نیست، یک ترکیب است. isPending روی ButtonProps تایپ شده — چون API فریزشده‌ی ری‌اکت‌آریا آن را داشت — اما Base UI حالت pending ندارد که به آن پاس داده شود، پس بی‌اثر است: می‌گذاریدش و هیچ چیز رندر نمی‌شود، هیچ چیز اعلام نمی‌شود، و هیچ خطایی هم به شما نمی‌گوید. آنچه واقعاً می‌نویسید همین است: isDisabled جلوی ارسال دوم را می‌گیرد، Spinner انتظار را با متن واقعی درون role=status اعلام می‌کند، و دکمه برچسب خودش را نگه می‌دارد — دکمه‌ای که متنش را با یک حلقه عوض کند، درست به‌اندازهٔ طول همان درخواست بی‌نام می‌ماند. دکمهٔ انصراف عمداً فعال مانده: کنش مشغول است، راه خروج نه.",
+          "دکمهٔ مشغول در این کتابخانه یک ویژگی نیست، یک ترکیب است. ری‌اکت‌آریا یک isPending داشت؛ لومو ندارد، چون Base UI حالت pending ندارد که به آن پاس داده شود و ویژگی‌ای که به جایی نمی‌رسد اعلام نمی‌شود. آنچه واقعاً می‌نویسید همین است: isDisabled جلوی ارسال دوم را می‌گیرد، Spinner انتظار را با متن واقعی درون role=status اعلام می‌کند، و دکمه برچسب خودش را نگه می‌دارد — دکمه‌ای که متنش را با یک حلقه عوض کند، درست به‌اندازهٔ طول همان درخواست بی‌نام می‌ماند. دکمهٔ انصراف عمداً فعال مانده: کنش مشغول است، راه خروج نه.",
         "en-US":
-          "A busy button is a composition here, not a prop. isPending IS typed on ButtonProps — the frozen React Aria API had it — but Base UI has no pending state to forward it to, so it is inert: set it and nothing renders, nothing is announced, and nothing errors. What you actually write is this: isDisabled blocks a second submit, Spinner announces the wait as real text inside role=status, and the button keeps its own label — a button that swaps its text for a ring is nameless for exactly as long as the request runs. The cancel button stays live on purpose: the action is busy, the escape route is not.",
+          "A busy button is a composition here, not a prop. React Aria had an isPending; Lumo does not, because Base UI has no pending state to forward it to and a prop that reaches nothing is not declared. What you actually write is this: isDisabled blocks a second submit, Spinner announces the wait as real text inside role=status, and the button keeps its own label — a button that swaps its text for a ring is nameless for exactly as long as the request runs. The cancel button stays live on purpose: the action is busy, the escape route is not.",
       },
       render: BusyExample,
     },

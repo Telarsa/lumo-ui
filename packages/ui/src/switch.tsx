@@ -239,6 +239,12 @@ export type SwitchVariantProps = VariantProps<typeof switchVariants>;
  */
 export interface SwitchProps
   extends Omit<ToggleFieldPropsBase, "validationBehavior" | "onFocusChange"> {
+  /**
+   * The control's position in the sequential tab order — `-1` removes it,
+   * which is what React Aria's `excludeFromTabOrder` meant and all it meant.
+   * That name is gone (15 Aug 2026); the real attribute replaces it.
+   */
+  tabIndex?: number | undefined;
   children?: LumoNode;
   /**
    * `md` is shadcn's current compact scale; `lg` keeps the row at the 44px
@@ -296,8 +302,7 @@ export function Switch({
    * prevent has no switch to flip here. Recorded as a capability gap.
    */
   autoFocus,
-  excludeFromTabOrder,
-  slot,
+  tabIndex,
   style,
   ...rest
 }: SwitchProps) {
@@ -350,10 +355,9 @@ export function Switch({
           {...attr("id", id)}
           {...attr("inputRef", inputRef)}
           {...attr("autoFocus", autoFocus)}
-          {...attr("slot", slot ?? undefined)}
           {...attr("style", style)}
           {...(rest as object)}
-          {...attr("tabIndex", excludeFromTabOrder === true ? -1 : undefined)}
+          {...attr("tabIndex", tabIndex)}
         >
           <BaseSwitch.Thumb aria-hidden="true" className={switchThumbVariants({ size })} />
         </BaseSwitch.Root>
