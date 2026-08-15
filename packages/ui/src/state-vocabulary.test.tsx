@@ -218,7 +218,7 @@ describe("focus ring — WCAG 2.4.7", () => {
       <DialogTrigger key="drawer" defaultOpen>
         <Button>منو</Button>
         <DrawerOverlay>
-          <Drawer side="start" label="عنوان">
+          <Drawer side="start">
             <Dialog closeLabel="بستن" label="عنوان">
               <DialogHeading>عنوان</DialogHeading>
             </Dialog>

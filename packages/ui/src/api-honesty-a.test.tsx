@@ -2,7 +2,7 @@ import { describe, it } from "vitest";
 import { Checkbox, CheckboxGroup } from "./checkbox.tsx";
 import { Dialog, DialogModal, DialogOverlay, type DialogProps } from "./dialog.tsx";
 import { DisclosureTrigger } from "./disclosure.tsx";
-import { Drawer } from "./drawer.tsx";
+import { type DrawerProps } from "./drawer.tsx";
 
 describe("component-specific types refuse inherited no-ops", () => {
   it("DisclosureTrigger refuses interaction contracts its engine cannot deliver", () => {
@@ -48,8 +48,10 @@ describe("component-specific types refuse inherited no-ops", () => {
     const detailed: DialogProps = { closeLabel: "بستن", label: "گفتگو", "aria-details": "details" };
     void described;
     void detailed;
-    // @ts-expect-error a drawer is itself role=dialog and needs a caller-authored name
-    void <Drawer />;
+    // The drawer is named by the Dialog it wraps; a name typed on the drawer itself would be a second, competing name.
+    // @ts-expect-error aria-label does not exist on DrawerProps
+    const drawerNamed: DrawerProps = { "aria-label": "کشو" };
+    void drawerNamed;
     // @ts-expect-error entering is engine-owned state
     void <DialogOverlay isEntering />;
     // @ts-expect-error outside-interaction filtering has no Base UI part seam here

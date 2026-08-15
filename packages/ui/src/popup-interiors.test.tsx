@@ -338,7 +338,7 @@ describe("popup interiors pass the full gate rule set while open", () => {
       <DialogTrigger defaultOpen>
         <Button>باز کردن فهرست</Button>
         <DrawerOverlay>
-          <Drawer side="start" label="فهرست">
+          <Drawer side="start">
             <Dialog closeLabel="بستن" label="فهرست">
               محتوای فهرست
             </Dialog>

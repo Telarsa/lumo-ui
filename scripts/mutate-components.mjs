@@ -78,15 +78,18 @@ function mutate(file, source) {
     return {
       operator: "drop the caller-authored dialog name before it reaches the popup",
       source: source.replace(
-        '{...attr("aria-label", popupName(children))}',
+        '{...attr("aria-label", dialogPopupName(children))}',
         '{...attr("aria-label", undefined)}',
       ),
     };
   }
   if (file === "drawer.tsx") {
     return {
-      operator: "drop the drawer's required name from its dialog surface",
-      source: source.replace("aria-label={label}", "aria-label={undefined}"),
+      operator: "drop the lifted dialog name from the drawer panel",
+      source: source.replace(
+        '{...attr("aria-label", dialogPopupName(children))}',
+        '{...attr("aria-label", undefined)}',
+      ),
     };
   }
   if (file === "menu.tsx") {

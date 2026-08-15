@@ -384,7 +384,7 @@ function DrawerUnderTest(props: { isKeyboardDismissDisabled?: boolean }) {
     <DialogTrigger defaultOpen {...props}>
       <Button>منو</Button>
       <DrawerOverlay>
-        <Drawer side="start" label="فهرست">
+        <Drawer side="start">
           <Dialog closeLabel="بستن" label="فهرست">
             <DialogHeading>فهرست</DialogHeading>
           </Dialog>
@@ -426,7 +426,7 @@ describe("Dialog and Drawer's isKeyboardDismissDisabled", () => {
         {/* @ts-expect-error dismissal lives on DialogTrigger, not on the overlay */}
         <DrawerOverlay isKeyboardDismissDisabled>
           {/* @ts-expect-error dismissal lives on DialogTrigger, not on the panel */}
-          <Drawer side="start" label="فهرست" isKeyboardDismissDisabled>
+          <Drawer side="start" isKeyboardDismissDisabled>
             <Dialog closeLabel="بستن" label="فهرست">
               <DialogHeading>فهرست</DialogHeading>
             </Dialog>

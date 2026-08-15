@@ -206,22 +206,49 @@ export interface DialogModalProps
 }
 
 /**
- * The role the popup announces. Under Base UI the focus trap is `Dialog.Popup`
- * (`role="dialog"`), so an alert dialog's role must be lifted onto it or the reader hears
- * a plain dialog. Detected by PROP (`confirmLabel`), not `child.type` — see `findChildProp`.
+ * The props of the `Dialog` / `AlertDialog` element a popup wraps, found by
+ * SHAPE (`closeLabel` / `confirmLabel`), never by `child.type` — across the
+ * RSC boundary a revived element's `type` is a client reference. The search is
+ * shallow on purpose: direct children, and through fragments and host
+ * elements only. It never descends into another component, so a form field's
+ * `label` inside the dialog body can never become the popup's name.
  */
-function popupRole(children: unknown): "dialog" | "alertdialog" | undefined {
-  const authored = findChildProp(children, "role");
-  if (authored === "dialog" || authored === "alertdialog") return authored;
-  return findChildProp(children, "confirmLabel") === undefined ? undefined : "alertdialog";
+function dialogSurfaceProps(children: unknown): Record<string, unknown> | undefined {
+  for (const child of React.Children.toArray(children as React.ReactNode)) {
+    if (!React.isValidElement(child)) continue;
+    const props = child.props as Record<string, unknown>;
+    if (typeof child.type !== "string" && child.type !== React.Fragment) {
+      if ("closeLabel" in props || "confirmLabel" in props) return props;
+      continue;
+    }
+    const nested = dialogSurfaceProps(props["children"]);
+    if (nested !== undefined) return nested;
+  }
+  return undefined;
 }
 
-/** The caller-authored name carried by Dialog.label or AlertDialog.title. */
-function popupName(children: unknown): string | undefined {
-  const dialogLabel = findChildProp(children, "label");
-  if (typeof dialogLabel === "string" && dialogLabel.trim() !== "") return dialogLabel;
-  const alertTitle = findChildProp(children, "title");
-  return typeof alertTitle === "string" && alertTitle.trim() !== "" ? alertTitle : undefined;
+/**
+ * The role the popup announces. Under Base UI the focus trap is `Dialog.Popup`
+ * (`role="dialog"`), so an alert dialog's role must be lifted onto it or the reader hears
+ * a plain dialog.
+ */
+function popupRole(children: unknown): "dialog" | "alertdialog" | undefined {
+  const surface = dialogSurfaceProps(children);
+  if (surface === undefined) return undefined;
+  const authored = surface["role"];
+  if (authored === "dialog" || authored === "alertdialog") return authored;
+  return "confirmLabel" in surface ? "alertdialog" : undefined;
+}
+
+/**
+ * The caller-authored name of the popup: `Dialog.label`, or `AlertDialog.title`.
+ * `DialogModal` and `Drawer` both lift it onto the `role="dialog"` element they render.
+ */
+export function dialogPopupName(children: unknown): string | undefined {
+  const surface = dialogSurfaceProps(children);
+  if (surface === undefined) return undefined;
+  const name = "closeLabel" in surface ? surface["label"] : surface["title"];
+  return typeof name === "string" && name.trim() !== "" ? name : undefined;
 }
 
 export function DialogModal({
@@ -235,7 +262,7 @@ export function DialogModal({
       // The focus stop carries the marker so the library's ring applies here as in the drawer.
       data-lumo=""
       {...attr("role", popupRole(children))}
-      {...attr("aria-label", popupName(children))}
+      {...attr("aria-label", dialogPopupName(children))}
       className={cn("fixed inset-0 z-50 m-auto h-fit", dialogModalVariants({ size }), className)}
       {...rest}
     >
@@ -256,7 +283,13 @@ interface DialogSupportedProps
   > {}
 
 export interface DialogProps extends DialogSupportedProps {
-  /** Announced name lifted onto the role=dialog popup. Required. */
+  /**
+   * Announced name of the dialog. Required.
+   *
+   * @forwarded `DialogModal` and `Drawer` read it off this element with
+   * `dialogPopupName(children)` and set it as `aria-label` on the `role="dialog"`
+   * popup they render — this component's own element is a descendant div.
+   */
   label: string;
   /** Announced name of the ✕ button. Required: an icon is not a name. */
   closeLabel: string;
@@ -265,6 +298,7 @@ export interface DialogProps extends DialogSupportedProps {
 }
 
 export function Dialog({
+  // `label` is lifted by DialogModal / Drawer; it must not reach this div.
   label: _label,
   closeLabel,
   className,

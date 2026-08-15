@@ -4727,7 +4727,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name lifted onto the role=dialog popup. Required."
+            "description": "Announced name of the dialog. Required."
           },
           {
             "name": "children",
@@ -5369,16 +5369,10 @@
         "name": "DrawerProps",
         "props": [
           {
-            "name": "label",
-            "type": "string",
-            "required": true,
-            "description": "Announced name of the role=dialog panel. Required."
-          },
-          {
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "The content this component renders."
+            "description": "The `<Dialog>` inside supplies the announced name: `Drawer` lifts `Dialog.label` onto this `role=\"dialog\"` panel."
           },
           {
             "name": "className",

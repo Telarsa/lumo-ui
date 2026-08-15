@@ -92,7 +92,7 @@ function StartExample(l: Locale) {
     <DialogTrigger>
       <Button variant="outline">{t.openMenu[l]}</Button>
       <DrawerOverlay>
-        <Drawer side="start" size="sm" label={t.navHeading[l]}>
+        <Drawer side="start" size="sm">
           <Dialog closeLabel={t.close[l]} label={t.navHeading[l]}>
             <DialogHeading>{t.navHeading[l]}</DialogHeading>
             <nav className="flex flex-col items-start gap-2">
@@ -113,7 +113,7 @@ function EndExample(l: Locale) {
     <DialogTrigger>
       <Button variant="outline">{t.openFilters[l]}</Button>
       <DrawerOverlay>
-        <Drawer side="end" size="md" label={t.filtersHeading[l]}>
+        <Drawer side="end" size="md">
           <Dialog closeLabel={t.close[l]} label={t.filtersHeading[l]}>
             <DialogHeading>{t.filtersHeading[l]}</DialogHeading>
             <DialogDescription>{t.filtersBody[l]}</DialogDescription>
@@ -130,7 +130,7 @@ function SizesExample(l: Locale) {
       <DialogTrigger>
         <Button variant="outline">{t.openSmall[l]}</Button>
         <DrawerOverlay>
-          <Drawer side="start" size="sm" label={t.smallHeading[l]}>
+          <Drawer side="start" size="sm">
             <Dialog closeLabel={t.close[l]} label={t.smallHeading[l]}>
               <DialogHeading>{t.smallHeading[l]}</DialogHeading>
               <DialogDescription>{t.smallBody[l]}</DialogDescription>
@@ -141,7 +141,7 @@ function SizesExample(l: Locale) {
       <DialogTrigger>
         <Button variant="outline">{t.openLarge[l]}</Button>
         <DrawerOverlay>
-          <Drawer side="end" size="lg" label={t.largeHeading[l]}>
+          <Drawer side="end" size="lg">
             <Dialog closeLabel={t.close[l]} label={t.largeHeading[l]}>
               <DialogHeading>{t.largeHeading[l]}</DialogHeading>
               <DialogDescription>{t.largeBody[l]}</DialogDescription>
@@ -158,7 +158,7 @@ function DismissableExample(l: Locale) {
     <DialogTrigger>
       <Button variant="outline">{t.openCart[l]}</Button>
       <DrawerOverlay isDismissable>
-        <Drawer side="end" size="md" label={t.cartHeading[l]}>
+        <Drawer side="end" size="md">
           <Dialog closeLabel={t.close[l]} label={t.cartHeading[l]}>
             <DialogHeading>{t.cartHeading[l]}</DialogHeading>
             <DialogDescription>{t.cartBody[l]}</DialogDescription>
@@ -183,7 +183,7 @@ export const EXAMPLES: ComponentExamples = {
       `<DialogTrigger>`,
       `  <Button>…</Button>                       ← all the first byte holds`,
       `  <DrawerOverlay isDismissable>            ← the scrim, and the portal boundary`,
-      `    <Drawer side="start" size="md" label="…"> ← start | end. The panel name is required.`,
+      `    <Drawer side="start" size="md">          ← start | end; named by the Dialog inside`,
       `      <Dialog closeLabel="…" label="…">    ← both the panel and ✕ need authored names`,
       `        <DialogHeading>…</DialogHeading>       ← aria-labelledby`,
       `        <DialogDescription>…</DialogDescription>  ← aria-describedby`,

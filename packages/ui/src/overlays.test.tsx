@@ -21,6 +21,8 @@ import { Button } from "./button.tsx";
 import { Breadcrumb, BreadcrumbEllipsis, Breadcrumbs } from "./breadcrumbs.tsx";
 import { ComboBox, ComboBoxItem } from "./combobox.tsx";
 import { Dialog, DialogHeading, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
+import { AlertDialog } from "./alert-dialog.tsx";
+import { TextField } from "./text-field.tsx";
 import { Drawer, DrawerOverlay } from "./drawer.tsx";
 import { Popover } from "./popover.tsx";
 import { Tooltip } from "./tooltip.tsx";
@@ -73,7 +75,7 @@ describe("server-rendered markup carries no English", () => {
         <DialogTrigger>
           <Button>منو</Button>
           <DrawerOverlay>
-            <Drawer side="end" size="lg" label="کشو">
+            <Drawer side="end" size="lg">
               <Dialog closeLabel="بستن" label="کشو">محتوا</Dialog>
             </Drawer>
           </DrawerOverlay>
@@ -320,7 +322,7 @@ describe("open-state English, counted rather than assumed", () => {
       <DialogTrigger defaultOpen>
         <Button>باز</Button>
         <DrawerOverlay>
-          <Drawer side="end" label="کشو">
+          <Drawer side="end">
             <Dialog closeLabel="بستن" label="کشو">
               <DialogHeading>کشو</DialogHeading>
             </Dialog>
@@ -516,5 +518,63 @@ describe("the open-state trio is a compile error on a surface", () => {
       </DialogTrigger>
     );
     expect(true).toBe(true);
+  });
+});
+
+describe("the popup's name is the surface's name, never a body field's", () => {
+  afterEach(cleanup);
+
+  it("AlertDialog: a labelled field in the body does not become the alertdialog's aria-label", () => {
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>حذف</Button>
+        <DialogOverlay>
+          <DialogModal>
+            <AlertDialog title="حذف فاکتور" confirmLabel="حذف" cancelLabel="انصراف">
+              <TextField label="دلیل حذف" />
+            </AlertDialog>
+          </DialogModal>
+        </DialogOverlay>
+      </DialogTrigger>,
+    );
+    const popup = screen.getByRole("alertdialog");
+    expect(popup.getAttribute("aria-label")).toBe("حذف فاکتور");
+    expect(popup.getAttribute("aria-label")).not.toBe("دلیل حذف");
+  });
+
+  it("Dialog: the lift survives a host-element wrapper but a body field's label never wins", () => {
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>باز</Button>
+        <DialogOverlay>
+          <DialogModal>
+            <div>
+              <Dialog closeLabel="بستن" label="ویرایش">
+                <TextField label="نام" />
+              </Dialog>
+            </div>
+          </DialogModal>
+        </DialogOverlay>
+      </DialogTrigger>,
+    );
+    expect(screen.getByRole("dialog").getAttribute("aria-label")).toBe("ویرایش");
+  });
+
+  it("Drawer: named by the Dialog inside — one name, typed once", () => {
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>منو</Button>
+        <DrawerOverlay>
+          <Drawer side="end">
+            <Dialog closeLabel="بستن" label="پالایه‌ها">
+              <TextField label="جست‌وجو" />
+            </Dialog>
+          </Drawer>
+        </DrawerOverlay>
+      </DialogTrigger>,
+    );
+    const panels = screen.getAllByRole("dialog");
+    expect(panels).toHaveLength(1);
+    expect(panels[0]?.getAttribute("aria-label")).toBe("پالایه‌ها");
   });
 });

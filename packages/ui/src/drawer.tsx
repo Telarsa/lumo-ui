@@ -3,6 +3,8 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Dialog as BaseDialog } from "@base-ui/react/dialog";
+import { attr } from "@lumo-ui/base-ui-ssr";
+import { dialogPopupName } from "./dialog.tsx";
 
 import {
   cn,
@@ -106,8 +108,7 @@ export interface DrawerProps
       OverlayOpenStateKeys | UnsupportedDrawerProp | "isDismissable" | "aria-label" | "aria-labelledby"
     >,
     VariantProps<typeof drawerVariants> {
-  /** Announced name of the role=dialog panel. Required. */
-  label: string;
+  /** The `<Dialog>` inside supplies the announced name: `Drawer` lifts `Dialog.label` onto this `role="dialog"` panel. */
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -118,7 +119,6 @@ export interface DrawerProps
  * of this prop that names a physical edge.
  */
 export function Drawer({
-  label,
   className,
   side,
   size,
@@ -130,7 +130,7 @@ export function Drawer({
       // This element IS the focus stop and has `outline-none`; `data-lumo`
       // gives it the one library ring under `:focus-visible` (WCAG 2.4.7).
       data-lumo=""
-      aria-label={label}
+      {...attr("aria-label", dialogPopupName(children))}
       className={cn(drawerVariants({ side, size }), className)}
       {...rest}
     >
