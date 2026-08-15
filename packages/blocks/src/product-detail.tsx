@@ -23,31 +23,11 @@ import {
 /**
  * A single product page: gallery, price, stock, variants, quantity, specs.
  *
- * No routing chrome here — breadcrumbs and the surrounding page belong to
- * `page-header.tsx` and the route itself, exactly as `booking-summary.tsx`
- * owns only its summary panel and not the whole checkout page. This block
- * DOES own its own `<h1>`, though, in the same spirit as `hero.tsx`: a
- * product-detail route usually has no other candidate for the page's single
- * top-level heading.
- *
- * ── STOCK STATE IS THREE STRINGS, NOT A BOOLEAN ─────────────────────────────
- *
- * `"in-stock" | "low-stock" | "out-of-stock"` rather than `inStock: boolean`,
- * because "only 3 left" changes the reader's decision in a way "in stock"
- * alone does not — and because a colour-only badge (green/amber/red) fails
- * WCAG 1.4.1 exactly as `stat-grid.tsx`'s delta badge would without its
- * `increase`/`decrease` words. Each state carries its own announced word;
- * `lowStock` is additionally a FUNCTION of the already-formatted count, for
- * the same reason `listing-grid.tsx`'s `rating` is: «فقط ۳ عدد باقی مانده»
- * does not place its number where "Only 3 left" places its own.
- *
- * ── VARIANTS ARE `RadioGroup`, NOT A CUSTOM SWATCH PICKER ───────────────────
- *
- * A size or colour choice is a single-selection question with a visible name
- * per option, which is exactly what `RadioGroup` already is — see rating.tsx
- * for the argument on *why* renting the roving-tabindex and RTL-aware
- * arrow-key contract beats hand-rolling one. There is deliberately no
- * swatch-as-colour-only rendering here: every option keeps its text label.
+ * No routing chrome (that is `page-header.tsx`), but it DOES own the `<h1>`.
+ * Stock is three strings, not a boolean: each state carries its own announced
+ * word (a colour-only badge fails WCAG 1.4.1) and `lowStock` is a function of
+ * the already-formatted count. Variants are `RadioGroup`, never a colour-only
+ * swatch picker.
  *
  * `"use client"`: `onAddToCart`, `onQuantityChange` and `onVariantChange` are
  * callbacks, and `Carousel` is itself a client component.
@@ -59,19 +39,8 @@ export interface ProductImage {
   alt: string;
   /**
    * Names this image's SLIDE, e.g. «نمای جلو». REQUIRED, and deliberately not
-   * the same field as `alt`.
-   *
-   * ── WHY TWO STRINGS FOR ONE PICTURE ──────────────────────────────────────
-   *
-   * They answer different questions. `alt` asks "what does this image add
-   * beyond the surrounding text", and `""` is the right answer for a gallery
-   * beside a heading that already names the product. `label` asks "which slide
-   * is this", and there is no gallery for which the right answer is nothing —
-   * a carousel of four unnamed slides is four identical announcements.
-   *
-   * This block derived one from the other and shipped `aria-label=""` on the
-   * slide for exactly the image whose `alt` was correctly empty. Caught by
-   * `named-roledescription` on the built export, not by review.
+   * the same field as `alt`: `alt=""` can be right, but four unnamed slides are
+   * four identical announcements (caught by `named-roledescription`).
    */
   label: string;
 }

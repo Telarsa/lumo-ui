@@ -19,55 +19,13 @@ import { useLumoLocale } from "./locale.ts";
 export { dateInputVariants };
 
 /**
- * A time typed segment by segment: ۲۳:۴۵.
- *
- * ═══ OFF REACT ARIA, ONTO THE SAME INPUT THE DATE FIELD USES ════════════════
- *
- * This file used to render React Aria's `<DateInput>` around `renderSegment`,
- * which meant the library shipped two segmented inputs with different keyboard
- * behaviour: Lumo's, inside `date-field.tsx`, and upstream's, here and in both
- * pickers. Now there is one — `date-input.tsx` — and an hour slot and a day
- * slot cannot drift apart because they are the same component.
- *
- * The arithmetic behind it is `useTimeFieldState`, a SECOND engine rather than
- * a `granularity` flag on the date one. They share their interface and almost
- * nothing else: a time has no calendar, no Esfand to be 29 or 30 days long, no
- * leap rule and no `toValue` that can refuse. 24 hours is 24 hours in every
- * calendar system ever built.
- *
- * ═══ THE VALUE IS THREE NUMBERS, NOT A `Time` ══════════════════════════════
- *
- * `onChange` hands back `{ hour, minute, second }` — the structural shape
- * `@internationalized/date`'s `Time` already satisfies, so
- * `new Time(v.hour, v.minute, v.second)` is one line at a call site that wants
- * one. Taking the class as the public type would put a runtime dependency in
- * the signature of a component whose whole job is three integers, and this
- * library's rule for a dependency is that owning it must FIX a defect.
- *
- * ═══ THE HOUR CYCLE IS THE LOCALE'S DECISION ════════════════════════════════
- *
- * Not defaulted here. fa-IR resolves to a 24-hour clock on its own and
- * `useTimeFieldState` asks `Intl` rather than assuming; hard-coding either
- * clock is the same class of mistake as writing `dir` by hand. Pass `hourCycle`
- * only when a product genuinely requires one clock everywhere, and know that
- * doing so overrides a user-visible convention.
- *
- * When a 12-hour cycle IS in force, a `dayPeriod` segment appears. Its VALUES
- * come from `Intl.DateTimeFormat.formatToParts` — «قبل‌ازظهر» / «بعدازظهر» —
- * and its NAME comes from `strings.ts`, because no API produces the name of a
- * part. Typing into it takes the first LETTER of either period in the reader's
- * own script; `date-input.tsx` matches against the texts the engine read out of
- * `Intl`, so neither file knows an alphabet.
- *
- * ═══ BOUNDS ════════════════════════════════════════════════════════════════
- *
- * `minValue`/`maxValue` constrain committed values without inventing an error
- * sentence. A typed value outside the inclusive range yields `null`; callers
- * provide any visible/announced explanation through `errorMessage` or
- * `validate`. The range is within one civil day—an overnight availability
- * window is two ranges, not an inverted one.
- *
- * `"use client"`: the segment values are state.
+ * A time typed segment by segment: ۲۳:۴۵. Renders the same `date-input.tsx`
+ * as the date field over `useTimeFieldState`, a SECOND engine (a time has no
+ * calendar and no leap rule). The value is `{ hour, minute, second }`, not a
+ * `Time` class. The hour cycle is the LOCALE's decision, asked of `Intl`; a
+ * 12-hour cycle adds a `dayPeriod` segment whose values come from
+ * `formatToParts` and whose name comes from `strings.ts`. Bounds yield `null`
+ * without inventing an error sentence; a range is within one civil day.
  */
 export interface TimeFieldProps {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
@@ -90,12 +48,9 @@ export interface TimeFieldProps {
   form?: string | undefined;
   /** Announces that the field needs a complete value. */
   isRequired?: boolean | undefined;
-  /**
-   * How much of the time is editable. `minute` by default — a seconds segment
-   * nobody asked for is a fourth tab stop on every time field.
-   */
+  /** How much of the time is editable. `minute` by default — a seconds segment is a fourth tab stop. */
   granularity?: "hour" | "minute" | "second" | undefined;
-  /** Overrides the locale's own clock. See the header before reaching for it. */
+  /** Overrides the locale's own clock — a user-visible convention. */
   hourCycle?: 12 | 24 | undefined;
   description?: LumoNode;
   /** Supplying one marks the field invalid. The sentence is yours. */
@@ -181,11 +136,7 @@ export function TimeField({
   const invalid = isInvalid ?? (effectiveError != null || outsideBounds ? true : undefined);
   const inputRef = useRef<DateInputHandle>(null);
 
-  /*
-   * Wired by hand, in RENDER. Base UI's `Field` associates its label and
-   * description in a LAYOUT EFFECT, so neither association exists in the served
-   * bytes — measured on this branch and recorded in `date-field.tsx`'s header.
-   */
+  // Wired by hand, in RENDER: Base UI's `Field` associates in a layout effect.
   const describedBy =
     [description != null ? descriptionId : null, effectiveError != null ? errorId : null]
       .filter((id): id is string => id != null)
@@ -198,11 +149,7 @@ export function TimeField({
       {...attr("disabled", isDisabled)}
       {...attr("invalid", invalid)}
     >
-      {/*
-       * `nativeLabel={false}` with a `<span>` render, exactly as `date-field.tsx`
-       * argues: a `<label for>` may only name a labelable element, and this is a
-       * `role="group"` of spinbuttons.
-       */}
+      {/* `nativeLabel={false}`: a `<label for>` cannot name a `role="group"`. */}
       <Field.Label
         id={labelId}
         nativeLabel={false}
@@ -245,11 +192,7 @@ export function TimeField({
         </Field.Description>
       ) : null}
 
-      {/*
-       * A plain element rather than `Field.Error`: Base UI's error part matches
-       * against a native control's `ValidityState`, and there is no native
-       * control here.
-       */}
+      {/* A plain element, not `Field.Error`, which matches a native control's `ValidityState`. */}
       {effectiveError != null ? (
         <div id={errorId} className={fieldErrorVariants()}>
           {effectiveError}

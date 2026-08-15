@@ -5,30 +5,12 @@ import { CodePanel } from "./code-panel";
 
 /**
  * The three "what is this made of" surfaces on a component page. All are SERVER
- * components rendering data the loader has already validated against
- * `packages/ui/src/index.ts` — by the time either mounts, every part name here
- * is a real export, so neither re-checks anything.
- *
- * `CompositionTree` shows the copyable monospace parts tree from the example
- * file's `meta.composition`, with the component module's own exported parts
- * listed under it — the derived list, straight from the barrel, so it cannot
- * name a part that does not ship.
- *
- * `PropsTable` is generated from the exported TypeScript props; `PartsTable`
- * supplies the hand-authored intent for each composable part. Part and prop
- * names are code — genuinely Latin — so they render as LTR islands under
- * `data-lumo-latn`, the same escape hatch `code-panel.tsx` documents; the
- * descriptions are in the page's locale.
+ * components rendering data the loader has already validated against the
+ * `@lumo-ui/ui` barrel, so nothing here re-checks anything. Part and prop names
+ * are code (Latin), rendered as LTR islands under `data-lumo-latn`.
  */
 export interface CompositionTreeProps {
-  /**
-   * Shiki output for the pseudo-JSX tree authored in the example file's meta.
-   *
-   * The raw `composition` string is no longer a prop. It existed only to feed
-   * the copy button, which now reads the rendered `<pre>` — and since this is a
-   * server component the panel it renders never crosses a client boundary, so
-   * the tree ships once instead of twice. See `code-panel.tsx`.
-   */
+  /** Shiki output for the pseudo-JSX tree from the example file's meta. The copy button reads the rendered `<pre>`, so the raw string is not a prop. */
   html: string;
   /** The copy button's name. Required. */
   copyLabel: string;
@@ -87,10 +69,8 @@ export interface PartsTableProps {
 export function PartsTable({ parts, locale, partHeader, descriptionHeader }: PartsTableProps) {
   return (
     /*
-     * A static HTML table, not the library's Table: this is a document table
-     * with no selection, no sorting and no focus behaviour, and renting a
-     * keyboard grid for it would put tab stops where a reader expects prose.
-     * Wide content scrolls inside its own container, never the page.
+     * A static HTML table, not the library's Table: no selection, sorting or
+     * focus behaviour, so a keyboard grid would misplace tab stops.
      */
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full border-collapse text-sm">
@@ -138,9 +118,7 @@ export interface PropsTableProps {
 
 /**
  * Checker-generated public props. Each exported props type is a disclosure so
- * a large compound component remains navigable rather than becoming one
- * several-hundred-row table. Names and types are code/LTR islands; every piece
- * of prose comes from required localized page copy.
+ * a large compound component stays navigable.
  */
 export function PropsTable({
   groups,

@@ -21,29 +21,10 @@ import {
  *
  * `"use client"`: `onSubmit` and `onCancel` are callbacks.
  *
- * ── THE STATUS LINE IS WHY THIS BLOCK EXISTS ───────────────────────────────
- *
- * A settings form is fields plus one hard problem — telling the reader that the
- * save worked. Doing it badly is the default:
- *
- *  - A `role="alert"` success banner INTERRUPTS the screen reader mid-sentence
- *    for good news. `alert.tsx` argues the whole case; `live="polite"` waits
- *    for a pause, which is what "saved" deserves. A failure gets
- *    `live="assertive"`, because a failure IS urgent.
- *
- *  - A banner rendered at load announces itself before the reader has reached
- *    it. That is why `status` starts at `"idle"` and the banner is mounted only
- *    in response to a submit — the live region appears WITH its content, which
- *    is the only ordering screen readers agree on.
- *
- * ── `Spinner.label` IS REQUIRED, SO PENDING IS A STRING TOO ────────────────
- *
- * A spinner has no text: a screen-reader user gets silence while the page looks
- * frozen. spinner.tsx makes the label a required `string` for exactly that, and
- * a block cannot default it either — a default would be English handed to a
- * Persian voice. So `strings.pending` is required whenever the caller intends
- * to use `isPending`, and it is rendered as REAL text inside the spinner's own
- * `role="status"` rather than as an `aria-label` on it.
+ * The status line is the hard part: success is `live="polite"`, failure
+ * `live="assertive"`, and `status` starts `"idle"` so the banner mounts WITH
+ * its content in response to a submit rather than announcing at load.
+ * `strings.pending` is required because a spinner with no text is silence.
  */
 export type SettingsFormStatus = "idle" | "saved" | "error";
 
@@ -70,11 +51,7 @@ export interface SettingsFormProps {
   onCancel?: (() => void) | undefined;
   /** Drives the status banner. See the file header. Default `"idle"`. */
   status?: SettingsFormStatus | undefined;
-  /**
-   * The failure text, already translated. Rendered only when
-   * `status === "error"` — a banner with a tone and no sentence is worse than
-   * no banner.
-   */
+  /** The failure text, already translated. Rendered only when `status === "error"`. */
   errorMessage?: LumoNode;
   isPending?: boolean | undefined;
   /** Heading level for the panel title. Default `2`. */
@@ -96,9 +73,7 @@ export function SettingsForm({
   return (
     <Card variant="outlined" className={cn("w-full", className)}>
       {/*
-       * The `<form>` wraps the whole card, footer included: a submit button
-       * outside its form only works through the `form` attribute, which is
-       * easy to forget and silent when wrong.
+       * The `<form>` wraps the whole card, footer included, so the submit button is inside it.
        */}
       <Form {...optional("onSubmit", onSubmit)} className="gap-0">
         <CardHeader>
@@ -126,10 +101,8 @@ export function SettingsForm({
         </CardBody>
 
         {/*
-         * `CardFooter` is already `justify-end` — the INLINE end, so the
-         * actions sit bottom-right in English and bottom-LEFT in Persian with
-         * no override. `me-auto` on the spinner pushes it to the opposite
-         * edge, again on the inline axis.
+         * `CardFooter` is `justify-end` (INLINE end); `me-auto` pushes the spinner
+         * to the opposite edge on the same axis.
          */}
         <CardFooter>
           {isPending ? (

@@ -10,52 +10,17 @@ import { IconButton } from "./button.tsx";
 /**
  * A slide carousel, over embla.
  *
- *     <Carousel
- *       locale={locale}
- *       label="پیشنهادهای ویژه"
- *       roleDescription="چرخ‌فلک"
- *       slideRoleDescription="اسلاید"
- *     >
- *       <CarouselContent>
- *         <CarouselItem>…</CarouselItem>
- *       </CarouselContent>
+ *     <Carousel locale={locale} label="پیشنهادهای ویژه" roleDescription="چرخ‌فلک" slideRoleDescription="اسلاید">
+ *       <CarouselContent><CarouselItem label="…">…</CarouselItem></CarouselContent>
  *       <CarouselPrevious label="اسلاید قبلی" />
  *       <CarouselNext label="اسلاید بعدی" />
  *     </Carousel>
  *
- * ═══ THREE THINGS UPSTREAM GETS WRONG IN PERSIAN, ALL SILENT ════════════════
- *
- * **1. `aria-roledescription="carousel"` and `="slide"`.** Two English strings,
- * hardcoded, spoken by a screen reader on every slide of every carousel — and
- * invisible to a sighted reviewer, which is why they survive. `lumo-gate` fails
- * a build over exactly this attribute (`no-latin-aria`), so they are required
- * props here. They live on `<Carousel>` rather than on each item because a
- * per-item prop is a prop somebody forgets on item seven.
- *
- * **2. The scroll direction.** embla takes a `direction: 'ltr' | 'rtl'` option
- * and defaults to `'ltr'`. Without it a Persian carousel starts at the LEFT and
- * advances rightward under a `dir="rtl"` layout — the slides and the buttons
- * disagree about which way "next" is. Lumo derives it from the locale via
- * `direction()`, so there is no `dir` prop to get wrong (rule 4).
- *
- * **3. The arrow keys.** Upstream maps ArrowLeft → previous and ArrowRight →
- * next. In Persian that is backwards: the reader's "back" is to the right. This
- * is the failure that survives a screenshot review, because the layout looks
- * perfect and only the keyboard is wrong.
- *
- * ── THE CHEVRONS ────────────────────────────────────────────────────────────
- *
- * Horizontal controls use `‹` (U+2039) and `›` (U+203A), the Unicode
- * `Bidi_Mirrored` pair, exactly as `pagination.tsx`, `menu.tsx` and
- * `breadcrumbs.tsx` do: the text engine draws each as the other when the
- * resolved direction is RTL, so the arrowhead flips with no CSS and nothing for
- * the RTL codemod to miss. Upstream's `IconPlaceholder` + `cn-rtl-flip` needs a
- * class that must be remembered on every copy and that silently does nothing if
- * the icon is later swapped for one already pointing the right way.
- *
- * Vertical controls use real lucide chevrons, because up and down are BLOCK-axis
- * directions and do not mirror in any horizontal writing mode. A mirrored glyph
- * rotated 90° would flip the wrong axis under RTL.
+ * Three silent upstream defects in Persian: hardcoded English `aria-roledescription`
+ * ("carousel"/"slide") — required props here, on `<Carousel>` so no item forgets; embla's
+ * `direction` defaults to `'ltr'` — derived from the locale, no `dir` prop; and ArrowLeft
+ * → previous, which is backwards in RTL. Horizontal chevrons are the `Bidi_Mirrored` pair
+ * `‹`/`›`, so the glyph flips with no CSS; vertical ones are lucide (block axis, no mirror).
  */
 
 type CarouselApi = UseEmblaCarouselType[1];
@@ -139,8 +104,7 @@ export function Carousel({
     {
       ...opts,
       axis: orientation === "horizontal" ? "x" : "y",
-      // Derived, never passed. embla defaults to 'ltr' and has no way to notice
-      // that the document around it reads the other way.
+      // Derived, never passed. embla defaults to 'ltr'.
       direction: isRtl ? "rtl" : "ltr",
     },
     plugins,
@@ -190,8 +154,7 @@ export function Carousel({
     api.on("select", onSelect);
 
     return () => {
-      // Upstream detaches only "select". Both are attached, so both come off, or
-      // a remounted carousel accumulates handlers on a live embla instance.
+      // Upstream detaches only "select"; both are attached, so both come off.
       api.off("reInit", onSelect);
       api.off("select", onSelect);
     };
@@ -229,12 +192,7 @@ export interface CarouselContentProps extends Omit<React.ComponentProps<"div">, 
   className?: string | undefined;
 }
 
-/**
- * `-ms-4` / `-mt-4` cancel the per-item gutter. Logical on the inline axis, so
- * the negative margin lands on the same physical edge as the items' padding in
- * either script; upstream's `-ml-4` would double the gap on one side and clip on
- * the other under RTL.
- */
+/** `-ms-4` / `-mt-4` cancel the per-item gutter; logical, so it lands on the right edge in either script. */
 export function CarouselContent({ className, ...props }: CarouselContentProps) {
   const { carouselRef, orientation } = useCarousel();
 
@@ -261,25 +219,9 @@ export interface CarouselItemProps
   /** Owned by Carousel context; cannot be overridden per slide. */
   "aria-roledescription"?: undefined;
   /**
-   * Announced name of this slide, e.g. «کفش ورزشی مدل آلفا». REQUIRED.
-   *
-   * ── A ROLEDESCRIPTION WITHOUT A NAME ANNOUNCES ONE WORD ──────────────────
-   *
-   * `aria-roledescription` REPLACES the role in the announcement. With no
-   * accessible name, this element is read out as «اسلاید» and nothing else —
-   * so a reader arrowing through a carousel hears the same word once per
-   * slide and learns nothing. Measured on the built export before this prop
-   * existed: 18 of 23 roledescribed elements on the carousel page computed an
-   * EMPTY name, and `named-roledescription` fires on exactly that.
-   *
-   * A heading inside the slide does NOT fix it, which is the trap. `group` is
-   * not a name-from-content role, so its content is not consulted — the name
-   * has to be on this element. There is a test pinning that, because the
-   * obvious fix is the wrong one.
-   *
-   * Required rather than defaulted, like every announced string here: a
-   * default would be English, and «اسلاید ۱» invented by the library is a
-   * position, not a name. The caller knows what is on the slide.
+   * Announced name of this slide, e.g. «کفش ورزشی مدل آلفا». REQUIRED: `aria-roledescription`
+   * REPLACES the role, so an unnamed slide is read as «اسلاید» and nothing else. A heading
+   * inside does NOT fix it — `group` is not a name-from-content role.
    */
   label: string;
 }
@@ -311,16 +253,9 @@ export interface CarouselControlProps
 }
 
 /**
- * `-start-12` / `-end-12` are `inset-inline-*`, so "previous" sits at the
- * reading start in both scripts — left in English, RIGHT in Persian — which is
- * the side embla's `scrollPrev` actually moves toward once `direction: 'rtl'`
- * is set. Upstream's `-left-12` pins it to the same physical edge in both, so in
- * Persian the back button sits where the carousel is heading.
- *
- * The vertical case centres with `start-0 end-0 mx-auto` rather than
- * `left-1/2 -translate-x-1/2`: both inline insets are zero, so the box is
- * direction-invariant and `margin-inline: auto` does the centring. `translate-x`
- * has no logical form and would need an `ltr:`/`rtl:` pair to say the same thing.
+ * `-start-12` / `-end-12` are `inset-inline-*`, so "previous" sits at the reading start in
+ * both scripts — the side embla's `scrollPrev` moves toward under `direction: 'rtl'`. The
+ * vertical case centres with `start-0 end-0 mx-auto`; `translate-x` has no logical form.
  */
 export function CarouselPrevious({ label, className, ...props }: CarouselControlProps) {
   const { orientation, scrollPrev, canScrollPrev } = useCarousel();

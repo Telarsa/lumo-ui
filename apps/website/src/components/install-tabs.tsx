@@ -6,39 +6,13 @@ import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
 
 /**
  * Installation: a Command tab (package-manager sub-tabs, pnpm first) and a
- * Manual tab (dependencies to install, then the source to copy).
- *
- * Every piece of data here — `registryComponents`, `files`, and the commands
- * inside `commandPanels` — is DERIVED from `registry.json` by the caller
- * (`page.tsx`, a server component that can read the filesystem at build time).
- * This component never hardcodes a package name or a file path; it only lays
- * out whatever the registry says. See `page.tsx`'s
- * `resolveRegistryItem` for how a page's slug is matched to a registry item —
- * most match by name, but `icon-button` shares `button.tsx` with `button` and
- * is matched by content rather than by a hardcoded exception.
- *
- * ── THE LISTINGS ARRIVE RENDERED, NOT AS STRINGS ────────────────────────────
- *
- * This module is `"use client"` because `Tabs` is, and every prop of a client
- * component is serialized into the RSC flight payload. It used to take the
- * command text, the dependency command and each file's full source as strings
- * plus a parallel bag of shiki HTML, and render `CodeBlock` itself — so the
- * component source shipped in the payload a second time even though React
- * Aria's `Tabs` never mounts the Manual panel that would display it. Measured
- * at 3f46039 on `fa/components/event-calendar`: a 336,371-char shiki row and a
- * 58,715-char source row, neither of which was ever in the DOM.
- *
- * The panels are now built by `page.tsx` (a server component) and handed over
- * already rendered. This file lays out tabs and nothing else; it holds no code
- * text, and the copy buttons inside those panels read the DOM.
- *
- * PACKAGE-MANAGER NAMES ARE NEVER PLACED IN AN ARIA-LABEL.
- * "pnpm" and "npm" both satisfy `/[A-Za-z]{3,}/`, the exact pattern
- * `no-latin-aria` (packages/gate/src/rules.ts) rejects when it appears in a
- * spoken attribute on a Persian page. Every copy button below carries a
- * locale-only accessible name ("Copy the install command", never "Copy the
- * pnpm command") for that reason — the manager name stays in the VISIBLE tab
- * text, which the gate does not restrict, and never in a `label`/`aria-label`.
+ * Manual tab (dependencies, then the source to copy). Every piece of data is
+ * DERIVED from `registry.json` by the server caller (`page.tsx`); nothing is
+ * hardcoded here. The listings arrive RENDERED, not as strings: this module is
+ * `"use client"` (because `Tabs` is), and string props would ship the source
+ * in the flight payload a second time. Package-manager names are NEVER placed
+ * in an aria-label ("pnpm" trips `no-latin-aria`); they stay in visible tab
+ * text only. Measurements: docs/decisions/log.md.
  */
 
 export interface InstallFile {
@@ -59,8 +33,7 @@ export interface InstallTabsProps {
   files: InstallFile[];
   /**
    * One rendered listing per package manager, keyed by the same `PMS` order the
-   * pill row iterates — a `Record`, not a `Partial`, because a missing panel is
-   * a tab that selects into nothing and nobody would notice until they tried it.
+   * pill row iterates — a `Record`, not a `Partial`, so no tab selects into nothing.
    */
   commandPanels: Record<PM, LumoNode>;
   /** The dependency-install listing, absent when the registry entry has no
@@ -91,22 +64,14 @@ export function InstallTabs({
       <TabPanel id="command" className="mt-3">
         <Tabs>
           {/*
-           * The package-manager switcher is deliberately NOT a third underline
-           * bar. The design review measured three byte-identical TabLists
-           * stacked ~12px apart on the built page — Preview|Code, then
-           * Command|Manual, then this — which flattens the hierarchy into
-           * noise. shadcn renders the PM switch as compact chrome attached to
-           * the code block, and that is what these class overrides do: a small
-           * segmented pill row, subordinate to the underline bar above it.
-           * Same Tabs component, same keyboard behaviour — only the clothes.
+           * The package-manager switcher is deliberately NOT a third underline bar
+           * (three stacked TabLists flattened the hierarchy): a compact segmented
+           * pill row, subordinate to the bar above. Same Tabs, only the clothes.
            */}
           {/*
            * `data-[orientation=horizontal]:border-b-0`, not a bare `border-be-0`:
-           * tabListVariants draws its hairline as `data-[orientation=horizontal]:
-           * border-b`, and a bare width-0 utility loses to it on specificity —
-           * tailwind-merge only removes the base class when the override carries
-           * the SAME variant. Measured on the built page: the pill row shipped
-           * with the underline bar's hairline still under it.
+           * tailwind-merge only removes tabListVariants' hairline when the override
+           * carries the SAME variant.
            */}
           <TabList
             label={t.pmGroup}
@@ -114,16 +79,9 @@ export function InstallTabs({
           >
             {PMS.map((pm) => (
               /*
-               * `mb-0 border-b-0` removes the selected-tab indicator entirely:
-               * tabVariants marks selection with `border-b-2 -mb-px
-               * data-selected:border-accent`, and on a `rounded-sm` pill that
-               * 2px rule renders as a second, rounded underline below the
-               * selected pill — the artefact the review flagged. The indicator
-               * is an underline's clothes; a segmented pill shows selection as
-               * a raised surface (`data-selected:bg-surface` + shadow), so the
-               * border width and the `-mb-px` that compensated for it both go.
-               * (An earlier `after:hidden` here guessed at a pseudo-element
-               * that tabs.tsx never renders — the indicator is a real border.)
+               * `mb-0 border-b-0` removes the selected-tab underline entirely:
+               * on a `rounded-sm` pill it renders as a second rounded underline.
+               * Selection reads as a raised surface (`data-selected:bg-surface`) instead.
                */
               <Tab
                 key={pm}

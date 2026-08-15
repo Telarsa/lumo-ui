@@ -7,26 +7,17 @@ import { assertLocale, localeParams, site } from "@/lib/locale";
 import "../globals.css";
 
 /**
- * The root layout, one per locale.
- *
- * `LumoHtml` is the only thing in the system that writes `<html>`, and it takes
- * no `dir` prop — direction is derived from the closed locale contract, so a
- * wrong direction cannot be passed. The gate asserts the result against the
- * prerendered output, not against a jsdom render.
+ * The root layout, one per locale. `LumoHtml` is the only thing that writes
+ * `<html>` and takes no `dir` prop — direction derives from the closed locale
+ * contract, so a wrong direction cannot be passed.
  */
 export function generateStaticParams() {
   return localeParams;
 }
 
 /**
- * Unknown segments 404 instead of rendering.
- *
- * Without this, any stray request — most famously `/sw.js`, a service worker
- * left registered on localhost:3000 by some OTHER project — falls into this
- * route as `lang="sw.js"`, and `assertLocale` turns it into a 500 on every
- * request. The throw is right at build time; at request time the honest answer
- * to an unknown locale is "no such document", which is exactly what refusing to
- * serve ungraded content means.
+ * Unknown segments 404 instead of rendering. Without this a stray request such as
+ * `/sw.js` falls into this route as `lang="sw.js"` and `assertLocale` 500s.
  */
 export const dynamicParams = false;
 

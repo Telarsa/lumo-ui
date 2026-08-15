@@ -1,21 +1,10 @@
 #!/usr/bin/env node
 /**
- * The consumer smoke test.
- *
- * Everything else in this repo verifies Lumo against itself. This verifies it
- * against someone else: it first validates every item's declared package and
- * sibling-item closure, then copies the registry payloads into a throwaway
- * consumer project, resolves the imports, and type-checks them.
- *
- * It exists because of a specific failure mode. A component can be perfect
- * inside the workspace — where `@lumo-ui/core` resolves through a workspace link
- * and TypeScript sees the source — and be uninstallable outside it, because the
- * registry entry forgot a dependency or a relative import points at a file the
- * consumer never receives. Nobody notices until the first consumer tries, and by
- * then it has been published.
- *
- * One gate standing between Telarsa and shipping a registry nobody has ever
- * installed from.
+ * The consumer smoke test. Everything else verifies Lumo against itself; this
+ * validates each item's declared package and sibling closure, then copies the
+ * registry payloads into a throwaway consumer project and type-checks them —
+ * because a component can be perfect inside the workspace and uninstallable
+ * outside it.
  */
 
 import { mkdtemp, readFile, writeFile, mkdir, cp, rm, symlink } from "node:fs/promises";
@@ -45,13 +34,9 @@ if (!registry.items?.length) {
 }
 
 /*
- * Validate the manifest as a manifest before letting the workspace dependency
- * tree help TypeScript. The compile below deliberately has a real node_modules,
- * so by itself it cannot prove that an item declares the packages and sibling
- * items its source imports. This pass follows the public registry payload:
- * every relative import must either be another file in the same item or name a
- * directly declared registry dependency, and every non-peer package import must
- * appear in `dependencies`.
+ * Validate the manifest as a manifest first: the compile below has a real
+ * node_modules, so by itself it cannot prove an item declares the packages and
+ * sibling items its source imports.
  */
 /** @type {Map<string, string[]>} */
 const ownersByTarget = new Map();
@@ -151,9 +136,7 @@ const dir = await mkdtemp(join(tmpdir(), "lumo-smoke-"));
 let failed = false;
 
 try {
-  // A consumer project: the copied components, the packaged invariants resolved
-  // by path, and nothing else. If a component needs something not declared in
-  // its registry entry, it fails here rather than in someone's repository.
+  // A consumer project: the copied components, the packaged invariants resolved by path, nothing else.
   await mkdir(join(dir, "components/ui"), { recursive: true });
 
   for (const item of registry.items) {
@@ -162,17 +145,9 @@ try {
     }
   }
 
-  // `@lumo-ui/core` is a real package dependency for a consumer, so it is mapped
-  // by path rather than copied — that IS the package/copy-in line under test.
-  // A real consumer has node_modules. Symlinking one is more faithful than
-  // hand-mapping packages through `paths` — it exercises the same resolution a
-  // consumer's bundler performs, so a dependency missing from a registry entry
-  // surfaces as the error they would actually see.
-  //
-  // packages/ui's, not the workspace root's: pnpm keeps the root free of the
-  // runtime dependencies and hoists nothing, so the root has no `react` at all.
-  // The UI package's tree is the closest thing in this repo to what a consumer
-  // installs from the registry's `dependencies`.
+  // Symlinking a real node_modules exercises the resolution a consumer's
+  // bundler performs. packages/ui's, not the root's: pnpm hoists nothing, so
+  // the root has no `react` at all.
   await symlink(join(ROOT, "packages/ui/node_modules"), join(dir, "node_modules"), "dir");
 
   await writeFile(
@@ -191,17 +166,11 @@ try {
           allowImportingTsExtensions: true,
           exactOptionalPropertyTypes: true,
           noUncheckedIndexedAccess: true,
-          // The two workspace packages a consumer installs rather than copies.
-          // Everything else must resolve from node_modules on its own — that is
-          // precisely what this test is checking.
+          // The workspace packages a consumer installs rather than copies;
+          // everything else must resolve from node_modules on its own.
           paths: {
             "@lumo-ui/core": [join(ROOT, "packages/core/src/index.ts")],
             "@lumo-ui/ui": [join(ROOT, "packages/ui/src/index.ts")],
-            // The engine-compat layer is the third. It is a package rather than
-            // a copied file precisely so that it can be upgraded away when Base
-            // UI fixes the defects it works around — which means a consumer
-            // resolves it from node_modules, and that resolution is under test
-            // here exactly like the other two.
             "@lumo-ui/base-ui-ssr": [join(ROOT, "packages/base-ui-ssr/src/index.ts")],
           },
         },

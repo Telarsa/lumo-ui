@@ -4,43 +4,14 @@ import { cn } from "@lumo-ui/core";
 import { Skeleton } from "./skeleton.tsx";
 
 /**
- * Composed placeholders: the shapes a real screen actually loses while it
- * loads. `skeleton.tsx` ships the atom; these are the molecules — a text
- * block, an avatar row, a card, a form, a table — so a `loading.tsx` reads as
- * a preview of the page rather than as one grey bar.
- *
- * No `"use client"`, exactly as on `skeleton.tsx`: every preset is spans in
- * divs plus a CSS animation, and the single most common render site is a
- * server `loading.tsx`, where a client directive would be actively wrong.
- *
- * ── NO STRINGS, AND THAT IS A DECISION, NOT AN OMISSION ─────────────────────
- *
- * Everywhere else in this library an announced string is a REQUIRED prop. A
- * skeleton is the one component with nothing to announce: it is a PICTURE of
- * pending content, not the pending state itself. So every preset renders
- * `aria-hidden="true"` on its root and takes no text at all — which is also
- * what keeps the HTML gate quiet about them: the gate grades visible text and
- * spoken attributes, and these have neither. The loading STATE is the
- * consumer's to announce, on the element that owns it: `aria-busy="true"` on
- * the region being replaced, or a `<Spinner label="…" />` beside it (which is
- * what spinner.tsx exists for). A skeleton that announced itself would turn a
- * page of placeholders into a run of unnamed stops in the reading order.
- *
- * ── EVERY DIMENSION HERE IS COPIED FROM THE COMPONENT IT STANDS IN FOR ──────
- *
- * The whole worth of a skeleton is that nothing jumps when the data lands. So
- * `SkeletonAvatar` uses avatar.tsx's size scale, `SkeletonForm` uses
- * form.tsx's field gaps and the `h-control-md` input height, `SkeletonCard`
- * wears card.tsx's outlined border and `p-4` sections, and `SkeletonTable`
- * restates the header band, row rule and cell padding from table.tsx. The
- * table's classes are restated rather than imported: table.tsx is a client
- * module, and a server module must not reach into one for its cva — the
- * coverage suite enforces exactly that. The costs of a restatement are pinned
- * by comments naming the source lines.
- *
- * Widths that "vary" (the last text line, table cells) are DETERMINISTIC — a
- * cycle over the column index, never `Math.random()` — because these render on
- * the server and hydration diffs are a worse defect than a repeating pattern.
+ * Composed placeholders — a text block, an avatar row, a card, a form, a table — so a
+ * `loading.tsx` reads as a preview of the page. No `"use client"`: the commonest render
+ * site is a server `loading.tsx`. NO STRINGS, deliberately: a skeleton is a PICTURE of
+ * pending content, so every preset is `aria-hidden` and the loading STATE is the
+ * consumer's to announce (`aria-busy`, or a `<Spinner label>`). Every dimension is
+ * copied from the component it stands in for so nothing jumps when the data lands;
+ * table classes are restated (table.tsx is a client module). Varying widths are
+ * DETERMINISTIC cycles, never `Math.random()`, because these render on the server.
  */
 
 export interface SkeletonTextProps
@@ -50,10 +21,7 @@ export interface SkeletonTextProps
   className?: string | undefined;
 }
 
-/**
- * A paragraph: `lines` full-width text lines, the last one cut short — a block
- * of identical bars reads as a table, not as prose.
- */
+/** A paragraph: `lines` text lines, the last one cut short so it reads as prose. */
 export function SkeletonText({ lines = 3, className, ...props }: SkeletonTextProps) {
   return (
     <div {...props} aria-hidden="true" className={cn("flex w-full flex-col gap-2", className)}>
@@ -89,11 +57,7 @@ export interface SkeletonAvatarProps
   className?: string | undefined;
 }
 
-/**
- * A round avatar, optionally with the short text lines that usually follow it.
- * The circle is centred on the text block for the two-line default — the same
- * optical rule the real feed row uses.
- */
+/** A round avatar, optionally with the short text lines that usually follow it. */
 export function SkeletonAvatar({ size, lines = 2, className, ...props }: SkeletonAvatarProps) {
   return (
     <div {...props} aria-hidden="true" className={cn("flex w-full items-center gap-3", className)}>
@@ -118,12 +82,7 @@ export interface SkeletonCardProps
   className?: string | undefined;
 }
 
-/**
- * A card: the outlined shell from card.tsx (`rounded-lg border bg-surface`,
- * `p-4` sections), holding an optional media rectangle, a heading line and a
- * short body. `aspect-video` on the media because a fixed height would jump
- * the moment the real image's ratio wins.
- */
+/** A card: card.tsx's outlined shell holding an optional `aspect-video` media rectangle, a heading line and a short body. */
 export function SkeletonCard({ hasMedia = true, lines = 2, className, ...props }: SkeletonCardProps) {
   return (
     <div
@@ -149,12 +108,7 @@ export interface SkeletonFormProps
   className?: string | undefined;
 }
 
-/**
- * A form: label-above-input pairs on form.tsx's own rhythm — `gap-1.5` inside
- * a field, `gap-4` between fields — with each input at `h-control-md`, the
- * height every real `md` control in this library shares. Label widths cycle
- * deterministically so the column does not read as one repeated stamp.
- */
+/** A form: label-above-input pairs on form.tsx's rhythm, each input at `h-control-md`. */
 export function SkeletonForm({ fields = 3, hasAction = true, className, ...props }: SkeletonFormProps) {
   const LABEL_WIDTHS = ["w-24", "w-16", "w-20"] as const;
   return (
@@ -180,15 +134,9 @@ export interface SkeletonTableProps
 }
 
 /**
- * A data table: table.tsx's look, restated. The header band is
- * `h-control-md px-3` on `bg-surface-sunken` with a `border-be` rule (its cva
- * around table.tsx:119–127); body cells are `px-3 py-2` and each row rules its
- * block-start edge (around table.tsx:131–141) — here the row keeps `border-be`
- * with `last:border-be-0`, which is what those collapsed borders resolve to
- * visually. Column tracks are equal `1fr`s from an inline style, because a
- * class cannot take a runtime count; the tracks repeat per row, so header and
- * body stay aligned. Cell widths cycle on (row+column) so the grid shimmers
- * like data rather than like wallpaper.
+ * A data table: table.tsx's look, restated (header band `h-control-md px-3` on
+ * `bg-surface-sunken`, cells `px-3 py-2`, `border-be` rows). Column tracks come from an
+ * inline style because a class cannot take a runtime count.
  */
 export function SkeletonTable({ rows = 4, columns = 4, className, ...props }: SkeletonTableProps) {
   const CELL_WIDTHS = ["w-2/3", "w-1/2", "w-3/4", "w-1/3"] as const;

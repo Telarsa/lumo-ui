@@ -3,8 +3,7 @@
 import * as React from "react";
 
 /**
- * Copy this hook into an application when one delayed value is all it needs.
- * It is intentionally a docs recipe, not another Lumo runtime abstraction.
+ * Copy this hook into an application when one delayed value is all it needs — a docs recipe, not a Lumo runtime abstraction.
  */
 export function useDebouncedValue<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = React.useState(value);
@@ -16,8 +15,7 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
 }
 
 /**
- * Subscribe to a media query without a hydration guess. The server value is a
- * required product decision: pass the layout represented by the served HTML.
+ * Subscribe to a media query without a hydration guess: pass the layout the served HTML represents as `serverMatches`.
  */
 export function useMediaQuery(query: string, serverMatches: boolean): boolean {
   const subscribe = React.useCallback((notify: () => void) => {

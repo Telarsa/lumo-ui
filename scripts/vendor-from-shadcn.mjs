@@ -1,57 +1,22 @@
 #!/usr/bin/env node
 /**
- * Vendors a component from shadcn's registry instead of hand-writing it.
+ * Vendors a component from shadcn's registry instead of hand-writing it:
  *
  *   node scripts/vendor-from-shadcn.mjs chart slider pagination
  *
- * The rule this exists to enforce: **never hand-type a component upstream
- * already has.** shadcn publishes an `aria-vega` style — React Aria underneath,
- * the same base Lumo rents — so most of what remains on the roadmap already
- * exists, tested, in a shape this library can adopt with edits rather than
- * author from zero.
- *
- * What it does NOT do is drop the file in and call it done. Vendored code lands
- * as a **raw emit in its own commit**, unmodified, and Lumo's changes go in a
- * second commit on top. That separation is the entire point:
- *
- *   - `git log -p <file>` shows exactly what is ours versus theirs
- *   - a later `shadcn add <name> --diff` can still show what upstream changed
- *   - a reviewer can see the Persian/RTL edits without reading 300 lines of
- *     unfamiliar upstream code
- *
- * Squash the two and every future upgrade becomes a manual merge.
- *
- * ── WHAT ALWAYS NEEDS EDITING AFTER A VENDOR ────────────────────────────────
- *
- * Upstream is English-first and direction-agnostic. Every vendored file needs a
- * pass for:
- *
- *  1. **Physical utilities.** `ml-`, `pr-`, `text-left`, `rounded-tl-`,
- *     `space-x-`. Lint will catch these, but fix them rather than suppressing.
- *     `shadcn migrate rtl` handles most automatically — run it.
- *  2. **English defaults.** Any `label = "Close"` or hardcoded `aria-label`
- *     becomes a REQUIRED prop. This is rule 3 and the coverage gate enforces it.
- *  3. **Raw numbers in JSX.** `LumoNode` makes `{count}` a compile error;
- *     upstream has no such rule. Route them through `formatNumber`.
- *  4. **`cn` import path.** Upstream imports from `@/lib/utils`; Lumo's lives in
- *     `@lumo-ui/core`.
- *  5. **`cva` in a client module.** If a server-rendered block might call the
- *     variants, they move to `<name>.variants.ts` — see button.variants.ts.
+ * Never hand-type a component upstream already has. The raw emit lands
+ * UNMODIFIED in its own commit and Lumo's edits go in a second, so `git log -p`
+ * shows ours versus theirs and a later `--diff` still works. Every vendored
+ * file then needs the Lumo pass: logical utilities (`shadcn migrate rtl`),
+ * English defaults → required props, raw numbers → `formatNumber`, `cn` from
+ * `@lumo-ui/core`, and `cva` moved to `<name>.variants.ts` where a server
+ * block calls it.
  */
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
-/*
- * `base-vega` — Base UI underneath, the engine Lumo migrated to (10 Aug 2026,
- * experiments/COMPARISON.md). Was `aria-vega` while Lumo rented React Aria.
- *
- * Measured the day of the switch: 48 of Lumo's 77 components have a base-vega
- * counterpart (experiments/measurements/base-vega-inventory.json). That is the
- * cheapest path through the migration by a wide margin — vendor the emit, then
- * apply the Lumo pass. Hand-writing a component that upstream already ships is
- * the thing this script exists to stop.
- */
+// `base-vega` — Base UI underneath, the engine Lumo migrated to; was `aria-vega`.
 const STYLE = process.env.LUMO_STYLE ?? "base-vega";
 const ROOT = new URL("..", import.meta.url).pathname;
 const OUT = join(ROOT, "packages/ui/src");
@@ -70,8 +35,7 @@ for (const name of names) {
   const res = await fetch(url);
 
   if (!res.ok) {
-    // A 404 usually means the component exists only under a Radix or Base UI
-    // style. Say which, rather than leaving the reader to guess.
+    // A 404 usually means the component exists only under another style. Say which.
     const alt = await fetch(`https://ui.shadcn.com/r/styles/aria-vega/${name}.json`);
     console.error(
       `  ${name}: not in ${STYLE} (${res.status})` +

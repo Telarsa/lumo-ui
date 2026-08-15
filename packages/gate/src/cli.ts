@@ -17,21 +17,9 @@ if (!root) {
   process.exit(2);
 }
 
-/*
- * The digit floors — rule 3's missing half, found by a review two days in.
- *
- * `persianDigitFloor` had a factory, a poison fixture, a passing self-test, a
- * README paragraph and a docs page — and was never in the RULES array this CLI
- * runs. Every one of those artifacts described a rule that graded nothing:
- * the anti-vacuity rule was itself vacuous, which is the failure mode this
- * repo's own docs call "worse than no rule, because it is trusted".
- *
- * Floors are per-path and belong to the SITE (the consumer knows which of its
- * routes exist to show numbers), so they arrive as a JSON file argument rather
- * than living here. No file → the floor rule simply is not constructed, and
- * that absence is now visible in this file instead of implied by an array
- * nobody re-read.
- */
+// The digit floors are per-path and belong to the SITE, so they arrive as a
+// JSON file argument. No file → the floor rule is not constructed, visibly here
+// (it once had a factory, fixture and docs and was never in RULES at all).
 const floorsPath = process.argv[3];
 
 /** Keys beginning with "//" are comments, not floors — JSON has no other way. */
@@ -70,9 +58,7 @@ async function htmlFiles(dir: string): Promise<string[]> {
 
 const files = await htmlFiles(root);
 
-// An empty run reporting success is the vacuous pass this whole project exists
-// to prevent — a gate that grades nothing and prints "clean" is worse than no
-// gate, because it is trusted. Refuse loudly instead.
+// A gate that grades nothing and prints "clean" is worse than no gate. Refuse loudly.
 if (files.length === 0) {
   console.error(`  lumo-gate found no .html under ${root}.`);
   console.error("  Refusing to report success on nothing.");
@@ -89,13 +75,11 @@ for (const file of files) {
   const html = await readFile(file, "utf8");
   pages.push({ path: rel, html });
   violations.push(...gradeHtml(rel, html, rules));
-  // Same read, second question: how much of it did the rules actually look at.
-  // See `addCoverage` — this prints, it never fails.
+  // Coverage prints, it never fails.
   coverage = addCoverage(coverage, rel, html);
 }
 
-// A floor keyed to a path that no longer exists is a rule that silently
-// stopped grading — the same hole as an unwired rule, one rename later.
+// A floor keyed to a path that no longer exists is a rule that silently stopped grading.
 if (floorsPath) {
   for (const declared of Object.keys(floorLedger)) {
     if (!graded.has(declared)) {

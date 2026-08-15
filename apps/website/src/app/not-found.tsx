@@ -1,16 +1,10 @@
 import { LumoHtml } from "@lumo-ui/core";
 
 /**
- * The root 404.
- *
- * It is served for any path that matched no route, so it cannot know the
- * visitor's locale. Next's default would be an English document; Persian is the
- * primary audience, so this is authored in Persian with an English line beneath
- * rather than left to a fallback.
- *
- * It writes its own `<html>` via LumoHtml because it sits ABOVE the `[lang]`
- * layout and would otherwise inherit no direction at all — which is precisely
- * the `<html lang="en">` defect, arriving through the one route nobody tests.
+ * The root 404. It matches no route, so it cannot know the locale: authored in
+ * Persian (the primary audience) with an English line beneath. It writes its own
+ * `<html>` via LumoHtml because it sits ABOVE the `[lang]` layout and would
+ * otherwise inherit no direction at all.
  */
 export default function NotFound() {
   return (
@@ -20,16 +14,9 @@ export default function NotFound() {
           <h1 className="text-2xl font-semibold text-fg">صفحه پیدا نشد</h1>
           <p className="mt-2 text-fg-muted">نشانی‌ای که دنبال آن بودید وجود ندارد.</p>
           {/*
-           * The deliberate second-language line: a 404 is the one route nobody
-           * arrives at on purpose, so it says the same thing twice.
-           *
-           * `data-lumo-latn` as well as `lang`/`dir`. The two are not
-           * interchangeable and the gate refuses to treat them as such: `lang`
-           * is the correct accessibility annotation and it is also the first
-           * thing anyone would add to silence a complaint about English in a
-           * Persian page — including the `thr` defect this rule was written
-           * for. So the house attribute is the only hatch, and `lang` stays
-           * what it should be: a statement about pronunciation, not a waiver.
+           * The deliberate second-language line. `data-lumo-latn` as well as `lang`/`dir`:
+           * the gate only accepts the house attribute as the hatch for Latin text, so `lang`
+           * stays an accessibility statement about pronunciation, not a waiver.
            */}
           <p
             className="mt-6 text-sm text-fg-subtle"

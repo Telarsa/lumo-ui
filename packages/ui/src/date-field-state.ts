@@ -1,59 +1,18 @@
 /**
- * EXPERIMENT ONLY (branch `experiment/base-ui`). Segmented date entry, written
- * from scratch against `@internationalized/date`.
+ * Segmented date entry, written from scratch against `@internationalized/date`
+ * (Base UI ships no calendar, date field or time field). Hooks and pure
+ * functions, no JSX and no directive; pulled into the client graph by
+ * `date-field.tsx`.
  *
- * ═══ WHY THIS FILE EXISTS ═══════════════════════════════════════════════════
+ * THE ONE RULE THAT IS NOT OBVIOUS: a segment's DISPLAY and the field's VALUE
+ * may disagree. Typing `31` into a 30-day month must be possible (the day is
+ * bounded by the longest month in the CALENDAR), and `toValue` refuses to make
+ * it a date until it is real — Esfand 30 exists in 1403 and not in 1404.
  *
- * `@base-ui/react@1.7.0` publishes 40 subpaths and none of them is a calendar,
- * a date field or a time field. The arithmetic is not the problem —
- * `@internationalized/date` is a standalone package with no React dependency,
- * and `PersianCalendar` answers `getDaysInMonth` and `getMaximumDaysInMonth`
- * whoever is asking. What React Aria uniquely supplied is the INTERACTION
- * layer, and this module is an honest attempt to price it: the per-segment
- * state, the keyboard grammar, and the rule that decides when three independent
- * numbers become a date.
- *
- * No JSX and no directive: this is hooks and pure functions, pulled into the
- * client graph by `date-field.tsx`, which does carry `"use client"`.
- *
- * ── THE ONE RULE THAT IS NOT OBVIOUS ────────────────────────────────────────
- *
- * A segment's DISPLAY and the field's VALUE are separate things, and they must
- * be allowed to disagree. Typing `31` into a 30-day month has to be possible or
- * a user can never type `31/x` in an order that puts the day first; the date
- * simply does not become a value until it is real. React Aria encodes this in
- * `IncompleteDate.cycle`, bounding the day by the longest month in the CALENDAR
- * rather than the longest month in the current one ("Allow incrementing up to
- * the maximum number of days in any month"). `toValue` below is the other half
- * of that bargain and is where the Jalali leap rule actually bites: Esfand 30
- * exists in 1403 and does not exist in 1404, so the same keystroke on the same
- * segment commits a date in one year and commits nothing in the next.
- *
- * ── WHAT IS NOT HERE, AND SHOULD BE COUNTED AS MISSING ──────────────────────
- *
- * Listed rather than discovered later. Every one of these is a React Aria
- * behaviour this module does not reproduce:
- *
- *   granularity        Only `year`/`month`/`day`. Hour, minute, second and
- *                      dayPeriod segments are not built, so `TimeField`,
- *                      `CalendarDateTime` and `ZonedDateTime` are out of scope.
- *   era                `getEras()` returns one era for the Persian calendar, so
- *                      no era segment is emitted. A Japanese or ROC calendar
- *                      needs one and would get a wrong field here.
- *   shouldForceLeadingZeros
- *                      Not implemented; segments render their natural width.
- *   built-in validation messages
- *                      Bounds and unavailable dates are enforced before commit,
- *                      but the engine does not invent a locale-specific error.
- *   text selection, drag, paste, IME
- *                      React Aria handles a paste into a segment and an IME
- *                      composition. This handles keydown and beforeinput-free
- *                      typing only.
- *   android/voiceover spinbutton quirks
- *                      React Aria carries a documented pile of workarounds for
- *                      how TalkBack and VoiceOver read a spinbutton whose value
- *                      changes under them. None of it is reproduced, and none
- *                      of it can be tested in jsdom.
+ * Not reproduced from React Aria: hour/minute/second granularity on the DATE
+ * engine (see the TIME engine below), era segments, `shouldForceLeadingZeros`,
+ * built-in validation messages, paste/IME/text selection, and the TalkBack /
+ * VoiceOver spinbutton workarounds. Long form: `docs/decisions/log.md`.
  */
 
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -103,13 +62,9 @@ export interface LumoDateSegment {
 type Fields = Partial<Record<EditableSegmentType, number>>;
 
 /**
- * The widest year this field will cycle to.
- *
- * React Aria derives its year bound from the calendar's era length via
- * `getYearsInEra`. That is the right answer and it is not the one used here:
- * for a single-era calendar `getYearsInEra` returns 9999 anyway, and reproducing
- * the multi-era path correctly needs era segments, which this engine does not
- * emit. Stated as a constant so the shortcut is visible instead of buried.
+ * The widest year this field will cycle to. React Aria derives it from
+ * `getYearsInEra`; a single-era calendar answers 9999 anyway, and multi-era
+ * needs era segments this engine does not emit.
  */
 const MAX_YEAR = 9999;
 
@@ -119,22 +74,14 @@ function fieldsOf(value: DateValue | null | undefined, calendar: Calendar): Fiel
   return { year: d.year, month: d.month, day: d.day };
 }
 
-/**
- * Reduce any `DateValue` to a `CalendarDate`.
- *
- * `CalendarDateTime` and `ZonedDateTime` both structurally satisfy the fields a
- * `CalendarDate` needs, and this engine only ever edits the date half.
- */
+/** Reduce any `DateValue` to a `CalendarDate`; this engine only edits the date half. */
 function toPlainDate(value: DateValue): CalendarDate {
   return new CalendarDate(value.calendar, value.era, value.year, value.month, value.day);
 }
 
 /**
- * Three numbers → a date, or nothing.
- *
- * THE JALALI LEAP RULE LIVES HERE, and it is asked rather than known: the
- * calendar object carried by the date answers `getDaysInMonth`, so Esfand is 30
- * days in 1403 and 29 in 1404 without this file containing either number.
+ * Three numbers → a date, or nothing. THE JALALI LEAP RULE LIVES HERE, asked of
+ * the calendar (`getDaysInMonth`) rather than known.
  */
 export function toValue(fields: Fields, calendar: Calendar): CalendarDate | null {
   const { year, month, day } = fields;
@@ -177,15 +124,9 @@ export interface DateFieldState {
   /** Bounds for one segment, used for `aria-valuemin`/`aria-valuemax` and typing. */
   boundsOf: (type: EditableSegmentType) => { min: number; max: number };
   /**
-   * The texts a NON-NUMERIC segment can hold, indexed by its value.
-   *
-   * Only `dayPeriod` has any: «قبل‌ازظهر» / «بعدازظهر», read out of `Intl` by
-   * the time engine. It exists so `date-input.tsx` can match a typed LETTER
-   * against them without knowing an alphabet — the alternative is a table of
-   * "a"/"p" in a file whose whole point is that it hard-codes no script.
-   *
-   * Returns `undefined` for every numeric segment, which is every segment the
-   * date engine emits.
+   * The texts a NON-NUMERIC segment can hold, indexed by its value. Only
+   * `dayPeriod` has any (read out of `Intl` by the time engine), so
+   * `date-input.tsx` can match a typed LETTER without knowing an alphabet.
    */
   optionTexts?: ((type: EditableSegmentType) => readonly string[] | undefined) | undefined;
 }
@@ -197,44 +138,24 @@ export function useDateFieldState<T extends DateValue = DateValue>(
   const formatLocale = FORMAT_LOCALE[locale];
   const strings = stringsFor(locale);
 
-  /**
-   * The calendar SYSTEM comes from the locale, not from a constant.
-   *
-   * `fa-IR-u-ca-persian-nu-arabext` resolves to `persian`, so an empty field is
-   * already Jalali before any value exists — which is the case a Gregorian
-   * default gets wrong invisibly, by 621 years.
-   */
+  // The calendar SYSTEM comes from the locale, not a constant: an empty field is
+  // already Jalali before any value exists.
   const localeCalendar = useMemo(
     () =>
       createCalendar(
-        /*
-         * `resolvedOptions().calendar` is typed `string` by TypeScript's own lib
-         * and `createCalendar` wants its narrower `CalendarIdentifier` union. The
-         * cast is the seam between two declarations of the same fact, not a
-         * claim about the value: an identifier the union does not know makes
-         * `createCalendar` throw, loudly, which is the correct outcome.
-         */
+        // `resolvedOptions().calendar` is typed `string`; an identifier the union
+        // does not know makes `createCalendar` throw, which is the correct outcome.
         new Intl.DateTimeFormat(formatLocale).resolvedOptions().calendar as CalendarIdentifier,
       ),
     [formatLocale],
   );
 
-  /**
-   * A value carries its own calendar and it WINS. `dates.test.tsx` hands this
-   * component a `CalendarDate` already in `PersianCalendar`; converting it to
-   * the locale's calendar would be a no-op there and a data loss elsewhere.
-   */
+  // A value carries its own calendar and it WINS; converting would lose data.
   const initial = value !== undefined ? value : defaultValue;
   const calendar = initial != null ? initial.calendar : localeCalendar;
 
-  /**
-   * Segment ORDER is the locale's business.
-   *
-   * Under `fa-IR` this is year / month / day, the reverse of the American
-   * order, and under `en-US` it is month / day / year. Asking `formatToParts`
-   * is the only way to be right in both without a table. The date fed in is
-   * irrelevant — only `type` is read.
-   */
+  // Segment ORDER is the locale's business (`fa-IR`: year/month/day; `en-US`:
+  // month/day/year) — `formatToParts` is asked; only `type` is read.
   const order = useMemo(
     () =>
       new Intl.DateTimeFormat(formatLocale, {
@@ -257,14 +178,8 @@ export function useDateFieldState<T extends DateValue = DateValue>(
 
   const [fields, setFields] = useState<Fields>(() => fieldsOf(initial, calendar));
 
-  /**
-   * Controlled resynchronisation, done in render rather than in an effect.
-   *
-   * An effect would emit one frame of stale segments, and on the server it
-   * would never run at all — the same class of defect as Base UI's own
-   * `aria-describedby`, which is applied in a layout effect and is therefore
-   * absent from the first byte (measured; see `date-field.tsx`).
-   */
+  // Controlled resynchronisation, done in render rather than in an effect: an
+  // effect would emit a frame of stale segments and never run on the server.
   const lastExternal = useRef<DateValue | null | undefined>(value);
   if (value !== undefined && value !== lastExternal.current) {
     lastExternal.current = value;
@@ -300,10 +215,8 @@ export function useDateFieldState<T extends DateValue = DateValue>(
     [calendar, isAllowed, onChange],
   );
 
-  /**
-   * A reference date for asking the calendar questions about the CURRENT month,
-   * with the placeholder filling anything the user has not typed yet.
-   */
+  // A reference date for asking the calendar about the CURRENT month, with the
+  // placeholder filling anything not yet typed.
   const reference = useMemo(
     () =>
       new CalendarDate(
@@ -323,22 +236,12 @@ export function useDateFieldState<T extends DateValue = DateValue>(
         case "month":
           return { min: 1, max: calendar.getMonthsInYear(reference) };
         case "day":
-          /*
-           * THE LONGEST MONTH IN THE CALENDAR, not in this one. See the header:
-           * the segment is allowed to show a day the current month does not
-           * have, and `toValue` refuses to turn it into a date. 31 for Jalali.
-           */
+          // THE LONGEST MONTH IN THE CALENDAR, not in this one — `toValue` refuses
+          // to turn an impossible day into a date. 31 for Jalali.
           return { min: 1, max: calendar.getMaximumDaysInMonth() };
         default:
-          /*
-           * `EditableSegmentType` widened to include the TIME segments when
-           * `useTimeFieldState` was added, so this switch is no longer
-           * exhaustive over the union — but it IS exhaustive over what this
-           * engine emits. A time segment arriving here is a programming error
-           * (the wrong engine behind a `<DateInput>`), and bounds that admit
-           * nothing surface it on the first arrow key instead of silently
-           * cycling a field that has no hour.
-           */
+          // Not exhaustive over the widened union, but exhaustive over what THIS
+          // engine emits; a time segment here is the wrong engine behind a `<DateInput>`.
           return { min: 0, max: 0 };
       }
     },
@@ -350,13 +253,9 @@ export function useDateFieldState<T extends DateValue = DateValue>(
       if (options.isDisabled === true || options.isReadOnly === true) return;
       const { min, max } = boundsOf(type);
       const current = fields[type];
-      // An untouched segment starts at the placeholder rather than at the
-      // bound, so the first ArrowUp on an empty field lands on a plausible date
-      // instead of on year 1.
+      // An untouched segment starts at the placeholder, not the bound (else year 1).
       if (current == null) {
-        // Only the three date segments have a placeholder to reach for; the
-        // narrowing is what keeps `placeholder` a `CalendarDate` rather than
-        // something indexed by the widened union.
+        // Only the three date segments have a placeholder to reach for.
         const seed =
           type === "year" || type === "month" || type === "day" ? placeholder[type] : min;
         commit({ ...fields, [type]: seed });
@@ -394,9 +293,7 @@ export function useDateFieldState<T extends DateValue = DateValue>(
     () =>
       order.map((part) => {
         if (part.type === "literal") {
-          // Which character separates the parts is the locale's business:
-          // fa-IR uses `/` and a locale that used something else arrives here
-          // already correct.
+          // Which character separates the parts is the locale's business.
           return { type: "literal", text: part.literal, isEditable: false, isPlaceholder: true };
         }
         const type = part.type as EditableSegmentType;
@@ -404,9 +301,7 @@ export function useDateFieldState<T extends DateValue = DateValue>(
         const { min, max } = boundsOf(type);
         return {
           type,
-          // `formatNumber` and never `String(n)`: the segment text is the one
-          // place a Latin digit would look entirely plausible on a Persian page.
-          // `useGrouping: false` because ۱۴۰۵ is a year, not a quantity.
+          // `formatNumber`, never `String(n)`; `useGrouping: false` because ۱۴۰۵ is a year.
           text:
             current == null
               ? strings.dateField[type]
@@ -430,12 +325,8 @@ export function useDateFieldState<T extends DateValue = DateValue>(
 }
 
 /**
- * Read one keystroke as a digit, in ANY numbering system the locale uses.
- *
- * A Persian keyboard produces `۵`, not `5`, and `Number("۵")` is 5 in V8 but
- * relying on that is relying on an engine detail. The digit table is built by
- * asking the formatter what it produces, the same technique `parseNumber` uses
- * in `@lumo-ui/core`, so it stays correct if the numbering system changes.
+ * Read one keystroke as a digit, in ANY numbering system the locale uses. The
+ * digit table is built by asking the formatter what it produces.
  */
 const digitTables = new Map<Locale, Map<string, number>>();
 export function digitFromKey(key: string, locale: Locale): number | null {
@@ -451,36 +342,14 @@ export function digitFromKey(key: string, locale: Locale): number | null {
   return table.get(key) ?? null;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * TIME
- *
- * A second engine rather than a `granularity` prop on the first, and the
- * reason is that they share almost nothing but their SHAPE. A time has no
- * calendar: there is no Esfand to be 29 or 30 days long, no leap rule, no
- * `toValue` that can refuse, and 24 hours is 24 hours in every calendar system
- * ever built. Threading `granularity` through `useDateFieldState` would put
- * `calendar.getDaysInMonth` and `hourCycle` in one function where every branch
- * is dead for one of the two callers.
- *
- * What they DO share is `DateFieldState`, so one `<DateInput>` renders either.
- * That is the interface worth sharing; the arithmetic is not.
- *
- * ── THE HOUR CYCLE IS THE LOCALE'S DECISION, AND IT IS ASKED ────────────────
- *
- * Whether the field reads ۲۳:۴۵ or ۱۱:۴۵ بعدازظهر is a user-visible convention,
- * and hard-coding either is the same class of mistake as writing `dir` by hand.
- * `Intl.DateTimeFormat(...).resolvedOptions().hourCycle` is asked, and fa-IR
- * answers `h23` on its own. `hourCycle` is accepted as an override for the
- * product that genuinely needs one clock everywhere, and overriding it is
- * overriding a convention — which is stated on the prop.
- *
- * ── THE `dayPeriod` VALUES COME FROM `Intl`, NOT FROM `strings.ts` ──────────
- *
- * «قبل‌ازظهر» / «بعدازظهر» are read out of `formatToParts` for two times of day.
- * Authoring them in `strings.ts` would be a second source of truth for a string
- * the platform gives correctly, and `strings.ts` says so on the `dayPeriod`
- * key: what IS authored there is the segment's NAME, which no API produces.
- * ═══════════════════════════════════════════════════════════════════════════ */
+/*
+ * TIME. A second engine rather than a `granularity` prop on the first: a time
+ * has no calendar, no leap rule and no `toValue` that can refuse; what they share
+ * is `DateFieldState`, so one `<DateInput>` renders either. The hour cycle is
+ * the LOCALE's decision, asked via `resolvedOptions().hourCycle` (fa-IR: `h23`);
+ * `hourCycle` overrides a convention. `dayPeriod` values come from `Intl`, not
+ * `strings.ts`, which authors only the segment's NAME.
+ */
 
 /** What a time engine can produce. Structural, so `Time` satisfies it. */
 export interface TimeFields {
@@ -500,10 +369,7 @@ export interface TimeFieldStateOptions {
   maxValue?: TimeFields | undefined;
   isDisabled?: boolean | undefined;
   isReadOnly?: boolean | undefined;
-  /**
-   * How much of the time is editable. `minute` is the default because a
-   * seconds segment nobody asked for is a fourth tab stop on every time field.
-   */
+  /** How much of the time is editable. `minute` by default: an unasked seconds segment is a fourth tab stop. */
   granularity?: "hour" | "minute" | "second" | undefined;
   /** Overrides the locale's own clock. See the block header before using it. */
   hourCycle?: 12 | 24 | undefined;
@@ -534,9 +400,7 @@ function dayPeriodsOf(formatLocale: string): [string, string] {
     fmt
       .formatToParts(new Date(Date.UTC(2020, 0, 1, hour)))
       .find((p) => p.type === "dayPeriod")?.value ?? "";
-  // 09:00 and 21:00 UTC — but the formatter has no time zone set, so these are
-  // read in the RUNTIME's zone. Both are far enough from a boundary that no
-  // real offset moves them across noon.
+  // 09:00 and 21:00 UTC, read in the RUNTIME's zone; no real offset crosses noon.
   return [read(9), read(21)];
 }
 
@@ -620,9 +484,7 @@ export function useTimeFieldState(options: TimeFieldStateOptions): DateFieldStat
     (type: EditableSegmentType) => {
       switch (type) {
         case "hour":
-          // 1–12 on a twelve-hour clock, 0–23 on a twenty-four-hour one. The
-          // asymmetry is real: there is no hour 0 on a twelve-hour clock and
-          // no hour 24 on either.
+          // 1–12 on a twelve-hour clock, 0–23 on a twenty-four-hour one.
           return resolved.is12 ? { min: 1, max: 12 } : { min: 0, max: 23 };
         case "minute":
         case "second":
@@ -697,9 +559,7 @@ export function useTimeFieldState(options: TimeFieldStateOptions): DateFieldStat
       if (guard) return;
       const { min, max } = boundsOf(type);
       const current = fields[type];
-      // An untouched segment starts at its minimum rather than wrapping from
-      // nothing — there is no "today" for a time, so there is no placeholder
-      // value to reach for the way the date engine reaches for one.
+      // An untouched segment starts at its minimum: there is no "today" for a time.
       if (current == null) {
         commit({ ...fields, [type]: delta > 0 ? min : max });
         return;

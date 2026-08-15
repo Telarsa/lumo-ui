@@ -1,14 +1,9 @@
 #!/usr/bin/env node
 /**
- * `lumo-inert-props <dir> [dir…]` — the source half of the gate.
- *
- * Separate binary from `cli.ts` because it grades a different medium: `cli.ts`
- * reads a build output directory of HTML, this reads component sources, and
- * running them from one entry point would mean one of the two arguments is
- * always ignored. It runs in `verify` between `gate:types` and `gate:test`,
- * where the audit put it — before the tests, because an inert prop makes tests
- * pass rather than fail, and after types, because a file that does not compile
- * has a better error waiting for it.
+ * `lumo-inert-props <dir> [dir…]` — the source half of the gate. A separate
+ * binary from `cli.ts` because it grades sources, not built HTML. Runs in
+ * `verify` after `gate:types` and before `gate:test` (an inert prop makes tests
+ * pass, not fail).
  */
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative, resolve } from "node:path";
@@ -28,9 +23,7 @@ if (roots.length === 0) {
   process.exit(2);
 }
 
-/** Component files only. `.ts` modules are excluded deliberately: a file with no
- *  JSX declares no components, so every prop in it is unreferenced by
- *  construction — see the header of `inert-props.ts`. */
+/** Component files only: a `.ts` module declares no components, so every prop in it is unreferenced by construction. */
 async function sources(dir: string): Promise<string[]> {
   const out: string[] = [];
   for (const entry of await readdir(dir, { withFileTypes: true })) {
@@ -44,26 +37,15 @@ async function sources(dir: string): Promise<string[]> {
 const files: string[] = [];
 for (const root of roots) files.push(...(await sources(root)));
 
-/*
- * The same refusal `cli.ts` makes, for the same reason: a gate that grades
- * nothing and prints "clean" is worse than no gate, because it is trusted. This
- * one has a specific way of going vacuous — a directory rename, or the `.tsx`
- * filter meeting a codebase that moved to `.ts` — and both look exactly like
- * success from the outside.
- */
+// The same refusal `cli.ts` makes: a gate that grades nothing must not print "clean".
 if (files.length === 0) {
   console.error(`  lumo-inert-props found no component sources under ${roots.join(", ")}.`);
   console.error("  Refusing to report success on nothing.");
   process.exit(2);
 }
 
-/*
- * TWO RULES, ONE PASS. `gradeSource` grades the props a file DECLARES;
- * `gradeRootContract` grades the DOM surface it INHERITS — the `ref`/`id`
- * contract decided in `@lumo-ui/core`'s props.ts. They are reported separately
- * because they fail for different reasons and are fixed by different edits, and
- * they exit together because a build is one answer.
- */
+// TWO RULES, ONE PASS: `gradeSource` grades the props a file DECLARES,
+// `gradeRootContract` the DOM surface it INHERITS. Reported separately, exit together.
 const violations: PropViolation[] = [];
 const roots_: RootViolation[] = [];
 
@@ -104,9 +86,7 @@ const GRADED_CORE_OWNERS = new Set([
   "Expandable",
   "ButtonAriaProps",
   "ButtonPropsBase",
-  // Added after the reevaluation PROVED `<Tab hrefLang="fa">` serving
-  // `<button hrefLang="fa">`: link attributes inherited by non-anchor
-  // components were never in the graded set, so no rule could see them.
+  // Link attributes inherited by non-anchor components (`<Tab hrefLang>` on a `<button>`).
   "LinkDOMProps",
 ]);
 

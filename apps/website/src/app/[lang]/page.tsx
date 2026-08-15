@@ -126,21 +126,11 @@ const home = {
 } as const;
 
 /**
- * The live showcase: one composed hero exhibit instead of an inventory grid.
- *
- * Nine equal cards proved the library has many components and showed none of
- * them at WORK — an inventory, not an interface, and the ragged grid it made
- * was the visual equivalent of a parts drawer. So: composition over inventory.
- * The hero is a settings panel assembled the way a real product assembles one
- * — Tabs, Switch rows and a Slider living together inside one Card, footer
- * actions included — composed inline from `@lumo-ui/ui` with complete copy in
- * both locales, fully interactive, standing on the dotted stage docs sites
- * use for exactly this job. Three small exhibits flank it, rendered by the
- * same `render(lang)` functions the component pages use.
- *
- * Everything is still real: if the panel breaks, the landing page breaks,
- * which is the correct incentive. The strip under the stage names every
- * component in the composition and links each name into its docs.
+ * The live showcase: one composed hero exhibit instead of an inventory grid. The hero is a
+ * settings panel — Tabs, Switch rows and a Slider inside one Card — composed inline from
+ * `@lumo-ui/ui` with complete copy in both locales, fully interactive; three small exhibits
+ * flank it via the same `render(lang)` functions the component pages use. If the panel
+ * breaks, the landing page breaks, which is the correct incentive.
  */
 const HERO_PARTS = ["card", "tabs", "switch", "slider", "button"] as const;
 const MINOR_EXHIBITS = ["number-field", "rating", "badge"] as const;
@@ -159,20 +149,16 @@ function Showcase({ lang }: { lang: Locale }) {
         <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface">
           <div className="relative flex flex-1 items-center justify-center p-6 sm:p-10">
             {/*
-             * The dotted backdrop, from tokens: `--lumo-sys-border` is the
-             * dot, so the pattern tracks both themes with no dark-mode
-             * override. Decorative, and behind the panel.
+             * The dotted backdrop, from tokens: `--lumo-sys-border` is the dot, so it tracks both
+             * themes with no dark-mode override. Decorative, and behind the panel.
              */}
             <div
               aria-hidden="true"
               className="absolute inset-0 bg-[radial-gradient(var(--lumo-sys-border)_1px,transparent_1px)] bg-size-[1rem_1rem]"
             />
             {/*
-             * The composed panel. INTERACTIVE on purpose — unlike the flank
-             * exhibits there is no stretched link over it, so the switches
-             * flip, the tabs switch and the slider slides. The Slider is the
-             * page's live proof again: its output renders «۶۰» through the
-             * same formatter the gate grades.
+             * The composed panel. INTERACTIVE on purpose — no stretched link over it, unlike the
+             * flank exhibits. The Slider's output renders «۶۰» through the formatter the gate grades.
              */}
             <Card variant="elevated" className="relative w-full max-w-xl">
               <CardHeader>
@@ -248,12 +234,8 @@ function Showcase({ lang }: { lang: Locale }) {
                   </Link>
                 </div>
                 {/*
-                 * `pointer-events-none`: each flank card is ONE link (the
-                 * stretched ::after above), so its demo is an exhibit — the
-                 * hero panel is where the landing page is interactive. The
-                 * two-layer centring survives from the old grid: the outer
-                 * flex centres vertically, the inner centres non-uniform
-                 * demos horizontally.
+                 * `pointer-events-none`: each flank card is ONE link (the stretched ::after above), so
+                 * its demo is an exhibit. Outer flex centres vertically, inner centres non-uniform demos.
                  */}
                 <div className="pointer-events-none flex min-h-24 flex-1 items-center justify-center overflow-hidden p-4">
                   <div className="flex w-full max-w-56 items-center justify-center">
@@ -270,21 +252,11 @@ function Showcase({ lang }: { lang: Locale }) {
 }
 
 /**
- * The home page proves the pitch instead of stating it.
- *
- * Shaped after `ui.shadcn.com` — eyebrow, headline, sub-headline, a primary and
- * a secondary call to action — with one deliberate difference. shadcn's hero is
- * followed by a showcase of what the components look like. Lumo's is followed by
- * evidence of what they *are*, because "looks right" is precisely the property
- * the 52-component prototype had while shipping `<html lang="en">` on all 55
- * Persian pages.
- *
- * The numbers and the date render through `@lumo-ui/core`'s formatters, so on
- * `/fa/` they arrive as Persian digits and a Jalali date in the served HTML,
- * before any JavaScript runs. That is not decoration either: `no-latin-digits`
- * fails this page if any of them regress, and `persian-digit-floor` fails it if
- * the page stops rendering them at all. The claim and its test are the same
- * bytes.
+ * The home page proves the pitch instead of stating it. Shaped after `ui.shadcn.com`
+ * (eyebrow, headline, two calls to action), but followed by evidence of what the components
+ * ARE rather than how they look. The numbers and the date render through `@lumo-ui/core`'s
+ * formatters, so on `/fa/` they are Persian digits and a Jalali date in the served HTML;
+ * `no-latin-digits` and `persian-digit-floor` fail this page if that regresses.
  */
 export default async function Home({ params }: { params: Promise<{ lang: string }> }) {
   const lang = assertLocale((await params).lang);
@@ -293,17 +265,8 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   const demos = await allCatalog();
   const behaviour = demos.filter((d) => d.behaviour).length;
   /*
-   * ── THE ONE FIGURE THAT WAS A LITERAL, AND WAS WRONG ──────────────────────
-   *
-   * This read `formatNumber(28, lang)` while the two figures beside it came
-   * from `allCatalog()`. The registry holds THIRTY blocks, so the landing page
-   * under-reported its own inventory by two — and it did so directly above a
-   * section arguing that a claim and its test should be the same bytes.
-   *
-   * A hand-kept number next to derived ones is the worst version of both: it
-   * looks as authoritative as its neighbours and nothing fails when it drifts.
-   * `allBlocks()` is already imported and already read by the search index, so
-   * this costs nothing.
+   * Derived, not a literal: a hand-kept count next to derived figures looks as authoritative
+   * as its neighbours and nothing fails when it drifts (it did, by two).
    */
   const blocks = allBlocks().length;
   // A fixed date: a rolling "today" would churn the committed gate fixtures daily.

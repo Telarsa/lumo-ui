@@ -9,49 +9,22 @@ export function generateStaticParams() {
 }
 
 /**
- * The blocks gallery — a card per block, grouped the way `ROADMAP.md`'s v0.4
- * entry groups them (auth, shell, dashboard, data, commerce, settings,
- * marketing).
+ * The blocks gallery — a card per block, grouped by `ROADMAP.md`'s v0.4 categories,
+ * each linking to the block's OWN page (`[slug]/page.tsx`) for the full-width preview.
  *
- * A block is a whole screen, and the previous shape of this page — all 4
- * curated blocks stacked full-width — does not scale to 28: a page that
- * stacks every whole screen the library ships is neither reviewable nor
- * honest about how any one of them looks in use. So the index shows a card
- * per block and links to the block's OWN page, which holds the full-width
- * preview in both directions. See `[slug]/page.tsx`.
+ * Each card shows the REAL block as a scaled `/view-block/<lang>/<slug>/` iframe: 4× the
+ * card's size at 25%, so it lays out against a realistic viewport. `transform-origin` has
+ * no logical values, hence the sanctioned `ltr:`/`rtl:` pair. It is scenery, not a control
+ * (`aria-hidden`, `tabIndex={-1}`, `pointer-events-none`); the card's LINK carries the
+ * name and its stretched `::after` makes the whole card one link.
  *
- * ── THE PREVIEW IN EACH CARD ────────────────────────────────────────────────
- *
- * Each card shows the REAL block, as a scaled-down `/view-block/<lang>/<slug>/`
- * iframe — the same independently graded document the block's own page frames
- * full-size. A gallery of dashed placeholder bars showed nothing, and a
- * gallery that shows nothing sells nothing. The mechanics:
- *
- *  - The iframe is 4× the card's size and scaled to 25%, so the block lays
- *    out against a realistic ~1300px viewport instead of reflowing to a
- *    320px column. The scale origin must be the top READING corner, and
- *    `transform-origin` has no logical values — hence the sanctioned
- *    `ltr:`/`rtl:` pair rather than a bare physical utility.
- *  - `loading="lazy"`: 28 documents must not load on page open.
- *  - It is scenery, not a control: `aria-hidden` (which the gate's
- *    named-control rule honours by skipping the subtree), `tabIndex={-1}`,
- *    and `pointer-events-none`. The card's LINK carries the block's name;
- *    the stretched `::after` makes the whole card, preview included, that
- *    one link.
- *
- * `id={block.id}` on each card is a small, free courtesy to the ⌘K search
- * palette: a search result for a block still links to `#<slug>` here (see
- * `lib/search-index.ts`), and an id on the card is what makes that fragment
- * land on the right entry instead of on nothing.
+ * `id={block.id}` on each card lets the ⌘K palette's `#<slug>` results land on the right
+ * entry (see `lib/search-index.ts`).
  */
 /**
- * The gallery's one paragraph of prose, keyed by locale.
- *
- * Not `lang === "fa-IR" ? persian : english` — that compiles with a third locale
- * in the union and hands it the English branch silently, which the HTML gate
- * cannot see because both branches are Latin script. See the rule in
- * CONTRIBUTING's "Adding a locale". The rest of this page was already correct:
- * `categoryLabel` and the blocks' own titles are full `Record<Locale, …>` maps.
+ * The gallery's one paragraph of prose, keyed by locale — a full `Record<Locale, …>`
+ * map, not a two-branch ternary that would hand a third locale English silently
+ * (see CONTRIBUTING's "Adding a locale").
  */
 const INTRO = {
   "fa-IR":

@@ -9,34 +9,11 @@ import { StatGrid, type StatGridStrings, type StatItem } from "./stat-grid.tsx";
  * `StatGrid`, a main data region and `ActivityFeed` — the composition every
  * dashboard rebuilds from the same four blocks, made one paste.
  *
- * ── WHY A COMPOSED PAGE WHEN THE FOUR BLOCKS EXIST ──────────────────────────
- *
- * `AppShell` alone previews as an empty frame, because it IS a frame — its
- * whole design is "own no content" (its header explains why). The cost of
- * that design lands on every consumer as the same first hour of work: placing
- * the header band, the stat row and the two-column data/feed split inside
- * `<main>` without breaking the reading order. This block is that layout,
- * decided once: stats before detail, the feed beside the data region on wide
- * viewports and AFTER it in the DOM — so a screen reader and a narrow screen
- * both get "headline figures, then the data, then what happened", never the
- * feed interleaved mid-table.
- *
- * ── FOUR STRING SETS, NESTED, NOT FLATTENED ─────────────────────────────────
- *
- * `strings` nests the four blocks' own interfaces rather than re-declaring
- * their fields flat. Flattening would fork the contract: a field added to
- * `ActivityFeedStrings` upstream would silently NOT be required here. Nesting
- * keeps one source of truth per block, and a consumer who already translated
- * `AppShellStrings` for another route reuses the object as-is.
- *
- * ── THE DATA REGION IS A SLOT, AND THAT KEEPS THIS FILE SERVER-SAFE ─────────
- *
- * No `"use client"`, same trade as app-shell.tsx: this file takes no
- * callbacks, so the shell, header, stats and feed all land in the
- * server-rendered first byte. A real data table needs sort/selection
- * callbacks — so `tableRegion` is a `LumoNode` slot the caller fills with a
- * `TableView` (or any listing) behind their OWN client boundary, instead of a
- * prop soup of forwarded functions that would drag this whole page across it.
+ * Layout decided once: stats before detail, the feed beside the data region on
+ * wide viewports and AFTER it in the DOM. `strings` nests the four blocks' own
+ * interfaces (flattening would fork the contract). No `"use client"`: this file
+ * takes no callbacks, so `tableRegion` is a slot the caller fills behind their
+ * OWN client boundary and everything else is server-rendered.
  */
 export interface DashboardPageStrings {
   /** The frame's own strings — nav landmark, skip link. See `AppShellStrings`. */
@@ -68,11 +45,7 @@ export interface DashboardPageProps {
   sidebarFooter?: LumoNode;
   /** Actions at the inline end of the heading band — forwarded to `PageHeader`. */
   headerActions?: LumoNode;
-  /**
-   * The main data region beside the feed — a `TableView` wired up by the
-   * caller, a listing, a chart panel. Omit it and the feed takes the full
-   * width instead of leaving a hole.
-   */
+  /** The main data region beside the feed — a `TableView`, a listing, a chart panel. Omit it and the feed takes the full width. */
   tableRegion?: LumoNode;
   /** DOM id of the shell's `<main>`, the skip link's target. Machine text. */
   mainId?: string | undefined;
@@ -116,11 +89,8 @@ export function DashboardPage({
 
         {tableRegion !== undefined ? (
           /*
-           * `items-start` so the feed does not stretch to the table's height —
-           * a short feed beside a long table would otherwise render mostly as
-           * empty card. Track 1 in a grid is the reading start in both
-           * scripts, so the data region leads and the feed follows with no
-           * mirroring anywhere.
+           * `items-start` so the feed does not stretch to the table's height.
+           * Track 1 is the reading start in both scripts, so nothing mirrors.
            */
           <div className="grid grid-cols-1 items-start gap-6 px-4 xl:grid-cols-3">
             <div className="min-w-0 xl:col-span-2">{tableRegion}</div>

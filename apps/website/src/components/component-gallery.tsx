@@ -8,60 +8,13 @@ import { SearchField } from "@lumo-ui/ui";
 import { PreviewFrameThemeSync } from "./demo-frame";
 
 /**
- * The components index as a filterable gallery of live previews.
- *
- * ═══ WHAT THIS REPLACED, AND WHY THE OLD ONE STOPPED SCALING ════════════════
- *
- * An A–Z text listing with a letter-jump strip. That page was RIGHT for what it
- * was — its header argued, correctly, that the sidebar answers "what do I use
- * for a date range" and an alphabetical index answers "where is the one I can
- * already name", and that these are different questions.
- *
- * What changed is the count. At 110 components the letter strip has more
- * entries than some letters have components, and neither axis answers the
- * question a visitor actually arrives with, which is *"show me the overlays"*
- * or *"show me anything with a calendar in it"*. That is a FILTER, and neither
- * an alphabet nor a tier tree is one.
- *
- * So: search plus tier chips plus a grid of real previews, which is the shape
- * reui.io uses and the reason it stays navigable at its size. The sidebar keeps
- * its job unchanged.
- *
- * ═══ THE PREVIEWS ARE IFRAMES, WHICH IS NOT A PERFORMANCE COMPROMISE ════════
- *
- * Each card shows `/view/<lang>/<slug>/`, the same prerendered route the detail
- * pages frame. Rendering the demos INLINE instead would have been the obvious
- * build and is wrong three times over:
- *
- *  1. **They would all hydrate.** Two thirds of the catalogue is `"use client"`,
- *     so an inline grid ships 70-odd interactive widgets to a page whose only
- *     interaction is a filter box.
- *  2. **They would not be Persian documents.** A preview that claims Persian
- *     correctness has to BE a `<html lang="fa-IR" dir="rtl">` document —
- *     `demo-frame.tsx` makes that argument at length and it does not weaken
- *     because the frame got smaller.
- *  3. **The demos are React nodes, and this component is a filter.** Filtering
- *     needs the list to be serialisable state; a `render` function is not. As
- *     iframes the preview is a URL, so the whole catalogue crosses the server
- *     boundary as plain data.
- *
- * `loading="lazy"` means a visitor who filters to "overlay" never fetches the
- * other ninety documents.
- *
- * ═══ THE PREVIEWS ARE `inert`, AND THAT IS THE ACCESSIBILITY DECISION ═══════
- *
- * A hundred and ten frames, each containing a real widget with real controls,
- * is several hundred tab stops between the filter box and the footer. It would
- * also be several hundred announced regions for a screen reader user whose
- * question is "which of these do I want".
- *
- * `inert` removes the subtree from the tab order AND from the accessibility
- * tree, which is exactly the claim being made: on THIS page the preview is a
- * picture. The card's link carries the name, and the detail page has the same
- * frame named and reachable. `aria-hidden` rides along because `lumo-gate`
- * skips `[aria-hidden="true"]` subtrees when grading interaction rules — an
- * inert widget genuinely cannot be keyboard-unreachable, so grading it would
- * report a defect that cannot be experienced.
+ * The components index as a filterable gallery of live previews (search + tier
+ * chips + grid), replacing the A–Z listing that stopped scaling at 110 items.
+ * Each preview is an `<iframe>` of `/view/<lang>/<slug>/` (a real Persian
+ * document, no hydration of 70 widgets, serialisable as a URL) with
+ * `loading="lazy"`. Frames are `inert` + `aria-hidden`: on THIS page a preview
+ * is a picture, and `lumo-gate` skips aria-hidden subtrees so an unreachable
+ * inert widget is not graded as a defect. Reasoning: docs/decisions/log.md.
  */
 
 export type GalleryItem = {
@@ -84,19 +37,9 @@ export interface ComponentGalleryStrings {
   /** Shown when nothing matches. */
   emptyLabel: string;
   /**
-   * The result count, as a per-locale template with a `{n}` hole.
-   *
-   * A STRING and not the `(n) => string` shape `core/src/strings.ts` argues
-   * for, and the difference is the server boundary rather than a change of
-   * mind: a function cannot cross from a server component into a client one,
-   * and this list is assembled on the server.
-   *
-   * The objection that shape exists to answer still gets answered. It was never
-   * "templates are wrong" — it was that a template written ONCE, in the
-   * component, forces every language into the clause order of whoever wrote it.
-   * A template supplied PER LOCALE does not: «{n} کامپوننت» and "{n} components"
-   * each put the hole where their own grammar wants it, and a language that
-   * wanted it last would write it last.
+   * The result count, as a per-locale template with a `{n}` hole. A STRING and
+   * not `(n) => string` because a function cannot cross the server boundary;
+   * supplied PER LOCALE, so each language puts the hole where its grammar wants.
    */
   countLabel: string;
 }
@@ -110,16 +53,8 @@ export interface ComponentGalleryProps {
 }
 
 /**
- * Folds the spellings a Persian reader does not distinguish.
- *
- * Arabic kaf (U+0643) and yeh (U+064A) arrive constantly from Arabic keyboards
- * and older content, and a reader who types «کارت» expects to find «كارت».
- * ZWNJ is invisible and appears inside «کامپوننت‌ها»-shaped compounds, so a
- * substring search that keeps it fails on a word the reader can see.
- *
- * `Intl.Collator` is the right tool for ORDERING and for equality, and
- * `autocomplete.tsx` uses it for exactly that. It is the wrong tool here:
- * collation compares whole strings, and this is a SUBSTRING test.
+ * Folds the spellings a Persian reader does not distinguish (Arabic kaf/yeh,
+ * ZWNJ). Not `Intl.Collator`: that compares whole strings, this is a substring test.
  */
 function fold(value: string): string {
   return value
@@ -255,11 +190,8 @@ export function ComponentGallery({ lang, items, tiers, strings }: ComponentGalle
 }
 
 /**
- * One filter chip.
- *
- * A `<button>` and not a `<Link>`: the filter is page state, not a location.
- * Making it a link would put 8 near-duplicate URLs in the sitemap and would
- * mean a full navigation per chip on a static export.
+ * One filter chip. A `<button>` and not a `<Link>`: the filter is page state,
+ * not a location (no duplicate sitemap URLs, no navigation per chip).
  */
 function ChipButton({
   isActive,

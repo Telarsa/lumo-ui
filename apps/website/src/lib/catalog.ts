@@ -6,25 +6,11 @@ import { exampleSlugs, loadExamplesFor } from "./examples-loader.ts";
 /**
  * THE component catalog — the one list every routed surface derives from.
  *
- * Found the hard way in round 3: eleven components shipped with example files
- * and no pages. Routes, the sidebar, the A–Z index and the search index all
- * derived from `allDemos()` (the demos.tsx registry), while the new components
- * registered themselves only in the examples directory — two registries, each
- * complete in its own eyes, and the gap between them was invisible to every
- * gate because a page that is never built is a page that is never graded.
- *
- * So: ONE merge, here. A component appears in the catalog if it has a
- * demos.tsx entry OR an examples file. When it has only an examples file, the
- * page identity (title, intro, tier) comes from the file's `meta` — the
- * loader validates those fields exist — the shown source is the component's
- * real module read off disk, `behaviour` is derived from the source itself
- * (`"use client"` present or not — measured, not asserted), and the page's
- * preview is its first example.
- *
- * Every consumer — `generateStaticParams` on both the docs and /view/ routes,
- * the sidebar, the index page, the search index, the landing counts — imports
- * THIS module. Importing `allDemos` directly for navigation is the bug this
- * file exists to end.
+ * A component appears here if it has a demos.tsx entry OR an examples file; the two
+ * registries once drifted apart and eleven components shipped without pages. Every
+ * consumer (static params, sidebar, index, search, landing counts) imports THIS module —
+ * importing `allDemos` directly for navigation is the bug this file exists to end.
+ * Long-form: docs/decisions/log.md.
  */
 
 const UI_SRC = join(process.cwd(), "..", "..", "packages", "ui", "src");
@@ -46,8 +32,7 @@ async function build(): Promise<CatalogEntry[]> {
     const loaded = await loadExamplesFor(slug);
     if (!loaded) continue;
     if (!loaded.title || !loaded.intro || !loaded.tier) {
-      // Loud, with the fix in the message — the alternative is the round-3
-      // failure again: a component that exists everywhere except the site.
+      // Loud, with the fix in the message: a component that exists everywhere except the site.
       throw new Error(
         `[catalog] examples/${slug}.tsx has no demos.tsx entry, so its meta must ` +
           `carry title, intro and tier (both locales) to have a page at all. ` +
@@ -79,8 +64,7 @@ async function build(): Promise<CatalogEntry[]> {
       intro: loaded.intro,
       tier: loaded.tier,
       // Derived from the bytes, not asserted: a directive-free component is
-      // server-renderable and the landing's "with behaviour" count should not
-      // inflate itself by guessing.
+      // server-renderable and the landing's "with behaviour" count must not guess.
       behaviour: source.startsWith('"use client"'),
       render: first.render,
       source,
@@ -88,9 +72,7 @@ async function build(): Promise<CatalogEntry[]> {
     });
   }
 
-  // One alphabetical order for every consumer; locale-aware sorting is the
-  // INDEX PAGE's job (it re-sorts with Intl.Collator per locale) — this order
-  // only needs to be stable.
+  // Stable order for every consumer; locale-aware sorting is the index page's job.
   entries.sort((a, b) => a.id.localeCompare(b.id));
   return entries;
 }

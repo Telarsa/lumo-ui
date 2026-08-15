@@ -14,33 +14,14 @@ import {
 } from "@/examples/_system/extract";
 
 /**
- * The example-file loader. SERVER-ONLY — it reads directories and file text,
- * and it runs during `next build` (this site is a static export, so "server"
- * means the build, exactly as `lib/highlight.ts`'s header puts it).
+ * The example-file loader. SERVER-ONLY — it reads directories and file text
+ * during `next build` (static export, so "server" means the build).
  *
- * Discovery is BY EXISTENCE: `exampleSlugs()` lists `src/examples/*.tsx` off
- * the filesystem, so a teammate shipping examples for a new component creates
- * one file and appears everywhere — the component page, the rail, the
- * sidebar's "new" dot — with no hand-kept list to forget. Names starting with
- * an underscore are the system's own (`_system/`), never examples.
- *
- * Loading VALIDATES, loudly. Everything the contract in
- * `examples/_system/types.ts` promises is checked here at build time, and a
- * violation throws — which fails the build — rather than degrading:
- *
- *   - the file must export `EXAMPLES` with at least one example;
- *   - ids must be kebab-case and unique (they become page anchors);
- *   - every localized string must be present and non-empty in EVERY locale —
- *     the site has no fallback locale, per CONTRIBUTING.md;
- *   - every example's source must be extractable (see `_system/extract.ts` —
- *     an example whose code cannot be shown is a broken page, not a warning);
- *   - every part named in `meta.composition` or `meta.parts` must be a real
- *     `packages/ui/src/index.ts` export, read off disk here the same way the
- *     slug page reads `registry.json`: derived from the artifact that is
- *     already true, never restated by hand.
- *
- * The module cache is per-build, like the registry cache in the slug page and
- * the highlighter in `lib/highlight.ts`.
+ * Discovery is BY EXISTENCE (`src/examples/*.tsx`; underscore names are the
+ * system's own). Loading VALIDATES loudly at build time — `EXAMPLES` present,
+ * kebab-case unique ids, every localized string in EVERY locale, extractable
+ * source, every named part a real `packages/ui/src/index.ts` export — and a
+ * violation throws rather than degrading. The module cache is per-build.
  */
 
 const EXAMPLES_DIR = join(process.cwd(), "src", "examples");
@@ -97,24 +78,10 @@ export interface LoadedComponentExamples {
 /**
  * Every component slug that has examples, alphabetical.
  *
- * ── TWO SHAPES, AND WHY BOTH ARE ACCEPTED ───────────────────────────────────
- *
- *     examples/button.tsx              a FILE
- *     examples/button/index.tsx        a DIRECTORY
- *
- * The directory form is what a component with twenty examples needs: `index.tsx`
- * still exports `EXAMPLES`, and it may import render functions from siblings
- * beside it, so a page's worth of examples stops being one file that only grows.
- *
- * Both are accepted rather than the file form being migrated away, and that is
- * deliberate. A component with three examples is not improved by a directory
- * containing one file, and a flag day across forty-three files buys nothing
- * except a large diff — `sourceOf` below resolves either shape, so a component
- * moves when it has a reason to.
- *
- * A slug may not exist in BOTH forms. That would be two files claiming one
- * page, and which one wins would depend on directory-read order — so it throws
- * rather than picking.
+ * Two shapes are accepted — `examples/button.tsx` (a FILE) or
+ * `examples/button/index.tsx` (a DIRECTORY, for a component whose examples
+ * outgrow one file); `sourceOf` resolves either. A slug in BOTH forms throws:
+ * which one won would depend on directory-read order.
  */
 export function exampleSlugs(): string[] {
   if (!existsSync(EXAMPLES_DIR)) return [];
@@ -263,14 +230,11 @@ async function loadAndValidate(
   file: string,
   path: string,
 ): Promise<LoadedComponentExamples> {
-  // A dynamic import whose specifier keeps a static prefix and a static
-  // extension — the shape bundlers turn into a directory context, which is
-  // what lets discovery-by-existence still be bundled statically.
+  // A dynamic import with a static prefix and extension — the shape bundlers
+  // turn into a directory context, so discovery-by-existence still bundles.
   /*
-   * TWO specifiers, both with a static prefix and a static extension — the
-   * shape a bundler turns into a directory context. One dynamic specifier
-   * covering both shapes would need a variable segment in the middle, which
-   * defeats that, so the branch is here rather than in the string.
+   * TWO specifiers: one covering both shapes would need a variable middle
+   * segment, which defeats the directory context, so the branch is here.
    */
   const mod = (
     file.endsWith("/index.tsx")
@@ -336,29 +300,10 @@ async function loadAndValidate(
 
   const moduleName = spec.meta.sourceFile ?? `${slug}.tsx`;
   /*
-   * ── THE ONE BRANCH HERE THAT USED TO FAIL QUIETLY ─────────────────────────
-   *
-   * This read `?? []`. Two lines above, `assertKnownParts` THROWS when a tree
-   * names a part the barrel does not export — "a tree that lies is worse than
-   * no tree". This did the opposite for the same class of problem: a module the
-   * barrel never mentions produced an empty parts list, and the component page
-   * rendered as though the component genuinely had no exported parts.
-   *
-   * Both causes are worth failing on:
-   *
-   *   · The component is not re-exported from `index.ts` at all — it is
-   *     unreachable to anyone importing `@lumo-ui/ui`, which is a real defect
-   *     and not a documentation gap.
-   *
-   *   · The barrel exports it in a form `parseExportedNames` cannot read. That
-   *     parser matches `export { … } from "./module"` and nothing else; an
-   *     `export *` or a direct `export const` in the barrel is invisible to it.
-   *     Measured at the time of writing: the barrel contains ZERO of either, and
-   *     `examples-loader.test.ts` now pins that, so the blind spot cannot open
-   *     silently underneath this.
-   *
-   * Distinguishing the two from here is not possible and not necessary — the
-   * message names both, because the fix for either is in the same file.
+   * Throws, never `?? []`: a module the barrel does not re-export (or exports
+   * in a form `parseExportedNames` cannot read — only `export { … } from` is
+   * parsed; `examples-loader.test.ts` pins that the barrel has nothing else)
+   * would otherwise render a page as though the component had no parts.
    */
   const moduleExports = exported.byModule.get(moduleName);
   if (moduleExports === undefined) {
@@ -396,13 +341,9 @@ async function loadAndValidate(
 }
 
 /**
- * The slugs whose example files carry `isNew: true` — what drives the
- * sidebar's "new" dot. Reads ONLY the flag, deliberately not the full
- * `loadExamplesFor` validation: the sidebar renders on every page, and full
- * validation includes cross-file state (parts against index.ts exports) that
- * belongs to the component's own page — where it still fails the build
- * loudly. The sidebar asking "is it new" must not make every page hostage to
- * one component's half-merged exports.
+ * The slugs whose example files carry `isNew: true` — drives the sidebar's
+ * "new" dot. Reads ONLY the flag, not the full `loadExamplesFor` validation,
+ * so one component's half-merged exports cannot break every page's sidebar.
  */
 export async function newExampleSlugs(): Promise<ReadonlySet<string>> {
   const flags = await Promise.all(

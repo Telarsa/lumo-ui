@@ -7,48 +7,15 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
- * Layout primitives: Stack (flex), Grid, Container.
+ * Layout primitives: Stack (flex), Grid, Container. No `"use client"`: a
+ * client directive on a layout primitive pulls whole route subtrees across the
+ * boundary.
  *
- * No `"use client"` in this file. These wrap page structure, and a client
- * directive on a layout primitive quietly pulls whole route subtrees across the
- * boundary — the most expensive possible place to get rule 1 wrong.
- *
- * ═══ WHY THESE THREE COMPONENTS ARE THE RTL STORY, NOT THE SPACING STORY ════
- *
- * Every mirroring bug this library exists to prevent is a layout bug, and the
- * fix is almost always to stop positioning things and let a layout algorithm do
- * it. Flexbox and Grid resolve `start` and `end` against the container's
- * `direction`, so `justify-end` is the RIGHT edge in English and the LEFT edge
- * in Persian with no `rtl:` variant, no duplicated rule and nothing to keep in
- * sync. That is why Lumo's primitives are flex and grid rather than a `Box`
- * with margin props.
- *
- * Three specific traps, stated because they are what people reach for:
- *
- *  1. **`space-x-*` is physical.** Tailwind implements it as `margin-left` on
- *     every child but the first (`margin-inline-start` is not what it emits),
- *     so a horizontal stack built with `space-x-4` bunches to the wrong side in
- *     Persian. `gap` is axis-relative by construction and is the only spacing
- *     mechanism these components offer — there is deliberately no `space`
- *     variant to pick by mistake.
- *
- *  2. **`items-start` / `justify-end` are already logical.** They compile to
- *     `align-items: flex-start` and `justify-content: flex-end`, and *flex*
- *     start/end follow the flex container's direction. No `-s`/`-e` variant
- *     exists for them because none is needed. Contrast `text-left`, which is
- *     genuinely physical and whose logical form is `text-start`.
- *
- *  3. **`mx-auto` is logical in Tailwind v4** — it emits `margin-inline: auto`,
- *     not `margin-left`/`margin-right`. Verified against tailwindcss 4.3.3,
- *     where the utility table maps `mx → margin-inline`, `my → margin-block`,
- *     `px → padding-inline`. Container relies on it.
- *
- * ── `tag`, not `asChild` ────────────────────────────────────────────────────
- * PLAN.md records the decision: Radix's `asChild` is powerful, type-hostile and
- * a standing source of "where did my ref go". A layout primitive still has to
- * be able to render `<main>` or `<section>` for the document outline, so it
- * takes a `tag` prop constrained to a closed union of container elements. A
- * real element, a real ref, no cloning.
+ * Flexbox and Grid resolve `start`/`end` against `direction`, so these need no
+ * `rtl:` variants. Traps: `space-x-*` is PHYSICAL (`margin-left`), so `gap` is
+ * the only spacing offered; `items-start`/`justify-end` are already logical;
+ * `mx-auto` is logical in Tailwind v4 (`margin-inline`), which Container relies
+ * on. `tag`, not `asChild`: a real element, a real ref, no cloning (PLAN.md).
  */
 
 /** Elements a layout primitive may render. Closed on purpose — see the header. */
@@ -73,11 +40,8 @@ export const stackVariants = cva("flex", {
   variants: {
     /** Main axis: a logical row that mirrors under RTL, or a column. */
     direction: {
-      // `flex-row` is the INLINE axis, so it already reverses under
-      // `dir="rtl"`. `flex-row-reverse` is deliberately not offered: it reverses
-      // against the direction rather than with it, which means it flips twice
-      // in Persian and lands back where it started — an "obvious" utility that
-      // does the opposite of what a reader of the class name expects.
+      // `flex-row` is the INLINE axis and reverses under `dir="rtl"`;
+      // `flex-row-reverse` is deliberately not offered (it flips twice in Persian).
       row: "flex-row",
       column: "flex-col",
     },
@@ -126,13 +90,8 @@ export interface StackProps
   extends Omit<ComponentProps<"div">, "children" | "className" | "ref">,
     VariantProps<typeof stackVariants> {
   /**
-   * The root element, at the widest type that is true of every branch.
-   *
-   * `ComponentProps<"div">` carries `Ref<HTMLDivElement>`, which is a LIE here:
-   * `tag` picks the element, and its values include
-   * `section`, `main`, `nav`, `ul` and `li`. `HTMLElement` is what every branch has in
-   * common. `ref` is never simply dropped under this library's contract — only
-   * ever widened, and the widening is stated. See `props.ts`.
+   * The root element, at the widest type that is true of every branch: `tag`
+   * picks the element, so `Ref<HTMLDivElement>` would be a lie. Widened, never dropped.
    */
   ref?: Ref<HTMLElement> | undefined;
   children?: LumoNode;
@@ -153,27 +112,14 @@ export function Stack({
   children,
   ...props
 }: StackProps) {
-  // Widened so JSX accepts a variable tag. The prop type is what constrains the
-  // VALUE; this local only exists to satisfy the JSX element-type check without
-  // a cast at every call site.
-  //
-  // Parameterised on `ComponentProps<"div">` rather than left bare, because a
-  // bare `ElementType` makes JSX check the attribute bag against EVERY
-  // intrinsic at once — and `<form>`'s `ref` is `Ref<HTMLFormElement>`, which
-  // no single ref type can satisfy alongside `<div>`'s. Pinning the check to
-  // the default tag is what keeps the one cast below to one line.
+  // Widened so JSX accepts a variable tag; parameterised on `ComponentProps<"div">`
+  // so JSX does not check the attribute bag against EVERY intrinsic at once.
   const Element = tag as ElementType<ComponentProps<"div">>;
   return (
     <Element
       className={cn(stackVariants({ direction, gap, align, justify, wrap }), className)}
-      /*
-       * The one cast the widened `ref` costs, and it is contained to this line.
-       * The element is chosen at RUN time, so no static type can be right for
-       * every branch; the ref itself is passed through untouched and React
-       * assigns whatever element it actually created. Widening the prop and
-       * narrowing here is the only arrangement in which a consumer is never
-       * handed a ref typed as an element this component may not render.
-       */
+      // The one cast the widened `ref` costs: the element is chosen at RUN time,
+      // and the ref is passed through untouched.
       {...(props as ComponentProps<"div">)}
     >
       {children}
@@ -185,21 +131,14 @@ export const gridVariants = cva("grid", {
   variants: {
     /** The column template: a fixed count or the auto-fill preset. */
     cols: {
-      // Grid tracks are laid out along the inline axis, so column 1 is the
-      // reader's first column in both scripts. This is the reason a card grid
-      // needs no RTL work at all while a float- or absolute-positioned one
-      // needs it everywhere.
+      // Grid tracks run along the inline axis, so column 1 is the reader's first in both scripts.
       "1": "grid-cols-1",
       "2": "grid-cols-2",
       "3": "grid-cols-3",
       "4": "grid-cols-4",
       "6": "grid-cols-6",
       "12": "grid-cols-12",
-      /**
-       * Responsive without breakpoints: as many columns as fit at 16rem or
-       * wider. `auto-fill` rather than `auto-fit` so a single item does not
-       * stretch across the whole row.
-       */
+      /** As many columns as fit at 16rem; `auto-fill` so a single item does not stretch. */
       auto: "grid-cols-[repeat(auto-fill,minmax(16rem,1fr))]",
     },
     /** The spacing step between tracks, from the spacing scale. */
@@ -226,13 +165,8 @@ export interface GridProps
   extends Omit<ComponentProps<"div">, "children" | "className" | "ref">,
     VariantProps<typeof gridVariants> {
   /**
-   * The root element, at the widest type that is true of every branch.
-   *
-   * `ComponentProps<"div">` carries `Ref<HTMLDivElement>`, which is a LIE here:
-   * `tag` picks the element, and its values include
-   * `section`, `main`, `nav`, `ul` and `li`. `HTMLElement` is what every branch has in
-   * common. `ref` is never simply dropped under this library's contract — only
-   * ever widened, and the widening is stated. See `props.ts`.
+   * The root element, at the widest type that is true of every branch: `tag`
+   * picks the element, so `Ref<HTMLDivElement>` would be a lie. Widened, never dropped.
    */
   ref?: Ref<HTMLElement> | undefined;
   children?: LumoNode;
@@ -246,14 +180,7 @@ export function Grid({ tag = "div", cols, gap, align, className, children, ...pr
   return (
     <Element
       className={cn(gridVariants({ cols, gap, align }), className)}
-      /*
-       * The one cast the widened `ref` costs, and it is contained to this line.
-       * The element is chosen at RUN time, so no static type can be right for
-       * every branch; the ref itself is passed through untouched and React
-       * assigns whatever element it actually created. Widening the prop and
-       * narrowing here is the only arrangement in which a consumer is never
-       * handed a ref typed as an element this component may not render.
-       */
+      // The one cast the widened `ref` costs; the ref is passed through untouched.
       {...(props as ComponentProps<"div">)}
     >
       {children}
@@ -262,15 +189,13 @@ export function Grid({ tag = "div", cols, gap, align, className, children, ...pr
 }
 
 export const containerVariants = cva(
-  // `mx-auto` → `margin-inline: auto`; `px-*` → `padding-inline`. Both logical
-  // in v4, so a centred page gutter is symmetric and script-agnostic.
+  // `mx-auto` → `margin-inline: auto`; `px-*` → `padding-inline`. Both logical in v4.
   "mx-auto w-full",
   {
     variants: {
       /** The max-width preset the content column is clamped to. */
       size: {
-        // Tailwind v4's `--container-*` scale. `max-w-screen-*` was removed in
-        // v4 and would silently emit nothing.
+        // Tailwind v4's `--container-*` scale; `max-w-screen-*` would emit nothing.
         sm: "max-w-2xl",
         md: "max-w-4xl",
         lg: "max-w-6xl",
@@ -291,20 +216,14 @@ export interface ContainerProps
   extends Omit<ComponentProps<"div">, "children" | "className" | "ref">,
     VariantProps<typeof containerVariants> {
   /**
-   * The root element, at the widest type that is true of every branch.
-   *
-   * `ComponentProps<"div">` carries `Ref<HTMLDivElement>`, which is a LIE here:
-   * `tag` picks the element, and `tag="main"` is the case the
-   * prop's own docblock recommends. `HTMLElement` is what every branch has in
-   * common. `ref` is never simply dropped under this library's contract — only
-   * ever widened, and the widening is stated. See `props.ts`.
+   * The root element, at the widest type that is true of every branch: `tag`
+   * picks the element, so `Ref<HTMLDivElement>` would be a lie. Widened, never dropped.
    */
   ref?: Ref<HTMLElement> | undefined;
   children?: LumoNode;
   /**
-   * Which element to render. Default `"div"` — but a page's main content
-   * container should be `tag="main"`, which is what makes "skip to content"
-   * work and what a screen reader's landmark rotor lists.
+   * Which element to render. Default `"div"` — a page's main content container
+   * should be `tag="main"`, which makes "skip to content" and the landmark rotor work.
    */
   tag?: BoxTag | undefined;
   className?: string | undefined;
@@ -322,14 +241,7 @@ export function Container({
   return (
     <Element
       className={cn(containerVariants({ size, padded }), className)}
-      /*
-       * The one cast the widened `ref` costs, and it is contained to this line.
-       * The element is chosen at RUN time, so no static type can be right for
-       * every branch; the ref itself is passed through untouched and React
-       * assigns whatever element it actually created. Widening the prop and
-       * narrowing here is the only arrangement in which a consumer is never
-       * handed a ref typed as an element this component may not render.
-       */
+      // The one cast the widened `ref` costs; the ref is passed through untouched.
       {...(props as ComponentProps<"div">)}
     >
       {children}

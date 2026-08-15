@@ -155,7 +155,7 @@
       "name": "breadcrumbs",
       "type": "registry:ui",
       "title": "Breadcrumbs",
-      "description": "Renders the `<ol>` only.",
+      "description": "Renders the `<ol>` only; wrap in an unlabelled `<nav>` yourself if you want a landmark.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -545,7 +545,7 @@
       "name": "date-field",
       "type": "registry:ui",
       "title": "Date Field",
-      "description": "The public surface is intentionally honest after the Base UI rebuild.",
+      "description": "The date field.",
       "author": "Telarsa",
       "dependencies": [
         "@base-ui/react",

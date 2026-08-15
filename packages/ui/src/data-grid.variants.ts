@@ -1,26 +1,13 @@
 import { cva } from "class-variance-authority";
 
 /**
- * The data grid's chrome, as cva.
- *
- * Split out of `data-grid.tsx` for the reason `button.variants.ts` states: a
- * variants module carries no `"use client"`, so a server component can import
- * a class string without pulling the grid's state into its bundle — and
- * `shadcn migrate rtl` walks exactly `cva()`'s first argument, so every class
- * below is inside one.
- *
- * ── EVERY HORIZONTAL RULE HERE IS LOGICAL, AND ONE OF THEM MATTERS MOST ─────
- *
- * The footer is a row with a range read-out at one end and a pager at the
- * other, and `justify-between` places them without naming a side — which is
- * why it is used instead of `ms-auto` on the pager. The toolbar is the same
- * shape. What CSS cannot place is the CONTENT of the read-out; see
- * `DataGridPagination.rangeLabel` in `data-grid.tsx`.
+ * The data grid's chrome, as cva. Split out of `data-grid.tsx` so a server
+ * component can import a class string without pulling in the grid's state.
+ * `justify-between` places footer and toolbar ends without naming a side.
  */
 
 export const dataGridVariants = cva(
-  // `flex flex-col` and not a grid: the three bands (toolbar, table, footer)
-  // are a stack whose middle member is the only one that scrolls.
+  // A stack of three bands; only the middle one scrolls.
   "flex w-full min-w-0 flex-col gap-3",
 );
 
@@ -29,8 +16,7 @@ export const dataGridToolbarVariants = cva(
 );
 
 export const dataGridFooterVariants = cva(
-  // `flex-wrap` because the read-out and the pager together overflow a phone,
-  // and a pager that scrolls off the edge is a pager nobody can reach.
+  // `flex-wrap`: the read-out and the pager together overflow a phone.
   "flex flex-wrap items-center justify-between gap-3",
 );
 

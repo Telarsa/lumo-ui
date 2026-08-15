@@ -157,57 +157,20 @@ export function DataGridEditableCell({
  *         <DataGridSearch label="جست‌وجو" clearLabel="پاک کردن" />
  *         <DataGridColumnsMenu label="ستون‌ها" columns={columnLabels} />
  *       </DataGridToolbar>
- *
  *       <Table label="سفارش‌ها" locale={locale} table={table}>…</Table>
  *       <DataGridEmpty>هیچ سفارشی پیدا نشد.</DataGridEmpty>
- *
- *       <DataGridPagination
- *         label="صفحه‌بندی" previousLabel="قبلی" nextLabel="بعدی"
- *         pageLabel={(n) => `صفحه ${n}`}
- *         pageSizes={[10, 25, 50]} pageSizeLabel="تعداد در هر صفحه"
- *         rangeLabel={(from, to, total) => `${from}–${to} از ${total}`}
- *       />
+ *       <DataGridPagination label="صفحه‌بندی" previousLabel="قبلی" nextLabel="بعدی"
+ *         pageLabel={(n) => `صفحه ${n}`} pageSizes={[10, 25, 50]} pageSizeLabel="تعداد در هر صفحه"
+ *         rangeLabel={(from, to, total) => `${from}–${to} از ${total}`} />
  *     </DataGrid>
  *
- * ═══ WHY THIS EXISTS WHEN `table.tsx` AND `table-view` ALREADY DO ═══════════
- *
- * `<Table>` is the grid: roles, roving focus, direction-resolved arrows,
- * sorting and selection. The `table-view` BLOCK already composes it with a
- * toolbar and a pager. So the bar for a third thing is high, and it is cleared
- * by exactly one capability neither of them has and one defect neither can fix:
- *
- *  1. **Column visibility has no UI anywhere in the library.**
- *     `columnVisibilityFeature` was not even switched on in `lumoTableFeatures`
- *     until this file needed it. A table wide enough to need hiding is the
- *     normal case for an admin screen, and «ستون‌ها» is the control that makes
- *     one usable on a laptop.
- *  2. **The range read-out is a bidi trap**, and it is the reason this file is
- *     worth reading. See the note on `rangeLabel` below.
- *
- * `table-view` stays what it is — a screen, opinionated, one import. This is
- * the unopinionated middle: parts you arrange, over a table instance you own.
- *
- * ═══ THE BOUNDARY, INHERITED FROM `table.tsx` VERBATIM ══════════════════════
- *
- * Nothing from TanStack is ever spread onto an element here. The interfaces
- * below name exactly the members this file calls and nothing else, so a future
- * minor that starts returning `getPaginationProps()`-shaped objects cannot get
- * a `role` into a Lumo element without someone widening a type in this file and
- * writing down why. Every member returns a scalar or a callback.
- *
- * State is read from `table.state`, which is TanStack 9's reactive projection —
- * verified in `dist/useTable.js`, where `useSelector(rootSource, selector)` is
- * what re-renders the tree. `useLumoTable` passes no selector, so every
- * registered slice is subscribed and `table.state.pagination` is live. Reading
- * `table.store.state` instead would be a snapshot that never re-renders, which
- * is the subtle way a pager ends up frozen on page one.
- *
- * `"use client"`: every part here reads live table state.
+ * The unopinionated middle between `<Table>` and the `table-view` block: column
+ * visibility has no UI elsewhere, and the range read-out is a bidi trap (`rangeLabel`).
+ * Nothing from TanStack is ever spread onto an element; the interfaces below name
+ * exactly the members called. State is read from `table.state` (TanStack 9's reactive
+ * projection), never `store.state`, which is a snapshot that never re-renders.
  */
 
-/* ════════════════════════════════════════════════════════════════════════════
- * THE SEAM
- * ═══════════════════════════════════════════════════════════════════════════ */
 
 /** What the column menu needs from a TanStack column. */
 export interface DataGridColumn {
@@ -219,10 +182,7 @@ export interface DataGridColumn {
 
 /** What the parts below need from a table instance. */
 export interface DataGridTableInstance {
-  /**
-   * TanStack 9's REACTIVE state projection. Not `store.state`, which is a
-   * snapshot — see the file header.
-   */
+  /** TanStack 9's REACTIVE state projection. Not `store.state`, which is a snapshot. */
   state: {
     pagination?: { pageIndex: number; pageSize: number } | undefined;
     globalFilter?: unknown;
@@ -252,9 +212,6 @@ function useDataGrid(): DataGridContextValue {
   return context;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * THE SHELL
- * ═══════════════════════════════════════════════════════════════════════════ */
 
 export interface DataGridProps {
   /** Formats every number the grid shows. Required — see `formatNumber`. */
@@ -268,13 +225,8 @@ export interface DataGridProps {
 }
 
 /**
- * The shell. A plain box that carries the locale and the table on a context.
- *
- * Deliberately NOT a `role="region"` and deliberately unnamed: the `<Table>`
- * inside it is already a named `role="grid"`, and wrapping it in a landmark
- * would announce the same collection twice and put a second entry in every
- * screen reader's landmark list. `frame.tsx` makes the same call for the same
- * reason.
+ * The shell. A plain box that carries the locale and the table on a context. Not a
+ * `role="region"`: the `<Table>` inside is already a named `role="grid"`.
  */
 export type DataGridAsyncState = AsyncCollectionPresentation;
 
@@ -323,20 +275,11 @@ export interface DataGridToolbarProps {
   className?: string | undefined;
 }
 
-/**
- * The row above the table.
- *
- * `justify-between` rather than `ms-auto` on the last child: naming no side at
- * all is one fewer logical property to get wrong, and it keeps working when a
- * caller puts three things in here instead of two.
- */
+/** The row above the table. `justify-between`, so no side is named. */
 export function DataGridToolbar({ children, className }: DataGridToolbarProps) {
   return <div className={cn(dataGridToolbarVariants(), className)}>{children as ReactNode}</div>;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * SEARCH
- * ═══════════════════════════════════════════════════════════════════════════ */
 
 export interface DataGridSearchProps {
   /** Announced and displayed name, e.g. «جست‌وجو در سفارش‌ها». REQUIRED. */
@@ -349,17 +292,9 @@ export interface DataGridSearchProps {
 }
 
 /**
- * The global filter, wired to `setGlobalFilter`.
- *
- * The value is read from `table.state.globalFilter` rather than held here, so
- * a caller who resets the filter from a "clear all" button elsewhere sees this
- * field empty — the rule `table.tsx` states as "no `useState` mirrors what the
- * DOM (or the store) already says".
- *
- * `String(… ?? "")` and not a cast: TanStack types `globalFilter` as `unknown`
- * because a consumer may filter on any shape, and a `<SearchField>` takes a
- * string. Coercing at the boundary is honest; asserting a type it does not
- * have is how an object reaches `value` and React warns at runtime.
+ * The global filter, wired to `setGlobalFilter`. The value is read from
+ * `table.state.globalFilter` rather than mirrored in state; `String(… ?? "")` because
+ * TanStack types it `unknown`.
  */
 export function DataGridSearch({
   label,
@@ -375,9 +310,7 @@ export function DataGridSearch({
       value={String(table.state.globalFilter ?? "")}
       onChange={(value) => {
         table.setGlobalFilter(value);
-        // Filtering changes what page one MEANS. Without this, filtering while
-        // on page four leaves the reader looking at an empty grid with a pager
-        // that says there is nothing wrong.
+        // Filtering changes what page one MEANS; stay on page four and the grid is empty.
         table.setPageIndex(0);
       }}
       {...(placeholder === undefined ? {} : { placeholder })}
@@ -386,9 +319,6 @@ export function DataGridSearch({
   );
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * COLUMN VISIBILITY
- * ═══════════════════════════════════════════════════════════════════════════ */
 
 export interface DataGridColumnLabel {
   /** The column's `id`, exactly as the table was given it. */
@@ -398,42 +328,17 @@ export interface DataGridColumnLabel {
 }
 
 export interface DataGridColumnsMenuProps {
-  /**
-   * Names BOTH the trigger and the menu, e.g. «ستون‌ها». REQUIRED.
-   *
-   * The trigger carries an icon, so without this it is an unnamed button and
-   * `named-controls` fails the build. The menu takes the same string because
-   * Base UI otherwise names the popup from the trigger's visible text — which
-   * is nothing at all when the trigger is a glyph.
-   */
+  /** Names BOTH the trigger and the menu, e.g. «ستون‌ها». REQUIRED: the trigger is a glyph. */
   label: string;
-  /**
-   * The columns offered, with their names.
-   *
-   * A list rather than a lookup INTO the table, because a column's header is a
-   * `LumoNode` — it may be an icon, or a header with a sort arrow in it — and
-   * there is no honest way to derive a string from one. Naming them here also
-   * means the menu shows only the columns worth offering: an id absent from
-   * this list is simply not in the menu.
-   */
+  /** The columns offered, with their names. A list rather than a lookup: a header is a `LumoNode`. */
   columns: readonly DataGridColumnLabel[];
   className?: string | undefined;
 }
 
 /**
- * A menu of `role="menuitemcheckbox"` toggles, one per column.
- *
- * ── WHY THE LAST VISIBLE COLUMN CANNOT BE HIDDEN ────────────────────────────
- *
- * A grid with every column hidden is a grid with no cells, no row headers and
- * nothing for a screen reader to announce — and no way back, because the only
- * control that could restore a column is the one the reader just used to
- * destroy the view. So the final visible toggle is `isDisabled`. That is not a
- * styling nicety: it is the difference between a recoverable state and a
- * trapped one.
- *
- * `closeOnClick={false}` is inherited from `MenuCheckboxItem`'s default:
- * hiding three columns should not mean opening the menu three times.
+ * A menu of `role="menuitemcheckbox"` toggles, one per column. The last visible column
+ * cannot be hidden: a grid with no columns has no way back. `closeOnClick={false}` so
+ * hiding three columns is one open.
  */
 export function DataGridColumnsMenu({ label, columns, className }: DataGridColumnsMenuProps) {
   const { table } = useDataGrid();
@@ -473,9 +378,6 @@ export function DataGridColumnsMenu({ label, columns, className }: DataGridColum
   );
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * EMPTINESS
- * ═══════════════════════════════════════════════════════════════════════════ */
 
 export interface DataGridEmptyProps {
   children?: LumoNode;
@@ -483,69 +385,16 @@ export interface DataGridEmptyProps {
 }
 
 /**
- * Shown when the current filter matches nothing.
- *
- * `role="status"`, because emptiness is the RESULT of the reader's last
- * keystroke in the search field. Without a live region the grid silently
- * becomes blank and a screen reader user is given no reason for it — the same
- * argument `sortable.tsx` makes about a move with no visible affordance.
- *
- * ── THE ROOT IS ALWAYS MOUNTED. ONLY ITS CHILDREN ARE CONDITIONAL ───────────
- *
- * This docblock used to say the opposite, in these words:
- *
- *     "It renders NOTHING when there are rows, rather than rendering hidden:
- *      an empty live region that exists on every page is a region that
- *      announces the moment it is filled, which is what makes this useful, and
- *      a `hidden` node with text in it is a string some screen readers will
- *      still reach."
- *
- * It is kept rather than deleted because it is instructive: the second clause
- * is TRUE, the third clause is TRUE, and the conclusion does not follow from
- * either. It conflates three arrangements and rules out only one of them.
- *
- *   (a) unmount the root when there is nothing to say   ← what it did
- *   (b) keep the root, render its children conditionally
- *   (c) keep the root with its text in it and `hidden`  ← what it argues against
- *
- * The third clause disposes of (c), correctly. The second clause — "an empty
- * live region that exists on every page is a region that announces the moment
- * it is filled" — is a description of (b) and is the argument FOR it, written
- * inside a paragraph justifying (a). Under (a) there is no region on the page
- * to be filled: the node arrives already containing its text, and a live region
- * is a promise about MUTATIONS to a node the reader's software is already
- * watching. A node inserted with its content is a mutation of the node ABOVE
- * it, and screen readers do not agree on whether that counts.
- *
- * The engine this library runs on states the same rule in its own source, which
- * is stronger evidence than this file asserting it. `@base-ui/react`'s
- * `combobox/empty/ComboboxEmpty.mjs:11-15`:
- *
- *     "This component's root element must remain mounted in the DOM to announce
- *      changes consistently across screen readers. Avoid hiding or removing the
- *      component itself with `display: none`, `hidden`, `aria-hidden`, or
- *      conditional rendering. Prefer updating or conditionally rendering its
- *      children instead."
- *
- * and its implementation is exactly (b) — `const children = filteredItems.length
- * === 0 ? childrenProp : null`, on a root that is unconditionally rendered.
- *
- * `sr-only` and not `hidden` for the populated case, for the reason
- * `spinner.tsx` gives about its own label: `display: none` inside a live region
- * is not announced at all, so hiding this one that way would be (c) with extra
- * steps. `sr-only` is `position: absolute` with a 1px clip — the node is out of
- * flow, so a populated grid grows no dashed box, and it is still in the
- * accessibility tree, which is the whole point.
- *
- * An initially empty grid also needs a mutation after assistive technology has
- * begun observing the live region. The invisible U+2060 word joiner is appended
- * on mount and removed after 200ms, matching Base UI's measured live-region
- * technique without changing visible text or layout.
+ * Shown when the current filter matches nothing. `role="status"`: emptiness is the
+ * RESULT of the reader's last keystroke. The root is ALWAYS mounted and only its
+ * children are conditional — a live region is a promise about MUTATIONS to a node
+ * already being watched (Base UI's `ComboboxEmpty` states the same rule). `sr-only`,
+ * not `hidden`, when populated. An invisible U+2060 is appended on mount and removed
+ * after 200ms so an initially empty grid still produces a mutation.
  */
 export function DataGridEmpty({ children, className }: DataGridEmptyProps) {
   const { table, asyncState } = useDataGrid();
-  // Async emptiness belongs to the shared state on the shell. Suppressing this
-  // parallel sentence prevents two live regions from announcing the same result.
+  // Async emptiness belongs to the shared state on the shell; avoid two live regions.
   const isEmpty = asyncState === undefined && table.getRowCount() === 0;
   const [mutationMarker, setMutationMarker] = useState(false);
   useEffect(() => {
@@ -565,9 +414,6 @@ export function DataGridEmpty({ children, className }: DataGridEmptyProps) {
   );
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * PAGING
- * ═══════════════════════════════════════════════════════════════════════════ */
 
 interface DataGridPaginationBaseProps {
   /** Names the pager's `<nav>` landmark, e.g. «صفحه‌بندی سفارش‌ها». REQUIRED. */
@@ -580,31 +426,10 @@ interface DataGridPaginationBaseProps {
   pageLabel: (formattedPage: string) => string;
   /**
    * Builds the range read-out from three ALREADY-FORMATTED numbers, e.g.
-   * ``(from, to, total) => `${from}–${to} از ${total}` `` → «۱–۱۰ از ۴۸».
-   *
-   * ── THIS PROP IS THE REASON THIS FILE EXISTS ────────────────────────────
-   *
-   * A function and not a `"{from}–{to} of {total}"` template, and not a string
-   * this file assembles, for two independent reasons that happen to have the
-   * same fix.
-   *
-   * The first is the one `core/src/strings.ts` makes for the whole library:
-   * «۱–۱۰ از ۴۸» and "1–10 of 48" do not place their figures in the same
-   * clause positions once a translator is given a real sentence, and a
-   * template with three holes forces one language into the other's grammar.
-   *
-   * The second is BIDI, and it is specific to this read-out. `۱–۱۰` is two
-   * Arabic-number runs with a neutral character between them. Under the
-   * Unicode bidi algorithm a neutral between two AN runs inside an RTL
-   * paragraph takes the PARAGRAPH's direction, so the dash resolves
-   * right-to-left and the range can render as «۱۰–۱» — the same numbers,
-   * reversed, silently, and only in Persian. Every screenshot an English
-   * reviewer takes is correct.
-   *
-   * Handing the whole sentence to the caller is what lets them place a
-   * U+200F or a `<bdi>`-equivalent if their wording needs one, rather than
-   * this file guessing at a separator it cannot see. `phone-input.tsx`
-   * records the same class of failure for a dial code.
+   * ``(from, to, total) => `${from}–${to} از ${total}` `` → «۱–۱۰ از ۴۸». A function,
+   * not a template: clause order differs per language, and `۱–۱۰` is a bidi trap
+   * (a neutral between two AN runs takes the paragraph direction), so only the caller
+   * can place a U+200F where their wording needs one.
    */
   rangeLabel: (from: string, to: string, total: string) => string;
   className?: string | undefined;
@@ -625,44 +450,16 @@ interface WithPageSizesProps {
 }
 
 /**
- * ── WHY THESE TWO PROPS ARE A PAIR AND NOT TWO OPTIONALS ───────────────────
- *
- * `pageSizeLabel` was documented "REQUIRED" and typed `string | undefined`, and
- * the render guard below read `pageSizeLabel !== undefined`. So a caller who
- * offered sizes and forgot the name got neither an unnamed dropdown nor an
- * error — the rows-per-page control SILENTLY DISAPPEARED. AUDIT §2.3, and §3.1
- * names the class: a comment doing the type system's job.
- *
- * No runtime assertion can state this rule, which is why it survived a suite
- * that renders this pager thirteen times. "The control is missing" is also what a
- * caller who deliberately passed no `pageSizes` correctly gets, so the two
- * cases are indistinguishable after the fact by construction. The type is the
- * only place the pairing can live.
- *
- * The union rather than the one-keystroke `pageSizeLabel: string`, because a
- * grid with no size control would then have to invent a Persian name for a
- * dropdown that never renders — and CONTRIBUTING's rule is that an announced
- * string is required, not that an unannounced one is. `link.tsx`'s
- * `newTab`/`newTabLabel` and `alert.tsx` are the same construction; the guard
- * below now tests `pageSizes` alone, because the label's presence is no longer
- * a thing that can vary independently of it.
+ * The two props are a PAIR: sizes offered without a name used to make the control
+ * silently disappear. The union, rather than a required `pageSizeLabel`, so a grid with
+ * no size control need not invent a name for a dropdown that never renders.
  */
 export type DataGridPaginationProps = DataGridPaginationBaseProps &
   (NoPageSizesProps | WithPageSizesProps);
 
-/**
- * The footer: how many rows you are looking at, and how to move.
- *
- * Every integer on this row goes through `formatNumber` — the page numbers
- * inside `Pagination`, the range read-out, and each item in the size dropdown.
- */
+/** The footer: how many rows you are looking at, and how to move. Every integer goes through `formatNumber`. */
 export function DataGridPagination(props: DataGridPaginationProps) {
-  /*
-   * `props` is kept whole rather than destructured, and that is forced by the
-   * union above: destructuring collapses `pageSizes`/`pageSizeLabel` into two
-   * independent `T | undefined` locals and throws away the very relationship
-   * the type exists to state. Narrowing has to be done on the object.
-   */
+  // `props` is kept whole: destructuring collapses the union's `pageSizes`/`pageSizeLabel` pairing.
   const { label, previousLabel, nextLabel, pageLabel, rangeLabel, className } = props;
   const { locale, table } = useDataGrid();
   const pageIndex = table.state.pagination?.pageIndex ?? 0;
@@ -670,14 +467,7 @@ export function DataGridPagination(props: DataGridPaginationProps) {
   const total = table.getRowCount();
   const pageCount = table.getPageCount();
 
-  /*
-   * The read-out's arithmetic, which is where an off-by-one is invisible.
-   *
-   * `from` is clamped to `total` so an empty result reads «۰–۰ از ۰» rather
-   * than «۱–۰ از ۰», and `to` is clamped so the last page does not claim rows
-   * past the end. Both are one `Math.min` and both are wrong in every
-   * hand-written pager the first time.
-   */
+  // `from` clamps so an empty result reads «۰–۰ از ۰»; `to` clamps so the last page stays in range.
   const from = total === 0 ? 0 : pageIndex * pageSize + 1;
   const to = Math.min((pageIndex + 1) * pageSize, total);
 
@@ -692,13 +482,7 @@ export function DataGridPagination(props: DataGridPaginationProps) {
           )}
         </span>
 
-        {/*
-         * `props.pageSizes` and not a destructured local: the narrowing this
-         * test performs is what makes `props.pageSizeLabel` a `string` two
-         * lines down. The `length > 0` half is still a runtime concern — an
-         * empty array is a legal `readonly number[]` and a dropdown with no
-         * options is a control that answers nothing.
-         */}
+        {/* `props.pageSizes`, not a destructured local: this narrowing types `props.pageSizeLabel`. */}
         {props.pageSizes !== undefined && props.pageSizes.length > 0 ? (
           <div className={dataGridPageSizeVariants()}>
             <SelectField
@@ -710,14 +494,12 @@ export function DataGridPagination(props: DataGridPaginationProps) {
                 if (key === null) return;
                 table.setPageSize(Number(key));
                 // Row 11 is on page two at ten-per-page and page one at fifty.
-                // Keeping the index would land the reader past the end.
                 table.setPageIndex(0);
               }}
               className="w-auto"
               triggerClassName="w-auto min-w-20"
               options={props.pageSizes.map((size) => ({
-                // The key stays ASCII because it is parsed straight back by
-                // Number(); only the reader-facing label is localized.
+                // The key stays ASCII because it is parsed straight back by Number().
                 value: String(size),
                 label: formatNumber(size, locale),
               }))}
@@ -733,8 +515,7 @@ export function DataGridPagination(props: DataGridPaginationProps) {
           previousLabel={previousLabel}
           nextLabel={nextLabel}
           pageLabel={pageLabel}
-          // `Pagination` is 1-based and TanStack is 0-based. The conversion is
-          // done HERE, once, rather than being a rule every caller remembers.
+          // `Pagination` is 1-based and TanStack is 0-based; converted HERE, once.
           page={pageIndex + 1}
           count={pageCount}
           onPageChange={(page) => table.setPageIndex(page - 1)}

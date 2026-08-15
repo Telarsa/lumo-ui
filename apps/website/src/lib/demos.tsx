@@ -120,46 +120,17 @@ import {
 } from "@/components/demo-islands";
 
 /**
- * The demo registry — the single source the whole site is generated from.
+ * The demo registry — the single source the whole site is generated from: a
+ * page per locale, a preview-frame route, a gallery tile, a nav entry, a source
+ * panel. `source` is READ FROM DISK at build time, so the code shown is
+ * byte-identical to the code rendering the preview.
  *
- * Adding an entry here produces: a page in each locale, a preview-frame route in
- * each locale, a gallery tile, a nav entry and a source panel. Nothing about a
- * component page is hand-authored except the capped intro.
- *
- * `source` is READ FROM DISK at build time rather than retyped into a string.
- * That is the difference between documentation and a claim: the code shown on
- * the page is byte-identical to the code that renders the preview beside it, so
- * it cannot drift the first time someone edits a component.
- *
- * ── THREE RULES EVERY `render` OBEYS, AND WHY ───────────────────────────────
- *
- *  1. Every user-visible string is keyed by locale. There is no English literal
- *     in any demo: `@lumo-ui/gate` grades the prerendered `/fa/` HTML and an
- *     English `aria-label` on a Persian page is a failing build, not a review
- *     comment.
- *  2. No bare numbers. `LumoNode` makes `{5}` a compile error, so a count goes
- *     through `formatNumber(n, locale)` and comes out `۵` on the Persian route.
- *  3. Nothing that needs a client. These render under a static export, so no
- *     `useState` and no function props — which is why the removable `Tag` and
- *     the `Menu`'s `onAction` are absent rather than forgotten: a function
- *     cannot cross the server/client boundary.
- *
- * Overlays (dialog, drawer, popover, menu, tooltip, select, combobox, command)
- * are shown as their TRIGGER. React Aria's `Overlay` returns `null` during SSR,
- * so a `defaultOpen` overlay would contribute nothing to the graded bytes while
- * covering the component page with a modal after hydration. The trigger is the
- * part that is actually in the first byte, so the trigger is what is shown.
- *
- * ── THE FOUR THAT CANNOT BE WRITTEN HERE, AND WHY ───────────────────────────
- *
- * Rule 3 has a hard edge. Four components REQUIRE something a server module
- * cannot hand to a client one: a function (`Rating`, `Pagination` — their
- * label-builders are functions precisely so Persian word order is authored, see
- * `tag-group.tsx`), a class instance (`Toast`'s queue), or a library that cannot
- * run during the RSC pass at all (recharts, for `Chart`). Those four live in
- * `@/components/demo-islands` — a `"use client"` module that takes ONLY strings
- * and builds the closure on its own side. No copy lives there; every
- * user-visible string in this site is still written here, in both locales.
+ * Every `render` obeys three rules: (1) every user-visible string is keyed by
+ * locale — the gate grades the prerendered `/fa/` HTML; (2) no bare numbers —
+ * `formatNumber(n, locale)`; (3) nothing that needs a client — no `useState`, no
+ * function props. Overlays are shown as their TRIGGER (the part in the first
+ * byte). The four that need a function/class/recharts live in
+ * `@/components/demo-islands`, which takes ONLY strings; all copy stays here.
  */
 
 const UI_SRC = join(process.cwd(), "..", "..", "packages", "ui", "src");
@@ -584,11 +555,7 @@ const copy = {
   },
 } as const satisfies Record<string, Record<Locale, string>>;
 
-/**
- * Fixed dates. A `new Date()` here would change the prerendered bytes on every
- * build, so the gate would be grading a different document each time — and a
- * Jalali date is exactly the kind of value nobody notices drifting.
- */
+/** Fixed dates: `new Date()` would change the prerendered bytes on every build. */
 const ORDER_DATE = new Date("2026-07-28T09:30:00Z");
 const INVOICE_DATE = new Date("2026-06-11T09:30:00Z");
 
@@ -1624,37 +1591,11 @@ const DEMOS: Demo[] = [
     ),
   },
   /*
-   * `tag-group` HAS NO DEMO, AND THE REASON IS MEASURED RATHER THAN FORGOTTEN.
-   *
-   * React Aria's `useGridListItem` — which `useTag` builds on — writes
-   *
-   *     'aria-labelledby': descriptionId && (node['aria-label'] || node.textValue)
-   *       ? `${rowId} ${descriptionId}` : undefined
-   *
-   * where `descriptionId` comes from `useSlotId()`. `useSlotId` only CLEARS an
-   * unclaimed id in a layout effect, which never runs on the server — and
-   * `useTag` then DISCARDS `descriptionProps` (`let {descriptionProps: _,
-   * ...rest} = states`), so nothing can ever claim it. Measured in the
-   * prerendered bytes of a `fa-IR` render:
-   *
-   *     <div role="row" aria-label="تهران"
-   *          aria-labelledby="…-thr react-aria-_R_eH1_">
-   *
-   * with no element carrying the second id. `@lumo-ui/gate`'s `resolved-idrefs`
-   * fails the build over it, correctly by its own terms.
-   *
-   * Verified UNREACHABLE, by rendering rather than by report: passing
-   * `aria-labelledby` to `TagItem` changes nothing, because RAC's `Tag` builds
-   * its DOM props with `filterDOMProps(props, {global: true})`, which carries no
-   * `aria-*` at all, and merges the row's own props after them. `TagItem` also
-   * cannot drop `textValue` to take the falsy branch: that is the prop the whole
-   * component requires so a tag row is named and typeahead works.
-   *
-   * This is the same shape as `table.tsx`'s ColumnResizer note — a leak that is
-   * pinned and stated rather than papered over, with the demo withheld until it
-   * closes. It is closed by claiming the slot in the other four components that
-   * had it (`list-box.tsx`, `autocomplete.tsx`, `file-upload.tsx`,
-   * `slider.tsx`), which is what let those four ship.
+   * `tag-group` HAS NO DEMO, for a measured reason: RAC's `useTag` emits an
+   * `aria-labelledby` pointing at a `useSlotId` description id that is never
+   * claimed on the server, so `resolved-idrefs` fails the build. Verified
+   * unreachable from `TagItem` (RAC filters `aria-*` and merges its own after).
+   * Same stance as `table.tsx`'s ColumnResizer note: withheld until it closes.
    */
   {
     id: "pagination",
@@ -1787,10 +1728,8 @@ const DEMOS: Demo[] = [
     tier: "form",
     behaviour: true,
     source: source("autocomplete.tsx"),
-    // `items` on the ROOT, not children in the list. Base UI filters a data
-    // array; a JSX collection still renders and is silently never filtered, so
-    // the prop is required and this call site is what the requirement caught.
-    // See the header of `packages/ui/src/autocomplete.tsx`.
+    // `items` on the ROOT, not children: Base UI filters a data array, and a
+    // JSX collection is silently never filtered (see autocomplete.tsx).
     render: (l) => (
       <AutocompleteIsland
         inputLabel={copy.commandSearch[l]}
@@ -1936,10 +1875,8 @@ const DEMOS: Demo[] = [
     render: (l) => (
       <div className="flex items-center gap-3">
         {/*
-          * An island, because `CommandList`'s children are a RENDER FUNCTION on
-          * this engine and a function cannot cross into the RSC payload. The
-          * commands are data on the root: Base UI filters an array, and a
-          * JSX-only palette is silently never filtered.
+         * An island: `CommandList`'s children are a RENDER FUNCTION, which cannot
+         * cross into the RSC payload. Commands are data on the root so they filter.
           */}
         <CommandPaletteIsland
           listLabel={copy.palette[l]}

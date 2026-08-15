@@ -109,43 +109,16 @@ export function TagsInputIsland({
 }
 
 /**
- * The four demos that cannot be written in `demos.tsx`, and exactly why.
- *
- * `demos.tsx` is a SERVER module — it reads component sources off disk at build
- * time — so every `render` it holds is a server component. Three kinds of prop
- * cannot cross that boundary, and four components require one:
- *
- *  - **A function.** `Rating.valueLabel`/`starLabel` and `Pagination.pageLabel`
- *    are required functions, and deliberately so: Persian word order has to be
- *    authored rather than assembled (see `tag-group.tsx`'s header, which makes
- *    the argument once for the whole library). React refuses to serialise a
- *    function into the RSC payload, so the closure has to be built on this side.
- *  - **A class instance.** `ToastRegion.queue` is a live `ToastQueue` with a
- *    subscription list. Only plain objects cross.
- *  - **A DEFINITION built from functions.** The charts below were on this side
- *    of the boundary because recharts' chart elements call hooks and threw
- *    during the RSC pass. That reason is GONE — `@tanstack/charts` builds a
- *    plain definition object and `chartCategoryAxis`/`chartValueAxis` live in a
- *    directive-free module, so a server component could now build the whole
- *    spec. What keeps them here is smaller and different: `defineChart`'s marks
- *    hold scale FACTORIES and a tooltip `format` closure, and a function still
- *    cannot cross into the RSC payload. So the island stays and its reason is
- *    restated rather than inherited.
- *
- * So the boundary is drawn here instead, and it is drawn narrowly: every prop
- * below is a STRING the caller supplies per locale. There is no copy in this
- * file — `demos.tsx` remains the single place where a user-visible string is
- * written, in both locales, which is the rule the gate enforces.
- *
- * These still render under the static export. A client component is
- * server-rendered during prerender exactly like any other, so `lumo-gate` grades
- * their first byte too — and **the chart is no longer the exception**. TanStack
- * server-renders a real `<svg>` with real Persian ticks (4,717 bytes against
- * recharts' 127 and its zero digits), so the plot on these pages is graded like
- * everything else.
+ * The demos that cannot be written in `demos.tsx`: that module is a SERVER
+ * module, and a function (`valueLabel`, `pageLabel`, render props), a class
+ * instance (`ToastRegion.queue`, a `CalendarDate`) or a hook (`useLumoTable`)
+ * cannot cross the RSC boundary. Every prop below is a STRING or plain data
+ * the caller supplies per locale — no copy is authored in this file; `demos.tsx`
+ * stays the single place a user-visible string is written, in both locales.
+ * These still prerender under the static export, so `lumo-gate` grades them too.
  */
 
-/* ───────────────────────────────────────────────────────────────── rating ── */
+/* rating */
 
 export interface RatingIslandProps {
   locale: Locale;
@@ -173,8 +146,7 @@ export function RatingIsland({
         value={value}
         locale={locale}
         // Both arguments arrive ALREADY formatted — `rating.tsx` runs them
-        // through `formatNumber` before calling this, which is what makes «۴ از ۵»
-        // expressible and `4 از 5` unrepresentable.
+        // through `formatNumber` first, which is what makes «۴ از ۵» expressible.
         valueLabel={(v, max) => `${v} ${ofWord} ${max}`}
       />
       <Rating
@@ -188,7 +160,7 @@ export function RatingIsland({
   );
 }
 
-/* ───────────────────────────────────────────────────────────── pagination ── */
+/* pagination */
 
 export interface PaginationIslandProps {
   locale: Locale;
@@ -209,10 +181,7 @@ export function PaginationIsland({
   nextLabel,
   pageWord,
 }: PaginationIslandProps) {
-  // The one piece of state in this file. It is here rather than in `demos.tsx`
-  // for the same reason as everything else: `onPageChange` is a required
-  // function. The initial value is a constant, so the prerendered bytes are
-  // deterministic and the gate grades the same markup every build.
+  // Constant initial value, so the prerendered bytes are deterministic.
   const [page, setPage] = useState(3);
 
   return (
@@ -229,13 +198,10 @@ export function PaginationIsland({
   );
 }
 
-/* ────────────────────────────────────────────────────────────────── toast ── */
+/* toast */
 
-/**
- * Module scope, exactly as `toast.tsx` prescribes: the queue is a plain class
- * with a subscription list, so anything can raise a toast without being a React
- * component.
- */
+// Module scope, as `toast.tsx` prescribes: anything can raise a toast without
+// being a React component.
 const demoToasts = createToastQueue({ maxVisibleToasts: 3 });
 
 export interface ToastIslandProps {
@@ -281,8 +247,7 @@ export function ToastIsland({
       <Button
         variant="outline"
         onPress={() => {
-          // No timeout: a failure is something the reader has to act on, and
-          // `toast.tsx` records why a library-chosen duration for that is wrong.
+          // No timeout: a failure is something the reader has to act on.
           demoToasts.add({
             title: criticalTitle,
             description: criticalBody,
@@ -293,8 +258,7 @@ export function ToastIsland({
         {criticalTrigger}
       </Button>
       {/*
-       * Renders `null` until a toast is queued, so it contributes nothing to the
-       * served bytes — the same reason every overlay demo shows its trigger.
+       * Renders `null` until a toast is queued, so it adds nothing to the served bytes.
        */}
       <ToastRegion
         queue={demoToasts}
@@ -306,7 +270,7 @@ export function ToastIsland({
   );
 }
 
-/* ────────────────────────────────────────────────────────────────── chart ── */
+/* chart */
 
 export interface ChartIslandProps {
   locale: Locale;
@@ -330,9 +294,8 @@ export function ChartIsland({
   dataCaption,
   data,
 }: ChartIslandProps) {
-  // `label` is required by `ChartConfig` for the reason chart.variants.ts gives:
-  // without it the legend falls back to the dataKey, which is an English
-  // identifier on a Persian dashboard.
+  // `label` is required by `ChartConfig`: without it the legend falls back to
+  // the dataKey, an English identifier on a Persian dashboard.
   const config: ChartConfig = {
     month: { label: categoryLabel },
     sales: { label: seriesLabel, color: "oklch(0.62 0.16 255)" },
@@ -346,17 +309,9 @@ export function ChartIsland({
       locale={locale}
       label={label}
       /*
-       * The plot IS this object now — TanStack is a keyed scene rather than a
-       * component tree, so there is no `<BarChart>` child and no `cloneElement`
-       * to get a name onto the `<svg>`. `ariaLabel` is required by the library's
-       * own types, which is the first dependency here to enforce Lumo's
-       * announced-string rule on Lumo's behalf.
-       *
-       * The Lumo axis builders, never TanStack's bare axis options: they reverse
-       * the scale's RANGE under RTL — so bars, ticks and grid mirror together —
-       * and run every tick through `formatNumber`. A bare axis emits `0 600
-       * 1200` in Latin digits, and unlike under recharts the gate would now SEE
-       * that, because these ticks are in the served bytes.
+       * `ariaLabel` is required by TanStack's own types. Use the Lumo axis
+       * builders, never bare axis options: they reverse the scale's RANGE under
+       * RTL and run every tick through `formatNumber`.
        */
       definition={
         defineChart({
@@ -379,14 +334,9 @@ export function ChartIsland({
   );
 }
 
-/* ───────────────────────────────────────────────────────────── attachment ── */
+/* attachment */
 
-/*
- * Appended by the round-3 chat batch. Import declarations are hoisted, so
- * placing these here keeps the append-only contract for this file without
- * touching the shared header. `useState` and `Locale` are already imported at
- * the top; re-importing them would be a duplicate-binding error.
- */
+// Imports are hoisted; names already bound at the top are not re-imported.
 import {
   Attachment,
   AttachmentContent,
@@ -397,11 +347,7 @@ import {
 
 export interface AttachmentIslandProps {
   locale: Locale;
-  /**
-   * The verb of the remove phrase: «حذف» → «حذف گزارش فروش مرداد». The noun is
-   * each file's own name, appended on this side of the boundary — the same
-   * word-shape RatingIsland's `ofWord` documents.
-   */
+  /** The verb of the remove phrase: «حذف» → «حذف گزارش فروش مرداد». */
   removeWord: string;
   /** Shown once the last attachment is removed, e.g. «همهٔ پیوست‌ها حذف شد.». */
   emptyText: string;
@@ -411,9 +357,7 @@ export interface AttachmentIslandProps {
 
 /**
  * The one attachment demo that cannot live in a server module: removal needs
- * `onPress`, and a function cannot cross the server/client boundary. Only
- * strings and plain data arrive here; every user-visible word is still written
- * in the examples module, in both locales.
+ * `onPress`, and a function cannot cross the server/client boundary.
  */
 export function AttachmentIsland({ locale, removeWord, emptyText, files }: AttachmentIslandProps) {
   const [remaining, setRemaining] = useState(files);
@@ -444,24 +388,15 @@ export function AttachmentIsland({ locale, removeWord, emptyText, files }: Attac
   );
 }
 
-/* ────────────────────────────────────────────────────────────── resizable ── */
+/* resizable */
 
-/*
- * Appended by the round-3 navigation batch, same append-only contract as the
- * attachment block above: the import is hoisted, `Locale` is already imported
- * at the top.
- */
 import { Resizable } from "@lumo-ui/ui";
 
 export interface ResizableIslandProps {
   locale: Locale;
   /** Announced name of the divider, e.g. «تغییر اندازهٔ ستون‌ها». */
   label: string;
-  /**
-   * The unit noun of the announced size: «درصد» → «۳۰ درصد». The number is
-   * formatted by resizable.tsx before the closure built here ever sees it —
-   * the same contract as PaginationIsland's `pageWord`.
-   */
+  /** The unit noun of the announced size: «درصد» → «۳۰ درصد». The number arrives formatted. */
   percentWord: string;
   /** Visible caption inside the start pane. */
   startTitle: string;
@@ -473,10 +408,7 @@ export interface ResizableIslandProps {
 
 /**
  * The one resizable demo that cannot live in a server module: `sizeLabel` is a
- * REQUIRED function — word order is authored, not assembled (tag-group.tsx
- * makes the argument once for the library) — and a function cannot cross the
- * server/client boundary. Only strings arrive here; every user-visible word is
- * still written in the examples module, in both locales.
+ * REQUIRED function, and a function cannot cross the server/client boundary.
  */
 export function ResizableIsland({
   locale,
@@ -505,38 +437,19 @@ export function ResizableIsland({
   );
 }
 
-/* ──────────────────────────────────────────────── chart: line and area ── */
+/* chart: line and area */
 
 /*
- * Appended by the round-4 misc batch, same append-only contract as the blocks
- * above: import declarations are hoisted, and `Locale`, `ChartConfig`,
- * `ChartContainer`, `ChartLegend`, `chartCategoryAxis`, `chartValueAxis`,
- * `chartTooltip`, `chartColor`, `defineChart` and `scaleLinear` are already
- * imported at the top of this file. Only the genuinely new names are here.
- *
- * ── THE DONUT IS GONE, AND THAT IS AN HONEST ABSENCE ────────────────────────
- *
- * `ChartDonutIsland` used `ChartPie`, `ChartPieCenter` and
- * `ChartValueLabelList`, and `chart.tsx` removed all three rather than stub
- * them: `@tanstack/charts` 0.9.0 has no pie mark at all — a pie is a
- * composition of `polar` + `radialArc`, and a donut is that with an inner
- * radius, so porting it is AUTHORING a chart type rather than translating a
- * component. The island and its example are deleted here for the same reason
- * the components were: a donut that renders an empty box, or a wrapper that
- * silently draws no sectors, is exactly the defect class this site measures
- * itself against, and a docs page is the worst place to keep one. The gap is
- * recorded in `bulk-migration-result.json` as a capability gap with the
- * evidence, not papered over.
+ * No donut island: `@tanstack/charts` 0.9.0 has no pie mark, and `chart.tsx`
+ * removed `ChartPie` rather than stub it — the gap is recorded in
+ * `bulk-migration-result.json`, not papered over.
  */
 import { areaY, lineY, scalePoint } from "@lumo-ui/ui";
 
 /**
- * One plotted row of a two-column series: a category and a figure.
- *
- * A `type` rather than an `interface`, and the difference is load-bearing here:
- * TypeScript gives a type alias an implicit index signature and an interface
- * none, so only this spelling is assignable to `ChartRow` — the
- * `Record<string, …>` that `ChartContainer` requires for the data table.
+ * One plotted row of a two-column series: a category and a figure. A `type`,
+ * not an `interface`: only a type alias gets the implicit index signature that
+ * makes it assignable to `ChartRow`.
  */
 export type SeriesRow = {
   readonly category: string;
@@ -581,10 +494,8 @@ export function ChartLineIsland({
       locale={locale}
       label={label}
       /*
-       * `scalePoint`, not `scaleBand`: a line's vertices sit ON the category
-       * rather than across a band, and the axis builder still does the whole
-       * mirror — it reverses the scale's RANGE, so the curve moves with its
-       * categories and there is nothing on the mark itself to remember.
+       * `scalePoint`, not `scaleBand`: a line's vertices sit ON the category;
+       * the axis builder still mirrors the RANGE under RTL.
        */
       definition={
         defineChart({
@@ -627,11 +538,7 @@ export function ChartAreaIsland({
       config={config}
       locale={locale}
       label={label}
-      /*
-       * `areaY` fills to the baseline and `stroke` draws its edge — two options
-       * on one mark, where recharts needed `<Area stroke fill fillOpacity>` and
-       * a separate opacity to stop the fill swallowing the line.
-       */
+      // `areaY` fills to the baseline and `stroke` draws its edge, on one mark.
       definition={
         defineChart({
           marks: [
@@ -661,48 +568,23 @@ export function ChartAreaIsland({
 
 
 /*
- * Appended by the round-4 integration, same append-only contract as the blocks
- * above.
- *
- * WHY A CALENDAR NEEDS AN ISLAND AT ALL. `isDateUnavailable` is a FUNCTION, and
- * the examples files are server modules — React refuses to serialise a function
- * into the RSC payload, so the calendar page's prerender died on it with
- * «Functions cannot be passed directly to Client Components». It is the first
- * reason `ChartIsland`'s header lists, applied to a component nobody expected to
- * need one: a calendar looks like pure markup right up until a rule decides
- * which days it closes.
- *
- * The predicate is therefore OWNED here rather than passed in, and every
- * user-visible string still arrives as a prop, in both locales, from the
- * examples file.
+ * A calendar needs an island because `isDateUnavailable` is a FUNCTION, which
+ * cannot cross into the RSC payload; the predicate is owned here.
  */
 import { Calendar } from "@lumo-ui/ui";
 
 /**
- * The Iranian weekend is پنجشنبه and جمعه.
- *
- * Written against the absolute weekday of the underlying instant rather than
- * against a "day of week" index counted from the start of the Persian week —
- * those two disagree, and a rule written against the wrong one closes the wrong
- * two days while looking entirely reasonable.
- *
- * Typed structurally rather than as `DateValue` on purpose: this package depends
- * on `@lumo-ui/ui` and not on `@internationalized/date`, so the date type is not
- * importable here. The one member actually used is declared, which is a smaller
- * surface than the real type and cannot silently accept less.
+ * The Iranian weekend is پنجشنبه and جمعه. Written against the absolute weekday
+ * of the underlying instant, not a Persian-week index — the two disagree.
+ * Typed structurally because `@internationalized/date` is not a dependency here.
  */
 function isWeekend(date: { toDate: (timeZone: string) => Date }) {
   const weekday = date.toDate("UTC").getUTCDay();
   return weekday === 4 || weekday === 5;
 }
 
-/*
- * `Calendar`'s `isDateUnavailable` is typed `(date: CalendarDate) => boolean`,
- * and `CalendarDate` is not importable in this package — see `isWeekend`'s own
- * note. The cast is the seam between two declarations of one fact, and it
- * narrows rather than widens: the predicate uses one member of a type that has
- * many, so nothing it cannot handle can reach it.
- */
+// `CalendarDate` is not importable in this package, so the cast is the seam
+// between two declarations of one fact; it narrows rather than widens.
 const isWeekendDate = isWeekend as (date: { toDate: (tz: string) => Date }) => boolean as (
   date: Parameters<NonNullable<React.ComponentProps<typeof Calendar>["isDateUnavailable"]>>[0],
 ) => boolean;
@@ -710,23 +592,11 @@ const isWeekendDate = isWeekend as (date: { toDate: (tz: string) => Date }) => b
 export interface CalendarClosedDaysIslandProps {
   /** Announced name of the calendar. */
   label: string;
-  /**
-   * Selects the calendar system, the digits, the week start and the direction.
-   *
-   * Required since the react-day-picker migration: `Calendar` used to read it
-   * from React Aria's `I18nProvider`, and there is no such provider now.
-   * `previousMonthLabel`/`nextMonthLabel` went the other way — the nav buttons'
-   * names are composed by `calendar-datelib.ts` per locale, so they are no
-   * longer props anyone can forget.
-   */
+  /** Selects the calendar system, the digits, the week start and the direction. */
   locale: Locale;
   /** Help text under the grid, naming which days are closed. */
   description: string;
-  /**
-   * Shown when an unavailable day is chosen. Required here for the reason
-   * `calendar.tsx` states: a constraint without an authored message hands the
-   * reader React Aria's English, Gregorian, Latin-digited sentence.
-   */
+  /** Shown when an unavailable day is chosen. Required — the engine's fallback is English. */
   errorMessage: string;
 }
 
@@ -748,26 +618,11 @@ export function CalendarClosedDaysIsland({
   );
 }
 
-/* ──────────────────────────────────────────────── table: state examples ── */
+/* table: state examples */
 
 /*
- * Appended by the Base UI integration pass, same append-only contract.
- *
- * ── WHY A TABLE NEEDS AN ISLAND NOW, WHEN IT DID NOT BEFORE ─────────────────
- *
- * React Aria's `Table` carried `selectionMode`, `defaultSelectedKeys` and
- * `sortDescriptor` as ELEMENT props, so a selectable, sortable grid was pure
- * markup and lived happily in a server module. Base UI has no table at all;
- * `table.tsx` is markup and keyboard over a TanStack instance, and that
- * instance comes from `useLumoTable` — a HOOK. A hook cannot run in a server
- * component, so the two stateful examples move here beside the chart and the
- * calendar, for the same class of reason and a new instance of it.
- *
- * This is the honest cost of the migration at the docs layer and it is worth
- * stating rather than hiding: the *component* is no worse, but "a sorted table
- * is static markup" stopped being true.
- *
- * Every user-visible string still arrives as a prop, in both locales.
+ * Base UI has no table; `table.tsx` is markup over a TanStack instance from
+ * `useLumoTable`, a HOOK, so the stateful table examples live here.
  */
 import { Pencil } from "lucide-react";
 import {
@@ -824,9 +679,7 @@ export function TableSelectionIsland({
     ],
     getRowId: (row: OrderDemoRow) => row.id,
     enableRowSelection: true,
-    // The pre-selected row the React Aria example showed with
-    // `defaultSelectedKeys`. It is initial STATE now rather than an attribute,
-    // which is the whole shape of this migration in one line.
+    // The pre-selected row: initial STATE now, not an attribute.
     initialState: { rowSelection: { b: true } },
   });
 
@@ -853,29 +706,10 @@ export function TableSelectionIsland({
 }
 
 /**
- * The actions column, and the ONLY reason it is an island.
- *
- * Nothing here holds state — no `useLumoTable`, no selection, no sorting. It is
- * an island because `TableWidgetCell` takes a RENDER PROP, and a function
- * cannot cross the RSC boundary into a `"use client"` component. Measured on
- * this repository's own build, with the example written as plain markup in
- * `examples/table.tsx`:
- *
- *     Error occurred prerendering page "/en/components/table"
- *     Error: Functions cannot be passed directly to Client Components unless
- *     you explicitly expose it by marking it with "use server".
- *       {children: function children}
- *
- * That is the cost of the design and it is worth stating where someone will
- * meet it: an actions column puts its call site in a client module. The failure
- * is a BUILD ERROR naming the prop, not a wrong render — which is the trade the
- * component header argues for against `cloneElement`, whose failure on a
- * wrapped control would have been silent.
- *
- * The buttons carry no handler on purpose: this page is a static export, and a
- * function prop is exactly what this island exists to keep out of the server
- * module. The SHAPE is the subject — one Tab stop for the whole grid, with the
- * stop on the button rather than on the cell around it.
+ * The actions column, and the ONLY reason it is an island: `TableWidgetCell`
+ * takes a RENDER PROP, and a function cannot cross the RSC boundary (the
+ * prerender fails with a build error naming the prop). The buttons carry no
+ * handler on purpose; the SHAPE is the subject — one Tab stop for the grid.
  */
 export interface TableActionsIslandProps {
   locale: Locale;
@@ -914,11 +748,8 @@ export function TableActionsIsland({
             <Cell isRowHeader>{row.customer}</Cell>
             <Cell>{row.city}</Cell>
             {/*
-             * ONE control, and the tab index comes from the cell. A second
-             * button here would share the one stop and strand itself: a cell
-             * holding several widgets needs an enter-and-leave mode this grid
-             * does not implement, so a second action belongs behind a menu on
-             * this same trigger.
+             * ONE control, and the tab index comes from the cell. A second button here
+             * would share the one stop and strand itself; put it behind a menu instead.
              */}
             <TableWidgetCell>
               {(tabIndex) => (
@@ -956,13 +787,8 @@ export function TableSortingIsland({
       { id: "city", accessorKey: "city" },
     ],
     getRowId: (row: OrderDemoRow) => row.id,
-    /*
-     * The sort is REAL now. React Aria's `sortDescriptor` only announced a
-     * state and left the sorting to the consumer, so this example used to show
-     * `aria-sort="ascending"` over rows in their original order. `useLumoTable`
-     * compares with `Intl.Collator` over the page's own locale, so «اصفهان»
-     * precedes «تبریز» because Persian says so.
-     */
+    // The sort is REAL: `useLumoTable` compares with `Intl.Collator` over the
+    // page's locale, so «اصفهان» precedes «تبریز».
     initialState: { sorting: [{ id: "city", desc: false }] },
   });
 
@@ -1008,10 +834,8 @@ export interface TableResizingIslandProps {
 }
 
 /**
- * A resize handle is stateful even when the surrounding rows are static.
- * `ColumnResizer` intentionally exposes value semantics only when it can find
- * its TanStack column; keeping that state here prevents the docs from showing
- * a handle-shaped button that cannot resize anything.
+ * A resize handle is stateful even when the rows are static: `ColumnResizer`
+ * needs its TanStack column, or the docs show a handle that resizes nothing.
  */
 export function TableResizingIsland({
   locale,
@@ -1076,9 +900,6 @@ export function TableResizingIsland({
 /**
  * The table demo on the home page's component list: four columns, a resizable
  * first column, a checkbox column and a sortable one.
- *
- * Everything it shows is state, so all of it is here rather than in
- * `demos.tsx` — see the boundary note above the two islands before it.
  */
 export interface TableDemoIslandProps {
   locale: Locale;
@@ -1135,11 +956,7 @@ export function TableDemoIsland({
         <TableHeader>
           <TableSelectAllColumn label={selectAllLabel} defaultWidth={48} />
           {/*
-           * The resizer's own announced value USED to be React Aria's English
-           * "75 pixels", closed by a 27 KB patch of `node_modules` that shipped
-           * an `fa-IR` table bundle. The patch is retired: this handle is Lumo's
-           * own `<button>` with a required name and localized value formatter.
-           * One workaround the migration DELETED rather than translated.
+           * Lumo's own resize handle: a `<button>` with a required name and a localized value.
            */}
           <Column
             id="customer"
@@ -1183,24 +1000,12 @@ export function TableDemoIsland({
   );
 }
 
-/* ─────────────────────────────────────────────── command: the palette ── */
+/* command: the palette */
 
 /*
- * ── WHY THE PALETTE NEEDS AN ISLAND NOW, AND IT IS THE SAME OLD REASON ──────
- *
- * `CommandList` and `CommandGroup` take RENDER FUNCTIONS over the filtered set
- * on this engine: Base UI filters the `items` ARRAY inside its combobox root,
- * so what a row renders and what it is matched on are structurally separate
- * (which is exactly what retired React Aria's `textValue` derivation trap). A
- * render prop is a FUNCTION, and this file's header lists a function as the
- * first thing that cannot cross into the RSC payload — the prerender fails with
- * «Functions cannot be passed directly to Client Components».
- *
- * A palette built from static JSX children compiles and would dodge the
- * boundary. It must not be used here: static children on this engine are
- * rendered and never filtered, so the demo would be a search box that returns
- * everything for every query — the precise defect `command.tsx` made `items`
- * required to prevent, shipped on the page that documents it.
+ * `CommandList`/`CommandGroup` take RENDER FUNCTIONS over the filtered set,
+ * and a function cannot cross into the RSC payload. Static JSX children would
+ * dodge the boundary but are never filtered — do not use them here.
  */
 import {
   Command,
@@ -1301,10 +1106,8 @@ export function CommandPaletteIsland({
         }
       </CommandList>
       {/*
-       * A SIBLING of the list, not a `renderEmptyState` prop. `CommandEmpty`
-       * renders Base UI's `Autocomplete.Empty`, which is `role="status"
-       * aria-live="polite"` and mounts only when the filter emptied the list —
-       * so "no results" is announced, where React Aria's was merely drawn.
+       * A SIBLING of the list, not a `renderEmptyState` prop: `CommandEmpty` is a
+       * live region that mounts only when the filter emptied the list.
        */}
       {emptyText === undefined ? null : <CommandEmpty>{emptyText}</CommandEmpty>}
       {withSeparator === true ? <CommandSeparator /> : null}
@@ -1327,14 +1130,10 @@ export function CommandPaletteIsland({
   );
 }
 
-/* ────────────────────────────────────────────────────────── autocomplete ── */
+/* autocomplete */
 
-/*
- * Same boundary as the palette above, and it arrives for the same reason:
- * `AutocompleteListBox` renders the FILTERED items through a render function,
- * because Base UI filters the `items` array on the root rather than a JSX
- * collection. A function cannot cross into the RSC payload.
- */
+// Same boundary as the palette: `AutocompleteListBox` renders the filtered
+// items through a render function, which cannot cross into the RSC payload.
 import { Autocomplete, AutocompleteInput, AutocompleteItem, AutocompleteListBox } from "@lumo-ui/ui";
 
 export interface AutocompleteIslandProps {
@@ -1375,7 +1174,7 @@ export function AutocompleteIsland({
   );
 }
 
-/* ─────────────────────────────────────────────────────────────── form state ── */
+/* form state */
 
 export interface FormStateIslandProps {
   locale: Locale;
@@ -1410,21 +1209,10 @@ export interface FormStateIslandProps {
 }
 
 /**
- * A real, validating, three-field form.
- *
- * An island for the reason the file header gives — `useLumoForm` is a hook, and
- * `demos.tsx` is a server module — and every string below is still a prop, so
- * no copy lives on this side.
- *
- * It is deliberately the WHOLE loop rather than a screenshot of one: type
- * nothing and submit, and the browser does not intervene (`Form` emits
- * `noValidate`), Lumo's own messages appear in Persian, and focus lands on the
- * first invalid control. That last step is the part a static preview cannot
- * show and the part most likely to be missing from a hand-rolled form.
- *
- * The national-ID and mobile fields accept Persian digits — «۰۴۹۹۳۷۰۸۹۹» is
- * checked, not rejected — which is the single most load-bearing claim
- * `form-state.tsx` makes and the one worth being able to try.
+ * A real, validating, three-field form. An island because `useLumoForm` is a
+ * hook; every string is still a prop. Submit empty: the browser does not
+ * intervene (`noValidate`), Lumo's Persian messages appear and focus lands on
+ * the first invalid control. Persian digits are accepted in the ID fields.
  */
 export function FormStateIsland({
   locale,
@@ -1494,48 +1282,15 @@ export function FormStateIsland({
   );
 }
 
-/* ─────────────────────── phone-input, sortable and kanban ── */
+/* phone-input, sortable and kanban */
 
 /*
- * Appended by the round-5 batch, same append-only contract as the blocks above:
- * import declarations are hoisted, and `useState` and `Locale` are already
- * imported at the top of this file.
- *
- * ── WHY THESE THREE, AND NOT THE OTHER SEVEN IN THE BATCH ───────────────────
- *
- * Seven of the ten components this batch documented needed no island at all,
- * which is worth stating because it is the interesting result: `InputOtp` is a
- * client component whose handlers are all OPTIONAL and whose value is
- * uncontrolled by default, so its examples type real codes while crossing the
- * boundary with nothing but strings. `MessageScroller` and `Scrollspy` are the
- * same shape. These three are here because each requires something React
- * refuses to serialise:
- *
- *  - **PhoneInput** is a CONTROLLED field with no uncontrolled mode. Without an
- *    `onChange` the value is derived from a prop that never changes, so the
- *    second keystroke erases the first — a static demo of it would be a field
- *    that cannot be typed into, which is the one thing this component has to be
- *    watched doing.
- *  - **Sortable** and **Kanban** require `onReorder`/`onColumnsChange`, a
- *    `children` RENDER FUNCTION, and a `strings` object with a function member.
- *
- * ── THE ANNOUNCEMENT CLOSURES, AND WHAT ASSEMBLING THEM COSTS ───────────────
- *
- * `SortableStrings.position` and `KanbanStrings.movedTo` are functions rather
- * than templates precisely so a translator can AUTHOR clause order — the
- * argument `core/src/strings.ts` makes once for the library. Assembling them
- * from word parts here, as `PaginationIsland` and `ResizableIsland` already do
- * for their own single-word cases, is admissible only because these two
- * particular sentences happen to place their figures identically in both
- * locales: «مورد ۳ از ۷» and "item 3 of 7" are the same shape.
- *
- * That is a fact about THESE sentences, not a general licence, and it is the
- * reason the parts are passed rather than the sentence: a real caller writes
- * the closure on their own client, where nothing has to cross a boundary and
- * the whole sentence can be authored per locale. The docs page says so.
- *
- * As everywhere else in this file, there is no copy here — every word arrives
- * as a prop, written in both locales in the examples module.
+ * PhoneInput is CONTROLLED-only (no `onChange` means the field cannot be typed
+ * into); Sortable and Kanban require `onReorder`/`onColumnsChange`, a render
+ * function and a `strings` object with a function member. Assembling
+ * `position`/`movedTo` from word parts is admissible only because these
+ * sentences place their figures identically in both locales; a real caller
+ * authors the closure per locale on their own client. The docs page says so.
  */
 import {
   Kanban,
@@ -1564,23 +1319,15 @@ export interface PhoneInputIslandProps {
   countries?: readonly PhoneCountry[];
   /** Initial E.164 value, or `""` for an empty field. */
   defaultValue?: string;
-  /**
-   * Caption for the read-out below, e.g. «چیزی که ذخیره می‌شود». The E.164
-   * string beside it is the component's own output, not copy.
-   */
+  /** Caption for the read-out below, e.g. «چیزی که ذخیره می‌شود». */
   storedLabel: string;
   /** Shown in place of the E.164 string while the field is empty. */
   emptyText: string;
 }
 
 /**
- * A phone field that can actually be typed into, plus what it stores.
- *
- * The read-out is the demonstration. Type «۰۹۱۲۱۲۳۴۵۶۷» — the number every
- * Iranian knows by heart, leading zero and all — and watch `+989121234567`
- * appear underneath. That trunk zero is a domestic dialling artefact rather
- * than part of the number, and reconciling the two is the entire reason the
- * component exists; neither half of it is visible in a screenshot.
+ * A phone field that can actually be typed into, plus what it stores: type
+ * «۰۹۱۲۱۲۳۴۵۶۷» and watch `+989121234567` appear underneath.
  */
 export function PhoneInputIsland({
   locale,
@@ -1616,10 +1363,8 @@ export function PhoneInputIsland({
           <span>{emptyText}</span>
         ) : (
           /*
-           * E.164 is a Latin run by definition, and `data-lumo-latn` is the
-           * sanctioned marker for one — the same pair `phone-input.tsx` uses
-           * for the dial code. `<bdi>` isolates it so the `+` does not migrate
-           * to the wrong end inside an RTL paragraph.
+           * E.164 is a Latin run; `data-lumo-latn` is the sanctioned marker and
+           * `<bdi>` keeps the `+` at the right end inside an RTL paragraph.
            */
           <bdi data-lumo-latn="" dir="ltr" className="font-medium text-fg">
             {value}
@@ -1655,11 +1400,8 @@ export interface SortableIslandProps {
 
 /**
  * A working sortable list. Pick a handle up with Space, move it with the arrow
- * keys, drop it with Space or put it back with Escape.
- *
- * The numbers reaching `position` are already localised — `sortable.tsx`
- * formats them before the closure built here ever sees them, so this file never
- * hands a translator a raw `number`.
+ * keys, drop it with Space or put it back with Escape. The numbers reaching
+ * `position` are already localised.
  */
 export function SortableIsland({
   locale,
@@ -1718,12 +1460,8 @@ export interface KanbanIslandProps {
 
 /**
  * A working board. Space picks a card up; the arrow keys move it within a
- * column and ACROSS columns; Escape puts it back where it started.
- *
- * The horizontal pair is the thing to try on the fa route: columns run
- * right-to-left there, so ArrowLeft advances a card toward «انجام‌شده» and
- * ArrowRight retreats it — the exact opposite of the English mapping, and a
- * difference no screenshot can show.
+ * column and ACROSS columns; Escape puts it back. On the fa route columns run
+ * right-to-left, so ArrowLeft advances toward «انجام‌شده».
  */
 export function KanbanIsland({
   locale,
@@ -1762,22 +1500,10 @@ export function KanbanIsland({
   );
 }
 
-/* ────────────────────────────────────────────────────────────── data-grid ── */
+/* data-grid */
 
-/*
- * Appended by the round-5 batch. Imports are hoisted; `useState` and `Locale`
- * are already imported at the top of this file.
- *
- * `DataGrid` cannot be demonstrated from a server module for three separate
- * reasons, any one of which would be enough: `useLumoTable` is a hook, and
- * `pageLabel` and `rangeLabel` are required FUNCTIONS. As everywhere else in
- * this file, no copy is authored here — every word arrives as a prop, and the
- * numbers arrive as data and go out through `formatNumber`.
- */
-// Only the genuinely new names: `Cell`, `Column`, `Row`, `Table`, `TableBody`,
-// `TableHeader` and `useLumoTable` are already imported by the table block
-// above, and import declarations are hoisted — re-importing them is a
-// duplicate-binding error, not a shadow.
+// `DataGrid` needs an island: `useLumoTable` is a hook, and `pageLabel` and
+// `rangeLabel` are required FUNCTIONS. Only the genuinely new names are imported.
 import {
   DataGrid,
   DataGridColumnsMenu,
@@ -2191,9 +1917,8 @@ export function DataGridTreeIsland({
   totalHeader,
   rows,
 }: DataGridTreeIslandProps) {
-  // TanStack treats a new data reference as a new row structure and schedules
-  // an expanded-state reset. Keep the server-provided snapshot stable so an
-  // expansion does not visibly undo itself on the next microtask.
+  // TanStack treats a new data reference as a new row structure and resets
+  // expanded state, so keep the server-provided snapshot stable.
   const [data] = useState(() => [...rows]);
   const table = useLumoTable({
     locale,
@@ -2236,11 +1961,8 @@ export function DataGridTreeIsland({
 
 /**
  * A working data grid: type in the search box, hide a column, change the page.
- *
- * The three things worth doing are all invisible in a screenshot — filtering
- * returns to page one, the LAST visible column's toggle is disabled so the view
- * cannot be trapped empty, and every figure on the footer is in the reader's
- * own numerals including the rows-per-page options.
+ * Filtering returns to page one, the LAST visible column's toggle is disabled,
+ * and every footer figure is in the reader's own numerals.
  */
 export function DataGridIsland({
   locale,
@@ -2325,12 +2047,9 @@ export function DataGridIsland({
         }
         {...(
           /*
-           * The two travel TOGETHER, because `DataGridPaginationProps` is now a
-           * union that says so: sizes without a name used to compile and
-           * silently delete the control (AUDIT §2.3). Splitting them across a
-           * plain prop and a conditional spread happens to type-check — TS is
-           * lenient about which union arm a spread lands in — so the pairing is
-           * written out here rather than left to that leniency.
+           * The two travel TOGETHER: `DataGridPaginationProps` is a union, and a
+           * spread that splits them happens to type-check, so the pairing is
+           * written out here.
            */
           pageSizes === undefined ? {} : { pageSizes, pageSizeLabel }
         )}
@@ -2339,34 +2058,13 @@ export function DataGridIsland({
   );
 }
 
-/* ──────────────────────────────────────────── autocomplete · rating · tags ── */
+/* autocomplete · rating · tags */
 
 /*
- * Appended by the round-6 form batch, same append-only contract as every block
- * above: imports are hoisted, and `useState`, `Locale` and `formatNumber` are
- * already imported at the top of this file. Only the genuinely new names are
- * imported here — `Autocomplete`, `AutocompleteInput`, `AutocompleteItem`,
- * `AutocompleteListBox` and `Rating` are already bound by earlier blocks, and
- * re-importing them is a duplicate-binding error rather than a shadow.
- *
- * Four components in this batch cannot be demonstrated from a server module,
- * each for a reason its own docblock states:
- *
- *  - `Autocomplete` filters a DATA ARRAY and hands the survivors to its list as
- *    a RENDER ARGUMENT. The children are therefore a function, and a static
- *    child list is the worst possible outcome — it renders, type-checks and is
- *    silently never filtered.
- *  - `Rating` requires `valueLabel` / `starLabel`, functions of an
- *    already-formatted number, because «۴ از ۵» and «۴ ستاره» are sentences
- *    Persian has to author rather than assemble.
- *  - `TagGroup`'s removable form requires `onRemove` AND `removeLabel`, and the
- *    union makes half of that pair unrepresentable.
- *  - `FileUpload`'s list requires `onRemove` per row and a `removeLabel` built
- *    from the file's own name.
- *
- * As everywhere else in this file, NO copy is authored here. Every word arrives
- * as a prop, in both locales, from the examples module; every number arrives as
- * data and leaves through the component's own formatter.
+ * Autocomplete's list children are a render function (a static child list is
+ * silently never filtered); Rating requires `valueLabel`/`starLabel`; TagGroup's
+ * removable form and FileUpload's list require `onRemove` and a `removeLabel`
+ * closure. Every word still arrives as a prop, in both locales.
  */
 import {
   FileUpload,
@@ -2395,10 +2093,8 @@ export interface AutocompleteExampleIslandProps {
   /** Which collator comparison the built-in filter uses. */
   match?: "contains" | "startsWith" | "endsWith" | undefined;
   /**
-   * Replace the built-in filter with a subsequence match, so the example can
-   * show what a consumer-supplied filter receives: the RAW text and the RAW
-   * query, unfolded, because folding behind a consumer's back would silently
-   * change what their own comparison sees.
+   * Replace the built-in filter with a subsequence match: a consumer-supplied
+   * filter receives the RAW text and the RAW query, unfolded.
    */
   subsequence?: boolean | undefined;
   /** Rows that render but cannot be chosen. Still filtered like any other. */
@@ -2407,13 +2103,7 @@ export interface AutocompleteExampleIslandProps {
   defaultInputValue?: string | undefined;
 }
 
-/**
- * A working autocomplete: an input and an always-visible list, no popup.
- *
- * The `inline` + `open` pairing that removes Base UI's English «Dismiss»
- * sentinel is inside the component, not here — this island passes no such prop
- * because there is none to pass.
- */
+/** A working autocomplete: an input and an always-visible list, no popup. */
 export function AutocompleteExampleIsland({
   inputLabel,
   inputPlaceholder,
@@ -2424,10 +2114,7 @@ export function AutocompleteExampleIsland({
   disabledValues,
   defaultInputValue,
 }: AutocompleteExampleIslandProps) {
-  /*
-   * A subsequence match: every character of the query, in order, anywhere in
-   * the text. It is handed the raw strings deliberately — see the prop's doc.
-   */
+  // A subsequence match, handed the raw strings deliberately — see the prop's doc.
   const fuzzy = (textValue: string, inputValue: string) => {
     let at = 0;
     for (const char of inputValue) {
@@ -2479,10 +2166,7 @@ export interface RatingSummaryIslandProps {
   ofWord: string;
 }
 
-/**
- * The read-only form: a `role="img"` with one authored name, no tab stop and no
- * five-way navigation through information that is not a choice.
- */
+/** The read-only form: a `role="img"` with one authored name and no tab stop. */
 export function RatingSummaryIsland({
   locale,
   value,
@@ -2550,18 +2234,15 @@ export interface TagGroupIslandProps {
   size?: "sm" | "md" | undefined;
   /**
    * The remove control's name is assembled from these two around the tag's own
-   * text — «حذف تهران» with a prefix, «تهران را بردارید» with a suffix. The
-   * component takes a FUNCTION for exactly this reason; the island supplies the
-   * closure and the examples module supplies the words.
+   * text — «حذف تهران» with a prefix, «تهران را بردارید» with a suffix.
    */
   removePrefix?: string | undefined;
   removeSuffix?: string | undefined;
 }
 
 /**
- * A working removable tag row. Arrow the chips and listen: each remove control
- * names the tag it drops, which is what makes eight filters eight distinct
- * announcements instead of eight buttons called «حذف».
+ * A working removable tag row: each remove control names the tag it drops,
+ * so eight filters are eight distinct announcements.
  */
 export function TagGroupIsland({
   label,
@@ -2638,11 +2319,6 @@ export interface FileUploadIslandProps {
 /**
  * A working uploader: drop files on the area, pick them with the button, or
  * paste them while something inside is focused.
- *
- * The three things worth doing here are all invisible in a screenshot — the
- * drag highlight survives the pointer crossing into the icon (a counter, not a
- * flag), choosing the same file twice in a row still fires, and every size is
- * formatted with its unit in the reader's own language.
  */
 export function FileUploadIsland({
   locale,
@@ -2763,34 +2439,13 @@ export function FileUploadIsland({
   );
 }
 
-/* ───────────────────────── date-input · pagination · toast · virtual-list ── */
+/* date-input · pagination · toast · virtual-list */
 
 /*
- * Appended by the round-7 batch, under the same append-only contract as every
- * block above: import declarations are hoisted, and `useState`, `Locale`,
- * `formatNumber`, `Button`, `Pagination`, `ToastRegion` and `createToastQueue`
- * are already bound at the top of this file. Only the genuinely new names are
- * imported here — re-importing a bound one is a duplicate-binding error rather
- * than a shadow.
- *
- * FOUR components in this batch cannot be demonstrated from a server module,
- * and each reason is the component's own rather than a limitation of this file:
- *
- *  - `DateInput` is handed a STATE OBJECT built by `useDateFieldState` or
- *    `useTimeFieldState`. A hook cannot run during the RSC pass, and the state
- *    it returns carries `cycle`, `setSegment` and `clearSegment` — functions.
- *  - `VirtualList`'s `children` is a FUNCTION of a row index. A static child
- *    list is not a smaller version of that; it is a list that is never
- *    virtualised, which renders and type-checks and silently does nothing.
- *  - `Pagination` requires `onPageChange` AND `pageLabel`, both functions, the
- *    second one because «صفحه ۳» is a sentence Persian authors rather than
- *    assembles.
- *  - `ToastRegion.queue` is a live object with a subscription list. Only plain
- *    objects cross into the payload.
- *
- * As everywhere else in this file, NO copy is authored here. Every word arrives
- * as a prop, in both locales, from the examples module; every number arrives as
- * data and leaves through `formatNumber`.
+ * DateInput takes a STATE OBJECT from a hook; VirtualList's `children` is a
+ * function of the row index (a static child list is never virtualised);
+ * Pagination requires `onPageChange` and `pageLabel`; ToastRegion's queue is a
+ * live object. Every word still arrives as a prop, in both locales.
  */
 import { useId } from "react";
 import {
@@ -2804,14 +2459,13 @@ import {
   type TimeFields,
 } from "@lumo-ui/ui";
 
-/* ─────────────────────────────────────────────────────────────── date-input ─ */
+/* date-input */
 
 export interface DateInputIslandProps {
   locale: Locale;
   /**
-   * The group's visible name. It is rendered as a real element here and reaches
-   * the component as an IDREF, because that is the only shape `DateInput`
-   * accepts — see its `labelId` prop.
+   * The group's visible name. Rendered as a real element here and reaches the
+   * component as an IDREF, the only shape `DateInput` accepts (`labelId`).
    */
   label: string;
   /** `"time"` builds the state with `useTimeFieldState` instead. */
@@ -2827,12 +2481,8 @@ export interface DateInputIslandProps {
 }
 
 /**
- * A working segmented input.
- *
- * BOTH hooks are called on every render and one result is chosen, rather than
- * the call being made conditional: a hook behind a branch is the rules-of-hooks
- * violation that only shows up when the branch changes, and the two states are
- * cheap to build.
+ * A working segmented input. BOTH hooks are called on every render and one
+ * result is chosen — a hook behind a branch is a rules-of-hooks violation.
  */
 export function DateInputIsland({
   locale,
@@ -2873,7 +2523,7 @@ export function DateInputIsland({
   );
 }
 
-/* ─────────────────────────────────────────────────────────────── pagination ─ */
+/* pagination */
 
 export interface PaginationExampleIslandProps {
   locale: Locale;
@@ -2919,17 +2569,12 @@ export function PaginationExampleIsland({
   );
 }
 
-/* ──────────────────────────────────────────────────────────────────── toast ─ */
+/* toast */
 
 /**
- * The queues, at MODULE SCOPE, keyed so each example owns one.
- *
- * One shared queue would be wrong for a page with several regions on it: every
- * mounted viewport subscribes to the manager it is given, so one `add` would
- * appear four times. One queue per example keeps the demonstration honest.
- *
- * That this map can exist at all — outside React, outside any component, with
- * no context to reach for — is the property `toast.tsx`'s header opens with.
+ * The queues, at MODULE SCOPE, keyed so each example owns one: every mounted
+ * viewport subscribes to the manager it is given, so a shared queue would show
+ * one `add` four times.
  */
 const exampleQueues = new Map<string, LumoToastQueue>();
 
@@ -2954,11 +2599,7 @@ export interface ToastButtonSpec {
   timeout?: number | undefined;
 }
 
-/**
- * NOT a component, and not a hook — an ordinary function that happens to raise
- * a toast. A fetch wrapper or a service-worker message handler would call it
- * exactly like this.
- */
+/** NOT a component, and not a hook — an ordinary function that raises a toast. */
 function raiseToast(queueKey: string, spec: ToastButtonSpec): void {
   queueFor(queueKey).add(
     {
@@ -2983,11 +2624,8 @@ export interface ToastExampleIslandProps {
 }
 
 /**
- * The buttons, and the region they fill.
- *
- * The region renders an empty landmark until something is queued, so it costs
- * the served bytes one element and contributes no strings to grade — the same
- * reason every overlay demo on this site shows its trigger.
+ * The buttons, and the region they fill. The region renders an empty landmark
+ * until something is queued, so it contributes no strings to grade.
  */
 export function ToastExampleIsland({
   locale,
@@ -3021,7 +2659,7 @@ export function ToastExampleIsland({
   );
 }
 
-/* ───────────────────────────────────────────────────────────── virtual-list ─ */
+/* virtual-list */
 
 export interface VirtualListIslandProps {
   locale: Locale;
@@ -3047,12 +2685,8 @@ export interface VirtualListIslandProps {
 }
 
 /**
- * A working virtualised list.
- *
- * Nothing here announces the corpus size: `aria-setsize` and `aria-posinset`
- * are emitted by the component on every row, from `count` and the row's TRUE
- * index, because an affordance a caller has to remember per row is one that is
- * eventually forgotten on one row.
+ * A working virtualised list. `aria-setsize`/`aria-posinset` come from the
+ * component on every row, from `count` and the row's TRUE index.
  */
 export function VirtualListIsland({
   locale,
@@ -3155,46 +2789,19 @@ export function AsyncListBoxIsland({
   );
 }
 
-/* ────────────────────────────────────────────────────────────── date-selector ─ */
+/* date-selector */
 
 /*
- * Appended by the date-selector batch, under the same append-only contract as
- * every block above: `useState` and `Locale` are already bound at the top of
- * this file, so only the genuinely new names are imported here — re-importing a
- * bound one is a duplicate-binding error rather than a shadow.
- *
- * `DateSelector` cannot be demonstrated from a server module for two reasons,
- * and only one of them is the usual one:
- *
- *  - `formatRange` is a required FUNCTION. It is a function rather than a
- *    template because a range read-out is the bidi trap `data-grid.tsx`
- *    documents at length — two Arabic-number runs with a neutral between them
- *    take the paragraph's direction and can render with their ends swapped —
- *    so the whole sentence belongs to the author, who can reach for the word
- *    «تا» instead of a dash. React refuses to serialise a function into the RSC
- *    payload, so the closure is built on this side.
- *  - The selector OWNS a range and shows it in its own trigger. A demo with no
- *    state would show the placeholder forever and prove nothing about the one
- *    thing the component is for.
- *
- * What does NOT need an island is the preset list. A `DateRangeRule` is plain
- * data — `{ kind: "thisMonth" }` — precisely so a server component can build
- * the array, and the labels beside it are ordinary strings. So the `presets`
- * prop below is passed straight through from the examples module, in both
- * locales, and no copy is authored in this file.
+ * `DateSelector`'s `formatRange` is a required FUNCTION (a range read-out is a
+ * bidi trap, so the whole sentence belongs to the author) and the selector
+ * OWNS a range, so it needs state. The `presets` list is plain data and passes
+ * straight through from the examples module.
  */
 import { DateSelector, type CalendarDateRange, type DateSelectorPreset } from "@lumo-ui/ui";
 
 /**
- * NO `locale` PROP, and that is the one thing worth noticing here.
- *
- * Every other island in this file takes one, because it formats a number or
- * builds a queue. `DateSelector` reads `LumoLocaleContext` instead — the
- * context `locale.ts` exists to provide, set once by the page's provider — so
- * passing a locale beside it would be a SECOND lever that can disagree with the
- * first. That is the exact failure `locale.ts`'s header records against Base
- * UI's own per-component `locale` prop sitting beside a global
- * `DirectionProvider`.
+ * NO `locale` PROP: `DateSelector` reads `LumoLocaleContext` instead, and a
+ * locale beside it would be a SECOND lever that can disagree with the first.
  */
 export interface DateSelectorIslandProps {
   /** Names the whole control; rendered `sr-only` inside the trigger. */
@@ -3208,9 +2815,8 @@ export interface DateSelectorIslandProps {
   /** The trigger's read-out before anything is chosen. */
   placeholder: string;
   /**
-   * The WORD between the two ends — «تا», "to". A word rather than a dash on
-   * purpose: a neutral character between two Arabic-number runs resolves under
-   * the paragraph's direction and can flip the range. See the block above.
+   * The WORD between the two ends — «تا», "to". A word rather than a dash: a
+   * neutral between two Arabic-number runs can flip the range under RTL.
    */
   joinWord: string;
   /** Plain data all the way down, so the whole list crosses the boundary. */
@@ -3220,12 +2826,9 @@ export interface DateSelectorIslandProps {
 }
 
 /**
- * A working selector. The range it holds is the reader's, not the page's.
- *
- * No `defaultValue`: a prerendered read-out would have to be computed from
- * `today()`, which is a different day on a build machine than in a reader's
- * browser, and the mismatch would show as the trigger's text changing on
- * hydration. The placeholder is stable in every byte.
+ * A working selector. No `defaultValue`: a read-out computed from `today()`
+ * differs between the build machine and the reader's browser and would change
+ * on hydration; the placeholder is stable in every byte.
  */
 export function DateSelectorIsland({
   label,
@@ -3257,34 +2860,14 @@ export function DateSelectorIsland({
   );
 }
 
-/* ────────────────────────────────────────────────────────────────── gantt ── */
+/* gantt */
 
 /*
- * Appended by the gantt pass, same append-only contract as every block above.
- * Imports are hoisted; `useState` and `Locale` are already imported at the top
- * of this file.
- *
- * A gantt needs an island for THREE of the reasons this file's header
- * enumerates, and it is worth naming all three rather than the first:
- *
- *  1. **Functions.** `strings.barName` and `strings.movedTo` are required
- *     functions — a bar's accessible name and a move announcement are whole
- *     Persian sentences, and Persian word order has to be authored rather than
- *     assembled from holes. React refuses to serialise a function into the RSC
- *     payload, so the closures are built on this side from words that arrive as
- *     props.
- *  2. **State.** `onTasksChange` receives a new list on every keyboard move, so
- *     a chart that can actually be moved needs a `useState` to hold it.
- *  3. **A CLASS INSTANCE.** `GanttTask.start` is a `CalendarDate`, which is not
- *     plain data and cannot cross the boundary either — and `apps/website` does
- *     not depend on `@internationalized/date`, so it could not construct one
- *     anyway (`examples/calendar.tsx` records the same wall). The dates arrive
- *     as ISO strings and `ganttDate` — exported from `@lumo-ui/ui` for exactly
- *     this — turns them into calendar FIELDS with no instant and therefore no
- *     time zone in the problem at all.
- *
- * As everywhere else in this file, no copy is authored here. Every word arrives
- * as a prop in the caller's locale.
+ * A gantt needs an island for functions (`strings.barName`/`movedTo`), state
+ * (`onTasksChange`) and a CLASS INSTANCE: `GanttTask.start` is a `CalendarDate`,
+ * which cannot cross the boundary and which `apps/website` could not construct
+ * anyway. Dates arrive as ISO strings and `ganttDate` turns them into calendar
+ * FIELDS with no instant and therefore no time zone.
  */
 import { Gantt, ganttDate, type GanttScale, type GanttTask } from "@lumo-ui/ui";
 
@@ -3325,21 +2908,15 @@ export interface GanttIslandProps {
   /** What a bar IS, e.g. «نوار زمان‌بندی». */
   barRoleDescription: string;
   /**
-   * The words that JOIN the two ends of a range.
-   *
-   * Words rather than a dash, and the reason is the one `DateSelectorIsland`
-   * states above: a neutral character between two Arabic-number runs resolves
-   * under the PARAGRAPH's direction, so «۱ مرداد – ۷ مرداد» can render with its
-   * ends swapped in Persian and only in Persian.
+   * The words that JOIN the two ends of a range. Words rather than a dash, for
+   * the reason `DateSelectorIsland` states: a neutral between two Arabic-number
+   * runs can render the ends swapped in Persian.
    */
   fromWord: string;
   toWord: string;
   /**
-   * What separates the clauses — «، » in Persian, ", " in English.
-   *
-   * A prop rather than a literal because the Arabic comma U+060C is not the
-   * ASCII one, and hardcoding either would put the wrong punctuation on one of
-   * the two routes. Same discipline as every other word in this file.
+   * What separates the clauses — «، » in Persian, ", " in English. A prop
+   * because the Arabic comma U+060C is not the ASCII one.
    */
   separator: string;
   /** Closes the progress clause, e.g. «انجام‌شده». */
@@ -3359,13 +2936,8 @@ export interface GanttIslandProps {
 
 /**
  * A working chart. Space picks a bar up, the arrow keys move it, Escape puts
- * the dates back.
- *
- * The horizontal pair is the thing to try on the fa route: time runs toward the
- * reader's end edge, so ArrowLeft moves a bar LATER there and ArrowRight moves
- * it earlier — the exact opposite of the English mapping, and a difference no
- * screenshot can show. The bars' POSITIONS mirror without being asked, because
- * they are `inset-inline-start` rather than a computed `left`.
+ * the dates back. On the fa route ArrowLeft moves a bar LATER; the bars'
+ * positions mirror because they are `inset-inline-start`, not `left`.
  */
 export function GanttIsland({
   locale,
@@ -3450,32 +3022,11 @@ export function GanttIsland({
   );
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * EVENT CALENDAR
- *
- * An island for the same three reasons the Gantt one lists, and it is worth
- * naming which of them bites hardest here.
- *
- *  1. **Functions.** Four members of `EventCalendarStrings` are functions — a
- *     day's announced name, an event's announced name, a range read-out and the
- *     overflow sentence. React refuses to serialise a function into the RSC
- *     payload, so the closures are built on THIS side from words that arrive as
- *     props. The library's own advice is to write those functions directly; a
- *     word-assembly island is what an example file can carry, not what an
- *     application should.
- *  2. **State.** The view and the focused day are the reader's, so the
- *     component keeps them; the island exists to be the client boundary they
- *     live behind.
- *  3. **CLASS INSTANCES.** `EventCalendarEvent.start` is a `CalendarDate` or a
- *     `CalendarDateTime`, which is not plain data — and `apps/website` does not
- *     depend on `@internationalized/date`, so it could not construct one
- *     anyway. `eventCalendarEvent` and `eventCalendarDay`, exported from
- *     `@lumo-ui/ui` for exactly this, turn ISO strings into calendar FIELDS.
- *     There is no instant anywhere in the path and therefore no time zone in
- *     the problem — which is a stronger guarantee than stating one.
- *
- * As everywhere else in this file, no copy is authored here. Every word arrives
- * as a prop in the caller's locale.
+/*
+ * EVENT CALENDAR. An island for the Gantt's three reasons: four members of
+ * `EventCalendarStrings` are functions, the view and focused day are state,
+ * and `EventCalendarEvent.start` is a `CalendarDate`/`CalendarDateTime` —
+ * `eventCalendarEvent`/`eventCalendarDay` turn ISO strings into calendar FIELDS.
  */
 import {
   EventCalendar,
@@ -3507,9 +3058,8 @@ export interface EventCalendarIslandProps {
   /** Prefixed to an event on every day after its first. */
   continued: string;
   /**
-   * The WORD between two ends — «تا», "to". A word rather than a dash on
-   * purpose: a neutral character between two Arabic-number runs resolves under
-   * the paragraph's direction and can render the range reversed.
+   * The WORD between two ends — «تا», "to". A word rather than a dash: a
+   * neutral between two Arabic-number runs can render the range reversed.
    */
   joinWord: string;
   /** What separates a date from what follows it — «، », ", ". */
@@ -3518,12 +3068,7 @@ export interface EventCalendarIslandProps {
   eventsWord: string;
   /** The word after a count in the overflow chip — «رویداد دیگر», "more". */
   moreWord: string;
-  /**
-   * The word marking `todayDay` — «امروز», "Today".
-   *
-   * Today is painted three ways in the grid and, until this string existed, was
-   * announced in none of them. See `EventCalendarStrings.todayLabel`.
-   */
+  /** The word marking `todayDay` — «امروز», "Today". See `EventCalendarStrings.todayLabel`. */
   todayWord: string;
   eventMovedWord: string;
   eventResizedWord: string;
@@ -3542,11 +3087,8 @@ export interface EventCalendarIslandProps {
 }
 
 /**
- * A working calendar. The view and the focused day are the reader's.
- *
- * No `today()` anywhere: the component requires an opening day precisely so a
- * prerendered page and the browser that hydrates it cannot disagree about which
- * month is on screen.
+ * A working calendar. No `today()` anywhere: the component requires an opening
+ * day so the prerendered page and the hydrating browser cannot disagree.
  */
 export function EventCalendarIsland({
   label,
@@ -3630,20 +3172,11 @@ export function EventCalendarIsland({
   );
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * ALERT — DISMISSAL
- *
- * `Alert` itself is a SERVER component and stays one: it is a `<div>` with
- * tokens, and a page of four callouts should cost no hydration. The dismiss
- * control does not change that — `alert.tsx` renders the `<button>` only when
- * `onClose` is present, so the branch that carries an event handler is
- * unreachable from a server module by construction.
- *
- * Which is exactly why this island exists. A function cannot cross the RSC
- * boundary, so the ONE example on the alert page that has a handler has to be
- * authored on this side. Every string still arrives as a prop, per locale, from
- * `demos.tsx`.
- * ═══════════════════════════════════════════════════════════════════════════ */
+/*
+ * ALERT — DISMISSAL. `Alert` itself stays a SERVER component; `alert.tsx`
+ * renders the dismiss button only when `onClose` is present, and a function
+ * cannot cross the RSC boundary, so the one example with a handler lives here.
+ */
 
 export interface AlertDismissIslandProps {
   title: string;
@@ -3663,8 +3196,7 @@ export function AlertDismissIsland({
   const [open, setOpen] = useState(true);
 
   // Dismissal is the CALLER's to own — `Alert` unmounts nothing and remembers
-  // nothing. That is the same division `Dialog` makes: the component draws the
-  // thing, the application decides whether it exists.
+  // nothing, the same division `Dialog` makes.
   return (
     <div className="flex w-full max-w-lg flex-col gap-3">
       {open ? (
@@ -3685,22 +3217,13 @@ export function AlertDismissIsland({
   );
 }
 
-/* ───────────────────────────────────────────────────────────── menu choice ── */
+/* menu choice */
 
 /**
- * The two selectable menu item kinds, which cannot be demonstrated any other
- * way: both are CONTROLLED-ONLY by design, so a demo of either needs state on
- * this side of the boundary. `MenuCheckboxItem` shipped with no example at all
- * for exactly that reason; `MenuRadioItem` arrives with one.
- *
- * Both kinds in ONE island rather than two, because the pairing is the point.
- * A settings menu normally holds a question with one answer above a set of
- * independent switches, and the thing worth seeing on the page is that the two
- * are told apart by their ANNOUNCEMENT — `menuitemradio` inside a named group
- * versus `menuitemcheckbox` — while their gutters line up to the same inset.
- *
- * No copy here: every string is a prop the caller supplies per locale, which is
- * the rule this whole file obeys.
+ * The two selectable menu item kinds, both CONTROLLED-ONLY by design, so a
+ * demo needs state on this side. Both in ONE island because the pairing is
+ * the point: `menuitemradio` inside a named group versus `menuitemcheckbox`,
+ * with their gutters lined up to the same inset.
  */
 export interface MenuChoiceIslandProps {
   /** Announced name of the menu, e.g. «نمایش». */
@@ -3763,34 +3286,13 @@ export function MenuChoiceIsland({
   );
 }
 
-/* ─────────────────────────────────────── calendar: the caption dropdowns ── */
+/* calendar: the caption dropdowns */
 
 /*
- * Appended by the caption-dropdown pass, same append-only contract.
- *
- * ── WHY A BOUNDED CALENDAR NEEDS AN ISLAND, MEASURED ────────────────────────
- *
- * `captionLayout="dropdown"` makes `minValue`/`maxValue` REQUIRED at the type
- * level — an unbounded year list is derived from `today()` during render, which
- * is a hydration hazard and a nondeterministic build, and `calendar.tsx`'s
- * header carries the measurement. So the examples file has to produce two dates,
- * and a date here is the SECOND kind of prop that cannot cross the RSC boundary:
- *
- *     Error occurred prerendering page "/fa/components/calendar"
- *     Only plain objects, and a few built-ins, can be passed to Client
- *     Components from Server Components. Classes or null prototypes are not
- *     supported.
- *       {label: …, minValue: {calendar: …, era: "AD", year: 1921, …}}
- *
- * — the build failing on exactly this, before the island existed. A
- * `CalendarDate` is a class instance carrying a `Calendar` implementation, which
- * is the same reason `ToastRegion.queue`, `GanttTask.start` and
- * `EventCalendarEvent.start` are all on this side of the line.
- *
- * The dates therefore arrive as ISO STRINGS and are constructed here by
- * `calendarDay`, exactly as `EventCalendarIsland` does with `eventCalendarDay`.
- * Every user-visible string is still a prop, in both locales, from the examples
- * file.
+ * `captionLayout="dropdown"` makes `minValue`/`maxValue` REQUIRED, and a
+ * `CalendarDate` is a class instance that cannot cross the RSC boundary
+ * («Only plain objects … can be passed to Client Components»). The dates
+ * therefore arrive as ISO STRINGS and are constructed here by `calendarDay`.
  */
 import { calendarDay, DatePicker, DateRangePicker, RangeCalendar } from "@lumo-ui/ui";
 
@@ -3954,12 +3456,8 @@ export function CalendarDropdownIsland({
 }
 
 /**
- * The picker's version, and it takes NO `locale`.
- *
- * `DatePicker` reads the locale from `LumoProvider` rather than from a prop —
- * `Calendar` is the one that requires it explicitly, because it can be rendered
- * outside a provider. `Omit` states that difference instead of carrying a prop
- * this island would have nowhere to put.
+ * The picker's version, and it takes NO `locale`: `DatePicker` reads it from
+ * `LumoProvider`, so `Omit` states that difference.
  */
 export interface DatePickerDropdownIslandProps
   extends Omit<CalendarDropdownIslandProps, "locale"> {
@@ -3986,53 +3484,24 @@ export function DatePickerDropdownIsland({
       minValue={calendarDay(minDay)}
       maxValue={calendarDay(maxDay)}
       /*
-       * `placeholderValue` and not `defaultValue`: the field stays EMPTY, which
-       * is what a date-of-birth field looks like before it is filled, while the
-       * segments and the grid both start from a month a reader born in ۱۳۶۰ is
-       * near — rather than from today, which is the wrong end of eighty years.
+       * `placeholderValue`, not `defaultValue`: the field stays EMPTY while the
+       * segments and grid start from a month a reader born in ۱۳۶۰ is near.
        */
       placeholderValue={calendarDay(openOn)}
     />
   );
 }
 
-/* ────────────────────────────────────────────────────── chart: motion ── */
+/* chart: motion */
 
-/*
- * Appended by the motion pass, same append-only contract as the blocks above:
- * import declarations are hoisted, so `useState`, `Locale`, `Button`,
- * `ChartConfig`, `ChartContainer`, `ChartLegend`, `barY`, `chartCategoryAxis`,
- * `chartColor`, `chartTooltip`, `chartValueAxis`, `defineChart`, `scaleBand`
- * and `scaleLinear` are already imported at the top of this file. Only the
- * genuinely new names are here.
- */
 import { chartMotion } from "@lumo-ui/ui";
 
 /**
  * ONE demo of everything `@tanstack/charts` 0.9.0 can be made to do in Lumo,
- * and — by its own copy — of the four things it cannot.
- *
- * It is deliberately one island rather than five, because the interesting part
- * is how the behaviours COMBINE: a series that enters while the value axis is
- * rescaling, a custom curve applied to a transition the reader triggered, a
- * tooltip that keeps following the pointer through all of it.
- *
- * ── WHY EVERY STRING IS A REQUIRED PROP, INCLUDING THE BUTTON LABELS ────────
- *
- * The whole rule, applied to a component that has more announced strings than
- * any other demo on the site: four controls, a live region and a legend. A
- * default for any of them would be English, and English on a Persian page is
- * the defect this library exists to prevent. They arrive as ONE required
- * `strings` object rather than fifteen loose props — the `ChartPanelStrings`
- * shape from `@lumo-ui/blocks`, for its reason: a group of strings that are
- * always written together should be missable together, at one compile error.
- *
- * ── THE FIGURES IN THE LIVE REGION GO THROUGH `formatNumber` ────────────────
- *
- * A selected datum's value is a `number` off the caller's row. It reaches the
- * DOM as text in a `role="status"`, which is neither a JSX child `LumoNode`
- * could refuse nor a tick the axis formatter could catch. This is the third
- * seam where a Latin digit could enter a chart, after the axis and the tooltip.
+ * one island rather than five because the behaviours COMBINE. Every string is
+ * a required prop in ONE `strings` object (the `ChartPanelStrings` shape), and
+ * the live region's figure goes through `formatNumber` — the third seam where
+ * a Latin digit could enter a chart, after the axis and the tooltip.
  */
 export interface ChartMotionStrings {
   /** The plot's announced name — it is `role="img"` and a Tab stop. */
@@ -4085,18 +3554,10 @@ export interface ChartMotionIslandProps {
 }
 
 /**
- * An authored easing curve.
- *
- * `ChartAnimationOptions['easing']` accepts `(progress: number) => number`, and
- * `reconcile.js`'s `easing(name)` returns a function argument unchanged — so
- * this runs verbatim on every interpolated attribute. It is a "back" curve:
- * it overshoots past 1 and settles, which is a shape none of the five named
- * easings can express and which recharts has no form of at all.
- *
- * Declared at module scope, not inside the component: a new function identity
- * on every render would make the definition a new object every render too, and
- * the definition's identity is what tells the renderer whether anything
- * changed.
+ * An authored "back" easing curve: it overshoots past 1 and settles, which no
+ * named easing can express. Module scope on purpose — a new function identity
+ * per render would make the definition a new object per render, and the
+ * definition's identity is what tells the renderer whether anything changed.
  */
 const chartBackOut = (progress: number): number => {
   const overshoot = 1.70158;
@@ -4134,9 +3595,7 @@ export function ChartMotionIsland({
   return (
     <div className="flex w-full flex-col gap-4">
       {/*
-       * `role="group"` with a name, not a bare `<div>`: four controls that all
-       * act on one plot are a unit, and a screen-reader user arriving at the
-       * third button otherwise has no way to learn what it belongs to.
+       * `role="group"` with a name: four controls that act on one plot are a unit.
        */}
       <div role="group" aria-label={strings.controlsLabel} className="flex flex-wrap gap-2">
         <Button
@@ -4169,10 +3628,8 @@ export function ChartMotionIsland({
         locale={locale}
         label={strings.label}
         /*
-         * `animate` is the ONE switch. It writes the attribute the enter
-         * stylesheet is keyed on AND strips `svgAnimation` from the definition,
-         * so the button above turns off both halves of motion rather than the
-         * half a reader happens to be looking at.
+         * `animate` is the ONE switch: it writes the enter-stylesheet attribute
+         * AND strips `svgAnimation`, so the button turns off both halves.
          */
         animate={animate}
         definition={
@@ -4183,11 +3640,8 @@ export function ChartMotionIsland({
             }) as never,
             y: chartValueAxis(locale, { scale: scaleLinear, grid: true }) as never,
             tooltip: chartTooltip(locale, config),
-            /*
-             * 700ms rather than the 320ms default, because this is a
-             * DEMONSTRATION of the transition and the default is tuned to be
-             * felt rather than watched.
-             */
+            // 700ms rather than the 320ms default: this is a DEMONSTRATION of the
+            // transition, and the default is tuned to be felt rather than watched.
             svgAnimation: chartMotion({
               duration: 700,
               easing: isCustomEasing ? chartBackOut : "ease-out",
@@ -4204,11 +3658,8 @@ export function ChartMotionIsland({
       </ChartContainer>
 
       {/*
-       * `role="status"` — polite, so it does not interrupt, and announced only
-       * when the reader has actually picked a datum. Selection is the right
-       * event to announce; the ACTIVE datum changes on every pixel of pointer
-       * movement, and a live region wired to that is a component nobody can
-       * use with a screen reader on.
+       * `role="status"` — polite, and announced on SELECTION rather than on the
+       * active datum, which changes on every pixel of pointer movement.
        */}
       <p role="status" className="text-sm text-fg-muted">
         {selected === undefined
@@ -4219,7 +3670,7 @@ export function ChartMotionIsland({
   );
 }
 
-/* ─────────────────────────────────────────────── overflow-list · transfer-list ─ */
+/* overflow-list · transfer-list */
 
 import { OverflowList, TransferList } from "@lumo-ui/ui";
 

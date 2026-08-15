@@ -3,126 +3,37 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
- * A navigational link.
+ * A navigational link. NO ENGINE and NO `"use client"`: Base UI has no link
+ * primitive, and a real `<a href>` gets press handling from the PLATFORM, so
+ * this file is server-renderable — a link in prose or a footer costs the
+ * consumer no hydration. `hover:`/`active:`/`:focus-visible` replace RAC's
+ * attributes; `data-current` ("true") is still emitted because
+ * `navigation-menu.tsx`, `breadcrumbs.tsx` and `sidebar.test.tsx` rely on it.
  *
- * ── NO ENGINE, AND NO `"use client"` ───────────────────────────────────────
- *
- * This file used to import React Aria's `Link`, and the header argued the
- * dependency bought four things a bare `<a>` lacks: press handling for touch,
- * keyboard and mouse alike; `data-pressed` / `data-focus-visible` to style
- * against; the `<span role="link" tabindex="0">` fallback when there is no
- * `href`; and `aria-current` written through to `data-current`.
- *
- * Base UI has no link primitive at all — 83 export subpaths, none of them a
- * link — so the migration question was never "which primitive" but "does this
- * need one". Item by item, against the measured Base UI state vocabulary
- * (`experiments/measurements/state-vocabulary.json`):
- *
- *   press handling      An `<a href>` is activated by click, by Enter and by
- *                       touch by the PLATFORM. React Aria's press abstraction
- *                       earns its keep on `<div>`s pretending to be buttons;
- *                       on a real anchor it is re-implementing the browser.
- *   data-pressed        Would have had to go anyway. Base UI publishes NO press
- *                       attribute (`button/ButtonDataAttributes` declares
- *                       `disabled` and nothing else), so the whole library's
- *                       answer here is CSS `:active`. That is a partial
- *                       fidelity loss and it is stated: React Aria's press
- *                       state survived the pointer leaving and returning;
- *                       `:active` ends when the pointer leaves.
- *   data-focus-visible  Same — zero files in the dist. The answer is
- *                       `:focus-visible`, which is what it always modelled.
- *   the span fallback   Three lines, below, and now VISIBLE rather than a
- *                       behaviour a reader has to know RAC has.
- *   aria-current        The old header spent thirty lines proving React Aria
- *                       wrote this attribute through even though `LinkProps`
- *                       omitted it by accident. Writing it directly is one
- *                       line and needs no proof.
- *
- * With all four answered, RAC was buying a client-component boundary and
- * nothing else. Dropping it makes this file server-renderable: a link in prose,
- * in a footer, in a server-rendered block, now costs the consumer no hydration.
- * `navigation-menu.tsx`, `sidebar.tsx` and `breadcrumbs.tsx` build on it and are
- * client components for their own reasons; they are unaffected.
- *
- * `data-current` is still emitted, with the same value RAC emitted
- * (`"true"`), because `navigation-menu.tsx` and `breadcrumbs.tsx` style
- * `data-current:` and `sidebar.test.tsx` asserts it.
- *
- * ── Two decisions that are about Persian, not about links ───────────────────
- *
- *  1. `underline-offset-4`. Arabic-script letterforms descend far below the
- *     baseline — the tails of ی, ج, ح, ع and the whole of ژ sit in the space a
- *     default underline occupies. At the browser default offset the rule cuts
- *     through those tails and the word becomes genuinely harder to read, which
- *     a Latin-only review will never notice because Latin descenders are
- *     shallower. The offset is part of the component, not a per-page fix.
- *
- *  2. `newTab` is a typed pair, not a `target` passthrough. `target="_blank"`
- *     with no warning is a WCAG 3.2.5 problem, and the warning is a spoken
- *     string — so by rule 6 it cannot have an English default and cannot be
- *     optional. `target` and `rel` are removed from the prop type so there is
- *     no back door: opening a new tab is only reachable through `newTab`, and
- *     `newTab` without `newTabLabel` does not compile.
+ * `underline-offset-4` because Arabic-script tails (ی ج ح ع ژ) sit where a
+ * default underline cuts. `newTab` is a typed pair (`newTabLabel` required —
+ * WCAG 3.2.5) and `target`/`rel` are removed from the prop type, so a new tab
+ * is reachable only with an announced warning.
  */
 export const linkVariants = cva(
   "inline-flex items-center gap-1 rounded-sm underline-offset-4 " +
     "transition-colors cursor-pointer " +
-    // THE press treatment, stated once for all three variants rather than in
-    // each of them. `button.variants.ts` carries the argument and the
-    // measurements; the variants below carry what this file gave up for it.
+    // THE press treatment, stated once for all three variants (see button.variants.ts).
     "active:translate-y-px " +
-    // `data-disabled` is still an ATTRIBUTE rather than `:disabled`, because an
-    // `<a>` has no disabled state in the platform at all — the component writes
-    // it, so the component may as well keep styling it.
+    // `data-disabled` stays an ATTRIBUTE: an `<a>` has no platform disabled state.
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4",
   {
     variants: {
       /** How strongly the link is styled against surrounding prose. */
       variant: {
-        // The default. Coloured and underlined, because colour alone is not a
-        // distinguishing feature (WCAG 1.4.1) once the link sits inside prose.
-        //
-        // `data-hovered:`/`data-pressed:` → `hover:`/`active:` on the engine
-        // swap. See the file header: neither attribute exists in Base UI, and
-        // this component no longer has React Aria to emit them either.
-        //
-        // ── THE PRESS WAS A COPY OF THE HOVER, MEASURED ────────────────────
-        //
-        // The rename above produced `hover:decoration-accent
-        // active:decoration-accent` on `accent` — the same byte-identical shape
-        // `button.variants.ts` was fixed for, and here it is the DECORATION
-        // rather than the fill, which makes it even quieter. `subtle` was the
-        // second half of it: `active:text-fg` is a strict SUBSET of
-        // `hover:text-fg hover:underline`, so a press after a hover changed
-        // nothing and a press with no hover before it — every tap on a phone —
-        // coloured the text and left the affordance off. `quiet` had no press
-        // rule at all.
-        //
-        // The second fix stepped on THICKNESS — `active:decoration-2` on all
-        // three variants, plus `active:text-fg`/`active:underline` on two of
-        // them — because colour was already spent on the hover. It is gone, and
-        // this file is where the trade is worth naming, because the note it
-        // replaces argued AGAINST the nudge and the argument was aesthetic
-        // rather than measured:
-        //
-        //   "a link is usually a run of text INSIDE a paragraph, and nudging it
-        //    by a pixel moves the words relative to the sentence around them."
-        //
-        // Two things are true and only one of them was checked. `translate` does
-        // not participate in layout any more than `text-decoration-thickness`
-        // does, so nothing reflows and no line rewraps — that half is
-        // measurable and it is fine. The other half is that a word dropping a
-        // pixel inside a sentence is unusual, which is a taste claim, and it was
-        // bought at the price of a THIRD press vocabulary in a library that had
-        // five. `linkVariants` is `inline-flex`, so the transform applies; the
-        // press now reads the same here as everywhere else.
+        // The default: coloured AND underlined (WCAG 1.4.1). `active:` is the shared
+        // `translate-y-px` above, not a copy of the hover — `translate` does not
+        // reflow, so a word inside a sentence never rewraps.
         accent: "text-accent underline decoration-accent/40 hover:decoration-accent",
-        // For dense secondary navigation, where an underline on every item is
-        // noise. The underline appears on hover so the affordance is not lost.
+        // Dense secondary navigation: the underline appears on hover.
         subtle: "text-fg-muted no-underline hover:text-fg hover:underline",
-        // Inherits the surrounding colour. For a link wrapping a whole card or
-        // a heading, where the target is obvious from the layout.
+        // Inherits the surrounding colour, for a link wrapping a whole card.
         quiet: "text-current no-underline hover:underline",
       },
       /** The text-size step. */
@@ -136,12 +47,8 @@ export const linkVariants = cva(
 );
 
 /**
- * The values ARIA defines for `aria-current`.
- *
- * `true` means "this one, unspecified kind"; the words name WHAT the reader is
- * currently on, and a screen reader speaks them in its own language. Closed
- * union rather than `string`, for the same reason `Locale` is closed: a typo
- * (`"pages"`) is silently ignored by the browser and leaves the item unmarked.
+ * The values ARIA defines for `aria-current`. A closed union rather than
+ * `string`: a typo is silently ignored by the browser.
  */
 export type LinkCurrent = true | "page" | "step" | "location" | "date" | "time";
 
@@ -160,18 +67,11 @@ interface LinkBaseProps
   children?: LumoNode;
   className?: string | undefined;
   /**
-   * Marks this link as the resource the reader is currently on — usually
-   * `"page"` for a navigation item, `"step"` inside a wizard.
-   *
-   * Emits `aria-current` AND `data-current`, so the active state is styleable
-   * with `data-current:` and announced without an `sr-only` string.
+   * Marks this link as the resource the reader is currently on — `"page"` for a
+   * navigation item, `"step"` inside a wizard. Emits `aria-current` AND `data-current`.
    */
   isCurrent?: LinkCurrent | false | undefined;
-  /**
-   * Renders a non-navigating link: no `href`, not in the tab order, styled as
-   * unavailable. Kept from the React Aria API — `app-shell.tsx` and the
-   * navigation components pass it.
-   */
+  /** Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable. */
   isDisabled?: boolean | undefined;
 }
 
@@ -186,13 +86,7 @@ interface NewTabProps {
   newTab: true;
   /**
    * Announced warning that a new tab will open, e.g. «در برگه جدید باز می‌شود».
-   *
-   * REQUIRED, and required by the type rather than by a lint rule: WCAG 3.2.5
-   * asks that a change of context be announced in advance, and a screen-reader
-   * user who is not told has no way to discover it before it happens. Lumo
-   * ships no default because a default would be English, and an English phrase
-   * appended to a Persian link name is worse than a missing one — it is spoken
-   * by a Persian voice as phoneme soup.
+   * REQUIRED by the type (WCAG 3.2.5); no default because it would be English.
    */
   newTabLabel: string;
 }
@@ -217,13 +111,8 @@ export function Link({
       ? {}
       : { "aria-current": isCurrent, "data-current": "true" as const };
 
-  /*
-   * Appended AFTER the visible text, so the accessible name reads
-   * "<link text>, <warning>" in document order. That order is the correct one
-   * in both scripts: an accessible name is concatenated in DOM order, which the
-   * bidi algorithm never reorders, so no `dir` island is needed here the way it
-   * is in Kbd.
-   */
+  // Appended AFTER the visible text: an accessible name is concatenated in DOM
+  // order, which bidi never reorders, so no `dir` island is needed.
   const content = (
     <>
       {children}
@@ -233,14 +122,8 @@ export function Link({
     </>
   );
 
-  /*
-   * No `href`, or disabled: a `<span role="link">` rather than an `<a>` with no
-   * destination. This is what React Aria did (`elementType = props.href &&
-   * !props.isDisabled ? 'a' : 'span'`) and the reason is the accessibility tree
-   * — an `<a>` without `href` is not a link to a screen reader, it is a
-   * generic. The span is NOT given `tabindex="0"` when disabled: a control that
-   * cannot be activated should not be a tab stop.
-   */
+  // No `href`, or disabled: a `<span role="link">` — an `<a>` without `href` is
+  // a generic to a screen reader. No `tabindex="0"` when disabled.
   if (href === undefined || isDisabled === true) {
     return (
       <span
@@ -267,9 +150,7 @@ export function Link({
       href={href}
       className={classes}
       {...current}
-      // `rel` travels with `target` and is not separately settable. `noopener`
-      // closes the reverse-`window.opener` hole; `noreferrer` is included
-      // because the two are only jointly honoured by older engines.
+      // `rel` travels with `target` and is not separately settable.
       {...(newTab === true ? ({ target: "_blank", rel: "noopener noreferrer" } as const) : {})}
     >
       {content}

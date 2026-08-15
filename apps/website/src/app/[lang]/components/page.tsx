@@ -34,33 +34,11 @@ const index = {
 } as const satisfies Record<Locale, Record<string, string>>;
 
 /**
- * The components index — a filterable gallery, not an alphabet.
- *
- * ── WHAT THIS PAGE USED TO BE, AND WHY IT CHANGED ───────────────────────────
- *
- * An A–Z listing with a letter-jump strip, whose header argued — correctly —
- * that the sidebar groups by KIND and this page ordered by NAME, and that those
- * answer different questions. That argument still holds. What stopped holding
- * is the assumption that name and kind are the only two axes worth having.
- *
- * At 110 components the question a visitor actually arrives with is neither:
- * it is *"show me the overlays"* or *"show me anything with a calendar in it"*.
- * Both are filters. An alphabet cannot express either, and a letter strip whose
- * headings hold two entries each is navigation that costs more than it saves.
- *
- * `Intl.Collator` still does the ordering, and still under `FORMAT_LOCALE`
- * rather than the bare tag so collation matches the numbering the rest of the
- * page uses — `Array.prototype.sort()` compares UTF-16 code units, which puts
- * Persian in codepoint order: plausible-looking and wrong, because Persian
- * letters are not laid out alphabetically in Unicode. What is gone is the
- * GROUPING by first letter, not the sort.
- *
- * ── THE CATALOGUE CROSSES THE BOUNDARY AS DATA ──────────────────────────────
- *
- * `CatalogEntry` carries a `render` function, which cannot cross into a client
- * component. It does not need to: the gallery's previews are `/view/` iframes,
- * so each card needs four strings. Mapping to `GalleryItem` here is what keeps
- * the filter client-side and the demos server-only.
+ * The components index — a filterable gallery, not an alphabet. At 110 components the
+ * question is "show me the overlays", which is a filter, not a letter strip. `Intl.Collator`
+ * under `FORMAT_LOCALE` still does the ordering (a bare `sort()` puts Persian in codepoint
+ * order, which is wrong). `CatalogEntry.render` cannot cross into a client component, so
+ * entries are mapped to `GalleryItem` strings here; the previews are `/view/` iframes.
  */
 export default async function Gallery({ params }: { params: Promise<{ lang: string }> }) {
   const lang = assertLocale((await params).lang);
@@ -107,8 +85,6 @@ export default async function Gallery({ params }: { params: Promise<{ lang: stri
               allLabel: copy.allLabel,
               emptyLabel: copy.emptyLabel,
               // A per-locale template, so each language positions its own hole.
-              // See the prop's docblock for why this is a string here and a
-              // function inside the library.
               countLabel: copy.countLabel,
             }}
           />

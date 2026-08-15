@@ -4,12 +4,8 @@ import { RULES, digitSystem, scriptSystem, type DigitSystem, type Doc, type Rule
 export * from "./rules.ts";
 
 /**
- * The digit sets, one per numbering system rather than one per locale — several
- * locales share a system, and the range is a property of the system.
- *
- * `name` is what a violation message calls them. "Persian" is deliberate and
- * load-bearing: it is the word the floor rule printed when the range was
- * hardwired, so a `fa-IR` violation still reads byte-for-byte as it always did.
+ * The digit sets, one per numbering system rather than one per locale. `name`
+ * is what a violation message calls them; "Persian" keeps `fa-IR` messages byte-identical.
  */
 const ARABEXT = digitSystem("Persian", "arabext", "۰"); // U+06F0–U+06F9
 const ARAB = digitSystem("Arabic-Indic", "arab", "٠"); //  U+0660–U+0669
@@ -17,13 +13,7 @@ const LATN = digitSystem("Latin", "latn", "0"); //         U+0030–U+0039
 
 /**
  * The scripts, one per writing system. `\p{Script=Arabic}` covers Persian and
- * Arabic alike — they are one script with different letter repertoires, which
- * is precisely why the property is script and not language: a rule asking "can
- * this reader read these letters?" gets the same answer for both.
- *
- * The message name is the SCRIPT's name, not the language's: a violation on a
- * `fa-IR` page reads "no Arabic character at all", because that is the true
- * statement — «سلام» is Persian written in the Arabic script.
+ * Arabic alike, and the message names the SCRIPT, not the language.
  */
 const ARABIC_SCRIPT = scriptSystem("Arabic", "Arabic");
 const LATIN_SCRIPT = scriptSystem("Latin", "Latin");
@@ -33,46 +23,18 @@ export interface LocaleGrading {
   direction: "rtl" | "ltr";
   digits: DigitSystem;
   /**
-   * The Unicode calendar its readers count years in. A THIRD independent
-   * property, for the same reason direction and digits are already two: it does
-   * not follow from either. Persian is rtl/arabext/persian, Arabic is
-   * rtl/arab/islamic-umalqura — same direction, different digits AND a
-   * different calendar — and Urdu is rtl/latn/gregory. Deriving any one from
-   * another is how `no-latin-digits` was silently Persian-only.
-   *
-   * Measured, and the reason this is data rather than an ICU default: on this
-   * project's Node, `Intl.DateTimeFormat("fa-IR")` picks `persian` by itself
-   * while `Intl.DateTimeFormat("ar-SA")` picks GREGORIAN. The default is not
-   * something a gate can rely on, and it can differ between a laptop and CI.
+   * The Unicode calendar its readers count years in. Independent of direction
+   * and digits, and data rather than an ICU default (ICU picks GREGORIAN for `ar-SA`).
    */
   calendar: string;
-  /**
-   * The writing system its readers read. A FOURTH independent property, and it
-   * is independent of all three others: Persian and Arabic share this one while
-   * differing in digits and calendar, and Urdu shares it while numbering in
-   * `latn`. Nothing about `rtl` implies Arabic script — deriving it from
-   * direction would be the proxy that made the digit rules silently
-   * Persian-only, in a new place.
-   */
+  /** The writing system its readers read. Independent of the other three: nothing about `rtl` implies Arabic script. */
   script: ScriptSystem;
 }
 
 /**
- * Locales this gate knows how to grade.
- *
- * Two properties, deliberately independent. Direction was once used as a stand-in
- * for "numbers in its own digits", which is true of Persian and Arabic and false
- * in both directions in general — Urdu is rtl and commonly latn, and nothing
- * about ltr implies Latin numerals. Conflating them is why the digit rules were
- * silently Persian-only, so both are stated.
- *
- * This table is the gate's OWN scope and is deliberately wider than
- * `@lumo-ui/core`'s `Locale` union: core's union is the set of locales the
- * LIBRARY ships complete string sets for, while this is the set of locales the
- * grader can grade — including a consumer's, whose HTML it is handed but whose
- * translations it does not own. `ar-SA` is here for that reason and because a
- * parametrisation with one instantiation is indistinguishable from a hardwire;
- * `fixtures/locales/` grades real Arabic bytes through it.
+ * Locales this gate knows how to grade. Every property is stated, none derived
+ * (deriving digits from direction made the rules silently Persian-only). Wider
+ * than core's `Locale` on purpose: `ar-SA` proves the parametrisation is real.
  */
 const KNOWN: Record<string, LocaleGrading> = {
   "fa-IR": { direction: "rtl", digits: ARABEXT, calendar: "persian", script: ARABIC_SCRIPT },
@@ -85,11 +47,7 @@ export function knownLocales(): string[] {
   return Object.keys(KNOWN);
 }
 
-/**
- * How a locale is graded. Throws rather than defaulting: a locale with no entry
- * would otherwise be graded against some other locale's digits, which is a
- * wrong answer wearing a green tick.
- */
+/** How a locale is graded. Throws rather than defaulting to another locale's digits. */
 export function gradingFor(locale: string): LocaleGrading {
   const grading = KNOWN[locale];
   if (!grading) {
@@ -102,25 +60,10 @@ export function gradingFor(locale: string): LocaleGrading {
   return grading;
 }
 
-/**
- * Derives the expected locale from a route path.
- *
- * Deliberately strict: an unrecognised first segment is an ERROR, not a skip.
- * Silently skipping unknown routes is how a gate ends up grading three pages out
- * of fifty-five and reporting green.
- */
+/** Derives the expected locale from a route path. Strict: an unrecognised route is an ERROR, not a skip. */
 export function localeForPath(
   path: string,
-  /**
-   * Documents that legitimately sit above the locale segment — a static export's
-   * root `404.html` and its entry stub. They are served for paths that matched
-   * no route, so they cannot know the visitor's locale.
-   *
-   * They are NOT skipped. They are graded as the primary locale, because a 404
-   * is user-facing text and the one route nobody tests is exactly where an
-   * English document slips through. The allowance is a narrow, named list rather
-   * than a wildcard for that reason.
-   */
+  /** Root documents (`404.html`, entry stub) are NOT skipped: graded as this locale. */
   rootLocale: string = "fa-IR",
 ): { locale: string; direction: "rtl" | "ltr" } {
   const clean = path.replace(/^\.?\//, "");
@@ -135,9 +78,7 @@ export function localeForPath(
   if (ROOT_DOCS.has(clean)) {
     return { locale: rootLocale, direction: gradingFor(rootLocale).direction };
   }
-  // The locale may be any segment, not only the first: preview routes are
-  // /view/<locale>/<slug>/. Scanning rather than assuming a position means a new
-  // route shape does not silently become ungraded.
+  // The locale may be any segment, not only the first (/view/<locale>/<slug>/).
   const segments = clean.split("/");
   const match = segments
     .map((seg) => Object.keys(KNOWN).find((l) => l === seg || l.split("-")[0] === seg))
@@ -155,8 +96,6 @@ export function localeForPath(
 export function gradeHtml(path: string, html: string, rules: Rule[] = RULES): Violation[] {
   const { locale, direction } = localeForPath(path);
   const { document } = parseHTML(html);
-  // `localeForPath` deliberately still returns only locale+direction: it answers
-  // "which page is this", and the digit set is looked up from the same table.
   const doc: Doc = {
     path,
     document: document as unknown as Document,
@@ -170,35 +109,10 @@ export function gradeHtml(path: string, html: string, rules: Rule[] = RULES): Vi
 }
 
 /**
- * WHAT FRACTION OF THIS DOCUMENT THE GATE ACTUALLY READ.
- *
- * ═══ WHY A GATE SHOULD PUBLISH ITS OWN SCOPE ════════════════════════════════
- *
- * "524 documents graded, 0 violations" is a true sentence that invites a false
- * conclusion. `data-lumo-latn` exempts whole subtrees from the digit and script
- * rules — legitimately, because the dominant one is shiki code listings, which
- * really are Latin. But this is a documentation site made largely OF source
- * code, so the exempt fraction is not small, and nothing in the output said so.
- *
- * Measured before this existed, across the 260 Persian documents:
- *
- *     text nodes   145,448 of 172,999   84.1% ungraded
- *     characters 1,844,825 of 2,318,717  79.6% ungraded
- *
- * Neither number is wrong and neither is a defect. What was wrong is that a
- * reader of the summary line could not have guessed either of them, and this
- * repository's own standard is that an ungraded page is an unprotected page.
- *
- * ═══ WHY THIS IS NOT A RULE ═════════════════════════════════════════════════
- *
- * There is no threshold to fail at. An exempt fraction of 80% is correct for a
- * docs site and would be alarming for a product; the number's job is to be SEEN
- * by someone who knows which they are looking at, not to be compared against a
- * constant nobody can justify. A rule here would either never fire or fire
- * always, and both teach people to ignore the output.
- *
- * So it prints, and printing is the whole feature: it is the only line in this
- * tool that can tell you about a defect nobody has thought of yet.
+ * What fraction of a document the gate actually read. `data-lumo-latn` exempts
+ * whole subtrees (measured: ~80% of a docs site's characters), and a summary
+ * line that hides that invites a false conclusion. Not a rule — there is no
+ * threshold to fail at — it prints, and printing is the whole feature.
  */
 export interface Coverage {
   /** Documents whose locale the digit rules actually grade. */
@@ -218,39 +132,16 @@ const EMPTY_COVERAGE: Coverage = {
 };
 
 /**
- * Adds one document's text-node census to a running total.
- *
- * Counts only documents whose locale the digit rules grade — a `latn` locale
- * has nothing to exempt, so folding English pages in would dilute the fraction
- * toward zero and make the exemption look smaller than it is.
- *
- * `closest("[data-lumo-latn]")` is the same test the rules themselves apply
- * (`rules.ts`, twice), deliberately: a census that used a different definition
- * of "exempt" would report a coverage the gate does not actually have.
- *
- * ═══ WHAT THIS NUMBER DOES AND DOES NOT DESCRIBE, AFTER PHASE 3 ════════════
- *
- * `native-script-text` joined the rules that read this census's corpus, so the
- * printed fraction now covers three rules rather than two and the scope line
- * says "visible-text rules" rather than naming only digits.
- *
- * `native-script-name` is deliberately NOT described by it, and that is worth
- * stating because the two look like they should agree. That rule grades a
- * COMPUTED ACCESSIBLE NAME, which is assembled from descendants, attributes and
- * elements elsewhere in the document — it is not a text-node census at all —
- * and its exemption therefore reads the hatch DOWNWARD (subtracting the text of
- * marked descendants) where everything counted here reads it upward. A census
- * of text nodes cannot state that rule's coverage without inventing a
- * denominator, so it does not try. The number it publishes instead is the one
- * in that rule's own header: 17,342 named controls on non-`latn` routes, 474
- * pure-Latin names, 0 unaccounted for.
+ * Adds one document's text-node census to a running total. Counts only
+ * documents whose locale the digit rules grade (folding `latn` pages in would
+ * dilute the fraction). `closest("[data-lumo-latn]")` is the same test the rules
+ * apply. Describes the digit and visible-text rules, NOT `native-script-name`,
+ * which grades a computed name and has no text-node denominator.
  */
 export function addCoverage(into: Coverage, path: string, html: string): Coverage {
   const { locale } = localeForPath(path);
-  // `.numberingSystem`, NOT the DigitSystem object. The first cut compared the
-  // object to the string "latn", which is never true — so every English page
-  // counted as Persian and the printed fraction was computed over twice the
-  // real corpus. A scope line that is itself miscounted is worse than none.
+  // `.numberingSystem`, NOT the DigitSystem object — comparing the object to
+  // "latn" is never true, and every English page then counts as Persian.
   if (gradingFor(locale).digits.numberingSystem === "latn") return into;
 
   const { document } = parseHTML(html);
@@ -267,8 +158,7 @@ export function addCoverage(into: Coverage, path: string, html: string): Coverag
     const text = n.nodeValue ?? "";
     if (text.trim() === "") continue;
     const parent = n.parentElement;
-    // `<script>` and `<style>` are not read by anyone, and counting them would
-    // credit the gate with ignoring bytes it was never asked to grade.
+    // `<script>` and `<style>` are not read by anyone.
     const tag = parent?.tagName?.toLowerCase();
     if (tag === "script" || tag === "style") continue;
     const exempt = parent?.closest?.("[data-lumo-latn]") != null;
@@ -288,11 +178,7 @@ export function addCoverage(into: Coverage, path: string, html: string): Coverag
   };
 }
 
-/**
- * Counts visible, non-exempt digits in the numbering system assigned to a
- * route. This is deliberately the same corpus the digit rules inspect: code
- * samples opt out with `data-lumo-latn`, and script/style bytes are not visible.
- */
+/** Counts visible, non-exempt digits in the route's numbering system — the same corpus the digit rules inspect. */
 export function countNativeDigits(path: string, html: string): number {
   const { locale } = localeForPath(path);
   const digits = gradingFor(locale).digits;
@@ -314,14 +200,9 @@ export function countNativeDigits(path: string, html: string): number {
 }
 
 /**
- * The executable sampling policy for the per-route digit-floor ledger.
- *
- * Every non-Latin route with at least 30 visible native digits must have a
- * committed floor. Existing floors are never removed automatically: if a
- * floored route regresses from many digits to none, `persianDigitFloor` still
- * catches it. Conversely, a new number-dense route makes the build fail until
- * its measured baseline is reviewed and added. The threshold excludes the
- * shared documentation chrome (currently about 23 digits per page).
+ * The executable sampling policy for the per-route digit-floor ledger: every
+ * non-Latin route with at least `threshold` visible native digits must have a
+ * committed floor. The threshold sits above the shared docs chrome (~23 digits/page).
  */
 export function missingDenseDigitFloors(
   pages: ReadonlyArray<{ path: string; html: string }>,

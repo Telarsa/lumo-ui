@@ -53,17 +53,12 @@ export interface CascaderProps {
 }
 
 /**
- * A drill-down selector over a tree of options, one column per level.
- *
- * The popup rides the shared `Popover`/`PopoverTrigger` pair rather than a
- * hand-rolled `absolute` div — an earlier version rolled its own and thereby
- * forfeited Escape dismissal, outside-press dismissal, focus return,
- * portalling and collision handling all at once, which an independent review
- * measured as the exact gap. Columns are navigated with the arrow keys:
- * Up/Down inside a column, the inline-end key drills into children, the
- * inline-start key returns to the parent column. `draftPath` is rebuilt from
- * the committed value every time the popup opens, so a controlled `value`
- * change while it was closed can never present a stale drill-down.
+ * A drill-down selector over a tree of options, one column per level. The popup
+ * rides the shared `Popover`/`PopoverTrigger` pair (a hand-rolled `absolute`
+ * div forfeited Escape, outside-press, focus return, portalling and collision
+ * handling). Arrow keys: Up/Down inside a column, inline-end drills in,
+ * inline-start returns. `draftPath` is rebuilt from the committed value on
+ * every open, so a controlled change while closed never presents a stale drill-down.
  */
 export function Cascader({
   locale,
@@ -187,11 +182,8 @@ export function Cascader({
                 <div key={columnIndex} role="listbox" aria-label={`${columnsLabel} ${formatNumber(columnIndex + 1, locale)}`} className="min-w-40 border-e border-border p-1 last:border-0">
                   {column.map((option) => {
                     const active = draftPath[columnIndex] === option.value;
-                    // Roving tabindex: one stop per column — the drilled option,
-                    // or the first ENABLED option where nothing usable is drilled.
-                    // A disabled first item cannot own the only stop. Arrow keys
-                    // move within; without this every option was its own Tab stop,
-                    // which this repo's own composite-tab-stop rule flags.
+                    // Roving tabindex: one stop per column — the drilled option, or
+                    // the first ENABLED option. Arrow keys move within.
                     const stop = option.value === stopValue;
                     return (
                       <button

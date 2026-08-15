@@ -47,141 +47,27 @@ export {
 /**
  * A timeline of tasks over dates, in the reader's own calendar.
  *
- *     <Gantt
- *       label="برنامهٔ انتشار"
- *       locale={locale}
- *       tasks={tasks}
- *       onTasksChange={setTasks}
- *       strings={ganttStrings}
- *     />
+ *     <Gantt label="برنامهٔ انتشار" locale={locale} tasks={tasks}
+ *            onTasksChange={setTasks} strings={ganttStrings} />
  *
- * The engine includes a collapsible hierarchy, explicit recursive summary
- * rollups, four dependency types, cycle rejection, critical-path analysis,
- * baseline bars, five calendar-aligned scales, continuous zoom, a resizable
- * hierarchy/timeline split, keyboard movement, pointer and keyboard edge
- * resizing, progress and required caller-authored announcements. Rollups are a
- * pure opt-in helper: rendering never silently rewrites caller-owned tasks.
+ * Hierarchy, opt-in rollups, four dependency types, critical path, baselines,
+ * five calendar-aligned scales, zoom, a resizable split, keyboard/pointer move
+ * and resize. No automatic scheduling: moving one bar never moves another.
  *
- * It deliberately stops short of automatic dependency scheduling/resource
- * leveling. Connectors describe and analyse the caller's graph; moving one bar
- * does not silently move another. A solver needs an explicit conflict policy,
- * calendars per resource and its own announced cascade contract.
- *
- * ═══ THE DEFECT THIS FILE IS DESIGNED AROUND ════════════════════════════════
- *
- * ReUI documents it about their own component, which is stronger evidence than
- * this file asserting it. From https://reui.io/docs/rtl , Gantt is on the list
- * of components that "have not been formally verified in RTL", and the page
- * names the mechanism:
- *
- *     "Drag and drop. Pointer deltas are signed. A grid, Kanban or Gantt that
- *      reorders on a positive x delta needs that sign flipped under RTL."
- *
- * A gantt is where that bites hardest, and not because of the drag. A bar's
- * position is ARITHMETIC — `(start − rangeStart) / rangeLength` — and the
- * natural way to spend that number is
- *
- *     style={{ left: `${offset * 100}%` }}
- *
- * which is measured from the LEFT edge in every script. On a Persian page the
- * timeline runs right-to-left: the earliest column is the rightmost one, the
- * scale row mirrors itself because it is a `flex` under `dir="rtl"`, and the
- * bars then sit at offsets measured from the far end. The result is a chart
- * where every bar is at its mirror-image date, drawn under a scale row that is
- * correct. Nothing crashes; the digits are Persian; the month names are
- * Persian; and a reviewer who cannot read the calendar sees a plausible chart.
- *
- * ── SO THE OFFSET IS EXPRESSED LOGICALLY AND NEVER RESOLVED ────────────────
- *
- * `insetInlineStart` and `inlineSize`, both of which the BROWSER mirrors:
- *
- *     style={{ insetInlineStart: "20%", inlineSize: "10%" }}
- *
- * Under `dir="ltr"` that computes to `left: 20%`; under `dir="rtl"` it computes
- * to `right: 20%`. One expression, both scripts, and — the part that matters —
- * NO `isRtl` anywhere near it. `slider.tsx` records the same finding from the
- * other side: Base UI positions its thumb with `insetInlineStart` rather than a
- * direction-resolved `left`, and that is why `thumb.style.left` is the empty
- * string on a correctly placed slider. The mirroring is the browser's, not a
- * computation somebody has to remember to write, re-check, and keep right.
- *
- * `kanban.tsx` reaches the same rule from the pointer side: hit-test with
- * `getBoundingClientRect()`, never reason about index order or delta sign,
- * because the rects were already mirrored by `dir` before the question was
- * asked. The absence of an `isRtl` branch in a LAYOUT computation is the point,
- * not an oversight to be fixed back in later.
- *
- * ── THE ONE LEGITIMATE `isRtl`, WHICH IS ABOUT A KEY AND NOT A BOX ─────────
- *
- * Which arrow moves a bar LATER in time is direction-dependent, exactly as in
- * `sortable.tsx` and `kanban.tsx`. Time runs toward the reader's END edge, so
- * "later" is ArrowRight in English and ArrowLeft in Persian. A KEY is a symbol
- * and carries no geometry, so it has to be told which way the chart runs —
- * `direction(locale)` is the source of truth, the same one the calendar's nav
- * chevrons use. That is the legitimate use. Layout is not.
- *
- * ═══ A "MONTH" SCALE CANNOT ASSUME EQUAL COLUMNS ════════════════════════════
- *
- * Jalali month lengths are 31,31,31,31,31,31,30,30,30,30,30,29-or-30 — they
- * vary INSIDE a single year, which no Gregorian intuition prepares you for.
- * Measured on this project's Node for ۱۴۰۵: Farvardin has 31 days, Aban has 30,
- * Esfand has 29. A month scale that divides the range into equal columns is
- * therefore wrong by up to two days per column and cumulatively wrong across a
- * year, and the bars — which are placed from real day counts — drift away from
- * the header that is supposed to explain them.
- *
- * So a column's inline size is its OWN day count as a fraction of the range's,
- * asked of `@internationalized/date` rather than assumed. On the `en-US` route
- * the same code produces 31/30/28-or-29, which is the Gregorian answer to the
- * same question; nothing here names a calendar.
- *
- * Every conversion goes through calendar FIELDS at local noon, via
- * `calendar-datelib.ts`'s `toPickerDate`, and never through an instant. That
- * file's header carries the full argument: an instant-based conversion makes a
- * server in UTC and a browser in Tehran disagree about which day a date is,
- * which shows as a chart that silently shifts by one day on hydration, and it
- * breaks again at a DST boundary where a local midnight may not exist.
- *
- * ═══ THE TAB STOP HAS TO BE IN THE SERVED BYTES ═════════════════════════════
- *
- * One tab stop for the whole chart, roving over the bars. `lumo-gate`'s
- * `composite-tab-stop` rule fails a build over a roving-tabindex widget that
- * serves `tabindex="-1"` on every member, because such a widget cannot be
- * reached with the Tab key at all before hydration — not "in the wrong order",
- * unreachable, for the whole window between first paint and hydration.
- *
- * `tree.tsx` solved this by computing the stop in the RENDER BODY from state
- * whose initial value is known, and that is reproduced here exactly:
- * `tabIndex={index === focusedIndex ? 0 : -1}` where `focusedIndex` starts at
- * `0`. There is nothing to measure, so there is no layout effect to wait for,
- * so `useCompositeTabStop` is unnecessary — that hook is for the other shape,
- * where Base UI resolves an index in an effect and the served markup has no
- * stop at all. The served bytes carry `tabindex="0"` on the first bar and `-1`
- * on the rest, and `gantt.test.tsx` asserts exactly that against
- * `renderToStaticMarkup`.
- *
- * One honest note for whoever reads the gate next, in the same spirit as
- * `tree.tsx`'s: `COMPOSITE_ROLES` in `packages/gate/src/rules.ts` maps
- * `tablist/radiogroup/tree/listbox/toolbar/menu/menubar` and has no entry for a
- * `list` of buttons, so this widget is not currently GRADED by that rule. The
- * shape above is correct because it is measured in the suite, not because the
- * gate would have caught it.
- *
- * ═══ WHY A MOVE DOES NOT NEED THE REFOCUS MACHINERY ═════════════════════════
- *
- * `sortable.tsx` and `kanban.tsx` both carry an effect that puts focus back on
- * the handle after a move, because a reorder re-inserts (or unmounts and
- * remounts) the focused node and an element removed from the document is
- * blurred. Moving a bar here changes only two dates, so the `tasks` array keeps
- * its order, React keeps the keyed `<li>` in place, and the button the reader
- * is holding is never removed. Nothing to restore. That is a consequence of the
- * data model, not luck — and it stops being true the moment a future version
- * sorts rows by start date, which is the note to read before adding that.
+ * Load-bearing decisions: bar position is `insetInlineStart` + `inlineSize`,
+ * which the BROWSER mirrors under `dir="rtl"` — never `left`, and no `isRtl`
+ * in any layout computation (the one legitimate `isRtl` decides which ARROW
+ * KEY means later). Month columns take their OWN day count from
+ * `@internationalized/date` (Jalali months are 31/30/29 inside one year), via
+ * calendar fields at local noon, never an instant. The roving tab stop is
+ * computed in the render body from `focusedIndex = 0`, so the served bytes
+ * carry `tabindex="0"` on the first bar. A move changes only dates, so the
+ * keyed `<li>` is never remounted and no refocus effect is needed — this stops
+ * being true if rows are ever sorted by date. Long form: `docs/i18n-and-rtl.md`,
+ * `docs/decisions/log.md`, `calendar-datelib.ts`.
  */
 
-/* ════════════════════════════════════════════════════════════════════════════
- * THE ARITHMETIC — no React, no DOM, no `Date` except at the formatting edge
- * ═══════════════════════════════════════════════════════════════════════════ */
+/* THE ARITHMETIC — no React, no DOM, no `Date` except at the formatting edge */
 
 /** Calendar-aligned scales, from individual days through whole years. */
 export type GanttScale = "day" | "week" | "month" | "quarter" | "year";
@@ -206,11 +92,7 @@ export interface GanttTask {
   start: CalendarDate;
   /** Last day of the task, inclusive. */
   end: CalendarDate;
-  /**
-   * How far along, in `0…1`. Optional: a task with no progress renders no fill
-   * and its accessible name gets `undefined` for the progress clause, so the
-   * caller writes a sentence that does not mention it.
-   */
+  /** How far along, in `0…1`. Optional: no progress means no fill and `undefined` in the name. */
   progress?: number | undefined;
   /** Optional planned interval rendered behind the actual bar. */
   baselineStart?: CalendarDate | undefined;
@@ -379,13 +261,7 @@ export interface GanttPlacement {
   inlineSize: string;
 }
 
-/**
- * The calendar cache.
- *
- * `createCalendar` is called once per locale rather than once per date: the
- * geometry converts every task and every column boundary, and a chart with
- * thirty tasks at a day scale would otherwise construct hundreds of them.
- */
+/** The calendar cache: `createCalendar` once per locale, not once per date. */
 const calendars = new Map<Locale, ReturnType<typeof createCalendar>>();
 
 function calendarFor(locale: Locale) {
@@ -398,47 +274,23 @@ function calendarFor(locale: Locale) {
 }
 
 /**
- * A date in the calendar this reader counts in.
- *
- * Exported because the conversion is the valuable part and it has no React in
- * it — a server route computing the same range for a query should call the same
- * function rather than a second implementation that agrees today and drifts in
- * Esfand.
+ * A date in the calendar this reader counts in. Exported so a server route
+ * computing the same range calls the same function.
  */
 export function ganttDateIn(date: CalendarDate, locale: Locale): CalendarDate {
   return toCalendar(date, calendarFor(locale));
 }
 
 /**
- * The stand-in extent of a chart with no tasks and no explicit range.
- *
- * Never read: `totalDays` is `0` in that case and every consumer checks it
- * first. It exists because `GanttGeometry.start` is a `CalendarDate` rather
- * than `CalendarDate | null`, which keeps the null check out of the placement
- * arithmetic where it would be re-derived per bar.
+ * The stand-in extent of a chart with no tasks and no explicit range. Never
+ * read (`totalDays` is `0`); exists so `GanttGeometry.start` is non-nullable.
  */
 const EMPTY_ANCHOR = new CalendarDate(1, 1, 1);
 
 /**
- * A date from an ISO `YYYY-MM-DD` string — CALENDAR FIELDS, never an instant.
- *
- * ── WHY THIS IS EXPORTED, WHEN `parseDate` ALREADY EXISTS ──────────────────
- *
- * Because a caller may not have `@internationalized/date` as a direct
- * dependency and still has to express a date. This repository's own docs site
- * is the proof: `apps/website` depends on `@lumo-ui/ui` and not on the date
- * library, so `examples/calendar.tsx` records that it cannot write a
- * `CalendarDate` literal at all. A component whose central value type is
- * unconstructible by half its callers is a component nobody can demonstrate.
- *
- * ── AND WHY THERE IS NO TIME ZONE IN THE SIGNATURE ─────────────────────────
- *
- * A gantt has no instants in it. «۱ مرداد» is a day, not a moment, and
- * `parseDate` reads the three fields straight out of the string without ever
- * constructing one — so there is no zone to fix and no DST edge to land on.
- * That is strictly stronger than fixing a zone: a value that was never an
- * instant cannot disagree between a build machine in UTC and a browser in
- * Tehran, which is the hydration mismatch `calendar-datelib.ts` measures.
+ * A date from an ISO `YYYY-MM-DD` string — CALENDAR FIELDS, never an instant,
+ * so there is no zone and no DST edge. Exported because a caller (e.g.
+ * `apps/website`) may not depend on `@internationalized/date` directly.
  */
 export function ganttDate(iso: string): CalendarDate {
   return parseDate(iso);
@@ -447,13 +299,7 @@ export function ganttDate(iso: string): CalendarDate {
 const earlier = (a: CalendarDate, b: CalendarDate) => (a.compare(b) <= 0 ? a : b);
 const later = (a: CalendarDate, b: CalendarDate) => (a.compare(b) >= 0 ? a : b);
 
-/**
- * A ratio as a CSS percentage.
- *
- * Four decimals, with trailing zeros dropped by `Number`. Enough that a
- * 365-column year does not accumulate a visible gap, short enough that the
- * served style attribute stays readable and a test can assert it exactly.
- */
+/** A ratio as a CSS percentage, four decimals — no visible gap over 365 columns. */
 function percent(ratio: number): string {
   return `${Number((ratio * 100).toFixed(4))}%`;
 }
@@ -470,11 +316,8 @@ function unitStart(date: CalendarDate, scale: GanttScale, locale: Locale): Calen
 }
 
 /**
- * The last day of the unit starting at `date`.
- *
- * `endOfMonth` is asked rather than "start + 30": Jalali months are 31, 30 or
- * 29 days INSIDE one year, and Esfand is 29 or 30 depending on the year. This
- * is the single line that makes the month scale honest.
+ * The last day of the unit starting at `date`. `endOfMonth`, not "start + 30":
+ * Jalali months are 31, 30 or 29 days inside one year.
  */
 function unitEnd(date: CalendarDate, scale: GanttScale): CalendarDate {
   if (scale === "day") return date;
@@ -485,16 +328,10 @@ function unitEnd(date: CalendarDate, scale: GanttScale): CalendarDate {
 }
 
 /**
- * The chart's columns, in the reader's own calendar.
- *
- * `range` overrides the extent derived from the tasks — a caller showing a
- * quarter wants the whole quarter even if the work stops half way through it.
- * Derived, the range is the earliest start to the latest end, then EXPANDED to
- * whole units so the scale row does not begin with a half column.
- *
- * An empty chart returns `totalDays: 0` and no columns rather than inventing a
- * range from `today()`, which would be a different day on a build machine than
- * in a reader's browser — a hydration mismatch dressed as a chart.
+ * The chart's columns, in the reader's own calendar. `range` overrides the
+ * extent derived from the tasks; derived, it is expanded to whole units. An
+ * empty chart returns `totalDays: 0` rather than a range from `today()`, which
+ * would be a hydration mismatch.
  */
 export function ganttGeometry(
   tasks: readonly GanttTask[],
@@ -515,16 +352,8 @@ export function ganttGeometry(
   }
 
   if (from === null || to === null || to.compare(from) < 0) {
-    /*
-     * Nothing to show, and it is not a special path anywhere else: no columns
-     * means no header cells, and no tasks means no bars, so every loop below
-     * simply does not run and `ganttBarPlacement` refuses on `totalDays <= 0`
-     * before it reads either end.
-     *
-     * `EMPTY_ANCHOR` rather than `today()`, which would be a different day on a
-     * build machine than in a reader's browser — a hydration mismatch dressed
-     * as an empty chart.
-     */
+    // Nothing to show: no columns, no bars, and `ganttBarPlacement` refuses on
+    // `totalDays <= 0`. `EMPTY_ANCHOR` rather than `today()` (hydration mismatch).
     const anchor = from ?? to ?? ganttDateIn(EMPTY_ANCHOR, locale);
     return { start: anchor, end: anchor, totalDays: 0, columns: [] };
   }
@@ -552,13 +381,8 @@ export function ganttGeometry(
 }
 
 /**
- * A column's caption, through `formatDate` under `FORMAT_LOCALE`.
- *
- * Which carries `-u-ca-persian -u-nu-arabext` explicitly, so «مرداد» is the
- * Jalali month and its digits are Persian — stated rather than inherited from
- * whichever ICU build the host happens to have. `calendar-datelib.ts`'s header
- * has the measurement of what happens when it is inherited: «۲۲ ژوئیه ۲۰۲۴»,
- * right script, wrong calendar, wrong year.
+ * A column's caption, through `formatDate` under `FORMAT_LOCALE`, which states
+ * `-u-ca-persian -u-nu-arabext` rather than inheriting the host's ICU default.
  */
 function ganttColumnLabel(date: CalendarDate, scale: GanttScale, locale: Locale): string {
   const js = toPickerDate(date);
@@ -572,13 +396,9 @@ function ganttColumnLabel(date: CalendarDate, scale: GanttScale, locale: Locale)
 }
 
 /**
- * Where a bar sits, as `inset-inline-start` and `inline-size`.
- *
- * THE FILE'S CENTRAL FUNCTION, and the reason it returns these two property
- * names and not `left`/`width` is the whole of the header's second section. A
- * task entirely outside the range returns `null` and renders nothing; one that
- * overlaps an edge is CLAMPED, so a bar never draws outside the lane it is
- * placed in.
+ * Where a bar sits, as `inset-inline-start` and `inline-size` — never
+ * `left`/`width` (see the header). A task outside the range returns `null`;
+ * one overlapping an edge is CLAMPED.
  */
 export function ganttBarPlacement(
   task: GanttTask,
@@ -597,24 +417,9 @@ export function ganttBarPlacement(
 
 /**
  * Moves one task by `steps` units of `scale`, returning a whole new list.
- *
- * ── THE DURATION IS PRESERVED IN DAYS, AND THAT IS NOT PEDANTRY ─────────────
- *
- * `end` is recomputed as `start + span days` rather than by adding the same
- * duration to both ends. Adding a month to ۱۴۰۵/۶/۳۱ has to CLAMP — Shahrivar
- * has 31 days and Mehr has 30 — so `start` and `end` would clamp by different
- * amounts and a six-day task would silently become a five-day one. Moving the
- * start and re-deriving the end from the day count is the only spelling under
- * which "the same task, later" stays the same task.
- *
- * ── AND THE ARITHMETIC IS IN THE READER'S CALENDAR ─────────────────────────
- *
- * «یک ماه بعد» on a Persian page means the same day of the next JALALI month,
- * which is 30 or 31 days later depending on where in the year it lands. Both
- * ends are converted before the addition and the result stays in that calendar,
- * so a value handed back through `onTasksChange` carries the calendar it was
- * computed in — the boundary `calendar-datelib.ts` describes for the whole
- * library.
+ * `end` is recomputed as `start + span days`, not shifted independently: month
+ * addition CLAMPS (Shahrivar 31, Mehr 30) and would change the duration. The
+ * arithmetic is in the reader's calendar, so «یک ماه بعد» is a Jalali month.
  */
 export function moveGanttTask<T extends GanttTask>(
   tasks: readonly T[],
@@ -676,29 +481,19 @@ export function resizeGanttTask<T extends GanttTask>(
   });
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * THE COMPONENT
- * ═══════════════════════════════════════════════════════════════════════════ */
+/* THE COMPONENT */
 
 /**
- * Every string this component can announce or display.
- *
- * All required, none with a default, for the reason CONTRIBUTING states and
- * `strings.ts` argues at length: a default is a promise the library cannot keep
- * in a language it does not speak. That includes the SCALE NAMES — "Day" is not
- * a word this library may put on a Persian page — and it includes the bar's
- * accessible name, which is the string a screen-reader user has instead of the
- * chart.
+ * Every string this component can announce or display. All required, none with
+ * a default: a default is a promise the library cannot keep in a language it
+ * does not speak — including the SCALE NAMES and the bar's accessible name.
  */
 export interface GanttStrings {
   /** Names the group of scale buttons, e.g. «مقیاس زمان». Announced. */
   scaleGroupLabel: string;
   /**
-   * One name per scale, e.g. `{ day: "روز", week: "هفته", month: "ماه" }`.
-   *
-   * A `Record<GanttScale, string>` rather than five optional props, so a scale
-   * added later is a COMPILE error at every call site instead of an English
-   * button appearing on a Persian page.
+   * One name per scale, e.g. `{ day: "روز", week: "هفته", month: "ماه" }`. A
+   * `Record`, so a scale added later is a compile error at every call site.
    */
   scaleNames: Record<GanttScale, string>;
   /** Heads the task-name column, e.g. «کار». Visible. */
@@ -708,22 +503,9 @@ export interface GanttStrings {
   /** What a bar IS, e.g. «نوار زمان‌بندی». Becomes `aria-roledescription`. */
   barRoleDescription: string;
   /**
-   * A bar's accessible name: WHAT the task is and WHEN it runs.
-   *
-   * A bar is a control, and a control named «۱ مرداد» tells a reader what it
-   * SAYS and not what it IS. The caller writes the whole sentence from four
-   * already-localised pieces — the task's label, both ends already formatted in
-   * the reader's calendar, and the progress already through `formatNumber` (or
-   * `undefined` when the task has none).
-   *
-   * A FUNCTION rather than a template with holes, for the reason
-   * `core/src/strings.ts` gives about clause order and the reason
-   * `DateSelector.formatRange` gives about bidi: two Arabic-number runs with a
-   * neutral character between them put that neutral under the PARAGRAPH's
-   * direction, so a dash can render the two ends swapped in Persian and only in
-   * Persian. Handing over the whole sentence is what lets a caller use a word
-   * («تا») or place a U+200F, rather than this file guessing at a separator it
-   * cannot see resolve.
+   * A bar's accessible name: WHAT the task is and WHEN it runs, from four
+   * already-localised pieces. A FUNCTION rather than a template so the caller
+   * controls clause order and bidi separators (see `core/src/strings.ts`).
    */
   barName: (label: string, from: string, to: string, progress: string | undefined) => string;
   /** Prefixes the announcement when a bar is picked up, e.g. «برداشته شد،». */
@@ -732,12 +514,7 @@ export interface GanttStrings {
   dropped: string;
   /** The whole sentence when Escape restores the dates, e.g. «جابه‌جایی لغو شد.». */
   cancelled: string;
-  /**
-   * Where the bar now is: the task, and both of its new ends already formatted.
-   *
-   * A move is TWO facts — which task, and which dates — so it is announced as
-   * two, the same call `kanban.tsx` makes for a column and a position.
-   */
+  /** Where the bar now is: the task, and both of its new ends already formatted. */
   movedTo: (label: string, from: string, to: string) => string;
   /** Names a collapsed branch's disclosure control. */
   expandTask: (label: string) => string;
@@ -754,28 +531,16 @@ export interface GanttStrings {
 }
 
 export interface GanttProps<T extends GanttTask>
-  /*
-   * `ref` is owned: `rootRef` below is what the pointer route hit-tests against
-   * and what the keyboard route measures. A consumer's ref would replace it and
-   * the drag would stop working with nothing thrown — the `table.tsx` defect,
-   * one component over. Everything else the `<div>` accepts is the caller's.
-   */
+  // `ref` is owned: `rootRef` is what the pointer route hit-tests against and
+  // the keyboard route measures; a consumer's ref would silently break the drag.
   extends Omit<React.ComponentProps<"div">, "children" | "className" | "ref" | "dir"> {
   /** Names the whole chart, e.g. «برنامهٔ انتشار». REQUIRED. */
   label: string;
-  /**
-   * The reader's locale. Fixes the calendar, the digits AND the direction —
-   * `direction(locale)` is the single source, exactly as `slider.tsx` records
-   * for its own two providers.
-   */
+  /** The reader's locale. Fixes the calendar, the digits AND the direction. */
   locale: Locale;
   /** The rows, in reading order. Order is never derived from the dates. */
   tasks: readonly T[];
-  /**
-   * Receives a whole new list after a keyboard move. Optional: a read-only
-   * chart is a legitimate chart, and without it the bars still take focus and
-   * still announce their names — they simply cannot be moved.
-   */
+  /** Receives a whole new list after a keyboard move. Optional: a read-only chart is legitimate. */
   onTasksChange?: ((tasks: T[]) => void) | undefined;
   /** Every string the chart announces or renders. All caller-authored. */
   strings: GanttStrings;
@@ -791,10 +556,7 @@ export interface GanttProps<T extends GanttTask>
   defaultExpandedTaskIds?: readonly string[] | undefined;
   /** Called with the expanded summary-task ids after a toggle. */
   onExpandedTaskIdsChange?: ((ids: string[]) => void) | undefined;
-  /**
-   * Overrides the extent derived from the tasks — a quarter view stays a whole
-   * quarter even when the work stops half way through it.
-   */
+  /** Overrides the extent derived from the tasks — a quarter view stays a whole quarter. */
   range?: { start: CalendarDate; end: CalendarDate } | undefined;
   /** Typed dependency edges drawn between bars and fed to the critical path. */
   dependencies?: readonly GanttDependency[] | undefined;
@@ -810,11 +572,7 @@ export interface GanttProps<T extends GanttTask>
   defaultSplitSize?: number | undefined;
   /** Called while the task-list split is resized. */
   onSplitSizeChange?: ((size: number) => void) | undefined;
-  /**
-   * How a date is formatted wherever one is spoken. Not an announced string —
-   * an `Intl` options bag — so it may have a default. It goes through
-   * `formatDate` under `FORMAT_LOCALE`, so the calendar is stated.
-   */
+  /** How a date is formatted wherever one is spoken. An `Intl` options bag, so it may have a default. */
   dateFormatOptions?: Intl.DateTimeFormatOptions | undefined;
   /** Extra content under the chart, e.g. a legend. */
   description?: LumoNode;
@@ -922,12 +680,8 @@ export function Gantt<T extends GanttTask>({
   const activeExpandedIds = expandedTaskIds ?? uncontrolledExpandedIds;
   const visibleRows = visibleGanttRows(tasks, new Set(activeExpandedIds));
 
-  /*
-   * THE TAB STOP, computed during render from state whose initial value is
-   * known. `0` in the server's bytes, `0` in the hydrating render, and it moves
-   * only when a bar is actually focused — so there is never a moment with two
-   * stops and never a moment with none. See the header.
-   */
+  // THE TAB STOP, computed during render from state whose initial value is
+  // known: `0` in the served bytes, moving only when a bar is actually focused.
   const [focusedIndex, setFocusedIndex] = React.useState(0);
 
   const [heldId, setHeldId] = React.useState<string | null>(null);
@@ -943,12 +697,8 @@ export function Gantt<T extends GanttTask>({
     pixelsPerStep: number;
   } | null>(null);
 
-  /*
-   * The props as of the last commit, readable from a handler older than it.
-   * `sortable.tsx` measured the list version of this defect: a guard that keeps
-   * comparing against a stale snapshot reads a real move as a no-op. Here it is
-   * cheaper insurance than a rule about which closures may be captured.
-   */
+  // The props as of the last commit, readable from a handler older than it —
+  // a stale snapshot would read a real move as a no-op (see `sortable.tsx`).
   const latest = React.useRef({ tasks, onTasksChange });
   React.useEffect(() => {
     if (pointerResizeRef.current === null) latest.current = { tasks, onTasksChange };
@@ -1122,14 +872,8 @@ export function Gantt<T extends GanttTask>({
     }
     if (!held) return;
 
-    /*
-     * THE MIRRORED PAIR, and the only `isRtl` in this file.
-     *
-     * Time runs toward the reader's END edge, so a bar moves LATER on
-     * ArrowRight in English and on ArrowLeft in Persian. The layout mirrored
-     * itself — `insetInlineStart` and a `flex` scale row both did that without
-     * being asked — and the KEY still cannot. See the header.
-     */
+    // THE MIRRORED PAIR, and the only `isRtl` in this file: time runs toward the
+    // reader's END edge, and a KEY cannot mirror itself the way layout does.
     const laterKey = isRtl ? "ArrowLeft" : "ArrowRight";
     const earlierKey = isRtl ? "ArrowRight" : "ArrowLeft";
     if (event.key === laterKey) {
@@ -1461,13 +1205,8 @@ export function Gantt<T extends GanttTask>({
 }
 
 /**
- * How wide one day is at each scale, as a scroll-track minimum.
- *
- * A day column narrower than about two ems cannot hold a two-digit date, and a
- * month scale at day widths would be a track thirty times wider than any
- * screen. These are the only pixel numbers in the file and they set a MINIMUM
- * — the columns themselves are percentages, so a chart in a wide container
- * simply fills it.
+ * How wide one day is at each scale, as a scroll-track MINIMUM — the only pixel
+ * numbers in the file; the columns themselves are percentages.
  */
 const PIXELS_PER_DAY: Record<GanttScale, number> = {
   day: 36,

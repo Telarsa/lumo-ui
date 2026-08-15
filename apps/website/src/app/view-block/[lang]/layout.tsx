@@ -6,32 +6,11 @@ import { assertLocale, localeParams } from "@/lib/locale";
 import "../../globals.css";
 
 /**
- * A second root layout for the block preview frames — the same move
- * `app/view/[lang]/layout.tsx` makes for components, copied exactly.
- *
- * It writes its own `<html lang dir>` via `LumoHtml`, so a `view-block` route
- * is a genuinely Persian (or English) document rather than a styled div
- * pretending to be one, and `lumo-gate` grades it exactly like any other page.
- *
- * `LumoProvider` is not optional here either. Without it Base UI's direction
- * context defaults to `ltr`, so a block like `AppShell` or `ProductDetail`
- * could render its interactive parts (a NumberField stepper, a RadioGroup)
- * LTR on a `dir="rtl"` page. See `README.md` rule 3.
- *
- * `place-items-center` but NO padding, unlike the component preview layout.
- * Every block root carries `w-full` (checked across packages/blocks/src), and
- * `justify-items: center` resolves a `w-full` child against the grid area —
- * the full viewport — so full-width blocks are unaffected, `AppShell`'s
- * `min-h-dvh w-full` still fills the frame, and only an exhibit that is
- * genuinely narrower or shorter than the frame (a sign-in card above the
- * fold, a lone footer) moves: it now sits centred on both axes instead of
- * hugging the block-start edge over a bare strip of background — the defect
- * the design review screenshotted. Padding stays at zero because padding
- * around a `min-h-dvh` block guarantees a document scrollbar inside the
- * iframe even when nothing overflows — the double-scrollbar defect the
- * component preview layout fixed by trimming ITS padding — and
- * `overflow-x-clip` keeps wide content scrolling inside its own
- * `overflow-auto` container rather than as a second, document-level bar.
+ * A second root layout for the block preview frames (mirrors `app/view/[lang]/layout.tsx`).
+ * It writes its own `<html lang dir>` via `LumoHtml`, and `LumoProvider` is required so
+ * Base UI's direction context is not `ltr` on a `dir="rtl"` page (README.md rule 3).
+ * `place-items-center` but NO padding: block roots are `w-full`, and padding around a
+ * `min-h-dvh` block would force a document scrollbar inside the iframe.
  */
 // Unknown segments 404 rather than 500 — see the [lang] layout's note on /sw.js.
 export const dynamicParams = false;

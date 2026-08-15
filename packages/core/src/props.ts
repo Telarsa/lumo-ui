@@ -15,262 +15,34 @@ import type {
 /**
  * THE PROP SHAPES LUMO'S PUBLIC API IS PINNED TO.
  *
- * ── WHY THIS FILE EXISTS ────────────────────────────────────────────────────
- *
- * Every shipped component ran on `react-aria-components` until the Base UI
- * migration, and the migration's one hard rule was that the PUBLIC API may not
- * change: a consumer's `isDisabled` / `onChange(value: string)` / `onPress`
- * call sites had to keep compiling. So after the runtime left, 31 files still
- * carried `import type { … } from "react-aria-components"` purely to `Omit`
- * and `Pick` from — erased at build, invisible in a bundle, and yet decisive
- * for a consumer, because `registry.json` derives each item's `dependencies`
- * from its imports. A component that no longer runs React Aria was still
- * telling everyone who copied it to install React Aria, to get types for
- * behaviour that is not there.
- *
- * The type import is the dependency. Deleting it is the point of this file.
- *
- * ── WHAT IS IN HERE, AND WHAT IS NOT ────────────────────────────────────────
- *
- * These are the vocabulary types React Aria composed its prop bags out of —
- * `InputBase`, `ValueBase`, `Validation`, `FocusableProps`, `GlobalDOMEvents`
- * and friends — restated so the composition can be restated. They are
- * deliberately NOT a fork of React Aria: nothing here has behaviour, and
- * nothing here is versioned against that library any more. They are a
- * description of the shape Lumo's own API promised, now owned by Lumo.
- *
- * Three things React Aria declared are deliberately ABSENT, and their absence
- * is the honest part:
- *
- *   `render`      RAC's render-prop escape hatch — `(props, renderProps) =>
- *                 ReactElement`, where `renderProps` is that component's own
- *                 React Aria state object. There is no React Aria state object
- *                 any more, so the prop could only have been typed against a
- *                 shape nothing produces. It was accepted-and-unreachable
- *                 already; now it is neither.
- *
- *   `className` /
- *   `style` as
- *   FUNCTIONS    Same argument. RAC let both be `(state) => value`. Lumo's
- *                 components spread what they receive at a Base UI element,
- *                 which would render a function into the DOM. `className` was
- *                 already `Omit`ted by every component here and redeclared as
- *                 `string`; `style` is now `CSSProperties` for the same reason
- *                 rather than by oversight.
- *
- * Everything else is preserved field for field. The accepted-and-unreachable
- * compatibility props (`slot`, `excludeFromTabOrder`, `routerOptions`, the
- * `isPending`/`preventFocusOnPress` carriers) were REMOVED on 15 Aug 2026:
- * this is a private `0.0.0` library with no external consumers, and the RAC
- * shadow API kept producing accepted-and-inert props — cancel buttons wired
- * to a `slot` no engine reads, link attributes served on `<button>`s. Lumo's
- * API is Lumo's now; a name that reaches nothing is not declared.
- *
- * ── ONE MEASURED WIDENING ───────────────────────────────────────────────────
- *
- * The DOM event groups below are `Pick`ed from React's own `DOMAttributes`
- * rather than retyped by hand, so a handler's parameter type comes from React
- * and cannot drift from it. React declares these as `T | undefined`; React Aria
- * declared a few of them as bare `T`. Under this repo's
- * `exactOptionalPropertyTypes`, that means an explicit `onCopy={undefined}` now
- * compiles where it did not before. Widening what a caller may pass cannot
- * break a caller, which is why it is acceptable; it is recorded rather than
- * hidden.
+ * The vocabulary types Lumo's prop bags are composed from (`InputBase`,
+ * `ValueBase`, `Validation`, `FocusableProps`, `GlobalDOMEvents`, …), owned by
+ * Lumo so no component carries a type-only import of a retired engine — the
+ * type import IS the dependency `registry.json` derives. Nothing here has
+ * behaviour. RAC's `render` prop and function-valued `className`/`style` are
+ * deliberately absent; DOM event groups are `Pick`ed from React (one measured
+ * widening: `T | undefined`). Reasoning: `docs/architecture.md`,
+ * `docs/decisions/log.md`.
  */
 
-/* ════════════════════════════════════════════════════════════════════════════
- * THE ROOT CONTRACT — WHAT `ref`, `id` AND EVERY OTHER DOM ATTRIBUTE DO
- *
- * Decided 12 Aug 2026. AUDIT.md §5 item 2.1. This is the file the decision
- * lives in; `button.tsx`'s header states it again at the exemplar, and
- * `packages/gate/src/inert-props.ts` enforces it.
- *
- * ── THE STATE IT REPLACES ───────────────────────────────────────────────────
- *
- * There was no `ref` story and no `id` story. Whether `<Card ref={r}>` compiled
- * was an accident of which base type a file's author had reached for:
- *
- *     HTMLAttributes<T>     21 files, 49 sites   NO ref  (card, alert, item, …)
- *     ComponentProps<E>     10 files             ref     (frame, chart, table, …)
- *
- * Nothing documented the difference, and nothing could: it is not a difference
- * anybody chose. AUDIT §4.2 counted the FILES; the sweep found 49 declaration
- * sites in them, because the shape repeats per part — five in
- * `skeleton-presets.tsx`, five in `attachment.tsx`, four in `card.tsx`.
- *
- * Downstream, no collection, no overlay and no date component forwarded a ref at
- * all, so a consumer could not focus a drawer panel, measure a popover, or
- * scroll a `VirtualList` to an index. Separately, 96 of 243 exported components
- * (39.5%) declared no rest parameter, so they accepted no `id`, no
- * `data-testid`, and no `aria-*` the component had not thought of. `MenuItem`
- * could not take `aria-current` for exactly that reason, and it cost a new prop
- * to fix one instance of it.
- *
- * (The audit's figure was "108 of 244 (44%)". The denominators differ — this one
- * counts exported `function` components whose first parameter is annotated with
- * a `*Props` type — so it is a method difference rather than a contradiction,
- * recorded in AUDIT §8 with both methods stated. After the sweep: 81 of 243.)
- *
- * This item went first in Phase 2 because it is the only one whose cost is
- * QUADRATIC: every component added before the decision has to be revisited
- * after it.
- *
- * ── THE DECISION: OMIT WHAT YOU OWN, SPREAD THE REST ────────────────────────
- *
- * A component's props interface extends the DOM surface of the element it
- * actually renders, minus the names the component owns:
- *
- *     export interface CardProps
- *       extends Omit<ComponentProps<"div">, "children" | "className">,
- *         VariantProps<typeof cardVariants> {
- *       children?: LumoNode;              // narrowed: never `ReactNode`
- *       className?: string | undefined;   // merged last by `cn`, never replaced
- *     }
- *
- * and the component binds a rest and spreads it at that element. `spinner.tsx`
- * is the model the audit named: `:67` omits `role` from the accepted surface
- * and `:102` hardcodes it, so `role="status"` is not a convention the component
- * hopes callers respect — it is unrepresentable to override.
- *
- * Two clauses, and the second is the one that has actually shipped defects:
- *
- *   1. THE BASE IS `ComponentProps<E>`, NEVER `HTMLAttributes<T>`, where `E` is
- *      the root's tag. This is the entire `ref` story and it costs nothing.
- *   2. `Omit` WHAT THE COMPONENT OWNS, AND SAY WHY ON THE LINE. A component
- *      that both accepts an attribute and writes it has a defect waiting on
- *      whichever spread happens to be last.
- *
- * ── WHY, SPECIFICALLY, UNDER REACT 19 ───────────────────────────────────────
- *
- * React 19 made `ref` an ORDINARY PROP. Verified against this repo's own
- * `@types/react@19.2.18` with its own `tsc`, both directions asserted so the
- * probe could not pass vacuously:
- *
- *     type HasRef<P> = "ref" extends keyof P ? true : false;
- *     const a: HasRef<ComponentProps<"div">>     = true;   // compiles
- *     const b: HasRef<HTMLAttributes<HTMLDivElement>> = false;  // compiles
- *     …and the inverted pair produces TS2322 on both lines.
- *
- * So the whole `ref` question is answered by a BASE TYPE, not by a mechanism.
- * No `forwardRef`, no `ref` prop to declare, no element bookkeeping, no runtime
- * cost. That is what makes clause 1 a one-token edit per interface rather than
- * a refactor, and it is the fact that decides between the two shapes below.
- *
- * Also verified under this repo's `exactOptionalPropertyTypes: true`:
- * `const p: ComponentProps<"div"> = { id: undefined, ref: undefined, onClick:
- * undefined }` compiles. React's DOM types spell every optional field
- * `T | undefined`, so spreading a props bag that carries an explicit
- * `undefined` — the shape `props.ts` already protects under "ONE MEASURED
- * WIDENING" and the shape `?: never` breaks — keeps working untouched.
- *
- * ── THE SHAPE THAT WAS REJECTED, AND WHY ────────────────────────────────────
- *
- * The alternative on the table was an explicit `attr()`-forwarded allow-list —
- * `id` / `ref` / `aria-labelledby` / `aria-describedby` / `data-*`, hand-listed
- * and hand-delivered on every root. It is more ceremony in exchange for the
- * promise that nothing arrives the component has not considered. It loses on
- * four counts, in ascending order of importance:
- *
- *   1. It is 244 hand-maintained lists. The current 21-vs-10 split is what a
- *      per-file judgement call produces at this scale; a per-file list is the
- *      same bet with more surface.
- *
- *   2. It cannot be typed as cheaply as it can be written. Every field on the
- *      list has to be redeclared BY HAND with `| undefined` on it, or
- *      `exactOptionalPropertyTypes` turns a correct spread into an error. That
- *      is the mistake this file already records once.
- *
- *   3. React 19 removed the reason it existed. Under React 18 an allow-list at
- *      least bought an explicit `ref` story that `forwardRef` otherwise made
- *      per-component ceremony. Under React 19 `ComponentProps<E>` gives the same
- *      thing for free, so the allow-list is paying its full price for what is
- *      now a rounding error.
- *
- *   4. IT IS NOT MECHANICALLY CHECKABLE, AND THAT IS THE DECIDING ONE. A gate
- *      can ask "you accept `id` — do you deliver it?" and answer it from
- *      syntax. No gate can ask "should you ALSO have accepted
- *      `aria-keyshortcuts`?" — the answer lives in a component nobody has
- *      written yet, on a page nobody has built yet. An allow-list's guarantee
- *      is therefore exactly as strong as the diligence of whoever wrote each
- *      list, which is the property that produced the state this decision
- *      replaces. "Omit what you own" inverts that: the DEFAULT is complete, and
- *      each subtraction is a reviewed line the gate can see.
- *
- * ── THE HYBRID CLAUSE: A FLOOR, SO A CLOSED SURFACE IS A DECISION ───────────
- *
- * "Omit what you own" alone would let a component omit everything and still be
- * within the letter of the rule. So:
- *
- *   `ref` AND `id` ARE NEVER SUBTRACTED, only ever OWNED or WIDENED, and either
- *   one is a comment on the `Omit` line naming what breaks otherwise.
- *
- * The components that OWN their `ref` all read the DOM out of it, and that is
- * what earns it: `Table`, `ListBox`, `Tree` and `VirtualList` drive a roving tab
- * stop or a virtual window from the element; `Gantt`, `Kanban` and `Sortable`
- * hit-test a drag against it. A consumer's ref does not coexist with theirs — it
- * REPLACES it. `table.tsx` shipped exactly that: `ref` and `onKeyDown` accepted,
- * `{...props}` spread last, and every arrow key silently dead the moment a
- * consumer measured the table. See `TableProps`.
- *
- * `DateInput` owns its `ref` for a different and better reason: it hands back a
- * `DateInputHandle` instead. What a caller needs from that component is "focus
- * the first segment", not the `<div>`.
- *
- * WIDENING is the other legal answer and is not a subtraction. A component
- * whose root varies at run time — `Stack`'s `tag`, `Separator`'s `<hr>`/`<div>`
- * pair, `MessageTime`'s `<time>`/`<span>` — declares `ref?: Ref<HTMLElement>`,
- * the widest type true of every branch, and casts once at the element. Handing
- * back `Ref<HTMLDivElement>` for a `<section>` would be worse than handing back
- * nothing, because it type-checks.
- *
- * ── WHAT THE COMPONENT STILL OWNS, AND HOW IT SAYS SO ──────────────────────
- *
- * Ownership is not a judgement call about taste; it is one of three facts:
- *
- *   the component WRITES it        `role` on `Spinner`, `aria-label` on `Table`
- *                                  (it is built from a REQUIRED `label` prop)
- *   the component READS it         `ref` on `Table`/`ListBox`/`VirtualList`
- *   the state lives elsewhere      the open-state trio on an overlay SURFACE;
- *                                  see `OverlayOpenStateKeys` below
- *
- * Everything else is the consumer's. `id`, `data-testid`, `aria-describedby`,
- * `aria-keyshortcuts`, `aria-current`, `onScroll`, `dir` on a bidi island —
- * this library cannot enumerate what a page needs, and 44% of it was
- * previously answering "no" to all of them by default.
- *
- * ── ONE THING THIS CONTRACT DOES NOT BUY ───────────────────────────────────
- *
- * `Omit` protects a TypeScript consumer. It does nothing for the one who copied
- * a file into a JavaScript project, which is how this library is distributed.
- * So where a displaced attribute is a SILENT failure rather than a visible one,
- * the component ALSO spreads `{...props}` FIRST and writes what it owns after
- * it. That is the reverse of the house order — everywhere else a caller's value
- * should win, because that is what an escape hatch is for — and it applies to
- * every root that writes an attribute its own behaviour then reads back:
- * `Table`, `ListBox`, `VirtualList`, `Tree`, `Gantt`, `Kanban`, `Sortable` and
- * `FileUpload`. `table.tsx` explains it on the line, and the two tests in
- * `table.test.tsx` that failed before it moved are the evidence it is needed
- * rather than a precaution.
- *
- * `Calendar`, `RangeCalendar`, `EventCalendar` and `DateInput` are spread the
- * same way, and for a weaker reason that is worth stating rather than dressing
- * up: they own nothing a caller can kill, and the order is uniformity inside a
- * family whose four roots are read side by side. If that turns out to be the
- * wrong call, it is four lines.
- * ═══════════════════════════════════════════════════════════════════════════ */
+/*
+ * THE ROOT CONTRACT — `ref`, `id` and every other DOM attribute (12 Aug 2026;
+ * enforced by `packages/gate/src/inert-props.ts`, exemplar in `button.tsx`):
+ * a props interface extends `ComponentProps<E>` of the root it renders (never
+ * `HTMLAttributes<T>` — under React 19 that base type IS the `ref` story),
+ * `Omit`s only what the component owns and says why on the line, and spreads
+ * the rest at the root. `ref` and `id` are never subtracted, only OWNED (the
+ * component reads/writes it) or WIDENED (`Ref<HTMLElement>` for a varying
+ * root), each with a comment on the `Omit` line. Roots that read back an
+ * attribute they write spread `{...props}` FIRST. Full decision and the
+ * rejected allow-list alternative: `docs/decisions/log.md`.
+ */
 
-/* ════════════════════════════════════════════════════════════════════════════
- * KEYS, SELECTION, ORIENTATION
- * ═══════════════════════════════════════════════════════════════════════════ */
+// KEYS, SELECTION, ORIENTATION
 
 /**
- * A collection item's identity.
- *
- * NOT React's `Key`. React widened its own to include `bigint`; this one is the
- * two things a Lumo collection actually keys on, and it is the type
- * `onSelectionChange` and `onAction` hand back. Declared once here rather than
- * per component because a structurally-equal copy in seven files is seven
- * things that can drift.
+ * A collection item's identity. NOT React's `Key` (which includes `bigint`);
+ * the type `onSelectionChange` and `onAction` hand back.
  */
 export type Key = string | number;
 
@@ -282,15 +54,10 @@ export type SelectionBehavior = "toggle" | "replace";
 export type DisabledBehavior = "selection" | "all";
 export type FocusStrategy = "first" | "last";
 
-/**
- * Layout axis. Note this is a VISUAL prop in Lumo — since the Base UI swap the
- * keyboard model no longer reads it. See `radio-group.tsx`'s header.
- */
+/** Layout axis. A VISUAL prop in Lumo — the keyboard model no longer reads it. */
 export type Orientation = "horizontal" | "vertical";
 
-/* ════════════════════════════════════════════════════════════════════════════
- * VALIDATION
- * ═══════════════════════════════════════════════════════════════════════════ */
+// VALIDATION
 
 export type ValidationError = string | string[];
 
@@ -308,11 +75,7 @@ export interface Validation<T = unknown> {
   isRequired?: boolean;
   /** Whether the input value is invalid. */
   isInvalid?: boolean;
-  /**
-   * ACCEPTED AND UNREACHABLE under Base UI, which decides this on `<Form>` and
-   * `Field.Root` rather than per control. Kept because removing it is an API
-   * change; see `form.tsx`.
-   */
+  /** ACCEPTED AND UNREACHABLE under Base UI, which decides this on `<Form>`; kept as API. */
   validationBehavior?: "native" | "aria";
   /** Returns a validation error, or nothing if the value is acceptable. */
   validate?: (value: T) => ValidationError | true | null | undefined;
@@ -341,15 +104,8 @@ export interface HelpTextProps {
   errorMessage?: ReactNode | ((v: ValidationResult) => ReactNode);
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * INTERACTION EVENTS
- *
- * `PressEvent` is the one shape in this file that a consumer writes code
- * AGAINST rather than merely passes through: `onPress={(e) => …}` reads
- * `e.pointerType` to tell a keyboard activation from a pointer one. It is
- * restated field for field for that reason. `base-ui-adapter.ts` translates a
- * real DOM event into one of these at runtime.
- * ═══════════════════════════════════════════════════════════════════════════ */
+// INTERACTION EVENTS — `PressEvent` is the one shape a consumer writes code
+// AGAINST; `base-ui-adapter.ts` translates a real DOM event into one at runtime.
 
 export type PointerType = "mouse" | "pen" | "touch" | "keyboard" | "virtual";
 
@@ -388,21 +144,10 @@ export interface HoverEvent {
 }
 
 /**
- * A React keyboard event that does NOT propagate by default.
- *
- * Named with the `Lumo` prefix because an unprefixed `KeyboardEvent` in an
- * importing module shadows the DOM global of the same name — a rename that
- * type-checks and confuses every reader afterwards.
- *
- * The `any` is LOAD-BEARING and is not laziness. It is the target element of
- * the React event, and it is what makes a plain
- * `KeyboardEventHandler<HTMLButtonElement>` accept a handler written against
- * this type — the assignment `menubar.tsx` and `toolbar.tsx` make when they
- * spread `rest` at a bare `<button>`. Narrowing it to `Element` was tried and
- * produces TS2322 (`Property 'continuePropagation' is missing`) at those two
- * call sites, because the extra methods make the intersection unreachable from
- * React's own event unless one side is `any`. React Aria typed it the same way,
- * for the same reason, and this type exists to keep that API.
+ * A React keyboard event that does NOT propagate by default. `Lumo`-prefixed so
+ * it never shadows the DOM global. The `any` is LOAD-BEARING: narrowing it to
+ * `Element` makes the type unassignable to React's own `KeyboardEventHandler`
+ * where `menubar.tsx`/`toolbar.tsx` spread `rest` at a bare `<button>`.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- see above
 export type LumoKeyboardEvent = ReactKeyboardEvent<any> & {
@@ -447,12 +192,8 @@ export interface HoverEvents {
 }
 
 /**
- * Any focusable element, HTML or SVG.
- *
- * The `onClick` in `PressEvents` is typed against this rather than `Element`,
- * and the difference is load-bearing in the contravariant direction: a caller
- * who ANNOTATED a handler `(e: MouseEvent<FocusableElement>) => void` — as the
- * published API invited — would not be assignable to an `Element` version.
+ * Any focusable element, HTML or SVG. `PressEvents.onClick` is typed against
+ * this, not `Element`: a caller-annotated handler must stay assignable.
  */
 export interface FocusableElement extends Element, HTMLOrSVGElement {}
 
@@ -476,9 +217,7 @@ export interface FocusableProps<Target = Element> extends FocusEvents<Target>, K
   autoFocus?: boolean;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * DOM PROPS
- * ═══════════════════════════════════════════════════════════════════════════ */
+// DOM PROPS
 
 export interface AriaLabelingProps {
   /** Defines a string value that labels the current element. */
@@ -516,10 +255,7 @@ export interface StyleProps {
   style?: CSSProperties;
 }
 
-/**
- * Text-input events, `Pick`ed from React so the handler parameter types are
- * React's own. See the header's note on the one widening this causes.
- */
+/** Text-input events, `Pick`ed from React so the handler parameter types are React's own. */
 export interface TextInputDOMEvents<T = HTMLInputElement>
   extends Pick<
     DOMAttributes<T>,
@@ -533,12 +269,7 @@ export interface TextInputDOMEvents<T = HTMLInputElement>
   > {
   /**
    * Handler that is called when the input value is about to be modified.
-   *
-   * NOT `Pick`ed from React with the others. React 19 types these two as
-   * `InputEventHandler`, which is NARROWER than the `FormEventHandler` the
-   * frozen API published — a caller's existing `FormEventHandler` would stop
-   * compiling. Narrowing what a caller may pass is the one direction this file
-   * is not allowed to move in, so they are declared by hand.
+   * Not `Pick`ed: React 19's `InputEventHandler` is narrower than the published `FormEventHandler`.
    */
   onBeforeInput?: FormEventHandler<T> | undefined;
   /** Handler that is called when the input value is modified. */
@@ -590,16 +321,11 @@ export interface LinkDOMProps {
   ping?: string;
   /** How much of the referrer to send when following the link. */
   referrerPolicy?: HTMLAttributeReferrerPolicy;
-  /** Options for the configured client side router. */
 }
 
 /**
- * Global DOM events supported on any element, `Pick`ed from React.
- *
- * Drag-and-drop, media, keyboard and focus events are deliberately absent — the
- * first two are handled directly on the element that needs them, and the last
- * two are declared on the focusable groups above so a component that is not
- * focusable does not advertise them.
+ * Global DOM events supported on any element, `Pick`ed from React. Keyboard and
+ * focus events live on the focusable groups above; drag/media are absent.
  */
 export type GlobalDOMEvents<T = Element> = Pick<
   DOMAttributes<T>,
@@ -683,19 +409,14 @@ export interface GlobalDOMAttributes<T = Element> extends GlobalDOMEvents<T> {
   translate?: "yes" | "no" | undefined;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * TEXT FIELDS
- * ═══════════════════════════════════════════════════════════════════════════ */
+// TEXT FIELDS
 
 /**
  * The prop surface every single-line text control in Lumo is pinned to —
- * `TextField`, `TextArea`, `SearchField` and `InputGroup`.
- *
- * `label`, `description`, `errorMessage` and `placeholder` are deliberately
- * ABSENT and are redeclared by each component: Lumo makes `label` a REQUIRED
- * `string` rather than an optional `ReactNode`, which is the library's central
- * rule and the reason 33 unnamed controls cannot ship again. Inheriting the
- * optional version would quietly undo it.
+ * `TextField`, `TextArea`, `SearchField` and `InputGroup`. `label`, `description`,
+ * `errorMessage` and `placeholder` are deliberately ABSENT: each component
+ * redeclares `label` as a REQUIRED `string`, and inheriting the optional version
+ * would quietly undo that.
  */
 export interface TextFieldPropsBase<T = HTMLInputElement>
   extends InputBase,
@@ -716,16 +437,11 @@ export interface TextFieldPropsBase<T = HTMLInputElement>
   enterKeyHint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send";
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * BOOLEAN FIELDS AND FIELD GROUPS
- * ═══════════════════════════════════════════════════════════════════════════ */
+// BOOLEAN FIELDS AND FIELD GROUPS
 
 /**
  * A single boolean control that is also a form field — `Checkbox`, `Switch`.
- *
- * Distinct from a bare toggle BUTTON (`toggle.tsx`) because this one submits:
- * it has a hidden `<input>`, a `name`, and validation. `children` and
- * `className` are absent for the reason every shape in this file omits them.
+ * Distinct from a bare toggle BUTTON (`toggle.tsx`) because this one submits.
  */
 export interface ToggleFieldPropsBase
   extends InputBase,
@@ -754,11 +470,8 @@ export interface ToggleFieldPropsBase
 
 /**
  * A group of controls that reports ONE value — `CheckboxGroup`, `RadioGroup`.
- *
- * Three type parameters rather than one because the three roles genuinely
- * differ: a radio group holds `string | null`, hands `string` to `onChange`,
- * and validates a `string`. Collapsing them would have made `validate` take a
- * nullable value for radios, which is a narrowing a caller would feel.
+ * Three type parameters because a radio group holds `string | null`, hands
+ * `string` to `onChange`, and validates a `string`.
  */
 export interface FieldGroupPropsBase<TValue, TChange = TValue, TValidate = TChange>
   extends InputBase,
@@ -772,9 +485,7 @@ export interface FieldGroupPropsBase<TValue, TChange = TValue, TValidate = TChan
     StyleProps,
     GlobalDOMAttributes<HTMLDivElement> {}
 
-/* ════════════════════════════════════════════════════════════════════════════
- * OVERLAYS
- * ═══════════════════════════════════════════════════════════════════════════ */
+// OVERLAYS
 
 export interface OverlayTriggerProps {
   /** Whether the overlay is open by default (controlled). */
@@ -787,35 +498,14 @@ export interface OverlayTriggerProps {
 
 /**
  * The three keys above, as a union, so a SURFACE can subtract them in one line.
- *
- * ── WHY A SURFACE MUST NOT ACCEPT THEM ─────────────────────────────────────
- *
- * Open state under Base UI belongs to the ROOT — `Dialog.Root`, `Popover.Root`,
- * `Tooltip.Root` — and in Lumo the part that renders the Root is the TRIGGER:
- * `DialogTrigger`, `PopoverTrigger`, `TooltipTrigger`. A backdrop, a panel or a
- * popup is rendered INSIDE that Root and has no access to it.
- *
- * Six surfaces declared the trio anyway and destructured all three into `_`
- * discards — `DialogOverlay`, `DialogModal`, `DrawerOverlay`, `Drawer`,
- * `Popover`, `Tooltip`. So
- *
- *     <DialogModal isOpen={open} onOpenChange={setOpen}>
- *
- * reads perfectly, compiles, and does nothing at all: the dialog neither opens
- * nor reports. That is the same shape as `isKeyboardDismissDisabled`, which was
- * removed from `ModalOverlayPropsBase` for the same reason and RELOCATED to
- * `DialogTrigger` — and it gets the same answer, minus the relocation, because
- * these three are already on the trigger and always have been.
- *
- * `time-field.tsx` set the precedent this rests on: absent is a failure at the
- * call site, accepted-and-ignored is a bug report six months on.
+ * Open state under Base UI belongs to the ROOT, which in Lumo the TRIGGER
+ * renders; a backdrop, panel or popup that accepted the trio would compile and
+ * do nothing. Absent is a failure at the call site; accepted-and-ignored is a
+ * bug report six months on.
  */
 export type OverlayOpenStateKeys = "isOpen" | "defaultOpen" | "onOpenChange";
 
-/**
- * A dialog's own props — `dialog.tsx` and `alert-dialog.tsx`, which differ only
- * in whether `role` is a caller's choice or fixed.
- */
+/** A dialog's own props — `dialog.tsx` and `alert-dialog.tsx`. */
 export interface DialogPropsBase
   extends DOMProps,
     AriaLabelingProps,
@@ -831,26 +521,9 @@ export interface DialogPropsBase
 
 /**
  * The overlay a modal renders into — `dialog.tsx`'s backdrop and panel, and
- * `drawer.tsx`'s.
- *
- * Several of these are ACCEPTED AND UNREACHABLE under Base UI and each
- * component's header names which; they are kept because removing a prop is an
- * API change.
- *
- * ── ONE OF THEM LEFT, AND IT LEFT BECAUSE IT WORKS SOMEWHERE ELSE ───────────
- *
- * `isKeyboardDismissDisabled` was declared here and was inert on all four
- * consumers of this type — `DialogOverlay`, `DialogModal`, `DrawerOverlay`,
- * `Drawer`. It is gone rather than kept, and the reason is the one
- * `PopoverTrigger` records: dismissal under Base UI lives on the ROOT, and none
- * of those four parts renders it. `DialogTrigger` does, and that is where the
- * prop now is — for dialogs and drawers alike, since a drawer's state owner is
- * `DialogTrigger` too. Passing it to an overlay or a panel is now a compile
- * error, which is what `time-field.tsx` set the precedent for: absent is a
- * failure at the call site, accepted-and-ignored is a bug report six months on.
- *
- * Those four are the ONLY consumers of this interface — checked before the
- * removal, not after.
+ * `drawer.tsx`'s. Several are ACCEPTED AND UNREACHABLE under Base UI (each
+ * component's header names which); `isKeyboardDismissDisabled` was removed and
+ * relocated to `DialogTrigger`, where the Root that reads it lives.
  */
 export interface ModalOverlayPropsBase
   extends OverlayTriggerProps,
@@ -869,13 +542,8 @@ export interface ModalOverlayPropsBase
 }
 
 /**
- * The full placement union, physical spellings included.
- *
- * Exported so `popover.tsx` can subtract the physical ones with the same
- * template-literal `Exclude` it always used — see `LumoPlacement` there. Kept
- * whole here rather than pre-filtered because the subtraction is the thing
- * worth reading at the call site: it is the rule that a placement in this
- * library mirrors with the writing direction.
+ * The full placement union, physical spellings included; `popover.tsx`
+ * subtracts the physical ones at the call site (`LumoPlacement`).
  */
 export type Placement =
   | "bottom"
@@ -920,9 +588,7 @@ export interface PositionProps {
   isOpen?: boolean;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * COLLECTIONS
- * ═══════════════════════════════════════════════════════════════════════════ */
+// COLLECTIONS
 
 export interface CollectionStateBase<T> {
   /** Item objects in the collection. */
@@ -955,9 +621,7 @@ export interface Expandable {
   onExpandedChange?: (keys: Set<Key>) => void;
 }
 
-/* ════════════════════════════════════════════════════════════════════════════
- * BUTTONS
- * ═══════════════════════════════════════════════════════════════════════════ */
+// BUTTONS
 
 /** The ARIA state attributes a button may carry explicitly. */
 export interface ButtonAriaProps {
@@ -987,11 +651,8 @@ export interface ButtonFormProps {
 }
 
 /**
- * A pressable button's prop surface, minus its children and class.
- *
- * This is the single most-copied shape in the library — `button.tsx`,
- * `item.tsx`, `menubar.tsx` and `disclosure.tsx` all pin their public API to
- * it, and `base-ui-adapter.ts` translates it onto Base UI at runtime.
+ * A pressable button's prop surface, minus its children and class — the
+ * most-copied shape in the library; `base-ui-adapter.ts` translates it onto Base UI.
  */
 export interface ButtonPropsBase
   extends FocusableProps,
@@ -1002,46 +663,18 @@ export interface ButtonPropsBase
     ButtonAriaProps,
     ButtonFormProps,
     StyleProps,
-    // `onClick` comes from `PressEvents`, not from the global set: a button's
-    // click handler is the press API's, and declaring both is a conflict.
+    // `onClick` comes from `PressEvents`, not from the global set.
     Omit<GlobalDOMAttributes<HTMLButtonElement>, "onClick"> {
   /** Whether the button is disabled. */
   isDisabled?: boolean;
   /**
    * The button's position in the sequential tab order.
    *
-   * ── WHY THIS IS A REAL PROP ──────────────────────────────────────────────
-   *
-   * React Aria spelled removal from the tab order as `excludeFromTabOrder`,
-   * which under Base UI was unreachable — `tabIndex={-1}` reaches the element
-   * directly and is what the flag ever meant, so that name is gone. Removal
-   * is half of a roving tabindex; the other half is putting the `0` BACK on
-   * exactly one member, and that needs the real attribute.
-   *
-   * A `role="grid"` needs both halves on the same control. `table.tsx` puts the
-   * grid's single Tab stop on the widget inside a cell rather than on the cell
-   * (ARIA's widget-focus model, and the reason `TableSelectionCell` exists), so
-   * the control in the active cell must serve `tabindex="0"` and the same
-   * control in every other row must serve `-1` — in the FIRST BYTE, because a
-   * stop elected in a layout effect does not exist on the server. Measured
-   * 12 Aug 2026 on a three-row grid with one `IconButton` per row: the served
-   * bytes carried FOUR `tabindex="0"` — the active cell plus one per button,
-   * since Base UI's `Button` writes an explicit `tabindex="0"` of its own
-   * rather than relying on a `<button>`'s default tabbability.
-   *
-   * The value reaches the element: `button.tsx` leaves `tabIndex` in `...rest`
-   * and spreads `rest` AFTER its own `attr("tabIndex", …)`, so a caller's value
-   * wins, and Base UI resolves a conflict with its own default in the caller's
-   * favour. Verified by rendering — `<IconButton
-   * tabIndex={-1}>` emits `tabindex="-1"` and no `tabindex="0"`.
-   *
-   * Declared on the BUTTON shape alone and not on `FocusableDOMProps`, which
-   * would hand it to every focusable control in the library at once. Several of
-   * those destructure their props rather than spreading them, so a blanket
-   * declaration would mint accepted-and-unreachable props — the exact defect
-   * the removed `isPending` carrier used to document. `CheckboxProps` still needs the same
-   * one-line fix and still has the cast in `table.tsx` recording that it does;
-   * widening this shape is not evidence about that one.
+   * A real prop (not RAC's `excludeFromTabOrder`) because a roving tabindex
+   * needs the `0` put BACK on one member in the FIRST BYTE — `table.tsx`'s grid.
+   * `button.tsx` spreads `rest` AFTER its own `attr("tabIndex", …)`, so a
+   * caller's value wins. Declared on the BUTTON shape alone, not
+   * `FocusableDOMProps`, so no destructuring control mints an inert prop.
    */
   tabIndex?: number | undefined;
 }

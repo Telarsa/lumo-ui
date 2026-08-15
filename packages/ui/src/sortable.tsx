@@ -6,88 +6,13 @@ import { GripVerticalIcon } from "lucide-react";
 import { cn, direction, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
 
 /**
- * A list the reader can reorder — by keyboard first, by pointer second.
- *
- *     <Sortable
- *       label="ترتیب وظیفه‌ها"
- *       locale={locale}
- *       items={tasks}
- *       onReorder={setTasks}
- *       strings={sortableStrings}
- *     >
- *       {(task) => <span>{task.label}</span>}
- *     </Sortable>
- *
- * ═══ THE KEYBOARD MODEL IS THE COMPONENT. THE DRAG IS THE ENHANCEMENT ═══════
- *
- * Every "sortable list" is built pointer-first and then has keyboard support
- * bolted on, or not bolted on at all. That ordering is what produces the most
- * common serious defect in the category: a board where work can be organised
- * only by people who can hold a pointer steady, on a screen big enough to see
- * both ends of the drag.
- *
- * So this is written the other way round. The model is the WAI-ARIA one:
- *
- *     Space / Enter   pick the item up, or put it down
- *     Arrow keys      move it while held
- *     Escape          put it back where it was
- *
- * and the pointer drag below is a second route to the same state machine, not
- * the thing the state machine was written for. Everything a pointer can do
- * here, a keyboard can do, which is the acceptance test the category usually
- * fails.
- *
- * ═══ ARROW KEYS ON A HORIZONTAL LIST ARE DIRECTION-AWARE ════════════════════
- *
- * For a vertical list, Up is toward the start of the list in every script. For
- * a HORIZONTAL one — a row of columns, a set of steps — the start of the list
- * is on the LEFT in English and on the RIGHT in Persian, so ArrowRight means
- * "earlier" on a Persian page and "later" on an English one.
- *
- * This cannot be done with CSS and it cannot be done by mirroring the layout:
- * the layout mirrors on its own from `flex`, and the KEY still has to be
- * reinterpreted. It is the same class of decision as the calendar's nav
- * chevrons — `calendar.tsx` argues it at length — and the same source of truth,
- * `direction(locale)`.
- *
- * ═══ EVERY MOVE IS ANNOUNCED, AND THE STRINGS ARE REQUIRED ══════════════════
- *
- * A reorder is a change with no focus move and no visible affordance for
- * someone not looking at the screen. Without a live region the item silently
- * moves and the reader has no way to know it worked, or where it went.
- *
- * `strings.position` is a FUNCTION of two already-formatted numbers rather than
- * a template, for the reason `core/src/strings.ts` gives: «مورد ۳ از ۷» and
- * "item 3 of 7" do not place their figures in the same clause positions, and a
- * template with two holes forces one language into the other's grammar. The
- * numbers arrive already localised — this file never hands a translator a raw
- * `number`.
- *
- * ═══ FOCUS HAS TO FOLLOW THE ITEM, AND NOTHING GIVES YOU THAT ═══════════════
- *
- * A reorder moves the held row in the DOM, and React performs that move by
- * re-inserting the node — which means removing it from the document first, and
- * an element removed from the document is blurred. The handle the reader is
- * holding therefore stops being `document.activeElement` on the FIRST arrow
- * press, and the second press goes to `<body>`.
- *
- * That is not a rough edge; it is the whole keyboard model failing after one
- * step. The item is stranded held: it cannot be moved again, cannot be dropped,
- * and Escape cannot reach it either. It is also invisible to any test that
- * re-queries the handle by its accessible name before each key, which is how it
- * survives — a real reader's keys go wherever focus went.
- *
- * So every operation that reorders records the id it must put focus back on,
- * and an effect does it after the commit. The board next door has the same
- * problem in a worse form and the same fix.
- *
- * ═══ THE HANDLE IS A BUTTON, AND IT IS THE ONLY TAB STOP PER ITEM ═══════════
- *
- * Not the row: a row that is itself focusable competes with any control inside
- * it, and a sortable list of cards with buttons on them becomes a maze. The
- * handle carries `aria-roledescription` so a screen reader says «دستگیرهٔ
- * جابه‌جایی» rather than "button", and that string is a required prop because a
- * default would be English.
+ * A list the reader can reorder — by keyboard first (Space/Enter picks up or
+ * drops, arrows move, Escape restores), by pointer second, both routes into
+ * ONE state machine. On a horizontal list the arrow keys are reinterpreted by
+ * `direction(locale)`; layout mirrors itself, the KEY cannot. Every move is
+ * announced from required, caller-authored strings. A reorder re-inserts the
+ * held row and so blurs its handle, so every reordering operation records the
+ * id to refocus after the commit. The handle is the ONLY tab stop per item.
  */
 
 export const sortableVariants = cva("flex list-none flex-col gap-2 p-0", {
@@ -103,45 +28,17 @@ export const sortableVariants = cva("flex list-none flex-col gap-2 p-0", {
 export const sortableItemVariants = cva(
   "flex items-center gap-2 rounded-lg border border-border bg-surface p-3 " +
     "transition-shadow " +
-    // The held state is on the ITEM and driven by a data attribute the
-    // component writes, so a consumer restyling it never has to reach into
-    // this file's state.
     "data-held:border-accent data-held:shadow-overlay",
 );
 
 /**
- * The grip.
- *
- * ── THE HELD STATE WAS A CHARACTER-FOR-CHARACTER COPY OF THE HOVER ──────────
- *
- * `data-held:bg-surface-hover data-held:text-fg` beside
- * `hover:bg-surface-hover hover:text-fg`: the same two tokens, so a handle the
- * reader is HOLDING looked exactly like one the pointer was merely resting on.
- * That is the defect `toggle.variants.ts` measured — an ON state drawn from the
- * neutral surface ramp the hover fill comes from — and here it is stronger than
- * a token collision, because the two strings are literally identical on both
- * themes rather than only on the light one.
- *
- * It also mattered most exactly when it was least visible. A pointer drag keeps
- * the cursor ON the handle for its whole duration, so the one state a dragging
- * reader could see was the one the drag could not change; and with equal
- * specificity between `hover:` and `data-held:` (both (0,2,0)) which of the two
- * painted was decided by the order Tailwind emits its variants in.
- *
- * So the held state moves to the accent tint — the hue the HELD ROW already
- * moves to (`data-held:border-accent` on `sortableItemVariants`), so the grip
- * and the card it belongs to now say the same thing. `data-held:hover:` is
- * stated explicitly, at (0,3,0), for the reason `sidebar.variants.ts` gives
- * about `data-current:hover:`: the pointer arriving must not repaint a state it
- * has nothing to do with.
+ * The grip. The held state is the accent tint, not the hover surface, so a
+ * held handle is distinguishable from a hovered one; `data-held:hover:` is
+ * stated explicitly so the pointer arriving cannot repaint it.
  */
 export const sortableHandleVariants = cva(
   "grid size-7 shrink-0 cursor-grab place-items-center rounded-md text-fg-subtle " +
-    // `touch-none` is load-bearing, not polish: without it a finger that starts
-    // on the handle scrolls the page, the browser takes the gesture over and
-    // fires `pointercancel`, and the drag ends before it began. The pointer
-    // route exists because `draggable` fires nothing for a finger — losing it
-    // to the default scroll gesture would put it back where it started.
+    // `touch-none` is load-bearing: without it a finger scrolls the page and the browser fires `pointercancel`.
     "touch-none transition-colors hover:bg-surface-hover hover:text-fg " +
     "data-held:cursor-grabbing data-held:bg-accent/10 data-held:text-accent " +
     "data-held:hover:bg-accent/10 data-held:hover:text-accent",
@@ -158,11 +55,7 @@ export interface SortableStrings {
   dropped: string;
   /** Announced on Escape, e.g. «لغو شد». */
   cancelled: string;
-  /**
-   * The position, from two ALREADY-FORMATTED numbers.
-   *
-   * A function and not a `"{n} of {total}"` template — see the file header.
-   */
+  /** The position, from two ALREADY-FORMATTED numbers. A function, not a two-hole template. */
   position: (index: string, total: string) => string;
 }
 
@@ -172,9 +65,7 @@ export interface SortableItem {
 }
 
 export interface SortableProps<T extends SortableItem>
-  /* `ref` and `aria-label` are owned — see `GanttProps` and `PaginationProps`.
-   * The props land on the `<ul>` that IS the list, not on the wrapper that
-   * exists only to hold the live region beside it. */
+  /* `ref` and `aria-label` are owned; the props land on the `<ul>` that IS the list. */
   extends Omit<React.ComponentProps<"ul">, "children" | "className" | "ref" | "aria-label"> {
   /** Names the list. Required — a reorderable list needs a name. */
   label: string;
@@ -222,20 +113,9 @@ export function Sortable<T extends SortableItem>({
 
   const isRtl = direction(locale) === "rtl";
 
-  /*
-   * The props as of the last commit, readable from a closure that is older than
-   * that commit. The pointer listeners are attached once, at pointerdown, and
-   * they outlive every render the drag causes, so anything they capture
-   * directly is frozen at the moment the finger went down.
-   *
-   * Measured on the version that captured `items` directly, with four 100px
-   * rows: dragging row 1 down to y=160 reordered once, and dragging it back up
-   * to y=20 produced NOTHING — `from` was still the pointerdown index, so the
-   * "did anything change" guard compared the new target against a position the
-   * item had left. An item could be dragged down and never back up. The same
-   * staleness made the drop announcement report «مورد ۱ از ۴» for a row sitting
-   * last. Reading through this ref costs one indirection and removes the class.
-   */
+  // The props as of the last commit: the pointer listeners are attached once
+  // at pointerdown and outlive every render, so a captured `items` is stale
+  // after the first move and the item could be dragged down but never back up.
   const latest = React.useRef({ items, onReorder });
   React.useEffect(() => {
     latest.current = { items, onReorder };
@@ -249,11 +129,7 @@ export function Sortable<T extends SortableItem>({
     refocusRef.current = null;
     const root = rootRef.current;
     if (root === null) return;
-    /*
-     * Only take focus back if it is ours to take — inside this list, or lost to
-     * `<body>` by the re-insertion we just caused. A consumer who moved focus
-     * elsewhere between the keypress and this effect keeps it.
-     */
+    // Only take focus back if it is ours to take — inside this list, or lost to `<body>`.
     const active = document.activeElement;
     if (active !== null && active !== document.body && !root.contains(active)) return;
     const handles = Array.from(root.querySelectorAll<HTMLElement>("[data-sortable-handle]"));
@@ -289,9 +165,7 @@ export function Sortable<T extends SortableItem>({
     setHeldId(null);
     if (origin) {
       latest.current.onReorder([...origin]);
-      // Putting the list back is itself a reorder, so it blurs the handle in
-      // exactly the way a move does. Cancelling must not cost the reader their
-      // place in the tab order.
+      // Putting the list back is itself a reorder, so it blurs the handle too.
       refocusRef.current = id;
     }
     setAnnouncement(strings.cancelled);
@@ -322,14 +196,7 @@ export function Sortable<T extends SortableItem>({
     }
     if (!held) return;
 
-    /*
-     * Which key means "earlier in the list".
-     *
-     * Vertical: Up, in every script — the block axis does not mirror.
-     * Horizontal: the start of the list is on the LEFT in English and on the
-     * RIGHT in Persian, so the key has to be reinterpreted. The layout already
-     * mirrored itself; the KEY cannot. See the file header.
-     */
+    // Which key means "earlier": Up on the block axis; on the inline axis it depends on direction.
     const backward =
       orientation === "vertical"
         ? "ArrowUp"
@@ -352,34 +219,15 @@ export function Sortable<T extends SortableItem>({
     }
   };
 
-  /*
-   * The pointer route into the SAME state machine.
-   *
-   * Pointer Events rather than HTML5 drag-and-drop, and the reason is touch:
-   * `draggable` fires no events for a finger, so a native-DnD list is a list
-   * that cannot be reordered on a phone. On a product built for a market that
-   * is overwhelmingly mobile that is not a nuance.
-   *
-   * The target index is "whose midpoint have we crossed", read from live
-   * `getBoundingClientRect()`s. Deliberately not cached at pointerdown: the
-   * rows move as the list reorders under the finger, and a cached set of rects
-   * is what makes a drag feel like it is fighting back.
-   *
-   * The listeners go on `window`, not on the handle. Pointer capture would
-   * normally keep the gesture on the handle, but capture is released implicitly
-   * when its element leaves the document — and every reorder re-inserts this
-   * handle's row, which is exactly that. A drag anchored to capture therefore
-   * dies on the first move it succeeds in making. Capture is still requested,
-   * because while it holds it suppresses text selection and hover, but nothing
-   * here depends on it; the pointerId filter is what keeps a second finger out.
-   */
+  // The pointer route into the SAME state machine. Pointer Events, not HTML5
+  // DnD (`draggable` fires nothing for a finger). Rects are read live, not
+  // cached, because rows move under the finger. Listeners go on `window`:
+  // pointer capture is released when the re-inserted row leaves the document.
   const onHandlePointerDown = (event: React.PointerEvent, id: string) => {
     if (event.button !== 0 && event.pointerType === "mouse") return;
     const { pointerId } = event;
     const handle = event.currentTarget as HTMLElement;
-    // Guarded because jsdom has no pointer capture at all, and an unguarded
-    // call throws there — which would mean no consumer could write a test for
-    // the pointer route in the environment this repo tests in.
+    // Guarded because jsdom has no pointer capture.
     if (typeof handle.setPointerCapture === "function") handle.setPointerCapture(pointerId);
     pickUp(id);
 
@@ -402,32 +250,12 @@ export function Sortable<T extends SortableItem>({
             ? point > middle
             : point < middle;
       });
-      /*
-       * `rows` still contains the row being dragged, so `slot` is an INSERTION
-       * point in the list as it stands — not the index the item ends up at.
-       * When the dragged row lies before that point, lifting it out shifts
-       * everything after it back one, and the two differ by exactly that.
-       *
-       * Measured without the correction, four rows of 100px: dragging row 1 to
-       * y=160, one midpoint crossed, landed it at index 2 rather than 1. Every
-       * forward drag overshot by a slot, which reads as the list refusing to
-       * put the item where the finger is.
-       */
+      // `slot` is an INSERTION point in a list that still contains the dragged
+      // row; lifting it out shifts everything after it back one.
       const insertion = slot === -1 ? rows.length : slot;
       const to = insertion > from ? insertion - 1 : insertion;
-      /*
-       * `reorder` and NO `announce`, deliberately — the one line in this file
-       * whose correctness is invisible, because it is a call that is absent.
-       *
-       * The keyboard's `moveBy` announces every step and must; a `pointermove`
-       * is a sample of one continuous gesture, not an act, and the row is under
-       * the finger the whole time. `aria-live="polite"` defers rather than
-       * drops, so a sentence written here is spoken after the drag has ended,
-       * about a position the item has left. `kanban.tsx` shipped that version:
-       * a ten-card drag queued ELEVEN sentences where this route queues two,
-       * and the asymmetry between these two files is how it was found. Do not
-       * make them symmetric by adding a call here.
-       */
+      // `reorder` and NO `announce`, deliberately: a `pointermove` is a sample
+      // of one gesture, and a polite region would queue a sentence per sample.
       if (to !== from) reorder(moveItem(live, from, to));
     };
 
@@ -454,11 +282,7 @@ export function Sortable<T extends SortableItem>({
 
   return (
     <div ref={rootRef} data-lumo="">
-      {/*
-       * The live region. Outside the list, because `role="list"` accepts only
-       * list items and a status node inside it is markup a screen reader is
-       * entitled to skip — the same call `autocomplete.tsx` makes.
-       */}
+      {/* The live region, outside the list: `role="list"` accepts only list items. */}
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {announcement}
       </div>
@@ -474,19 +298,14 @@ export function Sortable<T extends SortableItem>({
             <li
               key={item.id}
               data-sortable-item=""
-              // Written by the component and styled by the cva, so a consumer
-              // restyling the held state never reaches into this file.
               {...(held ? { "data-held": "" } : {})}
               className={sortableItemVariants()}
             >
               <button
                 type="button"
                 data-lumo=""
-                // How the refocus effect finds this handle again after React
-                // has re-inserted the row it lives in.
+                // How the refocus effect finds this handle after its row is re-inserted.
                 data-sortable-handle={item.id}
-                // Not the row: a focusable row competes with every control
-                // inside it, and a list of cards with buttons becomes a maze.
                 aria-label={`${strings.handleLabel} — ${item.label}`}
                 aria-roledescription={strings.handleRoleDescription}
                 aria-pressed={held}

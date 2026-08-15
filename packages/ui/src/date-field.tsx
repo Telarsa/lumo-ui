@@ -38,120 +38,26 @@ import { useDateFieldState } from "./date-field-state.ts";
 export { dateInputVariants, dateLiteralVariants, dateSegmentVariants };
 
 /**
- * A date typed segment by segment: ۱۴۰۵ / ۵ / ۱۹.
- *
- * ═══ REBUILT ON BASE UI, AND THE HONEST VERSION OF WHAT THAT COST ═══════════
- *
- * `@base-ui/react@1.7.0` publishes 40 subpaths. None of them is a calendar, a
- * date field or a time field, so unlike the other thirteen rebuilds there was
- * nothing to wrap — the interaction layer under this file is written from
- * scratch and lives in `date-field-state.ts`. What it is written AGAINST is
- * `@internationalized/date`, which is a standalone package with no React
- * dependency and is unaffected by which UI library sits on top: `PersianCalendar`
- * answers `getDaysInMonth` for Adobe and for us identically.
- *
- * So the split is: the ARITHMETIC ports for free, the INTERACTION does not. The
- * price of the interaction, in lines and in behaviours not reproduced, is
- * `experiments/measurements/date-field-cost.json`. Read that before treating
- * this file as a finished component. It is not one.
- *
- * ═══ THE FILE WHERE "JALALI FOR ENTRY" IS DECIDED ═══════════════════════════
- *
- * Every other date surface in the library only has to DISPLAY a Jalali date,
- * and displaying one is nearly free — `Intl` does it. Entry is where a calendar
- * system stops being a formatting concern and starts being arithmetic:
- * incrementing a month has to know that Esfand is followed by Farvardin of the
- * NEXT year, and incrementing a day has to know whether Esfand has 29 days or
- * 30 this year. Get either wrong and the field accepts a date that does not
- * exist, or refuses one that does.
- *
- * Lumo still does none of that arithmetic. `CalendarDate` carries its calendar
- * with it, `PersianCalendar` answers `getDaysInMonth`, and `toValue` in
- * `date-field-state.ts` asks. The measurement, unchanged from the React Aria
- * build and re-verified against this one:
- *
- *   1403 month lengths  31,31,31,31,31,31,30,30,30,30,30,30   ← Esfand has 30
- *   1404 month lengths  31,31,31,31,31,31,30,30,30,30,30,29   ← Esfand has 29
- *
- *   ArrowUp on the DAY segment at ۱۴۰۳/۱۲/۲۹ commits ۱۴۰۳/۱۲/۳۰.
- *   The same keystroke at ۱۴۰۴/۱۲/۲۹ commits NOTHING — `onChange` receives no
- *   date, because Esfand 30 does not exist in 1404.
- *
- * ── THE SAME UPSTREAM BEHAVIOUR, NOW REPRODUCED DELIBERATELY ────────────────
- *
- * The day segment lets you cycle to 31 inside a 30-day Esfand. On React Aria
- * that was upstream's `IncompleteDate.cycle` bounding the day by
- * `getMaximumDaysInMonth()`; here it is `boundsOf("day")` doing the same thing
- * for the same reason, because a user typing day-first must be able to reach 31
- * before the month is known. The DISPLAY shows ۳۱; the VALUE stays absent until
- * the whole date is real.
- *
- * ── WHAT BASE UI'S `field` PRIMITIVE DID AND DID NOT GIVE ───────────────────
- *
- * The brief was "use `Field` if it fits". It half fits, and the half that does
- * not is a first-byte defect, measured on this branch:
- *
- *     renderToStaticMarkup(<Field.Root><Field.Label …/><Field.Control render={<div/>}/>
- *                          <Field.Description …/></Field.Root>)
- *
- *     server   <span id="…">برچسب</span>
- *              <div role="group" id="…"></div>            ← no aria-labelledby
- *              <p id="…">راهنما</p>                       ← nothing points here
- *
- *     client   <div role="group" id="…" aria-labelledby="…" aria-describedby="…">
- *
- * `Field` associates its label and description in a LAYOUT EFFECT, so neither
- * association exists in the served bytes. That is the same failure shape the
- * audit pinned on React Aria's `useSlotId()` — and `dates.test.tsx` asserts the
- * association on SSR output, so `Field.Control` cannot carry this component's
- * ARIA. The ids below are minted with `useId` and wired by hand; `Field.Root`,
- * `Field.Label` and `Field.Description` are kept for their structure, their
- * `data-*` state and their styling hooks only.
- *
- * `Field.Error` is NOT used: it renders against the browser's `ValidityState`
- * of a native control, and there is no native control here.
- *
- * ── THE LOCALE HAS TO COME FROM SOMEWHERE ───────────────────────────────────
- *
- * Base UI has a direction provider and no locale provider. See `locale.ts` for
- * the context this reads and for why its default is load-bearing.
- *
- * ── DIGITS ──────────────────────────────────────────────────────────────────
- *
- * On React Aria the segment text arrived pre-formatted from upstream. Here it
- * is produced by `formatNumber`, in `date-field-state.ts`, with `useGrouping:
- * false` — the 77-Latin-digit defect is one `String(n)` away and the type
- * system cannot see the difference.
+ * A date typed segment by segment: ۱۴۰۵ / ۵ / ۱۹. Base UI ships no date
+ * field, so the interaction layer is Lumo's (`date-field-state.ts`) over
+ * `@internationalized/date`, whose `PersianCalendar` owns the Jalali
+ * arithmetic (Esfand has 29 or 30 days; the field never commits a date that
+ * does not exist). Base UI's `Field` associates label and description in a
+ * LAYOUT EFFECT, so the ids are minted with `useId` and wired by hand in
+ * render; `Field.Root`/`Label`/`Description` are kept for structure and state
+ * only, and `Field.Error` is not used (no native control). Segment digits go
+ * through `formatNumber`. Cost ledger: `experiments/measurements/date-field-cost.json`.
  */
 
 /**
- * Bounds and the message they make reachable, as one inseparable pair.
- *
- * ── THE MEASUREMENT, AND HOW IT CHANGED ─────────────────────────────────────
- *
- * On React Aria, a `minValue` plus an out-of-range value inside a `<Form>` made
- * `<FieldError>` render English, Gregorian, Latin-digited text —
- * "Value must be 8/23/2026 or later." — from `@react-stately/datepicker`, which
- * reads `navigator.language` rather than the `I18nProvider` and therefore
- * resolves to `en-US` on every server render. `dates.test.tsx` pins that as a
- * poison fixture, still, against raw React Aria.
- *
- * This rebuild cannot produce that sentence because it owns no translated
- * validation-message engine. It does enforce `minValue`, `maxValue` and
- * `isDateUnavailable` before committing a typed value; the caller-authored
- * message remains required whenever one of those constraints is supplied.
- */
-/**
- * The three props that make the message reachable. Named once, here, so the
- * five components that carry bounds cannot disagree about what a bound is.
+ * The three props that make the message reachable. Named once so the five
+ * components that carry bounds cannot disagree about what a bound is.
  */
 export type BoundKey = "minValue" | "maxValue" | "isDateUnavailable";
 
 /**
- * `P` is the upstream props object the component wraps, so the bound props keep
- * their EXACT upstream signatures — `isDateUnavailable` takes a second
- * `anchorDate` argument on a range picker and not on a field, and restating
- * either by hand is how a wrapper starts rejecting valid upstream code.
+ * Bounds and the message they make reachable, as one inseparable pair. `P` is
+ * the props object the component wraps, so the bound props keep their EXACT signatures.
  */
 export type DateBounds<P> =
   | {
@@ -162,10 +68,7 @@ export type DateBounds<P> =
       errorMessage?: LumoNode;
     }
   | (Pick<P, Extract<keyof P, BoundKey>> & {
-      /**
-       * REQUIRED, because a bound is what makes React Aria's English,
-       * Gregorian, Latin-digited fallback reachable. See the type's header.
-       */
+      /** REQUIRED: a bound is what makes a validation message reachable, and Lumo ships none. */
       errorMessage: LumoNode;
     });
 
@@ -173,12 +76,7 @@ export type DateFieldSize = "sm" | "md" | "lg";
 
 /**
  * The three bound props, with the EXACT signatures the date family shares.
- *
- * They were read off `react-aria-components`' `DateFieldProps` until the
- * type-only imports were removed; `DateBounds` picks from this now. Note
- * `minValue`/`maxValue` are `DateValue`, not the component's `T` — a bound may
- * be expressed in any calendar system, which is the whole point of a Jalali
- * field bounded by a Gregorian date.
+ * `minValue`/`maxValue` are `DateValue`, not `T`: a bound may be in any calendar.
  */
 export interface DateFieldBoundProps {
   /** The earliest allowed date. */
@@ -189,11 +87,7 @@ export interface DateFieldBoundProps {
   isDateUnavailable?: (date: DateValue) => boolean;
 }
 
-/**
- * The field's own props, minus its children, class, `aria-label` and the three
- * bounds — the name arrives as a REQUIRED `label`, and the bounds arrive
- * through `DateBounds`, which pairs them with a required `errorMessage`.
- */
+/** The field's own props, minus `aria-label` (the name is a REQUIRED `label`) and the bounds (see `DateBounds`). */
 interface DateFieldPropsBase<T extends DateValue>
   extends InputBase,
     Omit<Validation<T>, "isInvalid">,
@@ -208,16 +102,7 @@ interface DateFieldPropsBase<T extends DateValue>
   placeholderValue?: T | null;
 }
 
-/**
- * Subtracted from the shared shapes and NOT redeclared: these contracts need a
- * native form control or a validation engine, and this field has neither. They
- * were `?: undefined` carriers until 15 Aug 2026, when the React Aria
- * compatibility surface was removed (private 0.0.0 library, no external
- * consumers; the shadow API produced accepted-and-inert props). The unsupported
- * time/leading-zero options (`hourCycle`, `granularity`, `hideTimeZone`,
- * `shouldForceLeadingZeros`, `autoComplete`) are gone the same way — the engine
- * emits year/month/day only.
- */
+/** Subtracted and NOT redeclared: these need a native form control or a validation engine, and this field has neither. */
 type UnsupportedDateFieldProps =
   | "name"
   | "form"
@@ -243,12 +128,8 @@ export interface DateFieldProps<T extends DateValue> extends SupportedDateFieldP
 }
 
 /**
- * The public surface is intentionally honest after the Base UI rebuild.
- * Bounds are enforced by the state engine. DOM/ARIA/style and focus/keyboard
- * callbacks land on the segmented `role="group"`, and autofocus targets its
- * first segment. Contracts requiring a native form control or validation
- * engine (`name`, `form`, `validate`, `validationBehavior`, `isRequired`) are
- * not part of the type — see `UnsupportedDateFieldProps`.
+ * The date field. Bounds are enforced by the state engine; DOM/ARIA and
+ * focus/keyboard callbacks land on the segmented `role="group"`.
  */
 export function DateField<T extends DateValue>({
   label,
@@ -297,23 +178,14 @@ export function DateField<T extends DateValue>({
   const errorId = useId();
   const invalid = isInvalid ?? (errorMessage != null ? true : undefined);
 
-  /*
-   * Wired by hand, in RENDER, because Base UI's own wiring is a layout effect
-   * and would be absent from the first byte. See the component's header.
-   */
+  // Wired by hand, in RENDER: Base UI's own wiring is a layout effect.
   const describedBy =
     [callerDescribedBy, description != null ? descriptionId : null, errorMessage != null ? errorId : null]
       .filter((id): id is string => id != null)
       .join(" ") || undefined;
 
-  /*
-   * The keyboard model, the refs and the segment markup all moved to
-   * `date-input.tsx`. They were inline here, which is precisely why
-   * `time-field.tsx`, `date-picker.tsx` and `date-range-picker.tsx` could not
-   * use them and stayed on React Aria's `renderSegment` — two segmented inputs
-   * in one library, with different keyboard behaviour. The handle is kept so a
-   * click on the label still lands on the first segment.
-   */
+  // The keyboard model and segment markup live in `date-input.tsx`, shared
+  // with the other date fields; the handle lets a label click focus the first segment.
   const inputRef = useRef<DateInputHandle>(null);
   useEffect(() => {
     if (autoFocus === true) inputRef.current?.focus();
@@ -326,12 +198,7 @@ export function DateField<T extends DateValue>({
       {...attr("disabled", isDisabled)}
       {...attr("invalid", invalid)}
     >
-      {/*
-       * `nativeLabel={false}` with a `<span>` render, NOT the default `<label>`.
-       * A `<label for>` may only name a labelable element and this field is a
-       * `role="group"` of spinbuttons; Base UI emits the `for` regardless, which
-       * measured as a dangling reference to an id nothing carries.
-       */}
+      {/* `nativeLabel={false}`: a `<label for>` cannot name a `role="group"`, and Base UI would emit a dangling `for`. */}
       <Field.Label
         id={labelId}
         nativeLabel={false}
@@ -376,11 +243,7 @@ export function DateField<T extends DateValue>({
         </Field.Description>
       ) : null}
 
-      {/*
-       * Rendered ONLY when the author supplied a message, and a plain element
-       * rather than `Field.Error` — Base UI's error part matches against a
-       * native control's `ValidityState`, and there is no native control here.
-       */}
+      {/* A plain element, not `Field.Error`, which matches a native control's `ValidityState`. */}
       {errorMessage != null ? (
         <div id={errorId} className={fieldErrorVariants()}>
           {errorMessage}

@@ -75,9 +75,7 @@ export function TreeSelect({
     onValueChange?.(next);
   };
   /* Roving tabindex over the tree's inputs: the whole tree is ONE Tab stop
-   * (the first enabled row, or the checked one), and the arrow keys move
-   * between rows. Without it every native input was its own stop, which this
-   * repo's own composite-single-tab-stop rule flags on the served DOM. */
+   * (the first enabled row, or the checked one); arrow keys move between rows. */
   const flatEnabled = flat(options).filter((node) => !(isDisabled ?? false) && node.disabled !== true);
   const stopValue =
     flatEnabled.find((node) => selected.has(node.value))?.value ?? flatEnabled[0]?.value;
@@ -130,15 +128,9 @@ export function TreeSelect({
       })}
     </ul>
   );
-  /*
-   * The popup rides the shared `Popover`/`PopoverTrigger` pair rather than a
-   * hand-rolled `absolute` div — the hand-rolled form forfeited Escape,
-   * outside-press dismissal, focus return, portalling and collision handling
-   * at once, which an independent review measured as the exact gap. The tree
-   * itself stays a form of native radios/checkboxes: Tab reaches every row,
-   * and the native inputs carry the selection semantics a hand-rolled
-   * `aria-activedescendant` tree would have to re-earn.
-   */
+  // The popup rides the shared `Popover`/`PopoverTrigger` pair (a hand-rolled
+  // div forfeited Escape, outside-press, focus return, portalling, collision).
+  // The tree stays native radios/checkboxes, which carry the selection semantics.
   return (
     <div data-lumo="" className={cn("flex w-full flex-col gap-1.5", className)}>
       <label id={`${id}-label`} className="text-sm font-medium text-fg">{label}</label>

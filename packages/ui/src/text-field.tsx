@@ -1,47 +1,17 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
-// The prop SHAPE the public API is pinned to — the same surface `TextFieldProps`
-// from `react-aria-components` supplied before the type-only imports were
-// removed, now owned by Lumo. See `@lumo-ui/core`'s `props.ts`.
+// The prop SHAPE the public API is pinned to, owned by Lumo (`@lumo-ui/core`'s `props.ts`).
 import { cn, type LumoNode, type TextFieldPropsBase } from "@lumo-ui/core";
 import { Description, Field, FieldError, FieldInput, Label, optional } from "./form.tsx";
 
 /**
- * The input box. Shared by TextField, SearchField and InputGroup, which differ
- * only in what they overlay on top of it.
- *
- * Every inline dimension here is logical: `px-*` is `padding-inline`, so the box
- * pads the same on both sides in either direction, and `text-start` is
- * `text-align: start` rather than `left`. A single `text-left` in this string
- * would left-align Persian text inside a right-to-left field — legible, plausible
- * in a screenshot, and wrong.
- *
- * Height comes from the density-scaled control tokens, never a literal rem, so a
- * brand that sets `--lumo-ref-density` moves the whole system at once.
- *
- * ── THE STATE SELECTORS, AFTER THE ENGINE SWAP ─────────────────────────────
- *
- *     data-hovered  → `hover:`. Base UI publishes NO hover attribute anywhere:
- *                     a grep for `data-hovered` over the whole installed 1.7.0
- *                     dist returns zero files. Keeping it would have left a
- *                     class that styles nothing and reviews as if it did — the
- *                     defect `button.variants.ts` is still carrying.
- *                     Cost, stated: jsdom models no pointer, so `:hover` cannot
- *                     be unit-asserted the way the attribute could.
- *     data-invalid  → UNCHANGED, and this one had to be measured rather than
- *                     assumed. Base UI's validity reaches a control only when
- *                     the control sits inside a `Field.Root`; `InputDataAttributes`
- *                     declares `invalid` with exactly that caveat, and this
- *                     component always renders one. (Contrast number-field.tsx,
- *                     where `NumberField.Root` is NOT a `Field.Root` and the
- *                     attribute reaches nothing — a workaround, not a rename.)
- *     data-disabled → UNCHANGED. The widest-reaching state in the library.
- *
- * The focus ring is NOT restated here and that is deliberate: an `<input>` is
- * its own focusable element, so theme.css's single
- * `:where([data-lumo]):focus-visible` rule already draws it. `FOCUS_RING_SELF`
- * exists for the controls where Base UI moved focus onto a `<span role=…>`.
+ * The input box. Shared by TextField, SearchField and InputGroup. Every inline
+ * dimension is logical (`px-*`, `text-start`); height comes from the
+ * density-scaled control tokens. `hover:` replaces `data-hovered` (Base UI
+ * publishes no hover attribute); `data-invalid` reaches the control because
+ * this component always renders a `Field.Root`. The focus ring is NOT restated:
+ * an `<input>` is its own focusable element, so theme.css's `data-lumo` rule draws it.
  */
 export const inputVariants = cva(
   "w-full min-w-0 rounded-md border border-border-control bg-surface text-fg text-start " +
@@ -64,55 +34,23 @@ export const inputVariants = cva(
 );
 
 /**
- * A single-line text field.
- *
- * COMPOSED, not compositional, and `label` is a REQUIRED string. This is the same
- * argument the exemplar makes for `IconButton`: a convention that "every field
- * should have a label" is a convention, and a prototype shipped 33 controls with
- * no accessible name while following it. A required prop is checked in the editor.
- *
- * The consequence is that the label cannot be rich content. That is a deliberate
- * trade — a label is spoken by a screen reader as a flat string anyway, so markup
- * inside it buys nothing that `description` does not buy better.
- *
- * ── THE PUBLIC API IS REACT ARIA'S, THE ENGINE IS NOT ──────────────────────
- *
- * `TextFieldProps` still extends `AriaTextFieldProps`, so a consumer's existing
- * `isDisabled` / `isRequired` / `onChange(value: string)` call sites compile
- * unchanged. The translation to Base UI happens inside: the field-level props
- * (`isDisabled`, `isInvalid`, `name`, `validate`) go to `<Field>`, the
- * control-level ones to `<Input>`, and `onChange` maps onto Base UI's
- * `onValueChange`, which — usefully — hands over the same `string` React Aria
- * did rather than an event.
- *
- * Two props are ACCEPTED AND UNREACHABLE, recorded rather than silently
- * dropped:
- *
- *   `validationBehavior`  Base UI decides this on `<Form>` (`validationMode`)
- *                         and `Field.Root`, not per control, and its vocabulary
- *                         is `onSubmit`/`onBlur`/`onChange` rather than
- *                         `aria`/`native`. See form.tsx.
- *   `excludeFromTabOrder` No equivalent. `tabIndex={-1}` reaches the input
- *                         directly and is what this ever meant.
+ * A single-line text field. COMPOSED, and `label` is a REQUIRED string — a
+ * convention shipped 33 unnamed controls; a required prop is checked in the
+ * editor. Public API is React Aria's shape; inside, field-level props go to
+ * `<Field>`, control-level to `<Input>`, and `onChange` maps onto Base UI's
+ * `onValueChange` (same `string`). `validationBehavior` is accepted and
+ * unreachable (Base UI decides it on `<Form>`); see form.tsx.
  */
 export interface TextFieldProps
   extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior">,
     VariantProps<typeof inputVariants> {
-  /**
-   * The control's position in the sequential tab order — `-1` removes it,
-   * which is what React Aria's `excludeFromTabOrder` meant and all it meant.
-   * That name is gone (15 Aug 2026); the real attribute replaces it.
-   */
+  /** The control's position in the sequential tab order — `-1` removes it (was `excludeFromTabOrder`). */
   tabIndex?: number | undefined;
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
   /** Help text, wired into `aria-describedby` during render — not after hydration. */
   description?: LumoNode;
-  /**
-   * An error to display. Supplying one marks the field invalid, because a field
-   * carrying an error message and reporting itself valid is a contradiction the
-   * caller should not have to resolve by hand.
-   */
+  /** An error to display. Supplying one marks the field invalid. */
   errorMessage?: LumoNode;
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;

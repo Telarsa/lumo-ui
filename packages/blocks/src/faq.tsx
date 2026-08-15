@@ -11,48 +11,18 @@ import {
 /**
  * Questions and answers, collapsed.
  *
- * ── NO `"use client"`, WHICH IS NOT OBVIOUS HERE ───────────────────────────
- *
- * `Disclosure` and its friends ARE client components — they carry `"use client"`
- * because `@base-ui/react`'s Accordion holds expansion state. (It was
- * `react-aria-components` marking itself `client-only` before the migration;
- * the conclusion is the same and the reason is now Lumo's own directive.) But
- * this block adds no callback and no state of its own, so it stays a server
- * component that RENDERS client components, and
- * the answers arrive in the served HTML where a crawler can index them. That
- * distinction is the whole reason rule 1 says "only where genuinely needed":
- * `"use client"` marks a boundary, not a dependency, and putting it on a
- * wrapper that needs no interactivity drags the wrapper's whole subtree across.
- *
- * ── THE CHEVRON ROTATES 180°, WHICH `Disclosure` ALREADY HANDLES ───────────
- *
- * Worth stating because it is the reason this block composes rather than
- * hand-rolls: the usual accordion affordance is a chevron pointing along the
- * INLINE axis that turns a quarter-turn on expand, and that is a direction bug
- * in two places at once — the resting glyph points at a physical side, and
- * `rotate-90` turns the same way regardless of script. `disclosure.tsx` uses a
- * half-turn on a block-axis glyph, which is its own mirror image. A block that
- * re-implemented the trigger would re-introduce exactly that defect.
- *
- * ── EACH QUESTION IS A REAL HEADING ────────────────────────────────────────
- *
- * `DisclosureTrigger` renders `<Heading><Button slot="trigger">`, and the
- * heading is what puts each question in the document outline so a screen-reader
- * user can jump between them. `level` here is the SECTION's heading level; each
- * question renders one below it, so the outline cannot skip a level.
+ * No `"use client"`: `Disclosure` is a client component, but this block adds no
+ * state of its own, so it stays a server component that RENDERS client
+ * components and the answers land in the served HTML. It composes rather than
+ * hand-rolls the trigger (the chevron half-turn is direction-safe), and each
+ * question is a real heading one level below `level`, so the outline never skips.
  */
 export interface FaqItem {
-  /**
-   * Stable key. Also RAC's `expandedKeys` identity inside the group, so it must
-   * be unique across the list.
-   */
+  /** Stable key. Also the group's `expandedKeys` identity, so it must be unique across the list. */
   id: string;
   /** The question. */
   question: string;
-  /**
-   * The answer. `LumoNode` so it can carry links and lists — and `LumoNode`
-   * rather than `ReactNode` so it still cannot be a bare number.
-   */
+  /** The answer. `LumoNode` so it can carry links and lists but still cannot be a bare number. */
   answer: LumoNode;
 }
 
@@ -67,10 +37,7 @@ export interface FaqStrings {
 export interface FaqProps {
   strings: FaqStrings;
   items: readonly FaqItem[];
-  /**
-   * Whether more than one answer can be open at a time. Default `false` —
-   * an accordion, which keeps the page height predictable.
-   */
+  /** Whether more than one answer can be open at a time. Default `false` — an accordion. */
   allowsMultipleExpanded?: boolean | undefined;
   /** Heading level for the section title. Default `2`; questions render one below. */
   level?: 2 | 3 | 4 | undefined;

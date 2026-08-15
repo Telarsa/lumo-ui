@@ -1,42 +1,11 @@
 /**
- * EXPERIMENT ONLY (branch `experiment/base-ui`). What is left of the adapter
- * after the engine layer moved out.
- *
- * ── THE SPLIT, AND WHY THE LINE FALLS EXACTLY HERE ──────────────────────────
- *
- * This file used to hold two different kinds of code under one name, and the
- * difference only became visible when the package was extracted:
- *
- *   ENGINE COMPENSATION — Base UI does something on the client that it should do
- *   during render, or does not do at all. `useFieldWiring`, `useOpenMirror`,
- *   `findChildProp`, `attr` and the Base UI string catalogue are all this shape.
- *   They are true for ANYONE using Base UI, they name no Lumo concept, and they
- *   are now `@lumo-ui/base-ui-ssr` — a package with a README, a version it is
- *   verified against, and an upstream issue that would retire each part.
- *
- *   API-SHAPE TRANSLATION — Lumo's public API promises `onPress` and a
- *   press-flavoured `onKeyDown`, because that is what it promised when React
- *   Aria was the engine and the migration froze the API. Base UI promises
- *   `onClick` and React's own event. Something has to sit between them. That is
- *   what remains in this file, and it compensates for LUMO'S FROZEN API, not for
- *   Base UI: a Base UI-native API would delete it outright.
- *
- * The line is not a matter of taste. `@lumo-ui/base-ui-ssr` is a package ABOUT
- * Base UI, versioned against it, and the two functions below are about a shape
- * Base UI never had. They name a Lumo concept — the frozen press API — which is
- * why the shapes they translate to now live in `@lumo-ui/core` beside the rest
- * of Lumo's invariants, and no longer in a third-party type import.
- *
- * No `"use client"`: both functions are pure, so a server module can call them.
- * Same rule `button.variants.ts` states for `cva()`.
- *
- * ── WHAT THIS FILE STILL COSTS LUMO'S DISTRIBUTION MODEL ────────────────────
- *
- * Lumo ships by copy-in, and this remains a shared companion: `button.tsx`,
- * `toggle.tsx` and `number-field.tsx` travel with it. The engine layer no longer
- * does — a consumer installs `@lumo-ui/base-ui-ssr` the way they already install
- * `@lumo-ui/core`, which is the right shape for code that must not be forked per
- * consumer.
+ * API-SHAPE TRANSLATION between Lumo's frozen press API (`onPress`, a
+ * press-flavoured `onKeyDown`) and Base UI's `onClick` / React's own event. It
+ * compensates for LUMO'S FROZEN API, not for Base UI; engine compensation
+ * (`useFieldWiring`, `useOpenMirror`, `attr`, the string catalogue) lives in
+ * `@lumo-ui/base-ui-ssr`. No `"use client"`: both functions are pure, so a
+ * server module can call them. Ships by copy-in with `button.tsx`, `toggle.tsx`
+ * and `number-field.tsx`.
  */
 
 import type {
@@ -46,51 +15,23 @@ import type {
 import type { LumoKeyboardEvent as CoreKeyboardEvent, PressEvent } from "@lumo-ui/core";
 
 /**
- * The press event Lumo's frozen API hands a caller.
- *
- * Re-exported under the name the library already published rather than
- * renamed: `LumoPressEvent` is in `index.ts` and a consumer may be importing
- * it. The SHAPE is declared once, in `@lumo-ui/core`'s `props.ts`, so this file
- * and every component that types `onPress` read the same definition.
+ * The press event Lumo's frozen API hands a caller. Re-exported under the name
+ * already published; the SHAPE is declared once in `@lumo-ui/core`'s `props.ts`.
  */
 export type LumoPressEvent = PressEvent;
 
 /**
- * Build a `PressEvent` from a real `click`.
- *
- * ── WHAT IS DERIVED, AND WHAT CANNOT BE ─────────────────────────────────────
- *
- * Every field below is read from the DOM event. Nothing is invented. What is
- * NOT recoverable is stated here and recorded in
- * `experiments/measurements/rebuild-simple.json` as a capability gap:
- *
- *   pointerType   A `click` is a MouseEvent, not a PointerEvent, so touch and
- *                 pen are indistinguishable from mouse at this point in the
- *                 event stream. `detail === 0` is the one real signal — that
- *                 is how a keyboard activation and a screen-reader "click"
- *                 arrive — and React Aria calls that case `"virtual"`, so the
- *                 mapping below is its rule, not a guess. A touch press is
- *                 reported as `"mouse"`, and a caller branching on
- *                 `pointerType === "touch"` gets the wrong branch, silently.
- *   key           React Aria reports Space vs Enter here. A synthesised click
- *                 carries neither, so the field is omitted rather than filled
- *                 with a plausible value.
- *   continuePropagation
- *                 React Aria stops propagation by default and this opts back
- *                 in. Base UI stops nothing, so propagation already continues
- *                 and the method has nothing to undo. It is a no-op, and a
- *                 handler that calls it gets the behaviour it asked for by
- *                 accident rather than by mechanism.
- *
- * `x`/`y` are documented by React Aria as "relative to the target"; `offsetX`/
- * `offsetY` are exactly that, and they are 0 on a keyboard activation, which is
- * also what React Aria reports.
+ * Build a `PressEvent` from a real `click`. Every field is read from the DOM
+ * event. Not recoverable (recorded as a capability gap): `pointerType` for
+ * touch/pen (a `click` is a MouseEvent; `detail === 0` is React Aria's own rule
+ * for `"virtual"`), `key`, and `continuePropagation` — Base UI never stops
+ * propagation, so it is a no-op.
  */
 export function pressFromClick(event: ReactMouseEvent<Element>): LumoPressEvent {
   const native = event.nativeEvent as MouseEvent;
   return {
     type: "press",
-    // See the header: `detail === 0` is a keyboard or AT activation.
+    // `detail === 0` is a keyboard or AT activation.
     pointerType: native.detail === 0 ? "virtual" : "mouse",
     target: event.currentTarget,
     shiftKey: event.shiftKey,
@@ -100,34 +41,18 @@ export function pressFromClick(event: ReactMouseEvent<Element>): LumoPressEvent 
     x: native.offsetX,
     y: native.offsetY,
     continuePropagation() {
-      // Deliberately empty. Base UI never stopped propagation, so there is
-      // nothing to resume. See the header.
+      // Deliberately empty. Base UI never stopped propagation.
     },
   };
 }
 
-/**
- * The keyboard event Lumo's frozen API hands a caller — React's own, plus
- * `continuePropagation()`. Declared in `@lumo-ui/core` for the same reason as
- * `LumoPressEvent`.
- */
+/** The keyboard event Lumo's frozen API hands a caller — React's own, plus `continuePropagation()`. */
 export type LumoKeyboardEvent = CoreKeyboardEvent;
 
 /**
- * Hand a React keyboard event to a React Aria-shaped handler.
- *
- * This one is NOT cosmetic and it is the reason `onKeyDown` had to be
- * translated at all rather than spread through with the other global DOM
- * attributes: Lumo's `onKeyDown` is React's event PLUS
- * `continuePropagation()` and a redeclared `stopPropagation()` — the shape
- * React Aria published and the migration froze — so Lumo's `onKeyDown` and Base
- * UI's are not the same type and `tsc` refuses the spread. Verified: TS2322 on
- * `Types of property 'onKeyDown' are incompatible`.
- *
- * The event object itself is real and is augmented in place, which is what
- * React Aria does too. `continuePropagation()` is a no-op for the reason given
- * on `pressFromClick`: Base UI never stopped propagation, so there is nothing
- * to resume.
+ * Hand a React keyboard event to a React Aria-shaped handler. Lumo's `onKeyDown`
+ * is React's event PLUS `continuePropagation()`, so `tsc` refuses the plain
+ * spread (TS2322). The event is augmented in place; the method is a no-op.
  */
 export function asAriaKeyboardEvent(event: ReactKeyboardEvent<Element>): LumoKeyboardEvent {
   return Object.assign(event, {

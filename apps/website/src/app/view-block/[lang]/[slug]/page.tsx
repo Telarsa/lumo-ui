@@ -8,13 +8,9 @@ export function generateStaticParams() {
 }
 
 /**
- * A block, alone, in a real document — the full-page preview.
- *
- * Mirrors `app/view/[lang]/[slug]/page.tsx` exactly. The block's own page
- * (`app/[lang]/blocks/[slug]/page.tsx`) embeds this route in an iframe, in
- * both directions, via `DemoFrame` — but this route is also a real page on
- * its own, so an `AppShell` or `ProductDetail` block genuinely occupies a
- * whole viewport rather than a 224px thumbnail.
+ * A block, alone, in a real document — the full-page preview. Mirrors
+ * `app/view/[lang]/[slug]/page.tsx`; the block's own page embeds this route in an
+ * iframe via `DemoFrame`, but it is also a real page on its own.
  */
 export default async function ViewBlock({
   params,

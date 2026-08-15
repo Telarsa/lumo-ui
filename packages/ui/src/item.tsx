@@ -2,15 +2,11 @@
 
 import type { ComponentProps, MouseEvent as ReactMouseEvent } from "react";
 import { Button as BaseButton } from "@base-ui/react/button";
-// `onPress` hands back a `PressEvent`, the shape the frozen public API promises
-// and `base-ui-adapter.ts` builds from a real click.
 import { cn, type LumoNode, type PressEvent } from "@lumo-ui/core";
 import { pressFromClick } from "./base-ui-adapter.ts";
 import { Separator, type SeparatorProps } from "./separator.tsx";
-// Class definitions live in item.variants.ts with no "use client", so a
-// server-rendered listing can style static rows without dragging this module's
-// client boundary along. Deliberately NOT re-exported from here — file-upload.tsx
-// records why re-exporting through the directive defeats the split.
+// Class definitions live in item.variants.ts (no "use client") for server-rendered
+// listings, and are deliberately NOT re-exported through this directive.
 import {
   itemActionsVariants,
   itemContentVariants,
@@ -26,82 +22,16 @@ import {
 } from "./item.variants.ts";
 
 /**
- * The generic row: media, content, actions. The workhorse under lists of
- * files, people, settings and search results.
- *
- *     <Item href="/fa/profile" variant="outlined">
- *       <ItemMedia media="icon">…svg…</ItemMedia>
- *       <ItemContent>
- *         <ItemTitle>پروفایل</ItemTitle>
- *         <ItemDescription>نام و نشانی شما</ItemDescription>
- *       </ItemContent>
- *       <ItemActions>…</ItemActions>
- *     </Item>
- *
- * `"use client"` because `onPress` is a function prop and a function cannot
- * cross the server/client boundary. **BASE UI ENGINE** — but only just: see the
- * note below on what this component actually rented.
- *
- * ── THE ENGINE WAS DOING ALMOST NOTHING HERE, AND THAT IS THE FINDING ──────
- *
- * This is the cheapest migration in the family, and the reason is worth stating
- * because it is the exception rather than the rule. React Aria supplied exactly
- * two things: `Link`, which rendered an `<a href>` with press handling, and
- * `Button`, which rendered a `<button>` with `data-pressed`. Neither is a
- * behaviour the platform lacks.
- *
- *   - The LINK is now a plain `<a>`. Base UI ships no Link part at all — 40
- *     export subpaths, none of them a link — and it does not need to: an anchor
- *     with an `href` is already keyboard-operable, middle-clickable and
- *     crawlable. What React Aria added on top was a synthetic press model, and
- *     `onPress` was never in this component's public API.
- *   - The BUTTON is Base UI's `Button`, translated through `pressFromClick` the
- *     same way `button.tsx` does, so the frozen `onPress` signature survives.
- *
- * Recorded because the inventory reads the same for `item` as for `tree`: both
- * are components in a family being migrated. One of them cost two imports.
- *
- * ── WHAT THE ELEMENT IS, IS THE API ─────────────────────────────────────────
- * One row, three renderings, decided by the props' own shape:
- *
- *   - `href`     → a plain `<a>`: crawlable, middle-clickable.
- *   - `onPress`  → Base UI `Button`, which is a real `<button>`: keyboard and
- *                  touch activation from the platform, `data-disabled` for
- *                  styling. Hover and press are CSS pseudo-classes here, and
- *                  `item.variants.ts` keys them on the `interactive` variant
- *                  this branch sets.
- *   - neither    → a plain `<div>` with no role and no tab stop.
- *
- * The union makes the wrong mixtures unrepresentable — `href` with `onPress`
- * is a compile error, and a static row cannot accidentally become focusable.
- * A `<button>` named by its whole content announces title AND description;
- * that is the intended behaviour for a pressable row, and the reason there is
- * no aria-label prop here: the visible text IS the name, in the page's own
- * language.
- *
- * `target`/`rel` are stripped from the link form, as in link.tsx: opening a
- * new tab requires an announced warning, and this component has no slot for
- * one. Wrap a `Link` with `newTab` if a row must do that.
- *
- * ── Vendored shape, and what changed ────────────────────────────────────────
- * The anatomy is shadcn aria-vega `item`. Upstream defects fixed here:
- *
- *  1. `ItemDescription` hardcodes `text-left` — Persian descriptions hug the
- *     wrong edge. Gone; block flow already starts at the reading edge.
- *  2. `ItemGroup` sets `role="list"` while its items render no `listitem` —
- *     measured in the emitted source: VoiceOver announces "list, 0 items" and
- *     skips the content. Wrong semantics are worse than none, so the group
- *     here is a plain div and the test pins the ABSENCE of the role.
- *  3. The `xs` size existed to embed rows in a dropdown-menu package Lumo does
- *     not carry; two sizes remain.
+ * The generic row: media, content, actions. One row, three renderings decided
+ * by the props' own shape — `href` → a plain `<a>`; `onPress` → Base UI
+ * `Button` (a real `<button>`, named by its whole content, so no aria-label
+ * prop); neither → a static `<div>` with no role and no tab stop. The union
+ * makes the wrong mixtures unrepresentable. `target`/`rel` are stripped from
+ * the link form (a new tab needs an announced warning; wrap a `Link` instead).
+ * `ItemGroup` has no `role="list"`: its items are not `listitem`s.
  */
 
-/**
- * `interactive` is omitted, not forwarded. It is DERIVED from `href`/`onPress`
- * below — the same discriminant the union already switches on — so exposing it
- * would let a caller paint pointer feedback onto a static row, which is the one
- * thing `item.variants.ts` added the variant to prevent.
- */
+/** `interactive` is DERIVED from `href`/`onPress`, not forwarded, so a static row cannot light up. */
 interface ItemCommonProps extends Omit<ItemVariantProps, "interactive"> {
   children?: LumoNode;
   className?: string | undefined;
@@ -148,17 +78,14 @@ export function Item(props: ItemProps) {
       <BaseButton
         data-lumo=""
         className={cn(itemVariants({ variant, size, interactive: true }), className)}
-        // React Aria's `PressEvent` rebuilt from the real `click`. Every field
-        // is read from the DOM event and the two that cannot be derived are
-        // documented in `base-ui-adapter.ts` rather than filled with a guess.
+        // The frozen `PressEvent` shape, rebuilt from the real `click`.
         onClick={(event: ReactMouseEvent<HTMLButtonElement>) => onPress(pressFromClick(event))}
         {...button}
       />
     );
   }
   const { variant, size, className, href: _href, onPress: _onPress, ...rest } = props;
-  // No `interactive` — a static row has no role and no tab stop, so it must not
-  // light up under a pointer. See item.variants.ts.
+  // No `interactive` — a static row must not light up under a pointer.
   return <div className={cn(itemVariants({ variant, size }), className)} {...rest} />;
 }
 
@@ -169,8 +96,7 @@ export interface ItemSectionProps
 }
 
 export function ItemGroup({ className, ...props }: ItemSectionProps) {
-  // No role — see the file header. If real list semantics matter for a page,
-  // that page owns a <ul> and puts each Item in an <li>.
+  // No role: a page that wants list semantics owns a <ul> and puts each Item in an <li>.
   return <div className={cn(itemGroupVariants(), className)} {...props} />;
 }
 
@@ -193,12 +119,7 @@ export function ItemContent({ className, ...props }: ItemSectionProps) {
   return <div className={cn(itemContentVariants(), className)} {...props} />;
 }
 
-/**
- * A div, not a heading: a repeated row title inside every list entry would
- * flood the document outline with dozens of same-level entries. A page section
- * that IS an outline entry composes CardTitle or its own heading around the
- * list instead.
- */
+/** A div, not a heading: a repeated row title would flood the document outline. */
 export function ItemTitle({ className, ...props }: ItemSectionProps) {
   return <div className={cn(itemTitleVariants(), className)} {...props} />;
 }

@@ -9,20 +9,10 @@ import { OnThisPage } from "@/components/on-this-page";
 import { CodePanel } from "@/components/code-panel";
 
 /**
- * The shared scaffold for the prose docs pages — introduction, installation,
- * theming, cli, typography, changelog.
- *
- * Not a `layout.tsx` on purpose: the on-this-page rail takes each page's OWN
- * section list ("the page passes exactly the sections it rendered, so the two
- * cannot disagree" — on-this-page.tsx), and a layout cannot receive per-page
- * props. A colocated module the pages call keeps the three-column shape in one
- * place without weakening that contract. Next.js only routes the reserved
- * filenames, so this file is plain code, not a route.
- *
- * Every page built on this scaffold defines its copy as a
- * `satisfies Record<Locale, …>` table, which is what makes a missing Persian
- * paragraph a compile error rather than an English fallback — the same shape
- * `packages/core/src/strings.ts` gives the component strings.
+ * The shared scaffold for the prose docs pages. Not a `layout.tsx` on purpose: the
+ * on-this-page rail takes each page's OWN section list, and a layout cannot receive
+ * per-page props. Every page built on it defines its copy as a
+ * `satisfies Record<Locale, …>` table, so a missing Persian paragraph is a compile error.
  */
 export interface DocSectionDef {
   id: string;
@@ -30,14 +20,8 @@ export interface DocSectionDef {
 }
 
 /**
- * The scaffold's own chrome copy, keyed by locale.
- *
- * The pages this shell wraps state the rule in their headers; the shell obeyed
- * it for page copy and broke it for its own — five strings picked with a binary
- * conditional on `lang`. That conditional compiles with a third locale in the
- * union and hands it the English branch with no error and no warning, and three
- * of these five are `aria-label`s or pager words that a sighted reviewer skims
- * past. See the rule in CONTRIBUTING's "Adding a locale".
+ * The scaffold's own chrome copy, keyed by locale — a full `Record<Locale, …>` map, not a
+ * binary conditional on `lang` (see CONTRIBUTING's "Adding a locale").
  */
 const COPY = {
   "fa-IR": {
@@ -93,11 +77,8 @@ export function DocsShell({
   return (
     <SiteShell lang={lang} path={`docs/${slug}/`} wide>
       {/*
-       * The narrow-viewport path. The sidebar is `hidden lg:block`, and the
-       * review's finding was blunt: below lg these six pages were reachable
-       * only by typing URLs. This strip is the mobile navigation — a
-       * horizontal scroll of the SAME canonical list the sidebar renders,
-       * hidden exactly where the sidebar appears.
+       * The narrow-viewport path: the sidebar is `hidden lg:block`, so this strip is the mobile
+       * navigation — a horizontal scroll of the SAME canonical list, hidden where the sidebar appears.
        */}
       <nav
         aria-label={t.pagesNav}
@@ -138,11 +119,8 @@ export function DocsShell({
           </header>
           <div className="mt-10 flex flex-col gap-12">{children}</div>
           {/*
-           * Foot-of-article pager over the same canonical list, titles
-           * visible — the review's dead-end finding. Reading order is the
-           * point of prose docs; each page should hand you the next one.
-           * `‹`/`›` are Bidi_Mirrored (see pagination.tsx): under RTL they
-           * redraw as each other while the flex row reverses.
+           * Foot-of-article pager over the same canonical list, so each page hands you the next.
+           * `‹`/`›` are Bidi_Mirrored (see pagination.tsx): under RTL they redraw as each other.
            */}
           {(prev || next) && (
             <nav
@@ -197,17 +175,9 @@ export function DocSection({
   id: string;
   title: string;
   /**
-   * Marks the heading as deliberately carrying a GREGORIAN date beside the
-   * native one — «۱۹ مرداد ۱۴۰۵ — ۱۰ اوت ۲۰۲۶».
-   *
-   * `lumo-gate`'s `native-calendar` rule fires on a Gregorian month in a date
-   * on a `fa-IR` page, because that is normally the silent defect of a date
-   * localised in language but not in calendar. Printing BOTH is the one case
-   * where it is correct and helpful, and Iranian software does it routinely.
-   *
-   * Same shape as `data-lumo-latn` for the digit rule: a narrow, marked
-   * exemption that lives on the markup beside the thing it exempts, so whoever
-   * edits the date sees why it is allowed. Not a config allow-list.
+   * Marks the heading as deliberately carrying a GREGORIAN date beside the native one, so
+   * `lumo-gate`'s `native-calendar` rule allows it — a narrow, marked exemption on the markup
+   * (same shape as `data-lumo-latn`), not a config allow-list.
    */
   dualCalendar?: boolean | undefined;
   children?: LumoNode;
@@ -231,10 +201,9 @@ export function P({ children }: { children?: LumoNode }) {
 }
 
 /**
- * An inline identifier — `LumoNode`, `pnpm verify`, a file path. Marked as a
- * genuinely-Latin island (README's escape hatch) so the gate's digit and aria
- * rules skip it, and `dir="ltr"` so a path does not render mirrored mid-sentence
- * on a Persian page.
+ * An inline identifier — `LumoNode`, `pnpm verify`, a file path. Marked as a genuinely-Latin
+ * island (`data-lumo-latn`) so the gate's digit and aria rules skip it, and `dir="ltr"` so a
+ * path does not render mirrored mid-sentence on a Persian page.
  */
 export function Term({ children }: { children?: LumoNode }) {
   return (
@@ -250,16 +219,9 @@ export function Term({ children }: { children?: LumoNode }) {
 }
 
 /**
- * A code listing with the standard copy affordance. The labels `CodePanel`
- * requires are supplied here once, per locale, so every docs page gets the
- * same announced names for the same control.
- *
- * `code` is still a prop, and only on this path: the CSS snippets on the
- * theming and typography pages ship no `html` because `lib/highlight.ts` loads
- * no CSS grammar, and the unhighlighted fallback has to render the text from
- * somewhere. It renders on the SERVER, so it is a text child rather than a
- * client prop — the highlighted pages pass it too and it costs nothing there,
- * because `CodePanel` ignores it whenever `html` is present.
+ * A code listing with the standard copy affordance; `CodePanel`'s labels are supplied here
+ * once per locale. `code` stays a prop because the CSS snippets ship no `html` (no CSS
+ * grammar in `lib/highlight.ts`) and the fallback renders it on the SERVER as a text child.
  */
 export function Snippet({
   lang,
@@ -284,9 +246,8 @@ export function Snippet({
 }
 
 /**
- * A bulleted list for prose pages. Items are LumoNode so a page can mix text
- * with `Term` islands; the marker colour comes from the muted token so the
- * bullets read as structure, not content.
+ * A bulleted list for prose pages. Items are LumoNode so a page can mix text with `Term`
+ * islands; the marker colour comes from the muted token so bullets read as structure.
  */
 export function Bullets({ items }: { items: ReadonlyArray<{ key: string; body: LumoNode }> }) {
   return (

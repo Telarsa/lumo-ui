@@ -24,40 +24,12 @@ import {
  *
  * `"use client"`: `onConfirm`, `onPromoApply` and `onRemoveItem` are callbacks.
  *
- * ── READ `booking-summary.tsx` FIRST — THIS IS THE OTHER HALF OF ITS PAIR ────
- *
- * `BookingSummary` is a date range plus a flat list of charges — right for a
- * stay or a reservation, wrong for a cart, which has quantities, thumbnails
- * and a line the reader can remove. The `charges` shape here is the same
- * `label`/`note`/`amount` triple as `BookingLine`, and the money rows render
- * through `DescriptionList` for the reason `description-list.tsx` itself
- * argues at length: a hand-written `<dl>`/`<dt>`/`<dd>` accepts a bare number
- * (rule 0) and carries an un-reset UA indent that this component closes for
- * good rather than re-opening.
- *
- * ── EVERY LINE TOTAL IS PRE-COMPUTED BY THE CALLER ──────────────────────────
- *
- * `CheckoutItem.lineTotal` is `unitPrice × quantity`, already multiplied. This
- * block does no arithmetic on money: rounding a per-unit price and multiplying
- * it client-side is how a displayed total quietly disagrees with the one a
- * payment provider actually charges, and that mismatch is the kind of defect
- * that only shows up on an invoice, never in a screenshot.
- *
- * A successful promo code is represented by a NEW `charges` row (a negative
- * `amount`), not by a separate "applied" message this block would have to
- * invent — the discount is already the fact that needs announcing, and the
- * existing charges list already announces it.
- *
- * ── THE REMOVE CONTROL IS TEXT, NOT AN ICON ─────────────────────────────────
- *
- * `@lumo-ui/blocks` carries no icon library — see `app-shell.tsx`'s
- * `AppShellNavItem.icon` for the pattern of taking icons as a caller-supplied
- * slot instead. A per-row remove action does not need one: `strings.removeItem`
- * is short, VISIBLE text ("حذف"), and `strings.removeItemLabel(item.title)` is
- * the fuller sentence used only as the button's `aria-label`, so two identical
- * rows announce two different names. The visible word must be a PREFIX of the
- * announced one (WCAG 2.5.3), which is why the two are separate strings rather
- * than one the block would have to truncate itself.
+ * The cart-shaped half of the `booking-summary.tsx` pair. Money rows go through
+ * `DescriptionList` (a hand-written `<dl>` accepts a bare number). `lineTotal`
+ * is pre-computed by the caller — this block does no arithmetic on money. A
+ * successful promo is a new negative `charges` row, not an invented message.
+ * The remove control is visible text plus a fuller `aria-label`; the visible
+ * word must be a PREFIX of the announced one (WCAG 2.5.3).
  */
 export interface CheckoutItem {
   /** Stable key, sent back through `onRemoveItem`. */

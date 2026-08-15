@@ -105,7 +105,7 @@
             "name": "tone",
             "type": "AlertDialogTone",
             "required": false,
-            "description": "`critical` renders the confirm button in the destructive variant. Default is `accent`: not every alert destroys something."
+            "description": "`critical` renders the confirm button in the destructive variant. Default `accent`."
           },
           {
             "name": "translate",
@@ -124,7 +124,7 @@
             "name": "closeLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced name of the dismiss button, e.g. «بستن». Required whenever `onClose` is passed, and unrepresentable without it — the generated reference flattens this union to \"optional\", so read the two together."
+            "description": "Announced name of the dismiss button, e.g. «بستن». Required whenever `onClose` is passed."
           },
           {
             "name": "onClose",
@@ -153,19 +153,19 @@
             "name": "closeLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced name of the dismiss button, e.g. «بستن». Required whenever `onClose` is passed, and unrepresentable without it — the generated reference flattens this union to \"optional\", so read the two together."
+            "description": "Announced name of the dismiss button, e.g. «بستن». Required whenever `onClose` is passed."
           },
           {
             "name": "icon",
             "type": "LumoNode",
             "required": false,
-            "description": "Optional leading icon. A slot rather than a per-tone default, because a bundled icon set would ship a fifth dependency into every copied file — and because a directional glyph (an arrow, a chevron) supplied by the library would need mirroring the library cannot decide on the consumer's behalf."
+            "description": "Optional leading icon, rendered `aria-hidden`. A slot, not a per-tone default, so no icon set is bundled."
           },
           {
             "name": "live",
             "type": "AlertLive | undefined",
             "required": false,
-            "description": "See the file header. Default `\"off\"`."
+            "description": "How assistive technology is told about this alert. Default `\"off\"` — see the file header."
           },
           {
             "name": "onClose",
@@ -256,7 +256,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Further metadata, each piece in its own element — the kind («پی‌دی‌اف»), an error line, a duration. Pieces are separated by a middot drawn by CSS on each element after the first, so the visual order is the FLOW order: it mirrors under RTL with no per-piece direction handling."
+            "description": "Further metadata, each piece in its own element; the CSS middot separator follows FLOW order and so mirrors."
           },
           {
             "name": "className",
@@ -268,7 +268,7 @@
             "name": "size",
             "type": "number | undefined",
             "required": false,
-            "description": "Raw byte count. Formatted through `formatFileSize`, so a Persian page gets «۱٫۲ مگابایت» — digits and unit both localized. Pass the number; never pre-format, and never render `file.size` directly (LumoNode already makes that a compile error)."
+            "description": "Raw byte count, formatted through `formatFileSize` («۱٫۲ مگابایت»). Pass the number; never pre-format."
           }
         ]
       },
@@ -296,7 +296,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the operation, e.g. «بارگذاری گزارش-فروش.pdf»."
+            "description": "Announced name of the operation, e.g. «بارگذاری گزارش-فروش.pdf». REQUIRED — an unnamed bar is \"progress bar, ۴۵٪\"."
           },
           {
             "name": "locale",
@@ -612,7 +612,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the field, e.g. «جست‌وجوی فرمان». REQUIRED."
+            "description": "Announced name of the field, e.g. «جست‌وجوی فرمان». REQUIRED — a missing label is an anonymous `<input>`."
           },
           {
             "name": "className",
@@ -682,13 +682,13 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the results list, e.g. «فرمان‌ها». REQUIRED."
+            "description": "Announced name of the results list, e.g. «فرمان‌ها». REQUIRED — Base UI names nothing here."
           },
           {
             "name": "children",
             "type": "LumoNode | ((item: T) => LumoNode)",
             "required": false,
-            "description": "A render function over the FILTERED items. See the file header."
+            "description": "A render function over the FILTERED items."
           },
           {
             "name": "className",
@@ -706,7 +706,7 @@
             "name": "resultCount",
             "type": "number | undefined",
             "required": false,
-            "description": "How many items survived the filter. See the note below on who counts."
+            "description": "How many items survived the filter."
           },
           {
             "name": "resultsAnnouncement",
@@ -723,13 +723,13 @@
             "name": "items",
             "type": "readonly T[]",
             "required": true,
-            "description": "The rows to filter. REQUIRED — see the file header."
+            "description": "The rows to filter. REQUIRED. Strings or `{ value, label }` objects; anything else needs `itemToString`."
           },
           {
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "At least an input and a collection. See the file header."
+            "description": "At least an input and a collection."
           },
           {
             "name": "defaultInputValue",
@@ -741,7 +741,7 @@
             "name": "filter",
             "type": "((textValue: string, inputValue: string) => boolean) | undefined",
             "required": false,
-            "description": "Replace the built-in filter entirely — for fuzzy matching, or for scoring a command palette by recency."
+            "description": "Replace the built-in filter entirely — for fuzzy matching, or for scoring by recency."
           },
           {
             "name": "inputValue",
@@ -790,7 +790,7 @@
             "name": "initials",
             "type": "string | undefined",
             "required": false,
-            "description": "Fallback glyphs, e.g. `\"س م\"` or `\"KN\"`."
+            "description": "Fallback glyphs, e.g. `\"س م\"` or `\"KN\"`. Rendered exactly as given — no `uppercase`: Arabic script has no letter case. With no `src`, the initials are the whole component and cannot be omitted."
           },
           {
             "name": "size",
@@ -808,13 +808,13 @@
             "name": "statusLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "What the presence dot MEANS, e.g. «آنلاین» or «در دسترس نیست». Required to show one; there is no boolean and no default."
+            "description": "What the presence dot MEANS, e.g. «آنلاین». Required to show one; no boolean, no default. Announced as `sr-only` text inside the dot, even when `alt=\"\"`."
           },
           {
             "name": "statusTone",
             "type": "\"critical\" | \"neutral\" | \"positive\" | \"caution\" | undefined",
             "required": false,
-            "description": "Which of the library's status colours the dot takes. Default `\"neutral\"`."
+            "description": "Which of the library's status colours the dot takes. Default `\"neutral\"`. Ignored without a `statusLabel`."
           }
         ]
       }
@@ -899,13 +899,13 @@
             "name": "id",
             "type": "string | number | undefined",
             "required": false,
-            "description": "Stable key. Accepted because every existing call site passes one — React Aria used it as the COLLECTION key — and deliberately NOT rendered as a DOM `id`: two trails on one page offering the same crumb would emit duplicate ids. menu.tsx makes the same call for the same reason."
+            "description": "Stable key. Deliberately NOT rendered as a DOM `id`: two trails on one page would emit duplicates."
           },
           {
             "name": "isCurrent",
             "type": "boolean",
             "required": false,
-            "description": "The page you are already on — the last crumb. Set by `Breadcrumbs` from the child's position; pass it explicitly only to override that."
+            "description": "The page you are already on — the last crumb. Set by `Breadcrumbs` from position."
           },
           {
             "name": "isDisabled",
@@ -953,7 +953,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Visible AND announced text of the expand control, e.g. «نمایش بیشتر»."
+            "description": "Visible AND announced text of the expand control, e.g. «نمایش بیشتر». REQUIRED."
           },
           {
             "name": "children",
@@ -977,7 +977,7 @@
             "name": "level",
             "type": "number | undefined",
             "required": false,
-            "description": "Heading level for the trigger's outline entry, forwarded to Disclosure. Long quoted content in a bubble is genuinely navigable structure; if the transcript's headings make that wrong for a page, set the level that fits."
+            "description": "Heading level for the trigger's outline entry, forwarded to Disclosure."
           }
         ]
       },
@@ -1011,7 +1011,7 @@
             "name": "variant",
             "type": "BubbleVariant",
             "required": true,
-            "description": "Whose message this is. REQUIRED rather than defaulted: a bubble that guesses its sender renders confidently on the wrong side, and the wrong side is the one mistake a transcript cannot absorb."
+            "description": "Whose message this is. REQUIRED: a bubble that guesses its sender renders confidently on the wrong side."
           },
           {
             "name": "children",
@@ -1065,7 +1065,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the group. Required: `role=\"group\"` makes screen readers announce entry and exit, and an unnamed group is announced as nothing — the reader hears \"group\" with no idea of what."
+            "description": "Announced name of the group. Required: an unnamed `role=\"group\"` is announced as bare \"group\"."
           },
           {
             "name": "children",
@@ -1106,7 +1106,7 @@
             "name": "ref",
             "type": "Ref<HTMLElement> | undefined",
             "required": false,
-            "description": "The root, at the widest type both branches satisfy."
+            "description": "The root, at the widest type both branches satisfy: `HTMLElement`. Widened rather than dropped."
           }
         ]
       },
@@ -1689,7 +1689,7 @@
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
-            "description": "Shown when the value is out of range or unavailable."
+            "description": "Shown when the value is out of range or unavailable. REQUIRED once `minValue`, `maxValue` or `isDateUnavailable` is given — there is no built-in fallback message."
           },
           {
             "name": "isDateUnavailable",
@@ -1772,7 +1772,7 @@
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
-            "description": "Shown when the value is out of range or unavailable."
+            "description": "Shown when the value is out of range or unavailable. REQUIRED once `minValue`, `maxValue` or `isDateUnavailable` is given — there is no built-in fallback message."
           },
           {
             "name": "isDateUnavailable",
@@ -1890,7 +1890,7 @@
             "name": "level",
             "type": "2 | 5 | 3 | 6 | 4 | undefined",
             "required": false,
-            "description": "Which heading element to render. Default `3`."
+            "description": "Which heading element to render. Default `3`. A `level` number rather than a tag: only h2–h6 make sense, and a skipped level is a real screen-reader defect."
           }
         ]
       }
@@ -2153,7 +2153,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of this slide, e.g. «کفش ورزشی مدل آلفا». REQUIRED."
+            "description": "Announced name of this slide, e.g. «کفش ورزشی مدل آلفا». REQUIRED: `aria-roledescription` REPLACES the role, so an unnamed slide is read as «اسلاید» and nothing else. A heading inside does NOT fix it — `group` is not a name-from-content role."
           },
           {
             "name": "className",
@@ -2328,13 +2328,13 @@
             "name": "data",
             "type": "ChartRow[]",
             "required": true,
-            "description": "The same rows the marks plot."
+            "description": "The same rows the marks plot. REQUIRED (passed twice, deliberately): an optional data table is one nobody adds."
           },
           {
             "name": "dataCaption",
             "type": "string",
             "required": true,
-            "description": "The table's `<caption>`, e.g. «داده‌های نمودار فروش ماهانه»."
+            "description": "The table's `<caption>`, e.g. «داده‌های نمودار فروش ماهانه». Distinct from `label`, which names the interactive plot; this names the tabular equivalent."
           },
           {
             "name": "definition",
@@ -2346,7 +2346,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "The chart's announced name, e.g. «فروش ماهانه به تفکیک دسته»."
+            "description": "The chart's announced name, e.g. «فروش ماهانه به تفکیک دسته». REQUIRED: the plot is a `role=\"img\"` keyboard stop, and an unnamed one announces \"chart\" and nothing else."
           },
           {
             "name": "locale",
@@ -2358,13 +2358,13 @@
             "name": "animate",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Motion. **On by default**, and this is the ONE switch that turns it off."
+            "description": "Motion, on by default; the ONE switch that turns it off. `false` writes the motion attribute `\"off\"` AND strips `svgAnimation` from the definition. Not how you honour `prefers-reduced-motion` — see `CHART_MOTION_REDUCED_MOTION_IS_TOTAL`."
           },
           {
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Chrome AROUND the plot — a `<ChartLegend>`, a caption, a footnote."
+            "description": "Chrome AROUND the plot — a `<ChartLegend>`, a caption, a footnote. Not the chart itself, which is `definition`."
           },
           {
             "name": "className",
@@ -2382,13 +2382,13 @@
             "name": "initialWidth",
             "type": "number | undefined",
             "required": false,
-            "description": "The width the SERVER render lays out against, before `ResizeObserver` has measured anything. TanStack's documented \"deterministic fallback for server output\"; this is what puts real ticks in the first byte."
+            "description": "The width the SERVER render lays out against, before `ResizeObserver` has measured — what puts real ticks in the first byte."
           },
           {
             "name": "onActiveDatum",
             "type": "((row: ChartRow | undefined) => void) | undefined",
             "required": false,
-            "description": "The ACTIVE datum changed — hover moved to another band, or an arrow key did."
+            "description": "The ACTIVE datum changed — hover moved to another band, or an arrow key did. Receives the caller's own row (`point.datum`), `undefined` when nothing is active. Not named `onSelect`: `React.ComponentProps<\"div\">` already has a DOM `onSelect`."
           },
           {
             "name": "onSelectDatum",
@@ -2446,7 +2446,7 @@
             "name": "hiddenSeries",
             "type": "readonly string[] | undefined",
             "required": false,
-            "description": "Series to omit, e.g. one drawn only as a reference line."
+            "description": "Series to omit, e.g. one drawn only as a reference line. Not `hidden`, which is a real HTML boolean attribute."
           },
           {
             "name": "verticalAlign",
@@ -2716,7 +2716,7 @@
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
-            "description": "An error for a STANDALONE checkbox."
+            "description": "An error for a STANDALONE checkbox. Renders wherever it is passed; put a rule about the answer on the GROUP."
           },
           {
             "name": "form",
@@ -2758,7 +2758,7 @@
             "name": "isIndeterminate",
             "type": "boolean",
             "required": false,
-            "description": "Whether the checkbox is in a mixed state. The one field a switch does not have, which is why it is declared here and not on `ToggleFieldPropsBase`."
+            "description": "Whether the checkbox is in a mixed state. The one field a switch does not have."
           },
           {
             "name": "isInvalid",
@@ -2878,7 +2878,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
+            "description": "The control's position in the sequential tab order — `-1` removes it."
           },
           {
             "name": "translate",
@@ -3072,7 +3072,7 @@
             "name": "dismissLabel",
             "type": "string",
             "required": true,
-            "description": "Announced name of the engine's hidden dismiss control. REQUIRED."
+            "description": "Announced name of the engine's hidden dismiss control. REQUIRED — Base UI hardcodes \"Dismiss\" and no prop reaches it, so it is relabelled live (`relabelEngineDismiss`)."
           },
           {
             "name": "showSuggestionsLabel",
@@ -3211,7 +3211,7 @@
             "name": "title",
             "type": "string",
             "required": true,
-            "description": "The dialog's accessible name, e.g. «پالت فرمان». REQUIRED — upstream defaults it to \"Command Palette\", which is announced and never seen."
+            "description": "The dialog's accessible name, e.g. «پالت فرمان». REQUIRED — upstream defaults to English."
           },
           {
             "name": "className",
@@ -3229,7 +3229,7 @@
             "name": "isDismissable",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Close on backdrop press, the way cmdk palettes do. OPT-IN, matching `dialog.tsx`: a press outside a palette mid-typing discards the query, and whether that is convenience or data loss is the caller's call."
+            "description": "Close on backdrop press. OPT-IN, matching `dialog.tsx`: a press mid-typing discards the query."
           },
           {
             "name": "isOpen",
@@ -3304,7 +3304,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "The field's announced name, e.g. «جست‌وجوی فرمان»."
+            "description": "The field's announced name, e.g. «جست‌وجوی فرمان». REQUIRED — upstream's `aria-label={placeholder || \"Search\"}` falls back to English or to a name that disappears the moment the user types."
           },
           {
             "name": "className",
@@ -3339,7 +3339,7 @@
             "name": "href",
             "type": "string | undefined",
             "required": false,
-            "description": "Render the row as a real anchor."
+            "description": "Render the row as a real anchor (`<a role=\"option\">`, via Base UI's `render` prop) — crawlable, middle-clickable, as the docs site's own palette needs."
           },
           {
             "name": "id",
@@ -3357,13 +3357,13 @@
             "name": "isSelected",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Draw a check mark on this row."
+            "description": "Draw a check mark on this row. Handed in because an Autocomplete on this engine models no selection, so no item ever carries `data-selected`. Use `Combobox` when the list is a picker with a persistent selection."
           },
           {
             "name": "onAction",
             "type": "(() => void) | undefined",
             "required": false,
-            "description": "Run this command."
+            "description": "Run this command. Per-item rather than on the list: Base UI's Autocomplete models no selection, so there is no root callback; `AutocompleteItem.onClick` fires for pointer AND Enter-on-highlighted. A row with `href` navigates and should not also carry this."
           }
         ]
       },
@@ -3374,7 +3374,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the results list, e.g. «فرمان‌ها». REQUIRED."
+            "description": "Announced name of the results list, e.g. «فرمان‌ها». REQUIRED. A named `label` prop, not `aria-label`, like every other collection here."
           },
           {
             "name": "children",
@@ -3397,7 +3397,7 @@
             "name": "items",
             "type": "readonly T[]",
             "required": true,
-            "description": "The commands to filter. REQUIRED, and this is an API change."
+            "description": "The commands to filter. REQUIRED: Base UI filters a DATA ARRAY held by the root, and static children would render and silently never filter. Flat (`{value, label}[]`) or grouped (`{items: …}[]`, rendered by `CommandGroup`)."
           },
           {
             "name": "children",
@@ -3415,7 +3415,7 @@
             "name": "filter",
             "type": "((textValue: string, inputValue: string) => boolean) | undefined",
             "required": false,
-            "description": "Replace the built-in match. Left alone it uses Base UI's collator, with Lumo's Persian folding applied to both sides first — see the file header."
+            "description": "Replace the built-in match (Base UI's collator with Persian folding on both sides)."
           },
           {
             "name": "inputValue",
@@ -3474,13 +3474,13 @@
             "name": "aria-label",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced name of the menu."
+            "description": "Announced name of the menu. Without it Base UI names the popup from the trigger's visible text, which is wrong for an ellipsis icon."
           },
           {
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Static children. React Aria's render-function form is driven by its collection builder, which Base UI has no equivalent of — recorded as `menu.dynamic-collections` in the measurements file."
+            "description": "Static children only. No render-function arm: this container is a literal `<div>`, and a function child rendered an empty menu with a console error."
           },
           {
             "name": "className",
@@ -3528,13 +3528,13 @@
             "name": "columns",
             "type": "readonly DataGridColumnLabel[]",
             "required": true,
-            "description": "The columns offered, with their names."
+            "description": "The columns offered, with their names. A list rather than a lookup: a header is a `LumoNode`."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Names BOTH the trigger and the menu, e.g. «ستون‌ها». REQUIRED."
+            "description": "Names BOTH the trigger and the menu, e.g. «ستون‌ها». REQUIRED: the trigger is a glyph."
           },
           {
             "name": "className",
@@ -3639,7 +3639,7 @@
             "name": "rangeLabel",
             "type": "(from: string, to: string, total: string) => string",
             "required": true,
-            "description": "Builds the range read-out from three ALREADY-FORMATTED numbers, e.g. ``(from, to, total) => `${from}–${to} از ${total}` `` → «۱–۱۰ از ۴۸»."
+            "description": "Builds the range read-out from three ALREADY-FORMATTED numbers, e.g. ``(from, to, total) => `${from}–${to} از ${total}` `` → «۱–۱۰ از ۴۸». A function, not a template: clause order differs per language, and `۱–۱۰` is a bidi trap (a neutral between two AN runs takes the paragraph direction), so only the caller can place a U+200F where their wording needs one."
           },
           {
             "name": "className",
@@ -3926,13 +3926,13 @@
             "name": "labelId",
             "type": "string",
             "required": true,
-            "description": "The id of the element naming this group. REQUIRED."
+            "description": "The id of the element naming this group. REQUIRED — an unnamed group of spinbuttons announces as bare \"group\"."
           },
           {
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "Selects the numbering system AND the arrow-key mapping."
+            "description": "Selects the numbering system AND the arrow-key mapping. Passed, not read from context, so a picker cannot disagree with it."
           },
           {
             "name": "state",
@@ -3944,7 +3944,7 @@
             "name": "bare",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Renders the segments WITHOUT the bordered box, for a caller that supplies its own — `date-picker.tsx` wraps the segments and a trigger button in one bordered group, and two nested borders is what that looks like otherwise."
+            "description": "Renders the segments WITHOUT the bordered box, for a caller (a picker) that supplies its own."
           },
           {
             "name": "className",
@@ -4293,7 +4293,7 @@
             "name": "minValue",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Earliest and latest selectable DAY, forwarded to the grid unchanged."
+            "description": "Earliest and latest selectable DAY, forwarded to the grid unchanged. Days, not months."
           },
           {
             "name": "onChange",
@@ -4336,19 +4336,19 @@
             "name": "formatRange",
             "type": "(from: string, to: string | undefined) => string",
             "required": true,
-            "description": "Builds the trigger's read-out from ALREADY-FORMATTED ends. REQUIRED."
+            "description": "Builds the trigger's read-out from ALREADY-FORMATTED ends. REQUIRED. `to` is `undefined` while only the first end is picked. A FUNCTION, not a template: clause order differs per language, and a neutral dash between two number runs can render the ends swapped under bidi — the caller places «تا» or U+200F."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "What the whole control is FOR, e.g. «بازهٔ گزارش». REQUIRED."
+            "description": "What the whole control is FOR, e.g. «بازهٔ گزارش». REQUIRED. Rendered `sr-only` inside the trigger (content, not `aria-label`, for label-in-name), so the button's name is this string followed by the read-out."
           },
           {
             "name": "panelLabel",
             "type": "string",
             "required": true,
-            "description": "Names the popover, e.g. «انتخاب بازهٔ تاریخ». REQUIRED."
+            "description": "Names the popover, e.g. «انتخاب بازهٔ تاریخ». REQUIRED — the trigger's name changes with every pick, and a dialog named by its own value announces the answer instead of the question."
           },
           {
             "name": "placeholder",
@@ -4378,7 +4378,7 @@
             "name": "dateFormatOptions",
             "type": "Intl.DateTimeFormatOptions | undefined",
             "required": false,
-            "description": "How each end is formatted for the read-out. Not an announced string — an `Intl` options bag — so it may have a default. It goes through `formatDate` under `FORMAT_LOCALE`, so the calendar and the digits are stated rather than inherited from whichever ICU build the host happens to have."
+            "description": "How each end is formatted for the read-out. An `Intl` options bag, so it may have a default."
           },
           {
             "name": "defaultValue",
@@ -4414,7 +4414,7 @@
             "name": "minValue",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Earliest and latest selectable DAY in the grid, forwarded to `RangeCalendar`."
+            "description": "Earliest and latest selectable DAY in the grid, forwarded to `RangeCalendar`. Presets are not clamped."
           },
           {
             "name": "onChange",
@@ -4432,7 +4432,7 @@
             "name": "presets",
             "type": "readonly DateSelectorPreset[] | undefined",
             "required": false,
-            "description": "The named ranges. Order is the reading order."
+            "description": "The named ranges, in reading order. An empty list renders no list at all."
           },
           {
             "name": "size",
@@ -4546,7 +4546,7 @@
             "name": "children",
             "type": "React.ReactElement<unknown, string | React.JSXElementConstructor<any>>",
             "required": true,
-            "description": "The control that closes the dialog — usually a `<Button>`. Rendered through Base UI's own `Dialog.Close`, which merges the close behaviour onto the caller's element rather than wrapping it in a second button."
+            "description": "The control that closes the dialog — usually a `<Button>`, rendered through `Dialog.Close`."
           }
         ]
       },
@@ -4828,7 +4828,7 @@
             "name": "isKeyboardDismissDisabled",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Prevents Escape from closing the dialog — or the drawer, since this is the state owner for both."
+            "description": "Prevents Escape from closing the dialog — or the drawer, since this is the state owner for both. Lives here because only the Root owns dismissal."
           },
           {
             "name": "isOpen",
@@ -5002,7 +5002,7 @@
             "name": "keepMounted",
             "type": "boolean | \"until-found\" | undefined",
             "required": false,
-            "description": "Render the panel into the first byte, hidden, instead of not at all."
+            "description": "Render the panel into the first byte, hidden, instead of not at all. OFF by default; `\"until-found\"` also lets browser find-in-page reveal it."
           },
           {
             "name": "lang",
@@ -5061,7 +5061,7 @@
             "name": "id",
             "type": "Key",
             "required": false,
-            "description": "The section's collection key. A `Key`, not a DOM `id` — see the note above `DisclosureGroupProps`, which is also why it is not spread onto an element."
+            "description": "The section's collection key. A `Key`, not a DOM `id`, so it is not spread onto an element."
           },
           {
             "name": "inert",
@@ -5457,13 +5457,13 @@
             "name": "title",
             "type": "LumoNode",
             "required": true,
-            "description": "What is empty, in the reader's language."
+            "description": "What is empty, in the reader's language. REQUIRED; `LumoNode` still forbids a bare count."
           },
           {
             "name": "action",
             "type": "LumoNode",
             "required": false,
-            "description": "One action, usually a `<Button>`. A slot, not a label plus a handler — see the file header."
+            "description": "One action, usually a `<Button>`. A slot, not a label plus a handler."
           },
           {
             "name": "className",
@@ -5481,7 +5481,7 @@
             "name": "icon",
             "type": "LumoNode",
             "required": false,
-            "description": "Decorative illustration or glyph. `aria-hidden`, because the title already says what the icon says and an unnamed graphic adds a stop with no content."
+            "description": "Decorative illustration or glyph, `aria-hidden`. Framed by `media` — the chip by default, unframed with `media=\"bare\"`."
           },
           {
             "name": "level",
@@ -5512,7 +5512,7 @@
             "name": "defaultFocusedDate",
             "type": "CalendarDate",
             "required": true,
-            "description": "The day the calendar opens on, and the initial roving stop. REQUIRED."
+            "description": "The day the calendar opens on, and the initial roving stop. REQUIRED — the component never calls `today()`."
           },
           {
             "name": "events",
@@ -5524,7 +5524,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Names the grid, e.g. «تقویم تیم». REQUIRED."
+            "description": "Names the grid, e.g. «تقویم تیم». REQUIRED — an unnamed grid announces bare \"grid\"."
           },
           {
             "name": "strings",
@@ -5560,7 +5560,7 @@
             "name": "maxEventsPerDay",
             "type": "number | undefined",
             "required": false,
-            "description": "How many chips a month cell shows before «+۳ بیشتر». Not announced — a count is not a word — so it may have a default."
+            "description": "How many chips a month cell shows before «+۳ بیشتر»."
           },
           {
             "name": "onDaySelect",
@@ -5614,7 +5614,7 @@
             "name": "todayDate",
             "type": "CalendarDate | undefined",
             "required": false,
-            "description": "Which day to mark as today, if any. A PROP, not a clock read — see the header. Omitted, nothing is marked, which is correct for a calendar showing a period in the past."
+            "description": "Which day to mark as today, if any. A PROP, not a clock read; omitted, nothing is marked."
           },
           {
             "name": "view",
@@ -5656,7 +5656,7 @@
             "name": "outside",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "A day from a neighbouring month, SHOWN rather than blanked."
+            "description": "A day from a neighbouring month, SHOWN rather than blanked — Jalali month lengths change inside a year."
           },
           {
             "name": "today",
@@ -5704,7 +5704,7 @@
             "name": "removeLabel",
             "type": "(fileName: string) => string",
             "required": true,
-            "description": "Builds the announced name of this row's remove control from the file's own name, e.g. ``(n) => `حذف ${n}` `` → «حذف گزارش.pdf»."
+            "description": "Builds the announced name of this row's remove control from the file's own name, e.g. ``(n) => `حذف ${n}` ``. REQUIRED; a function so every row is distinct."
           },
           {
             "name": "size",
@@ -5762,7 +5762,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the drop area, e.g. «کشیدن و رها کردن پرونده‌ها»."
+            "description": "Announced name of the drop area, e.g. «کشیدن و رها کردن پرونده‌ها». REQUIRED — a missing label is a bare \"group\"."
           },
           {
             "name": "triggerLabel",
@@ -6039,7 +6039,7 @@
             "name": "explicit",
             "type": "Record<string, unknown> | undefined",
             "required": false,
-            "description": "The caller's own props, read for `aria-label`, `aria-labelledby` and `aria-describedby`. Naming a control the caller already named is the one way this can make things WORSE, so it never does."
+            "description": "The caller's own props, read for `aria-label`/`aria-labelledby`/`aria-describedby`; an explicit name suppresses the wiring."
           },
           {
             "name": "isDisabled",
@@ -6051,19 +6051,19 @@
             "name": "isInvalid",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Overrides the validity Base UI derives. Left undefined, a supplied `errorMessage` marks the field invalid on its own — a field carrying an error message and reporting itself valid is a contradiction the caller should not have to resolve by hand."
+            "description": "Overrides the validity Base UI derives. Left undefined, a supplied `errorMessage` marks the field invalid."
           },
           {
             "name": "label",
             "type": "LumoNode",
             "required": false,
-            "description": "The label's CONTENT, not a rendered label. The hook needs to know whether a label exists before deciding to point at one — an `aria-labelledby` minted on a guess is a dangling idref, which is a different defect rather than a fix."
+            "description": "The label's CONTENT, not a rendered label — an id is minted only for content that renders."
           },
           {
             "name": "mode",
             "type": "FieldWiringMode | undefined",
             "required": false,
-            "description": "`\"aria\"` (the default) when THIS component renders the label; `\"native\"` when the consumer does and the arrow has to reverse. See `FieldWiringMode` in `@lumo-ui/base-ui-ssr`."
+            "description": "`\"aria\"` (default) when THIS component renders the label; `\"native\"` when the consumer does. See `FieldWiringMode`."
           },
           {
             "name": "name",
@@ -6121,7 +6121,7 @@
             "name": "nativeLabel",
             "type": "boolean | undefined",
             "required": false,
-            "description": "`false` when there is no single labelable control to point a `<label for>` at — a radio group, a checkbox group. The name then reaches the group through `aria-labelledby` alone, and the element rendered is a `<span>`, because Base UI errors in development on a `<label>` with `nativeLabel={false}` and vice versa."
+            "description": "`false` when there is no single labelable control (a radio group); renders a `<span>` named via `aria-labelledby`."
           }
         ]
       }
@@ -6134,7 +6134,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Names what is INSIDE the frame, e.g. «پیش‌نمایش موبایل». Required."
+            "description": "Names what is INSIDE the frame, e.g. «پیش‌نمایش موبایل». Required. A named `<figure>`, not a `role=\"region\"`."
           },
           {
             "name": "address",
@@ -6177,7 +6177,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The reader's locale. Fixes the calendar, the digits AND the direction — `direction(locale)` is the single source, exactly as `slider.tsx` records for its own two providers."
+            "description": "The reader's locale. Fixes the calendar, the digits AND the direction."
           },
           {
             "name": "strings",
@@ -6201,7 +6201,7 @@
             "name": "dateFormatOptions",
             "type": "Intl.DateTimeFormatOptions | undefined",
             "required": false,
-            "description": "How a date is formatted wherever one is spoken. Not an announced string — an `Intl` options bag — so it may have a default. It goes through `formatDate` under `FORMAT_LOCALE`, so the calendar is stated."
+            "description": "How a date is formatted wherever one is spoken. An `Intl` options bag, so it may have a default."
           },
           {
             "name": "defaultExpandedTaskIds",
@@ -6267,7 +6267,7 @@
             "name": "onTasksChange",
             "type": "((tasks: T[]) => void) | undefined",
             "required": false,
-            "description": "Receives a whole new list after a keyboard move. Optional: a read-only chart is a legitimate chart, and without it the bars still take focus and still announce their names — they simply cannot be moved."
+            "description": "Receives a whole new list after a keyboard move. Optional: a read-only chart is legitimate."
           },
           {
             "name": "onZoomChange",
@@ -6279,7 +6279,7 @@
             "name": "range",
             "type": "{ start: CalendarDate; end: CalendarDate; } | undefined",
             "required": false,
-            "description": "Overrides the extent derived from the tasks — a quarter view stays a whole quarter even when the work stops half way through it."
+            "description": "Overrides the extent derived from the tasks — a quarter view stays a whole quarter."
           },
           {
             "name": "scale",
@@ -6389,7 +6389,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the card, e.g. «نمای کوتاه نمایه»."
+            "description": "Announced name of the card, e.g. «نمای کوتاه نمایه». REQUIRED — Base UI's Popup carries no role and no name; this names the `role=\"dialog\"`."
           },
           {
             "name": "trigger",
@@ -6450,7 +6450,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "What the stack MEANS, e.g. «۵ عضو». Required."
+            "description": "What the stack MEANS, e.g. «۵ عضو». Required — the children are hidden beneath it."
           },
           {
             "name": "locale",
@@ -6505,7 +6505,7 @@
             "name": "label",
             "type": "string | undefined",
             "required": false,
-            "description": "A name, ONLY when the tile is the sole carrier of meaning."
+            "description": "A name, ONLY when the tile is the sole carrier of meaning. Omitted, the tile is `aria-hidden`."
           },
           {
             "name": "size",
@@ -6523,7 +6523,7 @@
             "name": "variant",
             "type": "\"solid\" | \"subtle\" | null | undefined",
             "required": false,
-            "description": "HOW FILLED. The axis `solid` used to hide inside `tone`."
+            "description": "HOW FILLED. Same two names and treatments as `badge.tsx`."
           }
         ]
       }
@@ -6979,7 +6979,7 @@
             "name": "onBeforeInput",
             "type": "FormEventHandler<HTMLInputElement> | undefined",
             "required": false,
-            "description": "Handler that is called when the input value is about to be modified."
+            "description": "Handler that is called when the input value is about to be modified. Not `Pick`ed: React 19's `InputEventHandler` is narrower than the published `FormEventHandler`."
           },
           {
             "name": "onBlur",
@@ -7160,7 +7160,7 @@
             "name": "onComplete",
             "type": "((value: string) => void) | undefined",
             "required": false,
-            "description": "Fires once the last box is filled, with the ASCII code."
+            "description": "Fires once the last box is filled, with the ASCII code. Separate from `onChange` so no caller writes `>=`."
           },
           {
             "name": "value",
@@ -7353,7 +7353,7 @@
             "name": "ref",
             "type": "Ref<HTMLElement> | undefined",
             "required": false,
-            "description": "The root, at the widest type both branches satisfy."
+            "description": "The root, at the widest type both branches satisfy: `HTMLElement`. Widened rather than dropped."
           }
         ]
       },
@@ -7406,7 +7406,7 @@
             "name": "interactive",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Whether this row is a link or a button rather than a static div. See the header: the pointer states are real only in the first two, and painting them on the third invites a click that goes nowhere."
+            "description": "Whether this row is a link or a button rather than a static div; pointer states are real only then."
           },
           {
             "name": "size",
@@ -7535,7 +7535,7 @@
             "name": "keys",
             "type": "readonly string[]",
             "required": true,
-            "description": "The chord, in press order: `[\"Ctrl\", \"K\"]`, `[\"⌘\", \"⇧\", \"P\"]`."
+            "description": "The chord, in press order: `[\"Ctrl\", \"K\"]`. An array so the separators sit inside the direction island."
           },
           {
             "name": "className",
@@ -7547,7 +7547,7 @@
             "name": "separator",
             "type": "string | undefined",
             "required": false,
-            "description": "Drawn between keys. Default `\"+\"`."
+            "description": "Drawn between keys. Default `\"+\"`. Punctuation, not a word; it lands inside a `dir=\"ltr\"` island and will not mirror."
           },
           {
             "name": "size",
@@ -7578,13 +7578,13 @@
             "name": "isCurrent",
             "type": "false | LinkCurrent | undefined",
             "required": false,
-            "description": "Marks this link as the resource the reader is currently on — usually `\"page\"` for a navigation item, `\"step\"` inside a wizard."
+            "description": "Marks this link as the resource the reader is currently on — `\"page\"` for a navigation item, `\"step\"` inside a wizard. Emits `aria-current` AND `data-current`."
           },
           {
             "name": "isDisabled",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable. Kept from the React Aria API — `app-shell.tsx` and the navigation components pass it."
+            "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable."
           },
           {
             "name": "newTab",
@@ -7596,7 +7596,7 @@
             "name": "newTabLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced warning that a new tab will open, e.g. «در برگه جدید باز می‌شود»."
+            "description": "Announced warning that a new tab will open, e.g. «در برگه جدید باز می‌شود». REQUIRED by the type (WCAG 3.2.5); no default because it would be English."
           },
           {
             "name": "size",
@@ -7856,7 +7856,7 @@
             "name": "isSelected",
             "type": "boolean",
             "required": true,
-            "description": "Whether the item is ticked. CONTROLLED — there is no uncontrolled mode."
+            "description": "Whether the item is ticked. CONTROLLED — a menu of toggles is a view of state that lives elsewhere."
           },
           {
             "name": "onChange",
@@ -7880,7 +7880,7 @@
             "name": "closeOnClick",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Keeps the menu open after a tick, which is the right default HERE and the wrong one for `MenuItem`: toggling three columns should not mean reopening the menu three times. Set `false` for a toggle that ends the interaction."
+            "description": "Keeps the menu open after a tick (default `false` here: toggling three columns should not reopen the menu three times)."
           },
           {
             "name": "isDisabled",
@@ -7892,7 +7892,7 @@
             "name": "textValue",
             "type": "string | undefined",
             "required": false,
-            "description": "Typeahead string, and the accessible name when `children` is not a plain string. Same contract as `MenuItem.textValue`, and same reason: a server render has no DOM for Base UI to read text content out of."
+            "description": "Typeahead string, and the accessible name when `children` is not a plain string. Same contract as `MenuItem.textValue`."
           }
         ]
       },
@@ -7933,7 +7933,7 @@
             "name": "isCurrent",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Marks the item the user is already on — the entry in a menu of alternatives that is the CURRENT one."
+            "description": "Marks the item the user is already on. One prop draws the tick AND emits `aria-current` (`\"page\"` on a link, `\"true\"` otherwise), so the two cannot drift."
           },
           {
             "name": "isDisabled",
@@ -7980,7 +7980,7 @@
             "name": "placement",
             "type": "LumoPlacement",
             "required": false,
-            "description": "Logical only. LEAVE UNSET at both levels unless you mean it — this component already reproduces React Aria's two context defaults: `'bottom start'` at the root and `'end top'` inside a `<SubmenuTrigger>`."
+            "description": "Logical only. Leave unset unless you mean it: defaults are `'bottom start'` at the root and `'end top'` in a submenu."
           }
         ]
       },
@@ -7991,13 +7991,13 @@
             "name": "aria-label",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced name of the menu."
+            "description": "Announced name of the menu. Without it Base UI names the popup from the trigger's visible text, which is wrong for an ellipsis icon."
           },
           {
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "Static children. React Aria's render-function form is driven by its collection builder, which Base UI has no equivalent of — recorded as `menu.dynamic-collections` in the measurements file."
+            "description": "Static children only. No render-function arm: this container is a literal `<div>`, and a function child rendered an empty menu with a console error."
           },
           {
             "name": "className",
@@ -8020,7 +8020,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced AND visible name of the group, e.g. «مرتب‌سازی بر اساس»."
+            "description": "Announced AND visible name of the group, e.g. «مرتب‌سازی بر اساس». REQUIRED: radio items are answers to a question that is nowhere in the item text."
           },
           {
             "name": "onChange",
@@ -8032,7 +8032,7 @@
             "name": "value",
             "type": "string",
             "required": true,
-            "description": "The selected item's value. CONTROLLED — there is no uncontrolled mode, for `MenuCheckboxItem`'s reason: a menu is a VIEW of state that lives in the thing being sorted or filtered, and an item that could hold its own answer is an item that can disagree with the list below it."
+            "description": "The selected item's value. CONTROLLED — see `MenuCheckboxItem.isSelected`."
           },
           {
             "name": "children",
@@ -8079,7 +8079,7 @@
             "name": "closeOnClick",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Closes the menu after a choice. `true` HERE and `false` on `MenuCheckboxItem`, and the asymmetry is the point: picking a sort order ANSWERS the question the group asked, so leaving the panel open makes the reader dismiss a menu that has nothing left to say. Toggling columns does not — that is three decisions, and closing after the first would mean reopening the menu twice."
+            "description": "Closes the menu after a choice (default `true`: picking a sort order ANSWERS the question, unlike toggling columns)."
           },
           {
             "name": "isDisabled",
@@ -8091,7 +8091,7 @@
             "name": "textValue",
             "type": "string | undefined",
             "required": false,
-            "description": "Typeahead string, and the accessible name when `children` is not a plain string. Same contract as `MenuItem.textValue` and `MenuCheckboxItem`'s, and the same reason: a server render has no DOM for Base UI to read text content out of."
+            "description": "Typeahead string, and the accessible name when `children` is not a plain string. Same contract as `MenuItem.textValue`."
           }
         ]
       },
@@ -8364,7 +8364,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "NOT for callers. `Menu.Trigger` renders this component through its `render` prop, and `useRenderElement` hands a COMPONENT render target its merged props as ordinary React props — so the composite's roving `tabIndex` arrives here, in `rest`, and wins the spread. Declared so it can be intercepted. See the file header."
+            "description": "NOT for callers. The composite's roving `tabIndex` arrives here via `Menu.Trigger`'s `render`; declared so it can be intercepted."
           },
           {
             "name": "translate",
@@ -8393,7 +8393,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the row, e.g. «نوار منو»."
+            "description": "Announced name of the row, e.g. «نوار منو». REQUIRED — Base UI emits no name, so an unlabelled one is bare \"menu bar\"."
           },
           {
             "name": "children",
@@ -8430,7 +8430,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the transcript. Required."
+            "description": "Announced name of the transcript. Required — no default, because a default would be English."
           },
           {
             "name": "children",
@@ -8501,7 +8501,7 @@
             "name": "value",
             "type": "string",
             "required": true,
-            "description": "The ALREADY-FORMATTED timestamp, e.g. `formatDate(at, locale, …)` — «۱۴:۰۵» under fa-IR, in Jalali when the options ask for a date. A string by design; see the file header."
+            "description": "The ALREADY-FORMATTED timestamp, e.g. `formatDate(at, locale, …)` — «۱۴:۰۵» under fa-IR. A string by design."
           },
           {
             "name": "className",
@@ -8519,7 +8519,7 @@
             "name": "ref",
             "type": "Ref<HTMLElement> | undefined",
             "required": false,
-            "description": "The root, at the widest type both branches satisfy — `<time>` when `dateTime` is supplied and `<span>` when it is not. Widened rather than dropped; see `props.ts`'s contract."
+            "description": "The root, at the widest type both branches satisfy — `<time>` or `<span>`. Widened rather than dropped."
           }
         ]
       }
@@ -8676,13 +8676,13 @@
             "name": "isCurrent",
             "type": "false | LinkCurrent | undefined",
             "required": false,
-            "description": "Marks this link as the resource the reader is currently on — usually `\"page\"` for a navigation item, `\"step\"` inside a wizard."
+            "description": "Marks this link as the resource the reader is currently on — `\"page\"` for a navigation item, `\"step\"` inside a wizard. Emits `aria-current` AND `data-current`."
           },
           {
             "name": "isDisabled",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable. Kept from the React Aria API — `app-shell.tsx` and the navigation components pass it."
+            "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable."
           },
           {
             "name": "newTab",
@@ -8694,7 +8694,7 @@
             "name": "newTabLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced warning that a new tab will open, e.g. «در برگه جدید باز می‌شود»."
+            "description": "Announced warning that a new tab will open, e.g. «در برگه جدید باز می‌شود». REQUIRED by the type (WCAG 3.2.5); no default because it would be English."
           }
         ]
       },
@@ -8722,7 +8722,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی»."
+            "description": "Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی». REQUIRED: a page carries several navs."
           },
           {
             "name": "children",
@@ -8902,7 +8902,7 @@
             "name": "commitBehavior",
             "type": "\"validate\" | \"snap\"",
             "required": false,
-            "description": "Whether an out-of-range value snaps or is reported invalid."
+            "description": "Whether an out-of-range value snaps or is reported invalid. Translated onto `snapOnStep`."
           },
           {
             "name": "defaultValue",
@@ -8992,7 +8992,7 @@
             "name": "isWheelDisabled",
             "type": "boolean",
             "required": false,
-            "description": "Whether the field ignores the scroll wheel."
+            "description": "Whether the field ignores the scroll wheel. Translated onto Base UI's `allowWheelScrub` as `!isWheelDisabled`, only when the caller set it — the two defaults do NOT correspond."
           },
           {
             "name": "lang",
@@ -9022,7 +9022,7 @@
             "name": "onBeforeInput",
             "type": "FormEventHandler<HTMLInputElement> | undefined",
             "required": false,
-            "description": "Handler that is called when the input value is about to be modified."
+            "description": "Handler that is called when the input value is about to be modified. Not `Pick`ed: React 19's `InputEventHandler` is narrower than the published `FormEventHandler`."
           },
           {
             "name": "onBlur",
@@ -9082,7 +9082,7 @@
             "name": "step",
             "type": "number",
             "required": false,
-            "description": "The amount the value changes with each increment or decrement tick."
+            "description": "The amount the value changes with each increment or decrement tick. Translated onto `step`."
           },
           {
             "name": "style",
@@ -9192,7 +9192,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the navigation landmark, e.g. «صفحه‌بندی نتایج»."
+            "description": "Announced name of the navigation landmark, e.g. «صفحه‌بندی نتایج». REQUIRED — a top and bottom pager would be two unnamed `<nav>`s."
           },
           {
             "name": "locale",
@@ -9222,7 +9222,7 @@
             "name": "pageLabel",
             "type": "(formattedPage: string) => string",
             "required": true,
-            "description": "Builds a page button's announced name from the FORMATTED page number, e.g. ``(n) => `صفحه ${n}` `` → «صفحه ۳». REQUIRED — see the file header for why it takes a string rather than the integer."
+            "description": "Builds a page button's announced name from the FORMATTED page number, e.g. ``(n) => `صفحه ${n}` `` → «صفحه ۳». REQUIRED; takes a string, not the integer."
           },
           {
             "name": "previousLabel",
@@ -9302,7 +9302,7 @@
             "name": "countries",
             "type": "readonly PhoneCountry[] | undefined",
             "required": false,
-            "description": "Overrides the shipped list. See the header."
+            "description": "Overrides the shipped list."
           },
           {
             "name": "defaultCountry",
@@ -9482,7 +9482,7 @@
             "name": "placement",
             "type": "LumoPlacement",
             "required": false,
-            "description": "Logical only — see `LumoPlacement`. Defaults to `'bottom'`."
+            "description": "Logical only — see `LumoPlacement`. Defaults to `'bottom'`. Deliberately NOT `| undefined`: under `exactOptionalPropertyTypes` that breaks the spread below."
           },
           {
             "name": "translate",
@@ -9511,7 +9511,7 @@
             "name": "isKeyboardDismissDisabled",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Prevents Escape from closing the popover."
+            "description": "Prevents Escape from closing the popover. Lives here, not on `<Popover>`, because dismissal belongs to `Popover.Root`, which this part renders; the cancel intercepts exactly the `escape-key` reason."
           },
           {
             "name": "isOpen",
@@ -9674,7 +9674,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "What is being measured, e.g. «فضای مصرف‌شده». REQUIRED — same reasoning as `ProgressBar.label`."
+            "description": "What is being measured, e.g. «فضای مصرف‌شده». REQUIRED."
           },
           {
             "name": "locale",
@@ -9722,7 +9722,7 @@
             "name": "tone",
             "type": "\"accent\" | \"critical\" | \"positive\" | \"caution\" | null | undefined",
             "required": false,
-            "description": "Colour of the fill."
+            "description": "Colour of the fill. Colour must not be the only carrier (WCAG 1.4.1): pair `critical` with text."
           },
           {
             "name": "value",
@@ -9739,13 +9739,13 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "What is progressing, in the reader's language, e.g. «بارگذاری پرونده»."
+            "description": "What is progressing, in the reader's language, e.g. «بارگذاری پرونده». REQUIRED — no English default."
           },
           {
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale to format the value in, and to resolve Base UI's own English `\"indeterminate progress\"` out of. Required by design — see the file header."
+            "description": "The locale to format the value in, and to resolve Base UI's English `\"indeterminate progress\"` out of. Required."
           },
           {
             "name": "className",
@@ -9757,7 +9757,7 @@
             "name": "formatOptions",
             "type": "Intl.NumberFormatOptions | undefined",
             "required": false,
-            "description": "How the value is formatted. Defaults to `{ style: \"percent\" }`. Pass e.g. `{ style: \"unit\", unit: \"megabyte\" }` for a byte counter — whatever is passed goes through `Intl` under the locale's own numbering system, so the digits stay Persian either way."
+            "description": "How the value is formatted. Defaults to `{ style: \"percent\" }`. NOT forwarded to Base UI's `format` — see the header."
           },
           {
             "name": "isIndeterminate",
@@ -9818,7 +9818,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The document's locale. Same value given to `LumoHtml`."
+            "description": "The document's locale. Same value given to `LumoHtml`. No `direction` sibling: it is `direction(locale)`."
           }
         ]
       },
@@ -10655,13 +10655,13 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale every number in the announced name is formatted in."
+            "description": "The locale every number in the announced name is formatted in. REQUIRED — a context default would announce Latin digits silently."
           },
           {
             "name": "starLabel",
             "type": "(value: string) => string",
             "required": true,
-            "description": "Announced name of one star, built from its formatted position: ``(v) => `${v} ستاره` `` → «۳ ستاره». REQUIRED."
+            "description": "Announced name of one star from its formatted position: ``(v) => `${v} ستاره` `` → «۳ ستاره». REQUIRED."
           },
           {
             "name": "className",
@@ -10732,7 +10732,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale every number in the announced name is formatted in."
+            "description": "The locale every number in the announced name is formatted in. REQUIRED — a context default would announce Latin digits silently."
           },
           {
             "name": "className",
@@ -10798,7 +10798,7 @@
             "name": "starLabel",
             "type": "((value: string) => string) | undefined",
             "required": false,
-            "description": "Announced name of one star, built from its formatted position: ``(v) => `${v} ستاره` `` → «۳ ستاره». REQUIRED."
+            "description": "Announced name of one star from its formatted position: ``(v) => `${v} ستاره` `` → «۳ ستاره». REQUIRED."
           },
           {
             "name": "value",
@@ -10838,7 +10838,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale every number in the announced name is formatted in."
+            "description": "The locale every number in the announced name is formatted in. REQUIRED — a context default would announce Latin digits silently."
           },
           {
             "name": "value",
@@ -10899,7 +10899,7 @@
             "name": "sizeLabel",
             "type": "(formattedPercent: string) => string",
             "required": true,
-            "description": "Builds `aria-valuetext` from the ALREADY-FORMATTED percentage, e.g. ``(v) => `${v} درصد` `` → «۳۰ درصد». REQUIRED, and a function for the reason recorded in tag-group.tsx: word order is authored, not assembled."
+            "description": "Builds `aria-valuetext` from the ALREADY-FORMATTED percentage, e.g. ``(v) => `${v} درصد` ``. REQUIRED."
           },
           {
             "name": "startPanel",
@@ -10941,7 +10941,7 @@
             "name": "orientation",
             "type": "\"horizontal\" | \"vertical\"",
             "required": false,
-            "description": "`horizontal` splits along the inline axis (panes side by side) and is the direction-sensitive case; `vertical` stacks panes on the block axis."
+            "description": "`horizontal` splits along the inline axis (direction-sensitive); `vertical` stacks on the block axis."
           }
         ]
       }
@@ -11021,7 +11021,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the scrollable region, e.g. «فهرست تراکنش‌ها». REQUIRED: the container is a Tab stop (see the header), and an unnamed region announces as a bare \"region\" with no indication of what scrolls."
+            "description": "Announced name of the scrollable region, e.g. «فهرست تراکنش‌ها». REQUIRED — the container is a Tab stop."
           },
           {
             "name": "children",
@@ -11058,7 +11058,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Names the navigation, e.g. «در این صفحه». REQUIRED."
+            "description": "Names the navigation, e.g. «در این صفحه». REQUIRED — a page routinely has several `<nav>`s."
           },
           {
             "name": "className",
@@ -11082,7 +11082,7 @@
             "name": "topOffset",
             "type": "string",
             "required": false,
-            "description": "How far down the viewport or supplied scroll root the eye line sits."
+            "description": "How far down the viewport the eye line sits. The default clears a typical sticky header; raise it if yours is taller."
           }
         ]
       }
@@ -11095,7 +11095,7 @@
             "name": "clearLabel",
             "type": "string",
             "required": true,
-            "description": "The clear button's accessible name. REQUIRED, no default: a default would be English, and English is the defect this library exists to prevent."
+            "description": "The clear button's accessible name. REQUIRED, no default: a default would be English."
           },
           {
             "name": "label",
@@ -11299,7 +11299,7 @@
             "name": "onBeforeInput",
             "type": "FormEventHandler<HTMLInputElement> | undefined",
             "required": false,
-            "description": "Handler that is called when the input value is about to be modified."
+            "description": "Handler that is called when the input value is about to be modified. Not `Pick`ed: React 19's `InputEventHandler` is narrower than the published `FormEventHandler`."
           },
           {
             "name": "onBlur",
@@ -11389,7 +11389,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
+            "description": "The control's position in the sequential tab order — `-1` removes it (was `excludeFromTabOrder`)."
           },
           {
             "name": "translate",
@@ -11461,7 +11461,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the group, e.g. «نمای نتایج»."
+            "description": "Announced name of the group, e.g. «نمای نتایج». REQUIRED — nothing names the `role=\"radiogroup\"`."
           },
           {
             "name": "children",
@@ -11634,7 +11634,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the group, e.g. «استان تهران»."
+            "description": "Announced name of the group, e.g. «استان تهران». REQUIRED — an unnamed group is a node every option inside it reports membership of."
           },
           {
             "name": "children",
@@ -11687,7 +11687,7 @@
             "name": "textValue",
             "type": "string | undefined",
             "required": false,
-            "description": "Typeahead string, AND the text the collapsed control reads when this item is the selected one."
+            "description": "Typeahead string, AND the text the collapsed control reads when this item is selected. REQUIRED in this arm: markup children offer no label to derive."
           }
         ]
       },
@@ -11698,7 +11698,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": false,
-            "description": "The options. STATIC ONLY."
+            "description": "The options. STATIC ONLY — Base UI's `Select.List` has no render-function arm (unlike `Combobox.List`), so a function child renders an empty listbox."
           },
           {
             "name": "className",
@@ -11721,7 +11721,7 @@
             "name": "placeholder",
             "type": "string",
             "required": true,
-            "description": "Visible text shown when nothing is selected. REQUIRED — see the file header: Base UI's fallback is an EMPTY control, which is worse than RAC's English one because nothing on screen says a string is missing."
+            "description": "Visible text shown when nothing is selected. REQUIRED — Base UI's fallback is an EMPTY control, and nothing on screen says a string is missing."
           },
           {
             "name": "aria-label",
@@ -11763,13 +11763,13 @@
             "name": "description",
             "type": "LumoNode",
             "required": false,
-            "description": "Help text under the control, wired into the trigger's `aria-describedby` during RENDER — not after hydration. Rendered by this component, below `children`, so a consumer composing `<Label>`/`<SelectTrigger>` by hand cannot put it in the wrong place or forget it."
+            "description": "Help text under the control, wired into the trigger's `aria-describedby` during render. Rendered by this component, below `children`."
           },
           {
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
-            "description": "An error to display. Supplying one marks the field invalid, because a field carrying an error message and reporting itself valid is a contradiction the caller should not have to resolve by hand. Same rule as `TextField`."
+            "description": "An error to display. Supplying one marks the field invalid, as `TextField` does."
           },
           {
             "name": "isDisabled",
@@ -11910,7 +11910,7 @@
             "name": "ref",
             "type": "Ref<HTMLElement> | undefined",
             "required": false,
-            "description": "The root, at the widest type both branches satisfy."
+            "description": "The root, at the widest type both branches satisfy: `HTMLElement`. Widened rather than dropped."
           }
         ]
       }
@@ -11935,7 +11935,7 @@
             "name": "title",
             "type": "LumoNode",
             "required": false,
-            "description": "The group's heading, e.g. «گزارش‌ها». Optional — but when present it is wired as the group's ANNOUNCED name via `aria-labelledby`, not left as a decorative div, and it survives the rail as `sr-only`."
+            "description": "The group's heading, e.g. «گزارش‌ها». When present it is the group's ANNOUNCED name via `aria-labelledby`."
           }
         ]
       },
@@ -11946,13 +11946,13 @@
             "name": "icon",
             "type": "LumoNode",
             "required": true,
-            "description": "Required because every item can be rendered in collapsed rail mode."
+            "description": "The item's glyph. Decorative (`aria-hidden`; the NAME is the children) but all that remains visible in the rail."
           },
           {
             "name": "badge",
             "type": "LumoNode",
             "required": false,
-            "description": "Trailing count or state chip, ALREADY formatted — pass «۳», never 3, which `LumoNode` makes uncompilable. Announced in both states; visually hidden in the rail."
+            "description": "Trailing count or state chip, ALREADY formatted — «۳», never 3. Announced in both states."
           },
           {
             "name": "children",
@@ -11970,13 +11970,13 @@
             "name": "isCurrent",
             "type": "false | LinkCurrent | undefined",
             "required": false,
-            "description": "Marks this link as the resource the reader is currently on — usually `\"page\"` for a navigation item, `\"step\"` inside a wizard."
+            "description": "Marks this link as the resource the reader is currently on — `\"page\"` for a navigation item, `\"step\"` inside a wizard. Emits `aria-current` AND `data-current`."
           },
           {
             "name": "isDisabled",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable. Kept from the React Aria API — `app-shell.tsx` and the navigation components pass it."
+            "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable."
           },
           {
             "name": "newTab",
@@ -11988,7 +11988,7 @@
             "name": "newTabLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced warning that a new tab will open, e.g. «در برگه جدید باز می‌شود»."
+            "description": "Announced warning that a new tab will open, e.g. «در برگه جدید باز می‌شود». REQUIRED by the type (WCAG 3.2.5); no default because it would be English."
           }
         ]
       },
@@ -11999,7 +11999,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی». REQUIRED: landmarks of the same role are indistinguishable in a rotor unless named."
+            "description": "Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی». REQUIRED: same-role landmarks are indistinguishable unless named."
           },
           {
             "name": "children",
@@ -12212,13 +12212,13 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the slider, e.g. «بودجه»."
+            "description": "Announced name of the slider, e.g. «بودجه». REQUIRED: an unnamed group announces bare \"slider\"."
           },
           {
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale the value is formatted in."
+            "description": "The locale the value is formatted in — the only input to the output, `aria-valuetext` AND direction. REQUIRED."
           },
           {
             "name": "aria-describedby",
@@ -12266,7 +12266,7 @@
             "name": "formatOptions",
             "type": "Intl.NumberFormatOptions | undefined",
             "required": false,
-            "description": "Passed to `Intl.NumberFormat` for the visible output AND for `aria-valuetext`, so the two cannot drift."
+            "description": "Passed to `Intl.NumberFormat` for the visible output AND `aria-valuetext`, so the two cannot drift."
           },
           {
             "name": "hidden",
@@ -12441,7 +12441,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "What is being waited for, in the reader's language, e.g. «در حال بارگذاری…»."
+            "description": "What is being waited for, in the reader's language, e.g. «در حال بارگذاری…». REQUIRED."
           },
           {
             "name": "className",
@@ -12496,7 +12496,7 @@
             "name": "ref",
             "type": "Ref<HTMLElement> | undefined",
             "required": false,
-            "description": "The root element, at the widest type that is true of every branch."
+            "description": "The root element, at the widest type that is true of every branch: `tag` picks the element, so `Ref<HTMLDivElement>` would be a lie. Widened, never dropped."
           },
           {
             "name": "size",
@@ -12508,7 +12508,7 @@
             "name": "tag",
             "type": "BoxTag | undefined",
             "required": false,
-            "description": "Which element to render. Default `\"div\"` — but a page's main content container should be `tag=\"main\"`, which is what makes \"skip to content\" work and what a screen reader's landmark rotor lists."
+            "description": "Which element to render. Default `\"div\"` — a page's main content container should be `tag=\"main\"`, which makes \"skip to content\" and the landmark rotor work."
           }
         ]
       },
@@ -12549,7 +12549,7 @@
             "name": "ref",
             "type": "Ref<HTMLElement> | undefined",
             "required": false,
-            "description": "The root element, at the widest type that is true of every branch."
+            "description": "The root element, at the widest type that is true of every branch: `tag` picks the element, so `Ref<HTMLDivElement>` would be a lie. Widened, never dropped."
           },
           {
             "name": "tag",
@@ -12602,7 +12602,7 @@
             "name": "ref",
             "type": "Ref<HTMLElement> | undefined",
             "required": false,
-            "description": "The root element, at the widest type that is true of every branch."
+            "description": "The root element, at the widest type that is true of every branch: `tag` picks the element, so `Ref<HTMLDivElement>` would be a lie. Widened, never dropped."
           },
           {
             "name": "tag",
@@ -12633,7 +12633,7 @@
             "name": "current",
             "type": "number",
             "required": true,
-            "description": "The step in progress, 1-based. Steps before it are complete, steps after it are not started. Pass `items.length + 1` after the sequence is complete; every step is then complete and none is falsely marked current."
+            "description": "The step in progress, 1-based. Pass `items.length + 1` after the sequence is complete."
           },
           {
             "name": "currentLabel",
@@ -12651,13 +12651,13 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the sequence, e.g. «مراحل ثبت‌نام»."
+            "description": "Announced name of the sequence, e.g. «مراحل ثبت‌نام». REQUIRED — an unnamed `<nav>` is an anonymous landmark."
           },
           {
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale every step number is formatted in. Required — see the header."
+            "description": "The locale every step number is formatted in. Required."
           },
           {
             "name": "upcomingLabel",
@@ -12910,7 +12910,7 @@
             "name": "size",
             "type": "\"md\" | \"lg\"",
             "required": false,
-            "description": "`md` is shadcn's current compact scale; `lg` keeps the row at the 44px touch floor for Khroos's touch surfaces. See the size table on the thumb."
+            "description": "`md` is shadcn's compact scale; `lg` keeps the row at the 44px touch floor."
           },
           {
             "name": "style",
@@ -12922,7 +12922,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
+            "description": "The control's position in the sequential tab order — `-1` removes it (was `excludeFromTabOrder`)."
           },
           {
             "name": "translate",
@@ -12976,7 +12976,7 @@
             "name": "isRowHeader",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Makes this the cell that NAMES the row — `role=\"rowheader\"` instead of `role=\"gridcell\"`."
+            "description": "Makes this the cell that NAMES the row — `role=\"rowheader\"` instead of `role=\"gridcell\"`. Usually inherited from the `<Column>`; this is the per-cell override."
           }
         ]
       },
@@ -13005,7 +13005,7 @@
             "name": "defaultWidth",
             "type": "string | number | undefined",
             "required": false,
-            "description": "The column's initial inline size, e.g. `160` or `\"20%\"`."
+            "description": "The column's initial inline size, e.g. `160` or `\"20%\"`. An `inline-size` on the `<th>` only; when a TanStack instance owns sizing, `column.size` is authoritative and this is the pre-hydration hint."
           },
           {
             "name": "id",
@@ -13017,19 +13017,19 @@
             "name": "isRowHeader",
             "type": "boolean | undefined",
             "required": false,
-            "description": "The cells in THIS column name their row — they become `<th scope=\"row\">` with `role=\"rowheader\"` instead of `role=\"gridcell\"`."
+            "description": "The cells in THIS column name their row — they become `<th scope=\"row\">` with `role=\"rowheader\"`. Declared once on the column, not per cell."
           },
           {
             "name": "resizer",
             "type": "LumoNode",
             "required": false,
-            "description": "A `<ColumnResizer>`, as its own slot rather than as a child."
+            "description": "A `<ColumnResizer>`, as its own slot so it is not part of the header's announced name."
           },
           {
             "name": "sortAscendingLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced when this column is the active ascending sort, e.g. «مرتب‌شده صعودی»."
+            "description": "Announced when this column is the active ascending sort, e.g. «مرتب‌شده صعودی». REQUIRED because Android TalkBack ignores `aria-sort`."
           },
           {
             "name": "sortDescendingLabel",
@@ -13052,7 +13052,7 @@
             "name": "valueText",
             "type": "(value: number) => string",
             "required": true,
-            "description": "Human-readable current width, e.g. `value => `${formatNumber(value, locale)} پیکسل``. Required because VoiceOver does not expose the raw `aria-valuenow` for this separator."
+            "description": "Human-readable current width, e.g. `value => `${formatNumber(value, locale)} پیکسل``. Required — VoiceOver does not expose the raw `aria-valuenow`."
           },
           {
             "name": "className",
@@ -13110,7 +13110,7 @@
             "name": "row",
             "type": "LumoTableRow | undefined",
             "required": false,
-            "description": "The TanStack row this `<tr>` renders."
+            "description": "The TanStack row this `<tr>` renders. Optional — a grid with no state layer is still a grid."
           }
         ]
       },
@@ -13178,13 +13178,13 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the grid. REQUIRED."
+            "description": "Announced name of the grid. REQUIRED — an unnamed grid announces \"grid\" and nothing else."
           },
           {
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale. Drives the arrow-key mapping and the default collation. There is deliberately no `dir` prop — see `LumoProvider` for the argument."
+            "description": "The locale. Drives the arrow-key mapping and the default collation; there is deliberately no `dir` prop."
           },
           {
             "name": "asyncStatus",
@@ -13312,7 +13312,7 @@
             "name": "children",
             "type": "(tabIndex: 0 | -1) => LumoNode",
             "required": true,
-            "description": "Renders the cell's single control, given the tab index it must carry."
+            "description": "Renders the cell's single control, given the tab index it must carry (`0` when active, `-1` otherwise)."
           },
           {
             "name": "className",
@@ -13814,7 +13814,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the collection, e.g. «فیلترهای فعال»."
+            "description": "Announced name of the collection, e.g. «فیلترهای فعال». REQUIRED — names the toolbar when removable and the `<ul>` when not."
           },
           {
             "name": "children",
@@ -13832,13 +13832,13 @@
             "name": "onRemove",
             "type": "((keys: Set<Key>) => void) | undefined",
             "required": false,
-            "description": "Called with the keys to drop."
+            "description": "Called with the keys to drop. No longer fired on Delete/Backspace — rows are not tab stops."
           },
           {
             "name": "removeLabel",
             "type": "((tagLabel: string) => string) | undefined",
             "required": false,
-            "description": "Builds the announced name of each tag's remove control from that tag's own `textValue`, e.g. ``(tag) => `حذف ${tag}` `` → «حذف تهران»."
+            "description": "Builds the announced name of each tag's remove control from that tag's own `textValue`, e.g. ``(tag) => `حذف ${tag}` `` → «حذف تهران». REQUIRED whenever the group is removable."
           }
         ]
       },
@@ -13855,7 +13855,7 @@
             "name": "textValue",
             "type": "string",
             "required": true,
-            "description": "The tag's text, as a plain string."
+            "description": "The tag's text, as a plain string. REQUIRED — nothing derives it, so it cannot be empty by accident. Also the argument handed to `removeLabel`."
           },
           {
             "name": "children",
@@ -13938,7 +13938,7 @@
             "name": "removeLabel",
             "type": "string | undefined",
             "required": false,
-            "description": "Announced name of the remove control, e.g. «حذف تهران»."
+            "description": "Announced name of the remove control, e.g. «حذف تهران». REQUIRED — name the thing being removed, not the action alone."
           },
           {
             "name": "size",
@@ -14240,7 +14240,7 @@
             "name": "onBeforeInput",
             "type": "FormEventHandler<HTMLInputElement> | undefined",
             "required": false,
-            "description": "Handler that is called when the input value is about to be modified."
+            "description": "Handler that is called when the input value is about to be modified. Not `Pick`ed: React 19's `InputEventHandler` is narrower than the published `FormEventHandler`."
           },
           {
             "name": "onBlur",
@@ -14318,7 +14318,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
+            "description": "The control's position in the sequential tab order — `-1` removes it."
           },
           {
             "name": "textAreaClassName",
@@ -14463,7 +14463,7 @@
             "name": "errorMessage",
             "type": "LumoNode",
             "required": false,
-            "description": "An error to display. Supplying one marks the field invalid, because a field carrying an error message and reporting itself valid is a contradiction the caller should not have to resolve by hand."
+            "description": "An error to display. Supplying one marks the field invalid."
           },
           {
             "name": "form",
@@ -14553,7 +14553,7 @@
             "name": "onBeforeInput",
             "type": "FormEventHandler<HTMLInputElement> | undefined",
             "required": false,
-            "description": "Handler that is called when the input value is about to be modified."
+            "description": "Handler that is called when the input value is about to be modified. Not `Pick`ed: React 19's `InputEventHandler` is narrower than the published `FormEventHandler`."
           },
           {
             "name": "onBlur",
@@ -14631,7 +14631,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "The control's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
+            "description": "The control's position in the sequential tab order — `-1` removes it (was `excludeFromTabOrder`)."
           },
           {
             "name": "translate",
@@ -14704,13 +14704,13 @@
             "name": "granularity",
             "type": "\"hour\" | \"minute\" | \"second\" | undefined",
             "required": false,
-            "description": "How much of the time is editable. `minute` by default — a seconds segment nobody asked for is a fourth tab stop on every time field."
+            "description": "How much of the time is editable. `minute` by default — a seconds segment is a fourth tab stop."
           },
           {
             "name": "hourCycle",
             "type": "12 | 24 | undefined",
             "required": false,
-            "description": "Overrides the locale's own clock. See the header before reaching for it."
+            "description": "Overrides the locale's own clock — a user-visible convention."
           },
           {
             "name": "inputClassName",
@@ -14813,13 +14813,13 @@
             "name": "marker",
             "type": "LumoNode",
             "required": false,
-            "description": "What sits in the dot — usually a small icon."
+            "description": "What sits in the dot — usually a small icon. DECORATIVE: mark it `aria-hidden=\"true\"`."
           },
           {
             "name": "tone",
             "type": "\"accent\" | \"critical\" | \"neutral\" | \"positive\" | null | undefined",
             "required": false,
-            "description": "The rail's colour BELOW this item, and the dot's fill."
+            "description": "The rail's colour BELOW this item, and the dot's fill. The segment belongs to the item above it, so progress reads from per-item classes. Two properties because neutral wants two greys (dot vs hairline)."
           }
         ]
       },
@@ -14864,7 +14864,7 @@
             "name": "children",
             "type": "LumoNode",
             "required": true,
-            "description": "The already-formatted, already-localised time — «۱۹ مرداد ۱۴۰۵»."
+            "description": "The already-formatted, already-localised time — «۱۹ مرداد ۱۴۰۵». A STRING, not a `Date`: the caller holds the locale."
           },
           {
             "name": "className",
@@ -14876,7 +14876,7 @@
             "name": "dateTime",
             "type": "string | undefined",
             "required": false,
-            "description": "The machine-readable stamp for the `datetime` attribute — ISO 8601, and therefore GREGORIAN, whatever calendar the visible text is in."
+            "description": "The machine-readable stamp for the `datetime` attribute — ISO 8601, therefore GREGORIAN, whatever the visible calendar."
           }
         ]
       }
@@ -14889,7 +14889,7 @@
             "name": "closeLabel",
             "type": "string",
             "required": true,
-            "description": "Announced name of the dismiss control, e.g. «بستن»."
+            "description": "Announced name of the dismiss control, e.g. «بستن». REQUIRED: icon-only button, and Base UI supplies no default — the failure is a NAMELESS button."
           },
           {
             "name": "toast",
@@ -14918,13 +14918,13 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the notification landmark, e.g. «اعلان‌ها»."
+            "description": "Announced name of the notification landmark, e.g. «اعلان‌ها». REQUIRED — Base UI's default is English."
           },
           {
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale the region is rendered for."
+            "description": "The locale the region is rendered for. NOW INERT — Base UI writes no `dir` on its portal. Kept required because the public API may not change."
           },
           {
             "name": "queue",
@@ -15020,7 +15020,7 @@
             "name": "selectionMode",
             "type": "\"single\" | \"multiple\" | undefined",
             "required": false,
-            "description": "`\"single\"` keeps at most one item pressed; `\"multiple\"` any number."
+            "description": "`\"single\"` keeps at most one item pressed; `\"multiple\"` any number. Maps onto Base UI's `multiple`; does NOT change the role."
           }
         ]
       },
@@ -15055,7 +15055,7 @@
             "name": "id",
             "type": "Key | undefined",
             "required": false,
-            "description": "The item's key inside a group. Maps to Base UI's `value`."
+            "description": "The item's key inside a group. Maps to Base UI's `value`; it is ALWAYS the key and never reaches the DOM."
           },
           {
             "name": "isDisabled",
@@ -15085,7 +15085,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "NOT for callers, and the reason it has to be declared is a measured defect."
+            "description": "NOT for callers: what an outer composite (`<ToolbarItem>`) injects through `render`."
           }
         ]
       }
@@ -15111,7 +15111,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name. Required: an icon is not a name."
+            "description": "Announced name. Required: an icon is not a name. Names the THING, never changes with the state."
           },
           {
             "name": "aria-controls",
@@ -15201,7 +15201,7 @@
             "name": "id",
             "type": "Key",
             "required": false,
-            "description": "The toggle's collection key, not a DOM id — `toggle-group.tsx` addresses it. A `Key` rather than `FocusableDOMProps`'s `string`, which is why this shape does not extend that interface."
+            "description": "The toggle's collection key, not a DOM id — `toggle-group.tsx` addresses it."
           },
           {
             "name": "inert",
@@ -15285,7 +15285,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "The toggle's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
+            "description": "The toggle's position in the sequential tab order — `-1` removes it."
           },
           {
             "name": "translate",
@@ -15398,7 +15398,7 @@
             "name": "id",
             "type": "Key",
             "required": false,
-            "description": "The toggle's collection key, not a DOM id — `toggle-group.tsx` addresses it. A `Key` rather than `FocusableDOMProps`'s `string`, which is why this shape does not extend that interface."
+            "description": "The toggle's collection key, not a DOM id — `toggle-group.tsx` addresses it."
           },
           {
             "name": "inert",
@@ -15482,7 +15482,7 @@
             "name": "tabIndex",
             "type": "number | undefined",
             "required": false,
-            "description": "The toggle's position in the sequential tab order — `-1` removes it, which is what React Aria's `excludeFromTabOrder` meant and all it meant. That name is gone (15 Aug 2026); the real attribute replaces it."
+            "description": "The toggle's position in the sequential tab order — `-1` removes it."
           },
           {
             "name": "translate",
@@ -15507,7 +15507,7 @@
             "name": "iconOnly",
             "type": "boolean | null | undefined",
             "required": false,
-            "description": "Square, for a toggle whose whole content is one icon. Separate from `size` rather than a fourth value of it, because the two are orthogonal: an icon toggle still picks sm/md/lg for its height."
+            "description": "Square, for a toggle whose whole content is one icon. Orthogonal to `size`."
           },
           {
             "name": "size",
@@ -16054,7 +16054,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "Announced name of the tree, e.g. «پرونده‌های پروژه»."
+            "description": "Announced name of the tree, e.g. «پرونده‌های پروژه». REQUIRED — a treegrid names nothing by itself."
           },
           {
             "name": "aria-describedby",
@@ -16284,31 +16284,31 @@
             "name": "estimateSize",
             "type": "number | ((index: number) => number)",
             "required": true,
-            "description": "A row's size along the main axis in pixels: a constant, or a function of the index. Rows are measured for real once they mount; this is the estimate that makes the scrollbar right before they do."
+            "description": "A row's size along the main axis in pixels: a constant, or a function of the index."
           },
           {
             "name": "initialSize",
             "type": "number",
             "required": true,
-            "description": "The viewport's size along the main axis in pixels, used for the SERVER render and the first frame. REQUIRED — see the header. Match it to the height (or inline size) the container is actually styled to."
+            "description": "The viewport's size along the main axis in pixels, for the SERVER render and first frame. REQUIRED."
           },
           {
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "The list's announced name, e.g. «فهرست سفارش‌ها»."
+            "description": "The list's announced name, e.g. «فهرست سفارش‌ها». REQUIRED — the scroll container is a tab stop."
           },
           {
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The locale. Direction is derived from it — there is deliberately no `dir` and no `isRtl` prop, see the header."
+            "description": "The locale. Direction is derived from it — no `dir` and no `isRtl` prop."
           },
           {
             "name": "asyncStatus",
             "type": "AsyncCollectionStatus | undefined",
             "required": false,
-            "description": "Remote collection status. Active work owns `aria-busy`; ready and error remain operable and are announced by caller-authored status UI."
+            "description": "Remote collection status. Active work owns `aria-busy`."
           },
           {
             "name": "className",
@@ -16332,7 +16332,7 @@
             "name": "getItemKey",
             "type": "((index: number) => string | number) | undefined",
             "required": false,
-            "description": "A stable identity per row. Defaults to the index, which is correct only for a list that never reorders — pass a real key for anything sorted or filtered, exactly as with React's own `key`."
+            "description": "A stable identity per row. Defaults to the index — pass a real key for anything sorted or filtered."
           },
           {
             "name": "itemClassName",

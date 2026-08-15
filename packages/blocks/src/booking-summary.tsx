@@ -24,29 +24,11 @@ import {
  *
  * `"use client"`: `onConfirm` is a callback.
  *
- * ═══ THE DATE RANGE IS THE PART THAT GOES WRONG ═════════════════════════════
- *
- * Under `fa-IR` these dates are JALALI, and `formatDate` from `@lumo-ui/core`
- * is what makes them so — the `-u-ca-persian` extension in `FORMAT_LOCALE`
- * selects the calendar. format.ts states the failure precisely: without it you
- * get a plausible-looking date that is simply the wrong YEAR, and a booking
- * confirmation is the worst possible place for a date that is wrong but
- * readable. There is no fallback path here; `locale` is required and the block
- * formats.
- *
- * The two dates are rendered as separate elements with a `gap`, never joined by
- * a literal `–` or `تا`. A range separator is a translatable word in Persian
- * and a neutral character in the bidi algorithm — the same trap `kbd.tsx`
- * documents, where a neutral glyph between two strong runs reorders and the
- * reader sees the endpoints swapped. `strings.dateRangeJoiner` is the caller's.
- *
- * ── THE MONEY COLUMN USES `justify-between`, NOT A TABLE ───────────────────
- *
- * A `<dl>` of flex rows: the label takes the inline start, the amount the
- * inline end, and both swap under `dir="rtl"` from one class. A two-column
- * table with `text-right` on the second cell is the usual implementation and it
- * pins every amount to the physical right — outside the panel's reading edge in
- * Persian, which looks like a broken alignment rather than a mirroring bug.
+ * `locale` is required and the block formats: `formatDate` selects the Jalali
+ * calendar under `fa-IR`. The two dates are separate elements joined by the
+ * caller's `dateRangeJoiner`, never a literal `–` (a neutral glyph between two
+ * strong bidi runs reorders). Money rows are `justify-between` flex, not a
+ * table with `text-right`, so amounts sit on the inline end in both scripts.
  */
 export interface BookingLine {
   /** Stable key. Not rendered. */
@@ -89,11 +71,7 @@ export interface BookingSummaryProps {
   subtotal?: number | undefined;
   startsAt?: Date | undefined;
   endsAt?: Date | undefined;
-  /**
-   * `Intl.NumberFormat` options for every amount, e.g.
-   * `{style:"currency",currency:"IRR",maximumFractionDigits:0}`. No default —
-   * a currency is a business decision, not a library one.
-   */
+  /** `Intl.NumberFormat` options for every amount, e.g. `{style:"currency",currency:"IRR"}`. No default — a currency is a business decision. */
   currencyFormat?: Intl.NumberFormatOptions | undefined;
   dateFormat?: Intl.DateTimeFormatOptions | undefined;
   onConfirm?: (() => void) | undefined;
@@ -128,9 +106,7 @@ export function BookingSummary({
 
       <CardBody className="flex flex-col gap-4">
         {startsAt !== undefined || endsAt !== undefined ? (
-          // The compact range. `flex-wrap` because two Jalali dates plus a
-          // joiner overflow a 320px panel in Persian more readily than in
-          // English, and a horizontal scrollbar on a checkout panel is fatal.
+          // `flex-wrap`: two Jalali dates plus a joiner overflow a 320px panel; a scrollbar here is fatal.
           <div className="flex flex-wrap items-center gap-2 text-sm text-fg">
             {startsAt !== undefined ? (
               <span className="flex flex-col">
@@ -162,11 +138,8 @@ export function BookingSummary({
         ) : null}
 
         {/*
-         * `<dl>`, because these ARE name/value pairs and a screen reader
-         * navigates them as such. `<dt>`/`<dd>` are written directly rather
-         * than through a Lumo primitive: the library ships no description-list
-         * component, and a semantic element is markup, not a primitive to
-         * reimplement.
+         * `<dl>`, because these ARE name/value pairs; written directly since
+         * the library ships no description-list primitive.
          */}
         <dl className="flex flex-col gap-2 text-sm">
           {lines.map((line) => (
@@ -212,9 +185,8 @@ export function BookingSummary({
       </CardBody>
 
       {/*
-       * `CardFooter` is `justify-end`, which is the INLINE end — so a
-       * full-width button needs `w-full` on the button and a `flex-col` on the
-       * footer rather than any positional override.
+       * `CardFooter` is `justify-end` (INLINE end) — so full-width needs
+       * `flex-col` + `w-full`, not a positional override.
        */}
       <CardFooter className="flex-col items-stretch gap-2">
         <Button size="lg" isDisabled={isPending} {...optional("onPress", onConfirm)}>

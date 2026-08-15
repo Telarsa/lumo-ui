@@ -23,28 +23,16 @@ import { ExampleCard } from "@/components/example-card";
 import { CompositionTree, PartsTable, PropsTable } from "@/components/composition-tree";
 
 export async function generateStaticParams() {
-  // The CATALOG, not (await allCatalog()): round 3 shipped eleven components whose only
-  // registration was an examples file, and this line — then reading demos.tsx
-  // alone — quietly built no page for any of them. See lib/catalog.ts.
+  // The CATALOG, not demos.tsx alone: components registered only by an examples
+  // file would otherwise get no page. See lib/catalog.ts.
   const entries = await allCatalog();
   return LOCALES.flatMap((lang) => entries.map((d) => ({ lang: segmentFor(lang), slug: d.id })));
 }
 
 /**
- * The page's own copy, keyed by locale.
- *
- * NOT `lang === "fa-IR" ? persian : english`. That ternary compiles with a third
- * locale in the union and hands it the ENGLISH branch — silently, and invisibly
- * to the HTML gate, because both branches are Latin script. A
- * `Record<Locale, …>` turns the same addition into a compile error listing every
- * string still to translate. This page carried thirty-three of them, eleven
- * inside `aria-label`s that only a screen-reader user would ever hear. See the
- * rule in CONTRIBUTING's "Adding a locale".
- *
- * `rail` is shared with the section headings deliberately: four of the `<h2>`s
- * repeated their rail label as a second literal, free to drift from it. One
- * string each now, which is the same argument `sections()` below already makes
- * about order.
+ * The page's own copy, keyed by locale — a `Record<Locale, …>`, never a binary
+ * ternary, so a third locale is a compile error listing every string still to
+ * translate. `rail` is shared with the section headings so they cannot drift.
  */
 interface PageCopy {
   rail: {
@@ -55,11 +43,7 @@ interface PageCopy {
     installation: string;
     directions: string;
   };
-  /**
-   * Names the narrow-viewport component list. REQUIRED copy, not decoration:
-   * below 1024px this `<summary>` is the only navigation to the other 93
-   * components, so an unnamed one is an unreachable library.
-   */
+  /** Names the narrow-viewport component list. REQUIRED: below 1024px this `<summary>` is the only navigation to the other components. */
   browseComponents: string;
   copyPage: string;
   copied: string;
@@ -183,44 +167,24 @@ const COPY = {
 
 /**
  * Section headings, in both locales, so the rail and the page cannot disagree.
- *
- * There is no "source" entry: the source moved into the Preview | Code tab
- * pair inside `#preview`, so a rail link to a `#source` fragment would point
- * at nothing — exactly the drift this function exists to prevent.
- *
- * The list is DYNAMIC over the component's loaded examples file (see
- * `lib/examples-loader.ts`): each example contributes an `example-<id>`
- * section between Preview and Evidence, and the composition / parts-reference
- * sections appear only when the file declares them. The page body below maps
- * over the SAME loaded object in the same order, which is what keeps the rail
- * and the page structurally unable to disagree — the invariant this function
- * has always existed to hold.
+ * The list is DYNAMIC over the loaded examples file: each example contributes an
+ * `example-<id>` section, and the page body maps over the SAME loaded object in
+ * the same order — the invariant this function exists to hold. There is no
+ * "source" entry: the source lives in the Preview | Code tab pair.
  */
 function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
   const c = COPY[lang];
-  // Annotated, not inferred: COPY is `as const`, so an inferred element type
-  // would narrow to the first entry's literal and reject every later push.
+  // Annotated, not inferred: COPY is `as const`, so inference would narrow to the first literal.
   const list: Array<{ id: string; label: string }> = [
     { id: "preview", label: c.rail.preview },
     /*
-     * ── INSTALLATION IS SECOND, AND WAS SECOND-TO-LAST ──────────────────────
-     *
-     * Both ui.shadcn.com and reui.io put it directly under the preview, and
-     * they are right for a reason this library has more of than either: these
-     * components are COPIED, not imported. The page's job is not to admire the
-     * component — it is to get the file into somebody's project. Everything
-     * below (examples, composition, the parts table, the accessibility
-     * evidence, the two-direction render) is what you read AFTER you have it.
-     *
-     * It sat between "evidence" and "directions", which is where a section
-     * lands when it is added late rather than placed.
+     * Installation is SECOND, directly under the preview (as shadcn/reui do):
+     * these components are COPIED, and everything below is what you read after.
      */
     { id: "installation", label: c.rail.installation },
   ];
   if (loaded !== undefined) {
-    // Every example has a card now, including the first: its card is
-    // source-only (the preview above IS its render), so the anchor exists and
-    // a rail entry scrolls to something. See the card loop in the page body.
+    // Every example has a card, including the first (source-only), so each rail entry scrolls to something.
     for (const example of loaded.examples) {
       list.push({ id: `example-${example.id}`, label: example.title[lang] });
     }
@@ -239,16 +203,10 @@ function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
 }
 
 /**
- * The header's previous/next pager, over `(await allCatalog())`'s alphabetical order.
- *
- * The glyphs are `‹`/`›` — a Unicode `Bidi_Mirrored` pair, the exact pattern
- * `packages/ui/src/pagination.tsx`'s header documents: under `dir="rtl"` the
- * text engine redraws each as the other AND the flex row reverses, so both the
- * arrowhead and the position flip from normal flow alone. "Previous" is always
- * toward the reading start. The glyphs are `aria-hidden`; the per-locale
- * `aria-label` (which carries the neighbour's own title) is the name.
- *
- * At either end the missing control is simply not rendered.
+ * The header's previous/next pager, over the catalog's alphabetical order.
+ * The glyphs are `‹`/`›`, a `Bidi_Mirrored` pair: under `dir="rtl"` both the
+ * arrowhead and the position flip from normal flow alone (see pagination.tsx).
+ * They are `aria-hidden`; the per-locale `aria-label` is the name.
  */
 function Pager({
   prev,
@@ -285,25 +243,18 @@ function Pager({
 }
 
 /*
- * ── registry.json, READ AT BUILD TIME, NEVER HARDCODED ──────────────────────
- *
- * The Installation section (Command/Manual tabs, dependencies, the source to
- * copy) is entirely derived from the manifest `scripts/build-registry.mjs`
- * generates from the components that actually exist — the same manifest
- * `pnpm run gate:registry` checks is still exactly reproducible from source.
- * Reading it here rather than re-deriving it a second way keeps this page and
- * the registry unable to disagree.
+ * registry.json, READ AT BUILD TIME, NEVER HARDCODED: the Installation section
+ * is derived from the manifest `scripts/build-registry.mjs` generates, so this
+ * page and the registry cannot disagree.
  */
 const REPO_ROOT = join(process.cwd(), "..", "..");
 const UI_SOURCE_ROOT = join(REPO_ROOT, "packages", "ui", "src");
 const BLOCKS_SOURCE_ROOT = join(REPO_ROOT, "packages", "blocks", "src");
 
 /**
- * Registry files are generated from exactly these two flat source folders.
- * Keeping each dynamic read rooted there prevents Turbopack from treating a
- * registry path as a pattern over the whole repository (11,000+ files in the
- * warning that exposed this). The equality checks also fail closed if a future
- * registry entry introduces a nested or out-of-tree path.
+ * Registry files come from exactly these two flat source folders. Rooting each
+ * dynamic read there stops Turbopack treating a registry path as a pattern over
+ * the whole repository, and fails closed on a nested or out-of-tree path.
  */
 function readRegistrySource(path: string): string {
   const file = basename(path);
@@ -347,16 +298,9 @@ function mainFileOf(item: RegistryItem): RegistryFile | undefined {
 
 /**
  * Matches a component page's slug to the registry item that actually installs
- * it. Most match by NAME. `icon-button` does not: `IconButton` ships from
- * `button.tsx` alongside `Button`, and `scripts/build-registry.mjs` derives
- * one registry item per FILE, not per exported component, so it is registered
- * once, as "button".
- *
- * Rather than hardcoding that one exception, this falls back to a byte
- * comparison against the demo's own displayed source — which `demos.tsx`
- * also reads straight from `packages/ui/src` — so a future split is picked up
- * automatically instead of silently pointing an install command at the wrong
- * package.
+ * it. Most match by NAME; `icon-button` ships from `button.tsx` (one item per
+ * FILE), so a byte comparison against the demo's displayed source is the
+ * fallback rather than a hardcoded exception.
  */
 function resolveRegistryItem(
   registry: RegistryData,
@@ -365,13 +309,9 @@ function resolveRegistryItem(
 ): RegistryItem | undefined {
   const uiItems = registry.items.filter((i) => i.type === "registry:ui");
   /*
-   * Byte-comparison FIRST, name second. The name-first order shipped a real
-   * wrong install: the "skeleton" demo page shows skeleton-presets.tsx, but
-   * name-matching short-circuited to the bare `skeleton` item, so the page
-   * told the reader to install the one file its own demo was not showing.
-   * What the page DISPLAYS is the ground truth of what it should install —
-   * the name is only the fallback for pages whose displayed source is not a
-   * registry main file at all.
+   * Byte-comparison FIRST, name second: name-first once told the skeleton page
+   * to install a file its own demo was not showing. What the page DISPLAYS is
+   * the ground truth of what it should install.
    */
   const byContent = uiItems.find((i) => {
     const main = mainFileOf(i);
@@ -401,11 +341,8 @@ export default async function ComponentPage({
   const registry = loadRegistry();
   const item = resolveRegistryItem(registry, slug, demo.source);
   if (!item) {
-    // Every shipped demo has a real registry entry — an ungraded install
-    // command is the same class of problem as an ungraded page (see
-    // README.md's "An ungraded page is an unprotected page"), so this refuses
-    // to render a page that cannot show a real one rather than falling back
-    // to a guess.
+    // An ungraded install command is as bad as an ungraded page: refuse to
+    // render rather than fall back to a guess.
     throw new Error(
       `No registry.json item resolves for component page "${slug}". Every demo ` +
         `must correspond to a real registry entry.`,
@@ -418,39 +355,13 @@ export default async function ComponentPage({
     (d) => d !== item.name && uiNames.has(d),
   );
   /*
-   * ── EVERY LISTING ON THE PAGE IS BUILT HERE, AND THAT IS A BYTE DECISION ────
-   *
-   * Highlighting has always happened in this server pass, because shiki plus
-   * two grammars must not reach a browser bundle. What is new is that the
-   * PANELS are built here too, as `CodePanel` elements, instead of the markup
-   * being handed to `"use client"` modules as `html` and `code` strings.
-   *
-   * Measured at 3f46039 on the largest page, `fa/components/event-calendar`
-   * (2,217,379 chars): the RSC flight payload was 1,678,774 of them, 76%, and
-   * React outlines every string over 1024 chars into its own row. Fifteen such
-   * rows held 1,102,417 chars — nine shiki (885,280) and six raw source
-   * (217,137) — against 364,509 chars of `<pre>` actually in the DOM. The raw
-   * source was there only to feed copy buttons, and it is gone entirely: the
-   * buttons read the rendered listing (see `code-block.tsx`'s `CopyCode`).
-   *
-   * `sourcePanel` is ONE ELEMENT, placed twice. The Preview → Code tab and
-   * Installation → Manual show the same file whenever `resolveRegistryItem`
-   * matched by content, which is the normal case — and as two `html` props they
-   * shipped as two byte-identical 336,371-char rows. React's flight writer
-   * deduplicates objects by reference (`writtenObjects`) and never strings
-   * (`serializeLargeTextString` emits a fresh row per call), so the saving is
-   * available to an element and not to a string, however carefully the string
-   * is shared. `isPageSource` marks it for the header's "Copy page" — and yes,
-   * the marker rides along to the second placement, so a reader who opens the
-   * Manual tab has two elements carrying it. `document.querySelector` takes the
-   * first, which is the force-mounted Code tab; and the reuse only happens when
-   * the two listings are the SAME BYTES, so the copy is identical either way.
-   * The alternative — a third highlight of a file already highlighted twice —
-   * would cost 336,371 characters to remove a distinction nobody can observe.
-   *
-   * Sequential awaits, deliberately: the highlighter is one shared instance and
-   * the export builds ~100 of these pages — a `Promise.all` per page just
-   * interleaves the same single-threaded work.
+   * Every listing is highlighted AND assembled into `CodePanel` elements in this
+   * server pass — never handed to client modules as `html`/`code` strings, which
+   * once made the RSC flight payload 76% of the largest page. `sourcePanel` is
+   * ONE ELEMENT placed twice (Code tab and Manual tab): React's flight writer
+   * deduplicates elements by reference but never strings. `isPageSource` marks
+   * it for "Copy page"; `querySelector` takes the first, the force-mounted Code
+   * tab. Sequential awaits: one shared highlighter, ~100 pages.
    */
   const ic = INSTALL_COPY[lang];
   const sourceHtml = await highlight(demo.source, "tsx");
@@ -479,10 +390,8 @@ export default async function ComponentPage({
     installFiles.push({ target: f.target, panel });
   }
   /*
-   * A full `Record<PM, …>`, built by iterating `PMS` — the props type asks for
-   * every manager because a missing panel is a tab that selects into an empty
-   * region, which nobody notices until they click it. `Object.fromEntries`
-   * would type as a `Partial`, so this accumulates into an explicit record.
+   * A full `Record<PM, …>`: a missing panel is a tab that selects into an empty
+   * region. `Object.fromEntries` would type as a `Partial`.
    */
   const commandPanels = {} as Record<PM, LumoNode>;
   for (const pm of PMS) {
@@ -505,12 +414,8 @@ export default async function ComponentPage({
     ) : undefined;
 
   /*
-   * The component's worked examples, when an examples file exists — discovery
-   * is by existence (see lib/examples-loader.ts), and demos.tsx remains the
-   * whole page for components without one. The loader has already sliced and
-   * validated every example's source; highlighting happens here in the same
-   * sequential server pass as everything else above, for the same
-   * single-highlighter reason.
+   * The worked examples, when an examples file exists (discovery by existence);
+   * highlighted here in the same sequential server pass.
    */
   const loaded = await loadExamplesFor(slug);
   const exampleCards: Array<{
@@ -521,21 +426,9 @@ export default async function ComponentPage({
   }> = [];
   if (loaded !== undefined) {
     /*
-     * ── THE FIRST EXAMPLE IS THE PREVIEW, SO ITS CARD IS SOURCE-ONLY ─────────
-     *
-     * `catalog.ts` builds a component's demo as `render: first.render` — the
-     * preview at the top of this page IS the first example. Rendering it
-     * again in a card DUPLICATED EVERY ID IN IT: `unique-ids` found
-     * `spy-usage` twice on the scrollspy page and the table page's row ids
-     * five times over, and a duplicated id breaks `<label for>` and
-     * `aria-labelledby`, which resolve by document order.
-     *
-     * The previous answer was `slice(1)` — no card at all — which quietly
-     * removed the first example's USAGE SOURCE from the page: the Code tab
-     * above holds the component's implementation, not the call site. On the
-     * eighteen single-example components that meant a page with no usage
-     * listing anywhere. So the first example keeps its titled, anchored card
-     * and only the stage is omitted; both invariants hold at once.
+     * The first example IS the preview, so its card is source-only: rendering it
+     * again DUPLICATED EVERY ID IN IT (`unique-ids`), and dropping the card
+     * removed its usage source from the page. Titled, anchored card; no stage.
      */
     for (const [index, example] of loaded.examples.entries()) {
       exampleCards.push({
@@ -550,15 +443,9 @@ export default async function ComponentPage({
 
 
   /*
-   * The header toolbar's data. The pager walks `(await allCatalog())` — the SAME
-   * alphabetical order the sidebar shows — and "Copy page" still yields the
-   * install command plus the component's source, the two things a reader would
-   * otherwise copy one at a time. It is no longer CONCATENATED here: that put a
-   * third copy of the source (58,715 chars on event-calendar) into the flight
-   * payload beside the two the listings already carried. The button now carries
-   * the ~50-character command and appends the source's own `<pre>` at press
-   * time, from the force-mounted Code tab that is unconditionally in the served
-   * bytes. Same string, one copy of it.
+   * The header toolbar's data. "Copy page" carries only the ~50-char command
+   * and appends the source's own `<pre>` at press time (from the force-mounted
+   * Code tab) rather than concatenating a third copy into the flight payload.
    */
   const demos = (await allCatalog());
   const index = demos.findIndex((d) => d.id === slug);
@@ -580,25 +467,10 @@ export default async function ComponentPage({
         </aside>
 
         {/*
-         * ── THE NARROW-VIEWPORT PATH, WHICH DID NOT EXIST ────────────────────
-         *
-         * The sidebar above is `hidden lg:block` with nothing in its place, so
-         * below 1024px the entire 94-component list was reachable only through
-         * search or by typing a URL. The prose docs pages have had a mobile
-         * strip since their own review found the same hole
-         * (`docs/docs-shell.tsx`); the component pages never got one.
-         *
-         * NOT that strip, though. Six doc pages fit in a horizontal scroll;
-         * ninety-four do not — it would be a 94-chip rail nobody can find
-         * anything in, which is a worse answer than none because it looks like
-         * navigation. So it is a native `<details>` holding the SAME
-         * `DocsSidebar`, tier-grouped and counted exactly as on desktop.
-         *
-         * `<details>` and not a client disclosure on purpose: it needs no
-         * JavaScript, it is open-able before hydration, and the summary is a
-         * real button to assistive tech without a single ARIA attribute. The
-         * one behaviour it does not get is closing on navigation — and there
-         * is nothing to close, because following a link leaves the page.
+         * The narrow-viewport path: the sidebar is `hidden lg:block`, so below
+         * 1024px this native `<details>` holds the SAME `DocsSidebar`. Not the
+         * docs-shell chip strip (94 chips is not navigation), and not a client
+         * disclosure — `<details>` needs no JavaScript and no ARIA.
          */}
         <details className="group -mx-6 border-be border-border px-6 pbe-4 lg:hidden">
           <summary
@@ -606,12 +478,8 @@ export default async function ComponentPage({
           >
             {c.browseComponents}
             {/*
-             * `›` is U+203A, a Bidi_Mirrored character — the text engine draws
-             * it as `‹` under RTL, so the affordance points the correct way in
-             * both directions with no `rtl:` variant. The same technique the
-             * pager and the submenu arrow use. `aria-hidden` because the
-             * summary's own text already names the control, and `<details>`
-             * announces its own expanded state.
+             * `›` (U+203A) is Bidi_Mirrored, so it points the correct way under RTL
+             * with no `rtl:` variant. `aria-hidden`: the summary text names the control.
              */}
             <span
               aria-hidden="true"
@@ -663,12 +531,8 @@ export default async function ComponentPage({
 
           <section id="preview" className="mt-8 scroll-mt-24">
             {/*
-             * Preview | Code, the shadcn anatomy: the live demo and its
-             * highlighted source are the same exhibit seen two ways, so they
-             * share one tab pair rather than sitting a page apart. The preview
-             * tab is FIRST — it is the default selection, so the prerendered
-             * HTML contains the demo markup, which `[data-lumo-demo-root]`
-             * (inside PreviewToolbar) and the post-build evidence injector
+             * Preview | Code: the preview tab is FIRST so the prerendered HTML contains
+             * the demo markup that `[data-lumo-demo-root]` and the evidence injector
              * depend on being in the served bytes.
              */}
             <Tabs>
@@ -679,27 +543,16 @@ export default async function ComponentPage({
               <TabPanel id="preview" className="mt-4">
                 <PreviewToolbar lang={lang} slug={slug}>
                   {/*
-                   * The stage centres its cell vertically, but the cell itself
-                   * is `w-full max-w-2xl` — so an intrinsic-width exhibit (a
-                   * lone switch, a button pair) used to hug the start edge of
-                   * an otherwise empty stage, which is what the design review
-                   * screenshotted. `items-center` on a column flex centres an
-                   * intrinsic exhibit on the inline axis while a `w-full` demo
-                   * still spans the cell — centring without re-introducing a
-                   * width constraint the demo did not ask for.
+                   * `items-center` on a column flex centres an intrinsic-width exhibit on the
+                   * inline axis while a `w-full` demo still spans the cell.
                    */}
                   <div className="flex w-full flex-col items-center">{demo.render(lang)}</div>
                 </PreviewToolbar>
               </TabPanel>
               {/*
-               * `shouldForceMount`: without it the Tabs engine mounts ONLY the
-               * selected panel, and the review of the built bytes caught the
-               * consequence — the component source vanished from the served
-               * HTML entirely, on a site whose first claim is "in the served
-               * bytes, before any JavaScript runs". Force-mounted, the panel
-               * is in the DOM (inert while unselected) and a no-JS reader
-               * still gets the source, exactly as the old #source section
-               * served it.
+               * `shouldForceMount`: otherwise only the selected panel mounts and the
+               * component source vanishes from the served HTML — a no-JS reader must
+               * still get it.
                */}
               <TabPanel id="code" shouldForceMount className="mt-4 data-inert:hidden">
                 {sourcePanel}
@@ -723,11 +576,9 @@ export default async function ComponentPage({
           </section>
 
           {/*
-           * The worked examples, between Preview and Evidence — each one a
-           * titled, anchored section the rail lists, in the same order, from
-           * the same loaded object (see `sections()` above). The cards carry
-           * no [data-lumo-demo-root]: that marker stays unique to the preview
-           * stage the evidence injector reads.
+           * The worked examples, in the same order as `sections()`. The cards carry no
+           * [data-lumo-demo-root]: that marker stays unique to the preview stage the
+           * evidence injector reads.
            */}
           {exampleCards.map(({ example, html, withStage }) => (
             <ExampleCard
@@ -821,10 +672,8 @@ export default async function ComponentPage({
               {c.directionsIntro}
             </p>
             {/*
-             * One frame by default — the page's own locale — with the mirrored
-             * document a disclosure away. See `DirectionCompare`'s header: the
-             * hidden frame stays in the served bytes, and `loading="lazy"`
-             * keeps it unfetched until revealed.
+             * One frame by default, the mirrored document a disclosure away; the hidden
+             * frame stays in the served bytes with `loading="lazy"`.
              */}
             <div className="mt-3">
               <DirectionCompare

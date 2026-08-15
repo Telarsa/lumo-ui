@@ -86,24 +86,15 @@ function isOnlyUndefined(type) {
 }
 
 /*
- * Undocumented props, split by WHO owes the documentation.
- *
- * The old single filler — "Inherited DOM or shared Lumo prop." — was applied
- * to 1,191 of 2,520 props, and for Lumo-authored ones it was simply false:
- * `MultiSelectProps.maxValues` is not inherited from anything. An inherited
- * external prop legitimately points at the platform's documentation; a
- * Lumo-authored prop with no docblock is documentation DEBT, named as such
- * and counted, so the number can only be ratcheted down (see the check
- * against `api-docs.floor.json` below).
+ * Undocumented props, split by WHO owes the documentation: an inherited external
+ * prop points at the platform's docs; a Lumo-authored prop with no docblock is
+ * documentation DEBT, counted and ratcheted against `api-docs.floor.json`.
  */
 let undocumentedLumoProps = 0;
 /*
- * House-vocabulary names whose meaning is a LIBRARY RULE, not a per-component
- * decision — so one sentence is accurate at every declaration site. Only
- * names with genuinely uniform semantics belong here: `children` is absent
- * because several components take render-prop children, and `value`/`size`/
- * `variant` are absent because they mean different things per component.
- * A prop's own docblock always wins; this is the fallback.
+ * House-vocabulary names whose meaning is a LIBRARY RULE, so one sentence is
+ * accurate at every declaration site (`children`, `value`, `size`, `variant`
+ * are absent: they mean different things per component). A prop's own docblock always wins.
  */
 const HOUSE_VOCABULARY = new Map([
   ["className", "Additional classes merged onto the component's root element."],
@@ -132,23 +123,15 @@ const HOUSE_VOCABULARY = new Map([
 ]);
 /** @param {ts.Symbol} symbol @param {string} typeText */
 function descriptionOf(symbol, typeText) {
-  /*
-   * The public description is the docblock's FIRST PARAGRAPH — the summary,
-   * by JSDoc convention. Later paragraphs are engineering notes for the next
-   * maintainer ("Redeclared from the variants because the checker loses…",
-   * the upstream-issue reasoning behind `dismissLabel`) and the reevaluation
-   * found them rendered verbatim into the docs table. Accurate, but not
-   * documentation. Line breaks inside the paragraph collapse to spaces.
-   */
+  // The public description is the docblock's FIRST PARAGRAPH; later paragraphs
+  // are engineering notes. Line breaks inside the paragraph collapse to spaces.
   const full = ts.displayPartsToString(symbol.getDocumentationComment(checker)).trim();
   const own = full.split(/\n\s*\n/)[0]?.replace(/\s*\n\s*/g, " ").trim() ?? "";
   if (own.length > 0) return own;
   if (isLumoAuthored(symbol)) {
     const shared = HOUSE_VOCABULARY.get(symbol.name);
     if (shared !== undefined) return shared;
-    // Plain `children: LumoNode` is house vocabulary too, but ONLY at that
-    // exact type: render-prop children ((item) => LumoNode) and constrained
-    // unions mean something component-specific and stay counted as debt.
+    // Plain `children: LumoNode` is house vocabulary too, but ONLY at that exact type.
     if (symbol.name === "children" && /^LumoNode( \| undefined)?$/.test(typeText)) {
       return "The content this component renders.";
     }
@@ -207,13 +190,8 @@ for (const [moduleName, propsNames] of [...propsByModule].sort(([a], [b]) => a.l
 
 const generated = `${JSON.stringify({ version: 1, modules }, null, 2)}\n`;
 
-/*
- * The documentation-debt ratchet. `api-docs.floor.json` holds the highest
- * tolerated count of Lumo-authored props without a docblock. Adding an
- * undocumented prop fails the build; documenting props lets the floor be
- * lowered, and lowering it is a reviewed line in the diff — the same
- * one-way arrangement the digit floors use.
- */
+// The documentation-debt ratchet: adding an undocumented prop fails the build;
+// lowering the floor is a reviewed line in the diff.
 const FLOOR_PATH = join(ROOT, "api-docs.floor.json");
 const floor = JSON.parse(await readFile(FLOOR_PATH, "utf8"));
 if (undocumentedLumoProps > floor.maxUndocumentedLumoProps) {

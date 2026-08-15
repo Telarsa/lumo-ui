@@ -1,13 +1,9 @@
 import { LumoHtml } from "@lumo-ui/core";
 
 /**
- * The bare root.
- *
- * Under `output: "export"` there is no server to redirect, so this is a real
- * document — which means it must declare a language like any other. It is
- * Persian, because Persian is the primary audience rather than the translation,
- * and it links onward instead of relying on a meta-refresh that a crawler may
- * not follow.
+ * The bare root. Under `output: "export"` nothing can redirect, so this is a real
+ * document: Persian (the primary audience), with a link onward rather than relying
+ * on a meta-refresh a crawler may not follow.
  */
 export default function Root() {
   return (

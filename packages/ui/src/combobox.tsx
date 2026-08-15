@@ -10,59 +10,13 @@ import type { AsyncCollectionPresentation } from "./async-collection.ts";
 import { Button } from "./button.tsx";
 
 /**
- * EXPERIMENT — this file is the React Aria ComboBox rebuilt on Base UI 1.7.0.
- * The React Aria original is `experiments/baseline-rac/combobox.tsx`; the public
- * API below is unchanged, and `packages/ui/src/overlays.test.tsx` runs against
- * it UNEDITED. Every divergence is recorded, with evidence, in
- * `experiments/measurements/rebuild-collections.json`.
- *
- * A text input that filters a list of options.
- *
- *     <ComboBox
- *       label="شهر"
- *       showSuggestionsLabel="نمایش پیشنهادها"
- *       suggestionsLabel="پیشنهادها"
- *       items={cities}
- *     >
- *       {(city) => <ComboBoxItem id={city.id}>{city.name}</ComboBoxItem>}
- *     </ComboBox>
- *
- * ── THE TWO REQUIRED STRINGS SURVIVE, AND THE REASON INVERTS ────────────────
- *
- * Under React Aria these props existed to overwrite English. RAC's `en-US`
- * bundle carried, under `@react-aria/combobox`:
- *
- *     buttonLabel:   "Show suggestions"     → aria-label on the trigger <Button>
- *     listboxLabel:  "Suggestions"          → aria-label on the <ListBox>
- *
- * and `useComboBox` wrote both unconditionally, in a language RAC has no
- * Persian bundle for.
- *
- * Base UI has no string bundle and writes neither. Grepped across
- * `@base-ui/react/{select,menu,combobox}`, the entire English surface of the
- * three components is ONE literal — `aria-label="Dismiss"` in
- * `combobox/utils/ComboboxInternalDismissButton.mjs`, an `@internal` component
- * constructed with no props at all, so no prop reaches it. It is rendered only
- * while the popup is open and focus management is modal, which is why the
- * server-rendered assertions below stay clean and the open-state count does
- * not. Recorded as `combobox.dismiss-label` in the measurements file.
- *
- * What replaces the English is NOTHING, and nothing is worse. `Combobox.Trigger`
- * renders a `<button>` whose only content is an icon: with no `aria-label` it is
- * an UNNAMED control, the single most common defect this library exists to
- * prevent, and unlike "Show suggestions" it leaves no Latin word for
- * `@lumo-ui/gate`'s `no-latin-aria` rule or a reviewer to notice. So both props
- * stay REQUIRED, and the argument for requiring them is stronger than it was.
- *
- * ── WHY THIS COMPONENT IS STILL NOT SPLIT INTO PARTS ────────────────────────
- *
- * Everything else in this batch is composable primitives. The ComboBox is one
- * component because the two named elements live deep inside it (the trigger
- * `<button>` and the list), and a split API is an API where you can render a
- * ComboBox without them. Required props on the root are the only shape where
- * forgetting is impossible. Base UI raises the count of internal parts from
- * three to seven — Root, Label, Input, Trigger, Portal, Positioner, Popup, List
- * — which strengthens the argument rather than weakening it.
+ * A text input that filters a list of options, on Base UI's Combobox. Base UI
+ * names neither the trigger nor the list, so `showSuggestionsLabel` and
+ * `suggestionsLabel` stay REQUIRED (an unnamed control is worse than an
+ * English one), and its one English literal — the internal dismiss sentinel's
+ * `aria-label="Dismiss"`, mui/base-ui#5263 — is relabelled live from
+ * `dismissLabel`. One component rather than parts, so the named elements
+ * cannot be omitted. Divergences: `experiments/measurements/rebuild-collections.json`.
  */
 
 export const comboBoxVariants = cva("group flex w-full flex-col gap-1.5");
@@ -72,31 +26,23 @@ export const comboBoxLabelVariants = cva("text-sm font-medium text-fg");
 export const comboBoxGroupVariants = cva(
   "flex h-control-md w-full items-center rounded-md border border-border-control " +
     "bg-surface text-sm text-fg " +
-    // React Aria wrote `data-focus-within` on its `<Group>`; Base UI writes no
-    // such attribute on any part, so this is CSS's own `:focus-within`. Same
-    // behaviour, one less thing rented.
     "focus-within:border-border-strong " +
     "data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 
 export const comboBoxInputVariants = cva(
-  // `ps-3` is the reading edge and `pe-1` is the button edge; both mirror.
   "h-full min-w-0 flex-1 bg-transparent ps-3 pe-1 text-fg outline-none " +
     "placeholder:text-fg-subtle",
 );
 
 export const comboBoxButtonVariants = cva(
-  // `hover:` replaces React Aria's `data-hovered:` — Base UI emits no hover
-  // attribute on any part of any of the three components rebuilt here.
   "me-1 flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-sm " +
     "text-fg-muted outline-none hover:bg-surface-hover " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
 );
 
 export const comboBoxPopoverVariants = cva(
-  // `--anchor-width` is Base UI's name for the measured anchor width; React
-  // Aria wrote `--trigger-width`. Engine-owned variable, so this is a forced
-  // rename rather than a restyle.
+  // `--anchor-width` is Base UI's engine-owned name for the measured anchor width.
   "w-[var(--anchor-width)] overflow-auto p-0",
 );
 
@@ -107,13 +53,7 @@ export const comboBoxListBoxVariants = cva(
 export const comboBoxItemVariants = cva(
   "flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 " +
     "text-sm text-fg outline-none " +
-    // React Aria's `data-focused` is Base UI's `data-highlighted`.
     "data-highlighted:bg-surface-hover " +
-    // The press. `data-highlighted` is the CURSOR — Base UI moves it under the
-    // pointer and under the arrow keys alike — so it is already painted before
-    // the row is touched and says nothing about the touch. On a phone there is
-    // no cursor to have arrived first and the commit closes the whole popup,
-    // which can take a frame on a long list.
     "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
@@ -131,15 +71,8 @@ export interface ComboBoxProps<T extends object> {
    */
   suggestionsLabel: string;
   /**
-   * Announced name of the engine's hidden dismiss control. REQUIRED.
-   *
-   * `ComboboxInternalDismissButton` hardcodes `aria-label="Dismiss"` in every
-   * language, discards its props at the signature, and is unreachable from any
-   * export subpath (`mui/base-ui#5263`; measured in `autocomplete.tsx`, which
-   * escapes it via the `inline` form this popup composition cannot use). The
-   * string is therefore applied to the live element after the popup opens —
-   * see `relabelEngineDismiss` — and this prop is what makes it the caller's
-   * word rather than the engine's English.
+   * Announced name of the engine's hidden dismiss control. REQUIRED — Base UI
+   * hardcodes "Dismiss" and no prop reaches it, so it is relabelled live (`relabelEngineDismiss`).
    */
   dismissLabel: string;
   /** Visible field label. Omit only if the field is named some other way. */
@@ -175,22 +108,12 @@ export interface ComboBoxProps<T extends object> {
 }
 
 /**
- * Rewrites the engine-owned announced strings a caller cannot reach by prop.
- *
- * Scope is this instance: the field box itself, plus — while open — the
- * positioner that holds the listbox the instance's combobox input points at
- * via `aria-controls` (the popup is portalled, so it is NOT inside the box).
- * Two rewrites: the internal dismiss sentinel's hardcoded English
- * `aria-label="Dismiss"` becomes the caller's `dismissLabel`, and the
- * engine's unlabeled hidden serialization input leaves the accessibility
- * tree, where it announced as a nameless text field. Duplicated in
- * `multi-select.tsx` rather than shared: an import between the two would put
- * this whole file into the other's registry payload for fifteen lines.
- * The popup-interiors gate tier is what keeps both copies honest.
+ * Rewrites the engine-owned announced strings a caller cannot reach by prop:
+ * the portalled dismiss sentinel's "Dismiss" becomes `dismissLabel`, and the
+ * unlabeled hidden serialization input leaves the accessibility tree.
+ * Duplicated in `multi-select.tsx` rather than shared (registry payload).
  */
-/* The engine's exact hardcoded literal, held as a constant to be HUNTED —
- * not a default this file ships. (Also keeps the no-English-defaults
- * coverage sweep honest: the selector never spells `aria-label="…"`.) */
+/* The engine's exact literal, held as a constant to be HUNTED — not a default this file ships. */
 const ENGINE_ENGLISH_DISMISS = "Dismiss";
 const ENGINE_DISMISS_MARKER = "data-lumo-engine-dismiss";
 
@@ -246,58 +169,19 @@ export function ComboBox<T extends object>({
         : null;
   const stateAction =
     asyncState?.status === "ready" ? asyncState.loadMore : asyncState?.action;
-  // The input's id, chosen here rather than left to Base UI, so the visible
-  // label can point at it with a native `htmlFor` — see the comment on the
-  // `<label>` below. `useId` is SSR-stable, so the pairing exists in the first
-  // byte rather than after a layout effect.
+  // The input's id, minted here (SSR-stable) so the visible label can point at it in the first byte.
   const inputId = useId();
-  /*
-   * ── THE TRIGGER'S OWN ID, AND WHY IT HAS TO BE MINTED HERE ───────────────
-   *
-   * Without this, the `<input role="combobox">` and the trigger `<button
-   * role="combobox">` INSIDE ONE INSTANCE served the same id — 6 duplicates on
-   * the fa combobox page of the export at `10a08dc`, 44 across 8 documents.
-   * AUDIT §2.2.
-   *
-   * The mechanism is a store field only an effect can correct.
-   * `ComboboxTrigger.mjs:78` reads
-   *
-   *     const id = inputInsidePopup ? idProp ?? rootId : idProp;
-   *
-   * `inputInsidePopup` is initialised `true` (`AriaCombobox.mjs:333`) and set
-   * to its real value by `ComboboxInput.mjs:94` — from a layout effect, which
-   * does not run on the server. So the SERVER render takes the `?? rootId`
-   * branch and copies the root's id (the input's, passed above) onto the
-   * button, and hydration silently removes it again. Every jsdom test in this
-   * repository therefore saw a document that was already correct.
-   *
-   * It is a NAMING defect, not a validator nit: `<label for=…>` resolves to the
-   * first match in document order, so the field's visible name was attached to
-   * whichever of the two React happened to emit first. The gate's
-   * `resolvedIdrefs` rule cannot see it either — it asserts that an idref
-   * RESOLVES, and a duplicate satisfies that.
-   *
-   * Passing an explicit `id` takes the `idProp` side of that ternary in BOTH
-   * phases, so the trigger's id is the same string before and after hydration
-   * rather than appearing and vanishing. It is minted here rather than exposed
-   * as a prop for the reason this component takes no parts: a collision a
-   * caller cannot cause is one nobody has to remember.
-   *
-   * The same stale `inputInsidePopup` state makes Base UI serve
-   * `aria-haspopup="dialog"` on the trigger even though this composition opens
-   * a listbox. The explicit ARIA prop below is stable in both phases and keeps
-   * the trigger aligned with the input before hydration.
-   */
+  // The trigger's own id: without it Base UI's server render copies the root's
+  // id onto the trigger (a layout-effect-corrected store field), so input and
+  // button served the same id and `<label for>` named whichever came first.
+  // Same stale state serves `aria-haspopup="dialog"`, hence the explicit prop below.
   const triggerId = useId();
-  /* The dismiss sentinels mount with the popup, in a portal, and Base UI's
-   * open state lives in its own store — this component does not re-render on
-   * open. `onOpenChange` bumps an epoch so the relabel effect runs against
-   * the DOM that actually exists. See `relabelEngineDismiss`. */
+  // The dismiss sentinels mount with the popup, in a portal, and this component
+  // does not re-render on open; `onOpenChange` bumps an epoch so the relabel effect runs.
   const boxRef = useRef<HTMLDivElement | null>(null);
   const [openEpoch, setOpenEpoch] = useState(0);
   useEffect(() => {
-    // Twice: once now, once after the engine's own open work settles — the
-    // popup portal can mount after this effect's commit.
+    // Twice: once now, once after the popup portal has mounted.
     relabelEngineDismiss(boxRef.current, dismissLabel);
     const settle = setTimeout(() => relabelEngineDismiss(boxRef.current, dismissLabel), 0);
     return () => clearTimeout(settle);
@@ -321,57 +205,17 @@ export function ComboBox<T extends object>({
       {...(isRequired === undefined ? {} : { required: isRequired })}
       {...(name === undefined ? {} : { name })}
     >
-      {/*
-       * Base UI's Root renders no DOM, so the field box React Aria's
-       * `<ComboBox>` provided has to be a real element here.
-       */}
+      {/* Base UI's Root renders no DOM, so the field box is a real element here. */}
       <div data-lumo="" ref={boxRef} className={cn(comboBoxVariants(), className)}>
-        {/*
-         * A NATIVE `<label htmlFor>`, not `<Combobox.Label>`, and this is
-         * Base UI's own instruction rather than a preference. `ComboboxLabel`
-         * labels the TRIGGER, and in dev it logs:
-         *
-         *   <Combobox.Label> labels <Combobox.Trigger> only. When
-         *   <Combobox.Input> is the form control, use a native <label> or
-         *   <Field.Label> instead.
-         *
-         * Measured with `<Combobox.Label>` in place: the label rendered as a
-         * `<div>`, the `<input role="combobox">` carried NO `aria-labelledby`
-         * and NO `aria-label`, and its computed name was `null` — an unnamed
-         * text field, which is the defect `@lumo-ui/gate`'s `named-controls`
-         * rule exists to fail a build over. React Aria wired the same
-         * composition through `LabelContext` with nothing asked of the caller.
-         */}
+        {/* A NATIVE `<label htmlFor>`, not `<Combobox.Label>`, which labels the TRIGGER only. */}
         {label == null ? null : (
-          /*
-           * `id` beside `htmlFor`, because the input names itself BOTH ways.
-           * While the popup is open, Base UI's modal focus management puts
-           * `aria-hidden` on everything outside it — including this label —
-           * and a native `label[for]` association contributes nothing to the
-           * accessible name once the label is hidden. Measured: the open
-           * combobox announced as an unnamed textbox. An `aria-labelledby`
-           * reference is computed even when its target is hidden (that is
-           * accname's rule, and why the components that name their triggers
-           * by reference never had this defect), so the input carries one.
-           */
+          // `id` beside `htmlFor`: while the popup is open Base UI hides this
+          // label, and only an `aria-labelledby` reference survives that.
           <label id={`${inputId}-label`} htmlFor={inputId} className={comboBoxLabelVariants()}>
             {label}
           </label>
         )}
-        {/*
-         * `role="group"` restores a semantic React Aria emitted here and Base UI
-         * does not. Measured: the RAC baseline's SSR carried
-         * `<div role="group" class="…">` around the input and its trigger
-         * (`probe.api-shape-fixability.json → Q8.rac_combobox_group`); the Base
-         * UI rebuild's census reports `group` as the one ROLE lost by this
-         * component (`probe.api-shape.json → combobox.diff.roles_lost`).
-         *
-         * It is not decoration. The «نمایش پیشنهادها» button and the text field
-         * are one control to a reader, and without the grouping a screen
-         * reader's element-by-element walk meets a button that belongs to
-         * nothing. `role` is a plain DOM attribute on a plain `<div>`, so this
-         * costs nothing and depends on no engine behaviour.
-         */}
+        {/* `role="group"`: the trigger and the text field are one control to a reader. */}
         <div
           role="group"
           {...(asyncState?.status === "loading" ? { "aria-busy": true } : {})}
@@ -436,32 +280,13 @@ export function ComboBox<T extends object>({
 }
 
 /**
- * One suggestion.
- *
- * There is NO `textValue` here, deliberately. `Select.Item` and `Menu.Item`
- * both take a `label` prop for keyboard text matching; `Combobox.Item` takes
- * none — Base UI matches on the ROOT, through `filter` and `itemToStringLabel`
- * over the `items` array, so there is no per-item hook to route it to.
- * Forwarding it to `aria-label` would rename every option after its own
- * visible text and quietly change what a screen reader says. It was carried as
- * a `?: undefined` React Aria compatibility field until 15 Aug 2026, when that
- * surface was removed (private 0.0.0 library, no external consumers; the shadow
- * API produced accepted-and-inert props). Recorded as
- * `combobox.item-text-value` in the measurements file.
+ * One suggestion. No `textValue`: Base UI matches on the ROOT over `items`,
+ * and forwarding it to `aria-label` would rename every option.
  */
 export interface ComboBoxItemProps<T extends object = object> {
   /**
-   * TYPE CARRIER, NOT A PROP. React Aria's `ListBoxItemProps<T>` used `T` for
-   * the object an option stands for. Base UI's `Combobox.Item` takes an untyped
-   * `value`, so nothing is left for `T` to type; keeping the field keeps the
-   * type PARAMETER so an existing `ComboBoxItemProps<City>` annotation still
-   * compiles.
-   *
-   * Spelled `(T & never) | undefined`, not `T & never` — the latter resolves to
-   * `never`, which under `exactOptionalPropertyTypes` rejects an explicit
-   * `undefined` and so breaks a spread that passed no value at all. One of
-   * seven sites respelled together on 12 Aug 2026; the reproduction and its
-   * control are on `SelectProps.items` in `select.tsx`.
+   * TYPE CARRIER, NOT A PROP. Keeps `<T>` alive for existing annotations;
+   * `| undefined` so an explicit `undefined` passes `exactOptionalPropertyTypes`.
    */
   value?: (T & never) | undefined;
   /** The item's key. Maps to Base UI's `value`. */

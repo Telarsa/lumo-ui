@@ -26,50 +26,14 @@ import { Popover, PopoverTrigger } from "./popover.tsx";
 export { datePickerGroupVariants, datePickerTriggerVariants };
 
 /**
- * A typed date with a calendar behind a button.
- *
- * ═══ THE LAST FILE THAT HELD THE DATE FAMILY TO REACT ARIA ══════════════════
- *
- * The composition is `DateInput` plus `Calendar`, and until this rewrite it was
- * React Aria's `<DatePicker>` — a context that owned the value and fed BOTH
- * halves. That is why the family could not be migrated one component at a time,
- * and why `experiments/in-flight/README.md` recorded three reverted attempts:
- * replacing the calendar alone left the picker's grid bound to RAC's state, and
- * replacing the input alone left RAC's DatePicker feeding a segment
- * implementation that no longer existed.
- *
- * The knot is cut by owning the value HERE. This component holds one
- * `CalendarDate | null`, hands it to `useDateFieldState` for the segments and to
- * `Calendar` for the grid, and both halves are then ordinary controlled
- * components with no shared context at all. That is a smaller mechanism than
- * the one it replaces, and it is the reason both halves could move at once.
- *
- * ═══ THE ANNOUNCED STRINGS, AND WHICH ONES STOPPED BEING A PATCH ════════════
- *
- *   label               the field's own name.
- *   openCalendarLabel   the trigger button — an icon, so without it the control
- *                       is anonymous and `named-controls` fails the build.
- *
- * `previousMonthLabel` and `nextMonthLabel` are GONE from this component's API,
- * and their absence is the migration's headline: react-day-picker composes the
- * nav buttons' names through `labels`, which `calendar-datelib.ts` supplies per
- * locale. They were props here because React Aria's equivalents were reachable
- * only by prop, and the grid's per-cell names were not reachable at all — which
- * is what `patches/react-aria@3.51.0.patch` existed to fix.
- *
- * ═══ THE PANEL IS CLOSED IN THE FIRST BYTE, WHICH HIDES THINGS ══════════════
- *
- * A closed popover renders nothing, so every string inside the calendar is
- * absent from server output and a sweep that only reads the first byte scores
- * them clean whether they are or not. That measurement error is recorded in
- * `@lumo-ui/core`'s strings.ts, and it is why `dates.test.tsx` renders the grid
- * directly rather than trusting a closed picker.
- *
- * ═══ PLACEMENT ═════════════════════════════════════════════════════════════
- *
- * The panel opens `bottom start` — logical, so it anchors to the field's leading
- * edge in both directions. `popover.tsx` explains why the physical spellings are
- * subtracted from the type rather than merely discouraged.
+ * A typed date with a calendar behind a button: `DateInput` plus `Calendar`,
+ * with ONE `CalendarDate | null` owned HERE and handed to both halves as
+ * ordinary controlled components (no shared context — the knot that kept the
+ * date family on React Aria). Announced strings: `label`, `openCalendarLabel`
+ * (an icon button). `previousMonthLabel`/`nextMonthLabel` are GONE:
+ * react-day-picker composes nav names through `labels` from
+ * `calendar-datelib.ts`. The panel opens `bottom start` (logical) and is closed
+ * in the first byte, which is why `dates.test.tsx` renders the grid directly.
  */
 export interface DatePickerBaseProps {
   /** Announced and displayed name. Required. */
@@ -103,14 +67,9 @@ export interface DatePickerBaseProps {
 }
 
 /**
- * The picker's props, carrying `Calendar`'s caption-layout union unchanged.
- *
- * A date of birth is the case this exists for — the one date a reader is asked
- * for that is decades from the month the grid opens on — so the picker had to
- * reach `captionLayout` or the feature would be available everywhere except the
- * component that needs it. The union comes from `calendar.tsx` rather than being
- * restated, so the bounds a year dropdown requires are required here too, at
- * compile time, and for the same measured reason.
+ * The picker's props, carrying `Calendar`'s caption-layout union unchanged — a
+ * date of birth is the case a year dropdown exists for, and the bounds it
+ * requires are required here too, at compile time.
  */
 export type DatePickerProps = DatePickerBaseProps & CalendarNavigation;
 
@@ -133,22 +92,10 @@ export function DatePicker(props: DatePickerProps) {
     className,
   } = props;
 
-  /*
-   * The caption layout and its bounds, rebuilt as ONE value.
-   *
-   * Not three spreads of three optional props: `Calendar`'s type says the three
-   * are related — `captionLayout="dropdown"` REQUIRES both bounds — and three
-   * independent `optional()` spreads present them to the compiler as three
-   * unrelated maybes, so this component could construct a call `Calendar`
-   * refuses. Narrowing on `captionLayout` and rebuilding is what carries the
-   * caller's guarantee across the boundary with no cast: in the first branch the
-   * discriminant has already made both bounds non-optional.
-   *
-   * It is REBUILT and not `props` widened to `CalendarNavigation`: that also
-   * type-checks, and at runtime would spread this component's whole props object
-   * — `onChange`, `value`, `className` and all — onto the grid, where `onChange`
-   * has a different signature entirely.
-   */
+  // The caption layout and its bounds, rebuilt as ONE value: `captionLayout=
+  // "dropdown"` REQUIRES both bounds, and three independent `optional()` spreads
+  // would let this component construct a call `Calendar` refuses. Rebuilt, not
+  // `props` widened — that would spread `onChange` (different signature) onto the grid.
   const navigation: CalendarNavigation =
     props.captionLayout === "dropdown" || props.captionLayout === "dropdown-years"
       ? { captionLayout: props.captionLayout, minValue: props.minValue, maxValue: props.maxValue }
@@ -160,13 +107,8 @@ export function DatePicker(props: DatePickerProps) {
 
   const locale = useLumoLocale();
 
-  /*
-   * ONE value, owned here, feeding two controlled halves.
-   *
-   * Uncontrolled state exists only when the caller did not supply `value` —
-   * the same shape every other field in the library uses, and the reason the
-   * segments and the grid cannot disagree about what is selected.
-   */
+  // ONE value, owned here, feeding two controlled halves; uncontrolled state
+  // exists only when the caller did not supply `value`.
   const [uncontrolled, setUncontrolled] = useState<CalendarDate | null>(defaultValue ?? null);
   const selected = value !== undefined ? value : uncontrolled;
 
@@ -219,12 +161,7 @@ export function DatePicker(props: DatePickerProps) {
         {label}
       </Field.Label>
 
-      {/*
-       * A plain element, not React Aria's `<Group>`. RAC's Group was carried
-       * for its `data-hovered`/`data-focus-within`; without it the browser's own
-       * pseudo-classes do the same job, which is what `calendar.variants.ts`
-       * now says on `datePickerGroupVariants`.
-       */}
+      {/* A plain element, not RAC's `<Group>`: the browser's pseudo-classes do its job. */}
       <div
         className={datePickerGroupVariants({ size })}
         {...(invalid === true ? { "data-invalid": "" } : {})}

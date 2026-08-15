@@ -7,23 +7,9 @@ import { Card, CardBody, Container, Grid, Link } from "@lumo-ui/ui";
  *
  * No `"use client"` — marketing copy belongs in the first byte. See hero.tsx.
  *
- * ── THE GRID IS THE RTL WORK, AND THERE ISN'T ANY ──────────────────────────
- *
- * Grid tracks are laid out along the INLINE axis, so track 1 is the reader's
- * first column in both scripts and a three-column feature grid mirrors itself.
- * stack.tsx states the general rule: every mirroring bug this library exists to
- * prevent is a layout bug, and the fix is almost always to stop positioning
- * things and let a layout algorithm do it. This block is that rule at its
- * easiest — the only directional decision in the file is `text-start` on the
- * card, and that is only there because a `text-center` feature grid is a taste
- * some designers have.
- *
- * ── EACH FEATURE IS AN `<h3>` UNDER THE SECTION'S OWN HEADING ──────────────
- *
- * A grid of `<p class="font-semibold">` looks identical and is invisible to the
- * heading rotor a screen-reader user navigates by. `level` sets both the
- * section heading and the per-feature heading one below it, so the outline
- * cannot skip a level — which is a real navigation defect, not a nicety.
+ * Grid tracks run along the INLINE axis, so the grid mirrors itself with no
+ * directional work. Each feature is a real heading one level below the section's
+ * `level`, so the outline cannot skip a level.
  */
 export interface Feature {
   /** Stable key. Not rendered. */
@@ -32,10 +18,7 @@ export interface Feature {
   title: string;
   /** One or two sentences supporting it. */
   description: string;
-  /**
-   * A glyph. Rendered `aria-hidden`: the title already says what the icon says,
-   * and an unnamed graphic adds a stop with no content.
-   */
+  /** A glyph. Rendered `aria-hidden`: the title already says what the icon says. */
   icon?: LumoNode;
   /** Turns the title into a link. Omit and it stays plain text. */
   href?: string | undefined;
@@ -55,10 +38,7 @@ export interface FeatureGridProps {
   items: readonly Feature[];
   /** Tracks per row. Default `"3"`. */
   cols?: "2" | "3" | "4" | "auto" | undefined;
-  /**
-   * Heading level for the SECTION title. Each feature is rendered one level
-   * below. Default `2`, so features are `<h3>`.
-   */
+  /** Heading level for the SECTION title. Each feature renders one level below. Default `2`. */
   level?: 2 | 3 | 4 | undefined;
   className?: string | undefined;
 }
@@ -73,10 +53,8 @@ export function FeatureGrid({
   level = 2,
   className,
 }: FeatureGridProps) {
-  // Looked up from closed maps rather than built as `` `h${level}` ``: a
-  // template literal would type as `string` and JSX would accept `h9`. Widened
-  // to `ElementType` at the JSX site exactly as card.tsx does — the `level`
-  // union is what constrains the value.
+  // Closed maps rather than `` `h${level}` ``: a template literal would type as
+  // `string` and JSX would accept `h9`.
   const SectionHeading: ElementType = SECTION_TAG[level];
   const FeatureHeading: ElementType = NEXT_LEVEL[level];
 
@@ -87,9 +65,7 @@ export function FeatureGrid({
     >
       <Container size="xl" padded={false}>
         {strings.title !== undefined || strings.description !== undefined ? (
-          // `mbe-*` is the logical block-end margin. `mx-auto` is
-          // `margin-inline: auto` in Tailwind v4, so the centred intro column
-          // is symmetric in both scripts.
+          // `mbe-*` and `mx-auto` are logical, so the intro column is symmetric in both scripts.
           <div className="mbe-10 flex max-w-prose flex-col gap-3">
             {strings.title !== undefined ? (
               <SectionHeading className="text-2xl leading-snug font-semibold text-fg">

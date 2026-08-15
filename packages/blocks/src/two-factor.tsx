@@ -18,32 +18,11 @@ import {
 /**
  * The authenticator-app challenge: a TOTP code, or a printed recovery code.
  *
- * ═══ READ `otp-verify.tsx` FIRST — THIS IS NOT THAT SCREEN RENAMED ══════════
- *
- * `OtpVerify` is the SMS/email step: the SERVER generated a code and sent it
- * somewhere, so "resend" is a real, useful control and `resendAfterSeconds` is
- * the whole point of that file. Nothing here is server-issued. A TOTP code is
- * derived independently, on the reader's own device, from a shared secret and
- * the current time — there is nothing to resend, and a "didn't get a code?"
- * affordance on this screen would be actively misleading. So this component:
- *
- *  1. Has NO resend, NO countdown and NO `locale` prop — there is no number to
- *     format anywhere on this screen, unlike `OtpVerify`'s formatted seconds.
- *  2. Offers a SECOND, mutually exclusive input mode: a printed recovery code
- *     for the reader who has lost the device the authenticator app was on.
- *     `mode` is a controlled prop rather than internal state — the same trade
- *     `settings-form.tsx` makes for `status` — because it is the CALLER who
- *     knows whether recovery codes are even enabled for this account.
- *  3. Carries a "remember this device" checkbox with TRUST semantics, not
- *     `SignIn.rememberLabel`'s "keep me signed in": the two controls persist
- *     different things (a device fingerprint that skips this whole screen next
- *     time, versus a session cookie's lifetime), and a product legitimately
- *     ships both, on different screens, in the same flow.
- *
- * The TOTP field keeps `OtpVerify`'s digit treatment — `type="text"
- * inputMode="numeric"`, see that file for why `type="number"` silently
- * discards Persian digits before React ever sees them. The recovery field
- * does not: a recovery code is typically alphanumeric, not a decimal number.
+ * Not `otp-verify.tsx` renamed: a TOTP code is derived on the reader's own
+ * device, so there is NO resend, no countdown and no `locale`. `mode` is a
+ * controlled prop (only the caller knows whether recovery codes are enabled),
+ * and "remember this device" has TRUST semantics, distinct from SignIn's
+ * "keep me signed in". The TOTP field keeps `type="text" inputMode="numeric"`.
  *
  * `"use client"`: `onSubmit` is a callback.
  */
@@ -133,9 +112,7 @@ export function TwoFactor({
               <TextField
                 label={strings.codeLabel}
                 name="code"
-                // See the file header: the same digit-safety treatment as
-                // OtpVerify, and for the same reason — `type="number"` rejects
-                // Persian digits outright.
+                    // Same digit-safety treatment as OtpVerify: `type="number"` rejects Persian digits.
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"

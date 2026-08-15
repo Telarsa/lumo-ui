@@ -1,22 +1,9 @@
 #!/usr/bin/env node
 /**
- * Gate 3 — CSS Modules are banned in Lumo.
- *
- * This is the mechanical form of the styling decision itself. Without it,
- * "we use Tailwind" is a comment, and comments have already failed once on
- * this exact project: a 52-component prototype shipped 118 `.module.css`
- * files and 19,116 lines of hand-written CSS, none of it shareable and none
- * of it diffable against upstream.
- *
- * The ban is not aesthetic. A component whose styling lives in a separate
- * `.module.css` has no class strings, and therefore:
- *   - `shadcn add <name> --diff` has nothing to compare against upstream, and
- *   - `shadcn migrate rtl` — which rewrites 38 physical utilities to logical
- *     ones at the AST level — has nothing to walk.
- * Both mechanical RTL enforcers exist only on the Tailwind path.
- *
- * Runs on an empty repository and passes, which is the point: the gate exists
- * before the code it guards.
+ * Gate 3 — CSS Modules are banned in Lumo. A component styled in `.module.css`
+ * has no class strings, so `shadcn add --diff` and `shadcn migrate rtl` — the
+ * two mechanical RTL enforcers — have nothing to walk. Runs on an empty
+ * repository and passes: the gate exists before the code it guards.
  */
 
 import { readdir } from "node:fs/promises";

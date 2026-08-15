@@ -13,33 +13,11 @@ import {
 /**
  * The plan comparison: name, price, what is in, one call to action each.
  *
- * No `"use client"`. A pricing page is indexed, quoted and shared; the CTA is a
- * real `<a href>` wearing `buttonVariants`, for the reasons hero.tsx sets out
- * at length.
- *
- * ── THE PRICE IS THE POINT, AND IT IS THE EASIEST THING TO GET WRONG ───────
- *
- * `plan.price` is a `number` and is never rendered. `formatNumber(price,
- * locale, priceFormat)` runs it through `fa-IR-u-ca-persian-nu-arabext`, which
- * produces Persian digits with U+066C as the thousands separator — not the
- * comma a naive `toLocaleString` gives on some runtimes (format.ts records the
- * verification). `<p>{plan.price}</p>` is TS2322 because `children` is
- * `LumoNode`, which is the whole point of rule 0: the wrong path does not
- * compile, so nobody has to notice it in review.
- *
- * `priceFormat` has NO default. A currency is a business decision, and a
- * library that guessed one would render a plausible number in the wrong unit —
- * the single most expensive kind of plausible-looking defect on this page.
- *
- * ── INCLUSION IS NOT COMMUNICATED BY A GLYPH ALONE ─────────────────────────
- *
- * A ✓/✕ column fails WCAG 1.4.1 twice over: the two marks differ mainly in
- * shape at small sizes, and neither is announced usefully. So each row carries
- * a REQUIRED, translated `strings.included` / `strings.excluded` rendered
- * `sr-only`, and the mark itself is `aria-hidden` decoration. The marks are
- * drawn as spans rather than written as characters, so this package still ships
- * no glyph of its own — and a drawn shape has no Bidi_Mirrored question to
- * answer, unlike the `›` that breadcrumbs.tsx has to reason about.
+ * No `"use client"`: a pricing page is indexed and shared; the CTA is a real
+ * `<a href>` wearing `buttonVariants` (see hero.tsx). `plan.price` is a `number`
+ * never rendered raw, and `priceFormat` has NO default — a currency is a
+ * business decision. Inclusion is never a glyph alone (WCAG 1.4.1): each row
+ * carries a REQUIRED sr-only `included`/`excluded` word and a drawn, `aria-hidden` mark.
  */
 export interface PricingFeature {
   /** Stable key. Not rendered. */
@@ -135,10 +113,8 @@ export function PricingTable({
           {plans.map((plan) => (
             <li key={plan.id} className="flex">
               <Card
-                // `border-accent` on all four edges for the featured plan, not
-                // an inline-start accent bar: a bar would sit on the reading
-                // edge, which is where the plan name already starts, and the
-                // two would compete for the same attention in Persian only.
+                // A full `border-accent` outline for the featured plan, not an
+                // inline-start bar that would compete with the plan name.
                 variant={plan.isFeatured === true ? "elevated" : "outlined"}
                 className={cn("h-full w-full", plan.isFeatured === true && "border-accent")}
               >
@@ -160,10 +136,7 @@ export function PricingTable({
                   </div>
 
                   {/*
-                   * `items-baseline` so the period sits on the price's
-                   * baseline. `gap-1` rather than a margin: the gap is inserted
-                   * on the inline axis by the layout algorithm, which already
-                   * knows the direction, so the period lands after the figure
+                   * `items-baseline` + `gap-1`: the period lands after the figure
                    * in READING order in both scripts.
                    */}
                   <p className="flex flex-wrap items-baseline gap-1">
@@ -182,9 +155,7 @@ export function PricingTable({
                       return (
                         <li key={feature.id} className="flex items-start gap-2">
                           {/*
-                           * Drawn marks, `aria-hidden`. The announced version is
-                           * the sr-only word beside them — see the file header
-                           * for why a glyph alone is not enough.
+                           * Drawn marks, `aria-hidden`; the sr-only word beside them is what is announced.
                            */}
                           <span
                             aria-hidden="true"
@@ -210,9 +181,7 @@ export function PricingTable({
                   </ul>
 
                   {/*
-                   * `mbs-auto` pushes the CTA to the block end, so a row of
-                   * plans aligns its buttons even when the feature lists differ
-                   * in length. Block axis: nothing to mirror.
+                   * `mbs-auto` aligns the CTAs across a row of plans. Block axis: nothing to mirror.
                    */}
                   <Link
                     href={plan.href}

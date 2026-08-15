@@ -75,12 +75,7 @@ export type {
   LabelProps,
 } from "./form.tsx";
 
-/**
- * Form STATE, which is a separate registry item from the form CHROME above and
- * must stay one: `form.tsx` travels with every labelled control in the library,
- * and folding the state layer into it would make `@tanstack/react-form` a
- * declared dependency of `checkbox`. See `form-state.tsx`'s header.
- */
+/** Form STATE, a separate registry item from the form CHROME above (`form.tsx` travels with every control). */
 export {
   LumoForm,
   fieldControl,
@@ -543,10 +538,8 @@ export type { ToolbarItemProps, ToolbarProps, ToolbarSeparatorProps } from "./to
 
 export { ToggleButton, ToggleButtonGroup } from "./toggle-group.tsx";
 export type { ToggleButtonGroupProps, ToggleButtonProps } from "./toggle-group.tsx";
-// The classes come from the directive-free module, alongside `toggleVariants`
-// and `buttonVariants` further down and for the reason `button.variants.ts`
-// records: a cva exported from a `"use client"` file cannot be called by a
-// server component, and `shadcn migrate rtl` only walks `cva()` arguments.
+// From the directive-free module: a cva exported from a `"use client"` file cannot be
+// called by a server component, and `shadcn migrate rtl` only walks `cva()` arguments.
 export { toggleButtonGroupVariants, toggleButtonVariants } from "./toggle-group.variants.ts";
 export type {
   ToggleButtonGroupVariantProps,
@@ -592,9 +585,7 @@ export type {
   TableTreeCellProps,
   TableWidgetCellProps,
   VirtualTableBodyProps,
-  // The structural seam the grid reads TanStack through. Exported because a
-  // consumer wiring their own state layer needs to know what `Table` asks for —
-  // and because the interfaces ARE the statement that TanStack owns no ARIA.
+  // The structural seam the grid reads TanStack through; the interfaces ARE the statement that TanStack owns no ARIA.
   LumoTableColumn,
   AsyncLumoTableOptions,
   LumoExpandableTableRow,
@@ -605,12 +596,8 @@ export type {
   LumoTableRow,
 } from "./table.tsx";
 
-/*
- * Same rule as `pagination.variants.ts` and `chart.variants.ts`. Table's classes
- * AND its keyboard-direction arithmetic come from the directive-free module: a
- * server component framing a grid may call them, and `gridArrow(locale)` is a
- * pure function precisely so the RTL arrow mapping can be tested without a DOM.
- */
+// Directive-free module, direct: a server component framing a grid may call these, and
+// `gridArrow(locale)` is a pure function so the RTL arrow mapping is testable without a DOM.
 export {
   cellVariants,
   columnResizerVariants,
@@ -732,14 +719,8 @@ export type {
 export { buttonVariants } from "./button.variants.ts";
 export type { ButtonVariantProps } from "./button.variants.ts";
 
-/*
- * Pagination's classes and its page-window arithmetic come from the
- * directive-free module, NOT through `pagination.tsx`. Re-exporting them from
- * the client component would turn them back into client references in the RSC
- * graph — which is the exact failure `button.variants.ts` documents, and the
- * reason `packages/blocks/src/listing-grid.tsx` can render a server-side pager
- * of real `<a href>` links with these classes at all.
- */
+// Directive-free module, direct — never through the client component, which would turn
+// these back into client references (see `button.variants.ts`).
 export {
   paginationGapVariants,
   paginationItemVariants,
@@ -830,14 +811,7 @@ export type {
   UploadTransform,
 } from "./file-upload.tsx";
 
-/*
- * Same rule as `pagination.variants.ts` above, for the same reason: FileUpload's
- * classes AND `formatFileSize` come from the directive-free module, never
- * through `file-upload.tsx`. A list of already-uploaded attachments is text and
- * a formatted number with no interaction — the most server-renderable thing in
- * a file feature — and routing the formatter through the client component would
- * make it a client reference and fail that page's prerender.
- */
+// Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
   dropZoneVariants,
   fileUploadItemVariants,
@@ -904,8 +878,7 @@ export {
   CHART_MOTION_UPDATE_DURATION,
   chartMotion,
   chartTooltip,
-  // TanStack's own marks and scales, re-exported so a chart is composed from a
-  // single import. Deliberately unwrapped — see chart.tsx.
+  // TanStack's own marks and scales, re-exported so a chart is composed from a single import.
   areaY,
   barY,
   defineChart,
@@ -925,14 +898,7 @@ export type {
   ChartRow,
 } from "./chart.tsx";
 
-/*
- * Same rule as `pagination.variants.ts` above. Chart's classes, its theme
- * stylesheet builder AND its direction arithmetic come from the directive-free
- * module, never through `chart.tsx`. The chart panel on the roadmap is a SERVER
- * component — a title, a delta and a legend key around a client island — and
- * routing `chartMirror` or `chartContainerVariants` through the client component
- * would make them client references and fail that page's prerender.
- */
+// Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
   CHART_KEYBOARD_READING_ORDER,
   CHART_MOTION_ATTRIBUTE,
@@ -1036,11 +1002,7 @@ export type {
   ItemStaticProps,
 } from "./item.tsx";
 
-/*
- * Same rule as `pagination.variants.ts` above: item's cva definitions export
- * from the directive-free module directly — re-exporting them through the
- * "use client" component would turn them back into client references.
- */
+// Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
   itemActionsVariants,
   itemContentVariants,
@@ -1212,12 +1174,7 @@ export {
   SidebarItem,
   SidebarTrigger,
 } from "./sidebar.tsx";
-/*
- * The variants come from the DIRECTIVE-FREE module, never through sidebar.tsx:
- * a re-export routed through a "use client" module is a client reference for
- * every importer, however server-safe its definition file is — the same latent
- * break buttonVariants once shipped for real, caught here by review.
- */
+// Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
   sidebarBadgeVariants,
   sidebarContentVariants,
@@ -1237,12 +1194,7 @@ export type {
   SidebarTriggerProps,
 } from "./sidebar.tsx";
 
-/*
- * `calendarDay` comes from the directive-free adapter DIRECTLY, never through
- * `calendar.tsx` — same rule as the variants below. It is what a caller without
- * `@internationalized/date` uses to write the bounds a caption dropdown
- * requires, and a server component must be able to call it.
- */
+// `calendarDay` comes from the directive-free adapter DIRECTLY: a server component must be able to call it.
 export { calendarDay } from "./calendar-datelib.ts";
 
 export { Calendar, CalendarDropdown, calendarChevron, calendarClassNames, describedByWith } from "./calendar.tsx";
@@ -1253,14 +1205,7 @@ export type {
   CalendarProps,
 } from "./calendar.tsx";
 
-/*
- * The whole date family's classes come from ONE directive-free module, and they
- * come from it DIRECTLY — never through the six components, every one of which
- * carries "use client". Same rule as `pagination.variants.ts` above, and the
- * same reason: a re-export routed through a client module is a client reference
- * for every importer however server-safe its definition is. A server component
- * rendering a static month beside the interactive calendar needs these.
- */
+// The whole date family's classes come from ONE directive-free module, DIRECTLY.
 export {
   calendarCellVariants,
   calendarDayButtonVariants,
@@ -1323,13 +1268,8 @@ export type {
   RangeCalendarProps,
 } from "./range-calendar.tsx";
 
-/*
- * The preset-driven range picker. `resolveDateRangePreset` and `todayIn` are
- * exported beside the component because the arithmetic is the valuable half and
- * has no React in it: a server route that must run the same «این ماه» its
- * dashboard displays should call this function rather than grow a second
- * implementation that agrees today and drifts in Esfand.
- */
+// `resolveDateRangePreset` and `todayIn` are exported beside the component: the arithmetic
+// has no React in it, and a server route should call it rather than drift in Esfand.
 export { DateSelector, resolveDateRangePreset, todayIn } from "./date-selector.tsx";
 export type {
   DateRangeRule,
@@ -1351,10 +1291,7 @@ export type { DateSelectorTriggerVariantProps } from "./date-selector.variants.t
 export { TimeField } from "./time-field.tsx";
 export type { TimeFieldProps } from "./time-field.tsx";
 
-/*
- * The standalone two-state button. Its set-of-options sibling is
- * `toggle-group.tsx` further up — `ToggleButton` / `ToggleButtonGroup`.
- */
+// The standalone two-state button; its set-of-options sibling is `toggle-group.tsx`.
 export { IconToggle, Toggle } from "./toggle.tsx";
 export type { IconToggleProps, ToggleProps } from "./toggle.tsx";
 
@@ -1365,10 +1302,7 @@ export type { ToggleVariantProps } from "./toggle.variants.ts";
 export { Tree, TreeItem } from "./tree.tsx";
 export type { TreeItemProps, TreeProps } from "./tree.tsx";
 
-/*
- * Same rule again. A server component rendering a static outline beside the
- * interactive tree calls `treeChevronTurnFor(locale)` and the row classes.
- */
+// Same rule again: directive-free module, direct.
 export {
   TREE_CHEVRON_GLYPH,
   treeChevronGlyphVariants,
@@ -1384,13 +1318,7 @@ export type { TreeChevronTurn } from "./tree.variants.ts";
 export { VirtualList } from "./virtual-list.tsx";
 export type { VirtualListHandle, VirtualListProps, VirtualListRange } from "./virtual-list.tsx";
 
-/*
- * Same rule again — and here it is the RTL arithmetic that needs it. A server
- * component framing a virtualised list (a heading, a count, a filter bar) may
- * call `virtualMirror(locale, orientation)` to reason about the same direction
- * the client island will use, and routing it through `virtual-list.tsx` would
- * make it a client reference.
- */
+// Same rule again — `virtualMirror(locale, orientation)` must be callable from a server component.
 export {
   virtualListItemVariants,
   virtualListSizerVariants,
@@ -1399,16 +1327,8 @@ export {
 } from "./virtual-list.variants.ts";
 export type { VirtualListOrientation, VirtualMirror } from "./virtual-list.variants.ts";
 
-/*
- * A timeline of tasks over dates, in the reader's own calendar.
- *
- * The arithmetic is exported beside the component on purpose. `ganttGeometry`,
- * `ganttBarPlacement`, `moveGanttTask` and `ganttDateIn` have no React and no
- * DOM in them, so a server route that has to reason about the same range — or a
- * test that wants the placement without a renderer — calls the same functions
- * rather than a second implementation that agrees today and drifts in Esfand.
- * Same call `date-selector.tsx` makes for `resolveDateRangePreset`.
- */
+// A timeline of tasks over dates. The arithmetic is exported beside the component: no React,
+// no DOM, so a server route or a test calls the same functions.
 export {
   GANTT_SCALES,
   Gantt,
@@ -1435,12 +1355,7 @@ export type {
   GanttTask,
 } from "./gantt.tsx";
 
-/*
- * Directive-free module, imported directly — the same rule the date family
- * above follows. A server component drawing a static legend or a print view of
- * the same chart may call these; routing them through `gantt.tsx` would make
- * every one of them a client reference in the RSC graph.
- */
+// Directive-free module, direct — same rule as the date family above.
 export {
   ganttBarProgressVariants,
   ganttBarVariants,
@@ -1457,19 +1372,8 @@ export {
   ganttVariants,
 } from "./gantt.variants.ts";
 
-/*
- * The scheduling calendar. `event-calendar.variants.ts` is exported DIRECTLY
- * beside it, the same rule the date family above follows: a `cva()` re-exported
- * through a `"use client"` module becomes a client reference in the RSC graph,
- * and a server component that CALLS it fails the build. A page framing a
- * read-only month grid — a heading, a legend, a printed schedule — may use the
- * classes without paying for the island.
- *
- * `layoutDayEvents` and `indexEvents` are exported for the reason
- * `resolveDateRangePreset` is: the arithmetic is the valuable part, it has no
- * React in it, and a caller writing their own day view should not reimplement
- * the overlap packing or the per-day segment cut.
- */
+// The scheduling calendar. `event-calendar.variants.ts` is exported DIRECTLY (same rule);
+// `layoutDayEvents`/`indexEvents` are exported because the arithmetic is the valuable part.
 export {
   EventCalendar,
   eventCalendarDay,

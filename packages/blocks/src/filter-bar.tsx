@@ -17,34 +17,11 @@ import {
  *
  * `"use client"`: every prop here that matters is a callback.
  *
- * ── THREE REQUIRED STRINGS THAT ARE NOT DECORATION ──────────────────────────
- *
- * `@lumo-ui/ui` already forces two of them and this block forces the third:
- *
- *  1. `SearchField.clearLabel`. React Aria composes the clear button's name
- *     itself as `aria-label="Clear search"`, from a bundle with no `fa` entry
- *     that is not even reachable on the server (search-field.tsx has the
- *     measurement). Unset, a Persian filter bar ships an English button name in
- *     the first byte.
- *
- *  2. `Select.placeholder`. The worst leak in the library and the only VISIBLE
- *     one: RAC's `SelectValue` falls back to the literal "Select an item".
- *     A filter bar is four selects, so that is four English phrases in the
- *     middle of a Persian page (select.tsx records the source line).
- *
- *  3. `ActiveFilter.removeLabel`, per chip. An ✕ is not a name, and «حذف» eight
- *     times over is not eight names. The `Tag` type makes `onRemove` without
- *     `removeLabel` unrepresentable; this block carries the requirement out to
- *     its own data shape rather than inventing a label from the chip's text,
- *     because «حذف تهران» is a sentence and Lumo does not build sentences.
- *
- * ── WHY THE SELECTS ARE `aria-label`led RATHER THAN `<Label>`led ────────────
- *
- * A filter bar is a dense row; a visible label above each dropdown doubles its
- * height and repeats what the collapsed value already says. `aria-label` from
- * `filter.label` keeps the name in the tree. The value is the caller's Persian
- * string, so the gate's `no-latin-aria` rule stays green — it grades the
- * attribute's SCRIPT, not its presence.
+ * Three required strings that are not decoration: `searchClearLabel` and each
+ * `FilterDefinition.placeholder` (the engine's English fallbacks otherwise leak
+ * into the first byte), and `ActiveFilter.removeLabel` per chip (an ✕ is not a
+ * name, and Lumo does not build sentences). The selects are `aria-label`led
+ * rather than `<Label>`led because a filter bar is a dense row.
  */
 export interface FilterOption {
   /** Stable key, sent back through `onFilterChange`. Not rendered. */
@@ -93,12 +70,7 @@ export interface FilterBarProps {
   active?: readonly ActiveFilter[] | undefined;
   /** Controlled search text. */
   search?: string | undefined;
-  /**
-   * Chosen option per filter, keyed by `FilterDefinition.id`.
-   *
-   * `noUncheckedIndexedAccess` makes every lookup here `string | undefined`,
-   * which is the honest type: a filter with nothing chosen has no entry.
-   */
+  /** Chosen option per filter, keyed by `FilterDefinition.id`. A filter with nothing chosen has no entry. */
   values?: Readonly<Record<string, string | undefined>> | undefined;
   onSearchChange?: ((value: string) => void) | undefined;
   /** `optionId` is `null` when the reader clears the dropdown. */
@@ -128,10 +100,8 @@ export function FilterBar({
       className={cn("flex w-full flex-col gap-3 px-4 py-3", className)}
     >
       {/*
-       * `flex-wrap` + `gap`, never `space-x-*`. Tailwind implements `space-x-4`
-       * as `margin-left` on every child but the first — physical, so a wrapped
-       * filter row bunches to the wrong side in Persian. stack.tsx names this
-       * as trap #1 for exactly this kind of layout.
+       * `flex-wrap` + `gap`, never `space-x-*` (physical `margin-left`, bunches
+       * to the wrong side in Persian — stack.tsx trap #1).
        */}
       <div className="flex flex-wrap items-end gap-2">
         <SearchField
@@ -151,9 +121,7 @@ export function FilterBar({
             className="w-44 shrink-0"
             selectedKey={values?.[filter.id] ?? null}
             onSelectionChange={(key) => {
-              // RAC's `Key` is `string | number`; the block's public API is
-              // strings only, so the conversion happens here rather than
-              // leaking a union that means nothing to a caller.
+              // The block's public API is strings only; RAC's `Key` is converted here.
               onFilterChange?.(filter.id, key === null ? null : String(key));
             }}
           >
@@ -172,9 +140,7 @@ export function FilterBar({
       {chips.length > 0 ? (
         <div className="flex flex-wrap items-center gap-2">
           {/*
-           * A named group rather than a bare chip run: without the label a
-           * screen reader reads eight place names with no indication that they
-           * are the filters currently applied.
+           * A named group, so the chips read as "the filters currently applied".
            */}
           <span className="text-xs text-fg-muted">{strings.activeLabel}</span>
           <ul aria-label={strings.activeLabel} className="flex list-none flex-wrap gap-2 p-0">
@@ -182,8 +148,6 @@ export function FilterBar({
               <li key={chip.id}>
                 {/*
                  * Removable only when there is somewhere for the press to go.
-                 * A chip that renders an ✕ wired to nothing is a control that
-                 * announces an action it cannot perform.
                  */}
                 {onRemove === undefined ? (
                   <Tag size="sm">{chip.label}</Tag>

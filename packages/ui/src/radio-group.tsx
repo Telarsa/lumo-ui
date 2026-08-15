@@ -29,12 +29,8 @@ import {
 } from "./form.tsx";
 
 /**
- * The list of options.
- *
- * `flex-col` for vertical, `flex-row flex-wrap` for horizontal — and `gap` for
- * both, never a margin on the option. A `gap` in a row flex container is inserted
- * on the inline axis by the layout algorithm, which already knows the direction;
- * a `me-4` on each option would have to be un-mirrored by hand.
+ * The list of options. `gap`, never a margin on the option: the layout algorithm
+ * already knows the direction; a `me-4` would have to be un-mirrored by hand.
  */
 export const radioListVariants = cva("flex", {
   variants: {
@@ -54,42 +50,13 @@ export const radioVariants = cva(
 );
 
 /**
- * The circle, which under Base UI is also the control.
- *
- * ── THE STATE SELECTORS, AND WHY EVERY ONE OF THEM MOVED ───────────────────
- *
- * Under React Aria every rule here read the wrapping `<label>` through
- * `group-*`, because the label was where RAC published state and the circle was
- * pure decoration. Under Base UI this element is `Radio.Root`: `role="radio"`,
- * its own tab stop within the group's roving focus, and the carrier of its own
- * state (`radio/root/RadioRootDataAttributes.mjs`).
- *
- *     group-data-hovered       → group-hover. The hover TARGET is still the
- *                                label — only the mechanism changes, because
- *                                Base UI publishes no hover attribute anywhere.
- *     group-data-selected      → data-checked, un-grouped. Note this is NOT the
- *                                same edit toggle.tsx needs: there Base UI
- *                                spells the persistent ON state `data-pressed`,
- *                                which is React Aria's word for the transient
- *                                pointer-down. Radio has no such collision.
- *     group-data-invalid       → data-invalid, un-grouped. `Field.Root` pushes
- *                                validity down onto the radio, which is why the
- *                                group below must be a `Field.Root` and not
- *                                merely a `RadioGroup`.
- *     group-data-disabled      → data-disabled, un-grouped.
- *     group-data-focus-visible → FOCUS_RING_SELF. `data-focus-visible` does not
- *                                exist in Base UI, and its nearest neighbour
- *                                `data-focused` is unfiltered by modality — a
- *                                ring built on it appears on a MOUSE click,
- *                                which is the defect `:focus-visible` was
- *                                standardised to remove. WCAG 2.4.7.
- *
- * `group/radio` is the same workaround `checkbox.tsx` documents: the dot inside
- * is Lumo's own `<span>`, not a Base UI part, so it receives no state
- * attributes and has to read this element. `Radio.Indicator` is Base UI's own
- * answer and it mounts CONDITIONALLY, which would replace a scale transition
- * with a mount and lose the animation the dot exists to have. Named rather than
- * bare, because the label above is already an unnamed group.
+ * The circle, which under Base UI is also the control (`Radio.Root`), so the
+ * state selectors address it directly: `data-checked`, `data-invalid` (pushed
+ * down by `Field.Root`, which is why the group must be one), `data-disabled`,
+ * `group-hover` for the label, and `FOCUS_RING_SELF` (Base UI's `data-focused`
+ * is unfiltered by modality). `group/radio` is named so the dot — Lumo's own
+ * `<span>`, kept for its scale transition where `Radio.Indicator` mounts
+ * conditionally — can read this element's state.
  */
 export const radioIndicatorVariants = cva(
   "group/radio relative flex size-5 shrink-0 items-center justify-center rounded-full border " +
@@ -102,45 +69,18 @@ export const radioIndicatorVariants = cva(
 );
 
 /**
- * A group of mutually exclusive options.
- *
- * `label` is REQUIRED. A radio group without a name is announced as a bare
- * "radiogroup", and unlike a checkbox there is no sensible per-option fallback:
- * the individual radios name the OPTIONS, not the question they answer.
- *
- * ── ONE CAPABILITY GAP: `orientation` NO LONGER STEERS THE ARROW KEYS ──────
- *
- * Under React Aria this component fed ONE `orientation` value to two consumers
- * — the flex axis and the arrow-key axis — precisely so a keyboard user could
- * not navigate a direction the layout does not run in.
- *
- * Base UI's `RadioGroup` has NO `orientation` prop. It is a `CompositeRoot`,
- * and `useCompositeRoot` defaults `orientation` to `'both'`
- * (`internals/composite/root/useCompositeRoot.mjs:15`), which is not forwarded
- * by `RadioGroup.mjs` and cannot be reached from outside. So a horizontal group
- * now also answers ArrowUp/ArrowDown, and a vertical one also answers
- * ArrowLeft/ArrowRight.
- *
- * That is a widening rather than a break — every key that worked still works,
- * and the WAI-ARIA radio-group pattern permits both axes — so `orientation` is
- * kept as the VISUAL prop it always also was, and the loss is recorded rather
- * than hidden behind a prop that no longer does half of what its docblock said.
- * The adapter cannot close it: `@lumo-ui/base-ui-ssr` fixes things by passing a
- * public prop, and there is no prop here to pass.
- *
- * Base UI's arrow keys ARE direction-aware, which React Aria's also were:
- * `CompositeRoot` reads `useDirection()`, so ArrowRight moves to the PREVIOUS
- * option on an RTL page.
+ * A group of mutually exclusive options. `label` is REQUIRED: the radios name
+ * the OPTIONS, not the question. CAPABILITY GAP: Base UI's `RadioGroup` has no
+ * `orientation` prop and answers both arrow axes, so `orientation` is now
+ * purely visual (a widening, permitted by WAI-ARIA). Arrow keys are
+ * direction-aware via `useDirection()`.
  */
 export interface RadioGroupProps
   extends Omit<
       FieldGroupPropsBase<string | null, string>,
       "isInvalid" | "validationBehavior" | "slot"
     >,
-    // `orientation` is taken from the cva rather than from React Aria so the two
-    // cannot disagree about the literal union, and — since the engine swap —
-    // because it is now a purely visual prop with no keyboard meaning to keep in
-    // sync. See the header.
+    // `orientation` comes from the cva; it is a purely visual prop now.
     VariantProps<typeof radioListVariants> {
   /** Announced and displayed name for the whole group. Required. */
   label: string;
@@ -156,29 +96,10 @@ export interface RadioGroupProps
 }
 
 /**
- * The option that holds the tab stop until hydration.
- *
- * ── MEASURED ON THIS REPOSITORY'S OWN EXPORT ───────────────────────────────
- *
- * Before this context existed, every `<span role="radio">` this component
- * served carried `tabindex="-1"` and none carried `0` — so a radio group was
- * UNREACHABLE by the Tab key for the whole window between first paint and
- * hydration. Six documents of the 442-document build had a radio group in that
- * state, including the component's own docs page.
- *
- * `RadioGroup` is one of the four Base UI widgets built on `CompositeRoot`,
- * which resolves the roving index in a layout effect that never runs on the
- * server; `@lumo-ui/base-ui-ssr`'s `useCompositeTabStop` is the fix and its
- * value EXPIRES after hydration, which a constant `tabIndex={0}` would not —
- * that would leave two permanent tab stops the composite could never reclaim.
- *
- * `segmented-control.tsx` had already been given this treatment and this one
- * had not, which is the whole reason to state the rule per component rather
- * than trust that a family-wide sweep reached every member.
- *
- * The CHECKED option holds it, falling back to the first — that is where the
- * WAI-ARIA radio-group pattern puts the stop, and where Base UI itself puts it
- * once it can.
+ * The option that holds the tab stop until hydration. Base UI's `CompositeRoot`
+ * resolves the roving index in a layout effect, so the served group had no
+ * `tabindex="0"` and was unreachable by Tab; `useCompositeTabStop` serves one
+ * and EXPIRES after hydration. The CHECKED option holds it, else the first.
  */
 const RadioTabStopContext = createContext<string | undefined>(undefined);
 
@@ -215,8 +136,7 @@ export function RadioGroup({
   isRequired,
   ...rest
 }: RadioGroupProps) {
-  // One expression, so the served stop and the served selection cannot land on
-  // different options. `firstRadioValue` is only consulted when neither is set.
+  // One expression, so the served stop and selection cannot land on different options.
   const tabStopValue =
     value ?? defaultValue ?? (children === undefined ? undefined : firstRadioValue(children));
 
@@ -257,9 +177,7 @@ export function RadioGroup({
           onChange === undefined
             ? undefined
             : // Base UI's value type is the group's own; React Aria's `onChange`
-              // promised a `string`. A group whose value is cleared hands over
-              // `null`, which RAC could never produce, so it is normalised to
-              // the empty string rather than widened into the public API.
+              // promised a `string`; a cleared group hands over `null`, normalised to "".
               (next: string | null) => onChange(next ?? ""),
         )}
         {...optional("readOnly", isReadOnly)}
@@ -276,15 +194,9 @@ export function RadioGroup({
 }
 
 /**
- * The `role="radiogroup"` element.
- *
- * Split out for the reason `FieldInput` is: a hook cannot read the context its
- * own return value provides. It also removes a wrapper — React Aria needed a
- * `<div>` between the group and the options to hold the flex rules, because
- * RAC's `RadioGroup` rendered the box itself AND the semantics. Base UI's
- * `RadioGroup` IS the flex container, so `listClassName` now styles the element
- * that carries `role="radiogroup"` rather than a div beside it. Same public
- * prop, one fewer node.
+ * The `role="radiogroup"` element, split out because a hook cannot read the
+ * context its own return value provides. Base UI's `RadioGroup` IS the flex
+ * container, so `listClassName` styles the element carrying the role.
  */
 function RadioGroupList({
   children,
@@ -299,27 +211,11 @@ function RadioGroupList({
 }
 
 /**
- * One option.
- *
- * ── EACH RADIO NAMES ITSELF, AND IT HAS TO ─────────────────────────────────
- *
- * `Field.Item` is Base UI's part for exactly this — an option inside a group
- * with its own label and description — and it associates them through the same
- * `useLabelableContext` machinery `Field.Root` uses, which is to say through a
- * LAYOUT EFFECT. So a server-rendered radio is a `<span role="radio">` with no
- * `aria-labelledby`: the group's name is in the first byte and every option's
- * name is not, which is the more misleading half of the two.
- *
- * This calls `useFieldWiring` per option rather than inheriting the group's,
- * and that is not a re-solve of what form.tsx now owns — it is a different
- * field. Inheriting would point every radio at the GROUP's label and announce
- * five options all called «روش پرداخت».
- *
- * `RadioField` + `RadioButton` are gone with React Aria; the asymmetry the old
- * header noted survives the swap and is now structural rather than incidental —
- * `Field.Item` has a description part and no error part, because validation on
- * a radio set belongs to the group by construction. So there is still no
- * `errorMessage` here.
+ * One option. Each radio names ITSELF via its own `useFieldWiring`: `Field.Item`
+ * associates label and option in a LAYOUT EFFECT, so a server-rendered radio
+ * would carry no `aria-labelledby`; inheriting the group's would announce five
+ * options all called «روش پرداخت». No `errorMessage` here — validation belongs
+ * to the group by construction.
  */
 /** One option's props, minus its children and class. */
 interface RadioFieldPropsBase
@@ -337,11 +233,7 @@ interface RadioFieldPropsBase
   /**
    * A ref for the hidden `<input>` element.
    *
-   * @forwarded `...rest` → `Radio.Root`, which declares `inputRef` itself
-   * (`@base-ui/react/radio/root/RadioRoot.d.ts:71`) and points it at the hidden
-   * input it renders. One of the few React Aria names Base UI kept verbatim.
-   * Verified by rendering a `<Radio inputRef={ref}>` and reading `ref.current`:
-   * an `INPUT` with `type="radio"`, not the visible span.
+   * @forwarded `...rest` → `Radio.Root`, which declares `inputRef` itself.
    */
   inputRef?: React.RefObject<HTMLInputElement | null>;
 }
@@ -365,10 +257,8 @@ export function Radio({
   ...rest
 }: RadioProps) {
   const wiring = useFieldWiring({ label: children, description, explicit: rest });
-  // See `RadioTabStopContext`. `String(value)` because the context holds the
-  // group's value as a string and a numeric option would otherwise never match.
-  // Both hooks are called UNCONDITIONALLY — putting `useContext` behind the
-  // `value !== undefined` guard would make it a conditional hook call.
+  // `String(value)`: the context holds the group's value as a string. Both hooks
+  // are called UNCONDITIONALLY.
   const tabStopValue = useContext(RadioTabStopContext);
   const tabStop = useCompositeTabStop(value !== undefined && tabStopValue === String(value));
   return (
@@ -387,11 +277,8 @@ export function Radio({
           {...(rest as object)}
         >
           {/*
-           * The dot is a scaled span rather than an icon: it animates from the
-           * centre, and a transform on the block+inline axes together is
-           * direction-neutral in a way that a translate would not be. It reads
-           * the NAMED group on `Radio.Root` — see `radioIndicatorVariants` for
-           * why `Radio.Indicator` is not used.
+           * The dot is a scaled span: it animates from the centre, direction-
+           * neutrally, and reads the NAMED group on `Radio.Root`.
            */}
           <span
             aria-hidden="true"

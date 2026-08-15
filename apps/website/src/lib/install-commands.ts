@@ -1,12 +1,5 @@
 /**
- * The install commands, in a module with NO `"use client"` directive.
- *
- * They lived inside `install-tabs.tsx` until the build-time highlighter needed
- * them: a function imported FROM a client module INTO a server component is a
- * client reference, not a function — the server page could see the commands
- * but never call the builders. Both sides import from here instead: the server
- * page to highlight each command during the export, the tabs to know which
- * command belongs to which tab.
+ * The install commands, in a module with NO `"use client"` directive: the server page (build-time highlighting) and the client tabs share one source instead of a client reference.
  */
 export type PM = "pnpm" | "npm" | "yarn" | "bun";
 

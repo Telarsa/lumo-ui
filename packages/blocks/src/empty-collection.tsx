@@ -4,29 +4,11 @@ import { Card, CardBody, EmptyState, Separator } from "@lumo-ui/ui";
 /**
  * "There is nothing here yet", with the first steps spelled out.
  *
- * ── NO `"use client"`, AND THE `action` SLOT IS WHY ────────────────────────
- *
- * The obvious API is `{ actionLabel, onAction }`. It would make this a client
- * component — a function cannot cross the server boundary — and an empty state
- * is the thing a server `loading.tsx` or a freshly-provisioned dashboard route
- * renders first, before any JavaScript has arrived. So the action is a
- * `LumoNode` slot: the caller drops a client `<Button>` in and keeps its own
- * boundary, exactly as `empty-state.tsx` does one tier down.
- *
- * ── WHAT THIS ADDS OVER `<EmptyState>` ──────────────────────────────────────
- *
- * `EmptyState` is a primitive: icon, title, description, one action. This block
- * is the screen around it — a surface, and an optional numbered list of what to
- * do next. That list is the part worth having: an empty collection with no
- * instructions is the single most common dead end in an admin product, and the
- * instructions are prose the caller writes in their own language.
- *
- * The hints are an `<ol>` with `list-none`, not a UA-numbered list. A UA marker
- * is placed on the inline-start side and its numerals come from the list-style
- * type, not from `Intl` — so an `<ol>` on a Persian page numbers itself
- * `1. 2. 3.` in Latin digits with nothing to hook `formatNumber` into. The
- * ordering is carried by the element (which is what a screen reader reads) and
- * the marker is simply not drawn.
+ * No `"use client"`: `action` is a `LumoNode` slot rather than `onAction`, so an
+ * empty state can render from the server before any JavaScript arrives. The
+ * hints are an `<ol>` with `list-none` because a UA marker numbers itself in
+ * Latin digits with nothing to hook `formatNumber` into; order is carried by the
+ * element and the marker is simply not drawn.
  */
 export interface EmptyCollectionHint {
   /** Stable key. Not rendered. */
@@ -92,17 +74,11 @@ export function EmptyCollection({
               {/* See the file header for why the marker is suppressed. */}
               <ol className="flex list-none flex-col gap-1.5 p-0 text-sm text-fg-muted">
                 {steps.map((hint) => (
-                  // `ps-4` + a `::before` bullet would need a logical inset;
-                  // a flex row with a `gap` needs nothing, because the layout
-                  // algorithm already knows the reading direction.
+                  // A flex row with a `gap` needs no logical inset for the bullet.
                   <li key={hint.id} className="flex items-start gap-2">
                     {/*
-                     * A drawn dot rather than a bullet CHARACTER. A glyph would
-                     * be a string literal this package ships, and a round span
-                     * is the one shape with no mirroring question at all —
-                     * unlike `›`, which is only safe because Unicode gives it a
-                     * Bidi_Mirrored pair. `aria-hidden` because the `<ol>`
-                     * already conveys order and a bullet read aloud is noise.
+                     * A drawn dot rather than a bullet CHARACTER: no string literal
+                     * shipped, no mirroring question. `aria-hidden` — the `<ol>` conveys order.
                      */}
                     <span aria-hidden="true" className="mbs-1.5 size-1.5 shrink-0 rounded-full bg-fg-subtle" />
                     <span className="min-w-0">{hint.text}</span>

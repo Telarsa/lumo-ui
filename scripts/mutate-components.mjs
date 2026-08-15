@@ -1,23 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * Apply one visual/behavioral mutation to every @lumo-ui/ui implementation
- * module, one process at a time, and require the tests that import that module
- * to kill it. Source is restored byte-for-byte in a finally block after every
- * probe.
- *
- * The kill oracle is `vitest related <module>`: only tests that transitively
- * import the mutated file can grade it. The mutation floor test grades source
- * text with `fs`, not imports, so it can never certify its own mutation — an
- * earlier version of this campaign counted exactly that as a kill, which made
- * every result circular. A module whose mutant no related test observes is
- * reported as `unobserved`, not `killed`: the campaign's job is to name the
- * gap, not to round it away.
- *
- * Not part of the local `verify` chain: a full run spawns one vitest process
- * per module. CI runs it in a separate job so this expensive floor remains
- * enforced without doubling the critical path of the normal verification job.
- * Run it locally as a campaign: `pnpm run mutation:components`.
+ * Apply one mutation to every @lumo-ui/ui implementation module, one process at
+ * a time, and require the tests that import that module to kill it. Source is
+ * restored byte-for-byte in a finally block. The kill oracle is `vitest related
+ * <module>`; a mutant no related test observes is reported `unobserved`, not
+ * `killed`. Not in the local `verify` chain (one vitest process per module); CI
+ * runs it in a separate job. Locally: `pnpm run mutation:components`.
  */
 
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -30,10 +19,7 @@ const files = readdirSync(sourceDirectory)
   .filter((file) => file.endsWith(".tsx") && !file.endsWith(".test.tsx") && !file.endsWith(".type-test.tsx"))
   .sort();
 
-// The registry is the declared catalogue. A hardcoded count rotted once
-// already (asserted 99 against a directory that had grown to 111, which
-// meant the campaign could not execute at all and nobody noticed), so the
-// invariant is directory ↔ registry agreement, which updates itself.
+// The invariant is directory ↔ registry agreement: a hardcoded count rotted once already.
 /** @type {{ items: Array<{ type: string }> }} */
 const registry = JSON.parse(readFileSync(join(repository, "registry.json"), "utf8"));
 const declared = registry.items.filter((item) => item.type === "registry:ui").length;
