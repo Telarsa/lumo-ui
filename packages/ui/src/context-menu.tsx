@@ -10,7 +10,7 @@ import { Menu, MenuPopover, type MenuProps } from "./menu.tsx";
  *
  *     <ContextMenuTrigger>
  *       <Card>…the surface…</Card>
- *       <ContextMenu onAction={…}>
+ *       <ContextMenu aria-label="…" onAction={…}>
  *         <MenuItem id="duplicate">رونوشت</MenuItem>
  *         <MenuItem id="remove">حذف</MenuItem>
  *       </ContextMenu>
@@ -67,7 +67,9 @@ export function ContextMenuTrigger({ children, onOpenChange }: ContextMenuTrigge
  * and list are never composed differently. Both are menu.tsx's own components; Base UI's
  * `ContextMenu.*` parts are re-exports of the identical `Menu.*` modules.
  */
-export interface ContextMenuProps<T extends object> extends MenuProps<T> {
+export interface ContextMenuProps<T extends object> extends Omit<MenuProps<T>, "aria-label"> {
+  /** Announced name of the menu, e.g. «گزینه‌های سند». REQUIRED: no trigger button names a right-click menu. */
+  "aria-label": string;
   /** Classes for the floating panel, when the menu list is not what you mean. */
   popoverClassName?: string | undefined;
 }

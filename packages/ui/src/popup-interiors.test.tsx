@@ -98,6 +98,8 @@ describe("popup interiors pass the full gate rule set while open", () => {
     // Vacuous-pass guard: grading a page whose popup never opened proves nothing.
     const menu = screen.getByRole("menu");
     expect(menu).toBeTruthy();
+    // `<Menu aria-label>` is written one level below `role="menu"`; the carry is what names it.
+    expect(menu.getAttribute("aria-label")).toBe("گزینه‌ها");
     await new Promise((resolve) => setTimeout(resolve, 0));
     /*
      * composite-tab-stop is EXCLUDED here, and the exclusion is proved rather
@@ -284,7 +286,7 @@ describe("popup interiors pass the full gate rule set while open", () => {
     render(
       <ContextMenuTrigger>
         <div data-testid="context-surface" tabIndex={0}>ناحیهٔ سند</div>
-        <ContextMenu>
+        <ContextMenu aria-label="گزینه‌های سند">
           <MenuItem id="duplicate">رونوشت</MenuItem>
         </ContextMenu>
       </ContextMenuTrigger>,
@@ -292,6 +294,7 @@ describe("popup interiors pass the full gate rule set while open", () => {
     fireEvent.contextMenu(screen.getByTestId("context-surface"), { clientX: 20, clientY: 20 });
     const menu = await screen.findByRole("menu");
     expect(menu).toBeTruthy();
+    expect(menu.getAttribute("aria-label")).toBe("گزینه‌های سند");
     await new Promise((resolve) => setTimeout(resolve, 0));
     /*
      * composite-tab-stop is EXCLUDED here for the same proved reason as the

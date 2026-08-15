@@ -41,7 +41,7 @@ function composed() {
       <div data-testid="surface" tabIndex={0}>
         روی این کارت راست‌کلیک کنید
       </div>
-      <ContextMenu>
+      <ContextMenu aria-label="گزینه‌های سند">
         <MenuItem id="duplicate">رونوشت</MenuItem>
         <MenuItem id="rename">تغییر نام</MenuItem>
         <MenuSeparator />

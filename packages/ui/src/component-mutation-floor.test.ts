@@ -3,7 +3,7 @@
  *
  * `scripts/mutate-components.mjs` rewrites one anchor per module — JSX
  * `className` assignments for visual modules, a behavior-specific anchor for
- * the two honest non-visual modules — and grades each mutant with
+ * the modules listed in `behaviorAnchors` — and grades each mutant with
  * `vitest related`, so only tests that import the module can kill it. This
  * suite is NOT the kill oracle: it reads source text with `fs`, so counting
  * its failures as kills would be circular (an earlier version of the campaign
@@ -35,6 +35,15 @@ const declaredModules = registry.items.filter(
 const behaviorAnchors: Readonly<Record<string, string>> = {
   "form-state.tsx": "event.preventDefault();",
   "provider.tsx": "<DirectionProvider direction={direction(locale)}>",
+  "cascader.tsx": "formatNumber(columnIndex + 1, locale)",
+  "data-grid.tsx": "aria-errormessage={error === null ? undefined : errorId}",
+  "tree-select.tsx": 'mode === "checkbox" ? state === "checked" : selected.has(node.value)',
+  "combobox.tsx": "relabelEngineDismiss(boxRef.current, dismissLabel)",
+  "multi-select.tsx": "relabelEngineDismiss(boxRef.current, dismissLabel)",
+  "dialog.tsx": '{...attr("role", popupRole(children))}',
+  "menu.tsx": 'findChildProp(children, "aria-label") as string | undefined',
+  "select.tsx": "{...listName}",
+  "table.tsx": "const jump = arrow.jump(event.key, event.ctrlKey || event.metaKey);",
 };
 
 describe("the systematic component mutation floor", () => {

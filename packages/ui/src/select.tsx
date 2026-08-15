@@ -488,6 +488,14 @@ export function SelectPopover<T extends object>({
   children,
 }: SelectPopoverProps<T>) {
   const field = useContext(SelectFieldContext);
+  // The listbox names nothing by itself: the select's own name, else the trigger's.
+  const control = useFieldControl();
+  const listName =
+    field?.label !== undefined
+      ? { "aria-label": field.label }
+      : control.id !== undefined
+        ? { "aria-labelledby": control.id }
+        : {};
   const stateText =
     field?.asyncState?.status === "loading" || field?.asyncState?.status === "error"
       ? field.asyncState.text
@@ -512,6 +520,7 @@ export function SelectPopover<T extends object>({
         >
           <BaseSelect.List
             data-lumo=""
+            {...listName}
             className={cn(selectListBoxVariants(), listBoxClassName)}
           >
             {/* No cast. `children` is `LumoNode` now that the function arm is

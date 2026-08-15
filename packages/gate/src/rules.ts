@@ -142,7 +142,9 @@ const INTERACTIVE =
   'button,a[href],input:not([type=hidden]),select,textarea,[role=button],' +
   '[role=link],[role=checkbox],[role=radio],[role=switch],[role=tab],' +
   '[role=menuitem],[role=option],[role=combobox],[role=searchbox],[role=slider],' +
-  '[role=spinbutton],[role=textbox]';
+  '[role=spinbutton],[role=textbox],' +
+  // Composite widgets name nothing by themselves; an unnamed menu, list, tree or grid is a control with no name.
+  '[role=menu],[role=listbox],[role=tree],[role=treegrid],[role=grid]';
 
 function visibleTextNodes(doc: Document): Text[] {
   const out: Text[] = [];

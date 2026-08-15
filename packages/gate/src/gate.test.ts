@@ -808,6 +808,16 @@ describe("native-script-name — what is ANNOUNCED, not what is in an attribute"
     expect(fired('<button aria-label="افزودن سفارش">+</button>')).toEqual([]);
   });
 
+  it("grades composite widgets: an unnamed menu, listbox, tree or grid is an unnamed control", () => {
+    expect(fired('<div role="menu"><div role="menuitem" tabindex="0">رونوشت</div></div>')).toEqual(["named-controls"]);
+    expect(fired('<ul role="listbox"><li role="option" tabindex="0">۱۴۰۳</li></ul>')).toEqual(["named-controls"]);
+    expect(fired('<div role="tree"><div role="treeitem" tabindex="0">پرونده</div></div>')).toEqual(["named-controls"]);
+    expect(
+      fired('<button id="t">گزینه‌ها</button><div role="menu" aria-labelledby="t"><div role="menuitem" tabindex="0">رونوشت</div></div>'),
+    ).toEqual([]);
+    expect(fired('<ul role="listbox" aria-label="سال"><li role="option" tabindex="0">۱۴۰۳</li></ul>')).toEqual([]);
+  });
+
   it("is vacuous on a Latin-script locale", () => {
     const html =
       '<!doctype html><html lang="en-US" dir="ltr"><body><button>Save</button></body></html>';

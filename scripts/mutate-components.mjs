@@ -74,6 +74,33 @@ function mutate(file, source) {
       ),
     };
   }
+  if (file === "dialog.tsx") {
+    return {
+      operator: "stop lifting the alert dialog's role onto the popup",
+      source: source.replace('{...attr("role", popupRole(children))}', '{...attr("role", undefined)}'),
+    };
+  }
+  if (file === "menu.tsx") {
+    return {
+      operator: "drop the menu's announced name on its way to the popup",
+      source: source.replace('findChildProp(children, "aria-label") as string | undefined', "undefined"),
+    };
+  }
+  if (file === "select.tsx") {
+    return {
+      operator: "leave the listbox unnamed",
+      source: source.replace("{...listName}", ""),
+    };
+  }
+  if (file === "table.tsx") {
+    return {
+      operator: "ignore Home/End/PageUp/PageDown jumps",
+      source: source.replace(
+        "const jump = arrow.jump(event.key, event.ctrlKey || event.metaKey);",
+        "const jump = null;",
+      ),
+    };
+  }
   if (file === "combobox.tsx" || file === "multi-select.tsx") {
     return {
       operator: "leave the engine's English dismiss sentinel unrelabelled",

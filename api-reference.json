@@ -3472,9 +3472,9 @@
         "props": [
           {
             "name": "aria-label",
-            "type": "string | undefined",
-            "required": false,
-            "description": "Announced name of the menu. Without it Base UI names the popup from the trigger's visible text, which is wrong for an ellipsis icon."
+            "type": "string",
+            "required": true,
+            "description": "Announced name of the menu, e.g. «گزینه‌های سند». REQUIRED: no trigger button names a right-click menu."
           },
           {
             "name": "children",
