@@ -128,7 +128,7 @@ Scores between anchors are allowed. "10" means "best in the ecosystem, proved".
 | Criterion | 2 | 5 | 8 | 10 |
 |---|---|---|---|---|
 | I1 Install path | advertised URL does not serve the artifact | manual copy from repo works and is documented | registry/package resolves from the advertised location; consumer install tested in CI | …plus mirrors / offline install |
-| I2 Versioning | `0.0.0`, no tags | tags | semver + changelog | LTS policy |
+| I2 Versioning | `0.0.0`, no tags | tags | semver + changelog + migration notes | LTS policy |
 | I3 Docs site | none | static build, unhosted | hosted, searchable, bilingual | …plus versioned docs |
 | I4 Licence & access policy | unclear | private, stated | private/public policy stated, licence file present | OSS or clearly-licensed private |
 | I5 Adoption evidence *(weight 0)* | none | one internal app | several products in production | large public user base |

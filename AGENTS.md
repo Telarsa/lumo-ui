@@ -1,6 +1,6 @@
 # Lumo UI — agent guide
 
-Persian-first, RTL-honest React 19 component library on Base UI. Private, `0.0.0`, not on npm. Monorepo (pnpm). Read `docs/README.md` for the map.
+Persian-first, RTL-honest React 19 component library on Base UI. Private, versioned by git tag (`v0.1.0` first), not on npm. Monorepo (pnpm). Read `docs/README.md` for the map.
 
 ## Commands
 - `pnpm run verify` — the full pipeline (~15 min, low-RAM machine: run once at the end, never in parallel with the mutation campaign).

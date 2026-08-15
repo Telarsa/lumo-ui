@@ -15,6 +15,6 @@ Start with `architecture.md`, then `codebase.md` for where things live. Everythi
 
 Browser evidence: `evidence/README.md` — what the Playwright job proves and does not.
 
-Consumers (people and AI sessions in other projects): `agent-consumer.md` — find, get, use, customise, upgrade; the `lumo` CLI. Rating: `rubric.md` — the fixed weighted sheet every evaluation and comparison uses. APG audit: `apg.md` — per-family keyboard matrix (owned / proved / holes). Plan: `goals.md` — the criterion-by-criterion goal list, ordered by leverage.
+Versions: `../CHANGELOG.md` — per-tag breaking changes with migration notes; policy at the top. Consumers (people and AI sessions in other projects): `agent-consumer.md` — find, get, use, customise, upgrade; the `lumo` CLI. Rating: `rubric.md` — the fixed weighted sheet every evaluation and comparison uses. APG audit: `apg.md` — per-family keyboard matrix (owned / proved / holes). Plan: `goals.md` — the criterion-by-criterion goal list, ordered by leverage.
 
 Knowledge graph: `graphify query "<question>"` (built into `graphify-out/`, gitignored; rebuild with `/graphify .` or `graphify update .`).

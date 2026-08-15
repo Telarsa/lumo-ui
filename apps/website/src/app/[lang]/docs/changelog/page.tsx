@@ -3,8 +3,9 @@ import { assertLocale, localeParams } from "@/lib/locale";
 import { Bullets, DocSection, DocsShell, P, Term } from "../docs-shell";
 
 /**
- * /docs/changelog — dated history, derived from `git log`, with no version
- * numbers because nothing has been released.
+ * /docs/changelog — dated history, derived from `git log`. The first tagged
+ * version is v0.1.0 (16 Aug 2026); per-version changes and migration notes live
+ * in CHANGELOG.md at the repository root.
  *
  * Every entry below corresponds to commits that exist on this branch. These
  * are selected dated milestones, not an exhaustive transcription of every
@@ -45,7 +46,7 @@ interface PageCopy {
 const COPY = {
   "fa-IR": {
     title: "تاریخچهٔ تغییرات",
-    intro: "تاریخ به‌جای شماره‌نسخه — چون هنوز نسخه‌ای منتشر نشده است.",
+    intro: "نقطه‌های عطف به تاریخ؛ از نخستین نسخهٔ برچسب‌خورده به بعد، تغییرات هر نسخه با یادداشت‌های مهاجرت در فایل تغییرات مخزن ثبت می‌شود.",
     railLabel: {
       d20260815: "۲۴ مرداد ۱۴۰۵",
       d20260810: "۱۹ مرداد ۱۴۰۵",
@@ -65,7 +66,9 @@ const COPY = {
         این مخزن جوان است و این صفحه وانمود نمی‌کند که نیست. نخستین کامیت — ۸ مرداد ۱۴۰۵،
         برابر ۳۰ ژوئیهٔ ۲۰۲۶ — فقط برنامه و شواهدِ تصمیم‌ها بود. آنچه در ادامه می‌آید
         گزیده‌ای از نقطه‌های عطفِ ثبت‌شده در <Term>git log</Term> است — نه فهرست همهٔ
-        کامیت‌ها و نه نسخه‌های ساختگی؛ چون هنوز انتشاری در کار نبوده که شماره‌ای بخواهد.
+        کامیت‌ها و نه نسخه‌های ساختگی. از ۲۵ مرداد ۱۴۰۵ نسخه‌ها برچسب می‌خورند (<Term>v0.1.0</Term>{" "}
+        نخستین آن‌هاست) و شکست‌های سازگاری و راه مهاجرت هر نسخه در <Term>CHANGELOG.md</Term> مخزن
+        ثبت می‌شود.
       </>
     ),
     entries: {
@@ -181,7 +184,7 @@ const COPY = {
   },
   "en-US": {
     title: "Changelog",
-    intro: "Dates instead of version numbers — because nothing has been released yet.",
+    intro: "Milestones by date; from the first tagged version on, each version's changes and migration notes are recorded in the repository's changelog file.",
     railLabel: {
       d20260815: "15 August 2026",
       d20260810: "10 August 2026",
@@ -201,8 +204,9 @@ const COPY = {
         This repository is young and this page does not pretend otherwise. The first commit —
         30 July 2026 — contained only the plan and the evidence behind the decisions. What
         follows is a selection of milestones recorded in <Term>git log</Term>, not every
-        commit and not invented releases; there are no version numbers because there has been
-        no release to number.
+        commit and not invented releases. Since 16 August 2026 versions are tagged (<Term>v0.1.0</Term>{" "}
+        is the first) and each version's breaking changes and migration path are recorded in{" "}
+        <Term>CHANGELOG.md</Term> in the repository.
       </>
     ),
     entries: {
