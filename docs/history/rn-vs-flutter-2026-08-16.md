@@ -1,4 +1,4 @@
-# React Native (Expo) vs Flutter for Lumo — the two-project experiment, 16 Aug 2026
+# React Native (Expo) vs Flutter vs Lynx for Lumo — the twin-app experiment, 16 Aug 2026
 
 The owner asked for two projects with the same app on each, to try both and
 decide. Both live under `example-projects/` and are the ONLY vehicles for
@@ -54,3 +54,44 @@ Recommendation: keep React Native / Expo as the mobile line (the standing
 rule holds, now with a measured comparison behind it); keep `lumo-app-flutter`
 as the reference of what Flutter would cost and offer, and revisit only if the
 mobile line ever needs to stand alone from the web.
+
+
+## Addendum, later the same day: the React Native pass, and a third twin — Lynx
+
+**RN improved after the owner's first look** (motion "completely missing", the
+switch not mirroring): `@lumo-ui/native` gained motion on React Native's own
+`Animated`/`LayoutAnimation` (press dip, switch travel, sheet slide with a
+FADING scrim instead of the Modal's sliding curtain, dialog fade+scale, reduced
+motion honoured), a drawn chevron (the glyph sat below centre), and the switch
+thumb is positioned by **flex alignment** — the layout engine mirrors it like
+every row; two earlier approaches (logical `start` on an absolute child; a side
+from `I18nManager.isRTL`) disagreed with the layout on device. Performance:
+React Compiler enabled in `lumo-app-expo`, animations on the UI thread, Hermes +
+New Architecture. Verified on the iPhone 17.
+
+**Lynx** (`example-projects/lumo-app-lynx`): ReactLynx + `@lynx-js/lynx-ui`, the
+official *headless* UI — the same shape as rn-primitives — under Lumo's
+contract, tokens generated from `tokens.css` as Lynx CSS variables, RTL from CSS
+`direction` (inheritable by config), the same screen. Ran in the prebuilt
+LynxExplorer on the same simulator (no build). Measured:
+
+| Axis | RN + Lumo | Flutter + lumo_ui | Lynx + lumo (lynx-ui) |
+|---|---|---|---|
+| AI writing components | 8 | 8 | 7 — React with Lynx elements (`<view>/<text>`) and CSS; a few surprises (no child combinator, no `oklch()`, overlays need their `*View`, console only in DevTool) |
+| AI proving them | 9 | 6 | 5 — no served bytes, no semantics-tree tester yet; the probe had to render on screen |
+| AI running them | 6 | 5 | 8 — Explorer is Lynx's Expo Go; `pnpm dev` + one `openurl`, sub-second rebuilds |
+| Shared with the web | 9 | 3 | 7 — React + CSS + TypeScript; `@lumo-ui/core` would run (PrimJS passed the whole Intl probe, `Intl.Locale` included) but the DOM-based pieces (Base UI, gate) do not |
+| Maintainability | 7 | 6 | 5 — young ecosystem (lynx-ui 3.x, 4.0 core), Lynx CSS dialect, ByteDance-driven cadence |
+| RTL | 6 (app-level mirroring) | 9 | 8 — CSS `direction` per subtree, logical properties, `enableRTL` on the sheet |
+| i18n / digits / calendar | 6 | 9 | 9 — Persian digits, Persian calendar, `Intl.Locale` all present on device |
+| Accessibility depth | 7 | 7 | 5 — `accessibility-*` attributes exist; less documented, untested with VoiceOver here |
+| Ecosystem for our needs | 7 | 6 | 4 — 17 headless primitives, no calendar/combobox, thin third-party world |
+| Look parity | 8 | 7 | 8 — same tokens as CSS variables; text is the platform's |
+| Runtime maturity / risk | 8 | 9 | 5 — 4.0.1, decision §12's tripwire still applies |
+| **Overall (Telarsa)** | **7.6** | **6.9** | **6.4** |
+
+Verdict unchanged — React Native / Expo stays the mobile line — but Lynx is the
+more interesting runner-up than Flutter for *this* library: it is React + CSS,
+its runtime's Intl is complete, and its headless kit has the right shape; what
+it lacks is maturity, proof surfaces and an ecosystem. `lumo-app-lynx` stays as
+the tripwire decision §12 asked for.
