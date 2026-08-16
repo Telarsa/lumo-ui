@@ -11390,7 +11390,7 @@
             "name": "label",
             "type": "string",
             "required": true,
-            "description": "The accessible name of the field, rendered as its visible label unless showLabel hides it."
+            "description": "The accessible name of the field. ANNOUNCED ONLY by default — `SelectField` is the compact form used inside toolbars, calendars and filter bars; pass `showLabel` to render it visibly, or compose `Select` + `Label` for an ordinary form field with a visible label. (The docblock used to say the opposite of the default; a consumer trial caught it, 16 Aug 2026.)"
           },
           {
             "name": "options",
@@ -11474,7 +11474,7 @@
             "name": "showLabel",
             "type": "boolean | undefined",
             "required": false,
-            "description": "Renders the label visibly; when false the name is announced only."
+            "description": "Renders the label visibly. Default `false`: the name is announced only."
           },
           {
             "name": "size",
@@ -12410,7 +12410,7 @@
           },
           {
             "name": "cols",
-            "type": "\"1\" | \"2\" | \"auto\" | \"3\" | \"4\" | \"6\" | \"12\" | null | undefined",
+            "type": "\"1\" | \"2\" | \"3\" | \"4\" | \"6\" | \"12\" | \"auto\" | null | undefined",
             "required": false,
             "description": "The column template: a fixed count or the auto-fill preset."
           },

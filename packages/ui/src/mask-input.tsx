@@ -54,10 +54,14 @@ export function MaskInput({
   const status = maskValue(shown, mask);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const engineRef = React.useRef<MaskaInput | null>(null);
+  // Latest values for the engine's callback, kept current from an effect (never
+  // written during render): `onMaska` fires from DOM input events, always after commit.
   const controlledRef = React.useRef(value !== undefined);
   const onValueChangeRef = React.useRef(onValueChange);
-  controlledRef.current = value !== undefined;
-  onValueChangeRef.current = onValueChange;
+  React.useEffect(() => {
+    controlledRef.current = value !== undefined;
+    onValueChangeRef.current = onValueChange;
+  });
 
   React.useEffect(() => {
     const input = inputRef.current;

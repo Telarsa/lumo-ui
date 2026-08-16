@@ -13,7 +13,11 @@ import { Menu as BaseMenu } from "@base-ui/react/menu";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { attr, findChildProp, useOpenMirror } from "@lumo-ui/base-ui-ssr";
 import { placementToSideAlign, popoverVariants, type LumoPlacement } from "./popover.tsx";
-import { useLinkComponent } from "./link-context.ts";
+import {
+  useLinkComponent,
+  type LumoLinkComponent,
+  type LumoLinkRenderProps,
+} from "./link-context.ts";
 
 /**
  * A menu of actions, on Base UI's `Menu` with the React Aria-shaped public API.
@@ -222,6 +226,18 @@ export type MenuItemProps<T extends object = object> = MenuItemBaseProps<T> &
   (MenuItemSameTabProps | MenuItemNewTabProps);
 
 /**
+ * The app's link component as `Menu.LinkItem`'s `render` element. Its own component
+ * so the tag comes from a PROP (as `Link linkComponent` does): the React Compiler
+ * treats a value a hook returns as created during render when it is used as a tag.
+ */
+function MenuAnchor({
+  anchor: Anchor,
+  ...props
+}: { anchor: LumoLinkComponent } & LumoLinkRenderProps) {
+  return <Anchor {...props} />;
+}
+
+/**
  * One menu item. `textValue` is re-derived from a string child because a
  * server render has no DOM for Base UI to read text content from.
  */
@@ -296,7 +312,7 @@ export function MenuItem<T extends object = object>({
       <BaseMenu.LinkItem
         {...shared}
         // The app's router link when LumoProvider provides one (the same seam Item and Command use).
-        {...(Anchor === "a" ? {} : { render: <Anchor href={href} /> })}
+        {...(Anchor === "a" ? {} : { render: <MenuAnchor anchor={Anchor} href={href} /> })}
         href={href}
         {...(hrefLang === undefined ? {} : { hrefLang })}
         {...(isDisabled !== true && newTab === true

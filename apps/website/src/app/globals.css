@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "@lumo-ui/theme/tokens.css";
 @import "@lumo-ui/theme/theme.css";
+@import "@lumo-ui/theme/script.css";
 @import "tw-animate-css";
 
 /*

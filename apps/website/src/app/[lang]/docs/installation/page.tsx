@@ -22,7 +22,8 @@ pnpm start                     # http://localhost:4173/fa/`;
 
 const CSS_IMPORTS = `@import "tailwindcss";
 @import "@lumo-ui/theme/tokens.css";
-@import "@lumo-ui/theme/theme.css";`;
+@import "@lumo-ui/theme/theme.css";
+@import "@lumo-ui/theme/script.css"; /* greenfield app only — page-wide Persian typography */`;
 
 const PROVIDER_TSX = `import { LumoHtml } from "@lumo-ui/core";
 import { LumoProvider } from "@lumo-ui/ui";

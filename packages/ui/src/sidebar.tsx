@@ -3,7 +3,7 @@
 import { createContext, useContext, useId, useState } from "react";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { IconButton } from "./button.tsx";
-import { Link, type LinkProps } from "./link.tsx";
+import { Link, type LinkProps, type LinkTabProps } from "./link.tsx";
 import {
   sidebarBadgeVariants,
   sidebarContentVariants,
@@ -167,6 +167,7 @@ export type SidebarItemProps = DistributiveOmit<LinkProps, "variant" | "size"> &
  */
 export function SidebarItem(props: SidebarItemProps) {
   const { icon, badge, children, className, newTab, newTabLabel, isCurrent, ...rest } = props;
+  const tab: LinkTabProps = newTab === true && newTabLabel !== undefined ? { newTab: true, newTabLabel } : {};
   const Anchor = useLinkComponent();
   return (
     <Link
@@ -175,9 +176,7 @@ export function SidebarItem(props: SidebarItemProps) {
       {...(Anchor === "a" ? {} : { linkComponent: Anchor })}
       className={cn(sidebarItemVariants(), className)}
       {...(isCurrent === undefined || isCurrent === false ? {} : { isCurrent })}
-      {...(newTab === true && newTabLabel !== undefined
-        ? { newTab: true as const, newTabLabel }
-        : {})}
+      {...tab}
       {...rest}
     >
       {icon == null ? null : (

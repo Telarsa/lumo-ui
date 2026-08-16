@@ -86,7 +86,7 @@ export function ButtonGroupText({ className, ...props }: ButtonGroupTextProps) {
  * Defaults to `vertical`. `bg-border-control` because it reads as part of a
  * control's boundary (WCAG 1.4.11).
  */
-export interface ButtonGroupSeparatorProps extends SeparatorProps {}
+export type ButtonGroupSeparatorProps = SeparatorProps;
 
 export function ButtonGroupSeparator({
   orientation = "vertical",

@@ -1,5 +1,5 @@
 export type { LumoNode, Locale, Direction } from "./types.ts";
-export { LOCALES, FORMAT_LOCALE, direction } from "./types.ts";
+export { LOCALES, FORMAT_LOCALE, direction, isLocale } from "./types.ts";
 // The prop SHAPES the public API is pinned to (see `props.ts`).
 export type {
   AriaLabelingProps,
@@ -56,7 +56,7 @@ export type {
   ValueBase,
 } from "./props.ts";
 export { cn } from "./cn.ts";
-export { LumoHtml } from "./html.tsx";
+export { LumoHtml, documentDirection } from "./html.tsx";
 export type { LumoHtmlProps } from "./html.tsx";
 export { formatNumber, formatDate, parseNumber } from "./format.ts";
 export { STRINGS, stringsFor, fa, en } from "./strings.ts";

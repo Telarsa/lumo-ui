@@ -2,7 +2,10 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const TOKENS = readFileSync(join(import.meta.dirname, "tokens.css"), "utf8");
+const TOKENS_ONLY = readFileSync(join(import.meta.dirname, "tokens.css"), "utf8");
+const SCRIPT = readFileSync(join(import.meta.dirname, "script.css"), "utf8");
+// tokens.css + script.css: the Persian typography block moved to its opt-in file on 16 Aug 2026; the pins below still read one text.
+const TOKENS = TOKENS_ONLY + "\n" + SCRIPT;
 const THEME = readFileSync(join(import.meta.dirname, "theme.css"), "utf8");
 
 /*

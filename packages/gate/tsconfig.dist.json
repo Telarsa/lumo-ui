@@ -1,0 +1,18 @@
+{
+  "//": "The JavaScript build of the gate that `lumo gate` runs from a consumer's node_modules (Node will not strip types there). Committed under dist/; `gate:dist` in verify rebuilds it and fails if the committed copy is stale.",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "files": ["src/cli.ts", "src/index.ts", "src/rules.ts"]
+}

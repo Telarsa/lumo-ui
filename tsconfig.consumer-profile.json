@@ -1,0 +1,20 @@
+{
+  "//": "A CONSUMER's compiler, not ours: plain `strict`, no exactOptionalPropertyTypes / noUncheckedIndexedAccess, and lib `esnext` (Next.js's default). Every file a consumer can copy or import must type-check here — found necessary by the first consumer trials (16 Aug 2026: an Intl.Locale augmentation collided with lib.esnext.intl; three copies leaned on exactOptionalPropertyTypes). Run: pnpm run gate:consumer-profile.",
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "allowImportingTsExtensions": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "files": [
+    "packages/core/src/index.ts",
+    "packages/base-ui-ssr/src/index.ts",
+    "packages/ui/src/index.ts",
+    "packages/blocks/src/index.ts"
+  ]
+}

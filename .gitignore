@@ -1,5 +1,8 @@
 node_modules/
 dist/
+# The gate's JavaScript build is COMMITTED: `lumo gate` runs it from a consumer's
+# node_modules, where Node will not strip types. `gate:dist` keeps it fresh.
+!packages/gate/dist/
 .turbo/
 *.tsbuildinfo
 .DS_Store

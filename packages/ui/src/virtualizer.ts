@@ -1,6 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type RefObject,
+} from "react";
 
 /**
  * The window arithmetic behind `VirtualList`. Lumo's own rather than
@@ -70,6 +79,42 @@ function observe(callback: ResizeObserverCallback): ResizeObserver | null {
   return typeof ResizeObserver === "undefined" ? null : new ResizeObserver(callback);
 }
 
+/** Read access to the measured sizes as of one publication of the store below. */
+interface MeasureSnapshot {
+  get(key: string | number): number | undefined;
+}
+
+/**
+ * Measured sizes, keyed by ITEM KEY, fed by a `ResizeObserver`. An EXTERNAL
+ * STORE (`useSyncExternalStore`), not state: sizes are written in place from
+ * observer and ref callbacks, and each write publishes a new snapshot — a cheap
+ * accessor, never a copy of the map — so a batch of writes is one re-render and
+ * the layout memo has a real dependency to recompute on. Scrolling pays nothing.
+ */
+function createMeasureStore() {
+  const sizes = new Map<string | number, number>();
+  const listeners = new Set<() => void>();
+  let snapshot: MeasureSnapshot = { get: (key) => sizes.get(key) };
+  return {
+    subscribe(listener: () => void): () => void {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    getSnapshot(): MeasureSnapshot {
+      return snapshot;
+    },
+    /** Records `size` for `key`; a no-op, publishing nothing, when it is unchanged. */
+    set(key: string | number, size: number): void {
+      if (sizes.get(key) === size) return;
+      sizes.set(key, size);
+      snapshot = { get: (key) => sizes.get(key) };
+      for (const listener of listeners) listener();
+    },
+  };
+}
+
 /** The last index whose `start` is at or before `offset`. Binary search; runs on every scroll frame. */
 function indexAt(starts: readonly number[], offset: number): number {
   let low = 0;
@@ -101,10 +146,9 @@ export function useVirtualWindow(options: VirtualWindowOptions): VirtualWindow {
   const [offset, setOffset] = useState(0);
   const [viewport, setViewport] = useState(initialSize);
 
-  // Measured sizes, keyed by ITEM KEY. A ref, not state: written from a
-  // ResizeObserver, and `version` turns a batch of writes into one re-render.
-  const measured = useRef(new Map<string | number, number>());
-  const [version, setVersion] = useState(0);
+  // One store for the life of the window (state for identity, never set); see `createMeasureStore`.
+  const [store] = useState(createMeasureStore);
+  const measured = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 
   const keyOf = useCallback(
     (index: number): string | number => (getItemKey ? getItemKey(index) : index),
@@ -117,15 +161,14 @@ export function useVirtualWindow(options: VirtualWindowOptions): VirtualWindow {
     const sizes: number[] = new Array<number>(count);
     let running = 0;
     for (let index = 0; index < count; index++) {
-      const size = measured.current.get(keyOf(index)) ?? estimateSize(index);
+      const size = measured.get(keyOf(index)) ?? estimateSize(index);
       starts[index] = running;
       sizes[index] = size;
       running += size + gap;
     }
     // The trailing gap is not part of the content: n rows have n−1 gaps.
     return { starts, sizes, total: count === 0 ? 0 : running - gap };
-    // `version` is read for its identity, not its value.
-  }, [count, estimateSize, gap, keyOf, version]);
+  }, [count, estimateSize, gap, keyOf, measured]);
 
   // Watch the scroller. Both dependencies are stable, so this subscribes once.
   useEffect(() => {
@@ -150,22 +193,26 @@ export function useVirtualWindow(options: VirtualWindowOptions): VirtualWindow {
 
   // One ResizeObserver for every row; the row's index is read back from `data-index`.
   const rows = useRef<ResizeObserver | null>(null);
+  // Latest values for `record`, which stays stable so the observer subscribes once.
+  // Written from a layout effect, never during render.
   const keyOfRef = useRef(keyOf);
-  keyOfRef.current = keyOf;
   const horizontalRef = useRef(horizontal);
-  horizontalRef.current = horizontal;
+  useLayoutEffect(() => {
+    keyOfRef.current = keyOf;
+    horizontalRef.current = horizontal;
+  });
 
-  const record = useCallback((element: HTMLElement) => {
-    const index = Number(element.dataset["index"]);
-    if (!Number.isInteger(index)) return;
-    const size = horizontalRef.current ? element.offsetWidth : element.offsetHeight;
-    // A row not yet laid out reports 0; keep the estimate rather than collapse the scrollbar.
-    if (size === 0) return;
-    const key = keyOfRef.current(index);
-    if (measured.current.get(key) === size) return;
-    measured.current.set(key, size);
-    setVersion((n) => n + 1);
-  }, []);
+  const record = useCallback(
+    (element: HTMLElement) => {
+      const index = Number(element.dataset["index"]);
+      if (!Number.isInteger(index)) return;
+      const size = horizontalRef.current ? element.offsetWidth : element.offsetHeight;
+      // A row not yet laid out reports 0; keep the estimate rather than collapse the scrollbar.
+      if (size === 0) return;
+      store.set(keyOfRef.current(index), size);
+    },
+    [store],
+  );
 
   useEffect(() => {
     const observer = observe((entries) => {

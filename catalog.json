@@ -29,6 +29,7 @@
           "en-US": "It is a harmless confirmation; do the action and offer undo with a `Toast`. For a form or more content, `Dialog`."
         }
       },
+      "composition": "<DialogTrigger>\n  <Button variant=\"critical\">…</Button>       ← all the first byte holds\n  <DialogOverlay>                             ← pass NO isDismissable here\n    <DialogModal size=\"sm\">                   ← owns role=\"alertdialog\"\n      <AlertDialog title confirmLabel cancelLabel tone>\n        …the question…                        ← wired to aria-describedby\n      </AlertDialog>\n    </DialogModal>\n  </DialogOverlay>\n</DialogTrigger>",
       "module": "alert-dialog.tsx",
       "docs": [
         "/fa/components/alert-dialog/",
@@ -83,6 +84,7 @@
           "en-US": "A short, transient confirmation of an action — `Toast`. A decision that must be taken before continuing — `AlertDialog`. A view with no content yet — `EmptyState`."
         }
       },
+      "composition": "<Alert tone live icon title>   ← live defaults to \"off\": no role, read in document order\n      onClose closeLabel       ← a typed PAIR: no handler without a name, no name without one\n  the body                     ← prose stays text-fg; only the icon takes the tone colour\n</Alert>",
       "module": "alert.tsx",
       "docs": [
         "/fa/components/alert/",
@@ -126,6 +128,7 @@
           "en-US": "Device chrome around a preview — `Frame`. Laying out several boxes — `Stack` or `Grid`. A fixed height that scrolls — `ScrollArea`."
         }
       },
+      "composition": "<AspectRatio ratio className style>\n  the child, usually absolute inset-0   ← relative on the box is what it\n</AspectRatio>                             resolves against",
       "module": "aspect-ratio.tsx",
       "docs": [
         "/fa/components/aspect-ratio/",
@@ -231,6 +234,7 @@
           "en-US": "One choice from a popup that closes — `ComboBox`. Few known options with no typing — `Select`. Running actions from a dialog by keyboard — `Command`."
         }
       },
+      "composition": "<Autocomplete items match filter itemToString>   ← items is REQUIRED\n  <AutocompleteInput label showLabel placeholder />\n  <AutocompleteListBox label\n    resultCount locale resultsAnnouncement>       ← all three or none\n    {(item) => <AutocompleteItem id>…</AutocompleteItem>}\n  </AutocompleteListBox>\n</Autocomplete>",
       "module": "autocomplete.tsx",
       "docs": [
         "/fa/components/autocomplete/",
@@ -286,6 +290,7 @@
           "en-US": "Several people overlapping with a count for the rest — `IconStack`. A feature's icon in a tinted box — `IconTile`. A status marker — `Badge`."
         }
       },
+      "composition": "<Avatar src alt initials size>   ← src present → alt is required by the TYPE\n                                 ← no src → initials become required instead\n       statusLabel statusTone    ← the dot needs a WORD; there is no boolean\n\n<IconStack label locale max>     ← the group and its +N count live there, not here",
       "module": "avatar.tsx",
       "docs": [
         "/fa/components/avatar/",
@@ -328,6 +333,7 @@
           "en-US": "A removable or selectable chip — `Tag` or `TagGroup`. A message with a body — `Alert`. A line between chat messages — `Marker`."
         }
       },
+      "composition": "<Badge tone variant>       ← tone × variant are compoundVariants: colour only\n  formatNumber or text     ← children are LumoNode; a bare number is TS2322\n</Badge>",
       "module": "badge.tsx",
       "docs": [
         "/fa/components/badge/",
@@ -370,6 +376,7 @@
           "en-US": "Where the reader is in a linear flow they must finish — `Steps`. Site-top sections — `NavigationMenu`. The table of contents of this page — `Scrollspy`."
         }
       },
+      "composition": "<Breadcrumbs label>            ← an <ol> with the name on it; renders no <nav></nav>\n  <Breadcrumb id separator isCurrent isDisabled>\n    <Link href>                ← every crumb but the last\n  </Breadcrumb>\n  <BreadcrumbEllipsis label separator>  ← stands in for a run of crumbs\n  <Breadcrumb>plain text</Breadcrumb>   ← the last: the page you are on,\n                                           and the one carrying aria-current\n</Breadcrumbs>",
       "module": "breadcrumbs.tsx",
       "docs": [
         "/fa/components/breadcrumbs/",
@@ -473,6 +480,7 @@
           "en-US": "Options that stay pressed (bold, italic) — `ToggleButtonGroup`. Exactly one view of two to four — `SegmentedControl`. Many controls under one Tab stop — `Toolbar`."
         }
       },
+      "composition": "<ButtonGroup label orientation>          ← role=\"group\"; label is REQUIRED\n  <Button variant=\"outline\">…</Button>\n  <ButtonGroupSeparator />               ← for two SOLID neighbours\n  <ButtonGroupText>…</ButtonGroupText>   ← a unit, a prefix, a count\n  <IconButton label=\"…\">…</IconButton>\n</ButtonGroup>",
       "module": "button-group.tsx",
       "docs": [
         "/fa/components/button-group/",
@@ -523,6 +531,7 @@
           "en-US": "It takes the user to another page — that is `Link`. For choosing one state among a few, use `ToggleButtonGroup` or `SegmentedControl`."
         }
       },
+      "composition": "<Button variant=\"…\" size=\"…\">…</Button>\n\n<IconButton label=\"…\">\n  <svg aria-hidden=\"true\" />\n</IconButton>\n\n<Button isDisabled>                 ← busy is a COMPOSITION, not a prop\n  <Spinner size=\"sm\" label=\"…\" />   ← the announcement\n  …                                 ← the label STAYS\n</Button>",
       "module": "button.tsx",
       "docs": [
         "/fa/components/button/",
@@ -574,6 +583,7 @@
           "en-US": "A span of days — `RangeCalendar`. The grid behind a field and a button — `DatePicker`. Typing a date with no grid — `DateField`. Events laid on days — `EventCalendar`."
         }
       },
+      "composition": "<Calendar label locale value onChange>\n  the nav row          ← rendered for you. previous · month · next, all named\n                         by calendar-datelib.ts rather than by props.\n  the month grid       ← rendered for you. Every cell named in the reader's\n                         own calendar, by the same file.\n</Calendar>",
       "module": "calendar.tsx",
       "docs": [
         "/fa/components/calendar/",
@@ -635,6 +645,7 @@
           "en-US": "A repeated row in a list with media and actions — `Item`. A blank-state panel with one action — `EmptyState`. Just spacing between children — `Stack`."
         }
       },
+      "composition": "<Card variant>                 ← outlined | elevated | plain\n  <CardHeader>              ← a grid; the 2nd column exists only with an action\n    <CardTitle level>          ← 2–6, never 1: a card is not the page\n    <CardDescription>          ← a <p>, so :lang(fa) line-height applies\n    <CardAction>               ← last in the DOM, opposite the title in the layout\n  </CardHeader>\n  <CardBody>\n  <CardFooter>                 ← justify-end = the INLINE end\n</Card>",
       "module": "card.tsx",
       "docs": [
         "/fa/components/card/",
@@ -680,6 +691,7 @@
           "en-US": "A horizontal row that keeps what fits and hides the rest — `OverflowList`. A long list to scroll — `VirtualList` or `ScrollArea`. Steps in a required flow — `Steps`."
         }
       },
+      "composition": "<Carousel locale label roleDescription slideRoleDescription\n          orientation opts plugins setApi>\n  <CarouselContent>\n    <CarouselItem label>…</CarouselItem> ← label REQUIRED: a roledescription\n                                           with no name announces one word\n  </CarouselContent>\n  <CarouselPrevious label=\"…\" />         ← sits at the reading START\n  <CarouselNext label=\"…\" />\n</Carousel>",
       "module": "carousel.tsx",
       "docs": [
         "/fa/components/carousel/",
@@ -795,6 +807,7 @@
           "en-US": "A matrix of values as colour — `HeatmapChart`. Profiles compared over axes — `RadarChart`. Proportional area of a hierarchy — `TreemapChart`. Flow between nodes — `SankeyChart`. Just the numbers — `Table` or `DataGrid`."
         }
       },
+      "composition": "const definition = defineChart({\n  marks: [barY(data, { id: \"sales\", x: \"month\", y: \"sales\", fill: chartColor(\"sales\") })],\n  x: chartCategoryAxis(locale, { scale: () => scaleBand().padding(0.2) }),\n  y: chartValueAxis(locale, { scale: scaleLinear, grid: true }),\n  tooltip: chartTooltip(locale, config),\n})\n\n<ChartContainer config locale label definition data categoryKey dataCaption>\n  <ChartData />            ← rendered for you. the served figures.\n  <ChartLegend />          ← chrome around the plot, driven by config\n</ChartContainer>",
       "module": "chart.tsx",
       "docs": [
         "/fa/components/chart/",
@@ -856,6 +869,7 @@
           "en-US": "The change must apply immediately — `Switch`. Only one of several — `RadioGroup`."
         }
       },
+      "composition": "<CheckboxGroup label=\"…\" description=\"…\" errorMessage=\"…\">\n  <Checkbox value=\"…\">…</Checkbox>\n</CheckboxGroup>",
       "module": "checkbox.tsx",
       "docs": [
         "/fa/components/checkbox/",
@@ -1010,6 +1024,7 @@
           "en-US": "The list is short and fixed — `Select`. Free text with optional suggestions — `Autocomplete`. Several values — `MultiSelect`."
         }
       },
+      "composition": "<ComboBox\n  showSuggestionsLabel   ← REQUIRED: the trigger is an icon-only button\n  suggestionsLabel       ← REQUIRED: the engine names the list nothing\n  label                  ← rendered as a native <label htmlFor>\n  placeholder items selectedKey defaultSelectedKey onSelectionChange\n  inputValue onInputChange isDisabled isRequired name>\n\n  <ComboBoxItem id isDisabled>…</ComboBoxItem>\n</ComboBox>",
       "module": "combobox.tsx",
       "docs": [
         "/fa/components/combobox/",
@@ -1070,6 +1085,7 @@
           "en-US": "Filtering a list that stays on the page — `Autocomplete`. Picking a value in a form — `ComboBox` or `Select`. Field-aware search with clauses and saved views — `PowerSearch`."
         }
       },
+      "composition": "<CommandDialog title=\"…\" description=\"…\" closeLabel=\"…\" trigger={…}>\n  <Command items={commands}>\n    <CommandInput label=\"…\" />\n    <CommandList label=\"…\">\n      {(item) => (\n        <CommandItem key={item.value} id={item.value}>\n          {item.label}\n          <CommandShortcut>…</CommandShortcut>\n        </CommandItem>\n      )}\n    </CommandList>\n    <CommandEmpty>…</CommandEmpty>\n  </Command>\n</CommandDialog>",
       "module": "command.tsx",
       "docs": [
         "/fa/components/command/",
@@ -1140,6 +1156,7 @@
           "en-US": "A menu behind a visible button — `Menu`. A row of menus at the top of a window — `Menubar`. Content that opens on hover — `HoverCard`."
         }
       },
+      "composition": "<ContextMenuTrigger>\n  <Card>…the right-click surface…</Card>   ← display: contents, so no layout box\n  <ContextMenu aria-label onAction>\n    <MenuSection title>\n      <MenuItem id isDisabled>…</MenuItem>\n    </MenuSection>\n    <MenuSeparator />\n  </ContextMenu>\n</ContextMenuTrigger>",
       "module": "context-menu.tsx",
       "docs": [
         "/fa/components/context-menu/",
@@ -1190,6 +1207,7 @@
           "en-US": "A hundred readable rows with a few columns — `Table` is simpler and lighter. A hierarchy — `Tree`."
         }
       },
+      "composition": "<DataGrid locale table>            ← carries locale + the useLumoTable instance\n  <DataGridToolbar>\n    <DataGridSearch label clearLabel />\n    <DataGridColumnsMenu label columns />\n  </DataGridToolbar>\n\n  <Table …>…</Table>                ← the grid itself, unchanged\n  <DataGridEmpty>…</DataGridEmpty>  ← role=\"status\", always mounted; only its text is conditional\n\n  <DataGridPagination\n    label previousLabel nextLabel\n    pageLabel rangeLabel            ← both FUNCTIONS of formatted strings\n    pageSizeLabel pageSizes />\n</DataGrid>",
       "module": "data-grid.tsx",
       "docs": [
         "/fa/components/data-grid/",
@@ -1274,6 +1292,7 @@
           "en-US": "A visible grid to pick from — `DatePicker` behind a button, or `Calendar` on the page. Two dates that form a span — `DateRangePicker`. A time — `TimeField`."
         }
       },
+      "composition": "<DateField label description errorMessage size>\n  …the segments   ← rendered for you. WHICH segments and in what ORDER\n                    is the locale's answer, never a literal.\n</DateField>",
       "module": "date-field.tsx",
       "docs": [
         "/fa/components/date-field/",
@@ -1330,6 +1349,7 @@
           "en-US": "A finished date field — `DateField`. A time — `TimeField`. A field with a calendar behind a button — `DatePicker`."
         }
       },
+      "composition": "const state = useDateFieldState({ locale, value, onChange })\n// …or useTimeFieldState({ locale, granularity, hourCycle })\n\n<DateInput state locale labelId    ← labelId is an IDREF, not a string\n           describedBy size bare\n           isDisabled isReadOnly isInvalid />",
       "module": "date-input.tsx",
       "docs": [
         "/fa/components/date-input/",
@@ -1382,6 +1402,7 @@
           "en-US": "Typing only, no grid — `DateField`. A span — `DateRangePicker`. Named ranges such as «this month» for a report — `DateSelector`. A grid that is always visible — `Calendar`."
         }
       },
+      "composition": "<DatePicker label openCalendarLabel\n            description errorMessage>\n  …the segments and the trigger   ← rendered for you\n  …the calendar in a popover      ← rendered for you\n</DatePicker>",
       "module": "date-picker.tsx",
       "docs": [
         "/fa/components/date-picker/",
@@ -1448,6 +1469,7 @@
           "en-US": "Presets such as «last 7 days» beside the grid — `DateSelector`. One date — `DatePicker`. A grid on the page itself — `RangeCalendar`."
         }
       },
+      "composition": "<DateRangePicker label openCalendarLabel\n                 startLabel endLabel\n                 errorMessage>   ← authored: a reversed range speaks English\n  …start segments · dash · end segments   ← rendered for you\n  …the range calendar in a popover        ← rendered for you\n</DateRangePicker>",
       "module": "date-range-picker.tsx",
       "docs": [
         "/fa/components/date-range-picker/",
@@ -1513,6 +1535,7 @@
           "en-US": "Two typed dates with no presets — `DateRangePicker`. One date — `DatePicker`. Picking on a grid with no preset arithmetic — `RangeCalendar`."
         }
       },
+      "composition": "<DateSelector label panelLabel presetsLabel\n              calendarLabel placeholder\n              formatRange   ← authored: a range read-out is a bidi trap\n              presets>      ← authored labels, library arithmetic\n  …the preset buttons   ← rendered for you\n  …the RangeCalendar    ← rendered for you, in a Popover\n</DateSelector>",
       "module": "date-selector.tsx",
       "docs": [
         "/fa/components/date-selector/",
@@ -1578,6 +1601,7 @@
           "en-US": "Many records with the same columns — `Table`. Sorting, filtering and editing — `DataGrid`. Rows with media and actions — `Item`."
         }
       },
+      "composition": "<DescriptionList>                    ← the <dl></dl>\n  <DescriptionGroup layout>          ← a <div>: row (justify-between) or stack\n    <DescriptionTerm>                ← the <dt></dt>\n    <DescriptionDetail>              ← the <dd></dd>, children are LumoNode\n  </DescriptionGroup>\n</DescriptionList>",
       "module": "description-list.tsx",
       "docs": [
         "/fa/components/description-list/",
@@ -1623,6 +1647,7 @@
           "en-US": "You have a single yes/no with consequences — `AlertDialog` announces the right role. Long content or navigation, `Drawer`. A short note that should not interrupt, `Popover`."
         }
       },
+      "composition": "<DialogTrigger>\n  <Button>…</Button>\n  <DialogOverlay>\n    <DialogModal size=\"…\">\n      <Dialog closeLabel=\"…\" label=\"…\">\n        <DialogHeading>…</DialogHeading>       ← aria-labelledby\n        <DialogDescription>…</DialogDescription>  ← aria-describedby\n      </Dialog>\n    </DialogModal>\n  </DialogOverlay>\n</DialogTrigger>",
       "module": "dialog.tsx",
       "docs": [
         "/fa/components/dialog/",
@@ -1684,6 +1709,7 @@
           "en-US": "Parallel views where one is always shown — `Tabs`. Nested hierarchy with keyboard navigation — `Tree`. A panel that opens over the page — `Drawer` or `Dialog`."
         }
       },
+      "composition": "<DisclosureGroup allowsMultipleExpanded defaultExpandedKeys>\n  <Disclosure id isDisabled>\n    <DisclosureTrigger level={2}>…</DisclosureTrigger>  ← a real heading\n    <DisclosurePanel keepMounted=\"until-found\">…</DisclosurePanel>\n  </Disclosure>\n</DisclosureGroup>\n\nA LONE <Disclosure> needs no group — it renders its own root.",
       "module": "disclosure.tsx",
       "docs": [
         "/fa/components/disclosure/",
@@ -1732,6 +1758,7 @@
           "en-US": "A short decision is needed — `Dialog` or `AlertDialog`. Content that must always be visible belongs in a fixed page panel, not a drawer."
         }
       },
+      "composition": "<DialogTrigger>\n  <Button>…</Button>                       ← all the first byte holds\n  <DrawerOverlay isDismissable>            ← the scrim, and the portal boundary\n    <Drawer side=\"start\" size=\"md\">          ← start | end; named by the Dialog inside\n      <Dialog closeLabel=\"…\" label=\"…\">    ← both the panel and ✕ need authored names\n        <DialogHeading>…</DialogHeading>       ← aria-labelledby\n        <DialogDescription>…</DialogDescription>  ← aria-describedby\n      </Dialog>\n    </Drawer>\n  </DrawerOverlay>\n</DialogTrigger>",
       "module": "drawer.tsx",
       "docs": [
         "/fa/components/drawer/",
@@ -1779,6 +1806,7 @@
           "en-US": "Content still on its way — `Skeleton`. A message beside content that exists — `Alert`. An operation in flight — `Spinner`."
         }
       },
+      "composition": "<EmptyState size media level icon title description action>\n                          ← icon is aria-hidden: the title already says it\n                          ← action is a NODE, so a client Button fits inside\n                             a server-rendered panel",
       "module": "empty-state.tsx",
       "docs": [
         "/fa/components/empty-state/",
@@ -1823,6 +1851,7 @@
           "en-US": "Picking a date — `Calendar` or `DatePicker`. Tasks over a date range as bars — `Gantt`. Cards moved between states — `Kanban`."
         }
       },
+      "composition": "<EventCalendar label               ← names the grid\n               strings             ← every announced word, all required\n               events              ← occurrences; no recurrence in v1\n               defaultFocusedDate  ← required: the component reads no clock\n               todayDate           ← optional, also passed in\n               defaultView dayCount> ← month | week | day | days | agenda\n  …the toolbar, the grid or the list   ← rendered for you\n</EventCalendar>",
       "module": "event-calendar.tsx",
       "docs": [
         "/fa/components/event-calendar/",
@@ -1878,6 +1907,7 @@
           "en-US": "A file shown in a conversation before or after sending — `Attachment`. Free-form values entered as chips — `TagsInput`."
         }
       },
+      "composition": "<FileUpload\n  label            ← REQUIRED: names the role=\"group\" drop area\n  onSelectFiles    ← called for dropped, picked AND pasted files alike\n  acceptedFileTypes maxFileSize maxFiles currentFileCount\n  allowsMultiple isDisabled onRejectFiles>\n  …the hint…       ← rendered only when there is one\n</FileUpload>\n\n<FileUploadList>\n  <FileUploadItem name size locale lifecycle removeLabel onRemove />\n</FileUploadList>",
       "module": "file-upload.tsx",
       "docs": [
         "/fa/components/file-upload/",
@@ -2038,6 +2068,7 @@
           "en-US": "Values, validation and submission logic — `LumoForm`. A step-by-step survey — `Questionnaire`."
         }
       },
+      "composition": "<Form validationBehavior=\"aria\">      ← noValidate: the browser's own message is a\n                                         different language from the page\n  <Field label description errorMessage isDisabled name validate>\n    <Label>…</Label>                   ← reads the wiring off the context\n    <FieldInput />                     ← spreads useFieldControl for you\n    <Description>…</Description>\n    <FieldError>…</FieldError>         ← renders NOTHING when there is no error\n  </Field>\n</Form>",
       "module": "form.tsx",
       "docs": [
         "/fa/components/form/",
@@ -2086,6 +2117,7 @@
           "en-US": "Holding a proportion with no chrome — `AspectRatio`. A content surface with header and footer — `Card`."
         }
       },
+      "composition": "<Frame device label address>   ← label names what is INSIDE; the chrome is hidden\n  the preview                  ← inherits the page's own direction, untouched\n</Frame>\n\ndevice=\"browser\"   a bar with three dots and an address line\ndevice=\"phone\"     a thick bezel and a speaker slot\ndevice=\"plain\"     no chrome at all",
       "module": "frame.tsx",
       "docs": [
         "/fa/components/frame/",
@@ -2132,6 +2164,7 @@
           "en-US": "Events on days and hours — `EventCalendar`. A sequence of events with no duration — `Timeline`. Cards by status — `Kanban`."
         }
       },
+      "composition": "<Gantt label locale tasks onTasksChange strings>\n\ntasks             [{ id, label, start, end, progress? }]  start/end are CalendarDate,\n                  inclusive at both ends\nstrings.barName   a FUNCTION of the task's name, both ends already formatted, and the\n                  progress: a bar is a control, so it needs a name saying WHAT and WHEN\nstrings.scaleNames  one word per scale — the library ships no English default for any\n\nganttGeometry(tasks, scale, locale, range?)   the columns, with the day count each one\n                  really spans — a Jalali month scale is NOT twelve equal columns\nganttBarPlacement(task, geometry, locale)     { insetInlineStart, inlineSize } and never\n                  { left, width }: the whole point of the component\nmoveGanttTask(tasks, id, scale, steps, locale)  the pure move, in the reader's calendar\nganttDate(\"2026-03-21\")   a day, not an instant — so there is no time zone to fix",
       "module": "gantt.tsx",
       "docs": [
         "/fa/components/gantt/",
@@ -2242,6 +2275,7 @@
           "en-US": "The plain-text name of an icon — `Tooltip`. Content opened by a click, with controls — `Popover`. Anything a touch user must reach — on the page itself."
         }
       },
+      "composition": "<HoverCard\n  label=\"…\"                         ← REQUIRED: the panel is otherwise anonymous\n  trigger={<Link href=\"…\">…</Link>} ← adopted as-is, with its OWN display\n  placement=\"bottom start\"          ← logical only\n  openDelay={700} closeDelay={300}\n  isDisabled                        ← renders the trigger alone\n>…the preview…</HoverCard>",
       "module": "hover-card.tsx",
       "docs": [
         "/fa/components/hover-card/",
@@ -2292,6 +2326,7 @@
           "en-US": "One person — `Avatar`. A feature icon in a tinted square — `IconTile`. A count on its own — `Badge`."
         }
       },
+      "composition": "<IconStack label locale max size>   ← label is required: the stack is one fact\n  <Avatar initials />               ← the children are hidden beneath the label\n  <Avatar initials />\n</IconStack>                        ← anything past max becomes «+۲»",
       "module": "icon-stack.tsx",
       "docs": [
         "/fa/components/icon-stack/",
@@ -2339,6 +2374,7 @@
           "en-US": "A person — `Avatar`. An icon that does something — `IconButton`. A short status marker — `Badge`."
         }
       },
+      "composition": "<IconTile tone variant size label>  ← no label → aria-hidden; label → role=\"img\" with a name\n  the icon, aria-hidden        ← sized by the tile, at half its width\n</IconTile>",
       "module": "icon-tile.tsx",
       "docs": [
         "/fa/components/icon-tile/",
@@ -2381,6 +2417,7 @@
           "en-US": "A plain field — `TextField`. Search with a magnifier and clear — `SearchField`. A number with steppers — `NumberField`. Several joined buttons — `ButtonGroup`."
         }
       },
+      "composition": "<InputGroup\n  label            ← REQUIRED string: an unnamed field is a defect\n  leading          ← reading START: right in Persian, left in English\n  trailing         ← reading END\n  description errorMessage placeholder size\n  inputClassName />\n\n<InputGroupButton label>…</InputGroupButton>   ← for an interactive adornment",
       "module": "input-group.tsx",
       "docs": [
         "/fa/components/input-group/",
@@ -2434,6 +2471,7 @@
           "en-US": "A phone number — `PhoneInput`. Another fixed pattern — `MaskInput`. A number with steppers — `NumberField`."
         }
       },
+      "composition": "<InputOtp                     ← one field, one name, one tab stop\n  label locale                ← label is required: there is no English default\n  length                      ← six is the Iranian SMS default\n  defaultValue / value        ← ASCII, always\n  onChange onComplete         ← both hand back ASCII\n  description errorMessage\n  isDisabled name />",
       "module": "input-otp.tsx",
       "docs": [
         "/fa/components/input-otp/",
@@ -2589,6 +2627,7 @@
           "en-US": "Reordering one list — `Sortable`. Choosing a subset across two lists — `TransferList`. Tasks on dates — `Gantt`."
         }
       },
+      "composition": "<Kanban label locale columns onColumnsChange strings>\n  {(card, column) => …}         ← you render the card; the handle is supplied\n</Kanban>\n\ncolumns          [{ id, label, cards: [{ id, label }] }]\nstrings.movedTo  a FUNCTION of a column name and two already-formatted numbers:\n                 a move is TWO facts, so it is announced as two\nmoveCard(columns, cardId, toColumn, toIndex)\n                 the pure move, exported and testable alone; toIndex is CLAMPED,\n                 which is what makes an empty destination column ordinary",
       "module": "kanban.tsx",
       "docs": [
         "/fa/components/kanban/",
@@ -2641,6 +2680,7 @@
           "en-US": "A shortcut inside a command-palette row — `CommandShortcut`. A status marker — `Badge`."
         }
       },
+      "composition": "<Kbd keys separator size />    ← keys in press order; the separator is DRAWN,\n                                 never written by the caller\n                               ← the wrapper carries dir=\"ltr\" and data-lumo-latn",
       "module": "kbd.tsx",
       "docs": [
         "/fa/components/kbd/",
@@ -2685,6 +2725,7 @@
           "en-US": "An action that changes state — `Button`. Site-top navigation with panels — `NavigationMenu`. The trail to this page — `Breadcrumbs`."
         }
       },
+      "composition": "<Link href variant size isCurrent isDisabled newTab newTabLabel>\n                        ← no href, or isDisabled → <span role=\"link\">\n                        ← isCurrent → aria-current AND data-current\n                        ← newTab → target + rel, plus an sr-only warning\n</Link>",
       "module": "link.tsx",
       "docs": [
         "/fa/components/link/",
@@ -2728,6 +2769,7 @@
           "en-US": "A selection that lives in a popup — `Select` or `ComboBox`. Choosing across two lists — `TransferList`. Nested data — `Tree`. Ten thousand rows — `VirtualList`."
         }
       },
+      "composition": "<ListBox label selectionMode selectedKeys defaultSelectedKeys\n         disabledKeys onSelectionChange>\n  <ListBoxItem id textValue isDisabled>…</ListBoxItem>\n</ListBox>",
       "module": "list-box.tsx",
       "docs": [
         "/fa/components/list-box/",
@@ -2874,6 +2916,7 @@
           "en-US": "The user picks a value from options and that value must stay visible — `Select`. Site navigation — `NavigationMenu`. Right-click on an area — `ContextMenu`."
         }
       },
+      "composition": "<MenuTrigger>\n  <Button>…</Button>\n  <MenuPopover>\n    <Menu>\n      <MenuSection title=\"…\">\n        <MenuItem id=\"…\">…</MenuItem>\n      </MenuSection>\n      <MenuSeparator />\n      <MenuRadioGroup label=\"…\" value=\"…\">\n        <MenuRadioItem value=\"…\">…</MenuRadioItem>\n      </MenuRadioGroup>\n      <MenuCheckboxItem isSelected>…</MenuCheckboxItem>\n      <SubmenuTrigger>\n        <MenuItem id=\"…\">…</MenuItem>\n        <MenuPopover>\n          <Menu>…</Menu>\n        </MenuPopover>\n      </SubmenuTrigger>\n    </Menu>\n  </MenuPopover>\n</MenuTrigger>",
       "module": "menu.tsx",
       "docs": [
         "/fa/components/menu/",
@@ -2941,6 +2984,7 @@
           "en-US": "One menu behind one button — `Menu`. Site navigation with content panels — `NavigationMenu`. Buttons rather than menus, under one Tab stop — `Toolbar`."
         }
       },
+      "composition": "<Menubar label=\"…\">\n  <MenuTrigger>\n    <MenubarButton>…</MenubarButton>\n    <MenuPopover>\n      <Menu>…</Menu>\n    </MenuPopover>\n  </MenuTrigger>\n</Menubar>",
       "module": "menubar.tsx",
       "docs": [
         "/fa/components/menubar/",
@@ -2990,6 +3034,7 @@
           "en-US": "A long static list — `VirtualList` or `ScrollArea`. One message row — `Message`."
         }
       },
+      "composition": "<MessageScroller               ← role=\"log\" aria-live=\"polite\", and a tab stop\n  label                        ← required: an unnamed scroll region is announced as\n                                 \"scroll area\" and nothing else\n  jumpLabel                    ← required: the jump control is an icon\n  viewportClassName>           ← class for the scrolling box itself\n  <BubbleGroup>                ← anything: bubbles, messages, a plain list\n    <Bubble />\n  </BubbleGroup>\n</MessageScroller>",
       "module": "message-scroller.tsx",
       "docs": [
         "/fa/components/message-scroller/",
@@ -3148,6 +3193,7 @@
           "en-US": "An application's side navigation — `Sidebar`. Actions behind a button — `Menu`. Desktop-style rows of menus — `Menubar`."
         }
       },
+      "composition": "<NavigationMenu label=\"…\">\n  <NavigationMenuItem value=\"products\">\n    <NavigationMenuTrigger>…</NavigationMenuTrigger>\n    <NavigationMenuPanel>\n      <NavigationMenuLink href=\"…\" description=\"…\">…</NavigationMenuLink>\n    </NavigationMenuPanel>\n  </NavigationMenuItem>\n  <NavigationMenuLink href=\"…\">…</NavigationMenuLink>\n</NavigationMenu>",
       "module": "navigation-menu.tsx",
       "docs": [
         "/fa/components/navigation-menu/",
@@ -3207,6 +3253,7 @@
           "en-US": "A number the user enters — `NumberField`. A date the user enters — `DateField`. A count as a marker — `Badge` with `Num` inside."
         }
       },
+      "composition": "<Num value locale style currency minimumFractionDigits maximumFractionDigits />\n                            ← a <span>; options go straight to Intl.NumberFormat\n<DateText value locale dateStyle year month day />\n                            ← a <time dateTime>: the ISO value for machines,\n                               the locale's own calendar for the reader",
       "module": "num.tsx",
       "docs": [
         "/fa/components/num/",
@@ -3254,6 +3301,7 @@
           "en-US": "A value picked from a range — `Slider`. A number only displayed — `Num`. A phone number — `PhoneInput`. A one-time code — `InputOtp`."
         }
       },
+      "composition": "<NumberField\n  label                ← REQUIRED\n  decrementLabel       ← REQUIRED: the engine writes an English verb here\n  incrementLabel       ← REQUIRED: same\n  roleDescription      ← REQUIRED: aria-roledescription on the input\n  minValue maxValue step formatOptions\n  description errorMessage size isDisabled />",
       "module": "number-field.tsx",
       "docs": [
         "/fa/components/number-field/",
@@ -3313,6 +3361,7 @@
           "en-US": "A strip the reader pages through — `Carousel`. A grouped toolbar with arrow keys — `Toolbar`. Chips that wrap — `TagGroup`."
         }
       },
+      "composition": "<OverflowList items getKey initialVisibleItems\n              minVisibleItems maxVisibleItems collapseFrom\n              renderItem renderOverflow />",
       "module": "overflow-list.tsx",
       "docs": [
         "/fa/components/overflow-list/",
@@ -3361,6 +3410,7 @@
           "en-US": "A grid with paging built in — `DataGrid`. Steps in a flow — `Steps`. Everything in one scroller — `VirtualList`."
         }
       },
+      "composition": "<Pagination\n  locale page count onPageChange\n  label            ← names the <nav>. Two unnamed pagers is worse than one.\n  previousLabel nextLabel\n  pageLabel={(formatted) => …}   ← receives «۳», never 3\n  siblingCount size />",
       "module": "pagination.tsx",
       "docs": [
         "/fa/components/pagination/",
@@ -3419,6 +3469,7 @@
           "en-US": "A one-time code — `InputOtp`. Another fixed pattern — `MaskInput`. Free text — `TextField`."
         }
       },
+      "composition": "<PhoneInput\n  label locale countryLabel     ← countryLabel names the selector: two controls, one field\n  value onChange                ← both are E.164, always\n  defaultCountry countries      ← the list is a prop; the shipped one is a default\n  description errorMessage\n  placeholder name isDisabled />\n\ntoNational / toE164 / phoneDigits / isValidPhone / COUNTRIES\n                                 ← the parsing is exported and testable on its own",
       "module": "phone-input.tsx",
       "docs": [
         "/fa/components/phone-input/",
@@ -3471,6 +3522,7 @@
           "en-US": "The user must decide or finish a form — `Dialog`. Only a control's name — `Tooltip`. A preview on hovering a link — `HoverCard`."
         }
       },
+      "composition": "<PopoverTrigger>\n  <Button>…</Button>                     ← names the panel, unless you override it\n  <Popover\n    placement=\"bottom start\"             ← logical ONLY. No left, no right.\n    padded={false}                       ← for a panel that owns its own layout\n    aria-label=\"…\"                       ← wins over the trigger's text\n    offset crossOffset>\n    <PopoverDescription>…</PopoverDescription>   ← the string read AFTER the name\n  </Popover>\n</PopoverTrigger>",
       "module": "popover.tsx",
       "docs": [
         "/fa/components/popover/",
@@ -3582,6 +3634,7 @@
           "en-US": "A wait of unknown length — `Spinner`. Content not yet loaded — `Skeleton`. A value the user sets — `Slider`."
         }
       },
+      "composition": "<ProgressBar label locale value minValue maxValue isIndeterminate\n             formatOptions showValue tone size />\n                        ← formatOptions is NOT the engine's own format prop\n<Meter label locale value minValue maxValue formatOptions showValue tone size />\n                        ← never indeterminate: an unknown quantity within a\n                           known range is not a thing a meter can express",
       "module": "progress.tsx",
       "docs": [
         "/fa/components/progress/",
@@ -3635,6 +3688,7 @@
           "en-US": "Not for a single component or island — wrap the application once. A region in the other locale nests a second `LumoProvider`; there is no direction prop to reach for."
         }
       },
+      "composition": "<LumoProvider locale={locale}>     ← the ONLY prop. No direction sibling.\n  <DateField … />                  ← reads the locale from context\n  <TimeField … />\n  <DatePicker … />\n  <Tabs>…</Tabs>                   ← reads the DIRECTION from the same context\n</LumoProvider>\n\nNesting is legal and the innermost wins — locale and direction together.",
       "module": "provider.tsx",
       "docs": [
         "/fa/components/provider/",
@@ -3790,6 +3844,7 @@
           "en-US": "More than about 6 options — `Select`. Several choices at once — `CheckboxGroup`. Two to four views of one thing — `SegmentedControl`. On/off — `Switch`."
         }
       },
+      "composition": "<RadioGroup\n  label            ← REQUIRED; rendered with nativeLabel={false}\n  orientation      ← VISUAL only now: both axes of arrow keys navigate\n  description errorMessage isDisabled name value defaultValue onChange>\n\n  <Radio value description>…</Radio>   ← names ITSELF, per-option help text\n</RadioGroup>",
       "module": "radio-group.tsx",
       "docs": [
         "/fa/components/radio-group/",
@@ -3842,6 +3897,7 @@
           "en-US": "Behind a button, with typed fields — `DateRangePicker`. With named presets — `DateSelector`. One day — `Calendar`."
         }
       },
+      "composition": "<RangeCalendar label locale value onChange>\n  the nav row          ← the same one the single calendar draws.\n  the month grid       ← the band's ends round on logical corners.\n</RangeCalendar>",
       "module": "range-calendar.tsx",
       "docs": [
         "/fa/components/range-calendar/",
@@ -3955,6 +4011,7 @@
           "en-US": "One of a few labelled options — `RadioGroup`. A quantity within a range — `Meter`. A number typed — `NumberField`."
         }
       },
+      "composition": "<Rating isReadOnly value maxValue locale\n  valueLabel={(v, max) => …} />        ← role=\"img\", ONE announcement\n\n<Rating label locale maxValue\n  starLabel={(v) => …}                 ← role=\"radiogroup\", one name per star\n  value defaultValue onChange isDisabled name size />",
       "module": "rating.tsx",
       "docs": [
         "/fa/components/rating/",
@@ -4018,6 +4075,7 @@
           "en-US": "A fixed layout — `Stack` or `Grid`. A panel that opens over the page — `Drawer`. Just a scrolling region — `ScrollArea`."
         }
       },
+      "composition": "<Resizable\n  locale=\"fa-IR\"\n  label=\"…\"\n  sizeLabel={…}\n  startPanel={…}\n  endPanel={…}\n/>",
       "module": "resizable.tsx",
       "docs": [
         "/fa/components/resizable/",
@@ -4126,6 +4184,7 @@
           "en-US": "Ten thousand rows — `VirtualList`. A transcript that follows the newest message — `MessageScroller`. Panes the reader resizes — `Resizable`."
         }
       },
+      "composition": "<ScrollArea label=\"…\" orientation=\"vertical\">\n  …\n</ScrollArea>",
       "module": "scroll-area.tsx",
       "docs": [
         "/fa/components/scroll-area/",
@@ -4172,6 +4231,7 @@
           "en-US": "Between pages — `Breadcrumbs` or `NavigationMenu`. Application navigation — `Sidebar`. Steps in a flow — `Steps`."
         }
       },
+      "composition": "<Scrollspy label items topOffset scrollRootRef onActiveChange />\n\nitems      [{ id, label }] — id is the heading's own id, href becomes #id\nlabel      names the <nav>; a page has several, and unnamed ones are indistinguishable\ntopOffset  how far down the viewport the reader's eye line sits\nscrollRootRef  optional nested scroll container; omit for the viewport\nonActiveChange receives the id that carries aria-current=\"location\"",
       "module": "scrollspy.tsx",
       "docs": [
         "/fa/components/scrollspy/",
@@ -4219,6 +4279,7 @@
           "en-US": "Field-aware clauses and saved views — `PowerSearch`. Filtering a visible list — `Autocomplete`. Actions by keyboard — `Command`. Plain text — `TextField`."
         }
       },
+      "composition": "<SearchField\n  label            ← REQUIRED: an unnamed field is a defect\n  clearLabel       ← REQUIRED: an unnamed ✕ is worse than an English one\n  description errorMessage placeholder\n  size defaultValue value onChange onClear onSubmit />",
       "module": "search-field.tsx",
       "docs": [
         "/fa/components/search-field/",
@@ -4271,6 +4332,7 @@
           "en-US": "An option that can be none — `RadioGroup`. Several independent on/off buttons — `ToggleButtonGroup`. Content panels with their own URLs or many options — `Tabs`."
         }
       },
+      "composition": "<SegmentedControl\n  label                      ← REQUIRED: neither engine names the radiogroup\n  defaultSelectedKeys        ← a one-element iterable\n  selectedKeys onSelectionChange isDisabled name>\n\n  <SegmentedControlItem id size isDisabled aria-label>…</SegmentedControlItem>\n</SegmentedControl>",
       "module": "segmented-control.tsx",
       "docs": [
         "/fa/components/segmented-control/",
@@ -4322,6 +4384,7 @@
           "en-US": "There are many options or the user needs to type to find one — `ComboBox`. Several values — `MultiSelect`. Three or four always-visible options — `RadioGroup` or `SegmentedControl`."
         }
       },
+      "composition": "<Select placeholder=\"…\" validate={key => …}>\n  <Label>…</Label>\n  <SelectTrigger />\n  <SelectPopover>\n    <SelectGroup label=\"…\">\n      <SelectItem id=\"…\">…</SelectItem>\n    </SelectGroup>\n    <SelectSeparator />\n  </SelectPopover>\n</Select>",
       "module": "select.tsx",
       "docs": [
         "/fa/components/select/",
@@ -4390,6 +4453,7 @@
           "en-US": "A labelled line between messages — `Marker`. Space without a line — `Stack`. Inside a menu — `MenuSeparator`."
         }
       },
+      "composition": "<Separator orientation />   ← \"horizontal\" (the default) → <hr />\n                            ← \"vertical\" → <div role=\"separator\" aria-orientation>",
       "module": "separator.tsx",
       "docs": [
         "/fa/components/separator/",
@@ -4432,6 +4496,7 @@
           "en-US": "Site-top navigation — `NavigationMenu`. A drawer opened over content — `Drawer`. The table of contents of one page — `Scrollspy`."
         }
       },
+      "composition": "<Sidebar label=\"…\">\n  <SidebarHeader>…</SidebarHeader>\n  <SidebarContent>\n    <SidebarGroup title=\"…\">\n      <SidebarItem href=\"…\" icon=\"…\" badge=\"…\">…</SidebarItem>\n    </SidebarGroup>\n  </SidebarContent>\n  <SidebarFooter>\n    <SidebarTrigger collapseLabel=\"…\" expandLabel=\"…\" />\n  </SidebarFooter>\n</Sidebar>",
       "module": "sidebar.tsx",
       "docs": [
         "/fa/components/sidebar/",
@@ -4492,6 +4557,7 @@
           "en-US": "One custom shape — `Skeleton`. An operation in flight with a spoken name — `Spinner`. Nothing to show at all — `EmptyState`."
         }
       },
+      "composition": "<SkeletonText lines={3} />\n<SkeletonAvatar size=\"md\" lines={2} />     ← 0 for the bare circle\n<SkeletonCard hasMedia lines={2} />\n<SkeletonForm fields={3} hasAction />\n<SkeletonTable rows={4} columns={4} />\n\nAnnounce the STATE separately: aria-busy on the region,\nplus a <Spinner label=\"…\" showLabel /> beside it.",
       "module": "skeleton-presets.tsx",
       "docs": [
         "/fa/components/skeleton-presets/",
@@ -4540,6 +4606,7 @@
           "en-US": "A whole paragraph, card, form or table — the presets `SkeletonText`, `SkeletonCard`, `SkeletonForm`, `SkeletonTable`. Waiting on an operation — `Spinner`. A known progress — `ProgressBar`."
         }
       },
+      "composition": "<Skeleton shape className />   ← text | heading | circle | rect\n                               ← always aria-hidden, with no way to turn it off\n                               ← circle and rect take their size from className",
       "module": "skeleton.tsx",
       "docs": [
         "/fa/components/skeleton/",
@@ -4582,6 +4649,7 @@
           "en-US": "Two values — `RangeSlider`. An exact number — `NumberField`. A quantity displayed, not set — `Meter`."
         }
       },
+      "composition": "<Slider\n  label           ← REQUIRED: an unnamed range input announces as bare \"slider\"\n  locale          ← REQUIRED: the output, the aria-valuetext AND the direction\n  minValue maxValue step defaultValue\n  name form       ← native form submission, including an external owner\n  formatOptions   ← feeds the visible output and aria-valuetext, so they cannot drift\n  hideValue size isDisabled onChange onChangeEnd />",
       "module": "slider.tsx",
       "docs": [
         "/fa/components/slider/",
@@ -4634,6 +4702,7 @@
           "en-US": "Cards moving between columns — `Kanban`. Choosing a subset across two lists — `TransferList`. A list with no reordering — `ListBox`."
         }
       },
+      "composition": "<Sortable label locale items onReorder orientation strings>\n  {(item, index) => …}          ← you render the row; the handle is supplied\n</Sortable>\n\nstrings.position                 a FUNCTION of two already-formatted numbers,\n                                 never a \"{n} of {total}\" template — clause order\n                                 is authored, not assembled\nmoveItem(items, from, to)        the pure move, exported and testable alone",
       "module": "sortable.tsx",
       "docs": [
         "/fa/components/sortable/",
@@ -4686,6 +4755,7 @@
           "en-US": "A known fraction — `ProgressBar`. Content whose shape is known — `Skeleton`. A view that is entirely empty — `EmptyState`."
         }
       },
+      "composition": "<Spinner label showLabel size color />\n                     ← role=\"status\" wraps a decorative ring and REAL text\n                     ← showLabel off → the text is sr-only, never display:none,\n                        because a hidden live region is not announced at all",
       "module": "spinner.tsx",
       "docs": [
         "/fa/components/spinner/",
@@ -4732,6 +4802,7 @@
           "en-US": "A surface with header and footer — `Card`. Panes the reader resizes — `Resizable`. A row that hides its overflow — `OverflowList`."
         }
       },
+      "composition": "<Stack tag direction gap align justify wrap>   ← flex; gap only, never space-*\n<Grid tag cols gap align>                      ← \"auto\" fills the row at 16rem\n<Container tag size padded>                    ← mx-auto is margin-inline in v4",
       "module": "stack.tsx",
       "docs": [
         "/fa/components/stack/",
@@ -4776,6 +4847,7 @@
           "en-US": "A page's place in a hierarchy — `Breadcrumbs`. Parallel views — `Tabs`. Events in the past — `Timeline`. The flow itself with its questions — `Questionnaire`."
         }
       },
+      "composition": "<Steps\n  locale           ← REQUIRED: every step number goes through formatNumber\n  label            ← REQUIRED: names the <nav> landmark\n  current          ← 1-based; earlier steps are complete, later ones are not\n  items            ← [{ id, title, description? }]\n  completeLabel currentLabel upcomingLabel   ← REQUIRED, all three\n  orientation />",
       "module": "steps.tsx",
       "docs": [
         "/fa/components/steps/",
@@ -4831,6 +4903,7 @@
           "en-US": "The setting is saved with the form's submit — `Checkbox`. One of several states — `SegmentedControl`."
         }
       },
+      "composition": "<Switch description=\"…\" errorMessage=\"…\">\n  …\n</Switch>",
       "module": "switch.tsx",
       "docs": [
         "/fa/components/switch/",
@@ -4878,6 +4951,7 @@
           "en-US": "You need in-place editing, wide selection, server pagination and column controls — `DataGrid`. A list of items with an action — `ListBox` or `Item`. Name/value pairs — `DescriptionList`."
         }
       },
+      "composition": "const table = useLumoTable({ locale, data, columns, enableRowSelection: true })\n\n<ResizableTableContainer>\n  <Table label=\"…\" locale={locale} table={table}>\n    <TableHeader>\n      <TableSelectAllColumn label=\"…\" />\n      <Column id=\"…\" isRowHeader resizer={<ColumnResizer label=\"…\" valueText={(value) => `${formatNumber(value, locale)} ${unit}`} />}>…</Column>\n    </TableHeader>\n    <TableBody>\n      <Row row={row}>\n        <TableSelectionCell label=\"…\" />\n        <Cell>…</Cell>\n        <TableTreeCell row={row} expandLabel=\"…\" collapseLabel=\"…\">…</TableTreeCell>\n        <TableWidgetCell>{(tabIndex) => <IconButton label=\"…\" tabIndex={tabIndex} />}</TableWidgetCell>\n      </Row>\n    </TableBody>\n    <TableFooter>            ← one summary row, in the same coordinate space\n      <Cell>…</Cell>\n    </TableFooter>\n  </Table>\n</ResizableTableContainer>          ← the scroll box for ANY wide table, not only a resizable one",
       "module": "table.tsx",
       "docs": [
         "/fa/components/table/",
@@ -4966,6 +5040,7 @@
           "en-US": "The sections are ordered steps — `Steps`. Content that opens and closes — `Disclosure`. Navigation between pages — `NavigationMenu` or `Sidebar`."
         }
       },
+      "composition": "<Tabs orientation=\"…\">\n  <TabList label=\"…\">\n    <Tab id=\"…\">…</Tab>\n  </TabList>\n  <TabPanel id=\"…\">…</TabPanel>\n</Tabs>",
       "module": "tabs.tsx",
       "docs": [
         "/fa/components/tabs/",
@@ -5019,6 +5094,7 @@
           "en-US": "A single chip — `Tag`. Values entered by typing — `TagsInput`. Choosing from a list with chips — `MultiSelect`. A status marker — `Badge`."
         }
       },
+      "composition": "<TagGroup label onRemove removeLabel>   ← the last two travel together or not at all\n  <TagList>\n    <TagItem id textValue size>…</TagItem>\n  </TagList>\n</TagGroup>",
       "module": "tag-group.tsx",
       "docs": [
         "/fa/components/tag-group/",
@@ -5072,6 +5148,7 @@
           "en-US": "Several in a row — `TagGroup`. A read-only status marker — `Badge`. Free-form values typed in — `TagsInput`."
         }
       },
+      "composition": "<Tag size onRemove removeLabel>   ← onRemove and removeLabel are one union:\n  the text                        ← neither alone type-checks\n</Tag>",
       "module": "tag.tsx",
       "docs": [
         "/fa/components/tag/",
@@ -5167,6 +5244,7 @@
           "en-US": "One line — `TextField`. JSON with validation — `JsonInput`. A search — `SearchField`."
         }
       },
+      "composition": "<TextArea\n  label            ← REQUIRED string: an unnamed field is a defect\n  rows             ← 4 by default; the browser's own 2 is rarely right\n  description\n  errorMessage     ← supplying one marks the field invalid\n  placeholder isDisabled isReadOnly\n  textAreaClassName />",
       "module": "text-area.tsx",
       "docs": [
         "/fa/components/text-area/",
@@ -5215,6 +5293,7 @@
           "en-US": "Several lines — `TextArea`. A number with steps — `NumberField`. Search with clear — `SearchField`. A phone number, one-time code or fixed pattern — `PhoneInput`, `InputOtp`, `MaskInput`."
         }
       },
+      "composition": "<TextField\n  label=\"…\"\n  description=\"…\"\n  errorMessage=\"…\"\n  placeholder=\"…\"\n/>",
       "module": "text-field.tsx",
       "docs": [
         "/fa/components/text-field/",
@@ -5263,6 +5342,7 @@
           "en-US": "A date — `DateField`. A date with a calendar — `DatePicker`. Events on hours — `EventCalendar`."
         }
       },
+      "composition": "<TimeField label description errorMessage granularity minValue maxValue validate name form>\n  …the segments   ← rendered for you. granularity decides whether\n                    seconds exist; the locale decides the clock.\n  bounds + validate  ← reject out-of-policy times with caller-authored copy\n  name + form        ← submit HH:mm:ss through native FormData\n</TimeField>",
       "module": "time-field.tsx",
       "docs": [
         "/fa/components/time-field/",
@@ -5318,6 +5398,7 @@
           "en-US": "A forward flow with a current step — `Steps`. Tasks with duration — `Gantt`. Chat messages — `Message`."
         }
       },
+      "composition": "<Timeline>                                 ← an <ol>: the order is the information\n  <TimelineItem tone marker isLast>        ← tone colours the dot AND the rail below it\n    <TimelineTime dateTime>                ← already-formatted text; dateTime is ISO\n    <TimelineTitle>                        ← the step's real name\n    <TimelineBody>\n  </TimelineItem>\n</Timeline>",
       "module": "timeline.tsx",
       "docs": [
         "/fa/components/timeline/",
@@ -5365,6 +5446,7 @@
           "en-US": "The user must read it or decide — an inline `Alert` or an `AlertDialog`. A field's error — beside the field."
         }
       },
+      "composition": "// module scope — outside React, so anything can raise one\nexport const toasts = createToastQueue({ maxVisibleToasts: 3 })\n\n// once, near the root\n<ToastRegion queue locale label closeLabel placement />\n\n// anywhere at all\ntoasts.add({ title, description, tone }, { timeout })",
       "module": "toast.tsx",
       "docs": [
         "/fa/components/toast/",
@@ -5423,6 +5505,7 @@
           "en-US": "Exactly one of two to four, never none — `SegmentedControl`. Separate presses — `ButtonGroup`. One button on its own — `Toggle`. A setting — `Switch`."
         }
       },
+      "composition": "<ToggleButtonGroup\n  selectionMode=\"single\" | \"multiple\"   ← does NOT change the group's role\n  aria-label                            ← names the group\n  defaultSelectedKeys selectedKeys onSelectionChange\n  disallowEmptySelection                ← honoured by cancelling the un-press\n  orientation isDisabled>\n\n  <ToggleButton id size aria-label isDisabled>…</ToggleButton>\n</ToggleButtonGroup>",
       "module": "toggle-group.tsx",
       "docs": [
         "/fa/components/toggle-group/",
@@ -5473,6 +5556,7 @@
           "en-US": "A setting saved on change — `Switch`. Several in a strip — `ToggleButtonGroup`. A choice in a form — `Checkbox`."
         }
       },
+      "composition": "<Toggle variant size defaultSelected>\n  …\n</Toggle>\n\n<IconToggle label variant size>   ← label is required\n  …one icon, aria-hidden\n</IconToggle>",
       "module": "toggle.tsx",
       "docs": [
         "/fa/components/toggle/",
@@ -5524,6 +5608,7 @@
           "en-US": "Buttons joined visually with separate stops — `ButtonGroup`. Menus in a row — `Menubar`. Actions that overflow — `OverflowList`."
         }
       },
+      "composition": "<Toolbar label orientation>\n  <ToolbarItem>…one control…</ToolbarItem>   ← enrols it in the roving tabindex\n  <ToolbarSeparator />                       ← derives its own perpendicular\n  <ToolbarItem>…one control…</ToolbarItem>\n</Toolbar>",
       "module": "toolbar.tsx",
       "docs": [
         "/fa/components/toolbar/",
@@ -5575,6 +5660,7 @@
           "en-US": "The content is interactive or long — `Popover` or `HoverCard`. Information that must always be visible — a real label or `Description`."
         }
       },
+      "composition": "<TooltipTrigger isDisabled>\n  <IconButton label=\"حذف\">…</IconButton>   ← the NAME lives here\n  <Tooltip placement=\"top\">…</Tooltip>     ← the DESCRIPTION lives here\n</TooltipTrigger>\n\ndelay / closeDelay are accepted and INERT — see the file header.",
       "module": "tooltip.tsx",
       "docs": [
         "/fa/components/tooltip/",
@@ -5624,6 +5710,7 @@
           "en-US": "A few values with chips — `MultiSelect`. Reordering one list — `Sortable`. Nested data — `TreeSelect`."
         }
       },
+      "composition": "<TransferList items value defaultValue onValueChange strings>\n  <ListBox />  <Button actions />  <ListBox />\n</TransferList>",
       "module": "transfer-list.tsx",
       "docs": [
         "/fa/components/transfer-list/",
@@ -5729,6 +5816,7 @@
           "en-US": "Selecting into a form field — `TreeSelect`. One path — `Cascader`. Sections that open and close — `Disclosure`. Application navigation — `Sidebar`."
         }
       },
+      "composition": "<Tree label defaultExpandedKeys selectionMode>\n  <TreeItem id textValue title>   ← textValue is the name AND the typeahead key\n    <TreeItem id textValue title />\n  </TreeItem>\n</Tree>",
       "module": "tree.tsx",
       "docs": [
         "/fa/components/tree/",
@@ -5838,6 +5926,7 @@
           "en-US": "A few hundred rows — `ScrollArea`. Rows with columns — `DataGrid`. Selection from a list — `ListBox`. A live transcript — `MessageScroller`."
         }
       },
+      "composition": "<VirtualList\n  label locale                    ← direction is derived; there is no isRtl prop\n  count estimateSize\n  initialSize                     ← REQUIRED: the viewport the SERVER lays out against\n  overscan orientation gap getItemKey\n  className itemClassName>\n  {(index) => …}                  ← called with the row's TRUE index\n</VirtualList>",
       "module": "virtual-list.tsx",
       "docs": [
         "/fa/components/virtual-list/",
@@ -5873,6 +5962,20 @@
       "name": "activity-feed",
       "type": "registry:block",
       "description": "Events in reverse chronological order.",
+      "title": {
+        "fa-IR": "فهرست فعالیت",
+        "en-US": "Activity feed"
+      },
+      "intro": {
+        "fa-IR": "رویدادها به ترتیب معکوس زمانی. زمان با تقویم جلالی نمایش داده می‌شود، در حالی که attribute دیتایم به‌عمد میلادی و لاتین می‌ماند.",
+        "en-US": "Events in reverse chronological order. The visible time is Jalali, while the dateTime attribute deliberately stays ISO/Latin — a machine value, not prose."
+      },
+      "tier": "dashboard",
+      "docs": [
+        "/fa/blocks/activity-feed/",
+        "/en/blocks/activity-feed/"
+      ],
+      "module": "activity-feed.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -5889,6 +5992,20 @@
       "name": "app-shell",
       "type": "registry:block",
       "description": "A sidebar on the reading edge and a top bar.",
+      "title": {
+        "fa-IR": "چارچوب برنامه",
+        "en-US": "App shell"
+      },
+      "intro": {
+        "fa-IR": "نوار کناری روی لبهٔ خواندن و یک نوار بالا. بدون «use client»، چون هیچ callbackای اینجا نیست و مسیرها فقط href هستند.",
+        "en-US": "A sidebar on the reading edge and a top bar. No \"use client\" — routes are hrefs and there is no callback here to require one."
+      },
+      "tier": "shell",
+      "docs": [
+        "/fa/blocks/app-shell/",
+        "/en/blocks/app-shell/"
+      ],
+      "module": "app-shell.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -5905,6 +6022,20 @@
       "name": "auth-page",
       "type": "registry:block",
       "description": "The whole sign-in route in one piece: brand mark, the sign-in card, a footnote line, centred in the full viewport.",
+      "title": {
+        "fa-IR": "صفحهٔ ورود کامل",
+        "en-US": "Auth page"
+      },
+      "intro": {
+        "fa-IR": "کل مسیر ورود در یک تکه: نشان محصول، کارت ورود و خط پانوشت، وسط‌چین در ارتفاع کامل نما. چیزی که به‌جای یک بخش، یک صفحهٔ کامل جای‌گذاری می‌شود.",
+        "en-US": "The whole sign-in route in one piece: brand mark, the sign-in card, a footnote line, centred in the full viewport. Pasted as an entire page, not as a section."
+      },
+      "tier": "auth",
+      "docs": [
+        "/fa/blocks/auth-page/",
+        "/en/blocks/auth-page/"
+      ],
+      "module": "auth-page.tsx",
       "dependencies": [
         "@lumo-ui/core"
       ],
@@ -5922,6 +6053,20 @@
       "name": "booking-summary",
       "type": "registry:block",
       "description": "A Jalali date range and a set of charge rows.",
+      "title": {
+        "fa-IR": "خلاصهٔ رزرو",
+        "en-US": "Booking summary"
+      },
+      "intro": {
+        "fa-IR": "بازهٔ تاریخ به تقویم جلالی و ردیف‌های هزینه. تاریخ‌ها با یک gap کنار هم می‌نشینند، نه یک خط تیرهٔ نوشته‌شده که در بایدی وارونه می‌شود.",
+        "en-US": "A Jalali date range and a set of charge rows. The dates sit beside each other with a gap, never a written dash — a neutral glyph a bidi algorithm can reorder."
+      },
+      "tier": "commerce",
+      "docs": [
+        "/fa/blocks/booking-summary/",
+        "/en/blocks/booking-summary/"
+      ],
+      "module": "booking-summary.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -5938,6 +6083,20 @@
       "name": "chart-panel",
       "type": "registry:block",
       "description": "A card around a chart, with figures that survive even when the plot itself does not render.",
+      "title": {
+        "fa-IR": "پنل نمودار",
+        "en-US": "Chart panel"
+      },
+      "intro": {
+        "fa-IR": "کارت دور یک نمودار، با ارقامی که وقتی خودِ نمودار رندر نشود هم می‌مانند. نمودار یک خانهٔ LumoNode است؛ این بسته هیچ کتابخانهٔ نموداری وارد نمی‌کند.",
+        "en-US": "A card around a chart, with figures that survive even when the plot itself does not render. The chart is a LumoNode slot; this package imports no chart library."
+      },
+      "tier": "dashboard",
+      "docs": [
+        "/fa/blocks/chart-panel/",
+        "/en/blocks/chart-panel/"
+      ],
+      "module": "chart-panel.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -5954,6 +6113,20 @@
       "name": "checkout-summary",
       "type": "registry:block",
       "description": "Cart items, itemised charges and a promo code.",
+      "title": {
+        "fa-IR": "خلاصهٔ خرید",
+        "en-US": "Checkout summary"
+      },
+      "intro": {
+        "fa-IR": "اقلام سبد خرید، جمع هزینه‌ها و یک کد تخفیف. جمعِ هر ردیف را caller محاسبه می‌کند، چون ضرب سمت کلاینت است که با مبلغ نهایی درگاه پرداخت اختلاف پیدا می‌کند.",
+        "en-US": "Cart items, itemised charges and a promo code. Each line total is pre-computed by the caller — client-side multiplication is how a shown total quietly disagrees with a payment gateway's."
+      },
+      "tier": "commerce",
+      "docs": [
+        "/fa/blocks/checkout-summary/",
+        "/en/blocks/checkout-summary/"
+      ],
+      "module": "checkout-summary.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -5970,6 +6143,20 @@
       "name": "command-palette",
       "type": "registry:block",
       "description": "A search box with grouped actions.",
+      "title": {
+        "fa-IR": "پالت فرمان",
+        "en-US": "Command palette"
+      },
+      "intro": {
+        "fa-IR": "کادر جستجو به‌همراه گروه‌های اقدام. آیکون‌ها یک خانهٔ caller-supplied هستند، چون این بسته هیچ کتابخانهٔ آیکونی همراه ندارد.",
+        "en-US": "A search box with grouped actions. Icons are a caller-supplied slot, because this package carries no icon library of its own."
+      },
+      "tier": "shell",
+      "docs": [
+        "/fa/blocks/command-palette/",
+        "/en/blocks/command-palette/"
+      ],
+      "module": "command-palette.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -5986,6 +6173,20 @@
       "name": "danger-zone",
       "type": "registry:block",
       "description": "An irreversible action behind a typed phrase.",
+      "title": {
+        "fa-IR": "منطقهٔ خطر",
+        "en-US": "Danger zone"
+      },
+      "intro": {
+        "fa-IR": "کنش برگشت‌ناپذیر، پشتِ یک عبارتِ تایپ‌شونده. مقایسه با === و بدون هیچ نرمال‌سازی‌ای انجام می‌شود، چون ک عربی و ک فارسی دو نویسهٔ متفاوتند.",
+        "en-US": "An irreversible action behind a typed phrase. The comparison is === with no normalisation, because an Arabic ك and a Persian ک are two different characters."
+      },
+      "tier": "settings",
+      "docs": [
+        "/fa/blocks/danger-zone/",
+        "/en/blocks/danger-zone/"
+      ],
+      "module": "danger-zone.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6002,6 +6203,20 @@
       "name": "dashboard-page",
       "type": "registry:block",
       "description": "The app shell with real content in it: route header, stat grid, a table region and the activity feed, each in its place.",
+      "title": {
+        "fa-IR": "صفحهٔ داشبورد کامل",
+        "en-US": "Dashboard page"
+      },
+      "intro": {
+        "fa-IR": "چارچوب برنامه با محتوای واقعی: سربرگ مسیر، شبکهٔ شاخص‌ها، ناحیهٔ جدول و فهرست فعالیت، همه سرِ جای خودشان. ناحیهٔ جدول یک slot است تا مرز کلاینت با caller بماند.",
+        "en-US": "The app shell with real content in it: route header, stat grid, a table region and the activity feed, each in its place. The table region is a slot, so the client boundary stays with the caller."
+      },
+      "tier": "dashboard",
+      "docs": [
+        "/fa/blocks/dashboard-page/",
+        "/en/blocks/dashboard-page/"
+      ],
+      "module": "dashboard-page.tsx",
       "dependencies": [
         "@lumo-ui/core"
       ],
@@ -6022,6 +6237,20 @@
       "name": "data-toolbar",
       "type": "registry:block",
       "description": "Search, sort, a view switch and a result count.",
+      "title": {
+        "fa-IR": "نوار ابزار داده",
+        "en-US": "Data toolbar"
+      },
+      "intro": {
+        "fa-IR": "جستجو، مرتب‌سازی، سوییچ نما و شمار نتیجه. شمار نتیجه یک تابع روی رشتهٔ فرمت‌شده است، نه یک قالب با جای‌خالی.",
+        "en-US": "Search, sort, a view switch and a result count. The count is a function of the already-formatted total, not a template with a hole."
+      },
+      "tier": "data",
+      "docs": [
+        "/fa/blocks/data-toolbar/",
+        "/en/blocks/data-toolbar/"
+      ],
+      "module": "data-toolbar.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6038,6 +6267,20 @@
       "name": "empty-collection",
       "type": "registry:block",
       "description": "The state where there is no data.",
+      "title": {
+        "fa-IR": "مجموعهٔ خالی",
+        "en-US": "Empty collection"
+      },
+      "intro": {
+        "fa-IR": "حالتی که هیچ داده‌ای نیست. متن راهنما اجباری است، چون یک صفحهٔ خالیِ بی‌توضیح از یک خطا قابل تشخیص نیست.",
+        "en-US": "The state where there is no data. The guidance text is required, because an unexplained empty page is indistinguishable from a failure."
+      },
+      "tier": "data",
+      "docs": [
+        "/fa/blocks/empty-collection/",
+        "/en/blocks/empty-collection/"
+      ],
+      "module": "empty-collection.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6054,6 +6297,20 @@
       "name": "faq",
       "type": "registry:block",
       "description": "A question and answer list built on Disclosure.",
+      "title": {
+        "fa-IR": "پرسش‌های پرتکرار",
+        "en-US": "FAQ"
+      },
+      "intro": {
+        "fa-IR": "فهرست پرسش و پاسخ روی Disclosure. نشانگر باز و بسته در محور عمودی می‌چرخد، نه افقی، تا در راست‌چین همان معنا را بدهد.",
+        "en-US": "A question and answer list built on Disclosure. The open indicator rotates on the block axis, not the inline one, so it means the same thing under RTL."
+      },
+      "tier": "marketing",
+      "docs": [
+        "/fa/blocks/faq/",
+        "/en/blocks/faq/"
+      ],
+      "module": "faq.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6070,6 +6327,20 @@
       "name": "feature-grid",
       "type": "registry:block",
       "description": "The \"what it does\" section: a grid of short, self-contained claims.",
+      "title": {
+        "fa-IR": "شبکهٔ ویژگی‌ها",
+        "en-US": "Feature grid"
+      },
+      "intro": {
+        "fa-IR": "بخش «چه‌کار می‌کند»: چند ادعای کوتاه و خودکفا. تنها تصمیم جهت‌دار در این فایل text-start است؛ خودِ شبکه با محور درون‌خطی قرینه می‌شود.",
+        "en-US": "The \"what it does\" section: a grid of short, self-contained claims. The only directional decision in the file is text-start; the grid itself mirrors on the inline axis for free."
+      },
+      "tier": "marketing",
+      "docs": [
+        "/fa/blocks/feature-grid/",
+        "/en/blocks/feature-grid/"
+      ],
+      "module": "feature-grid.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6086,6 +6357,20 @@
       "name": "filter-bar",
       "type": "registry:block",
       "description": "Search, a row of dropdown filters, and the active chips.",
+      "title": {
+        "fa-IR": "نوار فیلتر",
+        "en-US": "Filter bar"
+      },
+      "intro": {
+        "fa-IR": "جستجو، چند فیلتر بازشو و تراشه‌های فعال. نام دکمهٔ پاک‌کردنِ هر تراشه اجباری است، چون یک ✕ نام نیست.",
+        "en-US": "Search, a row of dropdown filters, and the active chips. Each chip's remove name is required, because an ✕ is not a name."
+      },
+      "tier": "dashboard",
+      "docs": [
+        "/fa/blocks/filter-bar/",
+        "/en/blocks/filter-bar/"
+      ],
+      "module": "filter-bar.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6102,6 +6387,20 @@
       "name": "footer",
       "type": "registry:block",
       "description": "The band at the bottom of every page: brand, nav columns, a copyright line.",
+      "title": {
+        "fa-IR": "پاورقی",
+        "en-US": "Footer"
+      },
+      "intro": {
+        "fa-IR": "نوار پایین هر صفحه: نشان، ستون‌های ناوبری و خط کپی‌رایت. بدون level، چون پاورقی همیشه در یک عمق سند می‌نشیند، فارغ از آنچه بالای آن است.",
+        "en-US": "The band at the bottom of every page: brand, nav columns, a copyright line. No level prop — a footer sits at the same document depth regardless of what's above it."
+      },
+      "tier": "marketing",
+      "docs": [
+        "/fa/blocks/footer/",
+        "/en/blocks/footer/"
+      ],
+      "module": "footer.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6118,6 +6417,20 @@
       "name": "hero",
       "type": "registry:block",
       "description": "The opening section of a marketing page.",
+      "title": {
+        "fa-IR": "سربرگ صفحه",
+        "en-US": "Hero"
+      },
+      "intro": {
+        "fa-IR": "نخستین بخش یک صفحهٔ معرفی. بدون «use client» رندر می‌شود، پس متن آن در نخستین بایت است و خزنده آن را می‌بیند.",
+        "en-US": "The opening section of a marketing page. Renders without \"use client\", so its text is in the first byte and a crawler sees it."
+      },
+      "tier": "marketing",
+      "docs": [
+        "/fa/blocks/hero/",
+        "/en/blocks/hero/"
+      ],
+      "module": "hero.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6134,6 +6447,20 @@
       "name": "list-detail",
       "type": "registry:block",
       "description": "A list on the reading edge, the selected record beside it.",
+      "title": {
+        "fa-IR": "فهرست و جزئیات",
+        "en-US": "List / detail"
+      },
+      "intro": {
+        "fa-IR": "فهرست روی لبهٔ خواندن، رکورد انتخاب‌شده کنارش. جداکننده border-e است، پس همیشه میان دو ستون می‌نشیند نه روی لبهٔ صفحه.",
+        "en-US": "A list on the reading edge, the selected record beside it. The divider is border-e, so it always falls between the panes rather than against the viewport edge."
+      },
+      "tier": "data",
+      "docs": [
+        "/fa/blocks/list-detail/",
+        "/en/blocks/list-detail/"
+      ],
+      "module": "list-detail.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6150,6 +6477,20 @@
       "name": "listing-grid",
       "type": "registry:block",
       "description": "A responsive card grid of listings — image, title, price and rating — with the empty state built in.",
+      "title": {
+        "fa-IR": "شبکهٔ آگهی‌ها",
+        "en-US": "Listing grid"
+      },
+      "intro": {
+        "fa-IR": "کارتِ خبرِ کاملاً پیوندشده، بدون «use client» — هر آگهی یک a href واقعی است تا خزنده بدون جاوااسکریپت آن را ببیند.",
+        "en-US": "A grid of fully-linked cards, with no \"use client\" — each listing is a real a href, so a crawler sees it with no JavaScript at all."
+      },
+      "tier": "commerce",
+      "docs": [
+        "/fa/blocks/listing-grid/",
+        "/en/blocks/listing-grid/"
+      ],
+      "module": "listing-grid.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6166,6 +6507,20 @@
       "name": "otp-verify",
       "type": "registry:block",
       "description": "The SMS-code step.",
+      "title": {
+        "fa-IR": "تأیید کد پیامکی",
+        "en-US": "OTP verify"
+      },
+      "intro": {
+        "fa-IR": "مرحلهٔ کد پیامکی. شمارندهٔ ارسال دوباره یک تابع روی ثانیهٔ فرمت‌شده است، نه یک قالب، چون «۴۵ ثانیهٔ دیگر» عدد را جای دیگری می‌نشاند.",
+        "en-US": "The SMS-code step. The resend countdown is a function of the already-formatted seconds, not a template — «45 seconds left» places its number somewhere English doesn't."
+      },
+      "tier": "auth",
+      "docs": [
+        "/fa/blocks/otp-verify/",
+        "/en/blocks/otp-verify/"
+      ],
+      "module": "otp-verify.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6182,6 +6537,20 @@
       "name": "page-header",
       "type": "registry:block",
       "description": "The band atop a route: breadcrumbs, title, description, actions.",
+      "title": {
+        "fa-IR": "سربرگ صفحه",
+        "en-US": "Page header"
+      },
+      "intro": {
+        "fa-IR": "نوار بالای یک مسیر: مسیر راهنما، عنوان، توضیح و کنش‌ها. برچسب مسیر راهنما وقتی crumbs هست اجباری می‌شود، وگرنه غیرقابل‌نوشتن است.",
+        "en-US": "The band atop a route: breadcrumbs, title, description, actions. The trail's label becomes required exactly when crumbs are present, and unwritable otherwise."
+      },
+      "tier": "shell",
+      "docs": [
+        "/fa/blocks/page-header/",
+        "/en/blocks/page-header/"
+      ],
+      "module": "page-header.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6198,6 +6567,20 @@
       "name": "password-reset",
       "type": "registry:block",
       "description": "Two screens, two routes: requesting the reset link, then setting a new password.",
+      "title": {
+        "fa-IR": "بازیابی رمز عبور",
+        "en-US": "Password reset"
+      },
+      "intro": {
+        "fa-IR": "دو صفحه، دو مسیر: درخواست پیوند بازیابی و سپس تعیین رمز تازه. یک کامپوننت با یک مرحلهٔ درونی نیستند، چون پیوند ایمیل‌شده به نشانی دیگری می‌رود.",
+        "en-US": "Two screens, two routes: requesting the reset link, then setting a new password. Not one component with a stage prop — the emailed link points at a different URL."
+      },
+      "tier": "auth",
+      "docs": [
+        "/fa/blocks/password-reset/",
+        "/en/blocks/password-reset/"
+      ],
+      "module": "password-reset.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6214,6 +6597,20 @@
       "name": "preferences",
       "type": "registry:block",
       "description": "Instantly-committing controls, with no Save button.",
+      "title": {
+        "fa-IR": "ترجیحات",
+        "en-US": "Preferences"
+      },
+      "intro": {
+        "fa-IR": "کنترل‌های آنی — بدون دکمهٔ ذخیره. برخلاف فرم تنظیمات، هر کنترل به‌محض تغییر ثبت می‌شود، دقیقاً مانند یک سوییچ.",
+        "en-US": "Instantly-committing controls, with no Save button. Unlike the settings form, every control commits the moment it changes — exactly the way a switch should."
+      },
+      "tier": "settings",
+      "docs": [
+        "/fa/blocks/preferences/",
+        "/en/blocks/preferences/"
+      ],
+      "module": "preferences.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6230,6 +6627,20 @@
       "name": "pricing-table",
       "type": "registry:block",
       "description": "The plan comparison.",
+      "title": {
+        "fa-IR": "جدول قیمت‌گذاری",
+        "en-US": "Pricing table"
+      },
+      "intro": {
+        "fa-IR": "مقایسهٔ پلن‌ها. شمولِ هر ویژگی فقط با یک نشانه گفته نمی‌شود؛ کنار هر نشانه یک واژهٔ ترجمه‌شده و sr-only هست.",
+        "en-US": "The plan comparison. Inclusion is never a glyph alone — a required, translated, sr-only word sits beside every mark."
+      },
+      "tier": "marketing",
+      "docs": [
+        "/fa/blocks/pricing-table/",
+        "/en/blocks/pricing-table/"
+      ],
+      "module": "pricing-table.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6246,6 +6657,20 @@
       "name": "product-detail",
       "type": "registry:block",
       "description": "Gallery, price, stock and variants.",
+      "title": {
+        "fa-IR": "جزئیات محصول",
+        "en-US": "Product detail"
+      },
+      "intro": {
+        "fa-IR": "گالری، قیمت، موجودی و گزینه‌ها. وضعیت موجودی سه رشته است نه یک boolean، چون «فقط ۳ عدد باقی مانده» تصمیم خواننده را عوض می‌کند.",
+        "en-US": "Gallery, price, stock and variants. Stock is three strings rather than a boolean, because \"only 3 left\" changes the reader's decision in a way \"in stock\" alone does not."
+      },
+      "tier": "commerce",
+      "docs": [
+        "/fa/blocks/product-detail/",
+        "/en/blocks/product-detail/"
+      ],
+      "module": "product-detail.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6262,6 +6687,20 @@
       "name": "settings-form",
       "type": "registry:block",
       "description": "Fields plus one status line.",
+      "title": {
+        "fa-IR": "فرم تنظیمات",
+        "en-US": "Settings form"
+      },
+      "intro": {
+        "fa-IR": "فیلد و یک نوار وضعیت. پیام موفقیت با live=\"polite\" اعلام می‌شود، چون یک خبر خوب نباید صدای صفحه‌خوان را وسط جمله قطع کند.",
+        "en-US": "Fields plus one status line. Success is announced live=\"polite\", because good news should never interrupt a screen reader mid-sentence."
+      },
+      "tier": "settings",
+      "docs": [
+        "/fa/blocks/settings-form/",
+        "/en/blocks/settings-form/"
+      ],
+      "module": "settings-form.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6278,6 +6717,20 @@
       "name": "sign-in",
       "type": "registry:block",
       "description": "An email-and-password sign-in form.",
+      "title": {
+        "fa-IR": "ورود به حساب",
+        "en-US": "Sign in"
+      },
+      "intro": {
+        "fa-IR": "فرم ورود با ایمیل و رمز عبور. سرتیتر اصلی صفحه را خودش می‌سازد، چون صفحهٔ ورود خودِ صفحه است، نه بخشی از آن.",
+        "en-US": "An email-and-password sign-in form. It owns a real h1, because an auth screen IS the page rather than a section of one."
+      },
+      "tier": "auth",
+      "docs": [
+        "/fa/blocks/sign-in/",
+        "/en/blocks/sign-in/"
+      ],
+      "module": "sign-in.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6294,6 +6747,20 @@
       "name": "sign-up",
       "type": "registry:block",
       "description": "The account-creation form.",
+      "title": {
+        "fa-IR": "ساخت حساب",
+        "en-US": "Sign up"
+      },
+      "intro": {
+        "fa-IR": "فرم ثبت‌نام. ردیف پذیرش شرایط از چهار رشتهٔ جدا ساخته می‌شود، نه یک قالب با یک جای‌خالی، چون ترتیب جمله در فارسی یکی نیست.",
+        "en-US": "The account-creation form. The consent row is assembled from four separate strings rather than one template with a hole, because Persian clause order is not English's."
+      },
+      "tier": "auth",
+      "docs": [
+        "/fa/blocks/sign-up/",
+        "/en/blocks/sign-up/"
+      ],
+      "module": "sign-up.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6310,6 +6777,20 @@
       "name": "stat-grid",
       "type": "registry:block",
       "description": "A row of key figures.",
+      "title": {
+        "fa-IR": "شبکهٔ شاخص‌ها",
+        "en-US": "Stat grid"
+      },
+      "intro": {
+        "fa-IR": "چند عدد کلیدی در کنار هم. هر عدد از Intl عبور می‌کند، پس ارقام فارسی می‌مانند و جهت تغییر با واژه اعلام می‌شود، نه فقط با رنگ.",
+        "en-US": "A row of key figures. Every number goes through Intl, so digits stay Persian, and the direction of a change is announced in words rather than by colour alone."
+      },
+      "tier": "dashboard",
+      "docs": [
+        "/fa/blocks/stat-grid/",
+        "/en/blocks/stat-grid/"
+      ],
+      "module": "stat-grid.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6326,6 +6807,20 @@
       "name": "table-view",
       "type": "registry:block",
       "description": "A toolbar above a real ARIA grid, with pagination.",
+      "title": {
+        "fa-IR": "نمای جدول",
+        "en-US": "Table view"
+      },
+      "intro": {
+        "fa-IR": "نوار ابزار روی یک grid واقعی، با صفحه‌بندی. تنها بلوکی که یک بلوک همسایه (نوار ابزار داده) را وارد می‌کند، نه فقط کامپوننت‌های پایه را.",
+        "en-US": "A toolbar above a real ARIA grid, with pagination. The one block that imports a sibling block (the data toolbar) rather than composing only from primitives."
+      },
+      "tier": "data",
+      "docs": [
+        "/fa/blocks/table-view/",
+        "/en/blocks/table-view/"
+      ],
+      "module": "table-view.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"
@@ -6344,6 +6839,20 @@
       "name": "two-factor",
       "type": "registry:block",
       "description": "The authenticator-app challenge, with an alternate recovery-code input.",
+      "title": {
+        "fa-IR": "تأیید دومرحله‌ای",
+        "en-US": "Two-factor"
+      },
+      "intro": {
+        "fa-IR": "چالش برنامهٔ احرازهویت، با یک ورودی جایگزین برای کد بازیابی. برخلاف کد پیامکی، اینجا چیزی برای «ارسال دوباره» نیست.",
+        "en-US": "The authenticator-app challenge, with an alternate recovery-code input. Unlike the SMS step, there is nothing here to resend."
+      },
+      "tier": "auth",
+      "docs": [
+        "/fa/blocks/two-factor/",
+        "/en/blocks/two-factor/"
+      ],
+      "module": "two-factor.tsx",
       "dependencies": [
         "@lumo-ui/core",
         "@lumo-ui/ui"

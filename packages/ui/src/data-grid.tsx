@@ -113,7 +113,13 @@ export function DataGridEditableCell({
 }: DataGridEditableCellProps) {
   const errorId = useId();
   const [draft, setDraft] = useState(value);
-  useEffect(() => setDraft(value), [value]);
+  // A new committed value replaces the draft. Adjusted during render (React's
+  // "storing information from previous renders"), not from an effect.
+  const [committed, setCommitted] = useState(value);
+  if (committed !== value) {
+    setCommitted(value);
+    setDraft(value);
+  }
   const error = validate?.(draft) ?? null;
   return (
     <>
@@ -396,16 +402,19 @@ export function DataGridEmpty({ children, className }: DataGridEmptyProps) {
   const { table, asyncState } = useDataGrid();
   // Async emptiness belongs to the shared state on the shell; avoid two live regions.
   const isEmpty = asyncState === undefined && table.getRowCount() === 0;
-  const [mutationMarker, setMutationMarker] = useState(false);
+  // The marker goes on whenever emptiness (re)appears — adjusted during render, not
+  // from an effect — and a timer takes it off again 200ms later.
+  const [mutationMarker, setMutationMarker] = useState(isEmpty);
+  const [markedEmpty, setMarkedEmpty] = useState(isEmpty);
+  if (markedEmpty !== isEmpty) {
+    setMarkedEmpty(isEmpty);
+    setMutationMarker(isEmpty);
+  }
   useEffect(() => {
-    if (!isEmpty) {
-      setMutationMarker(false);
-      return;
-    }
-    setMutationMarker(true);
+    if (!mutationMarker) return;
     const timeout = globalThis.setTimeout(() => setMutationMarker(false), 200);
     return () => globalThis.clearTimeout(timeout);
-  }, [isEmpty]);
+  }, [mutationMarker]);
   return (
     <div role="status" className={cn(isEmpty ? dataGridEmptyVariants() : "sr-only", className)}>
       {isEmpty ? (children as ReactNode) : null}

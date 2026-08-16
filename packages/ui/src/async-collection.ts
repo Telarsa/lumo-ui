@@ -119,6 +119,14 @@ export function useAsyncCollection<T, Query, Cursor = string>({
   loadRef.current = load;
   keyRef.current = getKey;
 
+  // Read by the reset effect below but NOT part of its identity (`queryKey` is the
+  // explicit seam; a caller's inline `[]` must not reload). Kept current by an effect
+  // declared BEFORE that one, so it has run by the time the reset reads it.
+  const initialItemsRef = useRef(initialItems);
+  useEffect(() => {
+    initialItemsRef.current = initialItems;
+  });
+
   const active = useRef<AbortController | null>(null);
   const failed = useRef<Operation<Cursor> | null>(null);
 
@@ -159,13 +167,14 @@ export function useAsyncCollection<T, Query, Cursor = string>({
     active.current?.abort();
     active.current = null;
     failed.current = null;
+    const initial = initialItemsRef.current;
     const status: AsyncCollectionStatus = autoLoad
-      ? initialItems.length === 0
+      ? initial.length === 0
         ? "loading"
         : "refreshing"
       : "ready";
     setState({
-      items: [...initialItems],
+      items: [...initial],
       status,
       error: undefined,
       nextCursor: undefined,

@@ -185,7 +185,8 @@ export function ganttCriticalPath(
     }
   }
   if (visited !== tasks.length) throw new RangeError("Gantt dependency graph contains a cycle.");
-  let end = tasks[0]?.id;
+  // Annotated: without `noUncheckedIndexedAccess` (a consumer's default) `tasks[0]?.id` is `string`, and the walk below assigns `undefined`.
+  let end: string | undefined = tasks[0]?.id;
   for (const task of tasks) {
     if ((distance.get(task.id) ?? 0) > (distance.get(end ?? "") ?? 0)) end = task.id;
   }

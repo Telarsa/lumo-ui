@@ -151,10 +151,14 @@ export function VirtualList({
 
   useImperativeHandle(ref, () => ({ scrollToIndex, scrollToOffset }), [scrollToIndex, scrollToOffset]);
 
+  // Latest callbacks for the effects below, so a caller's inline function does not
+  // re-run them. Written from an effect declared FIRST, so it has run before they read.
   const rangeCallback = useRef(onVisibleRangeChange);
   const endCallback = useRef(onEndReached);
-  rangeCallback.current = onVisibleRangeChange;
-  endCallback.current = onEndReached;
+  useEffect(() => {
+    rangeCallback.current = onVisibleRangeChange;
+    endCallback.current = onEndReached;
+  });
   const requestedAtCount = useRef<number | null>(null);
   const firstIndex = items[0]?.index;
   const lastIndex = items.at(-1)?.index;

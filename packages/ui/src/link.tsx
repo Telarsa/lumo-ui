@@ -100,7 +100,15 @@ interface NewTabProps {
   newTabLabel: string;
 }
 
-export type LinkProps = LinkBaseProps & (SameTabProps | NewTabProps);
+/**
+ * The typed pair on its own, for wrappers that forward it: build a value of THIS
+ * type and spread it, rather than spreading a conditional object literal — the
+ * literal widens to `{ newTab?: true | undefined; newTabLabel?: string }` under a
+ * consumer's plain `strict` (no `exactOptionalPropertyTypes`) and fits neither arm.
+ */
+export type LinkTabProps = SameTabProps | NewTabProps;
+
+export type LinkProps = LinkBaseProps & LinkTabProps;
 
 export function Link({
   variant,

@@ -20,6 +20,84 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
+## 0.1.2 — 16 August 2026
+
+The first two consumer trials (path A, v0.1.1): `example-hotel` — Next 16 with
+shadcn and next-intl — and the Telarsa website — Next 16, its own CSS, no
+Tailwind. The components held in both; the tooling and one global theme block
+did not. Everything below came out of those two days of use, and each item is
+now held by a gate. Decision §26 has the full record.
+
+### Breaking (with migration)
+- **`@lumo-ui/theme/tokens.css` no longer carries the Persian typography
+  block** (root leading, `h1…h6:lang(fa)` leading, the `tracking-*` guard,
+  `font-synthesis: none`). It is `@lumo-ui/theme/script.css`, opt-in: page-wide
+  by design, and inside `tokens.css` it restyled a host that embeds Lumo (the
+  Telarsa site's `lang="fa"` switch link changed on all 46 English routes).
+  *Migrate:* a greenfield app adds `@import "@lumo-ui/theme/script.css";` after
+  `theme.css`. A site embedding Lumo does not — its own Persian typography now
+  reaches Lumo's components, which is the point.
+- **`script.css` applies the Persian face** (`font-family: var(--lumo-sys-font-sans)`
+  on the root and every `lang="fa"` island), so portalled surfaces (Select
+  popover, Dialog, Calendar) render in it too. *Migrate:* set
+  `--lumo-font-persian` to your loaded face; remove any body rule you had
+  written to get the same effect.
+- **`lumo add` stores originals as `.lumo/originals/**/*.orig`** (so a
+  consumer's `**/*.tsx` lint/tsc globs skip them) and **refuses to overwrite a
+  file it did not write** (`--force` to insist). *Migrate:* nothing — the
+  unsuffixed originals of 0.1.1 are still read; the next `upgrade` rewrites them.
+
+### Fixed (consumer contract)
+- `@lumo-ui/core` type-checks under `lib: ["dom", "dom.iterable", "esnext"]`
+  (create-next-app's default): the `Intl.Locale.getTextInfo` augmentation that
+  collided with `lib.esnext.intl.d.ts` is a local intersection type. `Gantt`,
+  `NavigationMenu`, `Sidebar` compile under plain `strict` (no
+  `exactOptionalPropertyTypes` / `noUncheckedIndexedAccess`).
+- Every copyable source passes a Next.js 16 app's ESLint: typescript-eslint
+  `recommended` + react-hooks 7 `recommended` (React Compiler rules included),
+  warnings as errors — 55 findings in 24 files fixed (empty
+  `interface … extends {}` → type aliases; `label: _label` discards gone; refs
+  read during render, setState in effects, components created during render,
+  mutation of frozen values, missing effect deps restructured).
+- **Blocks are consumable:** `lumo add <block>` rewrites `@lumo-ui/ui` imports
+  to relative imports of the ui copies (a consumer cannot install the workspace
+  package) and derives the block's closure from its imports; the catalog carries
+  every block's title, intro, category and docs page; `lumo info` prints
+  composition sketches for 106 items (was 17).
+- **`lumo gate` runs from a consumer's `node_modules`** — a committed
+  JavaScript build (`packages/gate/dist`) with `linkedom` and
+  `dom-accessibility-api` as root dependencies (Node refuses to strip types under
+  `node_modules`; the gate's deps were dev-only).
+- `lumo`: `--dir <components dir>` (remembered in `lumo.lock.json`), `--to`
+  defaults to `.` and the commands find the project upward, `deps` takes several
+  names, exact `pnpm add name@version` lines from the shipped catalog (contract
+  packages excluded — they are git pins), de-duplicated output, `diff` lists
+  locally edited copies, `lumo help` / `--help` exit 0, `doctor` finds
+  `package.json` above a sub-folder.
+- `LumoHtml.lang` accepts any BCP-47 tag for a host's other languages (direction
+  by primary subtag; `documentDirection`, `isLocale` exported); Lumo components
+  must not render under such a document.
+- `SelectField.label` docblock said the label is visible unless hidden; the
+  default is announced-only (`showLabel` opts in) — the docblock now says so.
+
+### Added
+- **Gates in `verify`:** `gate:consumer-profile` (tsc under a Next default
+  tsconfig over core/base-ui-ssr/ui/blocks), `gate:consumer-lint`
+  (`eslint.consumer.config.mjs`, `--max-warnings 0`), `gate:dist` (the gate's
+  committed build is fresh). The consumer smoke test gained the same tsconfig
+  profile and copies blocks the way `lumo add` does; `@lumo-ui/ui` is no longer
+  mapped for it.
+- `docs/agent-consumer.md` §0.1 (the wiring checklist both trials had to
+  discover: tsconfig, CSS order, fonts, dark mode, `LumoHtml`/`LumoProvider`
+  placement, `transpilePackages`, `--dir`, lint, server vs client parts, gating
+  a dynamic app, the Tailwind namespace collision) and §0.2 (embedding Lumo in a
+  site that is not a Tailwind app — the layer recipe proved on the Telarsa
+  website with 0 rendered differences over 92 captures).
+
+### Migration
+Bump the four specifiers to `v0.1.2`, `pnpm install`, `lumo upgrade`; then
+`script.css` per the first Breaking entry.
+
 ## 0.1.1 — 16 August 2026
 
 The install path, decided and proved: **path A — git dependencies pinned to a

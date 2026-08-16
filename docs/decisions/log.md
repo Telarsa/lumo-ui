@@ -1236,3 +1236,66 @@ Also this tranche: a behavioural mutation operator for every module that owns be
 
 **Decided 16 August 2026 (owner).** Consumers install `@lumo-ui/core`, `@lumo-ui/theme` and `@lumo-ui/base-ui-ssr` as `github:Telarsa/lumo-ui#<tag>&path:packages/<name>` and the repository root as a dev dependency (`lumo-ui`), which delivers the `lumo` CLI, the registry and the catalog. No registry host, no token beyond repository access, private by construction; the CLI reads any reachable checkout, so a later move to a package registry (npm under `@lumo-ui`, never GitHub Packages, which would force the `@telarsa` scope and a rename of every import) is a URL change for consumers, not a rewrite. What it cost: contract packages must carry real dependency specifiers (proved by `v0.1.0` failing to install), and Next consumers add `transpilePackages`. Recorded in CHANGELOG 0.1.1 and `docs/agent-consumer.md` §0.
 
+
+## 26. What the first two consumer trials settled (16 Aug 2026)
+
+Two real projects adopted v0.1.1 through path A the same day: `example-hotel`
+(a Next 16 + shadcn + next-intl app; a booking form on `DateRangePicker`,
+`Select`, `TextField`, `Dialog`) and the Telarsa website (Next 16, its own CSS,
+no Tailwind — the harder host). The components held: Persian first byte right
+(Jalali grid, Persian digits, RTL, every control named), zero console or
+hydration errors, the gate found 0 defects in the Lumo screens against 26 on the
+shadcn equivalent. The tooling and the theme's global reach did not, and that is
+what this entry records.
+
+**Decisions.**
+
+- **The Persian typography block is opt-in (`@lumo-ui/theme/script.css`).**
+  Its rules are page-wide by design (root leading, `h1…h6:lang(fa)`,
+  the `tracking-*` guard, `font-synthesis: none`), and inside `tokens.css` they
+  restyled a host wherever the host was silent — the Telarsa site's `lang="fa"`
+  locale-switch link grew 10 px on every English route, measured by computed
+  style. Layer order protects only properties the host declares. So: `tokens.css`
+  + `theme.css` are the embeddable contract; `script.css` is what a greenfield
+  app adds. Proved by re-running the site comparison: 0 differences over 92
+  captures (46 routes × 2 widths, computed styles + screenshots + normalised
+  HTML). The embedding recipe (Lumo layers declared first, Tailwind theme
+  without preflight, utilities unlayered and scanned only over the copies) is in
+  `docs/agent-consumer.md` §0.2.
+- **Copies must compile and lint under a CONSUMER's toolchain, not ours.** Two
+  new gates in `verify`: `gate:consumer-profile` (tsc, plain `strict` + `lib:
+  esnext`, over core/base-ui-ssr/ui/blocks) and `gate:consumer-lint`
+  (typescript-eslint `recommended` + react-hooks 7 `recommended`, React
+  Compiler rules included, `--max-warnings 0`, over ui/blocks). Both failed on
+  the day (an `Intl.Locale` augmentation collided with `lib.esnext.intl`; three
+  copies leaned on `exactOptionalPropertyTypes`; 55 lint findings incl. 30
+  compiler-rule violations); both are green at 0.1.2. The smoke test gained the
+  same profile and now copies blocks the way `lumo add` does.
+- **Blocks are consumable.** `lumo add <block>` rewrites `@lumo-ui/ui` imports
+  to relative imports of the ui copies and derives the block's ui/block closure
+  from its imports (registry.json records none); the catalog carries every
+  block's title/intro/category/docs from the docs site's own table.
+- **`lumo gate` runs a committed JavaScript build** (`packages/gate/dist`,
+  `gate:dist` keeps it fresh): Node refuses to strip types under
+  `node_modules`, and the gate's runtime deps are now root `dependencies`.
+- **`lumo add` never overwrites a file it did not write** (`--force` to
+  insist), takes `--dir`, remembers it, prints exact `name@version` installs
+  from the shipped catalog, stores originals as `*.orig`; `lumo diff` lists
+  local edits; `--to` defaults to `.` and the commands find the project upward.
+- **`LumoHtml.lang` accepts a host's other languages** (any BCP-47 tag;
+  direction by primary subtag) — Lumo components must not render under such a
+  document. `SelectField`'s docblock said the opposite of its default; the
+  docblock was wrong.
+- **Recorded, not changed:** Lumo's `@theme inline` names (`--color-accent`,
+  `--radius-*`) collide with another Tailwind theme in the same app; the
+  resolution is binding Lumo's `--lumo-sys-*` to the app's tokens in
+  `@layer lumo.brand`, documented — a namespace prefix would rename every
+  utility in 111 components and is not worth it for a private library. Also
+  recorded: `Button` and every field/popup are client components (Base UI);
+  `Card`/`Badge`/`Link` and the `*.variants.ts` render from a server component
+  — the Astryx spike's "no client boundary for a button" is a real difference,
+  and the price of a real button engine.
+
+The example-hotel session's verdict was 5/10 for "how well can it be used" at
+0.1.1 (components 8–9, tooling and docs pulled it down); every finding it
+listed is either fixed above or recorded here.

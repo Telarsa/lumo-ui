@@ -313,23 +313,34 @@ interface TableContextValue {
   active: { row: number; col: number };
   /** The TanStack instance, when the caller supplied one. */
   table: LumoTableInstance | undefined;
-  /**
-   * Which column indices were declared `isRowHeader`. A ref-held Set written
-   * during render, NOT state: `<thead>` renders before `<tbody>` in one
-   * synchronous pass (server render included), and state would need a second
-   * pass before the first row could be a `rowheader`. Idempotent under
-   * StrictMode. A body rendered before its header degrades to gridcells,
-   * which is why `Cell` also accepts an explicit `isRowHeader`.
-   */
-  rowHeaderColumns: Set<number>;
-  /** Column positions hidden by the state layer; written by the header before the body renders, like `rowHeaderColumns`. */
-  hiddenColumns: Set<number>;
-  /**
-   * How many rows `TableBody` rendered, so `TableFooter` knows its row index.
-   * Same render-phase ref write as `rowHeaderColumns`; a footer that guessed
-   * wrong would put two cells at one coordinate and the arrow keys stop short.
-   */
-  bodyRowCount: { current: number };
+  /** What the header and body tell the parts rendered after them; see the class. */
+  registry: TableRegistry;
+}
+
+/**
+ * What the header and body register for the parts that render AFTER them, in
+ * the SAME pass. One mutable instance per `Table`, written during render, NOT
+ * state: `<thead>` renders before `<tbody>` in one synchronous pass (server
+ * render included), and state would need a second pass before the first row
+ * could be a `rowheader`. Every write is idempotent under StrictMode.
+ *
+ * - `rowHeaderColumns`: which column indices were declared `isRowHeader`. A body
+ *   rendered before its header degrades to gridcells, which is why `Cell` also
+ *   accepts an explicit `isRowHeader`.
+ * - `hiddenColumns`: column positions hidden by the state layer; written by the
+ *   header before the body renders.
+ * - `bodyRowCount`: how many rows the body rendered, so `TableFooter` knows its
+ *   row index; a footer that guessed wrong would put two cells at one coordinate
+ *   and the arrow keys stop short. Written through `setBodyRowCount` — the
+ *   registry's writes are explicit operations, never incidental stores.
+ */
+class TableRegistry {
+  readonly rowHeaderColumns = new Set<number>();
+  readonly hiddenColumns = new Set<number>();
+  bodyRowCount = 0;
+  setBodyRowCount(count: number): void {
+    this.bodyRowCount = count;
+  }
 }
 
 const TableContext = createContext<TableContextValue | null>(null);
@@ -407,9 +418,8 @@ export function Table({
   const ref = useRef<HTMLTableElement>(null);
   const [active, setActive] = useState({ row: 0, col: 0 });
   const arrow = useMemo(() => gridArrow(locale), [locale]);
-  const rowHeaderColumns = useRef<Set<number>>(new Set()).current;
-  const hiddenColumns = useRef<Set<number>>(new Set()).current;
-  const bodyRowCount = useRef(0);
+  // One instance for the life of the grid (state for identity, never set).
+  const [registry] = useState(() => new TableRegistry());
 
   /** Move the roving tab stop. Targets are read from the DOM, not a registry; `preventDefault` only for keys the grid claims. */
   function onKeyDown(event: ReactKeyboardEvent<HTMLTableElement>) {
@@ -518,11 +528,9 @@ export function Table({
       hierarchical,
       active,
       table,
-      rowHeaderColumns,
-      hiddenColumns,
-      bodyRowCount,
+      registry,
     }),
-    [locale, hierarchical, active, table, rowHeaderColumns, hiddenColumns, bodyRowCount],
+    [locale, hierarchical, active, table, registry],
   );
 
   // `aria-multiselectable` is read from TanStack's options rather than accepted
@@ -645,7 +653,7 @@ export function Column({
   sortDescendingLabel,
   ...props
 }: ColumnProps) {
-  const { table, active, rowHeaderColumns, hiddenColumns } = useTableContext();
+  const { table, active, registry } = useTableContext();
   const col = useContext(ColContext);
 
   const column = id === undefined ? undefined : table?.getColumn(id);
@@ -653,12 +661,12 @@ export function Column({
 
   // The header is the single source for a column's projection; it renders
   // before every body/footer row.
-  if (visible) hiddenColumns.delete(col);
-  else hiddenColumns.add(col);
+  if (visible) registry.hiddenColumns.delete(col);
+  else registry.hiddenColumns.add(col);
 
-  // Render-phase ref write; see `TableContextValue.rowHeaderColumns`.
-  if (isRowHeader === true) rowHeaderColumns.add(col);
-  else rowHeaderColumns.delete(col);
+  // Render-phase registry write; see `TableRegistry`.
+  if (isRowHeader === true) registry.rowHeaderColumns.add(col);
+  else registry.rowHeaderColumns.delete(col);
 
   if (!visible) return null;
 
@@ -746,12 +754,12 @@ export function TableBody({
   renderEmptyState,
   ...props
 }: TableBodyProps) {
-  const { bodyRowCount } = useTableContext();
+  const { registry } = useTableContext();
   const rows = Children.toArray(children);
   const empty = rows.length === 0;
 
-  // See `TableContextValue.bodyRowCount`.
-  bodyRowCount.current = rows.length;
+  // See `TableRegistry`.
+  registry.setBodyRowCount(rows.length);
 
   return (
     <tbody
@@ -817,8 +825,8 @@ export function VirtualTableBody<TRow extends LumoTableRow>({
   className,
   ...props
 }: VirtualTableBodyProps<TRow>) {
-  const { bodyRowCount } = useTableContext();
-  bodyRowCount.current = rows.length;
+  const { registry } = useTableContext();
+  registry.setBodyRowCount(rows.length);
   const estimate = useMemo(
     () => (typeof estimateSize === "number" ? () => estimateSize : estimateSize),
     [estimateSize],
@@ -897,9 +905,9 @@ export interface TableFooterProps
  * describes the data set. `children` is the cells of ONE row.
  */
 export function TableFooter({ className, children, ...props }: TableFooterProps) {
-  const { bodyRowCount } = useTableContext();
+  const { registry } = useTableContext();
   // Body rows occupy 1…n (header is 0), so the footer is n+1.
-  const index = bodyRowCount.current + 1;
+  const index = registry.bodyRowCount + 1;
 
   return (
     <tfoot className={cn(tableFooterVariants(), className)} {...props}>
@@ -967,14 +975,14 @@ export interface CellProps
 }
 
 export function Cell({ isRowHeader, className, children, ...props }: CellProps) {
-  const { active, rowHeaderColumns, hiddenColumns } = useTableContext();
+  const { active, registry } = useTableContext();
   const rowContext = useContext(RowContext);
   const col = useContext(ColContext);
   const rowIndex = rowContext?.index ?? 1;
   // The column's declaration is the default; an explicit prop on the cell wins.
-  const rowHeader = isRowHeader ?? rowHeaderColumns.has(col);
+  const rowHeader = isRowHeader ?? registry.rowHeaderColumns.has(col);
 
-  if (hiddenColumns.has(col)) return null;
+  if (registry.hiddenColumns.has(col)) return null;
 
   const shared = {
     "data-lumo": "",
@@ -1065,14 +1073,14 @@ export interface TableSelectionCellProps
 }
 
 export function TableSelectionCell({ label, className, ...props }: TableSelectionCellProps) {
-  const { active, hiddenColumns } = useTableContext();
+  const { active, registry } = useTableContext();
   const rowContext = useContext(RowContext);
   const col = useContext(ColContext);
   const rowIndex = rowContext?.index ?? 1;
   const isActive = active.row === rowIndex && active.col === col;
   const row = rowContext?.row as LumoTableRow | undefined;
 
-  if (hiddenColumns.has(col)) return null;
+  if (registry.hiddenColumns.has(col)) return null;
 
   return (
     <td
@@ -1119,14 +1127,14 @@ export interface TableWidgetCellProps
 }
 
 export function TableWidgetCell({ isRowHeader, className, children, ...props }: TableWidgetCellProps) {
-  const { active, hiddenColumns, rowHeaderColumns } = useTableContext();
+  const { active, registry } = useTableContext();
   const rowContext = useContext(RowContext);
   const col = useContext(ColContext);
   const rowIndex = rowContext?.index ?? 1;
   const isActive = active.row === rowIndex && active.col === col;
-  const rowHeader = isRowHeader ?? rowHeaderColumns.has(col);
+  const rowHeader = isRowHeader ?? registry.rowHeaderColumns.has(col);
 
-  if (hiddenColumns.has(col)) return null;
+  if (registry.hiddenColumns.has(col)) return null;
 
   const shared = {
     "data-lumo": "",

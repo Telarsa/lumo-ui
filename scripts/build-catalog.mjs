@@ -71,7 +71,18 @@ function metaReader(sf) {
     const literal = resolve(node);
     return ts.isStringLiteralLike(literal) || ts.isNoSubstitutionTemplateLiteral(literal) ? literal.text : undefined;
   };
-  return { property, localized, string };
+  /** A string, or an array of string literals joined by newlines (the `composition` sketch is written both ways). */
+  const stringOrLines = (/** @type {import("typescript").Node} */ node) => {
+    let literal = resolve(node);
+    // `[…].join("\n")` — the array is the receiver of the call.
+    if (ts.isCallExpression(literal) && ts.isPropertyAccessExpression(literal.expression) && literal.expression.name.text === "join") literal = literal.expression.expression;
+    if (ts.isArrayLiteralExpression(literal)) {
+      const lines = literal.elements.map((e) => string(e)).filter((/** @type {string | undefined} */ l) => l !== undefined);
+      return lines.length ? lines.join("\n") : undefined;
+    }
+    return string(literal);
+  };
+  return { property, localized, string, stringOrLines };
 }
 
 /** @type {Record<string, unknown>} */
@@ -87,7 +98,7 @@ for (const file of pageFiles) {
   const text = await readFile(join(EXAMPLES_DIR, file), "utf8").catch(() => "");
   if (text === "") continue;
   const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
-  const { property, localized, string } = metaReader(sf);
+  const { property, localized, string, stringOrLines } = metaReader(sf);
   /** @type {import("typescript").Node | undefined} */
   let meta;
   /** @param {import("typescript").Node} node */
@@ -112,10 +123,37 @@ for (const file of pageFiles) {
     intro: localized(property(meta, "intro")?.initializer),
     tier: tierNode === undefined ? undefined : string(tierNode),
     usage: usageWhen !== undefined && usageWhenNot !== undefined ? { when: usageWhen, whenNot: usageWhenNot } : undefined,
-    composition: compositionNode === undefined ? undefined : string(compositionNode),
+    composition: compositionNode === undefined ? undefined : stringOrLines(compositionNode),
     module: (sourceFileNode === undefined ? undefined : string(sourceFileNode)) ?? `${slug}.tsx`,
     docs: LOCALES.map((/** @type {string} */ l) => `/${l.split("-")[0]}/components/${slug}/`),
   };
+}
+
+/**
+ * Blocks: the docs site's demo table (`apps/website/src/lib/blocks.tsx`) is the
+ * one place a block's title, intro and category live in both locales. Read the
+ * literal `{ id, category, title: { … }, intro: { … } }` heads with the same
+ * TypeScript AST reader; every registry block must have a row (checked below).
+ */
+const blocksSf = ts.createSourceFile("blocks.tsx", await readFile(join(ROOT, "apps/website/src/lib/blocks.tsx"), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+/** @type {Record<string, { title: Record<string, string>; intro: Record<string, string>; category: string | undefined; docs: string[] }>} */
+const blockPages = {};
+{
+  const { property, localized, string } = metaReader(blocksSf);
+  /** @param {import("typescript").Node} node */
+  const walk = (node) => {
+    if (ts.isObjectLiteralExpression(node)) {
+      const id = property(node, "id")?.initializer;
+      const title = localized(property(node, "title")?.initializer);
+      const intro = localized(property(node, "intro")?.initializer);
+      if (id !== undefined && ts.isStringLiteralLike(id) && title !== undefined && intro !== undefined) {
+        const cat = property(node, "category")?.initializer;
+        blockPages[id.text] = { title, intro, category: cat === undefined ? undefined : string(cat), docs: LOCALES.map((l) => `/${l.split("-")[0]}/blocks/${id.text}/`) };
+      }
+    }
+    ts.forEachChild(node, walk);
+  };
+  walk(blocksSf);
 }
 
 /** Announced strings: required string props whose docblock says the reader hears them, or whose name says so. */
@@ -135,11 +173,14 @@ const items = registry.items.map((item) => {
     }
   }
   const page = /** @type {Record<string, unknown> | undefined} */ (pages[item.name]);
+  const block = item.type === "registry:block" ? blockPages[item.name] : undefined;
+  if (item.type === "registry:block" && block === undefined) throw new Error(`catalog: block ${item.name} has no row in apps/website/src/lib/blocks.tsx (title/intro in both locales)`);
   return {
     name: item.name,
     type: item.type,
     description: item.description,
     ...(page ?? {}),
+    ...(block === undefined ? {} : { title: block.title, intro: block.intro, tier: block.category, docs: block.docs, module: item.files?.[0]?.path.split("/").pop() }),
     dependencies: item.dependencies ?? [],
     registryDependencies: item.registryDependencies ?? [],
     files: (item.files ?? []).map((f) => f.path),

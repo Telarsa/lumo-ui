@@ -55,8 +55,7 @@ export const checkboxIndicatorVariants = cva(
  * `aria-label` instead; the `named-controls` gate catches the miss on the served HTML.
  * `slot="selection"` is gone — Base UI has no context-injection mechanism.
  */
-interface CheckboxSupportedProps
-  extends Omit<ToggleFieldPropsBase, "validationBehavior" | "slot"> {}
+type CheckboxSupportedProps = Omit<ToggleFieldPropsBase, "validationBehavior" | "slot">;
 
 export interface CheckboxProps extends CheckboxSupportedProps {
   /** The control's position in the sequential tab order — `-1` removes it. */

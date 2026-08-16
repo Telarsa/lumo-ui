@@ -6,7 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { NavigationMenu as BaseNav } from "@base-ui/react/navigation-menu";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { attr } from "@lumo-ui/base-ui-ssr";
-import { Link, type LinkProps } from "./link.tsx";
+import { Link, type LinkProps, type LinkTabProps } from "./link.tsx";
 import { placementToSideAlign, type LumoPlacement } from "./popover.tsx";
 import { useLinkComponent } from "./link-context.ts";
 
@@ -220,6 +220,7 @@ export type NavigationMenuLinkProps = DistributiveOmit<LinkProps, "variant" | "s
  */
 export function NavigationMenuLink(props: NavigationMenuLinkProps) {
   const { className, children, description, newTab, newTabLabel, isCurrent, ...rest } = props;
+  const tab: LinkTabProps = newTab === true && newTabLabel !== undefined ? { newTab: true, newTabLabel } : {};
   const Anchor = useLinkComponent();
   return (
     <Link
@@ -232,9 +233,7 @@ export function NavigationMenuLink(props: NavigationMenuLinkProps) {
         className,
       )}
       {...(isCurrent === undefined || isCurrent === false ? {} : { isCurrent })}
-      {...(newTab === true && newTabLabel !== undefined
-        ? { newTab: true as const, newTabLabel }
-        : {})}
+      {...tab}
       {...rest}
     >
       <span className="text-sm font-medium text-fg">{children}</span>

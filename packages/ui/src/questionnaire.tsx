@@ -281,7 +281,8 @@ export function Questionnaire({
             type="button"
             variant="ghost"
             onPress={() => {
-              const { [currentItem.id]: _removed, ...remaining } = answers;
+              const remaining: Record<string, readonly string[]> = { ...answers };
+              delete remaining[currentItem.id];
               updateAnswers(remaining);
               moveTo(currentIndex + 1);
             }}

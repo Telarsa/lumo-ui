@@ -20,7 +20,23 @@ import {
   type ItemMediaVariantProps,
   type ItemVariantProps,
 } from "./item.variants.ts";
-import { useLinkComponent, type LumoLinkRenderProps } from "./link-context.ts";
+import {
+  useLinkComponent,
+  type LumoLinkComponent,
+  type LumoLinkRenderProps,
+} from "./link-context.ts";
+
+/**
+ * `source` without the props an element only CARRIES (`undefined` by type in that
+ * arm, but the KEY must not reach the DOM). Removed by name rather than
+ * discard-destructured: a consumer's `no-unused-vars` (typescript-eslint
+ * `recommended`) has no rest-sibling or `_`-prefix allowance.
+ */
+function omit<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Omit<T, K> {
+  const copy: Partial<T> = { ...source };
+  for (const key of keys) delete copy[key];
+  return copy as Omit<T, K>;
+}
 
 /**
  * The generic row: media, content, actions. One row, three renderings decided
@@ -62,13 +78,26 @@ export interface ItemStaticProps
 
 export type ItemProps = ItemLinkProps | ItemButtonProps | ItemStaticProps;
 
+/**
+ * The link rendering. Its own component so the app's link component reaches the JSX
+ * tag as a PROP (exactly as `Link linkComponent` does): the React Compiler treats a
+ * value a hook returns as created during render when it is used as a tag.
+ */
+function ItemAnchor({
+  anchor: Anchor,
+  ...props
+}: { anchor: LumoLinkComponent | "a" } & LumoLinkRenderProps) {
+  return <Anchor {...props} />;
+}
+
 export function Item(props: ItemProps) {
   // The app's router link when LumoProvider provides one; the platform anchor otherwise.
-  const Anchor = useLinkComponent();
+  const anchor = useLinkComponent();
   if (props.href !== undefined) {
     const { variant, size, className, ...link } = props;
     return (
-      <Anchor
+      <ItemAnchor
+        anchor={anchor}
         data-lumo=""
         className={cn(itemVariants({ variant, size, interactive: true }), className)}
         {...(link as LumoLinkRenderProps)}
@@ -76,20 +105,22 @@ export function Item(props: ItemProps) {
     );
   }
   if (props.onPress !== undefined) {
-    const { variant, size, className, href: _href, onPress, ...button } = props;
+    const { variant, size, className, onPress, ...button } = props;
     return (
       <BaseButton
         data-lumo=""
         className={cn(itemVariants({ variant, size, interactive: true }), className)}
         // The frozen `PressEvent` shape, rebuilt from the real `click`.
         onClick={(event: ReactMouseEvent<HTMLButtonElement>) => onPress(pressFromClick(event))}
-        {...button}
+        // `href` is `undefined` in this arm by type; the key itself still must not reach the button.
+        {...omit(button, ["href"])}
       />
     );
   }
-  const { variant, size, className, href: _href, onPress: _onPress, ...rest } = props;
-  // No `interactive` — a static row must not light up under a pointer.
-  return <div className={cn(itemVariants({ variant, size }), className)} {...rest} />;
+  const { variant, size, className, ...rest } = props;
+  // No `interactive` — a static row must not light up under a pointer. `href` and
+  // `onPress` are `undefined` in this arm by type; the keys still must not reach the div.
+  return <div className={cn(itemVariants({ variant, size }), className)} {...omit(rest, ["href", "onPress"])} />;
 }
 
 export interface ItemSectionProps
@@ -103,7 +134,7 @@ export function ItemGroup({ className, ...props }: ItemSectionProps) {
   return <div className={cn(itemGroupVariants(), className)} {...props} />;
 }
 
-export interface ItemSeparatorProps extends SeparatorProps {}
+export type ItemSeparatorProps = SeparatorProps;
 
 export function ItemSeparator({ className, ...props }: ItemSeparatorProps) {
   return <Separator className={cn("my-1", className)} {...props} />;
