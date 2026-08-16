@@ -24,6 +24,7 @@ interface SwitchBaseProps {
   isSelected?: boolean | undefined;
   /** Initial state when uncontrolled. */
   defaultSelected?: boolean | undefined;
+  /** Fired with the next state when the switch is toggled. */
   onChange?: ((isSelected: boolean) => void) | undefined;
   isDisabled?: boolean | undefined;
   /** `md` is the compact scale; `lg` keeps the row at the 44 dp touch floor. */
@@ -36,7 +37,18 @@ interface SwitchBaseProps {
 
 /** Named by its visible label, or by an explicit accessible name — never neither. */
 export type SwitchProps = SwitchBaseProps &
-  ({ children: LumoNode; accessibilityLabel?: string | undefined } | { children?: undefined; accessibilityLabel: string });
+  (
+    | {
+        children: LumoNode;
+        /** An explicit accessible name, when the visible label should not be the announced one. */
+        accessibilityLabel?: string | undefined;
+      }
+    | {
+        children?: undefined;
+        /** The accessible name — REQUIRED when there is no visible label. */
+        accessibilityLabel: string;
+      }
+  );
 
 const GEOMETRY = {
   md: { trackW: 30, trackH: 16, thumb: 14, on: 15, row: 36, text: 14 },

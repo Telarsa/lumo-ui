@@ -13,8 +13,11 @@ import { useLumoNative } from "./provider.tsx";
 import { control, focus, radius } from "./tokens.ts";
 
 export interface SelectOption {
+  /** Stable identity; the value `onChange` reports. */
   id: string;
+  /** The visible (and announced) text. */
   label: string;
+  /** Shown but not choosable. */
   isDisabled?: boolean | undefined;
 }
 
@@ -25,13 +28,20 @@ export interface SelectProps {
   placeholder: string;
   /** Announced name of the close action in the sheet. REQUIRED. */
   closeLabel: string;
+  /** The choices, in order; a disabled option is shown but cannot be chosen. */
   options: readonly SelectOption[];
+  /** Controlled selection: the chosen option's `id`. */
   value?: string | undefined;
+  /** Initial selection when uncontrolled. */
   defaultValue?: string | undefined;
+  /** Fired with the chosen option's `id`. */
   onChange?: ((id: string) => void) | undefined;
+  /** Help text under the trigger; also read as its hint. */
   description?: string | undefined;
+  /** The validation message; rendered under the trigger and announced. */
   errorMessage?: string | undefined;
   isDisabled?: boolean | undefined;
+  /** The size step on the shared control scale (29 / 36 / 44 dp). */
   size?: "sm" | "md" | "lg" | undefined;
   style?: StyleProp<ViewStyle>;
   testID?: string | undefined;

@@ -1,6 +1,6 @@
 {
   "name": "@lumo-ui/core",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Lumo's invariants: the types, locale context and helpers that every consumer must share byte-for-byte. Components are copied; this is not.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",

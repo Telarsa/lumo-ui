@@ -25,6 +25,7 @@ interface ButtonBaseProps {
   /** The size step on the shared control scale. `lg` meets the 44 dp touch-target floor. */
   size?: ButtonSize | undefined;
   isDisabled?: boolean | undefined;
+  /** Fired when the button is pressed (tap, or keyboard/switch activation). Not fired while disabled. */
   onPress?: ((event: GestureResponderEvent) => void) | undefined;
   /** Announced context after the name (VoiceOver: "…, button, <hint>"). Write it in the app's language. */
   accessibilityHint?: string | undefined;

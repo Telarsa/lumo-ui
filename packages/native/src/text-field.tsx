@@ -21,22 +21,35 @@ export interface TextFieldProps {
   description?: string | undefined;
   /** The validation message; rendered under the field and announced. */
   errorMessage?: string | undefined;
+  /** Marks the field invalid (critical border; the error joins the hint) without an error message. */
   isInvalid?: boolean | undefined;
   isDisabled?: boolean | undefined;
+  /** The value can be read and selected but not edited. */
   isReadOnly?: boolean | undefined;
+  /** Shows the required marker after the label. Validation itself is the form's. */
   isRequired?: boolean | undefined;
   placeholder?: string | undefined;
+  /** Controlled value. */
   value?: string | undefined;
+  /** Initial value when uncontrolled. */
   defaultValue?: string | undefined;
+  /** Fired with the new text on every edit. */
   onChange?: ((value: string) => void) | undefined;
+  /** The size step on the shared control scale (29 / 36 / 44 dp). */
   size?: "sm" | "md" | "lg" | undefined;
-  /** Keyboard and content hints, passed through to `TextInput`. */
+  /** Keyboard and content hint, passed through to `TextInput`. */
   inputMode?: TextInputProps["inputMode"];
+  /** The platform keyboard to show, passed through to `TextInput`. */
   keyboardType?: TextInputProps["keyboardType"];
+  /** Autofill hint, passed through to `TextInput`. */
   autoComplete?: TextInputProps["autoComplete"];
+  /** Masks the text (passwords). */
   secureTextEntry?: boolean | undefined;
+  /** Maximum number of characters. */
   maxLength?: number | undefined;
+  /** The return key's label, passed through to `TextInput`. */
   returnKeyType?: TextInputProps["returnKeyType"];
+  /** Fired when the return key is pressed. */
   onSubmitEditing?: TextInputProps["onSubmitEditing"];
   style?: StyleProp<ViewStyle>;
   testID?: string | undefined;
