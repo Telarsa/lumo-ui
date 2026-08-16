@@ -30,6 +30,14 @@ Hermes ICU probe below has run on a device. So this package now holds:
   `<label for>` on native), description = hint, error = live region, text
   aligned to the reading start; Select is Lumo's own combobox + modal sheet
   (`option`s with `aria-selected`), placeholder and close label REQUIRED.
+- `src/dialog.tsx` — the first component on an ENGINE: `@rn-primitives/dialog`
+  (decision §29; Radix on the web). Lumo's contract on top: `label` and
+  `closeLabel` REQUIRED, ✕ at the inline end, texts in the locale's writing
+  direction; the provider mounts the engine's `PortalHost` on device. Button/
+  IconButton forward engine props so they can be slotted as trigger/close.
+- Any language: `LumoNativeProvider` takes any BCP-47 tag (as the web's provider
+  does since 0.2.0); `any-language.test.tsx` renders the family under `de` and
+  `ar-EG` and grades it — RTL and every language weigh the same on mobile.
 - Tests: rendered through **react-native-web** to static markup and graded by
   the same 14 served-HTML rules as the web (0 violations under fa-IR); a
   `.type-test.tsx` pins the contract. `gate:consumer-lint` and
@@ -85,6 +93,16 @@ observation recorded without a claim: on that launch `I18nManager.isRTL` read
 `false` in JS while the layout was already mirrored (Expo Go; the constant is
 filled at native init). Screenshots in the session's evidence.
 
+Third run, same simulator, with `Dialog` on the `@rn-primitives` engine,
+`TextField` and `Select` (evidence image on the docs site,
+`public/native/ios-18-5-simulator-dialog-2026-08-16.png`): the engine's native
+portal rendered the dialog above the app — scrim, card, title at the reading
+start, ✕ at the inline end (left), description, footer mirrored. One thing it
+taught: the provider must sit at the app ROOT — inside a ScrollView its portal
+layer covers only that scroll region (the first attempt showed nothing); the
+provider now hosts the portal in an absolutely-filled, touch-transparent layer
+and its docblock says where to put it.
+
 Release-build row, attempted 16 Aug 2026: `expo run:ios --configuration
 Release --device <simulator UDID>` — `expo prebuild` and CocoaPods succeeded
 (ios/ generated, pods installed), xcodebuild refused every destination: Xcode
@@ -102,9 +120,10 @@ Hermes: digits and calendar hold; direction needs the table."
 The next component should be direction-sensitive (`Switch` /
 `SegmentedControl`), for the reason step 4 below gives.
 
-Provisional toolchain decision: plain `StyleSheet` over generated tokens, no
-NativeWind (nothing in a button needed class strings, and NativeWind's install
-is large). Revisit at the second component.
+Toolchain: plain `StyleSheet` over generated tokens (no NativeWind — nothing
+here needs class strings, and one token source for web and native matters more
+than sharing class syntax); `@rn-primitives` as the engine for overlays and
+composite widgets (decision §29). Both revisitable, both recorded.
 
 ---
 

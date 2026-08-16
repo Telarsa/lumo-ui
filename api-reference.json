@@ -16302,6 +16302,67 @@
         ]
       }
     ],
+    "native/dialog.tsx": [
+      {
+        "name": "DialogProps",
+        "props": [
+          {
+            "name": "closeLabel",
+            "type": "string",
+            "required": true,
+            "description": "The ✕ button's accessible name. REQUIRED — an ✕ is not a name."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "The dialog's accessible name and visible heading. REQUIRED."
+          },
+          {
+            "name": "trigger",
+            "type": "ReactNode",
+            "required": true,
+            "description": "The element that opens the dialog — a `Button`, usually. It receives the engine's press and `aria-expanded`."
+          },
+          {
+            "name": "children",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The body."
+          },
+          {
+            "name": "defaultOpen",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Initial state when uncontrolled."
+          },
+          {
+            "name": "description",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Read after the name; rendered under the heading."
+          },
+          {
+            "name": "isOpen",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Controlled open state."
+          },
+          {
+            "name": "onOpenChange",
+            "type": "((isOpen: boolean) => void) | undefined",
+            "required": false,
+            "description": "Fired when the engine wants to open or close (trigger, ✕, scrim, Escape, back button, close controls)."
+          },
+          {
+            "name": "size",
+            "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+            "required": false,
+            "description": "`sm` 24 rem, `md` 28 rem, `lg` 36 rem — never wider than the screen minus its margins."
+          }
+        ]
+      }
+    ],
     "native/provider.tsx": [
       {
         "name": "LumoNativeProviderProps",
@@ -16503,7 +16564,7 @@
           },
           {
             "name": "autoComplete",
-            "type": "\"name\" | \"url\" | \"tel\" | \"email\" | \"password\" | \"2fa-app-otp\" | \"additional-name\" | \"address-line1\" | \"address-line2\" | \"birthdate-day\" | \"birthdate-full\" | \"birthdate-month\" | \"birthdate-year\" | \"cc-csc\" | \"cc-exp\" | \"cc-exp-day\" | \"cc-exp-month\" | \"cc-exp-year\" | \"cc-number\" | \"cc-name\" | \"cc-given-name\" | \"cc-middle-name\" | \"cc-family-name\" | \"cc-type\" | \"country\" | \"current-password\" | \"email-otp\" | \"flight-confirmation-code\" | \"flight-number\" | \"family-name\" | \"gender\" | \"gift-card-number\" | \"gift-card-pin\" | \"given-name\" | \"honorific-prefix\" | \"honorific-suffix\" | \"loyalty-account-number\" | \"name-family\" | \"name-given\" | \"name-middle\" | \"name-middle-initial\" | \"name-prefix\" | \"name-suffix\" | \"new-password\" | \"nickname\" | \"one-time-code\" | \"organization\" | \"organization-title\" | \"password-new\" | \"postal-address\" | \"postal-address-country\" | \"postal-address-dependent-locality\" | \"postal-address-extended\" | \"postal-address-extended-postal-code\" | \"postal-address-locality\" | \"postal-address-region\" | \"postal-address-unit\" | \"postal-code\" | \"promo-code\" | \"street-address\" | \"sms-otp\" | \"tel-country-code\" | \"tel-national\" | \"tel-device\" | \"upi-vpa\" | \"wifi-password\" | \"username\" | \"username-new\" | \"off\" | undefined",
+            "type": "\"name\" | \"url\" | \"tel\" | \"email\" | \"password\" | \"off\" | \"2fa-app-otp\" | \"additional-name\" | \"address-line1\" | \"address-line2\" | \"birthdate-day\" | \"birthdate-full\" | \"birthdate-month\" | \"birthdate-year\" | \"cc-csc\" | \"cc-exp\" | \"cc-exp-day\" | \"cc-exp-month\" | \"cc-exp-year\" | \"cc-number\" | \"cc-name\" | \"cc-given-name\" | \"cc-middle-name\" | \"cc-family-name\" | \"cc-type\" | \"country\" | \"current-password\" | \"email-otp\" | \"flight-confirmation-code\" | \"flight-number\" | \"family-name\" | \"gender\" | \"gift-card-number\" | \"gift-card-pin\" | \"given-name\" | \"honorific-prefix\" | \"honorific-suffix\" | \"loyalty-account-number\" | \"name-family\" | \"name-given\" | \"name-middle\" | \"name-middle-initial\" | \"name-prefix\" | \"name-suffix\" | \"new-password\" | \"nickname\" | \"one-time-code\" | \"organization\" | \"organization-title\" | \"password-new\" | \"postal-address\" | \"postal-address-country\" | \"postal-address-dependent-locality\" | \"postal-address-extended\" | \"postal-address-extended-postal-code\" | \"postal-address-locality\" | \"postal-address-region\" | \"postal-address-unit\" | \"postal-code\" | \"promo-code\" | \"street-address\" | \"sms-otp\" | \"tel-country-code\" | \"tel-national\" | \"tel-device\" | \"upi-vpa\" | \"wifi-password\" | \"username\" | \"username-new\" | undefined",
             "required": false,
             "description": "Autofill hint, passed through to `TextInput`."
           },

@@ -11,7 +11,7 @@
  * focus ring (keyboard / switch access), disabled = 50 % opacity.
  */
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, type GestureResponderEvent, type PressableStateCallbackType, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, Text, type GestureResponderEvent, type PressableProps, type PressableStateCallbackType, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
 import type { LumoNode } from "@lumo-ui/core";
 import { useLumoNative } from "./provider.tsx";
 import { control, focus, radius } from "./tokens.ts";
@@ -19,7 +19,15 @@ import { control, focus, radius } from "./tokens.ts";
 export type ButtonVariant = "solid" | "outline" | "ghost" | "critical";
 export type ButtonSize = "sm" | "md" | "lg";
 
-interface ButtonBaseProps {
+/**
+ * What an ENGINE hands a button it slots (a dialog trigger, a close control):
+ * the press it composes, the state it announces, its ids. Forwarded to the
+ * Pressable — this is how `<Dialog trigger={<Button/>}>` gets `aria-expanded`
+ * and the open press. `style` and the announced strings stay Lumo's own props.
+ */
+type EngineProps = Omit<PressableProps, "style" | "children" | "onPress" | "disabled" | "role" | "accessibilityLabel" | "accessibilityHint" | "accessibilityState" | "testID">;
+
+interface ButtonBaseProps extends EngineProps {
   /** The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment. */
   variant?: ButtonVariant | undefined;
   /** The size step on the shared control scale. `lg` meets the 44 dp touch-target floor. */
@@ -95,12 +103,13 @@ function useButtonStyle(variant: ButtonVariant, size: ButtonSize, isDisabled: bo
   };
 }
 
-export function Button({ variant = "solid", size = "md", isDisabled = false, onPress, accessibilityHint, style, testID, children }: ButtonProps) {
+export function Button({ variant = "solid", size = "md", isDisabled = false, onPress, accessibilityHint, style, testID, children, ...engine }: ButtonProps) {
   const { colours, direction, fontFamily } = useLumoNative();
   const styleFor = useButtonStyle(variant, size, isDisabled, style);
   const textStyle: TextStyle = { ...styles.text, fontSize: SIZE[size].fontSize, writingDirection: direction, fontFamily };
   return (
     <Pressable
+      {...engine}
       role="button"
       accessibilityState={{ disabled: isDisabled }}
       disabled={isDisabled}
@@ -114,10 +123,11 @@ export function Button({ variant = "solid", size = "md", isDisabled = false, onP
   );
 }
 
-export function IconButton({ label, variant = "ghost", size = "md", isDisabled = false, onPress, accessibilityHint, style, testID, children }: IconButtonProps) {
+export function IconButton({ label, variant = "ghost", size = "md", isDisabled = false, onPress, accessibilityHint, style, testID, children, ...engine }: IconButtonProps) {
   const styleFor = useButtonStyle(variant, size, isDisabled, [{ width: SIZE[size].height, paddingStart: 0, paddingEnd: 0 }, style]);
   return (
     <Pressable
+      {...engine}
       role="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled: isDisabled }}

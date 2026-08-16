@@ -30,6 +30,13 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
   landscape sliver around a short exhibit.
 
 ### Added
+- **`@lumo-ui/native` `Dialog` on the `@rn-primitives` engine** (decision §29;
+  Radix on the web): `label` and `closeLabel` required, description wired, ✕ at
+  the inline end, `DialogClose` for footer controls, controlled/uncontrolled;
+  the provider mounts the engine's `PortalHost` on device. `Button`/`IconButton`
+  forward engine props (trigger/close slots). New runtime dependencies of the
+  native package: `@rn-primitives/dialog`, `@rn-primitives/portal`. Any-language
+  test on native (`de`, `ar-EG`).
 - **Web | Mobile on component pages.** Every component with a React Native
   implementation (`button`, `switch`, `text-field`, `select`) has a Mobile side
   at `/components/<slug>/mobile/` — the platform is a route, like the locale, so

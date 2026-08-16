@@ -8,5 +8,7 @@ export { TextField } from "./text-field.tsx";
 export type { TextFieldProps } from "./text-field.tsx";
 export { Select } from "./select.tsx";
 export type { SelectProps, SelectOption } from "./select.tsx";
+export { Dialog, DialogClose } from "./dialog.tsx";
+export type { DialogProps } from "./dialog.tsx";
 export { lightColours, darkColours, oklch, ACHROMATIC, radius, control, focus } from "./tokens.ts";
 export type { LumoBrand, LumoSchemeColours } from "./tokens.ts";
