@@ -46,5 +46,22 @@
   "bin": {
     "lumo": "scripts/lumo-cli.mjs"
   },
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "files": [
+    "scripts/lumo-cli.mjs",
+    "scripts/build-catalog.mjs",
+    "packages/*/package.json",
+    "packages/*/src/**",
+    "registry.json",
+    "catalog.json",
+    "api-reference.json",
+    "pnpm-workspace.yaml",
+    "docs/agent-consumer.md",
+    "docs/i18n-and-rtl.md",
+    "skills/**",
+    "llms.txt",
+    "LICENSE",
+    "CHANGELOG.md",
+    "README.md"
+  ]
 }
