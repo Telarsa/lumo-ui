@@ -20,7 +20,7 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
-## 0.2.2 — unreleased
+## 0.2.2 — 2026-08-17
 
 ### Decided
 - **Best in class per platform (decision §30).** Web stays Base UI + Tailwind +
