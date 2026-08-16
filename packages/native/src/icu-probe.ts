@@ -118,6 +118,9 @@ export function probeIcu(): ProbeResult {
   //    for EXISTENCE separately from its answer.
   let direction = "(no Intl.Locale.getTextInfo)";
   try {
+    // Hermes (Expo Go, iOS 18.5, 16 Aug 2026) has no `Intl.Locale` AT ALL —
+    // name that outcome rather than surfacing a raw TypeError.
+    if (typeof Intl.Locale !== "function") throw new Error("no Intl.Locale");
     const locale = new Intl.Locale("fa-IR") as Intl.Locale & {
       getTextInfo?: () => { direction: string };
       textInfo?: { direction: string };

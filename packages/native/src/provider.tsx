@@ -44,12 +44,12 @@ export interface LumoNativeContextValue {
 
 // Same default as the web's LumoLocaleContext: Persian first, so a missing
 // provider never announces English by accident.
-const LumoNativeContext = createContext<LumoNativeContextValue>({
-  locale: "fa-IR",
-  direction: direction("fa-IR"),
-  colours: lightColours(ACHROMATIC),
-  fontFamily: undefined,
-});
+// Computed lazily, not at module scope: nothing platform-dependent may run at
+// import time (a Hermes build without Intl.Locale crashed here on 16 Aug 2026).
+let fallback: LumoNativeContextValue | undefined;
+const fallbackValue = (): LumoNativeContextValue =>
+  (fallback ??= { locale: "fa-IR", direction: direction("fa-IR"), colours: lightColours(ACHROMATIC), fontFamily: undefined });
+const LumoNativeContext = createContext<LumoNativeContextValue | undefined>(undefined);
 
 export function LumoNativeProvider({ locale, brand = ACHROMATIC, fonts, colorScheme, children }: LumoNativeProviderProps) {
   const os = useColorScheme();
@@ -64,5 +64,5 @@ export function LumoNativeProvider({ locale, brand = ACHROMATIC, fonts, colorSch
 }
 
 export function useLumoNative(): LumoNativeContextValue {
-  return useContext(LumoNativeContext);
+  return useContext(LumoNativeContext) ?? fallbackValue();
 }

@@ -37,7 +37,20 @@ export type Direction = "rtl" | "ltr";
 type LocaleWithTextInfo = Intl.Locale & { getTextInfo?: () => { direction: "ltr" | "rtl" } };
 
 export function direction(locale: Locale): Direction {
-  const dir = (new Intl.Locale(locale) as LocaleWithTextInfo).getTextInfo?.()?.direction;
+  // Asked of the platform when it can answer; the table when it cannot. Hermes
+  // (Expo Go, iOS 18.5, 16 Aug 2026) has NO `Intl.Locale` at all — an unguarded
+  // `new Intl.Locale()` threw "undefined cannot be used as a constructor" at
+  // module load and took the app down before its first frame. That is the
+  // README's "DIRECTION FAILS" branch, and the fallback is what it said it
+  // would be: a hand-kept map, consulted only when the platform is silent.
+  let dir: string | undefined;
+  try {
+    dir = typeof Intl !== "undefined" && typeof Intl.Locale === "function"
+      ? (new Intl.Locale(locale) as LocaleWithTextInfo).getTextInfo?.()?.direction
+      : undefined;
+  } catch {
+    dir = undefined;
+  }
   // Narrowed by value, so a lib that types `direction` looser than ours still compiles.
   return dir === "rtl" || dir === "ltr" ? dir : DIRECTION[locale];
 }
