@@ -1,64 +1,29 @@
 "use client";
 
 import type { VariantProps } from "class-variance-authority";
-import {
-  Input as AriaInput,
-  TextField as AriaTextField,
-  type TextFieldProps as AriaTextFieldProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+// The prop SHAPE the public API is pinned to, owned by Lumo — see `@lumo-ui/core`'s `props.ts`.
+import { cn, type LumoNode, type TextFieldPropsBase } from "@lumo-ui/core";
 import { IconButton, type IconButtonProps } from "./button.tsx";
-import {
-  Description,
-  FieldError,
-  Label,
-  fieldVariants,
-  optional,
-} from "./form.tsx";
+import { Description, Field, FieldError, FieldInput, Label, optional } from "./form.tsx";
 
 /**
  * A text field with adornments at the reading edges of the box.
  *
- *     <InputGroup
- *       label="نشانی صفحه"
- *       leading={<LinkIcon aria-hidden="true" />}
- *       trailing={<InputGroupButton label="رونوشت نشانی"><CopyIcon aria-hidden="true" /></InputGroupButton>}
- *     />
+ *     <InputGroup label="نشانی صفحه" leading={<LinkIcon aria-hidden="true" />}
+ *       trailing={<InputGroupButton label="رونوشت نشانی"><CopyIcon aria-hidden="true" /></InputGroupButton>} />
  *
- * shadcn's `aria-vega` input-group was vendored first and then replaced by
- * this composition, for two reasons that are both Lumo policy rather than
- * taste:
- *
- *  1. Upstream is COMPOSITIONAL — a bare `Group` you fill with an unlabelled
- *     `InputGroupInput` — which reopens the exact hole `TextField` closed:
- *     nothing forces the field to have a name. This one is COMPOSED like
- *     text-field.tsx, and `label` is a REQUIRED string.
- *  2. Upstream puts the border on the wrapper and aligns the adornments with
- *     `pl-2`/`pr-2` and `-ml-1`/`-mr-1` — physical on every seam. Here the
- *     adornments are absolutely positioned overlays pinned with `start-0` /
- *     `end-0`, the pattern search-field.tsx measured and documented: the
- *     border stays on the focusable `<input>` itself, so the one focus rule in
- *     theme.css draws around the whole control rather than around a text run
- *     inset inside a decorated box.
- *
- * `leading` sits at the reading START (right in Persian, left in English) and
- * `trailing` at the reading END — both are `LumoNode` slots, so a bare number
- * can not land in either. The input reserves the overlay's width with
- * `ps-10`/`pe-10`, padding-inline utilities that mirror with the script, and
- * only on the side that actually has an adornment.
- *
- * The overlay containers are `pointer-events-none` so a click on a decorative
- * adornment falls through to the input underneath it — and interactive
- * children win back their own events via `[&_[data-lumo]]`, which every Lumo
- * control carries. An icon-only adornment control goes through
- * `InputGroupButton`, whose `label` is required by construction: it is the
- * exemplar's `IconButton` sized for this box, not a new kind of button.
+ * COMPOSED like text-field.tsx (`label` REQUIRED), not compositional like the shadcn
+ * vendors, whose unlabelled input and `pl-2`/`-mr-1` seams were rejected. Adornments are
+ * absolutely positioned overlays pinned with `start-0`/`end-0`, `pointer-events-none`
+ * so decorative ones fall through (interactive children win back via `[&_[data-lumo]]`);
+ * the input reserves `ps-10`/`pe-10` only on the side that has one, and keeps the border
+ * so theme.css's one focus rule draws around the whole control.
  */
 import { inputGroupAddonVariants, inputGroupInputVariants } from "./input-group.variants.ts";
 export { inputGroupAddonVariants, inputGroupInputVariants };
 
 export interface InputGroupProps
-  extends Omit<AriaTextFieldProps, "children" | "className" | "size" | "isInvalid">,
+  extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior">,
     Pick<VariantProps<typeof inputGroupInputVariants>, "size"> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
@@ -89,25 +54,48 @@ export function InputGroup({
   size,
   className,
   inputClassName,
-  ...props
+  // — translated onto <Field> —
+  isDisabled,
+  name,
+  validate,
+  // — translated onto the control —
+  value,
+  defaultValue,
+  onChange,
+  type,
+  isReadOnly,
+  isRequired,
+  autoFocus,
+  // — accepted by the API, unreachable in Base UI. See text-field.tsx. —
+  ...rest
 }: InputGroupProps) {
   return (
-    <AriaTextField
-      data-lumo=""
-      className={cn(fieldVariants(), className)}
-      {...optional("isInvalid", isInvalid ?? (errorMessage != null ? true : undefined))}
-      {...props}
+    <Field
+      label={label}
+      description={description}
+      errorMessage={errorMessage}
+      explicit={rest}
+      className={className}
+      {...optional("isDisabled", isDisabled)}
+      {...optional("isInvalid", isInvalid)}
+      {...optional("name", name)}
+      {...optional(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const result = validate(String(fieldValue ?? ""));
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
       <Label>{label}</Label>
       <div className="relative">
         {leading != null ? (
           <div className={inputGroupAddonVariants({ side: "start" })}>{leading}</div>
         ) : null}
-        {/* `data-lumo` on the input, not only the wrapper — the input is the
-            element that takes focus, so it must carry the ring marker. Same
-            note as text-field.tsx. */}
-        <AriaInput
-          data-lumo=""
+        {/* `data-lumo` rides on `FieldInput`: the input takes focus, so it carries the ring marker. */}
+        <FieldInput
           className={cn(
             inputGroupInputVariants({
               size,
@@ -117,6 +105,17 @@ export function InputGroup({
             inputClassName,
           )}
           {...optional("placeholder", placeholder)}
+          {...optional("value", value)}
+          {...optional("defaultValue", defaultValue)}
+          {...optional(
+            "onValueChange",
+            onChange === undefined ? undefined : (next: string) => onChange(next),
+          )}
+          {...optional("type", type)}
+          {...optional("readOnly", isReadOnly)}
+          {...optional("required", isRequired)}
+          {...optional("autoFocus", autoFocus)}
+          {...(rest as object)}
         />
         {trailing != null ? (
           <div className={inputGroupAddonVariants({ side: "end" })}>{trailing}</div>
@@ -124,7 +123,7 @@ export function InputGroup({
       </div>
       {description != null ? <Description>{description}</Description> : null}
       <FieldError>{errorMessage}</FieldError>
-    </AriaTextField>
+    </Field>
   );
 }
 

@@ -67,39 +67,13 @@ import {
 } from "@/app/view-block/block-islands";
 
 /**
- * The blocks gallery — data for both the card-grid index and every block's own
- * full-page preview.
+ * The blocks gallery — data for both the card-grid index and every block's own full-page
+ * preview (`[lang]/blocks/<slug>/` for the write-up, `view-block/<lang>/<slug>/` for the block
+ * rendered alone). Every entry supplies a complete Persian AND English `strings` set — no fallback.
  *
- * A block is a whole screen, and stacking 28 of them on one page (the v0.4
- * gallery's original shape) is neither reviewable nor honest about how any one
- * of them looks in use. So the index (`[lang]/blocks/page.tsx`) shows a card
- * per block — name, one-line intro, no live render — and each block gets its
- * OWN route: `[lang]/blocks/<slug>/` for the write-up, `view-block/<lang>/<slug>/`
- * for the block rendered alone in a real document. That second route is what
- * "full-page preview" means: `AppShell` at `min-h-dvh` actually gets a whole
- * page to occupy, rather than a card 224px tall.
- *
- * Every block takes ALL of its text as a required `strings` prop, so each entry
- * below supplies a complete Persian and English set — there is no default to
- * silently fall back to English.
- *
- * ── WHY SEVEN ENTRIES GO THROUGH `block-islands.tsx` ────────────────────────
- *
- * This file reads block source off disk with `node:fs` at module scope (see
- * `source()` below), exactly as `demos.tsx` does — which is what keeps it a
- * server module. A server module cannot pass a FUNCTION prop to a Client
- * Component: React has nothing to serialise a closure into. Seven blocks
- * require one directly in their `strings` contract — `otp-verify`,
- * `password-reset`, `data-toolbar`, `table-view`, `listing-grid`,
- * `checkout-summary`, `product-detail` — because a sentence like «فقط ۳ عدد
- * باقی مانده» does not place its number where "Only 3 left" places its own, so
- * the library asks for a function rather than a template with a hole in it
- * (see `otp-verify.tsx`'s header for the full argument). Those seven are
- * composed through a small Client Component in `view-block/block-islands.tsx`
- * that takes only plain, serialisable props and builds the closure itself —
- * the same move `demo-islands.tsx` already makes for `Rating`, `Pagination`,
- * `Toast` and `Chart`. No copy lives in the islands file; every word below is
- * still authored here, in both locales.
+ * This file reads block source off disk at module scope, which keeps it a server module; a server
+ * module cannot pass a FUNCTION prop to a Client Component, so the seven blocks whose `strings`
+ * contract needs one are composed through `view-block/block-islands.tsx`. All copy still lives here.
  */
 
 const BLOCKS_SRC = join(process.cwd(), "..", "..", "packages", "blocks", "src");
@@ -733,7 +707,7 @@ const BLOCKS: BlockDemo[] = [
                 </Button>
               </div>
               <div className="w-full overflow-auto">
-                <Table label={l === "fa-IR" ? "آخرین سفارش‌ها" : "Latest orders"}>
+                <Table label={l === "fa-IR" ? "آخرین سفارش‌ها" : "Latest orders"} locale={l}>
                   <TableHeader>
                     <Column id="customer" isRowHeader>
                       {l === "fa-IR" ? "مشتری" : "Customer"}
@@ -1265,7 +1239,7 @@ const BLOCKS: BlockDemo[] = [
             ? "کولهٔ ضدآب با بند قابل تنظیم و جای مخصوص لپ‌تاپ."
             : "A water-resistant backpack with adjustable straps and a dedicated laptop sleeve."
         }
-        images={[{ src: PLACEHOLDER_IMAGE, alt: "" }]}
+        images={[{ src: PLACEHOLDER_IMAGE, alt: "", label: "نمای محصول" }]}
         badge={l === "fa-IR" ? "پرفروش" : "Bestseller"}
         price={2450000}
         compareAtPrice={2890000}

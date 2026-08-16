@@ -1,114 +1,132 @@
 "use client";
 
+import * as React from "react";
 import { cva } from "class-variance-authority";
-import {
-  Button as AriaButton,
-  type ButtonProps as AriaButtonProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
-import { Toolbar, type ToolbarProps } from "./toolbar.tsx";
+import { Menubar as BaseMenubar } from "@base-ui/react/menubar";
+import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
+import { type ButtonPropsBase, cn, type LumoNode } from "@lumo-ui/core";
 
 /**
- * A horizontal row of menus — File/Edit/View in an app chrome.
- *
- *     <Menubar label="نوار منو">
- *       <MenuTrigger>
- *         <MenubarButton>پرونده</MenubarButton>
- *         <MenuPopover>
- *           <Menu onAction={…}>
- *             <MenuItem id="new">سند تازه</MenuItem>
- *           </Menu>
- *         </MenuPopover>
- *       </MenuTrigger>
- *       <MenuTrigger>…ویرایش…</MenuTrigger>
- *     </Menubar>
- *
- * The menus themselves come from menu.tsx — `MenuTrigger`, `MenuPopover`,
- * `Menu`, `MenuItem`, `MenuSection`, `MenuSeparator` — because a menubar's
- * menus must be EXACTLY the component's menus or the two drift apart visually
- * and behaviourally. This file adds only the row and the trigger style.
- *
- * ═══ THE ROLE IS `toolbar`, NOT `menubar`, AND THAT IS A PINNED DECISION ════
- *
- * Measured against React Aria Components 1.20.0 before writing, per the
- * vendor-first rule (shadcn has no aria-vega menubar — only a Base UI-shaped
- * one, confirmed by scripts/vendor-from-shadcn.mjs returning 404/base-vega):
- *
- *   - RAC 1.20 ships NO Menubar component, and `role="menubar"` appears
- *     nowhere in its dist output (grepped, not assumed).
- *   - A real `role="menubar"` needs `role="menuitem"` triggers with roving
- *     tabindex, `aria-haspopup`/`aria-expanded` wiring, open-on-hover once any
- *     menu is open, and RIGHT/LEFT moving between OPEN menus — resolved
- *     against direction. The hooks that could compose it (`useMenuTrigger`,
- *     `useMenuItem`, `useMenuTriggerState`) are not exported from
- *     `react-aria-components`, and `@react-aria/menu` is not a declared
- *     dependency of this package — importing it would be an undeclared
- *     transitive under pnpm and a new exactly-pinned dependency under the
- *     workspace policy. Re-implementing the roving/hover machinery by hand is
- *     the >400-line wrapper the measurement predicted, and hand-rolled arrow
- *     handling is the exact defect class toolbar.tsx documents.
- *
- * So this ships the composition RAC itself supports: a `Toolbar` of
- * `MenuTrigger`s. What a reader gets, honestly stated:
- *
- *   - ONE Tab stop for the whole row, named by the required `label`.
- *   - Arrow keys move between the triggers, resolved against document
- *     direction (ArrowLeft moves FORWARD in Persian) — RAC Toolbar behaviour,
- *     see toolbar.tsx's header.
- *   - ArrowDown/ArrowUp on a trigger opens its menu (RAC MenuTrigger
- *     behaviour), and the popover opens at the logical `bottom start`.
- *   - Announced as "toolbar", not "menubar", and there is no open-on-hover
- *     across triggers. If RAC ships a Menubar, this file adopts it and the
- *     role assertion in menubar.test.tsx goes red to say so.
+ * A horizontal row of menus, on Base UI's real `role="menubar"`; the menus
+ * come from menu.tsx. Base UI elects the tabbable trigger in an effect, so
+ * every trigger is served `tabindex="-1"`; `MenubarButton` closes that with
+ * `useCompositeTabStop` on the one designated trigger, and is a plain
+ * `<button>` because it is the element `Menu.Trigger` adopts via `render`.
  */
 export const menubarVariants = cva(
-  // The row is a bordered surface so the triggers read as one control cluster.
-  // gap-0.5 rather than toolbar's gap-1: menubar triggers are text-dense and
-  // sit closer, matching every desktop menubar people have used.
-  "w-fit gap-0.5 rounded-md border border-border bg-surface p-1",
+  // `flex` is this file's job — Base UI's `Menubar` is a bare `<div role="menubar">`.
+  // No `flex-row-reverse`: it would mirror paint order without DOM order.
+  "flex w-fit items-center gap-0.5 rounded-md border border-border bg-surface p-1",
 );
 
 export const menubarButtonVariants = cva(
   "flex cursor-pointer select-none items-center rounded-sm px-3 py-1.5 " +
     "text-sm font-medium text-fg outline-none transition-colors " +
-    "data-hovered:bg-surface-hover " +
-    // `data-pressed` covers the press flash; `data-open`* does not exist on a
-    // bare Button, so the open state is styled off aria-expanded, which RAC's
-    // MenuTrigger DOES maintain on its trigger.
-    "data-pressed:bg-surface-hover " +
+    // `data-popup-open` (engine, after hydration) AND `aria-expanded` (first
+    // byte, via `useOpenMirror`): two selectors, one open state, deliberately.
+    // Not `data-pressed`: in Base UI that is a PERSISTENT on-state.
+    "hover:bg-surface-hover " +
+    "data-popup-open:bg-surface-sunken " +
     "aria-expanded:bg-surface-sunken " +
-    "data-focus-visible:bg-surface-hover " +
+    // `data-highlighted` is the cross-trigger hover while a menu is open.
+    "data-highlighted:bg-surface-hover " +
+    // NO `focus-visible:` fill: `data-lumo` already rings it, and a fill would collide with `data-highlighted`.
     "data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 
-export interface MenubarProps extends Omit<ToolbarProps, "orientation"> {}
-
 /**
- * The row. A `Toolbar` with the menubar skin and the orientation fixed to
- * horizontal — a vertical "menubar" is a menu, and menu.tsx already is one.
- * `label` is required for the reason toolbar.tsx states: the row is a single
- * Tab stop, and an unnamed stop announces "toolbar" and nothing else.
+ * Which trigger holds the pre-hydration tab stop, decided by the `Menubar`.
+ * Exactly one ("N stops" fails as much as "0"), designated by CHILD because
+ * the `MenubarButton` is a grandchild the row cannot see.
  */
-export function Menubar({ className, ...props }: MenubarProps) {
-  return <Toolbar orientation="horizontal" className={cn(menubarVariants(), className)} {...props} />;
-}
+const MenubarStopContext = React.createContext<boolean | null>(null);
 
-export interface MenubarButtonProps extends Omit<AriaButtonProps, "children" | "className"> {
+export interface MenubarProps {
+  /** Announced name of the row, e.g. «نوار منو». REQUIRED — Base UI emits no name, so an unlabelled one is bare "menu bar". */
+  label: string;
   children?: LumoNode;
   className?: string | undefined;
+  /** Whether the whole row is disabled. */
+  isDisabled?: boolean | undefined;
+}
+
+export function Menubar({ label, className, children, isDisabled }: MenubarProps) {
+  // Designate the one trigger that holds the served tab stop. See `MenubarStopContext`.
+  const parts = React.Children.toArray(children as React.ReactNode);
+  const designated = parts.findIndex((part) => React.isValidElement(part));
+  return (
+    <BaseMenubar
+      data-lumo=""
+      aria-label={label}
+      orientation="horizontal"
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+      className={cn(menubarVariants(), className)}
+    >
+      {designated === -1
+        ? // Nothing to designate — an empty menubar has no stop to give.
+          (children as React.ReactNode)
+        : parts.map((part, index) => (
+            <MenubarStopContext.Provider key={index} value={index === designated}>
+              {part}
+            </MenubarStopContext.Provider>
+          ))}
+    </BaseMenubar>
+  );
+}
+
+/** Subtracted from `ButtonPropsBase`: React Aria press/hover callbacks with no counterpart on a plain `<button>`. */
+type MenubarButtonInertProps =
+  | "onPress"
+  | "onPressStart"
+  | "onPressEnd"
+  | "onPressUp"
+  | "onPressChange"
+  | "onHoverStart"
+  | "onHoverEnd"
+  | "onHoverChange"
+  | "onFocusChange"
+  | "isPending"
+  | "preventFocusOnPress"
+  | "excludeFromTabOrder"
+  | "slot"
+  | "style";
+
+export interface MenubarButtonProps extends Omit<ButtonPropsBase, MenubarButtonInertProps> {
+  children?: LumoNode;
+  className?: string | undefined;
+  /** NOT for callers. The composite's roving `tabIndex` arrives here via `Menu.Trigger`'s `render`; declared so it can be intercepted. */
+  tabIndex?: number | undefined;
 }
 
 /**
  * One menu's trigger in the row. Goes as the first child of a `MenuTrigger`,
- * which wires `aria-haspopup="menu"`, `aria-expanded` and the ArrowDown/
- * ArrowUp open behaviour onto it — none of that is restated here.
+ * which hands it to `Menu.Trigger`'s `render`; the engine supplies the role
+ * and ARIA, this file supplies the served tab stop.
  */
-export function MenubarButton({ className, ...props }: MenubarButtonProps) {
+export function MenubarButton({
+  className,
+  children,
+  isDisabled,
+  // The composite's roving value; intercepted because `rest` is spread last.
+  tabIndex: injectedTabIndex,
+  ...rest
+}: MenubarButtonProps) {
+  // `null` (no menubar around this button) falls back to taking the stop.
+  const designated = React.useContext(MenubarStopContext);
+  const tabStop = useCompositeTabStop(designated !== false);
   return (
-    <AriaButton
+    <button
+      type="button"
       data-lumo=""
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
       className={cn(menubarButtonVariants(), className)}
-      {...props}
-    />
+      {...rest}
+      // LAST, on purpose: 0 on the designated trigger before mount, the
+      // composite's injected value otherwise. `useCompositeTabStop` returns an
+      // empty object when not the holder, hence the spread with a fallback.
+      {...(tabStop.tabIndex === undefined ? { tabIndex: injectedTabIndex } : tabStop)}
+    >
+      {children as React.ReactNode}
+    </button>
   );
 }

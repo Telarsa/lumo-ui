@@ -21,8 +21,8 @@ const t = {
   products: { "fa-IR": "محصولات", "en-US": "Products" },
   lumo: { "fa-IR": "لومو", "en-US": "Lumo" },
   lumoDesc: {
-    "fa-IR": "سیستم طراحی فارسی‌محور روی React Aria",
-    "en-US": "The Persian-first design system on React Aria",
+    "fa-IR": "سیستم طراحی فارسی‌محور روی Base UI",
+    "en-US": "The Persian-first design system on Base UI",
   },
   khroos: { "fa-IR": "خروس", "en-US": "Khroos" },
   khroosDesc: {
@@ -46,7 +46,7 @@ const t = {
 function BasicExample(l: Locale) {
   return (
     <NavigationMenu label={t.nav[l]}>
-      <NavigationMenuItem>
+      <NavigationMenuItem value="products">
         <NavigationMenuTrigger>{t.products[l]}</NavigationMenuTrigger>
         <NavigationMenuPanel>
           <NavigationMenuLink href="#lumo" description={t.lumoDesc[l]}>
@@ -57,7 +57,7 @@ function BasicExample(l: Locale) {
           </NavigationMenuLink>
         </NavigationMenuPanel>
       </NavigationMenuItem>
-      <NavigationMenuItem>
+      <NavigationMenuItem value="resources">
         <NavigationMenuTrigger>{t.resources[l]}</NavigationMenuTrigger>
         <NavigationMenuPanel>
           <NavigationMenuLink href="#docs" description={t.docsDesc[l]}>
@@ -77,15 +77,24 @@ function BasicExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
-    // Page identity — this component has no demos.tsx entry, so the catalog
-    // builds its page from these three fields (see lib/catalog.ts).
+    usage: {
+      when: {
+        "fa-IR": "ناوبری بالای سایت با پنل محتوا: بخش‌های محصول، منوهای بزرگ. پیوندها پیوند می‌مانند.",
+        "en-US": "Site-top navigation with content panels: product sections, mega menus. Links stay links.",
+      },
+      whenNot: {
+        "fa-IR": "ناوبری کناری یک برنامه — `Sidebar`. کنش‌ها پشت یک دکمه — `Menu`. ردیف منوهای دسکتاپی — `Menubar`.",
+        "en-US": "An application's side navigation — `Sidebar`. Actions behind a button — `Menu`. Desktop-style rows of menus — `Menubar`.",
+      },
+    },
+    // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "منوی ناوبری", "en-US": "Navigation menu" },
     intro: { "fa-IR": "ناوبری بالای سایت با پنل‌های محتوایی. پنل‌ها پاپ‌اورند نه منو، پس پیوندها پیوند می‌مانند؛ جای پنل با خواص منطقی تعیین می‌شود و در فارسی خودبه‌خود آینه می‌شود.", "en-US": "Site-top navigation with content panels. Panels are popovers, not menus, so links stay links; placement is logical and mirrors on its own in Persian." },
     isNew: true,
     composition: [
       `<NavigationMenu label="…">`,
-      `  <NavigationMenuItem>`,
+      `  <NavigationMenuItem value="products">`,
       `    <NavigationMenuTrigger>…</NavigationMenuTrigger>`,
       `    <NavigationMenuPanel>`,
       `      <NavigationMenuLink href="…" description="…">…</NavigationMenuLink>`,
@@ -112,8 +121,8 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "NavigationMenuTrigger",
         description: {
-          "fa-IR": "دکمهٔ پنل با aria-expanded از خود RAC و شورون محور بلوکی که با چرخش ۱۸۰ درجه در هر دو خط یکسان است.",
-          "en-US": "The panel's button with RAC's own aria-expanded and a block-axis chevron whose half turn reads the same in both scripts.",
+          "fa-IR": "دکمهٔ پنل با aria-expanded از خودِ موتور و شورون محور بلوکی که با چرخش ۱۸۰ درجه در هر دو خط یکسان است.",
+          "en-US": "The panel's button with the engine's own aria-expanded and a block-axis chevron whose half turn reads the same in both scripts.",
         },
       },
       {

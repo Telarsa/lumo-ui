@@ -19,6 +19,16 @@ const copy = {
 } satisfies Record<string, Record<Locale, string>>;
 
 export const meta = {
+  usage: {
+    when: {
+      "fa-IR": "خط‌های میان پیام‌ها: تاریخ، وضعیت، «سارا به گفتگو پیوست»؛ جداکنندهٔ برچسب‌دار یا ردیف حاشیه‌دار.",
+      "en-US": "The lines between messages: a date, a status, «Sara joined the conversation»; a labelled separator or a bordered row.",
+    },
+    whenNot: {
+      "fa-IR": "خطی میان دو گروه محتوا — `Separator`. وضعیت روی یک ردیف — `Badge`. خودِ پیام — `Bubble` یا `Message`.",
+      "en-US": "A rule between two groups of content — `Separator`. A status on a row — `Badge`. The message itself — `Bubble` or `Message`.",
+    },
+  },
   id: "marker",
   tier: "display",
   title: { "fa-IR": "نشانگر گفتگو", "en-US": "Marker" },

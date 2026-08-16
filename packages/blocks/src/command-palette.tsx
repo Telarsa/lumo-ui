@@ -20,48 +20,18 @@ import {
  * state and an optional keyboard-shortcut hint — the whole screen-level widget
  * around `@lumo-ui/ui`'s `Command`/`CommandDialog` primitives.
  *
- * Those primitives are deliberately unopinionated about DATA — a consumer
- * composes `<CommandGroup><CommandItem>` by hand, because a command palette in
- * one product is a flat action list and in another is five grouped sections
- * with icons and shortcuts, and the primitive should not guess which. This
- * block is the other end of that trade: it takes `groups` as plain data and
- * assembles the composition once, for the common case where a project just
- * wants "here are my commands, render them".
- *
- * ── SELECTION IS `onSelect` FOR ACTIONS, `href` FOR NAVIGATION ───────────────
- *
- * `CommandPaletteItem.href` renders through `CommandItem`'s own `href`, so a
- * navigable entry is a real link — RAC's Menu already knows how to activate it
- * with Enter, with a click, and (per menu.tsx) with the keyboard model that
- * resolves correctly under `dir="rtl"`. An item with no `href` instead fires
- * `onSelect` with its id, wired ONCE at the list level via `onAction` rather
- * than once per item, so a consumer building the list from an array never has
- * to remember to close over a per-item handler.
- *
- * ── THE EMPTY STATE IS `renderEmptyState`, NOT A STATIC CHILD ───────────────
- *
- * `CommandEmpty` is plain, unstyled-logic markup — see `command.tsx`, it holds
- * no visibility rule of its own. Placed as an ordinary child of `CommandList`
- * it would render unconditionally, present alongside real results instead of
- * replacing them. `renderEmptyState` is the render prop RAC's own collection
- * components use to swap in content precisely when the (filtered) collection
- * resolves to zero items, which is the only place "no commands match" belongs.
- *
- * ── ICONS ARE A CALLER SLOT, NOT AN IMPORT ───────────────────────────────────
- *
- * `@lumo-ui/blocks` carries no icon library dependency — see `app-shell.tsx`'s
- * `AppShellNavItem.icon` and `feature-grid.tsx`'s `Feature.icon` for the same
- * pattern. `CommandPaletteItem.icon` is a `LumoNode` the caller already has an
- * icon component for; this block never imports one of its own.
+ * The primitives are unopinionated about DATA; this block takes `groups` as
+ * plain data and assembles the composition once. On Base UI the commands are
+ * an `items` array (a JSX-only palette is silently never filtered), `onSelect`
+ * is wired per item via `CommandItem.onAction`, and the empty state is a
+ * `role="status"` SIBLING of the list. Icons are a caller slot, not an import.
  *
  * `"use client"`: the whole point of this block is interaction.
  */
 export interface CommandPaletteItem {
   /** Stable key, sent back through `onSelect` when there is no `href`. */
   id: string;
-  /** Visible AND typeahead/filter text. Passed straight through as `textValue`,
-   * so a rich rendering below never loses the plain string the filter needs
-   * — see `command.tsx`'s note on the `textValue` derivation trap. */
+  /** Visible AND filter text: the `label` member Base UI matches on, so the filter and the row can never detach. */
   label: string;
   /** A leading glyph. Rendered `aria-hidden` — the label already names it. */
   icon?: LumoNode;
@@ -98,10 +68,7 @@ export interface CommandPaletteStrings {
 export interface CommandPaletteProps {
   strings: CommandPaletteStrings;
   groups: readonly CommandPaletteGroup[];
-  /**
-   * Overrides the default trigger entirely. A slot, exactly as
-   * `CommandDialog.trigger` already is — see `command.tsx`.
-   */
+  /** Overrides the default trigger entirely. A slot, exactly as `CommandDialog.trigger` is. */
   trigger?: LumoNode;
   /** A chord shown on the DEFAULT trigger, e.g. `["⌘", "K"]`. Omit for none. */
   triggerShortcut?: readonly string[] | undefined;
@@ -145,20 +112,29 @@ export function CommandPalette({
       onOpenChange={onOpenChange}
       className={className}
     >
-      <Command>
+      <Command<CommandPaletteGroup> items={groups}>
         <CommandInput label={strings.inputLabel} placeholder={strings.inputPlaceholder} />
-        <CommandList
-          onAction={(key) => onSelect?.(String(key))}
-          renderEmptyState={() => <CommandEmpty>{strings.emptyMessage}</CommandEmpty>}
-        >
-          {groups.map((group) => (
-            <CommandGroup key={group.id} heading={group.heading}>
-              {group.items.map((item) => (
+        {/*
+         * `CommandList` requires a name; the dialog's title is the honest value
+         * — the results ARE the palette.
+         */}
+        <CommandList<CommandPaletteGroup> label={strings.title}>
+          {(group: CommandPaletteGroup) => (
+            <CommandGroup<CommandPaletteItem>
+              key={group.id}
+              heading={group.heading}
+              items={group.items}
+            >
+              {(item: CommandPaletteItem) => (
                 <CommandItem
                   key={item.id}
                   id={item.id}
-                  textValue={item.label}
                   {...optional("href", item.href)}
+                  // Only a non-`href` row is an action; wiring both would fire
+                  // `onSelect` on every link press as well.
+                  {...(item.href === undefined && onSelect !== undefined
+                    ? { onAction: () => onSelect(item.id) }
+                    : {})}
                 >
                   {item.icon !== undefined ? (
                     <span aria-hidden="true" className="flex shrink-0 [&_svg]:size-4">
@@ -172,10 +148,12 @@ export function CommandPalette({
                     </CommandShortcut>
                   ) : null}
                 </CommandItem>
-              ))}
+              )}
             </CommandGroup>
-          ))}
+          )}
         </CommandList>
+        {/* A sibling, not a render prop — see the file header. */}
+        <CommandEmpty>{strings.emptyMessage}</CommandEmpty>
       </Command>
     </CommandDialog>
   );

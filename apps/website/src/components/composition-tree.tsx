@@ -1,27 +1,16 @@
 import type { Locale } from "@lumo-ui/core";
 import type { ExamplePart } from "@/examples/_system/types";
-import { CodeBlock } from "./code-block";
+import type { GeneratedApiGroup } from "@/lib/examples-loader";
+import { CodePanel } from "./code-panel";
 
 /**
- * The two "what is this made of" surfaces on a component page. Both are SERVER
- * components rendering data the loader has already validated against
- * `packages/ui/src/index.ts` — by the time either mounts, every part name here
- * is a real export, so neither re-checks anything.
- *
- * `CompositionTree` shows the copyable monospace parts tree from the example
- * file's `meta.composition`, with the component module's own exported parts
- * listed under it — the derived list, straight from the barrel, so it cannot
- * name a part that does not ship.
- *
- * `PartsTable` is the hand-authored API reference: one row per part. Part
- * names are code — genuinely Latin — so they render as LTR islands under
- * `data-lumo-latn`, the same escape hatch `code-block.tsx` documents; the
- * descriptions are in the page's locale.
+ * The three "what is this made of" surfaces on a component page. All are SERVER
+ * components rendering data the loader has already validated against the
+ * `@lumo-ui/ui` barrel, so nothing here re-checks anything. Part and prop names
+ * are code (Latin), rendered as LTR islands under `data-lumo-latn`.
  */
 export interface CompositionTreeProps {
-  /** The pseudo-JSX tree, exactly as authored in the example file's meta. */
-  composition: string;
-  /** Shiki output for the same tree. */
+  /** Shiki output for the pseudo-JSX tree from the example file's meta. The copy button reads the rendered `<pre>`, so the raw string is not a prop. */
   html: string;
   /** The copy button's name. Required. */
   copyLabel: string;
@@ -34,7 +23,6 @@ export interface CompositionTreeProps {
 }
 
 export function CompositionTree({
-  composition,
   html,
   copyLabel,
   copiedLabel,
@@ -43,7 +31,7 @@ export function CompositionTree({
 }: CompositionTreeProps) {
   return (
     <div className="flex flex-col gap-4">
-      <CodeBlock code={composition} html={html} label={copyLabel} copiedLabel={copiedLabel} />
+      <CodePanel html={html} label={copyLabel} copiedLabel={copiedLabel} />
       {parts.length > 0 ? (
         <div>
           <h3 className="text-xs font-medium uppercase tracking-wide text-fg-subtle">
@@ -81,10 +69,8 @@ export interface PartsTableProps {
 export function PartsTable({ parts, locale, partHeader, descriptionHeader }: PartsTableProps) {
   return (
     /*
-     * A static HTML table, not the library's Table: this is a document table
-     * with no selection, no sorting and no focus behaviour, and renting a
-     * keyboard grid for it would put tab stops where a reader expects prose.
-     * Wide content scrolls inside its own container, never the page.
+     * A static HTML table, not the library's Table: no selection, sorting or
+     * focus behaviour, so a keyboard grid would misplace tab stops.
      */
     <div className="overflow-x-auto rounded-lg border border-border">
       <table className="w-full border-collapse text-sm">
@@ -116,6 +102,101 @@ export function PartsTable({ parts, locale, partHeader, descriptionHeader }: Par
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+export interface PropsTableProps {
+  groups: readonly GeneratedApiGroup[];
+  propHeader: string;
+  typeHeader: string;
+  descriptionHeader: string;
+  requirementHeader: string;
+  requiredLabel: string;
+  optionalLabel: string;
+}
+
+/**
+ * Checker-generated public props. Each exported props type is a disclosure so
+ * a large compound component stays navigable.
+ */
+export function PropsTable({
+  groups,
+  propHeader,
+  typeHeader,
+  descriptionHeader,
+  requirementHeader,
+  requiredLabel,
+  optionalLabel,
+}: PropsTableProps) {
+  return (
+    <div className="flex flex-col gap-3">
+      {groups.map((group, index) => (
+        <details
+          key={group.name}
+          open={index === 0}
+          className="rounded-lg border border-border bg-surface"
+        >
+          <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-fg">
+            <code dir="ltr" lang="en" data-lumo-latn="">
+              {group.name}
+            </code>
+          </summary>
+          {/* A wide props table scrolls sideways; the scroller must be reachable by keyboard (axe scrollable-region-focusable). */}
+          <div tabIndex={0} className="overflow-x-auto border-t border-border">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="border-b border-border bg-surface-sunken">
+                  <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
+                    {propHeader}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
+                    {typeHeader}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
+                    {descriptionHeader}
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-start font-medium text-fg">
+                    {requirementHeader}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {group.props.map((prop) => (
+                  <tr key={prop.name} className="border-b border-border last:border-b-0">
+                    <th scope="row" className="whitespace-nowrap px-3 py-2 text-start font-normal">
+                      <code dir="ltr" lang="en" data-lumo-latn="" className="text-xs text-fg">
+                        {prop.name}
+                      </code>
+                    </th>
+                    <td className="max-w-xl px-3 py-2 text-fg-muted">
+                      <code
+                        dir="ltr"
+                        lang="en"
+                        data-lumo-latn=""
+                        className="break-words text-xs text-fg-muted"
+                      >
+                        {prop.type}
+                      </code>
+                    </td>
+                    <td
+                      dir="ltr"
+                      lang="en"
+                      data-lumo-latn=""
+                      className="min-w-64 max-w-2xl px-3 py-2 text-start text-fg-muted"
+                    >
+                      {prop.description}
+                    </td>
+                    <td className="whitespace-nowrap px-3 py-2 text-fg-muted">
+                      {prop.required ? requiredLabel : optionalLabel}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </details>
+      ))}
     </div>
   );
 }

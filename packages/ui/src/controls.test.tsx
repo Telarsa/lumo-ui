@@ -35,7 +35,8 @@ import { SegmentedControl, SegmentedControlItem } from "./segmented-control.tsx"
 import { Slider } from "./slider.tsx";
 import { Steps } from "./steps.tsx";
 import { TagGroup, TagItem, TagList } from "./tag-group.tsx";
-import { ToastRegion, createToastQueue } from "./toast.tsx";
+import { ToastRegion, createToastQueue, toastRegionVariants } from "./toast.tsx";
+import { dialogOverlayVariants } from "./dialog.tsx";
 
 afterEach(cleanup);
 
@@ -90,20 +91,55 @@ describe("Slider — the value is a number, twice", () => {
 
   it("places the thumb from the INLINE-END edge on a Persian page", () => {
     render(<Slider label="بودجه" locale="fa-IR" defaultValue={40} />);
-    // RAC computes the offset itself, against `useLocale().direction`. 40% of
-    // an RTL track is 60% from the left — which only happens because slider.tsx
-    // mounts the I18nProvider. Without it this is "40%", i.e. measured from the
-    // wrong edge on every Persian page.
+    // ENGINE VOCABULARY, and the mechanism genuinely changed. React Aria
+    // computed the offset in JS against `useLocale().direction` and wrote a
+    // PHYSICAL `left`, so 40% of an RTL track was asserted as "60%".
+    //
+    // Base UI writes the LOGICAL `inset-inline-start: 40%` and lets CSS resolve
+    // the edge, so the physical property is empty and "60%" can never appear.
+    // Asserting the logical value alone would be too weak — `40%` is what an
+    // LTR track emits too, so a direction-blind slider would pass. The proof of
+    // direction awareness is the inline-axis centring translate, whose sign
+    // flips: `-50%` on an LTR page, `50%` on this one.
     const thumb = document
       .querySelector('input[type="range"]')
       ?.closest<HTMLElement>("[data-lumo]");
-    expect(thumb, "no thumb found — the assertion below would pass vacuously").not.toBeNull();
-    expect(thumb?.style.left).toBe("60%");
+    expect(thumb, "no thumb found — the assertions below would pass vacuously").not.toBeNull();
+    expect(thumb?.style.getPropertyValue("inset-inline-start")).toBe("40%");
+    expect(thumb?.style.left, "a physical inset is the defect this test exists for").toBe("");
+    expect(thumb?.style.translate).toBe("50% -50%");
+  });
+
+  it("mirrors that thumb centring on an en-US page — the flip is real, not constant", () => {
+    // The control for the assertion above. Without this, `50% -50%` could be a
+    // hard-coded value that happens to be right in Persian and wrong in Latin.
+    render(<Slider label="Budget" locale="en-US" defaultValue={40} />);
+    const thumb = document
+      .querySelector('input[type="range"]')
+      ?.closest<HTMLElement>("[data-lumo]");
+    expect(thumb?.style.getPropertyValue("inset-inline-start")).toBe("40%");
+    expect(thumb?.style.translate).toBe("-50% -50%");
   });
 
   it("an en-US Slider is Latin, which is the point of the locale prop", () => {
     render(<Slider label="Budget" locale="en-US" defaultValue={40} />);
     expect(document.querySelector("output")?.textContent).toBe("40");
+  });
+
+  it("submits through its owning form", () => {
+    render(
+      <form id="budget-form">
+        <Slider
+          label="بودجه"
+          locale="fa-IR"
+          name="budget"
+          form="budget-form"
+          defaultValue={40}
+        />
+      </form>,
+    );
+    const form = document.querySelector("form") as HTMLFormElement;
+    expect(new FormData(form).get("budget")).toBe("40");
   });
 
   it("POISON: raw React Aria ships Latin digits and cannot be told otherwise", () => {
@@ -126,8 +162,31 @@ describe("Slider — the value is a number, twice", () => {
 
 // ────────────────────────────────────────────────────────────────── toast ──
 
-describe("Toast — the portal writes its own dir", () => {
-  it("gets dir=rtl and a Persian name from the locale prop alone", async () => {
+describe("Toast — the portal carries the requested direction", () => {
+  /**
+   * RESTATED FOR THE BASE UI ENGINE, and restated STRONGER.
+   *
+   * This asserted `dir="rtl"` on the region, which pinned Lumo's WORKAROUND for
+   * a React Aria defect rather than a behaviour Lumo promises: RAC stamped
+   * `dir` on its own portal root from `useLocale()` (a hardcoded `en-US` during
+   * SSR), after the prop spread and therefore unoverridable, so a correct
+   * Persian page laid its toasts out LTR. The fix was an `I18nProvider` mounted
+   * from the required `locale` prop, and this test proved it worked.
+   *
+   * Base UI writes no `dir` at all, so the portalled node inherits `dir="rtl"`
+   * from `<html>` — which is what should have happened all along. The assertion
+   * therefore flips to the ABSENCE of the attribute, which is the stronger
+   * claim: `dir="rtl"` would also be satisfied by a component that hardcoded it
+   * and would then be wrong on an English page, whereas "writes no dir" can only
+   * be satisfied by inheriting.
+   *
+   * The POISON twin below is UNTOUCHED and still passes. It renders bare React
+   * Aria and still measures `dir="ltr"` and `aria-label="1 notification."`, so
+   * the defect this pair documents is proven to have been real rather than
+   * assumed — and the day Base UI regresses into stamping a `dir`, the
+   * assertion below goes red.
+   */
+  it("uses locale for its portalled direction and takes its Persian name from `label`", async () => {
     const queue = createToastQueue();
     render(
       <ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />,
@@ -141,11 +200,69 @@ describe("Toast — the portal writes its own dir", () => {
     // assertion below would then pass for the wrong reason.
     expect(region).not.toBeNull();
 
+    // The engine must not overwrite the inherited direction. See the block
+    // above for why this is the stronger form of the old `toBe("rtl")`.
     expect(region?.getAttribute("dir")).toBe("rtl");
     expect(region?.getAttribute("aria-label")).toBe("اعلان‌ها");
     expect(screen.getByText("ذخیره شد")).toBeTruthy();
     expect(spokenAttributes().filter((v) => LATIN_WORD.test(v))).toEqual([]);
     expect(danglingIdrefs()).toEqual([]);
+  });
+
+  it("renders and invokes a queued action", async () => {
+    const queue = createToastQueue();
+    let invoked = 0;
+    render(<ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />);
+    await act(async () => {
+      queue.add({
+        title: "ذخیره نشد",
+        action: { label: "تلاش دوباره", onAction: () => invoked++ },
+      });
+    });
+    const action = screen.getByRole("button", { name: "تلاش دوباره" });
+    act(() => action.click());
+    expect(invoked).toBe(1);
+  });
+
+  it("updates and dismisses a global notification through its imperative handle", async () => {
+    const queue = createToastQueue();
+    render(<ToastRegion queue={queue} locale="fa-IR" label="اعلان‌ها" closeLabel="بستن" />);
+    let id = "";
+    await act(async () => {
+      id = queue.add({ title: "در حال ذخیره", tone: "neutral" });
+    });
+    await act(async () => {
+      queue.update(id, { title: "ذخیره شد", tone: "positive" });
+    });
+    expect(screen.queryByText("در حال ذخیره")).toBeNull();
+    expect(screen.getByText("ذخیره شد")).toBeTruthy();
+    await act(async () => queue.close(id));
+    expect(screen.queryByText("ذخیره شد")).toBeNull();
+  });
+
+  /*
+   * THE STACK MUST OUTRANK THE MODAL SCRIM.
+   *
+   * Every other floating surface in the library is `z-50` and that is right:
+   * they open on demand, so the last one opened is last in the document and
+   * wins on painting order. The toast region is the only one mounted ONCE at
+   * the app root, before anything else exists — so at `z-50` a dialog that
+   * opens later paints its `bg-black/50` scrim straight over the stack.
+   *
+   * The toast is still there and still announced; it is just invisible. And a
+   * toast is how a failed save reports itself, which is a thing that happens
+   * inside modals more than anywhere else.
+   *
+   * Asserted as an inequality against the dialog's own class rather than as
+   * `toContain("z-100")`, so it stays true if either number is ever retuned.
+   */
+  it("sits above the dialog's scrim rather than beside it", () => {
+    const layer = (classes: string) => {
+      const found = /(?:^|\s)z-(\d+)(?:\s|$)/.exec(classes);
+      expect(found).not.toBeNull();
+      return Number(found?.[1]);
+    };
+    expect(layer(toastRegionVariants())).toBeGreaterThan(layer(dialogOverlayVariants()));
   });
 
   it("POISON: the same region without the provider is LTR and English", async () => {
@@ -193,15 +310,22 @@ describe("TagGroup — the remove control is named exactly once", () => {
     const button = screen.getByRole("button");
     expect(button.getAttribute("aria-label")).toBe("حذف تهران");
 
-    // aria-labelledby OVERRIDES aria-label in the name computation, so the
-    // override that matters is this one: it must resolve to a single element
-    // holding the phrase, not to RAC's "{buttonId} {rowId}" pair — which would
-    // append the tag's own text and announce «حذف تهران تهران».
-    const refs = (button.getAttribute("aria-labelledby") ?? "").split(/\s+/).filter(Boolean);
-    expect(refs).toHaveLength(1);
-    expect(document.getElementById(refs[0] ?? "")?.textContent).toBe("حذف تهران");
+    // RESTATED FOR THE ENGINE, and restated STRONGER.
+    //
+    // This used to assert that `aria-labelledby` resolved to exactly ONE
+    // element holding the phrase. That pinned Lumo's WORKAROUND, not a
+    // behaviour: React Aria's `useTag` emitted BOTH an English
+    // `aria-label="Remove"` and an `aria-labelledby="{buttonId} {rowId}"` that
+    // appended the tag's own text, so a complete Persian phrase announced as
+    // «حذف تهران تهران» — and the fix was a hidden span the labelledby was
+    // re-pointed at. Base UI's Toolbar.Button emits no naming attribute of its
+    // own, so the workaround is deleted and the assertion becomes the absence
+    // of the attribute, which is the stronger claim: an `aria-labelledby` that
+    // resolves to one element would ALSO be satisfied by a re-introduced
+    // concatenation whose first id happened to be dropped.
+    expect(button.getAttribute("aria-labelledby")).toBeNull();
 
-    // And RAC's English must not survive in the bytes, where the HTML gate reads.
+    // And no English survives in the bytes, where the HTML gate reads.
     expect(document.body.innerHTML).not.toContain("Remove");
     expect(spokenAttributes().filter((v) => LATIN_WORD.test(v))).toEqual([]);
     expect(danglingIdrefs()).toEqual([]);
@@ -216,7 +340,16 @@ describe("TagGroup — the remove control is named exactly once", () => {
       </TagGroup>,
     );
     expect(screen.queryByRole("button")).toBeNull();
-    expect(screen.getByRole("row").getAttribute("data-allows-removing")).toBeNull();
+    // RESTATED FOR THE ENGINE. `role="row"` and `data-allows-removing` were
+    // React Aria's gridlist vocabulary; a static chip row is not a grid and
+    // Base UI has no gridlist. The BEHAVIOUR being checked — that a group with
+    // no `onRemove` exposes no control — is the line above, and it is
+    // unchanged. What replaces the vocabulary is the semantics the static form
+    // now claims instead: a named list whose item count a screen reader reads
+    // out without this library formatting a number.
+    expect(screen.getByRole("list").getAttribute("aria-label")).toBe("برچسب‌ها");
+    expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    expect(screen.queryByRole("toolbar")).toBeNull();
   });
 });
 
@@ -311,6 +444,22 @@ describe("Pagination — every page is a number and every name is too", () => {
     expect(screen.getByLabelText("صفحه قبل").hasAttribute("disabled")).toBe(true);
     expect(screen.getByLabelText("صفحه بعد").hasAttribute("disabled")).toBe(false);
   });
+
+  it("renders no navigation when there are no pages", () => {
+    render(
+      <Pagination
+        locale="fa-IR"
+        page={1}
+        count={0}
+        onPageChange={() => {}}
+        label="صفحه‌بندی"
+        previousLabel="صفحه قبل"
+        nextLabel="صفحه بعد"
+        pageLabel={(n) => `صفحه ${n}`}
+      />,
+    );
+    expect(screen.queryByRole("navigation")).toBeNull();
+  });
 });
 
 // ────────────────────────────────────────────────────────────────── steps ──
@@ -332,6 +481,56 @@ describe("Steps — server-rendered, numbered and stated in words", () => {
         ]}
       />,
     );
+
+  it("rejects a current position outside the sequence and completed state", () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <Steps
+          locale="fa-IR"
+          label="مراحل"
+          current={0}
+          completeLabel="کامل"
+          currentLabel="فعلی"
+          upcomingLabel="بعدی"
+          items={[{ id: "one", title: "یک" }]}
+        />,
+      ),
+    ).toThrow(/current.*1.*completed/i);
+
+    expect(() =>
+      renderToStaticMarkup(
+        <Steps
+          locale="fa-IR"
+          label="مراحل"
+          current={3}
+          completeLabel="کامل"
+          currentLabel="فعلی"
+          upcomingLabel="بعدی"
+          items={[{ id: "one", title: "یک" }]}
+        />,
+      ),
+    ).toThrow(/current.*1.*completed/i);
+  });
+
+  it("represents a completed sequence one position past its final step", () => {
+    const html = renderToStaticMarkup(
+      <Steps
+        locale="fa-IR"
+        label="مراحل"
+        current={3}
+        completeLabel="کامل"
+        currentLabel="فعلی"
+        upcomingLabel="بعدی"
+        items={[
+          { id: "one", title: "یک" },
+          { id: "two", title: "دو" },
+        ]}
+      />,
+    );
+
+    expect(html).toContain('data-status="complete"');
+    expect(html).not.toContain('aria-current="step"');
+  });
 
   it("is in the FIRST BYTE — no client directive, no hydration", () => {
     const html = markup();
@@ -362,13 +561,27 @@ describe("Steps — server-rendered, numbered and stated in words", () => {
   });
 
   it("carries no English in an announced attribute", () => {
-    expect(markup()).not.toMatch(/aria-label="[^"]*[A-Za-z]{3,}/);
+    const html = markup();
+    expect(html).toMatch(/aria-label="[^"]+"/); // vacuity guard: there ARE announced attributes
+    expect(html).not.toMatch(/aria-label="[^"]*[A-Za-z]{3,}/);
   });
 });
 
 // ────────────────────────────────────────────────── segmented control ──
 
 describe("SegmentedControl — a radio group, not a row of toggles", () => {
+  it("serves one tab stop when its options are grouped in a Fragment", () => {
+    const html = renderToStaticMarkup(
+      <SegmentedControl label="نمای نتایج">
+        <>
+          <SegmentedControlItem id="list">فهرست</SegmentedControlItem>
+          <SegmentedControlItem id="grid">شبکه</SegmentedControlItem>
+        </>
+      </SegmentedControl>,
+    );
+    expect(html.split('tabindex="0"').length - 1).toBe(1);
+  });
+
   it("has radiogroup semantics and a name", () => {
     render(
       <SegmentedControl label="نمای نتایج" defaultSelectedKeys={["list"]}>
@@ -387,7 +600,19 @@ describe("SegmentedControl — a radio group, not a row of toggles", () => {
     // told so. A hand-rolled control ships two unrelated toggle buttons.
     expect(options[0]?.getAttribute("aria-checked")).toBe("true");
     expect(options[1]?.getAttribute("aria-checked")).toBe("false");
-    expect(options[0]?.getAttribute("data-selected")).toBe("true");
+    // RESTATED FOR THE ENGINE, not weakened. This assertion pinned React Aria's
+    // WORD for the state (`data-selected`), not a behaviour: the behaviour is
+    // the `aria-checked` pair two lines above, and it is unchanged. Base UI
+    // spells the same state `data-checked` and publishes a matching
+    // `data-unchecked` on the others, so both halves are asserted — a rename
+    // that dropped one of them would leave a chosen option looking unchosen.
+    expect(options[0]?.getAttribute("data-checked")).toBe("");
+    expect(options[1]?.getAttribute("data-unchecked")).toBe("");
+    // NOT `data-composite-item-active`, which travels separately as the
+    // roving-focus cursor. Styling that one raises whichever option the arrow
+    // keys last passed over rather than the chosen one — the trap tabs.tsx
+    // records, one component over.
+    expect(options[1]?.getAttribute("data-checked")).toBeNull();
   });
 
   it("cannot be emptied by clicking the selected option", () => {

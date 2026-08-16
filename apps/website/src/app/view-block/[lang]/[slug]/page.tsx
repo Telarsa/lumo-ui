@@ -1,20 +1,16 @@
 import { notFound } from "next/navigation";
 import { LOCALES } from "@lumo-ui/core";
-import { assertLocale } from "@/lib/locale";
+import { assertLocale, segmentFor } from "@/lib/locale";
 import { allBlocks, blockById } from "@/lib/blocks";
 
 export function generateStaticParams() {
-  return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang, slug: b.id })));
+  return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang: segmentFor(lang), slug: b.id })));
 }
 
 /**
- * A block, alone, in a real document — the full-page preview.
- *
- * Mirrors `app/view/[lang]/[slug]/page.tsx` exactly. The block's own page
- * (`app/[lang]/blocks/[slug]/page.tsx`) embeds this route in an iframe, in
- * both directions, via `DemoFrame` — but this route is also a real page on
- * its own, so an `AppShell` or `ProductDetail` block genuinely occupies a
- * whole viewport rather than a 224px thumbnail.
+ * A block, alone, in a real document — the full-page preview. Mirrors
+ * `app/view/[lang]/[slug]/page.tsx`; the block's own page embeds this route in an
+ * iframe via `DemoFrame`, but it is also a real page on its own.
  */
 export default async function ViewBlock({
   params,
@@ -25,5 +21,10 @@ export default async function ViewBlock({
   const lang = assertLocale(raw);
   const block = blockById(slug);
   if (!block) notFound();
-  return <>{block.render(lang)}</>;
+  return (
+    <>
+      <title>{block.title[lang]}</title>
+      {block.render(lang)}
+    </>
+  );
 }

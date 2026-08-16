@@ -1,17 +1,17 @@
 {
-  "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "lumo",
-  "homepage": "https://lumo-ui.com",
+  "homepage": "https://github.com/Telarsa/lumo-ui",
   "items": [
     {
       "name": "alert-dialog",
       "type": "registry:ui",
       "title": "Alert Dialog",
-      "description": "A dialog that interrupts with a decision and offers exactly two ways out.",
+      "description": "A dialog that interrupts to force a decision and offers exactly two ways out.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "button",
@@ -34,7 +34,7 @@
       "name": "alert",
       "type": "registry:ui",
       "title": "Alert",
-      "description": "An inline message: information, success, failure, warning.",
+      "description": "An inline message in five tones.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -52,7 +52,7 @@
       "name": "aspect-ratio",
       "type": "registry:ui",
       "title": "Aspect Ratio",
-      "description": "A box that keeps a fixed width-to-height ratio while its width flexes.",
+      "description": "A box that holds a fixed width-to-height ratio while its width flexes.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -70,7 +70,7 @@
       "name": "attachment",
       "type": "registry:ui",
       "title": "Attachment",
-      "description": "A named file in a conversation: the chip in a composer before sending, the",
+      "description": "The conversation attachment row and card.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -93,21 +93,24 @@
       "name": "autocomplete",
       "type": "registry:ui",
       "title": "Autocomplete",
-      "description": "A text field bound to a collection it filters. The primitive underneath a",
+      "description": "A text field bound to a collection it filters: the primitive underneath a command palette, a filterable side panel, or a list that shrinks as you type.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
-      ],
-      "registryDependencies": [
-        "form"
+        "class-variance-authority"
       ],
       "files": [
         {
           "path": "packages/ui/src/autocomplete.tsx",
           "type": "registry:ui",
           "target": "components/ui/autocomplete.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -115,7 +118,7 @@
       "name": "avatar",
       "type": "registry:ui",
       "title": "Avatar",
-      "description": "A person or organisation, as a picture or as initials.",
+      "description": "A person, as a picture or as initials.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -133,7 +136,7 @@
       "name": "badge",
       "type": "registry:ui",
       "title": "Badge",
-      "description": "A status marker: a `<span>` with tokens on it.",
+      "description": "A status marker: a «span» with tokens on it.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -151,12 +154,11 @@
       "name": "breadcrumbs",
       "type": "registry:ui",
       "title": "Breadcrumbs",
-      "description": "A breadcrumb trail.",
+      "description": "Renders the `<ol>` only; wrap in an unlabelled `<nav>` yourself if you want a landmark.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -170,7 +172,7 @@
       "name": "bubble",
       "type": "registry:ui",
       "title": "Bubble",
-      "description": "A conversational message bubble.",
+      "description": "The message bubble with logical alignment: sent hugs the inline end, never the physical right — in Persian that is the left, exactly as messengers behave.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -212,11 +214,13 @@
       "name": "button",
       "type": "registry:ui",
       "title": "Button",
-      "description": "THE COMPONENT SHAPE. Every Lumo component follows this file's structure, and",
+      "description": "The React Aria → Base UI prop translation, stated once.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -228,6 +232,11 @@
           "path": "packages/ui/src/button.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/button.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -235,15 +244,18 @@
       "name": "calendar",
       "type": "registry:ui",
       "title": "Calendar",
-      "description": "A month grid, in the reader's own calendar system.",
+      "description": "A month grid in the reader's own calendar.",
       "author": "Telarsa",
       "dependencies": [
+        "@internationalized/date",
         "@lumo-ui/core",
+        "class-variance-authority",
         "lucide-react",
-        "react-aria-components"
+        "react-day-picker"
       ],
       "registryDependencies": [
-        "form"
+        "form",
+        "select"
       ],
       "files": [
         {
@@ -255,6 +267,11 @@
           "path": "packages/ui/src/calendar.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/calendar.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
         }
       ]
     },
@@ -262,7 +279,7 @@
       "name": "card",
       "type": "registry:ui",
       "title": "Card",
-      "description": "A surface with a header, a body and a footer. Six components, no state.",
+      "description": "A surface with a header, a body and a footer — seven components and no state.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -280,7 +297,7 @@
       "name": "carousel",
       "type": "registry:ui",
       "title": "Carousel",
-      "description": "A slide carousel, over embla.",
+      "description": "A strip of slides over embla.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -299,14 +316,36 @@
       ]
     },
     {
-      "name": "chart",
+      "name": "cascader",
       "type": "registry:ui",
-      "title": "Chart",
-      "description": "Charts. The one thing no headless library ships, and the reason this file is",
+      "title": "Cascader",
+      "description": "A drill-down selector over a tree of options, one column per level.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "recharts"
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/cascader.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/cascader.tsx"
+        }
+      ]
+    },
+    {
+      "name": "chart",
+      "type": "registry:ui",
+      "title": "Chart",
+      "description": "The chart engine draws nothing on the server.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts",
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -325,13 +364,14 @@
       "name": "checkbox",
       "type": "registry:ui",
       "title": "Checkbox",
-      "description": "The clickable row: indicator, then label.",
+      "description": "A single checkbox and a checkbox group.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "form"
@@ -345,18 +385,61 @@
       ]
     },
     {
+      "name": "color-input",
+      "type": "registry:ui",
+      "title": "Color Input",
+      "description": "CSS color text and the native picker edit one value; incomplete text remains editable until corrected.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "culori"
+      ],
+      "registryDependencies": [
+        "color-picker",
+        "form",
+        "text-field"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/color-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/color-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "color-picker",
+      "type": "registry:ui",
+      "title": "Color Picker",
+      "description": "A named color collection with real radio selection and visible focus.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/color-picker.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/color-picker.tsx"
+        }
+      ]
+    },
+    {
       "name": "combobox",
       "type": "registry:ui",
       "title": "Combobox",
       "description": "A text input that filters a list of options.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
+        "button",
+        "form",
         "popover"
       ],
       "files": [
@@ -364,6 +447,11 @@
           "path": "packages/ui/src/combobox.tsx",
           "type": "registry:ui",
           "target": "components/ui/combobox.tsx"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },
@@ -371,15 +459,17 @@
       "name": "command",
       "type": "registry:ui",
       "title": "Command",
-      "description": "A command palette — a filtered list of actions, keyboard-first.",
+      "description": "A filtered list of actions inside a dialog.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
+        "autocomplete",
         "dialog"
       ],
       "files": [
@@ -387,6 +477,16 @@
           "path": "packages/ui/src/command.tsx",
           "type": "registry:ui",
           "target": "components/ui/command.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -394,11 +494,11 @@
       "name": "context-menu",
       "type": "registry:ui",
       "title": "Context Menu",
-      "description": "A right-click menu, anchored at the pointer.",
+      "description": "A menu opened by right-click, long-press or the menu key, anchored at the pointer itself.",
       "author": "Telarsa",
       "dependencies": [
-        "@lumo-ui/core",
-        "react-aria-components"
+        "@base-ui/react",
+        "@lumo-ui/core"
       ],
       "registryDependencies": [
         "menu"
@@ -412,17 +512,56 @@
       ]
     },
     {
-      "name": "date-field",
+      "name": "data-grid",
       "type": "registry:ui",
-      "title": "Date Field",
-      "description": "A date typed segment by segment: ۱۴۰۵ / ۵ / ۱۹.",
+      "title": "Data Grid",
+      "description": "The chrome around a table: search, column visibility, paging and an empty state.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "react-aria-components"
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "button",
+        "menu",
+        "pagination",
+        "search-field",
+        "select"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/data-grid.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/data-grid.tsx"
+        },
+        {
+          "path": "packages/ui/src/data-grid.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/data-grid.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
+        }
+      ]
+    },
+    {
+      "name": "date-field",
+      "type": "registry:ui",
+      "title": "Date Field",
+      "description": "The date field.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core"
       ],
       "registryDependencies": [
         "calendar",
+        "date-input",
         "form"
       ],
       "files": [
@@ -430,6 +569,53 @@
           "path": "packages/ui/src/date-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-field.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
+        }
+      ]
+    },
+    {
+      "name": "date-input",
+      "type": "registry:ui",
+      "title": "Date Input",
+      "description": "THE segmented input — written once, for every date surface in the library.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@internationalized/date",
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "calendar",
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
         }
       ]
     },
@@ -437,16 +623,18 @@
       "name": "date-picker",
       "type": "registry:ui",
       "title": "Date Picker",
-      "description": "A typed date with a calendar behind a button.",
+      "description": "A date field plus a calendar behind a button.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "calendar",
-        "date-field",
+        "date-input",
         "form",
         "popover"
       ],
@@ -455,6 +643,21 @@
           "path": "packages/ui/src/date-picker.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-picker.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -465,22 +668,79 @@
       "description": "Two typed dates and a range grid behind one button.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "calendar",
-        "date-field",
-        "date-picker",
+        "date-input",
         "form",
-        "popover"
+        "popover",
+        "range-calendar"
       ],
       "files": [
         {
           "path": "packages/ui/src/date-range-picker.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-range-picker.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        }
+      ]
+    },
+    {
+      "name": "date-selector",
+      "type": "registry:ui",
+      "title": "Date Selector",
+      "description": "Named ranges beside a range grid, behind one button.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "popover",
+        "range-calendar"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/date-selector.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-selector.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-selector.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-selector.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -488,7 +748,7 @@
       "name": "description-list",
       "type": "registry:ui",
       "title": "Description List",
-      "description": "Name/value pairs: `<dl>`, `<dt>`, `<dd>`.",
+      "description": "Name/value pairs, with the «dl», «dt» and «dd» they should be.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -506,13 +766,14 @@
       "name": "dialog",
       "type": "registry:ui",
       "title": "Dialog",
-      "description": "Modal dialog. Composition mirrors React Aria's, deliberately:",
+      "description": "A modal dialog in four layers.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "button"
@@ -529,13 +790,14 @@
       "name": "disclosure",
       "type": "registry:ui",
       "title": "Disclosure",
-      "description": "A collapsible section, and the accordion that groups several of them.",
+      "description": "A section that opens and closes, and the accordion that groups several.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "files": [
         {
@@ -549,12 +811,16 @@
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",
-      "description": "A modal that slides in from an INLINE edge.",
+      "description": "The panel, and — under Base UI — the `role=\"dialog\"` element itself.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "dialog"
       ],
       "files": [
         {
@@ -568,7 +834,7 @@
       "name": "empty-state",
       "type": "registry:ui",
       "title": "Empty State",
-      "description": "The \"there is nothing here yet\" panel: icon, title, explanation, one action.",
+      "description": "The \"there is nothing here yet\" panel: an icon, a title, an explanation and one action.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -583,19 +849,54 @@
       ]
     },
     {
+      "name": "event-calendar",
+      "type": "registry:ui",
+      "title": "Event Calendar",
+      "description": "A scheduling grid in the reader's own calendar.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/event-calendar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/event-calendar.tsx"
+        },
+        {
+          "path": "packages/ui/src/event-calendar.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/event-calendar.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        }
+      ]
+    },
+    {
       "name": "file-upload",
       "type": "registry:ui",
       "title": "File Upload",
-      "description": "A drop area and a file picker, plus the list of what was chosen.",
+      "description": "A drop area, a file picker and the list of what was chosen.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "lucide-react",
-        "react-aria-components"
+        "class-variance-authority",
+        "lucide-react"
       ],
       "registryDependencies": [
-        "button",
-        "form"
+        "button"
       ],
       "files": [
         {
@@ -611,15 +912,71 @@
       ]
     },
     {
-      "name": "form",
+      "name": "filters",
       "type": "registry:ui",
-      "title": "Form",
-      "description": "The field chrome every form control in Lumo is built from: the wrapper, the",
+      "title": "Filters",
+      "description": "A typed field–operator–value query builder.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "button",
+        "multi-select",
+        "select",
+        "text-field"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/filters.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/filters.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/filters.shared.ts",
+          "type": "registry:ui",
+          "target": "components/ui/filters.shared.ts"
+        }
+      ]
+    },
+    {
+      "name": "form-state",
+      "type": "registry:ui",
+      "title": "Form State",
+      "description": "Values, validation and submission — on TanStack Form, which emits no markup, no roles and no English strings.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "@tanstack/react-form"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/form-state.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/form-state.tsx"
+        }
+      ]
+    },
+    {
+      "name": "form",
+      "type": "registry:ui",
+      "title": "Form",
+      "description": "The chrome every labelled control in this library is built from: the wrapper, the label, the help text, the error and the `<form>` itself.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -630,15 +987,83 @@
       ]
     },
     {
-      "name": "hover-card",
+      "name": "frame",
       "type": "registry:ui",
-      "title": "Hover Card",
-      "description": "A preview panel that opens when a link is hovered or focused.",
+      "title": "Frame",
+      "description": "Device chrome around a preview — a browser bar or a phone bezel.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/frame.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/frame.tsx"
+        }
+      ]
+    },
+    {
+      "name": "gantt",
+      "type": "registry:ui",
+      "title": "Gantt",
+      "description": "A timeline of tasks over dates, in the reader's own calendar.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@internationalized/date",
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/gantt.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/gantt.tsx"
+        },
+        {
+          "path": "packages/ui/src/gantt.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/gantt.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
+        }
+      ]
+    },
+    {
+      "name": "heatmap-chart",
+      "type": "registry:ui",
+      "title": "Heatmap Chart",
+      "description": "A labelled ordinal matrix with a semantic table in the served bytes.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts"
+      ],
+      "registryDependencies": [
+        "chart"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/heatmap-chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/heatmap-chart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "hover-card",
+      "type": "registry:ui",
+      "title": "Hover Card",
+      "description": "A preview that opens when the pointer rests on a link — or when the keyboard focuses it.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "popover"
@@ -652,15 +1077,50 @@
       ]
     },
     {
-      "name": "input-group",
+      "name": "icon-stack",
       "type": "registry:ui",
-      "title": "Input Group",
-      "description": "A text field with adornments at the reading edges of the box.",
+      "title": "Icon Stack",
+      "description": "Overlapping avatars with a count for the rest — the row on a shared document or a group conversation.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/icon-stack.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/icon-stack.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-tile",
+      "type": "registry:ui",
+      "title": "Icon Tile",
+      "description": "An icon in a tinted square — the thing at the top of a feature card.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/icon-tile.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/icon-tile.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input-group",
+      "type": "registry:ui",
+      "title": "Input Group",
+      "description": "A text field with adornments on the reading edges.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "button",
@@ -680,14 +1140,36 @@
       ]
     },
     {
-      "name": "item",
+      "name": "input-otp",
       "type": "registry:ui",
-      "title": "Item",
-      "description": "The generic row: media, content, actions. The workhorse under lists of",
+      "title": "Input Otp",
+      "description": "A one-time-code entry row: one real input, per-digit slots, and Persian digits on Persian pages.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "react-aria-components"
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/input-otp.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/input-otp.tsx"
+        }
+      ]
+    },
+    {
+      "name": "item",
+      "type": "registry:ui",
+      "title": "Item",
+      "description": "The generic row: media, content, actions.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "separator"
@@ -702,6 +1184,52 @@
           "path": "packages/ui/src/item.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/item.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
+        }
+      ]
+    },
+    {
+      "name": "json-input",
+      "type": "registry:ui",
+      "title": "Json Input",
+      "description": "Controlled text editing with valid, invalid, and optional formatting states; incomplete input is never erased.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/json-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/json-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "kanban",
+      "type": "registry:ui",
+      "title": "Kanban",
+      "description": "A board of columns whose cards move between them.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/kanban.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/kanban.tsx"
         }
       ]
     },
@@ -709,7 +1237,7 @@
       "name": "kbd",
       "type": "registry:ui",
       "title": "Kbd",
-      "description": "No \"use client\": Kbd is presentational and renders on the server, so a",
+      "description": "A keyboard shortcut rendered as key caps, kept as an LTR island so Latin glyphs and separators never mirror.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -727,18 +1255,22 @@
       "name": "link",
       "type": "registry:ui",
       "title": "Link",
-      "description": "A navigational link.",
+      "description": "A navigational link on a real «a», with no engine at all.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
           "path": "packages/ui/src/link.tsx",
           "type": "registry:ui",
           "target": "components/ui/link.tsx"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -746,15 +1278,17 @@
       "name": "list-box",
       "type": "registry:ui",
       "title": "List Box",
-      "description": "A standalone selectable list — no popover, no trigger.",
+      "description": "A list you select from, with no popover and no trigger — and that absence is the whole reason it exists.",
       "author": "Telarsa",
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
+        "autocomplete",
+        "button",
         "form"
       ],
       "files": [
@@ -762,6 +1296,16 @@
           "path": "packages/ui/src/list-box.tsx",
           "type": "registry:ui",
           "target": "components/ui/list-box.tsx"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -769,7 +1313,7 @@
       "name": "marker",
       "type": "registry:ui",
       "title": "Marker",
-      "description": "An inline conversation marker: «دیروز», «سارا به گفتگو پیوست», «پیام‌های",
+      "description": "The in-between-messages markers: a status line, a labeled separator and a bordered row.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -784,15 +1328,34 @@
       ]
     },
     {
-      "name": "menu",
+      "name": "mask-input",
       "type": "registry:ui",
-      "title": "Menu",
-      "description": "A menu of actions.",
+      "title": "Mask Input",
+      "description": "Separates the formatted display from the raw value and reports pattern completion.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "maska"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/mask-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/mask-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "menu",
+      "type": "registry:ui",
+      "title": "Menu",
+      "description": "A menu of actions with sections and separators.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "popover"
@@ -802,6 +1365,11 @@
           "path": "packages/ui/src/menu.tsx",
           "type": "registry:ui",
           "target": "components/ui/menu.tsx"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -809,15 +1377,13 @@
       "name": "menubar",
       "type": "registry:ui",
       "title": "Menubar",
-      "description": "A horizontal row of menus — File/Edit/View in an app chrome.",
+      "description": "A horizontal row of menus with arrow-key roving.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
-      ],
-      "registryDependencies": [
-        "toolbar"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -828,10 +1394,29 @@
       ]
     },
     {
+      "name": "message-scroller",
+      "type": "registry:ui",
+      "title": "Message Scroller",
+      "description": "A transcript that stays pinned to the newest message — until the reader scrolls back, and then it does not fight them.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/message-scroller.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/message-scroller.tsx"
+        }
+      ]
+    },
+    {
       "name": "message",
       "type": "registry:ui",
       "title": "Message",
-      "description": "The composed chat row: avatar slot, bubbles, timestamp.",
+      "description": "The composed chat row: avatar, bubbles, time.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -846,20 +1431,26 @@
       ]
     },
     {
-      "name": "native-select",
+      "name": "multi-select",
       "type": "registry:ui",
-      "title": "Native Select",
-      "description": "A styled REAL `<select>` — and the reason to reach for it is the platform",
+      "title": "Multi Select",
+      "description": "A searchable multiple selection field.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority"
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "form",
+        "popover"
       ],
       "files": [
         {
-          "path": "packages/ui/src/native-select.tsx",
+          "path": "packages/ui/src/multi-select.tsx",
           "type": "registry:ui",
-          "target": "components/ui/native-select.tsx"
+          "target": "components/ui/multi-select.tsx"
         }
       ]
     },
@@ -867,13 +1458,14 @@
       "name": "navigation-menu",
       "type": "registry:ui",
       "title": "Navigation Menu",
-      "description": "The marketing-site top navigation: a row of links and triggers whose",
+      "description": "Site-top navigation with content panels.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "link",
@@ -884,6 +1476,11 @@
           "path": "packages/ui/src/navigation-menu.tsx",
           "type": "registry:ui",
           "target": "components/ui/navigation-menu.tsx"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -891,7 +1488,7 @@
       "name": "num",
       "type": "registry:ui",
       "title": "Num",
-      "description": "Renders a number in the reader's own numbering system.",
+      "description": "Renders a number in the reader's own numbering system and a date in their own calendar.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core"
@@ -908,13 +1505,14 @@
       "name": "number-field",
       "type": "registry:ui",
       "title": "Number Field",
-      "description": "One stepper button.",
+      "description": "A number input with two stepper buttons.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "form"
@@ -924,6 +1522,34 @@
           "path": "packages/ui/src/number-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/number-field.tsx"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        }
+      ]
+    },
+    {
+      "name": "overflow-list",
+      "type": "registry:ui",
+      "title": "Overflow List",
+      "description": "A row that keeps as many actions as its container can hold and hands the rest to a caller-authored overflow control.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/overflow-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/overflow-list.tsx"
         }
       ]
     },
@@ -931,11 +1557,12 @@
       "name": "pagination",
       "type": "registry:ui",
       "title": "Pagination",
-      "description": "A page selector.",
+      "description": "A page selector in which every visible thing is a NUMBER — which is its whole risk profile: a bare number in JSX compiles, looks right, and ships Latin digits into a page whose every other figure is Persian.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -951,15 +1578,38 @@
       ]
     },
     {
-      "name": "popover",
+      "name": "phone-input",
       "type": "registry:ui",
-      "title": "Popover",
-      "description": "A positioned overlay.",
+      "title": "Phone Input",
+      "description": "A phone number, entered the way Iranians actually type one.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "form",
+        "select"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/phone-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/phone-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "popover",
+      "type": "registry:ui",
+      "title": "Popover",
+      "description": "A floating surface anchored to a control and opened by pressing it.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -970,15 +1620,51 @@
       ]
     },
     {
+      "name": "power-search",
+      "type": "registry:ui",
+      "title": "Power Search",
+      "description": "Field-aware search with editable clauses, typed editors, saved views, and the same query model executed by DataGrid.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "button",
+        "multi-select",
+        "popover",
+        "select",
+        "text-field"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/power-search.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/power-search.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/filters.shared.ts",
+          "type": "registry:ui",
+          "target": "components/ui/filters.shared.ts"
+        }
+      ]
+    },
+    {
       "name": "progress",
       "type": "registry:ui",
       "title": "Progress",
-      "description": "ProgressBar (an operation in flight) and Meter (a quantity within a range).",
+      "description": "Two things that look alike and are not: a progress bar is an operation in flight, a meter is a quantity within a range.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -992,17 +1678,69 @@
       "name": "provider",
       "type": "registry:ui",
       "title": "Provider",
-      "description": "Mount this once, high in every Lumo application. It is not optional.",
+      "description": "The root provider: derives direction from `locale`, mounts Base UI's direction context, and hosts the managed overlay surfaces.",
       "author": "Telarsa",
       "dependencies": [
-        "@lumo-ui/core",
-        "react-aria-components"
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core"
       ],
       "files": [
         {
           "path": "packages/ui/src/provider.tsx",
           "type": "registry:ui",
           "target": "components/ui/provider.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
+        }
+      ]
+    },
+    {
+      "name": "questionnaire",
+      "type": "registry:ui",
+      "title": "Questionnaire",
+      "description": "Question-by-question flow with single and multiple answers, validation, skipping, progress, resuming, and native form data.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "button"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/questionnaire.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/questionnaire.tsx"
+        }
+      ]
+    },
+    {
+      "name": "radar-chart",
+      "type": "registry:ui",
+      "title": "Radar Chart",
+      "description": "A comparative radar profile with explicit domains and tabular parity.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts"
+      ],
+      "registryDependencies": [
+        "chart"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/radar-chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/radar-chart.tsx"
         }
       ]
     },
@@ -1010,12 +1748,13 @@
       "name": "radio-group",
       "type": "registry:ui",
       "title": "Radio Group",
-      "description": "The list of options.",
+      "description": "A few mutually exclusive options, exactly one of which is true.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "form"
@@ -1032,11 +1771,12 @@
       "name": "range-calendar",
       "type": "registry:ui",
       "title": "Range Calendar",
-      "description": "A month grid that selects a span of days.",
+      "description": "Selecting a span of days on the same Jalali grid.",
       "author": "Telarsa",
       "dependencies": [
+        "@internationalized/date",
         "@lumo-ui/core",
-        "react-aria-components"
+        "react-day-picker"
       ],
       "registryDependencies": [
         "calendar",
@@ -1047,6 +1787,33 @@
           "path": "packages/ui/src/range-calendar.tsx",
           "type": "registry:ui",
           "target": "components/ui/range-calendar.tsx"
+        },
+        {
+          "path": "packages/ui/src/calendar-datelib.ts",
+          "type": "registry:ui",
+          "target": "components/ui/calendar-datelib.ts"
+        }
+      ]
+    },
+    {
+      "name": "range-slider",
+      "type": "registry:ui",
+      "title": "Range Slider",
+      "description": "Two ordered values with independently named, locale-formatted thumbs.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core"
+      ],
+      "registryDependencies": [
+        "slider"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/range-slider.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/range-slider.tsx"
         }
       ]
     },
@@ -1054,13 +1821,14 @@
       "name": "rating",
       "type": "registry:ui",
       "title": "Rating",
-      "description": "A star rating, read-only or interactive.",
+      "description": "A star has no text, so its name has to be COMPOSED — and from an already-formatted number, so «۳ ستاره» is what is announced and a Latin digit is never in scope.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "form"
@@ -1077,7 +1845,7 @@
       "name": "resizable",
       "type": "registry:ui",
       "title": "Resizable",
-      "description": "Two panes and a draggable divider.",
+      "description": "Two panes and a divider.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1092,10 +1860,31 @@
       ]
     },
     {
+      "name": "sankey-chart",
+      "type": "registry:ui",
+      "title": "Sankey Chart",
+      "description": "A validated proportional-flow diagram with semantic source/target rows.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts"
+      ],
+      "registryDependencies": [
+        "chart"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/sankey-chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/sankey-chart.tsx"
+        }
+      ]
+    },
+    {
       "name": "scroll-area",
       "type": "registry:ui",
       "title": "Scroll Area",
-      "description": "A scroll container with styled scrollbars.",
+      "description": "Native scrolling with token-coloured bars — no JavaScript thumb reconstruction.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1110,16 +1899,33 @@
       ]
     },
     {
+      "name": "scrollspy",
+      "type": "registry:ui",
+      "title": "Scrollspy",
+      "description": "A table of contents that knows where the reader is.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/scrollspy.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/scrollspy.tsx"
+        }
+      ]
+    },
+    {
       "name": "search-field",
       "type": "registry:ui",
       "title": "Search Field",
-      "description": "The search input.",
+      "description": "A search input with a magnifier at the reading start and a clear button at the reading end.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
         "button",
@@ -1137,12 +1943,13 @@
       "name": "segmented-control",
       "type": "registry:ui",
       "title": "Segmented Control",
-      "description": "Two to four mutually exclusive options, shown all at once.",
+      "description": "Two to four mutually exclusive options for one thing, all visible at once.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1159,12 +1966,14 @@
       "description": "A single-select listbox in a popover.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
+        "button",
+        "form",
         "popover"
       ],
       "files": [
@@ -1172,6 +1981,11 @@
           "path": "packages/ui/src/select.tsx",
           "type": "registry:ui",
           "target": "components/ui/select.tsx"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },
@@ -1179,12 +1993,11 @@
       "name": "separator",
       "type": "registry:ui",
       "title": "Separator",
-      "description": "A divider between two groups of content.",
+      "description": "A rule between two groups of content — and the whole component is one ternary, with no engine at all.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1198,10 +2011,11 @@
       "name": "sidebar",
       "type": "registry:ui",
       "title": "Sidebar",
-      "description": "The app sidebar: a collapsible rail of grouped navigation items.",
+      "description": "The app sidebar: groups, icon-and-badge items, and a collapsed rail.",
       "author": "Telarsa",
       "dependencies": [
-        "@lumo-ui/core"
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "button",
@@ -1217,6 +2031,11 @@
           "path": "packages/ui/src/sidebar.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/sidebar.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },
@@ -1224,7 +2043,7 @@
       "name": "skeleton-presets",
       "type": "registry:ui",
       "title": "Skeleton Presets",
-      "description": "Composed placeholders: the shapes a real screen actually loses while it",
+      "description": "Composed placeholders: the shapes a real screen actually loses while it loads — a paragraph, a feed row, a card, a form, a table.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1245,7 +2064,7 @@
       "name": "skeleton",
       "type": "registry:ui",
       "title": "Skeleton",
-      "description": "A placeholder block for content that has not arrived.",
+      "description": "The empty shape of content that has not arrived.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1263,12 +2082,16 @@
       "name": "slider",
       "type": "registry:ui",
       "title": "Slider",
-      "description": "A single value chosen from a range.",
+      "description": "One value chosen from a range.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "form"
       ],
       "files": [
         {
@@ -1279,10 +2102,29 @@
       ]
     },
     {
+      "name": "sortable",
+      "type": "registry:ui",
+      "title": "Sortable",
+      "description": "A list the reader can reorder — by keyboard first, by pointer second.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority",
+        "lucide-react"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/sortable.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/sortable.tsx"
+        }
+      ]
+    },
+    {
       "name": "spinner",
       "type": "registry:ui",
       "title": "Spinner",
-      "description": "A busy indicator that says so out loud.",
+      "description": "A busy indicator that says out loud what is being waited for.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1300,7 +2142,7 @@
       "name": "stack",
       "type": "registry:ui",
       "title": "Stack",
-      "description": "No \"use client\": these are layout primitives with no interaction, so they",
+      "description": "A one-axis flex layout: a logical row that mirrors under RTL, or a column, with a gap from the spacing scale.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1318,7 +2160,7 @@
       "name": "steps",
       "type": "registry:ui",
       "title": "Steps",
-      "description": "A stepper: where you are in a sequence you have to finish.",
+      "description": "Where you are in a sequence you have to finish.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1336,12 +2178,13 @@
       "name": "switch",
       "type": "registry:ui",
       "title": "Switch",
-      "description": "The clickable row.",
+      "description": "An on/off switch.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "form"
@@ -1358,23 +2201,42 @@
       "name": "table",
       "type": "registry:ui",
       "title": "Table",
-      "description": "A data grid.",
+      "description": "A real ARIA grid.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
+        "@tanstack/react-table",
         "class-variance-authority",
-        "lucide-react",
-        "react-aria-components"
+        "lucide-react"
       ],
       "registryDependencies": [
-        "checkbox",
-        "form"
+        "checkbox"
       ],
       "files": [
         {
           "path": "packages/ui/src/table.tsx",
           "type": "registry:ui",
           "target": "components/ui/table.tsx"
+        },
+        {
+          "path": "packages/ui/src/table.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/table.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
+        },
+        {
+          "path": "packages/ui/src/virtualizer.ts",
+          "type": "registry:ui",
+          "target": "components/ui/virtualizer.ts"
+        },
+        {
+          "path": "packages/ui/src/filters.shared.ts",
+          "type": "registry:ui",
+          "target": "components/ui/filters.shared.ts"
         }
       ]
     },
@@ -1382,12 +2244,13 @@
       "name": "tabs",
       "type": "registry:ui",
       "title": "Tabs",
-      "description": "Tabs.",
+      "description": "A tab list and its panels: one panel visible at a time, arrows moving the tab focus in the reading direction.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1401,12 +2264,13 @@
       "name": "tag-group",
       "type": "registry:ui",
       "title": "Tag Group",
-      "description": "A keyboard-navigable list of filters, keywords or selected values.",
+      "description": "A keyboard-navigable group of tags: filters, keywords, or selected values, removable when told how.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1420,7 +2284,7 @@
       "name": "tag",
       "type": "registry:ui",
       "title": "Tag",
-      "description": "A chip — a filter, a selected value, a keyword — optionally removable.",
+      "description": "A chip: a filter, a selected value, a keyword — optionally removable.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1435,15 +2299,35 @@
       ]
     },
     {
-      "name": "text-area",
+      "name": "tags-input",
       "type": "registry:ui",
-      "title": "Text Area",
-      "description": "The multi-line box.",
+      "title": "Tags Input",
+      "description": "Create, paste, remove, and preserve ordered free-form tags over one controlled array.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "form"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/tags-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tags-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "text-area",
+      "type": "registry:ui",
+      "title": "Text Area",
+      "description": "A multi-line text field.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "form"
@@ -1460,12 +2344,11 @@
       "name": "text-field",
       "type": "registry:ui",
       "title": "Text Field",
-      "description": "The input box. Shared by TextField, SearchField and NumberField, which differ",
+      "description": "A single-line input.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "form"
@@ -1482,15 +2365,17 @@
       "name": "time-field",
       "type": "registry:ui",
       "title": "Time Field",
-      "description": "A time typed segment by segment: ۲۳:۴۵.",
+      "description": "Types a time segment by segment.",
       "author": "Telarsa",
       "dependencies": [
-        "@lumo-ui/core",
-        "react-aria-components"
+        "@base-ui/react",
+        "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core"
       ],
       "registryDependencies": [
         "calendar",
-        "date-field",
+        "date-input",
         "form"
       ],
       "files": [
@@ -1498,6 +2383,39 @@
           "path": "packages/ui/src/time-field.tsx",
           "type": "registry:ui",
           "target": "components/ui/time-field.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-input.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/date-field-state.ts",
+          "type": "registry:ui",
+          "target": "components/ui/date-field-state.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        }
+      ]
+    },
+    {
+      "name": "timeline",
+      "type": "registry:ui",
+      "title": "Timeline",
+      "description": "A sequence of events down a rail — an order history, an audit trail.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/timeline.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/timeline.tsx"
         }
       ]
     },
@@ -1505,12 +2423,12 @@
       "name": "toast",
       "type": "registry:ui",
       "title": "Toast",
-      "description": "Transient notifications.",
+      "description": "Short messages that stack in a corner.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "button"
@@ -1527,18 +2445,24 @@
       "name": "toggle-group",
       "type": "registry:ui",
       "title": "Toggle Group",
-      "description": "A segmented control.",
+      "description": "A strip of buttons that are each on or off.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
           "path": "packages/ui/src/toggle-group.tsx",
           "type": "registry:ui",
           "target": "components/ui/toggle-group.tsx"
+        },
+        {
+          "path": "packages/ui/src/toggle-group.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/toggle-group.variants.ts"
         }
       ]
     },
@@ -1546,11 +2470,13 @@
       "name": "toggle",
       "type": "registry:ui",
       "title": "Toggle",
-      "description": "ONE two-state button. Bold on / bold off, muted / unmuted, pinned / unpinned.",
+      "description": "One button that stays down: bold, muted, pinned.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1562,6 +2488,11 @@
           "path": "packages/ui/src/toggle.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/toggle.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/base-ui-adapter.ts",
+          "type": "registry:ui",
+          "target": "components/ui/base-ui-adapter.ts"
         }
       ]
     },
@@ -1569,12 +2500,13 @@
       "name": "toolbar",
       "type": "registry:ui",
       "title": "Toolbar",
-      "description": "A group of controls with arrow-key navigation.",
+      "description": "A group of controls that collapse into a single Tab stop and are navigated with the arrow keys.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1588,12 +2520,13 @@
       "name": "tooltip",
       "type": "registry:ui",
       "title": "Tooltip",
-      "description": "A description shown on hover or focus.",
+      "description": "A short sentence that appears on hover or focus.",
       "author": "Telarsa",
       "dependencies": [
+        "@base-ui/react",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
-        "class-variance-authority",
-        "react-aria-components"
+        "class-variance-authority"
       ],
       "registryDependencies": [
         "popover"
@@ -1607,14 +2540,69 @@
       ]
     },
     {
-      "name": "tree",
+      "name": "transfer-list",
       "type": "registry:ui",
-      "title": "Tree",
-      "description": "A nested outline: folders, a category hierarchy, an org chart's reporting line.",
+      "title": "Transfer List",
+      "description": "Choose and order a subset across two named listboxes.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "button",
+        "list-box"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/transfer-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/transfer-list.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
+        }
+      ]
+    },
+    {
+      "name": "tree-select",
+      "type": "registry:ui",
+      "title": "Tree Select",
+      "description": "Single, multiple, or cascading selection from nested data with a real mixed state.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
-        "react-aria-components"
+        "lucide-react"
+      ],
+      "registryDependencies": [
+        "popover"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/tree-select.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/tree-select.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tree",
+      "type": "registry:ui",
+      "title": "Tree",
+      "description": "A nested list with keyboard navigation and typeahead.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/base-ui-ssr",
+        "@lumo-ui/core",
+        "class-variance-authority"
       ],
       "files": [
         {
@@ -1626,6 +2614,70 @@
           "path": "packages/ui/src/tree.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/tree.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
+        }
+      ]
+    },
+    {
+      "name": "treemap-chart",
+      "type": "registry:ui",
+      "title": "Treemap Chart",
+      "description": "A responsive hierarchical area chart; authored rows are never mutated.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "@tanstack/charts"
+      ],
+      "registryDependencies": [
+        "chart"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/treemap-chart.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/treemap-chart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "virtual-list",
+      "type": "registry:ui",
+      "title": "Virtual List",
+      "description": "A list that renders a WINDOW instead of a corpus.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/virtual-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/virtual-list.tsx"
+        },
+        {
+          "path": "packages/ui/src/virtual-list.variants.ts",
+          "type": "registry:ui",
+          "target": "components/ui/virtual-list.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/virtualizer.ts",
+          "type": "registry:ui",
+          "target": "components/ui/virtualizer.ts"
+        },
+        {
+          "path": "packages/ui/src/async-collection.ts",
+          "type": "registry:ui",
+          "target": "components/ui/async-collection.ts"
         }
       ]
     },
@@ -1633,7 +2685,7 @@
       "name": "activity-feed",
       "type": "registry:block",
       "title": "Activity Feed",
-      "description": "A reverse-chronological list of what happened: who did what, and when.",
+      "description": "Events in reverse chronological order.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1651,7 +2703,7 @@
       "name": "app-shell",
       "type": "registry:block",
       "title": "App Shell",
-      "description": "The signed-in frame: a sidebar on the reading edge, a top bar, and the route.",
+      "description": "A sidebar on the reading edge and a top bar.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1669,7 +2721,7 @@
       "name": "auth-page",
       "type": "registry:block",
       "title": "Auth Page",
-      "description": "The whole sign-in ROUTE: brand mark above, the `SignIn` card centred in the",
+      "description": "The whole sign-in route in one piece: brand mark, the sign-in card, a footnote line, centred in the full viewport.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core"
@@ -1689,7 +2741,7 @@
       "name": "booking-summary",
       "type": "registry:block",
       "title": "Booking Summary",
-      "description": "The panel beside a checkout: what is being booked, when, what it costs.",
+      "description": "A Jalali date range and a set of charge rows.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1707,7 +2759,7 @@
       "name": "chart-panel",
       "type": "registry:block",
       "title": "Chart Panel",
-      "description": "A titled card around a chart, with the figures that survive when the chart",
+      "description": "A card around a chart, with figures that survive even when the plot itself does not render.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1725,7 +2777,7 @@
       "name": "checkout-summary",
       "type": "registry:block",
       "title": "Checkout Summary",
-      "description": "The panel beside a checkout FORM: what is in the cart, what it costs, one",
+      "description": "Cart items, itemised charges and a promo code.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1743,7 +2795,7 @@
       "name": "command-palette",
       "type": "registry:block",
       "title": "Command Palette",
-      "description": "A trigger plus the assembled dialog: search box, grouped actions, an empty",
+      "description": "A search box with grouped actions.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1761,7 +2813,7 @@
       "name": "danger-zone",
       "type": "registry:block",
       "title": "Danger Zone",
-      "description": "The irreversible action, behind a confirmation the reader has to type.",
+      "description": "An irreversible action behind a typed phrase.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1779,7 +2831,7 @@
       "name": "dashboard-page",
       "type": "registry:block",
       "title": "Dashboard Page",
-      "description": "The signed-in landing screen, assembled: `AppShell` around `PageHeader`,",
+      "description": "The app shell with real content in it: route header, stat grid, a table region and the activity feed, each in its place.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core"
@@ -1802,7 +2854,7 @@
       "name": "data-toolbar",
       "type": "registry:block",
       "title": "Data Toolbar",
-      "description": "The control strip above a table or a card grid: search, sort, view switch,",
+      "description": "Search, sort, a view switch and a result count.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1820,7 +2872,7 @@
       "name": "empty-collection",
       "type": "registry:block",
       "title": "Empty Collection",
-      "description": "\"There is nothing here yet\", with the first steps spelled out.",
+      "description": "The state where there is no data.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1838,7 +2890,7 @@
       "name": "faq",
       "type": "registry:block",
       "title": "Faq",
-      "description": "Questions and answers, collapsed.",
+      "description": "A question and answer list built on Disclosure.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1874,7 +2926,7 @@
       "name": "filter-bar",
       "type": "registry:block",
       "title": "Filter Bar",
-      "description": "Search, a row of dropdown filters, and the chips showing what is currently on.",
+      "description": "Search, a row of dropdown filters, and the active chips.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1892,7 +2944,7 @@
       "name": "footer",
       "type": "registry:block",
       "title": "Footer",
-      "description": "The band at the bottom of every page: brand, grouped navigation, legal",
+      "description": "The band at the bottom of every page: brand, nav columns, a copyright line.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1910,7 +2962,7 @@
       "name": "hero",
       "type": "registry:block",
       "title": "Hero",
-      "description": "The top of a marketing page: a claim, a sentence, and two calls to action.",
+      "description": "The opening section of a marketing page.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1928,7 +2980,7 @@
       "name": "list-detail",
       "type": "registry:block",
       "title": "List Detail",
-      "description": "The two-pane pattern: a list on the reading edge, the selected record beside it.",
+      "description": "A list on the reading edge, the selected record beside it.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1946,7 +2998,7 @@
       "name": "listing-grid",
       "type": "registry:block",
       "title": "Listing Grid",
-      "description": "A grid of purchasable things: a product catalogue, a provider directory, a",
+      "description": "A responsive card grid of listings — image, title, price and rating — with the empty state built in.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1964,7 +3016,7 @@
       "name": "otp-verify",
       "type": "registry:block",
       "title": "Otp Verify",
-      "description": "One-time-code entry: the SMS step every Iranian sign-in flow ends with.",
+      "description": "The SMS-code step.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -1982,7 +3034,7 @@
       "name": "page-header",
       "type": "registry:block",
       "title": "Page Header",
-      "description": "The band at the top of a route: trail, title, one-line summary, actions.",
+      "description": "The band atop a route: breadcrumbs, title, description, actions.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2000,7 +3052,7 @@
       "name": "password-reset",
       "type": "registry:block",
       "title": "Password Reset",
-      "description": "The two screens either side of \"forgot your password\": request a link, then",
+      "description": "Two screens, two routes: requesting the reset link, then setting a new password.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2018,7 +3070,7 @@
       "name": "preferences",
       "type": "registry:block",
       "title": "Preferences",
-      "description": "A settings screen built from structured, instantly-committing controls:",
+      "description": "Instantly-committing controls, with no Save button.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2036,7 +3088,7 @@
       "name": "pricing-table",
       "type": "registry:block",
       "title": "Pricing Table",
-      "description": "The plan comparison: name, price, what is in, one call to action each.",
+      "description": "The plan comparison.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2054,7 +3106,7 @@
       "name": "product-detail",
       "type": "registry:block",
       "title": "Product Detail",
-      "description": "A single product page: gallery, price, stock, variants, quantity, specs.",
+      "description": "Gallery, price, stock and variants.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2072,7 +3124,7 @@
       "name": "settings-form",
       "type": "registry:block",
       "title": "Settings Form",
-      "description": "A titled settings panel: fields in, save and cancel out, one status line.",
+      "description": "Fields plus one status line.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2090,7 +3142,7 @@
       "name": "sign-in",
       "type": "registry:block",
       "title": "Sign In",
-      "description": "════════════════════════════════════════════════════════════════════════════",
+      "description": "An email-and-password sign-in form.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2108,7 +3160,7 @@
       "name": "sign-up",
       "type": "registry:block",
       "title": "Sign Up",
-      "description": "Account creation.",
+      "description": "The account-creation form.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2126,7 +3178,7 @@
       "name": "stat-grid",
       "type": "registry:block",
       "title": "Stat Grid",
-      "description": "The row of headline figures at the top of a dashboard.",
+      "description": "A row of key figures.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2144,7 +3196,7 @@
       "name": "table-view",
       "type": "registry:block",
       "title": "Table View",
-      "description": "A full data screen: `DataToolbar` above a real ARIA grid, with an empty",
+      "description": "A toolbar above a real ARIA grid, with pagination.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",
@@ -2165,7 +3217,7 @@
       "name": "two-factor",
       "type": "registry:block",
       "title": "Two Factor",
-      "description": "The authenticator-app challenge: a TOTP code, or a printed recovery code.",
+      "description": "The authenticator-app challenge, with an alternate recovery-code input.",
       "author": "Telarsa",
       "dependencies": [
         "@lumo-ui/core",

@@ -1,7 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { I18nProvider } from "react-aria-components";
-import { Dialog, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
+import { LumoProvider } from "./provider.tsx";
+import { Dialog, DialogClose, DialogModal, DialogOverlay, DialogTrigger } from "./dialog.tsx";
 import { Button } from "./button.tsx";
 
 /**
@@ -26,7 +26,6 @@ import { Button } from "./button.tsx";
  * this is the only place it can be caught.
  */
 
-const FA = "fa-IR-u-ca-persian-nu-arabext";
 const LATIN_WORD = /[A-Za-z]{3,}/;
 
 function announcedEnglish(root: ParentNode = document): string[] {
@@ -66,18 +65,18 @@ function danglingIdrefs(root: Document = document): string[] {
 describe("hydrated — an OPEN dialog announces no English", () => {
   it("mounts and is clean", () => {
     render(
-      <I18nProvider locale={FA}>
+      <LumoProvider locale="fa-IR">
         <DialogTrigger defaultOpen>
           <Button>باز کردن</Button>
           <DialogOverlay>
             <DialogModal>
-              <Dialog closeLabel="بستن" aria-label="گفتگو">
+              <Dialog closeLabel="بستن" label="گفتگو">
                 محتوای فارسی
               </Dialog>
             </DialogModal>
           </DialogOverlay>
         </DialogTrigger>
-      </I18nProvider>,
+      </LumoProvider>,
     );
 
     // Guard against a vacuous pass: if the dialog never opened, there is nothing
@@ -89,18 +88,18 @@ describe("hydrated — an OPEN dialog announces no English", () => {
 
   it("has no dangling ARIA references once live", () => {
     render(
-      <I18nProvider locale={FA}>
+      <LumoProvider locale="fa-IR">
         <DialogTrigger defaultOpen>
           <Button>باز کردن</Button>
           <DialogOverlay>
             <DialogModal>
-              <Dialog closeLabel="بستن" aria-label="گفتگو">
+              <Dialog closeLabel="بستن" label="گفتگو">
                 محتوا
               </Dialog>
             </DialogModal>
           </DialogOverlay>
         </DialogTrigger>
-      </I18nProvider>,
+      </LumoProvider>,
     );
     expect(screen.getByRole("dialog")).toBeTruthy();
     expect(danglingIdrefs()).toEqual([]);
@@ -125,5 +124,32 @@ describe("hydrated — the helpers can actually fail", () => {
     const doc = document.implementation.createHTMLDocument();
     doc.body.innerHTML = '<input aria-labelledby="nope" />';
     expect(danglingIdrefs(doc)).toEqual(["aria-labelledby → nope"]);
+  });
+});
+
+describe("DialogClose closes the dialog it sits in", () => {
+  it("a footer button wrapped in DialogClose dismisses the open dialog", async () => {
+    render(
+      <DialogTrigger defaultOpen>
+        <Button>باز کردن</Button>
+        <DialogOverlay>
+          <DialogModal>
+            <Dialog closeLabel="بستن" label="گفتگو">
+              <DialogClose>
+                <Button variant="ghost">انصراف</Button>
+              </DialogClose>
+            </Dialog>
+          </DialogModal>
+        </DialogOverlay>
+      </DialogTrigger>,
+    );
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    // This is what `<Button slot="close">` silently failed to do under Base
+    // UI: the RAC slot survived the migration as an inert prop and cancel
+    // buttons closed nothing. `slot` is a compile-time carrier now.
+    fireEvent.click(screen.getByRole("button", { name: "انصراف" }));
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).toBeNull();
+    });
   });
 });

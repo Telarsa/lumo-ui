@@ -1,34 +1,48 @@
 {
   "name": "@lumo-ui/ui",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "description": "Lumo components. Copy-in via the registry; this package is the canonical source and the site's dependency.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "sideEffects": false,
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
-  "peerDependencies": { "react": ">=19", "react-dom": ">=19" },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
+  },
   "dependencies": {
-    "@lumo-ui/core": "workspace:*",
-    "react-aria-components": "catalog:",
+    "@base-ui/react": "catalog:",
     "@internationalized/date": "catalog:",
+    "react-day-picker": "catalog:",
+    "@lumo-ui/base-ui-ssr": "workspace:*",
+    "@lumo-ui/core": "workspace:*",
+    "@tanstack/charts": "catalog:",
+    "@tanstack/react-form": "catalog:",
+    "@tanstack/react-table": "catalog:",
     "class-variance-authority": "catalog:",
+    "culori": "catalog:",
+    "embla-carousel-react": "catalog:",
     "lucide-react": "catalog:",
-    "recharts": "catalog:",
-    "embla-carousel-react": "catalog:"
+    "maska": "catalog:"
   },
   "devDependencies": {
+    "@lumo-ui/gate": "workspace:*",
+    "@testing-library/react": "catalog:",
+    "@types/culori": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "jsdom": "catalog:",
     "react": "catalog:",
+    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
-    "jsdom": "catalog:",
-    "@testing-library/react": "catalog:",
-    "@vitejs/plugin-react": "catalog:"
+    "vitest": "catalog:"
   }
 }

@@ -2,8 +2,10 @@ import type { Locale } from "@lumo-ui/core";
 import {
   Label,
   Select,
+  SelectGroup,
   SelectItem,
   SelectPopover,
+  SelectSeparator,
   SelectTrigger,
   TextField,
 } from "@lumo-ui/ui";
@@ -30,6 +32,22 @@ const t = {
   soldOut: { "fa-IR": "ناموجود", "en-US": "Sold out" },
   fullName: { "fa-IR": "نام و نام خانوادگی", "en-US": "Full name" },
   fullNamePlaceholder: { "fa-IR": "مثلاً سارا محمدی", "en-US": "For example, Sara Mohammadi" },
+  province: { "fa-IR": "استان", "en-US": "Province" },
+  selectProvince: { "fa-IR": "یک شهر انتخاب کنید", "en-US": "Select a city" },
+  tehranProvince: { "fa-IR": "استان تهران", "en-US": "Tehran province" },
+  isfahanProvince: { "fa-IR": "استان اصفهان", "en-US": "Isfahan province" },
+  karaj: { "fa-IR": "کرج", "en-US": "Karaj" },
+  shahriar: { "fa-IR": "شهریار", "en-US": "Shahriar" },
+  kashan: { "fa-IR": "کاشان", "en-US": "Kashan" },
+  najafabad: { "fa-IR": "نجف‌آباد", "en-US": "Najafabad" },
+  cityHelp: {
+    "fa-IR": "شهری که سفارش به آن ارسال می‌شود.",
+    "en-US": "The city the order ships to.",
+  },
+  cityRequired: {
+    "fa-IR": "برای ادامه یک شهر انتخاب کنید.",
+    "en-US": "Choose a city to continue.",
+  },
 } satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
@@ -42,6 +60,62 @@ function BasicExample(l: Locale) {
         <SelectItem id="isf">{t.isfahan[l]}</SelectItem>
         <SelectItem id="tbz">{t.tabriz[l]}</SelectItem>
         <SelectItem id="shz">{t.shiraz[l]}</SelectItem>
+      </SelectPopover>
+    </Select>
+  );
+}
+
+function GroupedExample(l: Locale) {
+  return (
+    <Select className="max-w-xs" placeholder={t.selectProvince[l]}>
+      <Label>{t.province[l]}</Label>
+      <SelectTrigger />
+      <SelectPopover>
+        <SelectGroup label={t.tehranProvince[l]}>
+          <SelectItem id="thr">{t.tehran[l]}</SelectItem>
+          <SelectItem id="krj">{t.karaj[l]}</SelectItem>
+          <SelectItem id="shr">{t.shahriar[l]}</SelectItem>
+        </SelectGroup>
+        <SelectSeparator />
+        <SelectGroup label={t.isfahanProvince[l]}>
+          <SelectItem id="isf">{t.isfahan[l]}</SelectItem>
+          <SelectItem id="ksh">{t.kashan[l]}</SelectItem>
+          <SelectItem id="njf">{t.najafabad[l]}</SelectItem>
+        </SelectGroup>
+      </SelectPopover>
+    </Select>
+  );
+}
+
+function DescriptionExample(l: Locale) {
+  return (
+    <Select className="max-w-xs" placeholder={t.selectCity[l]} description={t.cityHelp[l]}>
+      <Label>{t.city[l]}</Label>
+      <SelectTrigger />
+      <SelectPopover>
+        <SelectItem id="thr">{t.tehran[l]}</SelectItem>
+        <SelectItem id="isf">{t.isfahan[l]}</SelectItem>
+        <SelectItem id="yzd">{t.yazd[l]}</SelectItem>
+      </SelectPopover>
+    </Select>
+  );
+}
+
+function InvalidExample(l: Locale) {
+  return (
+    <Select
+      className="max-w-xs"
+      placeholder={t.selectCity[l]}
+      description={t.cityHelp[l]}
+      errorMessage={t.cityRequired[l]}
+      isRequired
+    >
+      <Label>{t.city[l]}</Label>
+      <SelectTrigger />
+      <SelectPopover>
+        <SelectItem id="thr">{t.tehran[l]}</SelectItem>
+        <SelectItem id="isf">{t.isfahan[l]}</SelectItem>
+        <SelectItem id="yzd">{t.yazd[l]}</SelectItem>
       </SelectPopover>
     </Select>
   );
@@ -98,12 +172,31 @@ function InFormExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک مقدار از فهرستی شناخته‌شده و کوتاه (تا حدود هشت گزینه) که مقدار انتخاب‌شده در میدان می‌ماند.",
+        "en-US": "One value from a short, known list (up to about eight options), with the chosen value staying in the field.",
+      },
+      whenNot: {
+        "fa-IR": "گزینه‌ها زیادند یا کاربر باید بنویسد تا بیابد — `ComboBox`. چند مقدار — `MultiSelect`. سه چهار گزینهٔ همیشه‌پیدا — `RadioGroup` یا `SegmentedControl`.",
+        "en-US": "There are many options or the user needs to type to find one — `ComboBox`. Several values — `MultiSelect`. Three or four always-visible options — `RadioGroup` or `SegmentedControl`.",
+      },
+    },
+    title: { "fa-IR": "انتخابگر", "en-US": "Select" },
+    intro: {
+      "fa-IR": "فهرست تک‌انتخابی درون یک پاپ‌اور. متن جای‌نما اجباری است، چون پیش‌فرض موتور یک عبارت انگلیسیِ دیدنی است.",
+      "en-US": "A single-select listbox in a popover. The placeholder is required, because an engine fallback would be a visible English phrase.",
+    },
+    tier: "form",
     composition: [
-      `<Select placeholder="…">`,
+      `<Select placeholder="…" validate={key => …}>`,
       `  <Label>…</Label>`,
       `  <SelectTrigger />`,
       `  <SelectPopover>`,
-      `    <SelectItem id="…">…</SelectItem>`,
+      `    <SelectGroup label="…">`,
+      `      <SelectItem id="…">…</SelectItem>`,
+      `    </SelectGroup>`,
+      `    <SelectSeparator />`,
       `  </SelectPopover>`,
       `</Select>`,
     ].join("\n"),
@@ -111,8 +204,10 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "Select",
         description: {
-          "fa-IR": "ریشهٔ فیلد؛ جای‌نما اجباری است چون پیش‌فرض ری‌اکت‌آریا یک عبارت انگلیسی دیدنی است.",
-          "en-US": "The field root; the placeholder is required because React Aria's fallback is visible English.",
+          "fa-IR":
+            "ریشهٔ فیلد؛ جای‌نما اجباری است چون موتور هیچ رشته‌ای ندارد و کنترل بدون آن خالی می‌ماند. متن راهنما و پیام خطا را هم همین بخش می‌سازد و به کنترل وصل می‌کند؛ validate کلید انتخابی را می‌گیرد و فقط متنِ نوشته‌شدهٔ فراخوان را نمایش می‌دهد.",
+          "en-US":
+            "The field root; the placeholder is required because the engine ships no string and the control renders empty without one. It renders and wires the description and error; validate receives the selected key and displays only caller-authored copy.",
         },
       },
       {
@@ -143,6 +238,20 @@ export const EXAMPLES: ComponentExamples = {
           "en-US": "One option; non-string children need a textValue so typeahead keeps working.",
         },
       },
+      {
+        name: "SelectGroup",
+        description: {
+          "fa-IR": "دستهٔ گزینه‌های هم‌خانواده؛ label اجباری است چون هر گزینه عضویتش در آن را اعلام می‌کند.",
+          "en-US": "A block of related options; label is required because every option inside announces its membership.",
+        },
+      },
+      {
+        name: "SelectSeparator",
+        description: {
+          "fa-IR": "خط جداکنندهٔ دیداری؛ نقش presentation دارد و جای دسته را نمی‌گیرد.",
+          "en-US": "A visual rule; role=\"presentation\", and no substitute for a named group.",
+        },
+      },
     ],
   },
   examples: [
@@ -154,6 +263,39 @@ export const EXAMPLES: ComponentExamples = {
         "en-US": "A single-select list in a popover; the label wires to the control through Label.",
       },
       render: BasicExample,
+    },
+    {
+      id: "grouped",
+      title: { "fa-IR": "دسته‌بندی‌شده", "en-US": "Grouped" },
+      description: {
+        "fa-IR":
+          "هر دسته نامی اعلام‌شده دارد، پس خواننده هنگام رد شدن از مرز استان از آن باخبر می‌شود؛ خط جداکننده فقط دیداری است.",
+        "en-US":
+          "Each group carries an announced name, so a listener is told when they arrow past a province boundary; the rule between them is visual only.",
+      },
+      render: GroupedExample,
+    },
+    {
+      id: "description",
+      title: { "fa-IR": "متن راهنما", "en-US": "Help text" },
+      description: {
+        "fa-IR":
+          "متن راهنما هنگام رندر به aria-describedby کنترل وصل می‌شود، نه پس از هیدریت شدن؛ پس خوانندهٔ صفحهٔ ایستا هم آن را می‌شنود.",
+        "en-US":
+          "The help text is wired into the control's aria-describedby during render, not after hydration — so a reader of the static page hears it too.",
+      },
+      render: DescriptionExample,
+    },
+    {
+      id: "invalid",
+      title: { "fa-IR": "خطای اعتبارسنجی", "en-US": "Validation error" },
+      description: {
+        "fa-IR":
+          "دادن errorMessage خودِ فیلد را نامعتبر می‌کند؛ کنترل در همان بایت نخست aria-invalid می‌گیرد و پیام و متن راهنما به همان ترتیب خوانده می‌شوند. برای وارونه کردن این استنتاج، isInvalid را صریح بدهید.",
+        "en-US":
+          "Supplying errorMessage marks the field invalid on its own; the control carries aria-invalid in the first byte, and the message and the help text are announced in that order. Pass isInvalid to override the inference.",
+      },
+      render: InvalidExample,
     },
     {
       id: "disabled-option",

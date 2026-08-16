@@ -107,6 +107,22 @@ describe("Resizable — the divider announces its size in the reader's digits", 
     expect(screen.getByRole("separator").getAttribute("aria-valuenow")).toBe("85");
   });
 
+  it("rejects inverted bounds instead of serving an invalid ARIA range", () => {
+    expect(() =>
+      renderToStaticMarkup(
+        <Resizable
+          locale="fa-IR"
+          label="تقسیم صفحه"
+          sizeLabel={(v) => `${v} درصد`}
+          startPanel={<p>الف</p>}
+          endPanel={<p>ب</p>}
+          minSize={90}
+          maxSize={10}
+        />,
+      ),
+    ).toThrow(/minSize.*maxSize/);
+  });
+
   it("sizes the start pane with a LOGICAL inline-size, in the first byte", () => {
     const html = renderToStaticMarkup(
       <Resizable

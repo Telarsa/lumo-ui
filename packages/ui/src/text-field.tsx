@@ -1,41 +1,27 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  Input as AriaInput,
-  TextField as AriaTextField,
-  type TextFieldProps as AriaTextFieldProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
-import {
-  Description,
-  FieldError,
-  Label,
-  fieldVariants,
-  optional,
-} from "./form.tsx";
+// The prop SHAPE the public API is pinned to, owned by Lumo (`@lumo-ui/core`'s `props.ts`).
+import { cn, type LumoNode, type TextFieldPropsBase } from "@lumo-ui/core";
+import { Description, Field, FieldError, FieldInput, Label, optional } from "./form.tsx";
 
 /**
- * The input box. Shared by TextField, SearchField and NumberField, which differ
- * only in what they overlay on top of it.
- *
- * Every inline dimension here is logical: `px-*` is `padding-inline`, so the box
- * pads the same on both sides in either direction, and `text-start` is
- * `text-align: start` rather than `left`. A single `text-left` in this string
- * would left-align Persian text inside a right-to-left field — legible, plausible
- * in a screenshot, and wrong.
- *
- * Height comes from the density-scaled control tokens, never a literal rem, so a
- * brand that sets `--lumo-ref-density` moves the whole system at once.
+ * The input box. Shared by TextField, SearchField and InputGroup. Every inline
+ * dimension is logical (`px-*`, `text-start`); height comes from the
+ * density-scaled control tokens. `hover:` replaces `data-hovered` (Base UI
+ * publishes no hover attribute); `data-invalid` reaches the control because
+ * this component always renders a `Field.Root`. The focus ring is NOT restated:
+ * an `<input>` is its own focusable element, so theme.css's `data-lumo` rule draws it.
  */
 export const inputVariants = cva(
   "w-full min-w-0 rounded-md border border-border-control bg-surface text-fg text-start " +
     "transition-colors placeholder:text-fg-subtle " +
-    "data-hovered:border-border-strong " +
+    "hover:border-border-strong " +
     "data-invalid:border-critical " +
     "data-disabled:cursor-not-allowed data-disabled:bg-surface-sunken",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         sm: "h-control-sm px-2.5 text-sm",
         md: "h-control-md px-3 text-sm",
@@ -48,29 +34,23 @@ export const inputVariants = cva(
 );
 
 /**
- * A single-line text field.
- *
- * COMPOSED, not compositional, and `label` is a REQUIRED string. This is the same
- * argument the exemplar makes for `IconButton`: a convention that "every field
- * should have a label" is a convention, and a prototype shipped 33 controls with
- * no accessible name while following it. A required prop is checked in the editor.
- *
- * The consequence is that the label cannot be rich content. That is a deliberate
- * trade — a label is spoken by a screen reader as a flat string anyway, so markup
- * inside it buys nothing that `description` does not buy better.
+ * A single-line text field. COMPOSED, and `label` is a REQUIRED string — a
+ * convention shipped 33 unnamed controls; a required prop is checked in the
+ * editor. Public API is React Aria's shape; inside, field-level props go to
+ * `<Field>`, control-level to `<Input>`, and `onChange` maps onto Base UI's
+ * `onValueChange` (same `string`). `validationBehavior` is accepted and
+ * unreachable (Base UI decides it on `<Form>`); see form.tsx.
  */
 export interface TextFieldProps
-  extends Omit<AriaTextFieldProps, "children" | "className" | "size" | "isInvalid">,
+  extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior">,
     VariantProps<typeof inputVariants> {
+  /** The control's position in the sequential tab order — `-1` removes it (was `excludeFromTabOrder`). */
+  tabIndex?: number | undefined;
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
-  /** Help text, wired into `aria-describedby` by the description slot. */
+  /** Help text, wired into `aria-describedby` during render — not after hydration. */
   description?: LumoNode;
-  /**
-   * An error to display. Supplying one marks the field invalid, because a field
-   * carrying an error message and reporting itself valid is a contradiction the
-   * caller should not have to resolve by hand.
-   */
+  /** An error to display. Supplying one marks the field invalid. */
   errorMessage?: LumoNode;
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;
@@ -89,29 +69,61 @@ export function TextField({
   size,
   className,
   inputClassName,
-  ...props
+  // — translated onto <Field> —
+  isDisabled,
+  name,
+  validate,
+  // — translated onto <Input> —
+  value,
+  defaultValue,
+  onChange,
+  type,
+  isReadOnly,
+  isRequired,
+  autoFocus,
+  // — accepted by the API, unreachable in Base UI. See the header. —
+  tabIndex,
+  ...rest
 }: TextFieldProps) {
   return (
-    <AriaTextField
-      data-lumo=""
-      className={cn(fieldVariants(), className)}
-      {...optional("isInvalid", isInvalid ?? (errorMessage != null ? true : undefined))}
-      {...props}
+    <Field
+      label={label}
+      description={description}
+      errorMessage={errorMessage}
+      explicit={rest}
+      className={className}
+      {...optional("isDisabled", isDisabled)}
+      {...optional("isInvalid", isInvalid)}
+      {...optional("name", name)}
+      {...optional(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const result = validate(String(fieldValue ?? ""));
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
       <Label>{label}</Label>
-      {/*
-       * `data-lumo` again on the input, and not only on the wrapper: the wrapper
-       * is a `<div>` that never receives focus, so the shared
-       * `:where([data-lumo]):focus-visible` rule would never fire on it. The
-       * element that takes focus is the element that must carry the marker.
-       */}
-      <AriaInput
-        data-lumo=""
+      <FieldInput
         className={cn(inputVariants({ size }), inputClassName)}
         {...optional("placeholder", placeholder)}
+        {...optional("value", value)}
+        {...optional("defaultValue", defaultValue)}
+        {...optional(
+          "onValueChange",
+          onChange === undefined ? undefined : (next: string) => onChange(next),
+        )}
+        {...optional("type", type)}
+        {...optional("readOnly", isReadOnly)}
+        {...optional("required", isRequired)}
+        {...optional("autoFocus", autoFocus)}
+        {...(rest as object)}
+        {...optional("tabIndex", tabIndex)}
       />
       {description != null ? <Description>{description}</Description> : null}
       <FieldError>{errorMessage}</FieldError>
-    </AriaTextField>
+    </Field>
   );
 }

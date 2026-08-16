@@ -1,5 +1,5 @@
 import type { Locale } from "@lumo-ui/core";
-import { DateRangePicker } from "@lumo-ui/ui";
+import { DateRangePickerIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -17,9 +17,9 @@ const t = {
     "fa-IR": "میان دو فیلد یک خط تیره است، نه یک پیکان؛ پیکان جهت را ادعا می‌کند و جهت با خط عوض می‌شود.",
     "en-US": "A dash sits between the two fields, not an arrow; an arrow claims a direction and direction flips with the script.",
   },
-  previous: { "fa-IR": "ماه قبل", "en-US": "Previous month" },
-  next: { "fa-IR": "ماه بعد", "en-US": "Next month" },
   open: { "fa-IR": "باز کردن تقویم", "en-US": "Open calendar" },
+  start: { "fa-IR": "تاریخ شروع", "en-US": "Start date" },
+  end: { "fa-IR": "تاریخ پایان", "en-US": "End date" },
   stay: { "fa-IR": "بازهٔ رزرو اقامتگاه", "en-US": "Accommodation booking range" },
   stayHelp: {
     "fa-IR": "هر بخش خودش می‌گوید که به تاریخ شروع تعلق دارد یا به تاریخ پایان.",
@@ -35,12 +35,11 @@ const t = {
 
 function BasicExample(l: Locale) {
   return (
-    <DateRangePicker
-      className="w-full max-w-md"
+    <DateRangePickerIsland
       label={t.trip[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      startLabel={t.start[l]}
+      endLabel={t.end[l]}
       description={t.tripHelp[l]}
     />
   );
@@ -48,12 +47,11 @@ function BasicExample(l: Locale) {
 
 function LabelledHalvesExample(l: Locale) {
   return (
-    <DateRangePicker
-      className="w-full max-w-md"
+    <DateRangePickerIsland
       label={t.stay[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      startLabel={t.start[l]}
+      endLabel={t.end[l]}
       description={t.stayHelp[l]}
     />
   );
@@ -61,12 +59,11 @@ function LabelledHalvesExample(l: Locale) {
 
 function InvalidExample(l: Locale) {
   return (
-    <DateRangePicker
-      className="w-full max-w-md"
+    <DateRangePickerIsland
       label={t.report[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      startLabel={t.start[l]}
+      endLabel={t.end[l]}
       errorMessage={t.reportError[l]}
     />
   );
@@ -74,12 +71,11 @@ function InvalidExample(l: Locale) {
 
 function DisabledExample(l: Locale) {
   return (
-    <DateRangePicker
-      className="w-full max-w-md"
+    <DateRangePickerIsland
       label={t.archive[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      startLabel={t.start[l]}
+      endLabel={t.end[l]}
       isDisabled
     />
   );
@@ -87,18 +83,28 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "آغاز و پایانی که در دو فیلد تایپ می‌شوند، با شبکهٔ بازه پشت یک دکمه: تاریخ سفر، دورهٔ یک فیلتر.",
+        "en-US": "A start and an end typed in two fields, with a range grid behind one button: trip dates, the period of a filter.",
+      },
+      whenNot: {
+        "fa-IR": "بازه‌های آماده مثل «۷ روز گذشته» کنار شبکه — `DateSelector`. یک تاریخ — `DatePicker`. شبکه‌ای روی خود صفحه — `RangeCalendar`.",
+        "en-US": "Presets such as «last 7 days» beside the grid — `DateSelector`. One date — `DatePicker`. A grid on the page itself — `RangeCalendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "انتخابگر بازهٔ تاریخ", "en-US": "Date range picker" },
     intro: {
       "fa-IR":
-        "دو تاریخ تایپ‌شدنی و یک شبکهٔ بازه‌ای پشت یک دکمه. تنها خطایی که مخصوص بازه است — پایانِ پیش از شروع — همان جایی است که ری‌اکت‌آریا انگلیسی حرف می‌زند، پس پیامش را نویسنده می‌نویسد.",
+        "دو تاریخ تایپ‌شدنی و یک شبکهٔ بازه‌ای پشت یک دکمه. تنها خطایی که مخصوص بازه است — پایانِ پیش از شروع — همان جایی است که موتور انگلیسی حرف می‌زند، پس پیامش را نویسنده می‌نویسد.",
       "en-US":
         "Two typed dates and a range grid behind one button. The one failure a range has to itself — an end before a start — is exactly where React Aria speaks English, so the author writes its message.",
     },
     composition: [
       `<DateRangePicker label openCalendarLabel`,
-      `                 previousMonthLabel nextMonthLabel`,
+      `                 startLabel endLabel`,
       `                 errorMessage>   ← authored: a reversed range speaks English`,
       `  …start segments · dash · end segments   ← rendered for you`,
       `  …the range calendar in a popover        ← rendered for you`,
@@ -109,18 +115,18 @@ export const EXAMPLES: ComponentExamples = {
         name: "DateRangePicker",
         description: {
           "fa-IR":
-            "دو فیلد و یک شبکهٔ بازه‌ای زیر یک برچسب. هر بخش خودش می‌گوید به کدام سر بازه تعلق دارد، و پیام خطای بازهٔ وارونه را نویسنده می‌نویسد چون رشتهٔ خودِ ری‌اکت‌آریا انگلیسی است.",
+            "دو فیلد و یک شبکهٔ بازه‌ای زیر یک برچسب. هر بخش خودش می‌گوید به کدام سر بازه تعلق دارد، و پیام خطای بازهٔ وارونه را نویسنده می‌نویسد چون رشتهٔ خودِ موتور انگلیسی است.",
           "en-US":
             "Two fields and a range grid under one label. Every segment says which end it belongs to, and the reversed-range message is authored because React Aria's own is English.",
         },
       },
       {
-        name: "renderSegment",
+        name: "DateInput",
         description: {
           "fa-IR":
-            "همان تابع بخش، برای هر چهار جای این کنترل. یکی بودنشان همان چیزی است که نمی‌گذارد نیمهٔ شروع و نیمهٔ پایان از هم دور بیفتند.",
+            "همان ورودیِ بخش‌بندی‌شده، دو بار: یکی برای شروع و یکی برای پایان. یکی بودنشان همان چیزی است که نمی‌گذارد دو نیمه از هم دور بیفتند.",
           "en-US":
-            "The same segment function, in all four places this control has one. Their being one thing is what keeps the start half and the end half from drifting.",
+            "The same segmented input, twice: one for the start and one for the end. Their being one thing is what keeps the two halves from drifting.",
         },
       },
     ],
@@ -142,7 +148,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "نام دو نیمه", "en-US": "Naming the halves" },
       description: {
         "fa-IR":
-          "دوازده بخشِ خوانده‌شده روی یک صفحهٔ فارسی، هیچ‌کدام انگلیسی — این از بستهٔ زبان وصله‌خوردهٔ ری‌اکت‌آریا می‌آید، نه از یک ویژگی.",
+          "دوازده بخشِ خوانده‌شده روی یک صفحهٔ فارسی، هیچ‌کدام انگلیسی — این از بستهٔ زبان وصله‌خوردهٔ موتور می‌آید، نه از یک ویژگی.",
         "en-US":
           "Twelve announced segment names on a Persian page, none of them English — that comes from React Aria's patched language bundle, not from a prop.",
       },
@@ -153,7 +159,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "بازهٔ وارونه", "en-US": "A reversed range" },
       description: {
         "fa-IR":
-          "جملهٔ آمادهٔ ری‌اکت‌آریا از navigator.language انتخاب می‌شود نه از provider، پس روی رندر سمت سرور همیشه انگلیسی است و هیچ وصله‌ای به آن نمی‌رسد.",
+          "جملهٔ آمادهٔ موتور از navigator.language انتخاب می‌شود نه از provider، پس روی رندر سمت سرور همیشه انگلیسی است و هیچ وصله‌ای به آن نمی‌رسد.",
         "en-US":
           "React Aria picks its own sentence from navigator.language rather than from the provider, so on a server render it is always English and no patch reaches it.",
       },

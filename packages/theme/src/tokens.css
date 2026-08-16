@@ -44,32 +44,84 @@
 
     /* ---- neutral ramp. Lightness is fixed; hue/chroma come from above. ---
      *
-     * The lightnesses are Nova's (shadcn), mapped onto this ramp: 0.985 the
-     * near-white (Nova's dark fg / primary-fg — deliberately NOT its pure-white
-     * page, see the sys tier), 0.970 its secondary/muted/accent wash, 0.922 its
-     * hairline border, 0.556 its light muted-foreground, 0.269 its dark
-     * secondary/muted (≈ its 10%-white border composited solid: L 0.2542),
-     * 0.205 its dark card, 0.145 its bg/fg anchor. Steps 300/500/700 have no
-     * Nova counterpart and keep Lumo's values. The 400–600 run is deliberately
-     * compressed: each step is load-bearing (400 the control-border floor, 500
-     * the subtle text, 600 Nova's muted text at 4.53:1 on the 0.985 page —
-     * on the previous 0.977 page it measured 4.43:1 and would have FAILED AA,
-     * which is why the page moved with it). */
+     * ── ONE STEP, ONE ROLE, AND WHY THAT HAD TO BECOME A RULE ────────────────
+     *
+     * Fifteen steps. Every one of them is read by exactly one `sys` token in
+     * exactly one theme, and that property is load-bearing rather than tidy.
+     *
+     * The ramp used to run 50…950 in the conventional eleven steps, and four of
+     * those steps carried a light-theme role AND a dark-theme role at once. The
+     * two roles pull in opposite directions: on a light ground a text token gets
+     * DARKER to gain contrast, on a dark ground it gets LIGHTER. Step 600
+     * (L 0.556) was light `fg-muted` and dark `border-control` simultaneously.
+     * Light `fg-muted` measured 4.34:1 on `bg-subtle` and needed to go down;
+     * dark `border-control` measured 3.19:1 on `surface-hover` and any move down
+     * put it under WCAG 1.4.11's 3:1. The step was pinned by two requirements it
+     * could not both satisfy, so the failing token could not be fixed at all
+     * until the roles were separated. Step 500 (L 0.577) was the same knot: it
+     * was `fg-subtle` in BOTH themes, needing to be darker on light and lighter
+     * on dark. That is why the run is now split rather than nudged.
+     *
+     * The old numbering is kept where the value did not move, so the map from
+     * the previous ramp reads: 400→500, 600→550, 700→750. 400, 450, 600, 650 and
+     * 700 carry values that did not exist before.
+     *
+     *   step   L      role                              measured on its worst ground
+     *   ----   -----  --------------------------------  ---------------------------
+     *   50     0.985  light bg · light accent-fg · dark fg
+     *   100    0.970  light bg-subtle / surface-hover / surface-sunken
+     *   200    0.922  light border                      1.15:1 (decorative)
+     *   300    0.845  light border-strong               1.47:1 (decorative)
+     *   400    0.710  dark fg-muted                     5.87:1 on surface-hover
+     *   450    0.660  dark fg-subtle                    4.86:1 on surface-hover
+     *   500    0.640  light border-control              3.08:1 on bg-subtle
+     *   550    0.556  dark border-control               3.19:1 on surface-hover
+     *   600    0.540  light fg-subtle                   4.64:1 on bg-subtle
+     *   650    0.500  light fg-muted                    5.50:1 on bg-subtle
+     *   700    0.470  dark border-strong                2.21:1 (decorative)
+     *   750    0.383  dark border                       1.53:1 on surface-hover
+     *   800    0.269  dark surface-hover
+     *   900    0.205  dark surface · dark bg-subtle · dark accent-fg
+     *   950    0.145  dark bg · dark surface-sunken · light fg
+     *
+     * ── PROVENANCE ───────────────────────────────────────────────────────────
+     *
+     * The unmoved lightnesses are Nova's (shadcn): 0.985 the near-white (Nova's
+     * dark fg / primary-fg — deliberately NOT its pure-white page, see the sys
+     * tier), 0.970 its secondary/muted/accent wash, 0.922 its hairline border,
+     * 0.556 its light muted-foreground, 0.269 its dark secondary/muted (≈ its
+     * 10%-white border composited solid: L 0.2542), 0.205 its dark card, 0.145
+     * its bg/fg anchor.
+     *
+     * 0.556 is no longer Lumo's light muted TEXT, and the reason is worth
+     * keeping: it measured 4.53:1 on the 0.985 page and 4.34:1 on the 0.970
+     * wash, so it passed AA only on the page. (On the 0.977 page this ramp
+     * shipped before that, it measured 4.43:1 and failed even there, which is
+     * why the page moved to 0.985.) It survives as dark `border-control`, where
+     * 3:1 rather than 4.5:1 applies and it clears on every dark ground.
+     *
+     * 0.640 is not Nova's 0.922-border or 0.708-ring. Nova draws form controls
+     * with its hairline: 0.922 measures 1.26:1 on white and 0.708 measures
+     * 2.48:1 — both fail WCAG 1.4.11's 3:1 for a form-control boundary, a defect
+     * Nova ships and this ramp does not import.
+     *
+     * 0.710/0.660 (dark text) and 0.540/0.500 (light text) have no Nova
+     * counterpart. They are the shallowest values that clear 4.5:1 against the
+     * WORST ground each theme permits — `surface-hover` at 0.269 on dark, the
+     * 0.970 wash on light — with margin, rather than against the page alone.
+     * tokens.test.ts sweeps that whole matrix and would fail on any of them. */
     --lumo-ref-neutral-50:  oklch(0.985 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-100: oklch(0.970 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-200: oklch(0.922 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-300: oklch(0.845 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    /* 0.640, not Nova's 0.922-border or 0.708-ring. Nova draws form controls
-       with its hairline: 0.922 measures 1.26:1 on white and 0.708 measures
-       2.48:1 — both fail WCAG 1.4.11's 3:1 for a form-control boundary, a
-       defect Nova ships and this ramp does not import. 0.640 gives 3.22:1 on
-       the light page (3.36:1 on the white surface) and 5.88:1 on dark —
-       measured by tokens.test.ts from these very values — without darkening
-       decorative hairlines, which is what --lumo-sys-border is for. */
-    --lumo-ref-neutral-400: oklch(0.640 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-500: oklch(0.577 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-600: oklch(0.556 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
-    --lumo-ref-neutral-700: oklch(0.383 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-400: oklch(0.710 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-450: oklch(0.660 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-500: oklch(0.640 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-550: oklch(0.556 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-600: oklch(0.540 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-650: oklch(0.500 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-700: oklch(0.470 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
+    --lumo-ref-neutral-750: oklch(0.383 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-800: oklch(0.269 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-900: oklch(0.205 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
     --lumo-ref-neutral-950: oklch(0.145 var(--lumo-ref-chroma-neutral) var(--lumo-ref-hue-neutral));
@@ -85,15 +137,173 @@
     --lumo-ref-brand-700: oklch(0.205 var(--lumo-ref-chroma-brand) var(--lumo-ref-hue-brand));
 
     /* ---- status. Semantic, deliberately NOT derived from the brand hue. --
-     * critical carries Nova's destructive pair, measured on its own grounds:
-     * light 4.56:1 on the 0.985 page, dark 6.84:1 on the 0.145 page — both
-     * clear AA as text. positive/caution have no Nova counterpart. */
-    --lumo-ref-positive: oklch(0.520 0.130 155);
+     *
+     * These are TEXT colours first (`text-critical` and friends appear on 27
+     * elements across ui/ and blocks/) and solid fills second (`bg-critical
+     * text-bg` on the destructive button and badge). So they are held to 4.5:1
+     * on every ground they are permitted to sit on, in both directions: the
+     * colour against the ground, and `--lumo-sys-bg` as a label ON the colour.
+     *
+     * The light pair moved on 12 Aug 2026. Both were set from the page ground
+     * alone and both failed on the 0.970 wash — the ground under `bg-subtle`,
+     * `surface-hover` and `surface-sunken`, which is exactly where a highlighted
+     * destructive menu item sits:
+     *
+     *     critical  0.577 → 0.555    bg 4.56→4.86   0.970 wash 4.37→4.66  FAIL→PASS
+     *     caution   0.560 → 0.545    bg 4.55→4.84   0.970 wash 4.36→4.64  FAIL→PASS
+     *
+     * critical's light value was Nova's destructive lightness; that provenance
+     * is given up here because Nova measured it against its own page and Lumo
+     * paints the same token on a darker wash. positive (0.520) already cleared
+     * the wash at 4.73:1 and did not move. The dark trio clears its worst ground
+     * — `surface-hover` at L 0.269 — at 5.23:1 / 7.41:1 / 6.03:1 and did not
+     * move either. positive/caution have no Nova counterpart. */
+    /* 15 Aug 2026, from the browser evidence job (axe in Chromium on the built
+     * site): status TEXT on its own 10% tint (`bg-positive/10 text-positive`,
+     * the badge/tag chips) measured 4.47 / 4.25 / 4.43 — the tint composited
+     * over the surface is darker than the 0.970 wash modelled above. Lightness
+     * lowered until text-on-own-tint clears 4.5 over every light surface, and
+     * that ground is now measured in tokens.test.ts:
+     *   positive 0.520 → 0.495 · critical 0.555 → 0.470 · caution 0.545 → 0.515 */
+    --lumo-ref-positive: oklch(0.495 0.130 155);
     --lumo-ref-positive-dark: oklch(0.700 0.150 155);
-    --lumo-ref-critical: oklch(0.577 0.245 27.325);
+    --lumo-ref-critical: oklch(0.470 0.245 27.325);
     --lumo-ref-critical-dark: oklch(0.704 0.191 22.216);
-    --lumo-ref-caution: oklch(0.560 0.120 75);
+    --lumo-ref-caution: oklch(0.515 0.120 75);
     --lumo-ref-caution-dark: oklch(0.780 0.140 75);
+
+    /* ---- elevation, and the scrim -------------------------------------- *
+     *
+     * ── WHY THESE EXIST AT ALL ────────────────────────────────────────────
+     *
+     * Before 12 Aug 2026 this file declared no shadow of any kind, so 100% of
+     * the library's elevation came from Tailwind's default `--shadow-*` ramp
+     * and a brand could not rescale one pixel of it. Measured across
+     * `packages/ui/src` on that date: twelve overlay surfaces spread over FIVE
+     * rungs of that ramp — `shadow-lg` on popover/menu/select/combobox/
+     * hover-card/nav-menu/toast, `shadow-2xl` on dialog/drawer, `shadow-md` on
+     * tooltip, `shadow-xl` on the chart tooltip. Two tooltips at two
+     * elevations, which is the whole finding in one line: nobody chose five
+     * rungs, five rungs is what you get when each component picks the number
+     * that looked right on the day it was written.
+     *
+     * ── WHY THREE TIERS, AND WHAT DECIDES WHICH ONE ───────────────────────
+     *
+     * The tier is NOT "how big". It is what the shadow has to separate the
+     * element from, which is a property of the element's job and therefore
+     * decidable without taste:
+     *
+     *   raised   The element is one plane above the SAME surface and stays in
+     *            flow. Its neighbours are its own siblings, drawn from the same
+     *            palette, and a border usually separates it as well. A card, a
+     *            chat bubble, a switch thumb, the checked chip in a segmented
+     *            track. The shadow only has to say "not flat".
+     *   overlay  The element covers page content it does not know, with NO
+     *            scrim to help it, and it is dismissible — so the reader has to
+     *            be able to tell at a glance what is the layer and what is the
+     *            page underneath it. This is the tier that carries the whole
+     *            separation job alone, and it is why tooltip and popover cannot
+     *            be two rungs apart: they are the same problem.
+     *   modal    The element covers a page that is ALREADY dimmed by the scrim
+     *            below, and it is the only thing on screen that can be
+     *            interacted with. The scrim does the separating; the shadow
+     *            says which object the reader is meant to be looking at.
+     *
+     * A dragged card (`data-held:` in kanban/sortable/gantt) is `overlay`: it
+     * is lifted out of its column and travels across content that is not its
+     * own, which is the overlay problem and not the card problem.
+     *
+     * ── THE DARK RAMP IS NOT A DARKER LIGHT RAMP, AND THE NUMBER SAYS WHY ─
+     *
+     * A black shadow on the dark page is arithmetically close to a no-op, and
+     * this is worth writing down because the instinct on seeing a flat dark
+     * overlay is to raise the alpha, which does not work. The dark page is
+     * `neutral-950`, L 0.145, relative luminance 0.00305. Black at alpha a
+     * leaves 0.00305·(1−a), so the shadowed pixel against the unshadowed page
+     * measures:
+     *
+     *     a = 0.10  1.006:1     a = 0.40  1.024:1
+     *     a = 0.25  1.015:1     a = 0.60  1.036:1
+     *
+     * For comparison, the quietest hairline this theme ships on purpose —
+     * light `border` on `bg-subtle` — is 1.15:1. So even at 60% black the dark
+     * shadow is seven times quieter than a rule that was already chosen for
+     * being nearly invisible. Elevation on the dark theme is carried by the
+     * LIGHTER SURFACE (`surface` 0.205 over `bg` 0.145) and by
+     * `border-border`, and every overlay in this library already sets both.
+     * The dark ramp below is therefore raised — it does real work where the
+     * page is not near-black, which is over `surface-hover` (0.269), over an
+     * image, and over an accent fill — and it is deliberately NOT raised to
+     * the point where it turns into a dark halo around every popover on a page
+     * that has no bright content on it.
+     *
+     * Geometry is shared between the themes on purpose: a shadow that changes
+     * SHAPE with the theme reads as two different elevation systems, and the
+     * only thing the ground legitimately changes is how much of the shadow
+     * survives it.
+     */
+    --lumo-ref-shadow-raised:
+      0 1px 2px 0 oklch(0 0 0 / 0.06),
+      0 1px 3px 0 oklch(0 0 0 / 0.10);
+    --lumo-ref-shadow-overlay:
+      0 4px 8px -2px oklch(0 0 0 / 0.10),
+      0 12px 24px -6px oklch(0 0 0 / 0.14);
+    --lumo-ref-shadow-modal:
+      0 8px 16px -4px oklch(0 0 0 / 0.12),
+      0 32px 64px -16px oklch(0 0 0 / 0.28);
+
+    --lumo-ref-shadow-raised-dark:
+      0 1px 2px 0 oklch(0 0 0 / 0.30),
+      0 1px 3px 0 oklch(0 0 0 / 0.40);
+    --lumo-ref-shadow-overlay-dark:
+      0 4px 8px -2px oklch(0 0 0 / 0.40),
+      0 12px 24px -6px oklch(0 0 0 / 0.52);
+    --lumo-ref-shadow-modal-dark:
+      0 8px 16px -4px oklch(0 0 0 / 0.44),
+      0 32px 64px -16px oklch(0 0 0 / 0.64);
+
+    /* ---- the scrim ------------------------------------------------------
+     *
+     * `dialog.tsx` and `drawer.tsx` painted `bg-black/50`. Those were the only
+     * two untokenised colours in the entire library — an exhaustive sweep for
+     * hex, `rgb()`, `hsl()`, `oklch()` and all 22 Tailwind palette names across
+     * the 94 components returns them and nothing else.
+     *
+     * ── THE LIGHT VALUE DOES NOT MOVE, AND THAT IS THE POINT ──────────────
+     *
+     * 0.5 is exactly what `bg-black/50` was, so tokenising it changes no light
+     * pixel and needs no re-review. Measured: the page (`bg`, Y 0.9557) drops
+     * to 0.4778, and the modal surface (literal white, Y 1) then reads 1.99:1
+     * against the dimmed page behind it.
+     *
+     * ── THE DARK VALUE MOVES, AND THE REASON IS NOT THE ONE YOU EXPECT ────
+     *
+     * On dark, a black scrim has almost nothing left to remove. The page is
+     * already Y 0.00305, so:
+     *
+     *     alpha   dimmed page   modal (surface, Y 0.00862) vs it
+     *     0.50    0.00152       1.138:1
+     *     0.72    0.00085       1.153:1
+     *     0.80    0.00061       1.158:1
+     *
+     * Twenty-two points of alpha buy fifteen THOUSANDTHS of contrast ratio.
+     * So the scrim is not what separates a dark modal from its page — the
+     * modal's own `border-border` and `--lumo-sys-shadow-modal` are, exactly
+     * as the elevation note above says. What the dark scrim IS for is the
+     * bright content: the only loud things on a dark page are accent fills,
+     * imagery and media, and those the scrim genuinely suppresses. Measured on
+     * `--lumo-sys-accent` at dark (`brand-400`, Y 0.7838), against the modal
+     * surface it now sits behind:
+     *
+     *     alpha 0.50  →  Y 0.3919, 7.54:1   the fill still shouts over the modal
+     *     alpha 0.72  →  Y 0.2195, 4.60:1
+     *
+     * 0.72 halves it. Higher than 0.8 was rejected: past that the scrim starts
+     * to read as a solid black sheet on a page that had nothing bright on it,
+     * and the modal's own drop shadow disappears into it.
+     */
+    --lumo-ref-scrim: oklch(0 0 0 / 0.5);
+    --lumo-ref-scrim-dark: oklch(0 0 0 / 0.72);
 
     /* ---- spacing, scaled by density ------------------------------------- */
     --lumo-ref-space-1: calc(0.25rem * var(--lumo-ref-density));
@@ -119,10 +329,25 @@
      * reassuring comment. Density still SCALES lg upward (a roomier brand gets
      * a bigger target), it simply cannot take it below Khroos's 44px. sm and md
      * are not floors and scale freely.
+     *
+     * ── `round()`, BECAUSE A MULTIPLIER PRODUCES FRACTIONS ─────────────────
+     *
+     * A density knob is a multiplier, so fractional pixels are inherent rather
+     * than accidental. At the shipped 0.9, `md` lands on 36 by arithmetic luck
+     * and `lg` is held by its floor, while `sm` computes 2rem × 0.9 = 28.8px —
+     * a control box on a fractional boundary paints its 1px border across two
+     * device pixels, which reads as a soft or uneven edge on a non-retina
+     * screen.
+     *
+     * `round()` is applied to all three rather than to the one that shows it
+     * today, because WHICH size lands fractionally is a property of the density
+     * VALUE and not of the size: at 0.95, `md` becomes 38 and `sm` becomes
+     * 30.4. Fixing only `sm` would hard-code today's knob position into the
+     * scale. Baseline in every engine this library targets.
      */
-    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
-    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
-    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
+    --lumo-ref-control-sm: round(calc(2rem   * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-md: round(calc(2.5rem * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-lg: max(2.75rem, round(calc(2.75rem * var(--lumo-ref-density)), 1px));
   }
 
   /* ---- the density ISLAND. One attribute hook: [data-density]. -----------
@@ -167,9 +392,14 @@
     --lumo-ref-space-4: calc(1rem    * var(--lumo-ref-density));
     --lumo-ref-space-6: calc(1.5rem  * var(--lumo-ref-density));
     --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
-    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
-    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
-    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
+    /* `round()` for the reason the root block states: a multiplier makes
+     * fractional pixels inherent, and which SIZE shows it depends on the knob's
+     * value. Restated here rather than inherited, because these islands
+     * redeclare the whole scale — an island that dropped the rounding would
+     * reintroduce the soft border only for the subtree that opted into it. */
+    --lumo-ref-control-sm: round(calc(2rem   * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-md: round(calc(2.5rem * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-lg: max(2.75rem, round(calc(2.75rem * var(--lumo-ref-density)), 1px));
   }
 
   [data-density="compact"] {
@@ -180,9 +410,14 @@
     --lumo-ref-space-4: calc(1rem    * var(--lumo-ref-density));
     --lumo-ref-space-6: calc(1.5rem  * var(--lumo-ref-density));
     --lumo-ref-space-8: calc(2rem    * var(--lumo-ref-density));
-    --lumo-ref-control-sm: calc(2rem     * var(--lumo-ref-density));
-    --lumo-ref-control-md: calc(2.5rem   * var(--lumo-ref-density));
-    --lumo-ref-control-lg: max(2.75rem, calc(2.75rem * var(--lumo-ref-density)));
+    /* `round()` for the reason the root block states: a multiplier makes
+     * fractional pixels inherent, and which SIZE shows it depends on the knob's
+     * value. Restated here rather than inherited, because these islands
+     * redeclare the whole scale — an island that dropped the rounding would
+     * reintroduce the soft border only for the subtree that opted into it. */
+    --lumo-ref-control-sm: round(calc(2rem   * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-md: round(calc(2.5rem * var(--lumo-ref-density)), 1px);
+    --lumo-ref-control-lg: max(2.75rem, round(calc(2.75rem * var(--lumo-ref-density)), 1px));
   }
 }
 
@@ -202,8 +437,15 @@
     /* Nova paints page and card the same white and separates them with
        borders alone; Lumo keeps its elevation ladder, so the page takes
        Nova's 0.985 near-white and the card stays literal white — which IS
-       Nova's card, oklch(1 0 0). Text ratios in tokens.test.ts are measured
-       against the 0.985 page, the darker of the two grounds. */
+       Nova's card, oklch(1 0 0).
+
+       THREE distinct light grounds come out of the five tokens below: 0.985
+       (bg), 0.970 (bg-subtle, surface-hover, surface-sunken) and pure white
+       (surface). tokens.test.ts measures every text token against ALL of them,
+       not against the page alone. That distinction is not academic — it is the
+       entire content of blockers B1 and B2 in AUDIT.md §4.3, both of which were
+       tokens that passed on the page and failed on the wash, and both of which
+       the previous seven-pair sample could not see. */
     --lumo-sys-bg: var(--lumo-ref-neutral-50);
     --lumo-sys-bg-subtle: var(--lumo-ref-neutral-100);
     --lumo-sys-surface: #ffffff;
@@ -211,21 +453,48 @@
     --lumo-sys-surface-sunken: var(--lumo-ref-neutral-100);
 
     --lumo-sys-fg: var(--lumo-ref-neutral-950);
-    --lumo-sys-fg-muted: var(--lumo-ref-neutral-600);
-    --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
+    /* 650 (L 0.500), was 600 (L 0.556): 4.34:1 → 5.50:1 on the 0.970 wash.
+       AUDIT §4.3 B2. */
+    --lumo-sys-fg-muted: var(--lumo-ref-neutral-650);
+    /* 600 (L 0.540), was 500 (L 0.577): 3.98:1 → 4.64:1 on the 0.970 wash,
+       4.15:1 → 4.85:1 on the page. AUDIT §4.3 B1 — 51 component sites, and the
+       one that mattered most is the placeholder, which is the only text in an
+       empty field. `muted` and `subtle` are now 0.040 apart in L rather than
+       0.021, so the tier they name is more visible than it was, not less. */
+    --lumo-sys-fg-subtle: var(--lumo-ref-neutral-600);
     --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-50);
 
-    /* Two border tokens, not one. WCAG 1.4.11 requires 3:1 for the boundary of
-       a form control, while a decorative rule has no such requirement — and
-       collapsing them forces every hairline to be darker than it should be. */
+    /* Three border tokens, not one, and the ladder runs
+       border < border-strong < border-control. WCAG 1.4.11 requires 3:1 for the
+       boundary of a form control, while a decorative rule has no such
+       requirement — collapsing them forces every hairline to be darker than it
+       should be. Measured on the 0.970 wash, the worst light ground:
+       1.15:1 · 1.47:1 · 3.08:1. Only border-control carries a WCAG floor,
+       because only it bounds a control.
+
+       Written out because it is a real wart and this file should not pretend
+       otherwise: the NAME `border-strong` reads as the top of that ladder while
+       its VALUE sits second, under `border-control`. AUDIT §4.3 records it. It
+       is not renamed here — a sys token is the public API and 94 components
+       read these names — so the ladder is stated instead of implied. */
     --lumo-sys-border: var(--lumo-ref-neutral-200);
-    --lumo-sys-border-control: var(--lumo-ref-neutral-400);
+    --lumo-sys-border-control: var(--lumo-ref-neutral-500);
     --lumo-sys-border-strong: var(--lumo-ref-neutral-300);
 
     --lumo-sys-accent: var(--lumo-ref-brand-700);
     --lumo-sys-accent-hover: var(--lumo-ref-brand-600);
     --lumo-sys-accent-fg: var(--lumo-ref-neutral-50);
-    /* The mark colour. Never used for text on light — see the contrast test. */
+    /* The mark colour, and the ONE token the contrast sweep deliberately skips.
+       Swept 12 Aug 2026 across ui/, blocks/ and the site: `accent-mark` has a
+       single usage, `bg-accent-mark` on a 16px decorative square in the site
+       header, with no text on it and none beside it. It is neither text nor a
+       control boundary, so neither 4.5:1 nor 3:1 applies, and inventing a floor
+       for it would be a number with nothing behind it. It is also the only sys
+       colour with no dark override: at L 0.750 it reads on both grounds
+       (2.13:1 on the light page, 8.90:1 on the dark one) and a mark that keeps
+       one identity across the theme flip is the point of a mark.
+       If it ever gains a second usage, it needs re-measuring and the sweep's
+       exclusion list in tokens.test.ts is where that decision is recorded. */
     --lumo-sys-accent-mark: var(--lumo-ref-brand-500);
 
     --lumo-sys-positive: var(--lumo-ref-positive);
@@ -239,17 +508,63 @@
     --lumo-sys-radius-sm: var(--lumo-ref-radius-sm);
     --lumo-sys-radius-md: var(--lumo-ref-radius-md);
     --lumo-sys-radius-lg: var(--lumo-ref-radius-lg);
+
+    /* Three tiers, and the ref block above argues which is which. Named for
+       the JOB — what the element has to be separated from — rather than for a
+       size, because a size name is what let twelve overlays land on five
+       rungs without anybody making a decision. */
+    --lumo-sys-shadow-raised: var(--lumo-ref-shadow-raised);
+    --lumo-sys-shadow-overlay: var(--lumo-ref-shadow-overlay);
+    --lumo-sys-shadow-modal: var(--lumo-ref-shadow-modal);
+
+    --lumo-sys-scrim: var(--lumo-ref-scrim);
   }
 
-  /* The dark ladder hangs from Nova's two anchors — page 0.145, card 0.205 —
-     with hover one step above the card at 0.269 (Nova's own dark accent) and
-     sunken returning to the page ground. Nova's dark borders are white at
-     10%/15% alpha; the contrast test's math cannot see through alpha, so the
-     decorative border uses the 0.269 step (10% white over 0.145 composites to
-     solid L 0.2542 — measured, not eyeballed). The 15% input composites to
-     L 0.3043 and measures 1.33:1 against the card, failing WCAG 1.4.11's 3:1
-     just as Nova's light input does — so the control border stays on the ramp's
-     measured step: neutral-400 at 5.33:1 on the card, 5.88:1 on the page. */
+  /* ── THE DARK LADDER ────────────────────────────────────────────────────────
+   *
+   * It hangs from Nova's two anchors — page 0.145, card 0.205 — with hover one
+   * step above the card at 0.269 (Nova's own dark accent) and sunken returning
+   * to the page ground. Nova's dark borders are white at 10%/15% alpha; the
+   * contrast test's math cannot see through alpha, so the border was originally
+   * given the 0.269 step (10% white over 0.145 composites to solid L 0.2542 —
+   * measured, not eyeballed). The 15% input composites to L 0.3043 and measures
+   * 1.33:1 against the card, failing WCAG 1.4.11's 3:1 just as Nova's light
+   * input does, so the control border stays on a measured ramp step.
+   *
+   * ── THE COLLISION, AND WHY IT IS THE THIRD OF ITS KIND ─────────────────────
+   *
+   * Composing that 0.2542 border to the nearest ramp step landed it on 800 —
+   * which is also `surface-hover`. Two names, one value, 1.00:1: every bordered
+   * control in this theme lost its outline the instant it was hovered. Measured
+   * on the 12 Aug 2026 export: 1,888 elements combine `border-border` with a
+   * `surface-hover` background, the landing page's own secondary CTA among them.
+   * AUDIT §4.3 B3.
+   *
+   * This is the THIRD "two names, one value" collision found in this codebase
+   * (light `bg-subtle` ≡ `surface-hover` ≡ `surface-sunken` is documented in
+   * sidebar.variants.ts, toggle.variants.ts and calendar.variants.ts, each of
+   * which had to work around it in a component). The recurrence is the finding,
+   * not this instance: an alias is invisible in the source, because the source
+   * says `var(--lumo-ref-neutral-800)` in two places that read as two decisions.
+   * So the fix is not only the value below — tokens.test.ts now sweeps every
+   * mark token against every ground in every theme, and a 1.00:1 pair is a
+   * failing assertion that names both tokens rather than a defect someone has
+   * to notice on a screenshot.
+   *
+   *   border         800 (L 0.269) → 750 (L 0.383)   1.00:1 → 1.53:1 on hover
+   *   border-strong  700 (L 0.383) → 700 (L 0.470)   1.53:1 → 2.21:1 on hover
+   *
+   * `border` had to move rather than `surface-hover`, because any hover ground
+   * placed between the card (0.205) and the old border (0.269) still measures
+   * under 1.2:1 against it — moving the ground could not open the gap, only
+   * moving the mark could. 1.53:1 is deliberately quiet: it is a decorative
+   * hairline with no WCAG floor, and it now beats the LIGHT theme's own normal
+   * state, where `border` on `bg` measures 1.21:1.
+   *
+   * border-strong then had to move too, or it would have inherited the very
+   * collision being fixed — 750 was its old value. Its new 0.470 keeps the
+   * ladder border < border-strong < border-control intact on every dark ground
+   * (on `surface-hover`: 1.53 < 2.21 < 3.19). */
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --lumo-sys-bg: var(--lumo-ref-neutral-950);
@@ -259,15 +574,24 @@
       --lumo-sys-surface-sunken: var(--lumo-ref-neutral-950);
 
       --lumo-sys-fg: var(--lumo-ref-neutral-50);
+      /* 400 is L 0.710 now, not 0.640. At 0.640 this measured 4.49:1 on
+         `surface-hover` — AA missed by one hundredth, on the ground a
+         highlighted menu row paints. 5.87:1 now. AUDIT §4.3 B2. */
       --lumo-sys-fg-muted: var(--lumo-ref-neutral-400);
-      --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
+      /* 450 (L 0.660), was 500 (L 0.577): 3.49:1 → 4.86:1 on `surface-hover`,
+         4.56:1 → 6.36:1 on the page. AUDIT §4.3 B1. Dark `fg-subtle` and light
+         `fg-subtle` used to share step 500 outright, which is why neither could
+         be fixed without splitting the ramp — see the ramp's own header. */
+      --lumo-sys-fg-subtle: var(--lumo-ref-neutral-450);
       --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-900);
 
-      --lumo-sys-border: var(--lumo-ref-neutral-800);
-      /* neutral-600, not 400: the design review measured 400 (L 0.640) reading
-         as chalk outlines — as bright as dark muted TEXT — when 600 already
-         clears WCAG 1.4.11's 3:1 on every dark ground. Quiet AND compliant. */
-      --lumo-sys-border-control: var(--lumo-ref-neutral-600);
+      --lumo-sys-border: var(--lumo-ref-neutral-750);
+      /* 550 is Nova's 0.556 under the ramp's new numbering — not the 0.710 step
+         above it: the design review measured L 0.640 reading as chalk outlines,
+         as bright as dark muted TEXT, when 0.556 already clears WCAG 1.4.11's
+         3:1 on every dark ground (3.19:1 on `surface-hover`). Quiet AND
+         compliant. */
+      --lumo-sys-border-control: var(--lumo-ref-neutral-550);
       --lumo-sys-border-strong: var(--lumo-ref-neutral-700);
 
       --lumo-sys-accent: var(--lumo-ref-brand-400);
@@ -278,6 +602,16 @@
       --lumo-sys-critical: var(--lumo-ref-critical-dark);
       --lumo-sys-caution: var(--lumo-ref-caution-dark);
       --lumo-sys-focus: var(--lumo-ref-brand-400);
+
+      /* Raised, not merely restated — see the elevation note in the ref block.
+         A black shadow measures 1.006:1 to 1.036:1 against this page whatever
+         the alpha, so these earn their keep over `surface-hover`, imagery and
+         accent fills rather than over the page itself. */
+      --lumo-sys-shadow-raised: var(--lumo-ref-shadow-raised-dark);
+      --lumo-sys-shadow-overlay: var(--lumo-ref-shadow-overlay-dark);
+      --lumo-sys-shadow-modal: var(--lumo-ref-shadow-modal-dark);
+
+      --lumo-sys-scrim: var(--lumo-ref-scrim-dark);
     }
   }
 
@@ -288,12 +622,17 @@
     --lumo-sys-surface-hover: var(--lumo-ref-neutral-800);
     --lumo-sys-surface-sunken: var(--lumo-ref-neutral-950);
     --lumo-sys-fg: var(--lumo-ref-neutral-50);
+    /* These five carry the same values as the media-dark block above, for the
+       same measured reasons. The duplication is the three-state theme's price:
+       an explicit `[data-theme="dark"]` has to win inside a light document and
+       a media query cannot express that. tokens.test.ts sweeps BOTH blocks
+       independently, so a value fixed in one and forgotten in the other fails
+       rather than shipping a stale explicit-dark theme. */
     --lumo-sys-fg-muted: var(--lumo-ref-neutral-400);
-    --lumo-sys-fg-subtle: var(--lumo-ref-neutral-500);
+    --lumo-sys-fg-subtle: var(--lumo-ref-neutral-450);
     --lumo-sys-fg-on-accent: var(--lumo-ref-neutral-900);
-    --lumo-sys-border: var(--lumo-ref-neutral-800);
-    /* neutral-600 — same reasoning as the media-dark block above. */
-    --lumo-sys-border-control: var(--lumo-ref-neutral-600);
+    --lumo-sys-border: var(--lumo-ref-neutral-750);
+    --lumo-sys-border-control: var(--lumo-ref-neutral-550);
     --lumo-sys-border-strong: var(--lumo-ref-neutral-700);
     --lumo-sys-accent: var(--lumo-ref-brand-400);
     --lumo-sys-accent-hover: var(--lumo-ref-brand-500);
@@ -302,11 +641,17 @@
     --lumo-sys-critical: var(--lumo-ref-critical-dark);
     --lumo-sys-caution: var(--lumo-ref-caution-dark);
     --lumo-sys-focus: var(--lumo-ref-brand-400);
+    --lumo-sys-shadow-raised: var(--lumo-ref-shadow-raised-dark);
+    --lumo-sys-shadow-overlay: var(--lumo-ref-shadow-overlay-dark);
+    --lumo-sys-shadow-modal: var(--lumo-ref-shadow-modal-dark);
+    --lumo-sys-scrim: var(--lumo-ref-scrim-dark);
   }
 }
 
 /*
- * Persian typography.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PERSIAN TYPOGRAPHY — AND THE TWO WAYS AN INHERITED RULE LOSES
+ * ═══════════════════════════════════════════════════════════════════════════
  *
  * Scoped to `:lang(fa)`, NOT `[dir="rtl"]`. The distinction is load-bearing:
  * Persian text inside an English page is still Persian, and a `[dir=rtl]` rule
@@ -315,6 +660,104 @@
  *
  * `letter-spacing: normal` rather than `0` so a cascading negative tracking from
  * a global heading rule is genuinely reset rather than merely zeroed.
+ *
+ * ── WHY THIS BLOCK KNOWS ABOUT TAILWIND, WHEN THE REST OF THE FILE DOES NOT ─
+ *
+ * Everything above this line is engine-agnostic: it declares custom properties
+ * and theme.css bridges them. This block is different. It is not setting a
+ * default — it is REPAIRING what a utility puts on the element, and to do that
+ * it has to name the utility's own machinery. Two Lumo-shaped defects, B4 and
+ * B5 in AUDIT.md §4.3, both had the same cause: a `:lang(fa)` declaration that
+ * INHERITS, versus a Tailwind utility that writes the same property directly ON
+ * the element. Inheritance is not a weak win in the cascade, it is not a win at
+ * all — any declaration that reaches the element beats a value inherited into
+ * it, whatever the layer or specificity. So the repair has to reach the element
+ * too, and the only way to do that without clobbering an author's explicit
+ * choice is to feed the utility's own fallback chain.
+ *
+ * The alternative — putting these in theme.css with the rest of the Tailwind
+ * bridge — was rejected: B5 is exactly what happens when Persian script rules
+ * live in two files. The `tracking` guard sat in the website's globals.css
+ * while this block sat here, and for months neither file listed what the other
+ * covered. Both halves are here now.
+ *
+ * ── B4 · LEADING ───────────────────────────────────────────────────────────
+ *
+ * `line-height: 1.75` below is inherited, and `.text-sm` compiles to
+ *
+ *     .text-sm { font-size: var(--text-sm);
+ *                line-height: var(--tw-leading, var(--text-sm--line-height)) }
+ *
+ * which sets line-height ON the element and therefore always wins: 1.4286, the
+ * Latin ratio, on every element carrying a size utility. Measured on the
+ * 12 Aug 2026 export: `text-sm` on 8,893 elements and `text-xs` on 6,187 across
+ * the 135 Persian pages. So Persian shipped at Latin leading nearly everywhere,
+ * and the rule that was supposed to prevent it had been in the file all along.
+ *
+ * Setting `--tw-leading` here does NOT fix it, and the reason is in the built
+ * CSS rather than in the docs: Tailwind v4 emits
+ * `@property --tw-leading { syntax:"*"; inherits:false }`. A registered
+ * property with `inherits:false` does not reach descendants, so a value set on
+ * `:root:lang(fa)` is invisible to every element below it — the same defect in
+ * a new variable.
+ *
+ * `--text-*--line-height` is the one that works. It is an ordinary unregistered
+ * custom property declared in Tailwind's `@theme`, so it inherits normally, and
+ * it is the FALLBACK arm of the utility's own `var()`. That ordering is what
+ * makes this safe: an author who writes `leading-none` sets `--tw-leading` on
+ * the element, the first arm resolves, and the Persian value steps aside. The
+ * ratios below are only the DEFAULT for Persian text, exactly as Tailwind's are
+ * the default for Latin text.
+ *
+ * The ramp: 1.75 for the reading sizes (the value this file already declared
+ * for Persian prose), tapering through the display sizes, because leading is a
+ * ratio and a ratio that suits 12px suits nothing at 60px. Latin defaults in
+ * brackets. 7xl–9xl are included although the current site build emits no such
+ * utility; a consumer's build may, and a ramp that stops where today's site
+ * stops is a ramp with a hole in it.
+ *
+ * ── B5 · TRACKING, AND WHY THE GUARD IS NOW A WHITELIST ────────────────────
+ *
+ * Negative letter-spacing on Arabic script crushes the joins between letters
+ * and can sever them outright — the defect this block exists to prevent. The
+ * previous guard named `tracking-wide` and `tracking-widest`, and it lived in
+ * the website's globals.css. `tracking-tight` (−0.025em) was not on that list,
+ * so it went straight through: 270 elements across all 135 Persian pages on the
+ * 12 Aug 2026 export.
+ *
+ * A blacklist of utility names is the wrong shape for this. It is a list that
+ * has to be extended every time Tailwind or an author introduces a name, it
+ * fails OPEN, and it fails silently in a script the reviewer probably cannot
+ * read. So the guard is inverted: every class whose name contains `tracking-`
+ * is neutralised on Persian text, including arbitrary values like
+ * `tracking-[0.02em]` and variant forms like `md:tracking-tight`, which the
+ * substring match catches for free. The escape hatch is `data-lumo-latn`, the
+ * marker this library already uses for a Latin island inside a Persian page —
+ * the one context where letter-spacing is legitimate, because the text is not
+ * Arabic script.
+ *
+ * That exemption arm is DESIGNED, not OBSERVED, and DECISIONS.md §13 is right
+ * that the distinction matters. The 12 Aug 2026 export carries 731
+ * `data-lumo-latn` elements across the Persian pages and not one of them also
+ * carries a `tracking-*` class, so the arm changes nothing about what ships
+ * today and no built page exercises it. It is kept rather than dropped because
+ * the marker is an established, tested part of the library (`kbd`,
+ * `phone-input`, `file-upload`, `frame`) rather than an attribute invented to
+ * make this selector pass, and because a copy-in library that bans a property
+ * outright with no way out is a library people patch around. If it is still
+ * unexercised when a third locale lands, delete it.
+ *
+ * NOTE on the measurement, because it nearly produced a wrong bug report: a
+ * plain grep for `tracking-tight` over the export returns 540, and 540 was the
+ * number in the audit. Half of those are inside Next's RSC flight payload,
+ * where the class name is JSON data and styles nothing. The true element count
+ * is 270 — 135 `<h1>` and 135 brand links, one of each per page. And of those,
+ * the 135 headings were ALREADY correct: the heading rule at the bottom of this
+ * block sets `letter-spacing: normal` on the element, in `lumo.script`, which
+ * the built stylesheet orders after `@layer utilities`. So the audit's "540
+ * occurrences including the `<h1>`" overstates the defect twice over. It is
+ * still a defect — 135 Persian brand links shipped with crushed joins — and the
+ * blacklist would have let the next one through as well.
  */
 @layer lumo.script {
   :root:lang(fa),
@@ -322,16 +765,45 @@
   [lang^="fa-"] {
     --lumo-sys-font-sans: var(--lumo-font-persian, "Vazirmatn Variable", "Vazirmatn"), system-ui, sans-serif;
     letter-spacing: normal;
+    /* Still here, and still doing work: it is the leading for every element
+       that carries NO size utility, which the --text-* ramp below cannot reach
+       because that ramp is only ever read through one. */
     line-height: 1.75;
     /* A synthesised bold or italic destroys Arabic-script letterforms. */
     font-synthesis: none;
     font-variant-numeric: normal;
+
+    --text-xs--line-height: 1.75;   /* Latin 1.3333 */
+    --text-sm--line-height: 1.75;   /* Latin 1.4286 */
+    --text-base--line-height: 1.75; /* Latin 1.5    */
+    --text-lg--line-height: 1.7;    /* Latin 1.5556 */
+    --text-xl--line-height: 1.6;    /* Latin 1.4    */
+    --text-2xl--line-height: 1.5;   /* Latin 1.3333 */
+    --text-3xl--line-height: 1.4;   /* Latin 1.2    */
+    --text-4xl--line-height: 1.3;   /* Latin 1.1111 */
+    --text-5xl--line-height: 1.3;   /* Latin 1      */
+    --text-6xl--line-height: 1.3;   /* Latin 1      */
+    --text-7xl--line-height: 1.25;  /* Latin 1      */
+    --text-8xl--line-height: 1.25;  /* Latin 1      */
+    --text-9xl--line-height: 1.25;  /* Latin 1      */
   }
 
   /* Persian headings need less leading than Persian prose, but still more than
-     Latin headings would take. */
+     Latin headings would take. This sets `line-height` on the ELEMENT, so it
+     also overrides the --text-* ramp above for a heading that carries a size
+     utility — which is intended: a heading's leading should not depend on which
+     size utility it happens to wear. */
   :is(h1, h2, h3, h4, h5, h6):lang(fa) {
     line-height: 1.4;
+    letter-spacing: normal;
+  }
+
+  /* The whitelist. See B5 above for why this is a substring match and not a
+     list of names. `:where()` on the exemption keeps the selector's specificity
+     at that of `[class*="tracking-"]:lang(fa)` alone, so an author who needs to
+     beat it can, with an ordinary class — layer order, not weight, is what
+     makes this win over `@layer utilities`. */
+  [class*="tracking-"]:lang(fa):not(:where([data-lumo-latn], [data-lumo-latn] *)) {
     letter-spacing: normal;
   }
 }

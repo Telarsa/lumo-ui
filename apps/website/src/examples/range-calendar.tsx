@@ -1,5 +1,5 @@
 import type { Locale } from "@lumo-ui/core";
-import { RangeCalendar } from "@lumo-ui/ui";
+import { RangeCalendarIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
@@ -38,10 +38,9 @@ const t = {
 
 function BasicExample(l: Locale) {
   return (
-    <RangeCalendar
+    <RangeCalendarIsland
       label={t.trip[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      locale={l}
       description={t.tripHelp[l]}
     />
   );
@@ -49,10 +48,9 @@ function BasicExample(l: Locale) {
 
 function MonthLengthExample(l: Locale) {
   return (
-    <RangeCalendar
+    <RangeCalendarIsland
       label={t.stay[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      locale={l}
       description={t.stayHelp[l]}
     />
   );
@@ -60,22 +58,20 @@ function MonthLengthExample(l: Locale) {
 
 function ReadOnlyExample(l: Locale) {
   return (
-    <RangeCalendar
+    <RangeCalendarIsland
       label={t.audit[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      locale={l}
       description={t.auditHelp[l]}
-      isReadOnly
+      isDisabled
     />
   );
 }
 
 function DisabledExample(l: Locale) {
   return (
-    <RangeCalendar
+    <RangeCalendarIsland
       label={t.closed[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
+      locale={l}
       isDisabled
     />
   );
@@ -83,6 +79,16 @@ function DisabledExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "بازه‌ای از روزها روی شبکه‌ای دیدنی: مدت اقامت، دورهٔ فیلتری که خواننده همان‌جا تنظیم می‌کند.",
+        "en-US": "A span of days on a visible grid: a stay, a filter period the reader adjusts in place.",
+      },
+      whenNot: {
+        "fa-IR": "پشت دکمه، با فیلدهای تایپ‌شدنی — `DateRangePicker`. با بازه‌های آماده — `DateSelector`. یک روز — `Calendar`.",
+        "en-US": "Behind a button, with typed fields — `DateRangePicker`. With named presets — `DateSelector`. One day — `Calendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "تقویم بازه‌ای", "en-US": "Range calendar" },
@@ -93,9 +99,9 @@ export const EXAMPLES: ComponentExamples = {
         "Selecting a span of days on the same Jalali grid. The band is the one part of a calendar with real handedness, and it gets it from logical classes rather than from a condition.",
     },
     composition: [
-      `<RangeCalendar label previousMonthLabel nextMonthLabel>`,
-      `  <CalendarHeader />   ← the same header the single calendar draws.`,
-      `  …the month grid      ← the band's ends round on logical corners.`,
+      `<RangeCalendar label locale value onChange>`,
+      `  the nav row          ← the same one the single calendar draws.`,
+      `  the month grid       ← the band's ends round on logical corners.`,
       `</RangeCalendar>`,
     ].join("\n"),
     parts: [
@@ -103,18 +109,18 @@ export const EXAMPLES: ComponentExamples = {
         name: "RangeCalendar",
         description: {
           "fa-IR":
-            "همان شبکه، با یک بازه به‌جای یک روز. دو سر بازه را ری‌اکت‌آریا با نام‌های منطقی علامت می‌زند، پس گرد شدن گوشه‌ها به هیچ شرطی روی جهت نیاز ندارد.",
+            "همان شبکه، با یک بازه به‌جای یک روز. گوشه‌های دو سر بازه با ویژگی‌های منطقی گرد می‌شوند، پس هیچ شرطی روی جهت لازم نیست.",
           "en-US":
-            "The same grid, selecting a span instead of a day. React Aria marks the ends with logical names, so rounding them needs no condition on direction.",
+            "The same grid, selecting a span instead of a day. The ends round with the logical corner utilities, so it needs no condition on direction.",
         },
       },
       {
-        name: "CalendarHeader",
+        name: "rangeCalendarSelectionVariants",
         description: {
           "fa-IR":
-            "ردیف پیمایش ماه، مشترک با تقویم تک‌روزه. نام دو دکمه اینجا هم اجباری است.",
+            "سه حالتِ بازه، به‌صورت نامِ کلاس و نه ویژگی. react-day-picker دو سر بازه را به‌شکل کلاس به سلول می‌چسباند، نه به‌شکل data-selection-start؛ همین یک تفاوت بود که بازنویسیِ کلاس‌ها را لازم کرد.",
           "en-US":
-            "The month navigation row, shared with the single calendar. Both button names are required here too.",
+            "The range's three states, as CLASS NAMES rather than attributes. react-day-picker joins the ends onto the cell as classes, not as data-selection-start — that single difference is what forced the variants rewrite.",
         },
       },
     ],
@@ -125,9 +131,9 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "پایه", "en-US": "Basic" },
       description: {
         "fa-IR":
-          "ری‌اکت‌آریا دو سر بازه را با data-selection-start و data-selection-end نشانه‌گذاری می‌کند؛ این نام‌ها منطقی‌اند و برای جهت حل شده‌اند.",
+          "دو سر بازه به‌صورت نامِ کلاس می‌رسند، نه ویژگی؛ گرد شدنشان روی گوشه‌های منطقی نوشته شده و برای جهت حل شده است.",
         "en-US":
-          "React Aria marks the ends with data-selection-start and data-selection-end; those names are logical and already resolved for direction.",
+          "The ends arrive as class names rather than attributes; the rounding is written on the logical corners and is already resolved for direction.",
       },
       render: BasicExample,
     },

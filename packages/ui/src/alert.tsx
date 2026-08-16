@@ -1,78 +1,66 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
- * An inline message: information, success, failure, warning.
- *
- * No `"use client"` — it is a `<div>` with tokens. See badge.tsx.
- *
- * ── `role="alert"` is opt-in, and the default is NO live region ─────────────
- * This is the decision in the file worth arguing about, so here is the whole
- * argument.
- *
- * `role="alert"` is `aria-live="assertive"` plus `aria-atomic="true"`. It
- * interrupts whatever the screen reader is currently saying. That is correct
- * for a message that APPEARS in response to something the user did — a failed
- * submit, a lost connection — and wrong for a message that was in the HTML when
- * the page loaded.
- *
- * Wrong in a specific, measurable way: several screen readers announce live
- * regions present at load, so a page with four `role="alert"` callouts reads all
- * four before the user has reached any of them, out of context and out of
- * order. And a Lumo page is exactly the shape that hits this — server-rendered
- * first, with the callouts already in the first byte, because that is the whole
- * point of the SSR rules elsewhere in this library.
- *
- * So `live` defaults to `"off"`: the alert is read in document order like the
- * prose it is. A consumer who renders one in response to an event passes
- * `live="assertive"` and gets `role="alert"`; `live="polite"` gives
- * `role="status"` for the non-urgent case, which waits for a pause instead of
- * interrupting. The prop is named after the ARIA concept rather than after the
- * visual tone precisely so that tone and urgency stay independent — a `critical`
- * alert that has always been on the page is not urgent, and an `info` alert
- * that just appeared may be.
+ * An inline message: plain, informational, success, failure, warning.
+ * No `"use client"` — a `<div>` with tokens, so it renders on the server.
+ * `role="alert"` is opt-in via `live`, and the default is NO live region: an
+ * assertive region already in the first byte is announced at load, out of
+ * context, so `live="assertive"` is for a message that APPEARS in response to
+ * an event. Tint vocabulary (/10 fill, /25 edge) is shared with `badge.tsx`
+ * and `icon-tile.tsx`; a tint token is deliberately not minted yet.
  */
 export const alertVariants = cva(
-  // Flex, not grid: the icon and the text column mirror for free because
-  // `flex-direction: row` follows `direction`. `border-s-4` puts the accent bar
-  // on the reader's leading edge — left in English, right in Persian — with no
-  // `rtl:` override anywhere.
-  "flex w-full items-start gap-3 rounded-md border-s-4 p-4 text-sm text-fg",
+  // Flex, not grid: the icon and text column mirror for free. `border-s-4` is
+  // the reader's leading edge; `border` before `border-s-4` so per-side wins.
+  "flex w-full items-start gap-3 rounded-md border border-s-4 p-4 text-sm text-fg",
   {
     variants: {
+      // Ordered neutral-first, matching `badge.tsx`; `neutral` is badge's own neutral subtle.
       tone: {
-        info: "border-s-accent bg-accent/8",
-        positive: "border-s-positive bg-positive/8",
-        critical: "border-s-critical bg-critical/8",
-        caution: "border-s-caution bg-caution/8",
+        neutral: "border-border border-s-border-strong bg-surface-sunken",
+        accent: "border-accent/25 border-s-accent bg-accent/10",
+        positive: "border-positive/25 border-s-positive bg-positive/10",
+        critical: "border-critical/25 border-s-critical bg-critical/10",
+        caution: "border-caution/25 border-s-caution bg-caution/10",
       },
     },
-    defaultVariants: { tone: "info" },
+    defaultVariants: { tone: "accent" },
   },
 );
 
 /**
- * The icon keeps the tone colour while the body text stays `text-fg`.
- *
- * Colouring the prose to match the tone is what pushes `caution` text onto a
- * tinted background at roughly 4.6:1 — technically a pass, with no headroom for
- * a brand that re-hues the ramp. The icon carries the colour instead, where
- * contrast is a 3:1 non-text requirement (WCAG 1.4.11) rather than 4.5:1.
+ * The icon keeps the tone colour while the body text stays `text-fg`: tinted
+ * prose sits near 4.5:1 with no headroom, an icon needs only 3:1.
  */
 export const alertIconVariants = cva("mbs-0.5 flex size-5 shrink-0 items-center justify-center", {
   variants: {
+    /** The semantic color: neutral, accent, positive, caution, or critical. */
     tone: {
-      info: "text-accent",
+      neutral: "text-fg-muted",
+      accent: "text-accent",
       positive: "text-positive",
       critical: "text-critical",
       caution: "text-caution",
     },
   },
-  defaultVariants: { tone: "info" },
+  defaultVariants: { tone: "accent" },
 });
 
-/** How assistive technology is told about this alert. See the file header. */
+/**
+ * The dismiss control. A bare `<button>`, not `IconButton`: `button.tsx` is
+ * `"use client"` and would drag every alert into the client graph.
+ */
+export const alertCloseVariants = cva(
+  "mbs-0.5 -me-1 inline-flex h-control-sm w-control-sm shrink-0 cursor-pointer " +
+    "items-center justify-center rounded-md border-0 bg-transparent p-0 " +
+    "text-fg-muted transition-colors hover:bg-surface-hover hover:text-fg " +
+    "active:translate-y-px " +
+    "[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+);
+
+/** How assistive technology is told about this alert. */
 export type AlertLive = "off" | "polite" | "assertive";
 
 const ROLE_FOR_LIVE = {
@@ -81,34 +69,52 @@ const ROLE_FOR_LIVE = {
   assertive: "alert",
 } as const;
 
-export interface AlertProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className" | "title" | "role">,
+interface AlertBaseProps
+  extends Omit<ComponentProps<"div">, "children" | "className" | "title" | "role">,
     VariantProps<typeof alertVariants> {
-  /**
-   * Optional leading icon. A slot rather than a per-tone default, because a
-   * bundled icon set would ship a fifth dependency into every copied file — and
-   * because a directional glyph (an arrow, a chevron) supplied by the library
-   * would need mirroring the library cannot decide on the consumer's behalf.
-   *
-   * It is rendered `aria-hidden`: the icon repeats what the tone and the text
-   * already say, and an unnamed decorative image in a message is noise.
-   */
+  /** The semantic color: neutral, accent, positive, caution, or critical. */
+  tone?: VariantProps<typeof alertVariants>["tone"];
+  /** Optional leading icon, rendered `aria-hidden`. A slot, not a per-tone default, so no icon set is bundled. */
   icon?: LumoNode;
   /** Short summary line, rendered above the body. */
   title?: LumoNode;
   children?: LumoNode;
-  /** See the file header. Default `"off"`. */
+  /** How assistive technology is told about this alert. Default `"off"` — see the file header. */
   live?: AlertLive | undefined;
   className?: string | undefined;
 }
 
+/**
+ * The dismiss half of the props, as a discriminated pair: `closeLabel` has no
+ * default (an icon is not a name) and cannot be passed without `onClose`. No
+ * action slot: an action is CONTENT and belongs in `children`.
+ */
+interface DismissibleAlertProps {
+  /** Called when the reader dismisses the alert. Owning the removal is the caller's. */
+  onClose: () => void;
+  /** Announced name of the dismiss button, e.g. «بستن». Required whenever `onClose` is passed. */
+  closeLabel: string;
+}
+
+interface StaticAlertProps {
+  onClose?: undefined;
+  closeLabel?: undefined;
+}
+
+export type AlertDismissProps = DismissibleAlertProps | StaticAlertProps;
+
+/** The whole public surface. An intersection with a union, so a wrapper inherits the pairing rule. */
+export type AlertProps = AlertBaseProps & AlertDismissProps;
+
 export function Alert({
-  tone = "info",
+  tone = "accent",
   icon,
   title,
   children,
   live = "off",
   className,
+  onClose,
+  closeLabel,
   ...props
 }: AlertProps) {
   return (
@@ -123,23 +129,29 @@ export function Alert({
         </span>
       ) : null}
 
-      {/*
-       * `min-w-0` is load-bearing: a flex item defaults to `min-width: auto`,
-       * so a long unbroken token — a URL, an order reference — pushes the alert
-       * wider than its container instead of wrapping. In RTL that overflow
-       * escapes to the LEFT, where a horizontal-scrollbar sweep at 320px is
-       * least likely to look for it.
-       */}
+      {/* `min-w-0` is load-bearing: a long unbroken token would otherwise widen the alert. */}
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        {/*
-         * A `<p>`, not a heading. An alert's title is a summary of the sentence
-         * below it, not a section of the document; promoting it to `<h4>` puts
-         * a transient message into the heading outline that screen-reader users
-         * navigate by.
-         */}
+        {/* A `<p>`, not a heading: a transient message does not belong in the outline. */}
         {title !== undefined ? <p className="font-semibold">{title}</p> : null}
         {children !== undefined ? <div className="text-fg-muted">{children}</div> : null}
       </div>
+
+      {/* Rendered only when there is something to call; a server component cannot pass a function. */}
+      {onClose !== undefined ? (
+        <button
+          data-lumo=""
+          type="button"
+          // `type="button"`: an unadorned <button> inside a <form> submits it.
+          aria-label={closeLabel}
+          onClick={onClose}
+          className={cn(alertCloseVariants())}
+        >
+          {/* An inline SVG rather than an icon package: no server-renderable module imports `lucide-react`. */}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M6 6 18 18M18 6 6 18" />
+          </svg>
+        </button>
+      ) : null}
     </div>
   );
 }

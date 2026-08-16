@@ -18,33 +18,10 @@ import {
  * A settings screen built from structured, instantly-committing controls:
  * grouped switches, selects and radio choices.
  *
- * ═══ READ `settings-form.tsx` FIRST — THIS IS A DIFFERENT INTERACTION MODEL ═
- *
- * `SettingsForm` is a `<form>`: fields go in as `children`, nothing persists
- * until the reader presses Save, and a status banner reports the result of
- * that ONE submit. This block has no Save button and no `<form>` at all —
- * every control commits the instant it changes, which is `switch.tsx`'s own
- * argument for why a switch "is never pending until submit": a notification
- * toggle, a language choice or a theme radio reads as broken if it waits for
- * a separate confirm step, in a way a multi-field profile form does not.
- *
- * The two blocks are shaped differently for the same reason. `SettingsForm`
- * takes arbitrary `children` because a caller's fields are typically bespoke,
- * cross-validated inputs; this block takes DATA — `PreferenceGroup[]` —
- * because a preferences screen is usually a flat, homogeneous list the caller
- * already has as an array (from a settings API, from a feature-flag table).
- * Composing it from `SettingsForm` children would mean re-writing the same
- * `Switch`/`Select`/`RadioGroup` row by hand in every project that has one.
- *
- * ── PER-ITEM PENDING, NOT ONE SCREEN-WIDE SPINNER ───────────────────────────
- *
- * Because each control commits independently, "saving" is a property of the
- * ROW that changed, not of the screen — two toggles can be in flight to two
- * different endpoints at once. `PreferenceItem.isPending` disables that row's
- * own control and shows `strings.pending` beside it, exactly as
- * `settings-form.tsx` requires `strings.pending` for its one spinner and for
- * the same reason: a spinner with no text is silence to a screen-reader user,
- * and a default here would be English handed to a Persian voice.
+ * Unlike `settings-form.tsx` (a `<form>` with one Save), every control here
+ * commits the instant it changes, and the block takes DATA (`PreferenceGroup[]`)
+ * rather than `children`. Pending is per ROW, not screen-wide, and
+ * `strings.pending` is REQUIRED because a spinner with no text is silence.
  *
  * `"use client"`: every control here fires a callback on change.
  */
@@ -189,7 +166,7 @@ function PreferenceRow({ item, pendingLabel }: { item: PreferenceItem; pendingLa
             </Radio>
           ))}
         </RadioGroup>
-        {item.isPending ? <Spinner label={pendingLabel} showLabel size="sm" tone="muted" /> : null}
+        {item.isPending ? <Spinner label={pendingLabel} showLabel size="sm" color="muted" /> : null}
       </div>
     );
   }
@@ -207,7 +184,7 @@ function PreferenceRow({ item, pendingLabel }: { item: PreferenceItem; pendingLa
           {item.label}
         </Switch>
         {item.isPending ? (
-          <Spinner label={pendingLabel} showLabel size="sm" tone="muted" className="ps-13" />
+          <Spinner label={pendingLabel} showLabel size="sm" color="muted" className="ps-13" />
         ) : null}
       </div>
     );
@@ -225,7 +202,7 @@ function PreferenceRow({ item, pendingLabel }: { item: PreferenceItem; pendingLa
         ) : null}
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        {item.isPending ? <Spinner label={pendingLabel} size="sm" tone="muted" /> : null}
+        {item.isPending ? <Spinner label={pendingLabel} size="sm" color="muted" /> : null}
         <Select
           aria-label={item.label}
           placeholder={control.placeholder}

@@ -1,0 +1,12 @@
+- dialog "درخت دسترسی":
+  - tree "درخت دسترسی":
+    - treeitem "محتوا" [expanded]:
+      - checkbox "محتوا" [checked=mixed]
+      - text: ""
+      - group:
+        - treeitem "خواندن" [selected]:
+          - checkbox "خواندن" [checked]
+          - text: ""
+        - treeitem "نوشتن":
+          - checkbox "نوشتن"
+          - text: ""

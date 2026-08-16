@@ -1,71 +1,24 @@
 "use client";
 
+import { useEffect, useId, useRef, useState } from "react";
 import { cva } from "class-variance-authority";
 import { Check, ChevronDown } from "lucide-react";
-import {
-  Button as AriaButton,
-  ComboBox as AriaComboBox,
-  Group as AriaGroup,
-  Input as AriaInput,
-  Label as AriaLabel,
-  ListBox as AriaListBox,
-  ListBoxItem as AriaComboBoxItem,
-  Popover as AriaPopover,
-  type ComboBoxProps as AriaComboBoxProps,
-  type ListBoxItemProps as AriaListBoxItemProps,
-} from "react-aria-components";
+import { Combobox as BaseCombobox } from "@base-ui/react/combobox";
 import { cn, type LumoNode } from "@lumo-ui/core";
+import { relabelEngineDismiss } from "@lumo-ui/base-ui-ssr";
+import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
 import { popoverVariants } from "./popover.tsx";
+import type { AsyncCollectionPresentation } from "./async-collection.ts";
+import { Button } from "./button.tsx";
 
 /**
- * A text input that filters a list of options.
- *
- *     <ComboBox
- *       label="شهر"
- *       showSuggestionsLabel="نمایش پیشنهادها"
- *       suggestionsLabel="پیشنهادها"
- *       items={cities}
- *     >
- *       {(city) => <ComboBoxItem id={city.id}>{city.name}</ComboBoxItem>}
- *     </ComboBox>
- *
- * ── TWO REQUIRED STRINGS, BOTH MEASURED ─────────────────────────────────────
- *
- * The ComboBox is the leakiest component React Aria ships. Its `en-US` bundle
- * contains, under `@react-aria/combobox`:
- *
- *     buttonLabel:   "Show suggestions"     → aria-label on the trigger <Button>
- *     listboxLabel:  "Suggestions"          → aria-label on the <ListBox>
- *
- * `useComboBox` writes BOTH unconditionally:
- *
- *     buttonProps  = useLabels({…, 'aria-label': format('buttonLabel'),  …})
- *     listBoxProps = useLabels({…, 'aria-label': format('listboxLabel'), …})
- *
- * Persian is not among RAC's 34 bundles, so both come out in English. Both are
- * reachable — RAC merges its context props with local props and local wins — so
- * both are required props here rather than something to apologise for later.
- *
- * `suggestionsLabel` matters more than it looks. RAC pairs the listbox's
- * `aria-label` with an `aria-labelledby` pointing at the field's `<Label>`, and
- * `aria-labelledby` wins the name computation — so with a label present the
- * English string is inert but still sits in the markup, where `@lumo-ui/gate`'s
- * `no-latin-aria` rule (which grades ATTRIBUTES, not computed names) fires on
- * it. Without a visible label there is no `aria-labelledby` at all and
- * "Suggestions" becomes the listbox's actual announced name.
- *
- * ── WHY THIS COMPONENT IS NOT SPLIT INTO PARTS ──────────────────────────────
- *
- * Everything else in this batch is composable primitives. The ComboBox is one
- * component because the two leaking strings live on elements deep inside it
- * (the trigger `<Button>` and the `<ListBox>`), and a split API is an API where
- * you can render a ComboBox without them. Required props on the root are the
- * only shape where forgetting is impossible.
- *
- * And a context would NOT have been an acceptable alternative for a different
- * reason than usual: it would work on the server (React context does render
- * server-side, unlike RAC's `LocalizedStringProvider`), but it would let a
- * `<ComboBoxInput>` exist that compiles with no string in scope.
+ * A text input that filters a list of options, on Base UI's Combobox. Base UI
+ * names neither the trigger nor the list, so `showSuggestionsLabel` and
+ * `suggestionsLabel` stay REQUIRED (an unnamed control is worse than an
+ * English one), and its one English literal — the internal dismiss sentinel's
+ * `aria-label="Dismiss"`, mui/base-ui#5263 — is relabelled live from
+ * `dismissLabel`. One component rather than parts, so the named elements
+ * cannot be omitted. Divergences: `docs/history/base-ui-migration/comparison-2026-08-11.md`.
  */
 
 export const comboBoxVariants = cva("group flex w-full flex-col gap-1.5");
@@ -75,24 +28,24 @@ export const comboBoxLabelVariants = cva("text-sm font-medium text-fg");
 export const comboBoxGroupVariants = cva(
   "flex h-control-md w-full items-center rounded-md border border-border-control " +
     "bg-surface text-sm text-fg " +
-    "data-focus-within:border-border-strong " +
+    "focus-within:border-border-strong " +
     "data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 
 export const comboBoxInputVariants = cva(
-  // `ps-3` is the reading edge and `pe-1` is the button edge; both mirror.
   "h-full min-w-0 flex-1 bg-transparent ps-3 pe-1 text-fg outline-none " +
     "placeholder:text-fg-subtle",
 );
 
 export const comboBoxButtonVariants = cva(
   "me-1 flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-sm " +
-    "text-fg-muted outline-none data-hovered:bg-surface-hover " +
+    "text-fg-muted outline-none hover:bg-surface-hover " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
 );
 
 export const comboBoxPopoverVariants = cva(
-  "w-[var(--trigger-width)] overflow-auto p-0",
+  // `--anchor-width` is Base UI's engine-owned name for the measured anchor width.
+  "w-[var(--anchor-width)] overflow-auto p-0",
 );
 
 export const comboBoxListBoxVariants = cva(
@@ -102,29 +55,59 @@ export const comboBoxListBoxVariants = cva(
 export const comboBoxItemVariants = cva(
   "flex cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 " +
     "text-sm text-fg outline-none " +
-    "data-focused:bg-surface-hover " +
+    "data-highlighted:bg-surface-hover " +
+    "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
 );
 
-export interface ComboBoxProps<T extends object>
-  extends Omit<AriaComboBoxProps<T>, "children" | "className"> {
+export interface ComboBoxProps<T extends object> {
   /**
    * Announced name of the trigger button. REQUIRED.
-   * Overrides RAC's `aria-label="Show suggestions"`.
+   * Base UI names it nothing at all; the button's only content is an icon.
    */
   showSuggestionsLabel: string;
   /**
    * Announced name of the suggestion list. REQUIRED.
-   * Overrides RAC's `aria-label="Suggestions"`.
+   * Base UI names it nothing at all.
    */
   suggestionsLabel: string;
-  /** Visible field label. Omit only if the field is named some other way. */
-  label?: LumoNode;
+  /**
+   * Announced name of the engine's hidden dismiss control. REQUIRED — Base UI
+   * hardcodes "Dismiss" and no prop reaches it, so it is relabelled live (`relabelEngineDismiss`).
+   */
+  dismissLabel: string;
+  /** Visible field label — the input's accessible name. Required: nothing else names this field. */
+  label: LumoNode;
+  /** Help text, connected to the input by `aria-describedby` in the first byte. */
+  description?: LumoNode;
+  /** The error, connected like the description; also sets `aria-invalid`. */
+  errorMessage?: LumoNode;
   /** Visible placeholder for the text input. */
   placeholder?: string | undefined;
   /** Options: static children, or a render function over `items`. */
   children?: LumoNode | ((item: T) => LumoNode);
+  /** The collection the render-function form iterates and filters. */
+  items?: Iterable<T> | undefined;
+  /** Caller-authored loading/error/empty state from the shared async controller. */
+  asyncState?: AsyncCollectionPresentation | undefined;
+  /** The selected key. Maps to Base UI's `value`. */
+  selectedKey?: string | null | undefined;
+  /** The initially selected key, when selection is uncontrolled. */
+  defaultSelectedKey?: string | null | undefined;
+  /** Called with the newly selected key, or null when cleared. */
+  onSelectionChange?: ((key: string | null) => void) | undefined;
+  /** The typed text, when controlled. */
+  inputValue?: string | undefined;
+  /** The initial typed text, when the text is uncontrolled. */
+  defaultInputValue?: string | undefined;
+  /** Called with the typed text after every keystroke. */
+  onInputChange?: ((value: string) => void) | undefined;
+  isDisabled?: boolean | undefined;
+  /** Marks the field required for form submission and announces it as such. */
+  isRequired?: boolean | undefined;
+  /** Submitted field name when the control sits inside a form. */
+  name?: string | undefined;
   className?: string | undefined;
   /** Class for the popover surface. */
   popoverClassName?: string | undefined;
@@ -133,65 +116,170 @@ export interface ComboBoxProps<T extends object>
 export function ComboBox<T extends object>({
   showSuggestionsLabel,
   suggestionsLabel,
+  dismissLabel,
   label,
+  description,
+  errorMessage,
   placeholder,
   children,
+  items,
+  asyncState,
+  selectedKey,
+  defaultSelectedKey,
+  onSelectionChange,
+  inputValue,
+  defaultInputValue,
+  onInputChange,
+  isDisabled,
+  isRequired,
+  name,
   className,
   popoverClassName,
-  ...props
 }: ComboBoxProps<T>) {
+  const resolvedItems = items === undefined ? undefined : Array.from(items);
+  const stateText =
+    asyncState?.status === "loading" || asyncState?.status === "error"
+      ? asyncState.text
+      : asyncState?.status === "ready" && resolvedItems?.length === 0
+        ? asyncState.emptyText
+        : null;
+  const stateAction =
+    asyncState?.status === "ready" ? asyncState.loadMore : asyncState?.action;
+  // The input's id, minted here (SSR-stable) so the visible label can point at it in the first byte.
+  const inputId = useId();
+  const describedBy =
+    [description == null ? null : `${inputId}-description`, errorMessage == null ? null : `${inputId}-error`]
+      .filter((id): id is string => id !== null)
+      .join(" ") || undefined;
+  // The trigger's own id: without it Base UI's server render copies the root's
+  // id onto the trigger (a layout-effect-corrected store field), so input and
+  // button served the same id and `<label for>` named whichever came first.
+  // Same stale state serves `aria-haspopup="dialog"`, hence the explicit prop below.
+  const triggerId = useId();
+  // The dismiss sentinels mount with the popup, in a portal, and this component
+  // does not re-render on open; `onOpenChange` bumps an epoch so the relabel effect runs.
+  const boxRef = useRef<HTMLDivElement | null>(null);
+  const [openEpoch, setOpenEpoch] = useState(0);
+  useEffect(() => {
+    // Twice: once now, once after the popup portal has mounted.
+    relabelEngineDismiss(boxRef.current, dismissLabel);
+    const settle = setTimeout(() => relabelEngineDismiss(boxRef.current, dismissLabel), 0);
+    return () => clearTimeout(settle);
+  }, [dismissLabel, openEpoch]);
   return (
-    <AriaComboBox data-lumo="" className={cn(comboBoxVariants(), className)} {...props}>
-      {label == null ? null : (
-        <AriaLabel className={comboBoxLabelVariants()}>{label}</AriaLabel>
-      )}
-      <AriaGroup className={comboBoxGroupVariants()}>
-        <AriaInput
-          className={comboBoxInputVariants()}
-          {...(placeholder === undefined ? {} : { placeholder })}
-        />
-        {/*
-         * The leak, closed. `aria-label` on this Button is the documented
-         * override point; RAC merges its own context props with local props and
-         * the local value wins.
-         */}
-        <AriaButton
-          data-lumo=""
-          aria-label={showSuggestionsLabel}
-          className={comboBoxButtonVariants()}
-        >
-          <ChevronDown aria-hidden="true" />
-        </AriaButton>
-      </AriaGroup>
-      <AriaPopover
-        className={cn(
-          popoverVariants({ padded: false }),
-          comboBoxPopoverVariants(),
-          popoverClassName,
+    <BaseCombobox.Root
+      id={inputId}
+      onOpenChange={() => setOpenEpoch((epoch) => epoch + 1)}
+      {...(resolvedItems === undefined ? {} : { items: resolvedItems })}
+      {...(selectedKey === undefined ? {} : { value: selectedKey })}
+      {...(defaultSelectedKey === undefined ? {} : { defaultValue: defaultSelectedKey })}
+      {...(onSelectionChange === undefined
+        ? {}
+        : { onValueChange: (value: string | null) => onSelectionChange(value) })}
+      {...(inputValue === undefined ? {} : { inputValue })}
+      {...(defaultInputValue === undefined ? {} : { defaultInputValue })}
+      {...(onInputChange === undefined
+        ? {}
+        : { onInputValueChange: (value: string) => onInputChange(value) })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+      {...(isRequired === undefined ? {} : { required: isRequired })}
+      {...(name === undefined ? {} : { name })}
+    >
+      {/* Base UI's Root renders no DOM, so the field box is a real element here. */}
+      <div data-lumo="" ref={boxRef} className={cn(comboBoxVariants(), className)}>
+        {/* A NATIVE `<label htmlFor>`, not `<Combobox.Label>`, which labels the TRIGGER only. */}
+        {label == null ? null : (
+          // `id` beside `htmlFor`: while the popup is open Base UI hides this
+          // label, and only an `aria-labelledby` reference survives that.
+          <label id={`${inputId}-label`} htmlFor={inputId} className={comboBoxLabelVariants()}>
+            {label}
+          </label>
         )}
-      >
-        {/* Second leak, closed. See the header for why this one is not inert. */}
-        <AriaListBox
-          data-lumo=""
-          aria-label={suggestionsLabel}
-          className={comboBoxListBoxVariants()}
+        {/* `role="group"`: the trigger and the text field are one control to a reader. */}
+        <div
+          role="group"
+          {...(asyncState?.status === "loading" ? { "aria-busy": true } : {})}
+          className={comboBoxGroupVariants()}
         >
-          {children}
-        </AriaListBox>
-      </AriaPopover>
-    </AriaComboBox>
+          <BaseCombobox.Input
+            className={comboBoxInputVariants()}
+            {...(label == null ? {} : { "aria-labelledby": `${inputId}-label` })}
+            {...(describedBy === undefined ? {} : { "aria-describedby": describedBy })}
+            {...(errorMessage == null ? {} : { "aria-invalid": true })}
+            {...(placeholder === undefined ? {} : { placeholder })}
+          />
+          {/* An icon-only button. Named because Base UI names nothing. */}
+          <BaseCombobox.Trigger
+            data-lumo=""
+            id={triggerId}
+            aria-label={showSuggestionsLabel}
+            aria-haspopup="listbox"
+            className={comboBoxButtonVariants()}
+          >
+            <ChevronDown aria-hidden="true" />
+          </BaseCombobox.Trigger>
+        </div>
+        <BaseCombobox.Portal>
+          <BaseCombobox.Positioner
+            className="isolate z-50"
+            side="bottom"
+            align="start"
+            sideOffset={4}
+          >
+            <BaseCombobox.Popup
+              className={cn(
+                popoverVariants({ padded: false }),
+                comboBoxPopoverVariants(),
+                popoverClassName,
+              )}
+            >
+              {/* The list. Named for the same reason as the trigger. */}
+              <BaseCombobox.List
+                data-lumo=""
+                aria-label={suggestionsLabel}
+                className={comboBoxListBoxVariants()}
+              >
+                {children as LumoNode}
+              </BaseCombobox.List>
+              {stateText === null && stateAction === undefined ? null : (
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5 text-sm text-fg-muted">
+                  <span role="status" aria-live="polite">
+                    {stateText}
+                  </span>
+                  {stateAction === undefined ? null : (
+                    <Button variant="outline" size="sm" onPress={stateAction.onPress}>
+                      {stateAction.label}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </BaseCombobox.Popup>
+          </BaseCombobox.Positioner>
+        </BaseCombobox.Portal>
+        {description == null ? null : (
+          <p id={`${inputId}-description`} className={descriptionVariants()}>{description}</p>
+        )}
+        {errorMessage == null ? null : (
+          <p id={`${inputId}-error`} className={fieldErrorVariants()}>{errorMessage}</p>
+        )}
+      </div>
+    </BaseCombobox.Root>
   );
 }
 
 /**
- * One suggestion.
- *
- * `textValue` is re-derived from string children for the reason documented in
- * menu.tsx: RAC reads a typeahead string only from a LITERAL string child, and
- * the check mark forces a wrapper.
+ * One suggestion. No `textValue`: Base UI matches on the ROOT over `items`,
+ * and forwarding it to `aria-label` would rename every option.
  */
-export interface ComboBoxItemProps<T extends object = object>
-  extends Omit<AriaListBoxItemProps<T>, "children" | "className"> {
+export interface ComboBoxItemProps<T extends object = object> {
+  /**
+   * TYPE CARRIER, NOT A PROP. Keeps `<T>` alive for existing annotations;
+   * `| undefined` so an explicit `undefined` passes `exactOptionalPropertyTypes`.
+   */
+  value?: (T & never) | undefined;
+  /** The item's key. Maps to Base UI's `value`. */
+  id?: string | undefined;
+  isDisabled?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
@@ -199,23 +287,20 @@ export interface ComboBoxItemProps<T extends object = object>
 export function ComboBoxItem<T extends object = object>({
   className,
   children,
-  textValue,
-  ...props
+  id,
+  isDisabled,
 }: ComboBoxItemProps<T>) {
-  const resolvedTextValue = textValue ?? (typeof children === "string" ? children : undefined);
   return (
-    <AriaComboBoxItem
+    <BaseCombobox.Item
       data-lumo=""
       className={cn(comboBoxItemVariants(), className)}
-      {...(resolvedTextValue === undefined ? {} : { textValue: resolvedTextValue })}
-      {...props}
+      {...(id === undefined ? {} : { value: id })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
     >
-      {({ isSelected }) => (
-        <>
-          <span className="flex-1 truncate">{children}</span>
-          {isSelected ? <Check aria-hidden="true" className="ms-auto text-accent" /> : null}
-        </>
-      )}
-    </AriaComboBoxItem>
+      <span className="flex-1 truncate">{children}</span>
+      <BaseCombobox.ItemIndicator className="ms-auto flex items-center">
+        <Check aria-hidden="true" className="text-accent" />
+      </BaseCombobox.ItemIndicator>
+    </BaseCombobox.Item>
   );
 }

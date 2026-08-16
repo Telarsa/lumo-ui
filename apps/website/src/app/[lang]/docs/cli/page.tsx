@@ -5,16 +5,9 @@ import { CLI_COMMAND, PMS } from "@/lib/install-commands";
 import { Bullets, DocSection, DocsShell, P, Snippet, Term } from "../docs-shell";
 
 /**
- * /docs/cli — the real tooling: the add command, the registry, the vendor
- * script and `verify`.
- *
- * The add commands are BUILT from the same `CLI_COMMAND` table the install
- * tabs render, so this page cannot drift from what the component pages say.
- * The verify chain and what each gate proves are README.md's own table; the
- * vendor workflow is `scripts/vendor-from-shadcn.mjs`'s own header.
+ * /docs/cli — the real tooling: the `lumo` command, the registry, and the verify chain.
  */
 
-const VENDOR_CMD = `node scripts/vendor-from-shadcn.mjs chart slider pagination`;
 
 const VERIFY_CMD = `pnpm verify
 # gate:types → gate:no-css-modules → gate:test → gate:registry → gate:smoke → gate:html`;
@@ -25,7 +18,7 @@ export function generateStaticParams() {
 }
 
 /** Section ids in reading order; the rail and the headings both derive from it. */
-const SECTIONS = ["add", "registry", "vendor", "verify"] as const;
+const SECTIONS = ["add", "registry", "verify"] as const;
 type SectionId = (typeof SECTIONS)[number];
 
 /** One `Bullets` row. */
@@ -49,10 +42,6 @@ interface PageCopy {
     /** Two paragraphs: how the manifest is generated, then what smoke adds. */
     registryManifest: LumoNode;
     registrySmoke: LumoNode;
-    /** Two paragraphs around the vendor command, then the per-file checklist. */
-    vendorRule: LumoNode;
-    vendorCommits: LumoNode;
-    vendorChecklist: readonly Item[];
     verifyIntro: LumoNode;
     verifyGates: readonly Item[];
   };
@@ -61,25 +50,27 @@ interface PageCopy {
 const COPY = {
   "fa-IR": {
     title: "خط فرمان",
-    intro: "دستور نصب، رجیستری، اسکریپت وندورکردن از shadcn، و زنجیرهٔ verify.",
+    intro: "فرمان lumo، رجیستری، و زنجیرهٔ verify.",
     heading: {
       add: "دستور add",
       registry: "رجیستری",
-      vendor: "وندورکردن از shadcn",
       verify: "زنجیرهٔ verify",
     },
     body: {
       addCommand: (
         <>
-          لومو ابزار خط فرمانِ خودش را نمی‌سازد؛ رجیستری‌اش با CLI خود shadcn سازگار است و همان
-          دستورِ آشنا، فایل‌های آیتم را در پروژهٔ شما کپی می‌کند — با هر چهار مدیر بسته
-          (pnpm اول، چون لومو pnpm-محور است):
+          فرمان <Term>lumo</Term> با وابستگیِ توسعهٔ <Term>lumo-ui</Term> می‌آید:{" "}
+          <Term>search</Term> و <Term>info</Term> برای پیدا کردن کامپوننت درست، <Term>add</Term>{" "}
+          برای کپی آیتم و بستارِ رجیستری‌اش، <Term>diff</Term> و <Term>upgrade</Term> برای
+          به‌روزرسانی با ادغام سه‌طرفه که ویرایش‌های شما را نگه می‌دارد، <Term>gate</Term> برای
+          سنجش HTML سروشدهٔ خودتان با قاعده‌های لومو — با هر چهار مدیر بسته (pnpm اول، چون لومو
+          pnpm-محور است):
         </>
 
       ),
       registryManifest: (
         <>
-          <Term>registry.json</Term> — امروز ۸۵ آیتم — هرگز با دست نگه‌داری نمی‌شود؛{" "}
+          <Term>registry.json</Term> — امروز ۱۴۱ آیتم — هرگز با دست نگه‌داری نمی‌شود؛{" "}
           <Term>scripts/build-registry.mjs</Term> آن را از روی کامپوننت‌هایی که واقعاً وجود
           دارند تولید می‌کند. دروازهٔ <Term>gate:registry</Term> همین تولید را دوباره اجرا
           می‌کند و با <Term>git diff --exit-code</Term> می‌سنجد: اگر مانیفست از کد قابلِ
@@ -96,54 +87,7 @@ const COPY = {
         </>
 
       ),
-      vendorRule: (
-        <>
-          قاعده: چیزی را که بالادست از قبل دارد، با دست تایپ نکن. shadcn سبکِ{" "}
-          <Term>aria-vega</Term> را منتشر می‌کند — زیرش همان React Aria است که لومو اجاره کرده —
-          پس بیشتر آنچه لازم می‌شود، آن‌جا آماده است:
-        </>
-
-      ),
-      vendorCommits: (
-        <>
-          خروجیِ خام در یک کامیتِ جدا می‌نشیند و تغییرات لومو در کامیت دوم — تا{" "}
-          <Term>git log -p</Term> نشان دهد چه چیزی مال ماست و چه چیزی مال آن‌ها، و{" "}
-          <Term>shadcn add --diff</Term> بعدها بتواند تغییرات بالادست را نشان دهد. فایل
-          وندورشده هیچ‌وقت با ورودش تمام نیست؛ هر کدام یک گذر لازم دارد:
-        </>
-
-      ),
       verifyIntro: "شش دروازه، به همان ترتیبی که اجرا می‌شوند — و هر کدام چیزی را ثابت می‌کند که قبلی نمی‌تواند:",
-      vendorChecklist: [
-        { key: "physical", body: (
-            <>
-              کلاس‌های فیزیکی (<Term>ml-</Term>، <Term>pr-</Term>، <Term>text-left</Term>) که
-              باید منطقی شوند — <Term>shadcn migrate rtl</Term> بیشترش را مکانیکی انجام می‌دهد.
-            </>
-
-          ) },
-        { key: "defaults", body: (
-            <>
-              پیش‌فرض‌های انگلیسی، مثل هر <Term>label = "Close"</Term>، که باید پراپ اجباری
-              شوند.
-            </>
-
-          ) },
-        { key: "numbers", body: (
-            <>
-              عددهای خام در JSX که <Term>LumoNode</Term> ردشان می‌کند و باید از{" "}
-              <Term>formatNumber</Term> عبور کنند.
-            </>
-
-          ) },
-        { key: "cn", body: (
-            <>
-              مسیر ایمپورت <Term>cn</Term>: بالادست از <Term>@/lib/utils</Term> می‌آورد، لومو
-              از <Term>@lumo-ui/core</Term>.
-            </>
-
-          ) },
-      ],
       verifyGates: [
         { key: "types", body: (
             <>
@@ -192,25 +136,27 @@ const COPY = {
   },
   "en-US": {
     title: "CLI",
-    intro: "The add command, the registry, the shadcn vendor script, and the verify chain.",
+    intro: "The lumo command, the registry, and the verify chain.",
     heading: {
       add: "The add command",
       registry: "The registry",
-      vendor: "Vendoring from shadcn",
       verify: "The verify chain",
     },
     body: {
       addCommand: (
         <>
-          Lumo does not ship a CLI of its own; the registry is compatible with shadcn&rsquo;s,
-          and the familiar command copies an item&rsquo;s files into your project — under any of
-          the four package managers (pnpm first, because Lumo is pnpm-first):
+          The <Term>lumo</Term> command comes with the <Term>lumo-ui</Term> dev dependency:{" "}
+          <Term>search</Term> and <Term>info</Term> to find the right component, <Term>add</Term>{" "}
+          to copy an item with its registry closure, <Term>diff</Term> and <Term>upgrade</Term> to
+          update with a three-way merge that keeps your edits, <Term>gate</Term> to grade your own
+          served HTML with Lumo&rsquo;s rules — under any of the four package managers (pnpm first,
+          because Lumo is pnpm-first):
         </>
 
       ),
       registryManifest: (
         <>
-          <Term>registry.json</Term> — 85 items today — is never hand-kept:{" "}
+          <Term>registry.json</Term> — 141 items today — is never hand-kept:{" "}
           <Term>scripts/build-registry.mjs</Term> generates it from the components that actually
           exist. <Term>gate:registry</Term> re-runs that generation and checks it with{" "}
           <Term>git diff --exit-code</Term>: if the manifest is not reproducible from the code,
@@ -227,55 +173,7 @@ const COPY = {
         </>
 
       ),
-      vendorRule: (
-        <>
-          The rule: never hand-type a component upstream already has. shadcn publishes the{" "}
-          <Term>aria-vega</Term> style — React Aria underneath, the same base Lumo rents — so
-          most of what is needed already exists there:
-        </>
-
-      ),
-      vendorCommits: (
-        <>
-          The raw emit lands as one commit and Lumo&rsquo;s changes as a second — so{" "}
-          <Term>git log -p</Term> shows what is ours versus theirs, and{" "}
-          <Term>shadcn add --diff</Term> can still show what upstream changed later. A vendored
-          file is never done on arrival; every one needs a pass for:
-        </>
-
-      ),
       verifyIntro: "Six gates, in the order they run — each proving something the one before it cannot:",
-      vendorChecklist: [
-        { key: "physical", body: (
-            <>
-              Physical utilities (<Term>ml-</Term>, <Term>pr-</Term>, <Term>text-left</Term>)
-              that must become logical — <Term>shadcn migrate rtl</Term> handles most of it
-              mechanically.
-            </>
-
-          ) },
-        { key: "defaults", body: (
-            <>
-              English defaults — any <Term>label = "Close"</Term> — that must become required
-              props.
-            </>
-
-          ) },
-        { key: "numbers", body: (
-            <>
-              Raw numbers in JSX, which <Term>LumoNode</Term> rejects and which must route
-              through <Term>formatNumber</Term>.
-            </>
-
-          ) },
-        { key: "cn", body: (
-            <>
-              The <Term>cn</Term> import path: upstream imports from <Term>@/lib/utils</Term>,
-              Lumo&rsquo;s lives in <Term>@lumo-ui/core</Term>.
-            </>
-
-          ) },
-      ],
       verifyGates: [
         { key: "types", body: (
             <>
@@ -337,7 +235,6 @@ export default async function CliPage({
   /* One block, all four managers — derived, never retyped. */
   const addCmds = PMS.map((pm) => CLI_COMMAND[pm]("button")).join("\n");
   const addHtml = await highlight(addCmds, "bash");
-  const vendorHtml = await highlight(VENDOR_CMD, "bash");
   const verifyHtml = await highlight(VERIFY_CMD, "bash");
 
   return (
@@ -352,12 +249,6 @@ export default async function CliPage({
         <P>{t.body.registrySmoke}</P>
       </DocSection>
 
-      <DocSection id="vendor" title={t.heading.vendor}>
-        <P>{t.body.vendorRule}</P>
-        <Snippet lang={lang} code={VENDOR_CMD} html={vendorHtml} />
-        <P>{t.body.vendorCommits}</P>
-        <Bullets items={t.body.vendorChecklist} />
-      </DocSection>
 
       <DocSection id="verify" title={t.heading.verify}>
         <P>{t.body.verifyIntro}</P>

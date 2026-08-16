@@ -1,32 +1,14 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
 /**
- * Sidebar's class definitions, in a module with NO `"use client"` — the same
- * split as button.variants.ts, for the same measured reason: the app-shell
- * BLOCK is server-rendered so its navigation copy lands in the first byte, and
- * when it adopts this component's styling it will CALL these functions from
- * the server. A cva exported from a client module is a client reference, and
- * calling one from a server component is the build failure that once took down
- * the whole /fa-IR/blocks route.
- *
- * ── THE COLLAPSE CHANNEL ────────────────────────────────────────────────────
- *
- * The root carries the named group `group/lumo-sidebar` and, when collapsed,
- * a bare `data-collapsed` attribute. Every collapse-aware class below is a
- * `group-data-collapsed/lumo-sidebar:` variant reading that one attribute —
- * no descendant receives a prop about it, so a consumer compostion cannot
- * have a header that collapsed and a list that did not.
- *
- * The collapsed treatment for text is `sr-only`, NOT `hidden`: a rail item is
- * icon-only VISUALLY, but its accessible name must survive — an icon is not a
- * name (button.tsx), and 33 unnamed controls is the measured defect that rule
- * comes from. `sr-only` keeps the label and badge in the name computation
- * while the rail shows the icon alone.
+ * Sidebar's class definitions, in a module with NO `"use client"` so the
+ * server-rendered app-shell block can call them. The collapse channel is one
+ * `data-collapsed` attribute on the `group/lumo-sidebar` root; every
+ * collapse-aware class reads it, so no descendant can disagree. Collapsed
+ * text is `sr-only`, NOT `hidden`: a rail item's accessible name must survive.
  */
 export const sidebarVariants = cva(
-  // `border-e`: the seam sits on the inline-END edge — the LEFT side in
-  // Persian, automatically. `w-*` utilities size the inline axis in horizontal
-  // writing modes, so none of this needs a per-direction branch.
+  // `border-e`: the seam sits on the inline-END edge.
   "flex h-full w-64 shrink-0 flex-col border-e border-border bg-surface " +
     "transition-[width] duration-200 motion-reduce:transition-none " +
     "data-collapsed:w-14",
@@ -37,8 +19,7 @@ export const sidebarHeaderVariants = cva(
 );
 
 export const sidebarContentVariants = cva(
-  // The scrolling middle. Same native-scrollbar restyle as scroll-area.tsx
-  // and the same reasoning — see that file's header for the trade.
+  // The scrolling middle. Same native-scrollbar restyle as scroll-area.tsx.
   "min-h-0 flex-1 overflow-y-auto overflow-x-hidden p-2 " +
     "[scrollbar-width:thin] [scrollbar-color:var(--color-border)_transparent]",
 );
@@ -54,14 +35,21 @@ export const sidebarGroupLabelVariants = cva(
     "group-data-collapsed/lumo-sidebar:sr-only",
 );
 
+/**
+ * One navigation row. The current row is the accent tint, not the neutral
+ * ramp, because `surface-sunken` IS `surface-hover` on the light theme; the
+ * fill is not what announces it — `Link` emits `aria-current`.
+ */
 export const sidebarItemVariants = cva(
   "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm text-fg " +
-    "no-underline data-hovered:no-underline " +
-    "data-hovered:bg-surface-hover " +
-    "data-current:bg-surface-sunken data-current:font-medium " +
+    "no-underline hover:no-underline " +
+    "hover:bg-surface-hover " +
+    "data-current:bg-accent/10 data-current:text-accent data-current:font-medium " +
+    // Explicit: `hover:` and `data-current:` are both (0,2,0), so the cascade would decide by emit order.
+    "data-current:hover:bg-accent/20 " +
+    "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
-    // In the rail, only the icon keeps a box; centre it so the column of
-    // glyphs is optically one rail rather than a ragged start-aligned strip.
+    // In the rail, only the icon keeps a box; centre it.
     "group-data-collapsed/lumo-sidebar:justify-center " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
 );
@@ -71,10 +59,7 @@ export const sidebarItemLabelVariants = cva(
 );
 
 export const sidebarBadgeVariants = cva(
-  // `ms-auto` pushes the badge to the inline END of the row — the left in
-  // Persian. The count itself is the consumer's, ALREADY formatted: LumoNode
-  // makes a bare number a compile error, which is what keeps «۳» and 3 from
-  // coexisting on one page.
+  // `ms-auto` pushes the badge to the inline END. The count is the consumer's, ALREADY formatted.
   "ms-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full " +
     "bg-surface-sunken px-1.5 text-xs text-fg-muted " +
     "group-data-collapsed/lumo-sidebar:sr-only",

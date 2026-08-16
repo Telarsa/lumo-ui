@@ -1,160 +1,122 @@
 "use client";
 
+import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  I18nProvider,
-  Text as AriaText,
-  UNSTABLE_Toast as AriaToast,
-  UNSTABLE_ToastContent as AriaToastContent,
-  UNSTABLE_ToastQueue as AriaToastQueue,
-  UNSTABLE_ToastRegion as AriaToastRegion,
-  type QueuedToast,
-} from "react-aria-components";
-import { FORMAT_LOCALE, cn, type Locale, type LumoNode } from "@lumo-ui/core";
+import { Toast as BaseToast } from "@base-ui/react/toast";
+import type { ToastManager, ToastObject } from "@base-ui/react/toast";
+import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { IconButton } from "./button.tsx";
 
 /**
- * Transient notifications.
+ * Transient notifications. BASE UI ENGINE.
  *
- *     // module scope — outside React, so any code can raise a toast
- *     export const toasts = createToastQueue();
- *
- *     // once, near the root of the app
+ *     export const toasts = createToastQueue();            // module scope
  *     <ToastRegion queue={toasts} locale={locale} label="اعلان‌ها" closeLabel="بستن" />
- *
- *     // anywhere
  *     toasts.add({ title: "ذخیره شد", tone: "positive" }, { timeout: 5000 })
  *
- * `"use client"` because `react-aria-components` is client-only, and because the
- * queue is a live subscription — a toast is by definition something that appears
- * after the first byte.
- *
- * ═══ THE PORTAL WRITES ITS OWN `dir`, AND YOU CANNOT PASS IT ONE ════════════
- *
- * `ToastRegion` is one of only two RAC components that stamps a `dir` attribute
- * on the element it renders — and it renders that element through
- * `createPortal(region, document.body)`, outside the app's own tree. Verified in
- * react-aria-components 1.20.0, `private/Toast.mjs`:
- *
- *     let {direction} = useLocale();
- *     ...
- *     <div {...mergeProps(DOMProps, renderProps, regionProps, focusProps, hoverProps)}
- *          dir={direction} ... />
- *     return state.visibleToasts.length > 0 && portalContainer
- *       ? createPortal(region, portalContainer) : null;
- *
- * Two facts follow, and both are load-bearing:
- *
- *  1. **`dir` is applied AFTER the prop spread**, so a `dir` passed into this
- *     component is silently discarded. There is no prop-shaped fix. (Lumo would
- *     refuse to expose one anyway — rule 3, there is no `dir` prop in this
- *     library — but it is worth knowing the door is bolted from the other side.)
- *
- *  2. **`useLocale()` is the only input.** With no `I18nProvider` mounted it
- *     falls back to `useDefaultLocale()`, which is `navigator.language` in the
- *     browser and, verified in `i18n/useDefaultLocale.mjs`, a hardcoded
- *     `{locale: 'en-US', direction: 'ltr'}` during SSR.
- *
- * A portaled `<div>` in `document.body` would normally INHERIT `dir="rtl"` from
- * `<html>` — `dir` is an inherited attribute, and `LumoHtml` puts it there. RAC
- * then overwrites that inheritance with its own guess. So a correct Persian page,
- * viewed on a machine whose browser is set to en-US, lays its toasts out
- * left-to-right: the close button jumps to the far side, the tone stripe moves
- * to the wrong edge, and everything else on the page is still RTL. Measured in
- * this repo's test run — `dir="ltr"` on the region with no provider,
- * `dir="rtl"` with one.
- *
- * The fix is the only one available: this component mounts an `I18nProvider`
- * around the region, from the SAME required `locale` prop the rest of Lumo
- * threads. Direction is still derived rather than passed — `I18nProvider`
- * computes it with `Intl.Locale.maximize().getTextInfo()`, the same source
- * `direction()` in `@lumo-ui/core` uses — so rule 3 holds.
- *
- * ── `label` IS REQUIRED, AND THE DEFAULT IS WORSE THAN PLAIN ENGLISH ────────
- *
- * `useToastRegion` names the landmark `props['aria-label'] ||
- * stringFormatter.format('notifications', {count})`, and the `en-US` bundle is:
- *
- *     "notifications": (args, formatter) => `${formatter.plural(args.count, {
- *        one: () => `${formatter.number(args.count)} notification`, ... })}.`
- *
- * So an unlabelled region announces `"1 notification."` — English, and with a
- * NUMBER formatted by RAC's own formatter. Under the `I18nProvider` above that
- * digit becomes Persian and the noun does not: measured `aria-label="۱
- * notification."`, which is the worst of both and exactly the kind of half-right
- * output that survives review. Persian is not among RAC's 34 bundles and will
- * not be, so `label` is a required prop.
- *
- * `closeLabel` is required for the same reason: `useToast` sets
- * `closeButtonProps['aria-label'] = stringFormatter.format('close')` → `"Close"`.
- * That one IS reachable — the value arrives through `ButtonContext`, and
- * `useContextProps` merges context first and local props second, so an
- * `aria-label` on the close button wins. Measured: `aria-label="بستن"`.
+ * Public API unchanged; `createToastQueue` adapts `queue.add(content, options)`
+ * onto Base UI's flat `manager.add(...)`. Base UI writes no `dir` on its portal,
+ * so the region inherits `<html dir>` — the RAC `dir` defect is gone and `locale`
+ * is KEPT but INERT (`toast.locale-prop-now-inert`). `label` and `closeLabel`
+ * stay REQUIRED (Base UI's only English literal is `'Notifications'`; an ✕ is
+ * not a name). Announcement comes from ONE live region on the viewport, so a
+ * `<Toast>` outside it is silent; `Title`/`Description` are Base UI parts because
+ * they mint the ids the root points at. NO timeout default: the adapter passes
+ * `timeout: 0` (never auto-dismiss) — Base UI's 5000 would be a WCAG 2.2.1
+ * moving target. Long form: `docs/decisions/log.md`.
  */
 
 /**
- * The payload of a toast.
- *
- * `title` and `description` are `LumoNode`, so `toasts.add({ title: count })`
- * with a bare number is a compile error here exactly as it is in JSX — a queue
- * is usually filled from an event handler, which is precisely where someone
- * interpolates an unformatted total into "۳ پیام" and ships Latin digits.
+ * The payload of a toast. `title` and `description` are `LumoNode`, so a bare
+ * number is a compile error here exactly as it is in JSX.
  */
 export interface LumoToastContent {
   title: LumoNode;
   description?: LumoNode | undefined;
+  /** Optional visible action, such as Undo or Retry. */
+  action?: { label: string; onAction: () => void } | undefined;
   /** Colour of the tone stripe. See `toastVariants` before relying on it. */
   tone?: ToastTone | undefined;
 }
 
 export type ToastTone = "neutral" | "positive" | "critical" | "caution";
 
-/** The queue type, aliased so consumers never have to spell `UNSTABLE_`. */
-export type LumoToastQueue = AriaToastQueue<LumoToastContent>;
+/** Custom data Lumo attaches to a Base UI toast. Only the tone needs carrying. */
+interface LumoToastData extends Record<string, unknown> {
+  tone: ToastTone;
+  action?: { label: string; onAction: () => void } | undefined;
+}
 
 /**
- * Creates the queue.
- *
- * Call this at MODULE scope, not inside a component:
+ * One queued toast, as handed to `Toast`'s `toast` prop. Flat (`.title`, not
+ * `.content.title`) because Base UI's store owns the shape (`toast.queued-toast-shape`).
+ */
+export type LumoQueuedToast = ToastObject<LumoToastData>;
+
+/**
+ * The queue. A plain object over a `subscribe`-backed store, not a hook, so a
+ * fetch wrapper or a route handler can raise a toast without a context.
+ */
+export interface LumoToastQueue {
+  /** Raise a toast. Returns its id, which `close` accepts. No default `timeout` — pass it per toast. */
+  add: (content: LumoToastContent, options?: { timeout?: number | undefined }) => string;
+  /** Replace visible content/status without moving the toast in the queue. */
+  update: (id: string, content: LumoToastContent) => void;
+  /** Dismiss one toast, or all of them. */
+  close: (id?: string) => void;
+  /** The Base UI manager `ToastRegion` mounts. Public because queue and region are separate modules. */
+  readonly manager: ToastManager<LumoToastData>;
+  /** How many toasts are on screen at once. Read by `ToastRegion`. */
+  readonly maxVisibleToasts: number | undefined;
+}
+
+/**
+ * Creates the queue. Call this at MODULE scope, not inside a component:
  *
  *     export const toasts = createToastQueue();
- *
- * `ToastQueue` is a plain class with a subscription list, not a hook, and that
- * is the whole point — a fetch wrapper, a route handler's error branch or a
- * service worker message can raise a toast without being a React component and
- * without a context to reach for. `<ToastRegion>` subscribes to it.
- *
- * On `timeout`: pass it per toast, `toasts.add(content, { timeout: 5000 })`.
- * There is deliberately no default. An auto-dismissing toast is a moving target
- * under WCAG 2.2.1, and a library-chosen duration would be the one number nobody
- * revisits; RAC does pause every visible timer while the region is hovered or
- * focused (`useToastRegion` → `state.pauseAll()`), which is what makes a timeout
- * defensible at all. Anything a user must act on should have NO timeout.
  */
 export function createToastQueue(options?: {
   /** How many toasts are on screen at once. The rest wait. */
   maxVisibleToasts?: number | undefined;
 }): LumoToastQueue {
-  return new AriaToastQueue<LumoToastContent>({
-    ...(options?.maxVisibleToasts !== undefined
-      ? { maxVisibleToasts: options.maxVisibleToasts }
-      : {}),
+  const manager = BaseToast.createToastManager<LumoToastData>();
+  const contentOptions = (content: LumoToastContent) => ({
+    title: content.title as React.ReactNode,
+    ...(content.description === undefined
+      ? {}
+      : { description: content.description as React.ReactNode }),
+    data: {
+      tone: content.tone ?? "neutral",
+      ...(content.action === undefined ? {} : { action: content.action }),
+    },
   });
+  return {
+    manager,
+    maxVisibleToasts: options?.maxVisibleToasts,
+    add: (content, addOptions) =>
+      manager.add({
+        ...contentOptions(content),
+        // Base UI's own default is 5000; Lumo's is none, and `0` is "never auto-dismiss".
+        timeout: addOptions?.timeout ?? 0,
+      }),
+    update: (id, content) => manager.update(id, contentOptions(content)),
+    close: (id) => manager.close(id),
+  };
 }
 
 /**
- * Where the stack sits.
- *
- * `start`/`end` rather than `left`/`right`: the default `bottom-end` is the
- * bottom-LEFT corner on a Persian page and the bottom-right on an English one,
- * from one class, with no `rtl:` variant to forget. `bottom-*`/`top-*` stay
- * physical on purpose — the block axis does not mirror with reading direction,
- * and inventing a logical spelling for it would only obscure that.
+ * Where the stack sits. `start`/`end` rather than `left`/`right`, so `bottom-end`
+ * is the bottom-LEFT corner on a Persian page; `bottom-*`/`top-*` stay physical
+ * because the block axis does not mirror. `z-100`, the one layer that is not
+ * `z-50`: the region is mounted once at the root, EARLIER in the document than
+ * any dialog opened later, whose `z-50` scrim would otherwise paint over it —
+ * hiding a failed-save toast exactly when it matters.
  */
 export const toastRegionVariants = cva(
-  "fixed z-50 flex w-[min(24rem,90vw)] flex-col gap-2 outline-none",
+  "fixed z-100 flex w-[min(24rem,90vw)] flex-col gap-2 outline-none",
   {
     variants: {
+      /** The viewport corner the stack anchors to; logical, so it mirrors under RTL. */
       placement: {
         "bottom-end": "bottom-4 end-4",
         "bottom-start": "bottom-4 start-4",
@@ -167,19 +129,22 @@ export const toastRegionVariants = cva(
 );
 
 /**
- * `border-s-4` puts the tone stripe on the reader's leading edge — left in
- * English, right in Persian — the same way `alert.tsx` does it.
- *
- * The tone is DECORATION. A `critical` toast whose only signal of failure is a
- * red stripe fails WCAG 1.4.1 for anyone who cannot see it, and a toast is read
- * aloud by its text alone (RAC wraps the body in `role="alert"`). Put the word
- * in the title: «ذخیره نشد», not «ذخیره» in red.
+ * `border-s-4` puts the tone stripe on the reader's leading edge, as `alert.tsx`
+ * does. The tone is DECORATION (WCAG 1.4.1): put the word in the title. Base UI's
+ * `priority: 'high'` (alertdialog + assertive) is deliberately NOT wired to
+ * `tone="critical"` — a colour is not an interruption.
  */
 export const toastVariants = cva(
   "pointer-events-auto flex items-start gap-3 rounded-md border border-border " +
-    "border-s-4 bg-surface p-4 text-sm text-fg shadow-lg outline-none",
+    "border-s-4 bg-surface p-4 text-sm text-fg shadow-overlay outline-none " +
+    // data-starting-style / data-ending-style; the offset is on the BLOCK axis.
+    "transition-[opacity,transform] duration-200 ease-out " +
+    "data-starting-style:opacity-0 data-starting-style:-translate-y-2 " +
+    "data-ending-style:opacity-0 " +
+    "motion-reduce:transition-none",
   {
     variants: {
+      /** The notification's semantic color. */
       tone: {
         neutral: "border-s-border-strong",
         positive: "border-s-positive",
@@ -195,99 +160,82 @@ export type ToastVariantProps = VariantProps<typeof toastVariants>;
 
 export interface ToastProps {
   /** The queued toast handed to the region's render function. */
-  toast: QueuedToast<LumoToastContent>;
+  toast: LumoQueuedToast;
   /**
-   * Announced name of the dismiss control, e.g. «بستن».
-   *
-   * REQUIRED. RAC's own value is the English `"Close"` — see the file header.
-   * It is an icon-only button, so there is no visible text to fall back on.
+   * Announced name of the dismiss control, e.g. «بستن». REQUIRED: icon-only
+   * button, and Base UI supplies no default — the failure is a NAMELESS button.
    */
   closeLabel: string;
   className?: string | undefined;
 }
 
 /**
- * One toast.
- *
- * Exported separately from `ToastRegion` because Lumo components are COPIED, not
- * imported — a consumer who wants an action button or an icon in the body edits
- * this function rather than waiting for a `renderToast` prop that would have to
- * anticipate them.
+ * One toast. Exported separately because Lumo components are COPIED: a consumer
+ * who wants an action button edits this function (`Toast.Action` is the part).
  */
 export function Toast({ toast, closeLabel, className }: ToastProps) {
-  const { title, description, tone } = toast.content;
+  const tone = toast.data?.tone ?? "neutral";
   return (
-    // `data-lumo` because RAC gives the toast root `tabIndex={0}` — it is a real
-    // focus stop (`role="alertdialog"`), so it needs the system focus ring.
-    <AriaToast
+    // `data-lumo`: the toast root is a real focus stop (`role="dialog"`, F6).
+    <BaseToast.Root
       toast={toast}
       data-lumo=""
-      className={cn(toastVariants({ tone: tone ?? "neutral" }), className)}
+      className={cn(toastVariants({ tone }), className)}
     >
       {/*
-       * `ToastContent` carries `role="alert"` + `aria-atomic`, which is what
-       * makes a toast announce itself on arrival. Everything meant to be spoken
-       * has to be INSIDE it; the close button deliberately is not, or every
-       * toast would announce its own dismiss control as part of the message.
-       *
-       * `min-w-0` keeps a long unbroken token — a filename, an order reference —
-       * from pushing the toast wider than the region. In RTL that overflow
-       * escapes to the LEFT, which is the side nobody checks at 320px.
+       * A plain layout box: `Toast.Content` carries no role or aria (the live
+       * region is on the viewport). `min-w-0` keeps a long unbroken token from
+       * pushing the toast wider than the region — in RTL that overflow escapes LEFT.
        */}
-      <AriaToastContent className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
         {/*
-         * `Text`, not a bare `<p slot="title">`. The slot is not an HTML slot:
-         * `useToast` mints a `titleId` and publishes it through `TextContext`,
-         * and the toast root carries `aria-labelledby={titleId}` unconditionally.
-         * A plain element with a `slot` attribute claims nothing, so the id is
-         * never rendered and the toast points its accessible name at an element
-         * that does not exist — the dangling-IDREF class `hydrated.test.tsx`
-         * exists to catch. `form.tsx` uses `Text` for the same reason.
+         * `Toast.Title`/`Toast.Description` mint the ids the root points at and
+         * read the toast's own fields when given no children.
          */}
-        <AriaText slot="title" elementType="p" className="font-semibold">
-          {title}
-        </AriaText>
-        {description !== undefined ? (
-          <AriaText slot="description" elementType="p" className="text-fg-muted">
-            {description}
-          </AriaText>
-        ) : null}
-      </AriaToastContent>
+        <BaseToast.Title className="font-semibold" />
+        {toast.description === undefined ? null : (
+          <BaseToast.Description className="text-fg-muted" />
+        )}
+      </div>
+
+      {toast.data?.action === undefined ? null : (
+        <BaseToast.Action
+          type="button"
+          onClick={toast.data.action.onAction}
+          className="shrink-0 rounded-sm px-2 py-1 font-medium text-accent hover:bg-surface-hover"
+        >
+          {toast.data.action.label}
+        </BaseToast.Action>
+      )}
 
       {/*
-       * `slot="close"` is how RAC wires `onPress` to `state.close(key)`. The
-       * `label` prop of `IconButton` becomes `aria-label` and beats the "Close"
-       * that arrives on the same slot through `ButtonContext`.
-       *
-       * `-me-1 -mt-1`: pulled toward the toast's inline END and block start.
-       * The inline nudge is logical, so it lands on the left in Persian without
-       * a second rule; the block nudge cannot mirror and does not need to.
+       * `Toast.Close` merges its `onClick` onto the element it is given.
+       * `-me-1 -mt-1`: the inline nudge is logical, the block nudge cannot mirror.
        */}
-      <IconButton
-        slot="close"
-        label={closeLabel}
-        variant="ghost"
-        size="sm"
-        className="-me-1 -mt-1 shrink-0"
-      >
-        {/*
-         * Drawn inline: a copy-in component with no icon dependency is one
-         * fewer install for a consuming repo, and an ✕ is diagonally symmetric
-         * so it is identical under mirroring. Same reasoning as `tag.tsx`.
-         */}
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 16 16"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.75"
-          strokeLinecap="round"
-          className="size-3.5"
-        >
-          <path d="M4 4 12 12M12 4 4 12" />
-        </svg>
-      </IconButton>
-    </AriaToast>
+      <BaseToast.Close
+        render={
+          <IconButton
+            label={closeLabel}
+            variant="ghost"
+            size="sm"
+            className="-me-1 -mt-1 shrink-0"
+          >
+            {/* Drawn inline: no icon dependency, and an ✕ is symmetric under mirroring. */}
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              className="size-3.5"
+            >
+              <path d="M4 4 12 12M12 4 4 12" />
+            </svg>
+          </IconButton>
+        }
+      />
+    </BaseToast.Root>
   );
 }
 
@@ -295,28 +243,31 @@ export interface ToastRegionProps extends VariantProps<typeof toastRegionVariant
   /** The queue from `createToastQueue()`. */
   queue: LumoToastQueue;
   /**
-   * The locale the region is rendered for.
-   *
-   * REQUIRED, and it does more here than format anything: it is the only way to
-   * reach the `dir` RAC writes on its own portal root. See the file header.
+   * The locale the region is rendered for: Base UI writes no `dir` on its
+   * portal, so the region sets `dir={direction(locale)}` itself — a toast that
+   * arrives from outside the provider tree still reads in the right direction.
    */
   locale: Locale;
-  /**
-   * Announced name of the notification landmark, e.g. «اعلان‌ها».
-   *
-   * REQUIRED — RAC's default is `"1 notification."`. See the file header.
-   */
+  /** Announced name of the notification landmark, e.g. «اعلان‌ها». REQUIRED — Base UI's default is English. */
   label: string;
   /** Announced name of every toast's dismiss control, e.g. «بستن». REQUIRED. */
   closeLabel: string;
   className?: string | undefined;
 }
 
-/**
- * Mount ONCE, near the root. It renders nothing until a toast is queued —
- * `ToastRegion` returns `null` while `visibleToasts` is empty, so it costs the
- * served HTML nothing.
- */
+/** The mapping, split out so it can call `useToastManager` inside the Provider. */
+function ToastList({ closeLabel }: { closeLabel: string }) {
+  const { toasts } = BaseToast.useToastManager<LumoToastData>();
+  return (
+    <>
+      {toasts.map((toast) => (
+        <Toast key={toast.id} toast={toast} closeLabel={closeLabel} />
+      ))}
+    </>
+  );
+}
+
+/** Mount ONCE, near the root. Costs the served HTML a single empty region element. */
 export function ToastRegion({
   queue,
   locale,
@@ -326,23 +277,21 @@ export function ToastRegion({
   className,
 }: ToastRegionProps) {
   return (
-    // The provider must sit OUTSIDE the region: `useLocale()` is read during the
-    // region's own render, and React context crosses `createPortal` (it follows
-    // the React tree, not the DOM tree) — which is what makes this reach the
-    // portaled node in `document.body` at all.
-    //
-    // `FORMAT_LOCALE`, not the bare tag: it carries `-u-ca-persian-nu-arabext`,
-    // so any number RAC formats for itself lands in the same numbering system as
-    // everything `formatNumber` produces. `isRTL()` maximizes the tag before
-    // asking `getTextInfo()`, so the extensions do not disturb the direction.
-    <I18nProvider locale={FORMAT_LOCALE[locale]}>
-      <AriaToastRegion<LumoToastContent>
-        queue={queue}
-        aria-label={label}
-        className={cn(toastRegionVariants({ placement }), className)}
-      >
-        {({ toast }) => <Toast toast={toast} closeLabel={closeLabel} />}
-      </AriaToastRegion>
-    </I18nProvider>
+    <BaseToast.Provider
+      toastManager={queue.manager}
+      // React Aria's `maxVisibleToasts` is Base UI's `limit`; same meaning.
+      {...(queue.maxVisibleToasts === undefined ? {} : { limit: queue.maxVisibleToasts })}
+    >
+      <BaseToast.Portal>
+        <BaseToast.Viewport
+          data-lumo=""
+          dir={direction(locale)}
+          aria-label={label}
+          className={cn(toastRegionVariants({ placement }), className)}
+        >
+          <ToastList closeLabel={closeLabel} />
+        </BaseToast.Viewport>
+      </BaseToast.Portal>
+    </BaseToast.Provider>
   );
 }

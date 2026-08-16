@@ -2,6 +2,8 @@ import type { Locale } from "@lumo-ui/core";
 import {
   Button,
   Dialog,
+  DialogClose,
+  DialogDescription,
   DialogHeading,
   DialogModal,
   DialogOverlay,
@@ -15,8 +17,14 @@ import type { ComponentExamples, LocalizedText } from "./_system/types";
  * render is a named top-level function so the loader can slice its source.
  *
  * Like every overlay demo on this site, what exists in the first byte is the
- * TRIGGER — React Aria's Overlay returns null during SSR, so the modal itself
- * cannot contribute to the graded bytes (see demos.tsx's header).
+ * TRIGGER — a closed Base UI Dialog renders nothing at all, so the modal itself
+ * cannot contribute to the graded bytes (see the contract in _system/types.ts).
+ *
+ * Every body paragraph here is a `DialogDescription` rather than a hand-written
+ * `<p className="text-sm text-fg-muted">`. That is not a styling tidy-up: the
+ * part publishes the paragraph's id into the dialog's `aria-describedby`, and
+ * the hand-written version — which is what these examples used to show, and
+ * therefore what every reader copied — was announced to nobody.
  */
 
 const t = {
@@ -55,14 +63,16 @@ function BasicExample(l: Locale) {
       <Button>{t.editProfile[l]}</Button>
       <DialogOverlay>
         <DialogModal size="md">
-          <Dialog closeLabel={t.close[l]}>
+          <Dialog closeLabel={t.close[l]} label={t.editProfile[l]}>
             <DialogHeading>{t.editProfile[l]}</DialogHeading>
-            <p className="text-sm text-fg-muted">{t.dialogBody[l]}</p>
+            <DialogDescription>{t.dialogBody[l]}</DialogDescription>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" slot="close">
-                {t.cancel[l]}
-              </Button>
-              <Button slot="close">{t.save[l]}</Button>
+              <DialogClose>
+              <Button variant="ghost">{t.cancel[l]}</Button>
+            </DialogClose>
+              <DialogClose>
+              <Button>{t.save[l]}</Button>
+            </DialogClose>
             </div>
           </Dialog>
         </DialogModal>
@@ -73,21 +83,32 @@ function BasicExample(l: Locale) {
 
 function FormExample(l: Locale) {
   return (
-    <DialogTrigger>
+    /*
+     * `isKeyboardDismissDisabled` sits on the TRIGGER, because the trigger is
+     * the state owner — the overlay and the panel cannot reach the dismissal
+     * machinery and used to accept this prop and do nothing with it.
+     *
+     * It is on the FORM example specifically: this is the dialog where Escape
+     * throws away typing the reader cannot get back. The ✕ and «انصراف» still
+     * close it, so the exit is never blocked, only made deliberate.
+     */
+    <DialogTrigger isKeyboardDismissDisabled>
       <Button variant="outline">{t.editProfile[l]}</Button>
       <DialogOverlay>
         <DialogModal size="md">
-          <Dialog closeLabel={t.close[l]}>
+          <Dialog closeLabel={t.close[l]} label={t.editProfile[l]}>
             <DialogHeading>{t.editProfile[l]}</DialogHeading>
             <div className="flex flex-col gap-4">
               <TextField label={t.fullName[l]} />
               <TextField label={t.email[l]} type="email" />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="ghost" slot="close">
-                {t.cancel[l]}
-              </Button>
-              <Button slot="close">{t.save[l]}</Button>
+              <DialogClose>
+              <Button variant="ghost">{t.cancel[l]}</Button>
+            </DialogClose>
+              <DialogClose>
+              <Button>{t.save[l]}</Button>
+            </DialogClose>
             </div>
           </Dialog>
         </DialogModal>
@@ -103,9 +124,9 @@ function SizesExample(l: Locale) {
         <Button variant="outline">{t.small[l]}</Button>
         <DialogOverlay>
           <DialogModal size="sm">
-            <Dialog closeLabel={t.close[l]}>
+            <Dialog closeLabel={t.close[l]} label={t.quickNote[l]}>
               <DialogHeading>{t.quickNote[l]}</DialogHeading>
-              <p className="text-sm text-fg-muted">{t.quickNoteBody[l]}</p>
+              <DialogDescription>{t.quickNoteBody[l]}</DialogDescription>
             </Dialog>
           </DialogModal>
         </DialogOverlay>
@@ -114,9 +135,9 @@ function SizesExample(l: Locale) {
         <Button variant="outline">{t.large[l]}</Button>
         <DialogOverlay>
           <DialogModal size="lg">
-            <Dialog closeLabel={t.close[l]}>
+            <Dialog closeLabel={t.close[l]} label={t.releaseNotes[l]}>
               <DialogHeading>{t.releaseNotes[l]}</DialogHeading>
-              <p className="text-sm text-fg-muted">{t.releaseNotesBody[l]}</p>
+              <DialogDescription>{t.releaseNotesBody[l]}</DialogDescription>
             </Dialog>
           </DialogModal>
         </DialogOverlay>
@@ -131,17 +152,22 @@ function ScrollingExample(l: Locale) {
       <Button variant="outline">{t.terms[l]}</Button>
       <DialogOverlay>
         <DialogModal size="md">
-          <Dialog closeLabel={t.close[l]}>
+          <Dialog closeLabel={t.close[l]} label={t.terms[l]}>
             <DialogHeading>{t.terms[l]}</DialogHeading>
-            <div className="flex flex-col gap-3">
+            {/*
+              * `render={<div />}`: the description here is ten paragraphs, and
+              * a `<p>` inside the part's default `<p>` is invalid HTML that
+              * browsers repair by splitting the paragraph.
+              */}
+            <DialogDescription render={<div />} className="flex flex-col gap-3">
               {Array.from({ length: 10 }, (_, i) => (
-                <p key={i} className="text-sm text-fg-muted">
-                  {t.termsParagraph[l]}
-                </p>
+                <p key={i}>{t.termsParagraph[l]}</p>
               ))}
-            </div>
+            </DialogDescription>
             <div className="flex justify-end">
-              <Button slot="close">{t.close[l]}</Button>
+              <DialogClose>
+              <Button>{t.close[l]}</Button>
+            </DialogClose>
             </div>
           </Dialog>
         </DialogModal>
@@ -152,14 +178,30 @@ function ScrollingExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "کاربر باید پیش از ادامه کاری را تمام کند: فرمی کوتاه، تأییدی که به تصمیم نیاز دارد. محتوا کوتاه است و به صفحهٔ زیر وابسته نیست.",
+        "en-US": "The user must finish something before continuing: a short form, a confirmation that needs a decision. The content is short and does not depend on the page beneath.",
+      },
+      whenNot: {
+        "fa-IR": "تنها یک پرسش بله/خیر با پیامد دارید — `AlertDialog` نقش درست را اعلام می‌کند. محتوای بلند یا ناوبری، `Drawer`. اطلاعات کوتاه بدون قطع کار، `Popover`.",
+        "en-US": "You have a single yes/no with consequences — `AlertDialog` announces the right role. Long content or navigation, `Drawer`. A short note that should not interrupt, `Popover`.",
+      },
+    },
+    title: { "fa-IR": "گفت‌وگو", "en-US": "Dialog" },
+    intro: {
+      "fa-IR": "پنجرهٔ مودال در چهار لایه. نام دکمهٔ بستن ویژگی اجباری است، چون یک ✕ نام نیست.",
+      "en-US": "A modal dialog in four layers. The close button's name is a required prop, because an ✕ is not a name.",
+    },
+    tier: "overlay",
     composition: [
       `<DialogTrigger>`,
       `  <Button>…</Button>`,
       `  <DialogOverlay>`,
       `    <DialogModal size="…">`,
-      `      <Dialog closeLabel="…">`,
-      `        <DialogHeading>…</DialogHeading>`,
-      `        …`,
+      `      <Dialog closeLabel="…" label="…">`,
+      `        <DialogHeading>…</DialogHeading>       ← aria-labelledby`,
+      `        <DialogDescription>…</DialogDescription>  ← aria-describedby`,
       `      </Dialog>`,
       `    </DialogModal>`,
       `  </DialogOverlay>`,
@@ -169,8 +211,10 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "DialogTrigger",
         description: {
-          "fa-IR": "جفت‌کنندهٔ دکمه و پنجره؛ تنها چیزی که در نخستین بایت هست خود دکمه است.",
-          "en-US": "Pairs the button with the window; the button is all that exists in the first byte.",
+          "fa-IR":
+            "جفت‌کنندهٔ دکمه و پنجره؛ تنها چیزی که در نخستین بایت هست خود دکمه است. صاحبِ وضعیت هم همین است، پس isKeyboardDismissDisabled اینجاست و نه روی پس‌زمینه یا قاب — همان دلیلی که PopoverTrigger دارد. کشو هم از همین‌جا آن را می‌گیرد.",
+          "en-US":
+            "Pairs the button with the window; the button is all that exists in the first byte. It is also the state owner, so `isKeyboardDismissDisabled` lives here rather than on the backdrop or the frame — `PopoverTrigger`'s reason exactly. The drawer takes it from here too.",
         },
       },
       {
@@ -197,8 +241,19 @@ export const EXAMPLES: ComponentExamples = {
       {
         name: "DialogHeading",
         description: {
-          "fa-IR": "عنوانی که با slot به aria-labelledby پنجره وصل می‌شود.",
-          "en-US": "The heading, slot-wired into the dialog's aria-labelledby.",
+          "fa-IR":
+            "عنوان پنجره، که شناسه‌اش را در انبارهٔ ریشه می‌نویسد و پنجره آن را به aria-labelledby خود می‌بندد.",
+          "en-US":
+            "The dialog's heading; it writes its id into the root store and the popup binds it to aria-labelledby.",
+        },
+      },
+      {
+        name: "DialogDescription",
+        description: {
+          "fa-IR":
+            "متن پشتیبان پنجره، و رشته‌ای که پس از نام خوانده می‌شود. تا پیش از این هیچ‌چیز aria-describedby را منتشر نمی‌کرد، پس پنجره نامش را می‌گفت و بعد سکوت — و همان جملهٔ بعدی دلیلِ وقفه بود. اجباری نیست، چون این متن دیده می‌شود و نبودنش سوراخی است که مرورگرِ داور می‌بیند؛ برای محتوای بلوکی render={<div />} بدهید.",
+          "en-US":
+            "The dialog's supporting prose, and the string read AFTER the name. Nothing published aria-describedby before it, so a dialog announced its title and then silence — while the next sentence was the whole reason it interrupted. It is not required: this text is VISIBLE, so its absence is a hole a reviewer can see, and plenty of dialogs are a heading plus a form. Pass render={<div />} for block content.",
         },
       },
     ],
@@ -217,8 +272,10 @@ export const EXAMPLES: ComponentExamples = {
       id: "form",
       title: { "fa-IR": "با فرم", "en-US": "With a form" },
       description: {
-        "fa-IR": "فیلدها درون گفت‌وگو همان فیلدهای همیشگی‌اند؛ برچسب هر کدام همچنان اجباری است.",
-        "en-US": "Fields inside a dialog are the ordinary fields; each label is still required.",
+        "fa-IR":
+          "فیلدها درون گفت‌وگو همان فیلدهای همیشگی‌اند؛ برچسب هر کدام همچنان اجباری است. اینجا isKeyboardDismissDisabled روی DialogTrigger نشسته است — کلید گریز نوشته‌های نیمه‌تمام را دور نمی‌ریزد، ولی ✕ و انصراف همچنان می‌بندند.",
+        "en-US":
+          "Fields inside a dialog are the ordinary fields; each label is still required. `isKeyboardDismissDisabled` sits on `DialogTrigger` here — Escape no longer throws away half-finished typing, while the ✕ and Cancel still close it.",
       },
       render: FormExample,
     },

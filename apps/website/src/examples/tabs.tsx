@@ -1,5 +1,6 @@
 import type { Locale } from "@lumo-ui/core";
-import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
+import { formatNumber } from "@lumo-ui/core";
+import { Badge, Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
 import { CreditCard, ShieldCheck, User } from "lucide-react";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
@@ -24,6 +25,24 @@ const t = {
   securityPanel: {
     "fa-IR": "گذرواژه و ورود دومرحله‌ای را اینجا مدیریت کنید.",
     "en-US": "Manage your password and two-step sign-in here.",
+  },
+  inbox: { "fa-IR": "صندوق ورودی", "en-US": "Inbox" },
+  drafts: { "fa-IR": "پیش‌نویس‌ها", "en-US": "Drafts" },
+  spam: { "fa-IR": "هرزنامه", "en-US": "Spam" },
+  mailboxes: { "fa-IR": "صندوق‌های نامه", "en-US": "Mailboxes" },
+  unreadCounted: { "fa-IR": "پیام خوانده‌نشده", "en-US": "unread messages" },
+  draftsCounted: { "fa-IR": "پیش‌نویس ذخیره‌شده", "en-US": "saved drafts" },
+  inboxPanel: {
+    "fa-IR": "نامه‌های رسیده که هنوز بایگانی نشده‌اند.",
+    "en-US": "Mail that has arrived and has not been archived yet.",
+  },
+  draftsPanel: {
+    "fa-IR": "نوشته‌هایی که ذخیره شده‌اند و هنوز فرستاده نشده‌اند.",
+    "en-US": "Messages you saved and have not sent.",
+  },
+  spamPanel: {
+    "fa-IR": "پیام‌هایی که فیلتر جدا کرده است.",
+    "en-US": "Messages the filter set aside.",
   },
   archived: { "fa-IR": "بایگانی‌شده", "en-US": "Archived" },
   archivedPanel: {
@@ -133,8 +152,79 @@ function DisabledTabExample(l: Locale) {
   );
 }
 
+function CountsExample(l: Locale) {
+  /*
+   * A count in a tab is not decoration — it lands inside the tab's ACCESSIBLE
+   * NAME, because a tab is named by its contents. Two consequences follow, and
+   * both are why this example exists rather than a screenshot of a number in a
+   * pill:
+   *
+   *  1. The digits are announced, so they must be the page's digits.
+   *     `formatNumber` is what makes them ۱۲ rather than the Latin pair — and a
+   *     bare number child would not have compiled anyway.
+   *  2. «Inbox ۱۲» is not a sentence. What the twelve COUNTS has to be in the
+   *     name, or a listener hears a figure with no noun. The visible badge
+   *     stays a bare figure, and an `sr-only` span supplies the noun, so the
+   *     tab reads «صندوق ورودی ۱۲ پیام خوانده‌نشده» while the pill still shows
+   *     just the figure.
+   *
+   * The badge is `subtle`: a solid fill inside a selected tab puts two filled
+   * surfaces on top of each other.
+   */
+  return (
+    <Tabs className="w-full max-w-md">
+      <TabList label={t.mailboxes[l]}>
+        <Tab id="inbox">
+          <span className="flex items-center gap-2">
+            {t.inbox[l]}
+            <Badge tone="accent" variant="subtle">
+              {formatNumber(12, l)}
+              <span className="sr-only"> {t.unreadCounted[l]}</span>
+            </Badge>
+          </span>
+        </Tab>
+        <Tab id="drafts">
+          <span className="flex items-center gap-2">
+            {t.drafts[l]}
+            <Badge tone="neutral" variant="subtle">
+              {formatNumber(3, l)}
+              <span className="sr-only"> {t.draftsCounted[l]}</span>
+            </Badge>
+          </span>
+        </Tab>
+        <Tab id="spam">{t.spam[l]}</Tab>
+      </TabList>
+      <TabPanel id="inbox">
+        <p className="text-sm text-fg-muted">{t.inboxPanel[l]}</p>
+      </TabPanel>
+      <TabPanel id="drafts">
+        <p className="text-sm text-fg-muted">{t.draftsPanel[l]}</p>
+      </TabPanel>
+      <TabPanel id="spam">
+        <p className="text-sm text-fg-muted">{t.spamPanel[l]}</p>
+      </TabPanel>
+    </Tabs>
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "چند نمای هم‌سطح از یک چیز که کاربر بین‌شان جابه‌جا می‌شود و یکی همیشه انتخاب است؛ نمای انتخاب‌شده در بایت اول ارسال می‌شود.",
+        "en-US": "Several peer views of one thing the user switches between, one always selected; the selected view is served in the first byte.",
+      },
+      whenNot: {
+        "fa-IR": "بخش‌ها مراحل ترتیبی‌اند — `Steps`. محتوایی که می‌شود باز و بسته کرد — `Disclosure`. ناوبری بین صفحه‌ها — `NavigationMenu` یا `Sidebar`.",
+        "en-US": "The sections are ordered steps — `Steps`. Content that opens and closes — `Disclosure`. Navigation between pages — `NavigationMenu` or `Sidebar`.",
+      },
+    },
+    title: { "fa-IR": "زبانه‌ها", "en-US": "Tabs" },
+    intro: {
+      "fa-IR": "زبانه‌ها. نام فهرست زبانه اجباری است، و کلیدهای پیکان را موتور با جهت سند حل می‌کند.",
+      "en-US": "Tabs. The tab list's name is required, and the engine resolves the arrow keys against the document direction.",
+    },
+    tier: "navigation",
     composition: [
       `<Tabs orientation="…">`,
       `  <TabList label="…">`,
@@ -192,6 +282,17 @@ export const EXAMPLES: ComponentExamples = {
         "en-US": "The icon is decoration and aria-hidden; the tab's name stays its visible text.",
       },
       render: WithIconsExample,
+    },
+    {
+      id: "counts",
+      title: { "fa-IR": "شمارنده روی زبانه", "en-US": "A count on the tab" },
+      description: {
+        "fa-IR":
+          "شمارنده تزئین نیست: زبانه با محتوایش نام می‌گیرد، پس عدد داخل نام اعلام‌شده می‌نشیند. دو نتیجه دارد. نخست، رقم‌ها خوانده می‌شوند و باید رقم‌های همین صفحه باشند — formatNumber همین را تضمین می‌کند و عدد خام اصلاً کامپایل نمی‌شد. دوم، «صندوق ورودی ۱۲» جمله نیست: باید معلوم باشد دوازده، شمارِ چیست، وگرنه شنونده عددی بی‌اسم می‌شنود. نشانِ دیداری همان رقم تنها می‌ماند و اسم را یک span پنهان می‌آورد، پس زبانه «صندوق ورودی ۱۲ پیام خوانده‌نشده» خوانده می‌شود و حباب همچنان فقط رقم را نشان می‌دهد. نشان subtle است چون پرکردنِ توپر داخل زبانهٔ انتخاب‌شده دو سطح پرشده را روی هم می‌گذارد.",
+        "en-US":
+          "The count is not decoration: a tab is named by its contents, so the figure lands inside the announced name. Two things follow. First, the digits are spoken, so they must be the page's digits — formatNumber guarantees that, and a bare number child would not have compiled. Second, «Inbox ۱۲» is not a sentence: what the twelve counts has to be in the name, or a listener hears a figure with no noun. The visible badge stays the bare figure and an sr-only span supplies the noun, so the tab reads «Inbox ۱۲ unread messages» while the pill still shows only the figure. The badge is subtle because a solid fill inside a selected tab stacks two filled surfaces.",
+      },
+      render: CountsExample,
     },
     {
       id: "vertical",

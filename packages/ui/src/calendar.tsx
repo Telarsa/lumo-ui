@@ -1,153 +1,136 @@
 "use client";
 
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
-import { useId } from "react";
-import {
-  Button as AriaButton,
-  Calendar as AriaCalendar,
-  CalendarCell as AriaCalendarCell,
-  CalendarGrid as AriaCalendarGrid,
-  CalendarGridBody as AriaCalendarGridBody,
-  CalendarGridHeader as AriaCalendarGridHeader,
-  CalendarHeaderCell as AriaCalendarHeaderCell,
-  Heading as AriaHeading,
-  Text as AriaText,
-  useLocale,
-  type CalendarCellProps as AriaCalendarCellProps,
-  type CalendarProps as AriaCalendarProps,
-  type DateValue,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { useId, type ChangeEvent, type ComponentProps } from "react";
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { DayPicker, type DropdownProps } from "react-day-picker";
+import type { CalendarDate } from "@internationalized/date";
+import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
+import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
 import {
   calendarCellVariants,
+  calendarDayButtonVariants,
+  calendarDropdownRootVariants,
+  calendarDropdownsVariants,
+  calendarDropdownVariants,
+  calendarFooterVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
   calendarHeaderVariants,
   calendarHeadingVariants,
+  calendarMonthsVariants,
   calendarNavButtonVariants,
+  calendarNavVariants,
   calendarVariants,
 } from "./calendar.variants.ts";
 import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
+import { SelectField } from "./select.tsx";
 
 export {
   calendarCellVariants,
+  calendarDayButtonVariants,
+  calendarDropdownRootVariants,
+  calendarDropdownsVariants,
+  calendarDropdownVariants,
+  calendarFooterVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
   calendarHeaderVariants,
   calendarHeadingVariants,
+  calendarMonthsVariants,
   calendarNavButtonVariants,
+  calendarNavVariants,
   calendarVariants,
 };
 
 /**
- * A month grid, in the reader's own calendar system.
+ * A month grid, in the reader's own calendar.
  *
- * ═══ THIS IS THE COMPONENT THE WHOLE LIBRARY WAS BUILT FOR ══════════════════
+ *     <Calendar label="تاریخ سفر" locale={locale} today={todayDate} value={value} onChange={setValue} />
  *
- * The prototype that started Lumo rendered a Persian calendar with `{day.day}`
- * and shipped 77 of 77 day cells in Latin digits on a page whose every other
- * number was Persian. `LumoNode` exists because of this component; the lint rule
- * that bans a bare number in JSX names this component in its message. So this
- * file is where the library either keeps its promise or does not.
+ * react-day-picker owns the grid, roving tab stop and arrow keys; `calendar-datelib.ts`
+ * owns WHICH calendar, week start, formatting and every announced string; this file owns
+ * the value boundary (`CalendarDate`, never a JS `Date`), Lumo class names, direction-aware
+ * chevrons and the required-label API. `locale` is REQUIRED and there is no `dir` prop.
  *
- * It keeps it by DELEGATING, not by formatting. `CalendarCell` renders its own
- * text from React Aria's `DateFormatter`, which reads the locale from context —
- * `LumoProvider` supplies `fa-IR-u-ca-persian-nu-arabext` — so the digits are
- * ۱–۳۱ and the month is مرداد without a single call to a formatter here. There
- * is deliberately no `children` on the cell for anyone to fill in with a raw
- * number. Measured under `renderToStaticMarkup`: 42 rendered cells, 0 of them
- * containing a Latin digit. `dates.test.tsx` pins that count.
- *
- * ── JALALI IS A CALENDAR, NOT A NUMERAL SYSTEM ──────────────────────────────
- *
- * The failure worth naming: `-u-nu-arabext` alone gives you Persian DIGITS on
- * GREGORIAN dates, which looks entirely correct and is off by 621 years. The
- * `-u-ca-persian` half is what makes Mordad a month. Both live in
- * `FORMAT_LOCALE` and arrive through `LumoProvider`; nothing in this file
- * chooses a calendar, which is why nothing in this file can choose the wrong
- * one. React Aria calls `createCalendar` on the resolved locale for exactly
- * this reason (verified in `Calendar.mjs`).
- *
- * Consequences a reader of this file should expect, all measured:
- *
- *   - The week starts on شنبه. The weekday header row is ش ی د س چ پ ج.
- *   - Month lengths are 31×6, 30×5, then Esfand at 29 or 30. A grid that
- *     assumed 30/31 alternation would be wrong six times a year.
- *   - Esfand has 30 days in a leap year — 1403 is one, 1404 is not. That is not
- *     a display detail: it decides whether ۱۴۰۳/۱۲/۳۰ is a date a user can
- *     enter at all. See `date-field.tsx` and the leap-year block in
- *     `dates.test.tsx`.
- *
- * ── THE NAV ARROWS ARE CHOSEN, NOT MIRRORED ─────────────────────────────────
- *
- * `useLocale().direction` picks which chevron means "previous". No CSS utility
- * can do this: a class can move a box to the other side of the header, but the
- * glyph inside it still points the same way, and an arrow pointing at the
- * reader's future labelled «ماه قبل» is worse than no arrow. So the icons swap
- * at the component level and the layout mirrors on its own from the logical
- * classes. `flex justify-between` needs no direction to be told to it.
- *
- * ── EVERY ANNOUNCED STRING ──────────────────────────────────────────────────
- *
- * `label`, `previousMonthLabel`, `nextMonthLabel` are required props, because a
- * grid with 42 tab-reachable cells that announces nothing is the `named-controls`
- * defect at its worst. The two nav labels are `strings.calendar.previousMonth`
- * and `.nextMonth`.
- *
- * The cell names — `aria-label="امروز، ۱۴۰۵ مرداد ۱۹, دوشنبه"` — are NOT prop
- * reachable and were once recorded as a permanent leak. They are closed by
- * `patches/react-aria@3.51.0.patch`, which adds a real `fa-IR` bundle to
- * react-aria's own `calendar` intl package. See `packages/core/src/strings.ts`.
+ * `minValue`/`maxValue` are DAYS and are passed TWICE: `startMonth`/`endMonth` bound
+ * NAVIGATION (upstream rounds them to whole months) and `disabled` matchers bound
+ * SELECTION. A year dropdown with no bounds derives its options from the clock during
+ * render (a hydration hazard), so `CalendarNavigation` makes bounds REQUIRED for
+ * `"dropdown"`/`"dropdown-years"` at the type level. `today` is required for the same
+ * reason. Long form: docs/decisions/log.md, docs/history/.
  */
-export interface CalendarProps<T extends DateValue>
+
+/** How the month and year are shown in the caption. react-day-picker's own names, unrenamed. */
+export type CalendarCaptionLayout = "label" | "dropdown" | "dropdown-months" | "dropdown-years";
+
+/**
+ * The caption layout together with the bounds it requires — see the header. Shared by
+ * `Calendar`, `RangeCalendar` and `DatePicker` so the rule is stated once.
+ */
+export type CalendarNavigation =
+  | {
+      /** Paging chevrons only, or a month dropdown — neither reads a clock. */
+      captionLayout?: "label" | "dropdown-months" | undefined;
+      /** Earliest selectable DAY. Itself selectable; the day before it is not. */
+      minValue?: CalendarDate | undefined;
+      /** Latest selectable DAY. Itself selectable; the day after it is not. */
+      maxValue?: CalendarDate | undefined;
+    }
+  | {
+      /** A year dropdown. Both bounds are REQUIRED — see the header. */
+      captionLayout: "dropdown" | "dropdown-years";
+      /** Earliest selectable DAY, and the first year in the list. */
+      minValue: CalendarDate;
+      /** Latest selectable DAY, and the last year in the list. */
+      maxValue: CalendarDate;
+    };
+
+export interface CalendarBaseProps
+  // `aria-describedby` is owned: merged with the description node's id, so it cannot ride the passthrough.
   extends Omit<
-    AriaCalendarProps<T>,
-    "children" | "className" | "aria-label" | "visibleDuration"
+    ComponentProps<"div">,
+    // `onChange` is Lumo's `(value) => void`, not React's `ChangeEventHandler`.
+    "children" | "className" | "aria-describedby" | "onChange"
   > {
   /** Announced name of the calendar. Required: a 42-cell grid needs a name. */
   label: string;
-  /** Name of the previous-month button. Required. `strings.calendar.previousMonth`. */
-  previousMonthLabel: string;
-  /** Name of the next-month button. Required. `strings.calendar.nextMonth`. */
-  nextMonthLabel: string;
+  /**
+   * The reader's locale. Selects the calendar system, the digits, the week
+   * start and the direction. There is no `dir` and no `calendar` prop.
+   */
+  locale: Locale;
+  /** The selected day, in the reader's own calendar. */
+  value?: CalendarDate | undefined;
+  /** Fires with a `CalendarDate` in the reader's calendar, never a JS `Date`. */
+  onChange?: ((value: CalendarDate | undefined) => void) | undefined;
+  /** The month to show when uncontrolled. */
+  defaultMonth?: CalendarDate | undefined;
+  /** The day marked as today. Required so render never reads the clock. */
+  today: CalendarDate;
+  /** Marks individual days unselectable — holidays, booked days. */
+  isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
+  isDisabled?: boolean | undefined;
   /** Help text under the grid. */
   description?: LumoNode;
   /**
-   * Shown when the value is out of range or unavailable.
-   *
-   * REQUIRED once `minValue`, `maxValue` or `isDateUnavailable` is given — see
-   * `date-field.tsx`'s `DateBounds` for the measurement behind that rule. React
-   * Aria's own message is English, Gregorian and Latin-digited, and it is
-   * chosen from `navigator.language` rather than from the provider.
+   * Shown when the value is out of range or unavailable. REQUIRED once `minValue`,
+   * `maxValue` or `isDateUnavailable` is given — there is no built-in fallback message.
    */
   errorMessage?: LumoNode;
   className?: string | undefined;
+  "aria-describedby"?: string | undefined;
 }
 
 /**
- * Joins a caller's `aria-describedby` with one this component owns.
- *
- * WHY A CALENDAR'S HELP TEXT IS NOT A SLOT. React Aria's `Calendar` and
- * `RangeCalendar` provide exactly ONE `Text` slot — `errorMessage` — so
- * `<Text slot="description">` inside either one throws at render:
- * «Invalid slot "description". Valid slot names are "errorMessage"». It is a
- * runtime failure, not a type error, so it does not surface until a page that
- * passes `description` is actually rendered; the static export caught it on the
- * first such page. `DateField`, `TimeField`, `DatePicker` and `DateRangePicker`
- * are unaffected — those DO provide a description slot, which is why they keep
- * using `Description` from `form.tsx`.
- *
- * So the help text is a plain element with an id, associated by
- * `aria-describedby`, which both calendars forward to their group. Joining
- * rather than overwriting matters: `aria-describedby` takes a LIST, and
- * replacing a caller's value would silently drop whatever else already
- * described the grid.
- *
- * Returns a SPREADABLE object rather than a string, because the repo compiles
- * with `exactOptionalPropertyTypes` and React Aria types this prop as a plain
- * `string`: writing `aria-describedby={undefined}` is a type error there, and
- * the honest shape for "no description" is an absent attribute, not an empty
- * one.
+ * The grid's props: everything above, plus the caption layout and its bounds. An
+ * intersection with a UNION, so bounds are required only for the clock-reading layouts.
+ */
+export type CalendarProps = CalendarBaseProps & CalendarNavigation;
+
+/**
+ * Joins a caller's `aria-describedby` with one this component owns: it takes a LIST, so
+ * replacing would drop what already described the grid. Returns a spreadable object
+ * because of `exactOptionalPropertyTypes` — "no description" is an absent attribute.
  */
 export function describedByWith(
   caller: string | undefined,
@@ -157,109 +140,202 @@ export function describedByWith(
   return ids.length === 0 ? {} : { "aria-describedby": ids.join(" ") };
 }
 
-export function Calendar<T extends DateValue>({
+/**
+ * The Lumo class names, mapped onto react-day-picker's element slots. Exported so
+ * `RangeCalendar` and both pickers share one map. Keys are the `UI` enum values as
+ * string literals so a key that stops existing upstream shows as an unstyled element.
+ */
+export function calendarClassNames(): Record<string, string> {
+  return {
+    root: calendarVariants(),
+    // `months` is the positioning context; `nav` is a SIBLING of `month` and is stretched
+    // across the top of it — see `calendarHeaderVariants`.
+    months: calendarMonthsVariants(),
+    month: "flex flex-col gap-4",
+    month_caption: calendarHeaderVariants(),
+    caption_label: calendarHeadingVariants(),
+    nav: calendarNavVariants(),
+    button_previous: calendarNavButtonVariants(),
+    button_next: calendarNavButtonVariants(),
+    // Caption dropdowns, present unconditionally: a `label` layout emits none of these elements.
+    dropdowns: calendarDropdownsVariants(),
+    dropdown_root: calendarDropdownRootVariants(),
+    dropdown: calendarDropdownVariants(),
+    month_grid: calendarGridVariants(),
+    weekdays: "flex",
+    weekday: calendarHeaderCellVariants(),
+    week: "flex w-full",
+    day: calendarCellVariants(),
+    day_button: calendarDayButtonVariants(),
+    week_number: calendarHeaderCellVariants(),
+  };
+}
+
+/**
+ * The two chevrons, chosen by DIRECTION rather than rotated by a class: "previous" points
+ * at the reader's PAST, which is the right of the screen in RTL, and no utility can flip a
+ * glyph. `"down"` (the caption dropdown's chevron) is a third case, not a side: a list
+ * opens downward in every script. Exported so both pickers build their grids the same way.
+ */
+export function calendarChevron(locale: Locale) {
+  const rtl = direction(locale) === "rtl";
+  const Previous = rtl ? ChevronRightIcon : ChevronLeftIcon;
+  const Next = rtl ? ChevronLeftIcon : ChevronRightIcon;
+  return function Chevron({ orientation }: { orientation?: string }) {
+    const Icon =
+      orientation === "down" ? ChevronDownIcon : orientation === "left" ? Previous : Next;
+    return <Icon aria-hidden="true" className="size-4" />;
+  };
+}
+
+/** Adapts react-day-picker's numeric dropdown contract to Lumo's Select. */
+export function CalendarDropdown({ options = [], value, onChange, disabled, "aria-label": label }: DropdownProps) {
+  const accessibleLabel = label ?? "";
+  return (
+    <SelectField
+      label={accessibleLabel}
+      placeholder={accessibleLabel}
+      options={options.map((option) => ({
+        value: String(option.value),
+        label: option.label,
+        disabled: option.disabled,
+      }))}
+      selectedKey={value === undefined ? null : String(value)}
+      onSelectionChange={(key) => {
+        if (key === null || onChange === undefined) return;
+        onChange({ target: { value: key } } as ChangeEvent<HTMLSelectElement>);
+      }}
+      isDisabled={disabled}
+      size="sm"
+      className="relative z-[1] w-auto"
+      triggerClassName="w-auto min-w-20 px-2 text-xs"
+      popoverClassName="max-h-64"
+      itemClassName="gap-1.5 px-1.5 py-1 text-xs [&_svg]:size-3.5"
+    />
+  );
+}
+
+/**
+ * One matcher in react-day-picker's `disabled` prop, as this file uses it. Deliberately
+ * NOT upstream's `Matcher`: that union includes `{ before, after }`, the one shape this
+ * file must never construct — see `calendarDisabled`.
+ */
+export type CalendarDisabledMatcher = ((date: Date) => boolean) | { before: Date } | { after: Date };
+
+/**
+ * The `disabled` prop for the grid: the caller's unavailable days AND the bounds.
+ *
+ * `startMonth`/`endMonth` alone round to whole months, so a `minValue` of ۱۵ مرداد let
+ * fourteen earlier days be selected. Bounds are ADDED beside `isDateUnavailable` (any
+ * matcher disables), as two SEPARATE entries and never one `{ before, after }` object:
+ * upstream flips a closed interval to `&&`, so inverted bounds would enable only the
+ * out-of-range days instead of selecting nothing. `isDisabled` short-circuits first.
+ * Returns `undefined`, not `[]`, when nothing is disabled — `[]` is truthy upstream and
+ * costs a matcher call per cell.
+ */
+export function calendarDisabled(options: {
+  locale: Locale;
+  isDisabled?: boolean | undefined;
+  isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
+  minValue?: CalendarDate | undefined;
+  maxValue?: CalendarDate | undefined;
+}): true | CalendarDisabledMatcher[] | undefined {
+  const { locale, isDisabled, isDateUnavailable, minValue, maxValue } = options;
+  if (isDisabled === true) return true;
+
+  const matchers: CalendarDisabledMatcher[] = [];
+  if (isDateUnavailable) {
+    // Back into the reader's own calendar before the caller's predicate sees it.
+    matchers.push((date: Date) => isDateUnavailable(fromPickerDate(date, locale)));
+  }
+  if (minValue) matchers.push({ before: toPickerDate(minValue) });
+  if (maxValue) matchers.push({ after: toPickerDate(maxValue) });
+  return matchers.length > 0 ? matchers : undefined;
+}
+
+export function Calendar({
   label,
-  previousMonthLabel,
-  nextMonthLabel,
+  locale,
+  value,
+  onChange,
+  defaultMonth,
+  today,
+  captionLayout,
+  minValue,
+  maxValue,
+  isDateUnavailable,
+  isDisabled,
   description,
   errorMessage,
   className,
   "aria-describedby": describedBy,
   ...props
-}: CalendarProps<T>) {
+}: CalendarProps) {
   const descriptionId = useId();
+  const config = lumoCalendar(locale);
+  const dir = direction(locale);
+  const disabled = calendarDisabled({
+    locale,
+    isDisabled,
+    isDateUnavailable,
+    minValue,
+    maxValue,
+  });
+
   return (
-    <AriaCalendar
-      data-lumo=""
-      aria-label={label}
-      {...describedByWith(describedBy, description != null ? descriptionId : undefined)}
-      className={cn(calendarVariants(), className)}
+    <div
       {...props}
+      data-lumo=""
+      className={cn("flex w-fit flex-col gap-2", className)}
+      {...describedByWith(describedBy, description != null ? descriptionId : undefined)}
     >
-      <CalendarHeader previousMonthLabel={previousMonthLabel} nextMonthLabel={nextMonthLabel} />
-      <AriaCalendarGrid className={calendarGridVariants()}>
-        <AriaCalendarGridHeader>
-          {renderHeaderCell}
-        </AriaCalendarGridHeader>
-        <AriaCalendarGridBody>{renderCell}</AriaCalendarGridBody>
-      </AriaCalendarGrid>
+      <DayPicker
+        mode="single"
+        dir={dir}
+        // `lang` explicitly: react-day-picker otherwise stamps `locale.code` (`lang="en-US"`) on a Persian grid.
+        lang={locale}
+        // Neighbouring months' days are SHOWN, greyed: Jalali month lengths change inside the
+        // year, so a reader near a boundary needs to see where the month ends (`data-outside`).
+        showOutsideDays
+        aria-label={label}
+        // The whole calendar system, in four props. See `calendar-datelib.ts`.
+        dateLib={config.dateLib as never}
+        formatters={config.formatters as never}
+        labels={config.labels as never}
+        weekStartsOn={config.weekStartsOn as never}
+        classNames={calendarClassNames()}
+        components={{ Chevron: calendarChevron(locale), Dropdown: CalendarDropdown }}
+        // Omitted when absent rather than passed as `"label"`, so served markup stays identical.
+        {...(captionLayout ? { captionLayout } : {})}
+        {...(value ? { selected: toPickerDate(value) } : {})}
+        {...(defaultMonth ? { defaultMonth: toPickerDate(defaultMonth) } : {})}
+        today={toPickerDate(today)}
+        // The bounds are passed TWICE, on purpose: these bound NAVIGATION (and feed the year
+        // dropdown's option list); the `disabled` matchers below bound SELECTION.
+        {...(minValue ? { startMonth: toPickerDate(minValue) } : {})}
+        {...(maxValue ? { endMonth: toPickerDate(maxValue) } : {})}
+        {...(disabled !== undefined ? { disabled } : {})}
+        {...(onChange
+          ? {
+              // Back into the reader's calendar before it leaves this file.
+              onSelect: (selected: Date | undefined) => {
+                onChange(selected ? fromPickerDate(selected, locale) : undefined);
+              },
+            }
+          : {})}
+      />
       {description != null ? (
-        <div id={descriptionId} className={descriptionVariants()}>
+        // `calendarFooterVariants` keeps a sentence from inflating the `w-fit` wrapper past the grid.
+        <div id={descriptionId} className={cn(calendarFooterVariants(), descriptionVariants())}>
           {description}
         </div>
       ) : null}
       {errorMessage != null ? (
-        <AriaText slot="errorMessage" className={fieldErrorVariants()}>
+        // `role="alert"`: react-day-picker has no error slot.
+        <div role="alert" className={cn(calendarFooterVariants(), fieldErrorVariants())}>
           {errorMessage}
-        </AriaText>
+        </div>
       ) : null}
-    </AriaCalendar>
-  );
-}
-
-/**
- * The weekday abbreviation row.
- *
- * A named function rather than an inline arrow so the two calendars share one
- * definition — and so nobody is tempted to hand-write ["Sun", "Mon", …], which
- * is a list that has no correct Persian translation because the Persian week
- * does not start on the same day.
- */
-function renderHeaderCell(day: string) {
-  return <AriaCalendarHeaderCell className={calendarHeaderCellVariants()}>{day}</AriaCalendarHeaderCell>;
-}
-
-/**
- * One day cell, with no `children`.
- *
- * That absence is the whole point. Passing children here is how the 77-Latin-
- * digit calendar happened: `{date.day}` is a `number`, it type-checks under a
- * plain `ReactNode`, and it renders 1–31 in ASCII on a page that is otherwise
- * entirely Persian. Left empty, React Aria formats the day itself through the
- * locale's numbering system and the defect is unrepresentable.
- */
-export function renderCell(date: AriaCalendarCellProps["date"]) {
-  return <AriaCalendarCell data-lumo="" date={date} className={calendarCellVariants()} />;
-}
-
-export interface CalendarHeaderProps {
-  previousMonthLabel: string;
-  nextMonthLabel: string;
-  className?: string | undefined;
-}
-
-/**
- * Previous / month name / next.
- *
- * Exported because both `Calendar` and `RangeCalendar` render it and a second
- * copy is how the two drift apart. The chevron choice is the direction-aware
- * part; everything else is logical CSS.
- */
-export function CalendarHeader({
-  previousMonthLabel,
-  nextMonthLabel,
-  className,
-}: CalendarHeaderProps) {
-  const { direction } = useLocale();
-  // "Previous" points at the reader's past, which is the RIGHT of the screen in
-  // an RTL script. The icon is the state; no class can rotate a glyph.
-  const PreviousIcon = direction === "rtl" ? ChevronRightIcon : ChevronLeftIcon;
-  const NextIcon = direction === "rtl" ? ChevronLeftIcon : ChevronRightIcon;
-  return (
-    <header className={cn(calendarHeaderVariants(), className)}>
-      <AriaButton
-        slot="previous"
-        aria-label={previousMonthLabel}
-        className={calendarNavButtonVariants()}
-      >
-        <PreviousIcon aria-hidden="true" />
-      </AriaButton>
-      {/* RAC fills the Heading with its own DateFormatter output — «۱۴۰۵ مرداد».
-          It takes no children, so there is no place to put a wrong string. */}
-      <AriaHeading className={calendarHeadingVariants()} />
-      <AriaButton slot="next" aria-label={nextMonthLabel} className={calendarNavButtonVariants()}>
-        <NextIcon aria-hidden="true" />
-      </AriaButton>
-    </header>
+    </div>
   );
 }

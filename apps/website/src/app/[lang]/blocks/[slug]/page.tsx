@@ -6,16 +6,13 @@ import { SiteShell } from "@/components/site-shell";
 import { OnThisPage } from "@/components/on-this-page";
 import { CopyButton } from "@/components/code-block";
 import { DirectionCompare, PreviewFrameThemeSync } from "@/components/demo-frame";
-import { assertLocale, oppositeDirectionLocale, site } from "@/lib/locale";
+import { assertLocale, oppositeDirectionLocale, site, segmentFor} from "@/lib/locale";
 import { allBlocks, blockById } from "@/lib/blocks";
 
 /**
- * The same always-visible scrollbar treatment `code-block.tsx` applies —
- * duplicated rather than imported, because that module is `"use client"` and a
- * bare string cannot cross the client boundary into this server page. Keep the
- * two in step: `overflow-auto` alone leaves macOS's overlay scrollbar invisible
- * until mid-scroll, which on a capped-height listing reads as "the rest of the
- * code does not exist".
+ * The always-visible scrollbar treatment `code-block.tsx` applies — duplicated because that
+ * module is `"use client"` and a bare string cannot cross into this server page. Keep the two
+ * in step: `overflow-auto` alone hides macOS's overlay scrollbar until mid-scroll.
  */
 const SCROLLBAR =
   "[scrollbar-width:thin] [scrollbar-color:var(--lumo-sys-border-strong)_transparent] " +
@@ -24,17 +21,20 @@ const SCROLLBAR =
   "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border-strong";
 
 export function generateStaticParams() {
-  return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang, slug: b.id })));
+  return LOCALES.flatMap((lang) => allBlocks().map((b) => ({ lang: segmentFor(lang), slug: b.id })));
+}
+
+/** One `<title>` per page (WCAG 2.4.2): the block's own name, then the site's. */
+export async function generateMetadata({ params }: { params: Promise<{ lang: string; slug: string }> }) {
+  const { lang: raw, slug } = await params;
+  const lang = assertLocale(raw);
+  const block = blockById(slug);
+  return { title: block === undefined ? site[lang].title : `${block.title[lang]} — ${site[lang].title}` };
 }
 
 /**
- * The page's own copy, keyed by locale.
- *
- * NOT `lang === "fa-IR" ? persian : english`. That ternary compiles with a third
- * locale in the union and hands it the ENGLISH branch — silently, and invisibly
- * to the HTML gate, because both branches are Latin script. A
- * `Record<Locale, …>` turns the same addition into a compile error listing every
- * string still to translate. See the rule in CONTRIBUTING's "Adding a locale".
+ * The page's own copy, keyed by locale — a `Record<Locale, …>`, not a two-branch ternary
+ * that would hand a third locale English silently (CONTRIBUTING's "Adding a locale").
  */
 interface PageCopy {
   rail: { preview: string; installation: string; source: string };
@@ -48,17 +48,9 @@ interface PageCopy {
   hideCompare: string;
   openFullPage: string;
   /**
-   * How this page's language names each locale a frame can be in — EXONYMS, and
-   * the reason this is a nested Record rather than one string.
-   *
-   * The frame caption reads "<block> — Persian" on the English page and
-   * "<block> — انگلیسی" on the Persian one, so the answer depends on BOTH the
-   * page's locale and the frame's. It was a ternary nested inside a ternary,
-   * which produces the right answer for exactly two locales and an English word
-   * in a Persian sentence for any third. `LOCALE_NAMES` in lib/locale.ts is the
-   * endonym table and deliberately different: it answers "what does this
-   * language call itself", which is the right question for a language menu and
-   * the wrong one inside a translated caption.
+   * How this page's language names each locale a frame can be in — EXONYMS, nested by both
+   * the page's and the frame's locale ("<block> — انگلیسی" on the Persian page). `LOCALE_NAMES`
+   * in lib/locale.ts is the endonym table, the right answer for a menu, the wrong one here.
    */
   localeName: Record<Locale, string>;
 }
@@ -105,18 +97,11 @@ function sections(lang: Locale) {
 }
 
 /**
- * The header's previous/next pager over `allBlocks()`'s alphabetical order —
- * the component page's own `Pager`, copied rather than imported for the same
- * reason `BlockFrame` below copies `DemoFrame`'s shape: a page file must not
- * export helpers for another route to import, and the sibling page is not this
- * file's to reach into.
- *
- * The glyphs are `‹`/`›`, a Unicode `Bidi_Mirrored` pair (see
- * `packages/ui/src/pagination.tsx`'s header): under `dir="rtl"` the text
- * engine redraws each as the other and the flex row reverses, so "previous"
- * is always toward the reading start with no `rtl:` variant. The glyphs are
- * `aria-hidden`; the per-locale `aria-label` carrying the neighbour's title is
- * the name. At either end the missing control is simply not rendered.
+ * The header's previous/next pager over `allBlocks()`'s alphabetical order — copied from the
+ * component page rather than imported (a page file must not export helpers for another route).
+ * `‹`/`›` are a Unicode `Bidi_Mirrored` pair (see `packages/ui/src/pagination.tsx`), so
+ * "previous" is always toward the reading start with no `rtl:` variant; the glyphs are
+ * `aria-hidden` and the per-locale `aria-label` is the name.
  */
 function Pager({
   prev,
@@ -153,17 +138,10 @@ function Pager({
 }
 
 /**
- * The full-page preview frame, for ONE direction.
- *
- * This is `components/demo-frame.tsx`'s own shape — a `<figure>` with a
- * language/direction caption above a lazy iframe — copied here rather than
- * imported, because `DemoFrame` hardcodes its `src` to `/view/<lang>/<slug>/`,
- * the component-preview route. Blocks preview at `/view-block/<lang>/<slug>/`,
- * a different route this file owns, and `DemoFrame` itself is out of scope to
- * edit. An "open full page" link sits beside the frame for the reason the
- * frame itself does not fully deliver on: it is a fixed 14rem-tall thumbnail
- * by design (see `DemoFrame`'s own header), while a block is meant to occupy
- * a WHOLE page — the link is where that is actually seen.
+ * The full-page preview frame, for ONE direction. `components/demo-frame.tsx`'s shape copied
+ * here because `DemoFrame` hardcodes its `src` to the component route; blocks preview at
+ * `/view-block/<lang>/<slug>/`. The frame is a fixed-height thumbnail by design, so the
+ * "open full page" link beside it is where a block is actually seen occupying a whole page.
  */
 function BlockFrame({
   slug,
@@ -178,16 +156,12 @@ function BlockFrame({
   pageLang: Locale;
 }) {
   const c = COPY[pageLang];
-  const href = `/view-block/${lang}/${slug}/`;
+  const href = `/view-block/${segmentFor(lang)}/${slug}/`;
   return (
     <figure className="m-0 overflow-hidden rounded-lg border border-border">
-      <figcaption
-        dir="ltr"
-        lang="en"
-        data-lumo-latn=""
-        className="flex items-center justify-between gap-3 border-b border-border bg-surface-sunken px-3 py-1.5 text-xs text-fg-muted"
-      >
-        <code>{`lang="${lang}" dir="${direction(lang)}"`}</code>
+      {/* The island wraps the code ONLY: the link is page-language prose and must be graded as such. */}
+      <figcaption className="flex items-center justify-between gap-3 border-b border-border bg-surface-sunken px-3 py-1.5 text-xs text-fg-muted">
+        <code dir="ltr" lang="en" data-lumo-latn="">{`lang="${lang}" dir="${direction(lang)}"`}</code>
         <a href={href} className="shrink-0 underline">
           {c.openFullPage}
         </a>
@@ -196,10 +170,8 @@ function BlockFrame({
       <iframe
         src={href}
         /*
-         * The frame's accessible name is in the PAGE's language — a screen
-         * reader reads it from the surrounding document. See `demo-frame.tsx`
-         * for why interpolating the slug directly here would ship English
-         * into a Persian page.
+         * The frame's accessible name is in the PAGE's language — see `demo-frame.tsx` for why
+         * interpolating the slug here would ship English into a Persian page.
          */
         title={`${title} — ${c.localeName[lang]}`}
         loading="lazy"
@@ -221,7 +193,7 @@ export default async function BlockPage({
 
   const t = site[lang];
   const c = COPY[lang];
-  const install = `npx shadcn@latest add @lumo/${slug}`;
+  const install = `pnpm exec lumo add ${slug} --to .`;
   const installHtml = await highlight(install, "bash");
   const sourceHtml = await highlight(block.source, "tsx");
 
@@ -252,13 +224,13 @@ export default async function BlockPage({
               <Pager
                 prev={
                   prevBlock && {
-                    href: `/${lang}/blocks/${prevBlock.id}/`,
+                    href: `/${segmentFor(lang)}/blocks/${prevBlock.id}/`,
                     title: prevBlock.title[lang],
                   }
                 }
                 next={
                   nextBlock && {
-                    href: `/${lang}/blocks/${nextBlock.id}/`,
+                    href: `/${segmentFor(lang)}/blocks/${nextBlock.id}/`,
                     title: nextBlock.title[lang],
                   }
                 }
@@ -277,9 +249,8 @@ export default async function BlockPage({
               {c.previewIntro}
             </p>
             {/*
-             * One frame by default — the page's own locale — with the mirrored
-             * document a disclosure away, exactly as the component pages do it.
-             * See `DirectionCompare`'s header in demo-frame.tsx.
+             * One frame by default — the page's own locale — with the mirrored document a disclosure
+             * away, as the component pages do it (see `DirectionCompare` in demo-frame.tsx).
              */}
             <div className="mt-3">
               <DirectionCompare

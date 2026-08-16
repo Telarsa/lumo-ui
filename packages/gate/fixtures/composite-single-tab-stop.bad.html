@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl"><body>
+  <!-- Poison: a toolbar that serves a tab stop on EVERY control. This is what
+       the export served before 12 Aug 2026 — five toolbars at 2, 3, 3, 4 and 5
+       stops — because `ToolbarItem` handed `tabIndex={0}` to every item rather
+       than to one, and because a bare `<button>` with no tabindex is natively
+       tabbable and never joins the composite at all.
+
+       It is the exact inverse of composite-tab-stop.bad.html, and the pair is
+       the point: one file has no stop, this one has three, and a rule that
+       grades only the floor calls this green. -->
+  <div role="toolbar" aria-label="قالب‌بندی متن">
+    <button type="button" tabindex="0">پررنگ</button>
+    <button type="button" tabindex="0">کج</button>
+    <button type="button" aria-label="افزودن پیوند">پ</button>
+  </div>
+  <p>۱۲۳</p>
+</body></html>

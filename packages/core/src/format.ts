@@ -1,20 +1,10 @@
-import { FORMAT_LOCALE, type Locale } from "./types";
+import { FORMAT_LOCALE, type Locale } from "./types.ts";
 
 /**
- * Number and date formatting, locale-aware by construction.
- *
- * `LumoNode` makes `{someNumber}` a compile error. This module is the sanctioned
- * way to render one — the ban is only useful if the correct path is easier than
- * the wrong one.
- *
- * Verified on a full-ICU runtime: under `fa-IR-u-ca-persian-nu-arabext`,
- * `formatNumber(1234.5)` produces `۱٬۲۳۴٫۵` — Persian digits with U+066C as the
- * thousands separator and U+066B as the decimal. Both are required and neither
- * is what a naive `toLocaleString("fa")` guarantees across runtimes, which is
- * why the extensions are stated explicitly rather than inherited from the host.
- *
- * Formatters are cached because constructing `Intl.NumberFormat` is measurably
- * expensive and these run per cell in a table.
+ * Number and date formatting, locale-aware by construction — the sanctioned way
+ * to render the number `LumoNode` makes a compile error. The `-u-ca-persian-nu-arabext`
+ * extensions are stated explicitly because a naive `toLocaleString("fa")` does not
+ * guarantee Persian separators across runtimes. Formatters are cached: they run per cell.
  */
 
 const numberCache = new Map<string, Intl.NumberFormat>();
@@ -49,12 +39,8 @@ export function formatNumber(
 }
 
 /**
- * Formats a date in the locale's own calendar system.
- *
- * Under `fa-IR` this is Jalali, not Gregorian-with-Persian-digits — the
- * `-u-ca-persian` extension in FORMAT_LOCALE is what selects the calendar, and
- * omitting it produces a plausible-looking date that is simply the wrong year.
- * That failure is invisible to anyone who cannot read the calendar.
+ * Formats a date in the locale's own calendar system — Jalali under `fa-IR`,
+ * selected by the `-u-ca-persian` extension in FORMAT_LOCALE.
  */
 export function formatDate(
   value: Date,
@@ -65,17 +51,10 @@ export function formatDate(
 }
 
 /**
- * Parses a locale-formatted number back to a JS number.
- *
- * There is NO `Intl.NumberFormat.prototype.parse` — verified absent in every
- * engine — and `Number("۱٬۲۳۴٫۵")` is `NaN`. So every numeric input in a Persian
- * app needs this, and every such input must be `type="text"` with
- * `inputMode="numeric"`, because `<input type="number">` rejects Persian digits
- * outright. (React Aria's NumberField already does exactly this — verified: it
- * renders `type="text" inputMode="numeric"`.)
- *
- * Built by asking the formatter which characters it produces, rather than
- * hardcoding U+06F0–06F9, so it stays correct if the numbering system changes.
+ * Parses a locale-formatted number back to a JS number. There is no
+ * `Intl.NumberFormat.prototype.parse`, and `<input type="number">` rejects Persian
+ * digits, so numeric inputs are `type="text" inputMode="numeric"` and come here.
+ * Digits are learned from the formatter, not hardcoded.
  */
 export function parseNumber(input: string, locale: Locale): number {
   const fmt = numberFormatter(locale);

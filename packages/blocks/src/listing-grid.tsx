@@ -13,36 +13,11 @@ import {
  * A grid of purchasable things: a product catalogue, a provider directory, a
  * room list.
  *
- * ── NO `"use client"`, AND FOR THIS BLOCK IT IS THE PRODUCT REQUIREMENT ─────
- *
- * A listing grid is the page a crawler indexes. Every card is a real `<a href>`
- * — `Link` from `@lumo-ui/ui`, not a `<div onClick>` — so the catalogue is in
- * the first byte with no JavaScript, which is the reason `badge.tsx`,
- * `card.tsx` and `avatar.tsx` all refuse the client directive as well. One
- * `"use client"` here would remove a whole storefront from the served HTML.
- *
- * ── THREE NUMBERS, THREE CHANCES TO SHIP LATIN DIGITS ──────────────────────
- *
- * A price, a rating and a review count. All three go through `formatNumber`
- * under the route's locale, which is why `locale` is a REQUIRED prop rather
- * than a context with a default (progress.tsx has the argument). `LumoNode`
- * makes the shortcut a compile error: `<CardBody>{listing.price}</CardBody>` is
- * TS2322, not a rendering surprise a Persian shopper discovers.
- *
- * The rating string is assembled by a CALLER-SUPPLIED FUNCTION,
- * `strings.rating(value, count)`, for the same reason `numberField.decrease`
- * is a function in `packages/core/src/strings.ts`: «۴٫۸ از ۱۲۰ نظر» does not
- * place its two numbers where "4.8 from 120 reviews" places them, and a
- * `"{0} from {1}"` template forces Persian into English clause order.
- *
- * ── `image` IS A PAIR, NOT TWO OPTIONAL PROPS ──────────────────────────────
- *
- * `{src, alt}` together or neither. `avatar.tsx` makes the same move: `alt` is
- * required to be WRITTEN, because `alt=""` is right when the title beside the
- * image already names the thing and `alt="اتاق دو تخته با نمای دریا"` is right
- * when it does not — and which one is right is a judgement the type asks for
- * rather than a default it guesses. Two independent optional props would let
- * the attribute vanish entirely, which is the one answer that is always wrong.
+ * No `"use client"`: every card is a real `<a href>`, so the catalogue is in the
+ * server-rendered first byte a crawler indexes. Price, rating and review count
+ * all go through `formatNumber` under the REQUIRED `locale`; the rating sentence
+ * is a caller-supplied function so Persian is not forced into English clause
+ * order. `image` is a `{src, alt}` pair so `alt` must be WRITTEN, never omitted.
  */
 export interface ListingImage {
   src: string;
@@ -72,16 +47,9 @@ export interface Listing {
 export interface ListingGridStrings {
   /** Announced name of the region wrapping the grid, e.g. «آگهی‌ها». */
   regionLabel: string;
-  /**
-   * Announced prefix for the price, e.g. «قیمت». Rendered `sr-only` before the
-   * figure, so a screen reader says "price, one million two hundred thousand"
-   * rather than a bare number floating under a title.
-   */
+  /** Announced prefix for the price, e.g. «قیمت». Rendered `sr-only` before the figure. */
   priceLabel: string;
-  /**
-   * The rating sentence, as a function of two ALREADY-FORMATTED strings.
-   * See the file header for why this is a function.
-   */
+  /** The rating sentence, as a function of two ALREADY-FORMATTED strings. A function, not a template — see the file header. */
   rating: (value: string, count: string) => string;
   /** Shown when `items` is empty. */
   emptyTitle: string;
@@ -93,13 +61,7 @@ export interface ListingGridProps {
   items: readonly Listing[];
   /** Formats every figure. Required by design — see progress.tsx. */
   locale: Locale;
-  /**
-   * `Intl.NumberFormat` options for the price, e.g.
-   * `{style:"currency",currency:"IRR",maximumFractionDigits:0}`.
-   *
-   * No default: a currency is a business decision, and a library that guessed
-   * one would render a plausible price in the wrong unit.
-   */
+  /** `Intl.NumberFormat` options for the price, e.g. `{style:"currency",currency:"IRR"}`. No default — a currency is a business decision. */
   priceFormat?: Intl.NumberFormatOptions | undefined;
   /** Tracks per row. Default `"auto"` — as many 16rem columns as fit. */
   cols?: "2" | "3" | "4" | "auto" | undefined;
@@ -110,6 +72,7 @@ export interface ListingGridProps {
 
 const RATING_FORMAT: Intl.NumberFormatOptions = { maximumFractionDigits: 1 };
 
+/** A responsive card grid of listings — image, title, price and rating — with the empty state built in. */
 export function ListingGrid({
   strings,
   items,
@@ -142,16 +105,11 @@ export function ListingGrid({
             return (
               <li key={listing.id} className="flex">
                 {/*
-                 * `variant="elevated"` and `h-full`: the cards in a row must
-                 * agree on height regardless of how long the Persian title
-                 * runs, and Persian titles run measurably longer than the same
-                 * English string.
+                 * `h-full`: cards in a row must agree on height however long the Persian title runs.
                  */}
                 <Card variant="elevated" className="h-full w-full overflow-hidden">
                   {listing.image !== undefined ? (
-                    // `aspect-video` + `object-cover` keeps a non-square photo
-                    // centred rather than squashed. Neither utility has an
-                    // inline axis, so there is nothing here to mirror.
+                    // `aspect-video` + `object-cover`: centred, not squashed; nothing to mirror.
                     <img
                       src={listing.image.src}
                       alt={listing.image.alt}
@@ -167,11 +125,8 @@ export function ListingGrid({
                     ) : null}
 
                     {/*
-                     * The link wraps the TITLE, not the whole card. A card-wide
-                     * anchor swallows the price and the rating into the link's
-                     * accessible name, which a screen reader then reads as one
-                     * long run with no way to skim. `variant="quiet"` keeps the
-                     * heading looking like a heading.
+                     * The link wraps the TITLE, not the whole card — a card-wide anchor
+                     * swallows price and rating into the link's accessible name.
                      */}
                     <h3 className="text-base leading-snug font-semibold text-fg">
                       <Link href={listing.href} variant="quiet">

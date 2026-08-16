@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 import { readdir, readFile } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { format, gradeHtml } from "./index.ts";
+import {
+  addCoverage,
+  EMPTY_COVERAGE,
+  format,
+  formatCoverage,
+  gradeHtml,
+  missingDenseDigitFloors,
+} from "./index.ts";
 import { RULES, persianDigitFloor } from "./rules.ts";
 
 const root = process.argv[2];
@@ -10,21 +17,9 @@ if (!root) {
   process.exit(2);
 }
 
-/*
- * The digit floors — rule 3's missing half, found by a review two days in.
- *
- * `persianDigitFloor` had a factory, a poison fixture, a passing self-test, a
- * README paragraph and a docs page — and was never in the RULES array this CLI
- * runs. Every one of those artifacts described a rule that graded nothing:
- * the anti-vacuity rule was itself vacuous, which is the failure mode this
- * repo's own docs call "worse than no rule, because it is trusted".
- *
- * Floors are per-path and belong to the SITE (the consumer knows which of its
- * routes exist to show numbers), so they arrive as a JSON file argument rather
- * than living here. No file → the floor rule simply is not constructed, and
- * that absence is now visible in this file instead of implied by an array
- * nobody re-read.
- */
+// The digit floors are per-path and belong to the SITE, so they arrive as a
+// JSON file argument. No file → the floor rule is not constructed, visibly here
+// (it once had a factory, fixture and docs and was never in RULES at all).
 const floorsPath = process.argv[3];
 
 /** Keys beginning with "//" are comments, not floors — JSON has no other way. */
@@ -36,15 +31,18 @@ async function readFloors(path: string): Promise<Record<string, number>> {
 }
 
 const rules = [...RULES];
+let floorCount = 0;
+let floorLedger: Record<string, number> = {};
 if (floorsPath) {
-  const floors = await readFloors(floorsPath);
-  const entries = Object.keys(floors).length;
+  floorLedger = await readFloors(floorsPath);
+  const entries = Object.keys(floorLedger).length;
   if (entries === 0) {
     console.error(`  ${floorsPath} declares no floors. An empty floors file is`);
     console.error("  the vacuous pass this rule exists to prevent.");
     process.exit(2);
   }
-  rules.push(persianDigitFloor(floors));
+  rules.push(persianDigitFloor(floorLedger));
+  floorCount = entries;
   console.log(`  persian-digit-floor armed for ${entries} route(s)`);
 }
 
@@ -60,9 +58,7 @@ async function htmlFiles(dir: string): Promise<string[]> {
 
 const files = await htmlFiles(root);
 
-// An empty run reporting success is the vacuous pass this whole project exists
-// to prevent — a gate that grades nothing and prints "clean" is worse than no
-// gate, because it is trusted. Refuse loudly instead.
+// A gate that grades nothing and prints "clean" is worse than no gate. Refuse loudly.
 if (files.length === 0) {
   console.error(`  lumo-gate found no .html under ${root}.`);
   console.error("  Refusing to report success on nothing.");
@@ -71,17 +67,21 @@ if (files.length === 0) {
 
 const violations = [];
 const graded = new Set<string>();
+const pages: Array<{ path: string; html: string }> = [];
+let coverage = EMPTY_COVERAGE;
 for (const file of files) {
   const rel = relative(root, file);
   graded.add(rel);
-  violations.push(...gradeHtml(rel, await readFile(file, "utf8"), rules));
+  const html = await readFile(file, "utf8");
+  pages.push({ path: rel, html });
+  violations.push(...gradeHtml(rel, html, rules));
+  // Coverage prints, it never fails.
+  coverage = addCoverage(coverage, rel, html);
 }
 
-// A floor keyed to a path that no longer exists is a rule that silently
-// stopped grading — the same hole as an unwired rule, one rename later.
+// A floor keyed to a path that no longer exists is a rule that silently stopped grading.
 if (floorsPath) {
-  const floors = await readFloors(floorsPath);
-  for (const declared of Object.keys(floors)) {
+  for (const declared of Object.keys(floorLedger)) {
     if (!graded.has(declared)) {
       violations.push({
         rule: "persian-digit-floor",
@@ -90,8 +90,19 @@ if (floorsPath) {
       });
     }
   }
+  for (const missing of missingDenseDigitFloors(pages, floorLedger)) {
+    violations.push({
+      rule: "persian-digit-floor",
+      path: missing.path,
+      detail:
+        `number-dense route has ${String(missing.found)} visible native digits but no committed floor; ` +
+        "add a reviewed baseline at about 55% of this count",
+    });
+  }
 }
 
 console.log(format(violations));
 console.log(`  ${files.length} document(s) graded, ${violations.length} violation(s)`);
+const scope = formatCoverage(coverage, floorCount);
+if (scope) console.log(scope);
 process.exit(violations.length ? 1 : 0);

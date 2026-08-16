@@ -7,13 +7,12 @@ import type { Locale, LumoNode } from "@lumo-ui/core";
  *
  *     apps/website/src/examples/<slug>.tsx
  *
- * where `<slug>` is the component page's slug — the same id the component's
- * entry in `lib/demos.tsx` carries. The loader (`lib/examples-loader.ts`)
- * discovers these files by READING THE DIRECTORY, so adding a component's
- * examples is creating the file and nothing else: no list to append to, no
- * registry to regenerate, no import to add. `demos.tsx` remains the fallback —
- * a component without an examples file renders exactly the single-demo page it
- * renders today.
+ * where `<slug>` is the component page's slug. The loader
+ * (`lib/examples-loader.ts`) discovers these files by READING THE DIRECTORY, so
+ * adding a component's page is creating the file and nothing else: no list to
+ * append to, no registry to regenerate, no import to add. This file IS the
+ * registration — there is no other list, and a component without one has no
+ * page (see `lib/catalog.ts`). The FIRST example is the page's preview.
  *
  * The file exports ONE named constant:
  *
@@ -23,7 +22,7 @@ import type { Locale, LumoNode } from "@lumo-ui/core";
  *
  * Every example renders as a card with its own source under it, and that source
  * is SLICED FROM THIS FILE'S TEXT at build time — never retyped — so it cannot
- * drift from the preview beside it (the same argument `demos.tsx` makes for
+ * drift from the preview beside it (the same argument `lib/catalog.ts` makes for
  * reading component source off disk). Slicing needs anchors, so the contract
  * fixes the file's shape:
  *
@@ -49,8 +48,7 @@ import type { Locale, LumoNode } from "@lumo-ui/core";
  *
  * ── THE RULES EVERY RENDER FUNCTION OBEYS ───────────────────────────────────
  *
- * The same three as `demos.tsx`, because these render on the same prerendered,
- * gate-graded pages:
+ * Three rules, because these render on prerendered, gate-graded pages:
  *
  *  1. Every user-visible string is keyed by locale — both `fa-IR` and `en-US`,
  *     no English literal anywhere, including `aria-label`s. `LocalizedText`
@@ -87,19 +85,25 @@ export interface ExamplePart {
 
 export interface ExamplesMeta {
   /**
-   * Page identity for components that have NO demos.tsx entry. The round-3
-   * review found eleven components with example files and no built page:
-   * routes derive from the demo registry, and an examples file alone was
-   * invisible to it. These three fields are what lets the catalog synthesize
-   * the page — title and intro become the page header, tier places it in the
-   * sidebar. Required (validated by the loader) whenever the component is
-   * absent from demos.tsx; redundant, and ignored, when a demo entry exists.
+   * Page identity. Title and intro become the page header, tier places it in
+   * the sidebar and the gallery. REQUIRED for every file (validated by
+   * `lib/catalog.ts` at build time) — the types stay optional only because
+   * the loader validates with a message that names the missing field rather
+   * than a compiler error that does not. History: routes once derived from a
+   * separate demo registry, an examples file alone was invisible to it, and a
+   * review found eleven components with example files and no built page.
    */
   title?: Record<Locale, string>;
   intro?: Record<Locale, string>;
   tier?: "form" | "display" | "overlay" | "navigation" | "feedback" | "layout" | "data";
   /** Marks the component's sidebar row with the "new" dot. */
   isNew?: boolean;
+  /**
+   * When to reach for this component and when not to — one or two sentences
+   * each, in both locales, naming the alternative ("use `Select` for fewer than
+   * eight known options"). Renders as its own section and rail entry.
+   */
+  usage?: { when: Record<Locale, string>; whenNot: Record<Locale, string> };
   /**
    * The monospace parts tree, as pseudo-JSX. Rendered in a copyable code
    * block. Every capitalised tag must be a real `@lumo-ui/ui` export.

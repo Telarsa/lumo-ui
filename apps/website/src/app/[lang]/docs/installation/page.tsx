@@ -18,7 +18,7 @@ pnpm verify      # types → no-CSS-Modules → tests → build → gate
 pnpm dev         # the showcase site, live`;
 
 const PREVIEW_CMDS = `pnpm --filter website build
-pnpm --filter website preview   # http://localhost:4173/fa-IR/`;
+pnpm start                     # http://localhost:4173/fa/`;
 
 const CSS_IMPORTS = `@import "tailwindcss";
 @import "@lumo-ui/theme/tokens.css";
@@ -86,8 +86,13 @@ const COPY = {
           لومو خصوصی است و درون سازمان تلارسا مصرف می‌شود؛ روی npm منتشر نشده و رجیستری عمومی
           ندارد (<Term>DECISIONS.md §0.2</Term>). توزیع دو مسیر دارد: کامپوننت‌ها و بلوک‌ها
           به‌صورت کپی در پروژهٔ مصرف‌کننده می‌نشینند تا قابل ویرایش باشند؛ بسته‌های{" "}
-          <Term>@lumo-ui/core</Term> و <Term>@lumo-ui/theme</Term> — یعنی قراردادها — به‌صورت
-          وابستگی گیتِ سنجاق‌شده به یک تگ سفر می‌کنند، چون ویرایش آن‌ها باگ است، نه شخصی‌سازی.
+          <Term>@lumo-ui/core</Term>، <Term>@lumo-ui/theme</Term> و <Term>@lumo-ui/base-ui-ssr</Term>{" "}
+          — یعنی قراردادها — به‌صورت وابستگی گیتِ سنجاق‌شده به یک تگ نصب می‌شوند، چون ویرایش
+          آن‌ها باگ است، نه شخصی‌سازی. شکل دقیق:{" "}
+          <Term>&quot;@lumo-ui/core&quot;: &quot;github:Telarsa/lumo-ui#v0.1.0&amp;path:packages/core&quot;</Term>{" "}
+          (و همین برای theme و base-ui-ssr)، به‌علاوهٔ خودِ مخزن به‌عنوان وابستگی توسعه —{" "}
+          <Term>&quot;lumo-ui&quot;: &quot;github:Telarsa/lumo-ui#v0.1.0&quot;</Term> — که فرمان{" "}
+          <Term>lumo</Term> و رجیستری را می‌آورد. راهنمای کامل: <Term>docs/agent-consumer.md</Term>.
         </>
       ),
       workspaceLoop: (
@@ -98,8 +103,11 @@ const COPY = {
       ),
       workspacePreview: (
         <>
-          <Term>pnpm start</Term> وجود ندارد — سایت یک خروجی استاتیک است و سروری در کار نیست.
-          برای دیدن همان بایت‌هایی که دروازه نمره داده:
+          <Term>next start</Term> اینجا کار نمی‌کند — سایت یک خروجی استاتیک است و سروری برای
+          راه‌اندازی وجود ندارد. <Term>pnpm start</Term> به‌جایش همان پوشهٔ خروجی را سرو می‌کند،
+          دقیقاً همان‌طور که یک میزبان واقعی: نشانی بدون اسلشِ پایانی به شکل اسلش‌دار هدایت
+          می‌شود و صفحهٔ خطای چهارصدوچهار خودِ سایت سرو می‌شود، نه پیام خام Node. پس همان
+          بایت‌هایی را می‌بینید که دروازه نمره داده:
         </>
       ),
       css: (
@@ -124,8 +132,9 @@ const COPY = {
       ),
       addCommand: (
         <>
-          کامپوننت‌ها از راه رجیستریِ shadcn-سازگار نصب می‌شوند؛ هر آیتم، فایل یا فایل‌هایش را
-          در پروژهٔ شما کپی می‌کند:
+          کامپوننت‌ها با فرمان <Term>lumo add</Term> نصب می‌شوند؛ هر آیتم با وابستگی‌های
+          رجیستری‌اش کپی می‌شود و در <Term>lumo.lock.json</Term> ثبت می‌شود تا{" "}
+          <Term>lumo upgrade</Term> بعداً ویرایش‌های شما را نگه دارد:
         </>
       ),
       addTabs: (
@@ -153,9 +162,13 @@ const COPY = {
           Lumo is private and consumed inside the Telarsa organisation; it is not published to
           npm and serves no public registry (<Term>DECISIONS.md §0.2</Term>). Distribution has
           two paths: components and blocks land as copies in the consuming project so they can
-          be edited, while the packages — <Term>@lumo-ui/core</Term> and{" "}
-          <Term>@lumo-ui/theme</Term>, the contracts — travel as git dependencies pinned to a
-          tag, because an edit to them is a bug, not a customisation.
+          be edited, while the packages — <Term>@lumo-ui/core</Term>, <Term>@lumo-ui/theme</Term>{" "}
+          and <Term>@lumo-ui/base-ui-ssr</Term>, the contracts — are installed as git dependencies
+          pinned to a tag, because an edit to them is a bug, not a customisation. The exact form:{" "}
+          <Term>&quot;@lumo-ui/core&quot;: &quot;github:Telarsa/lumo-ui#v0.1.0&amp;path:packages/core&quot;</Term>{" "}
+          (likewise theme and base-ui-ssr), plus the repository itself as a dev dependency —{" "}
+          <Term>&quot;lumo-ui&quot;: &quot;github:Telarsa/lumo-ui#v0.1.0&quot;</Term> — which brings the{" "}
+          <Term>lumo</Term> command and the registry. Full guide: <Term>docs/agent-consumer.md</Term>.
         </>
       ),
       workspaceLoop: (
@@ -166,8 +179,11 @@ const COPY = {
       ),
       workspacePreview: (
         <>
-          There is no <Term>pnpm start</Term> — the site is a static export, so there is no
-          server to start. To view the exact bytes the gate graded:
+          <Term>next start</Term> does not work here — the site is a static export, so there is
+          no server to start. <Term>pnpm start</Term> serves the export instead, and serves it
+          the way a real host would: an unslashed URL redirects to its slashed form, and the
+          site&rsquo;s own 404 page is served rather than a bare Node message. So what you see is
+          the exact bytes the gate graded:
         </>
       ),
       css: (
@@ -180,20 +196,21 @@ const COPY = {
       ),
       provider: (
         <>
-          Never write <Term>{"<html>"}</Term> yourself — <Term>LumoHtml</Term> is the only thing
-          that writes it, and because it derives <Term>dir</Term> from the locale, a wrong
-          direction cannot be passed. And <Term>LumoProvider</Term> is not optional: without it
-          React Aria resolves its locale from <Term>navigator.language</Term> — absent during
-          server rendering — and falls back to <Term>en-US</Term>. Measured: a slider thumb at
-          value 40 sits at <Term>left: 40%</Term> instead of <Term>left: 60%</Term>, and no
-          gate catches it, because it is valid HTML with plausible inline styles. That is why
-          the provider is a component with a required prop rather than a line of documentation.
+         Never write <Term>{"<html>"}</Term> yourself — <Term>LumoHtml</Term> is the only thing
+         that writes it, and because it derives <Term>dir</Term> from the locale, a wrong
+         direction cannot be passed. And <Term>LumoProvider</Term> is not optional: without it
+          Base UI&rsquo;s direction context defaults to <Term>ltr</Term>. LumoProvider sends the
+          same required locale to Lumo&rsquo;s formatter/string context and to Base UI&rsquo;s{" "}
+          <Term>DirectionProvider</Term>, so Persian text, digits, arrows and keyboard geometry
+          cannot disagree. That is why the provider is a component with a required prop rather
+          than a line of documentation.
         </>
       ),
       addCommand: (
         <>
-          Components install through the shadcn-compatible registry; each item copies its file
-          or files into your project:
+          Components install with <Term>lumo add</Term>; each item is copied with its registry
+          closure and recorded in <Term>lumo.lock.json</Term>, so <Term>lumo upgrade</Term> can
+          later keep your edits:
         </>
       ),
       addTabs: (

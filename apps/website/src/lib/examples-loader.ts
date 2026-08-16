@@ -14,37 +14,41 @@ import {
 } from "@/examples/_system/extract";
 
 /**
- * The example-file loader. SERVER-ONLY — it reads directories and file text,
- * and it runs during `next build` (this site is a static export, so "server"
- * means the build, exactly as `lib/highlight.ts`'s header puts it).
+ * The example-file loader. SERVER-ONLY — it reads directories and file text
+ * during `next build` (static export, so "server" means the build).
  *
- * Discovery is BY EXISTENCE: `exampleSlugs()` lists `src/examples/*.tsx` off
- * the filesystem, so a teammate shipping examples for a new component creates
- * one file and appears everywhere — the component page, the rail, the
- * sidebar's "new" dot — with no hand-kept list to forget. Names starting with
- * an underscore are the system's own (`_system/`), never examples.
- *
- * Loading VALIDATES, loudly. Everything the contract in
- * `examples/_system/types.ts` promises is checked here at build time, and a
- * violation throws — which fails the build — rather than degrading:
- *
- *   - the file must export `EXAMPLES` with at least one example;
- *   - ids must be kebab-case and unique (they become page anchors);
- *   - every localized string must be present and non-empty in EVERY locale —
- *     the site has no fallback locale, per CONTRIBUTING.md;
- *   - every example's source must be extractable (see `_system/extract.ts` —
- *     an example whose code cannot be shown is a broken page, not a warning);
- *   - every part named in `meta.composition` or `meta.parts` must be a real
- *     `packages/ui/src/index.ts` export, read off disk here the same way the
- *     slug page reads `registry.json`: derived from the artifact that is
- *     already true, never restated by hand.
- *
- * The module cache is per-build, like the registry cache in the slug page and
- * the highlighter in `lib/highlight.ts`.
+ * Discovery is BY EXISTENCE (`src/examples/*.tsx`; underscore names are the
+ * system's own). Loading VALIDATES loudly at build time — `EXAMPLES` present,
+ * kebab-case unique ids, every localized string in EVERY locale, extractable
+ * source, every named part a real `packages/ui/src/index.ts` export — and a
+ * violation throws rather than degrading. The module cache is per-build.
  */
 
 const EXAMPLES_DIR = join(process.cwd(), "src", "examples");
 const UI_INDEX = join(process.cwd(), "..", "..", "packages", "ui", "src", "index.ts");
+const API_REFERENCE = join(process.cwd(), "..", "..", "api-reference.json");
+
+export interface GeneratedApiProp {
+  name: string;
+  type: string;
+  required: boolean;
+  description: string;
+}
+
+export interface GeneratedApiGroup {
+  name: string;
+  props: readonly GeneratedApiProp[];
+}
+
+interface GeneratedApiReference {
+  version: number;
+  modules: Record<string, readonly GeneratedApiGroup[]>;
+}
+
+const generatedApi = JSON.parse(readFileSync(API_REFERENCE, "utf8")) as GeneratedApiReference;
+if (generatedApi.version !== 1) {
+  throw new Error(`[examples] unsupported api-reference.json version ${generatedApi.version}`);
+}
 
 export interface LoadedExample {
   id: string;
@@ -57,31 +61,74 @@ export interface LoadedExample {
 
 export interface LoadedComponentExamples {
   slug: string;
-  /** Page identity, for components with no demos.tsx entry (see catalog.ts). */
+  /** Page identity — title and intro become the page header, tier places it in the sidebar (see catalog.ts). */
   title?: Record<Locale, string> | undefined;
   intro?: Record<Locale, string> | undefined;
   tier?: "form" | "display" | "overlay" | "navigation" | "feedback" | "layout" | "data" | undefined;
   isNew: boolean;
+  usage?: { when: Record<Locale, string>; whenNot: Record<Locale, string> } | undefined;
+  /**
+   * The component's module inside `packages/ui/src` — `meta.sourceFile` when
+   * set, else `<slug>.tsx`. The catalog reads the source panel's bytes from it.
+   */
+  module: string;
   composition?: string | undefined;
   /** Value exports of the component's own module — the derived parts list. */
   moduleParts: readonly string[];
+  /** Exported props and their resolved types, generated from the TypeScript checker. */
+  api: readonly GeneratedApiGroup[];
   parts?: readonly ExamplePart[] | undefined;
   examples: readonly LoadedExample[];
 }
 
-/** Every component slug that has an examples file, alphabetical. */
+/**
+ * Every component slug that has examples, alphabetical.
+ *
+ * Two shapes are accepted — `examples/button.tsx` (a FILE) or
+ * `examples/button/index.tsx` (a DIRECTORY, for a component whose examples
+ * outgrow one file); `sourceOf` resolves either. A slug in BOTH forms throws:
+ * which one won would depend on directory-read order.
+ */
 export function exampleSlugs(): string[] {
   if (!existsSync(EXAMPLES_DIR)) return [];
-  return readdirSync(EXAMPLES_DIR, { withFileTypes: true })
+  const entries = readdirSync(EXAMPLES_DIR, { withFileTypes: true });
+  const named = (name: string) => !name.startsWith("_") && !name.includes(".test.");
+
+  const files = entries
+    .filter((e) => e.isFile() && e.name.endsWith(".tsx") && named(e.name))
+    .map((e) => e.name.slice(0, -".tsx".length));
+
+  const dirs = entries
     .filter(
       (e) =>
-        e.isFile() &&
-        e.name.endsWith(".tsx") &&
-        !e.name.startsWith("_") &&
-        !e.name.includes(".test."),
+        e.isDirectory() && named(e.name) && existsSync(join(EXAMPLES_DIR, e.name, "index.tsx")),
     )
-    .map((e) => e.name.slice(0, -".tsx".length))
-    .sort((a, b) => a.localeCompare(b));
+    .map((e) => e.name);
+
+  const both = files.filter((slug) => dirs.includes(slug));
+  if (both.length > 0) {
+    throw new Error(
+      `[examples] ${both.join(", ")}: both examples/<slug>.tsx and ` +
+        `examples/<slug>/index.tsx exist. Two files claiming one page, with the ` +
+        `winner decided by directory-read order. Delete one.`,
+    );
+  }
+
+  return [...files, ...dirs].sort((a, b) => a.localeCompare(b));
+}
+
+/**
+ * The path of a slug's entry module, whichever shape it is in.
+ *
+ * Returns `undefined` when the component has no examples at all — which is not
+ * an error, it is the `coverage.ts` manifest's whole subject.
+ */
+export function sourceOf(slug: string): string | undefined {
+  const flat = join(EXAMPLES_DIR, `${slug}.tsx`);
+  if (existsSync(flat)) return flat;
+  const nested = join(EXAMPLES_DIR, slug, "index.tsx");
+  if (existsSync(nested)) return nested;
+  return undefined;
 }
 
 function assertLocalizedText(value: LocalizedText, file: string, field: string): void {
@@ -106,15 +153,19 @@ const cache = new Map<string, Promise<LoadedComponentExamples>>();
 
 /**
  * Loads, validates and source-slices one component's examples file.
- * Returns `undefined` when the component has none — the caller falls back to
- * its single `demos.tsx` demo, which is the contract's stated default.
+ * Returns `undefined` when the component has none — and a component with no
+ * examples file has no page (see catalog.ts).
  */
 export function loadExamplesFor(slug: string): Promise<LoadedComponentExamples> | undefined {
-  const file = `${slug}.tsx`;
-  if (!existsSync(join(EXAMPLES_DIR, file))) return undefined;
+  const path = sourceOf(slug);
+  if (path === undefined) return undefined;
+  // The name used in every error message: the shape the author actually wrote.
+  const file = path.endsWith(`${slug}.tsx`) && !path.includes(`/${slug}/`)
+    ? `${slug}.tsx`
+    : `${slug}/index.tsx`;
   let pending = cache.get(slug);
   if (pending === undefined) {
-    pending = loadAndValidate(slug, file);
+    pending = loadAndValidate(slug, file, path);
     cache.set(slug, pending);
   }
   return pending;
@@ -152,9 +203,11 @@ function normalizeModule(
       title?: Record<Locale, string>;
       intro?: Record<Locale, string>;
       tier?: ComponentExamples["meta"]["tier"];
+      usage?: ComponentExamples["meta"]["usage"];
     };
     return {
       meta: {
+        ...(m.usage !== undefined ? { usage: m.usage } : {}),
         ...(m.title !== undefined ? { title: m.title } : {}),
         ...(m.intro !== undefined ? { intro: m.intro } : {}),
         ...(m.tier !== undefined ? { tier: m.tier } : {}),
@@ -180,13 +233,22 @@ function normalizeModule(
   );
 }
 
-async function loadAndValidate(slug: string, file: string): Promise<LoadedComponentExamples> {
-  // A dynamic import whose specifier keeps a static prefix and a static
-  // extension — the shape bundlers turn into a directory context, which is
-  // what lets discovery-by-existence still be bundled statically.
-  const mod = (await import(`../examples/${slug}.tsx`)) as Parameters<
-    typeof normalizeModule
-  >[0];
+async function loadAndValidate(
+  slug: string,
+  file: string,
+  path: string,
+): Promise<LoadedComponentExamples> {
+  // A dynamic import with a static prefix and extension — the shape bundlers
+  // turn into a directory context, so discovery-by-existence still bundles.
+  /*
+   * TWO specifiers: one covering both shapes would need a variable middle
+   * segment, which defeats the directory context, so the branch is here.
+   */
+  const mod = (
+    file.endsWith("/index.tsx")
+      ? await import(`../examples/${slug}/index.tsx`)
+      : await import(`../examples/${slug}.tsx`)
+  ) as Parameters<typeof normalizeModule>[0];
   const spec = normalizeModule(mod, file);
   if (spec.examples.length === 0) {
     throw new Error(
@@ -195,7 +257,7 @@ async function loadAndValidate(slug: string, file: string): Promise<LoadedCompon
     );
   }
 
-  const fileText = readFileSync(join(EXAMPLES_DIR, file), "utf8");
+  const fileText = readFileSync(path, "utf8");
   const seen = new Set<string>();
   const examples: LoadedExample[] = [];
   for (const example of spec.examples) {
@@ -245,9 +307,32 @@ async function loadAndValidate(slug: string, file: string): Promise<LoadedCompon
   }
 
   const moduleName = spec.meta.sourceFile ?? `${slug}.tsx`;
-  const moduleParts = (exported.byModule.get(moduleName) ?? []).filter((n) =>
-    /^[A-Z]/.test(n),
-  );
+  /*
+   * Throws, never `?? []`: a module the barrel does not re-export (or exports
+   * in a form `parseExportedNames` cannot read — only `export { … } from` is
+   * parsed; `examples-loader.test.ts` pins that the barrel has nothing else)
+   * would otherwise render a page as though the component had no parts.
+   */
+  const moduleExports = exported.byModule.get(moduleName);
+  if (moduleExports === undefined) {
+    throw new Error(
+      `[examples] ${file}: nothing in packages/ui/src/index.ts re-exports ` +
+        `"./${moduleName}". Either the component is not exported from the ` +
+        `barrel — in which case no consumer can import it — or the barrel ` +
+        `exports it in a form parseExportedNames cannot read (it matches ` +
+        `\`export { … } from "./module"\` and nothing else). Fix the barrel, or ` +
+        `set meta.sourceFile if the parts live in a differently-named module.`,
+    );
+  }
+  const moduleParts = moduleExports.filter((n) => /^[A-Z]/.test(n));
+  const api = generatedApi.modules[moduleName];
+  if (api === undefined || api.length === 0) {
+    throw new Error(
+      `[examples] ${file}: api-reference.json has no exported Props group for ` +
+        `${moduleName}. Run \`node scripts/build-api-reference.mjs\`; if it stays ` +
+        `empty, export the component's public Props type from packages/ui/src/index.ts.`,
+    );
+  }
 
   return {
     slug,
@@ -255,26 +340,30 @@ async function loadAndValidate(slug: string, file: string): Promise<LoadedCompon
     intro: spec.meta.intro,
     tier: spec.meta.tier,
     isNew: spec.meta.isNew === true,
+    usage: spec.meta.usage,
+    module: moduleName,
     composition: spec.meta.composition,
     moduleParts,
+    api,
     parts: spec.meta.parts,
     examples,
   };
 }
 
 /**
- * The slugs whose example files carry `isNew: true` — what drives the
- * sidebar's "new" dot. Reads ONLY the flag, deliberately not the full
- * `loadExamplesFor` validation: the sidebar renders on every page, and full
- * validation includes cross-file state (parts against index.ts exports) that
- * belongs to the component's own page — where it still fails the build
- * loudly. The sidebar asking "is it new" must not make every page hostage to
- * one component's half-merged exports.
+ * The slugs whose example files carry `isNew: true` — drives the sidebar's
+ * "new" dot. Reads ONLY the flag, not the full `loadExamplesFor` validation,
+ * so one component's half-merged exports cannot break every page's sidebar.
  */
 export async function newExampleSlugs(): Promise<ReadonlySet<string>> {
   const flags = await Promise.all(
     exampleSlugs().map(async (slug) => {
-      const mod = (await import(`../examples/${slug}.tsx`)) as {
+      const nested = sourceOf(slug)?.endsWith("/index.tsx") === true;
+      const mod = (
+        nested
+          ? await import(`../examples/${slug}/index.tsx`)
+          : await import(`../examples/${slug}.tsx`)
+      ) as {
         EXAMPLES?: ComponentExamples;
         meta?: { isNew?: boolean };
       };

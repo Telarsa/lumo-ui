@@ -20,30 +20,11 @@ import {
  *
  * `"use client"`: callbacks throughout.
  *
- * ── THE RESULT COUNT IS A FUNCTION OF A FORMATTED STRING ───────────────────
- *
- * `resultCount: (count: string) => string`, and the argument arrives already
- * run through `formatNumber`. Two separate rules meet here:
- *
- *  - Rule 0. `«۲۴ نتیجه»` needs Persian digits; `{items.length}` in JSX would
- *    render `24`, which is the calendar-cell defect wearing a different hat.
- *  - Rule 6. «۲۴ نتیجه» does not put its number where "24 results" does, so a
- *    `"{n} results"` template forces Persian into English clause order.
- *    `packages/core/src/strings.ts` types `numberField.decrease(label)` as a
- *    function for exactly this reason; this is the same shape.
- *
- * The block owns `formatNumber` and the caller owns the sentence. Neither can
- * do the other's job wrongly.
- *
- * ── WHY THE VIEW SWITCH LIVES IN A `Toolbar` ────────────────────────────────
- *
- * `Toolbar` collapses its contents into ONE Tab stop with arrow-key navigation
- * inside — and React Aria resolves those arrows against the document direction,
- * so ArrowLeft moves to the NEXT control under `dir="rtl"`. That is the exact
- * behaviour a hand-written `switch (e.key)` gets backwards, invisibly, in every
- * screenshot (toolbar.tsx has the argument). The search field is deliberately
- * OUTSIDE it: a text input inside a roving-tabindex group traps the arrow keys
- * a reader needs for caret movement.
+ * `resultCount` is a function of the ALREADY-FORMATTED total: the block owns
+ * `formatNumber`, the caller owns the sentence (a template would force Persian
+ * into English clause order). The view switch lives in a `Toolbar` so arrow keys
+ * resolve against document direction; the search field stays OUTSIDE it so a
+ * roving-tabindex group does not trap the caret's arrow keys.
  */
 export interface SortOption {
   /** Stable key, sent back through `onSortChange`. Not rendered. */
@@ -70,10 +51,7 @@ export interface DataToolbarStrings {
   viewList: string;
   /** The grid-view toggle. */
   viewGrid: string;
-  /**
-   * The result count, as a function of the ALREADY-FORMATTED total.
-   * See the file header for why this is a function and not a template.
-   */
+  /** The result count, as a function of the ALREADY-FORMATTED total. A function, not a template — see the file header. */
   resultCount: (count: string) => string;
 }
 
@@ -149,15 +127,12 @@ export function DataToolbar({
           <ToggleButtonGroup
             aria-label={strings.viewLabel}
             selectionMode="single"
-            // `disallowEmptySelection`: a view switch with nothing selected
-            // renders neither view. Unlike a filter, "off" is not a state here.
+            // A view switch with nothing selected renders neither view.
             disallowEmptySelection
             selectedKeys={view === undefined ? [] : [view]}
             onSelectionChange={(keys) => {
-              // RAC hands back a `Set<Key>`; single-selection mode guarantees
-              // at most one member. Iterating rather than indexing keeps
-              // `noUncheckedIndexedAccess` honest — a Set has no index to be
-              // wrong about.
+              // RAC hands back a `Set<Key>`; iterating rather than indexing keeps
+              // `noUncheckedIndexedAccess` honest.
               for (const key of keys) {
                 if (key === "list" || key === "grid") onViewChange?.(key);
               }
@@ -178,10 +153,8 @@ export function DataToolbar({
 
       {total !== undefined ? (
         /*
-         * `role="status"` so a change in the count is announced after a filter
-         * runs, politely — at the next pause rather than interrupting. The
-         * count is a formatted STRING by the time it reaches JSX, which is what
-         * gets it past `LumoNode` and past the gate's `no-latin-digits` rule.
+         * `role="status"` so a change in the count is announced politely after
+         * a filter runs. The count is a formatted STRING by the time it reaches JSX.
          */
         <p role="status" className="text-sm text-fg-muted">
           {strings.resultCount(formatNumber(total, locale))}

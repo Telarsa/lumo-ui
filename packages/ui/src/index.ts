@@ -1,6 +1,38 @@
 export { Button, IconButton } from "./button.tsx";
 export type { ButtonProps, IconButtonProps } from "./button.tsx";
 
+export { HeatmapChart } from "./heatmap-chart.tsx";
+export type { HeatmapChartProps, HeatmapDatum } from "./heatmap-chart.tsx";
+export { RadarChart } from "./radar-chart.tsx";
+export type { RadarChartProps, RadarDatum, RadarSeries } from "./radar-chart.tsx";
+export { TreemapChart } from "./treemap-chart.tsx";
+export type { TreemapChartProps, TreemapDatum } from "./treemap-chart.tsx";
+export { SankeyChart } from "./sankey-chart.tsx";
+export type {
+  SankeyChartProps,
+  SankeyLinkDatum,
+  SankeyNodeDatum,
+} from "./sankey-chart.tsx";
+
+export { ColorPicker } from "./color-picker.tsx";
+export type { ColorPickerProps, ColorSwatch } from "./color-picker.tsx";
+export { ColorInput, normalizeColor } from "./color-input.tsx";
+export type { ColorFormat, ColorInputProps } from "./color-input.tsx";
+export { JsonInput, validateJson } from "./json-input.tsx";
+export type { JsonInputProps, JsonValidation } from "./json-input.tsx";
+export { MaskInput, maskValue } from "./mask-input.tsx";
+export type { MaskInputProps, MaskValue } from "./mask-input.tsx";
+export { MultiSelect } from "./multi-select.tsx";
+export type { MultiSelectOption, MultiSelectProps } from "./multi-select.tsx";
+export { TagsInput } from "./tags-input.tsx";
+export type { TagsInputProps } from "./tags-input.tsx";
+export { Cascader, resolveCascaderPath } from "./cascader.tsx";
+export type { CascaderOption, CascaderProps } from "./cascader.tsx";
+export { TreeSelect, treeSelectionState } from "./tree-select.tsx";
+export type { TreeSelectOption, TreeSelectProps } from "./tree-select.tsx";
+export { RangeSlider } from "./range-slider.tsx";
+export type { RangeSliderProps } from "./range-slider.tsx";
+
 export {
   ButtonGroup,
   ButtonGroupSeparator,
@@ -20,7 +52,9 @@ export type { AspectRatioProps } from "./aspect-ratio.tsx";
 export {
   Description,
   FieldError,
-  FOCUS_RING,
+  FOCUS_RING_SELF,
+  Field,
+  FieldInput,
   Form,
   Label,
   descriptionVariants,
@@ -29,8 +63,117 @@ export {
   formVariants,
   labelVariants,
   optional,
+  useFieldControl,
+  useFieldLabelId,
 } from "./form.tsx";
-export type { DescriptionProps, FieldErrorProps, FormProps, LabelProps } from "./form.tsx";
+export type {
+  DescriptionProps,
+  FieldErrorProps,
+  FieldInputProps,
+  FieldProps,
+  FormProps,
+  FormValidationBehavior,
+  LabelProps,
+} from "./form.tsx";
+
+/** Form STATE, a separate registry item from the form CHROME above (`form.tsx` travels with every control). */
+export {
+  LumoForm,
+  fieldControl,
+  createLatestAsyncValidator,
+  formSubmissionState,
+  firstError,
+  focusFirstInvalid,
+  isValidNationalId,
+  lumoValidators,
+  listFieldControl,
+  lumoStandardSchema,
+  revalidateLogic,
+  useLumoForm,
+  visibleLength,
+} from "./form-state.tsx";
+export type {
+  LumoFieldControl,
+  LumoFormField,
+  LumoFormInstance,
+  LumoFormProps,
+  LumoFormSubmissionState,
+  LumoLatestAsyncValidator,
+  LumoListField,
+  LumoListFieldControl,
+  LumoStandardSchema,
+  LumoStandardSchemaIssue,
+  LumoValidator,
+  LumoValidatorMessages,
+} from "./form-state.tsx";
+
+export { Filters } from "./filters.tsx";
+export {
+  assertQuery,
+  createFilter,
+  createFilterGroup,
+  executeQuery,
+  parseQuery,
+  queryIssues,
+  serializeQuery,
+} from "./filters.shared.ts";
+export type {
+  FilterField,
+  FilterOperator,
+  FilterOption,
+  FilterSelectField,
+  FiltersProps,
+  FiltersStrings,
+  FilterTextField,
+} from "./filters.tsx";
+export type {
+  FilterClause,
+  FilterExpression,
+  FilterGroup,
+  FilterQuery,
+  ParseQueryResult,
+  QueryCombinator,
+  QueryExecutionField,
+  QueryExecutionOperator,
+  QueryIssue,
+  QueryShapeField,
+  QueryShapeOperator,
+} from "./filters.shared.ts";
+export { PowerSearch } from "./power-search.tsx";
+export type {
+  PowerSearchBooleanField,
+  PowerSearchChoiceField,
+  PowerSearchCustomEditorProps,
+  PowerSearchCustomField,
+  PowerSearchDateField,
+  PowerSearchField,
+  PowerSearchNumberField,
+  PowerSearchOperator,
+  PowerSearchOption,
+  PowerSearchProps,
+  PowerSearchSavedView,
+  PowerSearchStatus,
+  PowerSearchStrings,
+  PowerSearchTextField,
+} from "./power-search.tsx";
+
+export {
+  groupCollection,
+  presentAsyncCollection,
+  presentQueryResult,
+  useAsyncCollection,
+} from "./async-collection.ts";
+export type {
+  AsyncCollectionAction,
+  AsyncCollectionMessages,
+  AsyncCollectionOptions,
+  AsyncCollectionPage,
+  AsyncCollectionPresentation,
+  AsyncCollectionRequest,
+  AsyncCollectionResult,
+  AsyncCollectionStatus,
+  CollectionGroup,
+} from "./async-collection.ts";
 
 export { TextField, inputVariants } from "./text-field.tsx";
 export type { TextFieldProps } from "./text-field.tsx";
@@ -42,6 +185,28 @@ export {
   inputGroupInputVariants,
 } from "./input-group.tsx";
 export type { InputGroupButtonProps, InputGroupProps } from "./input-group.tsx";
+
+export {
+  InputOtp,
+  otpDigits,
+  inputOtpCaretVariants,
+  inputOtpControlVariants,
+  inputOtpRowVariants,
+  inputOtpSlotVariants,
+} from "./input-otp.tsx";
+export type { InputOtpProps } from "./input-otp.tsx";
+
+export {
+  COUNTRIES,
+  PhoneInput,
+  isValidPhone,
+  phoneDigits,
+  phoneInputControlVariants,
+  phoneInputRowVariants,
+  toE164,
+  toNational,
+} from "./phone-input.tsx";
+export type { PhoneCountry, PhoneInputProps } from "./phone-input.tsx";
 
 export { TextArea, textAreaVariants } from "./text-area.tsx";
 export type { TextAreaProps } from "./text-area.tsx";
@@ -86,11 +251,17 @@ export type { BadgeProps } from "./badge.tsx";
 export { Tag, tagVariants } from "./tag.tsx";
 export type { TagProps } from "./tag.tsx";
 
-export { Avatar, avatarVariants } from "./avatar.tsx";
+export {
+  Avatar,
+  avatarStatusVariants,
+  avatarStatusWrapperVariants,
+  avatarVariants,
+} from "./avatar.tsx";
 export type { AvatarProps } from "./avatar.tsx";
 
 export {
   Card,
+  CardAction,
   CardBody,
   CardDescription,
   CardFooter,
@@ -105,10 +276,10 @@ export type {
   CardTitleProps,
 } from "./card.tsx";
 
-export { Alert, alertIconVariants, alertVariants } from "./alert.tsx";
-export type { AlertLive, AlertProps } from "./alert.tsx";
+export { Alert, alertCloseVariants, alertIconVariants, alertVariants } from "./alert.tsx";
+export type { AlertDismissProps, AlertLive, AlertProps } from "./alert.tsx";
 
-export { EmptyState, emptyStateVariants } from "./empty-state.tsx";
+export { EmptyState, emptyStateMediaVariants, emptyStateVariants } from "./empty-state.tsx";
 export type { EmptyStateProps } from "./empty-state.tsx";
 
 export { Separator, separatorVariants } from "./separator.tsx";
@@ -158,7 +329,9 @@ export {
 export type { BoxTag, ContainerProps, GridProps, StackProps } from "./stack.tsx";
 
 export {
+  DialogClose,
   Dialog,
+  DialogDescription,
   DialogHeading,
   DialogModal,
   DialogOverlay,
@@ -168,6 +341,8 @@ export {
   dialogVariants,
 } from "./dialog.tsx";
 export type {
+  DialogCloseProps,
+  DialogDescriptionProps,
   DialogHeadingProps,
   DialogModalProps,
   DialogOverlayProps,
@@ -181,8 +356,13 @@ export type { AlertDialogProps, AlertDialogTone } from "./alert-dialog.tsx";
 export { Drawer, DrawerOverlay, drawerOverlayVariants, drawerVariants } from "./drawer.tsx";
 export type { DrawerOverlayProps, DrawerProps } from "./drawer.tsx";
 
-export { Popover, PopoverTrigger, popoverVariants } from "./popover.tsx";
-export type { LumoPlacement, PopoverProps, PopoverTriggerProps } from "./popover.tsx";
+export { Popover, PopoverDescription, PopoverTrigger, popoverVariants } from "./popover.tsx";
+export type {
+  LumoPlacement,
+  PopoverDescriptionProps,
+  PopoverProps,
+  PopoverTriggerProps,
+} from "./popover.tsx";
 
 export { Tooltip, TooltipTrigger, tooltipVariants } from "./tooltip.tsx";
 export type { TooltipProps, TooltipTriggerProps } from "./tooltip.tsx";
@@ -193,8 +373,14 @@ export {
   MenuPopover,
   MenuSection,
   MenuSeparator,
+  MenuCheckboxItem,
+  MenuRadioGroup,
+  MenuRadioItem,
   MenuTrigger,
   SubmenuTrigger,
+  menuCheckboxIndicatorVariants,
+  menuCurrentIndicatorVariants,
+  menuRadioIndicatorVariants,
   menuItemVariants,
   menuPopoverVariants,
   menuSectionHeaderVariants,
@@ -203,36 +389,83 @@ export {
   menuVariants,
 } from "./menu.tsx";
 export type {
+  MenuCheckboxItemProps,
   MenuItemProps,
   MenuPopoverProps,
   MenuProps,
+  MenuRadioGroupProps,
+  MenuRadioItemProps,
   MenuSectionProps,
   MenuSeparatorProps,
   MenuTriggerProps,
   SubmenuTriggerProps,
 } from "./menu.tsx";
 
+export {
+  DataGrid,
+  DataGridColumnsMenu,
+  DataGridEmpty,
+  DataGridPagination,
+  DataGridSearch,
+  DataGridToolbar,
+  DataGridEditableCell,
+  aggregateDataGrid,
+  dataGridPinnedStyle,
+  reorderDataGridItems,
+  dataGridEmptyVariants,
+  dataGridFooterVariants,
+  dataGridPageSizeVariants,
+  dataGridRangeVariants,
+  dataGridToolbarVariants,
+  dataGridVariants,
+} from "./data-grid.tsx";
+export type {
+  DataGridColumn,
+  DataGridColumnLabel,
+  DataGridAsyncState,
+  DataGridColumnsMenuProps,
+  DataGridEmptyProps,
+  DataGridPaginationProps,
+  DataGridProps,
+  DataGridSearchProps,
+  DataGridTableInstance,
+  DataGridToolbarProps,
+  DataGridAggregate,
+  DataGridEditableCellProps,
+  DataGridPin,
+} from "./data-grid.tsx";
+
 export { ContextMenu, ContextMenuTrigger } from "./context-menu.tsx";
 export type { ContextMenuProps, ContextMenuTriggerProps } from "./context-menu.tsx";
 
 export {
   Select,
+  SelectField,
+  SelectGroup,
   SelectItem,
   SelectPopover,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
+  selectGroupLabelVariants,
   selectItemVariants,
   selectListBoxVariants,
   selectPopoverVariants,
+  selectSeparatorVariants,
   selectTriggerVariants,
   selectValueVariants,
   selectVariants,
 } from "./select.tsx";
 export type {
+  SelectGroupProps,
+  SelectFieldOption,
+  SelectFieldProps,
   SelectItemProps,
   SelectPopoverProps,
   SelectProps,
+  SelectSeparatorProps,
   SelectTriggerProps,
+  SelectTriggerVariantProps,
   SelectValueProps,
 } from "./select.tsx";
 
@@ -283,28 +516,37 @@ export type {
 
 export {
   Breadcrumb,
+  BreadcrumbEllipsis,
   Breadcrumbs,
+  breadcrumbEllipsisVariants,
   breadcrumbSeparatorVariants,
   breadcrumbVariants,
   breadcrumbsVariants,
 } from "./breadcrumbs.tsx";
-export type { BreadcrumbProps, BreadcrumbsProps } from "./breadcrumbs.tsx";
+export type {
+  BreadcrumbEllipsisProps,
+  BreadcrumbProps,
+  BreadcrumbsProps,
+} from "./breadcrumbs.tsx";
 
 export {
   Toolbar,
+  ToolbarItem,
   ToolbarSeparator,
   toolbarSeparatorVariants,
   toolbarVariants,
 } from "./toolbar.tsx";
-export type { ToolbarProps, ToolbarSeparatorProps } from "./toolbar.tsx";
+export type { ToolbarItemProps, ToolbarProps, ToolbarSeparatorProps } from "./toolbar.tsx";
 
-export {
-  ToggleButton,
-  ToggleButtonGroup,
-  toggleButtonGroupVariants,
-  toggleButtonVariants,
-} from "./toggle-group.tsx";
+export { ToggleButton, ToggleButtonGroup } from "./toggle-group.tsx";
 export type { ToggleButtonGroupProps, ToggleButtonProps } from "./toggle-group.tsx";
+// From the directive-free module: a cva exported from a `"use client"` file cannot be
+// called by a server component, and `shadcn migrate rtl` only walks `cva()` arguments.
+export { toggleButtonGroupVariants, toggleButtonVariants } from "./toggle-group.variants.ts";
+export type {
+  ToggleButtonGroupVariantProps,
+  ToggleButtonVariantProps,
+} from "./toggle-group.variants.ts";
 
 export { Num, DateText } from "./num.tsx";
 export type { NumProps, DateTextProps } from "./num.tsx";
@@ -317,17 +559,18 @@ export {
   Row,
   Table,
   TableBody,
+  TableFooter,
   TableHeader,
   TableSelectAllColumn,
   TableSelectionCell,
-  cellVariants,
-  columnResizerVariants,
-  columnVariants,
-  resizableTableContainerVariants,
-  rowVariants,
-  tableBodyVariants,
-  tableHeaderVariants,
-  tableVariants,
+  TableTreeCell,
+  TableWidgetCell,
+  VirtualTableBody,
+  localeSortFn,
+  lumoTableFeatures,
+  useAsyncLumoTable,
+  useLumoTable,
+  useLumoQueryTable,
 } from "./table.tsx";
 export type {
   CellProps,
@@ -336,14 +579,48 @@ export type {
   ResizableTableContainerProps,
   RowProps,
   TableBodyProps,
+  TableFooterProps,
   TableHeaderProps,
   TableProps,
   TableSelectAllColumnProps,
   TableSelectionCellProps,
+  TableTreeCellProps,
+  TableWidgetCellProps,
+  VirtualTableBodyProps,
+  // The structural seam the grid reads TanStack through; the interfaces ARE the statement that TanStack owns no ARIA.
+  LumoTableColumn,
+  AsyncLumoTableOptions,
+  LumoExpandableTableRow,
+  LumoTableFeatures,
+  LumoTableInstance,
+  LumoTableOptions,
+  LumoQueryTableOptions,
+  LumoTableRow,
 } from "./table.tsx";
 
+// Directive-free module, direct: a server component framing a grid may call these, and
+// `gridArrow(locale)` is a pure function so the RTL arrow mapping is testable without a DOM.
+export {
+  cellVariants,
+  columnResizerVariants,
+  columnVariants,
+  gridArrow,
+  resizableTableContainerVariants,
+  rowVariants,
+  tableBodyVariants,
+  tableFooterVariants,
+  tableHeaderVariants,
+  tableVariants,
+} from "./table.variants.ts";
+export type { GridArrow, GridStep } from "./table.variants.ts";
+
 export { ListBox, ListBoxItem, listBoxItemVariants, listBoxVariants } from "./list-box.tsx";
-export type { ListBoxItemProps, ListBoxProps } from "./list-box.tsx";
+export type {
+  ListBoxAsyncAction,
+  ListBoxAsyncState,
+  ListBoxItemProps,
+  ListBoxProps,
+} from "./list-box.tsx";
 
 export {
   DescriptionDetail,
@@ -370,6 +647,7 @@ export {
   toastVariants,
 } from "./toast.tsx";
 export type {
+  LumoQueuedToast,
   LumoToastContent,
   LumoToastQueue,
   ToastProps,
@@ -417,6 +695,17 @@ export {
 } from "./steps.tsx";
 export type { StepItem, StepStatus, StepsProps } from "./steps.tsx";
 
+export { Questionnaire } from "./questionnaire.tsx";
+export type {
+  QuestionnaireChoice,
+  QuestionnaireItem,
+  QuestionnaireOptionalItem,
+  QuestionnaireProps,
+  QuestionnaireRequiredItem,
+  QuestionnaireStrings,
+  QuestionnaireValue,
+} from "./questionnaire.tsx";
+
 export {
   SegmentedControl,
   SegmentedControlItem,
@@ -432,14 +721,8 @@ export type {
 export { buttonVariants } from "./button.variants.ts";
 export type { ButtonVariantProps } from "./button.variants.ts";
 
-/*
- * Pagination's classes and its page-window arithmetic come from the
- * directive-free module, NOT through `pagination.tsx`. Re-exporting them from
- * the client component would turn them back into client references in the RSC
- * graph — which is the exact failure `button.variants.ts` documents, and the
- * reason `packages/blocks/src/listing-grid.tsx` can render a server-side pager
- * of real `<a href>` links with these classes at all.
- */
+// Directive-free module, direct — never through the client component, which would turn
+// these back into client references (see `button.variants.ts`).
 export {
   paginationGapVariants,
   paginationItemVariants,
@@ -452,8 +735,18 @@ export type {
   PaginationSlot,
 } from "./pagination.variants.ts";
 
-export { LumoProvider } from "./provider.tsx";
-export type { LumoProviderProps } from "./provider.tsx";
+export {
+  LumoProvider,
+  ManagedSurfaces,
+  createCommandManager,
+  createModalManager,
+} from "./provider.tsx";
+export type {
+  LumoProviderProps,
+  LumoSurfaceManager,
+  ManagedSurface,
+  ManagedSurfacesProps,
+} from "./provider.tsx";
 
 export {
   HoverCard,
@@ -494,21 +787,33 @@ export type {
   ReadOnlyRatingProps,
 } from "./rating.tsx";
 
-export { FileUpload, FileUploadItem, FileUploadList } from "./file-upload.tsx";
+export {
+  FileUpload,
+  FileUploadItem,
+  FileUploadList,
+  collectDroppedFiles,
+  createUploadController,
+  reorderUploadItems,
+  transformUploadFiles,
+} from "./file-upload.tsx";
 export type {
+  FileUploadLifecycle,
+  FileUploadLifecycleAction,
   FileUploadItemProps,
   FileUploadListProps,
   FileUploadProps,
+  FileUploadRejection,
+  FileUploadRejectionReason,
+  UploadChunkContext,
+  UploadController,
+  UploadControllerOptions,
+  UploadControllerSnapshot,
+  UploadControllerStatus,
+  UploadDropEntry,
+  UploadTransform,
 } from "./file-upload.tsx";
 
-/*
- * Same rule as `pagination.variants.ts` above, for the same reason: FileUpload's
- * classes AND `formatFileSize` come from the directive-free module, never
- * through `file-upload.tsx`. A list of already-uploaded attachments is text and
- * a formatted number with no interaction — the most server-renderable thing in
- * a file feature — and routing the formatter through the client component would
- * make it a client reference and fail that page's prerender.
- */
+// Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
   dropZoneVariants,
   fileUploadItemVariants,
@@ -568,59 +873,67 @@ export type {
 } from "./command.tsx";
 
 export {
-  ChartCategoryAxis,
   ChartContainer,
   ChartData,
   ChartLegend,
-  ChartLegendContent,
-  ChartPie,
-  ChartPieCenter,
   ChartStyle,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartValueAxis,
-  ChartValueLabelList,
+  CHART_MOTION_UPDATE_DURATION,
+  chartMotion,
+  chartTooltip,
+  // TanStack's own marks and scales, re-exported so a chart is composed from a single import.
+  areaY,
+  barY,
+  defineChart,
+  dot,
+  lineY,
+  scaleBand,
+  scaleLinear,
+  scalePoint,
 } from "./chart.tsx";
 export type {
-  ChartAxisProps,
+  ChartAnimation,
   ChartContainerProps,
   ChartDataProps,
-  ChartLegendContentProps,
-  ChartPieCenterProps,
-  ChartPieProps,
+  ChartEasing,
+  ChartLegendProps,
+  ChartMotionOptions,
   ChartRow,
-  ChartTooltipContentProps,
-  ChartTooltipProps,
-  ChartValueLabelListProps,
 } from "./chart.tsx";
 
-/*
- * Same rule as `pagination.variants.ts` above. Chart's classes, its theme
- * stylesheet builder AND its direction arithmetic come from the directive-free
- * module, never through `chart.tsx`. The chart panel on the roadmap is a SERVER
- * component — a title, a delta and a legend key around a client island — and
- * routing `chartMirror` or `chartContainerVariants` through the client component
- * would make them client references and fail that page's prerender.
- */
+// Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
+  CHART_KEYBOARD_READING_ORDER,
+  CHART_MOTION_ATTRIBUTE,
+  CHART_MOTION_GUIDE_DURATION,
+  CHART_MOTION_MARK_DURATION,
+  CHART_MOTION_REDUCED_MOTION_IS_TOTAL,
+  CHART_MOTION_STAGGER,
+  CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
+  CHART_ROLE_DESCRIPTION,
+  CHART_VALUE_AXIS_TRAILING_EDGE,
+  TANSTACK_ROLE_DESCRIPTION,
+  chartCategoryAxis,
   chartColor,
   chartColorVar,
   chartContainerVariants,
   chartLegendItemVariants,
   chartLegendVariants,
   chartMirror,
+  chartMotionStyleSheet,
   chartPieCenterVariants,
+  chartRenderSvg,
   chartStyleSheet,
   chartTickFormatter,
   chartTooltipIndicatorVariants,
   chartTooltipVariants,
+  chartValueAxis,
 } from "./chart.variants.ts";
 export type {
+  ChartAxisSpecOptions,
   ChartConfig,
-  ChartCrossAxisMirror,
-  ChartMainAxisMirror,
+  ChartAxisMirror,
   ChartMirror,
   ChartPieSweep,
 } from "./chart.variants.ts";
@@ -691,11 +1004,7 @@ export type {
   ItemStaticProps,
 } from "./item.tsx";
 
-/*
- * Same rule as `pagination.variants.ts` above: item's cva definitions export
- * from the directive-free module directly — re-exporting them through the
- * "use client" component would turn them back into client references.
- */
+// Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
   itemActionsVariants,
   itemContentVariants,
@@ -734,16 +1043,98 @@ export type {
 } from "./message.tsx";
 
 export {
-  NativeSelect,
-  NativeSelectOptGroup,
-  NativeSelectOption,
-  nativeSelectVariants,
-} from "./native-select.tsx";
+  MessageScroller,
+  messageScrollerJumpVariants,
+  messageScrollerVariants,
+  messageScrollerViewportVariants,
+} from "./message-scroller.tsx";
+export type { MessageScrollerProps } from "./message-scroller.tsx";
+
+export {
+  Timeline,
+  TimelineBody,
+  TimelineItem,
+  TimelineTime,
+  TimelineTitle,
+  timelineBodyVariants,
+  timelineItemVariants,
+  timelineMarkerVariants,
+  timelineRailVariants,
+  timelineTimeVariants,
+  timelineTitleVariants,
+  timelineVariants,
+} from "./timeline.tsx";
 export type {
-  NativeSelectOptGroupProps,
-  NativeSelectOptionProps,
-  NativeSelectProps,
-} from "./native-select.tsx";
+  TimelineItemProps,
+  TimelineProps,
+  TimelineSectionProps,
+  TimelineTimeProps,
+} from "./timeline.tsx";
+
+export { Scrollspy, scrollspyLinkVariants, scrollspyVariants } from "./scrollspy.tsx";
+export type { ScrollspyItem, ScrollspyProps } from "./scrollspy.tsx";
+
+export {
+  OverflowList,
+  fitOverflowItems,
+  overflowListItemVariants,
+  overflowListMeasureVariants,
+  overflowListVariants,
+} from "./overflow-list.tsx";
+export type {
+  OverflowFitInput,
+  OverflowListEntry,
+  OverflowListProps,
+} from "./overflow-list.tsx";
+
+export {
+  TransferList,
+  transferListActionsVariants,
+  transferListPanelVariants,
+  transferListVariants,
+} from "./transfer-list.tsx";
+export type {
+  TransferListItem,
+  TransferListProps,
+  TransferListStrings,
+} from "./transfer-list.tsx";
+
+export { IconTile, iconTileVariants } from "./icon-tile.tsx";
+export type { IconTileProps } from "./icon-tile.tsx";
+
+export { IconStack, iconStackOverflowVariants, iconStackVariants } from "./icon-stack.tsx";
+export type { IconStackProps } from "./icon-stack.tsx";
+
+export {
+  Frame,
+  frameAddressVariants,
+  frameBarVariants,
+  frameDotVariants,
+  frameNotchVariants,
+  frameVariants,
+} from "./frame.tsx";
+export type { FrameProps } from "./frame.tsx";
+
+export {
+  Sortable,
+  moveItem,
+  sortableHandleVariants,
+  sortableItemVariants,
+  sortableVariants,
+} from "./sortable.tsx";
+export type { SortableItem, SortableProps, SortableStrings } from "./sortable.tsx";
+
+export {
+  Kanban,
+  kanbanCardVariants,
+  kanbanColumnHeaderVariants,
+  kanbanColumnVariants,
+  kanbanHandleVariants,
+  kanbanRootVariants,
+  kanbanVariants,
+  moveCard,
+} from "./kanban.tsx";
+export type { KanbanCard, KanbanColumn, KanbanProps, KanbanStrings } from "./kanban.tsx";
 
 export {
   NavigationMenu,
@@ -785,12 +1176,7 @@ export {
   SidebarItem,
   SidebarTrigger,
 } from "./sidebar.tsx";
-/*
- * The variants come from the DIRECTIVE-FREE module, never through sidebar.tsx:
- * a re-export routed through a "use client" module is a client reference for
- * every importer, however server-safe its definition file is — the same latent
- * break buttonVariants once shipped for real, caught here by review.
- */
+// Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
   sidebarBadgeVariants,
   sidebarContentVariants,
@@ -810,24 +1196,32 @@ export type {
   SidebarTriggerProps,
 } from "./sidebar.tsx";
 
-export { Calendar, CalendarHeader } from "./calendar.tsx";
-export type { CalendarHeaderProps, CalendarProps } from "./calendar.tsx";
+// `calendarDay` comes from the directive-free adapter DIRECTLY: a server component must be able to call it.
+export { calendarDay } from "./calendar-datelib.ts";
 
-/*
- * The whole date family's classes come from ONE directive-free module, and they
- * come from it DIRECTLY — never through the six components, every one of which
- * carries "use client". Same rule as `pagination.variants.ts` above, and the
- * same reason: a re-export routed through a client module is a client reference
- * for every importer however server-safe its definition is. A server component
- * rendering a static month beside the interactive calendar needs these.
- */
+export { Calendar, CalendarDropdown, calendarChevron, calendarClassNames, describedByWith } from "./calendar.tsx";
+export type {
+  CalendarBaseProps,
+  CalendarCaptionLayout,
+  CalendarNavigation,
+  CalendarProps,
+} from "./calendar.tsx";
+
+// The whole date family's classes come from ONE directive-free module, DIRECTLY.
 export {
   calendarCellVariants,
+  calendarDayButtonVariants,
+  calendarDropdownRootVariants,
+  calendarDropdownsVariants,
+  calendarDropdownVariants,
+  calendarFooterVariants,
   calendarGridVariants,
   calendarHeaderCellVariants,
   calendarHeaderVariants,
   calendarHeadingVariants,
+  calendarMonthsVariants,
   calendarNavButtonVariants,
+  calendarNavVariants,
   calendarVariants,
   dateInputVariants,
   dateLiteralVariants,
@@ -836,27 +1230,70 @@ export {
   dateRangeSeparatorVariants,
   dateSegmentVariants,
   rangeCalendarCellVariants,
+  rangeCalendarSelectionVariants,
 } from "./calendar.variants.ts";
 
-export { DateField, renderSegment } from "./date-field.tsx";
+export { DateField } from "./date-field.tsx";
 export type { DateBounds, DateFieldProps, DateFieldSize } from "./date-field.tsx";
 
-export { DatePicker, renderPickerCell, renderPickerHeaderCell } from "./date-picker.tsx";
-export type { DatePickerProps } from "./date-picker.tsx";
+export { DateInput } from "./date-input.tsx";
+export type { DateInputHandle, DateInputProps, DateInputSize } from "./date-input.tsx";
+
+export {
+  EDITABLE_SEGMENTS,
+  TIME_SEGMENTS,
+  digitFromKey,
+  toValue,
+  useDateFieldState,
+  useTimeFieldState,
+} from "./date-field-state.ts";
+export type {
+  DateFieldState,
+  DateFieldStateOptions,
+  DateSegmentType,
+  EditableSegmentType,
+  LumoDateSegment,
+  TimeFields,
+  TimeFieldStateOptions,
+} from "./date-field-state.ts";
+
+export { DatePicker } from "./date-picker.tsx";
+export type { DatePickerBaseProps, DatePickerProps } from "./date-picker.tsx";
 
 export { DateRangePicker } from "./date-range-picker.tsx";
 export type { DateRangePickerProps } from "./date-range-picker.tsx";
 
 export { RangeCalendar } from "./range-calendar.tsx";
-export type { RangeCalendarProps } from "./range-calendar.tsx";
+export type {
+  CalendarDateRange,
+  RangeCalendarBaseProps,
+  RangeCalendarProps,
+} from "./range-calendar.tsx";
+
+// `resolveDateRangePreset` and `todayIn` are exported beside the component: the arithmetic
+// has no React in it, and a server route should call it rather than drift in Esfand.
+export { DateSelector, resolveDateRangePreset, todayIn } from "./date-selector.tsx";
+export type {
+  DateRangeRule,
+  DateSelectorPreset,
+  DateSelectorProps,
+} from "./date-selector.tsx";
+
+/* Directive-free module, direct — same rule as the date family above. */
+export {
+  dateSelectorPanelVariants,
+  dateSelectorPlaceholderVariants,
+  dateSelectorPresetListVariants,
+  dateSelectorPresetVariants,
+  dateSelectorTriggerVariants,
+  dateSelectorValueVariants,
+} from "./date-selector.variants.ts";
+export type { DateSelectorTriggerVariantProps } from "./date-selector.variants.ts";
 
 export { TimeField } from "./time-field.tsx";
 export type { TimeFieldProps } from "./time-field.tsx";
 
-/*
- * The standalone two-state button. Its set-of-options sibling is
- * `toggle-group.tsx` further up — `ToggleButton` / `ToggleButtonGroup`.
- */
+// The standalone two-state button; its set-of-options sibling is `toggle-group.tsx`.
 export { IconToggle, Toggle } from "./toggle.tsx";
 export type { IconToggleProps, ToggleProps } from "./toggle.tsx";
 
@@ -867,10 +1304,7 @@ export type { ToggleVariantProps } from "./toggle.variants.ts";
 export { Tree, TreeItem } from "./tree.tsx";
 export type { TreeItemProps, TreeProps } from "./tree.tsx";
 
-/*
- * Same rule again. A server component rendering a static outline beside the
- * interactive tree calls `treeChevronTurnFor(locale)` and the row classes.
- */
+// Same rule again: directive-free module, direct.
 export {
   TREE_CHEVRON_GLYPH,
   treeChevronGlyphVariants,
@@ -882,3 +1316,136 @@ export {
   treeVariants,
 } from "./tree.variants.ts";
 export type { TreeChevronTurn } from "./tree.variants.ts";
+
+export { VirtualList } from "./virtual-list.tsx";
+export type { VirtualListHandle, VirtualListProps, VirtualListRange } from "./virtual-list.tsx";
+
+// Same rule again — `virtualMirror(locale, orientation)` must be callable from a server component.
+export {
+  virtualListItemVariants,
+  virtualListSizerVariants,
+  virtualListVariants,
+  virtualMirror,
+} from "./virtual-list.variants.ts";
+export type { VirtualListOrientation, VirtualMirror } from "./virtual-list.variants.ts";
+
+// A timeline of tasks over dates. The arithmetic is exported beside the component: no React,
+// no DOM, so a server route or a test calls the same functions.
+export {
+  GANTT_SCALES,
+  Gantt,
+  ganttBarPlacement,
+  ganttDate,
+  ganttDateIn,
+  ganttGeometry,
+  moveGanttTask,
+  resizeGanttTask,
+  ganttCriticalPath,
+  ganttDependencyPath,
+  ganttZoom,
+  rollupGanttTasks,
+} from "./gantt.tsx";
+export type {
+  GanttColumn,
+  GanttDependency,
+  GanttGeometry,
+  GanttPlacement,
+  GanttProps,
+  GanttScale,
+  GanttResizeEdge,
+  GanttStrings,
+  GanttTask,
+} from "./gantt.tsx";
+
+// Directive-free module, direct — same rule as the date family above.
+export {
+  ganttBarProgressVariants,
+  ganttBarVariants,
+  ganttColumnHeaderVariants,
+  ganttRowVariants,
+  ganttScaleButtonVariants,
+  ganttScaleGroupVariants,
+  ganttScaleRowVariants,
+  ganttSplitVariants,
+  ganttTaskHeaderVariants,
+  ganttTaskListVariants,
+  ganttTaskRowVariants,
+  ganttTimelineVariants,
+  ganttVariants,
+} from "./gantt.variants.ts";
+
+// The scheduling calendar. `event-calendar.variants.ts` is exported DIRECTLY (same rule);
+// `layoutDayEvents`/`indexEvents` are exported because the arithmetic is the valuable part.
+export {
+  EventCalendar,
+  eventCalendarDay,
+  eventCalendarEvent,
+  indexEvents,
+  layoutDayEvents,
+  applySchedulerMutation,
+  expandEventRecurrence,
+  groupSchedulerEvents,
+  moveSchedulerEvent,
+  resizeSchedulerEvent,
+  schedulerDraftEvent,
+  schedulerZonedEvent,
+} from "./event-calendar.tsx";
+export type {
+  EventCalendarAllDayEvent,
+  EventCalendarEventBase,
+  EventCalendarEvent,
+  EventCalendarEventInput,
+  EventCalendarPlacement,
+  EventCalendarProps,
+  EventCalendarSegment,
+  EventCalendarSpan,
+  EventCalendarStrings,
+  EventCalendarTimedEvent,
+  EventCalendarTone,
+  EventCalendarView,
+  SchedulerMoveOptions,
+  SchedulerDraft,
+  SchedulerMutation,
+  SchedulerRecurrence,
+  SchedulerResizeEdge,
+  SchedulerZonedEvent,
+  SchedulerZonedEventInput,
+} from "./event-calendar.tsx";
+export {
+  eventCalendarAgendaDateVariants,
+  eventCalendarAgendaDayVariants,
+  eventCalendarAgendaRowVariants,
+  eventCalendarAgendaTimeVariants,
+  eventCalendarAgendaVariants,
+  eventCalendarAllDayCaptionVariants,
+  eventCalendarAllDayVariants,
+  eventCalendarChipVariants,
+  eventCalendarDayCellVariants,
+  eventCalendarDayNumberVariants,
+  eventCalendarEmptyVariants,
+  eventCalendarGridVariants,
+  eventCalendarGutterVariants,
+  eventCalendarHourLineVariants,
+  eventCalendarHourVariants,
+  eventCalendarMoreVariants,
+  eventCalendarNavButtonVariants,
+  eventCalendarNavVariants,
+  eventCalendarPeriodVariants,
+  eventCalendarTimedColumnVariants,
+  eventCalendarToolbarVariants,
+  eventCalendarVariants,
+  eventCalendarViewButtonVariants,
+  eventCalendarViewSwitchVariants,
+  eventCalendarWeekCellVariants,
+  eventCalendarWeekdayVariants,
+  eventCalendarWeekGridVariants,
+  eventCalendarWeekHeadDayVariants,
+  eventCalendarWeekHeadVariants,
+} from "./event-calendar.variants.ts";
+export type {
+  EventCalendarChipVariantProps,
+  EventCalendarDayCellVariantProps,
+  EventCalendarViewButtonVariantProps,
+} from "./event-calendar.variants.ts";
+export { useLinkComponent } from "./link-context.ts";
+export type { LumoLinkComponent, LumoLinkRenderProps } from "./link-context.ts";

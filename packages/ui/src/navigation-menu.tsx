@@ -1,190 +1,210 @@
 "use client";
 
+import * as React from "react";
 import { cva } from "class-variance-authority";
 import { ChevronDown } from "lucide-react";
-import {
-  Button as AriaButton,
-  type ButtonProps as AriaButtonProps,
-} from "react-aria-components";
+import { NavigationMenu as BaseNav } from "@base-ui/react/navigation-menu";
 import { cn, type LumoNode } from "@lumo-ui/core";
+import { attr } from "@lumo-ui/base-ui-ssr";
 import { Link, type LinkProps } from "./link.tsx";
-import {
-  Popover,
-  PopoverTrigger,
-  type PopoverProps,
-  type PopoverTriggerProps,
-} from "./popover.tsx";
+import { placementToSideAlign, type LumoPlacement } from "./popover.tsx";
+import { useLinkComponent } from "./link-context.ts";
 
 /**
- * The marketing-site top navigation: a row of links and triggers whose
- * triggers open content panels.
+ * The marketing-site top navigation: a row of links and triggers whose triggers open
+ * content panels, on Base UI's `NavigationMenu` (one shared Positioner/Viewport, so the
+ * panel morphs between triggers and the inline-axis machinery is the engine's).
  *
  *     <NavigationMenu label="ناوبری اصلی">
  *       <NavigationMenuItem>
  *         <NavigationMenuTrigger>محصولات</NavigationMenuTrigger>
  *         <NavigationMenuPanel>
- *           <NavigationMenuLink href="/lumo" description="سیستم طراحی فارسی‌محور">
- *             لومو
- *           </NavigationMenuLink>
+ *           <NavigationMenuLink href="/lumo" description="سیستم طراحی فارسی‌محور">لومو</NavigationMenuLink>
  *         </NavigationMenuPanel>
  *       </NavigationMenuItem>
  *       <NavigationMenuLink href="/pricing">قیمت‌ها</NavigationMenuLink>
  *     </NavigationMenu>
  *
- * Not vendored: shadcn has no aria-vega navigation-menu (verified via
- * scripts/vendor-from-shadcn.mjs — it exists only Base UI-shaped), so this is
- * the RAC composition instead, built on popover.tsx.
- *
- * ── WHY A POPOVER AND NOT A MENU ────────────────────────────────────────────
- *
- * A `role="menu"` promises menuitem children and app-command semantics; a
- * marketing panel holds LINKS, and a link inside a menu is announced as a
- * menu item that then navigates — wrong promise, twice. The Radix pattern this
- * mirrors makes the same call: the panel is generic content, the links are
- * links. Here the trigger/panel pair is `PopoverTrigger` + `Popover`, so the
- * trigger carries `aria-expanded` and the panel participates in RAC's overlay
- * stack (Escape closes, click-outside closes, focus is restored).
- *
- * ── THE RTL WORK, STATED ────────────────────────────────────────────────────
- *
- *  1. PANEL ALIGNMENT. The panel opens at `bottom start` — a LOGICAL placement
- *     (see popover.tsx's `LumoPlacement`, which makes the physical spellings
- *     unrepresentable). Under Persian the start edge is the right edge, so the
- *     panel hangs inline-start-aligned from its trigger in both scripts with
- *     no direction code in this file.
- *  2. MOTION DIRECTION. The enter/exit motion is popoverVariants' uniform
- *     scale plus a BLOCK-axis nudge keyed on the resolved `data-placement`.
- *     The block axis does not mirror, so the panel slides down-into-place
- *     identically in both scripts; there is deliberately no inline-axis motion
- *     to get wrong (popover.tsx records why).
- *  3. THE CHEVRON. Block-axis glyph, rotated 180° when open — the disclosure
- *     argument (see disclosure.tsx): a half-turn is its own mirror image,
- *     where the inline-pointing chevron plus quarter-turn disagrees with
- *     itself under RTL.
- *
- * One trade is accepted knowingly: each trigger owns an independent popover,
- * so moving pointer or focus from one open trigger to the next closes and
- * reopens rather than morphing one shared viewport, and hover alone does not
- * open a panel (press/Enter does — which is also the accessible behaviour;
- * hover-open menus are a pointer-only affordance). The shared-viewport morph
- * is bought with a hand-rolled focus/hover state machine on the inline axis —
- * the exact class of direction-sensitive code this library rents instead of
- * writes. If that polish is ever demanded, it arrives as a measured decision,
- * not as a default.
+ * The panel is generic content, not a `role="menu"` (links are not menu items). Base UI's
+ * `Popup` renders a second, UNNAMED `<nav>`; it is demoted with `render={<div/>}`.
+ * `placement` is logical and lives on the root (one Positioner); motion is a uniform scale
+ * plus a BLOCK-axis nudge; the chevron is a block-axis glyph rotated 180° on
+ * `data-popup-open`. A closed panel renders nothing at SSR, but `aria-expanded` IS served.
  */
 export const navigationMenuVariants = cva(
-  // A plain flex row of triggers and links. `w-fit` so the nav's box is its
-  // content — a full-width nav would make the empty inline-end run part of
-  // nothing clickable but part of the landmark.
+  // `w-fit` so the nav's box is its content, not an empty inline-end run inside the landmark.
   "flex w-fit items-center gap-1",
 );
 
 export const navigationMenuTriggerVariants = cva(
   "flex cursor-pointer select-none items-center gap-1 rounded-md px-3 py-2 " +
     "text-sm font-medium text-fg outline-none transition-colors " +
-    "data-hovered:bg-surface-hover data-pressed:bg-surface-hover " +
-    "aria-expanded:bg-surface-sunken " +
+    // `data-hovered`/`data-pressed` do not exist in Base UI, so pseudo-classes; `data-popup-open`
+    // is the engine's own. NO `active:` — pressing produces a whole panel (see `button.variants.ts`).
+    "hover:bg-surface-hover " +
+    "data-popup-open:bg-surface-sunken " +
+    // No ring class: `data-lumo` and theme.css's one rule draw it.
     "data-disabled:pointer-events-none data-disabled:opacity-50",
 );
 
 export const navigationMenuChevronVariants = cva(
   "size-3.5 shrink-0 text-fg-muted transition-transform duration-200 " +
-    "group-aria-expanded/lumo-nav-trigger:rotate-180 " +
+    "group-data-popup-open/lumo-nav-trigger:rotate-180 " +
     "motion-reduce:transition-none",
 );
 
 export const navigationMenuPanelVariants = cva("min-w-[16rem] p-2");
 
+export const navigationMenuPopupVariants = cva(
+  "z-50 rounded-md border border-border bg-surface text-fg shadow-overlay outline-none " +
+    "transition duration-150 ease-out " +
+    "data-starting-style:opacity-0 data-starting-style:scale-95 " +
+    "data-ending-style:opacity-0 data-ending-style:scale-95 " +
+    "data-[side=bottom]:data-starting-style:-translate-y-1 " +
+    "data-[side=top]:data-starting-style:translate-y-1 " +
+    "motion-reduce:transition-none",
+);
+
 export const navigationMenuLinkVariants = cva(
   "flex flex-col items-start gap-0.5 rounded-md px-3 py-2 " +
-    "data-hovered:bg-surface-hover " +
+    // A panel link owns no overlay, so it takes the library's press nudge; hover and
+    // `data-current` are the only two FILLS, and the press is on `translate`.
+    "hover:bg-surface-hover active:translate-y-px " +
     "data-current:bg-surface-sunken",
 );
 
 export interface NavigationMenuProps {
-  /**
-   * Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی».
-   *
-   * REQUIRED. A page routinely carries several `<nav>`s (top bar, sidebar,
-   * breadcrumbs, footer) and a screen reader's landmark list shows them as
-   * identical "navigation" entries unless each is named.
-   */
+  /** Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی». REQUIRED: a page carries several navs. */
   label: string;
   children?: LumoNode;
   className?: string | undefined;
+  /** Controlled value of the open item; `null` closes the menu. */
+  value?: string | null | undefined;
+  /** Uncontrolled initial open item. */
+  defaultValue?: string | null | undefined;
+  /** Reports the identity of the open item, or `null` when all are closed. */
+  onValueChange?: ((value: string | null) => void) | undefined;
+  /** Logical placement of the one shared popup positioner. */
+  placement?: LumoPlacement | undefined;
 }
 
-export function NavigationMenu({ label, className, children }: NavigationMenuProps) {
+export function NavigationMenu({
+  label,
+  className,
+  children,
+  value,
+  defaultValue,
+  onValueChange,
+  placement,
+}: NavigationMenuProps) {
+  // The root owns both the open item's identity and the one shared Positioner.
+  const { side, align } = placementToSideAlign(placement ?? "bottom start");
+
   return (
-    <nav aria-label={label} className={cn(navigationMenuVariants(), className)}>
-      {children}
-    </nav>
+    <BaseNav.Root
+      data-lumo=""
+      aria-label={label}
+      orientation="horizontal"
+      {...attr("defaultValue", defaultValue)}
+      {...attr("value", value)}
+      {...attr(
+        "onValueChange",
+        onValueChange === undefined ? undefined : (next: string | null) => onValueChange(next),
+      )}
+    >
+      {/* `render={<div/>}` on the List and every Item: a bare `<NavigationMenuLink>` child is
+       * an `<a>` inside a `<ul>`, invalid HTML that browsers reparent OUT of the nav. */}
+      <BaseNav.List
+        render={<div />}
+        className={cn(navigationMenuVariants(), className)}
+      >
+        {children as React.ReactNode}
+      </BaseNav.List>
+
+      <BaseNav.Portal>
+        <BaseNav.Positioner className="isolate z-50" side={side} align={align} sideOffset={4}>
+          {/* `render={<div/>}` — the second, unnamed <nav>. See the file header. */}
+          <BaseNav.Popup render={<div />} className={cn(navigationMenuPopupVariants())}>
+            <BaseNav.Viewport />
+          </BaseNav.Popup>
+        </BaseNav.Positioner>
+      </BaseNav.Portal>
+    </BaseNav.Root>
   );
 }
 
-export interface NavigationMenuItemProps extends PopoverTriggerProps {
+export interface NavigationMenuItemProps {
   /** The `<NavigationMenuTrigger>`, then the `<NavigationMenuPanel>`. In that order. */
   children: LumoNode;
+  /** Stable identity used by the root's value/defaultValue/onValueChange API. */
+  value: string;
+  className?: string | undefined;
+}
+
+/** One trigger/panel pair. Renders the row cell; the state lives on the Root. */
+export function NavigationMenuItem({
+  children,
+  value,
+  className,
+}: NavigationMenuItemProps) {
+  return (
+    <BaseNav.Item
+      render={<div />}
+      value={value}
+      {...(className === undefined ? {} : { className })}
+    >
+      {children as React.ReactNode}
+    </BaseNav.Item>
+  );
+}
+
+export interface NavigationMenuTriggerProps {
+  children?: LumoNode;
+  className?: string | undefined;
+  isDisabled?: boolean | undefined;
 }
 
 /**
- * Owns one trigger/panel pair's open state. Renders no DOM — it is
- * popover.tsx's `PopoverTrigger` under the navigation name, re-exported so a
- * nav is assembled from parts named for what they do here.
+ * The button that opens a panel. Base UI supplies `aria-expanded` in the first byte plus
+ * `data-popup-open`, which the chevron reads through the named group.
  */
-export function NavigationMenuItem(props: NavigationMenuItemProps) {
-  return <PopoverTrigger {...props} />;
+export function NavigationMenuTrigger({
+  className,
+  children,
+  isDisabled,
+}: NavigationMenuTriggerProps) {
+  return (
+    <BaseNav.Trigger
+      data-lumo=""
+      {...attr("disabled", isDisabled)}
+      className={cn("group/lumo-nav-trigger", navigationMenuTriggerVariants(), className)}
+    >
+      {children as React.ReactNode}
+      <ChevronDown aria-hidden="true" className={navigationMenuChevronVariants()} />
+    </BaseNav.Trigger>
+  );
 }
 
-export interface NavigationMenuTriggerProps
-  extends Omit<AriaButtonProps, "children" | "className"> {
+export interface NavigationMenuPanelProps {
   children?: LumoNode;
   className?: string | undefined;
 }
 
-/**
- * The button that opens a panel. RAC's DialogTrigger context wires
- * `aria-expanded`/`aria-haspopup` onto it; the chevron reads that attribute
- * back through the named group, so open styling needs no state mirror.
- */
-export function NavigationMenuTrigger({ className, children, ...props }: NavigationMenuTriggerProps) {
+/** The content panel. */
+export function NavigationMenuPanel({
+  className,
+  children,
+}: NavigationMenuPanelProps) {
   return (
-    <AriaButton
-      data-lumo=""
-      className={cn("group/lumo-nav-trigger", navigationMenuTriggerVariants(), className)}
-      {...props}
-    >
-      {children}
-      <ChevronDown aria-hidden="true" className={navigationMenuChevronVariants()} />
-    </AriaButton>
-  );
-}
-
-export interface NavigationMenuPanelProps extends Omit<PopoverProps, "padded"> {}
-
-/**
- * The content panel. A popover pinned to logical `bottom start` — override
- * `placement` only with another LOGICAL value; the physical spellings do not
- * compile (see `LumoPlacement`).
- */
-export function NavigationMenuPanel({ className, placement, children, ...props }: NavigationMenuPanelProps) {
-  return (
-    <Popover
-      padded={false}
-      placement={placement ?? "bottom start"}
-      className={cn(navigationMenuPanelVariants(), className)}
-      {...props}
-    >
-      {children}
-    </Popover>
+    <BaseNav.Content data-lumo="" className={cn(navigationMenuPanelVariants(), className)}>
+      {children as React.ReactNode}
+    </BaseNav.Content>
   );
 }
 
 /**
- * `Omit` distributed over `LinkProps`' union, so link.tsx's `newTab`/
- * `newTabLabel` typed pair SURVIVES the wrapper: a plain `Omit` flattens the
- * union to `newTab?: boolean` and would let a new-tab nav link compile with
- * no announced warning — the exact hole the pair exists to close.
+ * `Omit` distributed over `LinkProps`' union, so link.tsx's `newTab`/`newTabLabel` typed
+ * pair SURVIVES the wrapper (a plain `Omit` flattens it to `newTab?: boolean`).
  */
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
@@ -194,26 +214,21 @@ export type NavigationMenuLinkProps = DistributiveOmit<LinkProps, "variant" | "s
 };
 
 /**
- * A link styled for the nav — in the row or inside a panel. Built ON
- * `link.tsx`'s Link rather than beside it, so `isCurrent` (→ `aria-current` +
- * `data-current`) and the `newTab`/`newTabLabel` typed pair arrive intact; the
- * quiet variant is restyled into a padded row, and the description renders as
- * a muted second line inside the link so the whole block is one target.
- *
- * The union members are destructured out and re-assembled conditionally —
- * spreading a rest that still contained them would collapse the pair back to
- * independent optionals at the `<Link>` call (Column does the same dance with
- * its sorting labels, for the same reason).
+ * A link styled for the nav — in the row or inside a panel. DELIBERATELY NOT
+ * `NavigationMenu.Link`: adopting it would cost `isCurrent` and the `newTab`/`newTabLabel`
+ * pair, which matter more than arrow-key traversal of a four-item marketing row.
  */
 export function NavigationMenuLink(props: NavigationMenuLinkProps) {
   const { className, children, description, newTab, newTabLabel, isCurrent, ...rest } = props;
+  const Anchor = useLinkComponent();
   return (
     <Link
       variant="quiet"
       size="sm"
+      {...(Anchor === "a" ? {} : { linkComponent: Anchor })}
       className={cn(
         navigationMenuLinkVariants(),
-        "no-underline data-hovered:no-underline",
+        "no-underline hover:no-underline",
         className,
       )}
       {...(isCurrent === undefined || isCurrent === false ? {} : { isCurrent })}

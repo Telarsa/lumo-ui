@@ -1,136 +1,68 @@
 "use client";
 
-import * as React from "react";
+import { useId, useMemo } from "react";
 import { cva } from "class-variance-authority";
 import { CheckIcon, SearchIcon } from "lucide-react";
+import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
+import { cn, FORMAT_LOCALE, type Key, type LumoNode } from "@lumo-ui/core";
+import { foldPersian } from "./autocomplete.tsx";
 import {
-  Autocomplete,
-  Collection,
-  Header,
-  Input,
-  Menu,
-  MenuItem,
-  MenuSection,
-  SearchField,
-  Separator,
-  Text,
-  composeRenderProps,
-  useFilter,
-  type AutocompleteProps,
-  type InputProps,
-  type MenuItemProps,
-  type MenuProps,
-  type MenuSectionProps,
-  type SeparatorProps,
-} from "react-aria-components";
-
-import { cn, type LumoNode } from "@lumo-ui/core";
+  ComboboxWiringProvider,
+  useComboboxInputWiring,
+  useComboboxListId,
+  useComboboxListWiring,
+} from "@lumo-ui/base-ui-ssr";
+import { useLumoLocale } from "./locale.ts";
 import {
   Dialog,
+  DialogDescription,
   DialogHeading,
   DialogModal,
   DialogOverlay,
   DialogTrigger,
 } from "./dialog.tsx";
+import { useLinkComponent } from "./link-context.ts";
 
 /**
- * A command palette — a filtered list of actions, keyboard-first.
+ * A command palette — a filtered list of actions, keyboard-first. BASE UI ENGINE.
  *
- *     <CommandDialog
- *       title="پالت فرمان"
- *       description="برای اجرای یک فرمان جست‌وجو کنید"
- *       closeLabel="بستن"
- *     >
- *       <Command>
+ *     <CommandDialog title="پالت فرمان" description="…" closeLabel="بستن">
+ *       <Command items={commands}>
  *         <CommandInput label="جست‌وجوی فرمان" placeholder="یک فرمان بنویسید…" />
- *         <CommandList>
- *           <CommandGroup heading="پیشنهادها">
- *             <CommandItem id="new">سند تازه</CommandItem>
- *           </CommandGroup>
+ *         <CommandList label="فرمان‌ها">
+ *           {(item) => <CommandItem id={item.value}>{item.label}</CommandItem>}
  *         </CommandList>
  *       </Command>
  *     </CommandDialog>
  *
- * ═══ WHAT CHANGED FROM UPSTREAM, AND WHY ════════════════════════════════════
- *
- * **The `dir` prop is gone.** Upstream's `Command` accepts `dir` and writes it
- * onto its root `<div>`. That is rule 4 inverted: Lumo derives direction from
- * the locale so a wrong one is unrepresentable, and a component that lets a
- * caller hand-write `dir="ltr"` around a Persian palette re-opens the exact hole
- * `LumoHtml` was built to close. Direction is inherited from the document.
- *
- * **Four English defaults became required props.** `title = "Command Palette"`,
- * `description = "Search for a command to run..."`, and
- * `aria-label={placeholder || "Search"}` on the input. Every one is announced;
- * none of them is visible; all three would have shipped English into a Persian
- * product and looked fine in review.
- *
- * **The search row is cmdk's**: a borderless full-bleed row with the icon
- * INLINE as a flex sibling — no border on the `<input>`, the block-end hairline
- * under the row is the only rule drawn. The previous shape (bordered input,
- * icon absolutely positioned over it, `relative` on the wrapper) also carried a
- * real defect, recorded below so it is not rebuilt.
- *
- * ── WHY THE ✕ "DID NOT WORK", MEASURED ──────────────────────────────────────
- * The close button never received a click. `Dialog` renders its ✕ first, as an
- * absolutely-positioned child; the old input wrapper was `relative` and came
- * LATER in the DOM. Two positioned boxes with no z-index hit-test in document
- * order, so the wrapper's box — full row width, its `pe-11` padding gutter
- * included — sat ON TOP of the ✕. The icon showed through the transparent
- * wrapper, looked pressable, and every press landed on the wrapper instead.
- * jsdom has no hit-testing, which is why no unit test ever saw it. The wrapper
- * is no longer positioned, and the ✕ carries `z-10` for its focused state, so
- * the overlap is unrepresentable now.
- *
- * **The dialog is Lumo's four-layer one.** Upstream's `<Dialog>` is a single
- * component with `showCloseButton`; Lumo's requires an overlay and a modal
- * around it and ALWAYS renders a named close control — see `dialog.tsx`, which
- * argues that a dialog whose ✕ can be unnamed is a dialog that ships unnamed
- * ✕s. Here that control is kept but not DRAWN: cmdk palettes show no ✕ (Esc,
- * backdrop and choosing an item all close it), so the ✕ is `sr-only` until it
- * is keyboard-focused, at which point it appears in its corner. Screen-reader
- * and keyboard users keep a named close control; sighted pointer users get
- * cmdk's chrome-free head. `closeLabel` stays required for exactly that
- * reason.
- *
- * ── DIRECTION AND FILTERING BOTH COME FROM `LumoProvider` ───────────────────
- *
- * `useFilter` builds an `Intl.Collator` from React Aria's resolved locale, which
- * is `en-US` unless `LumoProvider` is mounted (rule 3). Persian matching without
- * it compares strings under English collation — «ک» vs «ك» and «ی» vs «ي» stop
- * being equal, so a palette silently fails to find half its own entries. That is
- * not a styling regression; it is the feature not working, and nothing renders
- * red.
- *
- * ── `cmdk-group-heading` IS GONE ────────────────────────────────────────────
- *
- * Upstream styles group headings through `**:[[cmdk-group-heading]]:…`, an
- * attribute left over from the `cmdk` implementation this React Aria port
- * replaced. `cmdk` is not a dependency here, so the attribute named nothing and
- * the selector chain existed to reach an element this file renders itself. It is
- * a plain class on the `<Header>` now.
+ * Not vendored from base-vega: that emit is a cmdk wrapper, not Base UI. The
+ * palette is a combobox over a listbox (`role="combobox"` / `listbox` /
+ * `option`), which is what WAI-ARIA says a filtering text field IS. No `dir`
+ * prop (direction is inherited from the locale); the four upstream English
+ * defaults are required props; `foldPersian` is imported from `autocomplete.tsx`
+ * so palette and autocomplete match alike. The input wrapper must NOT be
+ * `relative` — a positioned wrapper swallowed the dialog ✕'s clicks. Long form:
+ * `docs/decisions/log.md`, `docs/history/`.
  */
 
 export const commandVariants = cva(
-  // No padding of its own: the input row is full-bleed so its block-end
-  // hairline can span the whole panel, cmdk-style. The list carries the inset.
+  // No padding of its own: the input row is full-bleed; the list carries the inset.
   "flex size-full flex-col overflow-hidden rounded-lg bg-surface text-fg",
 );
 
 /**
  * NOT `relative`, load-bearingly — a positioned wrapper here is what swallowed
- * the dialog ✕'s clicks (see the file header). The icon is a flex sibling, so
- * nothing in this row needs a positioning context.
+ * the dialog ✕'s clicks. The icon is a flex sibling; nothing needs a context.
  */
 export const commandInputWrapperVariants = cva(
   "flex items-center gap-2 border-be border-border px-3",
 );
 
 export const commandInputVariants = cva(
-  "h-11 w-full min-w-0 bg-transparent " +
+  "h-control-md w-full min-w-0 bg-transparent " +
     "text-sm text-fg text-start outline-none " +
     "placeholder:text-fg-subtle " +
-    "[&::-webkit-search-cancel-button]:hidden " +
+    "disabled:cursor-not-allowed disabled:opacity-50 " +
     "data-disabled:cursor-not-allowed data-disabled:opacity-50",
 );
 
@@ -148,57 +80,103 @@ export const commandGroupHeadingVariants = cva(
 
 export const commandSeparatorVariants = cva("-mx-1 my-1 h-px w-auto border-0 bg-border");
 
+/**
+ * ONE FOCUS CURSOR: Base UI writes `data-highlighted` for pointer and keyboard
+ * alike, so a `:hover` rule beside it would fight the arrow keys.
+ */
 export const commandItemVariants = cva(
   "group/command-item relative flex cursor-pointer select-none items-center gap-2 " +
     "rounded-sm px-2 py-1.5 text-sm text-fg outline-none " +
-    "data-focused:bg-surface-hover data-selected:bg-surface-hover " +
+    "data-highlighted:bg-surface-hover " +
+    // The press: the highlight is a cursor, not an answer to a touch.
+    "active:translate-y-px " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:size-4",
 );
 
-/**
- * `ms-auto`, not `ml-auto`. `margin-inline-start: auto` pushes the shortcut to
- * the reading END in either script; `ml-auto` pushes it right in both, which in
- * Persian is where the item's text begins.
- */
+/** `ms-auto`, not `ml-auto`: pushes the shortcut to the reading END in either script. */
 export const commandShortcutVariants = cva(
   "ms-auto text-xs tracking-widest text-fg-subtle " +
-    "group-data-focused/command-item:text-fg group-data-selected/command-item:text-fg",
+    "group-data-highlighted/command-item:text-fg",
 );
 
 export const commandCheckVariants = cva(
-  // Rendered only when the item is selected (see CommandItem) — no opacity
-  // dance, so no way for a cascade accident to show a tick on every row.
+  // Rendered only when the item is selected (see CommandItem) — no opacity dance.
   "ms-auto group-has-data-[slot=command-shortcut]/command-item:hidden",
 );
 
-export interface CommandProps
-  extends Omit<AutocompleteProps, "className" | "children" | "filter"> {
+export interface CommandProps<T = unknown> {
   /**
-   * Overrides the default contains-match. Left alone it uses React Aria's
-   * `useFilter`, which is locale-aware through `LumoProvider`.
+   * The commands to filter. REQUIRED: Base UI filters a DATA ARRAY held by the
+   * root, and static children would render and silently never filter. Flat
+   * (`{value, label}[]`) or grouped (`{items: …}[]`, rendered by `CommandGroup`).
    */
+  items: readonly T[];
+  /** Replace the built-in match (Base UI's collator with Persian folding on both sides). */
   filter?: ((textValue: string, inputValue: string) => boolean) | undefined;
+  /** How a non-`{value,label}` item becomes the text the filter matches. */
+  itemToString?: ((item: T) => string) | undefined;
+  /** The query (controlled). Maps to Base UI's `value`. */
+  inputValue?: string | undefined;
+  /** Called as the query changes. Maps to Base UI's `onValueChange`. */
+  onInputChange?: ((value: string) => void) | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function Command({ className, filter, children, ...props }: CommandProps) {
-  const { contains } = useFilter({ sensitivity: "base" });
+function defaultItemToString(item: unknown): string {
+  if (typeof item === "string") return item;
+  if (item !== null && typeof item === "object" && "label" in item) {
+    return String((item as { label: unknown }).label);
+  }
+  return String(item);
+}
+
+export function Command<T = unknown>({
+  items,
+  filter,
+  itemToString,
+  inputValue,
+  onInputChange,
+  className,
+  children,
+}: CommandProps<T>) {
+  const locale = useLumoLocale();
+  const baseFilter = BaseAutocomplete.useFilter({ locale: FORMAT_LOCALE[locale] });
+  const toString = itemToString ?? (defaultItemToString as (item: T) => string);
+  const listId = useComboboxListId();
+
+  const filterFn = useMemo(() => {
+    if (filter) return (item: T, query: string) => filter(toString(item), query);
+    return (item: T, query: string) =>
+      baseFilter.contains(item, foldPersian(query), (value: T) => foldPersian(toString(value)));
+  }, [filter, baseFilter, toString]);
+
   return (
     <div data-slot="command" className={cn(commandVariants(), className)}>
-      <Autocomplete filter={filter ?? contains} {...props}>
-        {children}
-      </Autocomplete>
+      {/*
+       * `inline open`, not a popup: the palette IS the surface, and this keeps
+       * Base UI's untranslatable `aria-label="Dismiss"` out of the served bytes.
+       */}
+      <BaseAutocomplete.Root<T>
+        items={items}
+        filter={filterFn}
+        inline
+        open
+        {...(inputValue === undefined ? {} : { value: inputValue })}
+        {...(onInputChange === undefined
+          ? {}
+          : { onValueChange: (value: string) => onInputChange(value) })}
+      >
+        {/* The list id. See `combobox-wiring.ts` and autocomplete.tsx. */}
+        <ComboboxWiringProvider value={listId}>{children}</ComboboxWiringProvider>
+      </BaseAutocomplete.Root>
     </div>
   );
 }
 
 export interface CommandDialogProps {
-  /**
-   * The dialog's accessible name, e.g. «پالت فرمان». REQUIRED — upstream
-   * defaults it to "Command Palette", which is announced and never seen.
-   */
+  /** The dialog's accessible name, e.g. «پالت فرمان». REQUIRED — upstream defaults to English. */
   title: string;
   /** Its description, e.g. «برای اجرای یک فرمان جست‌وجو کنید». REQUIRED. */
   description: string;
@@ -206,34 +184,19 @@ export interface CommandDialogProps {
   closeLabel: string;
   /** The trigger control, if the dialog is not controlled. */
   trigger?: LumoNode;
+  /** Whether the palette is open, when controlled. */
   isOpen?: boolean | undefined;
+  /** Opens the palette on first render, when open state is uncontrolled. */
   defaultOpen?: boolean | undefined;
+  /** Called when the palette opens or closes. */
   onOpenChange?: ((isOpen: boolean) => void) | undefined;
-  /**
-   * Close on backdrop press, the way cmdk palettes do.
-   *
-   * OPT-IN, not the default, matching `dialog.tsx`'s stance on dismissable
-   * overlays. One earlier claim here is corrected: RAC's internal
-   * DismissButton is NOT stuck in English — this repo's own
-   * `patches/react-aria@3.51.0.patch` adds a `fa-IR` overlays bundle
-   * («بستن»), which `LumoProvider` routes to, the same mechanism that
-   * localised the table's `columnSize`. The remaining reason to keep it
-   * opt-in is behavioural, not lingual: a press outside a palette mid-typing
-   * discards the query, and whether that is convenience or data loss is the
-   * caller's call.
-   */
+  /** Close on backdrop press. OPT-IN, matching `dialog.tsx`: a press mid-typing discards the query. */
   isDismissable?: boolean | undefined;
   children: LumoNode;
   className?: string | undefined;
 }
 
-/**
- * The title and description are `sr-only`: a palette shows its purpose through
- * its input, but the dialog still needs a name and a description in the tree.
- * `DialogHeading` carries `slot="title"`, which is what points the dialog's
- * `aria-labelledby` at it — a plain `<h2>` would look identical and leave the
- * dialog labelled by its trigger instead.
- */
+/** The title and description are `sr-only`: the dialog still needs a name in the tree. */
 export function CommandDialog({
   title,
   description,
@@ -261,15 +224,12 @@ export function CommandDialog({
       >
         <DialogModal size="lg" className={cn("overflow-hidden", className)}>
           {/*
-           * The ✕ (the Dialog's only direct `data-lumo` child) is sr-only
-           * until keyboard focus reaches it — cmdk shows no ✕, but Lumo does
-           * not ship an unreachable close control. When revealed it keeps its
-           * own `absolute top-3 end-3` placement plus the `z-10` granted
-           * here, which also keeps it above the input row it used to lose
-           * hit-testing to (see the file header).
+           * The ✕ is sr-only until keyboard focus reaches it; `z-10` keeps it
+           * above the input row it used to lose hit-testing to.
            */}
           <Dialog
             closeLabel={closeLabel}
+            label={title}
             className={cn(
               "gap-0 p-0",
               "[&>button[data-lumo]]:z-10",
@@ -277,7 +237,11 @@ export function CommandDialog({
             )}
           >
             <DialogHeading className="sr-only pe-0">{title}</DialogHeading>
-            <p className="sr-only">{description}</p>
+            {/*
+             * `DialogDescription`, not a bare sr-only `<p>`: the part writes its
+             * id into the root store so `aria-describedby` actually points at it.
+             */}
+            <DialogDescription className="sr-only">{description}</DialogDescription>
             {children}
           </Dialog>
         </DialogModal>
@@ -286,274 +250,224 @@ export function CommandDialog({
   );
 }
 
-export interface CommandInputProps extends Omit<InputProps, "className" | "placeholder"> {
+export interface CommandInputProps {
   /**
-   * The field's announced name, e.g. «جست‌وجوی فرمان».
-   *
-   * REQUIRED. Upstream writes `aria-label={placeholder || "Search"}`, which is
-   * two defects in one expression: it falls back to English, and when it does
-   * not, it names the field with its own placeholder — so the name disappears
-   * the moment the user types.
+   * The field's announced name, e.g. «جست‌وجوی فرمان». REQUIRED — upstream's
+   * `aria-label={placeholder || "Search"}` falls back to English or to a name
+   * that disappears the moment the user types.
    */
   label: string;
+  /** Text shown in the empty search input. */
   placeholder?: string | undefined;
   className?: string | undefined;
 }
 
-export function CommandInput({ label, placeholder, className, ...props }: CommandInputProps) {
+export function CommandInput({ label, placeholder, className }: CommandInputProps) {
+  const listWiring = useComboboxInputWiring();
   return (
-    <SearchField
-      autoFocus
-      aria-label={label}
-      data-slot="command-input-wrapper"
-      className={commandInputWrapperVariants()}
-    >
+    <div data-slot="command-input-wrapper" className={commandInputWrapperVariants()}>
       {/* Inline, not absolutely positioned — see commandInputWrapperVariants. */}
       <SearchIcon aria-hidden="true" className="size-4 shrink-0 text-fg-subtle" />
       {/*
-       * Deliberately NO `data-lumo` here — the one control in the system that
-       * opts out of the shared focus ring. `theme.css` draws
-       * `:where([data-lumo]):focus-visible` in the lumo.components layer,
-       * which beats a utility `outline-none` on layer order; with ⌘K being a
-       * keyboard interaction, the ring painted on every open — a boxed halo
-       * over a full-bleed row, the "weird focus" a user screenshotted. A
-       * palette input holds focus for the dialog's whole life; the focus is
-       * not news, and cmdk-style rows are the affordance instead.
+       * Deliberately NO `data-lumo`: the one control that opts out of the shared
+       * focus ring — a palette input holds focus for the dialog's whole life.
+       * `autoFocus` is Base UI's own prop; this is a real `<input role="combobox">`
+       * with no clear button whose English name would need closing.
        */}
-      <Input
+      <BaseAutocomplete.Input
+        autoFocus
+        // `aria-controls` in the first byte — see `combobox-wiring.ts`.
+        {...listWiring}
+        aria-label={label}
         data-slot="command-input"
         className={cn(commandInputVariants(), className)}
         {...(placeholder === undefined ? {} : { placeholder })}
-        {...props}
       />
-    </SearchField>
+    </div>
   );
 }
 
-export interface CommandListProps<T extends object>
-  extends Omit<MenuProps<T>, "children" | "className"> {
-  children?: LumoNode | ((item: T) => LumoNode);
+export interface CommandListProps<T = unknown> {
+  /**
+   * Announced name of the results list, e.g. «فرمان‌ها». REQUIRED. A named
+   * `label` prop, not `aria-label`, like every other collection here.
+   */
+  label: string;
+  /** A render function over the FILTERED items, or grouped children. */
+  children?: ((item: T) => LumoNode) | LumoNode;
   className?: string | undefined;
 }
 
-export function CommandList<T extends object>({ className, ...props }: CommandListProps<T>) {
+export function CommandList<T = unknown>({ label, className, children }: CommandListProps<T>) {
+  const listProps = useComboboxListWiring();
   return (
-    <Menu
+    <BaseAutocomplete.List
       data-lumo=""
+      {...listProps}
       data-slot="command-list"
+      aria-label={label}
       className={cn(commandListVariants(), className)}
-      {...props}
-    />
+    >
+      {children as LumoNode}
+    </BaseAutocomplete.List>
   );
 }
 
-export interface CommandEmptyProps extends Omit<React.ComponentProps<"div">, "className"> {
+export interface CommandEmptyProps {
+  children?: LumoNode;
   className?: string | undefined;
 }
 
 /**
- * The empty state. No default text: «فرمانی پیدا نشد» is the caller's sentence,
- * and a default here would be an English one.
+ * The empty state. No default text: «فرمانی پیدا نشد» is the caller's sentence.
+ * `Autocomplete.Empty` renders `role="status" aria-live="polite"` and mounts
+ * only when the filter emptied the list, so "no results" is ANNOUNCED.
  */
-export function CommandEmpty({ className, ...props }: CommandEmptyProps) {
+export function CommandEmpty({ className, children }: CommandEmptyProps) {
   return (
-    <div
+    <BaseAutocomplete.Empty
       data-slot="command-empty"
       className={cn(commandEmptyVariants(), className)}
-      {...props}
-    />
+    >
+      {children}
+    </BaseAutocomplete.Empty>
   );
 }
 
-export interface CommandGroupProps<T extends object>
-  extends Omit<MenuSectionProps<T>, "children" | "className"> {
-  /** The group's visible title. Renders through RAC's `<Header>`, which names it. */
+export interface CommandGroupProps<T = unknown> {
+  /** The group's visible title. */
   heading?: LumoNode;
-  children?: LumoNode | ((item: T) => LumoNode);
+  /** This group's own items, for the grouped `items` shape. */
+  items?: readonly T[] | undefined;
+  /** Static items, or a render function over this group's items. */
+  children?: ((item: T) => LumoNode) | LumoNode;
   className?: string | undefined;
 }
 
-export function CommandGroup<T extends object>({
+/**
+ * Bare Base UI publishes the group's `aria-labelledby` from a layout effect, so
+ * the group is unnamed in the first byte. The id is minted here with `useId`
+ * and passed to BOTH parts as public props, which Base UI honours over its own.
+ */
+export function CommandGroup<T = unknown>({
+  heading,
+  items,
   className,
   children,
-  items,
-  heading,
-  ...props
 }: CommandGroupProps<T>) {
+  const headingId = useId();
   return (
-    <MenuSection
+    <BaseAutocomplete.Group
       data-slot="command-group"
       className={cn(commandGroupVariants(), className)}
       {...(items === undefined ? {} : { items })}
-      {...props}
+      {...(heading == null ? {} : { "aria-labelledby": headingId })}
     >
       {heading == null ? null : (
-        <Header className={commandGroupHeadingVariants()}>{heading}</Header>
+        <BaseAutocomplete.GroupLabel id={headingId} className={commandGroupHeadingVariants()}>
+          {heading}
+        </BaseAutocomplete.GroupLabel>
       )}
-      <Collection {...(items === undefined ? {} : { items })}>{children}</Collection>
-    </MenuSection>
+      {items === undefined ? (
+        (children as LumoNode)
+      ) : (
+        <BaseAutocomplete.Collection>{children as never}</BaseAutocomplete.Collection>
+      )}
+    </BaseAutocomplete.Group>
   );
 }
 
-export interface CommandSeparatorProps extends Omit<SeparatorProps, "className"> {
+export interface CommandSeparatorProps {
   className?: string | undefined;
 }
 
-/**
- * `-mx-1` cancels the list's own `p-1` symmetrically, so it is
- * direction-invariant; `-ms-1` alone would leave a stub that swaps ends between
- * locales.
- */
-export function CommandSeparator({ className, ...props }: CommandSeparatorProps) {
+/** `-mx-1` cancels the list's own `p-1` symmetrically, so it is direction-invariant. */
+export function CommandSeparator({ className }: CommandSeparatorProps) {
   return (
-    <Separator
+    <BaseAutocomplete.Separator
       data-slot="command-separator"
       className={cn(commandSeparatorVariants(), className)}
-      {...props}
     />
   );
 }
 
-export interface CommandItemProps<T extends object = object>
-  extends Omit<MenuItemProps<T>, "children" | "className"> {
-  children?: LumoNode | ((values: { isSelected: boolean }) => LumoNode);
+export interface CommandItemProps {
+  /** The command's key. Maps to Base UI's `value`. */
+  id?: Key | undefined;
+  /**
+   * Run this command. Per-item rather than on the list: Base UI's Autocomplete
+   * models no selection, so there is no root callback; `AutocompleteItem.onClick`
+   * fires for pointer AND Enter-on-highlighted. A row with `href` navigates and
+   * should not also carry this.
+   */
+  onAction?: (() => void) | undefined;
+  isDisabled?: boolean | undefined;
+  /**
+   * Draw a check mark on this row. Handed in because an Autocomplete on this
+   * engine models no selection, so no item ever carries `data-selected`. Use
+   * `Combobox` when the list is a picker with a persistent selection.
+   */
+  isSelected?: boolean | undefined;
+  /**
+   * Render the row as a real anchor (`<a role="option">`, via Base UI's `render`
+   * prop) — crawlable, middle-clickable, as the docs site's own palette needs.
+   */
+  href?: string | undefined;
+  children?: LumoNode;
   className?: string | undefined;
 }
 
 /**
- * ── THE `textValue` DERIVATION TRAP, AGAIN — AND WORSE HERE ─────────────────
- *
- * RAC computes a collection item's typeahead and FILTER string as
- * `textValue || (typeof children === 'string' ? children : '') || aria-label`.
- * A LITERAL string child, and nothing else. This component wraps its children to
- * place the check mark, so `props.children` stops being a string and every item
- * silently loses both — in a component whose entire purpose is filtering.
- * `menu.tsx` documents the same trap.
- *
- * The cure has to go further here than it does in `menu.tsx`, because the
- * commonest command item in existence is text PLUS a `<CommandShortcut>`:
- *
- *     <CommandItem id="open">بازکردن پرونده<CommandShortcut>⌘O</CommandShortcut></CommandItem>
- *
- * That makes `children` an array, RAC's derivation yields `""`, and the item
- * cannot be found by typing its own name. Nothing renders wrong; the palette
- * simply never matches. So the string members of an array are joined, and the
- * `<CommandShortcut>` element — not a string — is excluded on its own, which is
- * also correct: nobody searches for "⌘O".
+ * Three React Aria workarounds retired here (`deriveTextValue`, the
+ * `<Text slot="label">` partition, `composeRenderProps`): Base UI filters the
+ * `items` array before any JSX exists and emits no `aria-labelledby`. The check
+ * mark exists in the DOM only when the item IS selected — never an
+ * always-rendered icon that CSS promises to hide.
  */
-function deriveTextValue(children: unknown): string | undefined {
-  if (typeof children === "string") return children;
-  if (Array.isArray(children)) {
-    const joined = children
-      .filter((child): child is string => typeof child === "string")
-      .join("")
-      .trim();
-    return joined === "" ? undefined : joined;
-  }
-  return undefined;
-}
-
-export function CommandItem<T extends object = object>({
+export function CommandItem({
+  id,
+  onAction,
+  isDisabled,
+  isSelected,
+  href,
   className,
   children,
-  textValue,
-  ...props
-}: CommandItemProps<T>) {
-  const resolvedTextValue = textValue ?? deriveTextValue(children);
-
+}: CommandItemProps) {
+  const Anchor = useLinkComponent();
   return (
-    <MenuItem
+    <BaseAutocomplete.Item
       data-lumo=""
       data-slot="command-item"
+      // Not `aria-selected`: the widget models no selection. The tick is a visual
+      // affordance the caller owns and is `aria-hidden` for the same reason.
       className={cn(commandItemVariants(), className)}
-      {...(resolvedTextValue === undefined ? {} : { textValue: resolvedTextValue })}
-      {...props}
+      {...(id === undefined ? {} : { value: String(id) })}
+      // Base UI's own activation seam: pointer press AND Enter-on-highlighted.
+      {...(onAction === undefined ? {} : { onClick: () => onAction() })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
+      // No `target`/`rel`: a new tab needs an announced warning and a row has no slot for one.
+      {...(href === undefined ? {} : { render: Anchor === "a" ? <a href={href} /> : <Anchor href={href} /> })}
     >
-      {composeRenderProps(children, (resolved, { isSelected }) => {
-        /*
-         * ── THE LABEL SLOT MUST BE CONSUMED, OR SSR SHIPS A DANGLING IDREF ──
-         *
-         * `useMenuItem` names the item by `aria-labelledby` pointing at a slot
-         * id from `useSlotId`. Client-side, an unconsumed slot id collapses to
-         * undefined in an effect and the attribute disappears — but effects do
-         * not run on the server, so in the SERVED BYTES every menu item carries
-         * an `aria-labelledby` pointing at an id no element has. Invisible for
-         * as long as menu items only ever appeared inside closed overlays;
-         * measured the moment the inline palette example put five of them in
-         * the prerendered HTML (lumo-gate `resolved-idrefs`, 10 violations).
-         *
-         * The cure is RAC's own mechanism: render the item's text inside
-         * `<Text slot="label">`, which claims the id — the reference resolves
-         * in the first byte and the announced name is exactly the text, not
-         * text-plus-shortcut. String children become the label; element
-         * children (a `<CommandShortcut>`, an icon) stay siblings so the row's
-         * flex layout is untouched. The same partition `deriveTextValue` above
-         * already applies for filtering, and for the same reason: nobody is
-         * announced "چاپ ⌘P" any more than they search for it. A children shape
-         * with no string members at all keeps today's behaviour unchanged.
-         */
-        /*
-         * IN PLACE, not partitioned: the first cut of this hoisted every string
-         * into one leading <Text> and pushed every element after it, so an
-         * `<Icon/> label` row silently became `label <Icon/>` — review-caught.
-         * Now the FIRST contiguous string run is wrapped where it stands and
-         * everything else keeps its position. A later, disjoint string run
-         * stays plain and therefore outside the announced name — the same
-         * deliberate trade the shortcut already makes (nobody is announced
-         * "چاپ ⌘P"), documented here because it is a trade.
-         */
-        const parts = Array.isArray(resolved) ? resolved : [resolved];
-        const out: React.ReactNode[] = [];
-        let labelDone = false;
-        for (let i = 0; i < parts.length; i++) {
-          const part = parts[i];
-          if (typeof part === "string" && !labelDone) {
-            let run = part;
-            while (i + 1 < parts.length && typeof parts[i + 1] === "string") {
-              run += parts[++i] as string;
-            }
-            out.push(
-              <Text key={`label-${i}`} slot="label">
-                {run}
-              </Text>,
-            );
-            labelDone = true;
-          } else {
-            out.push(<React.Fragment key={i}>{part}</React.Fragment>);
-          }
-        }
-        return (
-          <>
-            {labelDone ? out : resolved}
-            {/*
-             * The check exists in the DOM only when the item IS selected — never
-             * as an always-rendered icon that CSS promises to hide. The previous
-             * arrangement (render always, `opacity-0`, reveal on a group data
-             * variant) shipped a tick on every row of a NAVIGATION palette, where
-             * no item is ever selected and the tick answers a question nobody
-             * asked. Presence-by-state cannot have that bug, in any stylesheet,
-             * in dev or in prod.
-             */}
-            {isSelected ? (
-              <CheckIcon aria-hidden="true" className={commandCheckVariants()} />
-            ) : null}
-          </>
-        );
-      })}
-    </MenuItem>
+      {children}
+      {isSelected === true ? (
+        <CheckIcon aria-hidden="true" className={commandCheckVariants()} />
+      ) : null}
+    </BaseAutocomplete.Item>
   );
 }
 
-export interface CommandShortcutProps extends Omit<React.ComponentProps<"span">, "className"> {
+export interface CommandShortcutProps {
+  children?: LumoNode;
   className?: string | undefined;
 }
 
-export function CommandShortcut({ className, ...props }: CommandShortcutProps) {
+export function CommandShortcut({ className, children }: CommandShortcutProps) {
   return (
     <span
       data-slot="command-shortcut"
       className={cn(commandShortcutVariants(), className)}
-      {...props}
-    />
+    >
+      {children}
+    </span>
   );
 }

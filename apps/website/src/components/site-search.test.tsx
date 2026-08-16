@@ -21,7 +21,7 @@ const INDEX: SearchDoc[] = [
     title: { "fa-IR": "دکمه", "en-US": "Button" },
     intro: { "fa-IR": "کنش اصلی رابط کاربری.", "en-US": "The interface's primary action." },
     tier: "form",
-    href: { "fa-IR": "/fa-IR/components/button/", "en-US": "/en-US/components/button/" },
+    href: { "fa-IR": "/fa/components/button/", "en-US": "/en/components/button/" },
   },
   {
     id: "table",
@@ -29,7 +29,7 @@ const INDEX: SearchDoc[] = [
     title: { "fa-IR": "جدول", "en-US": "Table" },
     intro: { "fa-IR": "نمایش داده‌های ردیفی.", "en-US": "Displays tabular data." },
     tier: "data",
-    href: { "fa-IR": "/fa-IR/components/table/", "en-US": "/en-US/components/table/" },
+    href: { "fa-IR": "/fa/components/table/", "en-US": "/en/components/table/" },
   },
   {
     id: "hero",
@@ -37,7 +37,7 @@ const INDEX: SearchDoc[] = [
     title: { "fa-IR": "سربرگ صفحه", "en-US": "Hero" },
     intro: { "fa-IR": "نخستین بخش صفحه.", "en-US": "The opening section." },
     tier: undefined,
-    href: { "fa-IR": "/fa-IR/blocks/hero/", "en-US": "/en-US/blocks/hero/" },
+    href: { "fa-IR": "/fa/blocks/hero/", "en-US": "/en/blocks/hero/" },
   },
 ];
 
@@ -87,11 +87,28 @@ describe("SiteSearch — opening the palette", () => {
     expect(screen.getByText("سربرگ صفحه")).toBeTruthy();
   });
 
+  /*
+   * ── `combobox`, WHICH WAS `searchbox` — A VOCABULARY RESTATEMENT ──────────
+   *
+   * The four queries below reached the input by its ROLE, and the role changed
+   * with the engine: React Aria composed `Autocomplete` over a `Menu`, so the
+   * palette announced searchbox + menu + menuitem; Base UI's filtering lives
+   * inside its combobox root and there is no context a `Menu.Item` could
+   * subscribe to, so it is combobox + listbox + option. `command.tsx`'s header
+   * has the evidence and the argument that this is the RIGHT pattern — a text
+   * field that filters a list IS a combobox by WAI-ARIA, and cmdk emits the
+   * same three roles.
+   *
+   * Only the way these tests FIND the input has changed. Every assertion below
+   * — the Persian name, the ی/ك folding, the translated empty state, and that
+   * the empty state is a live status — is the behaviour it always was, and none
+   * of them was weakened to pass.
+   */
   it("names the dialog and its search field, both in Persian", async () => {
     renderSearch("fa-IR");
     const dialog = await openPalette();
     expect(dialog.textContent).toContain("جستجوی سراسری");
-    expect(screen.getByRole("searchbox").getAttribute("aria-label")).toBe(
+    expect(screen.getByRole("combobox").getAttribute("aria-label")).toBe(
       "جستجوی کامپوننت‌ها و بلوک‌ها",
     );
   });
@@ -120,7 +137,7 @@ describe("SiteSearch — the server render, which is what the HTML gate grades",
   // `site-shell.tsx` puts this trigger in the header of ~every page the site
   // serves, so this is the one part of the palette lumo-gate actually sees —
   // CommandDialog's overlay returns null during SSR (see command-palette's own
-  // demo entry in demos.tsx for the same fact about every other overlay), so
+  // examples file, `examples/command.tsx`, for the same fact about every other overlay), so
   // the dialog's interior never reaches prerendered bytes at all.
   it("server-renders the fa-IR trigger with a Persian name and no ASCII digits", () => {
     const html = renderToStaticMarkup(
@@ -161,7 +178,7 @@ describe("SiteSearch — Persian search actually works through the real UI", () 
     // The Arabic kaf (ك, U+0643), not the Persian keheh (ک, U+06A9) «دکمه» is
     // written with. Without normalize() wired into the live filter, this
     // query finds nothing — see search-index.ts and search-index.test.ts.
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "دكمه" } });
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "دكمه" } });
     expect(screen.getByText("دکمه")).toBeTruthy();
     expect(screen.queryByText("جدول")).toBeNull();
     expect(screen.queryByText("سربرگ صفحه")).toBeNull();
@@ -170,7 +187,7 @@ describe("SiteSearch — Persian search actually works through the real UI", () 
   it("shows the translated empty state when nothing matches", async () => {
     renderSearch("fa-IR");
     await openPalette();
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "xyz-nonsense" } });
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "xyz-nonsense" } });
     expect(screen.getByText("نتیجه‌ای پیدا نشد")).toBeTruthy();
   });
 
@@ -181,7 +198,7 @@ describe("SiteSearch — Persian search actually works through the real UI", () 
   it("announces the empty state as a status, since there is no result count", async () => {
     renderSearch("fa-IR");
     await openPalette();
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "xyz-nonsense" } });
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "xyz-nonsense" } });
     const status = screen.getByRole("status");
     expect(status.textContent).toContain("نتیجه‌ای پیدا نشد");
   });

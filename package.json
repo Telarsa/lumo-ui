@@ -1,5 +1,6 @@
 {
   "name": "lumo-ui",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.3.0",
@@ -9,18 +10,58 @@
   "scripts": {
     "dev": "pnpm --filter @lumo-ui/website dev",
     "build": "pnpm -r --if-present run build",
-    "verify": "pnpm run gate:types && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:smoke && pnpm run gate:html",
+    "start": "node scripts/serve-static.mjs",
+    "preview": "pnpm run build && pnpm run start",
+    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
+    "gate:props": "node --experimental-strip-types packages/gate/src/inert-props-cli.ts packages/ui/src packages/blocks/src",
+    "lint": "eslint .",
+    "gate:lint": "eslint .",
     "gate:no-css-modules": "node scripts/no-css-modules.mjs",
     "typecheck": "pnpm run gate:types",
     "test": "pnpm -r --if-present test",
     "gate:test": "pnpm -r --if-present run test",
-    "gate:html": "pnpm --filter @lumo-ui/website build && node --experimental-strip-types packages/gate/src/cli.ts apps/website/out",
-    "gate:registry": "node scripts/build-registry.mjs && git diff --exit-code registry.json",
-    "gate:smoke": "node scripts/smoke-consumer.mjs"
+    "gate:html": "pnpm --filter @lumo-ui/website build && node --experimental-strip-types packages/gate/src/cli.ts apps/website/out apps/website/gate.floors.json",
+    "gate:registry": "node scripts/build-registry.mjs --check",
+    "build:api": "node scripts/build-api-reference.mjs",
+    "gate:api": "node scripts/build-api-reference.mjs --check",
+    "gate:smoke": "node scripts/smoke-consumer.mjs",
+    "mutation:components": "node scripts/mutate-components.mjs --output mutation-report.json",
+    "evidence": "playwright test -c evidence/playwright.config.ts",
+    "evidence:types": "tsc -p evidence/tsconfig.json",
+    "catalog": "node scripts/build-catalog.mjs",
+    "gate:catalog": "node scripts/build-catalog.mjs --check",
+    "gate:versions": "node scripts/check-versions.mjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@lumo-ui/config": "workspace:*",
+    "@playwright/test": "^1.62.1",
     "@types/node": "catalog:",
-    "typescript": "catalog:"
-  }
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
+  },
+  "bin": {
+    "lumo": "scripts/lumo-cli.mjs"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "files": [
+    "scripts/lumo-cli.mjs",
+    "scripts/build-catalog.mjs",
+    "packages/*/package.json",
+    "packages/*/src/**",
+    "registry.json",
+    "catalog.json",
+    "api-reference.json",
+    "pnpm-workspace.yaml",
+    "docs/agent-consumer.md",
+    "docs/i18n-and-rtl.md",
+    "skills/**",
+    "llms.txt",
+    "LICENSE",
+    "CHANGELOG.md",
+    "README.md"
+  ]
 }

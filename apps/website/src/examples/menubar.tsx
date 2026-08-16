@@ -107,11 +107,20 @@ function SectionsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
-    // Page identity — this component has no demos.tsx entry, so the catalog
-    // builds its page from these three fields (see lib/catalog.ts).
+    usage: {
+      when: {
+        "fa-IR": "ردیفی افقی از منوها مثل برنامه‌های دسکتاپ: پرونده، ویرایش، نما.",
+        "en-US": "A horizontal row of menus like a desktop application: File, Edit, View.",
+      },
+      whenNot: {
+        "fa-IR": "یک منو پشت یک دکمه — `Menu`. ناوبری سایت با پنل محتوا — `NavigationMenu`. دکمه‌ها به‌جای منو، با یک ایست تبی — `Toolbar`.",
+        "en-US": "One menu behind one button — `Menu`. Site navigation with content panels — `NavigationMenu`. Buttons rather than menus, under one Tab stop — `Toolbar`.",
+      },
+    },
+    // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "navigation",
     title: { "fa-IR": "میلهٔ منو", "en-US": "Menubar" },
-    intro: { "fa-IR": "ردیفی افقی از منوها با پیمایش پیکانی. تا وقتی React Aria نقش menubar واقعی نداشته باشد، صادقانه یک Toolbar از دکمه‌های منو است — این در سرصفحهٔ کامپوننت پین شده.", "en-US": "A horizontal row of menus with arrow-key roving. Until React Aria ships a real menubar role, it is honestly a Toolbar of menu triggers — pinned in the component header." },
+    intro: { "fa-IR": "ردیفی افقی از منوها با پیمایش پیکانی. روی نقش واقعی menubar از Base UI؛ هر دکمه یک منو باز می‌کند و پیکان‌ها بین منوها می‌گردند.", "en-US": "A horizontal row of menus with arrow-key roving. On Base UI's real role=menubar: each button opens a menu and the arrows rove between menus." },
     isNew: true,
     composition: [
       `<Menubar label="…">`,

@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { Check, Languages } from "lucide-react";
+import { Languages } from "lucide-react";
 import type { Locale } from "@lumo-ui/core";
 import { cn, LOCALES } from "@lumo-ui/core";
 import { IconButton, Menu, MenuItem, MenuPopover, MenuTrigger } from "@lumo-ui/ui";
-import { LOCALE_NAMES, site } from "@/lib/locale";
+import { LOCALE_NAMES, site, segmentFor} from "@/lib/locale";
 import { allBlocks } from "@/lib/blocks";
 import { allCatalog } from "@/lib/catalog";
 import { buildSearchIndex } from "@/lib/search-index";
@@ -12,29 +12,11 @@ import { SiteSearch } from "./site-search";
 import { ThemeToggle } from "./theme-toggle";
 
 /**
- * The site chrome.
- *
- * The language control is a menu of real `<a href>`s to the mirrored path —
- * one entry per member of `LOCALES`, so a third locale appears here by being
- * added to the union, not by someone remembering this file. It is never a
- * toggle. That is the whole honesty argument: a toggle would flip CSS while
- * leaving `lang` on the document unchanged, which is the exact defect this
- * library exists to prevent. Crossing locales is a document navigation because
- * the two locales are two documents.
- *
- * The header is sticky with a blurred backdrop — the shape every serious
- * component-library site converged on, because docs are read scrolled and the
- * navigation must not scroll away. `bg-surface/80` + `backdrop-blur` rather
- * than opaque so content sliding beneath reads as depth, in both themes.
- *
- * `searchIndex` is built ONCE, at module scope rather than inside `SiteShell`.
- * `allDemos()`/`allBlocks()` each read source files off disk (see their own
- * headers); computing it inside the component body would re-run both on every
- * one of the ~200 pages this shell wraps, once per page, during the static
- * export. Module scope means Node's own module cache does that work once per
- * build instead — every `<SiteShell>` render in the same process reuses the
- * same array. See `search-index.ts` for why the builder itself takes these
- * two arrays as plain arguments rather than reading the registries itself.
+ * The site chrome. The language control is a menu of real `<a href>`s to the
+ * mirrored path — one per member of `LOCALES` — never a toggle: a toggle flips
+ * CSS while leaving `lang` unchanged, and the two locales are two documents.
+ * Sticky, blurred header. `searchIndex` is built ONCE at module scope: the
+ * builders read source off disk, and this shell wraps ~200 pages per export.
  */
 // A promise at module scope (allCatalog is async); resolved once per build
 // process, awaited by the (server) shell per render at cached cost.
@@ -47,9 +29,8 @@ const searchIndexPromise = allCatalog().then((entries) =>
 );
 
 /**
- * lucide-react 1.x removed its brand icons, so the GitHub mark is inlined —
- * one path, `fill-currentColor`, decorative. The LINK carries the accessible
- * name (per locale, from `site`); the drawing never does.
+ * lucide-react 1.x removed its brand icons, so the GitHub mark is inlined,
+ * decorative. The LINK carries the accessible name; the drawing never does.
  */
 function GitHubMark({ className }: { className?: string }) {
   return (
@@ -72,8 +53,7 @@ export async function SiteShell({
   wide?: boolean;
 }) {
   const t = site[lang];
-  // The path prop already encodes which area of the site this page lives in;
-  // deriving the active link from it keeps the header stateless and honest.
+  // The active link is derived from `path`, keeping the header stateless.
   const section = path.startsWith("docs")
     ? "docs"
     : path.startsWith("components")
@@ -82,21 +62,30 @@ export async function SiteShell({
         ? "blocks"
         : null;
 
-  // Docs first — reading order, and the review's finding: a docs section that
-  // no header link reaches is a docs section that does not exist on a phone.
+  // Docs first — reading order; a docs section no header link reaches does
+  // not exist on a phone.
   const navLinks: Array<{ key: "docs" | "components" | "blocks"; href: string; label: string }> = [
-    { key: "docs", href: `/${lang}/docs/introduction/`, label: t.docs },
-    { key: "components", href: `/${lang}/components/`, label: t.components },
-    { key: "blocks", href: `/${lang}/blocks/`, label: t.blocks },
+    { key: "docs", href: `/${segmentFor(lang)}/docs/introduction/`, label: t.docs },
+    { key: "components", href: `/${segmentFor(lang)}/components/`, label: t.components },
+    { key: "blocks", href: `/${segmentFor(lang)}/blocks/`, label: t.blocks },
   ];
 
   return (
     <div className="min-h-dvh flex flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-surface/80 backdrop-blur supports-backdrop-filter:bg-surface/60">
-        <div className="mx-auto flex h-14 w-full max-w-screen-2xl items-center gap-6 px-6">
+        {/*
+         * WHY THIS ROW WRAPS BELOW `md`: its min-content floor (~580px) is what
+         * made every page scroll sideways on a phone. `flex-wrap` + `order-last
+         * w-full` on the nav gives the links their own row (DOM order unchanged, so
+         * tab order still follows reading order); `py-2` lets two rows breathe and
+         * `md:h-14` restores the single-row header. `min-w-0` on the flexible
+         * children is the other half: a flex item's `min-width: auto` out-ranks any
+         * width you give it.
+         */}
+        <div className="mx-auto flex w-full max-w-screen-2xl flex-wrap items-center gap-x-6 gap-y-1 px-6 py-2 md:h-14 md:flex-nowrap md:py-0">
           <Link
-            href={`/${lang}/`}
-            className="flex items-center gap-2 text-sm font-semibold tracking-tight text-fg"
+            href={`/${segmentFor(lang)}/`}
+            className="flex shrink-0 items-center gap-2 text-sm font-semibold tracking-tight text-fg"
           >
             <span
               aria-hidden="true"
@@ -104,7 +93,7 @@ export async function SiteShell({
             />
             {t.title}
           </Link>
-          <nav className="flex items-center gap-5 text-sm">
+          <nav className="order-last flex w-full min-w-0 flex-wrap items-center gap-x-5 gap-y-1 text-sm md:order-0 md:w-auto md:flex-nowrap">
             {navLinks.map((l) => (
               <Link
                 key={l.key}
@@ -119,7 +108,11 @@ export async function SiteShell({
               </Link>
             ))}
           </nav>
-          <div className="ms-auto flex items-center gap-1.5">
+          {/*
+           * `ms-auto` — logical, so the cluster sits at the END in both directions —
+           * and `min-w-0` so it may be narrower than its contents' min-content.
+           */}
+          <div className="ms-auto flex min-w-0 items-center gap-1.5">
             <SiteSearch lang={lang} index={await searchIndexPromise} />
             <div className="flex items-center gap-0.5">
               {/* Icon-only, so the accessible name is required copy — see locale.ts. */}
@@ -134,11 +127,8 @@ export async function SiteShell({
               </a>
               <ThemeToggle lang={lang} />
               {/*
-               * The language menu. Each entry is a real <a href> to the SAME
-               * `path` in that locale, not a toggle — see the file header;
-               * crossing locales is a navigation. The icon trigger scales to
-               * any number of locales where a "switch to the other one" link
-               * could only ever name two.
+               * The language menu: real <a href>s to the SAME `path` in each locale, not
+               * a toggle (see the file header). Scales to any number of locales.
                */}
               <MenuTrigger>
                 <IconButton
@@ -155,18 +145,15 @@ export async function SiteShell({
                       <MenuItem
                         key={locale}
                         id={locale}
-                        href={`/${locale}/${path}`}
+                        href={`/${segmentFor(locale)}/${path}`}
                         hrefLang={locale}
                         textValue={LOCALE_NAMES[locale]}
+                        // Draws the tick AND emits `aria-current` — one prop.
+                        // See `MenuItemProps.isCurrent`.
+                        isCurrent={locale === lang}
                         className={locale === lang ? "font-medium" : undefined}
                       >
                         {LOCALE_NAMES[locale]}
-                        {/* The current locale, marked. Decorative: the mark's
-                            meaning is already carried by the document you are
-                            reading being IN this language. */}
-                        {locale === lang ? (
-                          <Check aria-hidden="true" className="ms-2 inline-block size-4 text-fg-muted" />
-                        ) : null}
                       </MenuItem>
                     ))}
                   </Menu>
@@ -185,7 +172,12 @@ export async function SiteShell({
 
       <footer className="border-t border-border">
         <div className="mx-auto flex w-full max-w-screen-2xl items-center justify-between px-6 py-6 text-xs text-fg-muted">
-          <span>Telarsa · Lumo UI</span>
+          {/*
+           * `data-lumo-latn`: two proper nouns, the legitimate exception
+           * `native-script-text` has a hatch for. "Telarsa" is the organisation's
+           * name in every language; transliterating it would invent a second name.
+           */}
+          <span data-lumo-latn="">Telarsa · Lumo UI</span>
           <span className="tabular-nums">{t.footerNote}</span>
         </div>
       </footer>

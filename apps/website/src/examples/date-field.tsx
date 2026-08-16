@@ -88,6 +88,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "تاریخی که بخش‌به‌بخش تایپ می‌شود، بی‌شبکه: تاریخ تولد، تاریخی معلوم، فرم‌های فشرده.",
+        "en-US": "A date typed segment by segment, with no grid: a birth date, a date already known, dense forms.",
+      },
+      whenNot: {
+        "fa-IR": "شبکه‌ای دیدنی برای برداشتن — `DatePicker` پشت دکمه، یا `Calendar` روی صفحه. دو تاریخ که یک بازه‌اند — `DateRangePicker`. ساعت — `TimeField`.",
+        "en-US": "A visible grid to pick from — `DatePicker` behind a button, or `Calendar` on the page. Two dates that form a span — `DateRangePicker`. A time — `TimeField`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "فیلد تاریخ", "en-US": "Date field" },
@@ -114,12 +124,12 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
-        name: "renderSegment",
+        name: "DateInput",
         description: {
           "fa-IR":
-            "یک بخش را می‌کشد. تابعی نام‌دار و مشترک میان همهٔ اعضای خانواده، تا بخش‌های فیلد و انتخابگر یک چیز باشند؛ و بدون children، چون یک عدد خام همان نقص ارقام لاتین است.",
+            "همان ورودیِ بخش‌بندی‌شده که کل خانوادهٔ تاریخ به کار می‌برد: مدلِ صفحه‌کلید، یک‌بار. کلیدهای جهت از روی جهتِ صفحه تفسیر می‌شوند، پس در فارسی چپ به بخشِ بعدی می‌رود. جای renderSegment قدیمی را گرفته، که موتور بود.",
           "en-US":
-            "Draws one segment. A named function shared by the whole family so a field's slots and a picker's are the same thing — and with no children, because a raw number is the Latin-digit defect itself.",
+            "The same segmented input the whole date family uses: the keyboard model, once. The arrow keys are resolved from the page's direction, so in Persian the left one moves to the NEXT segment. It replaced renderSegment, which was React Aria's.",
         },
       },
     ],
@@ -152,7 +162,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "نامعتبر", "en-US": "Invalid" },
       description: {
         "fa-IR":
-          "پیام خطا را نویسنده می‌نویسد. پیام آمادهٔ ری‌اکت‌آریا انگلیسی است و تاریخ داخلش میلادی با ارقام لاتین.",
+          "پیام خطا را نویسنده می‌نویسد. پیام آمادهٔ موتور انگلیسی است و تاریخ داخلش میلادی با ارقام لاتین.",
         "en-US":
           "The author writes the message. React Aria's own is English, with a Gregorian date in Latin digits inside it.",
       },

@@ -1,180 +1,79 @@
 "use client";
 
-import { createContext, useContext, useId } from "react";
+import { Children, createContext, Fragment, isValidElement, useContext } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  Button as AriaButton,
-  Tag as AriaTag,
-  TagGroup as AriaTagGroup,
-  TagList as AriaTagList,
-  type Key,
-  type TagGroupProps as AriaTagGroupProps,
-  type TagListProps as AriaTagListProps,
-  type TagProps as AriaTagProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { Toolbar as BaseToolbar } from "@base-ui/react/toolbar";
+import { cn, type Key, type LumoNode } from "@lumo-ui/core";
+import { useCompositeTabStop } from "@lumo-ui/base-ui-ssr";
 
 /**
- * A keyboard-navigable list of filters, keywords or selected values.
+ * A keyboard-navigable list of filters, keywords or selected values. BASE UI
+ * ENGINE (`Toolbar`) for the removable form; the static form has no engine and
+ * renders a plain `<ul>`. Distinct from `tag.tsx`, a single static chip.
  *
- *     <TagGroup
- *       label="فیلترهای فعال"
- *       onRemove={(keys) => drop(keys)}
- *       removeLabel={(tag) => `حذف ${tag}`}
- *     >
+ *     <TagGroup label="فیلترهای فعال" onRemove={(keys) => drop(keys)}
+ *               removeLabel={(tag) => `حذف ${tag}`}>
  *       <TagList>
  *         <TagItem id="thr" textValue="تهران">تهران</TagItem>
- *         <TagItem id="isf" textValue="اصفهان">اصفهان</TagItem>
  *       </TagList>
  *     </TagGroup>
  *
- * Distinct from `tag.tsx`, which is a single static chip — a `<span>` with no
- * collection, no roving focus and no Delete-key handling. This one is RAC's
- * `role="grid"` collection: arrow keys move between tags, Delete removes, and
- * arrow direction is resolved against the document direction so ArrowLeft moves
- * FORWARD in Persian. None of that is implemented here; it is why Lumo rents
- * behaviour from React Aria.
- *
- * `"use client"` for that behaviour, and independently because `onRemove` is a
- * function prop — a function cannot cross the server/client boundary.
- *
- * ═══ `removeLabel` IS A FUNCTION, AND THE REASON IS NOT STYLE ═══════════════
- *
- * The remove control is an ✕ with no text, so it has no name of its own. RAC
- * supplies one, and supplies it TWICE. From
- * `react-aria/private/tag/useTag.mjs`:
- *
- *     removeButtonProps: {
- *       'aria-label': stringFormatter.format('removeButtonLabel'),   // "Remove"
- *       'aria-labelledby': `${buttonId} ${rowProps.id}`,
- *       ...
- *     }
- *
- * Measured output, with a Persian `aria-label` passed in:
- *
- *     <button id="…_r_7_" aria-label="حذف تهران"
- *             aria-labelledby="…_r_7_ …_r_0_-thr" slot="remove">
- *
- * Read that carefully, because it decides the whole API:
- *
- *  1. `aria-labelledby` OVERRIDES `aria-label` in the accessible-name
- *     computation. It names the button by concatenating the button's own label
- *     with the TAG ROW's — so RAC's design is "verb here, noun appended
- *     automatically": `"Remove"` + `"Tehran"`. Pass a complete Persian phrase
- *     and you get «حذف تهران تهران», the noun twice.
- *  2. The English `aria-label="Remove"` is in the served HTML whether or not
- *     the name computation uses it, and `lumo-gate` greps `aria-label` for
- *     Latin script. Overriding only `aria-labelledby` would leave the gate red.
- *
- * So both are overridden, deliberately: `aria-label` to keep English out of the
- * bytes, and `aria-labelledby` — pointed at a visually-hidden span inside the
- * button — to make the announced name EXACTLY the consumer's string, with no
- * concatenation happening behind it. `aria-labelledby={undefined}` would not
- * work: `mergeProps` does `result[key] = b !== undefined ? b : a`, so an
- * undefined local value leaves RAC's context value standing.
- *
- * ── AND THAT IS WHY IT TAKES THE TAG'S OWN LABEL ────────────────────────────
- *
- * Once Lumo owns the whole name rather than a fragment RAC glues a noun onto,
- * a fixed string cannot express it. «حذف» alone announces eight identical
- * buttons on a page with eight filters — the measured 33-unnamed-controls defect
- * with a name attached but no distinguishing content. And the phrase is not
- * assemblable by the library: Persian can want «حذف تهران», «تهران را حذف کن» or
- * «برداشتن فیلتر تهران», and only the first happens to match English word order.
- * A `(tagLabel: string) => string` hands the consumer the noun and asks for the
- * sentence — the same shape `numberField.decrease` takes in
- * `@lumo-ui/core`'s strings.ts, and for the same reason recorded there: word
- * order must be authored, not interpolated.
- *
- * It lives on the GROUP rather than on each tag because `onRemove` does, and the
- * two are meaningless apart. The union below makes that structural: `onRemove`
- * without `removeLabel` is a type error, and `removeLabel` without `onRemove`
- * is unrepresentable.
- *
- * ═══ ONE UNREACHABLE DEFECT, PINNED RATHER THAN PAPERED OVER ════════════════
- *
- * A server-rendered tag row carries a DANGLING `aria-labelledby`. From
- * `react-aria/private/gridlist/useGridListItem.mjs`, which `useTag` builds on:
- *
- *     let descriptionId = useSlotId();
- *     ...
- *     'aria-labelledby': descriptionId && (node['aria-label'] || node.textValue)
- *       ? `${getRowId(state, node.key)} ${descriptionId}` : undefined,
- *
- * `useSlotId` mints an id and only CLEARS an unclaimed one inside a layout
- * effect — which never runs during `renderToStaticMarkup`. And `useTag` then
- * throws the matching props away (`let {descriptionProps: _, ...rest} = states`),
- * so no element can claim it in any composition. Measured on a `fa-IR` render:
- *
- *     <div role="row" aria-label="تهران"
- *          aria-labelledby="…-thr react-aria-_R_eH1_">   ← second id has no element
- *
- * `@lumo-ui/gate`'s `resolved-idrefs` rule fails a build over exactly that, and
- * it is right to by its own terms. After hydration the id is removed and the
- * dangle count is 0, so this is a FIRST-BYTE defect only — the same tier as the
- * `aria-describedby` dangles that rule already excludes.
- *
- * Verified unreachable, by rendering rather than by report:
- *
- *   - passing `aria-labelledby` to `TagItem` changes nothing. RAC's `Tag` builds
- *     its DOM props with `filterDOMProps(props, {global: true})`, which carries
- *     no `aria-*` at all, and merges the row's own props after them.
- *   - dropping `textValue` WOULD take the falsy branch, and is not an option:
- *     it is the prop that names the row and drives typeahead. See its doc below.
- *
- * The four sibling components that had the same `useSlotId` dangle — `ListBox`,
- * `Autocomplete`, `FileUpload` and `Slider` — are FIXED, because in each of
- * those RAC publishes the id somewhere a component can claim it (a `Text` slot,
- * or a `useSlot` branch an `aria-label` takes out). This one has nowhere.
- *
- * Consequence, stated so nobody rediscovers it in production: **a `fa-IR` route
- * that renders a TagGroup fails the HTML gate**, which is why the showcase site
- * has no tag-group demo yet. `packages/blocks` composes it only inside client
- * surfaces that are not prerendered. When React Aria closes this, that demo can
- * be added with no change here.
+ * The React Aria dangling-idref pin is retired (no `useTag`, no `useSlotId`).
+ * The removable form is a toolbar of remove BUTTONS, so arrowing announces
+ * «حذف تهران»; a static list is a LIST, so the count is announced for free.
+ * Gone, and removed from the type: selection (compose `ListBox` instead) and
+ * Delete/Backspace on a focused row. Direction is NOT free: `CompositeRoot`
+ * reads `useDirection()`, `'ltr'` unless the app mounts `<DirectionProvider>`.
+ * `removeLabel` stays a required FUNCTION: an ✕ has no text, and Persian word
+ * order is not English with the words swapped; the union makes
+ * `onRemove`/`removeLabel` one decision. `"use client"` because `onRemove` is a
+ * function prop and for the toolbar's behaviour. Long form: `docs/decisions/log.md`.
  */
 
 /**
- * Carries the group's `removeLabel` to each tag.
- *
- * A context rather than a prop on every `TagItem`, and the objection recorded in
- * `progress.tsx` — "a context has a default, and the default renders confidently
- * wrong" — does not apply here: the default is `null`, and a `null` reaching a
- * tag that is actually removable is impossible, because `removeLabel` and
- * `onRemove` are the same type-level decision on the same element.
+ * Carries the group's `removeLabel` to each tag. Default `null` cannot reach a
+ * removable tag, because `removeLabel` and `onRemove` are one type-level decision.
  */
-const RemoveLabelContext = createContext<((tagLabel: string) => string) | null>(null);
+interface TagGroupContextValue {
+  removeLabel: (tagLabel: string) => string;
+  onRemove: (keys: Set<Key>) => void;
+  /**
+   * The key of the chip that holds the tab stop until hydration (see
+   * `useCompositeTabStop`): a served Base UI composite has no `tabindex="0"`.
+   * `TagList` picks the first chip because the chip cannot know it is first.
+   */
+  firstKey: Key | undefined;
+}
+
+const TagGroupContext = createContext<TagGroupContextValue | null>(null);
 
 export const tagGroupVariants = cva("flex flex-col gap-2");
 
 export const tagListVariants = cva(
   "flex flex-wrap items-center gap-2 outline-none " +
-    // RAC publishes `data-empty` on the list; the empty state is the consumer's
-    // to render via `renderEmptyState`, so all this does is keep the row from
-    // collapsing to zero height and jumping the layout.
-    "data-empty:min-h-8",
+    // `:empty` replaces RAC's `data-empty`; keeps the row from collapsing when
+    // the last filter is dropped.
+    "empty:min-h-8",
 );
 
 export const tagItemVariants = cva(
   "inline-flex w-fit max-w-full cursor-default select-none items-center " +
     "rounded-md border border-border bg-surface-sunken align-middle " +
     "whitespace-nowrap text-fg outline-none transition-colors " +
-    "data-hovered:bg-surface-hover " +
-    // `data-selected` is selection in the collection sense; `data-focus-visible`
-    // is the roving tabindex landing on this tag. Both need to be visible, and
-    // they are different states — styling only one of them is the usual bug.
-    "data-selected:border-accent data-selected:bg-accent data-selected:text-accent-fg " +
-    "data-disabled:pointer-events-none data-disabled:opacity-50 " +
+    // `data-hovered` → CSS `:hover`; nothing tracks a pointer here any more.
+    "hover:bg-surface-hover " +
+    // The `data-selected:` rules are DELETED: Base UI's Toolbar has no selection model.
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
+      /** The tag-size step. */
       size: {
         // `ps-`/`pe-` rather than `px-`: the inline-END cap is trimmed when a
-        // remove button is present, and only a logical pair can express "the
-        // cap the button sits in" without knowing which side that is.
+        // remove button is present.
         sm: "h-6 gap-1 ps-2 pe-2 text-xs",
         md: "h-7 gap-1.5 ps-2.5 pe-2.5 text-sm",
       },
+      /** Reserves the inline-end space the remove control occupies. */
       removable: {
         true: "pe-1",
         false: "",
@@ -185,27 +84,24 @@ export const tagItemVariants = cva(
 );
 
 export const tagRemoveVariants = cva(
-  // `ms-0.5 -me-1`: nudged toward the chip's inline END, which is the LEFT in
-  // Persian, automatically. The `ml-`/`mr-` spelling of this line is the single
-  // most copied RTL defect in chip components.
+  // `ms-0.5 -me-1`: nudged toward the chip's inline END, LEFT in Persian.
   "relative -me-1 ms-0.5 inline-flex size-5 shrink-0 cursor-pointer " +
     "items-center justify-center rounded-sm text-fg-muted outline-none " +
-    "transition-colors data-hovered:bg-surface-hover data-hovered:text-fg " +
-    // The glyph is 20px, under the 44px touch floor. Inflating the chip would
-    // make a row of filters unusable, so the HIT AREA grows via a transparent
-    // pseudo-element: the target changes, the layout does not.
+    "transition-colors hover:bg-surface-hover hover:text-fg " +
+    // The press: the chip is removed, so no element is left to carry a state.
+    "active:translate-y-px " +
+    // No ring class: this IS the focusable element and carries `data-lumo`. The
+    // glyph is 20px, under the 44px touch floor, so the HIT AREA grows via a
+    // transparent pseudo-element: the target changes, the layout does not.
     "after:absolute after:-inset-2.5 after:content-['']",
 );
 
 export type TagItemVariantProps = VariantProps<typeof tagItemVariants>;
 
-interface TagGroupBaseProps
-  extends Omit<AriaTagGroupProps, "className" | "onRemove" | "aria-label"> {
+interface TagGroupBaseProps {
   /**
-   * Announced name of the collection, e.g. «فیلترهای فعال».
-   *
-   * REQUIRED. RAC puts it on the `role="grid"` element; without it the whole
-   * list is announced as a bare "grid" with no indication of what it holds.
+   * Announced name of the collection, e.g. «فیلترهای فعال». REQUIRED — names
+   * the toolbar when removable and the `<ul>` when not.
    */
   label: string;
   children?: LumoNode;
@@ -213,15 +109,12 @@ interface TagGroupBaseProps
 }
 
 interface RemovableTagGroupProps extends TagGroupBaseProps {
-  /** Called with the keys to drop. RAC also fires this on Delete/Backspace. */
+  /** Called with the keys to drop. No longer fired on Delete/Backspace — rows are not tab stops. */
   onRemove: (keys: Set<Key>) => void;
   /**
    * Builds the announced name of each tag's remove control from that tag's own
-   * `textValue`, e.g. ``(tag) => `حذف ${tag}` `` → «حذف تهران».
-   *
-   * REQUIRED whenever the group is removable. See the file header — this prop is
-   * what the union exists to force, and the function form is load-bearing rather
-   * than decorative.
+   * `textValue`, e.g. ``(tag) => `حذف ${tag}` `` → «حذف تهران». REQUIRED
+   * whenever the group is removable.
    */
   removeLabel: (tagLabel: string) => string;
 }
@@ -233,112 +126,143 @@ interface StaticTagGroupProps extends TagGroupBaseProps {
 
 export type TagGroupProps = RemovableTagGroupProps | StaticTagGroupProps;
 
+/**
+ * A keyboard-navigable group of tags: filters, keywords, or selected values, removable when told how.
+ * A `role="toolbar"` when there is something to operate; otherwise `TagList`'s `<ul>`.
+ */
 export function TagGroup(props: TagGroupProps) {
-  const { label, className, children, onRemove, removeLabel, ...rest } = props;
+  const { label, className, children, onRemove, removeLabel } = props;
+
+  if (onRemove === undefined || removeLabel === undefined) {
+    return (
+      <div data-lumo="" className={cn(tagGroupVariants(), className)}>
+        <TagGroupLabelContext.Provider value={label}>{children}</TagGroupLabelContext.Provider>
+      </div>
+    );
+  }
+
   return (
-    <RemoveLabelContext.Provider value={removeLabel ?? null}>
-      <AriaTagGroup
-        {...rest}
+    <TagGroupContext.Provider value={{ removeLabel, onRemove, firstKey: undefined }}>
+      <BaseToolbar.Root
+        data-lumo=""
         aria-label={label}
-        {...(onRemove !== undefined ? { onRemove } : {})}
         className={cn(tagGroupVariants(), className)}
       >
-        {children}
-      </AriaTagGroup>
-    </RemoveLabelContext.Provider>
+        <TagGroupLabelContext.Provider value={undefined}>{children}</TagGroupLabelContext.Provider>
+      </BaseToolbar.Root>
+    </TagGroupContext.Provider>
   );
 }
 
-export interface TagListProps<T extends object>
-  extends Omit<AriaTagListProps<T>, "children" | "className"> {
-  children?: LumoNode | ((item: T) => LumoNode);
+/**
+ * The name for the STATIC form's `<ul>`. `undefined` inside a toolbar, which
+ * already carries the name.
+ */
+const TagGroupLabelContext = createContext<string | undefined>(undefined);
+
+export interface TagListProps {
+  children?: LumoNode;
   className?: string | undefined;
 }
 
-export function TagList<T extends object>({ className, ...props }: TagListProps<T>) {
-  // `data-lumo` because the list is the roving-tabindex container and takes
-  // focus itself when empty — RAC gives it `tabIndex={0}`.
+function firstTagKey(children: LumoNode): Key | undefined {
+  for (const child of Children.toArray(children)) {
+    if (!isValidElement(child)) continue;
+    const props = child.props as { id?: Key; children?: LumoNode };
+    if (child.type === Fragment) {
+      const nested = firstTagKey(props.children);
+      if (nested !== undefined) return nested;
+    } else if (props.id !== undefined) {
+      return props.id;
+    }
+  }
+  return undefined;
+}
+
+export function TagList({ className, children }: TagListProps) {
+  const listLabel = useContext(TagGroupLabelContext);
+  const group = useContext(TagGroupContext);
+
+  // A real `<ul>` in the static form: the count is announced for free.
+  if (listLabel !== undefined) {
+    return (
+      <ul aria-label={listLabel} className={cn(tagListVariants(), className)}>
+        {children}
+      </ul>
+    );
+  }
+
+  // Inside a toolbar, a plain flex box keeps the composite's children where it
+  // expects them. Descend through Fragments: React.Children flattens only arrays.
+  const firstKey = firstTagKey(children);
   return (
-    <AriaTagList
-      data-lumo=""
-      className={cn(tagListVariants(), className)}
-      {...props}
-    />
+    <TagGroupContext.Provider
+      value={group === null ? null : { ...group, firstKey }}
+    >
+      <div className={cn(tagListVariants(), className)}>{children}</div>
+    </TagGroupContext.Provider>
   );
 }
 
-export interface TagItemProps
-  extends Omit<AriaTagProps, "children" | "className" | "textValue">,
-    Omit<TagItemVariantProps, "removable"> {
+export interface TagItemProps extends Omit<TagItemVariantProps, "removable"> {
+  /** The tag's key, handed back to `onRemove`. */
+  id: Key;
   /**
-   * The tag's text, as a plain string.
-   *
-   * REQUIRED, where RAC makes it optional. RAC derives it from a literal string
-   * child and falls back to `''` otherwise — an unnamed row plus a broken
-   * typeahead, silently, the moment a child is anything but bare text. It is
-   * also the argument handed to the group's `removeLabel`, so the announced name
-   * of the remove control depends on it existing.
+   * The tag's text, as a plain string. REQUIRED — nothing derives it, so it
+   * cannot be empty by accident. Also the argument handed to `removeLabel`.
    */
   textValue: string;
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function TagItem({ textValue, children, size, className, ...props }: TagItemProps) {
-  const removeLabel = useContext(RemoveLabelContext);
-  // The id of the hidden name element. See the file header: pointing
-  // `aria-labelledby` at it is what stops RAC appending the tag's own text to
-  // the phrase the consumer authored.
-  const nameId = useId();
+export function TagItem({ id, textValue, children, size, className }: TagItemProps) {
+  const group = useContext(TagGroupContext);
+  const isStatic = useContext(TagGroupLabelContext) !== undefined;
+  // One tab stop in the served HTML, handed back to Base UI on hydration. A
+  // CONSTANT `tabIndex={0}` would leave two stops forever.
+  const tabStop = useCompositeTabStop(group !== null && group.firstKey === id);
 
-  return (
-    <AriaTag
-      {...props}
-      data-lumo=""
-      textValue={textValue}
-      className={({ allowsRemoving }) =>
-        cn(tagItemVariants({ size, removable: allowsRemoving }), className)
-      }
-    >
-      {({ allowsRemoving }) => (
-        <>
-          <span className="truncate">{children ?? textValue}</span>
-          {allowsRemoving && removeLabel !== null ? (
-            <AriaButton
-              slot="remove"
-              data-lumo=""
-              // Both overrides are needed and they do different jobs:
-              // `aria-label` keeps RAC's "Remove" out of the served bytes, which
-              // is what the HTML gate reads; `aria-labelledby` displaces the
-              // `"{buttonId} {rowId}"` pair so the computed name is this phrase
-              // and nothing else.
-              aria-label={removeLabel(textValue)}
-              aria-labelledby={nameId}
-              className={cn(tagRemoveVariants())}
-            >
-              <span id={nameId} className="sr-only">
-                {removeLabel(textValue)}
-              </span>
-              {/*
-               * An ✕ drawn inline: no icon dependency for a copied file, and
-               * the glyph is diagonally symmetric so it is identical under
-               * mirroring. A chevron here would need `rtl:-scale-x-100`.
-               */}
-              <svg
-                aria-hidden="true"
-                viewBox="0 0 16 16"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.75"
-                strokeLinecap="round"
-                className="size-3"
-              >
-                <path d="M4 4 12 12M12 4 4 12" />
-              </svg>
-            </AriaButton>
-          ) : null}
-        </>
+  const chip = (
+    <>
+      <span className="truncate">{children ?? textValue}</span>
+      {group === null ? null : (
+        <BaseToolbar.Button
+          data-lumo=""
+          // ONE naming attribute, and only one.
+          aria-label={group.removeLabel(textValue)}
+          {...tabStop}
+          onClick={() => {
+            group.onRemove(new Set([id]));
+          }}
+          className={cn(tagRemoveVariants())}
+        >
+          {/* An ✕ drawn inline: no icon dependency, and symmetric under mirroring. */}
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            className="size-3"
+          >
+            <path d="M4 4 12 12M12 4 4 12" />
+          </svg>
+        </BaseToolbar.Button>
       )}
-    </AriaTag>
+    </>
+  );
+
+  const classes = cn(tagItemVariants({ size, removable: group !== null }), className);
+
+  return isStatic ? (
+    <li data-lumo="" className={classes}>
+      {chip}
+    </li>
+  ) : (
+    <span data-lumo="" className={classes}>
+      {chip}
+    </span>
   );
 }

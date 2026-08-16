@@ -1,140 +1,58 @@
 "use client";
 
 import Link from "next/link";
-import type { Locale } from "@lumo-ui/core";
+import type { Locale, LumoNode } from "@lumo-ui/core";
 import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
-import { CodeBlock } from "./code-block";
 
 /**
  * Installation: a Command tab (package-manager sub-tabs, pnpm first) and a
- * Manual tab (dependencies to install, then the source to copy).
- *
- * Every piece of data here — the registry name, `dependencies`,
- * `registryComponents`, `files` — is DERIVED from `registry.json` by the
- * caller (`page.tsx`, a server component that can read the filesystem at
- * build time). This component never hardcodes a package name or a file path;
- * it only lays out whatever the registry says. See `page.tsx`'s
- * `resolveRegistryItem` for how a page's slug is matched to a registry item —
- * most match by name, but `icon-button` shares `button.tsx` with `button` and
- * is matched by content rather than by a hardcoded exception.
- *
- * PACKAGE-MANAGER NAMES ARE NEVER PLACED IN AN ARIA-LABEL.
- * "pnpm" and "npm" both satisfy `/[A-Za-z]{3,}/`, the exact pattern
- * `no-latin-aria` (packages/gate/src/rules.ts) rejects when it appears in a
- * spoken attribute on a Persian page. Every copy button below carries a
- * locale-only accessible name ("Copy the install command", never "Copy the
- * pnpm command") for that reason — the manager name stays in the VISIBLE tab
- * text, which the gate does not restrict, and never in a `label`/`aria-label`.
+ * Manual tab (dependencies, then the source to copy). Every piece of data is
+ * DERIVED from `registry.json` by the server caller (`page.tsx`); nothing is
+ * hardcoded here. The listings arrive RENDERED, not as strings: this module is
+ * `"use client"` (because `Tabs` is), and string props would ship the source
+ * in the flight payload a second time. Package-manager names are NEVER placed
+ * in an aria-label ("pnpm" trips `no-latin-aria`); they stay in visible tab
+ * text only. Measurements: docs/decisions/log.md.
  */
 
 export interface InstallFile {
   /** Where a consumer's copy lands, e.g. "components/ui/button.tsx" — read
    *  verbatim from the registry item's own `files[].target`. */
   target: string;
-  code: string;
-  /** Build-time shiki output for `code`. See `commandHtml` on the props. */
-  html?: string | undefined;
+  /** The file's listing, server rendered by `page.tsx` as a `CodePanel`. */
+  panel: LumoNode;
 }
 
 export interface InstallTabsProps {
   locale: Locale;
-  /** The registry item name actually resolved for this page, e.g. "button". */
-  registryName: string;
-  /** External npm packages the registry entry lists in `dependencies`. */
-  dependencies: string[];
   /** Sibling Lumo registry items this one depends on — real registry item
    *  names only; a companion `*.variants.ts` file is filtered out upstream. */
   registryComponents: string[];
   /** The file(s) to copy: the component itself, and its companion
    *  `*.variants.ts` when the registry lists one. */
   files: InstallFile[];
-  /** Shiki output per command/file, produced by the SERVER page via
-   *  `lib/highlight.ts` — this client module must not import the highlighter
-   *  (see code-block.tsx's `html` prop for the whole argument). */
-  commandHtml?: Partial<Record<PM, string>> | undefined;
-  depsHtml?: string | undefined;
+  /**
+   * One rendered listing per package manager, keyed by the same `PMS` order the
+   * pill row iterates — a `Record`, not a `Partial`, so no tab selects into nothing.
+   */
+  commandPanels: Record<PM, LumoNode>;
+  /** The dependency-install listing, absent when the registry entry has no
+   *  external dependencies — the same condition that renders `noDeps` instead. */
+  depsPanel?: LumoNode | undefined;
 }
 
-import { CLI_COMMAND, PMS, depsCommand, type PM } from "@/lib/install-commands";
-
-const COPY: Record<
-  Locale,
-  {
-    installMethod: string;
-    command: string;
-    manual: string;
-    pmGroup: string;
-    copyCommand: string;
-    copyCommandDone: string;
-    depsHeading: string;
-    noDeps: string;
-    copyDeps: string;
-    copyDepsDone: string;
-    alsoUses: string;
-    sourceHeading: string;
-    copyMain: string;
-    copyMainDone: string;
-    copyCompanion: string;
-    copyCompanionDone: string;
-    /**
-     * What goes between two names in a run-on list. Persian uses U+060C, not a
-     * comma — the last string on this page that was still picked with a binary
-     * conditional on `locale`, which would have silently handed a third locale
-     * the Latin comma inside otherwise-correct prose.
-     */
-    listSeparator: string;
-  }
-> = {
-  "fa-IR": {
-    installMethod: "روش نصب",
-    command: "دستور",
-    manual: "دستی",
-    pmGroup: "مدیر بستهٔ ترجیحی",
-    copyCommand: "کپی دستور نصب",
-    copyCommandDone: "دستور نصب در کلیپ‌بورد کپی شد",
-    depsHeading: "نصب وابستگی‌ها",
-    noDeps: "این کامپوننت به بستهٔ بیرونی نیاز ندارد.",
-    copyDeps: "کپی دستور وابستگی‌ها",
-    copyDepsDone: "دستور وابستگی‌ها کپی شد",
-    alsoUses: "همچنین به این کامپوننت‌های لومو نیاز دارد:",
-    sourceHeading: "کد را کپی و در پروژه جای‌گذاری کنید",
-    copyMain: "کپی کد اصلی",
-    copyMainDone: "کد اصلی کپی شد",
-    copyCompanion: "کپی کد کمکی",
-    copyCompanionDone: "کد کمکی کپی شد",
-    listSeparator: "، ",
-  },
-  "en-US": {
-    installMethod: "Install method",
-    command: "Command",
-    manual: "Manual",
-    pmGroup: "Package manager",
-    copyCommand: "Copy the install command",
-    copyCommandDone: "Install command copied to clipboard",
-    depsHeading: "Install the dependencies",
-    noDeps: "This component has no external dependencies.",
-    copyDeps: "Copy the dependency command",
-    copyDepsDone: "Dependency command copied",
-    alsoUses: "Also requires these Lumo components:",
-    sourceHeading: "Copy and paste the code into your project",
-    copyMain: "Copy the main file",
-    copyMainDone: "Main file copied",
-    copyCompanion: "Copy the companion file",
-    copyCompanionDone: "Companion file copied",
-    listSeparator: ", ",
-  },
-};
+import { PMS, type PM } from "@/lib/install-commands";
+import { INSTALL_COPY } from "@/lib/install-copy";
+import { segmentFor } from "@/lib/locale";
 
 export function InstallTabs({
-  commandHtml,
-  depsHtml,
+  commandPanels,
+  depsPanel,
   locale,
-  registryName,
-  dependencies,
   registryComponents,
   files,
 }: InstallTabsProps) {
-  const t = COPY[locale];
+  const t = INSTALL_COPY[locale];
 
   return (
     <Tabs>
@@ -146,22 +64,14 @@ export function InstallTabs({
       <TabPanel id="command" className="mt-3">
         <Tabs>
           {/*
-           * The package-manager switcher is deliberately NOT a third underline
-           * bar. The design review measured three byte-identical TabLists
-           * stacked ~12px apart on the built page — Preview|Code, then
-           * Command|Manual, then this — which flattens the hierarchy into
-           * noise. shadcn renders the PM switch as compact chrome attached to
-           * the code block, and that is what these class overrides do: a small
-           * segmented pill row, subordinate to the underline bar above it.
-           * Same Tabs component, same keyboard behaviour — only the clothes.
+           * The package-manager switcher is deliberately NOT a third underline bar
+           * (three stacked TabLists flattened the hierarchy): a compact segmented
+           * pill row, subordinate to the bar above. Same Tabs, only the clothes.
            */}
           {/*
            * `data-[orientation=horizontal]:border-b-0`, not a bare `border-be-0`:
-           * tabListVariants draws its hairline as `data-[orientation=horizontal]:
-           * border-b`, and a bare width-0 utility loses to it on specificity —
-           * tailwind-merge only removes the base class when the override carries
-           * the SAME variant. Measured on the built page: the pill row shipped
-           * with the underline bar's hairline still under it.
+           * tailwind-merge only removes tabListVariants' hairline when the override
+           * carries the SAME variant.
            */}
           <TabList
             label={t.pmGroup}
@@ -169,16 +79,9 @@ export function InstallTabs({
           >
             {PMS.map((pm) => (
               /*
-               * `mb-0 border-b-0` removes the selected-tab indicator entirely:
-               * tabVariants marks selection with `border-b-2 -mb-px
-               * data-selected:border-accent`, and on a `rounded-sm` pill that
-               * 2px rule renders as a second, rounded underline below the
-               * selected pill — the artefact the review flagged. The indicator
-               * is an underline's clothes; a segmented pill shows selection as
-               * a raised surface (`data-selected:bg-surface` + shadow), so the
-               * border width and the `-mb-px` that compensated for it both go.
-               * (An earlier `after:hidden` here guessed at a pseudo-element
-               * that tabs.tsx never renders — the indicator is a real border.)
+               * `mb-0 border-b-0` removes the selected-tab underline entirely:
+               * on a `rounded-sm` pill it renders as a second rounded underline.
+               * Selection reads as a raised surface (`data-selected:bg-surface`) instead.
                */
               <Tab
                 key={pm}
@@ -193,12 +96,7 @@ export function InstallTabs({
           </TabList>
           {PMS.map((pm) => (
             <TabPanel key={pm} id={pm} className="mt-3">
-              <CodeBlock
-                code={CLI_COMMAND[pm](registryName)}
-                html={commandHtml?.[pm]}
-                label={t.copyCommand}
-                copiedLabel={t.copyCommandDone}
-              />
+              {commandPanels[pm]}
             </TabPanel>
           ))}
         </Tabs>
@@ -208,13 +106,8 @@ export function InstallTabs({
         <div>
           <h3 className="text-sm font-medium text-fg">{t.depsHeading}</h3>
           <div className="mt-2">
-            {dependencies.length > 0 ? (
-              <CodeBlock
-                code={depsCommand(dependencies)}
-                html={depsHtml}
-                label={t.copyDeps}
-                copiedLabel={t.copyDepsDone}
-              />
+            {depsPanel !== undefined ? (
+              depsPanel
             ) : (
               <p className="text-sm text-fg-muted">{t.noDeps}</p>
             )}
@@ -230,7 +123,7 @@ export function InstallTabs({
                    * noun, not prose, so it is an LTR island like the file
                    * paths above rather than something to translate. */}
                   <Link
-                    href={`/${locale}/components/${name}/`}
+                    href={`/${segmentFor(locale)}/components/${name}/`}
                     dir="ltr"
                     lang="en"
                     data-lumo-latn=""
@@ -247,7 +140,7 @@ export function InstallTabs({
         <div>
           <h3 className="text-sm font-medium text-fg">{t.sourceHeading}</h3>
           <div className="mt-2 flex flex-col gap-4">
-            {files.map((file, i) => (
+            {files.map((file) => (
               <div key={file.target}>
                 <p
                   dir="ltr"
@@ -257,12 +150,7 @@ export function InstallTabs({
                 >
                   {file.target}
                 </p>
-                <CodeBlock
-                  code={file.code}
-                  html={file.html}
-                  label={i === 0 ? t.copyMain : t.copyCompanion}
-                  copiedLabel={i === 0 ? t.copyMainDone : t.copyCompanionDone}
-                />
+                {file.panel}
               </div>
             ))}
           </div>

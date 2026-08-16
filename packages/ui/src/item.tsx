@@ -1,18 +1,12 @@
 "use client";
 
-import type { HTMLAttributes } from "react";
-import {
-  Button as AriaButton,
-  Link as AriaLink,
-  type ButtonProps as AriaButtonProps,
-  type LinkProps as AriaLinkProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import type { ComponentProps, MouseEvent as ReactMouseEvent } from "react";
+import { Button as BaseButton } from "@base-ui/react/button";
+import { cn, type LumoNode, type PressEvent } from "@lumo-ui/core";
+import { pressFromClick } from "./base-ui-adapter.ts";
 import { Separator, type SeparatorProps } from "./separator.tsx";
-// Class definitions live in item.variants.ts with no "use client", so a
-// server-rendered listing can style static rows without dragging this module's
-// client boundary along. Deliberately NOT re-exported from here — file-upload.tsx
-// records why re-exporting through the directive defeats the split.
+// Class definitions live in item.variants.ts (no "use client") for server-rendered
+// listings, and are deliberately NOT re-exported through this directive.
 import {
   itemActionsVariants,
   itemContentVariants,
@@ -26,78 +20,42 @@ import {
   type ItemMediaVariantProps,
   type ItemVariantProps,
 } from "./item.variants.ts";
+import { useLinkComponent, type LumoLinkRenderProps } from "./link-context.ts";
 
 /**
- * The generic row: media, content, actions. The workhorse under lists of
- * files, people, settings and search results.
- *
- *     <Item href="/fa-IR/profile" variant="outlined">
- *       <ItemMedia media="icon">…svg…</ItemMedia>
- *       <ItemContent>
- *         <ItemTitle>پروفایل</ItemTitle>
- *         <ItemDescription>نام و نشانی شما</ItemDescription>
- *       </ItemContent>
- *       <ItemActions>…</ItemActions>
- *     </Item>
- *
- * `"use client"` because the interactive forms come from react-aria-components,
- * which is client-only.
- *
- * ── WHAT THE ELEMENT IS, IS THE API ─────────────────────────────────────────
- * One row, three renderings, decided by the props' own shape:
- *
- *   - `href`     → RAC `Link`, a real `<a>`: crawlable, middle-clickable.
- *   - `onPress`  → RAC `Button`: press handling for touch/keyboard/mouse,
- *                  `data-pressed` for styling.
- *   - neither    → a plain `<div>` with no role and no tab stop.
- *
- * The union makes the wrong mixtures unrepresentable — `href` with `onPress`
- * is a compile error, and a static row cannot accidentally become focusable.
- * A `<button>` named by its whole content announces title AND description;
- * that is the intended behaviour for a pressable row, and the reason there is
- * no aria-label prop here: the visible text IS the name, in the page's own
- * language.
- *
- * `target`/`rel` are stripped from the link form, as in link.tsx: opening a
- * new tab requires an announced warning, and this component has no slot for
- * one. Wrap a `Link` with `newTab` if a row must do that.
- *
- * ── Vendored shape, and what changed ────────────────────────────────────────
- * The anatomy is shadcn aria-vega `item`. Upstream defects fixed here:
- *
- *  1. `ItemDescription` hardcodes `text-left` — Persian descriptions hug the
- *     wrong edge. Gone; block flow already starts at the reading edge.
- *  2. `ItemGroup` sets `role="list"` while its items render no `listitem` —
- *     measured in the emitted source: VoiceOver announces "list, 0 items" and
- *     skips the content. Wrong semantics are worse than none, so the group
- *     here is a plain div and the test pins the ABSENCE of the role.
- *  3. The `xs` size existed to embed rows in a dropdown-menu package Lumo does
- *     not carry; two sizes remain.
+ * The generic row: media, content, actions. One row, three renderings decided
+ * by the props' own shape — `href` → a plain `<a>`; `onPress` → Base UI
+ * `Button` (a real `<button>`, named by its whole content, so no aria-label
+ * prop); neither → a static `<div>` with no role and no tab stop. The union
+ * makes the wrong mixtures unrepresentable. `target`/`rel` are stripped from
+ * the link form (a new tab needs an announced warning; wrap a `Link` instead).
+ * `ItemGroup` has no `role="list"`: its items are not `listitem`s.
  */
 
-interface ItemCommonProps extends ItemVariantProps {
+/** `interactive` is DERIVED from `href`/`onPress`, not forwarded, so a static row cannot light up. */
+interface ItemCommonProps extends Omit<ItemVariantProps, "interactive"> {
   children?: LumoNode;
   className?: string | undefined;
 }
 
 export interface ItemLinkProps
   extends ItemCommonProps,
-    Omit<AriaLinkProps, "children" | "className" | "target" | "rel"> {
+    Omit<ComponentProps<"a">, "children" | "className" | "target" | "rel"> {
   /** Renders the row as a real anchor. */
   href: string;
 }
 
 export interface ItemButtonProps
   extends ItemCommonProps,
-    Omit<AriaButtonProps, "children" | "className"> {
+    Omit<ComponentProps<"button">, "children" | "className" | "onClick"> {
   href?: undefined;
   /** Renders the row as a button. Required — a handler-less button is a static row. */
-  onPress: NonNullable<AriaButtonProps["onPress"]>;
+  onPress: (e: PressEvent) => void;
 }
 
 export interface ItemStaticProps
   extends ItemCommonProps,
-    Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+    Omit<ComponentProps<"div">, "children" | "className"> {
   href?: undefined;
   onPress?: undefined;
 }
@@ -105,39 +63,43 @@ export interface ItemStaticProps
 export type ItemProps = ItemLinkProps | ItemButtonProps | ItemStaticProps;
 
 export function Item(props: ItemProps) {
+  // The app's router link when LumoProvider provides one; the platform anchor otherwise.
+  const Anchor = useLinkComponent();
   if (props.href !== undefined) {
     const { variant, size, className, ...link } = props;
     return (
-      <AriaLink
+      <Anchor
         data-lumo=""
-        className={cn(itemVariants({ variant, size }), className)}
-        {...link}
+        className={cn(itemVariants({ variant, size, interactive: true }), className)}
+        {...(link as LumoLinkRenderProps)}
       />
     );
   }
   if (props.onPress !== undefined) {
-    const { variant, size, className, href: _href, ...button } = props;
+    const { variant, size, className, href: _href, onPress, ...button } = props;
     return (
-      <AriaButton
+      <BaseButton
         data-lumo=""
-        className={cn(itemVariants({ variant, size }), className)}
+        className={cn(itemVariants({ variant, size, interactive: true }), className)}
+        // The frozen `PressEvent` shape, rebuilt from the real `click`.
+        onClick={(event: ReactMouseEvent<HTMLButtonElement>) => onPress(pressFromClick(event))}
         {...button}
       />
     );
   }
   const { variant, size, className, href: _href, onPress: _onPress, ...rest } = props;
+  // No `interactive` — a static row must not light up under a pointer.
   return <div className={cn(itemVariants({ variant, size }), className)} {...rest} />;
 }
 
 export interface ItemSectionProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
 
 export function ItemGroup({ className, ...props }: ItemSectionProps) {
-  // No role — see the file header. If real list semantics matter for a page,
-  // that page owns a <ul> and puts each Item in an <li>.
+  // No role: a page that wants list semantics owns a <ul> and puts each Item in an <li>.
   return <div className={cn(itemGroupVariants(), className)} {...props} />;
 }
 
@@ -148,6 +110,7 @@ export function ItemSeparator({ className, ...props }: ItemSeparatorProps) {
 }
 
 export interface ItemMediaProps extends ItemSectionProps {
+  /** How the leading media is framed: an icon chip, an image, or unframed. */
   media?: ItemMediaVariantProps["media"];
 }
 
@@ -159,18 +122,13 @@ export function ItemContent({ className, ...props }: ItemSectionProps) {
   return <div className={cn(itemContentVariants(), className)} {...props} />;
 }
 
-/**
- * A div, not a heading: a repeated row title inside every list entry would
- * flood the document outline with dozens of same-level entries. A page section
- * that IS an outline entry composes CardTitle or its own heading around the
- * list instead.
- */
+/** A div, not a heading: a repeated row title would flood the document outline. */
 export function ItemTitle({ className, ...props }: ItemSectionProps) {
   return <div className={cn(itemTitleVariants(), className)} {...props} />;
 }
 
 export interface ItemDescriptionProps
-  extends Omit<HTMLAttributes<HTMLParagraphElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"p">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }

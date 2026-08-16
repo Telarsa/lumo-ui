@@ -1,8 +1,8 @@
 {
   "name": "@lumo-ui/core",
-  "version": "0.0.0",
+  "version": "0.1.1",
   "description": "Lumo's invariants: the types, locale context and helpers that every consumer must share byte-for-byte. Components are copied; this is not.",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
   "sideEffects": false,
   "exports": {
@@ -16,8 +16,8 @@
     "react": ">=19"
   },
   "dependencies": {
-    "clsx": "catalog:",
-    "tailwind-merge": "catalog:"
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.6.0"
   },
   "devDependencies": {
     "@types/react": "catalog:",

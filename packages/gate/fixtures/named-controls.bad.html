@@ -3,6 +3,16 @@
   <body>
     <button></button>
     <a href="#"></a>
+    <!-- Composite widgets name nothing by themselves. -->
+    <div role="menu"><div role="menuitem" tabindex="0">رونوشت</div></div>
+    <ul role="listbox"><li role="option" tabindex="0">۱۴۰۳</li></ul>
+    <div role="dialog"></div>
+    <div role="alertdialog"></div>
+    <div role="tablist"></div>
+    <div role="region"></div>
+    <!-- Not a violation: named by its trigger. -->
+    <button id="t">گزینه‌ها</button>
+    <div role="menu" aria-labelledby="t"><div role="menuitem" tabindex="0">رونوشت</div></div>
     <!-- Not a violation: aria-hidden on an ancestor removes the whole subtree
          from the accessibility tree. This mirrors React Aria's hidden native
          <select>, and the rule must not flag it. -->

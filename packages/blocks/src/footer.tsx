@@ -5,30 +5,10 @@ import { Container, Link, Separator } from "@lumo-ui/ui";
  * The band at the bottom of every page: brand, grouped navigation, legal
  * links, copyright.
  *
- * No `"use client"` — a footer's links are exactly the kind of real `<a href>`
- * navigation `hero.tsx` and `feature-grid.tsx` argue for at length: they are
- * indexed, they work with no JavaScript, and nothing here needs a callback.
- *
- * ── NO `level` PROP, UNLIKE ITS MARKETING SIBLINGS ──────────────────────────
- *
- * `hero.tsx`, `feature-grid.tsx`, `pricing-table.tsx` and `faq.tsx` all take a
- * `level` because they are IN-FLOW sections whose correct heading depth
- * depends on whatever the caller stacked above them on the same page. A
- * footer is not in that flow — it is the one landmark that sits at the same
- * document depth on every route regardless of what the page above it looks
- * like — so its two heading tiers (a section-level column heading, fixed at
- * `<h2>`) are fixed rather than parameterised. There is nothing above a
- * footer for its own headings to disagree with.
- *
- * ── THE BRAND MARK AND SOCIAL ROW ARE SLOTS, NOT `strings.brand` ────────────
- *
- * `brand` and `social` are `LumoNode`, not text: a wordmark is usually an
- * `<img>` or an inline SVG, and a social row is a set of `IconButton`s that
- * each already carry their OWN required `label` (`button.tsx`'s whole
- * argument for why `IconButton` exists). Typing either as a string here would
- * either lose the markup or force a second, parallel icon API this block has
- * no business inventing — see `app-shell.tsx`'s `sidebarFooter` for the
- * identical trade.
+ * No `"use client"` — real `<a href>` navigation, nothing needs a callback.
+ * No `level` prop: a footer sits at the same document depth on every route, so
+ * its column headings are fixed at `<h2>`. `brand` and `social` are `LumoNode`
+ * slots, not strings — a wordmark is markup and social icons carry their own labels.
  */
 export interface FooterLink {
   /** Stable key. Not rendered. */
@@ -48,15 +28,7 @@ export interface FooterLinkGroup {
 export interface FooterStrings {
   /** Announced name of the `<footer>` landmark. Required. */
   regionLabel: string;
-  /**
-   * The whole copyright line, assembled by the caller — e.g.
-   * «© ۱۴۰۴ شرکت تلارسا. تمام حقوق محفوظ است.».
-   *
-   * The caller owns the year for the same reason `booking-summary.tsx` owns
-   * its dates: a year is a number, and formatting one needs a `locale` this
-   * block has no other use for — nor should it need one, for a single line
-   * the caller already has fully formed.
-   */
+  /** The whole copyright line, assembled by the caller — e.g. «© ۱۴۰۴ شرکت تلارسا. تمام حقوق محفوظ است.». The caller owns the year: formatting one needs a `locale` this block has no other use for. */
   copyright: LumoNode;
 }
 

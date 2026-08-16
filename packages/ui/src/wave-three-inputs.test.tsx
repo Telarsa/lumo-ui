@@ -1,0 +1,323 @@
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
+
+import { ColorInput, normalizeColor } from "./color-input.tsx";
+import { ColorPicker } from "./color-picker.tsx";
+import { JsonInput, validateJson } from "./json-input.tsx";
+import { MaskInput, maskValue } from "./mask-input.tsx";
+import { MultiSelect } from "./multi-select.tsx";
+import { TagsInput } from "./tags-input.tsx";
+import { Cascader, resolveCascaderPath } from "./cascader.tsx";
+import { TreeSelect, treeSelectionState } from "./tree-select.tsx";
+import { RangeSlider } from "./range-slider.tsx";
+
+describe("Wave 3 product inputs", () => {
+  it("keeps every newer field trigger on the shared compact control scale", () => {
+    const { rerender } = render(
+      <MaskInput label="Account" mask="####" />,
+    );
+    expect(screen.getByLabelText("Account").className).toContain("h-control-md");
+    expect(screen.getByLabelText("Account").className).not.toContain("h-10");
+
+    rerender(
+      <Cascader
+        locale="en-US"
+        label="Location"
+        placeholder="Choose"
+        columnsLabel="Location levels"
+        options={[{ value: "ir", label: "Iran" }]}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Location Choose" }).className).toContain(
+      "h-control-md",
+    );
+
+    rerender(
+      <TreeSelect
+        label="Permissions"
+        treeLabel="Permission tree"
+        placeholder="Choose"
+        options={[{ value: "read", label: "Read" }]}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Permissions Choose" }).className).toContain(
+      "h-control-md",
+    );
+  });
+
+  it("aligns composite fields and adjacent affordances to that same compact scale", () => {
+    const { container, rerender } = render(
+      <ColorInput
+        label="Brand"
+        pickerLabel="Pick brand color"
+        invalidColorMessage="Invalid color"
+      />,
+    );
+    expect(container.querySelector('input[type="color"]')?.parentElement?.className).toContain(
+      "size-control-md",
+    );
+
+    rerender(
+      <TagsInput
+        label="Tags"
+        placeholder="Add tag"
+        removeLabel={(tag) => `Remove ${tag}`}
+      />,
+    );
+    expect(screen.getByRole("combobox", { name: "Tags" }).parentElement?.className).toContain(
+      "min-h-control-md",
+    );
+
+    rerender(
+      <MultiSelect
+        locale="en-US"
+        label="Libraries"
+        placeholder="Choose"
+        suggestionsLabel="Library suggestions" dismissLabel="بستن پیشنهادها"
+        removeLabel={(label) => `Remove ${label}`}
+        options={[{ value: "react", label: "React" }]}
+      />,
+    );
+    expect(
+      screen.getByRole("combobox", { name: "Libraries" }).parentElement?.parentElement?.className,
+    ).toContain("min-h-control-md");
+  });
+
+  it("normalizes supported CSS colors without exposing Culori objects", () => {
+    expect(normalizeColor("rgb(255 0 0 / 50%)", "hex8")).toBe("#ff000080");
+    expect(normalizeColor("not-a-color", "hex")).toBeUndefined();
+  });
+
+  it("serves named color controls and keeps invalid typed text editable", () => {
+    const html = renderToStaticMarkup(
+      <ColorInput
+        label="رنگ برند"
+        pickerLabel="انتخاب رنگ"
+        invalidColorMessage="رنگ معتبر نیست"
+        defaultValue="#ff0000"
+      />,
+    );
+    expect(html).toContain("رنگ برند");
+    // The native picker is NAMED by the required prop — a `title` alone is a tooltip, not a name.
+    expect(html).toContain('type="color" aria-label="انتخاب رنگ"');
+  });
+
+  it("publishes a labelled swatch collection", () => {
+    const html = renderToStaticMarkup(
+      <ColorPicker
+        label="رنگ‌های مجاز"
+        swatches={[
+          { value: "#ff0000", label: "قرمز" },
+          { value: "#0000ff", label: "آبی" },
+        ]}
+      />,
+    );
+    expect(html).toContain('role="radiogroup" aria-label="رنگ‌های مجاز"');
+    expect(html).toContain("قرمز");
+    expect(html).toContain("آبی");
+    expect((html.match(/tabindex="0"/g) ?? [])).toHaveLength(1);
+    expect((html.match(/tabindex="-1"/g) ?? [])).toHaveLength(1);
+  });
+
+  it("moves the visible swatch selection in uncontrolled mode", () => {
+    render(
+      <ColorPicker
+        label="Brand colors"
+        defaultValue="#ff0000"
+        swatches={[
+          { value: "#ff0000", label: "Red" },
+          { value: "#0000ff", label: "Blue" },
+        ]}
+      />,
+    );
+    const blue = screen.getByRole("radio", { name: "Blue" });
+    fireEvent.click(blue);
+    expect(blue.parentElement?.querySelector("[data-color-selected]")).not.toBeNull();
+  });
+
+  it("distinguishes incomplete JSON editing from valid JSON values", () => {
+    expect(validateJson('{"name":')).toEqual({ valid: false });
+    expect(validateJson('{"name":"Lumo"}')).toEqual({ valid: true, value: { name: "Lumo" } });
+    const html = renderToStaticMarkup(
+      <JsonInput label="پیکربندی" invalidJsonMessage="جی‌سون معتبر نیست" defaultValue="{" />,
+    );
+    expect(html).toContain("جی‌سون معتبر نیست");
+    expect(html).toContain('aria-invalid="true"');
+    expect(html).toContain('data-lumo-latn=""');
+  });
+
+  it("masks raw input and reports completion", () => {
+    expect(maskValue("1234567890", "(###) ###-####")).toEqual({
+      masked: "(123) 456-7890",
+      raw: "1234567890",
+      complete: true,
+    });
+    const onValueChange = vi.fn();
+    render(
+      <MaskInput
+        label="Phone"
+        mask="(###) ###-####"
+        onValueChange={onValueChange}
+      />,
+    );
+    fireEvent.input(screen.getByLabelText("Phone"), { target: { value: "1234" } });
+    expect(onValueChange).toHaveBeenLastCalledWith("1234", "(123) 4", false);
+    // …and COMPLETION is reported once the last slot fills, not left permanently false.
+    fireEvent.input(screen.getByLabelText("Phone"), { target: { value: "1234567890" } });
+    expect(onValueChange).toHaveBeenLastCalledWith("1234567890", "(123) 456-7890", true);
+  });
+
+  it("delegates mid-string caret repair to the mask engine", () => {
+    const setSelectionRange = vi.spyOn(HTMLInputElement.prototype, "setSelectionRange");
+    render(
+      <MaskInput
+        label="Account"
+        mask="####-####"
+        defaultValue="12345678"
+      />,
+    );
+    const input = screen.getByLabelText("Account") as HTMLInputElement;
+    input.value = "19234-5678";
+    input.setSelectionRange(2, 2);
+    setSelectionRange.mockClear();
+    input.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText" }));
+    expect(setSelectionRange).toHaveBeenCalled();
+    setSelectionRange.mockRestore();
+  });
+
+  it("supports multiple collection selection with removable named chips", () => {
+    const onValueChange = vi.fn();
+    render(
+      <MultiSelect
+        locale="en-US"
+        label="Libraries"
+        placeholder="Choose libraries"
+        suggestionsLabel="Library suggestions" dismissLabel="بستن پیشنهادها"
+        removeLabel={(label) => `Remove ${label}`}
+        options={[
+          { value: "react", label: "React" },
+          { value: "vue", label: "Vue" },
+        ]}
+        value={["react"]}
+        onValueChange={onValueChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Remove React" }));
+    expect(onValueChange).toHaveBeenCalledWith([]);
+  });
+
+  it("connects multi-select keyboard highlight to its active option", () => {
+    render(
+      <MultiSelect
+        locale="en-US"
+        label="Libraries"
+        placeholder="Choose libraries"
+        suggestionsLabel="Library suggestions" dismissLabel="بستن پیشنهادها"
+        removeLabel={(label) => `Remove ${label}`}
+        options={[
+          { value: "react", label: "React" },
+          { value: "vue", label: "Vue" },
+        ]}
+      />,
+    );
+    const input = screen.getByRole("combobox", { name: "Libraries" });
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    const activeId = input.getAttribute("aria-activedescendant");
+    expect(activeId).toBeTruthy();
+    expect(document.getElementById(activeId!)?.getAttribute("role")).toBe("option");
+  });
+
+  it("updates MultiSelect's engine-owned dismiss name while suggestions remain open", async () => {
+    const multiSelect = (dismissLabel: string) => (
+      <MultiSelect
+        locale="fa-IR"
+        label="کتابخانه‌ها"
+        placeholder="انتخاب کنید"
+        suggestionsLabel="پیشنهادهای کتابخانه"
+        dismissLabel={dismissLabel}
+        removeLabel={(label) => `حذف ${label}`}
+        options={[{ value: "react", label: "ری‌اکت" }]}
+      />
+    );
+    const view = render(multiSelect("بستن پیشنهادها"));
+    const input = screen.getByRole("combobox", { name: "کتابخانه‌ها" });
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    await waitFor(() => {
+      expect(document.querySelectorAll('[aria-label="بستن پیشنهادها"]').length).toBeGreaterThan(0);
+    });
+
+    view.rerender(multiSelect("خروج از پیشنهادها"));
+    await waitFor(() => {
+      expect(document.querySelectorAll('[aria-label="بستن پیشنهادها"]')).toHaveLength(0);
+      expect(document.querySelectorAll('[aria-label="خروج از پیشنهادها"]').length).toBeGreaterThan(0);
+    });
+  });
+
+  it("creates and removes ordered tags", () => {
+    const onValueChange = vi.fn();
+    render(
+      <TagsInput
+        label="Tags"
+        placeholder="Add tag"
+        removeLabel={(tag) => `Remove ${tag}`}
+        value={["one"]}
+        onValueChange={onValueChange}
+      />,
+    );
+    const input = screen.getByLabelText("Tags");
+    fireEvent.change(input, { target: { value: "two" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onValueChange).toHaveBeenLastCalledWith(["one", "two"]);
+    // Removal goes through a button NAMED by the required `removeLabel` — an unnamed ✕ is not a control.
+    fireEvent.click(screen.getByRole("button", { name: "Remove one" }));
+    expect(onValueChange).toHaveBeenLastCalledWith([]);
+  });
+
+  it("uses a named Lumo suggestions popup instead of the browser datalist", () => {
+    render(
+      <TagsInput
+        label="Tags"
+        placeholder="Add tag"
+        removeLabel={(tag) => `Remove ${tag}`}
+        suggestions={["Charts"]}
+        suggestionsLabel="Suggested tags"
+      />,
+    );
+    const input = screen.getByRole("combobox", { name: "Tags" });
+    expect(document.querySelector("datalist")).toBeNull();
+    fireEvent.focus(input);
+    expect(screen.getByRole("listbox", { name: "Suggested tags" })).toBeTruthy();
+    expect(screen.getByRole("option", { name: "Charts" })).toBeTruthy();
+  });
+
+  it("resolves only valid cascader paths", () => {
+    const options = [{ value: "asia", label: "Asia", children: [{ value: "ir", label: "Iran" }] }];
+    expect(resolveCascaderPath(options, ["asia", "ir"]).map((node) => node.label)).toEqual(["Asia", "Iran"]);
+    expect(resolveCascaderPath(options, ["asia", "missing"])).toEqual([]);
+  });
+
+  it("computes checked, mixed, and unchecked tree selection", () => {
+    const tree = [{ value: "root", label: "Root", children: [{ value: "leaf", label: "Leaf" }] }];
+    expect(treeSelectionState(tree[0]!, new Set(["leaf"]))).toBe("checked");
+    expect(treeSelectionState({ ...tree[0]!, children: [...tree[0]!.children!, { value: "other", label: "Other" }] }, new Set(["leaf"]))).toBe("mixed");
+  });
+
+  it("serves two independently named range thumbs with localized values", () => {
+    const html = renderToStaticMarkup(
+      <RangeSlider
+        locale="fa-IR"
+        label="بازهٔ قیمت"
+        startLabel="کمینهٔ قیمت"
+        endLabel="بیشینهٔ قیمت"
+        defaultValue={[20, 80]}
+      />,
+    );
+    expect(html).toContain("کمینهٔ قیمت");
+    expect(html).toContain("بیشینهٔ قیمت");
+    expect(html).toContain("۲۰");
+    expect(html).toContain("۸۰");
+  });
+});

@@ -98,7 +98,7 @@ function innerTheme(frame: HTMLIFrameElement): string | null {
 
 describe("preview frames — the stamp reaches the inner document", () => {
   it("writes the theme into a same-origin frame and snaps the transition", () => {
-    const frame = mountFrame("/view/fa-IR/button/");
+    const frame = mountFrame("/view/fa/button/");
     expect(innerTheme(frame)).toBeNull();
 
     expect(syncFrameTheme(frame, "dark")).toBe(true);
@@ -113,7 +113,7 @@ describe("preview frames — the stamp reaches the inner document", () => {
   });
 
   it("does nothing when the frame already agrees — the write is idempotent", () => {
-    const frame = mountFrame("/view/fa-IR/button/");
+    const frame = mountFrame("/view/fa/button/");
     syncFrameTheme(frame, "light");
     // Two syncers on one page (two DemoFrames) is a supported state precisely
     // because the second call is a no-op rather than a second repaint.
@@ -124,7 +124,7 @@ describe("preview frames — the stamp reaches the inner document", () => {
 
 describe("preview frames — the page's flip is what drives it", () => {
   it("repaints an already-loaded frame when <html data-theme> changes", async () => {
-    const frame = mountFrame("/view/fa-IR/button/");
+    const frame = mountFrame("/view/fa/button/");
     document.documentElement.setAttribute("data-theme", "light");
 
     render(<PreviewFrameThemeSync />);
@@ -139,8 +139,8 @@ describe("preview frames — the page's flip is what drives it", () => {
   });
 
   it("reaches block previews as well as component previews", async () => {
-    const component = mountFrame("/view/fa-IR/button/");
-    const block = mountFrame("/view-block/fa-IR/sign-in/");
+    const component = mountFrame("/view/fa/button/");
+    const block = mountFrame("/view-block/fa/sign-in/");
     document.documentElement.setAttribute("data-theme", "dark");
 
     render(<PreviewFrameThemeSync />);
@@ -163,7 +163,7 @@ describe("preview frames — the page's flip is what drives it", () => {
   });
 
   it("stops observing when it unmounts", async () => {
-    const frame = mountFrame("/view/fa-IR/button/");
+    const frame = mountFrame("/view/fa/button/");
     const { unmount } = render(<PreviewFrameThemeSync />);
     document.documentElement.setAttribute("data-theme", "dark");
     await waitFor(() => expect(innerTheme(frame)).toBe("dark"));
@@ -184,7 +184,7 @@ describe("preview frames — the system-theme path, which storage never sees", (
     // OS, which writes nothing anywhere. Both are why the sync listens to the
     // document and the media query rather than to `storage` — a storage
     // listener inside the view layout would never fire for either.
-    const frame = mountFrame("/view/fa-IR/button/");
+    const frame = mountFrame("/view/fa/button/");
     render(<PreviewFrameThemeSync />);
     await waitFor(() => expect(innerTheme(frame)).toBe("light"));
 

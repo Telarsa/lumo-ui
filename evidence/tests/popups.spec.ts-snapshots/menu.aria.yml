@@ -1,0 +1,4 @@
+- menu "کنش‌ها":
+  - menuitem "تکثیر"
+  - menuitem "تغییر نام"
+  - menuitem "حذف"

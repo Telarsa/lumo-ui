@@ -29,11 +29,17 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
+  commandInputVariants,
 } from "./command.tsx";
 
 afterEach(cleanup);
 
 const LATIN_WORD = /[A-Za-z]{3,}/;
+
+it("uses the shared compact control height instead of a one-off command height", () => {
+  expect(commandInputVariants()).toContain("h-control-md");
+  expect(commandInputVariants()).not.toContain("h-11");
+});
 
 function spokenAttributes(root: ParentNode = document): string[] {
   const attrs = [
@@ -53,23 +59,49 @@ function spokenAttributes(root: ParentNode = document): string[] {
   return out;
 }
 
+interface Cmd {
+  value: string;
+  label: string;
+  shortcut?: string;
+}
+
+/**
+ * The grouped `items` shape. It is DATA now, not JSX — Base UI filters the array
+ * the root holds, and a JSX collection is rendered but never filtered. That is
+ * the API change `command.tsx`'s header argues, and this fixture is what it
+ * looks like at a call site.
+ */
+const GROUPS: readonly { value: string; heading: string; items: readonly Cmd[] }[] = [
+  {
+    value: "suggestions",
+    heading: "پیشنهادها",
+    items: [
+      { value: "new", label: "سند تازه" },
+      { value: "open", label: "بازکردن پرونده", shortcut: "⌘O" },
+    ],
+  },
+  { value: "settings", heading: "تنظیمات", items: [{ value: "theme", label: "پوسته" }] },
+];
+
 function Palette() {
   return (
-    <Command>
+    <Command items={GROUPS}>
       <CommandInput label="جست‌وجوی فرمان" placeholder="یک فرمان بنویسید…" />
-      <CommandList aria-label="فرمان‌ها">
-        <CommandGroup heading="پیشنهادها">
-          <CommandItem id="new">سند تازه</CommandItem>
-          <CommandItem id="open">
-            بازکردن پرونده
-            <CommandShortcut>⌘O</CommandShortcut>
-          </CommandItem>
-        </CommandGroup>
-        <CommandSeparator />
-        <CommandGroup heading="تنظیمات">
-          <CommandItem id="theme">پوسته</CommandItem>
-        </CommandGroup>
+      <CommandList label="فرمان‌ها">
+        {(group: (typeof GROUPS)[number]) => (
+          <CommandGroup key={group.value} heading={group.heading} items={group.items}>
+            {(item: Cmd) => (
+              <CommandItem key={item.value} id={item.value}>
+                {item.label}
+                {item.shortcut === undefined ? null : (
+                  <CommandShortcut>{item.shortcut}</CommandShortcut>
+                )}
+              </CommandItem>
+            )}
+          </CommandGroup>
+        )}
       </CommandList>
+      <CommandSeparator />
     </Command>
   );
 }
@@ -81,7 +113,12 @@ describe("Command — the search field is named, and stays named", () => {
         <Palette />
       </LumoProvider>,
     );
-    const input = screen.getByRole("searchbox");
+    // RESTATED FOR THE ENGINE. `searchbox` -> `combobox`: Base UI's filtering
+    // lives inside its combobox root and no Menu can subscribe to it, so a
+    // filtered palette is a combobox over a listbox on this engine. The
+    // BEHAVIOUR under test — that the name is a required prop and is not the
+    // placeholder — is asserted unchanged below. See command.tsx's header.
+    const input = screen.getByRole("combobox");
     expect(input.getAttribute("aria-label")).toBe("جست‌وجوی فرمان");
     expect(input.getAttribute("placeholder")).toBe("یک فرمان بنویسید…");
 
@@ -135,11 +172,13 @@ describe("Command — filtering still works after the children were wrapped", ()
         <Palette />
       </LumoProvider>,
     );
-    expect(screen.getAllByRole("menuitem")).toHaveLength(3);
+    // `menuitem` -> `option`, for the reason restated above. Three commands
+    // across two groups, before any query.
+    expect(screen.getAllByRole("option")).toHaveLength(3);
 
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "پوسته" } });
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "پوسته" } });
 
-    const remaining = screen.getAllByRole("menuitem");
+    const remaining = screen.getAllByRole("option");
     expect(remaining).toHaveLength(1);
     expect(remaining[0]!.textContent).toContain("پوسته");
   });
@@ -150,12 +189,15 @@ describe("Command — filtering still works after the children were wrapped", ()
         <Palette />
       </LumoProvider>,
     );
-    // «بازکردن پرونده» has a <CommandShortcut> sibling, so `children` is an ARRAY and
-    // RAC's own derivation yields "". This is the commonest shape a command item
-    // takes, and without the join in `deriveTextValue` the palette would render
-    // perfectly and never find it.
-    fireEvent.change(screen.getByRole("searchbox"), { target: { value: "بازکردن" } });
-    const remaining = screen.getAllByRole("menuitem");
+    // «بازکردن پرونده» has a <CommandShortcut> sibling. Under React Aria that
+    // made `children` an ARRAY, its derivation yielded "", and the commonest
+    // shape a command item takes could not be found by typing its own name —
+    // which is what `deriveTextValue` existed to repair. Base UI filters the
+    // items ARRAY before any JSX exists, so the shortcut is structurally
+    // incapable of affecting the match. The assertion is kept precisely because
+    // the repair was deleted: it now proves the engine, not the workaround.
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "بازکردن" } });
+    const remaining = screen.getAllByRole("option");
     expect(remaining).toHaveLength(1);
     expect(remaining[0]!.textContent).toContain("بازکردن پرونده");
   });
@@ -190,12 +232,32 @@ describe("CommandDialog — the title and description are Persian and required",
   it("renders an empty state only from the caller's own words", () => {
     render(
       <LumoProvider locale="fa-IR">
-        <Command>
+        <Command items={[]}>
           <CommandInput label="جست‌وجو" />
+          <CommandList label="فرمان‌ها">{() => null}</CommandList>
           <CommandEmpty>فرمانی پیدا نشد</CommandEmpty>
         </Command>
       </LumoProvider>,
     );
-    expect(screen.getByText("فرمانی پیدا نشد")).toBeTruthy();
+    // `getByRole("status")` and `toContain`, NOT `getByText(exact)`, and the
+    // reason is a measured Base UI behaviour rather than test convenience:
+    // `useInitialLiveRegionTextMutation` appends a WORD JOINER (U+2060) to the
+    // empty state's last text node on mount and removes it 200 ms later, so
+    // Safari VoiceOver reliably notices the polite live region. An exact-text
+    // query fails inside that window. Worth pinning: this is also proof the
+    // empty state is a real live region — under React Aria it was a plain
+    // `<div>` a screen reader never mentioned, so "no results" was silent.
+    const status = screen.getByRole("status");
+    expect(status.textContent).toContain("فرمانی پیدا نشد");
+    expect(status.getAttribute("aria-live")).toBe("polite");
+  });
+});
+
+describe("styling delivery", () => {
+  it("the command box carries the module's own classes", () => {
+    const { container } = render(<Palette />);
+    expect(
+      container.querySelector('[data-slot="command"]')?.getAttribute("class"),
+    ).toBeTruthy();
   });
 });

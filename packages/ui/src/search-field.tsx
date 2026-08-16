@@ -1,50 +1,28 @@
 "use client";
 
+import { useRef, type KeyboardEvent } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { SearchIcon, XIcon } from "lucide-react";
-import {
-  Input as AriaInput,
-  SearchField as AriaSearchField,
-  type SearchFieldProps as AriaSearchFieldProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+import { cn, type LumoNode, type TextFieldPropsBase } from "@lumo-ui/core";
 import { IconButton } from "./button.tsx";
-import {
-  Description,
-  FieldError,
-  Label,
-  fieldVariants,
-  optional,
-} from "./form.tsx";
+import { Description, Field, FieldError, FieldInput, Label, optional } from "./form.tsx";
 
 /**
- * The search input.
- *
- * The icon and the clear button are ABSOLUTELY POSITIONED over the input rather
- * than laid out beside it inside a flex `<Group>`, and that is a focus decision
- * before it is a layout one. If the border lived on a wrapper, the element that
- * actually takes focus would be a borderless `<input>` inset inside it, and the
- * shared `:where([data-lumo]):focus-visible` ring would draw a rectangle around
- * the text run instead of around the control. Keeping the border on the input
- * means the one focus rule in theme.css is still the only focus rule.
- *
- * `ps-9`/`pe-9` reserve the two overlays. Both are `padding-inline-*`, so the
- * magnifier sits at the reading start and the clear button at the reading end in
- * either script, with no `rtl:` override anywhere.
- *
- * `::-webkit-search-cancel-button` is hidden because `type="search"` gives WebKit
- * its own clear affordance — an unlabelled native control that would sit beside
- * ours, be announced with no name, and always in English if it were announced.
+ * The search input. The icon and clear button are ABSOLUTELY POSITIONED over
+ * the input so the border — and the shared `data-lumo` focus ring — stay on the
+ * element that takes focus. `ps-9`/`pe-9` reserve the overlays logically.
+ * `::-webkit-search-cancel-button` is hidden: an unlabelled native control.
  */
 export const searchInputVariants = cva(
   "w-full min-w-0 rounded-md border border-border-control bg-surface text-fg text-start " +
     "ps-9 pe-9 transition-colors placeholder:text-fg-subtle " +
     "[&::-webkit-search-cancel-button]:hidden " +
-    "data-hovered:border-border-strong " +
+    "hover:border-border-strong " +
     "data-invalid:border-critical " +
     "data-disabled:cursor-not-allowed data-disabled:bg-surface-sunken",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         sm: "h-control-sm text-sm",
         md: "h-control-md text-sm",
@@ -56,30 +34,32 @@ export const searchInputVariants = cva(
 );
 
 /**
- * A search field.
- *
- * `clearLabel` is REQUIRED and typed `string` because of a measured leak: React
- * Aria composes the clear button's name itself as `aria-label="Clear search"`,
- * from a string bundle that has no `fa` entry and — because
- * `LocalizedStringProvider` emits a client `<script>` rather than context — is not
- * reachable on the server at all. See `packages/core/src/strings.ts`; the Persian
- * value lives at `searchField.clear`.
- *
- * The override works because `SearchField` publishes `clearButtonProps` through an
- * UNSLOTTED `ButtonContext`, and React Aria merges context first and local props
- * second. Anything local wins. There is no `clearButtonLabel` prop on the field
- * itself — the button is the only reachable surface, which is why this component
- * owns the button rather than accepting it as a child.
+ * A search field. Base UI has no search field, so this is BUILT: `Field` +
+ * `Input` + `type="search"` + a clear button this file owns. Clearing goes
+ * through the native `value` setter plus a bubbling `input` event (a state
+ * mirror is forbidden, and `el.value = ""` is swallowed by React's tracker);
+ * Escape clears; `clearLabel` is REQUIRED because Base UI ships no name at all.
+ * FIRST-BYTE GAP, left honest: `Field.Root` seeds `filled` as `false` with no
+ * prop to override, so a server-rendered `defaultValue` serves its clear button
+ * hidden until hydration.
  */
+/** A search field is a text field plus two events the text field has no notion of. */
+interface SearchFieldPropsBase
+  extends Omit<TextFieldPropsBase, "isInvalid" | "validationBehavior" | "type"> {
+  /** The control's position in the sequential tab order — `-1` removes it (was `excludeFromTabOrder`). */
+  tabIndex?: number | undefined;
+  /** Handler that is called when the Enter key is pressed. */
+  onSubmit?: (value: string) => void;
+  /** Handler that is called when the clear button is pressed. */
+  onClear?: () => void;
+}
+
 export interface SearchFieldProps
-  extends Omit<AriaSearchFieldProps, "children" | "className" | "isInvalid">,
+  extends SearchFieldPropsBase,
     VariantProps<typeof searchInputVariants> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */
   label: string;
-  /**
-   * The clear button's accessible name. REQUIRED, no default: a default would be
-   * English, and English is the defect this library exists to prevent.
-   */
+  /** The clear button's accessible name. REQUIRED, no default: a default would be English. */
   clearLabel: string;
   description?: LumoNode;
   /** Supplying one marks the field invalid. See `TextField`. */
@@ -102,17 +82,61 @@ export function SearchField({
   size,
   className,
   inputClassName,
-  ...props
+  // — translated onto <Field> —
+  isDisabled,
+  name,
+  validate,
+  // — translated onto the control —
+  value,
+  defaultValue,
+  onChange,
+  onClear,
+  onSubmit,
+  isReadOnly,
+  isRequired,
+  autoFocus,
+  // — accepted by the API, unreachable in Base UI. See text-field.tsx. —
+  tabIndex,
+  ...rest
 }: SearchFieldProps) {
+  // `HTMLElement`, as `Field.Control` declares its ref; the narrowing below is
+  // a real check, so a future `render={<textarea/>}` fails loudly.
+  const inputRef = useRef<HTMLElement>(null);
+  const initiallyFilled = String(value ?? defaultValue ?? "").length > 0;
+
+  // The native setter: React's own `value` descriptor marks a direct assignment
+  // as already seen, so a CONTROLLED field would clear and snap back. The
+  // prototype setter plus a bubbling `input` event is what React and Base UI listen for.
+  function clear() {
+    const el = inputRef.current;
+    if (!(el instanceof HTMLInputElement)) return;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.set;
+    setter?.call(el, "");
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.focus();
+    onClear?.();
+  }
+
   return (
-    <AriaSearchField
-      data-lumo=""
-      // Named group: the clear button hides itself from `data-empty` on this
-      // root. Named rather than bare `group` so a SearchField nested inside
-      // another grouped component cannot read the wrong ancestor's state.
-      className={cn("group/search", fieldVariants(), className)}
-      {...optional("isInvalid", isInvalid ?? (errorMessage != null ? true : undefined))}
-      {...props}
+    <Field
+      label={label}
+      description={description}
+      errorMessage={errorMessage}
+      explicit={rest}
+      // Named group: the clear button reads `data-filled` from THIS root.
+      className={cn("group/search", className)}
+      {...optional("isDisabled", isDisabled)}
+      {...optional("isInvalid", isInvalid)}
+      {...optional("name", name)}
+      {...optional(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const result = validate(String(fieldValue ?? ""));
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
       <Label>{label}</Label>
       <div className="relative flex items-center">
@@ -120,27 +144,55 @@ export function SearchField({
           aria-hidden="true"
           className="pointer-events-none absolute start-3 size-4 shrink-0 text-fg-subtle"
         />
-        <AriaInput
-          data-lumo=""
+        <FieldInput
+          ref={inputRef}
+          type="search"
           className={cn(searchInputVariants({ size }), inputClassName)}
+          onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              clear();
+            } else if (event.key === "Enter") {
+              // Enter fires the callback and lets a surrounding form keep its own behaviour.
+              onSubmit?.(event.currentTarget.value);
+            }
+          }}
           {...optional("placeholder", placeholder)}
+          {...optional("value", value)}
+          {...optional("defaultValue", defaultValue)}
+          {...optional(
+            "onValueChange",
+            onChange === undefined ? undefined : (next: string) => onChange(next),
+          )}
+          {...optional("readOnly", isReadOnly)}
+          {...optional("required", isRequired)}
+          {...optional("autoFocus", autoFocus)}
+          {...(rest as object)}
+          {...optional("tabIndex", tabIndex)}
         />
         {/*
-         * `-translate-y-1/2` is a BLOCK-axis transform. It is not mirrored by
-         * writing direction and is therefore safe; the inline axis is handled by
-         * `end-1`, which is `inset-inline-end`.
+         * `-translate-y-1/2` is a BLOCK-axis transform, safe under RTL; the inline
+         * axis is `end-1`. `hidden` + `group-data-filled` restore: Base UI states
+         * the POSITIVE. `type="button"` so it cannot submit a surrounding form.
          */}
         <IconButton
+          type="button"
           label={clearLabel}
           variant="ghost"
           size="sm"
-          className="absolute end-1 top-1/2 -translate-y-1/2 rounded-full group-data-empty/search:hidden"
+          onPress={clear}
+          className={cn(
+            "absolute end-1 top-1/2 -translate-y-1/2 rounded-full",
+            initiallyFilled
+              ? "inline-flex group-data-empty/search:hidden"
+              : "hidden group-data-filled/search:inline-flex",
+          )}
         >
           <XIcon aria-hidden="true" />
         </IconButton>
       </div>
       {description != null ? <Description>{description}</Description> : null}
       <FieldError>{errorMessage}</FieldError>
-    </AriaSearchField>
+    </Field>
   );
 }

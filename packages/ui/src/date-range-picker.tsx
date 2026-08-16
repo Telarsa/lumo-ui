@@ -1,178 +1,264 @@
 "use client";
 
+import { useId, useRef, useState } from "react";
 import { CalendarIcon } from "lucide-react";
-import {
-  Button as AriaButton,
-  CalendarGrid as AriaCalendarGrid,
-  CalendarGridBody as AriaCalendarGridBody,
-  CalendarGridHeader as AriaCalendarGridHeader,
-  CalendarCell as AriaCalendarCell,
-  DateInput as AriaDateInput,
-  DateRangePicker as AriaDateRangePicker,
-  Dialog as AriaDialog,
-  Group as AriaGroup,
-  Popover as AriaPopover,
-  RangeCalendar as AriaRangeCalendar,
-  type CalendarCellProps as AriaCalendarCellProps,
-  type DateRangePickerProps as AriaDateRangePickerProps,
-  type DateValue,
-} from "react-aria-components";
+import { Field } from "@base-ui/react/field";
+import type { CalendarDate } from "@internationalized/date";
+import { attr } from "@lumo-ui/base-ui-ssr";
 import { cn, type LumoNode } from "@lumo-ui/core";
-import { CalendarHeader } from "./calendar.tsx";
 import {
-  calendarGridVariants,
-  calendarVariants,
   datePickerGroupVariants,
   datePickerTriggerVariants,
   dateRangeSeparatorVariants,
-  rangeCalendarCellVariants,
 } from "./calendar.variants.ts";
-import { renderSegment, type DateBounds, type DateFieldSize } from "./date-field.tsx";
-import { renderPickerHeaderCell } from "./date-picker.tsx";
-import { Description, FieldError, Label, fieldVariants, optional } from "./form.tsx";
-import { popoverVariants } from "./popover.tsx";
+import { DateInput, type DateInputHandle, type DateInputSize } from "./date-input.tsx";
+import { useDateFieldState } from "./date-field-state.ts";
+import {
+  descriptionVariants,
+  fieldErrorVariants,
+  fieldVariants,
+  labelVariants,
+  optional,
+} from "./form.tsx";
+import { useLumoLocale } from "./locale.ts";
+import { Popover, PopoverTrigger } from "./popover.tsx";
+import { RangeCalendar, type CalendarDateRange } from "./range-calendar.tsx";
 
 export { dateRangeSeparatorVariants };
 
 /**
- * Two typed dates and a range grid behind one button.
- *
- * ── THE SEPARATOR IS NOT AN ARROW ───────────────────────────────────────────
- *
- * Between the two fields sits «–», an en dash, and it is `aria-hidden`. An
- * arrow would be a direction, and a direction between two dates is a claim
- * about which one comes first ON SCREEN — which flips with the script while the
- * meaning does not. A dash says "from … to …" without pointing, so the same
- * character is correct in both, and the two `DateInput`s land in reading order
- * because the flex row is direction-agnostic and `dir` does the rest.
- *
- * Which half a segment belongs to is not left to position: RAC labels each
- * segment «سال, تاریخ شروع» / «سال, تاریخ پایان» from the patched `datepicker`
- * bundle, so a screen-reader user is told start-or-end explicitly rather than
- * inferring it from order. Measured — all twelve segment names on a Persian
- * render, zero English.
- *
- * ── THE ORDER TRAP, AND WHY IT IS AN ERROR MESSAGE ──────────────────────────
- *
- * A range whose end precedes its start is the one validation failure a range
- * picker has all to itself, and React Aria's own words for it are "Start date
- * must be before end date." — English, and chosen from `navigator.language`
- * rather than from the provider, so no patch reaches it and server rendering
- * always picks `en-US`. `DateBounds` in `date-field.tsx` carries the full
- * measurement. The consequence here: `errorMessage` is REQUIRED as soon as the
- * picker is bounded, and `<FieldError>` renders only when one was authored, so
- * the English sentence has nowhere to appear.
- *
- * ── A JALALI RANGE IS NOT A GREGORIAN RANGE WITH A DIFFERENT LABEL ──────────
- *
- * Shahrivar has 31 days and Mehr has 30 — the first six Jalali months carry 31,
- * the next five carry 30 — so a five-night stay starting ۱۴۰۵/۶/۲۹ ends in Mehr. `@internationalized/date` does that
- * arithmetic in the persian calendar because the values carry their calendar;
- * adding days to a JavaScript `Date` would not, and would be wrong in a way
- * that reads as plausible.
+ * Two typed dates and a range grid behind one button — `date-picker.tsx`'s
+ * composition, twice. The separator is an `aria-hidden` en dash, not an arrow:
+ * an arrow claims which date comes first ON SCREEN, which flips with the
+ * script. Each half is a `role="group"` named by `startLabel`/`endLabel`
+ * (required), so «سال» is announced inside «تاریخ شروع». No validation engine
+ * produces "end before start" — `errorMessage` is the caller's sentence. Range
+ * arithmetic is `@internationalized/date`'s, in the persian calendar.
  */
-export interface DateRangePickerProps<T extends DateValue>
-  extends Omit<
-    AriaDateRangePickerProps<T>,
-    | "children"
-    | "className"
-    | "aria-label"
-    | "minValue"
-    | "maxValue"
-    | "isDateUnavailable"
-    | "isInvalid"
-  > {
+export interface DateRangePickerProps {
   /** Announced and displayed name of the whole range. Required. */
   label: string;
-  /** Name of the button that opens the calendar. Required. `strings.datePicker.openCalendar`. */
+  /** Names the start field's group, e.g. «تاریخ شروع». Required — see the header. */
+  startLabel: string;
+  /** Names the end field's group, e.g. «تاریخ پایان». Required. */
+  endLabel: string;
+  /** Name of the button that opens the calendar. Required — the trigger is an icon. */
   openCalendarLabel: string;
-  /** Name of the previous-month button. Required. `strings.calendar.previousMonth`. */
-  previousMonthLabel: string;
-  /** Name of the next-month button. Required. `strings.calendar.nextMonth`. */
-  nextMonthLabel: string;
+  /** Clock input forwarded to the popup calendar for deterministic rendering. */
+  today: CalendarDate;
+  /** The range, when controlled. CalendarDate endpoints, inclusive. */
+  value?: CalendarDateRange | null | undefined;
+  /** The initial range, when the value is uncontrolled. */
+  defaultValue?: CalendarDateRange | null | undefined;
+  /** Called with the committed range, or null when cleared. */
+  onChange?: ((value: CalendarDateRange | null) => void) | undefined;
+  /** The date the empty segments start from when editing begins. */
+  placeholderValue?: CalendarDate | undefined;
+  /** Earliest and latest selectable DAY, forwarded to the grid unchanged. Days, not months. */
+  minValue?: CalendarDate | undefined;
+  /** The latest selectable date. */
+  maxValue?: CalendarDate | undefined;
+  /** Marks individual dates unselectable in the grid. */
+  isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
+  /** Help text rendered under the field and linked to it. */
   description?: LumoNode;
+  /** Shown under the field. Supplying one marks it invalid. */
+  errorMessage?: LumoNode;
   /** Overrides the invalid state derived from `errorMessage`. */
   isInvalid?: boolean | undefined;
-  size?: DateFieldSize;
+  isDisabled?: boolean | undefined;
+  /** The value is announced and focusable but cannot be edited. */
+  isReadOnly?: boolean | undefined;
+  /** The control-height variant shared across form controls. */
+  size?: DateInputSize;
   className?: string | undefined;
 }
 
-export function DateRangePicker<T extends DateValue>({
+export function DateRangePicker({
   label,
+  startLabel,
+  endLabel,
   openCalendarLabel,
-  previousMonthLabel,
-  nextMonthLabel,
-  description,
-  errorMessage,
-  isInvalid,
-  size,
-  className,
+  today,
+  value,
+  defaultValue,
+  onChange,
+  placeholderValue,
   minValue,
   maxValue,
   isDateUnavailable,
-  ...props
-}: DateRangePickerProps<T> & DateBounds<AriaDateRangePickerProps<T>>) {
-  // `isDateUnavailable` takes a second `anchorDate` argument HERE and not on a
-  // field — which is why `DateBounds` is generic over the upstream props object
-  // rather than restating the predicate's shape.
-  const bounds = {
+  description,
+  errorMessage,
+  isInvalid,
+  isDisabled,
+  isReadOnly,
+  size,
+  className,
+}: DateRangePickerProps) {
+  const locale = useLumoLocale();
+
+  const [uncontrolled, setUncontrolled] = useState<CalendarDateRange | null>(
+    defaultValue ?? null,
+  );
+  const selected = value !== undefined ? value : uncontrolled;
+
+  const commit = (next: CalendarDateRange | null) => {
+    if (value === undefined) setUncontrolled(next);
+    onChange?.(next);
+  };
+
+  // TWO engines, one value: each half is an ordinary `useDateFieldState`, and
+  // the range is reassembled on every edit. A `from` with no `to` is a real
+  // intermediate state the grid also produces.
+  const startState = useDateFieldState({
+    locale,
+    value: selected?.from ?? null,
+    ...optional("placeholderValue", placeholderValue),
     ...optional("minValue", minValue),
     ...optional("maxValue", maxValue),
     ...optional("isDateUnavailable", isDateUnavailable),
-  };
+    onChange: (next) => {
+      const from = (next as CalendarDate | null) ?? null;
+      if (from === null) {
+        commit(null);
+        return;
+      }
+      commit({ from, ...(selected?.to ? { to: selected.to } : {}) });
+    },
+    ...optional("isDisabled", isDisabled),
+    ...optional("isReadOnly", isReadOnly),
+  });
+
+  const endState = useDateFieldState({
+    locale,
+    value: selected?.to ?? null,
+    ...optional("placeholderValue", placeholderValue),
+    ...optional("minValue", minValue),
+    ...optional("maxValue", maxValue),
+    ...optional("isDateUnavailable", isDateUnavailable),
+    onChange: (next) => {
+      const to = (next as CalendarDate | null) ?? null;
+      // An end with no start is not a range.
+      if (!selected?.from) return;
+      commit({ from: selected.from, ...(to ? { to } : {}) });
+    },
+    ...optional("isDisabled", isDisabled),
+    ...optional("isReadOnly", isReadOnly),
+  });
+
+  const labelId = useId();
+  const startLabelId = useId();
+  const endLabelId = useId();
+  const descriptionId = useId();
+  const errorId = useId();
+  const invalid = isInvalid ?? (errorMessage != null ? true : undefined);
+  const startRef = useRef<DateInputHandle>(null);
+
+  const describedBy =
+    [description != null ? descriptionId : null, errorMessage != null ? errorId : null]
+      .filter((id): id is string => id != null)
+      .join(" ") || undefined;
+
   return (
-    <AriaDateRangePicker
+    <Field.Root
       data-lumo=""
       className={cn(fieldVariants(), className)}
-      {...optional("isInvalid", isInvalid ?? (errorMessage != null ? true : undefined))}
-      {...bounds}
-      {...props}
+      {...attr("disabled", isDisabled)}
+      {...attr("invalid", invalid)}
     >
-      <Label>{label}</Label>
-      <AriaGroup className={datePickerGroupVariants({ size })}>
-        <AriaDateInput slot="start" className="flex items-center">
-          {renderSegment}
-        </AriaDateInput>
+      <Field.Label
+        id={labelId}
+        nativeLabel={false}
+        render={<span />}
+        className={labelVariants()}
+        onClick={() => {
+          startRef.current?.focus();
+        }}
+      >
+        {label}
+      </Field.Label>
+
+      <div
+        className={datePickerGroupVariants({ size })}
+        {...(invalid === true ? { "data-invalid": "" } : {})}
+        {...(isDisabled === true ? { "data-disabled": "" } : {})}
+      >
+        {/* Each half names its own group; the labels are `sr-only` but the NAMES must exist. */}
+        <span id={startLabelId} className="sr-only">
+          {startLabel}
+        </span>
+        <DateInput
+          ref={startRef}
+          bare
+          state={startState}
+          locale={locale}
+          labelId={startLabelId}
+          {...optional("isDisabled", isDisabled)}
+          {...optional("isReadOnly", isReadOnly)}
+          {...optional("isInvalid", invalid)}
+          className="flex items-center"
+        />
+
         {/* A dash, not an arrow: an arrow encodes a direction that flips with
             the script while the meaning does not. Hidden from the accessibility
-            tree because each segment already announces start or end. */}
+            tree because each half already announces which end it is. */}
         <span aria-hidden="true" className={dateRangeSeparatorVariants()}>
           –
         </span>
-        <AriaDateInput slot="end" className="flex flex-1 items-center">
-          {renderSegment}
-        </AriaDateInput>
-        <AriaButton aria-label={openCalendarLabel} className={datePickerTriggerVariants()}>
-          <CalendarIcon aria-hidden="true" />
-        </AriaButton>
-      </AriaGroup>
-      {description != null ? <Description>{description}</Description> : null}
-      {errorMessage != null ? <FieldError>{errorMessage}</FieldError> : null}
-      <AriaPopover placement="bottom start" className={cn(popoverVariants({ padded: true }))}>
-        <AriaDialog className="outline-none">
-          <AriaRangeCalendar className={calendarVariants()}>
-            <CalendarHeader
-              previousMonthLabel={previousMonthLabel}
-              nextMonthLabel={nextMonthLabel}
-            />
-            <AriaCalendarGrid className={calendarGridVariants()}>
-              <AriaCalendarGridHeader>{renderPickerHeaderCell}</AriaCalendarGridHeader>
-              <AriaCalendarGridBody>{renderRangePickerCell}</AriaCalendarGridBody>
-            </AriaCalendarGrid>
-          </AriaRangeCalendar>
-        </AriaDialog>
-      </AriaPopover>
-    </AriaDateRangePicker>
-  );
-}
 
-/**
- * A day inside the picker's range grid.
- *
- * Uses the range cell classes rather than the single-date ones, so the band
- * rounds on the logical corners — see `range-calendar.tsx`. No `children`, for
- * the reason `calendar.tsx` gives at length.
- */
-function renderRangePickerCell(date: AriaCalendarCellProps["date"]) {
-  return <AriaCalendarCell data-lumo="" date={date} className={rangeCalendarCellVariants()} />;
+        <span id={endLabelId} className="sr-only">
+          {endLabel}
+        </span>
+        <DateInput
+          bare
+          state={endState}
+          locale={locale}
+          labelId={endLabelId}
+          {...optional("describedBy", describedBy)}
+          {...optional("isDisabled", isDisabled)}
+          {...optional("isReadOnly", isReadOnly)}
+          {...optional("isInvalid", invalid)}
+        />
+
+        <PopoverTrigger>
+          <button
+            type="button"
+            data-lumo=""
+            aria-label={openCalendarLabel}
+            {...(isDisabled === true ? { disabled: true } : {})}
+            className={datePickerTriggerVariants()}
+          >
+            <CalendarIcon aria-hidden="true" />
+          </button>
+          <Popover placement="bottom start" padded>
+            <RangeCalendar
+              label={label}
+              locale={locale}
+              today={today}
+              {...optional("value", selected ?? undefined)}
+              {...optional("defaultMonth", selected?.from ?? placeholderValue)}
+              {...optional("minValue", minValue)}
+              {...optional("maxValue", maxValue)}
+              {...optional("isDateUnavailable", isDateUnavailable)}
+              onChange={(next) => {
+                commit(next ?? null);
+              }}
+            />
+          </Popover>
+        </PopoverTrigger>
+      </div>
+
+      {description != null ? (
+        <Field.Description id={descriptionId} className={descriptionVariants()}>
+          {description}
+        </Field.Description>
+      ) : null}
+
+      {errorMessage != null ? (
+        <div id={errorId} className={fieldErrorVariants()}>
+          {errorMessage}
+        </div>
+      ) : null}
+    </Field.Root>
+  );
 }

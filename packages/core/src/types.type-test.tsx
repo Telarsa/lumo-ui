@@ -8,7 +8,8 @@
  * pass silently, which is the whole point — this is guarding against exactly
  * the class of defect that renders correctly and reads wrong.
  */
-import type { LumoNode, Locale } from "./types";
+import type { LumoNode, Locale } from "./types.ts";
+import type { LinkDOMProps } from "./props.ts";
 
 declare function Cell(props: { children: LumoNode }): null;
 
@@ -39,5 +40,20 @@ const _badLocale: Locale = "de-DE";
 
 const _goodLocale: Locale = "fa-IR";
 
+// The RAC compatibility carriers are gone (15 Aug 2026); a link bag is just
+// the anchor attributes.
+const _linkBagWithAbsentRouter: LinkDOMProps = { href: "/" };
+
 // Silence unused-local diagnostics without weakening the checks above.
-void [_rawNumber, _computed, _bigint, _formatted, _element, _nullish, _array, _badLocale, _goodLocale];
+void [
+  _rawNumber,
+  _computed,
+  _bigint,
+  _formatted,
+  _element,
+  _nullish,
+  _array,
+  _badLocale,
+  _goodLocale,
+  _linkBagWithAbsentRouter,
+];

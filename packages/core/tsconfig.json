@@ -1,5 +1,22 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "types": [] },
+  "compilerOptions": {
+    // Explicit `.ts` extensions in every internal import — the contract packages travel as SOURCE
+    // (git dependency), and a Node-ESM consumer (`moduleResolution: NodeNext`) rejects extensionless
+    // relative imports. Same convention as packages/ui. Proved by the second consumer profile in
+    // scripts/smoke-consumer.mjs.
+    "allowImportingTsExtensions": true,
+    // `["node"]` like every sibling package. It was `[]` — core is a
+    // DOM/Node-free module and that was the point — but `src/cn.test.ts`
+    // (added 12 Aug 2026) reads `tailwind-merge`'s package.json off disk to
+    // detect version skew, so the SUITE needs Node's types even though the
+    // shipped module does not. `gate:types` failed on three errors from that
+    // one file until this line.
+    //
+    // If the DOM/Node-free property of `src/` is worth enforcing, the right
+    // instrument is a check that no non-test file imports `node:*`, not an
+    // empty `types` that also blinds the tests.
+    "types": ["node"]
+  },
   "include": ["src/**/*"]
 }

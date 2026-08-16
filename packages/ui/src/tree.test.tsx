@@ -10,12 +10,13 @@
  * at least once rather than believed.
  */
 
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
 
 import { LumoProvider } from "./provider.tsx";
 import { Tree, TreeItem } from "./tree.tsx";
-import { TREE_CHEVRON_GLYPH, treeChevronTurn } from "./tree.variants.ts";
+import { TREE_CHEVRON_GLYPH, TREE_STRINGS, treeChevronTurn } from "./tree.variants.ts";
 
 afterEach(cleanup);
 
@@ -58,6 +59,19 @@ describe("tree — the shape RAC actually emits, pinned", () => {
     // of what a screen reader announces stops being true.
     expect(screen.queryByRole("tree")).toBeNull();
     expect(rows().length).toBeGreaterThan(0);
+  });
+
+  it("keeps its rows while the shared collection refreshes and marks the treegrid busy", () => {
+    render(
+      <LumoProvider locale="fa-IR">
+        <Tree label="پرونده‌های پروژه" asyncStatus="refreshing">
+          <TreeItem id="asnad" textValue="اسناد" title="اسناد" />
+        </Tree>
+      </LumoProvider>,
+    );
+
+    expect(screen.getByRole("treegrid").getAttribute("aria-busy")).toBe("true");
+    expect(screen.getByRole("row", { name: "اسناد" })).toBeTruthy();
   });
 
   it("names every row from `textValue`, so the name and the typeahead key are one string", () => {
@@ -246,5 +260,229 @@ describe("tree — the keyboard is rented, and it is rented in Persian", () => {
     expect(screen.getByRole("row", { name: "پیوست‌ها" }).getAttribute("aria-expanded")).toBe(
       "true",
     );
+  });
+});
+
+/**
+ * ═══ THE ENGINE IS LUMO'S NOW, SO THE RENTED PARTS NEED THEIR OWN TESTS ═════
+ *
+ * Everything above this line predates the migration and is UNEDITED. It passes
+ * against both engines, which is the evidence that the emitted shape was copied
+ * rather than reinvented — the roles, the level custom property, the Persian
+ * verbs on the marker, the swapped arrow and the Persian typeahead all assert
+ * the same things they asserted against `react-aria-components@1.20.0`.
+ *
+ * What follows is new, and every case is something React Aria used to be
+ * accountable for and Lumo now is.
+ */
+describe("tree — the tab stop, in the SERVED bytes and after interaction", () => {
+  it("serves exactly one tabindex=0, on the treegrid itself", () => {
+    // The whole point of `composite-tab-stop`: a roving-tabindex widget with no
+    // served stop cannot be reached with the Tab key AT ALL before hydration.
+    // This is the third exemption in that rule — the CONTAINER is the stop —
+    // and it holds here without a layout effect because the value is a function
+    // of state that starts `null`. Asserted on static markup, because the
+    // defect self-heals on hydration and jsdom would pass either way.
+    const html = renderToStaticMarkup(<Files locale="fa-IR" />);
+    expect(html.match(/tabindex="0"/g) ?? []).toHaveLength(1);
+    expect(/role="treegrid"[^>]*tabindex="0"/.test(html)).toBe(true);
+    // Five rows in the default tree, every one of them at -1.
+    expect((html.match(/role="row"/g) ?? []).length).toBe(5);
+    expect(/role="row"[^>]*tabindex="0"/.test(html)).toBe(false);
+  });
+
+  it("hands the stop to the focused row and takes it back from the container", () => {
+    render(<Files locale="fa-IR" />);
+    const grid = screen.getByRole("treegrid");
+    expect(grid.getAttribute("tabindex")).toBe("0");
+
+    const first = screen.getByRole("row", { name: "اسناد" });
+    first.focus();
+    fireEvent.keyDown(first, { key: "ArrowDown" });
+
+    // Exactly one stop at every moment: the two are computed in one render pass
+    // from one piece of state, so they cannot both be 0.
+    expect(grid.getAttribute("tabindex")).toBe("-1");
+    const stops = rows().filter((r) => r.getAttribute("tabindex") === "0");
+    expect(stops).toHaveLength(1);
+    expect(stops[0]!.getAttribute("aria-label")).toBe("گزارش فروش");
+  });
+
+  it("keeps a tab stop when the branch holding it is collapsed by the marker", () => {
+    // The one way a widget with a correct SERVED stop can still end up with
+    // none: collapsing unmounts the row that holds it. The keyboard path cannot
+    // reach this state — the collapse key acts on the focused row — so it is
+    // the pointer path that has to be pinned.
+    render(<Files locale="fa-IR" />);
+
+    const parent = screen.getByRole("row", { name: "اسناد" });
+    fireEvent.click(screen.getByRole("row", { name: "گزارش فروش" }));
+    expect(
+      rows().filter((r) => r.getAttribute("tabindex") === "0")[0]?.getAttribute("aria-label"),
+    ).toBe("گزارش فروش");
+
+    fireEvent.click(parent.querySelector('button[slot="chevron"]')!);
+
+    expect(screen.getByRole("row", { name: "اسناد" }).getAttribute("aria-expanded")).toBe("false");
+    expect(screen.queryByRole("row", { name: "گزارش فروش" })).toBeNull();
+    const stops = rows().filter((r) => r.getAttribute("tabindex") === "0");
+    expect(stops).toHaveLength(1);
+    expect(stops[0]!.getAttribute("aria-label")).toBe("اسناد");
+  });
+});
+
+describe("tree — the flattened order is the DOM, and the numbers a reader hears", () => {
+  it("renders every row as a direct child of the treegrid, however deep", () => {
+    // This is what makes `:scope > [role="row"]` the flattened visible order and
+    // lets navigation read the DOM instead of a registry that has to be kept in
+    // step with every expand. `TreeItem` returns a fragment for exactly this.
+    render(<Files locale="fa-IR" />);
+    const grid = screen.getByRole("treegrid");
+    for (const row of rows()) expect(row.parentElement).toBe(grid);
+    expect(grid.querySelectorAll(':scope > [role="row"]')).toHaveLength(5);
+  });
+
+  it("numbers each row within its OWN siblings, not the whole tree", () => {
+    // «سطح ۲، مورد ۲ از ۲» — the part nobody remembers, and the part that has to
+    // be recomputed against the flattened order every time a branch opens.
+    render(<Files locale="fa-IR" />);
+    const at = (name: string) => {
+      const row = screen.getByRole("row", { name });
+      return [
+        row.getAttribute("aria-level"),
+        row.getAttribute("aria-posinset"),
+        row.getAttribute("aria-setsize"),
+      ].join("/");
+    };
+    expect(at("اسناد")).toBe("1/1/3");
+    expect(at("گزارش فروش")).toBe("2/1/2");
+    expect(at("پیوست‌ها")).toBe("2/2/2");
+    expect(at("نمودارها")).toBe("1/3/3");
+  });
+
+  it("skips collapsed subtrees when moving, because they are not rendered", () => {
+    render(<Files locale="fa-IR" />);
+    const last = screen.getByRole("row", { name: "پیوست‌ها" });
+    last.focus();
+    fireEvent.keyDown(last, { key: "ArrowDown" });
+    // «قرارداد» lives under the collapsed «پیوست‌ها» and is not in the order.
+    expect((document.activeElement as HTMLElement).getAttribute("aria-label")).toBe("تصویرها");
+  });
+});
+
+describe("tree — typeahead is collated, and its limits are the ones written down", () => {
+  it("ignores harakat, which `===` would not", () => {
+    render(
+      <LumoProvider locale="fa-IR">
+        <Tree label="ماه‌ها" selectionMode="single">
+          <TreeItem id="a" textValue="فروردین" title="فروردین" />
+          <TreeItem id="b" textValue="مَرداد" title="مَرداد" />
+        </Tree>
+      </LumoProvider>,
+    );
+    const first = screen.getByRole("row", { name: "فروردین" });
+    first.focus();
+    // Typed WITHOUT the fatha the data carries. `sensitivity: "base"` folds it;
+    // a `startsWith` would not, which is why Base UI's own composite typeahead
+    // (`toLowerCase().startsWith`) was not reused.
+    for (const key of ["م", "ر"]) fireEvent.keyDown(document.activeElement!, { key });
+    expect((document.activeElement as HTMLElement).getAttribute("aria-label")).toBe("مَرداد");
+  });
+
+  it("expires the buffer on a TIMESTAMP, so a later keystroke starts a new search", () => {
+    // The buffer is compared against `Date.now()` rather than cleared by a
+    // `setTimeout`: nothing is scheduled, so nothing leaks on unmount and the
+    // only thing a test has to move is the clock.
+    vi.useFakeTimers();
+    try {
+      render(<Files locale="fa-IR" />);
+      const first = screen.getByRole("row", { name: "اسناد" });
+      first.focus();
+
+      fireEvent.keyDown(document.activeElement!, { key: "ت" });
+      expect((document.activeElement as HTMLElement).getAttribute("aria-label")).toBe("تصویرها");
+
+      // Still inside the window: «تن» is a REFINEMENT and matches nothing, so
+      // focus must not move. A matcher that silently restarted here would jump
+      // rows mid-word.
+      fireEvent.keyDown(document.activeElement!, { key: "ن" });
+      expect((document.activeElement as HTMLElement).getAttribute("aria-label")).toBe("تصویرها");
+
+      vi.advanceTimersByTime(1500);
+
+      // A new session: the same «ن» now searches from the focused row onward.
+      fireEvent.keyDown(document.activeElement!, { key: "ن" });
+      expect((document.activeElement as HTMLElement).getAttribute("aria-label")).toBe("نمودارها");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("tree — the marker's verbs come from a Lumo file, not from the patch", () => {
+  it("says the English pair on an English page and nothing Latin on a Persian one", () => {
+    // Under React Aria «بستن» arrived from `patches/react-aria@3.51.0.patch`,
+    // which added an fa-IR bundle because no prop reached the string. It is now
+    // `TREE_STRINGS` — and that is this component's last tie to the patch cut.
+    render(<Files locale="en-US" />);
+    const labels = screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"));
+    expect(labels).toContain(TREE_STRINGS["en-US"].collapse);
+    expect(labels).toContain(TREE_STRINGS["en-US"].expand);
+    cleanup();
+
+    render(<Files locale="fa-IR" />);
+    const fa = screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"));
+    expect(fa.filter((v) => LATIN_WORD.test(v ?? ""))).toEqual([]);
+  });
+
+  it("names the treegrid and every marker in the SERVED bytes", () => {
+    // `named-controls` and `resolved-idrefs`, on markup no effect has touched.
+    const html = renderToStaticMarkup(<Files locale="fa-IR" />);
+    const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!));
+    const refs = [...html.matchAll(/aria-labelledby="([^"]*)"/g)].flatMap((m) =>
+      m[1]!.split(/\s+/).filter(Boolean),
+    );
+    expect(refs.length).toBeGreaterThan(0);
+    expect(refs.filter((r) => !ids.has(r))).toEqual([]);
+    for (const button of html.match(/<button[^>]*>/g) ?? []) {
+      expect(button).toMatch(/aria-label="/);
+    }
+  });
+});
+
+describe("tree — collection contracts", () => {
+  it("renders an items collection through its function child", () => {
+    const items = [
+      { id: "one", name: "یک" },
+      { id: "two", name: "دو" },
+    ];
+    render(
+      <LumoProvider locale="fa-IR">
+        <Tree label="شماره‌ها" items={items}>
+          {(item) => <TreeItem id={item.id} textValue={item.name} title={item.name} />}
+        </Tree>
+      </LumoProvider>,
+    );
+    expect(screen.getByRole("row", { name: "یک" })).toBeTruthy();
+    expect(screen.getByRole("row", { name: "دو" })).toBeTruthy();
+  });
+
+  it("converts selectedKeys=all to concrete keys when one row is toggled", () => {
+    const onSelectionChange = vi.fn();
+    render(
+      <LumoProvider locale="fa-IR">
+        <Tree
+          label="شماره‌ها"
+          selectionMode="multiple"
+          selectedKeys="all"
+          onSelectionChange={onSelectionChange}
+        >
+          <TreeItem id="one" textValue="یک" title="یک" />
+          <TreeItem id="two" textValue="دو" title="دو" />
+        </Tree>
+      </LumoProvider>,
+    );
+    fireEvent.keyDown(screen.getByRole("row", { name: "یک" }), { key: " " });
+    expect(onSelectionChange).toHaveBeenCalledWith(new Set(["two"]));
   });
 });

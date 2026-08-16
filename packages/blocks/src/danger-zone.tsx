@@ -14,6 +14,7 @@ import {
   DialogHeading,
   DialogModal,
   DialogOverlay,
+  DialogClose,
   DialogTrigger,
   TextField,
   optional,
@@ -24,43 +25,12 @@ import {
  *
  * `"use client"`: `onConfirm`, plus `useState` for the typed phrase.
  *
- * ── WHY A TYPED PHRASE AND NOT A SECOND BUTTON ─────────────────────────────
- *
- * "Are you sure?" with an OK button is one mis-aimed tap from data loss, and on
- * a Persian layout the buttons have swapped sides relative to whatever muscle
- * memory the reader brought from an English product. Typing the resource's own
- * name is the only confirmation that cannot be performed by reflex.
- *
- * The comparison is `===` against `confirmPhrase` with no normalisation, and
- * that is deliberate rather than lazy: Persian text can carry an Arabic ك
- * (U+0643) where a Persian ک (U+06A9) belongs, and ی/ي likewise, so a "helpful"
- * fold would either accept a phrase the reader did not type or reject one they
- * did. The caller knows which normalisation their data needs; the block does
- * not guess.
- *
- * ── FOUR REQUIRED STRINGS THAT ARE NOT COPY ────────────────────────────────
- *
- * `closeLabel` (the dialog's ✕ — an icon is not a name), `confirmFieldLabel`
- * (an unnamed field is a defect), `mismatchError` (a disabled button with no
- * stated reason is a dead end), and `confirm` itself. `Dialog.closeLabel` is
- * already required one tier down; the rest are required here for the same
- * reason, and none of them may have a default, because a default would be
- * English.
- *
- * ── THE DIALOG DOES NOT CLOSE ITSELF ON CONFIRM ────────────────────────────
- *
- * `onConfirm` fires and the dialog stays open. That is the honest behaviour for
- * an action that is usually async and usually navigates: closing first would
- * flash the panel the reader is about to lose. The CANCEL button carries React
- * Aria's `slot="close"`, which is wired to the dialog's own state with no
- * `useState` here.
- *
- * One measured caveat, from dialog.tsx: `isDismissable` on the modal makes RAC
- * render an internal `DismissButton` labelled from its English bundle, with no
- * prop of ours reaching it. This block deliberately does not set it — a
- * destructive confirmation should not be dismissable by an outside click
- * anyway, so the correct interaction and the clean accessibility tree happen to
- * be the same choice.
+ * A typed phrase is the only confirmation that cannot be performed by reflex.
+ * The comparison is `===` with NO normalisation (ک/ك, ی/ي): the caller knows
+ * which fold their data needs. `closeLabel`, `confirmFieldLabel`, `mismatchError`
+ * and `confirm` are required with no default because a default would be English.
+ * The dialog does not close itself on confirm (usually async and navigates), and
+ * is deliberately not `isDismissable` — see dialog.tsx for the English DismissButton.
  */
 export interface DangerZoneStrings {
   /** The panel's heading, e.g. «منطقه خطر». */
@@ -89,11 +59,7 @@ export interface DangerZoneStrings {
 
 export interface DangerZoneProps {
   strings: DangerZoneStrings;
-  /**
-   * What the reader must type, character for character — usually the resource's
-   * own name. Not part of `strings`: it is DATA, not copy, and it must not be
-   * translated.
-   */
+  /** What the reader must type, character for character. Not part of `strings`: it is DATA, not copy, and must not be translated. */
   confirmPhrase: string;
   onConfirm?: (() => void) | undefined;
   isPending?: boolean | undefined;
@@ -110,19 +76,15 @@ export function DangerZone({
   level = 2,
   className,
 }: DangerZoneProps) {
-  // `""` is an empty initial value, not a user-facing string: there is nothing
-  // here to translate, which is the same exemption `kbd.tsx` claims for its
-  // `"+"` separator.
+  // `""` is an empty initial value, not a user-facing string.
   const [typed, setTyped] = useState("");
   const matches = typed === confirmPhrase;
 
   return (
     <Card
       variant="outlined"
-      // `border-critical` on all four edges rather than an accent bar: an
-      // `border-s-4` accent (the pattern alert.tsx uses) would put the weight
-      // on the reading edge, where this card's own content already starts, and
-      // the two compete. A full outline has no inline axis to argue about.
+      // A full `border-critical` outline rather than a `border-s-4` accent bar,
+      // which would compete with the content on the reading edge.
       className={cn("w-full border-critical", className)}
     >
       <CardHeader>
@@ -134,9 +96,7 @@ export function DangerZone({
 
       <CardBody>
         {/*
-         * `justify-end` is the INLINE end: the trigger lands bottom-right in
-         * English and bottom-LEFT in Persian, resolved by flexbox against the
-         * container's direction with no `rtl:` variant.
+         * `justify-end` is the INLINE end: bottom-right in English, bottom-LEFT in Persian.
          */}
         <div className="flex justify-end">
           <DialogTrigger>
@@ -144,7 +104,7 @@ export function DangerZone({
 
             <DialogOverlay>
               <DialogModal size="md">
-                <Dialog closeLabel={strings.closeLabel}>
+                <Dialog closeLabel={strings.closeLabel} label={strings.dialogTitle}>
                   <DialogHeading>{strings.dialogTitle}</DialogHeading>
 
                   <Alert tone="critical">{strings.dialogDescription}</Alert>
@@ -153,32 +113,26 @@ export function DangerZone({
                     label={strings.confirmFieldLabel}
                     value={typed}
                     onChange={setTyped}
-                    // `autoComplete="off"`: a browser that filled this in would
-                    // defeat the entire mechanism.
+                    // A browser that filled this in would defeat the mechanism.
                     autoComplete="off"
                     {...optional("description", strings.confirmFieldDescription)}
-                    // The error appears only once the reader has started
-                    // typing. Showing it against an empty field scolds someone
-                    // who has not done anything yet.
+                    // The error appears only once the reader has started typing.
                     {...(typed.length > 0 && !matches
                       ? { errorMessage: strings.mismatchError }
                       : {})}
                   />
 
                   {/*
-                   * `justify-end` again, and `flex-wrap` because two Persian
-                   * button labels overflow a `size="md"` dialog on a narrow
-                   * phone more readily than their English equivalents.
+                   * `flex-wrap`: two Persian button labels overflow a `size="md"` dialog on a narrow phone.
                    */}
                   <div className="flex flex-wrap items-center justify-end gap-2">
                     {/*
-                     * `slot="close"` is RAC's own wiring: the Dialog publishes
-                     * a ButtonContext whose `close` slot carries
-                     * `onPress: () => state.close()`. No state, no refs.
+                     * `DialogClose` is Base UI's own wiring; RAC's `slot="close"`
+                     * survived the migration as an inert prop until `slot` became a compile-time carrier.
                      */}
-                    <Button slot="close" variant="outline">
-                      {strings.cancel}
-                    </Button>
+                    <DialogClose>
+                      <Button variant="outline">{strings.cancel}</Button>
+                    </DialogClose>
                     <Button
                       variant="critical"
                       isDisabled={!matches || isPending}

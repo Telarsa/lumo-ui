@@ -60,8 +60,8 @@ function Deck({ locale }: { locale: "fa-IR" | "en-US" }) {
       slideRoleDescription="اسلاید"
     >
       <CarouselContent>
-        <CarouselItem>یک</CarouselItem>
-        <CarouselItem>دو</CarouselItem>
+        <CarouselItem label="پیشنهاد یکم">یک</CarouselItem>
+        <CarouselItem label="پیشنهاد دوم">دو</CarouselItem>
       </CarouselContent>
       <CarouselPrevious label="اسلاید قبلی" />
       <CarouselNext label="اسلاید بعدی" />
@@ -162,5 +162,78 @@ describe("Carousel — the geometry is logical, and the arrowheads mirror themse
       "‹",
     );
     expect(container.querySelector('[data-slot="carousel-next"]')?.textContent).toBe("›");
+  });
+});
+
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * A ROLEDESCRIPTION WITHOUT A NAME ANNOUNCES ONE WORD
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * `aria-roledescription` REPLACES the role in the announcement, so a slide
+ * with no accessible name is read out as «اسلاید» and nothing else. Measured
+ * on the built export before `label` was required: 18 of 23 roledescribed
+ * elements on the carousel page computed an EMPTY name, and the whole widget's
+ * state was invisible to a reader arrowing through it.
+ *
+ * `named-roledescription` in `packages/gate` grades exactly this on the served
+ * bytes. These are the unit tier: they pin WHY the obvious fix does not work.
+ */
+describe("every slide is named", () => {
+  it("does not let passthrough props replace owned carousel semantics", () => {
+    // @ts-expect-error the root role is always region
+    void <Carousel locale="fa-IR" label="پیشنهادها" roleDescription="چرخ‌فلک" slideRoleDescription="اسلاید" role="group" />;
+    // @ts-expect-error the root roledescription comes from the required localized prop
+    void <Carousel locale="fa-IR" label="پیشنهادها" roleDescription="چرخ‌فلک" slideRoleDescription="اسلاید" aria-roledescription="carousel" />;
+    // @ts-expect-error a slide is always a group
+    void <CarouselItem label="پیشنهاد" role="region" />;
+    // @ts-expect-error a slide roledescription comes from Carousel context
+    void <CarouselItem label="پیشنهاد" aria-roledescription="slide" />;
+  });
+
+  it("puts the label on the element that carries the roledescription", () => {
+    const { container } = render(<Deck locale="fa-IR" />);
+    /*
+     * `[data-slot="carousel-item"]`, not `[aria-roledescription]`. The carousel
+     * ROOT carries a roledescription of its own (`roleDescription`, «چرخ‌فلک»),
+     * so the looser selector matches three elements and the assertion passes on
+     * the root's name while saying nothing about the slides. Caught by the
+     * second test failing with the root's label.
+     */
+    const slides = [...container.querySelectorAll('[data-slot="carousel-item"]')];
+    expect(slides).toHaveLength(2);
+    for (const slide of slides) {
+      expect(slide.getAttribute("aria-label")).not.toBe("");
+      expect(slide.getAttribute("aria-label")).not.toBeNull();
+    }
+  });
+
+  it("is not satisfied by a heading inside the slide — the trap", () => {
+    /*
+     * `role="group"` is NOT a name-from-content role, so its descendants are
+     * not consulted. A slide containing an <h3> still computes an empty name,
+     * which is why `label` is a required prop rather than a documented
+     * suggestion: the fix everyone reaches for first does nothing.
+     */
+    const { container } = render(
+      <Carousel
+        locale="fa-IR"
+        label="پیشنهادهای ویژه"
+        roleDescription="چرخ‌فلک"
+        slideRoleDescription="اسلاید"
+      >
+        <CarouselContent>
+          <CarouselItem label="پیشنهاد یکم">
+            <h3>عنوان اسلاید</h3>
+          </CarouselItem>
+        </CarouselContent>
+        <CarouselPrevious label="اسلاید قبلی" />
+        <CarouselNext label="اسلاید بعدی" />
+      </Carousel>,
+    );
+    const slide = container.querySelector('[data-slot="carousel-item"]');
+    // The heading is present AND is not what names the slide.
+    expect(slide?.querySelector("h3")?.textContent).toBe("عنوان اسلاید");
+    expect(slide?.getAttribute("aria-label")).toBe("پیشنهاد یکم");
   });
 });

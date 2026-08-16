@@ -35,12 +35,42 @@ packages:
 # Ranges are used only for build tooling whose output the gates already check.
 catalog:
   # --- behaviour layer (see DECISIONS.md §0) --------------------------------
-  # Pinned exactly: RAC minors have changed default accessible names before, and
-  # that is precisely what the committed AX snapshots exist to catch.
+  # TEST-ONLY since the type-only imports went. No shipped component imports
+  # this package at runtime OR in a type position any more, so it is a
+  # devDependency of `packages/ui` and appears in NO registry item — a consumer
+  # copying a component never installs it. What still needs it are the six
+  # POISON TWINS (`dates.test.tsx`, `controls.test.tsx`, `provider.test.tsx`,
+  # `hydrated.test.tsx`, `collections-no-primitive.test.tsx`,
+  # `scroll-area.test.tsx`), which render real React Aria to pin the defects the
+  # migration was for. Deleting the pin would delete the evidence.
+  #
+  # Still pinned exactly, for the original reason: RAC minors have changed
+  # default accessible names before, and a poison fixture that silently changes
+  # what it pins is worse than no fixture.
   react-aria-components: 1.20.0
   # Must stay on the version RAC itself resolves, or `Calendar` types come from
   # two copies of the package and will not assign.
   '@internationalized/date': 3.12.3
+  # EXPERIMENT ONLY (branch experiment/base-ui). NOTE the package RENAME:
+  # `@base-ui-components/react` is dead at 1.0.0-rc.0 and must not be measured.
+  # 1.7.0 published 2026-08-04, six days before adoption — clears the cooldown.
+  #
+  # THE PIN IS LOAD-BEARING HERE IN A WAY IT IS NOT FOR THE OTHERS. Every fix in
+  # `packages/base-ui-ssr` compensates for an implementation choice — an
+  # accessible name published from a layout effect, an English literal at a known
+  # file and line — and not for a documented seam. A patch release may retire a
+  # workaround or silently defeat it, in both cases with no type error. So this
+  # version is the one that package declares in its peer range and its README's
+  # "verified against" line, and moving it is a deliberate bump that re-runs
+  # `gate:html` and `packages/base-ui-ssr`'s own suite, never a resolution
+  # difference between two machines.
+  '@base-ui/react': 1.7.0
+
+  # NOT IN THIS CATALOG, deliberately: `@lumo-ui/base-ui-ssr`. The catalog names
+  # versions of packages Lumo does not control. A workspace package enters
+  # through `workspace:*`, the same route `@lumo-ui/core` takes; if the SSR layer
+  # is ever published and consumed from the registry rather than the workspace,
+  # its version belongs here and not before.
 
   # --- runtime ---------------------------------------------------------------
   react: 19.2.8
@@ -68,19 +98,142 @@ catalog:
   lucide-react: 1.30.0
 
   # --- charts ----------------------------------------------------------------
-  # The one dependency Lumo takes for rendered geometry rather than behaviour.
-  # Pinned exactly to the version shadcn's `chart` item declares, because the
-  # vendored file uses recharts' own types (`TooltipValueType`,
-  # `DefaultTooltipContentProps`, `DefaultLegendContentProps`, and
-  # `ResponsiveContainer`'s `initialDimension`) and a minor that renames one of
-  # them turns a vendored file into a compile error nobody asked for. Newer
-  # releases exist (3.10.1); adopting one is a deliberate bump plus a re-vendor,
-  # not a range.
-  recharts: 3.8.0
+  # recharts 3.8.0 WAS HERE and is gone as of 11 Aug 2026. It was the one
+  # dependency Lumo took for rendered geometry rather than behaviour, pinned to
+  # the version shadcn's `chart` item declares. `@tanstack/charts` replaced it
+  # in `chart.tsx` on the measured axis below, and the pin was left behind for
+  # exactly one commit: no file in the tree imported it, while two package.json
+  # manifests and the registry's EXTERNAL set still told consumers to install
+  # it. A dependency nothing imports is not free — it is a version this project
+  # is on the hook for, an entry in every consumer's lockfile, and a line in the
+  # `chart` registry item's install command that installs a renderer the file
+  # no longer uses. Deleted rather than kept "in case".
+  #
+  # THE RENDERER, since 11 Aug 2026. `@tanstack/charts` replaces recharts in
+  # `chart.tsx` on one measured axis: recharts serves 127 bytes and NO `<svg>`,
+  # TanStack serves 4,717 with a real `<svg>` and Persian ticks, so `lumo-gate`
+  # — which grades the SERVED HTML — stops being structurally blind to the most
+  # number-dense component in the library (record in docs/history/base-ui-migration/).
+  #
+  # Pinned exactly (0.11.1 as of 14 Aug 2026; the initial pin was 0.9.0, held
+  # back by the release cooldown). THE PIN IS LOAD-BEARING: the upstream API
+  # self-describes as pre-alpha, has replaced the axis surface once already, and
+  # that surface is where Lumo's RTL work sits. Budget a wrapper review, not a
+  # blind re-pin, on every minor until 1.0. The React adapter is this package's
+  # `./react` subpath; `@tanstack/react-charts` is the dead pre-0.9.0 name.
+  '@tanstack/charts': 0.11.1
+
+  # Product input engines. Both are deliberately framework-independent: Lumo
+  # owns the React lifecycle, field markup, announced strings, locale and RTL.
+  # Culori supplies standards-based CSS color parsing/conversion; the `/fn`
+  # entry keeps the shipped subset tree-shakeable. Maska supplies the caret and
+  # edit-state machinery that a correct mask cannot derive from the final value.
+  culori: 4.0.2
+  maska: 3.2.0
+  '@types/culori': 4.0.1
+
+  # --- the calendar GRID (not the calendar SYSTEM) ---------------------------
+  # Adopted 11 Aug 2026 for the date family, and the split is the whole point:
+  # this supplies the month grid, its roving tab stop, its labels and its
+  # keyboard model; `@internationalized/date` supplies WHICH CALENDAR those days
+  # belong to. Lumo binds the two with `calendar-datelib.ts`.
+  #
+  # 10.0.1 AND NOT 9.14.0, which is the version that ships
+  # `react-day-picker/persian`. That entry point is genuinely excellent —
+  # measured on a server render, it produced «۱ مرداد ۱۴۰۳», 57 Persian digits,
+  # zero Latin, and ZERO lumo-gate violations with no configuration at all — and
+  # it is still the wrong choice here, because it is PERSIAN-ONLY. Its calendars
+  # are separate entry points bound to separate forked date libraries
+  # (`/persian` -> date-fns-jalali, `/hijri` -> a hijri converter), so a second
+  # locale is a second component and a second dependency. Lumo serves fa-IR,
+  # en-US and grades ar-SA; a design where adding a locale means adding a
+  # package is the opposite of this library's reason to exist.
+  #
+  # v10 dropped those entry points AND their date libraries — its `locale/fa-IR`
+  # is date-fns's Persian locale over a GREGORIAN grid, which renders
+  # «۲۲ ژوئیه ۲۰۲۴» and is exactly the defect `native-calendar` was written to
+  # catch. What v10 KEPT is the seam: `dateLib` overrides and the `formatters`
+  # prop group. So v10 is not a regression for us, it is an invitation — bring
+  # your own calendar — and `@internationalized/date` brings thirteen of them
+  # behind one runtime `createCalendar(id)`.
+  #
+  # Exact pin for the usual reason, plus one specific to this package: the
+  # `DateLib` surface IS our integration contract, and a minor that renames a
+  # member silently drops an override back to Gregorian. `native-calendar` is
+  # the backstop that turns that into a red build rather than a wrong year.
+  # 10.0.1 published 2026-05-15, three months old — well clear of the cooldown.
+  react-day-picker: 10.0.1
   # Build-time only: server components highlight during the static export, so
   # none of this reaches a client bundle. 4.4.3 was six hours old at adoption —
   # inside the 24h cooldown — so this pins one release behind, per the rule.
   shiki: 4.4.2
+
+  # --- headless STATE, with no markup and no ARIA -----------------------------
+  # None of these are accessibility dependencies, and that is the whole reason
+  # they are acceptable beside Base UI. Base UI has no table, no virtualiser and
+  # no form state; TanStack supplies the arithmetic (sort/filter/paginate/select
+  # state; item offsets and a window; field values, validity and submission) and
+  # emits no DOM, no role, no aria-* and no focus management. Lumo keeps
+  # role=grid, aria-sort, aria-rowcount, aria-setsize, the roving tab stop, the
+  # RTL arrow mapping and the error/description associations — one accessibility
+  # dependency, not two. If a future TanStack minor starts returning props with
+  # `role` or `aria-*` in them, that is the signal to stop spreading its output,
+  # not to adopt it.
+  #
+  # Exact pins for the usual reason: all three compute geometry, ordering or
+  # validity that the committed tests read back out.
+  '@tanstack/react-table': 9.1.2
+  #
+  # `@tanstack/react-virtual` 3.14.9 WAS HERE and is gone as of 11 Aug 2026 —
+  # the one TanStack package replaced rather than kept, because it was the only
+  # one with defects measured against THIS library rather than in general:
+  # measurements cached by index so they stay behind when a list reorders, a
+  # `getScrollElement` getter that re-subscribes the scroll listener on every
+  # render, and an `isRtl` option defaulting to `false` that silently windows
+  # the wrong end of a horizontal Persian list. All three are closed by DELETING
+  # the option rather than setting it, in `packages/ui/src/virtualizer.ts`.
+  #
+  # The others stay, and the test that separates them is the same one: owning it
+  # must fix a defect, not merely remove a name from a manifest. Table and Form
+  # emit no DOM, no ARIA and no English, and neither had a defect for us.
+  # THE FORM STATE LAYER, since 11 Aug 2026. Adopted for one reason that is
+  # Lumo's rather than general, and it is the exact inverse of React Aria's:
+  #
+  #   React Aria ships 34 locale bundles of announced strings and `fa` is not
+  #   among them, so every leak had to be measured and closed (see
+  #   `packages/core/src/strings.ts`). TanStack Form ships NO announced strings
+  #   AT ALL. Verified against the published 1.33.4 tarballs, runtime `.js`
+  #   only: zero `aria-*`, zero `role`, zero host element names — every `jsx()`
+  #   call in the React adapter renders a Fragment, a Context.Provider or one of
+  #   the library's own components, so `<form.Field>` contributes ZERO BYTES to
+  #   the served HTML. The only English in the runtime is developer assertions
+  #   ("field component names must be unique", "Path must be a string.") which
+  #   reach a console and never a page.
+  #
+  #   Nothing to translate is a stronger property than translatable, because
+  #   there is no version bump that can add a string behind our back to a
+  #   surface that renders no text.
+  #
+  # SSR: field state is read from the store DURING RENDER; the layout effects
+  # (`useIsomorphicLayoutEffect`, which is `useEffect` on the server and so a
+  # no-op) only mount and update. So default values are in the first byte and
+  # this is NOT another instance of the Base UI layout-effect defect. The form
+  # id comes from React's own `useId`. Both verified by reading dist, and both
+  # pinned by `form-state.test.tsx`.
+  #
+  # TRANSITIVE COST, CHECKED: `@tanstack/form-core` imports
+  # `@tanstack/devtools-event-client` unconditionally and constructs a client at
+  # module scope with `reconnectEveryMs: 1000`. That reads alarming and is not —
+  # the package's root export is
+  # `process.env.NODE_ENV !== "development" ? EventClientNoOp : EventClient`, so
+  # a production build folds it to a no-op class and tree-shakes the real client
+  # (with its `setInterval` and its `window.addEventListener`) away. Recorded
+  # because the next person to read that import will have the same reaction.
+  #
+  # 1.33.4 published 2026-08-08T22:31Z, 58 hours old at adoption — clears
+  # `minimumReleaseAge: 1440`. A 2.0.0-alpha.0 exists on the `alpha` tag and is
+  # not a candidate.
+  '@tanstack/react-form': 1.33.4
 
   # --- carousel --------------------------------------------------------------
   # 9.0.0-rc02 is a prerelease; 8.6.0 is the newest stable. Exact, because embla
@@ -113,15 +266,30 @@ catalog:
   '@vitejs/plugin-react': ^6.0.5
 
   # --- lint ------------------------------------------------------------------
-  eslint: ^9.40.0
-  typescript-eslint: ^9.0.0
+  # These two entries were unsatisfiable until 12 Aug 2026, which is itself
+  # evidence that nothing ever installed them: the newest published eslint 9 is
+  # 9.39.5 (^9.40.0 matches nothing) and the newest typescript-eslint is 8.67.0
+  # (^9.0.0 matches nothing). A catalog pin that cannot resolve is a pin nobody
+  # has run.
+  #
+  # eslint             — the runner. Held at 9.x: typescript-eslint 8 and the
+  #                      flat-config shape below are what this repo is written
+  #                      against, and 10 is a config-schema change, not a bump.
+  # typescript-eslint  — PARSER ONLY. `packages/config/eslint/lumo.mjs` is
+  #                      deliberately plugin-free, but its selectors have to see
+  #                      .tsx; espree cannot parse it. No typed-lint program is
+  #                      configured, so this costs no type-check pass.
+  #                      Peer range is >=4.8.4 <6.1.0, which the pinned
+  #                      typescript 6.0.3 satisfies.
+  eslint: ^9.39.5
+  typescript-eslint: ^8.67.0
+  # The one real plugin. `rules-of-hooks` is not expressible as a syntax
+  # selector — it needs the plugin's control-flow analysis — and its absence is
+  # exactly what let a conditional `useContext` ship in toggle-group.tsx.
+  eslint-plugin-react-hooks: ^7.1.1
   stylelint: ^17.14.1
 
   # --- distribution ----------------------------------------------------------
   # The CLI that builds the registry and applies the RTL transform. Pinned so
   # `shadcn migrate rtl` cannot change its rewrite table under us between runs.
   shadcn: 4.16.2
-
-patchedDependencies:
-  react-aria-components@1.20.0: patches/react-aria-components@1.20.0.patch
-  react-aria@3.51.0: patches/react-aria@3.51.0.patch

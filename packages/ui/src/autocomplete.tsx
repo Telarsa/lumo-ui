@@ -1,105 +1,46 @@
 "use client";
 
-import { useCallback } from "react";
+import { useMemo } from "react";
 import { cva } from "class-variance-authority";
+import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
 import {
-  Autocomplete as AriaAutocomplete,
-  Input as AriaInput,
-  Label as AriaLabel,
-  ListBox as AriaListBox,
-  ListBoxItem as AriaAutocompleteItem,
-  Text as AriaText,
-  TextField as AriaTextField,
-  useFilter,
-  type AutocompleteProps as AriaAutocompleteProps,
-  type ListBoxItemProps as AriaListBoxItemProps,
-  type ListBoxProps as AriaListBoxProps,
-  type TextFieldProps as AriaTextFieldProps,
-} from "react-aria-components";
-import { cn, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
-import { optional } from "./form.tsx";
+  cn,
+  formatNumber,
+  FORMAT_LOCALE,
+  type Key,
+  type Locale,
+  type LumoNode,
+} from "@lumo-ui/core";
+import {
+  ComboboxWiringProvider,
+  useComboboxInputWiring,
+  useComboboxListId,
+  useComboboxListWiring,
+  useFieldWiring,
+} from "@lumo-ui/base-ui-ssr";
+import { useLumoLocale } from "./locale.ts";
 
 /**
- * A text field bound to a collection it filters. The primitive underneath a
- * command palette, a filterable side panel, or a search-as-you-type list.
- *
- *     <Autocomplete>
- *       <AutocompleteInput label="جست‌وجوی فرمان" />
- *       <AutocompleteListBox label="فرمان‌ها">
- *         <AutocompleteItem id="new">سند تازه</AutocompleteItem>
- *         <AutocompleteItem id="open">باز کردن…</AutocompleteItem>
- *       </AutocompleteListBox>
- *     </Autocomplete>
- *
- * ── IT EXISTS IN 1.20.0, AND IT RENDERS NO DOM ─────────────────────────────
- *
- * `Autocomplete` and `useFilter` are both exported from
- * `react-aria-components@1.20.0` (verified in `dist/types/exports/index.d.ts`).
- * The component is a pure context provider — `private/Autocomplete.mjs` returns
- * `<Provider values={[…]}>{props.children}</Provider>` and nothing else. It
- * publishes three things:
- *
- *   - `FieldInputContext`          → consumed by `TextField` and `SearchField`
- *   - `SelectableCollectionContext` → consumed by `ListBox` and `Menu`
- *   - `AutocompleteStateContext`   → the input value
- *
- * That is why this file is a set of parts rather than one component: the pieces
- * are already decoupled by context, so fusing them would be inventing a
- * constraint. A command palette wants the input inside a dialog header and the
- * list in a scrolling body; a filter panel wants them stacked; the primitive
- * should not have an opinion. Contrast `combobox.tsx`, which IS one component —
- * there the strings that leak live on elements a split API would let you forget.
- *
- * ── THE FILTER IS A COLLATOR, NOT `String.includes` ────────────────────────
- *
- * `useFilter` builds on `Intl.Collator`, which is why it is a hook: the
- * comparison depends on the locale from `useLocale()`, and therefore on
- * `LumoProvider`. This matters more in Persian than the English documentation
- * suggests. Under `sensitivity: "base"` the collator treats the Arabic and
- * Persian forms of the same letter as equal — ي/ی (U+064A vs U+06CC) and
- * ك/ک (U+0643 vs U+06A9) — which is the single most common reason a Persian
- * search box "finds nothing" for text a reader can see on the screen: the data
- * was typed with an Arabic keyboard and the query with a Persian one. A
- * hand-rolled `includes()` gets that wrong silently, in a way nobody notices
- * until a user complains that the palette is broken.
- *
- * ── `collectionLabel` IS COVERED BY THE PATCH, AND IS STILL A PROP ─────────
- *
- * `useAutocomplete` names the collection itself:
- *
- *     let collectionProps = useLabels({
- *       id: collectionId,
- *       'aria-label': stringFormatter.format('collectionLabel')   // "Suggestions"
- *     });
- *
- * `patches/react-aria@3.51.0.patch` adds `dist/private/intl/autocomplete/fa-IR.mjs`
- * with `collectionLabel: «پیشنهادها»`, so on a Persian page with a provider that
- * string already comes out Persian at SSR. `AutocompleteListBox.label` is a
- * required prop anyway, for two reasons that outlive the patch:
- *
- *  1. «پیشنهادها» is right for a search box and wrong for a command palette,
- *     where the list is «فرمان‌ها». A generic fallback is a naming defect that
- *     merely happens to be in the correct language.
- *  2. The patch is a repair re-applied on every upgrade. A prop is a contract
- *     the compiler enforces in the consumer's own repo.
- *
- * The override works because `ListBox` reads that context through
- * `useContextProps`, which is `mergeProps(contextProps, props)` — local wins for
- * `aria-label`, while `id` falls through untouched (`mergeProps` only merges ids
- * when BOTH sides have one), so the input's `aria-controls` still resolves and
- * the gate's `resolved-idrefs` rule stays green.
+ * A text field bound to a collection it filters, on Base UI's Autocomplete.
+ * `inline` + `open` are passed unconditionally: `inline` keeps Base UI's
+ * English "Dismiss" sentinel out of the served bytes (mui/base-ui#5263 is
+ * confined to the popup form) and `open` stops the visible list being
+ * announced as collapsed. `items` lives on the root and is REQUIRED — Base UI
+ * filters a data array, and static children render but never filter. No
+ * `Intl.Collator` usage folds ی~ي, ک~ك, ZWNJ and tashkeel together, so
+ * `foldPersian` does it on both sides before the collator. Long form:
+ * `docs/i18n-and-rtl.md`, `docs/decisions/log.md`.
  */
 
 export const autocompleteInputVariants = cva(
-  // `ps-3 pe-3` rather than `px-3`: identical today, but the pair is what makes
-  // an asymmetric revision (an icon at the reading edge) a one-token change
-  // instead of a mirroring bug. `text-start` is the utility that matters here —
-  // `text-left` in a filter input is the most copied RTL defect in this family.
+  // `ps-3 pe-3` and `text-start`: `text-left` in a filter input is the most copied RTL defect.
   "h-control-md w-full min-w-0 rounded-md border border-border-control bg-surface " +
     "ps-3 pe-3 text-start text-sm text-fg outline-none transition-colors " +
     "placeholder:text-fg-subtle " +
-    "data-hovered:border-border-strong " +
-    "data-focused:border-border-strong " +
+    "hover:border-border-strong " +
+    // `:focus`, not `:focus-visible`: this moves a BORDER, not the focus ring.
+    "focus:border-border-strong " +
+    "disabled:cursor-not-allowed disabled:bg-surface-sunken disabled:opacity-50 " +
     "data-disabled:cursor-not-allowed data-disabled:bg-surface-sunken data-disabled:opacity-50",
 );
 
@@ -112,13 +53,9 @@ export const autocompleteListBoxVariants = cva(
 export const autocompleteItemVariants = cva(
   "flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 " +
     "text-start text-sm text-fg outline-none " +
-    // `data-focused` and not `data-hovered` alone: under an Autocomplete the
-    // collection uses VIRTUAL focus (`shouldUseVirtualFocus` arrives through
-    // `SelectableCollectionContext`), so the arrow keys move `data-focused`
-    // while the DOM focus never leaves the input. Styling only hover would
-    // leave a keyboard user with no visible position in the list.
-    "data-focused:bg-surface-hover " +
-    "data-hovered:bg-surface-hover " +
+    // `data-highlighted` only: Base UI drives ONE cursor for pointer and
+    // keyboard, so a `:hover` rule would fight the arrow keys.
+    "data-highlighted:bg-surface-hover " +
     "data-selected:bg-surface-sunken data-selected:font-medium " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:pointer-events-none",
@@ -127,136 +64,182 @@ export const autocompleteItemVariants = cva(
 /** How the built-in collator-backed filter matches. */
 export type AutocompleteMatch = "contains" | "startsWith" | "endsWith";
 
-export interface AutocompleteProps<T extends object = object>
-  extends Omit<AriaAutocompleteProps<T>, "children" | "filter"> {
-  /** Which `useFilter` comparison to use. Defaults to `"contains"`. */
-  match?: AutocompleteMatch;
-  /**
-   * Replace the built-in filter entirely — for fuzzy matching, or for scoring a
-   * command palette by recency.
-   *
-   * Deliberately narrower than RAC's three-argument form: the third argument is
-   * the collection `Node`, and reaching into it couples a consumer to RAC's
-   * internal collection shape. Use `textValue` on the item instead.
-   */
-  filter?: (textValue: string, inputValue: string) => boolean;
-  /** At least an input and a collection. See the file header. */
+export interface AutocompleteProps<T = string> {
+  /** The rows to filter. REQUIRED. Strings or `{ value, label }` objects; anything else needs `itemToString`. */
+  items: readonly T[];
+  /** Which collator comparison to use. Defaults to `"contains"`. */
+  match?: AutocompleteMatch | undefined;
+  /** Replace the built-in filter entirely — for fuzzy matching, or for scoring by recency. */
+  filter?: ((textValue: string, inputValue: string) => boolean) | undefined;
+  /** How a non-string item becomes the text the filter matches against. */
+  itemToString?: ((item: T) => string) | undefined;
+  /** The query (controlled). */
+  inputValue?: string | undefined;
+  /** The initial query (uncontrolled). */
+  defaultInputValue?: string | undefined;
+  /** Called with the typed text after every keystroke. */
+  onInputValueChange?: ((value: string) => void) | undefined;
+  /** At least an input and a collection. */
   children?: LumoNode;
 }
 
-export function Autocomplete<T extends object = object>({
+/** `stringifyAsLabel`'s rule, restated so `filter` sees the same string Base UI does. */
+function defaultItemToString(item: unknown): string {
+  if (typeof item === "string") return item;
+  if (item !== null && typeof item === "object" && "label" in item) {
+    return String((item as { label: unknown }).label);
+  }
+  return String(item);
+}
+
+// foldPersian: what no `Intl.Collator` configuration folds in one pass —
+// tashkeel (stripped first, so a mark cannot survive a remap), Arabic ك/ي/آ to
+// Persian ک/ی/ا (NFC does not relate them), ZWNJ, and both non-Latin digit
+// blocks. Applied to BOTH sides before the collator. Mirrors
+// `apps/website/src/lib/search-index.ts`, which is canonical if they disagree.
+const PERSIAN_FOLD_DIACRITICS = /[ً-ٰٟ]/g;
+const PERSIAN_FOLD_ZWNJ = /‌/g;
+const PERSIAN_FOLD_LETTERS = /[كيآ]/g;
+const PERSIAN_FOLD_LETTER_MAP: Record<string, string> = {
+  "ك": "ک", // ك Arabic kaf   → ک Persian keheh
+  "ي": "ی", // ي Arabic yeh   → ی Persian yeh
+  "آ": "ا", // آ alef madda   → ا bare alef
+};
+const PERSIAN_FOLD_DIGITS = /[۰-۹٠-٩]/g;
+
+export function foldPersian(text: string): string {
+  return text
+    .normalize("NFC")
+    .replace(PERSIAN_FOLD_DIACRITICS, "")
+    .replace(PERSIAN_FOLD_LETTERS, (char) => PERSIAN_FOLD_LETTER_MAP[char] ?? char)
+    .replace(PERSIAN_FOLD_ZWNJ, "")
+    .replace(PERSIAN_FOLD_DIGITS, (char) =>
+      String(
+        char.codePointAt(0)! >= 0x06f0
+          ? char.codePointAt(0)! - 0x06f0
+          : char.codePointAt(0)! - 0x0660,
+      ),
+    );
+}
+
+export function Autocomplete<T = string>({
+  items,
   match = "contains",
   filter,
+  itemToString,
+  inputValue,
+  defaultInputValue,
+  onInputValueChange,
   children,
-  ...props
 }: AutocompleteProps<T>) {
-  // Locale-aware by construction: `useFilter` reads `useLocale()`, so this is
-  // one more thing `LumoProvider` is not optional for. Without it the collator
-  // is built for `en-US` and the ي/ی equivalence above disappears.
-  const { contains, startsWith, endsWith } = useFilter({ sensitivity: "base" });
+  const locale = useLumoLocale();
+  const baseFilter = BaseAutocomplete.useFilter({ locale: FORMAT_LOCALE[locale] });
 
-  const compare = match === "startsWith" ? startsWith : match === "endsWith" ? endsWith : contains;
+  const toString = itemToString ?? (defaultItemToString as (item: T) => string);
 
-  const filterFn = useCallback(
-    (textValue: string, inputValue: string) =>
-      filter ? filter(textValue, inputValue) : compare(textValue, inputValue),
-    [filter, compare],
-  );
+  const filterFn = useMemo(() => {
+    // A custom filter is handed the RAW text and query; folding behind its back would change what it sees.
+    if (filter) {
+      return (item: T, query: string) => filter(toString(item), query);
+    }
+    const compare =
+      match === "startsWith"
+        ? baseFilter.startsWith
+        : match === "endsWith"
+          ? baseFilter.endsWith
+          : baseFilter.contains;
+    // Both sides folded before the collator sees either. See `foldPersian`.
+    return (item: T, query: string) =>
+      compare(item, foldPersian(query), (value: T) => foldPersian(toString(value)));
+  }, [filter, match, baseFilter, toString]);
+
+  const listId = useComboboxListId();
 
   return (
-    <AriaAutocomplete<T> {...props} filter={filterFn}>
-      {children}
-    </AriaAutocomplete>
+    <BaseAutocomplete.Root<T>
+      items={items}
+      filter={filterFn}
+      // The two travel together — see the file header.
+      inline
+      open
+      {...(inputValue === undefined ? {} : { value: inputValue })}
+      {...(defaultInputValue === undefined ? {} : { defaultValue: defaultInputValue })}
+      {...(onInputValueChange === undefined
+        ? {}
+        : { onValueChange: (value: string) => onInputValueChange(value) })}
+    >
+      {/* The list id, minted here because the input and the list are siblings that cannot see each other. */}
+      <ComboboxWiringProvider value={listId}>{children}</ComboboxWiringProvider>
+    </BaseAutocomplete.Root>
   );
 }
 
-export interface AutocompleteInputProps
-  extends Omit<
-    AriaTextFieldProps,
-    "children" | "className" | "aria-label" | "value" | "defaultValue" | "onChange"
-  > {
-  /**
-   * Announced name of the field, e.g. «جست‌وجوی فرمان». REQUIRED.
-   *
-   * Not optional-with-a-fallback: React Aria emits nothing here, so a missing
-   * label is not an English string but an anonymous `<input>` — the quietest
-   * form of the 33-unnamed-controls defect, and the one a screenshot cannot show.
-   */
+export interface AutocompleteInputProps {
+  /** Announced name of the field, e.g. «جست‌وجوی فرمان». REQUIRED — a missing label is an anonymous `<input>`. */
   label: string;
   /** Also render the label visibly above the field. */
-  showLabel?: boolean;
+  showLabel?: boolean | undefined;
   placeholder?: string | undefined;
+  isDisabled?: boolean | undefined;
   className?: string | undefined;
   /** Class for the `<input>` itself. */
   inputClassName?: string | undefined;
 }
 
 /**
- * The query field.
- *
- * `TextField`, not `SearchField`, and that is a deliberate narrowing. A
- * SearchField brings `type="search"` and a clear button whose name React Aria
- * composes as `aria-label="Clear search"` from a bundle with no `fa` entry
- * (see `search-field.tsx`) — a leak to close in exchange for a magnifier this
- * primitive should not assume. Compose `SearchField` yourself when the surface
- * really is a search box; it consumes the same `FieldInputContext`.
- *
- * The value is NOT accepted here. `Autocomplete` owns `inputValue` and publishes
- * it through that context, and a second source of truth on the input is a
- * controlled-input bug waiting for someone to type fast.
+ * The query field. The visible label goes through `useFieldWiring`, not
+ * `Field.Label`, which publishes its id from a layout effect. The value is not
+ * accepted here: `Autocomplete` owns the query.
  */
 export function AutocompleteInput({
   label,
   showLabel = false,
   placeholder,
+  isDisabled,
   className,
   inputClassName,
-  ...props
 }: AutocompleteInputProps) {
+  const wiring = useFieldWiring({
+    ...(showLabel ? { label } : {}),
+    explicit: showLabel ? {} : { "aria-label": label },
+  });
+  const listWiring = useComboboxInputWiring();
+
   return (
-    <AriaTextField
-      data-lumo=""
-      className={cn("flex w-full flex-col gap-1.5", className)}
-      // With a visible `<Label>` present RAC wires `aria-labelledby`, and that
-      // wins the name computation — so setting both would leave a redundant
-      // attribute in the served bytes for `no-latin-aria` to read. One or the
-      // other, never both.
-      {...(showLabel ? {} : { "aria-label": label })}
-      {...props}
-    >
-      {showLabel ? <AriaLabel className={autocompleteLabelVariants()}>{label}</AriaLabel> : null}
-      <AriaInput
+    <div data-lumo="" className={cn("flex w-full flex-col gap-1.5", className)}>
+      {showLabel ? (
+        <label {...wiring.labelProps} className={autocompleteLabelVariants()}>
+          {label}
+        </label>
+      ) : null}
+      <BaseAutocomplete.Input
         data-lumo=""
+        // `aria-controls` in the FIRST BYTE; Base UI writes the same value after mount.
+        {...listWiring}
         className={cn(autocompleteInputVariants(), inputClassName)}
-        {...optional("placeholder", placeholder)}
+        {...(showLabel ? {} : { "aria-label": label })}
+        {...wiring.controlProps}
+        {...(placeholder === undefined ? {} : { placeholder })}
+        {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
       />
-    </AriaTextField>
+    </div>
   );
 }
 
-interface AutocompleteListBoxBaseProps<T extends object>
-  extends Omit<AriaListBoxProps<T>, "children" | "className" | "aria-label"> {
-  /**
-   * Announced name of the results list, e.g. «فرمان‌ها». REQUIRED — see the
-   * file header for why the patched Persian default does not retire this prop.
-   */
+interface AutocompleteListBoxBaseProps<T> {
+  /** Announced name of the results list, e.g. «فرمان‌ها». REQUIRED — Base UI names nothing here. */
   label: string;
-  children?: LumoNode | ((item: T) => LumoNode);
+  /** A render function over the FILTERED items. */
+  children?: ((item: T) => LumoNode) | LumoNode;
   className?: string | undefined;
 }
 
 /**
  * The announcing variant. All three props travel together or none of them do.
- *
- * `resultCount` is a NUMBER and is never rendered as one: it goes through
- * `formatNumber` here and the consumer receives a finished string, so «۷ نتیجه»
- * is expressible and `7 نتیجه` is not. The word order is the consumer's because
- * it has to be — Persian can want «۷ نتیجه»، «۷ مورد یافت شد» or «تعداد نتیجه‌ها:
- * ۷», and only the first happens to match English order. Same shape and same
- * reasoning as `TagGroup.removeLabel`.
+ * `resultCount` goes through `formatNumber`; the consumer owns the word order.
  */
-interface AnnouncingListBoxProps<T extends object> extends AutocompleteListBoxBaseProps<T> {
-  /** How many items survived YOUR filter. See the note below on why not RAC's. */
+interface AnnouncingListBoxProps<T> extends AutocompleteListBoxBaseProps<T> {
+  /** How many items survived the filter. */
   resultCount: number;
   /** The locale the count is formatted in. */
   locale: Locale;
@@ -264,41 +247,23 @@ interface AnnouncingListBoxProps<T extends object> extends AutocompleteListBoxBa
   resultsAnnouncement: (count: string) => string;
 }
 
-interface SilentListBoxProps<T extends object> extends AutocompleteListBoxBaseProps<T> {
+interface SilentListBoxProps<T> extends AutocompleteListBoxBaseProps<T> {
   resultCount?: undefined;
   locale?: undefined;
   resultsAnnouncement?: undefined;
 }
 
-export type AutocompleteListBoxProps<T extends object> =
-  | AnnouncingListBoxProps<T>
-  | SilentListBoxProps<T>;
+export type AutocompleteListBoxProps<T> = AnnouncingListBoxProps<T> | SilentListBoxProps<T>;
 
 /**
- * The filtered collection.
- *
- * ── WHY THE RESULT COUNT IS OPT-IN AND COMES FROM THE CONSUMER ─────────────
- *
- * A live region announcing "7 results" is the standard fix for the fact that a
- * list shrinking under a cursor is a purely visual event. Lumo cannot compute
- * the number: RAC's built-in filtering happens inside the collection, and
- * `AutocompleteStateContext` exposes `inputValue` and the focused node id and
- * nothing about how many nodes survived. Deriving it would mean running the
- * filter a second time in userland and hoping the two agree — a second source of
- * truth for a number that is read aloud.
- *
- * So: pass `resultCount` when you filter your own `items` (which is what a
- * command palette does anyway, to score and sort), and omit all three props when
- * you let RAC filter. Omitting is expressible; a half-configured live region is
- * not. `aria-activedescendant` still announces each option as the arrow keys
- * move, so the silent form is degraded, not broken.
+ * The filtered collection. The result count is opt-in and consumer-supplied:
+ * Base UI exposes the survivor count only inside the render callback, below
+ * the live region that must announce it, and Lumo will not invent the sentence.
  */
-export function AutocompleteListBox<T extends object>(props: AutocompleteListBoxProps<T>) {
-  const { label, className, children, resultCount, locale, resultsAnnouncement, ...listBoxProps } =
-    props;
+export function AutocompleteListBox<T>(props: AutocompleteListBoxProps<T>) {
+  const { label, className, children, resultCount, locale, resultsAnnouncement } = props;
+  const listProps = useComboboxListWiring();
 
-  // The union makes a partially-supplied announcement unrepresentable; the
-  // three-way check is what proves that to the compiler at this narrowing site.
   const announcement =
     resultsAnnouncement !== undefined && resultCount !== undefined && locale !== undefined
       ? resultsAnnouncement(formatNumber(resultCount, locale))
@@ -307,64 +272,50 @@ export function AutocompleteListBox<T extends object>(props: AutocompleteListBox
   return (
     <>
       {announcement === null ? null : (
-        // Outside the listbox, not inside it: `role="listbox"` accepts only
-        // options and groups as children, and a status node in there is markup
-        // a screen reader is entitled to ignore.
+        // Outside the listbox: `role="listbox"` accepts only options and groups.
         <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
           {announcement}
         </div>
       )}
-      <AriaListBox
+      <BaseAutocomplete.List
         data-lumo=""
+        // The id the input's `aria-controls` points at.
+        {...listProps}
         aria-label={label}
         className={cn(autocompleteListBoxVariants(), className)}
-        {...listBoxProps}
       >
-        {children}
-      </AriaListBox>
+        {children as LumoNode}
+      </BaseAutocomplete.List>
     </>
   );
 }
 
 /**
- * One row.
- *
- * `textValue` is re-derived from a literal string child, and here it decides
- * whether the component WORKS rather than merely how it is announced. RAC hands
- * the filter `node.textValue`, and it extracts that only from a string child —
- * so an item rendered as `<AutocompleteItem><Icon /> سند تازه</AutocompleteItem>`
- * gets `''`, never matches any query, and disappears the moment the reader types
- * one character. Nothing throws, nothing logs, and the list simply comes back
- * empty. Pass `textValue` explicitly whenever the children are not plain text.
- *
- * The children are wrapped in RAC's `Text` rather than left bare, for the reason
- * `list-box.tsx` sets out at length: `useOption` mints the option's label id with
- * `useSlotId()`, and `useSlotId` only clears an unclaimed id in a layout effect —
- * which never runs on the server. Unclaimed, that id ships as a dangling
- * `aria-labelledby` in the prerendered bytes and fails `@lumo-ui/gate`'s
- * `resolved-idrefs`. `Text` is the element RAC publishes the id to.
+ * One row. No `textValue`: the filter runs over the root's `items`, never the
+ * children, so an icon in the row cannot break search. Use `itemToString`.
  */
-export interface AutocompleteItemProps<T extends object = object>
-  extends Omit<AriaListBoxItemProps<T>, "children" | "className"> {
+export interface AutocompleteItemProps {
+  /** The item's key. Maps to Base UI's `value`. */
+  id?: Key | undefined;
+  isDisabled?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function AutocompleteItem<T extends object = object>({
+export function AutocompleteItem({
+  id,
+  isDisabled,
   className,
   children,
-  textValue,
-  ...props
-}: AutocompleteItemProps<T>) {
-  const resolvedTextValue = textValue ?? (typeof children === "string" ? children : undefined);
+}: AutocompleteItemProps) {
   return (
-    <AriaAutocompleteItem
+    <BaseAutocomplete.Item
       data-lumo=""
       className={cn(autocompleteItemVariants(), className)}
-      {...optional("textValue", resolvedTextValue)}
-      {...props}
+      {...(id === undefined ? {} : { value: String(id) })}
+      {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
     >
-      <AriaText className="min-w-0 flex-1">{children}</AriaText>
-    </AriaAutocompleteItem>
+      {children}
+    </BaseAutocomplete.Item>
   );
 }

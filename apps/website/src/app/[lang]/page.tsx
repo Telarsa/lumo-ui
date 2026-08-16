@@ -16,9 +16,9 @@ import {
   Tabs,
 } from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
-import { assertLocale, localeParams, site } from "@/lib/locale";
-import { demoById } from "@/lib/demos";
-import { allCatalog } from "@/lib/catalog";
+import { assertLocale, localeParams, site, segmentFor} from "@/lib/locale";
+import { allCatalog, type CatalogEntry } from "@/lib/catalog";
+import { allBlocks } from "@/lib/blocks";
 
 export function generateStaticParams() {
   return localeParams;
@@ -125,27 +125,18 @@ const home = {
 } as const;
 
 /**
- * The live showcase: one composed hero exhibit instead of an inventory grid.
- *
- * Nine equal cards proved the library has many components and showed none of
- * them at WORK — an inventory, not an interface, and the ragged grid it made
- * was the visual equivalent of a parts drawer. So: composition over inventory.
- * The hero is a settings panel assembled the way a real product assembles one
- * — Tabs, Switch rows and a Slider living together inside one Card, footer
- * actions included — composed inline from `@lumo-ui/ui` with complete copy in
- * both locales, fully interactive, standing on the dotted stage docs sites
- * use for exactly this job. Three small exhibits flank it, rendered by the
- * same `render(lang)` functions the component pages use.
- *
- * Everything is still real: if the panel breaks, the landing page breaks,
- * which is the correct incentive. The strip under the stage names every
- * component in the composition and links each name into its docs.
+ * The live showcase: one composed hero exhibit instead of an inventory grid. The hero is a
+ * settings panel — Tabs, Switch rows and a Slider inside one Card — composed inline from
+ * `@lumo-ui/ui` with complete copy in both locales, fully interactive; three small exhibits
+ * flank it via the same `render(lang)` functions the component pages use. If the panel
+ * breaks, the landing page breaks, which is the correct incentive.
  */
 const HERO_PARTS = ["card", "tabs", "switch", "slider", "button"] as const;
 const MINOR_EXHIBITS = ["number-field", "rating", "badge"] as const;
 
-function Showcase({ lang }: { lang: Locale }) {
+function Showcase({ lang, catalog }: { lang: Locale; catalog: readonly CatalogEntry[] }) {
   const h = home[lang];
+  const byId = (id: string) => catalog.find((e) => e.id === id);
   return (
     <section className="mt-16">
       <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
@@ -158,20 +149,16 @@ function Showcase({ lang }: { lang: Locale }) {
         <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-surface">
           <div className="relative flex flex-1 items-center justify-center p-6 sm:p-10">
             {/*
-             * The dotted backdrop, from tokens: `--lumo-sys-border` is the
-             * dot, so the pattern tracks both themes with no dark-mode
-             * override. Decorative, and behind the panel.
+             * The dotted backdrop, from tokens: `--lumo-sys-border` is the dot, so it tracks both
+             * themes with no dark-mode override. Decorative, and behind the panel.
              */}
             <div
               aria-hidden="true"
               className="absolute inset-0 bg-[radial-gradient(var(--lumo-sys-border)_1px,transparent_1px)] bg-size-[1rem_1rem]"
             />
             {/*
-             * The composed panel. INTERACTIVE on purpose — unlike the flank
-             * exhibits there is no stretched link over it, so the switches
-             * flip, the tabs switch and the slider slides. The Slider is the
-             * page's live proof again: its output renders «۶۰» through the
-             * same formatter the gate grades.
+             * The composed panel. INTERACTIVE on purpose — no stretched link over it, unlike the
+             * flank exhibits. The Slider's output renders «۶۰» through the formatter the gate grades.
              */}
             <Card variant="elevated" className="relative w-full max-w-xl">
               <CardHeader>
@@ -213,12 +200,12 @@ function Showcase({ lang }: { lang: Locale }) {
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-bs border-border px-4 py-2.5 text-xs text-fg-muted">
             <span>{h.builtFrom}</span>
             {HERO_PARTS.map((id) => {
-              const demo = demoById(id);
+              const demo = byId(id);
               if (!demo) return null;
               return (
                 <Link
                   key={id}
-                  href={`/${lang}/components/${id}/`}
+                  href={`/${segmentFor(lang)}/components/${id}/`}
                   className="font-medium underline-offset-4 transition-colors hover:text-fg hover:underline"
                 >
                   {demo.title[lang]}
@@ -231,7 +218,7 @@ function Showcase({ lang }: { lang: Locale }) {
         {/* ── The flank: three small exhibits ────────────────────────────── */}
         <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
           {MINOR_EXHIBITS.map((id) => {
-            const demo = demoById(id);
+            const demo = byId(id);
             if (!demo) return null;
             return (
               <div
@@ -240,19 +227,15 @@ function Showcase({ lang }: { lang: Locale }) {
               >
                 <div className="flex items-center justify-between border-be border-border px-4 py-2">
                   <Link
-                    href={`/${lang}/components/${id}/`}
+                    href={`/${segmentFor(lang)}/components/${id}/`}
                     className="text-sm font-medium text-fg after:absolute after:inset-0"
                   >
                     {demo.title[lang]}
                   </Link>
                 </div>
                 {/*
-                 * `pointer-events-none`: each flank card is ONE link (the
-                 * stretched ::after above), so its demo is an exhibit — the
-                 * hero panel is where the landing page is interactive. The
-                 * two-layer centring survives from the old grid: the outer
-                 * flex centres vertically, the inner centres non-uniform
-                 * demos horizontally.
+                 * `pointer-events-none`: each flank card is ONE link (the stretched ::after above), so
+                 * its demo is an exhibit. Outer flex centres vertically, inner centres non-uniform demos.
                  */}
                 <div className="pointer-events-none flex min-h-24 flex-1 items-center justify-center overflow-hidden p-4">
                   <div className="flex w-full max-w-56 items-center justify-center">
@@ -269,21 +252,11 @@ function Showcase({ lang }: { lang: Locale }) {
 }
 
 /**
- * The home page proves the pitch instead of stating it.
- *
- * Shaped after `ui.shadcn.com` — eyebrow, headline, sub-headline, a primary and
- * a secondary call to action — with one deliberate difference. shadcn's hero is
- * followed by a showcase of what the components look like. Lumo's is followed by
- * evidence of what they *are*, because "looks right" is precisely the property
- * the 52-component prototype had while shipping `<html lang="en">` on all 55
- * Persian pages.
- *
- * The numbers and the date render through `@lumo-ui/core`'s formatters, so on
- * `/fa-IR/` they arrive as Persian digits and a Jalali date in the served HTML,
- * before any JavaScript runs. That is not decoration either: `no-latin-digits`
- * fails this page if any of them regress, and `persian-digit-floor` fails it if
- * the page stops rendering them at all. The claim and its test are the same
- * bytes.
+ * The home page proves the pitch instead of stating it. Shaped like the component-library sites people already know
+ * (eyebrow, headline, two calls to action), but followed by evidence of what the components
+ * ARE rather than how they look. The numbers and the date render through `@lumo-ui/core`'s
+ * formatters, so on `/fa/` they are Persian digits and a Jalali date in the served HTML;
+ * `no-latin-digits` and `persian-digit-floor` fail this page if that regresses.
  */
 export default async function Home({ params }: { params: Promise<{ lang: string }> }) {
   const lang = assertLocale((await params).lang);
@@ -291,13 +264,18 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
   const h = home[lang];
   const demos = await allCatalog();
   const behaviour = demos.filter((d) => d.behaviour).length;
+  /*
+   * Derived, not a literal: a hand-kept count next to derived figures looks as authoritative
+   * as its neighbours and nothing fails when it drifts (it did, by two).
+   */
+  const blocks = allBlocks().length;
   // A fixed date: a rolling "today" would churn the committed gate fixtures daily.
   const stamp = new Date("2026-08-10T12:00:00Z");
 
   const figures: Array<{ value: string; label: string }> = [
     { value: formatNumber(demos.length, lang), label: h.componentsLabel },
     { value: formatNumber(behaviour, lang), label: h.behaviourLabel },
-    { value: formatNumber(28, lang), label: h.blocksLabel },
+    { value: formatNumber(blocks, lang), label: h.blocksLabel },
     {
       value: formatDate(stamp, lang, { month: "short", day: "numeric" }),
       label: h.reviewedLabel,
@@ -321,13 +299,13 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         */}
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
-            href={`/${lang}/components/`}
+            href={`/${segmentFor(lang)}/components/`}
             className="inline-flex h-control-md items-center rounded-md bg-accent px-5 text-sm font-medium text-accent-fg hover:bg-accent-hover"
           >
             {h.getStarted}
           </Link>
           <Link
-            href={`/${lang}/blocks/`}
+            href={`/${segmentFor(lang)}/blocks/`}
             className="inline-flex h-control-md items-center rounded-md border border-border px-5 text-sm font-medium text-fg hover:bg-surface-hover"
           >
             {h.browseBlocks}
@@ -335,7 +313,7 @@ export default async function Home({ params }: { params: Promise<{ lang: string 
         </div>
       </section>
 
-      <Showcase lang={lang} />
+      <Showcase lang={lang} catalog={demos} />
 
       <section className="mt-14 border-bs border-border pbs-10">
         <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">

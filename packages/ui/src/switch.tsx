@@ -1,40 +1,25 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
-import {
-  SwitchButton as AriaSwitchButton,
-  SwitchField as AriaSwitchField,
-  type SwitchFieldProps as AriaSwitchFieldProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
-import { Description, FieldError, FOCUS_RING } from "./form.tsx";
+import { Field } from "@base-ui/react/field";
+import { Switch as BaseSwitch } from "@base-ui/react/switch";
+import { cn, type LumoNode, type ToggleFieldPropsBase } from "@lumo-ui/core";
+import { descriptionVariants, fieldErrorVariants, FOCUS_RING_SELF } from "./form.tsx";
+import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
 
 /**
- * The clickable row.
- *
- * `items-start`, not `items-center`, which is a REVERSAL of checkbox.tsx's
- * choice — deliberately. `items-center` centres the track against the label's
- * WHOLE block, which is correct only while the label is one line: the moment a
- * label wraps, the track floats between the lines, attached to neither. A
- * switch names its first clause, so the track belongs on the FIRST line. The
- * actual first-line centring is done on the track itself with a `1lh` margin —
- * see `switchTrackVariants` — so `items-start` here is just the anchor it
- * offsets from. The `description` row is unaffected either way: it renders
- * OUTSIDE this row (below, indented on the inline-start side), so a multi-line
- * description never pulled the track down even before this change.
- *
- * `lg` raises the row's minimum block size to the `control-lg` token — the
- * 44px touch-target floor Khroos specifies, the same floor button.variants.ts
- * meets with `h-control-lg`. The track itself stays 24px tall; inflating the
- * glyph to 44px would make a settings list unreadable, so the FLOOR is met by
- * the row (the actual hit area — the whole `<label>` is pressable) while the
- * track keeps its proportions.
+ * The clickable row. `items-start`, not `items-center` (a deliberate reversal of
+ * checkbox.tsx): a wrapped label would float the track between lines, so the
+ * track is centred on the FIRST line via a `1lh` margin in `switchTrackVariants`.
+ * `lg` raises the row to the 44px `control-lg` touch floor while the track keeps
+ * its proportions — the whole `<label>` is the hit area.
  */
 export const switchVariants = cva(
   "group flex w-fit cursor-pointer items-start gap-2 text-fg select-none " +
     "data-disabled:cursor-not-allowed data-disabled:opacity-50",
   {
     variants: {
+      /** The size step on the shared control scale. */
       size: {
         md: "text-sm",
         lg: "min-h-control-lg text-base",
@@ -45,36 +30,22 @@ export const switchVariants = cva(
 );
 
 /**
- * The track.
+ * The track. The block-start margin, calc((1lh − track height)/2), centres it on
+ * the label's FIRST line box under Latin and `:lang(fa)` leading alike; each
+ * size restates the calc with its own track height. `md` rounds shadcn's
+ * 18.4×32 to 18×32 so every inset below is a whole pixel.
  *
- * The block-start margin — calc((1lh − track height)/2) — centres the track on
- * the label's FIRST line box, exactly: with `items-start` the track's margin
- * box tops the row, so a block-start margin of (line-height − track-height)/2
- * puts the track's centre at half a line-height — the first line's own centre.
- * `1lh` resolves against the row's computed line-height, so the same
- * declaration is right under Latin leading and under the taller `:lang(fa)`
- * leading, with no per-locale constant to drift. A fixed `items-center` was
- * measurably wrong for wrapped labels (track centred between lines); a fixed
- * margin would be wrong in one script. Each size restates the calc with its
- * own track height, because the subtrahend is the one number that changes.
- *
- * ── THE SCALE, AND WHY IT IS 18px WHERE SHADCN SAYS 18.4 ────────────────────
- *
- * `md` follows shadcn's current switch — their track is 1.15rem tall and 2rem
- * wide with a proportional thumb, visibly smaller and cleaner than the 24×44
- * track this file used to ship as its only size. But 1.15rem is 18.4px, and
- * 18.4 breaks the border-aware inset arithmetic below: no whole-pixel inset
- * centres a whole-pixel thumb in a 16.4px padding box. Lumo rounds the track
- * to 18×32 so every inset in this file is an integer. The 0.4px is not a
- * visible difference; a fractional inset that rounds differently per zoom
- * level is.
+ * This element IS the control under Base UI (`Switch.Root`, `role="switch"`),
+ * so state selectors address it directly: `data-checked` (not
+ * `group-data-selected`), `focus-visible` (no group), `group-hover` for the
+ * label hover, `data-disabled` unchanged.
  */
 export const switchTrackVariants = cva(
   "relative shrink-0 rounded-full bg-surface-sunken " +
     "border border-border-control transition-colors " +
-    "group-data-hovered:border-border-strong " +
-    "group-data-selected:border-accent group-data-selected:bg-accent " +
-    FOCUS_RING,
+    "group-hover:border-border-strong " +
+    "data-checked:border-accent data-checked:bg-accent " +
+    FOCUS_RING_SELF,
   {
     variants: {
       size: {
@@ -89,50 +60,32 @@ export const switchTrackVariants = cva(
 );
 
 /**
- * The thumb, and the one genuinely hard RTL problem in this batch.
+ * The thumb, and the one genuinely hard RTL problem here. `translate-x-*` is a
+ * physical transform with no logical counterpart, so an "on" switch would slide
+ * toward the reading START in Persian — silently. `start-*`
+ * (`inset-inline-start`) animates and the browser resolves the edge. shadcn's
+ * base-vega switch ships exactly that defect (quoted in
+ * the retired vendor snapshot, not here — Tailwind scans comments).
  *
- * The obvious implementation is `translate-x-0` → `translate-x-5`. It is wrong in
- * Persian and wrong SILENTLY: `translate-x` is a physical transform with no
- * logical counterpart in CSS, so an "on" switch slides its thumb to the right in
- * both directions — toward the reading END in English and back toward the reading
- * START in Persian. The switch still works; it just says the opposite of what it
- * does. No test that checks `aria-checked` will ever see it.
- *
- * `inset-inline-start` is the logical property that has no transform equivalent,
- * and Tailwind spells it `start-*`. It animates (both endpoints are lengths), and
- * the browser resolves which physical edge that is.
- *
- * ── THE DEFECT THE FIRST VERSION SHIPPED, AND THE ARITHMETIC THAT FIXED IT ──
- *
- * The first version measured the BORDER box, but absolute insets resolve
- * against the PADDING box, and the track wears a 1px border — so the thumb sat
- * visibly low and jammed flush against the end border when selected. The
- * border-aware rule, now restated per size (border box → padding box → insets):
- *
+ * Insets resolve against the PADDING box and the track wears a 1px border:
  *   resting inset = (padding-box height − thumb)/2
  *   selected inset = padding-box width − thumb − resting inset
+ *   md 18×32 → 16×30, thumb 14: rest 1px `top-0.25 start-0.25`, on 15px `start-3.75`
+ *   lg 24×44 → 22×42, thumb 20: rest 1px `top-0.25 start-0.25`, on 21px `start-5.25`
+ * If you change any number, recompute its whole block.
  *
- *   md  18×32 border box → 16×30 padding box, thumb 14px
- *       resting (16−14)/2 = 1px            → `top-0.25 start-0.25`
- *       selected 30 − 14 − 1 = 15px        → `start-3.75`
- *   lg  24×44 border box → 22×42 padding box, thumb 20px
- *       resting (22−20)/2 = 1px            → `top-0.25 start-0.25`
- *       selected 42 − 20 − 1 = 21px        → `start-5.25`
- *
- * Both sizes rest 1px inside the border on every side, in both states, in both
- * scripts. If you change any number above, recompute all three lines of its
- * block — the header's math and the shipped values must not drift apart.
+ * Base UI PROPAGATES `data-checked` onto `Switch.Thumb` itself, so no group hop.
  */
 export const switchThumbVariants = cva(
-  "absolute top-0.25 start-0.25 rounded-full bg-surface shadow-sm " +
+  "absolute top-0.25 start-0.25 rounded-full bg-surface shadow-raised " +
     "transition-[inset-inline-start] duration-150 ease-out " +
-    "group-data-selected:bg-accent-fg " +
+    "data-checked:bg-accent-fg " +
     "motion-reduce:transition-none",
   {
     variants: {
       size: {
-        md: "size-3.5 group-data-selected:start-3.75",
-        lg: "size-5 group-data-selected:start-5.25",
+        md: "size-3.5 data-checked:start-3.75",
+        lg: "size-5 data-checked:start-5.25",
       },
     },
     defaultVariants: { size: "md" },
@@ -142,27 +95,19 @@ export const switchThumbVariants = cva(
 export type SwitchVariantProps = VariantProps<typeof switchVariants>;
 
 /**
- * A switch.
- *
- * A switch commits immediately, so unlike a checkbox it is never "pending until
- * submit" — which is why React Aria's flat `Switch` omits `isRequired` and
- * `isInvalid` entirely. `SwitchField` restores them (and adds the description and
- * error slots), so this is built on `SwitchField` + `SwitchButton`; the flat
- * `Switch` is `@deprecated` in React Aria 1.20 anyway.
- *
- * No `data-lumo` focus ring on the root: the focusable element is a clipped
- * `<input>`, so the ring is drawn on the track instead. See `FOCUS_RING`.
- *
- * `children` is the visible label, typed `LumoNode`. As with `Checkbox`, a switch
- * with no visible label must pass `aria-label`, and the `named-controls` gate rule
- * is what catches the omission in the prerendered HTML.
+ * A switch. BASE UI ENGINE (`@base-ui/react/switch` + `field`); `SwitchProps`
+ * is unchanged. The cva blocks above are written to Base UI's measured state
+ * vocabulary — the first pass reused React Aria's selectors and shipped a switch
+ * that was correct to a screen reader and frozen on screen. Composition is
+ * Field → Label → Switch: validity, description and error live on `Field.Root`.
+ * A switch with no visible label must pass `aria-label`.
  */
-export interface SwitchProps extends Omit<AriaSwitchFieldProps, "children" | "className"> {
+export interface SwitchProps
+  extends Omit<ToggleFieldPropsBase, "validationBehavior" | "onFocusChange"> {
+  /** The control's position in the sequential tab order — `-1` removes it (was `excludeFromTabOrder`). */
+  tabIndex?: number | undefined;
   children?: LumoNode;
-  /**
-   * `md` is shadcn's current compact scale; `lg` keeps the row at the 44px
-   * touch floor for Khroos's touch surfaces. See the size table on the thumb.
-   */
+  /** `md` is shadcn's compact scale; `lg` keeps the row at the 44px touch floor. */
   size?: "md" | "lg";
   /** Help text under the switch. */
   description?: LumoNode;
@@ -180,25 +125,102 @@ export function Switch({
   errorMessage,
   className,
   controlClassName,
-  ...props
+  // — translated onto Switch.Root —
+  isSelected,
+  defaultSelected,
+  onChange,
+  isReadOnly,
+  isRequired,
+  name,
+  value,
+  form,
+  id,
+  inputRef,
+  // — translated onto Field.Root —
+  isDisabled,
+  isInvalid,
+  // React Aria's `validate` returns `true` for VALID; Base UI's wants `null`.
+  // The value and the error shapes otherwise agree.
+  validate,
+  // `validationBehavior` is NOT translatable: Base UI's `validationMode` is
+  // WHEN to validate, not WHETHER the browser owns the message. Capability gap.
+  autoFocus,
+  tabIndex,
+  style,
+  ...rest
 }: SwitchProps) {
-  // Track width plus the 0.5rem gap, on the inline axis: md 2rem + 0.5rem,
-  // lg 2.75rem + 0.5rem. Keeps the description's start edge on the label's.
+  // Track width plus the 0.5rem gap, so the description's start edge is the label's.
   const indent = size === "lg" ? "ps-13" : "ps-10";
+  const wiring = useFieldWiring({ label: children, description, errorMessage, explicit: rest });
   return (
-    <AriaSwitchField
+    <Field.Root
       data-lumo=""
       className={cn("flex flex-col gap-1", className)}
-      {...props}
+      disabled={isDisabled ?? false}
+      {...attr("invalid", isInvalid)}
+      {...attr(
+        "validate",
+        validate === undefined
+          ? undefined
+          : (fieldValue: unknown) => {
+              const result = validate(fieldValue as boolean);
+              return result === true || result === undefined ? null : result;
+            },
+      )}
     >
-      <AriaSwitchButton className={cn(switchVariants({ size }), controlClassName)}>
-        <span className={switchTrackVariants({ size })}>
-          <span aria-hidden="true" className={switchThumbVariants({ size })} />
-        </span>
+      {/*
+        `Field.Label` renders the `<label>` the baseline's `SwitchButton`
+        rendered, and Base UI associates it with the control by id rather than
+        by containment. The row still wraps the track, so a click anywhere on
+        the row still toggles.
+
+        That association is HYDRATION-ONLY, which is why the ids are threaded
+        through both elements by hand — the control is a `<span role="switch">`
+        and ships unnamed otherwise. The description under it is unannounced for
+        the same reason. See `useFieldWiring`.
+      */}
+      <Field.Label
+        className={cn(switchVariants({ size }), controlClassName)}
+        {...wiring.labelProps}
+      >
+        <BaseSwitch.Root
+          className={switchTrackVariants({ size })}
+          {...wiring.controlProps}
+          {...attr("checked", isSelected)}
+          {...attr("defaultChecked", defaultSelected)}
+          {...attr("onCheckedChange", onChange)}
+          {...attr("readOnly", isReadOnly)}
+          {...attr("required", isRequired)}
+          {...attr("name", name)}
+          {...attr("value", value)}
+          {...attr("form", form)}
+          {...attr("id", id)}
+          {...attr("inputRef", inputRef)}
+          {...attr("autoFocus", autoFocus)}
+          {...attr("style", style)}
+          {...(rest as object)}
+          {...attr("tabIndex", tabIndex)}
+        >
+          <BaseSwitch.Thumb aria-hidden="true" className={switchThumbVariants({ size })} />
+        </BaseSwitch.Root>
         {children}
-      </AriaSwitchButton>
-      {description != null ? <Description className={indent}>{description}</Description> : null}
-      <FieldError className={indent}>{errorMessage}</FieldError>
-    </AriaSwitchField>
+      </Field.Label>
+      {description != null ? (
+        <Field.Description {...wiring.descriptionProps} className={cn(descriptionVariants(), indent)}>
+          {description}
+        </Field.Description>
+      ) : null}
+      {/*
+        `match` is Base UI's "show this regardless of ValidityState", which is
+        what a caller-supplied `errorMessage` means. Without it the message is
+        shown only when the browser's own validity says so, and a switch is
+        never natively invalid.
+      */}
+      {errorMessage != null ? (
+        <Field.Error match {...wiring.errorProps} className={cn(fieldErrorVariants(), indent)}>
+          {errorMessage}
+        </Field.Error>
+      ) : null}
+    </Field.Root>
   );
 }

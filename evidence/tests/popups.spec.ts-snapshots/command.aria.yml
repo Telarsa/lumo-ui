@@ -1,0 +1,14 @@
+- dialog "پالت فرمان":
+  - button "بستن"
+  - heading "پالت فرمان" [level=2]
+  - paragraph: برای اجرای یک فرمان جست‌وجو کنید.
+  - combobox "جست‌وجوی فرمان" [expanded]
+  - listbox "پالت فرمان":
+    - group "پیشنهادها":
+      - text: ""
+      - option "سند تازه"
+      - option "باز کردن پرونده"
+    - group "تنظیمات":
+      - text: ""
+      - option "پروفایل"
+      - option "پوسته"

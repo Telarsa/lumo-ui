@@ -41,7 +41,7 @@ function composed() {
       <div data-testid="surface" tabIndex={0}>
         روی این کارت راست‌کلیک کنید
       </div>
-      <ContextMenu>
+      <ContextMenu aria-label="گزینه‌های سند">
         <MenuItem id="duplicate">رونوشت</MenuItem>
         <MenuItem id="rename">تغییر نام</MenuItem>
         <MenuSeparator />
@@ -71,16 +71,26 @@ describe("ContextMenu — opened at the pointer", () => {
     const items = screen.getAllByRole("menuitem").map((i) => i.textContent);
     expect(items).toEqual(["رونوشت", "تغییر نام", "حذف"]);
 
-    // The virtual trigger: a fixed point at clientX/clientY. Physical top/left
-    // on purpose — pointer coordinates are viewport-physical in both scripts.
-    const anchor = document.querySelector<HTMLElement>("[data-lumo-context-menu-anchor]");
-    expect(anchor).not.toBeNull();
-    expect(anchor?.style.position).toBe("fixed");
-    expect(anchor?.style.top).toBe("48px");
-    expect(anchor?.style.left).toBe("120px");
-
-    // The popover.tsx count, re-pinned: exactly two unreachable "Dismiss".
-    expect(englishIn(spokenAttributes())).toEqual(["Dismiss", "Dismiss"]);
+    // COVERAGE DELIBERATELY LOST — read before restoring anything.
+    //
+    // This block asserted a portaled `[data-lumo-context-menu-anchor]` div at
+    // position:fixed/top:48px/left:120px. That element was never a feature; it
+    // was the workaround React Aria needed, because RAC had no context menu and
+    // the pointer had to be turned into a real node for a Popover to anchor to.
+    // Base UI's anchor is a VIRTUAL object exposing getBoundingClientRect(), so
+    // there is no node in the document to query — and emitting an empty div
+    // purely to keep this assertion would be dressing one library as the other.
+    //
+    // The consequence is honest and is recorded in phase-a-result.json: NOTHING
+    // now verifies that the menu opens AT THE POINTER. jsdom computes no
+    // layout, so the coordinate hand-off is not observable from here at all.
+    // That check needs a real browser, and Lumo has no browser tier today. It
+    // is a test-coverage debt of the migration, not a defect of Base UI.
+    //
+    // What remains observable is asserted above (opens on contextmenu, Persian
+    // items) and below (announces no English — the two unreachable "Dismiss"
+    // sentinels RAC emitted here are gone with the same sentinel class).
+    expect(englishIn(spokenAttributes())).toEqual([]);
   });
 
   it("Escape closes it and tears the anchor down", async () => {
@@ -89,7 +99,9 @@ describe("ContextMenu — opened at the pointer", () => {
     const menu = await screen.findByRole("menu");
     fireEvent.keyDown(menu, { key: "Escape" });
     expect(screen.queryByRole("menu")).toBeNull();
-    expect(document.querySelector("[data-lumo-context-menu-anchor]")).toBeNull();
+    // The companion anchor assertion is removed rather than kept: with the
+    // element gone engine-wide it would be null unconditionally, and a query
+    // that can never fail reads as coverage without being any.
   });
 
   it("Shift+F10 opens it at the focused element — the pattern is not pointer-only", async () => {
@@ -98,5 +110,17 @@ describe("ContextMenu — opened at the pointer", () => {
     surface.focus();
     fireEvent.keyDown(surface, { key: "F10", shiftKey: true });
     expect(await screen.findByRole("menu")).toBeDefined();
+  });
+});
+
+/*
+ * Styling delivery: the mutation campaign's visual mutant strips this
+ * module's className assignments, and the behavior assertions above cannot
+ * see that. One observation of an element THIS module styles is the floor.
+ */
+describe("styling delivery", () => {
+  it("the trigger wrapper carries the module's contents class", () => {
+    const { container } = render(composed());
+    expect(container.querySelector(".contents")).toBeTruthy();
   });
 });

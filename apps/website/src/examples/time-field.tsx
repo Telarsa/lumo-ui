@@ -89,6 +89,16 @@ function SizesExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "ساعتی که بخش‌به‌بخش تایپ می‌شود: ساعت نوبت، یادآور، ساعت کاری.",
+        "en-US": "A time typed segment by segment: an appointment hour, a reminder, opening hours.",
+      },
+      whenNot: {
+        "fa-IR": "تاریخ — `DateField`. تاریخ با تقویم — `DatePicker`. رویدادها روی ساعت‌ها — `EventCalendar`.",
+        "en-US": "A date — `DateField`. A date with a calendar — `DatePicker`. Events on hours — `EventCalendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "فیلد ساعت", "en-US": "Time field" },
@@ -99,9 +109,11 @@ export const EXAMPLES: ComponentExamples = {
         "Types a time segment by segment. A time has no calendar, so none of the leap-year reasoning applies — but the digits are still Persian, and still come from the locale itself.",
     },
     composition: [
-      `<TimeField label description errorMessage granularity>`,
+      `<TimeField label description errorMessage granularity minValue maxValue validate name form>`,
       `  …the segments   ← rendered for you. granularity decides whether`,
       `                    seconds exist; the locale decides the clock.`,
+      `  bounds + validate  ← reject out-of-policy times with caller-authored copy`,
+      `  name + form        ← submit HH:mm:ss through native FormData`,
       `</TimeField>`,
     ].join("\n"),
     parts: [
@@ -115,12 +127,12 @@ export const EXAMPLES: ComponentExamples = {
         },
       },
       {
-        name: "renderSegment",
+        name: "DateInput",
         description: {
           "fa-IR":
-            "همان تابع بخش که فیلد تاریخ به کار می‌برد. ساعت و تاریخ یک نوع بخش دارند، پس یک تعریف دارند.",
+            "همان ورودیِ بخش‌بندی‌شده که فیلد تاریخ به کار می‌برد. ساعت و روز یک نوع بخش‌اند، پس یک پیاده‌سازی دارند — و پیش از این دو تا داشتند، چون این پرونده روی موتور مانده بود.",
           "en-US":
-            "The same segment function the date field uses. A time and a date have one kind of segment, so they have one definition.",
+            "The same segmented input the date field uses. An hour slot and a day slot are one kind of thing, so they have one implementation — and until this migration they had two, because this file was still on React Aria.",
         },
       },
     ],
@@ -151,7 +163,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "نامعتبر", "en-US": "Invalid" },
       description: {
         "fa-IR":
-          "دادن پیام خطا خودش فیلد را نامعتبر می‌کند، و تنها راهی است که جملهٔ انگلیسی ری‌اکت‌آریا هرگز نمایش داده نشود.",
+          "دادن پیام خطا خودش فیلد را نامعتبر می‌کند، و تنها راهی است که جملهٔ انگلیسی موتور هرگز نمایش داده نشود.",
         "en-US":
           "Supplying a message marks the field invalid itself, and is the only thing that keeps React Aria's English sentence off the page.",
       },

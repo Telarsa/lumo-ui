@@ -1,54 +1,21 @@
-"use client";
-
+import * as React from "react";
 import { cva } from "class-variance-authority";
-import {
-  Breadcrumb as AriaBreadcrumb,
-  Breadcrumbs as AriaBreadcrumbs,
-  type BreadcrumbProps as AriaBreadcrumbProps,
-  type BreadcrumbsProps as AriaBreadcrumbsProps,
-} from "react-aria-components";
 import { cn, type LumoNode } from "@lumo-ui/core";
 
 /**
- * A breadcrumb trail.
+ * A breadcrumb trail. No engine and no `"use client"`: a trail of links is a picture
+ * of the route, so a page header renders it on the server with no hydration.
  *
  *     <Breadcrumbs label="مسیر صفحه">
  *       <Breadcrumb><Link href="/">خانه</Link></Breadcrumb>
  *       <Breadcrumb>تنظیمات</Breadcrumb>
  *     </Breadcrumbs>
  *
- * ── A FIRST-BYTE ENGLISH LEAK THAT IS NOT IN core/strings.ts ────────────────
- *
- * `label` is REQUIRED because React Aria hard-defaults the trail's accessible
- * name. From `react-aria/private/breadcrumbs/useBreadcrumbs.mjs`:
- *
- *     'aria-label': ariaLabel || strings.format('breadcrumbs')
- *
- * and the `en-US` bundle carries `"@react-aria/breadcrumbs": {breadcrumbs:
- * "Breadcrumbs"}`. Persian is not among RAC's 34 locales, so an unlabelled
- * Lumo breadcrumb ships `<ol aria-label="Breadcrumbs">` on every Persian page.
- *
- * Worth noting precisely because it is NOT in the eight strings recorded in
- * `@lumo-ui/core`'s strings.ts. That sweep rendered components in their default
- * state, and every overlay in this batch renders `null` while closed — so the
- * sweep could not see the popover-borne leaks. Breadcrumbs are never closed.
- * This one was always in the served HTML and the measurement's shape hid it.
- * The lesson is about the method, not the string: "measured zero" means "zero
- * in the states we rendered".
- *
- * ── THE SEPARATOR MIRRORS ITSELF ────────────────────────────────────────────
- *
- * The default separator is `›` (U+203A). That character has the Unicode
- * `Bidi_Mirrored` property — it is half of the mirroring pair 2039/203A — so the
- * text engine draws it as `‹` when the resolved bidi direction is RTL. The trail
- * therefore points from the root toward the current page in both scripts with no
- * CSS, no `rtl:` variant, no `scale-x-[-1]`, and nothing for the RTL codemod to
- * have to catch.
- *
- * An SVG chevron cannot do this, and neither can `/`, which is unmirrored and
- * ends up leaning the wrong way against Persian text. If you override
- * `separator`, override it with another mirrored character (`»`/`«` U+00BB, or
- * `>` U+003E) or you have re-introduced the bug this default exists to avoid.
+ * `label` stays REQUIRED: React Aria defaulted the trail's name to the English
+ * "Breadcrumbs"; without an engine an unlabelled trail is anonymous, which is worse
+ * because no gate can see it. The default separator `›` (U+203A) carries the Unicode
+ * `Bidi_Mirrored` property, so the text engine draws `‹` under RTL with no CSS —
+ * override it only with another mirrored character (`»`, `>`). Long form: docs/history/.
  */
 
 export const breadcrumbsVariants = cva(
@@ -57,47 +24,67 @@ export const breadcrumbsVariants = cva(
 
 export const breadcrumbVariants = cva(
   "flex items-center gap-1 " +
-    // `data-current` is the last crumb: the page you are already on.
+    // `data-current` is the last crumb, written by `Breadcrumbs` below.
     "data-current:font-medium data-current:text-fg " +
     "data-disabled:opacity-50",
 );
 
 export const breadcrumbSeparatorVariants = cva("px-1 text-fg-subtle");
 
-export interface BreadcrumbsProps<T extends object>
-  extends Omit<AriaBreadcrumbsProps<T>, "children" | "className" | "aria-label"> {
-  /**
-   * Announced name of the trail. Required — see the file header: the fallback
-   * is RAC's English "Breadcrumbs", in the server-rendered HTML.
-   */
+export const breadcrumbEllipsisVariants = cva("select-none leading-none text-fg-subtle");
+
+export interface BreadcrumbsProps<T extends object> {
+  /** Announced name of the trail. Required — see the file header. */
   label: string;
-  children?: LumoNode | ((item: T) => LumoNode);
+  /**
+   * TYPE CARRIER, NOT A PROP: keeps `BreadcrumbsProps<T>` compiling for consumers while
+   * making a passed value a compile error. `(Iterable<T> & never) | undefined`, since a
+   * bare `never` rejects an explicit `undefined` under `exactOptionalPropertyTypes`.
+   */
+  items?: (Iterable<T> & never) | undefined;
+  children?: LumoNode;
   className?: string | undefined;
 }
 
 /**
- * Renders the `<ol>` only. If you want a `<nav>` landmark around it, wrap it
- * yourself and leave the wrapper unlabelled — two labelled ancestors announce
- * the trail's name twice.
+ * Renders the `<ol>` only; wrap in an unlabelled `<nav>` yourself if you want a landmark.
+ * The last crumb is marked here via `cloneElement`, which ADDS a prop without needing to
+ * know the element's type — so it survives a server component composing the tree.
  */
 export function Breadcrumbs<T extends object>({
   label,
   className,
-  ...props
+  children,
 }: BreadcrumbsProps<T>) {
+  const items = React.Children.toArray(children as React.ReactNode);
+  const lastIndex = items.length - 1;
   return (
-    <AriaBreadcrumbs
-      aria-label={label}
-      className={cn(breadcrumbsVariants(), className)}
-      {...props}
-    />
+    <ol data-lumo="" aria-label={label} className={cn(breadcrumbsVariants(), className)}>
+      {items.map((child, index) =>
+        React.isValidElement(child)
+          ? React.cloneElement(child as React.ReactElement<{ isCurrent?: boolean }>, {
+              key: index,
+              // An explicit `isCurrent` on the element wins.
+              isCurrent:
+                (child as React.ReactElement<{ isCurrent?: boolean }>).props.isCurrent ??
+                index === lastIndex,
+            })
+          : child,
+      )}
+    </ol>
   );
 }
 
-export interface BreadcrumbProps extends Omit<AriaBreadcrumbProps, "children" | "className"> {
+export interface BreadcrumbProps {
   children?: LumoNode;
   /** A mirrored character. See the file header before changing it. */
   separator?: LumoNode;
+  /** The page you are already on — the last crumb. Set by `Breadcrumbs` from position. */
+  isCurrent?: boolean;
+  /** Disabled crumb. Styling only; a crumb is not a control. */
+  isDisabled?: boolean;
+  /** Stable key. Deliberately NOT rendered as a DOM `id`: two trails on one page would emit duplicates. */
+  id?: string | number | undefined;
   className?: string | undefined;
 }
 
@@ -105,29 +92,70 @@ export function Breadcrumb({
   className,
   children,
   separator = "›",
-  ...props
+  isCurrent = false,
+  isDisabled = false,
+  id,
 }: BreadcrumbProps) {
   return (
-    <AriaBreadcrumb className={cn(breadcrumbVariants(), className)} {...props}>
-      {({ isCurrent }) => (
-        <>
-          {children}
-          {/*
-           * `isCurrent` comes from RAC's own render props — it is derived from
-           * the crumb's position in the collection, so the trailing separator
-           * disappears without anyone having to know which child is last.
-           *
-           * `aria-hidden` because the separator is punctuation between links,
-           * not content: without it a screen reader reads a bare angle bracket
-           * between every crumb.
-           */}
-          {isCurrent ? null : (
-            <span aria-hidden="true" className={breadcrumbSeparatorVariants()}>
-              {separator}
-            </span>
-          )}
-        </>
+    <li
+      data-lumo=""
+      // `aria-current="page"`: `data-current` only PAINTS the current crumb. On the `<li>`,
+      // because the crumb's content is whatever the caller passed.
+      {...(isCurrent ? { "data-current": "true", "aria-current": "page" as const } : {})}
+      {...(isDisabled ? { "data-disabled": "true" } : {})}
+      {...(id === undefined ? {} : { "data-key": id })}
+      className={cn(breadcrumbVariants(), className)}
+    >
+      {children as React.ReactNode}
+      {/* The separator is punctuation between links, so it is `aria-hidden`; it disappears
+       * on the last crumb because `Breadcrumbs` decided that above. */}
+      {isCurrent ? null : (
+        <span aria-hidden="true" className={breadcrumbSeparatorVariants()}>
+          {separator as React.ReactNode}
+        </span>
       )}
-    </AriaBreadcrumb>
+    </li>
+  );
+}
+
+/**
+ * The crumbs that were left out — one `…` standing in for a run of them. A hand-written
+ * `<Breadcrumb>…</Breadcrumb>` has a one-punctuation-character name, so `label` is
+ * REQUIRED. `…` is symmetric and needs no mirroring. Deliberately INERT (no dropdown),
+ * which keeps this file server-only; compose a `Menu` yourself if you want one.
+ */
+export interface BreadcrumbEllipsisProps {
+  /** What the `…` stands for, e.g. «خرده‌های میانی». REQUIRED — see above. */
+  label: string;
+  /** A mirrored character. See the file header before changing it. */
+  separator?: LumoNode;
+  /** Written by `Breadcrumbs` from position. */
+  isCurrent?: boolean;
+  className?: string | undefined;
+}
+
+export function BreadcrumbEllipsis({
+  label,
+  separator = "›",
+  isCurrent = false,
+  className,
+}: BreadcrumbEllipsisProps) {
+  return (
+    <li
+      data-lumo=""
+      {...(isCurrent ? { "data-current": "true", "aria-current": "page" as const } : {})}
+      className={cn(breadcrumbVariants(), className)}
+    >
+      {/* `aria-hidden` glyph plus `sr-only` text: degrades to readable text if the utility is dropped. */}
+      <span aria-hidden="true" className={breadcrumbEllipsisVariants()}>
+        …
+      </span>
+      <span className="sr-only">{label}</span>
+      {isCurrent ? null : (
+        <span aria-hidden="true" className={breadcrumbSeparatorVariants()}>
+          {separator as React.ReactNode}
+        </span>
+      )}
+    </li>
   );
 }

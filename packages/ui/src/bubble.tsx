@@ -1,49 +1,21 @@
-import type { HTMLAttributes } from "react";
+import type { ComponentProps } from "react";
 import { cva } from "class-variance-authority";
 import { cn, type LumoNode } from "@lumo-ui/core";
 import { Disclosure, DisclosurePanel, DisclosureTrigger } from "./disclosure.tsx";
 
 /**
- * A conversational message bubble.
+ * A conversational message bubble. No `"use client"` — a bubble is a styled div, so a
+ * whole transcript renders on the server.
  *
  *     <BubbleGroup variant="sent">
  *       <Bubble variant="sent" grouping="first">سلام!</Bubble>
  *       <Bubble variant="sent" grouping="last">رسیدی خونه؟</Bubble>
  *     </BubbleGroup>
  *
- * No `"use client"` — a bubble is a styled div, so a whole chat transcript
- * renders on the server. `BubbleCollapse` composes the Disclosure client
- * component; its props are strings, so a server tree can still use it.
- *
- * ═══ "SENT" IS A DIRECTION IN THE CONVERSATION, NOT ON THE SCREEN ═══════════
- *
- * Every chat UI puts the reader's own messages on one side, and nearly every
- * implementation writes that side down as `right`. It is not the right — it is
- * the reading END. In Persian Telegram and WhatsApp your own messages sit on
- * the LEFT, because the whole conversation mirrors with the script. So:
- *
- *   - `sent` is `self-end`, `received` is `self-start`. Flexbox resolves both
- *     against the container's direction, so the sent side is the physical
- *     right in English and the physical left in Persian with zero RTL code.
- *   - The grouping corners are LOGICAL corners. Consecutive bubbles from one
- *     sender square off the corners on the JOINED side — the side the bubbles
- *     hug, which is the end side for sent and the start side for received.
- *     `rounded-se`/`rounded-ee`/`rounded-ss`/`rounded-es` name exactly those
- *     corners in both scripts; the tl/tr/bl/br spellings are the single most
- *     copied chat-UI defect and are banned by lint here anyway.
- *
- * The vendored shape (shadcn aria-vega `bubble`) fails both halves: its end
- * alignment exists but its reactions row is pinned with physical inset-left /
- * inset-right, and it has no grouping geometry at all. Its seven color variants
- * collapse here to the two the conversation actually has — sent (accent) and
- * received (surface) — because a chat is a dialogue, not a palette.
- *
- * ── Grouping ────────────────────────────────────────────────────────────────
- * `single` (default) keeps all four corners large. In a run, the FIRST bubble
- * squares its block-end corner on the joined side, MIDDLE squares both, LAST
- * squares its block-start corner — the classic tail-less grouped look. The
- * block axis never mirrors, so only the inline half of each corner pair
- * changes between sent and received.
+ * "Sent" is a direction in the conversation, not on the screen: `sent` is `self-end`,
+ * `received` is `self-start` (in Persian Telegram your own messages sit on the LEFT), and
+ * the grouping corners are LOGICAL corners on the JOINED side. Two variants, not seven:
+ * a chat is a dialogue, not a palette.
  */
 
 export const bubbleVariants = cva(
@@ -78,12 +50,8 @@ export type BubbleVariant = "sent" | "received";
 export type BubbleGrouping = "single" | "first" | "middle" | "last";
 
 export interface BubbleProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
-  /**
-   * Whose message this is. REQUIRED rather than defaulted: a bubble that
-   * guesses its sender renders confidently on the wrong side, and the wrong
-   * side is the one mistake a transcript cannot absorb.
-   */
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
+  /** Whose message this is. REQUIRED: a bubble that guesses its sender renders confidently on the wrong side. */
   variant: BubbleVariant;
   /** Position within a run of consecutive bubbles from the same sender. */
   grouping?: BubbleGrouping | undefined;
@@ -101,13 +69,10 @@ export function Bubble({ variant, grouping = "single", className, ...props }: Bu
   );
 }
 
-/**
- * A run of bubbles from one sender. Carries the shared alignment so a map over
- * messages does not restate it, and provides the tight gap that makes the
- * squared grouping corners read as one unit.
- */
+/** A run of bubbles from one sender: shared alignment and the tight gap that makes grouped corners read as one unit. */
 export const bubbleGroupVariants = cva("flex w-full min-w-0 flex-col gap-0.5", {
   variants: {
+    /** Which side of the conversation the group belongs to. */
     variant: {
       sent: "items-end",
       received: "items-start",
@@ -116,7 +81,8 @@ export const bubbleGroupVariants = cva("flex w-full min-w-0 flex-col gap-0.5", {
 });
 
 export interface BubbleGroupProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
+  /** Which side of the conversation the group belongs to. */
   variant: BubbleVariant;
   children?: LumoNode;
   className?: string | undefined;
@@ -127,17 +93,13 @@ export function BubbleGroup({ variant, className, ...props }: BubbleGroupProps) 
 }
 
 /**
- * The reactions row, overlapping the bubble's block-end edge.
- *
- * `bottom-0` plus a translate is all block-axis geometry — direction-neutral —
- * and the inline anchor is `start-*`/`end-*`, which is the line upstream wrote
- * physically. Counts inside are the caller's to format: `LumoNode` refuses a
- * bare number, so «۲» arrives via formatNumber and cannot arrive as `2`.
+ * The reactions row, overlapping the bubble's block-end edge. Block-axis geometry plus a
+ * `start-*`/`end-*` inline anchor. Counts are the caller's to format (`LumoNode`).
  */
 export const bubbleReactionsVariants = cva(
   "absolute bottom-0 z-10 flex w-fit translate-y-2/3 items-center gap-1 " +
     "rounded-full border border-border bg-surface px-1.5 py-0.5 text-xs " +
-    "text-fg shadow-sm",
+    "text-fg shadow-raised",
   {
     variants: {
       align: {
@@ -150,7 +112,7 @@ export const bubbleReactionsVariants = cva(
 );
 
 export interface BubbleReactionsProps
-  extends Omit<HTMLAttributes<HTMLDivElement>, "children" | "className"> {
+  extends Omit<ComponentProps<"div">, "children" | "className"> {
   /** Which inline corner to hug. Defaults to the trailing (end) corner. */
   align?: "start" | "end" | undefined;
   children?: LumoNode;
@@ -162,33 +124,19 @@ export function BubbleReactions({ align = "end", className, ...props }: BubbleRe
 }
 
 export interface BubbleCollapseProps {
-  /**
-   * Visible AND announced text of the expand control, e.g. «نمایش بیشتر».
-   *
-   * REQUIRED — the control is the only way to reach the hidden content, and a
-   * library default would be an English phrase inside a Persian bubble.
-   */
+  /** Visible AND announced text of the expand control, e.g. «نمایش بیشتر». REQUIRED. */
   label: string;
-  /**
-   * Heading level for the trigger's outline entry, forwarded to Disclosure.
-   * Long quoted content in a bubble is genuinely navigable structure; if the
-   * transcript's headings make that wrong for a page, set the level that fits.
-   */
+  /** Heading level for the trigger's outline entry, forwarded to Disclosure. */
   level?: number | undefined;
+  /** Starts expanded, when the disclosure is uncontrolled. */
   defaultExpanded?: boolean | undefined;
   children?: LumoNode;
   className?: string | undefined;
 }
 
 /**
- * Collapsible long content inside a bubble, composed from Disclosure rather
- * than re-implemented: RAC supplies aria-expanded, aria-controls and the
- * keyboard handling, and its chevron already rotates a half turn — its own
- * mirror image, safe in both scripts (disclosure.tsx records why).
- *
- * The trigger restates its colors as `text-current` so it inherits the
- * bubble's own foreground — accent-fg inside a sent bubble, fg inside a
- * received one — instead of Disclosure's document-level palette.
+ * Collapsible long content inside a bubble, composed from Disclosure. The trigger uses
+ * `text-current` so it inherits the bubble's own foreground.
  */
 export function BubbleCollapse({
   label,
@@ -204,7 +152,8 @@ export function BubbleCollapse({
     >
       <DisclosureTrigger
         {...(level !== undefined ? { level } : {})}
-        className="gap-2 py-1 text-xs font-medium text-current data-hovered:text-current data-hovered:underline"
+        // `hover:`, not `data-hovered:` (Base UI writes none). `text-current` keeps the trigger on the bubble's palette.
+        className="gap-2 py-1 text-xs font-medium text-current hover:text-current hover:underline"
       >
         {label}
       </DisclosureTrigger>

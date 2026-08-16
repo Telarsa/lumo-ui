@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
   assertKnownParts,
@@ -5,7 +7,7 @@ import {
   extractExampleSource,
   parseExportedNames,
 } from "@/examples/_system/extract";
-import { exampleSlugs, loadExamplesFor, newExampleSlugs } from "./examples-loader";
+import { exampleSlugs, loadExamplesFor, newExampleSlugs, sourceOf } from "./examples-loader";
 
 /**
  * The example system's contract, exercised from both ends: the pure text
@@ -120,6 +122,60 @@ describe("parseExportedNames", () => {
     const parsed = parseExportedNames(index);
     expect(parsed.all.has("ButtonProps")).toBe(false);
   });
+
+  /*
+   * ── THE PARSER'S BLIND SPOT, PINNED RATHER THAN PATCHED ───────────────────
+   *
+   * `parseExportedNames` matches `export { … } from "./module"` and nothing
+   * else. That is a deliberate and reasonable limit — the barrel is a flat
+   * re-export file — but it is a limit the whole parts system rests on, and it
+   * was silent: an `export *` in the barrel would have produced an empty parts
+   * list for that component's page, and the page would have rendered as though
+   * the component simply had no parts.
+   *
+   * `examples-loader.ts` now throws on the empty case. This is the other half:
+   * it asserts the ASSUMPTION, so the blind spot cannot open underneath it. The
+   * check is against the REAL barrel, not a fixture, because a fixture would
+   * only prove the regex works on text chosen to make it work.
+   *
+   * If this ever fails, the fix is a decision, not a patch: either keep the
+   * barrel flat, or teach the parser the new form. Both are fine; silently
+   * having neither is not.
+   */
+  it("the real barrel uses only the form this parser can read", () => {
+    const source = readFileSync(
+      join(process.cwd(), "..", "..", "packages", "ui", "src", "index.ts"),
+      "utf8",
+    );
+    // `export * from "./x"` — re-exports names this parser cannot enumerate
+    // without reading the target module.
+    expect(source.match(/^export \*.*$/gm) ?? []).toEqual([]);
+    // `export const Foo = …` directly in the barrel — a value that belongs to
+    // no module key, so `byModule` could never carry it.
+    expect(source.match(/^export (?:const|function|class) \w+/gm) ?? []).toEqual([]);
+  });
+
+  it("every component page's module is actually in the barrel", () => {
+    /*
+     * The invariant `examples-loader.ts` now enforces per page, asserted once
+     * here so a break is reported as one failure naming every offender rather
+     * than as whichever page happened to build first.
+     */
+    const parsed = parseExportedNames(
+      readFileSync(join(process.cwd(), "..", "..", "packages", "ui", "src", "index.ts"), "utf8"),
+    );
+    // The same resolution the loader does: `meta.sourceFile` when the file
+    // names one (icon-button documents button.tsx), else `<slug>.tsx`.
+    const moduleOf = (slug: string) => {
+      const path = sourceOf(slug);
+      const text = path === undefined ? "" : readFileSync(path, "utf8");
+      return /sourceFile:\s*"([^"]+)"/.exec(text)?.[1] ?? `${slug}.tsx`;
+    };
+    const missing = exampleSlugs().filter(
+      (slug) => sourceOf(slug) !== undefined && !parsed.byModule.has(moduleOf(slug)),
+    );
+    expect(missing).toEqual([]);
+  });
 });
 
 describe("composition validation", () => {
@@ -165,6 +221,7 @@ describe("the real example files on disk", () => {
       const loaded = await loadExamplesFor(slug);
       expect(loaded, slug).toBeDefined();
       if (loaded === undefined) continue;
+      expect(loaded.api.length, `${slug} has no generated prop reference`).toBeGreaterThan(0);
       expect(loaded.examples.length, slug).toBeGreaterThanOrEqual(4);
       for (const example of loaded.examples) {
         // The flagships all use the canonical shape: a named function whose
@@ -173,11 +230,38 @@ describe("the real example files on disk", () => {
         expect(example.source.endsWith("}")).toBe(true);
       }
     }
-  });
+    /*
+     * ── WHY THESE TWO CARRY AN EXPLICIT TIMEOUT ─────────────────────────────
+     *
+     * Both reach the loader's DYNAMIC IMPORT, whose specifier keeps a static
+     * prefix and extension so a bundler turns it into a directory context —
+     * and a directory context is compiled as a whole. The examples directory
+     * went from 32 files to 81 when coverage was closed, so the first `await`
+     * in this file now pays for transforming every example module on disk, not
+     * just the flagships it names.
+     *
+     * That is a property of the fixture growing, not of anything being slow:
+     * the work is real, it is one-time per run, and the build does the same.
+     * Vitest's 5s default was sized for the 32-file directory. Raising it here
+     * rather than globally keeps the default tight for every other test, so a
+     * genuinely slow unit test still shows up as one.
+     */
+  }, 60_000);
 
-  it("exposes isNew to the sidebar", async () => {
-    const flagged = await newExampleSlugs();
-    expect(flagged.has("command")).toBe(true);
-    expect(flagged.has("button")).toBe(false);
-  });
+  it("derives required and optional Select props from the exported type", async () => {
+    const loaded = await loadExamplesFor("select");
+    const select = loaded?.api.find((group) => group.name === "SelectProps");
+    expect(select?.props.find((prop) => prop.name === "placeholder")?.required).toBe(true);
+    expect(select?.props.find((prop) => prop.name === "validate")?.required).toBe(false);
+  }, 60_000);
+
+  it(
+    "exposes isNew to the sidebar",
+    async () => {
+      const flagged = await newExampleSlugs();
+      expect(flagged.has("command")).toBe(true);
+      expect(flagged.has("button")).toBe(false);
+    },
+    60_000,
+  );
 });

@@ -17,49 +17,18 @@ import {
 /**
  * One-time-code entry: the SMS step every Iranian sign-in flow ends with.
  *
- * ═══ WHY THIS BLOCK EXISTS RATHER THAN "a TextField on a page" ══════════════
- *
- * Three Persian-specific decisions are baked in here, and every one of them is
- * something a hand-rolled OTP screen gets wrong:
- *
- *  1. **The input is `type="text"` with `inputMode="numeric"`, never
- *     `type="number"`.** `<input type="number">` REJECTS Persian digits: a user
- *     typing ۱۲۳۴ on a Persian keyboard produces an empty value, silently, with
- *     no validation message because the browser never accepted the keystrokes.
- *     `packages/core/src/format.ts` records the same finding and ships
- *     `parseNumber` for the round trip. React Aria's NumberField already does
- *     this internally; a raw numeric input does not.
- *
- *  2. **The resend countdown is a FUNCTION of the formatted number, not a
- *     template with a hole in it.** `resendIn: (seconds: string) => string`.
- *     This is the same shape `packages/core/src/strings.ts` uses for
- *     `numberField.decrease(label)`, and for the same reason: «۳۰ ثانیه دیگر»
- *     does not place its number where "Resend in 30s" places its own, so a
- *     `"Resend in {n}"` template forces Persian into English clause order. The
- *     argument is already a STRING because `formatNumber` has run — the block
- *     never hands a translator a raw `number` to render.
- *
- *  3. **The code is not centred with `text-center` and letter-spaced.** The
- *     usual OTP treatment (`tracking-[1em] text-center`) pushes the caret to a
- *     visually wrong position under `dir="rtl"`, because letter-spacing is
- *     applied after the trailing character in the physical writing direction.
- *     `text-start` plus the field's own padding is correct in both scripts, and
- *     the thing an OTP screen actually needs — big, unambiguous digits — comes
- *     from `size="lg"`.
+ * Three Persian-specific decisions are baked in: the input is `type="text"` +
+ * `inputMode="numeric"` (`type="number"` silently REJECTS Persian digits); the
+ * resend countdown is a function of the formatted number, not a template; and
+ * the code is `text-start`, not letter-spaced/centred, because letter-spacing
+ * misplaces the caret under `dir="rtl"`.
  *
  * `"use client"`: `onSubmit` and `onResend` are function props. See sign-in.tsx.
  */
 export interface OtpVerifyStrings {
   /** The screen's heading. Rendered as the page `<h1>`. */
   title: string;
-  /**
-   * Where the code was sent, e.g. «کد به ۰۹۱۲… پیامک شد».
-   *
-   * A whole sentence from the caller rather than a template plus a destination,
-   * because the caller is the only party that knows whether the destination is
-   * a phone number (which must be wrapped in `data-lumo-latn dir="ltr"` if it
-   * is written in Latin digits) or an email address.
-   */
+  /** Where the code was sent, e.g. «کد به ۰۹۱۲… پیامک شد». A whole sentence: only the caller knows whether the destination is a phone number or an email. */
   description?: LumoNode;
   codeLabel: string;
   codePlaceholder?: string | undefined;
@@ -68,10 +37,7 @@ export interface OtpVerifyStrings {
   submit: string;
   /** The resend control, once it is enabled. */
   resend: string;
-  /**
-   * The disabled resend control, as a function of the ALREADY-FORMATTED
-   * remaining seconds. See the file header for why this is a function.
-   */
+  /** The disabled resend control, as a function of the ALREADY-FORMATTED remaining seconds. */
   resendIn: (seconds: string) => string;
 }
 
@@ -81,12 +47,7 @@ export interface OtpVerifyProps {
   locale: Locale;
   /** How many characters the code has. Drives `maxLength`, nothing visible. */
   length?: number | undefined;
-  /**
-   * Seconds until the code can be resent. `0` (or omitted) enables the control.
-   *
-   * A number, not a formatted string, because this block owns the formatting —
-   * that is the point of taking `locale`.
-   */
+  /** Seconds until the code can be resent. `0` (or omitted) enables the control. A number: this block owns the formatting. */
   resendAfterSeconds?: number | undefined;
   onSubmit?: ((event: FormEvent<HTMLFormElement>) => void) | undefined;
   onResend?: (() => void) | undefined;
@@ -131,8 +92,7 @@ export function OtpVerify({
             <TextField
               label={strings.codeLabel}
               name="code"
-              // `type="text"` is load-bearing. See the file header: `type="number"`
-              // discards Persian digits before React ever sees them.
+              // `type="text"` is load-bearing: `type="number"` discards Persian digits.
               type="text"
               inputMode="numeric"
               // Lets iOS and Android offer the code straight from the SMS.
@@ -150,11 +110,7 @@ export function OtpVerify({
           </Form>
 
           {/*
-           * The resend control is OUTSIDE the `<Form>`: it is a second action,
-           * not a second submit, and a `<button>` inside a form with no explicit
-           * `type` submits it. `Button` from @lumo-ui/ui defaults RAC's
-           * `type="button"`, but placing it outside makes the intent readable
-           * without knowing that.
+           * The resend control is OUTSIDE the `<Form>`: a second action, not a second submit.
            */}
           <div className="mbs-4 flex justify-center">
             <Button

@@ -1,0 +1,4 @@
+- listbox "پیشنهادهای کتابخانه":
+  - option "ری‌اکت" [selected]
+  - option "ویو"
+  - option "اسولت"

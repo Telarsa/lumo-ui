@@ -10,21 +10,19 @@
 # ci/node-ci.template.yml. Copy it; do not reference it.
 name: CI
 
+# No paths-ignore. It used to skip '**/*.md', which exempted exactly the
+# change class that kept shipping stale claims: documentation counts that no
+# gate ever re-derived. A doc-only push costs one 20-minute runner; a wrong
+# public number costs trust.
+#
+# 'experiment/**' is included because the Base UI migration lived on
+# experiment/base-ui for weeks with zero CI — every gate in this file was
+# advisory there. Long-lived branches get graded, not just protected ones.
 on:
   push:
-    branches: [main, develop]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'LICENSE'
-      - '.gitignore'
+    branches: [main, develop, 'experiment/**']
   pull_request:
     branches: [main, develop]
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
-      - 'LICENSE'
-      - '.gitignore'
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -81,6 +79,23 @@ jobs:
       - name: Types
         run: pnpm run gate:types
 
+      # A prop that is typed, accepted and never delivered. It renders nothing,
+      # throws nothing and type-checks, so it is invisible to every step below
+      # this one — the tests it breaks are tests nobody wrote. Runs straight
+      # after Types because a file that does not compile has a better error
+      # waiting for it, and before Tests because an inert prop makes tests PASS.
+      - name: Inert props
+        run: pnpm run gate:props
+
+      # The RTL contract's mechanical half, and the only step that can see a
+      # conditional hook. Sits beside Inert props because both grade SOURCE, and
+      # BEFORE Tests for the reason that makes this class of defect expensive: a
+      # physical utility does not make a test fail, it makes tests PASS while the
+      # Persian page mirrors wrong. Wired in on 12 Aug 2026; before that the
+      # policy existed and nothing executed it.
+      - name: Lint
+        run: pnpm run gate:lint
+
       # The mechanical form of the styling decision. Without it, "we use
       # Tailwind" is a comment.
       - name: No CSS Modules
@@ -97,6 +112,13 @@ jobs:
         run: |
           node scripts/build-registry.mjs
           git diff --exit-code registry.json
+
+      # The prop reference is generated from the checker. Keeping this separate
+      # from Registry makes a stale API artifact name itself in CI.
+      - name: API reference
+        run: pnpm run gate:api
+      - name: Catalog
+        run: pnpm run gate:catalog
 
       # Two minutes standing between us and publishing a registry nobody has
       # ever installed from. Copies every item into a bare project and compiles
@@ -118,3 +140,60 @@ jobs:
           name: site-output
           path: apps/website/out
           retention-days: 3
+
+  # Kept separate from verify because it intentionally launches one related
+  # Vitest process per registry component. This is a mutation floor, not a
+  # replacement for the behavioral suite: most modules exercise rendered class
+  # assignment, while high-risk modules use component-specific behavior probes.
+  mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Component mutation floor
+        run: pnpm run mutation:components
+      - name: Publish the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: mutation-report.json
+          retention-days: 30
+
+  # Real layout and accessibility-tree engines over the built site. What each
+  # spec proves — and does not — is in docs/evidence/README.md. Not a
+  # screen-reader run. Separate from verify for RAM and time.
+  evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Browsers
+        run: pnpm exec playwright install --with-deps chromium webkit firefox
+      - name: Build the site
+        run: pnpm --filter @lumo-ui/website build
+      - name: Evidence (Chromium: axe on every route + popups + RTL; WebKit and Firefox: popups + RTL)
+        run: pnpm run evidence
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence
+          path: |
+            .evidence/report
+            .evidence/results
+          retention-days: 14

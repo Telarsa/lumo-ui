@@ -1,9 +1,14 @@
 import type { Locale } from "@lumo-ui/core";
-import { DatePicker } from "@lumo-ui/ui";
+import { DatePickerDropdownIsland, DatePickerIsland } from "@/components/demo-islands";
 import type { ComponentExamples, LocalizedText } from "./_system/types";
 
 /**
  * Worked examples for the date-picker page.
+ *
+ * Every picker goes through a narrow island because `today` is required and a
+ * `CalendarDate` class instance cannot cross into a client component from this
+ * server module. The documentation clock and the date-of-birth bounds travel as
+ * ISO strings; `demo-islands.tsx` builds them with `calendarDay`.
  *
  * `meta.composition` and `meta.parts` landed with the `index.ts` merge: the
  * loader checks every capitalised name in them against the real exports of
@@ -31,16 +36,20 @@ const t = {
     "en-US": "The delivery date must be at least two days from today.",
   },
   archive: { "fa-IR": "تاریخ بایگانی", "en-US": "Archive date" },
+  birth: { "fa-IR": "تاریخ تولد", "en-US": "Date of birth" },
+  birthHelp: {
+    "fa-IR":
+      "تایپ کنید، یا تقویم را باز کنید و سال را از فهرست بردارید. بازهٔ مجاز از ۱ فروردین ۱۳۰۰ تا ۲۹ اسفند ۱۴۰۴ است و فهرست سال‌ها دقیقاً همین است.",
+    "en-US":
+      "Type it, or open the calendar and take the year from a list. The permitted span runs from the first day of 1300 to the last day of 1404, and the year list is exactly that.",
+  },
 } satisfies Record<string, LocalizedText>;
 
 function BasicExample(l: Locale) {
   return (
-    <DatePicker
-      className="w-full max-w-sm"
+    <DatePickerIsland
       label={t.travel[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
       description={t.travelHelp[l]}
     />
   );
@@ -48,12 +57,9 @@ function BasicExample(l: Locale) {
 
 function DescriptionExample(l: Locale) {
   return (
-    <DatePicker
-      className="w-full max-w-sm"
+    <DatePickerIsland
       label={t.booking[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
       description={t.bookingHelp[l]}
     />
   );
@@ -61,12 +67,9 @@ function DescriptionExample(l: Locale) {
 
 function InvalidExample(l: Locale) {
   return (
-    <DatePicker
-      className="w-full max-w-sm"
+    <DatePickerIsland
       label={t.delivery[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
       errorMessage={t.deliveryError[l]}
     />
   );
@@ -74,12 +77,9 @@ function InvalidExample(l: Locale) {
 
 function DisabledExample(l: Locale) {
   return (
-    <DatePicker
-      className="w-full max-w-sm"
+    <DatePickerIsland
       label={t.archive[l]}
       openCalendarLabel={t.open[l]}
-      previousMonthLabel={t.previous[l]}
-      nextMonthLabel={t.next[l]}
       isDisabled
     />
   );
@@ -88,38 +88,57 @@ function DisabledExample(l: Locale) {
 function SizesExample(l: Locale) {
   return (
     <div className="flex w-full max-w-sm flex-col gap-4">
-      <DatePicker
+      <DatePickerIsland
         size="sm"
         label={t.travel[l]}
         openCalendarLabel={t.open[l]}
-        previousMonthLabel={t.previous[l]}
-        nextMonthLabel={t.next[l]}
       />
-      <DatePicker
+      <DatePickerIsland
         size="lg"
         label={t.travel[l]}
         openCalendarLabel={t.open[l]}
-        previousMonthLabel={t.previous[l]}
-        nextMonthLabel={t.next[l]}
       />
     </div>
   );
 }
 
+function BirthDateExample(l: Locale) {
+  return (
+    <DatePickerDropdownIsland
+      label={t.birth[l]}
+      openCalendarLabel={t.open[l]}
+      minDay="1921-03-21"
+      maxDay="2026-03-20"
+      openOn="1981-07-23"
+      description={t.birthHelp[l]}
+    />
+  );
+}
+
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "یک تاریخ در فرم، تایپ‌شده یا برداشته از تقویمی پشت دکمه — کنترل همه‌منظورهٔ تاریخ.",
+        "en-US": "One date in a form, typed or picked from a calendar behind a button — the general-purpose date control.",
+      },
+      whenNot: {
+        "fa-IR": "فقط تایپ، بی‌شبکه — `DateField`. یک بازه — `DateRangePicker`. بازه‌های نام‌دار مثل «این ماه» برای گزارش — `DateSelector`. شبکه‌ای همیشه‌پیدا — `Calendar`.",
+        "en-US": "Typing only, no grid — `DateField`. A span — `DateRangePicker`. Named ranges such as «this month» for a report — `DateSelector`. A grid that is always visible — `Calendar`.",
+      },
+    },
     tier: "form",
     isNew: true,
     title: { "fa-IR": "انتخابگر تاریخ", "en-US": "Date picker" },
     intro: {
       "fa-IR":
-        "فیلد تاریخ به‌علاوهٔ یک تقویم پشت دکمه. چهار رشتهٔ خوانده‌شده اجباری است، و نام دکمهٔ تقویم رشتهٔ خودِ ری‌اکت‌آریا را جایگزین می‌کند نه اینکه کنارش بنشیند.",
+        "فیلد تاریخ به‌علاوهٔ یک تقویم پشت دکمه. چهار رشتهٔ خوانده‌شده اجباری است، و نام دکمهٔ تقویم رشتهٔ خودِ موتور را جایگزین می‌کند نه اینکه کنارش بنشیند.",
       "en-US":
-        "A date field plus a calendar behind a button. Four announced strings are required, and the trigger's name replaces React Aria's rather than sitting beside it.",
+        "A date field plus a calendar behind a button. Four announced strings are required, and the trigger's name is the caller's own — nothing engine-authored sits beside it.",
     },
     composition: [
       `<DatePicker label openCalendarLabel`,
-      `            previousMonthLabel nextMonthLabel>`,
+      `            description errorMessage>`,
       `  …the segments and the trigger   ← rendered for you`,
       `  …the calendar in a popover      ← rendered for you`,
       `</DatePicker>`,
@@ -129,27 +148,27 @@ export const EXAMPLES: ComponentExamples = {
         name: "DatePicker",
         description: {
           "fa-IR":
-            "فیلد و تقویم با هم. چهار نام اعلام‌شده اجباری است، چون چهار کنترل جداگانه خوانده می‌شوند: خودِ فیلد، دکمهٔ باز کردن، و دو دکمهٔ ماه داخل پاپ‌اور.",
+            "فیلد و تقویم با هم. حالا فقط دو نام اعلام‌شده اجباری است — خودِ فیلد و دکمهٔ باز کردن — چون نام دکمه‌های ماه را calendar-datelib.ts برای هر زبان می‌سازد و دیگر ویژگی نیست که کسی از قلم بیندازد.",
           "en-US":
-            "The field and the calendar together. Four announced names are required because four controls are announced separately: the field, the trigger, and the two month buttons inside the popover.",
+            "The field and the calendar together. Only TWO announced names are required now — the field and the trigger — because the month buttons' names are composed per locale by calendar-datelib.ts and are no longer props anyone can forget.",
         },
       },
       {
-        name: "renderPickerCell",
+        name: "DateInput",
         description: {
           "fa-IR":
-            "خانهٔ روز داخل پاپ‌اور. جدا از خانهٔ تقویم مستقل است چون اندازه‌اش فرق دارد، و مثل آن بدون children می‌ماند تا ری‌اکت‌آریا خودش رقم را با شمارش زبان بنویسد.",
+            "نیمهٔ تایپی: همان ورودیِ بخش‌بندی‌شده که فیلد تاریخ هم به کار می‌برد. جای renderPickerCell و renderPickerHeaderCell را گرفته، که هر دو نشانه‌گذاریِ موتور بودند.",
           "en-US":
-            "The day cell inside the popover. Separate from the standalone calendar's because its size differs, and childless for the same reason: React Aria writes the digit in the locale's own numbering.",
+            "The typed half: the same segmented input the date field uses. Lumo's own segmented input, so the segments announce Persian names and Jalali values in the first byte.",
         },
       },
       {
-        name: "renderPickerHeaderCell",
+        name: "Calendar",
         description: {
           "fa-IR":
-            "خانهٔ نام روز هفته در همان شبکه. فهرست روزها هرگز دستی نوشته نمی‌شود؛ هفتهٔ فارسی از شنبه آغاز می‌شود و این را زبان می‌گوید.",
+            "نیمهٔ شبکه‌ای، بی‌کم‌وکاست همان تقویمی که به‌تنهایی هم رندر می‌شود. انتخابگر مقدار را خودش نگه می‌دارد و به هر دو نیمه می‌دهد، پس بخش‌ها و شبکه نمی‌توانند دربارهٔ روزِ انتخاب‌شده اختلاف پیدا کنند.",
           "en-US":
-            "The weekday-name cell in the same grid. The day list is never hand-written: the Persian week starts on Saturday and the locale is what says so.",
+            "The grid half, exactly the calendar that also renders on its own. The picker holds the value itself and hands it to both halves, so the segments and the grid cannot disagree about which day is selected.",
         },
       },
     ],
@@ -174,6 +193,17 @@ export const EXAMPLES: ComponentExamples = {
         "en-US": "The description sits under the group and is announced through aria-describedby — after the name, not as part of it.",
       },
       render: DescriptionExample,
+    },
+    {
+      id: "birth-date",
+      title: { "fa-IR": "تاریخ تولد", "en-US": "Date of birth" },
+      description: {
+        "fa-IR":
+          "همان اتحادِ نوعِ تقویم، از راه انتخابگر: هر چیدمانی که فهرست سال بسازد، هر دو کران را اجباری می‌کند. این تنها تاریخی است که چند دهه با ماه جاری فاصله دارد، و بدون فهرست سال، تنها راهش صفحه‌زدن است.",
+        "en-US":
+          "The calendar's type union, reached through the picker: any layout that builds a year list makes both bounds required. This is the one date a form asks for that is decades from the current month, and without a year list the only route to it is paging.",
+      },
+      render: BirthDateExample,
     },
     {
       id: "invalid",

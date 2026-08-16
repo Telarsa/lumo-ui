@@ -1,8 +1,9 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { gradeHtml, gradingFor, knownLocales, localeForPath } from "./index.ts";
-import { RULES, digitSystem, persianDigitFloor } from "./rules.ts";
+import { addCoverage, EMPTY_COVERAGE, formatCoverage, gradeHtml, gradingFor, knownLocales, localeForPath } from "./index.ts";
+import { RULES, compositeSingleTabStop, digitSystem, nativeCalendar, persianDigitFloor, resolvedIdrefs } from "./rules.ts";
+import { missingDenseDigitFloors } from "./index.ts";
 
 const FIXTURES = join(import.meta.dirname, "..", "fixtures");
 const read = (name: string) => readFileSync(join(FIXTURES, name), "utf8");
@@ -37,6 +38,72 @@ describe("self-test — every rule rejects its poison", () => {
       expect(v.map((x) => x.rule)).toContain(ruleId);
     });
   }
+
+  /*
+   * The `aria-describedby` half of resolved-idrefs, pinned from both sides.
+   *
+   * The rule used to skip the attribute entirely, because React Aria's server
+   * render dangles it by design. Measured on the 442-document export of this
+   * branch, ALL 301 dangling describedby references carried a `react-aria-` id
+   * and none came from Base UI or Lumo — so the exclusion narrowed from the
+   * attribute to that id prefix.
+   *
+   * Both directions need a test or the narrowing is reversible by accident:
+   * without the first, someone restores the wholesale exclusion and the gate
+   * silently stops grading the attribute `form-state.tsx` routes every
+   * validation error through; without the second, someone deletes the exemption
+   * early and 301 documents go red for a defect that is not there.
+   */
+  it("grades a dangling aria-describedby — a message announced by nobody", () => {
+    const html =
+      '<!doctype html><html lang="fa-IR" dir="rtl"><body>' +
+      '<label id="l">ایمیل</label>' +
+      '<input aria-labelledby="l" aria-describedby="gone" aria-invalid="true" />' +
+      "</body></html>";
+    const v = gradeHtml("fa-IR/index.html", html, [resolvedIdrefs]);
+    expect(v).toHaveLength(1);
+    expect(v[0]?.detail).toMatch(/aria-describedby points at missing id "gone"/);
+  });
+
+  it("exempts React Aria's hydration-deferred ids, until the last one is gone", () => {
+    const html =
+      '<!doctype html><html lang="fa-IR" dir="rtl"><body>' +
+      '<label id="l">ایمیل</label>' +
+      '<input aria-labelledby="l" aria-describedby="react-aria-_R_1abc_" />' +
+      "</body></html>";
+    expect(gradeHtml("fa-IR/index.html", html, [resolvedIdrefs])).toEqual([]);
+  });
+
+  /*
+   * native-calendar, from both sides.
+   *
+   * The poison above proves it fires. These two prove it is not merely
+   * pattern-matching Persian words: the SAME date written in the calendar Iran
+   * actually uses must pass, and a Gregorian month on an ENGLISH page must pass
+   * too — `en-US` readers count in `gregory`, so there is nothing to catch and
+   * the rule returns early rather than inventing a check.
+   */
+  it("accepts the same date written in the reader's own calendar", () => {
+    const html =
+      '<!doctype html><html lang="fa-IR" dir="rtl"><body><p>۱ مرداد ۱۴۰۳</p></body></html>';
+    expect(gradeHtml("fa-IR/index.html", html, [nativeCalendar])).toEqual([]);
+  });
+
+  it("is vacuous on a Gregorian locale rather than pretending to grade it", () => {
+    const html = '<!doctype html><html lang="en-US" dir="ltr"><body><p>22 July 2024</p></body></html>';
+    expect(gradeHtml("en-US/index.html", html, [nativeCalendar])).toEqual([]);
+  });
+
+  it("grades ARABIC against its own calendar, not Persian's", () => {
+    // The parametrisation, proven with a second locale — a rule with one
+    // instantiation is indistinguishable from a hardwire. `ar-SA` counts in
+    // islamic-umalqura, and this is the ICU default that is NOT its own
+    // calendar, so the defect is live here in a way it is not for fa-IR.
+    const bad = '<!doctype html><html lang="ar-SA" dir="rtl"><body><p>٢٢ يوليو ٢٠٢٤</p></body></html>';
+    const good = '<!doctype html><html lang="ar-SA" dir="rtl"><body><p>١٦ محرم ١٤٤٦</p></body></html>';
+    expect(gradeHtml("ar-SA/index.html", bad, [nativeCalendar])).toHaveLength(1);
+    expect(gradeHtml("ar-SA/index.html", good, [nativeCalendar])).toEqual([]);
+  });
 
   it("persian-digit-floor fires when a page renders no Persian digits", () => {
     const rule = persianDigitFloor({ "fa-IR/index.html": 20 });
@@ -82,13 +149,224 @@ describe("rules do not fire where they should not", () => {
     expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
   });
 
+  /*
+   * THE COLLECTION-AS-TAB-STOP EXEMPTION.
+   *
+   * Inline rather than a `composite-tab-stop-clean.bad.html`: the loop above
+   * generates a "fires on its poison" test per `*.bad.html` and asserts the
+   * fixture basenames equal the rule-id list exactly, so a second file for the
+   * same rule fails the no-orphans assertion.
+   *
+   * React Aria's collections serve `role="listbox" tabindex="0"` with every
+   * option at `-1`, and marshal focus into the first option on entry. That IS
+   * a tab stop. The rule reported four of these as unreachable widgets before
+   * the exemption existed.
+   */
+  it("a composite whose CONTAINER is the tab stop is not a violation", () => {
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="listbox" aria-label="شهرها" tabindex="0">
+        <div role="option" tabindex="-1">تهران</div>
+        <div role="option" tabindex="-1">شیراز</div>
+      </div><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
+  });
+
+  /*
+   * THE ANTI-VACUITY GUARD for the exemption above. Without this, widening
+   * `=== "0"` to `hasAttribute("tabindex")` — which looks like a tidy-up —
+   * would silently swallow the eight autocomplete/command containers, which
+   * sit at `tabindex="-1"` and ARE genuinely unreachable in the served bytes.
+   */
+  it("a container at tabindex=-1 with no tabbable option still fires", () => {
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="listbox" aria-label="شهرها" tabindex="-1">
+        <div role="option" tabindex="-1">تهران</div>
+      </div><p>۱۲۳</p></body></html>`;
+    const fired = gradeHtml("fa-IR/index.html", html).map((v) => v.rule);
+    expect(fired).toContain("composite-tab-stop");
+  });
+
+  /*
+   * THE THREE GRID SHAPES, added on 12 Aug 2026 — and their anti-vacuity twins.
+   *
+   * `grid` and `treegrid` were absent from `COMPOSITE_ROLES` until three
+   * components (`tree`, `event-calendar`, `gantt`) each shipped a header saying
+   * their shape was right because it had been MEASURED, not because this rule
+   * would have caught them. A rule entry that never fires is worse than no
+   * entry, so each of the three gets a poison twin here rather than only a
+   * clean case.
+   *
+   * `treegrid` maps to `row` and not to `treeitem`: ARIA names the two
+   * container roles differently and it is the ROW that takes focus, which is
+   * exactly why `tree: "treeitem"` did not cover `tree.tsx` after its
+   * migration.
+   */
+  it("a treegrid whose rows are all -1 is a violation", () => {
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="treegrid" aria-label="پرونده‌ها">
+        <div role="row" tabindex="-1" aria-level="1"><span role="gridcell">اسناد</span></div>
+        <div role="row" tabindex="-1" aria-level="1"><span role="gridcell">تصویرها</span></div>
+      </div><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html).map((x) => x.rule)).toContain(
+      "composite-tab-stop",
+    );
+  });
+
+  it("a grid whose cells are all -1 is a violation", () => {
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="grid" aria-label="مرداد">
+        <div role="row"><span role="gridcell" tabindex="-1">۱</span></div>
+        <div role="row"><span role="gridcell" tabindex="-1">۲</span></div>
+      </div><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html).map((x) => x.rule)).toContain(
+      "composite-tab-stop",
+    );
+  });
+
+  it("but a grid whose CONTAINER holds the stop is clean — the shape all three ship", () => {
+    // `tree.tsx`, `event-calendar.tsx` and `gantt.tsx` all compute
+    // `tabIndex={entered ? -1 : 0}` on the container in the render body, so the
+    // stop is in the served bytes with no effect to wait for. If this went red,
+    // every one of them would be failing a rule they were built to satisfy.
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <div role="grid" aria-label="مرداد" tabindex="0">
+        <div role="row"><span role="gridcell" tabindex="-1">۱</span></div>
+      </div><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
+  });
+
+  it("a grid using WIDGET focus — the stop inside the cell — is clean", () => {
+    /*
+     * react-day-picker's shape, measured on a served calendar: the cells are
+     * not tabbable and each holds a button, 41 at -1 and one at 0. ARIA
+     * specifies both cell focus and widget focus; a rule that knew only the
+     * first reported every calendar in the library as unreachable.
+     */
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <table role="grid" aria-label="مرداد"><tbody>
+        <tr><td role="gridcell"><button tabindex="0">۱</button></td>
+            <td role="gridcell"><button tabindex="-1">۲</button></td></tr>
+      </tbody></table><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
+  });
+
+  it("but widget focus with EVERY control at -1 still fires", () => {
+    // The anti-vacuity twin for the widening above: reaching inside the cell
+    // must not become "any cell with a control in it passes".
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <table role="grid" aria-label="مرداد"><tbody>
+        <tr><td role="gridcell"><button tabindex="-1">۱</button></td>
+            <td role="gridcell"><button tabindex="-1">۲</button></td></tr>
+      </tbody></table><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html).map((x) => x.rule)).toContain(
+      "composite-tab-stop",
+    );
+  });
+
+  it("a fully DISABLED grid has nothing to focus, and that is not a violation", () => {
+    /*
+     * `<Calendar isDisabled>` serves 42 cells that are not themselves disabled,
+     * each holding a `<button disabled>` at -1. Having no tab stop is correct —
+     * there is nothing to focus. Judging the cell alone called that unreachable.
+     */
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <table role="grid" aria-label="مرداد"><tbody>
+        <tr><td role="gridcell"><button disabled tabindex="-1">۱</button></td>
+            <td role="gridcell"><button disabled tabindex="-1">۲</button></td></tr>
+      </tbody></table><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html)).toEqual([]);
+  });
+
+  it("one ENABLED control among disabled ones still demands a stop", () => {
+    // The anti-vacuity twin: "some control is disabled" must not become
+    // "the widget is exempt".
+    const html = `<!doctype html><html lang="fa-IR" dir="rtl"><body>
+      <table role="grid" aria-label="مرداد"><tbody>
+        <tr><td role="gridcell"><button disabled tabindex="-1">۱</button></td>
+            <td role="gridcell"><button tabindex="-1">۲</button></td></tr>
+      </tbody></table><p>۱۲۳</p></body></html>`;
+    expect(gradeHtml("fa-IR/index.html", html).map((x) => x.rule)).toContain(
+      "composite-tab-stop",
+    );
+  });
+
+  /*
+   * THE COMBOBOX EXEMPTION, and the three ways it must NOT apply.
+   *
+   * In the combobox pattern focus never enters the list: it stays on the input,
+   * the options are correctly -1, and the input names the active one. That is
+   * one Tab from the outside — the input's.
+   *
+   * The three negative cases below are the ones that matter, because each is a
+   * plausible loosening someone would make while "simplifying" this.
+   */
+  const combobox = (input: string, listAttrs = 'id="lumo-list"') => `<!doctype html>
+    <html lang="fa-IR" dir="rtl"><body>
+      <input role="combobox" aria-label="جست‌وجو" aria-expanded="true" ${input} />
+      <div role="listbox" aria-label="نتیجه‌ها" tabindex="-1" ${listAttrs}>
+        <div role="option" tabindex="-1">تهران</div>
+      </div><p>۱۲۳</p></body></html>`;
+
+  const composite = (html: string) =>
+    gradeHtml("fa-IR/index.html", html)
+      .map((v) => v.rule)
+      .filter((r) => r === "composite-tab-stop");
+
+  it("a listbox controlled by a tabbable combobox is not a violation", () => {
+    expect(composite(combobox('aria-controls="lumo-list"'))).toEqual([]);
+  });
+
+  it("still fires when the combobox names no list at all", () => {
+    // The adjacency heuristic this replaced would have excused this one: a
+    // combobox is right there, sharing a parent. Nothing points at the list.
+    expect(composite(combobox(""))).toEqual(["composite-tab-stop"]);
+  });
+
+  it("still fires when the combobox points somewhere else", () => {
+    expect(composite(combobox('aria-controls="a-different-list"'))).toEqual([
+      "composite-tab-stop",
+    ]);
+  });
+
+  it("still fires when the combobox itself cannot be reached", () => {
+    // A disabled input is not a tab stop, so the list behind it is exactly as
+    // unreachable as it looks.
+    expect(composite(combobox('aria-controls="lumo-list" disabled'))).toEqual([
+      "composite-tab-stop",
+    ]);
+    expect(composite(combobox('aria-controls="lumo-list" tabindex="-1"'))).toEqual([
+      "composite-tab-stop",
+    ]);
+  });
+
+  it("reads aria-controls as the token LIST it is", () => {
+    // One input may control a list and a grid. An exact-match comparison fails
+    // that silently, which is the quietest kind of wrong.
+    expect(composite(combobox('aria-controls="some-grid lumo-list"'))).toEqual([]);
+  });
+
   it("each poison fires its own rule and nothing unexplained", () => {
     // One implication is real and worth stating rather than designing around:
     // a dangling aria-labelledby means the control genuinely HAS no accessible
     // name, so resolved-idrefs necessarily drags named-controls with it. Any
     // other co-firing means a fixture is testing more than one thing and the
     // suite has stopped isolating defects.
-    const IMPLIES: Record<string, string[]> = { "resolved-idrefs": ["named-controls"] };
+    /*
+     * The second implication, added 12 Aug 2026 with `native-script-name`, and
+     * as real as the first: a Latin `aria-label` on an interactive control IS
+     * that control's computed accessible name, so the rule that grades the
+     * attribute and the rule that grades the name are two true statements about
+     * one string. `no-latin-aria.bad.html`'s first line is
+     * `<button aria-label="Show suggestions">`, which is exactly that shape.
+     *
+     * It is declared rather than designed around because designing around it
+     * would mean poisoning `no-latin-aria` with a NON-interactive element,
+     * which is not where that defect happens.
+     */
+    const IMPLIES: Record<string, string[]> = {
+      "resolved-idrefs": ["named-controls"],
+      "no-latin-aria": ["native-script-name"],
+    };
 
     for (const file of readdirSync(FIXTURES).filter((f) => f.endsWith(".bad.html") && !f.startsWith("persian-digit"))) {
       const ruleId = file.replace(".bad.html", "");
@@ -219,6 +497,14 @@ describe("fa-IR grading is unchanged by the parametrisation", () => {
       "no-latin-aria",
       "named-controls",
       "resolved-idrefs",
+      "composite-tab-stop",
+      "composite-single-tab-stop",
+      "native-calendar",
+      "unique-ids",
+      "native-script-text",
+      "native-script-name",
+      "named-roledescription",
+      "latn-island-purity",
     ]);
     expect(persianDigitFloor({}).id).toBe("persian-digit-floor");
   });
@@ -230,5 +516,656 @@ describe("fa-IR grading is unchanged by the parametrisation", () => {
     const html = read("no-latin-digits.bad.html").replace('lang="fa-IR" dir="rtl"', 'lang="en-US" dir="ltr"');
     expect(gradeHtml("en-US/index.html", html).filter((x) => x.rule === "no-latin-digits")).toEqual([]);
     expect(gradingFor("en-US").digits.numberingSystem).toBe("latn");
+  });
+});
+
+/**
+ * The CEILING, and its one exemption from both sides.
+ *
+ * `composite-tab-stop` fires when a widget has NO stop; this one fires when it
+ * has more than one. The pair is the whole contract, and the two poison
+ * fixtures are inverses of each other — `composite-tab-stop.bad.html` is a
+ * tablist with zero, `composite-single-tab-stop.bad.html` a toolbar with three.
+ * The "each poison fires its own rule and nothing unexplained" block above is
+ * what stops either from quietly grading the other's file.
+ *
+ * DECISIONS §13's rule applies to the exemption below: it carries negative
+ * twins, or the next tidy-up widens it into a skip.
+ */
+const ceiling = (body: string) =>
+  gradeHtml("fa-IR/index.html", `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`, [
+    compositeSingleTabStop,
+  ]);
+
+describe("composite-single-tab-stop — the ceiling", () => {
+  it("passes a toolbar with exactly one stop", () => {
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار">' +
+          '<button tabindex="0">الف</button><button tabindex="-1">ب</button></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  it("passes a container that IS the stop — activedescendant and the RAC collection", () => {
+    // Both of `composite-tab-stop`'s first two exemptions are one stop, and the
+    // ceiling must agree with the floor about that or the two rules disagree
+    // about the same correct markup.
+    expect(
+      ceiling(
+        '<div role="listbox" tabindex="0" aria-activedescendant="o1" aria-label="شهرها">' +
+          '<div role="option" id="o1" tabindex="-1">تهران</div>' +
+          '<div role="option" tabindex="-1">شیراز</div></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  it("counts a natively-focusable control with NO tabindex", () => {
+    // The half of the defect that does not self-heal. A `<button>` with no
+    // tabindex is tabbable forever, not until hydration — which is what made
+    // the toolbar demo and the grid's resize handle permanent extra stops.
+    const v = ceiling(
+      '<div role="toolbar" aria-label="ابزار">' +
+        '<button tabindex="0">الف</button><button aria-label="ب">ب</button></div>',
+    );
+    expect(v).toHaveLength(1);
+    expect(v[0]!.detail).toContain("serves 2 tab stops");
+  });
+
+  it("does not count a disabled control", () => {
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار">' +
+          '<button tabindex="0">الف</button><button disabled>ب</button>' +
+          '<button aria-disabled="true">پ</button></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  it("does not count an `inert` subtree, and DOES count an aria-hidden one", () => {
+    // `inert` removes an element from sequential navigation; `aria-hidden` does
+    // not — it removes it from the accessibility tree while leaving the Tab key
+    // landing on it, which is axe's own `aria-hidden-focus` rule. Discounting
+    // the second would hide a stop a reader really reaches.
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار"><button tabindex="0">الف</button>' +
+          '<span inert><button>ب</button></span></div>',
+      ),
+    ).toEqual([]);
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار"><button tabindex="0">الف</button>' +
+          '<span aria-hidden="true"><button>ب</button></span></div>',
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("skips a container that is itself hidden", () => {
+    expect(
+      ceiling(
+        '<div hidden><div role="toolbar" aria-label="ابزار">' +
+          '<button tabindex="0">الف</button><button tabindex="0">ب</button></div></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  /* ── THE EXEMPTION, AND ITS NEGATIVE TWINS ──────────────────────────────── */
+
+  it("discounts a control marked data-lumo-extra-tab-stop", () => {
+    // The one use in the repository: `RegistrationExample` demonstrates the
+    // defect this rule grades, and its third control is the demonstration.
+    expect(
+      ceiling(
+        '<div role="toolbar" aria-label="ابزار"><button tabindex="0">الف</button>' +
+          '<button data-lumo-extra-tab-stop aria-label="ب">ب</button></div>',
+      ),
+    ).toEqual([]);
+  });
+
+  it("discounts ONE control, not the container", () => {
+    // The narrowing that matters. A marked control next to a SECOND unmarked
+    // extra stop still fails — the attribute buys one stop, not silence.
+    const v = ceiling(
+      '<div role="toolbar" aria-label="ابزار"><button tabindex="0">الف</button>' +
+        '<button data-lumo-extra-tab-stop aria-label="ب">ب</button>' +
+        '<button aria-label="پ">پ</button></div>',
+    );
+    expect(v).toHaveLength(1);
+    expect(v[0]!.detail).toContain("serves 2 tab stops");
+  });
+
+  it("does NOT let the attribute on the container excuse its children", () => {
+    // The weakening this exemption is deliberately not. `closest` from a
+    // descendant would match the container, so one attribute on the toolbar
+    // would silence the whole widget — DECISIONS §13's "blindness by adjacency"
+    // in a different spelling. The rule excludes the container from the match.
+    const v = ceiling(
+      '<div role="toolbar" data-lumo-extra-tab-stop aria-label="ابزار">' +
+        '<button tabindex="0">الف</button><button tabindex="0">ب</button></div>',
+    );
+    expect(v).toHaveLength(1);
+    expect(v[0]!.detail).toContain("serves 2 tab stops");
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE FOUR RULES ADDED FOR AUDIT PHASE 3, AND THEIR NARROWINGS
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Each of these grades something the first nine structurally could not see, and
+ * each carries its negative twins here for the reason DECISIONS §13 gives: an
+ * exemption without a test against it is an exemption that widens into a skip
+ * on the next tidy-up.
+ *
+ * Three of the four have LIVE findings on the export as they land — 14 duplicate
+ * ids, 138 pure-Latin text runs, 44 unnamed roledescriptions. That is the
+ * intended state and it is recorded here rather than smoothed away: a rule
+ * narrowed until the export is green is a rule that has stopped grading.
+ */
+const fa = (body: string) =>
+  `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+const fired = (body: string, rules?: Parameters<typeof gradeHtml>[2]) =>
+  [...new Set(gradeHtml("fa-IR/index.html", fa(body), rules).map((v) => v.rule))].sort();
+
+describe("unique-ids — a reference that resolves to the WRONG element", () => {
+  it("fires on a duplicate, where resolved-idrefs is green", () => {
+    const html = fa('<p id="x">الف</p><p id="x">ب</p><input aria-labelledby="x" />');
+    const v = gradeHtml("fa-IR/index.html", html);
+    expect(v.filter((r) => r.rule === "resolved-idrefs")).toEqual([]);
+    const dup = v.filter((r) => r.rule === "unique-ids");
+    expect(dup).toHaveLength(1);
+    expect(dup[0]?.detail).toContain("is carried by 2 elements");
+  });
+
+  it("reports one violation per duplicated id, not one per element", () => {
+    // Five rows sharing `id="a"` is ONE defect to fix. Reporting five would
+    // make the export's 44 elements read as 44 problems and bury the 14.
+    const v = gradeHtml("fa-IR/index.html", fa('<i id="a">۱</i><i id="a">۲</i><i id="a">۳</i>'));
+    expect(v.filter((r) => r.rule === "unique-ids")).toHaveLength(1);
+  });
+
+  it("does not group empty ids together", () => {
+    // `id=""` matches no reference at all, so two of them are not a collision.
+    // Grouping on it would report every such element as a duplicate of every
+    // other — a fabricated defect, which is worse than a missed one.
+    expect(fired('<p id="">الف</p><p id="">ب</p>')).toEqual([]);
+  });
+
+  it("grades ids inside <pre> and <code>, because the export has none there", () => {
+    /*
+     * The carve-out this rule was specified with. Measured before it was
+     * written: 8,846 elements carry an `id` in the export and ZERO of them are
+     * inside a `<pre>` or `<code>` — a shiki listing renders `id="…"` as
+     * escaped TEXT, never as an attribute, so the exclusion is a no-op on every
+     * byte this project ships and a hole the day someone embeds live markup in
+     * a code block.
+     */
+    expect(fired('<pre><code><span id="d">۱</span><span id="d">۲</span></code></pre>')).toEqual([
+      "unique-ids",
+    ]);
+  });
+});
+
+describe("native-script-text — the rule that would have caught «thr»", () => {
+  it("fires on a pure-Latin run on a Persian page", () => {
+    expect(fired("<p>مرتب‌سازی</p><span>thr</span>")).toEqual(["native-script-text"]);
+  });
+
+  it("does NOT fire on an inline technical term inside Persian prose", () => {
+    // The scope decision, from the side that matters: hundreds of these exist
+    // in the documentation and every one is correct prose. A rule that flagged
+    // them would be switched off within a day.
+    expect(fired('<p>با orientation="vertical" پشته می‌نشیند.</p>')).toEqual([]);
+  });
+
+  it("merges a run split by ENTITIES, which is how linkedom parses the export", () => {
+    /*
+     * `&quot;` splits a text node in linkedom, so this ONE Persian sentence
+     * arrives as five nodes and two of them hold no Persian at all. Asked per
+     * node the rule reports two false positives here; measured over the export,
+     * 40 of 178 findings were exactly this and nothing else. The rule grades
+     * an element's own text, merged.
+     */
+    expect(fired("<p>با orientation=&quot;vertical&quot; پشته می‌نشیند.</p>")).toEqual([]);
+  });
+
+  it("honours data-lumo-latn and NOT a bare lang attribute", () => {
+    /*
+     * `lang` was considered as a second hatch — the root 404 documents carry
+     * `lang="en-US" dir="ltr"` on a deliberate English line — and refused. The
+     * natural wrong fix for «thr» being read in a Persian voice is to add
+     * `lang="en"` to it, which would silence this rule on the exact defect it
+     * exists for. `data-lumo-latn` cannot be reached by accident.
+     */
+    expect(fired('<span data-lumo-latn dir="ltr">KH-4825</span>')).toEqual([]);
+    expect(fired('<p lang="en-US" dir="ltr">This page could not be found.</p>')).toEqual([
+      "native-script-text",
+    ]);
+  });
+
+  it("is vacuous on a Latin-script locale rather than pretending to grade it", () => {
+    const html = '<!doctype html><html lang="en-US" dir="ltr"><body><p>Sort by</p></body></html>';
+    expect(gradeHtml("en-US/index.html", html)).toEqual([]);
+  });
+
+  it("grades ARABIC through the same script, not a second hardwired one", () => {
+    // The parametrisation, proven with a second locale — the standard this
+    // suite already holds the digit rules to.
+    const bad = '<!doctype html><html lang="ar-SA" dir="rtl"><body><span>newest</span></body></html>';
+    const good = '<!doctype html><html lang="ar-SA" dir="rtl"><body><span>الأحدث</span></body></html>';
+    expect(gradeHtml("ar-SA/index.html", bad).map((v) => v.rule)).toContain("native-script-text");
+    expect(gradeHtml("ar-SA/index.html", good)).toEqual([]);
+  });
+
+  it("ignores a run with no WORD in it — a bullet, a unit, a symbol", () => {
+    // Three letters, not one: «۵ kg» and «▼» are not untranslated strings.
+    expect(fired("<p>۵ kg</p><span>▼</span><span>x</span>")).toEqual([]);
+  });
+});
+
+describe("native-script-name — what is ANNOUNCED, not what is in an attribute", () => {
+  it("fires on a name that no attribute carries", () => {
+    // `<input type=submit>` is named by its `value`: not an ARIA attribute, not
+    // a text node. This is the gap `no-latin-aria` structurally cannot reach.
+    const v = gradeHtml("fa-IR/index.html", fa('<input type="submit" value="Send order" />'));
+    expect(v.map((r) => r.rule)).toEqual(["native-script-name"]);
+    expect(v[0]?.detail).toContain('"Send order"');
+  });
+
+  it("fires on a control named by a <label for> across the document", () => {
+    expect(fired('<label for="q">Search orders</label><input id="q" />')).toEqual([
+      "native-script-name",
+      "native-script-text",
+    ]);
+  });
+
+  it("subtracts a MARKED DESCENDANT, which is where a name comes from", () => {
+    /*
+     * The 474 pure-Latin names in the export are all proper nouns and all
+     * already marked — but the mark is one level DOWN, on the `<code>` or
+     * `<span>` inside the control. `closest()`, which every other rule in
+     * rules.ts uses for this hatch, looks UP and would report all 474.
+     */
+    expect(fired('<a href="/x/"><code data-lumo-latn dir="ltr" lang="en">pnpm</code></a>')).toEqual([]);
+  });
+
+  it("but subtraction is not silence: unmarked Latin beside marked Latin fires", () => {
+    // The negative twin. The mark buys the string it wraps, not the control.
+    const v = gradeHtml(
+      "fa-IR/index.html",
+      fa('<button><code data-lumo-latn dir="ltr" lang="en">pnpm</code> Install</button>'),
+    );
+    expect(v.filter((r) => r.rule === "native-script-name")).toHaveLength(1);
+  });
+
+  it("leaves an UNNAMED control to named-controls", () => {
+    // Two rules reporting one element teaches people to read neither.
+    expect(fired("<button></button>")).toEqual(["named-controls"]);
+  });
+
+  it("passes a control named in the reader's own script", () => {
+    expect(fired('<button aria-label="افزودن سفارش">+</button>')).toEqual([]);
+  });
+
+  it("grades composite widgets: an unnamed menu, listbox, tree or grid is an unnamed control", () => {
+    expect(fired('<div role="menu"><div role="menuitem" tabindex="0">رونوشت</div></div>')).toEqual(["named-controls"]);
+    expect(fired('<ul role="listbox"><li role="option" tabindex="0">۱۴۰۳</li></ul>')).toEqual(["named-controls"]);
+    expect(fired('<div role="tree"><div role="treeitem" tabindex="0">پرونده</div></div>')).toEqual(["named-controls"]);
+    expect(
+      fired('<button id="t">گزینه‌ها</button><div role="menu" aria-labelledby="t"><div role="menuitem" tabindex="0">رونوشت</div></div>'),
+    ).toEqual([]);
+    expect(fired('<ul role="listbox" aria-label="سال"><li role="option" tabindex="0">۱۴۰۳</li></ul>')).toEqual([]);
+  });
+
+  it("grades an unnamed radiogroup; a plain role=group may stay unnamed", () => {
+    expect(fired('<div role="radiogroup"><div role="radio" aria-checked="true" tabindex="0">الف</div></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="group"><button>الف</button></div>')).toEqual([]);
+  });
+
+  it("grades unnamed dialog, tablist and region roles", () => {
+    expect(fired('<div role="dialog"></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="alertdialog"></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="tablist"></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="region"></div>')).toEqual(["named-controls"]);
+    expect(fired('<div role="dialog" aria-label="گفتگو"></div>')).toEqual([]);
+  });
+
+  it("is vacuous on a Latin-script locale", () => {
+    const html =
+      '<!doctype html><html lang="en-US" dir="ltr"><body><button>Save</button></body></html>';
+    expect(gradeHtml("en-US/index.html", html)).toEqual([]);
+  });
+});
+
+describe("named-roledescription — a word announced with nothing attached", () => {
+  it("fires on a roledescription with no accessible name", () => {
+    const v = gradeHtml("fa-IR/index.html", fa('<div role="group" aria-roledescription="اسلاید"></div>'));
+    expect(v.map((r) => r.rule)).toEqual(["named-roledescription"]);
+    expect(v[0]?.detail).toContain("announced as that word and nothing else");
+  });
+
+  it("passes once the element has a name — the one-attribute fix", () => {
+    expect(
+      fired('<div role="group" aria-roledescription="اسلاید" aria-label="کفش، ۱ از ۴"></div>'),
+    ).toEqual([]);
+  });
+
+  it("still fires when the slide merely CONTAINS a heading — the obvious wrong fix", () => {
+    /*
+     * `group` takes its name from the author only: ARIA does not list it among
+     * the name-from-content roles, so a heading inside the slide is not a name
+     * and a reader announcing this element still says «اسلاید» and stops.
+     * This is worth a test rather than a comment, because "put a title in the
+     * slide" is what anyone would try first when told the carousel is unnamed —
+     * and the page would look completely correct afterwards.
+     */
+    expect(fired('<div role="group" aria-roledescription="اسلاید"><h3>کفش دویدن</h3></div>')).toEqual(
+      ["named-roledescription"],
+    );
+  });
+
+  it("accepts a name from CONTENT where the role takes one", () => {
+    // The counterpart, so the rule is not mistaken for "aria-label or nothing":
+    // `button` IS a name-from-content role, so its text is its name.
+    expect(fired('<button aria-roledescription="کلید میان‌بر">ذخیره</button>')).toEqual([]);
+  });
+
+  it("skips an aria-hidden subtree, which is never announced at all", () => {
+    expect(
+      fired('<div aria-hidden="true"><div role="group" aria-roledescription="اسلاید"></div></div>'),
+    ).toEqual([]);
+  });
+
+  it("grades an ENGLISH page too — the export's finding is 22 and 22", () => {
+    // Deliberately no locale early return. An unnamed slide is exactly as
+    // unnavigable in English, and a rule that graded only the Persian half
+    // would have called the English carousel correct.
+    const html =
+      '<!doctype html><html lang="en-US" dir="ltr"><body>' +
+      '<div role="group" aria-roledescription="slide"></div></body></html>';
+    expect(gradeHtml("en-US/index.html", html).map((v) => v.rule)).toEqual([
+      "named-roledescription",
+    ]);
+  });
+});
+
+describe("no-latin-aria grades the two PLATFORM attributes as well", () => {
+  /*
+   * `SPOKEN` held seven attributes, five of them `aria-*`. `alt` IS the
+   * accessible name of an image and a native `placeholder` is announced; that
+   * `aria-placeholder` was graded and `placeholder` was not is the tell. The
+   * export has 12 `alt` and 40 `placeholder` attributes on Persian routes with
+   * zero Latin words among them, so this costs nothing — which is exactly why
+   * it needs tests that watch it fire rather than a note saying it is clean.
+   */
+  it("grades alt on an image", () => {
+    const v = gradeHtml("fa-IR/index.html", fa('<img src="/l.svg" alt="Company logo" />'));
+    expect(v.map((r) => r.rule)).toEqual(["no-latin-aria"]);
+    expect(v[0]?.detail).toContain("alt=");
+  });
+
+  it("grades a native placeholder", () => {
+    const v = gradeHtml(
+      "fa-IR/index.html",
+      fa('<input type="search" aria-label="جست‌وجو" placeholder="Search orders" />'),
+    );
+    expect(v.map((r) => r.rule)).toEqual(["no-latin-aria"]);
+    expect(v[0]?.detail).toContain("placeholder=");
+  });
+
+  it("does NOT grade either on an element the platform never speaks them on", () => {
+    // `<div alt>` and `<div placeholder>` are author errors no reader hears. A
+    // rule whose findings cannot reach a user is one people learn to ignore.
+    expect(fired('<div alt="Save" placeholder="Search">متن</div>')).toEqual([]);
+  });
+
+  it("does not fire on an empty decorative alt", () => {
+    expect(fired('<img src="/d.svg" alt="" />')).toEqual([]);
+  });
+
+  it("does not mistake the standards-defined aria-keyshortcuts grammar for English prose", () => {
+    const v = gradeHtml(
+      "fa-IR/index.html",
+      fa(
+        '<button aria-label="تغییر اندازه" aria-keyshortcuts="F2 ArrowLeft ArrowRight Escape Tab">تغییر</button>',
+      ),
+    );
+    expect(v.filter((result) => result.rule === "no-latin-aria")).toEqual([]);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE RULE THAT IS ARMED BY AN ARGUMENT, NOT BY THE ARRAY
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * `persian-digit-floor` is deliberately NOT in `RULES` — it needs per-route
+ * floors, so `cli.ts` constructs it only when handed a floors file. That design
+ * is right, and it has now un-armed the rule TWICE by two different routes.
+ *
+ * The first time is memorialised in `cli.ts`'s own header: the rule had "a
+ * factory, a poison fixture, a passing self-test, a README paragraph … and was
+ * never in the RULES array this CLI runs."
+ *
+ * The second time is what this test exists for. The arming moved out of the
+ * array and into an ARGUMENT — and the argument was missing from `gate:html`,
+ * which is the only gate command `verify` and CI actually run. The floors file
+ * was passed by `apps/website`'s own `gate` script, which nothing invokes. So
+ * the rule was fully built, fully tested, documented, and grading nothing.
+ *
+ * Measured at the time: the real landing page with every Persian digit replaced
+ * by an en-dash — the exact defect the rule exists for — graded CLEAN, exit 0.
+ *
+ * Every other rule is protected from this by being in `RULES`, which the
+ * one-fixture-per-rule test enumerates. This one cannot be, so it is protected
+ * by reading the script that has to arm it. A string assertion on a package
+ * manifest is a blunt instrument; it is also the only thing standing between
+ * this rule and a third disappearance.
+ */
+describe("persian-digit-floor is actually armed where it matters", () => {
+  const root = JSON.parse(
+    readFileSync(join(import.meta.dirname, "..", "..", "..", "package.json"), "utf8"),
+  ) as { scripts: Record<string, string> };
+
+  it("gate:html passes a floors file", () => {
+    const script = root.scripts["gate:html"] ?? "";
+    expect(script, "gate:html does not exist").not.toBe("");
+    // Not a path equality check: the point is that SOME floors argument reaches
+    // the CLI, because `cli.ts` builds the rule from `argv[3]` and from nothing
+    // else. A renamed floors file should not fail this test; a missing argument
+    // must.
+    expect(script, "gate:html runs the CLI with no floors argument, so the rule is not constructed").toMatch(
+      /cli\.ts\s+\S+\s+\S*floors\S*\.json/,
+    );
+  });
+
+  it("is the rule that verify depends on, and it is still absent from RULES", () => {
+    // Both halves of the design, pinned. If someone "fixes" the arming by
+    // pushing it into RULES, the rule would run with no floors on every
+    // document and the fixture suite would go red — this states why it is out.
+    expect(RULES.map((r) => r.id)).not.toContain("persian-digit-floor");
+    expect(persianDigitFloor({ "fa/index.html": 1 }).id).toBe("persian-digit-floor");
+  });
+
+  it("requires every newly number-dense Persian route to join the floor ledger", () => {
+    const dense = fa(`<p>${"۱".repeat(30)}</p>`);
+    const exempt = fa(`<pre data-lumo-latn><code>${"۱".repeat(40)}</code></pre>`);
+    expect(missingDenseDigitFloors([
+      { path: "fa/components/new/index.html", html: dense },
+      { path: "fa/components/code/index.html", html: exempt },
+      { path: "en/components/new/index.html", html: dense.replace('lang="fa-IR" dir="rtl"', 'lang="en-US" dir="ltr"') },
+    ], {})).toEqual([{ path: "fa/components/new/index.html", found: 30 }]);
+    expect(missingDenseDigitFloors([
+      { path: "fa/components/new/index.html", html: dense },
+    ], { "fa/components/new/index.html": 16 })).toEqual([]);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// THE GATE PRINTS ITS OWN SCOPE
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * "524 documents graded, 0 violations" is true and invites a false conclusion.
+ * `data-lumo-latn` exempts whole subtrees — legitimately, since the dominant
+ * one is shiki code listings — but on a docs site made largely OF source code
+ * the exempt fraction is most of the text, and nothing said so.
+ *
+ * These grade the census itself. It never fails a build: there is no threshold
+ * to fail at, because 80% exempt is correct for a documentation site and would
+ * be alarming for a product. The number's job is to be seen by someone who
+ * knows which they are looking at.
+ */
+describe("coverage census", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+
+  it("counts an exempt subtree as exempt, using the rules' own test", () => {
+    const c = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa(
+      `<p>سلام</p><pre data-lumo-latn=""><code>const x = 1;</code></pre>`,
+    ));
+    expect(c.textNodes).toBe(2);
+    expect(c.exemptTextNodes).toBe(1);
+    // The exemption is inherited by descendants — `closest`, not an own-attribute
+    // check — because that is exactly what `no-latin-digits` does.
+    expect(c.exemptCharacters).toBe("const x = 1;".length);
+  });
+
+  it("ignores latn locales, so the fraction is over the corpus it describes", () => {
+    /*
+     * The first cut compared `gradingFor(locale).digits` — a DigitSystem object —
+     * to the string "latn", which is never true. Every English page counted as
+     * Persian and the printed fraction was computed over twice the real corpus.
+     * A scope line that is itself miscounted is worse than no scope line.
+     */
+    const before = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa("<p>سلام</p>"));
+    const after = addCoverage(before, "en/index.html",
+      `<!doctype html><html lang="en-US" dir="ltr"><body><p>hello</p></body></html>`);
+    expect(after).toEqual(before);
+    expect(after.gradedLocaleDocs).toBe(1);
+  });
+
+  it("does not credit itself for script and style it was never asked to read", () => {
+    const c = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa(
+      `<p>سلام</p><script>var a = 1;</script><style>.a{color:red}</style>`,
+    ));
+    expect(c.textNodes).toBe(1);
+  });
+
+  it("prints nothing when there is nothing in scope to describe", () => {
+    // An all-English export should not print a Persian coverage line at all,
+    // rather than printing 0.0% and implying it measured something.
+    expect(formatCoverage(EMPTY_COVERAGE, 0)).toBe("");
+  });
+
+  it("reports the floor's coverage against the same denominator", () => {
+    const c = addCoverage(EMPTY_COVERAGE, "fa/index.html", fa("<p>سلام</p>"));
+    expect(formatCoverage(c, 12)).toContain("armed on 12 of 1 route(s)");
+  });
+});
+
+describe("latn-island-purity — the exemption cannot hide the reader's own prose", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+  const fired = (body: string) => gradeHtml("fa-IR/index.html", fa(body)).map((v) => v.rule);
+
+  it("fires on a Persian paragraph inside a data-lumo-latn island", () => {
+    expect(
+      fired('<p data-lumo-latn dir="ltr">این پاراگراف فارسی است و نباید در جزیرهٔ لاتین باشد؛ چون قاعده‌ها آن را نمی‌خوانند.</p>'),
+    ).toEqual(["latn-island-purity"]);
+  });
+
+  it("fires on a Persian CONTROL inside an English island, however short", () => {
+    expect(
+      fired('<figcaption dir="ltr" lang="en" data-lumo-latn=""><code>lang="fa-IR" dir="rtl"</code><a href="/x/">باز کردن تمام‌صفحه</a></figcaption>'),
+    ).toEqual(["latn-island-purity"]);
+  });
+
+  it("does NOT fire on a Persian-named control inside a bare bidi island (no lang): PhoneInput's tel input", () => {
+    expect(fired('<bdi dir="ltr" data-lumo-latn=""><span aria-hidden="true">+۹۸</span><input type="tel" aria-label="شمارهٔ موبایل" /></bdi>')).toEqual([]);
+  });
+
+  it("reads a control's aria-label, and ignores hidden controls", () => {
+    expect(fired('<div dir="ltr" lang="en" data-lumo-latn=""><code>pnpm add</code><button aria-label="کپی کردن دستور">⧉</button></div>')).toEqual(["latn-island-purity"]);
+    expect(fired('<div dir="ltr" lang="en" data-lumo-latn=""><code>pnpm add @lumo-ui/ui</code><a hidden href="/x/">باز کردن تمام‌صفحه</a></div>')).toEqual([]);
+  });
+
+  it("does NOT fire on English documentation prose that quotes Persian strings", () => {
+    expect(
+      fired('<td dir="ltr" lang="en" data-lumo-latn="">The label announced when the list is empty, e.g. «هیچ موردی پیدا نشد» or «فهرست خالی است».</td>'),
+    ).toEqual([]);
+  });
+
+  it("does NOT fire on a code sample that quotes a short Persian string", () => {
+    expect(
+      fired('<pre data-lumo-latn dir="ltr"><code>&lt;Button label="ذخیره کنید"&gt;ذخیره&lt;/Button&gt; // pnpm add @lumo-ui/ui</code></pre>'),
+    ).toEqual([]);
+  });
+
+  it("does NOT fire on digit-only islands (phone runs, ids) — letters are what count", () => {
+    expect(fired('<bdi data-lumo-latn dir="ltr">+۹۸ ۹۱۲ ۱۲۳ ۴۵۶۷</bdi><span data-lumo-latn dir="ltr">KH-4825</span>')).toEqual([]);
+  });
+
+  it("grades outermost islands only, and skips hidden ones", () => {
+    // The nested island alone would fire; it is not graded because its outer island is, and the outer one is Latin-dominant.
+    expect(
+      fired(
+        '<pre data-lumo-latn dir="ltr"><code>import { Button } from "@lumo-ui/ui"; export function Save() { return &lt;Button variant="primary" size="md"&gt;' +
+          '<span data-lumo-latn>این هم فارسی است ولی درون کد</span>&lt;/Button&gt;; }</code></pre>',
+      ),
+    ).toEqual([]);
+    expect(fired('<p hidden data-lumo-latn dir="ltr">این پاراگراف فارسی پنهان است و نباید گزارش شود چون خوانده نمی‌شود.</p>')).toEqual([]);
+  });
+
+  it("is vacuous on a Latin-script locale", () => {
+    expect(gradeHtml("en-US/index.html", '<!doctype html><html lang="en-US" dir="ltr"><body><p data-lumo-latn>Plain English prose is fine here.</p></body></html>')).toEqual([]);
+  });
+});
+
+describe("no-latin-aria — mixed Persian is Persian", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+  const fired = (body: string) => gradeHtml("fa-IR/index.html", fa(body)).map((v) => v.rule);
+
+  it("passes an announced string that carries a foreign token inside a Persian phrase", () => {
+    expect(fired('<button type="button" aria-label="دانلود PDF">⬇</button>')).toEqual([]);
+    expect(fired('<button type="button" aria-label="ورود با Google">G</button>')).toEqual([]);
+    expect(fired('<input aria-label="ایمیل" aria-placeholder="نشانی مثل name@example.com" />')).toEqual([]);
+  });
+
+  it("still fails a purely Latin announced string", () => {
+    expect(fired('<button type="button" aria-label="Download">⬇</button>')).toContain("no-latin-aria");
+    expect(fired('<input aria-label="مبلغ" aria-roledescription="Number field" />')).toEqual(["no-latin-aria"]);
+  });
+});
+
+describe("no-latin-digits — attributes a reader sees or hears", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+  const fired = (body: string) => gradeHtml("fa-IR/index.html", fa(body)).map((v) => v.rule);
+
+  it("fires on an input's served value, aria-valuetext, placeholder and alt", () => {
+    expect(fired('<input aria-label="مبلغ" value="1,234" />')).toEqual(["no-latin-digits"]);
+    expect(fired('<div role="slider" tabindex="0" aria-label="بودجه" aria-valuenow="40" aria-valuetext="40 درصد"></div>')).toContain("no-latin-digits");
+    expect(fired('<input aria-label="سن" placeholder="18" />')).toEqual(["no-latin-digits"]);
+    expect(fired('<img alt="فاکتور 12" src="x.png" />')).toEqual(["no-latin-digits"]);
+    expect(fired('<button type="button" aria-label="حذف ردیف 3">×</button>')).toEqual(["no-latin-digits"]);
+  });
+
+  it("does NOT fire on Latin-by-nature inputs, islands, hidden nodes or Persian digits", () => {
+    expect(fired('<input type="tel" aria-label="تلفن" value="+98 912" /><input type="email" aria-label="ایمیل" value="a2@x.com" />')).toEqual([]);
+    expect(fired('<input aria-label="کد سفارش" data-lumo-latn value="KH-4825" />')).toEqual([]);
+    expect(fired('<input hidden aria-label="x" value="42" />')).toEqual([]);
+    expect(fired('<input type="number" aria-label="مبلغ" value="100" />')).toEqual([]);
+    expect(fired('<input aria-label="مبلغ" value="۱٬۲۳۴" placeholder="۱۸" />')).toEqual([]);
+  });
+});
+
+describe("native-calendar — a numeric Gregorian year in a Persian date field", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+  const fired = (body: string) => gradeHtml("fa-IR/index.html", fa(body)).map((v) => v.rule);
+  const seg = (year: number, first = true) =>
+    `<div role="group" aria-label="تاریخ"><div role="spinbutton" data-type="year" aria-label="سال" aria-valuemin="1" aria-valuemax="9999" aria-valuenow="${year}" aria-valuetext="${year}" tabindex="${first ? 0 : -1}"></div></div>`;
+  it("fires on 2026, not on 1405", () => {
+    expect(fired(seg(2026))).toContain("native-calendar");
+    expect(fired(seg(1405))).not.toContain("native-calendar");
   });
 });

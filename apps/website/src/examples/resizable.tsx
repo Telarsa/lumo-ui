@@ -50,8 +50,17 @@ function RowsExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
-    // Page identity — this component has no demos.tsx entry, so the catalog
-    // builds its page from these three fields (see lib/catalog.ts).
+    usage: {
+      when: {
+        "fa-IR": "دو یا چند پنجرک با جداکننده‌ای که خواننده می‌کشد: ویرایشگر، تقسیم فهرست/جزئیات، پنل کناری.",
+        "en-US": "Two or more panes with a divider the reader drags: editors, a list/detail split, side panels.",
+      },
+      whenNot: {
+        "fa-IR": "چیدمان ثابت — `Stack` یا `Grid`. پنلی که روی صفحه باز می‌شود — `Drawer`. فقط ناحیه‌ای پیمایشی — `ScrollArea`.",
+        "en-US": "A fixed layout — `Stack` or `Grid`. A panel that opens over the page — `Drawer`. Just a scrolling region — `ScrollArea`.",
+      },
+    },
+    // Page identity — the catalog builds the page from these three fields (see lib/catalog.ts).
     tier: "layout",
     title: { "fa-IR": "قاب‌های تغییر اندازه", "en-US": "Resizable" },
     intro: { "fa-IR": "دو قاب با دستگیرهٔ میانی. مقدار هر تغییر با ارقام فارسی اعلام می‌شود — همان الگویی که جدول برای columnSize اندازه گرفت.", "en-US": "Two panes and a divider. Every announced value goes through the locale formatter — the same pattern the table measured for columnSize." },

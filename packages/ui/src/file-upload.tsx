@@ -1,25 +1,18 @@
 "use client";
 
-import { CloudUpload, Paperclip, X } from "lucide-react";
 import {
-  DropZone as AriaDropZone,
-  FileTrigger as AriaFileTrigger,
-  Text as AriaText,
-  isFileDropItem,
-  type DropZoneProps as AriaDropZoneProps,
-} from "react-aria-components";
+  useRef,
+  useState,
+  type ComponentProps,
+  type ClipboardEvent as ReactClipboardEvent,
+  type DragEvent as ReactDragEvent,
+} from "react";
+import { ArrowDown, ArrowUp, CloudUpload, Paperclip, X } from "lucide-react";
 import { cn, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Button, IconButton } from "./button.tsx";
-import { optional } from "./form.tsx";
-// The cva definitions and the size formatter live in a module with no
-// "use client" so a SERVER-rendered list of existing attachments can use them.
-// See file-upload.variants.ts, and button.variants.ts for the rule.
-//
-// Deliberately NOT re-exported from this file, unlike `button.variants.ts` from
-// `button.tsx`. Re-exporting through a module that carries the directive turns
-// them back into client references in the RSC graph, which defeats the split
-// for anyone who imports the convenient name. `pagination.variants.ts` is
-// handled the same way, and index.ts records the reason.
+// The cva definitions and the size formatter live in `file-upload.variants.ts`
+// (no "use client") so a SERVER-rendered list can use them, and are deliberately
+// NOT re-exported here: that would turn them back into client references.
 import {
   dropZoneVariants,
   fileUploadItemVariants,
@@ -29,92 +22,37 @@ import {
 } from "./file-upload.variants.ts";
 
 /**
- * A drop area and a file picker, plus the list of what was chosen.
- *
- *     <FileUpload
- *       label="کشیدن و رها کردن پرونده‌ها"
- *       triggerLabel="انتخاب پرونده"
- *       allowsMultiple
- *       onSelectFiles={add}
- *     />
- *     <FileUploadList>
- *       {files.map((f) => (
- *         <FileUploadItem
- *           key={f.name}
- *           name={f.name}
- *           size={f.size}
- *           locale={locale}
- *           removeLabel={(n) => `حذف ${n}`}
- *           onRemove={() => drop(f)}
- *         />
- *       ))}
- *     </FileUploadList>
- *
- * ── BOTH PIECES EXIST IN 1.20.0, AND THEY ARE NOT THE SAME PIECE ───────────
- *
- * `DropZone` and `FileTrigger` are both exported from
- * `react-aria-components@1.20.0` (verified in `dist/types/exports/index.d.ts`),
- * and they solve different halves. `DropZone` is a drop target with a clipboard
- * path — it renders a visually hidden `<button>` so a keyboard user can paste
- * files into it. `FileTrigger` is a `<PressResponder>` around a hidden
- * `<input type="file">`. Neither implies the other, so both are here: a drop
- * area with no button is unusable without a pointer, and a button with no drop
- * area throws away the interaction most people reach for first.
- *
- * ═══ TWO LEAKS, MEASURED IN THE SOURCE, AND NEITHER IS OBVIOUS ══════════════
- *
- * **1. The drop area names itself in English.** From `private/DropZone.mjs`:
- *
- *     let ariaLabel = props['aria-label'] || stringFormatter.format('dropzoneLabel');
- *
- * and the bundle it reads is react-aria-components' OWN
- * `dist/private/intl/en-US.mjs`:
- *
- *     {selectPlaceholder: "Select an item", tableResizer: "Resizer",
- *      dropzoneLabel: "DropZone", colorSwatchPicker: "Color swatches"}
- *
- * Note WHICH package that is. `patches/react-aria@3.51.0.patch` adds `fa-IR`
- * bundles to **react-aria**'s intl packages — fifteen of them — and this string
- * is not in any of them, because it does not come from react-aria. A Persian
- * page with the patch applied and the provider mounted still renders
- * `aria-label="DropZone"` on the drop area's button, in the first byte, where
- * `lumo-gate`'s `no-latin-aria` rule reads it. So `label` is a required prop,
- * and it is the reason this component cannot have a sensible default.
- *
- * **2. The file input has no accessible name, and `aria-label` cannot reach
- * it.** `FileTrigger` forwards props to its `<input type="file">` with
- * `filterDOMProps(rest, {global: true})` — and `global` covers `dir`, `lang`,
- * `hidden`, `inert`, `translate` and the global events. It does NOT pass
- * `labelable`, so `aria-label` / `aria-labelledby` are dropped on the floor. The
- * input is `style="display:none"`, but the HTML gate grades SERVER-RENDERED
- * markup with no layout and reports everything visible on purpose (see
- * `packages/gate/src/rules.ts`) — so its `named-controls` rule matches
- * `input:not([type=hidden])` and finds an unnamed control.
- *
- * The lever that IS reachable is `hidden`, and it happens to be the correct
- * answer rather than a workaround: the input is never meant to be perceived, it
- * is clicked programmatically by the `<Button>` beside it, and `hidden` takes
- * the whole element out of the accessibility tree — which is also the skip the
- * gate performs (`el.closest('[aria-hidden="true"],[hidden]')`). `.click()` on a
- * hidden input still opens the picker; that is the pattern the platform has
- * always used for custom file buttons.
- *
- * ═══ A FILE SIZE IS A NUMBER, AND SO IS ITS UNIT ════════════════════════════
- *
- * `formatFileSize` lives in `file-upload.variants.ts` with the measurement that
- * shaped it — the short answer is that `Intl`'s DEFAULT `unitDisplay` produces
- * «۱٫۲ MB» on a Persian page: Persian digits, Latin unit, and a gate that passes
- * because it grades digits. Read that file before changing the call below.
+ * A drop area and a file picker, plus the list of what was chosen. No engine:
+ * a drop area is four platform DOM events and a hidden `<input type="file">`,
+ * so nothing is rented. The area is `role="group"` named by the required
+ * `label`, not a hidden button; `paste` bubbles from the picker button, so a
+ * keyboard user can still paste files but the area is no longer its own tab
+ * stop (a stated regression against React Aria). Acquisition covers picker,
+ * paste, camera capture and recursive directory drops; `createUploadController`
+ * is an optional transport boundary. `formatFileSize` lives in the variants
+ * file with the measurement that shaped it («۱٫۲ MB» is a Latin unit).
  */
 
+/** True when the name has no letter outside the Latin script — the only case a Latin island is honest. */
+function isLatinName(name: string): boolean {
+  return !/(?=\p{L})[^\p{Script=Latin}]/u.test(name);
+}
+
 export interface FileUploadProps
-  extends Omit<AriaDropZoneProps, "children" | "className" | "aria-label" | "onDrop"> {
-  /**
-   * Announced name of the drop area, e.g. «کشیدن و رها کردن پرونده‌ها».
-   *
-   * REQUIRED. See the file header: React Aria's own fallback is the English
-   * literal "DropZone", from a bundle the fa-IR patch does not cover.
-   */
+  /* OWNED: `role`/`aria-label` (the group and its name) and the four drag
+   * handlers, which carry the depth counter; `{...props}` is also spread FIRST. */
+  extends Omit<
+    ComponentProps<"div">,
+    | "children"
+    | "className"
+    | "role"
+    | "aria-label"
+    | "onDragEnter"
+    | "onDragLeave"
+    | "onDragOver"
+    | "onDrop"
+  > {
+  /** Announced name of the drop area, e.g. «کشیدن و رها کردن پرونده‌ها». REQUIRED — a missing label is a bare "group". */
   label: string;
   /**
    * Visible text on the button that opens the file picker, e.g. «انتخاب پرونده».
@@ -123,9 +61,22 @@ export interface FileUploadProps
   triggerLabel: string;
   /** Called with the files, however they arrived — dropped, picked or pasted. */
   onSelectFiles?: (files: File[]) => void;
+  /** Reports files rejected by type, size, or the remaining count budget. */
+  onRejectFiles?: (rejections: FileUploadRejection[]) => void;
   /** MIME types or extensions the picker offers, e.g. `["image/png", ".pdf"]`. */
   acceptedFileTypes?: readonly string[] | undefined;
-  allowsMultiple?: boolean | undefined;
+  /** Lets one pick contain several files. */  allowsMultiple?: boolean | undefined;
+  /** Maximum bytes per file. Non-finite and negative values reject nothing. */
+  maxFileSize?: number | undefined;
+  /** Maximum total files, including `currentFileCount`. */
+  maxFiles?: number | undefined;
+  /** Files already owned by the caller, used to compute the remaining slots. */
+  currentFileCount?: number | undefined;
+  isDisabled?: boolean | undefined;
+  /** Native camera/media acquisition hint. */
+  capture?: "user" | "environment" | undefined;
+  /** Opts the picker into directory acquisition where the browser supports it. */
+  allowsDirectories?: boolean | undefined;
   /** Hint under the button — a size limit, an accepted-formats line. */
   children?: LumoNode;
   className?: string | undefined;
@@ -135,101 +86,341 @@ export function FileUpload({
   label,
   triggerLabel,
   onSelectFiles,
+  onRejectFiles,
   acceptedFileTypes,
   allowsMultiple,
+  maxFileSize,
+  maxFiles,
+  currentFileCount,
+  isDisabled,
+  capture,
+  allowsDirectories,
   children,
   className,
   ...props
 }: FileUploadProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  // A COUNTER, not a boolean: `dragleave` fires when the pointer crosses into
+  // a CHILD, so a boolean flag strobes. Counting enter/leave pairs survives nesting.
+  const [dragDepth, setDragDepth] = useState(0);
+
+  const accepts = (file: File) =>
+    acceptedFileTypes === undefined ||
+    acceptedFileTypes.length === 0 ||
+    acceptedFileTypes.some((rule) => {
+      const candidate = rule.trim().toLowerCase();
+      if (candidate.startsWith(".")) return file.name.toLowerCase().endsWith(candidate);
+      if (candidate.endsWith("/*")) return file.type.toLowerCase().startsWith(candidate.slice(0, -1));
+      return file.type.toLowerCase() === candidate;
+    });
+
+  const deliver = (files: FileList | readonly File[] | null | undefined) => {
+    if (files && files.length > 0) {
+      const accepted: File[] = [];
+      const rejected: FileUploadRejection[] = [];
+      const requestedLimit = allowsMultiple === true ? maxFiles : 1;
+      let slots =
+        requestedLimit === undefined
+          ? Number.POSITIVE_INFINITY
+          : Math.max(0, Math.floor(requestedLimit) - Math.max(0, currentFileCount ?? 0));
+      for (const file of Array.from(files)) {
+        if (!accepts(file)) {
+          rejected.push({ file, reason: "type" });
+        } else if (
+          maxFileSize !== undefined &&
+          Number.isFinite(maxFileSize) &&
+          maxFileSize >= 0 &&
+          file.size > maxFileSize
+        ) {
+          rejected.push({ file, reason: "size" });
+        } else if (slots <= 0) {
+          rejected.push({ file, reason: "count" });
+        } else {
+          accepted.push(file);
+          slots -= 1;
+        }
+      }
+      if (accepted.length > 0) onSelectFiles?.(accepted);
+      if (rejected.length > 0) onRejectFiles?.(rejected);
+    }
+  };
+
+  const accept = acceptedFileTypes === undefined ? undefined : acceptedFileTypes.join(",");
+
   return (
-    <AriaDropZone
-      data-lumo=""
-      // Leak 1, closed. Without this the served bytes carry
-      // aria-label="DropZone" on a Persian page.
-      aria-label={label}
-      className={cn(dropZoneVariants(), className)}
-      onDrop={(event) => {
-        if (!onSelectFiles) return;
-        // `items` is a heterogeneous list — a drag can carry text, a URL, or a
-        // directory. `isFileDropItem` is RAC's own guard, used rather than a
-        // hand-written `kind === "file"` check so a future DnD shape change is
-        // their problem and not a silent filter that stops matching.
-        //
-        // `getFile()` is async, so the whole handler is: an async handler is
-        // assignable to RAC's `(e: DropEvent) => void`, and there is nothing to
-        // await it for — the result is delivered by callback either way.
-        void Promise.all(event.items.filter(isFileDropItem).map((item) => item.getFile())).then(
-          (files) => onSelectFiles(files),
-        );
-      }}
+    <div
       {...props}
+      data-lumo=""
+      role="group"
+      aria-label={label}
+      {...(isDisabled === true ? { "data-disabled": "" } : {})}
+      {...(dragDepth > 0 ? { "data-lumo-drop-target": "" } : {})}
+      className={cn(dropZoneVariants(), className)}
+      onDragEnter={(event: ReactDragEvent<HTMLDivElement>) => {
+        // Only a drag that actually carries files, so a dragged text selection does not light the target.
+        if (isDisabled === true || !event.dataTransfer.types.includes("Files")) return;
+        event.preventDefault();
+        setDragDepth((depth) => depth + 1);
+      }}
+      onDragOver={(event: ReactDragEvent<HTMLDivElement>) => {
+        if (isDisabled === true || !event.dataTransfer.types.includes("Files")) return;
+        // `preventDefault` on EVERY dragover, or the drop event never fires.
+        event.preventDefault();
+        event.dataTransfer.dropEffect = "copy";
+      }}
+      onDragLeave={() => {
+        setDragDepth((depth) => Math.max(0, depth - 1));
+      }}
+      onDrop={(event: ReactDragEvent<HTMLDivElement>) => {
+        if (isDisabled === true) return;
+        event.preventDefault();
+        setDragDepth(0);
+        deliver(event.dataTransfer.files);
+      }}
+      // The clipboard path. `paste` BUBBLES, so the container catches a paste
+      // from any focusable descendant; something inside must be focused first.
+      onPaste={(event: ReactClipboardEvent<HTMLDivElement>) => {
+        if (isDisabled === true) return;
+        const files = event.clipboardData?.files;
+        if (files && files.length > 0) {
+          event.preventDefault();
+          deliver(files);
+        }
+      }}
     >
-      {/*
-       * A cloud with an upward arrow. `aria-hidden` because the drop area is
-       * already named by `label`, and an icon that repeats the name only makes
-       * the announcement longer. The BLOCK axis is direction-invariant, so an
-       * upward arrow needs no mirroring — the same reasoning select.tsx records
-       * for its chevron.
-       */}
       <CloudUpload aria-hidden="true" className="size-8 shrink-0 text-fg-muted" />
 
-      <AriaFileTrigger
-        // Leak 2, closed. `hidden` is the only lever that reaches the input —
-        // `aria-label` is filtered out before it gets there. See the file header.
+      {/* `hidden`: the input is never meant to be perceived; `.click()` on it still opens the picker. */}
+      <input
+        ref={inputRef}
+        type="file"
         hidden
-        onSelect={(files) => {
-          // `FileList` is not an array. `Array.from` rather than a spread so the
-          // conversion is explicit at the boundary where the DOM type ends.
-          onSelectFiles?.(Array.from(files ?? []));
+        {...(accept === undefined ? {} : { accept })}
+        {...(allowsMultiple === true ? { multiple: true } : {})}
+        {...(capture === undefined ? {} : { capture })}
+        {...(allowsDirectories === true
+          ? ({ webkitdirectory: "", directory: "" } as Record<string, string>)
+          : {})}
+        onChange={(event) => {
+          deliver(event.target.files);
+          // Cleared so choosing the SAME file twice in a row still fires a change event.
+          event.target.value = "";
         }}
-        {...optional("acceptedFileTypes", acceptedFileTypes)}
-        {...optional("allowsMultiple", allowsMultiple)}
-      >
-        <Button variant="outline" size="sm">
-          {triggerLabel}
-        </Button>
-      </AriaFileTrigger>
+      />
 
-      {/*
-       * `Text`, not a bare `<div>`, and it is rendered even when there is no
-       * hint. `DropZone` mints an id with `useSlotId()` and puts it in the drop
-       * button's `aria-labelledby`; `useSlotId` only clears an unclaimed id in a
-       * layout effect, which never runs on the server. Measured in the
-       * prerendered bytes: `aria-labelledby="<buttonId> react-aria-_R_0_"` with
-       * nothing carrying the second id — a dangling reference that fails
-       * `@lumo-ui/gate`'s `resolved-idrefs`. RAC publishes that id through
-       * `TextContext`, so this element is what claims it. `list-box.tsx` records
-       * the same trap; `toast.tsx` states the rule.
-       *
-       * `elementType="div"`: the hint is prose and a consumer will pass a `<p>`,
-       * which is not valid inside the `<span>` `Text` renders by default.
-       */}
-      <AriaText slot="label" elementType="div" className="text-center">
-        {children}
-      </AriaText>
-    </AriaDropZone>
+      <Button
+        variant="outline"
+        size="sm"
+        isDisabled={isDisabled ?? false}
+        onPress={() => {
+          inputRef.current?.click();
+        }}
+      >
+        {triggerLabel}
+      </Button>
+
+      {children == null ? null : <div className="text-center">{children}</div>}
+    </div>
   );
 }
 
-export interface FileUploadListProps {
+export type UploadDropEntry =
+  | { kind: "file"; file: () => Promise<File> }
+  | { kind: "directory"; entries: () => Promise<readonly UploadDropEntry[]> };
+
+/** Recursively flattens the File System Entry API behind a browser-neutral seam. */
+export async function collectDroppedFiles(entries: readonly UploadDropEntry[]): Promise<File[]> {
+  const files: File[] = [];
+  for (const entry of entries) {
+    if (entry.kind === "file") files.push(await entry.file());
+    else files.push(...(await collectDroppedFiles(await entry.entries())));
+  }
+  return files;
+}
+
+export type UploadTransform = (file: File) => File | Promise<File>;
+
+export async function transformUploadFiles(
+  files: readonly File[],
+  transforms: readonly UploadTransform[],
+): Promise<File[]> {
+  return Promise.all(
+    files.map(async (file) => {
+      let current = file;
+      for (const transform of transforms) current = await transform(current);
+      return current;
+    }),
+  );
+}
+
+export function reorderUploadItems<T extends { id: string }>(
+  items: readonly T[],
+  activeId: string,
+  beforeId: string | null,
+): T[] {
+  const from = items.findIndex((item) => item.id === activeId);
+  const target = beforeId === null ? items.length : items.findIndex((item) => item.id === beforeId);
+  if (from < 0 || target < 0 || from === target) return [...items];
+  const next = [...items];
+  const [item] = next.splice(from, 1);
+  next.splice(from < target ? target - 1 : target, 0, item!);
+  return next;
+}
+
+export type UploadControllerStatus =
+  | "queued"
+  | "uploading"
+  | "paused"
+  | "success"
+  | "error"
+  | "cancelled";
+
+export interface UploadControllerSnapshot {
+  status: UploadControllerStatus;
+  progress: number;
+  error?: unknown;
+}
+
+export interface UploadChunkContext {
+  file: File;
+  chunk: Blob;
+  index: number;
+  count: number;
+  signal: AbortSignal;
+}
+
+export interface UploadControllerOptions {
+  file: File;
+  chunkSize?: number | undefined;
+  uploadChunk: (context: UploadChunkContext) => Promise<void>;
+}
+
+export interface UploadController {
+  readonly finished: Promise<void>;
+  pause: () => void;
+  resume: () => void;
+  cancel: () => void;
+  retry: () => Promise<void>;
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => UploadControllerSnapshot;
+}
+
+/** Optional transport adapter: no URL/client/runtime is bundled. */
+export function createUploadController(options: UploadControllerOptions): UploadController {
+  const chunkSize = Math.max(1, Math.trunc(options.chunkSize ?? (options.file.size || 1)));
+  const count = Math.max(1, Math.ceil(options.file.size / chunkSize));
+  const abort = new AbortController();
+  const listeners = new Set<() => void>();
+  let snapshot: UploadControllerSnapshot = { status: "queued", progress: 0 };
+  let completed = 0;
+  let wake: (() => void) | undefined;
+  const publish = (next: UploadControllerSnapshot) => {
+    snapshot = next;
+    listeners.forEach((listener) => listener());
+  };
+  const waitWhilePaused = async () => {
+    while (snapshot.status === "paused") {
+      await new Promise<void>((resolve) => {
+        wake = resolve;
+      });
+    }
+  };
+  const run = async () => {
+    try {
+      for (; completed < count; completed += 1) {
+        await waitWhilePaused();
+        if (abort.signal.aborted) return;
+        publish({ status: "uploading", progress: completed / count });
+        await options.uploadChunk({
+          file: options.file,
+          chunk: options.file.slice(completed * chunkSize, (completed + 1) * chunkSize),
+          index: completed,
+          count,
+          signal: abort.signal,
+        });
+        if (abort.signal.aborted) return;
+      }
+      publish({ status: "success", progress: 1 });
+    } catch (error) {
+      if (!abort.signal.aborted) publish({ status: "error", progress: completed / count, error });
+    }
+  };
+  const finished = Promise.resolve().then(run);
+  return {
+    finished,
+    pause() {
+      if (snapshot.status === "queued" || snapshot.status === "uploading") {
+        publish({ status: "paused", progress: snapshot.progress });
+      }
+    },
+    resume() {
+      if (snapshot.status !== "paused") return;
+      publish({ status: "uploading", progress: snapshot.progress });
+      wake?.();
+      wake = undefined;
+    },
+    cancel() {
+      abort.abort();
+      wake?.();
+      publish({ status: "cancelled", progress: snapshot.progress });
+    },
+    retry: run,
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    getSnapshot: () => snapshot,
+  };
+}
+
+export type FileUploadRejectionReason = "type" | "size" | "count";
+
+export interface FileUploadRejection {
+  file: File;
+  reason: FileUploadRejectionReason;
+}
+
+export interface FileUploadListProps
+  extends Omit<ComponentProps<"ul">, "children" | "className"> {
   children?: LumoNode;
   className?: string | undefined;
 }
 
-/**
- * The list of chosen files.
- *
- * A real `<ul>`: the count is then in the accessibility tree for free ("list,
- * 3 items"), announced in the reader's own language by the screen reader rather
- * than by a string this library would otherwise have to require and format.
- * That is the cheapest correct answer to "how many files did I attach", and it
- * is the reason this is not a `<div>` with `gap`.
- */
-export function FileUploadList({ children, className }: FileUploadListProps) {
-  return <ul className={cn(fileUploadListVariants(), className)}>{children}</ul>;
+/** The list of chosen files. A real `<ul>`, so the count is announced by the screen reader for free. */
+export function FileUploadList({ children, className, ...props }: FileUploadListProps) {
+  return (
+    <ul className={cn(fileUploadListVariants(), className)} {...props}>
+      {children}
+    </ul>
+  );
 }
 
-export interface FileUploadItemProps {
+export interface FileUploadLifecycleAction {
+  /** Visible and announced action text, e.g. «تلاش دوباره برای گزارش.pdf». */
+  label: string;
+  onPress: () => void;
+}
+
+export type FileUploadLifecycle =
+  | {
+      status: "uploading";
+      /** Visible state text and the progress bar's accessible name. */
+      statusText: string;
+      /** Fraction in `0…1`; rendering clamps it without changing caller state. */
+      progress: number;
+      /** Localised value prose, e.g. «چهل درصد». */
+      progressText: string;
+      action?: FileUploadLifecycleAction | undefined;
+    }
+  | {
+      status: "queued" | "success" | "error";
+      /** Visible live-region text authored by the caller. */
+      statusText: string;
+      action?: FileUploadLifecycleAction | undefined;
+    };
+
+export interface FileUploadItemProps
+  extends Omit<ComponentProps<"li">, "children" | "className"> {
   /** The file's own name, exactly as the file system reports it. */
   name: string;
   /** Size in BYTES. A number — formatted here, never interpolated. */
@@ -238,18 +429,26 @@ export interface FileUploadItemProps {
   locale: Locale;
   /**
    * Builds the announced name of this row's remove control from the file's own
-   * name, e.g. ``(n) => `حذف ${n}` `` → «حذف گزارش.pdf».
-   *
-   * REQUIRED, and a function rather than a string, for the reason
-   * `TagGroup.removeLabel` sets out: a fixed «حذف» announces every row of a
-   * five-file list identically, and Persian word order is not English word order
-   * with the words swapped.
+   * name, e.g. ``(n) => `حذف ${n}` ``. REQUIRED; a function so every row is distinct.
    */
   removeLabel: (fileName: string) => string;
   /** Drop this file. Required: a list with no way out of it is a dead end. */
   onRemove: () => void;
   /** Options for `Intl.NumberFormat` — see `formatFileSize`. */
   formatOptions?: Intl.NumberFormatOptions | undefined;
+  /** Caller-owned transfer state. This module renders it but never performs I/O. */
+  lifecycle?: FileUploadLifecycle | undefined;
+  /** Optional list/gallery ordering controls; every announced label is caller-authored. */
+  order?:
+    | {
+        earlierLabel: string;
+        laterLabel: string;
+        onEarlier: () => void;
+        onLater: () => void;
+        isEarlierDisabled?: boolean | undefined;
+        isLaterDisabled?: boolean | undefined;
+      }
+    | undefined;
   className?: string | undefined;
 }
 
@@ -260,60 +459,95 @@ export function FileUploadItem({
   removeLabel,
   onRemove,
   formatOptions,
+  lifecycle,
+  order,
   className,
+  ...props
 }: FileUploadItemProps) {
   return (
-    <li className={cn(fileUploadItemVariants(), className)}>
+    <li
+      className={cn(fileUploadItemVariants(), className)}
+      {...props}
+      {...(lifecycle === undefined ? {} : { "data-status": lifecycle.status })}
+      {...(lifecycle?.status === "uploading" ? { "aria-busy": true } : {})}
+    >
       <Paperclip aria-hidden="true" className="size-4 shrink-0 text-fg-muted" />
 
-      {/*
-       * `<bdi>`, not `<span>`.
-       *
-       * A file name is the one string in this component whose script Lumo cannot
-       * predict: `report-2024.pdf` and `گزارش سالانه.pdf` land in the same list,
-       * from the same picker. `<bdi>` is the element the platform provides for
-       * exactly that — it isolates the run so a Latin name embedded in a
-       * right-to-left row cannot drag the surrounding punctuation around with
-       * it, and its implicit `dir="auto"` derives each name's own direction from
-       * its first strong character. A `<span dir="ltr">` would be right for the
-       * Latin case and wrong for the Persian one; a bare `<span>` gets the
-       * extension separated from the stem in the classic bidi way, rendering
-       * `pdf.گزارش`.
-       *
-       * `data-lumo-latn` is the sanctioned escape hatch from README.md: a file
-       * name is genuinely-Latin content often enough that the gate's
-       * `no-latin-digits` rule would fire on `report-2024.pdf`. Marked, not
-       * excused — and the mark is inert when the name is Persian.
-       */}
-      <bdi data-lumo-latn="" className="min-w-0 flex-1 truncate">
-        {name}
-      </bdi>
+      {/* `<bdi>`, not `<span>`: a file name's script is unpredictable, and a bare
+          span renders `pdf.گزارش`. `data-lumo-latn` only when the name really IS
+          Latin — a Persian name forced LTR and exempted from the script rules was
+          the first thing the island-purity gate found. */}
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex min-w-0 items-center gap-3">
+          <bdi {...(isLatinName(name) ? { "data-lumo-latn": "" } : {})} className="min-w-0 flex-1 truncate">
+            {name}
+          </bdi>
 
-      {/*
-       * The formatted size. It is a STRING by the time it reaches JSX, which is
-       * also what gets it past `LumoNode` — the compile error is the point, and
-       * `{size}` here would be the file-upload spelling of the `{day.day}` that
-       * shipped 77 Latin calendar cells.
-       */}
-      <span className="shrink-0 text-fg-muted">{formatFileSize(size, locale, formatOptions)}</span>
+          {/* A STRING by the time it reaches JSX; `{size}` would be Latin digits. */}
+          <span className="shrink-0 text-fg-muted">
+            {formatFileSize(size, locale, formatOptions)}
+          </span>
+        </div>
 
-      {/*
-       * `data-lumo-latn` on the CONTROL, not on the row.
-       *
-       * `removeLabel(name)` necessarily embeds the file name — that is the whole
-       * point of the function form — so «حذف report-2024.pdf» is a correct
-       * Persian accessible name that contains a Latin word. The gate's
-       * `no-latin-aria` rule matches `/[A-Za-z]{3,}/` on spoken attributes and
-       * would report it, which is the rule working as designed on content it
-       * cannot distinguish from a React Aria leak.
-       *
-       * The mark goes here and nowhere wider on purpose. Putting it on the `<li>`
-       * would also exempt the formatted SIZE from `no-latin-digits`, and proving
-       * that size is Persian is the main thing this component exists to do. The
-       * cost is stated rather than hidden: an English word a consumer writes into
-       * `removeLabel` is no longer caught here. That is the trade the README's
-       * escape hatch describes — genuinely-Latin content is marked, not excused.
-       */}
+        {lifecycle === undefined ? null : (
+          <div className="flex min-w-0 items-center gap-2 text-xs text-fg-muted">
+            <span role="status" aria-live="polite" className="min-w-0 truncate">
+              {lifecycle.statusText}
+            </span>
+            {lifecycle.status === "uploading" ? (
+              <div
+                role="progressbar"
+                aria-label={lifecycle.statusText}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(Math.max(0, Math.min(lifecycle.progress, 1)) * 100)}
+                aria-valuetext={lifecycle.progressText}
+                className="h-1.5 min-w-16 flex-1 overflow-hidden rounded-full bg-surface-sunken"
+              >
+                <span
+                  aria-hidden="true"
+                  className="block h-full rounded-full bg-accent"
+                  style={{
+                    inlineSize: `${Math.max(0, Math.min(lifecycle.progress, 1)) * 100}%`,
+                  }}
+                />
+              </div>
+            ) : null}
+            {lifecycle.action === undefined ? null : (
+              <Button variant="ghost" size="sm" onPress={lifecycle.action.onPress}>
+                {lifecycle.action.label}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* `data-lumo-latn` on the CONTROL, not the row: `removeLabel(name)` embeds
+          a possibly-Latin file name, and the row's SIZE must stay graded. */}
+      {order === undefined ? null : (
+        <div className="flex shrink-0 items-center gap-0.5">
+          <IconButton
+            data-lumo-latn=""
+            label={order.earlierLabel}
+            variant="ghost"
+            size="sm"
+            isDisabled={order.isEarlierDisabled ?? false}
+            onPress={order.onEarlier}
+          >
+            <ArrowUp aria-hidden="true" />
+          </IconButton>
+          <IconButton
+            data-lumo-latn=""
+            label={order.laterLabel}
+            variant="ghost"
+            size="sm"
+            isDisabled={order.isLaterDisabled ?? false}
+            onPress={order.onLater}
+          >
+            <ArrowDown aria-hidden="true" />
+          </IconButton>
+        </div>
+      )}
       <IconButton
         data-lumo-latn=""
         label={removeLabel(name)}

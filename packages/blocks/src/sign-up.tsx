@@ -19,21 +19,10 @@ import {
 /**
  * Account creation.
  *
- * `"use client"` for the `onSubmit` callback — see sign-in.tsx for the full
- * argument, and for the block contract this file obeys.
- *
- * ── THE CONSENT CHECKBOX IS WHY `Checkbox` TAKES `children` AND NOT `label` ──
- *
- * Terms acceptance is the canonical case for rich checkbox content: the label
- * legitimately wraps two links inside one sentence, and where those links fall
- * inside that sentence is a translation decision. So the terms row is assembled
- * from four separate strings — a prefix, the terms link, a joiner, the privacy
- * link — rather than one template with holes in it. English wants
- * "I accept the {terms} and the {privacy policy}"; Persian does not put the
- * clauses in that order, and a `{0}`-style placeholder quietly forces it to.
- *
- * The pieces are laid out with `flex-wrap` + `gap`, never with `{" "}` text
- * nodes, so the library ships no whitespace of its own between them.
+ * `"use client"` for the `onSubmit` callback — see sign-in.tsx for the block
+ * contract. The consent row is four separate strings (prefix, terms link,
+ * joiner, privacy link) laid out with `flex-wrap` + `gap`, never a template
+ * with holes: where the links fall in the sentence is a translation decision.
  */
 export interface SignUpStrings {
   /** The screen's heading. Rendered as the page `<h1>`. */
@@ -151,9 +140,7 @@ export function SignUp({
 
             <Checkbox name="terms" isRequired>
               {/*
-               * Four strings, one sentence, assembled by the layout rather than
-               * by a template. See the file header — this is the whole reason
-               * `Checkbox` takes `children` and not a flat `label: string`.
+               * Four strings, one sentence, assembled by the layout — the reason `Checkbox` takes `children`.
                */}
               <span className="flex flex-wrap items-center gap-1">
                 <span>{strings.termsPrefix}</span>

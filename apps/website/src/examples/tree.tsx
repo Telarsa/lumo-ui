@@ -159,6 +159,16 @@ function MultipleExample(l: Locale) {
 
 export const EXAMPLES: ComponentExamples = {
   meta: {
+    usage: {
+      when: {
+        "fa-IR": "فهرستی تودرتو که در جای خود با صفحه‌کلید و تایپ‌یاب مرور می‌شود: درخت پرونده، طرح کلی دسته‌ها.",
+        "en-US": "A nested list browsed in place with keyboard and typeahead: a file tree, a category outline.",
+      },
+      whenNot: {
+        "fa-IR": "انتخاب برای یک فیلد فرم — `TreeSelect`. یک مسیر — `Cascader`. بخش‌هایی که باز و بسته می‌شوند — `Disclosure`. ناوبری برنامه — `Sidebar`.",
+        "en-US": "Selecting into a form field — `TreeSelect`. One path — `Cascader`. Sections that open and close — `Disclosure`. Application navigation — `Sidebar`.",
+      },
+    },
     tier: "data",
     isNew: true,
     title: { "fa-IR": "درخت", "en-US": "Tree" },
@@ -180,7 +190,7 @@ export const EXAMPLES: ComponentExamples = {
         name: "Tree",
         description: {
           "fa-IR":
-            "خودِ درخت. label الزامی است چون ری‌اکت‌آریا این ناحیه را بی‌نام می‌سازد و یک درختِ بی‌نام فقط «جدول درختی» خوانده می‌شود.",
+            "خودِ درخت. label الزامی است چون موتور این ناحیه را بی‌نام می‌سازد و یک درختِ بی‌نام فقط «جدول درختی» خوانده می‌شود.",
           "en-US":
             "The tree itself. label is required because React Aria leaves the region unnamed, and an unnamed one is announced as bare «tree grid».",
         },
@@ -202,7 +212,7 @@ export const EXAMPLES: ComponentExamples = {
       title: { "fa-IR": "پایه", "en-US": "Basic" },
       description: {
         "fa-IR":
-          "تورفتگی از ویژگی سفارشی خودِ ری‌اکت‌آریا می‌آید و روی محور منطقی اعمال می‌شود، پس در فارسی از راست پله می‌خورد بدون هیچ قاعدهٔ جداگانه.",
+          "تورفتگی از ویژگی سفارشی خودِ موتور می‌آید و روی محور منطقی اعمال می‌شود، پس در فارسی از راست پله می‌خورد بدون هیچ قاعدهٔ جداگانه.",
         "en-US":
           "The indent comes from React Aria's own custom property and is applied on the logical axis, so a Persian tree steps in from the right with no separate rule.",
       },

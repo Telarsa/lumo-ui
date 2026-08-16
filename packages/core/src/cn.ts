@@ -1,19 +1,23 @@
 import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 
 /**
- * Conditional classes with Tailwind conflict resolution.
- *
- * `twMerge` is what makes a copy-in component overridable: a consumer passing
- * `className="ms-4"` must beat the component's own `ms-2`, and plain string
- * concatenation would leave both in the class list with the winner decided by
- * stylesheet order rather than by intent.
- *
- * This matters more in RTL than it looks. `tailwind-merge` encodes Tailwind's
- * conflict GROUPS, so it knows `ms-2` and `ms-4` collide but `ms-2` and `me-4`
- * do not. A version that gets those groups wrong produces silently wrong
- * spacing that mirrors incorrectly — see cn.test.ts, which pins the exact case.
+ * Conditional classes with Tailwind conflict resolution: a consumer's `ms-4`
+ * beats the component's `ms-2` by intent, not stylesheet order. EXTENDED with
+ * Lumo's own spacing scale (`--spacing-control-*`), which a bare `twMerge`
+ * cannot see as conflicting; `extend.theme.spacing` (not `classGroups`) covers
+ * every spacing-derived group at once.
  */
+const merge = extendTailwindMerge({
+  extend: {
+    theme: {
+      // Pinned mirror of `--spacing-control-*` in `packages/theme/src/theme.css`;
+      // `cn.test.ts` fails if the two disagree.
+      spacing: ["control-sm", "control-md", "control-lg"],
+    },
+  },
+});
+
 export function cn(...inputs: ClassValue[]): string {
-  return twMerge(clsx(inputs));
+  return merge(clsx(inputs));
 }

@@ -45,6 +45,16 @@ const copy = {
 } satisfies Record<string, Record<Locale, string>>;
 
 export const meta = {
+  usage: {
+    when: {
+      "fa-IR": "پروندهٔ نام‌داری در دل گفتگو: تراشه در نوشتار پیش از ارسال، و کارت روی پیام پس از آن، با اندازه و وضعیت.",
+      "en-US": "A named file inside a conversation: the chip in the composer before sending, the card on the message afterwards, with size and state.",
+    },
+    whenNot: {
+      "fa-IR": "فهرست پرونده‌ها داخل خودِ ابزارک انتخاب — `FileUpload` و `FileUploadItem`. ردیف عمومی با رسانه و کنش — `Item`. کلیدواژهٔ حذف‌شدنی — `Tag`.",
+      "en-US": "The list of files inside the picker widget itself — `FileUpload` and `FileUploadItem`. A generic row with media and actions — `Item`. A removable keyword — `Tag`.",
+    },
+  },
   id: "attachment",
   tier: "display",
   title: { "fa-IR": "پیوست", "en-US": "Attachment" },

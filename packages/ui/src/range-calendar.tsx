@@ -1,128 +1,189 @@
 "use client";
 
-import { useId } from "react";
+import { useId, type ComponentProps } from "react";
+import { DayPicker } from "react-day-picker";
+import type { CalendarDate } from "@internationalized/date";
+import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
+import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
 import {
-  CalendarGrid as AriaCalendarGrid,
-  CalendarGridBody as AriaCalendarGridBody,
-  CalendarGridHeader as AriaCalendarGridHeader,
-  CalendarHeaderCell as AriaCalendarHeaderCell,
-  CalendarCell as AriaCalendarCell,
-  RangeCalendar as AriaRangeCalendar,
-  Text as AriaText,
-  type CalendarCellProps as AriaCalendarCellProps,
-  type DateValue,
-  type RangeCalendarProps as AriaRangeCalendarProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
-import { CalendarHeader, describedByWith } from "./calendar.tsx";
+  calendarChevron,
+  CalendarDropdown,
+  calendarClassNames,
+  calendarDisabled,
+  describedByWith,
+  type CalendarNavigation,
+} from "./calendar.tsx";
 import {
-  calendarGridVariants,
-  calendarHeaderCellVariants,
-  calendarVariants,
+  calendarFooterVariants,
   rangeCalendarCellVariants,
+  rangeCalendarSelectionVariants,
 } from "./calendar.variants.ts";
 import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
 
-export { rangeCalendarCellVariants };
+export { rangeCalendarCellVariants, rangeCalendarSelectionVariants };
 
 /**
- * A month grid that selects a span of days.
- *
- * Everything `calendar.tsx` says about Jalali applies here; read that file
- * first. What is specific to a RANGE is the highlight, and the highlight is the
- * one part of a calendar that genuinely has handedness.
- *
- * ── THE BAND ROUNDS ON LOGICAL CORNERS ──────────────────────────────────────
- *
- * A selected range renders as a continuous band with rounded ends. Which end is
- * "the start" is a reading-order question, not a geometric one: in Persian the
- * first day of the range is the RIGHTMOST cell of the first row. React Aria
- * gives the ends `data-selection-start` and `data-selection-end` — logical
- * names, already resolved for direction — and `rangeCalendarCellVariants`
- * rounds them with the logical corner utilities, so one class string produces
- * a band that opens toward the reader in both scripts.
- *
- * Written with the physical corner spellings this would be invisible in review:
- * an English reviewer sees a correctly rounded range, and a Persian reader sees
- * a band that appears to start at its end. That is the entire defect profile
- * this library exists to remove.
- *
- * ── A JALALI RANGE CROSSES MONTHS OF DIFFERENT LENGTHS ──────────────────────
- *
- * A six-day trip beginning ۱۴۰۵/۶/۲۹ ends in Mehr, because Shahrivar has 31
- * days — the first six Jalali months have 31, the next five have 30, and
- * Esfand has 29 or 30. Arithmetic like that belongs to `@internationalized/date`,
- * which does it in the persian calendar because the values carry their calendar
- * with them — `CalendarDate` is not a Gregorian date with a Persian skin. Never
- * compute a range by adding to a JavaScript `Date`; that is Gregorian by
- * construction and will land in the wrong month roughly half the year.
- *
- * ── ANNOUNCED STRINGS ───────────────────────────────────────────────────────
- *
- * Same three required props as `Calendar`. The range-specific announcements —
- * «برای شروع انتخاب بازهٔ تاریخ کلیک کنید» and «بازهٔ انتخاب‌شده: …» — are not
- * prop reachable and come from the patched `fa-IR` calendar bundle.
+ * A month grid that selects a span of days. Everything `calendar.tsx` says
+ * about Jalali applies; what is specific to a RANGE is the highlight. The band
+ * rounds on LOGICAL corners (`rounded-ss`/`rounded-es`) so it opens toward the
+ * reader in both scripts; react-day-picker marks range ends as modifier CLASS
+ * NAMES (`range_start`/`range_end`/`range_middle`), hence
+ * `rangeCalendarSelectionVariants()` is a map. Range arithmetic belongs to
+ * `@internationalized/date` — never add to a JS `Date`, which is Gregorian by
+ * construction. Announcements are data via `labels` from `calendar-datelib.ts`.
  */
-export interface RangeCalendarProps<T extends DateValue>
+
+/** A span of days, both ends in the reader's own calendar. */
+export interface CalendarDateRange {
+  from: CalendarDate;
+  /** Absent while the reader has picked only the first end. */
+  to?: CalendarDate | undefined;
+}
+
+export interface RangeCalendarBaseProps
+  // The root DOM surface. `aria-describedby` is declared BELOW and merged with the
+  // component's own `description` id — two sources, one attribute.
   extends Omit<
-    AriaRangeCalendarProps<T>,
-    "children" | "className" | "aria-label" | "visibleDuration"
+    ComponentProps<"div">,
+    /* `onChange` is the library's own `(value) => void`, not React's; subtracted so the Lumo one can be declared. */
+    "children" | "className" | "aria-describedby" | "onChange"
   > {
   /** Announced name of the calendar. Required. */
   label: string;
-  /** Name of the previous-month button. Required. `strings.calendar.previousMonth`. */
-  previousMonthLabel: string;
-  /** Name of the next-month button. Required. `strings.calendar.nextMonth`. */
-  nextMonthLabel: string;
+  /** Selects the calendar system, the digits, the week start and the direction. */
+  locale: Locale;
+  /** Clock input for deterministic SSR and hydration. */
+  today: CalendarDate;
+  /** The selected range, when controlled. CalendarDate endpoints, inclusive. */
+  value?: CalendarDateRange | undefined;
+  /** Fires with both ends, or `undefined` once the selection is cleared. */
+  onChange?: ((value: CalendarDateRange | undefined) => void) | undefined;
+  /** The month the grid opens on when no value decides it. */
+  defaultMonth?: CalendarDate | undefined;
+  /** Marks individual dates unselectable in the grid. */
+  isDateUnavailable?: ((date: CalendarDate) => boolean) | undefined;
+  isDisabled?: boolean | undefined;
   description?: LumoNode;
   /** Required once the range is bounded — see `date-field.tsx`'s `DateBounds`. */
   errorMessage?: LumoNode;
   className?: string | undefined;
+  "aria-describedby"?: string | undefined;
 }
 
-export function RangeCalendar<T extends DateValue>({
+/**
+ * The range grid's props, with the SAME caption-layout union `Calendar` uses —
+ * imported, not restated, so neither grid comes to permit the unbounded case.
+ */
+export type RangeCalendarProps = RangeCalendarBaseProps & CalendarNavigation;
+
+export function RangeCalendar({
   label,
-  previousMonthLabel,
-  nextMonthLabel,
+  locale,
+  today,
+  value,
+  onChange,
+  defaultMonth,
+  captionLayout,
+  minValue,
+  maxValue,
+  isDateUnavailable,
+  isDisabled,
   description,
   errorMessage,
   className,
   "aria-describedby": describedBy,
   ...props
-}: RangeCalendarProps<T>) {
+}: RangeCalendarProps) {
   const descriptionId = useId();
+  const errorId = useId();
+  const config = lumoCalendar(locale);
+  const dir = direction(locale);
+  // The bounds as SELECTION matchers, shared with `calendar.tsx`: a bound that
+  // only bounds navigation lets a reader anchor a range on an out-of-range day.
+  const disabled = calendarDisabled({
+    locale,
+    isDisabled,
+    isDateUnavailable,
+    minValue,
+    maxValue,
+  });
+
   return (
-    <AriaRangeCalendar
-      data-lumo=""
-      aria-label={label}
-      {...describedByWith(describedBy, description != null ? descriptionId : undefined)}
-      className={cn(calendarVariants(), className)}
+    <div
       {...props}
+      data-lumo=""
+      className={cn("flex w-fit flex-col gap-2", className)}
+      {...describedByWith(
+        describedByWith(describedBy, description != null ? descriptionId : undefined)[
+          "aria-describedby"
+        ],
+        errorMessage != null ? errorId : undefined,
+      )}
     >
-      <CalendarHeader previousMonthLabel={previousMonthLabel} nextMonthLabel={nextMonthLabel} />
-      <AriaCalendarGrid className={calendarGridVariants()}>
-        <AriaCalendarGridHeader>{renderRangeHeaderCell}</AriaCalendarGridHeader>
-        <AriaCalendarGridBody>{renderRangeCell}</AriaCalendarGridBody>
-      </AriaCalendarGrid>
+      <DayPicker
+        mode="range"
+        dir={dir}
+        // `lang` explicitly: react-day-picker otherwise stamps `locale.code`
+        // (`lang="en-US"` inside a Persian document).
+        lang={locale}
+        today={toPickerDate(today)}
+        // Neighbouring months' days are SHOWN, greyed: Jalali month lengths change
+        // inside a year, so a reader needs to see where the month actually ends.
+        showOutsideDays
+        aria-label={label}
+        dateLib={config.dateLib as never}
+        formatters={config.formatters as never}
+        labels={config.labels as never}
+        weekStartsOn={config.weekStartsOn as never}
+        // The shared map, plus the range cell and the three selection classes.
+        classNames={{
+          ...calendarClassNames(),
+          day: rangeCalendarCellVariants(),
+          ...rangeCalendarSelectionVariants(),
+        }}
+        components={{ Chevron: calendarChevron(locale), Dropdown: CalendarDropdown }}
+        // Forwarded only when stated, exactly as `Calendar` does.
+        {...(captionLayout ? { captionLayout } : {})}
+        {...(value
+          ? {
+              selected: {
+                from: toPickerDate(value.from),
+                ...(value.to ? { to: toPickerDate(value.to) } : {}),
+              },
+            }
+          : {})}
+        {...(defaultMonth ? { defaultMonth: toPickerDate(defaultMonth) } : {})}
+        // Navigation bounds, beside the selection matchers above.
+        {...(minValue ? { startMonth: toPickerDate(minValue) } : {})}
+        {...(maxValue ? { endMonth: toPickerDate(maxValue) } : {})}
+        {...(disabled !== undefined ? { disabled } : {})}
+        {...(onChange
+          ? {
+              onSelect: (selected: { from?: Date | undefined; to?: Date | undefined } | undefined) => {
+                // Both ends back into the reader's calendar. `from` absent means
+                // cleared; `to` absent means only the first end is picked.
+                if (!selected?.from) {
+                  onChange(undefined);
+                  return;
+                }
+                onChange({
+                  from: fromPickerDate(selected.from, locale),
+                  ...(selected.to ? { to: fromPickerDate(selected.to, locale) } : {}),
+                });
+              },
+            }
+          : {})}
+      />
       {description != null ? (
-        <div id={descriptionId} className={descriptionVariants()}>
+        <div id={descriptionId} className={cn(calendarFooterVariants(), descriptionVariants())}>
           {description}
         </div>
       ) : null}
       {errorMessage != null ? (
-        <AriaText slot="errorMessage" className={fieldErrorVariants()}>
+        <div id={errorId} role="alert" className={cn(calendarFooterVariants(), fieldErrorVariants())}>
           {errorMessage}
-        </AriaText>
+        </div>
       ) : null}
-    </AriaRangeCalendar>
+    </div>
   );
-}
-
-function renderRangeHeaderCell(day: string) {
-  return <AriaCalendarHeaderCell className={calendarHeaderCellVariants()}>{day}</AriaCalendarHeaderCell>;
-}
-
-/** No `children`, for the reason `calendar.tsx`'s `renderCell` gives at length. */
-function renderRangeCell(date: AriaCalendarCellProps["date"]) {
-  return <AriaCalendarCell data-lumo="" date={date} className={rangeCalendarCellVariants()} />;
 }

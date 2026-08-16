@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <!--
+      POISON: a control whose announced name is English, reached by a route no
+      other rule in this directory can follow.
+
+      An `<input type="submit">` is named by its `value`. That is not an ARIA
+      attribute, so `no-latin-aria` cannot see it; it is not a text node, so
+      `native-script-text` cannot see it; it HAS a name, so `named-controls` is
+      green. A Persian reader Tabs onto this button and hears «Send order».
+
+      The shape is chosen deliberately to isolate the rule. The COMMON case —
+      a control named by its own visible content — trips this rule and
+      `native-script-text` together, which is honest (the text is wrong AND
+      what is announced is wrong) but would make this fixture test two things.
+      That case is pinned inline in `gate.test.ts` instead, with the co-firing
+      asserted rather than allowed.
+    -->
+    <input type="submit" value="Send order" />
+
+    <!--
+      NOT a violation, and this is the exemption that had to be spelled
+      downward rather than upward.
+
+      The name of this link computes to «pnpm» — no Persian character in it —
+      and it is correct: a package manager is a proper noun. The mark sits on a
+      DESCENDANT, which is where a name comes from, so the ancestor-only
+      `closest("[data-lumo-latn]")` every other rule uses would report this and
+      the 473 like it in the export as violations. The rule subtracts the marked
+      text from the computed name and grades what is left.
+    -->
+    <a href="/fa/docs/install/"><code data-lumo-latn dir="ltr" lang="en">pnpm</code></a>
+
+    <!-- Not a violation: named in the language its reader reads. -->
+    <button aria-label="افزودن سفارش">+</button>
+  </body>
+</html>

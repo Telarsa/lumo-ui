@@ -1,60 +1,31 @@
 "use client";
 
 import { useId, useState } from "react";
-import { cn } from "@lumo-ui/core";
+import { cn, type LumoNode } from "@lumo-ui/core";
 import { Button } from "@lumo-ui/ui";
-import { CodeBlock } from "./code-block";
 
 /**
- * The collapsed-code affordance under every example card: a few grayed lines
- * of the source behind a gradient fade, with one centred button that expands
- * to the full highlighted listing.
- *
- * Expansion is CLIENT state; highlighting is not. `html` arrives from the
- * server pass via `lib/highlight.ts`, for the reason that file's header gives —
- * shiki must never reach a browser bundle. This component only decides how
- * much of the already-highlighted block is visible.
- *
- * The full source is in the served bytes either way — collapsed is a
- * max-height clip, not a conditional render — so view-source and reader modes
- * see the whole listing, and expanding cannot cause a fetch or a reflow of
- * highlight work. While collapsed the clipped region is `inert`: it contains
- * CodeBlock's copy button, and a focusable control inside an invisible
- * three-line strip is a keyboard trap wearing a gradient.
- *
- * ONE toggle button, kept mounted in both states rather than swapped for a
- * sibling: a control that unmounts on press drops keyboard focus on the floor.
- * Only its wrapper's classes move it from "centred over the fade" to "centred
- * under the listing". Both of its names are REQUIRED per-locale props —
- * `label` collapsed, `expandedLabel` expanded — per CONTRIBUTING.md: any
- * string a screen reader announces is a required prop. The open/closed state
- * itself is announced from `aria-expanded`, in the reader's own language.
+ * The collapsed-code affordance under every example card: a clipped, faded
+ * strip of the source with one centred button that expands the listing.
+ * Expansion is CLIENT state; the listing arrives as already-rendered `children`
+ * from the server (`example-card.tsx`), so this island is a boolean and a
+ * button. Collapsed is a max-height clip, not a conditional render, and the
+ * clipped region is `inert` (its copy button would otherwise be a keyboard
+ * trap). ONE toggle stays mounted in both states so focus is never dropped;
+ * both names are REQUIRED per-locale props, state comes from `aria-expanded`.
  */
 export interface ViewCodeProps {
-  /** The exact text the copy button copies. */
-  code: string;
-  /** Shiki output for the same code, produced by the server caller. */
-  html: string;
+  /** The code panel this toggle clips and reveals — server rendered by the
+   *  caller, never highlighted or serialized here. */
+  children: LumoNode;
   /** The toggle's name while collapsed, e.g. «نمایش کد». Required. */
   label: string;
   /** The toggle's name while expanded, e.g. «پنهان کردن کد». Required. */
   expandedLabel: string;
-  /** CodeBlock's copy-button name. Required. */
-  copyLabel: string;
-  /** CodeBlock's copied announcement. Required. */
-  copiedLabel: string;
   className?: string | undefined;
 }
 
-export function ViewCode({
-  code,
-  html,
-  label,
-  expandedLabel,
-  copyLabel,
-  copiedLabel,
-  className,
-}: ViewCodeProps) {
+export function ViewCode({ children, label, expandedLabel, className }: ViewCodeProps) {
   const [expanded, setExpanded] = useState(false);
   const regionId = useId();
 
@@ -63,23 +34,18 @@ export function ViewCode({
       <div
         id={regionId}
         inert={!expanded}
-        className={cn(!expanded && "max-h-24 overflow-hidden")}
+        className={cn(
+          !expanded && "max-h-24 overflow-hidden",
+          // The clip region carries the dimming for its subtree: the server-rendered
+          // panel cannot take a state-dependent class.
+          !expanded && "select-none opacity-60",
+        )}
       >
-        <CodeBlock
-          code={code}
-          html={html}
-          label={copyLabel}
-          copiedLabel={copiedLabel}
-          className={cn(!expanded && "select-none opacity-60")}
-        />
+        {children}
       </div>
       {!expanded ? (
-        /*
-         * The fade, drawn over the clip toward the block's OWN background so
-         * the last visible line dissolves into the panel. Block-axis gradient:
-         * top and bottom never mirror, so a physical direction is correct here
-         * in a way an inline one would not be.
-         */
+        // The fade toward the block's OWN background. Block-axis gradient: top
+        // and bottom never mirror, so a physical direction is correct here.
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 rounded-lg bg-linear-to-b from-transparent to-surface-sunken"

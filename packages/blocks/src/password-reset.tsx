@@ -18,30 +18,12 @@ import {
 /**
  * The two screens either side of "forgot your password": request a link, then
  * set a new one. Two components, not one switching on a `stage` prop, because
- * they are two ROUTES — the link emailed to the reader points at a different
- * URL than the form that asked for it, and a single component pretending
- * otherwise would force both screens into one client bundle for no reason.
+ * they are two ROUTES.
  *
- * `"use client"`: both take `onSubmit`. See sign-in.tsx for the block contract
- * this file obeys and for why the directive sits here rather than being
- * assumed.
- *
- * ── `RequestPasswordReset` OWNS A `status` PROP, LIKE `SettingsForm` ────────
- *
- * The email form and the "check your inbox" confirmation are the same screen
- * at the same URL — a reader who mistypes their address needs to see the
- * request form again without a client-side redirect happening first. So
- * `status` is a prop the CALLER flips once the request resolves, exactly the
- * trade `settings-form.tsx` makes for `"saved"`, rather than state this block
- * would otherwise have to invent and own itself.
- *
- * ── THE CONFIRMATION SCREEN GETS `OtpVerify`'S RESEND MECHANIC ──────────────
- *
- * A link can land in spam or simply never arrive, and "resend in 30s" is the
- * same affordance `otp-verify.tsx` ships for the identical reason: a disabled
- * control with no stated wait time reads as broken. See that file for why
- * `resendIn` is a function of the ALREADY-FORMATTED seconds rather than a
- * template with a hole in it.
+ * `"use client"`: both take `onSubmit`. See sign-in.tsx for the block contract.
+ * `status` is a prop the CALLER flips once the request resolves (same trade as
+ * settings-form.tsx), and the confirmation screen reuses otp-verify.tsx's
+ * resend mechanic, with `resendIn` a function of the ALREADY-FORMATTED seconds.
  */
 export interface RequestPasswordResetStrings {
   /** The screen's heading. Rendered as the page `<h1>`. */
@@ -55,20 +37,11 @@ export interface RequestPasswordResetStrings {
   backToSignIn: string;
   /** Heading shown once the link has been sent. */
   sentTitle: string;
-  /**
-   * Where the link was sent, e.g. «پیوند بازیابی به example@mail.com ارسال شد».
-   *
-   * A whole sentence from the caller, exactly as `OtpVerify.description` is —
-   * only the caller knows the address, and whether it needs a `dir="ltr"`
-   * island if it is written in Latin characters.
-   */
+  /** Where the link was sent, e.g. «پیوند بازیابی به example@mail.com ارسال شد». A whole sentence: only the caller knows the address and whether it needs a `dir="ltr"` island. */
   sentDescription?: LumoNode;
   /** The resend control, once it is enabled. */
   resend: string;
-  /**
-   * The disabled resend control, as a function of the ALREADY-FORMATTED
-   * remaining seconds. See the file header.
-   */
+  /** The disabled resend control, as a function of the ALREADY-FORMATTED remaining seconds. */
   resendIn: (seconds: string) => string;
 }
 
@@ -187,13 +160,9 @@ export function RequestPasswordReset({
  * Screen two: the reader has followed the emailed link and sets a new
  * password.
  *
- * No resend, no email field — the token in the URL is what authorises this
- * screen, and rejecting an expired one before rendering it is the caller's
- * job, never this block's. Field-level errors use the same
- * `Readonly<Partial<Record<…, LumoNode>>>` shape `sign-up.tsx` uses for its
- * own two password fields, for the identical reason: "too weak" belongs on
- * `password`, "does not match" belongs on `confirm`, and folding both into one
- * `error` string loses which field to focus.
+ * No resend, no email field — the token in the URL authorises this screen and
+ * rejecting an expired one is the caller's job. Field-level errors use the same
+ * per-field shape as sign-up.tsx so the caller knows which field to focus.
  */
 export interface SetNewPasswordStrings {
   /** The screen's heading. Rendered as the page `<h1>`. */

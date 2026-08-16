@@ -1,103 +1,57 @@
 "use client";
 
+import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Popover as BasePopover } from "@base-ui/react/popover";
+// `Placement` is the FULL union, physical spellings included, so the `Exclude` below can
+// subtract them; seven siblings import `LumoPlacement` from here, so it must not narrow.
 import {
-  DialogTrigger as AriaDialogTrigger,
-  Popover as AriaPopover,
-  type DialogTriggerProps as AriaDialogTriggerProps,
-  type Placement as AriaPlacement,
-  type PopoverProps as AriaPopoverProps,
-} from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
+  cn,
+  type FocusWithinEvents,
+  type GlobalDOMAttributes,
+  type LumoNode,
+  type OverlayTriggerProps,
+  type Placement,
+  type PositionProps,
+} from "@lumo-ui/core";
+import { attr } from "@lumo-ui/base-ui-ssr";
 
 /**
- * A positioned overlay.
+ * A positioned overlay on the Base UI engine.
  *
  *     <PopoverTrigger>
  *       <Button>گزینه‌ها</Button>
  *       <Popover placement="bottom start">…</Popover>
  *     </PopoverTrigger>
  *
- * ── PLACEMENT IS A CLOSED, LOGICAL UNION ────────────────────────────────────
- *
- * React Aria's `Placement` accepts BOTH spellings — `'bottom start'` and
- * `'bottom left'` are equally valid to it, and only one of them mirrors. That is
- * the defect surface: `placement="bottom left"` renders identically to
- * `"bottom start"` on the English page it was written on, and pins the popover
- * to the wrong corner on every Persian one.
- *
- * `LumoPlacement` subtracts the physical spellings with a template-literal
- * `Exclude`, so the wrong value is a compile error rather than a review comment.
- * It is derived from RAC's own union rather than retyped, so a future RAC
- * release that adds `'bottom-start'` or drops a value stays in sync — and if RAC
- * ever adds a physical spelling that does not contain "left" or "right", this
- * type does not silently start accepting it, because the source union is the
- * thing being filtered.
- *
- * ── data-placement IS PHYSICAL, AND THAT IS CORRECT ─────────────────────────
- *
- * Measured asymmetry worth knowing: the `placement` PROP is logical, but the
- * `data-placement` ATTRIBUTE RAC writes back is `PlacementAxis`, which is only
- * `'top' | 'bottom' | 'left' | 'right' | 'center'`. It is the RESOLVED position
- * — RAC has already applied the direction and any collision flip. So
- * `data-[placement=left]:` in a Tailwind variant refers to where the popover
- * actually ended up on screen, and styling against it is direction-correct by
- * construction. Do not "fix" it to `start`/`end`; there is no such value.
- *
- * ── EVERY OPEN POPOVER CARRIES TWO ENGLISH LABELS. MEASURED. ────────────────
- *
- * Rendering an open Popover, MenuPopover or SelectPopover in jsdom and reading
- * every `aria-label` in the document yields exactly `["Dismiss", "Dismiss"]`.
- * RAC's Popover brackets its children with two `DismissButton`s — one before
- * the content (skipped when `isNonModal`) and one after (unconditional) — each
- * a 1×1 visually-hidden `<button>` labelled from `@react-aria/overlays`'s
- * `dismiss` string. `isNonModal` removes one of the two, never both.
- *
- * They are NOT prop-reachable: RAC constructs `DismissButton` internally with
- * only `{onDismiss}`, and its `useLabels` call has no other input to override.
- * This is the same class of leak as the CalendarCell and DateSegment strings
- * recorded in `@lumo-ui/core`'s strings.ts, and the same reasoning applies — a
- * CLOSED popover renders `null`, so none of it reaches the first byte, and the
- * string is only ever announced after hydration, which is the one place a
- * client-side `LocalizedStringProvider` genuinely does work.
- *
- * Worth stating because it also explains a gap in that file's sweep: the
- * measurement rendered components in their DEFAULT state, and every overlay in
- * this batch is closed by default. "Measured zero" meant "zero in the states we
- * rendered". overlays.test.tsx pins the open-state counts so a RAC upgrade that
- * changes them is a failing build rather than a discovery.
+ * `LumoPlacement` is a closed, LOGICAL union; Base UI takes `side` + `align`, and its
+ * `side` already includes `inline-start`/`inline-end`, so the translation is lossless.
+ * State vocabulary is Base UI's (`data-starting-style`, `data-side`). No hidden
+ * "Dismiss" sentinels: outside-press is a listener. Long form: docs/decisions/log.md.
  */
 export type LumoPlacement = Exclude<
-  AriaPlacement,
+  Placement,
   `${string}left${string}` | `${string}right${string}`
 >;
 
 /**
- * The shared overlay surface, exported because Menu, Select and ComboBox all
- * render an RAC `<Popover>` too and four divergent copies of "what a floating
- * panel looks like" is how a design system stops being one.
- *
- * The enter/exit transform is a UNIFORM scale plus a small BLOCK-axis nudge:
- *
- *   - Uniform scale has no handedness and needs no `transform-origin`, which
- *     matters because `transform-origin` has no logical keywords — `origin-top-left`
- *     is unmirror-able and the RTL codemod does not rewrite it.
- *   - The nudge is `translate-y`, keyed on the resolved `data-placement`. The
- *     block axis is direction-invariant, so it is safe.
- *   - There is deliberately NO horizontal nudge for `left`/`right` placements.
- *     `translate-x` is physical, and a 4px slide is not worth a utility that
- *     lies about direction. Those placements get opacity and scale only.
+ * The shared overlay surface, imported by seven components (menu, select, combobox,
+ * hover-card, navigation-menu, date-picker, date-range-picker). One surface, seven panels.
  */
 export const popoverVariants = cva(
-  "z-50 rounded-md border border-border bg-surface text-fg shadow-lg outline-none " +
+  "z-50 rounded-md border border-border bg-surface text-fg shadow-overlay outline-none " +
     "transition duration-150 ease-out " +
-    "data-entering:opacity-0 data-entering:scale-95 " +
-    "data-exiting:opacity-0 data-exiting:scale-95 " +
-    "data-[placement=bottom]:data-entering:-translate-y-1 " +
-    "data-[placement=top]:data-entering:translate-y-1 " +
+    // Base UI vocabulary: `data-starting-style`/`data-ending-style`, and `data-side` +
+    // `data-align` (RAC's single `data-placement` is SPLIT, not renamed). Offsets are on
+    // the block axis only, which does not mirror.
+    "data-starting-style:opacity-0 data-starting-style:scale-95 " +
+    "data-ending-style:opacity-0 data-ending-style:scale-95 " +
+    "data-[side=bottom]:data-starting-style:-translate-y-1 " +
+    "data-[side=top]:data-starting-style:translate-y-1 " +
     "motion-reduce:transition-none",
   {
     variants: {
+      /** Applies the surface's default inner padding. */
       padded: {
         true: "p-4",
         false: "p-0",
@@ -108,44 +62,199 @@ export const popoverVariants = cva(
 );
 
 /**
- * React Aria has no `PopoverTrigger` component — `DialogTrigger` is the state
- * owner for popovers as well as dialogs, because a popover with focusable
- * content IS a non-modal dialog to the accessibility tree.
- *
- * Re-exported under the name people will look for, so nobody discovers the
- * mapping by grepping. It renders no DOM and therefore takes no `className`.
+ * `LumoPlacement` → Base UI's `side` + `align`. On an inline side the cross axis is the
+ * BLOCK axis, where RAC says `top`/`bottom` and Base UI says `start`/`end` — not lossy,
+ * the block axis does not mirror. A full `Record` rather than a parser, so adding a
+ * union member is a compile error listing the work.
  */
-export interface PopoverTriggerProps extends Omit<AriaDialogTriggerProps, "children"> {
-  /** The trigger control, then the `<Popover>`. In that order. */
-  children: LumoNode;
+export interface SideAlign {
+  side: "top" | "bottom" | "inline-start" | "inline-end";
+  align: "start" | "center" | "end";
 }
 
-export function PopoverTrigger(props: PopoverTriggerProps) {
-  return <AriaDialogTrigger {...props} />;
+export const PLACEMENT: Record<LumoPlacement, SideAlign> = {
+  bottom: { side: "bottom", align: "center" },
+  "bottom start": { side: "bottom", align: "start" },
+  "bottom end": { side: "bottom", align: "end" },
+  top: { side: "top", align: "center" },
+  "top start": { side: "top", align: "start" },
+  "top end": { side: "top", align: "end" },
+  start: { side: "inline-start", align: "center" },
+  "start top": { side: "inline-start", align: "start" },
+  "start bottom": { side: "inline-start", align: "end" },
+  end: { side: "inline-end", align: "center" },
+  "end top": { side: "inline-end", align: "start" },
+  "end bottom": { side: "inline-end", align: "end" },
+};
+
+/** `PLACEMENT` with RAC's default (`'bottom'`) applied. */
+export function placementToSideAlign(placement: LumoPlacement | undefined): SideAlign {
+  return PLACEMENT[placement ?? "bottom"];
+}
+
+/**
+ * The trigger's id, so the popup can be named by it. Base UI's `Popover.Popup` is an
+ * UNNAMED `role="dialog"`; RAC pointed `aria-labelledby` at the trigger, and that is
+ * reproduced here. A caller who names the popup explicitly wins — see `Popover`.
+ */
+const PopoverNameContext = React.createContext<string | undefined>(undefined);
+
+/**
+ * Splits `[trigger, ...overlay]` and wires the first child as the trigger. RAC wired the
+ * trigger implicitly through `ButtonContext`; Base UI needs a literal trigger element, so
+ * the first child is lifted into `render`.
+ */
+function splitTrigger(children: LumoNode): {
+  trigger: React.ReactNode;
+  rest: React.ReactNode[];
+} {
+  const items = React.Children.toArray(children as React.ReactNode);
+  const [first, ...rest] = items;
+  return { trigger: first, rest };
+}
+
+/** Owns the popover state (`Popover.Root`). Renders no DOM, so it takes no `className`. */
+export interface PopoverTriggerProps extends OverlayTriggerProps {
+  /** The trigger control, then the `<Popover>`. In that order. */
+  children: LumoNode;
+  /**
+   * Prevents Escape from closing the popover. Lives here, not on `<Popover>`, because
+   * dismissal belongs to `Popover.Root`, which this part renders; the cancel intercepts
+   * exactly the `escape-key` reason.
+   */
+  isKeyboardDismissDisabled?: boolean | undefined;
+}
+
+export function PopoverTrigger({
+  children,
+  isOpen,
+  defaultOpen,
+  onOpenChange,
+  isKeyboardDismissDisabled,
+}: PopoverTriggerProps) {
+  const { trigger, rest } = splitTrigger(children);
+  const triggerId = React.useId();
+  // One handler: a cancelled Escape must ALSO not reach the caller's `onOpenChange`.
+  // `attr()` still omits the prop when neither is set.
+  const handleOpenChange =
+    onOpenChange === undefined && isKeyboardDismissDisabled !== true
+      ? undefined
+      : (open: boolean, details: BasePopover.Root.ChangeEventDetails) => {
+          if (isKeyboardDismissDisabled === true && !open && details.reason === "escape-key") {
+            details.cancel();
+            return;
+          }
+          onOpenChange?.(open);
+        };
+  return (
+    // RAC spells the controlled prop `isOpen`; Base UI spells it `open`.
+    <BasePopover.Root
+      {...attr("open", isOpen)}
+      {...attr("defaultOpen", defaultOpen)}
+      {...attr("onOpenChange", handleOpenChange)}
+    >
+      {React.isValidElement(trigger) ? (
+        <BasePopover.Trigger
+          id={triggerId}
+          render={trigger as React.ReactElement<Record<string, unknown>>}
+        />
+      ) : (
+        trigger
+      )}
+      <PopoverNameContext.Provider value={triggerId}>{rest}</PopoverNameContext.Provider>
+    </BasePopover.Root>
+  );
+}
+
+/** The popover surface's own props, minus children, class and `placement` (redeclared as `LumoPlacement`). */
+interface PopoverPropsBase
+  // Open state belongs to `Popover.Root`, so `isOpen` is subtracted here — it was inert on the surface.
+  extends Omit<
+      PositionProps,
+      "placement" | "isOpen" | "shouldFlip" | "containerPadding"
+    >,
+    FocusWithinEvents,
+    GlobalDOMAttributes<HTMLDivElement> {
+  "aria-label"?: string;
+  "aria-labelledby"?: string;
+  /** @forwarded `...rest` → `Popover.Popup` → the `role="dialog"` element. Verified by rendering. */
+  "aria-describedby"?: string;
+  /** @forwarded `...rest` → `Popover.Popup`. See `aria-describedby`. */
+  "aria-details"?: string;
+}
+
+/**
+ * The popover's supporting prose, and the string a screen reader reads AFTER the name:
+ * `Popover.Description` writes its id into the root store the popup reads. Renders a
+ * `<p>`; pass `render={<div />}` for block content. There is deliberately no
+ * `PopoverTitle`: the name is already guaranteed by the trigger, and an optional title
+ * would replace a guarantee with a convention.
+ */
+export interface PopoverDescriptionProps
+  extends Omit<React.ComponentProps<"p">, "children" | "className"> {
+  /** Swap the rendered element, e.g. `render={<div />}` for block content. */
+  render?: React.ReactElement<Record<string, unknown>> | undefined;
+  children?: LumoNode;
+  className?: string | undefined;
+}
+
+export function PopoverDescription({
+  className,
+  render,
+  ...rest
+}: PopoverDescriptionProps) {
+  return (
+    <BasePopover.Description
+      className={cn("text-sm text-fg-muted", className)}
+      {...attr("render", render)}
+      {...rest}
+    />
+  );
 }
 
 export interface PopoverProps
-  extends Omit<AriaPopoverProps, "children" | "className" | "placement">,
+  extends PopoverPropsBase,
     VariantProps<typeof popoverVariants> {
   /**
-   * Logical only — see `LumoPlacement`. Defaults to RAC's `'bottom'`.
-   *
-   * Deliberately NOT `| undefined`: RAC declares `placement?: Placement`, and
-   * under `exactOptionalPropertyTypes` widening ours to include `undefined`
-   * makes the whole props object unassignable on the spread below. The prop is
-   * omittable; it is not settable to `undefined`.
+   * Logical only — see `LumoPlacement`. Defaults to `'bottom'`. Deliberately NOT
+   * `| undefined`: under `exactOptionalPropertyTypes` that breaks the spread below.
    */
   placement?: LumoPlacement;
   children?: LumoNode;
   className?: string | undefined;
 }
 
-export function Popover({ className, padded, ...props }: PopoverProps) {
+export function Popover({
+  className,
+  padded,
+  placement,
+  // — translated onto Popover.Positioner —
+  offset,
+  crossOffset,
+  ...rest
+}: PopoverProps) {
+  const { side, align } = PLACEMENT[placement ?? "bottom"];
+  // Name the dialog by its trigger, as RAC did — unless the caller named it.
+  const triggerId = React.useContext(PopoverNameContext);
+  const named =
+    (rest as Record<string, unknown>)["aria-label"] !== undefined ||
+    (rest as Record<string, unknown>)["aria-labelledby"] !== undefined;
   return (
-    <AriaPopover
-      data-lumo=""
-      className={cn(popoverVariants({ padded }), className)}
-      {...props}
-    />
+    <BasePopover.Portal>
+      <BasePopover.Positioner
+        side={side}
+        align={align}
+        {...attr("sideOffset", offset)}
+        {...attr("alignOffset", crossOffset)}
+        className="isolate z-50"
+      >
+        <BasePopover.Popup
+          data-lumo=""
+          {...attr("aria-labelledby", named ? undefined : triggerId)}
+          className={cn(popoverVariants({ padded }), className)}
+          {...rest}
+        />
+      </BasePopover.Positioner>
+    </BasePopover.Portal>
   );
 }

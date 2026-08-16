@@ -15,6 +15,7 @@ import {
   sidebarItemVariants,
   sidebarVariants,
 } from "./sidebar.variants.ts";
+import { useLinkComponent } from "./link-context.ts";
 
 export {
   sidebarBadgeVariants,
@@ -29,16 +30,14 @@ export {
 };
 
 /**
- * The app sidebar: a collapsible rail of grouped navigation items.
+ * The app sidebar: a collapsible rail of grouped navigation items — the COMPONENT, not
+ * the app-shell block (the cvas live in sidebar.variants.ts so a server block can call them).
  *
  *     <Sidebar label="ناوبری اصلی">
  *       <SidebarHeader>…logo…</SidebarHeader>
  *       <SidebarContent>
  *         <SidebarGroup title="گزارش‌ها">
- *           <SidebarItem href="/dash" icon={<Gauge />} isCurrent="page">
- *             داشبورد
- *           </SidebarItem>
- *           <SidebarItem href="/orders" icon={<Box />} badge="۳">سفارش‌ها</SidebarItem>
+ *           <SidebarItem href="/dash" icon={<Gauge />} isCurrent="page">داشبورد</SidebarItem>
  *         </SidebarGroup>
  *       </SidebarContent>
  *       <SidebarFooter>
@@ -46,40 +45,10 @@ export {
  *       </SidebarFooter>
  *     </Sidebar>
  *
- * This is the COMPONENT, not the app-shell BLOCK: it owns the rail, the
- * groups, the items and the collapse state, and nothing about page layout.
- * The shell block composes it later, which is also why every cva lives in
- * sidebar.variants.ts — the block is server-rendered and will call them
- * (the buttonVariants lesson, recorded there).
- *
- * Vendor-first was followed and rejected on the merits: shadcn's aria-vega
- * `sidebar` emits 714 lines whose behaviour rests on four things this library
- * does not have or does not want — a Sheet overlay for mobile, a `use-mobile`
- * viewport hook, a cookie side-channel for persistence, and a physical
- * `side="left"|"right"` prop, which is the exact API shape the logical-only
- * rule exists to keep out (the seam here is `border-e`; there is no side
- * prop to hold wrong). What Lumo keeps is the shape — header/content/footer,
- * groups, items, a rail state. What it drops it drops loudly, here:
- * persistence belongs to the consumer via `onCollapsedChange` (a cookie
- * written by a component is state the server rendered wrong on the next
- * request), and the mobile overlay belongs to drawer.tsx, which exists.
- *
- * ── COLLAPSING WITHOUT LOSING NAMES ─────────────────────────────────────────
- *
- * The rail hides text with `sr-only`, never `hidden` — see the variants file.
- * An item's accessible name is identical expanded and collapsed, so the
- * screen-reader experience does not change when a sighted user shrinks the
- * rail. That also means rail mode PRESUMES ICONS: an item without an `icon`
- * has no visible box when collapsed. The type cannot express "icon required
- * only if an ancestor might collapse", so the presumption is documented.
- *
- * ── COLLAPSE STATE, CONTROLLED OR NOT ───────────────────────────────────────
- *
- * Uncontrolled by default (`defaultCollapsed`), controllable via
- * `isCollapsed` + `onCollapsedChange` for a toggle that lives outside the
- * sidebar (a top-bar button) or for persistence. Context carries the resolved
- * state down; `SidebarTrigger` is the in-tree toggle and throws outside a
- * `<Sidebar>` rather than rendering a button that manages nothing.
+ * shadcn's sidebar was rejected: it needs a Sheet, a viewport hook, a cookie side-channel
+ * and a physical `side` prop. Persistence belongs to the consumer via `onCollapsedChange`;
+ * the mobile overlay is drawer.tsx. The rail hides text with `sr-only`, never `hidden`,
+ * so names are identical expanded and collapsed — which means rail mode PRESUMES ICONS.
  */
 interface SidebarContextValue {
   collapsed: boolean;
@@ -91,18 +60,14 @@ const SidebarContext = createContext<SidebarContextValue | null>(null);
 function useSidebar(component: string): SidebarContextValue {
   const context = useContext(SidebarContext);
   if (context === null) {
-    // Developer-facing, so English is fine — the rule governs ANNOUNCED
-    // strings, and this one is thrown before anything renders.
+    // Developer-facing, thrown before anything renders.
     throw new Error(`<${component}> must be rendered inside a <Sidebar>.`);
   }
   return context;
 }
 
 export interface SidebarProps {
-  /**
-   * Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی». REQUIRED:
-   * landmarks of the same role are indistinguishable in a rotor unless named.
-   */
+  /** Announced name of the `<nav>` landmark, e.g. «ناوبری اصلی». REQUIRED: same-role landmarks are indistinguishable unless named. */
   label: string;
   /** Controlled collapse state. Pair with `onCollapsedChange`. */
   isCollapsed?: boolean;
@@ -162,11 +127,7 @@ export function SidebarFooter({ className, children }: SidebarSectionProps) {
 }
 
 export interface SidebarGroupProps {
-  /**
-   * The group's heading, e.g. «گزارش‌ها». Optional — but when present it is
-   * wired as the group's ANNOUNCED name via `aria-labelledby`, not left as a
-   * decorative div, and it survives the rail as `sr-only`.
-   */
+  /** The group's heading, e.g. «گزارش‌ها». When present it is the group's ANNOUNCED name via `aria-labelledby`. */
   title?: LumoNode;
   children?: LumoNode;
   className?: string | undefined;
@@ -189,42 +150,29 @@ export function SidebarGroup({ title, children, className }: SidebarGroupProps) 
   );
 }
 
-/**
- * `Omit` distributed over `LinkProps`' union — a plain `Omit` flattens the
- * `newTab`/`newTabLabel` pair to independent optionals and reopens the hole
- * link.tsx's union closes. Same device as navigation-menu.tsx.
- */
+/** `Omit` distributed over `LinkProps`' union so the `newTab`/`newTabLabel` pair survives (as in navigation-menu.tsx). */
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
 export type SidebarItemProps = DistributiveOmit<LinkProps, "variant" | "size"> & {
-  /**
-   * The item's glyph. Decorative — wrapped `aria-hidden`, the NAME is the
-   * children — but load-bearing in the rail, where it is all that remains
-   * visible. See the header: rail mode presumes icons.
-   */
-  icon?: LumoNode;
-  /**
-   * Trailing count or state chip, ALREADY formatted — pass «۳», never 3,
-   * which `LumoNode` makes uncompilable. Announced in both states; visually
-   * hidden in the rail.
-   */
+  /** The item's glyph. Decorative (`aria-hidden`; the NAME is the children) but all that remains visible in the rail. */
+  icon: LumoNode;
+  /** Trailing count or state chip, ALREADY formatted — «۳», never 3. Announced in both states. */
   badge?: LumoNode;
 };
 
 /**
- * One navigation item. Built ON link.tsx's Link so `isCurrent` (→
- * `aria-current="page"` + `data-current` styling) and the `newTab` typed pair
- * arrive intact — a sidebar is the single most common place `aria-current`
- * belongs, and link.tsx documents why it is better than any sr-only phrase.
- * The union members are destructured out and re-assembled so the pair is not
- * collapsed by a rest spread (see `DistributiveOmit`).
+ * One navigation item, built ON link.tsx's Link so `isCurrent` and the `newTab` typed pair
+ * arrive intact; the union members are destructured and re-assembled so a rest spread
+ * does not collapse the pair.
  */
 export function SidebarItem(props: SidebarItemProps) {
   const { icon, badge, children, className, newTab, newTabLabel, isCurrent, ...rest } = props;
+  const Anchor = useLinkComponent();
   return (
     <Link
       variant="quiet"
       size="sm"
+      {...(Anchor === "a" ? {} : { linkComponent: Anchor })}
       className={cn(sidebarItemVariants(), className)}
       {...(isCurrent === undefined || isCurrent === false ? {} : { isCurrent })}
       {...(newTab === true && newTabLabel !== undefined
@@ -252,16 +200,9 @@ export interface SidebarTriggerProps {
 }
 
 /**
- * The in-tree collapse toggle. TWO required labels rather than one, because
- * the button's meaning inverts with the state and a single «نوار کناری»
- * would name the noun but not the action.
- *
- * The glyph is the mirrored pair of double angle quotation marks (U+00AB and
- * U+00BB), not a panel icon: both carry Unicode `Bidi_Mirrored`, so the text
- * engine redraws each as the other under RTL and the chevrons always point
- * at the edge the rail will move toward — menu.tsx's `›` argument, applied
- * to the inline axis again. An SVG panel-left icon is a fixed path that
- * would need a physical flip.
+ * The in-tree collapse toggle. TWO required labels because the button's meaning inverts.
+ * The glyph is the `Bidi_Mirrored` pair «/» (U+00AB/U+00BB), so it always points at the
+ * edge the rail will move toward with no physical flip.
  */
 export function SidebarTrigger({ collapseLabel, expandLabel, className }: SidebarTriggerProps) {
   const { collapsed, toggle } = useSidebar("SidebarTrigger");

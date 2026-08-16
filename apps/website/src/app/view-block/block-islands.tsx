@@ -31,23 +31,12 @@ import {
 } from "@lumo-ui/blocks";
 
 /**
- * Client islands for the seven blocks whose `strings` contract requires a
- * FUNCTION — `resendIn`, `resultCount`, `rating`, `selectRow`, `quantity`,
- * `removeItemLabel`, `lowStock`, `ratingValueLabel`. `../../lib/blocks.tsx`
- * (this route's own registry) mirrors `demos.tsx`'s architecture exactly and
- * for the identical reason: it reads block source off disk with `node:fs` at
- * module scope, so it must stay a server module, and a server module cannot
- * pass a function prop to a Client Component — React has nothing to serialise
- * it into. See `demo-islands.tsx`'s header for the full argument; this file is
- * that same move, once per block that needs it.
- *
- * Every prop below is a plain, serialisable value — a string, a number, a
- * `Date`, an array of plain objects. No copy is authored here: the actual
- * Persian and English words are still written in `blocks.tsx`, in both
- * locales, and merely PASSED IN. What lives here is structure — the fixed
- * word order a sentence like «ارسال دوباره تا ۳۰ ثانیه دیگر» needs, built from
- * a prefix and a suffix supplied by the caller — exactly the shape
- * `RatingIsland.valueLabel` already uses in `demo-islands.tsx`.
+ * Client islands for the seven blocks whose `strings` contract requires a FUNCTION
+ * (`resendIn`, `resultCount`, `rating`, …). `../../lib/blocks.tsx` reads block source with
+ * `node:fs`, so it must stay a server module, and a server module cannot pass a function
+ * prop to a Client Component — see `demo-islands.tsx`'s header. Every prop below is a
+ * plain serialisable value; the Persian and English words are still authored in
+ * `blocks.tsx` and merely PASSED IN as prefix/suffix pairs — only word order lives here.
  */
 
 /* ────────────────────────────────────────────────────────────── otp-verify ── */
@@ -323,6 +312,10 @@ export function TableViewIsland({
       id: "date",
       header: dateHeader,
       allowsSorting: true,
+      // What the header sorts BY. `cell` returns a `<time>` element and a
+      // sortable column now has to say what is underneath it — see
+      // `table-view.tsx`. Before this the header sorted nothing at all.
+      sortValue: (row) => row.placedAt.getTime(),
       cell: (row) => (
         <time dateTime={row.placedAt.toISOString()}>
           {formatDate(row.placedAt, locale, { dateStyle: "medium" })}
@@ -333,6 +326,10 @@ export function TableViewIsland({
       id: "amount",
       header: amountHeader,
       allowsSorting: true,
+      // The raw number, never the formatted string: «۱٬۲۰۰٬۰۰۰ ریال» sorts by
+      // its first Persian digit, which is not what any reader means by "sort
+      // by amount".
+      sortValue: (row) => row.amount,
       cell: (row) => formatNumber(row.amount, locale, { style: "currency", currency: "IRR", maximumFractionDigits: 0 }),
     },
     {

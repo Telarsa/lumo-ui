@@ -66,4 +66,13 @@ describe("Marker — server bytes are quiet and Persian", () => {
     expect(root.getAttribute("data-variant")).toBe("status");
     expect(root.getAttribute("class")).toContain("justify-center");
   });
+
+  it("keeps MarkerIcon hidden when an untyped props bag conflicts", () => {
+    const { container } = render(
+      <MarkerIcon {...({ "aria-hidden": false, role: "img" } as object)} />,
+    );
+    const icon = container.firstElementChild;
+    expect(icon?.getAttribute("aria-hidden")).toBe("true");
+    expect(icon?.getAttribute("role")).toBeNull();
+  });
 });

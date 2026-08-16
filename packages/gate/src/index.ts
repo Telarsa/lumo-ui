@@ -1,47 +1,45 @@
 import { parseHTML } from "linkedom";
-import { RULES, digitSystem, type DigitSystem, type Doc, type Rule, type Violation } from "./rules.ts";
+import { RULES, digitSystem, scriptSystem, type DigitSystem, type Doc, type Rule, type ScriptSystem, type Violation } from "./rules.ts";
 
 export * from "./rules.ts";
 
 /**
- * The digit sets, one per numbering system rather than one per locale — several
- * locales share a system, and the range is a property of the system.
- *
- * `name` is what a violation message calls them. "Persian" is deliberate and
- * load-bearing: it is the word the floor rule printed when the range was
- * hardwired, so a `fa-IR` violation still reads byte-for-byte as it always did.
+ * The digit sets, one per numbering system rather than one per locale. `name`
+ * is what a violation message calls them; "Persian" keeps `fa-IR` messages byte-identical.
  */
 const ARABEXT = digitSystem("Persian", "arabext", "۰"); // U+06F0–U+06F9
 const ARAB = digitSystem("Arabic-Indic", "arab", "٠"); //  U+0660–U+0669
 const LATN = digitSystem("Latin", "latn", "0"); //         U+0030–U+0039
 
+/**
+ * The scripts, one per writing system. `\p{Script=Arabic}` covers Persian and
+ * Arabic alike, and the message names the SCRIPT, not the language.
+ */
+const ARABIC_SCRIPT = scriptSystem("Arabic", "Arabic");
+const LATIN_SCRIPT = scriptSystem("Latin", "Latin");
+
 /** Everything the gate needs to know about a locale to grade a page in it. */
 export interface LocaleGrading {
   direction: "rtl" | "ltr";
   digits: DigitSystem;
+  /**
+   * The Unicode calendar its readers count years in. Independent of direction
+   * and digits, and data rather than an ICU default (ICU picks GREGORIAN for `ar-SA`).
+   */
+  calendar: string;
+  /** The writing system its readers read. Independent of the other three: nothing about `rtl` implies Arabic script. */
+  script: ScriptSystem;
 }
 
 /**
- * Locales this gate knows how to grade.
- *
- * Two properties, deliberately independent. Direction was once used as a stand-in
- * for "numbers in its own digits", which is true of Persian and Arabic and false
- * in both directions in general — Urdu is rtl and commonly latn, and nothing
- * about ltr implies Latin numerals. Conflating them is why the digit rules were
- * silently Persian-only, so both are stated.
- *
- * This table is the gate's OWN scope and is deliberately wider than
- * `@lumo-ui/core`'s `Locale` union: core's union is the set of locales the
- * LIBRARY ships complete string sets for, while this is the set of locales the
- * grader can grade — including a consumer's, whose HTML it is handed but whose
- * translations it does not own. `ar-SA` is here for that reason and because a
- * parametrisation with one instantiation is indistinguishable from a hardwire;
- * `fixtures/locales/` grades real Arabic bytes through it.
+ * Locales this gate knows how to grade. Every property is stated, none derived
+ * (deriving digits from direction made the rules silently Persian-only). Wider
+ * than core's `Locale` on purpose: `ar-SA` proves the parametrisation is real.
  */
 const KNOWN: Record<string, LocaleGrading> = {
-  "fa-IR": { direction: "rtl", digits: ARABEXT },
-  "ar-SA": { direction: "rtl", digits: ARAB },
-  "en-US": { direction: "ltr", digits: LATN },
+  "fa-IR": { direction: "rtl", digits: ARABEXT, calendar: "persian", script: ARABIC_SCRIPT },
+  "ar-SA": { direction: "rtl", digits: ARAB, calendar: "islamic-umalqura", script: ARABIC_SCRIPT },
+  "en-US": { direction: "ltr", digits: LATN, calendar: "gregory", script: LATIN_SCRIPT },
 };
 
 /** The locales `localeForPath` will accept. Used by the gate's own self-test. */
@@ -49,11 +47,7 @@ export function knownLocales(): string[] {
   return Object.keys(KNOWN);
 }
 
-/**
- * How a locale is graded. Throws rather than defaulting: a locale with no entry
- * would otherwise be graded against some other locale's digits, which is a
- * wrong answer wearing a green tick.
- */
+/** How a locale is graded. Throws rather than defaulting to another locale's digits. */
 export function gradingFor(locale: string): LocaleGrading {
   const grading = KNOWN[locale];
   if (!grading) {
@@ -66,25 +60,10 @@ export function gradingFor(locale: string): LocaleGrading {
   return grading;
 }
 
-/**
- * Derives the expected locale from a route path.
- *
- * Deliberately strict: an unrecognised first segment is an ERROR, not a skip.
- * Silently skipping unknown routes is how a gate ends up grading three pages out
- * of fifty-five and reporting green.
- */
+/** Derives the expected locale from a route path. Strict: an unrecognised route is an ERROR, not a skip. */
 export function localeForPath(
   path: string,
-  /**
-   * Documents that legitimately sit above the locale segment — a static export's
-   * root `404.html` and its entry stub. They are served for paths that matched
-   * no route, so they cannot know the visitor's locale.
-   *
-   * They are NOT skipped. They are graded as the primary locale, because a 404
-   * is user-facing text and the one route nobody tests is exactly where an
-   * English document slips through. The allowance is a narrow, named list rather
-   * than a wildcard for that reason.
-   */
+  /** Root documents (`404.html`, entry stub) are NOT skipped: graded as this locale. */
   rootLocale: string = "fa-IR",
 ): { locale: string; direction: "rtl" | "ltr" } {
   const clean = path.replace(/^\.?\//, "");
@@ -99,9 +78,7 @@ export function localeForPath(
   if (ROOT_DOCS.has(clean)) {
     return { locale: rootLocale, direction: gradingFor(rootLocale).direction };
   }
-  // The locale may be any segment, not only the first: preview routes are
-  // /view/<locale>/<slug>/. Scanning rather than assuming a position means a new
-  // route shape does not silently become ungraded.
+  // The locale may be any segment, not only the first (/view/<locale>/<slug>/).
   const segments = clean.split("/");
   const match = segments
     .map((seg) => Object.keys(KNOWN).find((l) => l === seg || l.split("-")[0] === seg))
@@ -119,16 +96,141 @@ export function localeForPath(
 export function gradeHtml(path: string, html: string, rules: Rule[] = RULES): Violation[] {
   const { locale, direction } = localeForPath(path);
   const { document } = parseHTML(html);
-  // `localeForPath` deliberately still returns only locale+direction: it answers
-  // "which page is this", and the digit set is looked up from the same table.
   const doc: Doc = {
     path,
     document: document as unknown as Document,
     locale,
     direction,
     digits: gradingFor(locale).digits,
+    calendar: gradingFor(locale).calendar,
+    script: gradingFor(locale).script,
   };
   return rules.flatMap((r) => r.run(doc));
+}
+
+/**
+ * What fraction of a document the gate actually read. `data-lumo-latn` exempts
+ * whole subtrees (measured: ~80% of a docs site's characters), and a summary
+ * line that hides that invites a false conclusion. Not a rule — there is no
+ * threshold to fail at — it prints, and printing is the whole feature.
+ */
+export interface Coverage {
+  /** Documents whose locale the digit rules actually grade. */
+  gradedLocaleDocs: number;
+  textNodes: number;
+  exemptTextNodes: number;
+  characters: number;
+  exemptCharacters: number;
+}
+
+const EMPTY_COVERAGE: Coverage = {
+  gradedLocaleDocs: 0,
+  textNodes: 0,
+  exemptTextNodes: 0,
+  characters: 0,
+  exemptCharacters: 0,
+};
+
+/**
+ * Adds one document's text-node census to a running total. Counts only
+ * documents whose locale the digit rules grade (folding `latn` pages in would
+ * dilute the fraction). `closest("[data-lumo-latn]")` is the same test the rules
+ * apply. Describes the digit and visible-text rules, NOT `native-script-name`,
+ * which grades a computed name and has no text-node denominator.
+ */
+export function addCoverage(into: Coverage, path: string, html: string): Coverage {
+  const { locale } = localeForPath(path);
+  // `.numberingSystem`, NOT the DigitSystem object — comparing the object to
+  // "latn" is never true, and every English page then counts as Persian.
+  if (gradingFor(locale).digits.numberingSystem === "latn") return into;
+
+  const { document } = parseHTML(html);
+  const walker = (document as unknown as Document).createTreeWalker(
+    (document as unknown as Document).body ?? (document as unknown as Document),
+    // NodeFilter.SHOW_TEXT
+    4,
+  );
+  let nodes = 0;
+  let exemptNodes = 0;
+  let chars = 0;
+  let exemptChars = 0;
+  for (let n = walker.nextNode(); n !== null; n = walker.nextNode()) {
+    const text = n.nodeValue ?? "";
+    if (text.trim() === "") continue;
+    const parent = n.parentElement;
+    // `<script>` and `<style>` are not read by anyone.
+    const tag = parent?.tagName?.toLowerCase();
+    if (tag === "script" || tag === "style") continue;
+    const exempt = parent?.closest?.("[data-lumo-latn]") != null;
+    nodes += 1;
+    chars += text.length;
+    if (exempt) {
+      exemptNodes += 1;
+      exemptChars += text.length;
+    }
+  }
+  return {
+    gradedLocaleDocs: into.gradedLocaleDocs + 1,
+    textNodes: into.textNodes + nodes,
+    exemptTextNodes: into.exemptTextNodes + exemptNodes,
+    characters: into.characters + chars,
+    exemptCharacters: into.exemptCharacters + exemptChars,
+  };
+}
+
+/** Counts visible, non-exempt digits in the route's numbering system — the same corpus the digit rules inspect. */
+export function countNativeDigits(path: string, html: string): number {
+  const { locale } = localeForPath(path);
+  const digits = gradingFor(locale).digits;
+  if (digits.numberingSystem === "latn") return 0;
+
+  const { document } = parseHTML(html);
+  const walker = (document as unknown as Document).createTreeWalker(
+    (document as unknown as Document).body ?? (document as unknown as Document),
+    4,
+  );
+  let count = 0;
+  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+    const parent = node.parentElement;
+    const tag = parent?.tagName?.toLowerCase();
+    if (tag === "script" || tag === "style" || parent?.closest?.("[data-lumo-latn]")) continue;
+    count += (node.nodeValue?.match(digits.pattern) ?? []).length;
+  }
+  return count;
+}
+
+/**
+ * The executable sampling policy for the per-route digit-floor ledger: every
+ * non-Latin route with at least `threshold` visible native digits must have a
+ * committed floor. The threshold sits above the shared docs chrome (~23 digits/page).
+ */
+export function missingDenseDigitFloors(
+  pages: ReadonlyArray<{ path: string; html: string }>,
+  floors: Readonly<Record<string, number>>,
+  threshold = 30,
+): Array<{ path: string; found: number }> {
+  return pages.flatMap((page) => {
+    if (Object.hasOwn(floors, page.path)) return [];
+    const found = countNativeDigits(page.path, page.html);
+    return found >= threshold ? [{ path: page.path, found }] : [];
+  });
+}
+
+export { EMPTY_COVERAGE };
+
+/** The scope line, printed beside the violation count. */
+export function formatCoverage(c: Coverage, flooredRoutes: number): string {
+  if (c.gradedLocaleDocs === 0) return "";
+  const pct = (part: number, whole: number) =>
+    whole === 0 ? "0.0" : ((part / whole) * 100).toFixed(1);
+  return [
+    `  scope — of ${String(c.gradedLocaleDocs)} document(s) in a non-latn locale:`,
+    `    ${pct(c.exemptTextNodes, c.textNodes)}% of text nodes and ` +
+      `${pct(c.exemptCharacters, c.characters)}% of characters are exempt ` +
+      `(data-lumo-latn), so the digit and visible-text rules did not read them`,
+    `    persian-digit-floor armed on ${String(flooredRoutes)} of ` +
+      `${String(c.gradedLocaleDocs)} route(s)`,
+  ].join("\n");
 }
 
 export function format(violations: Violation[]): string {

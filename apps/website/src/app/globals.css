@@ -101,7 +101,7 @@ code, pre, kbd, samp {
  *
  * Dozens of surfaces carry `transition-colors` for hover feedback, and every
  * one of them also fires when the theme flip swaps the token values — the
- * whole page cross-fades for 150ms, each element on its own clock. shadcn's
+ * whole page cross-fades for 150ms, each element on its own clock. The common
  * sites snap for exactly this reason. The toggle adds this class to <html>
  * for the flip and removes it after a double requestAnimationFrame (one frame
  * for the restyled paint, one to be safely past it) — see theme-toggle.tsx.
@@ -121,7 +121,7 @@ code, pre, kbd, samp {
  * directions) — not by React state. `ThemeScript` stamps the attribute before
  * first paint, so the correct icon appears in the very first frame with no
  * mount gate and no wrong-icon flash. The icon mirrors the CURRENT theme
- * (sun in light, moon in dark), shadcn's convention.
+ * (sun in light, moon in dark), the common convention.
  */
 .lumo-theme-icon-moon {
   display: none;
@@ -142,16 +142,33 @@ code, pre, kbd, samp {
 }
 
 /*
- * `tracking-wide` is banned from reaching Persian text. Letter-spacing severs
- * the joins between Arabic-script letters — the exact defect tokens.css
- * documents — and the theme's :lang(fa) guard covers prose defaults but loses
- * to a utility applied directly to the element, which is how the fa-IR hero
- * eyebrow shipped with gapped joins. This wins over the utility (same layer,
- * later in the sheet, equal-or-higher specificity) for the whole Persian
- * document, where the site's small-caps label style is carried by size and
- * colour alone.
+ * ── THE PERSIAN TRACKING GUARD MOVED, AND THIS NOTE IS WHY ─────────────────
+ *
+ * Two rules used to live here — `html[lang="fa-IR"] .tracking-wide` and
+ * `.tracking-widest`, set to `letter-spacing: normal` because letter-spacing
+ * severs the joins between Arabic-script letters, which is how the fa-IR hero
+ * eyebrow shipped with gapped joins.
+ *
+ * They were a blacklist of two names, and `tracking-tight` was not on it. It
+ * reached 270 Persian elements across all 135 fa pages of the 12 Aug 2026
+ * export with −0.025em on Arabic script — AUDIT.md §4.3 B5. The replacement is
+ * a whitelist (every `tracking-*` class neutralised, `data-lumo-latn` exempt)
+ * and it lives in `@lumo-ui/theme`'s own `@layer lumo.script`, beside the
+ * Persian leading rule, for two reasons:
+ *
+ *   1. Splitting Persian script rules across two files is what let B5 hide.
+ *      Neither file listed what the other covered, so neither review saw the
+ *      gap. They are one concern and they are now in one place.
+ *   2. This site is a consumer of the library like any other. A guard that only
+ *      exists in the site's stylesheet leaves every OTHER consumer shipping the
+ *      defect, and Lumo's whole claim is that Persian is correct out of the box.
+ *
+ * The site therefore has no rule of its own here. If one is ever added back it
+ * would be unlayered and would silently outrank the library's — so add it in
+ * the theme instead.
+ *
+ * NOTE for whoever adds the next locale: CONTRIBUTING.md step 8 still says this
+ * neutralisation lives in this file. It does not, as of 12 Aug 2026. The step
+ * is otherwise correct — an Arabic-script locale still needs the guard extended
+ * to its tag, because the selector is keyed to `:lang(fa)` alone.
  */
-html[lang="fa-IR"] .tracking-wide,
-html[lang="fa-IR"] .tracking-widest {
-  letter-spacing: normal;
-}

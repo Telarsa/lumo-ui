@@ -1,14 +1,11 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
 /**
- * Item's class definitions, in a module with NO `"use client"`.
- *
- * The rule is button.variants.ts's, and Item is the component most likely to
- * trip it: a generic row is exactly what a server-rendered listing page styles
- * — a static roster, a settings index, a directory. A cva exported from the
- * client module would turn into a client reference the moment such a page
- * called it, and the whole route would fail to prerender. Styling is data;
- * only the interactive wrapper in item.tsx needs a client.
+ * Item's class definitions, in a module with NO `"use client"`: a server-rendered
+ * listing page styles rows with these. Whether the row is a link/button or a static div
+ * is a VARIANT (`interactive`), because Base UI publishes no `data-hovered`/`data-pressed`
+ * and bare `hover:`/`active:` would light up a static `<div>` that invites a click.
+ * The steps are `button.variants.ts`'s ghost variant.
  */
 
 export const itemGroupVariants = cva("flex w-full min-w-0 flex-col gap-2");
@@ -16,25 +13,29 @@ export const itemGroupVariants = cva("flex w-full min-w-0 flex-col gap-2");
 export const itemVariants = cva(
   "group/lumo-item relative flex w-full min-w-0 flex-wrap items-center " +
     "text-start text-sm text-fg outline-none transition-colors " +
-    // These fire only when RAC renders the row (link/button forms): a static
-    // div never receives the data attributes, so the same class set is inert
-    // decoration there rather than a lie.
-    "data-hovered:bg-surface-hover data-pressed:bg-surface-hover " +
     "data-disabled:pointer-events-none data-disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
+      /** Whether this row is a link or a button rather than a static div; pointer states are real only then. */
+      interactive: {
+        true: "hover:bg-surface-hover active:translate-y-px",
+        false: "",
+      },
+      /** The frame treatment: outlined box, plain row, or muted fill. */
       variant: {
         plain: "rounded-md",
         outlined: "rounded-md border border-border bg-surface",
         muted: "rounded-md bg-surface-sunken",
       },
+      /** The row-density step shared by every arm of the item union. */
       size: {
         sm: "gap-2.5 px-3 py-2.5",
         md: "gap-3.5 px-4 py-3.5",
       },
     },
-    defaultVariants: { variant: "plain", size: "md" },
+    // `interactive: false` is the default: a forgotten flag loses feedback (visible), the opposite paints a dead div.
+    defaultVariants: { variant: "plain", size: "md", interactive: false },
   },
 );
 
@@ -42,12 +43,11 @@ export type ItemVariantProps = VariantProps<typeof itemVariants>;
 
 export const itemMediaVariants = cva(
   "flex shrink-0 items-center justify-center text-fg-muted " +
-    // With a description present the row is two lines tall; the media aligns
-    // to the block start so the icon sits beside the title, not the seam.
-    // Block-axis alignment — nothing to mirror.
+    // With a description present the media aligns to the block start, beside the title.
     "group-has-[[data-lumo-item-description]]/lumo-item:self-start",
   {
     variants: {
+      /** How the leading media is framed: an icon chip, an image, or unframed. */
       media: {
         plain: "",
         icon: "[&_svg]:size-4",
@@ -69,15 +69,12 @@ export const itemTitleVariants = cva(
 );
 
 export const itemDescriptionVariants = cva(
-  // No alignment utility at all — block flow already starts at the reading
-  // edge. Upstream pinned this element with a physical start-side alignment,
-  // which is why Persian descriptions hugged the wrong margin.
+  // No alignment utility: block flow already starts at the reading edge.
   "line-clamp-2 min-w-0 text-sm leading-normal text-fg-muted",
 );
 
 export const itemActionsVariants = cva(
-  // `ms-auto` pushes a lone actions cluster to the inline end even when there
-  // is no flexible content column before it.
+  // `ms-auto` pushes a lone actions cluster to the inline end.
   "ms-auto flex shrink-0 items-center gap-2",
 );
 

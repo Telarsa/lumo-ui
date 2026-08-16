@@ -1,10 +1,22 @@
 "use client";
 
-import { ToggleButton as AriaToggleButton, type ToggleButtonProps as AriaToggleButtonProps } from "react-aria-components";
-import { cn, type LumoNode } from "@lumo-ui/core";
-// No `"use client"` in that module, so a SERVER component can call the variants
-// — the split button.variants.ts's header argues for.
+import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent as ReactMouseEvent } from "react";
+import { Toggle as BaseToggle } from "@base-ui/react/toggle";
+import {
+  type AriaLabelingProps,
+  type ButtonAriaProps,
+  cn,
+  type FocusableProps,
+  type GlobalDOMAttributes,
+  type Key,
+  type LumoNode,
+  type PressEvents,
+  type StyleProps,
+} from "@lumo-ui/core";
+// Directive-free module, so a SERVER component can call the variants.
 import { toggleVariants, type ToggleVariantProps } from "./toggle.variants.ts";
+import { attr } from "@lumo-ui/base-ui-ssr";
+import { asAriaKeyboardEvent, pressFromClick } from "./base-ui-adapter.ts";
 
 export { toggleVariants };
 export type { ToggleVariantProps };
@@ -15,105 +27,128 @@ export type { ToggleVariantProps };
  *     <Toggle defaultSelected>پررنگ</Toggle>
  *     <IconToggle label="پررنگ"><Bold /></IconToggle>
  *
- * ── WHY THIS EXISTS ALONGSIDE `toggle-group.tsx` ────────────────────────────
- *
- * `toggle-group.tsx` already exports a `ToggleButton`, and RAC's underlying
- * component is the same one. The difference is not the behaviour, it is what the
- * control is a member of — and that decides how it must look and what it must
- * be given:
- *
- *     ToggleButton   a MEMBER of a strip. Its edges, its dividers and its
- *                    rounding belong to the group, which is why that file puts
- *                    `rounded-md overflow-hidden` on the parent and nothing on
- *                    the child. On its own it is a rectangle with no border.
- *     Toggle         a control with no siblings. It owns its own resting
- *                    chrome (`variant="outline"` when there is nothing beside
- *                    it to imply one) and its own rounding.
- *
- * The rule of thumb for a caller: two or more options that are read as a set →
- * `ToggleButtonGroup`. Exactly one thing that is on or off → this.
- *
- * ── `IconToggle` AND A DIRECT REPLY TO `toggle-group.tsx`'s HEADER ──────────
- *
- * That file states there is deliberately no `IconToggleButton`, on the grounds
- * that "inventing a second spelling of the same prop would let the two drift."
- * The concern is right and the conclusion does not follow, so this file takes
- * the other branch and says why:
- *
- *  - **The spelling is not new.** `IconToggle` takes `label: string`, the exact
- *    prop `IconButton` takes, for the exact reason. Two components spelling one
- *    idea the same way is the opposite of drift.
- *  - **A convention that the compiler cannot see is not a rule.** RAC's own
- *    `aria-label` is optional, so "an icon-only toggle still needs `aria-label`"
- *    is advice — and the measured cost of that kind of advice in this codebase
- *    is 33 unnamed controls in one prototype. `button.tsx` split `IconButton`
- *    out for precisely this and the argument does not weaken when the button
- *    happens to have two states.
- *  - **An icon-only toggle is the WORST case, not a milder one.** A nameless
- *    plain button is announced as "button"; a nameless toggle is announced as
- *    "button, pressed", which sounds like information and is not.
- *
- * `toggle-group.tsx` is left alone: its `ToggleButton` is a group member, and a
- * group carries a name of its own. This split is for the standalone case.
- *
- * ── THE NAME DOES NOT CHANGE WHEN THE STATE DOES ────────────────────────────
- *
- * The tempting Persian copy for a mute toggle is «بی‌صدا کردن» when it is off
- * and «باصدا کردن» when it is on — the label as an offer, the way
- * `theme-toggle.tsx` writes its icon button. That is right for a button that
- * DOES something and wrong for one that IS something:
- *
- *   - RAC emits `aria-pressed` on this control (measured in `toggle.test.tsx`),
- *     so the state is already announced. A name that also flips announces it
- *     twice, and the two readings contradict each other — "unmute, pressed".
- *   - A voice-control user says the name to operate the control. A name that
- *     changes on activation cannot be said twice.
- *
- * So: name the THING (`«بی‌صدا»`), let `aria-pressed` carry the state. A control
- * whose label must change with its state is a `Button` with an `onPress`, not a
- * toggle — which is exactly what `theme-toggle.tsx` is.
+ * Engine: `@base-ui/react/toggle`. TRAP: React Aria's `data-pressed` is the transient
+ * pointer-down and `data-selected` the ON state; Base UI spells the ON state
+ * `data-pressed` and emits no `data-selected` — see `toggle.variants.ts`.
+ * `ToggleButton` (toggle-group.tsx) is a MEMBER of a strip; this is a control with no
+ * siblings that owns its own chrome. `IconToggle` exists because a nameless toggle
+ * announces "button, pressed", which sounds like information and is not. The name
+ * does NOT change with the state («بی‌صدا», not «بی‌صدا کردن»): `aria-pressed` carries
+ * the state, and a voice-control user must be able to say the name twice.
  */
 
+/**
+ * A two-state button's prop surface, minus children and class. Deliberately NOT
+ * `ButtonPropsBase`: a toggle has no submit behaviour and HAS `isSelected`/`onChange`.
+ */
+interface ToggleButtonPropsBase
+  extends Omit<FocusableProps, "onFocusChange">,
+    Omit<PressEvents, "onPressStart" | "onPressEnd" | "onPressUp" | "onPressChange">,
+    AriaLabelingProps,
+    Omit<ButtonAriaProps, "aria-current">,
+    StyleProps,
+    // `onClick` is the press API's; see `ButtonPropsBase`.
+    Omit<GlobalDOMAttributes<HTMLDivElement>, "onClick"> {
+  /** The toggle's collection key, not a DOM id — `toggle-group.tsx` addresses it. */
+  id?: Key;
+  /** The toggle's position in the sequential tab order — `-1` removes it. */
+  tabIndex?: number | undefined;
+  /** Whether the toggle is disabled. */
+  isDisabled?: boolean;
+  /** Whether the toggle is on (controlled). */
+  isSelected?: boolean;
+  /** Whether the toggle is on by default (uncontrolled). */
+  defaultSelected?: boolean;
+  /** Handler that is called when the toggle's state changes. */
+  onChange?: (isSelected: boolean) => void;
+}
+
 export interface ToggleProps
-  extends Omit<AriaToggleButtonProps, "children" | "className">,
+  extends ToggleButtonPropsBase,
     Omit<ToggleVariantProps, "iconOnly"> {
+  /** @forwarded `...props` → `toBaseToggleProps` → `BaseToggle` → the `<button>`. */
   children?: LumoNode;
   className?: string | undefined;
 }
 
+/**
+ * The React Aria → Base UI translation for a two-state button. `onChange` lands cleanly
+ * on `onPressedChange`; everything else is renamed, and `id` narrows to `string`.
+ */
+function toBaseToggleProps({
+  // — translated —
+  isSelected,
+  defaultSelected,
+  onChange,
+  isDisabled,
+  onPress,
+  onKeyDown,
+  onKeyUp,
+  tabIndex,
+  // RAC types this `Key`; Base UI `string`. A numeric id is stringified here.
+  id,
+  style,
+  // — accepted by the API, unreachable in Base UI. See button.tsx's header. —
+  ...rest
+}: Omit<ToggleProps, "className" | "variant" | "size">) {
+  return {
+    ...attr("pressed", isSelected),
+    ...attr("defaultPressed", defaultSelected),
+    ...attr("onPressedChange", onChange),
+    disabled: isDisabled ?? false,
+    ...attr("id", id === undefined ? undefined : String(id)),
+    ...attr("tabIndex", tabIndex),
+    ...attr("style", style),
+    ...attr(
+      "onClick",
+      onPress === undefined
+        ? undefined
+        : (event: ReactMouseEvent<HTMLButtonElement>) => onPress(pressFromClick(event)),
+    ),
+    ...attr(
+      "onKeyDown",
+      onKeyDown === undefined
+        ? undefined
+        : (event: ReactKeyboardEvent<HTMLButtonElement>) => onKeyDown(asAriaKeyboardEvent(event)),
+    ),
+    ...attr(
+      "onKeyUp",
+      onKeyUp === undefined
+        ? undefined
+        : (event: ReactKeyboardEvent<HTMLButtonElement>) => onKeyUp(asAriaKeyboardEvent(event)),
+    ),
+    // `rest` is cast because RAC declares these handlers against `HTMLDivElement` for a
+    // component that renders a `<button>`; Base UI's `HTMLButtonElement` is the correct one.
+    ...(rest as object),
+  };
+}
+
 export function Toggle({ className, variant, size, ...props }: ToggleProps) {
   return (
-    <AriaToggleButton
+    <BaseToggle
       data-lumo=""
       className={cn(toggleVariants({ variant, size }), className)}
-      {...props}
+      {...toBaseToggleProps(props)}
     />
   );
 }
 
 export interface IconToggleProps extends Omit<ToggleProps, "aria-label"> {
-  /**
-   * Announced name. Required: an icon is not a name.
-   *
-   * Names the thing, not the action, and never changes with the state — see the
-   * file header. «پررنگ», not «پررنگ کردن».
-   */
+  /** Announced name. Required: an icon is not a name. Names the THING, never changes with the state. */
   label: string;
 }
 
 /**
- * A toggle whose entire content is an icon.
- *
- * Split from `Toggle` for the same reason `IconButton` is split from `Button`:
- * the type system enforces the name that a convention would only recommend.
+ * A toggle whose entire content is an icon. Split from `Toggle` for the same reason
+ * `IconButton` is split from `Button`: the type system enforces the name.
  */
 export function IconToggle({ label, className, variant, size, ...props }: IconToggleProps) {
   return (
-    <AriaToggleButton
+    <BaseToggle
       data-lumo=""
       aria-label={label}
       className={cn(toggleVariants({ variant, size, iconOnly: true }), className)}
-      {...props}
+      {...toBaseToggleProps(props)}
     />
   );
 }

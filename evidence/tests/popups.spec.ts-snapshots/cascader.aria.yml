@@ -1,0 +1,8 @@
+- dialog "سطوح موقعیت":
+  - listbox "سطوح موقعیت ۱":
+    - option "آسیا" [selected]
+  - listbox "سطوح موقعیت ۲":
+    - option "ایران" [selected]
+    - option "ژاپن"
+  - listbox "سطوح موقعیت ۳":
+    - option "تهران" [selected]
