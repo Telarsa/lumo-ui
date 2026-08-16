@@ -191,6 +191,13 @@ function originalPathOf(/** @type {string} */ to, /** @type {string} */ rel) {
   const legacy = join(to, ".lumo/originals", rel);
   return existsSync(suffixed) || !existsSync(legacy) ? suffixed : legacy;
 }
+/** Write an original at the `.orig` path; a pre-0.1.2 unsuffixed original for the same file is removed (migration on the next upgrade/add). */
+async function writeOriginal(/** @type {string} */ to, /** @type {string} */ rel, /** @type {string} */ text) {
+  const suffixed = join(to, ".lumo/originals", `${rel}.orig`);
+  await mkdir(dirname(suffixed), { recursive: true });
+  await writeFile(suffixed, text);
+  await rm(join(to, ".lumo/originals", rel), { force: true });
+}
 
 async function loadLock(/** @type {string} */ to) {
   const p = join(to, "lumo.lock.json");
@@ -241,9 +248,7 @@ async function add() {
       }
       await mkdir(dirname(dst), { recursive: true });
       await writeFile(dst, text);
-      const originalPath = join(to, ".lumo/originals", `${rel}.orig`);
-      await mkdir(dirname(originalPath), { recursive: true });
-      await writeFile(originalPath, text);
+      await writeOriginal(to, rel, text);
       files[rel] = sha(text);
       console.log(`  ${existing === undefined ? "copied " : existing === text ? "same   " : "REPLACED"} ${rel}`);
     }
@@ -285,7 +290,11 @@ async function diffOrUpgrade(mode) {
       const upstreamChanged = original !== undefined ? original !== next : current !== next;
       const locallyEdited = original !== undefined && original !== current;
       if (locallyEdited) edited.push(rel);
-      if (!upstreamChanged) { console.log(`  ${rel}: up to date${locallyEdited ? " (edited locally)" : ""}`); continue; }
+      if (!upstreamChanged) {
+        if (mode === "upgrade" && original !== undefined && originalPath === join(to, ".lumo/originals", rel)) await writeOriginal(to, rel, original);
+        console.log(`  ${rel}: up to date${locallyEdited ? " (edited locally)" : ""}`);
+        continue;
+      }
       changed++;
       if (mode === "diff") {
         console.log(`  ${rel}: lumo-ui changed this file${locallyEdited ? " AND you edited your copy (upgrade will 3-way merge)" : ""}`);
@@ -295,8 +304,7 @@ async function diffOrUpgrade(mode) {
       }
       if (!locallyEdited) {
         await writeFile(dst, next);
-        await mkdir(dirname(originalPath), { recursive: true });
-        await writeFile(originalPath, next);
+        await writeOriginal(to, rel, next);
         lock.items[name] = { version, files: { ...(lock.items[name]?.files ?? {}), [rel]: sha(next) } };
         console.log(`  ${rel}: replaced (your copy was untouched)`);
         continue;
@@ -307,8 +315,7 @@ async function diffOrUpgrade(mode) {
       await writeFile(tmpNext, next);
       const r = spawnSync("git", ["merge-file", "-L", "yours", "-L", "lumo-ui (installed)", "-L", `lumo-ui ${version}`, dst, originalPath, tmpNext], { encoding: "utf8" });
       await rm(join(to, ".lumo/incoming"), { recursive: true, force: true });
-      await mkdir(dirname(originalPath), { recursive: true });
-      await writeFile(originalPath, next);
+      await writeOriginal(to, rel, next);
       lock.items[name] = { version, files: { ...(lock.items[name]?.files ?? {}), [rel]: sha(next) } };
       if (r.status === 0) { merged++; console.log(`  ${rel}: merged cleanly with your edits`); }
       else { conflicts++; console.log(`  ${rel}: MERGED WITH CONFLICTS — resolve the <<<<<<< markers, then run your gates`); }
