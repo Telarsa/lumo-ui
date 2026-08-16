@@ -1,4 +1,4 @@
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
 import { ShieldCheck, UserPlus } from "lucide-react";
 import { Marker, MarkerIcon } from "@lumo-ui/ui";
 

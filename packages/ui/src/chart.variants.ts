@@ -1,6 +1,6 @@
 import { cva } from "class-variance-authority";
 import { renderChartSvg } from "@tanstack/charts/svg";
-import { direction, formatNumber, type Direction, type Locale, type LumoNode } from "@lumo-ui/core";
+import { direction, formatNumber, type Direction, type Locale, type LumoNode, type LumoStrings } from "@lumo-ui/core";
 import type { ComponentType } from "react";
 
 /**
@@ -264,22 +264,17 @@ export function chartValueAxis(locale: Locale, options: ChartAxisSpecOptions) {
 export const TANSTACK_ROLE_DESCRIPTION = 'aria-roledescription="chart"';
 
 /**
- * The Persian and English words for what a chart IS, spoken on every focus via
- * `aria-roledescription`. Engine vocabulary, so a `Record<Locale, …>` rather than a
- * required prop; `satisfies` makes a new locale a compile error here.
- */
-export const CHART_ROLE_DESCRIPTION = {
-  "fa-IR": "نمودار",
-  "en-US": "chart",
-} satisfies Record<Locale, string>;
-
-/**
  * TanStack's own SVG renderer, with its one English literal localised. Pass as the
  * `renderSvg` prop — a prop-level fix, no patch, no fork. ONE bounded replacement on
- * the root element; `en-US` goes through the same path so both locales exercise it.
+ * the root element; `en-US` goes through the same path so every locale exercises it.
+ * `strings` is `LumoStrings["chart"]` — the word for what a chart IS, spoken on every
+ * focus via `aria-roledescription`: engine vocabulary, so not a required prop, but no
+ * table here either. `ChartContainer` resolves it with `useLumoStringsFor(locale)`
+ * (built-in, or the app's own for a language Lumo does not carry) and hands it in;
+ * this module stays hook-free so a server component may call it.
  */
-export function chartRenderSvg(locale: Locale) {
-  const replacement = `aria-roledescription="${CHART_ROLE_DESCRIPTION[locale]}"`;
+export function chartRenderSvg(strings: LumoStrings["chart"]) {
+  const replacement = `aria-roledescription="${strings.roleDescription}"`;
   return (scene: never, options: never): string =>
     renderChartSvg(scene, options).replace(TANSTACK_ROLE_DESCRIPTION, replacement);
 }

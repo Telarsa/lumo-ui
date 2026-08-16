@@ -1605,7 +1605,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The reader's locale. Selects the calendar system, the digits, the week start and the direction. There is no `dir` and no `calendar` prop."
+            "description": "The reader's locale. Selects the calendar system, the digits, the week start, the direction and the announced chrome (`LumoStrings[\"calendar\"]`, the app's own for a language Lumo does not carry). There is no `dir` and no `calendar` prop."
           },
           {
             "name": "today",
@@ -1682,7 +1682,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The reader's locale. Selects the calendar system, the digits, the week start and the direction. There is no `dir` and no `calendar` prop."
+            "description": "The reader's locale. Selects the calendar system, the digits, the week start, the direction and the announced chrome (`LumoStrings[\"calendar\"]`, the app's own for a language Lumo does not carry). There is no `dir` and no `calendar` prop."
           },
           {
             "name": "today",
@@ -2298,7 +2298,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "The numbering system every tick, tooltip and legend figure is formatted in."
+            "description": "The numbering system every tick, tooltip and legend figure is formatted in — and whose `LumoStrings[\"chart\"]` names the SVG (`aria-roledescription`)."
           },
           {
             "name": "animate",
@@ -9171,7 +9171,7 @@
             "name": "locale",
             "type": "Locale",
             "required": true,
-            "description": "Selects the numerals the number is DISPLAYED in."
+            "description": "Selects the numerals the number is DISPLAYED in, and whose `LumoStrings[\"phoneInput\"].countries` name the countries."
           },
           {
             "name": "className",
@@ -9691,15 +9691,21 @@
           },
           {
             "name": "locale",
-            "type": "Locale",
+            "type": "\"fa-IR\" | \"en-US\" | (string & {})",
             "required": true,
-            "description": "The document's locale. Same value given to `LumoHtml`. No `direction` sibling: it is `direction(locale)`."
+            "description": "A locale Lumo carries strings for: `fa-IR` or `en-US`. Same value as `LumoHtml`'s `lang`. Any other BCP-47 tag (`de`, `ar-EG`, `zh-Hant-TW`). Same value as `LumoHtml`'s `lang`."
           },
           {
             "name": "linkComponent",
             "type": "LumoLinkComponent | undefined",
             "required": false,
             "description": "The app's own link component (Next's `Link`, TanStack Router's `Link`, …), used by every Lumo family that renders an anchor — `Link`, `Item`, `Command` rows, `NavigationMenuLink`. Omit for the platform `<a>`. It receives the anchor's props (`href`, `className`, `aria-*`, `target`/`rel`, handlers)."
+          },
+          {
+            "name": "strings",
+            "type": "LumoAppStrings | undefined",
+            "required": false,
+            "description": "The app's own complete `LumoAppStrings` for a built-in locale — its own wording, in that language; omit for Lumo's. REQUIRED for a language Lumo does not carry: every Lumo string plus the engine's, complete. There is no fallback."
           }
         ]
       },

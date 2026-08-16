@@ -10,8 +10,9 @@ import {
   startOfYear as icuStartOfYear,
   toCalendar,
   type Calendar,
+  type CalendarIdentifier,
 } from "@internationalized/date";
-import { FORMAT_LOCALE, type Locale } from "@lumo-ui/core";
+import { formatLocale, type Locale, type LumoStrings } from "@lumo-ui/core";
 
 /**
  * Binds `react-day-picker`'s GRID to `@internationalized/date`'s CALENDARS.
@@ -28,11 +29,39 @@ import { FORMAT_LOCALE, type Locale } from "@lumo-ui/core";
  * The calendar each locale's readers actually count in — a THIRD independent
  * property beside direction and digits. Not an ICU default lookup: `ar-SA`
  * defaults to GREGORIAN and the answer can differ between a laptop and CI.
+ * Since the locale opened (decision §28): a tag that STATES its calendar
+ * (`ar-SA-u-ca-islamic-umalqura`, `he-IL-u-ca-hebrew`) counts in that one — the
+ * app has decided, the same way `formatLocale` honours a `-u-` extension;
+ * Persian counts in Jalali; every other tag counts in Gregorian, deterministic
+ * on every runtime. Value: a CLDR calendar identifier for `createCalendar` — a
+ * stated one the library does not know makes `createCalendar` throw, which is
+ * the correct outcome (typed as the identifier union for that reason, not checked).
  */
-export const CALENDAR_FOR = {
-  "fa-IR": "persian",
-  "en-US": "gregory",
-} as const satisfies Record<Locale, string>;
+export function calendarFor(locale: Locale): CalendarIdentifier {
+  // ONE source: the calendar `formatLocale` states for the tag (a stated `-u-ca-`
+  // wins there too), so the grid, the formatters and the gate agree.
+  const stated = statedCalendar(formatLocale(locale));
+  return (stated ?? "gregory") as CalendarIdentifier;
+}
+
+/** The `ca` keyword of a tag's Unicode (`-u-`) extension, or `undefined`. Parsed by hand: no `Intl.Locale` on every runtime. */
+function statedCalendar(locale: Locale): string | undefined {
+  const subtags = locale.toLowerCase().split("-");
+  const u = subtags.indexOf("u");
+  if (u === -1) return undefined;
+  const values: string[] = [];
+  let collecting = false;
+  for (const subtag of subtags.slice(u + 1)) {
+    // A two-character subtag is a KEY; longer ones are its values (`ca-islamic-umalqura`).
+    if (subtag.length === 2) {
+      if (collecting) break;
+      collecting = subtag === "ca";
+    } else if (collecting) {
+      values.push(subtag);
+    }
+  }
+  return values.length === 0 ? undefined : values.join("-");
+}
 
 /** A Gregorian calendar, for converting to and from a JS `Date`'s own fields. */
 const GREGORIAN = createCalendar("gregory");
@@ -61,7 +90,7 @@ export function toPickerDate(date: CalendarDate): Date {
 
 /** A JS `Date` from the grid, back into the reader's own calendar (`{year: 1403, month: 5, day: 1}`, not Gregorian). */
 export function fromPickerDate(date: Date, locale: Locale): CalendarDate {
-  return toCalendar(fromJsDate(date), createCalendar(CALENDAR_FOR[locale]));
+  return toCalendar(fromJsDate(date), createCalendar(calendarFor(locale)));
 }
 
 /**
@@ -80,8 +109,8 @@ function formatter(locale: Locale, options: Intl.DateTimeFormatOptions): Intl.Da
   const key = locale + JSON.stringify(options);
   let found = formatters.get(key);
   if (!found) {
-    // `FORMAT_LOCALE`, not the bare tag: calendar and numbering system are STATED, never inherited from ICU.
-    found = new Intl.DateTimeFormat(FORMAT_LOCALE[locale], options);
+    // `formatLocale`, not the bare tag: calendar and numbering system are STATED, never inherited from ICU.
+    found = new Intl.DateTimeFormat(formatLocale(locale), options);
     formatters.set(key, found);
   }
   return found;
@@ -101,9 +130,15 @@ export interface LumoCalendarConfig {
   weekStartsOn: number;
 }
 
-/** Build the calendar configuration for a locale. Cheap enough to leave uncached. */
-export function lumoCalendar(locale: Locale): LumoCalendarConfig {
-  const calendar = createCalendar(CALENDAR_FOR[locale]);
+/**
+ * Build the calendar configuration for a locale. Cheap enough to leave uncached.
+ * `strings` are the ANNOUNCED chrome — `LumoStrings["calendar"]`, authored in
+ * `@lumo-ui/core` for the built-in locales and brought by the app for any other
+ * language; the calling component gets them from `useLumoStringsFor(locale)`.
+ * This module stays hook-free so a server component may build the config.
+ */
+export function lumoCalendar(locale: Locale, strings: LumoStrings["calendar"]): LumoCalendarConfig {
+  const calendar = createCalendar(calendarFor(locale));
 
   /** A JS `Date` as a `CalendarDate` in THIS calendar. The one conversion. */
   const inCal = (date: Date): CalendarDate => toCalendar(fromJsDate(date), calendar);
@@ -174,7 +209,7 @@ export function lumoCalendar(locale: Locale): LumoCalendarConfig {
 
     // Overridden because `DateLib` calls it for week numbers and dropdown years, where a Latin digit is a defect.
     formatNumber: (value: number | string) =>
-      new Intl.NumberFormat(FORMAT_LOCALE[locale], { useGrouping: false }).format(Number(value)),
+      new Intl.NumberFormat(formatLocale(locale), { useGrouping: false }).format(Number(value)),
 
     formatMonthYear: (date: Date) =>
       formatter(locale, { month: "long", year: "numeric" }).format(date),
@@ -196,53 +231,39 @@ export function lumoCalendar(locale: Locale): LumoCalendarConfig {
         : formatter(locale, { weekday: "narrow" }).format(date);
     },
     formatWeekNumber: (weekNumber: number) =>
-      new Intl.NumberFormat(FORMAT_LOCALE[locale], { useGrouping: false }).format(weekNumber),
+      new Intl.NumberFormat(formatLocale(locale), { useGrouping: false }).format(weekNumber),
   };
 
   // THE ANNOUNCED STRINGS. The first render served a flawless Persian grid and
   // forty-two English `aria-label`s. Not a locale bundle (which can be partial
-  // and fall back to English silently): every label `satisfies Record<Locale, string>`,
-  // so a locale added without them is a COMPILE error.
-  const CHROME = {
-    nav: { "fa-IR": "پیمایش ماه‌ها", "en-US": "Month navigation" },
-    previous: { "fa-IR": "ماه پیش", "en-US": "Go to the previous month" },
-    next: { "fa-IR": "ماه بعد", "en-US": "Go to the next month" },
-    monthDropdown: { "fa-IR": "انتخاب ماه", "en-US": "Choose the month" },
-    yearDropdown: { "fa-IR": "انتخاب سال", "en-US": "Choose the year" },
-    weekNumberHeader: { "fa-IR": "شمارهٔ هفته", "en-US": "Week number" },
-    week: { "fa-IR": "هفتهٔ", "en-US": "Week" },
-  } as const satisfies Record<string, Record<Locale, string>>;
-
-  // "Today, <date>" — a whole SENTENCE per locale, punctuation included: a
-  // shared separator once put the Arabic comma into the English announcement.
-  const todayName = {
-    "fa-IR": (date: string) => `امروز، ${date}`,
-    "en-US": (date: string) => `Today, ${date}`,
-  } as const satisfies Record<Locale, (date: string) => string>;
-
+  // and fall back to English silently): every label is a REQUIRED member of
+  // `LumoStrings["calendar"]`, so a language without them is a COMPILE error
+  // for the app that brings it, and `today` is a whole SENTENCE per language,
+  // punctuation included — a shared separator once put the Arabic comma into
+  // the English announcement.
   const longDate = (date: Date) =>
     formatter(locale, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(
       date,
     );
 
   const labels: Record<string, unknown> = {
-    labelNav: () => CHROME.nav[locale],
-    labelPrevious: () => CHROME.previous[locale],
-    labelNext: () => CHROME.next[locale],
-    labelMonthDropdown: () => CHROME.monthDropdown[locale],
-    labelYearDropdown: () => CHROME.yearDropdown[locale],
-    labelWeekNumberHeader: () => CHROME.weekNumberHeader[locale],
+    labelNav: () => strings.nav,
+    labelPrevious: () => strings.previous,
+    labelNext: () => strings.next,
+    labelMonthDropdown: () => strings.monthDropdown,
+    labelYearDropdown: () => strings.yearDropdown,
+    labelWeekNumberHeader: () => strings.weekNumberHeader,
     labelWeekNumber: (weekNumber: number) =>
-      `${CHROME.week[locale]} ${new Intl.NumberFormat(FORMAT_LOCALE[locale], { useGrouping: false }).format(weekNumber)}`,
+      `${strings.week} ${new Intl.NumberFormat(formatLocale(locale), { useGrouping: false }).format(weekNumber)}`,
     // The grid names itself by the month it shows, in that month's own calendar.
     labelGrid: (date: Date) => formatter(locale, { month: "long", year: "numeric" }).format(date),
     labelWeekday: (date: Date) => formatter(locale, { weekday: "long" }).format(date),
     // A full, calendar-correct date per cell, prefixed «امروز» when it is today —
     // the one fact a keyboard user cannot get from the date itself.
     labelGridcell: (date: Date, modifiers?: { today?: boolean }) =>
-      modifiers?.today === true ? todayName[locale](longDate(date)) : longDate(date),
+      modifiers?.today === true ? strings.today(longDate(date)) : longDate(date),
     labelDayButton: (date: Date, modifiers?: { today?: boolean }) =>
-      modifiers?.today === true ? todayName[locale](longDate(date)) : longDate(date),
+      modifiers?.today === true ? strings.today(longDate(date)) : longDate(date),
   };
 
   return { calendar, dateLib, formatters: formattersProp, labels, weekStartsOn };

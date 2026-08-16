@@ -8,7 +8,7 @@
  * pass silently, which is the whole point — this is guarding against exactly
  * the class of defect that renders correctly and reads wrong.
  */
-import type { LumoNode, Locale } from "./types.ts";
+import type { BuiltinLocale, LumoNode, Locale } from "./types.ts";
 import type { LinkDOMProps } from "./props.ts";
 
 declare function Cell(props: { children: LumoNode }): null;
@@ -33,10 +33,13 @@ const _element = <Cell><span>{day.label}</span></Cell>;
 const _nullish = <Cell>{null}</Cell>;
 const _array = <Cell>{[day.label, day.label]}</Cell>;
 
-// --- the locale union is closed --------------------------------------------
-// @ts-expect-error an arbitrary tag is not a Locale — adding one is an edit to
-// the union plus a passing parity test, never a string from a route param
-const _badLocale: Locale = "de-DE";
+// --- the locale type is OPEN since 0.2.0 (decision §28) ---------------------
+// Any BCP-47 tag is a Locale; the built-in two still autocomplete and narrow.
+const _anyLocale: Locale = "de-DE";
+const _builtin: BuiltinLocale = "fa-IR";
+// @ts-expect-error a consumer language is not a BUILT-IN locale — Lumo carries no strings for it
+const _notBuiltin: BuiltinLocale = "de-DE";
+
 
 const _goodLocale: Locale = "fa-IR";
 
@@ -53,7 +56,9 @@ void [
   _element,
   _nullish,
   _array,
-  _badLocale,
+  _anyLocale,
+  _notBuiltin,
+  _builtin,
   _goodLocale,
   _linkBagWithAbsentRouter,
 ];

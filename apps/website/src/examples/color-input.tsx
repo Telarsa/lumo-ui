@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { ColorInput } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "رنگ رابط", "en-US": "Interface color" }, picker: { "fa-IR": "باز کردن انتخاب‌گر رنگ", "en-US": "Open color picker" }, invalid: { "fa-IR": "یک رنگ معتبر وارد کنید", "en-US": "Enter a valid color" }, help: { "fa-IR": "هگز یا یکی از قالب‌های رنگ سی‌اس‌اس", "en-US": "Hex or another CSS color format" } } as const;

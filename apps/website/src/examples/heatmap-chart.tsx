@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { HeatmapChart } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 

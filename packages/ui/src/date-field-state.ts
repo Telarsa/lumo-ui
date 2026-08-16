@@ -26,7 +26,8 @@ import {
   type CalendarIdentifier,
   type DateValue,
 } from "@internationalized/date";
-import { FORMAT_LOCALE, formatNumber, stringsFor, type Locale } from "@lumo-ui/core";
+import { formatLocale as formatLocaleOf, formatNumber, type Locale } from "@lumo-ui/core";
+import { useLumoStringsFor } from "./locale.ts";
 
 /** The segment kinds this engine emits. `literal` is the separator between them. */
 export type DateSegmentType =
@@ -135,8 +136,10 @@ export function useDateFieldState<T extends DateValue = DateValue>(
   options: DateFieldStateOptions<T>,
 ): DateFieldState {
   const { locale, value, defaultValue, placeholderValue, onChange } = options;
-  const formatLocale = FORMAT_LOCALE[locale];
-  const strings = stringsFor(locale);
+  const formatLocale = formatLocaleOf(locale);
+  // The segments' NAMES: `LumoStrings["dateField"]` for THIS `locale` — built-in,
+  // or the app's own for a language Lumo does not carry (throws otherwise).
+  const strings = useLumoStringsFor(locale);
 
   // The calendar SYSTEM comes from the locale, not a constant: an empty field is
   // already Jalali before any value exists.
@@ -355,7 +358,7 @@ export function digitFromKey(key: string, locale: Locale): number | null {
  * is `DateFieldState`, so one `<DateInput>` renders either. The hour cycle is
  * the LOCALE's decision, asked via `resolvedOptions().hourCycle` (fa-IR: `h23`);
  * `hourCycle` overrides a convention. `dayPeriod` values come from `Intl`, not
- * `strings.ts`, which authors only the segment's NAME.
+ * `LumoStrings`, which authors only the segment's NAME.
  */
 
 /** What a time engine can produce. Structural, so `Time` satisfies it. */
@@ -426,8 +429,10 @@ export function useTimeFieldState(options: TimeFieldStateOptions): DateFieldStat
   ) {
     throw new RangeError("TimeField minValue must not be after maxValue");
   }
-  const formatLocale = FORMAT_LOCALE[locale];
-  const strings = stringsFor(locale);
+  const formatLocale = formatLocaleOf(locale);
+  // The segments' NAMES: `LumoStrings["dateField"]` for THIS `locale` — built-in,
+  // or the app's own for a language Lumo does not carry (throws otherwise).
+  const strings = useLumoStringsFor(locale);
 
   const resolved = useMemo(() => {
     const probe = new Intl.DateTimeFormat(formatLocale, {

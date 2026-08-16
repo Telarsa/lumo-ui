@@ -15,6 +15,16 @@ Hermes ICU probe below has run on a device. So this package now holds:
   button's contract: four variants, three sizes on the shared control scale,
   `isDisabled` announced through `accessibilityState`, children typed `LumoNode`
   (a raw number does not compile), `IconButton.label` REQUIRED.
+- `src/switch.tsx` — `Switch`, the direction-sensitive one step 4 asked for:
+  named by its visible label or a REQUIRED `accessibilityLabel` (the type
+  allows neither to be absent), `role="switch"` + `aria-checked`, the web's
+  measured geometry (30×16 / 42×22), and the thumb positioned by React
+  Native's LOGICAL `start` — so ON sits at the reading end: left in Persian.
+  On a device the platform mirrors `start` under the app's `I18nManager`
+  decision; on the web (react-native-web) the provider roots its tree in a
+  `dir`/`lang` View, which is how RNW resolves logical styles
+  (`I18nManager.forceRTL` is a no-op there). Tested both ways: `right: 15px`
+  under fa-IR, `left: 15px` under en-US, from the locale alone.
 - Tests: rendered through **react-native-web** to static markup and graded by
   the same 14 served-HTML rules as the web (0 violations under fa-IR); a
   `.type-test.tsx` pins the contract. `gate:consumer-lint` and
@@ -59,6 +69,16 @@ rendered on the simulator (screenshot in the session's evidence): four variants,
 three sizes, the named icon button, disabled; text RTL; row order LTR because
 the app never called `I18nManager.forceRTL` — the app-level switch, as
 `provider.tsx` documents.
+
+Second run, same simulator, with the app calling `I18nManager.allowRTL(true);
+forceRTL(true)` at startup (a Persian app's decision) and `Switch` on screen:
+after a relaunch the layout was mirrored — button rows begin at the right, each
+switch sits at the reading end (left) of its label, the ON thumb is at the
+left edge and the OFF thumb at the right, i.e. the logical `start` offset the
+component sets was mirrored by the platform exactly as designed. One
+observation recorded without a claim: on that launch `I18nManager.isRTL` read
+`false` in JS while the layout was already mirrored (Expo Go; the constant is
+filled at native init). Screenshots in the session's evidence.
 
 Still open: the **release-build** row (minification, `resConfigs`, language
 splits) and an **Android emulator** run — Android Studio is not on the

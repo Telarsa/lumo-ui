@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { formatDate } from "@lumo-ui/core";
 import { CheckIcon, ClockIcon, CreditCardIcon, PackageIcon, TruckIcon } from "lucide-react";
 import { Timeline, TimelineBody, TimelineItem, TimelineTime, TimelineTitle } from "@lumo-ui/ui";

@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { InputOtp } from "@lumo-ui/ui";
 import type { ComponentExamples } from "../_system/types";
 // The copy table, in a sibling. THE reason this component is a directory: the

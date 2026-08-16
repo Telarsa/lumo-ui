@@ -2,7 +2,7 @@
 
 import { segmentFor } from "@/lib/locale";
 import { useEffect, useId, useState } from "react";
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
 import { cn, direction } from "@lumo-ui/core";
 import { Button } from "@lumo-ui/ui";
 

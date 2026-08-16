@@ -18,7 +18,7 @@ import {
   type TextInputDOMEvents,
   type Validation,
   type ValueBase,
-  FORMAT_LOCALE,
+  formatLocale,
   type Locale,
 } from "@lumo-ui/core";
 import { attr, useFieldWiring } from "@lumo-ui/base-ui-ssr";
@@ -85,7 +85,7 @@ export const stepperVariants = cva(
  * RUNTIME locale by default — under `fa-IR` that served `value="1,234"` until
  * 16 Aug 2026 (third blind pass). The locale now comes from `LumoProvider`
  * (`useLumoLocale`), overridable by a `locale` prop, and is handed to the engine
- * as `locale` so the served value carries the reader's digits.
+ * as `formatLocale(locale)` so the served value carries the reader's digits — for ANY tag.
  */
 /**
  * The numeric field's own props, minus its children, class and the two stepper
@@ -201,7 +201,7 @@ export function NumberField({
     <BaseNumberField.Root
       data-lumo=""
       // The reader's digits and grouping in the served value: `fa-IR` → «۱٬۲۳۴», not "1,234".
-      locale={FORMAT_LOCALE[locale]}
+      locale={formatLocale(locale)}
       // `group/field` exists for one rule: the input's invalid border (see `numberInputVariants`).
       className={cn("group/field", fieldVariants(), className)}
       {...attr("min", minValue)}

@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { SankeyChart } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "جریان سفارش", "en-US": "Order flow" }, caption: { "fa-IR": "داده‌های جریان سفارش", "en-US": "Order flow data" }, target: { "fa-IR": "مقصد", "en-US": "Target" }, value: { "fa-IR": "جریان", "en-US": "Flow" }, orders: { "fa-IR": "سفارش‌ها", "en-US": "Orders" }, paid: { "fa-IR": "پرداخت‌شده", "en-US": "Paid" }, pending: { "fa-IR": "در انتظار", "en-US": "Pending" } } as const;

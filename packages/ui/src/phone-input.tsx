@@ -3,7 +3,9 @@
 import * as React from "react";
 import { cva } from "class-variance-authority";
 import { formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
+import { asciiDigit, learnDigits } from "./digits.ts";
 import { Description, Field, FieldError, FieldInput, Label } from "./form.tsx";
+import { useLumoStringsFor } from "./locale.ts";
 import { SelectField } from "./select.tsx";
 
 /**
@@ -13,7 +15,10 @@ import { SelectField } from "./select.tsx";
  * the wire. The number is an LTR island in a `<bdi data-lumo-latn>` so its
  * `+` does not land on the wrong end in an RTL paragraph. No numbering-plan
  * metadata dependency: `COUNTRIES` is a small curated default and a prop, and
- * validation is length-only — Iran properly, everything else loosely.
+ * validation is length-only — Iran properly, everything else loosely. Country
+ * NAMES are `LumoStrings["phoneInput"].countries` (built-in, or the app's own for
+ * a language Lumo does not carry), read through `useLumoStringsFor(locale)`; the
+ * reader's digits are learned from `Intl` (`digits.ts`), never tabled.
  */
 
 export interface PhoneCountry {
@@ -21,23 +26,29 @@ export interface PhoneCountry {
   code: string;
   /** Dial code WITHOUT the plus, e.g. "98". */
   dial: string;
-  /** The country's name, per locale. Both required — no English fallback. */
-  name: Record<Locale, string>;
+  /**
+   * The country's displayed name comes from `LumoStrings["phoneInput"].countries[code]`
+   * — Lumo's own for the built-in locales, the app's for any other language — and
+   * falls back to the CODE, never to another language. An app whose list goes
+   * beyond the shipped one may name a country here per locale tag; a tag it
+   * does not name resolves through the strings as above.
+   */
+  name?: Readonly<Partial<Record<Locale, string>>> | undefined;
   /** National number length, excluding the trunk prefix. The only validation this component claims. */
   nationalLength?: number;
 }
 
-/** The default list. Iran first, deliberately — not alphabetical. */
+/** The default list. Iran first, deliberately — not alphabetical. Names live in `LumoStrings["phoneInput"]`. */
 export const COUNTRIES: readonly PhoneCountry[] = [
-  { code: "IR", dial: "98", nationalLength: 10, name: { "fa-IR": "ایران", "en-US": "Iran" } },
-  { code: "AE", dial: "971", nationalLength: 9, name: { "fa-IR": "امارات", "en-US": "UAE" } },
-  { code: "TR", dial: "90", nationalLength: 10, name: { "fa-IR": "ترکیه", "en-US": "Türkiye" } },
-  { code: "IQ", dial: "964", nationalLength: 10, name: { "fa-IR": "عراق", "en-US": "Iraq" } },
-  { code: "AF", dial: "93", nationalLength: 9, name: { "fa-IR": "افغانستان", "en-US": "Afghanistan" } },
-  { code: "DE", dial: "49", name: { "fa-IR": "آلمان", "en-US": "Germany" } },
-  { code: "GB", dial: "44", nationalLength: 10, name: { "fa-IR": "بریتانیا", "en-US": "United Kingdom" } },
-  { code: "US", dial: "1", nationalLength: 10, name: { "fa-IR": "آمریکا", "en-US": "United States" } },
-  { code: "CA", dial: "1", nationalLength: 10, name: { "fa-IR": "کانادا", "en-US": "Canada" } },
+  { code: "IR", dial: "98", nationalLength: 10 },
+  { code: "AE", dial: "971", nationalLength: 9 },
+  { code: "TR", dial: "90", nationalLength: 10 },
+  { code: "IQ", dial: "964", nationalLength: 10 },
+  { code: "AF", dial: "93", nationalLength: 9 },
+  { code: "DE", dial: "49" },
+  { code: "GB", dial: "44", nationalLength: 10 },
+  { code: "US", dial: "1", nationalLength: 10 },
+  { code: "CA", dial: "1", nationalLength: 10 },
 ];
 
 export const phoneInputRowVariants = cva(
@@ -52,22 +63,17 @@ export const phoneInputControlVariants = cva(
     "aria-invalid:border-critical",
 );
 
-/** Every numeral this library renders, mapped back to ASCII. See `input-otp.tsx`. */
-const DIGITS: Map<string, string> = (() => {
-  const map = new Map<string, string>();
-  for (const locale of ["fa-IR", "en-US"] as const satisfies readonly Locale[]) {
-    for (let d = 0; d <= 9; d += 1) {
-      map.set(formatNumber(d, locale, { useGrouping: false }), String(d));
-    }
-  }
-  return map;
-})();
-
-/** ASCII digits only. Punctuation, spaces and bidi marks are dropped. */
-export function phoneDigits(input: string): string {
+/**
+ * ASCII digits only. Punctuation, spaces and bidi marks are dropped. Digits are
+ * learned from `Intl`, never tabled (`digits.ts`): the built-in numbering
+ * systems always, plus every locale a `PhoneInput` has rendered under — pass
+ * `locale` to learn one here and now.
+ */
+export function phoneDigits(input: string, locale?: Locale): string {
+  if (locale !== undefined) learnDigits(locale);
   let out = "";
   for (const character of input) {
-    const ascii = DIGITS.get(character);
+    const ascii = asciiDigit(character);
     if (ascii !== undefined) out += ascii;
   }
   return out;
@@ -107,7 +113,7 @@ function countryFromValue(
 export interface PhoneInputProps {
   /** Announced and displayed name. Required. */
   label: string;
-  /** Selects the numerals the number is DISPLAYED in. */
+  /** Selects the numerals the number is DISPLAYED in, and whose `LumoStrings["phoneInput"].countries` name the countries. */
   locale: Locale;
   /** Names the country selector. Required — it is a second control in one field. */
   countryLabel: string;
@@ -144,6 +150,10 @@ export function PhoneInput({
   name,
   className,
 }: PhoneInputProps) {
+  // The reader's digits are learned once, so every `phoneDigits`/`toE164` below reads them back as ASCII.
+  learnDigits(locale);
+  // Country names for THIS `locale`: built-in, or the app's own for a language Lumo does not carry.
+  const countryNames = useLumoStringsFor(locale).phoneInput.countries;
   const fallback = countries[0];
   const [countryCode, setCountryCode] = React.useState(
     () => defaultCountry ?? countryFromValue(value, countries)?.code ?? fallback?.code ?? "IR",
@@ -203,7 +213,7 @@ export function PhoneInput({
           triggerClassName="w-full"
           options={countries.map((c) => ({
             value: c.code,
-            label: `${c.name[locale]} +${renderDigits(c.dial, locale)}`,
+            label: `${c.name?.[locale] ?? countryNames[c.code] ?? c.code} +${renderDigits(c.dial, locale)}`,
           }))}
         />
 

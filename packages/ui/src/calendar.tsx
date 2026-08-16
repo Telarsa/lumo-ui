@@ -6,6 +6,7 @@ import { DayPicker, type DropdownProps } from "react-day-picker";
 import type { CalendarDate } from "@internationalized/date";
 import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
+import { useLumoStringsFor } from "./locale.ts";
 import {
   calendarCellVariants,
   calendarDayButtonVariants,
@@ -96,7 +97,8 @@ export interface CalendarBaseProps
   label: string;
   /**
    * The reader's locale. Selects the calendar system, the digits, the week
-   * start and the direction. There is no `dir` and no `calendar` prop.
+   * start, the direction and the announced chrome (`LumoStrings["calendar"]`,
+   * the app's own for a language Lumo does not carry). There is no `dir` and no `calendar` prop.
    */
   locale: Locale;
   /** The selected day, in the reader's own calendar. */
@@ -272,7 +274,9 @@ export function Calendar({
   ...props
 }: CalendarProps) {
   const descriptionId = useId();
-  const config = lumoCalendar(locale);
+  // The announced chrome for THIS `locale`: built-in, or the app's own for a language Lumo does not carry.
+  const strings = useLumoStringsFor(locale);
+  const config = lumoCalendar(locale, strings.calendar);
   const dir = direction(locale);
   const disabled = calendarDisabled({
     locale,

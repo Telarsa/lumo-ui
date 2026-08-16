@@ -1,4 +1,4 @@
-import { FORMAT_LOCALE, type Locale } from "@lumo-ui/core";
+import { FORMAT_LOCALE, type BuiltinLocale as Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { ComponentGallery, type GalleryItem } from "@/components/component-gallery";

@@ -19,7 +19,7 @@ import {
   Time,
 } from "@internationalized/date";
 import { DayPicker } from "react-day-picker";
-import { FORMAT_LOCALE, formatNumber } from "@lumo-ui/core";
+import { fa, formatLocale, formatNumber } from "@lumo-ui/core";
 import { lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
 import { Calendar } from "./calendar.tsx";
 import {
@@ -56,7 +56,7 @@ import { DateRangePicker } from "./date-range-picker.tsx";
  * directions and both are needed.
  */
 
-const FA = FORMAT_LOCALE["fa-IR"];
+const FA = formatLocale("fa-IR");
 const LATIN_WORD = /[A-Za-z]{3,}/;
 const LATIN_DIGIT = /[0-9]/;
 
@@ -1061,7 +1061,7 @@ describe("the caption dropdowns, and the bounds they are not allowed to guess", 
   });
 
   it("a BOUNDED year list is the same list tomorrow — and an unbounded one is not", () => {
-    const config = lumoCalendar("fa-IR");
+    const config = lumoCalendar("fa-IR", fa.calendar);
 
     /** The same element, rendered with the system clock set to `iso`. */
     const yearsAt = (iso: string, el: React.ReactElement) => {

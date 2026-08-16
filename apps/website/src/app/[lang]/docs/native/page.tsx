@@ -1,4 +1,4 @@
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
 import { Frame } from "@lumo-ui/ui";
 import { assertLocale, localeParams } from "@/lib/locale";
 import { highlight } from "@/lib/highlight";
@@ -18,7 +18,7 @@ export const generateStaticParams = localeParams;
 const SECTIONS = ["status", "preview", "contract", "usage", "next"] as const;
 type SectionId = (typeof SECTIONS)[number];
 
-const USAGE = `import { LumoNativeProvider, Button, IconButton } from "@lumo-ui/native";
+const USAGE = `import { LumoNativeProvider, Button, IconButton, Switch } from "@lumo-ui/native";
 import { formatNumber } from "@lumo-ui/core";
 
 export function App() {
@@ -27,6 +27,7 @@ export function App() {
       <Button onPress={save}>ذخیره</Button>
       <Button variant="outline">{\`\${formatNumber(3, "fa-IR")} مورد\`}</Button>
       <IconButton label="بستن"><CloseIcon /></IconButton>
+      <Switch isSelected={notify} onChange={setNotify}>اعلان‌ها</Switch>
     </LumoNativeProvider>
   );
 }`;
@@ -34,19 +35,20 @@ export function App() {
 const COPY: Record<Locale, { title: string; intro: string; heading: Record<SectionId, string>; body: Record<string, LumoNode>; frame: string }> = {
   "fa-IR": {
     title: "موبایل — React Native",
-    intro: "همان قرارداد لومو روی React Native / Expo. آنچه امروز هست: پرووایدر و دکمه؛ آنچه هنوز نیست: اجرای روی دستگاه.",
+    intro: "همان قرارداد لومو روی React Native / Expo. آنچه امروز هست: پرووایدر، دکمه و کلید؛ پروب ICU یک بار روی شبیه‌ساز iOS اجرا شده است.",
     frame: "پیش‌نمایش دکمهٔ موبایل در مرورگر",
     heading: { status: "وضعیت", preview: "پیش‌نمایش", contract: "قرارداد", usage: "استفاده", next: "بعدی" },
     body: {
       status: (
         <>
-          <Term>@lumo-ui/native</Term> یک بسته است با یک کامپوننت (<Term>Button</Term> و{" "}
-          <Term>IconButton</Term>) و پرووایدرش. توکن‌هایش از همان <Term>tokens.css</Term> وب تولید
+          <Term>@lumo-ui/native</Term> یک بسته است با دو کامپوننت (<Term>Button</Term> /{" "}
+          <Term>IconButton</Term> و <Term>Switch</Term>) و پرووایدرش. توکن‌هایش از همان <Term>tokens.css</Term> وب تولید
           می‌شوند (رنگ‌ها از oklch به hex، اندازه‌ها از rem به dp) و یک دروازه جلوی انحرافشان را
           می‌گیرد. اولین بایتش با همان چهارده قاعدهٔ وب نمره می‌گیرد — از راه{" "}
-          <Term>react-native-web</Term>. آنچه هنوز انجام نشده و صادقانه می‌گوییم: پروب ICU که
-          تعیین می‌کند <Term>@lumo-ui/core</Term> روی دستگاه بدون تغییر کار می‌کند یا نه، هنوز روی
-          شبیه‌ساز یا دستگاه اجرا نشده. پیش‌نمایش زیر رندر مرورگر است، نه اجرای دستگاه.
+          <Term>react-native-web</Term>. پروب ICU یک بار روی شبیه‌ساز iOS ۱۸٫۵ (Hermes، Expo Go) اجرا
+          شده: ارقام فارسی و تقویم جلالی درست بودند؛ این Hermes اصلاً <Term>Intl.Locale</Term> ندارد،
+          پس جهت از جدول می‌آید (گزارش کامل در <Term>packages/native/README.md</Term>). اجرای
+          نسخهٔ release و امولاتور اندروید هنوز باز است. پیش‌نمایش زیر رندر مرورگر است، نه اجرای دستگاه.
         </>
       ),
       preview: (
@@ -68,29 +70,30 @@ const COPY: Record<Locale, { title: string; intro: string; heading: Record<Secti
       usage: <>نصب مثل بقیهٔ بسته‌های قرارداد: وابستگی گیت سنجاق‌شده به همان تگ، مسیر <Term>packages/native</Term>.</>,
       next: (
         <>
-          اجرای پروب ICU روی شبیه‌ساز iOS و امولاتور اندروید (دو اجرای مسدودکننده در{" "}
-          <Term>packages/native/README.md</Term>)؛ سپس یک کامپوننت حساس به جهت — <Term>Switch</Term>{" "}
-          یا <Term>SegmentedControl</Term> — چون دکمه‌ای که رندر می‌شود چیزی دربارهٔ راست‌چینی ثابت
-          نمی‌کند.
+          اجرای release و امولاتور اندروید برای پروب ICU؛ کلید (<Term>Switch</Term>) اکنون هست و
+          حساس به جهت است — دستگیرهٔ روشن در فارسی سمت چپ می‌نشیند، از راه ویژگی منطقی{" "}
+          <Term>start</Term> که پلتفرم آینه می‌کند؛ بعدی فیلد متنی و انتخاب.
         </>
       ),
     },
   },
   "en-US": {
     title: "Mobile — React Native",
-    intro: "Lumo's contract on React Native / Expo. What exists today: the provider and Button; what does not yet: a device run.",
+    intro: "Lumo's contract on React Native / Expo. What exists today: the provider, Button and Switch; the ICU probe has run once on the iOS simulator.",
     frame: "Mobile button preview in the browser",
     heading: { status: "Status", preview: "Preview", contract: "Contract", usage: "Usage", next: "Next" },
     body: {
       status: (
         <>
-          <Term>@lumo-ui/native</Term> is a package with one component (<Term>Button</Term> and{" "}
-          <Term>IconButton</Term>) and its provider. Its tokens are generated from the web&rsquo;s{" "}
+          <Term>@lumo-ui/native</Term> is a package with two components (<Term>Button</Term> /{" "}
+          <Term>IconButton</Term> and <Term>Switch</Term>) and its provider. Its tokens are generated from the web&rsquo;s{" "}
           <Term>tokens.css</Term> (colours oklch → hex, sizes rem → dp) and a gate stops them
           drifting. Its first byte is graded by the same fourteen rules as the web — through{" "}
-          <Term>react-native-web</Term>. What has not been done, stated plainly: the ICU probe that
-          decides whether <Term>@lumo-ui/core</Term> runs unchanged on a device has not yet run on a
-          simulator or a device. The preview below is a browser rendering, not a device run.
+          <Term>react-native-web</Term>. The ICU probe has run once on the iOS 18.5 simulator (Hermes,
+          Expo Go): Persian digits and the Jalali calendar were right; that Hermes has no{" "}
+          <Term>Intl.Locale</Term> at all, so direction comes from the table (full report in{" "}
+          <Term>packages/native/README.md</Term>). The release build and an Android emulator are still
+          open. The preview below is a browser rendering, not a device run.
         </>
       ),
       preview: (
@@ -114,10 +117,9 @@ const COPY: Record<Locale, { title: string; intro: string; heading: Record<Secti
       usage: <>Installed like the other contract packages: a git dependency pinned to the same tag, path <Term>packages/native</Term>.</>,
       next: (
         <>
-          Run the ICU probe on the iOS simulator and an Android emulator (the two blocking runs
-          in <Term>packages/native/README.md</Term>); then one direction-sensitive component —{" "}
-          <Term>Switch</Term> or <Term>SegmentedControl</Term> — because a button that renders
-          proves nothing about right-to-left.
+          The release-build and Android-emulator probe runs; <Term>Switch</Term> exists now and is
+          the direction-sensitive one — its ON thumb sits on the left in Persian, through the
+          logical <Term>start</Term> style the platform mirrors; next a text field and a select.
         </>
       ),
     },

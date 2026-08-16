@@ -18,10 +18,11 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { CALENDAR_FOR, lumoCalendar } from "./calendar-datelib.ts";
+import { en as enStrings, fa as faStrings } from "@lumo-ui/core";
+import { calendarFor, lumoCalendar } from "./calendar-datelib.ts";
 
-const fa = lumoCalendar("fa-IR");
-const en = lumoCalendar("en-US");
+const fa = lumoCalendar("fa-IR", faStrings.calendar);
+const en = lumoCalendar("en-US", enStrings.calendar);
 
 /** A JS Date at local noon, matching the adapter's own construction. */
 const at = (y: number, m: number, d: number) => new Date(y, m - 1, d, 12);
@@ -113,7 +114,7 @@ describe("English is not a special case, it is the same code", () => {
    * Both directions need a test.
    */
   it("leaves en-US on the Gregorian calendar", () => {
-    expect(CALENDAR_FOR["en-US"]).toBe("gregory");
+    expect(calendarFor("en-US")).toBe("gregory");
     const d = at(2024, 7, 22);
     expect(lib<(x: Date) => number>(en, "getYear")(d)).toBe(2024);
     expect(lib<(x: Date) => number>(en, "getMonth")(d)).toBe(6); // July, 0-based

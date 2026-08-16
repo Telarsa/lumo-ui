@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { AlignCenter, AlignJustify, AlignRight, Bold, Italic, Underline } from "lucide-react";
 import { ToggleButton, ToggleButtonGroup } from "@lumo-ui/ui";
 import type { ComponentExamples, LocalizedText } from "./_system/types";

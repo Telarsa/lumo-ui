@@ -1322,3 +1322,37 @@ NativeWind), and whether `@lumo-ui/core` runs unchanged on a device — that is
 the probe's answer, and Xcode 26.6 with simulators being on the development
 machine makes the blocking simulator run feasible when the owner wants the
 long build. The next component should be direction-sensitive.
+
+## 28. Any language — the locale contract opens (16 Aug 2026)
+
+The owner: "our library should be able to be used with all languages." Until
+now `Locale` was the closed union `"fa-IR" | "en-US"` — chosen so that a
+route-param string could never become a locale, and so that every internal
+string table was forced complete by `satisfies Record<Locale, …>`. Both
+guarantees mattered; neither requires the union to be closed. What they
+require is that a language Lumo does not carry never gets another language's
+strings by default. So:
+
+- `Locale = BuiltinLocale | (string & {})`; `BuiltinLocale = "fa-IR" | "en-US"`.
+  Built-ins autocomplete and narrow (`isBuiltinLocale`); any tag is accepted.
+- **`LumoProvider` requires `strings` for a non-built-in locale — by type**
+  (`{ locale: BuiltinLocale; strings? } | { locale: Locale; strings: LumoAppStrings }`),
+  and `stringsFor` / `baseUiStringsFor` THROW when asked for a language without
+  the app's set. The rule for a third language is the rule for a required
+  `label`: the app writes it, Lumo refuses to guess.
+- Every internal `Record<Locale, …>` string table in the components (calendar
+  chrome, tree verbs, chart role description, phone-input country names) moved
+  into `LumoStrings` and is read through `useLumoStrings()`; nothing in
+  `packages/ui` branches on a locale literal any more. `FORMAT_LOCALE[locale]`
+  became `formatLocale(locale)` (`fa-*` → Persian calendar + `arabext`; other
+  tags formatted as themselves; a `-u-` extension is respected).
+- `direction()` answers for any tag: the platform when it can (`getTextInfo`),
+  else CLDR character order by primary subtag — the same fallback the Hermes run
+  needed.
+- The gate grades any tag: explicit table first, then a profile derived from
+  the same CLDR data the formatters use; a script it cannot name is an error.
+  `localeForPath` accepts a BCP-47 route segment and refines from `<html lang>`.
+- The docs site stays two-locale (`BuiltinLocale as Locale` in its copy).
+
+Deprecated, kept one minor: `LOCALES`, `FORMAT_LOCALE`, `isLocale`,
+`documentDirection`. This is 0.2.0 — a MINOR that may break, per policy.

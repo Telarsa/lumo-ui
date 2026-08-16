@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { Bold, Eye, Italic, Pin, Underline, VolumeX } from "lucide-react";
 import { IconToggle, Toggle } from "@lumo-ui/ui";
 import type { ComponentExamples, LocalizedText } from "./_system/types";

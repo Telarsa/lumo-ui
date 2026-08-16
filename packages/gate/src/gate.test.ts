@@ -418,10 +418,13 @@ describe("the digit rules read the locale, not a hardwired range", () => {
     expect(localeForPath("ar-SA/index.html")).toEqual({ locale: "ar-SA", direction: "rtl" });
   });
 
-  it("refuses a locale it has no grading rules for", () => {
-    // Defaulting would grade a page against some other locale's digits, which
-    // is a wrong answer wearing a green tick.
-    expect(() => gradingFor("de-DE")).toThrow(/No grading rules for locale/);
+  it("never grades a tag against another locale's digits: derives its own, or refuses", () => {
+    // Since 0.2.0 (decision §28) `de-DE` is graded by its own CLDR profile —
+    // Latin digits, Latin script — not refused; what is refused is a tag that
+    // is not a language, or a script the gate cannot name. Defaulting to
+    // another locale's digits would be a wrong answer wearing a green tick.
+    expect(gradingFor("de-DE").digits.numberingSystem).toBe("latn");
+    expect(() => gradingFor("not a tag!")).toThrow(/not a BCP-47/);
   });
 
   it("the Arabic good fixture passes every rule, and clears an Arabic floor", () => {
@@ -1167,5 +1170,45 @@ describe("native-calendar — a numeric Gregorian year in a Persian date field",
   it("fires on 2026, not on 1405", () => {
     expect(fired(seg(2026))).toContain("native-calendar");
     expect(fired(seg(1405))).not.toContain("native-calendar");
+  });
+});
+
+describe("any language — a CLDR-derived profile under the explicit table (decision §28)", () => {
+  it("derives direction, digits, calendar and script for tags the table does not name", () => {
+    expect(gradingFor("de")).toMatchObject({ direction: "ltr", calendar: "gregory" });
+    expect(gradingFor("de").digits.numberingSystem).toBe("latn");
+    expect(gradingFor("de").script.name).toBe("Latin");
+    expect(gradingFor("ar-EG").direction).toBe("rtl");
+    expect(gradingFor("ar-EG").digits.numberingSystem).toBe("arab");
+    expect(gradingFor("ar-EG").digits.pattern.source).toBe("[٠-٩]");
+    expect(gradingFor("he").direction).toBe("rtl");
+    expect(gradingFor("he").script.name).toBe("Hebrew");
+    expect(gradingFor("fa-AF").calendar).toBe("persian"); // fa-* always Jalali, as formatLocale does
+    expect(gradingFor("ja").script.pattern.test("ひらがな")).toBe(true);
+    expect(gradingFor("ja").script.pattern.test("漢字")).toBe(true);
+    expect(gradingFor("hi").script.name).toBe("Devanagari");
+  });
+  it("the explicit table still wins for the locales it names", () => {
+    expect(gradingFor("ar-SA").calendar).toBe("islamic-umalqura");
+    expect(gradingFor("fa-IR").digits.numberingSystem).toBe("arabext");
+  });
+  it("throws for a tag that is not a language — never grades against another locale's digits", () => {
+    expect(() => gradingFor("not a tag!")).toThrow(/not a BCP-47/);
+  });
+  it("derives the locale from a non-built-in route segment, refined by <html lang>", () => {
+    expect(localeForPath("de/about/index.html")).toEqual({ locale: "de", direction: "ltr" });
+    expect(localeForPath("de/about/index.html", undefined, "de-AT")).toEqual({ locale: "de-AT", direction: "ltr" });
+    expect(localeForPath("de/about/index.html", undefined, "fr")).toEqual({ locale: "de", direction: "ltr" }); // lang disagrees on the language: the route wins, lang-dir will report it
+    expect(localeForPath("ar-EG/index.html")).toEqual({ locale: "ar-EG", direction: "rtl" });
+    expect(() => localeForPath("about/index.html")).toThrow(/Cannot derive a locale/);
+  });
+  it("grades a German page and an Egyptian-Arabic page with their own digits and script", () => {
+    const de = `<!doctype html><html lang="de" dir="ltr"><head><title>Konto</title></head><body><main><h1>Konto</h1><p>3 Einträge</p><button type="button">Speichern</button></main></body></html>`;
+    expect(gradeHtml("de/konto/index.html", de)).toEqual([]);
+    const ar = `<!doctype html><html lang="ar-EG" dir="rtl"><head><title>حساب</title></head><body><main><h1>الحساب</h1><p>٣ عناصر</p><button type="button">حفظ</button></main></body></html>`;
+    expect(gradeHtml("ar-EG/index.html", ar)).toEqual([]);
+    // Latin digits on the Arabic page are the defect, exactly as on a Persian page.
+    const bad = ar.replace("٣ عناصر", "3 عناصر");
+    expect(gradeHtml("ar-EG/index.html", bad).map((v) => v.rule)).toContain("no-latin-digits");
   });
 });

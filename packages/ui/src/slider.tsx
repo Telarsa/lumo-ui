@@ -9,7 +9,7 @@ import {
   cn,
   direction,
   type DOMProps,
-  FORMAT_LOCALE,
+  formatLocale,
   formatNumber,
   type GlobalDOMAttributes,
   type Locale,
@@ -17,8 +17,9 @@ import {
   type LumoNode,
   type ValueBase,
 } from "@lumo-ui/core";
-import { attr, baseUiStringsFor } from "@lumo-ui/base-ui-ssr";
+import { attr, type BaseUiStrings } from "@lumo-ui/base-ui-ssr";
 import { descriptionVariants, fieldErrorVariants } from "./form.tsx";
+import { useBaseUiStringsFor } from "./locale.ts";
 
 /**
  * A single value chosen from a range, on the Base UI engine.
@@ -42,14 +43,15 @@ export const sliderVariants = cva("flex w-full flex-col gap-2");
  * thumbs although Lumo ships one: components are COPIED, and a consumer adding
  * `<Slider.Thumb index={1}>` would otherwise get Base UI's half-localised default.
  * `thumbCount`, not `index > 0`: index 0 differs between a single and a range slider.
+ * `strings` are the engine's phrases for the same `locale` — `useBaseUiStringsFor(locale)`
+ * in the component: built-in for `fa-IR`/`en-US`, the app's `strings.engine` for any other tag.
  */
 function thumbValueText(
   locale: Locale,
+  strings: BaseUiStrings,
   formatOptions: Intl.NumberFormatOptions | undefined,
   thumbCount: number,
 ): (formattedValue: string, value: number, index: number) => string {
-  // Resolved once per render, from the same `locale` prop. One source, three consumers.
-  const strings = baseUiStringsFor(locale);
   return (_formattedValue, value, index) => {
     if (thumbCount < 2) return formatNumber(value, locale, formatOptions);
     return index === 0
@@ -165,6 +167,8 @@ export function Slider({
   ...rest
 }: SliderProps) {
   const noteId = useId();
+  // Resolved once per render, from the same `locale` prop. One source, every thumb.
+  const strings = useBaseUiStringsFor(locale);
   const describedBy =
     [description == null ? null : `${noteId}-description`, errorMessage == null ? null : `${noteId}-error`]
       .filter((id): id is string => id !== null)
@@ -174,7 +178,7 @@ export function Slider({
     <DirectionProvider direction={direction(locale)}>
       <BaseSlider.Root
         data-lumo=""
-        locale={FORMAT_LOCALE[locale]}
+        locale={formatLocale(locale)}
         className={cn(sliderVariants(), className)}
         {...attr("format", formatOptions)}
         {...attr("min", minValue)}
@@ -220,7 +224,7 @@ export function Slider({
               aria-label={label}
               {...(describedBy === undefined ? {} : { "aria-describedby": describedBy })}
               // No explicit `index`: a single thumb resolves to 0; a SECOND thumb needs one.
-              getAriaValueText={thumbValueText(locale, formatOptions, 1)}
+              getAriaValueText={thumbValueText(locale, strings, formatOptions, 1)}
               className={cn(sliderThumbVariants({ size }))}
             />
           </BaseSlider.Track>

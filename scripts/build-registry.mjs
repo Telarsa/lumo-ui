@@ -50,6 +50,8 @@ const SHARED_COMPANIONS = new Set([
   "async-collection.ts",
   // The router-link seam (`LumoProvider linkComponent`) every anchor-rendering family reads.
   "link-context.ts",
+  // The ASCII-digit map learned from `formatNumber` for any locale (input-otp, phone-input).
+  "digits.ts",
 ]);
 
 /** Packages a consumer must install; everything else is workspace-internal. */

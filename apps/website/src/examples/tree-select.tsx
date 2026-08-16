@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { TreeSelect } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "دسترسی‌ها", "en-US": "Permissions" }, tree: { "fa-IR": "درخت دسترسی", "en-US": "Permission tree" }, placeholder: { "fa-IR": "دسترسی انتخاب کنید", "en-US": "Choose permissions" }, content: { "fa-IR": "محتوا", "en-US": "Content" }, read: { "fa-IR": "خواندن", "en-US": "Read" }, write: { "fa-IR": "نوشتن", "en-US": "Write" } } as const;

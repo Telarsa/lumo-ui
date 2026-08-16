@@ -13,7 +13,7 @@
  * app mirrors correctly.
  */
 import { createContext, useContext, type ReactNode } from "react";
-import { useColorScheme } from "react-native";
+import { Platform, View, useColorScheme } from "react-native";
 import { direction, type Direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { ACHROMATIC, darkColours, lightColours, type LumoBrand, type LumoSchemeColours } from "./tokens.ts";
 
@@ -60,7 +60,18 @@ export function LumoNativeProvider({ locale, brand = ACHROMATIC, fonts, colorSch
     colours: scheme === "dark" ? darkColours(brand) : lightColours(brand),
     fontFamily: locale === "fa-IR" ? fonts?.persian : fonts?.latin,
   };
-  return <LumoNativeContext.Provider value={value}>{children as ReactNode}</LumoNativeContext.Provider>;
+  // On the WEB (react-native-web: tests, the docs preview) logical `start`/`end`
+  // styles resolve from a writing-direction context that a `dir`/`lang` prop on
+  // a View establishes — RNW's `I18nManager.forceRTL` is a no-op there. So the
+  // provider roots its tree in one such View on web only; on a device it adds
+  // no element and leaves layout mirroring to the app's `I18nManager` decision.
+  const tree =
+    Platform.OS === "web" ? (
+      <View {...({ dir: value.direction, lang: locale } as object)}>{children as ReactNode}</View>
+    ) : (
+      (children as ReactNode)
+    );
+  return <LumoNativeContext.Provider value={value}>{tree}</LumoNativeContext.Provider>;
 }
 
 export function useLumoNative(): LumoNativeContextValue {

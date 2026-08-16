@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { assertLocale, localeParams } from "@/lib/locale";
 import { Bullets, DocSection, DocsShell, P, Snippet, Term } from "../docs-shell";
 

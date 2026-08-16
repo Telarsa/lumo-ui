@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatNumber, type Locale } from "@lumo-ui/core";
+import { formatNumber, type BuiltinLocale as Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { assertLocale, localeParams, site, segmentFor} from "@/lib/locale";
 import { allBlocks, CATEGORIES, categoryLabel } from "@/lib/blocks";

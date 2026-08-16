@@ -1,5 +1,6 @@
 export type { LumoNode, Locale, Direction } from "./types.ts";
-export { LOCALES, FORMAT_LOCALE, direction, isLocale } from "./types.ts";
+export type { BuiltinLocale } from "./types.ts";
+export { BUILTIN_LOCALES, LOCALES, FORMAT_LOCALE, RTL_PRIMARY, direction, formatLocale, isBuiltinLocale, isLocale, primarySubtag } from "./types.ts";
 // The prop SHAPES the public API is pinned to (see `props.ts`).
 export type {
   AriaLabelingProps,

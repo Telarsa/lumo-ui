@@ -56,9 +56,14 @@ export interface ScriptSystem {
   pattern: RegExp;
 }
 
-/** Builds a script system from its Unicode script property value. */
-export function scriptSystem(name: string, property: string): ScriptSystem {
-  return { name, property, pattern: new RegExp(`\\p{Script=${property}}`, "u") };
+/**
+ * Builds a script system from its Unicode script property value — or several,
+ * for a writing system that mixes scripts (Japanese: Han + Hiragana + Katakana;
+ * Korean: Hangul + Han). `property` keeps the first for messages.
+ */
+export function scriptSystem(name: string, property: string, ...more: string[]): ScriptSystem {
+  const all = [property, ...more];
+  return { name, property, pattern: new RegExp(all.map((p) => `\\p{Script=${p}}`).join("|"), "u") };
 }
 
 export interface Doc {

@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { Bold, Italic, Link2, Redo2, Trash2, Underline, Undo2 } from "lucide-react";
 import { IconButton, ToggleButton, Toolbar, ToolbarItem, ToolbarSeparator } from "@lumo-ui/ui";
 import type { ComponentExamples, LocalizedText } from "./_system/types";

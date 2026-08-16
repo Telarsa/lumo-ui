@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { highlight } from "@/lib/highlight";
-import { LOCALES, direction, type Locale } from "@lumo-ui/core";
+import { LOCALES, direction, type BuiltinLocale as Locale } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { OnThisPage } from "@/components/on-this-page";
 import { CopyButton } from "@/components/code-block";

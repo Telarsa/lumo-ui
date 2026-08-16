@@ -37,7 +37,7 @@ import {
   toCalendar,
   type Calendar,
 } from "@internationalized/date";
-import { formatNumber } from "@lumo-ui/core";
+import { en as enStrings, fa as faStrings, formatNumber } from "@lumo-ui/core";
 import type { Locale } from "@lumo-ui/core";
 import { lumoCalendar } from "./calendar-datelib.ts";
 import { LumoLocaleContext } from "./locale.ts";
@@ -261,7 +261,7 @@ const meeting = (
 });
 
 function mount(locale: Locale, node: React.ReactElement) {
-  return render(<LumoLocaleContext.Provider value={locale}>{node}</LumoLocaleContext.Provider>);
+  return render(<LumoLocaleContext.Provider value={{ locale, strings: undefined }}>{node}</LumoLocaleContext.Provider>);
 }
 
 function calendarFor(locale: Locale, events: readonly EventCalendarEvent[] = [], extra = {}) {
@@ -409,8 +409,8 @@ describe("the week starts on شنبه under fa-IR and on Sunday under en-US", ()
     // DERIVED — `calendar-datelib.ts` reads it back off `startOfWeek` — so a
     // locale added later needs no table entry, and this assertion is what keeps
     // that derivation honest.
-    expect(lumoCalendar("fa-IR").weekStartsOn).toBe(6);
-    expect(lumoCalendar("en-US").weekStartsOn).toBe(0);
+    expect(lumoCalendar("fa-IR", faStrings.calendar).weekStartsOn).toBe(6);
+    expect(lumoCalendar("en-US", enStrings.calendar).weekStartsOn).toBe(0);
   });
 
   it("the fa-IR grid's first column is شنبه", () => {
@@ -498,7 +498,7 @@ describe("overlap is packed into lanes, from clock time and nothing else", () =>
      * document's own direction, so the SAME string is correct in both scripts.
      */
     const html = renderToStaticMarkup(
-      <LumoLocaleContext.Provider value="fa-IR">
+      <LumoLocaleContext.Provider value={{ locale: "fa-IR", strings: undefined }}>
         {calendarFor("fa-IR", [meeting("a", 9, 0, 11, 0), meeting("b", 10, 0, 12, 0)], {
           defaultView: "week",
         })}
@@ -619,7 +619,7 @@ describe("every announced string is a required prop", () => {
 describe("the served bytes, before any JavaScript runs", () => {
   const serve = (locale: Locale, extra = {}) =>
     renderToStaticMarkup(
-      <LumoLocaleContext.Provider value={locale}>
+      <LumoLocaleContext.Provider value={{ locale, strings: undefined }}>
         {calendarFor(locale, [meeting("a", 9, 0, 10, 0)], extra)}
       </LumoLocaleContext.Provider>,
     );
@@ -869,7 +869,7 @@ describe("the four views answer four questions", () => {
       end: new CalendarDate(GREGORY, 2026, 8, 11),
     };
     const html = renderToStaticMarkup(
-      <LumoLocaleContext.Provider value="fa-IR">
+      <LumoLocaleContext.Provider value={{ locale: "fa-IR", strings: undefined }}>
         {calendarFor("fa-IR", [holiday, meeting("a", 9, 0, 10, 0)], { defaultView: "week" })}
       </LumoLocaleContext.Provider>,
     );

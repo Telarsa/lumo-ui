@@ -22,6 +22,41 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 
 ## 0.2.0 — unreleased
 
+Any language (decision §28). `Locale` is any BCP-47 tag; `fa-IR` and `en-US`
+stay built-in (Lumo carries their strings); every other language brings its
+own strings, and the type requires them.
+
+### Breaking (with migration)
+- **`LumoProvider` for a non-built-in locale requires `strings: LumoAppStrings`**
+  (Lumo's `LumoStrings` + the engine's `BaseUiStringTemplates`); `stringsFor`
+  and `baseUiStringsFor` throw without them. *Migrate:* nothing for `fa-IR` /
+  `en-US`; a new language writes one complete `LumoAppStrings` object.
+- **`LumoStrings` grew** `calendar`, `tree`, `chart`, `phoneInput.countries`
+  (moved out of the components' internal tables). *Migrate:* if you built a
+  `LumoStrings` object yourself, add the groups — the type lists them.
+- **`Locale` is no longer a closed union.** Code that relied on exhaustiveness
+  over `Locale` (`Record<Locale, …>` tables, `switch`) must use
+  `BuiltinLocale`. *Migrate:* `import type { BuiltinLocale as Locale }` where a
+  two-locale table is meant (the docs site did exactly this).
+- **Deprecated (removed next minor):** `LOCALES` → `BUILTIN_LOCALES`,
+  `FORMAT_LOCALE[l]` → `formatLocale(l)`, `isLocale` → `isBuiltinLocale`,
+  `documentDirection` → `direction`.
+
+### Added
+- `@lumo-ui/native` `Switch` — the direction-sensitive second component (thumb
+  on the logical `start`, ON at the reading end; named by label or required
+  `accessibilityLabel`; `aria-checked`); the native provider roots a `dir`/`lang`
+  View on web so react-native-web resolves logical styles; the docs preview
+  shows it. First device probe run recorded (see Fixed).
+- `formatLocale`, `isBuiltinLocale`, `BUILTIN_LOCALES`, `primarySubtag`,
+  `RTL_PRIMARY` in core; `useLumoStrings`, `LumoAppStrings` in the ui locale
+  companion; `direction()` for any tag with the CLDR fallback.
+- The gate grades any BCP-47 tag (CLDR-derived profile under the explicit
+  table; `localeForPath` accepts any tag segment and refines from `<html lang>`);
+  `scriptSystem` accepts several Unicode scripts (Japanese, Korean).
+- `docs/i18n-and-rtl.md` "Any language"; the provider type-test and an
+  any-language render test (German with its own strings, Egyptian Arabic digits).
+
 ### Fixed
 - `direction()` no longer throws on a runtime without `Intl.Locale` (Hermes on
   iOS 18.5 / Expo Go — the first device run of the probe): it asks the platform

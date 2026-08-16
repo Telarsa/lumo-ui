@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { TagsInputIsland } from "@/components/demo-islands";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "برچسب‌ها", "en-US": "Tags" }, placeholder: { "fa-IR": "برچسبی بنویسید", "en-US": "Enter a tag" }, suggestions: { "fa-IR": "برچسب‌های پیشنهادی", "en-US": "Suggested tags" }, remove: { "fa-IR": "حذف", "en-US": "Remove" }, design: { "fa-IR": "طراحی", "en-US": "Design" }, rtl: { "fa-IR": "راست‌به‌چپ", "en-US": "RTL" }, access: { "fa-IR": "دسترسی‌پذیری", "en-US": "Accessibility" } } as const;

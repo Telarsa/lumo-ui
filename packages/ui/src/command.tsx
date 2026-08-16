@@ -4,7 +4,7 @@ import { useId, useMemo } from "react";
 import { cva } from "class-variance-authority";
 import { CheckIcon, SearchIcon } from "lucide-react";
 import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
-import { cn, FORMAT_LOCALE, type Key, type LumoNode } from "@lumo-ui/core";
+import { cn, formatLocale, type Key, type LumoNode } from "@lumo-ui/core";
 import { foldPersian } from "./autocomplete.tsx";
 import {
   ComboboxWiringProvider,
@@ -146,7 +146,7 @@ export function Command<T = unknown>({
   children,
 }: CommandProps<T>) {
   const locale = useLumoLocale();
-  const baseFilter = BaseAutocomplete.useFilter({ locale: FORMAT_LOCALE[locale] });
+  const baseFilter = BaseAutocomplete.useFilter({ locale: formatLocale(locale) });
   const toString = itemToString ?? (defaultItemToString as (item: T) => string);
   const listId = useComboboxListId();
 

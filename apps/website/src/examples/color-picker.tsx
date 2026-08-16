@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { ColorPicker } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "رنگ برند", "en-US": "Brand color" }, red: { "fa-IR": "قرمز", "en-US": "Red" }, blue: { "fa-IR": "آبی", "en-US": "Blue" }, green: { "fa-IR": "سبز", "en-US": "Green" } } as const;

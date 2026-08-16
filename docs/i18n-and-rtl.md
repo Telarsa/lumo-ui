@@ -3,7 +3,7 @@
 Lumo is Persian-first with English second; the rules below are what make that true in served bytes, not only after hydration.
 
 ## Four independent properties per locale
-Direction, digit system, calendar, and script are graded separately (`packages/gate/src/index.ts`): Persian is rtl / arabext / persian / Arabic script; Arabic is rtl / arab / islamic-umalqura / Arabic script; English is ltr / latn / gregory / Latin. None is derived from another — deriving digits from direction is how a rule goes silently Persian-only. The GATE knows the Arabic profile so a future `ar-SA` route is graded correctly on day one; the COMPONENTS ship `Locale = "fa-IR" | "en-US"` today (`packages/core/src/types.ts`) — adding a locale is a core change, not a config flag.
+Direction, digit system, calendar, and script are graded separately (`packages/gate/src/index.ts`): Persian is rtl / arabext / persian / Arabic script; Arabic is rtl / arab / islamic-umalqura / Arabic script; English is ltr / latn / gregory / Latin. None is derived from another — deriving digits from direction is how a rule goes silently Persian-only. The GATE grades any BCP-47 tag (an explicit table for `fa-IR`, `ar-SA`, `en-US`, a CLDR-derived profile for the rest); the COMPONENTS accept any tag since 0.2.0 — the two BUILT-IN locales carry Lumo's strings, every other language brings its own (see "Any language" below).
 
 ## Rules that are compile-time
 - Every announced string is a required prop (`label`, `closeLabel`, `dismissLabel`, `strings` objects). No defaults.
@@ -34,3 +34,47 @@ consumer sees:
 | A pure-Latin placeholder — `name@example.com` | fails `no-latin-aria` | it is Latin content: mark that input `data-lumo-latn` (its value is LTR anyway) or phrase the hint in Persian |
 | A `data-lumo-latn` island that is mostly Persian, or holds a Persian control inside a `lang="en"` container | fails `latn-island-purity` | the hatch may not hide the reader's own prose |
 
+
+## Any language — the contract since 0.2.0 (decision §28)
+
+`Locale` is any BCP-47 tag. Two are **built-in** — `fa-IR` and `en-US` — meaning
+Lumo carries their strings (`LumoStrings`: number field, date field, calendar
+chrome, tree, chart, phone-input country names) and the engine's seven
+templates (`BaseUiStringTemplates`). Every other language is a **consumer
+language**, and the rule is the same one that governs announced strings on
+components: **the app supplies them, Lumo never defaults.**
+
+```tsx
+import type { LumoAppStrings } from "@/components/ui/locale.ts";
+const de: LumoAppStrings = { numberField: {…}, dateField: {…}, calendar: {…}, tree: {…}, chart: {…}, phoneInput: {…}, engine: {…} };
+
+<LumoHtml lang="de-AT">…</LumoHtml>
+<LumoProvider locale="de-AT" strings={de}>…</LumoProvider>   // `strings` is REQUIRED by the type for a non-built-in tag
+```
+
+- **Direction** — `direction(locale)`: the platform's `Intl.Locale.getTextInfo`
+  when it exists, else CLDR's character order by primary subtag
+  (`RTL_PRIMARY`). Never passed.
+- **Digits and calendar** — `formatNumber` / `formatDate` format in
+  `formatLocale(locale)`: `fa-*` gets `-u-ca-persian-nu-arabext`; any other tag
+  is formatted as itself, so `ar-EG` gets Arabic-Indic digits and `de` Latin
+  ones from CLDR, without Lumo deciding; a tag that already carries `-u-…` is
+  respected.
+- **Strings** — `useLumoStrings()` resolves the built-in set or the app's;
+  `stringsFor("de")` without the app's set **throws** — a German page rendered
+  with Persian or English chrome is the defect, and it must not happen quietly.
+- **The gate** grades any tag: the explicit table (`fa-IR`, `ar-SA`, `en-US`)
+  first, else a profile derived from the same CLDR data the formatters use
+  (numbering system from `Intl.NumberFormat`, calendar from
+  `Intl.DateTimeFormat`, script from `Intl.Locale.maximize`). A tag whose script
+  the gate cannot name is an error, not Latin by default. `lumo gate` finds the
+  locale in the route segment (`/de/…`, `/ar-EG/…`) and refines it from
+  `<html lang>`.
+- **The docs site** is still two-locale by design; its copy types against
+  `BuiltinLocale`.
+- **Native** — `LumoNativeProvider` takes the same open `locale`; the first
+  component needs no strings.
+
+What "all languages" does NOT mean: Lumo authoring strings for a third
+language. That is the app's translation, in the app's voice, and a required
+prop is how the library refuses to guess.

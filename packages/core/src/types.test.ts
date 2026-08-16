@@ -129,3 +129,15 @@ describe("direction — a runtime without Intl.Locale (Hermes, 16 Aug 2026)", ()
     }
   });
 });
+
+describe("formatLocale — the reader's calendar and digits per tag", () => {
+  it("adds the Persian profile to any fa-* tag, respects a stated -u- extension, and gives ar-SA Umm al-Qura like the gate's table", async () => {
+    const { formatLocale } = await import("./types.ts");
+    expect(formatLocale("fa-IR")).toBe("fa-IR-u-ca-persian-nu-arabext");
+    expect(formatLocale("fa-AF")).toBe("fa-AF-u-ca-persian-nu-arabext");
+    expect(formatLocale("fa-IR-u-nu-latn")).toBe("fa-IR-u-nu-latn");
+    expect(formatLocale("ar-SA")).toBe("ar-SA-u-ca-islamic-umalqura");
+    expect(formatLocale("ar-EG")).toBe("ar-EG");
+    expect(formatLocale("de")).toBe("de");
+  });
+});

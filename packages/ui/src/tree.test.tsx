@@ -16,7 +16,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import { LumoProvider } from "./provider.tsx";
 import { Tree, TreeItem } from "./tree.tsx";
-import { TREE_CHEVRON_GLYPH, TREE_STRINGS, treeChevronTurn } from "./tree.variants.ts";
+import { en } from "@lumo-ui/core";
+import { TREE_CHEVRON_GLYPH, treeChevronTurn } from "./tree.variants.ts";
 
 afterEach(cleanup);
 
@@ -423,11 +424,11 @@ describe("tree — the marker's verbs come from a Lumo file, not from the patch"
   it("says the English pair on an English page and nothing Latin on a Persian one", () => {
     // Under React Aria «بستن» arrived from `patches/react-aria@3.51.0.patch`,
     // which added an fa-IR bundle because no prop reached the string. It is now
-    // `TREE_STRINGS` — and that is this component's last tie to the patch cut.
+    // `LumoStrings["tree"]` in core (`en.tree`) — and that is this component's last tie to the patch cut.
     render(<Files locale="en-US" />);
     const labels = screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"));
-    expect(labels).toContain(TREE_STRINGS["en-US"].collapse);
-    expect(labels).toContain(TREE_STRINGS["en-US"].expand);
+    expect(labels).toContain(en.tree.collapse);
+    expect(labels).toContain(en.tree.expand);
     cleanup();
 
     render(<Files locale="fa-IR" />);

@@ -248,6 +248,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -272,6 +273,11 @@
           "path": "packages/ui/src/calendar-datelib.ts",
           "type": "registry:ui",
           "target": "components/ui/calendar-datelib.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -343,6 +349,7 @@
       "description": "The chart engine draws nothing on the server.",
       "author": "Telarsa",
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "@tanstack/charts",
         "class-variance-authority"
@@ -357,6 +364,11 @@
           "path": "packages/ui/src/chart.variants.ts",
           "type": "registry:ui",
           "target": "components/ui/chart.variants.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -600,6 +612,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core"
       ],
       "registryDependencies": [
@@ -611,6 +624,11 @@
           "path": "packages/ui/src/date-input.tsx",
           "type": "registry:ui",
           "target": "components/ui/date-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         },
         {
           "path": "packages/ui/src/date-field-state.ts",
@@ -1157,6 +1175,11 @@
           "path": "packages/ui/src/input-otp.tsx",
           "type": "registry:ui",
           "target": "components/ui/input-otp.tsx"
+        },
+        {
+          "path": "packages/ui/src/digits.ts",
+          "type": "registry:ui",
+          "target": "components/ui/digits.ts"
         }
       ]
     },
@@ -1584,6 +1607,7 @@
       "description": "A phone number, entered the way Iranians actually type one.",
       "author": "Telarsa",
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority"
       ],
@@ -1596,6 +1620,16 @@
           "path": "packages/ui/src/phone-input.tsx",
           "type": "registry:ui",
           "target": "components/ui/phone-input.tsx"
+        },
+        {
+          "path": "packages/ui/src/digits.ts",
+          "type": "registry:ui",
+          "target": "components/ui/digits.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -1671,6 +1705,11 @@
           "path": "packages/ui/src/progress.tsx",
           "type": "registry:ui",
           "target": "components/ui/progress.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -1775,6 +1814,7 @@
       "author": "Telarsa",
       "dependencies": [
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "react-day-picker"
       ],
@@ -1792,6 +1832,11 @@
           "path": "packages/ui/src/calendar-datelib.ts",
           "type": "registry:ui",
           "target": "components/ui/calendar-datelib.ts"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },
@@ -2098,6 +2143,11 @@
           "path": "packages/ui/src/slider.tsx",
           "type": "registry:ui",
           "target": "components/ui/slider.tsx"
+        },
+        {
+          "path": "packages/ui/src/locale.ts",
+          "type": "registry:ui",
+          "target": "components/ui/locale.ts"
         }
       ]
     },

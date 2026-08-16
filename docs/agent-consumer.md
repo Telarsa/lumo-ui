@@ -110,7 +110,11 @@ overwrites a file it did not write (`REFUSED …`; `--force` to insist). Blocks
 2. **No `dir` prop.** Wrap the app in `<LumoProvider locale="fa-IR">` (and
    `<LumoHtml lang=…>` at the root); direction is derived. Latin runs (codes,
    ids, URLs, product names) get `data-lumo-latn` — see the mixed-content policy
-   in `docs/i18n-and-rtl.md`.
+   in `docs/i18n-and-rtl.md`. **Any language works:** `locale` is any BCP-47
+   tag; for a language Lumo does not carry (`de`, `ar-EG`, `tr`, …) the type
+   makes `strings` REQUIRED on the provider — a complete `LumoAppStrings` in
+   that language (see "Any language" in `docs/i18n-and-rtl.md`). Digits,
+   calendar and direction follow the tag.
 3. **Numbers go through `formatNumber(n, locale)`.** A bare number child does
    not compile (`LumoNode`); a number-typed prop is formatted by the component.
 4. **Compose, don't fork, first.** Every component has a `<name>.variants.ts`

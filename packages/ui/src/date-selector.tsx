@@ -16,7 +16,7 @@ import {
   type CalendarDate,
 } from "@internationalized/date";
 import { cn, formatDate, type Locale, type LumoNode } from "@lumo-ui/core";
-import { CALENDAR_FOR, toPickerDate } from "./calendar-datelib.ts";
+import { calendarFor, toPickerDate } from "./calendar-datelib.ts";
 import { useLumoLocale } from "./locale.ts";
 import { Popover, PopoverTrigger, type LumoPlacement } from "./popover.tsx";
 import { RangeCalendar, type CalendarDateRange } from "./range-calendar.tsx";
@@ -97,7 +97,7 @@ export type DateRangeRule =
  * "which day is it" differs between Tehran and UTC at 21:00 local.
  */
 export function todayIn(locale: Locale, anchor?: CalendarDate): CalendarDate {
-  const calendar = createCalendar(CALENDAR_FOR[locale]);
+  const calendar = createCalendar(calendarFor(locale));
   return toCalendar(anchor ?? icuToday(getLocalTimeZone()), calendar);
 }
 

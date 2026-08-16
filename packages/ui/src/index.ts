@@ -747,6 +747,16 @@ export type {
   ManagedSurface,
   ManagedSurfacesProps,
 } from "./provider.tsx";
+// The locale context the provider fills: the tag, and Lumo's strings for it —
+// built-in, or the app's own for any other language (decision §28).
+export {
+  useBaseUiStrings,
+  useBaseUiStringsFor,
+  useLumoLocale,
+  useLumoStrings,
+  useLumoStringsFor,
+} from "./locale.ts";
+export type { LumoAppStrings, LumoLocaleValue } from "./locale.ts";
 
 export {
   HoverCard,
@@ -911,7 +921,6 @@ export {
   CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
-  CHART_ROLE_DESCRIPTION,
   CHART_VALUE_AXIS_TRAILING_EDGE,
   TANSTACK_ROLE_DESCRIPTION,
   chartCategoryAxis,

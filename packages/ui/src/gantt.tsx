@@ -11,7 +11,7 @@ import {
   toCalendar,
 } from "@internationalized/date";
 import { cn, direction, formatDate, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
-import { CALENDAR_FOR, toPickerDate } from "./calendar-datelib.ts";
+import { calendarFor as calendarNameFor, toPickerDate } from "./calendar-datelib.ts";
 import {
   ganttBarProgressVariants,
   ganttBarVariants,
@@ -268,7 +268,7 @@ const calendars = new Map<Locale, ReturnType<typeof createCalendar>>();
 function calendarFor(locale: Locale) {
   let found = calendars.get(locale);
   if (!found) {
-    found = createCalendar(CALENDAR_FOR[locale]);
+    found = createCalendar(calendarNameFor(locale));
     calendars.set(locale, found);
   }
   return found;
@@ -382,7 +382,7 @@ export function ganttGeometry(
 }
 
 /**
- * A column's caption, through `formatDate` under `FORMAT_LOCALE`, which states
+ * A column's caption, through `formatDate` under `formatLocale(locale)`, which states
  * `-u-ca-persian -u-nu-arabext` rather than inheriting the host's ICU default.
  */
 function ganttColumnLabel(date: CalendarDate, scale: GanttScale, locale: Locale): string {

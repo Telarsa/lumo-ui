@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { formatNumber } from "@lumo-ui/core";
 import { Frame } from "@lumo-ui/ui";
 import type { ComponentExamples, LocalizedText } from "./_system/types";

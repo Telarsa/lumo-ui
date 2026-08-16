@@ -1,4 +1,4 @@
-import { FORMAT_LOCALE, type Locale } from "./types.ts";
+import { formatLocale, type Locale } from "./types.ts";
 
 /**
  * Number and date formatting, locale-aware by construction — the sanctioned way
@@ -14,7 +14,7 @@ function numberFormatter(locale: Locale, options?: Intl.NumberFormatOptions) {
   const key = locale + JSON.stringify(options ?? {});
   let fmt = numberCache.get(key);
   if (!fmt) {
-    fmt = new Intl.NumberFormat(FORMAT_LOCALE[locale], options);
+    fmt = new Intl.NumberFormat(formatLocale(locale), options);
     numberCache.set(key, fmt);
   }
   return fmt;
@@ -24,7 +24,7 @@ function dateFormatter(locale: Locale, options?: Intl.DateTimeFormatOptions) {
   const key = locale + JSON.stringify(options ?? {});
   let fmt = dateCache.get(key);
   if (!fmt) {
-    fmt = new Intl.DateTimeFormat(FORMAT_LOCALE[locale], options);
+    fmt = new Intl.DateTimeFormat(formatLocale(locale), options);
     dateCache.set(key, fmt);
   }
   return fmt;
@@ -40,7 +40,7 @@ export function formatNumber(
 
 /**
  * Formats a date in the locale's own calendar system — Jalali under `fa-IR`,
- * selected by the `-u-ca-persian` extension in FORMAT_LOCALE.
+ * selected by the `-u-ca-persian` extension `formatLocale` adds for Persian.
  */
 export function formatDate(
   value: Date,

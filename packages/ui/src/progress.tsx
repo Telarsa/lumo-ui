@@ -4,8 +4,9 @@ import type { ComponentProps } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Progress as BaseProgress } from "@base-ui/react/progress";
 import { Meter as BaseMeter } from "@base-ui/react/meter";
-import { useFieldWiring, baseUiStringsFor } from "@lumo-ui/base-ui-ssr";
+import { useFieldWiring } from "@lumo-ui/base-ui-ssr";
 import { cn, formatNumber, type Locale } from "@lumo-ui/core";
+import { useBaseUiStringsFor } from "./locale.ts";
 
 /**
  * ProgressBar (an operation in flight) and Meter (a quantity within a range), on
@@ -17,8 +18,9 @@ import { cn, formatNumber, type Locale } from "@lumo-ui/core";
  * SAME string is what `Progress.Value` renders, so seen and announced cannot drift.
  * TRAP: Base UI's `format` applies to the CLAMPED VALUE, Lumo's `formatOptions` applies
  * `percent` to the FRACTION — never forward one to the other (45 would announce «۴٬۵۰۰٪»).
- * The indeterminate string is `baseUiStringsFor(locale).progress.indeterminate`
- * (engine vocabulary, branch on `value === null`). `useFieldWiring` puts the name in
+ * The indeterminate string is `useBaseUiStringsFor(locale).progress.indeterminate`
+ * (engine vocabulary, branch on `value === null`; the app's `strings.engine` for a
+ * language Lumo does not carry). `useFieldWiring` puts the name in
  * the first byte; the label element exists in both `showValue` cases with the same id.
  * State selectors use Base UI's `data-indeterminate`; `Meter` has no state attributes.
  * Long form: docs/decisions/log.md.
@@ -138,7 +140,7 @@ export function ProgressBar({
   className,
   ...props
 }: ProgressBarProps) {
-  const strings = baseUiStringsFor(locale);
+  const strings = useBaseUiStringsFor(locale);
   const wiring = useFieldWiring({ label, explicit: props });
   const normalizedValue = boundedValue(value, minValue, maxValue, "ProgressBar");
   const fraction = fractionOf(normalizedValue, minValue, maxValue);

@@ -22,9 +22,14 @@ export function digitSystem(name, numberingSystem, zero) {
         pattern: new RegExp(`[${zero}-${nine}]`, "gu"),
     };
 }
-/** Builds a script system from its Unicode script property value. */
-export function scriptSystem(name, property) {
-    return { name, property, pattern: new RegExp(`\\p{Script=${property}}`, "u") };
+/**
+ * Builds a script system from its Unicode script property value — or several,
+ * for a writing system that mixes scripts (Japanese: Han + Hiragana + Katakana;
+ * Korean: Hangul + Han). `property` keeps the first for messages.
+ */
+export function scriptSystem(name, property, ...more) {
+    const all = [property, ...more];
+    return { name, property, pattern: new RegExp(all.map((p) => `\\p{Script=${p}}`).join("|"), "u") };
 }
 const ASCII_DIGIT = /[0-9]/;
 const LATIN_WORD = /[A-Za-z]{3,}/;

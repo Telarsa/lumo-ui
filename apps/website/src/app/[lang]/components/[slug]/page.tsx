@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { LOCALES, type Locale, type LumoNode } from "@lumo-ui/core";
+import { LOCALES, type BuiltinLocale as Locale, type LumoNode } from "@lumo-ui/core";
 import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";

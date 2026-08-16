@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
 import { Tab, TabList, TabPanel, Tabs } from "@lumo-ui/ui";
 
 /**

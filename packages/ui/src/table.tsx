@@ -41,7 +41,7 @@ import {
   useTable,
   type RowData,
 } from "@tanstack/react-table";
-import { FORMAT_LOCALE, cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
+import { cn, direction, formatLocale, type Locale, type LumoNode } from "@lumo-ui/core";
 import { Checkbox, type CheckboxProps } from "./checkbox.tsx";
 import {
   presentAsyncCollection,
@@ -146,7 +146,7 @@ export type LumoTableFeatures = typeof lumoTableFeatures;
  * and ک/ك pairs, the same choice `search-index.ts` makes.
  */
 export function localeSortFn(locale: Locale) {
-  const collator = new Intl.Collator(FORMAT_LOCALE[locale], {
+  const collator = new Intl.Collator(formatLocale(locale), {
     numeric: true,
     sensitivity: "base",
   });

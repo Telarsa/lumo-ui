@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import type { ExamplePart } from "@/examples/_system/types";
 import type { GeneratedApiGroup } from "@/lib/examples-loader";
 import { CodePanel } from "./code-panel";

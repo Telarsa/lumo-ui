@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { LayoutGrid, List, Rows3 } from "lucide-react";
 import { SegmentedControl, SegmentedControlItem } from "@lumo-ui/ui";
 import type { ComponentExamples, LocalizedText } from "./_system/types";

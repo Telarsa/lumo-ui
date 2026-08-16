@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { cn, formatNumber } from "@lumo-ui/core";
 import { site, segmentFor} from "@/lib/locale";
 import { allCatalog, TIERS } from "@/lib/catalog";
