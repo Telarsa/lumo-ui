@@ -21,3 +21,8 @@ graphify-out/
 
 # Browser evidence output
 .evidence/
+
+# Flutter / Dart (packages/mobile)
+.dart_tool/
+build/
+packages/mobile/pubspec.lock

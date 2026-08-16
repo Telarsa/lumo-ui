@@ -37,12 +37,13 @@ for (const name of ["core", "theme", "base-ui-ssr", "."]) {
     }
   }
 }
-// native's peer on core moves in lockstep with the release, like base-ui-ssr's.
-const native = JSON.parse(readFileSync(join(ROOT, "packages/native/package.json"), "utf8"));
-if (native.peerDependencies?.["@lumo-ui/core"] !== root.version) problems.push(`packages/native peerDependencies.@lumo-ui/core: "${native.peerDependencies?.["@lumo-ui/core"]}" (root is ${root.version})`);
 // base-ui-ssr's peer on core moves in lockstep with the release.
 const ssr = JSON.parse(readFileSync(join(ROOT, "packages/base-ui-ssr/package.json"), "utf8"));
 if (ssr.peerDependencies?.["@lumo-ui/core"] !== root.version) problems.push(`packages/base-ui-ssr peerDependencies.@lumo-ui/core: "${ssr.peerDependencies?.["@lumo-ui/core"]}" (root is ${root.version})`);
+// packages/mobile (Lumo UI Mobile, decision §30) moves with the root too — pubspec.yaml, not package.json.
+const pubspec = readFileSync(join(ROOT, "packages/mobile/pubspec.yaml"), "utf8");
+const pubVersion = /^version:\s*(\S+)/m.exec(pubspec)?.[1];
+if (pubVersion !== root.version) problems.push(`packages/mobile/pubspec.yaml: version ${pubVersion ?? "missing"} (root is ${root.version})`);
 const changelog = readFileSync(join(ROOT, "CHANGELOG.md"), "utf8");
 const first = /^## (\d+\.\d+\.\d+)/m.exec(changelog)?.[1];
 if (first !== root.version) problems.push(`CHANGELOG.md: newest section is ${first ?? "missing"}, root version is ${root.version}`);

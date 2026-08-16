@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * example-projects/lumo-app-flutter/packages/lumo_ui/lib/src/tokens.g.dart is GENERATED from packages/theme/src/tokens.css:
+ * packages/mobile/lib/src/tokens.g.dart (Lumo UI Mobile) is GENERATED from packages/theme/src/tokens.css:
  * the same `--lumo-sys-*` semantic tokens, resolved to values Flutter can
  * use (hex colours from oklch, dp from rem at 16px, the density and radius
  * knobs at their defaults), for the light scheme and the dark scheme. Flutter
@@ -182,7 +182,7 @@ class LumoFocus {
 }
 `;
 
-const OUT = process.argv.includes("--out") ? process.argv[process.argv.indexOf("--out") + 1] : join(ROOT, "..", "..", "example-projects", "lumo-app-flutter", "packages", "lumo_ui", "lib", "src", "tokens.g.dart");
+const OUT = (process.argv.includes("--out") && process.argv[process.argv.indexOf("--out") + 1]) || join(ROOT, "packages", "mobile", "lib", "src", "tokens.g.dart");
 if (process.argv.includes("--check")) {
   const current = await readFile(OUT, "utf8").catch(() => "");
   if (current !== out) { console.error(`  flutter-tokens: ${OUT} is stale; run node scripts/build-flutter-tokens.mjs`); process.exit(1); }

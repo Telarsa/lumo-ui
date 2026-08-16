@@ -20,13 +20,10 @@
     "react-dom": "catalog:",
     "lucide-react": "catalog:",
     "@lumo-ui/blocks": "workspace:*",
-    "@lumo-ui/native": "workspace:*",
-    "react-native-web": "catalog:",
     "linkedom": "catalog:",
     "dom-accessibility-api": "catalog:"
   },
   "devDependencies": {
-    "react-native": "catalog:",
     "@tailwindcss/postcss": "catalog:",
     "tailwindcss": "catalog:",
     "tw-animate-css": "catalog:",

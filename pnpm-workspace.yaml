@@ -249,24 +249,6 @@ catalog:
   # No browser in CI. linkedom parses the built HTML; dom-accessibility-api
   # computes accessible names over it.
   linkedom: 0.18.13
-  # --- native (packages/native, the React Native / Expo start) -----------------
-  # react-native      — the PEER a native consumer supplies; here a devDependency
-  #                     of packages/native for its canonical types (@types/react-native
-  #                     is a stub that depends on it). Not a runtime dependency of any
-  #                     web package.
-  # react-native-web  — how the native components are TESTED (first-byte markup
-  #                     under react-dom, graded by the gate) and PREVIEWED on the
-  #                     docs site. A browser rendering is not a device run and the
-  #                     site says so; see packages/native/README.md.
-  react-native: 0.87.0
-  react-native-web: 0.21.2
-  # @rn-primitives — the native ENGINE for the components a hand-built Pressable
-  # cannot honestly carry (dialogs, popovers, menus): Radix-shaped unstyled
-  # primitives with native implementations, Radix itself on web. Owner decision
-  # 16 Aug 2026 ("rn-primitives ok"), evaluated on Dialog first (decision §29).
-  # `portal` is a peer of every overlay primitive and mounts once at the app root.
-  '@rn-primitives/dialog': 1.5.2
-  '@rn-primitives/portal': 1.5.3
   dom-accessibility-api: 0.7.1
 
   # Must track .nvmrc (24), NOT npm latest. Types ahead of the runtime describe

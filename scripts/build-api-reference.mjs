@@ -16,14 +16,9 @@ import ts from "typescript";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const CORE_SRC = join(ROOT, "packages", "core", "src");
-/*
- * The packages whose exported `*Props` are documented: the web components
- * (module keys as before, `button.tsx`) and the React Native components
- * (`native/button.tsx`), so the docs site's mobile pages read generated props too.
- */
+/* The packages whose exported `*Props` are documented: the web components (module keys `button.tsx`). */
 const PACKAGES = [
   { root: join(ROOT, "packages", "ui"), prefix: "" },
-  { root: join(ROOT, "packages", "native"), prefix: "native/" },
 ];
 const outputFlag = process.argv.indexOf("--api");
 const OUTPUT =
@@ -114,9 +109,6 @@ const HOUSE_VOCABULARY = new Map([
   ["isDisabled", "Disables the control: it cannot be interacted with and is announced as disabled."],
   ["locale", "The BCP-47 locale this component renders in. Drives direction, calendar system, and digit shaping."],
   ["ref", "A ref to the component's root element."],
-  // React Native house vocabulary (packages/native).
-  ["testID", "React Native test identifier, forwarded to the root element for end-to-end tests."],
-  ["style", "React Native style (or array of styles) merged onto the component's root element."],
   ["aria-controls", "Standard ARIA attribute, forwarded to the element that carries the role."],
   ["aria-haspopup", "Standard ARIA attribute, forwarded to the element that carries the role."],
   ["aria-expanded", "Standard ARIA attribute, forwarded to the element that carries the role."],

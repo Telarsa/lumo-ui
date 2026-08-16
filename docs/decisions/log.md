@@ -1395,3 +1395,52 @@ plain primitives. Same rule as the web: the engine underneath, Lumo's contract
 on top, the gate over the served bytes on both platforms. RTL and any language
 carry the same weight on mobile as on the web — the any-language native test
 (German ltr / Egyptian Arabic rtl through the same provider) is the pin.
+
+## 30. Best in class per platform: web stays Base UI + Tailwind + tokens; mobile is Flutter (17 Aug 2026)
+
+The owner's rule, stated verbatim: "i want the best in class, if mobile is
+better with flutter then it is flutter, if like now, the best case is base ui
+with tailwindcss and tokens on web then it is that." This supersedes decision
+§27's "never Flutter" and §29's React Native engine choice for *product*
+mobile work.
+
+What was measured to get here (record: `docs/history/rn-vs-flutter-2026-08-16.md`):
+three twins of one screen (Expo/RN, Flutter, Lynx) on one simulator; a 2,000-row
+bench on the two finalists (Flutter: 60 fps, whole-list update 14–40 ms even in
+debug; Lynx: 60 fps, 216–273 ms, and `<list>` shows stale rows after off-screen
+updates); the Persian l10n probes (Flutter `intl` dates are Gregorian only — Jalali
+needs a package; PrimJS Intl does Jalali/plural/currency); Lynx's accessibility
+model (traits image | button | text, no states) which cannot carry Lumo's
+contract; RN's app-level RTL, build-dependent Intl and library-dependent
+motion/perf — every owner priority a workaround.
+
+Decision:
+- **Web:** Lumo as it is — Base UI engine, Tailwind arrives scoped, tokens,
+  the served-bytes gate. Nothing changes.
+- **Mobile:** **Flutter.** `lumo_ui_mobile` — **Lumo UI Mobile** (Dart; `packages/mobile` in this
+  repo, moved from the Flutter twin) is the mobile
+  library: Material's widget layer underneath (as Base UI is under the web),
+  Lumo tokens generated from `tokens.css` (`scripts/build-flutter-tokens.mjs`),
+  Lumo's contract on top (required named parameters for every announced string;
+  Dart's null-safety and constructor asserts are the type-level guard),
+  `Directionality`/logical geometry for RTL, `Semantics` for the announcements.
+  Jalali dates: a Lumo Dart utility over ICU/CLDR data or a vetted package —
+  decided when the first date component lands.
+- **Shared between the two:** tokens, the contract, the component names and
+  prop vocabulary, the docs site (a Flutter tab where the Mobile tab was), the
+  proof discipline (semantics-tree tests are the mobile counterpart of the
+  served-HTML gate; no screen-reader claims without runs). Not shared: code.
+- **`@lumo-ui/native` (React Native) and the Lynx twin: REMOVED** on the
+  owner's instruction the same day ("remove old projects and folders and
+  files") — package, docs Mobile tab, previews, gates, catalog pins, token
+  generators. History keeps the code; `docs/history/rn-vs-flutter-2026-08-16.md`
+  keeps the findings. Lynx is re-evaluated only if it ships accessibility
+  roles/states and the `<list>` bug is gone — from scratch, not from a kept twin.
+- **Docs site:** the Mobile tab returns as a Flutter-web embed of the same
+  Dart components (the way forui / shadcn_flutter show theirs), labelled as a
+  canvas preview; the semantics-tree tests remain the proof.
+
+Why two libraries is acceptable: Lumo's value is the contract and the proof,
+not the code sharing; the Dart library was built in a day; the cost of the wrong
+mobile framework (RTL/perf/l10n workarounds forever) is larger than the cost of
+one more implementation of a small, well-specified surface.

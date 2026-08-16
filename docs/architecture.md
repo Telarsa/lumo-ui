@@ -15,7 +15,7 @@ packages/blocks        @lumo-ui/blocks        30 product compositions
 packages/base-ui-ssr   @lumo-ui/base-ui-ssr   first-byte Base UI compensations
 packages/gate          @lumo-ui/gate          source and built-HTML graders
 packages/config        @lumo-ui/config        executable ESLint policy
-packages/native        @lumo-ui/native        unstarted React Native probe
+packages/mobile        lumo_ui_mobile         Lumo UI Mobile (Flutter/Dart; decision §30)
 apps/website                                   static showcase and documentation
 ```
 
