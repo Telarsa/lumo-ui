@@ -7,7 +7,7 @@
  * chosen option's text is the trigger's value. Direction and the writing
  * direction of every text come from the provider.
  */
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View, type PressableStateCallbackType, type StyleProp, type ViewStyle } from "react-native";
 import { Chevron } from "./chevron.tsx";
 import { DURATION, EASE, useReducedMotion } from "./motion.ts";
@@ -151,8 +151,8 @@ export function Select({
 
 /** Scrim opacity 0→1 and sheet translate 320→0 on open, timed; instant under reduced motion. */
 function SheetMotion({ open, children }: { open: boolean; children: (scrimOpacity: Animated.Value, sheetTranslate: Animated.Value) => ReactNode }) {
-  const scrim = useRef(new Animated.Value(0)).current;
-  const sheet = useRef(new Animated.Value(320)).current;
+  const scrim = useState(() => new Animated.Value(0))[0];
+  const sheet = useState(() => new Animated.Value(320))[0];
   const reduced = useReducedMotion();
   useEffect(() => {
     if (!open) { scrim.setValue(0); sheet.setValue(320); return; }

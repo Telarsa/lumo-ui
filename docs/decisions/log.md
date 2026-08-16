@@ -1417,7 +1417,7 @@ motion/perf — every owner priority a workaround.
 Decision:
 - **Web:** Lumo as it is — Base UI engine, Tailwind arrives scoped, tokens,
   the served-bytes gate. Nothing changes.
-- **Mobile:** **Flutter.** `lumo_ui_mobile` — **Lumo UI Mobile** (Dart; `flutter/lumo_ui_mobile` in this
+- **Mobile:** **Flutter.** `lumo_ui_mobile` — **Lumo UI Mobile** (Dart; `packages/mobile` in this
   repo, moved from the Flutter twin) is the mobile
   library: Material's widget layer underneath (as Base UI is under the web),
   Lumo tokens generated from `tokens.css` (`scripts/build-flutter-tokens.mjs`),

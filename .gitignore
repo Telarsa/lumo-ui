@@ -22,7 +22,7 @@ graphify-out/
 # Browser evidence output
 .evidence/
 
-# Flutter / Dart (flutter/lumo_ui_mobile)
+# Flutter / Dart (packages/mobile)
 .dart_tool/
 build/
-flutter/**/pubspec.lock
+packages/mobile/pubspec.lock

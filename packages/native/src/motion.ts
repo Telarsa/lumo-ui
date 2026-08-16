@@ -5,7 +5,7 @@
  * theme uses. Reduced motion is honoured: every animation collapses to an
  * instant set when the platform asks for it.
  */
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { AccessibilityInfo, Animated, Easing } from "react-native";
 
 export const DURATION = { fast: 120, base: 180, slow: 260 } as const;
@@ -25,7 +25,7 @@ export function useReducedMotion(): boolean {
 
 /** An Animated value that follows `to`, timed (or set instantly under reduced motion). */
 export function useAnimatedTo(to: number, options: { duration?: number; easing?: (t: number) => number; native?: boolean } = {}): Animated.Value {
-  const value = useRef(new Animated.Value(to)).current;
+  const value = useState(() => new Animated.Value(to))[0];
   const reduced = useReducedMotion();
   const { duration = DURATION.base, easing = EASE.out, native = true } = options;
   useEffect(() => {
@@ -44,7 +44,7 @@ export function usePressScale(pressed: boolean, pressedScale = 0.97): Animated.V
 
 /** A value that starts at 0 on mount and animates to 1 — enter motion; instant under reduced motion. */
 export function useMountProgress(duration = DURATION.base): Animated.Value {
-  const value = useRef(new Animated.Value(0)).current;
+  const value = useState(() => new Animated.Value(0))[0];
   const reduced = useReducedMotion();
   useEffect(() => {
     if (reduced) { value.setValue(1); return; }

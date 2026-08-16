@@ -27,7 +27,7 @@ dependencies:
     git:
       url: https://github.com/Telarsa/lumo-ui.git
       ref: v0.2.2          # a tag; every package moves together
-      path: flutter/lumo_ui_mobile
+      path: packages/mobile
 ```
 Then `LumoScope(locale: 'fa-IR', brightness: …, child: …)` at the root of every
 route (`MaterialApp.builder`), `theme: lumoThemeData(brightness: …)`, and the

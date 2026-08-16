@@ -79,7 +79,6 @@ function colour(/** @type {string} */ resolved) {
 }
 
 const COLOURS = ["bg", "bg-subtle", "surface", "surface-hover", "surface-sunken", "fg", "fg-muted", "fg-subtle", "fg-on-accent", "border", "border-strong", "border-control", "accent", "accent-hover", "accent-fg", "positive", "critical", "caution", "focus", "scrim"];
-const camel = (/** @type {string} */ s) => s.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
 /** Brand knobs for the baked palette: `--brand h,c[,nh,nc]` on the command line, else achromatic. */
 const brandArg = process.argv.indexOf("--brand");
@@ -128,7 +127,7 @@ ${scheme(SYS_DARK)}
 }
 `;
 
-const OUT = process.argv.includes("--out") ? process.argv[process.argv.indexOf("--out") + 1] : join(ROOT, "..", "..", "example-projects", "lumo-app-lynx", "src", "lumo", "tokens.css");
+const OUT = (process.argv.includes("--out") && process.argv[process.argv.indexOf("--out") + 1]) || join(ROOT, "..", "..", "example-projects", "lumo-app-lynx", "src", "lumo", "tokens.css");
 if (process.argv.includes("--check")) {
   const current = await readFile(OUT, "utf8").catch(() => "");
   if (current !== out) { console.error(`  lynx-tokens: ${OUT} is stale; run node scripts/build-lynx-tokens.mjs`); process.exit(1); }
