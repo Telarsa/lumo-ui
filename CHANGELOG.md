@@ -20,7 +20,7 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
-## 0.2.0 — unreleased
+## 0.2.0 — 16 August 2026
 
 Any language (decision §28). `Locale` is any BCP-47 tag; `fa-IR` and `en-US`
 stay built-in (Lumo carries their strings); every other language brings its
