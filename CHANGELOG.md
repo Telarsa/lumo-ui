@@ -22,6 +22,24 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 
 ## 0.2.2 — unreleased
 
+### Decided
+- **Best in class per platform (decision §30).** Web stays Base UI + Tailwind +
+  tokens. **Mobile is Flutter: `flutter/lumo_ui_mobile` — Lumo UI Mobile**, the
+  mobile UI component library, enters the monorepo (Button, IconButton, Switch,
+  TextField, Select, Dialog; `LumoScope`, `lumoThemeData`, `formatNumber`) with
+  the same contract as the web (announced strings are required parameters,
+  direction from the locale, tokens generated from `packages/theme` by
+  `scripts/build-flutter-tokens.mjs`) and its own gates in `verify`:
+  `gate:flutter-tokens` (generated file fresh) and `gate:flutter`
+  (`flutter analyze` + the semantics-tree tests; `LUMO_SKIP_FLUTTER=1` skips
+  visibly on a machine without Flutter). Its version moves in lockstep
+  (`gate:versions` reads `pubspec.yaml`). Consumed as a git dependency pinned to
+  a tag (`path: flutter/lumo_ui_mobile`). Reference app:
+  `example-projects/lumo-app-flutter` (with the 2,000-row bench).
+- `@lumo-ui/native` (React Native) is a **frozen experiment**: kept, not
+  extended, not advertised. Lynx (`example-projects/lumo-app-lynx`) is the
+  tripwire. Record: `docs/history/rn-vs-flutter-2026-08-16.md`.
+
 ### Fixed
 - The docs site's mobile previews follow the SITE's theme, not the OS
   (react-native-web's `useColorScheme` reads `prefers-color-scheme`; a dark OS

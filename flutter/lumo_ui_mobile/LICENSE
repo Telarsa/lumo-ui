@@ -1,0 +1,15 @@
+Lumo UI — Proprietary License
+
+Copyright (c) 2026 Telarsa. All rights reserved.
+
+This software and its documentation ("Lumo UI") are the confidential and
+proprietary property of Telarsa. They are made available only to Telarsa and to
+projects that Telarsa authorises in writing. No part of Lumo UI may be copied,
+modified, published, distributed, sublicensed, or used outside such authorised
+projects without Telarsa's prior written permission.
+
+Lumo UI is provided "as is", without warranty of any kind. Third-party
+components remain under their own licences (see each package's dependencies).
+
+This notice is the current statement of terms while Lumo UI is private; any
+future licence change is recorded in CHANGELOG.md.

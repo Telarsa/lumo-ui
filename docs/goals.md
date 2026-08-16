@@ -54,7 +54,7 @@ Tier 3 total ≈ **+0.35**.
 ## What we deliberately do not chase
 
 - **Adoption (I5) and bus factor (H1)** — recorded, unweighted, out of scope for now.
-- **React Native as the product mobile stack** — tried 16 Aug 2026 (`@lumo-ui/native`, decisions §27/§29), superseded 17 Aug 2026 by decision §30: **mobile is Flutter (`lumo_ui`)**, best in class per platform; the RN package is a frozen experiment. Lynx is the tripwire.
+- **React Native as the product mobile stack** — tried 16 Aug 2026 (`@lumo-ui/native`, decisions §27/§29), superseded 17 Aug 2026 by decision §30: **mobile is Flutter (`lumo_ui_mobile`, Lumo UI Mobile)**, best in class per platform; the RN package is a frozen experiment. Lynx is the tripwire.
 - **Component count for its own sake** — C is 12% of the score; a component without proof lowers B and D more than it raises C.
 - **Claims without runs** — no NVDA/JAWS/TalkBack claims until we actually run them; VoiceOver via Guidepup is the honest first step on this machine.
 

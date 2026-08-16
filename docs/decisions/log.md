@@ -1417,8 +1417,8 @@ motion/perf — every owner priority a workaround.
 Decision:
 - **Web:** Lumo as it is — Base UI engine, Tailwind arrives scoped, tokens,
   the served-bytes gate. Nothing changes.
-- **Mobile:** **Flutter.** `lumo_ui` (Dart; today in
-  `example-projects/lumo-app-flutter/packages/lumo_ui`) becomes the mobile
+- **Mobile:** **Flutter.** `lumo_ui_mobile` — **Lumo UI Mobile** (Dart; `flutter/lumo_ui_mobile` in this
+  repo, moved from the Flutter twin) is the mobile
   library: Material's widget layer underneath (as Base UI is under the web),
   Lumo tokens generated from `tokens.css` (`scripts/build-flutter-tokens.mjs`),
   Lumo's contract on top (required named parameters for every announced string;
@@ -1432,11 +1432,11 @@ Decision:
   served-HTML gate; no screen-reader claims without runs). Not shared: code.
 - **`@lumo-ui/native` (React Native):** frozen as an experiment; not deleted,
   not advertised, not versioned as a product; the docs' Mobile tab points to
-  Flutter once `lumo_ui` moves into this repo.
+  Flutter now that `lumo_ui_mobile` lives in this repo.
 - **Lynx:** `lumo-app-lynx` stays as the tripwire; re-evaluate when Lynx
   ships accessibility roles/states and the list bug is gone.
 
 Why two libraries is acceptable: Lumo's value is the contract and the proof,
-not the code sharing; `lumo_ui` was built in a day; the cost of the wrong
+not the code sharing; the Dart library was built in a day; the cost of the wrong
 mobile framework (RTL/perf/l10n workarounds forever) is larger than the cost of
 one more implementation of a small, well-specified surface.
