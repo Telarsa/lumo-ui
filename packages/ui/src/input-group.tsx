@@ -132,7 +132,7 @@ export function InputGroup({
  * inherited from `IconButtonProps` rather than restated, so the two cannot
  * drift. Ghost by default: the input already draws the box.
  */
-export interface InputGroupButtonProps extends Omit<IconButtonProps, "size"> {}
+export type InputGroupButtonProps = Omit<IconButtonProps, "size">;
 
 export function InputGroupButton({ variant = "ghost", className, ...props }: InputGroupButtonProps) {
   return (

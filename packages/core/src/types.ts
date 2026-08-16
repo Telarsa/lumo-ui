@@ -13,6 +13,11 @@ export type Locale = "fa-IR" | "en-US";
 
 export const LOCALES = ["fa-IR", "en-US"] as const satisfies readonly Locale[];
 
+/** Narrows an arbitrary language tag to a Lumo locale. */
+export function isLocale(tag: string): tag is Locale {
+  return (LOCALES as readonly string[]).includes(tag);
+}
+
 /** The writing direction of a locale. Derived, never passed in. See `direction`. */
 export type Direction = "rtl" | "ltr";
 
@@ -21,19 +26,20 @@ export type Direction = "rtl" | "ltr";
  * with an exhaustive fallback (Android WebView 124 lacks `getTextInfo()`).
  * There is intentionally no `dir` parameter anywhere in Lumo.
  */
-declare global {
-  namespace Intl {
-    interface Locale {
-      /** Not yet in TypeScript's lib; declared once here, deleted in one place when it is. */
-      getTextInfo?: () => { direction: "ltr" | "rtl" };
-    }
-  }
-}
+/*
+ * Typed structurally, NOT as a `declare global` augmentation of `Intl.Locale`:
+ * TypeScript's `lib.esnext.intl.d.ts` declares `getTextInfo(): TextInfo`, and a
+ * consumer whose tsconfig `lib` includes `esnext` (Next.js's default) then sees
+ * two incompatible declarations and fails to type-check (found by the first
+ * consumer trial, 16 Aug 2026). An intersection is a local statement about this
+ * one call and cannot collide with any lib.
+ */
+type LocaleWithTextInfo = Intl.Locale & { getTextInfo?: () => { direction: "ltr" | "rtl" } };
 
 export function direction(locale: Locale): Direction {
-  const info = new Intl.Locale(locale).getTextInfo?.();
-  if (info) return info.direction;
-  return DIRECTION[locale];
+  const dir = (new Intl.Locale(locale) as LocaleWithTextInfo).getTextInfo?.()?.direction;
+  // Narrowed by value, so a lib that types `direction` looser than ours still compiles.
+  return dir === "rtl" || dir === "ltr" ? dir : DIRECTION[locale];
 }
 
 const DIRECTION = {

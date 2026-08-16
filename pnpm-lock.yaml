@@ -109,6 +109,13 @@ catalogs:
 importers:
 
   .:
+    dependencies:
+      dom-accessibility-api:
+        specifier: 0.7.1
+        version: 0.7.1
+      linkedom:
+        specifier: 0.18.13
+        version: 0.18.13
     devDependencies:
       '@axe-core/playwright':
         specifier: ^4.13.0

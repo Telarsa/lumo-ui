@@ -185,27 +185,28 @@ export function useDateFieldState<T extends DateValue = DateValue>(
   const [fields, setFields] = useState<Fields>(() => fieldsOf(initial, calendar));
 
   // Controlled resynchronisation, done in render rather than in an effect: an
-  // effect would emit a frame of stale segments and never run on the server.
-  const lastExternal = useRef<DateValue | null | undefined>(value);
-  if (value !== undefined && value !== lastExternal.current) {
-    lastExternal.current = value;
+  // effect would emit a frame of stale segments and never run on the server. The
+  // last external value is STATE (React's "storing information from previous
+  // renders"), not a ref — a ref may not be read or written during render.
+  const [lastExternal, setLastExternal] = useState<DateValue | null | undefined>(value);
+  if (value !== undefined && value !== lastExternal) {
+    setLastExternal(value);
     setFields(fieldsOf(value, calendar));
   }
 
   /** The last value handed to `onChange`, so a no-op edit stays silent. */
   const lastEmitted = useRef<string | null>(toValue(fieldsOf(initial, calendar), calendar)?.toString() ?? null);
 
+  const { minValue, maxValue, isDateUnavailable } = options;
   const isAllowed = useCallback(
     (date: CalendarDate) => {
-      const minimum =
-        options.minValue == null ? null : toCalendar(toPlainDate(options.minValue), calendar);
-      const maximum =
-        options.maxValue == null ? null : toCalendar(toPlainDate(options.maxValue), calendar);
+      const minimum = minValue == null ? null : toCalendar(toPlainDate(minValue), calendar);
+      const maximum = maxValue == null ? null : toCalendar(toPlainDate(maxValue), calendar);
       if (minimum != null && date.compare(minimum) < 0) return false;
       if (maximum != null && date.compare(maximum) > 0) return false;
-      return options.isDateUnavailable?.(date as T) !== true;
+      return isDateUnavailable?.(date as T) !== true;
     },
-    [calendar, options.isDateUnavailable, options.maxValue, options.minValue],
+    [calendar, isDateUnavailable, maxValue, minValue],
   );
 
   const commit = useCallback(
@@ -472,9 +473,10 @@ export function useTimeFieldState(options: TimeFieldStateOptions): DateFieldStat
 
   // Controlled resynchronisation in RENDER, for the reason the date engine
   // gives above: an effect emits one stale frame and never runs on the server.
-  const lastExternal = useRef<TimeFields | null | undefined>(value);
-  if (value !== undefined && value !== lastExternal.current) {
-    lastExternal.current = value;
+  // State, not a ref, for the reason given there too.
+  const [lastExternal, setLastExternal] = useState<TimeFields | null | undefined>(value);
+  if (value !== undefined && value !== lastExternal) {
+    setLastExternal(value);
     setFields(toFields(value));
   }
 

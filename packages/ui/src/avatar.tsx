@@ -118,9 +118,8 @@ export type AvatarProps = AvatarImageProps | AvatarInitialsProps;
 
 export function Avatar(props: AvatarProps) {
   const { size, className, initials, statusLabel, statusTone, ...rest } = props;
-  // `src` and `alt` are read off `props` below (union narrowing), so they are
-  // removed from the passthrough by name.
-  const { src: _src, alt: _alt, ...dom } = rest;
+  // `src` and `alt` belong to the `<img>` below, never to the wrapper's passthrough.
+  const { src, alt, ...dom } = rest;
 
   // The wrapper is CONDITIONAL: `icon-stack.tsx` sizes and rings its DIRECT
   // children, so wrapping unconditionally would silently resize every stack.
@@ -138,10 +137,10 @@ export function Avatar(props: AvatarProps) {
         <span className="font-medium text-fg-muted">{initials}</span>
       ) : null}
 
-      {props.src !== undefined ? (
+      {src !== undefined ? (
         <img
-          src={props.src}
-          alt={props.alt}
+          src={src}
+          alt={alt}
           // `inset-0` is direction-neutral; `object-cover` keeps a non-square portrait centred.
           className="absolute inset-0 size-full object-cover"
         />

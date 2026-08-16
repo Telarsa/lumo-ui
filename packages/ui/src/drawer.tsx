@@ -14,6 +14,17 @@ import {
 } from "@lumo-ui/core";
 
 /**
+ * `source` without the props an element only CARRIES (read off it by a parent).
+ * Removed by name rather than discard-destructured: a consumer's `no-unused-vars`
+ * (typescript-eslint `recommended`) has no rest-sibling or `_`-prefix allowance.
+ */
+function omit<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Omit<T, K> {
+  const copy: Partial<T> = { ...source };
+  for (const key of keys) delete copy[key];
+  return copy as Omit<T, K>;
+}
+
+/**
  * A modal that slides in from an INLINE edge, on Base UI's `Dialog` — NOT its
  * `Drawer`, whose `swipeDirection` is physical-only and reads no direction. It
  * animates `inset-inline-*`, never `translate-x`: transforms have no logical
@@ -84,18 +95,14 @@ export interface DrawerOverlayProps
  * READ OFF THIS ELEMENT by `DialogTrigger`. `Dialog.Root` mounts no
  * `CloseWatcher`; if this ever moves onto `Drawer.Root`, add `close-watcher` to the cancel.
  */
-export function DrawerOverlay({
-  className,
-  children,
-  // Read off this element's props by `DialogTrigger`.
-  isDismissable: _isDismissable,
-  ...rest
-}: DrawerOverlayProps) {
+export function DrawerOverlay(props: DrawerOverlayProps) {
+  const { className, children, ...rest } = props;
   return (
     <BaseDialog.Portal>
       <BaseDialog.Backdrop
         className={cn(drawerOverlayVariants(), className)}
-        {...rest}
+        // `isDismissable` is read off this element's props by `DialogTrigger`; it never reaches the DOM.
+        {...omit(rest, ["isDismissable"])}
       />
       {children as React.ReactNode}
     </BaseDialog.Portal>

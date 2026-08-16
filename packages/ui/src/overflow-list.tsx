@@ -129,13 +129,16 @@ export function OverflowList<T>({
   const visible = collapseFrom === "start" ? entries.slice(split) : entries.slice(0, split);
   const hidden = collapseFrom === "start" ? entries.slice(0, split) : entries.slice(split);
   const visibleKeys = new Set(visible.map((entry) => entry.key));
+  // Only the COUNT reaches the effect: `entries` is rebuilt every render.
+  const itemCount = entries.length;
 
   useEffect(() => {
     const root = rootRef.current;
     if (root === null) return;
 
     const measure = () => {
-      const itemSizes = entries.map(
+      const itemSizes = Array.from(
+        { length: itemCount },
         (_, index) => itemRefs.current[index]?.getBoundingClientRect().width ?? 0,
       );
       const next = fitOverflowItems({
@@ -157,7 +160,7 @@ export function OverflowList<T>({
     for (const item of itemRefs.current) if (item !== null) observer.observe(item);
     if (overflowRef.current !== null) observer.observe(overflowRef.current);
     return () => observer.disconnect();
-  }, [collapseFrom, entries.length, gap, maximum, minimum, visibleCount]);
+  }, [collapseFrom, itemCount, gap, maximum, minimum, visibleCount]);
 
   const overflow =
     hidden.length === 0 ? null : (

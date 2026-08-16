@@ -298,7 +298,7 @@ written out rather than left to be rediscovered.
    German and wrong for any Arabic-script locale, where it means OS-substituted
    glyphs on a page that ships a designed face.
 8. **If the locale is Arabic-script, extend the script rules in
-   `packages/theme/src/tokens.css`** — the `lumo.script` layer, not this app.
+   `packages/theme/src/script.css`** — the `lumo.script` layer (opt-in for consumers), not this app.
    Letter spacing severs the joins between Arabic-script letters — spaced-out
    text is not a word, it is disconnected letters — so an Arabic page would
    inherit the defect the Persian rule exists to fix, with nothing on screen

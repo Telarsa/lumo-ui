@@ -707,9 +707,10 @@ export function EventCalendar({
   /** The live region's text. Empty on the first render: nothing has changed yet. */
   const [announcement, setAnnouncement] = useState("");
   const gridRef = useRef<HTMLDivElement | null>(null);
-  // Set when a keyboard move should pull DOM focus after the render — an effect
+  // Bumped when a keyboard move should pull DOM focus after the render — an effect
   // because a move may cross a period boundary and the target cell does not exist yet.
-  const pendingFocus = useRef(false);
+  // State, not a ref: the render it schedules is the one the effect must follow.
+  const [pendingFocus, setPendingFocus] = useState(0);
   const pointerEvent = useRef<{ id: string; originY: number; resize: boolean } | null>(null);
 
   const index = indexEvents(events, locale);
@@ -734,7 +735,7 @@ export function EventCalendar({
     onFocusedDateChange?.(next);
     setEntered(true);
     setAnnouncement(dayName(next));
-    pendingFocus.current = true;
+    setPendingFocus((count) => count + 1);
   };
 
   const changeView = (next: EventCalendarView) => {
@@ -754,10 +755,9 @@ export function EventCalendar({
   };
 
   useEffect(() => {
-    if (!pendingFocus.current) return;
-    pendingFocus.current = false;
+    if (pendingFocus === 0) return;
     gridRef.current?.querySelector<HTMLElement>('[data-lumo-focused="true"]')?.focus();
-  });
+  }, [pendingFocus]);
 
   /* the visible period */
 

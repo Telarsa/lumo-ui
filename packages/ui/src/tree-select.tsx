@@ -116,7 +116,10 @@ export function TreeSelect({
                   const next = new Set(selected);
                   const affected = mode === "checkbox" ? descendantKeys(node) : [node.value];
                   const shouldAdd = mode === "checkbox" ? state !== "checked" : !selected.has(node.value);
-                  for (const key of affected) shouldAdd ? next.add(key) : next.delete(key);
+                  for (const key of affected) {
+                    if (shouldAdd) next.add(key);
+                    else next.delete(key);
+                  }
                   commit([...next]);
                 }}
               />

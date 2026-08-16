@@ -11,7 +11,7 @@ import { DocSection, DocsShell, P, Snippet, Term } from "../docs-shell";
  * file's, abridged), `apps/website/src/fonts/` (the three variable faces that
  * actually ship), `packages/core` (`LumoNode`, `formatNumber` — the ۱٬۲۳۴
  * output was produced by running the formatter, not recalled), and the
- * `:lang(fa)` rules in `packages/theme/src/tokens.css`.
+ * `:lang(fa)` rules in `packages/theme/src/script.css` (opt-in since 0.1.2; was tokens.css).
  */
 
 const STACKS_CSS = `:root {

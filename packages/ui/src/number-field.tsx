@@ -174,8 +174,8 @@ export function NumberField({
   // assignable either way; `asAriaKeyboardEvent` (base-ui-adapter.ts) bridges.
   validate,
   onKeyDown,
-  // Same incompatibility as `onKeyDown`; nothing needs it, so it is dropped.
-  onKeyUp: _onKeyUp,
+  // Same incompatibility as `onKeyDown`, bridged the same way (as `Button` and `Toggle` do).
+  onKeyUp,
   ...rest
 }: NumberFieldProps) {
   const [uncontrolledValue, setUncontrolledValue] = React.useState(
@@ -232,6 +232,12 @@ export function NumberField({
           ? undefined
           : (event: React.KeyboardEvent<HTMLDivElement>) =>
               onKeyDown(asAriaKeyboardEvent(event)),
+      )}
+      {...attr(
+        "onKeyUp",
+        onKeyUp === undefined
+          ? undefined
+          : (event: React.KeyboardEvent<HTMLDivElement>) => onKeyUp(asAriaKeyboardEvent(event)),
       )}
       {...optional("data-invalid", isInvalid ?? (effectiveError != null ? true : undefined))}
       {...(rest as unknown as BaseNumberField.Root.Props)}

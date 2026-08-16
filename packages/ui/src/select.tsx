@@ -377,7 +377,13 @@ export interface SelectFieldOption {
 }
 
 export interface SelectFieldProps extends SelectTriggerVariantProps {
-  /** The accessible name of the field, rendered as its visible label unless showLabel hides it. */
+  /**
+   * The accessible name of the field. ANNOUNCED ONLY by default — `SelectField`
+   * is the compact form used inside toolbars, calendars and filter bars; pass
+   * `showLabel` to render it visibly, or compose `Select` + `Label` for an
+   * ordinary form field with a visible label. (The docblock used to say the
+   * opposite of the default; a consumer trial caught it, 16 Aug 2026.)
+   */
   label: string;
   /** Text shown on the trigger before any option is chosen. */
   placeholder: string;
@@ -396,7 +402,7 @@ export interface SelectFieldProps extends SelectTriggerVariantProps {
   errorMessage?: LumoNode;
   /** Submitted field name when the control sits inside a form. */
   name?: string | undefined;
-  /** Renders the label visibly; when false the name is announced only. */
+  /** Renders the label visibly. Default `false`: the name is announced only. */
   showLabel?: boolean | undefined;
   className?: string | undefined;
   /** Additional classes merged onto the trigger button. */

@@ -227,8 +227,10 @@ type UnsupportedDisclosureTriggerProp =
   | "onFocusChange"
   | "excludeFromTabOrder";
 
-interface DisclosureTriggerSupportedProps
-  extends Omit<ButtonPropsBase, "slot" | UnsupportedDisclosureTriggerProp> {}
+type DisclosureTriggerSupportedProps = Omit<
+  ButtonPropsBase,
+  "slot" | UnsupportedDisclosureTriggerProp
+>;
 
 export interface DisclosureTriggerProps extends DisclosureTriggerSupportedProps {
   children?: LumoNode;

@@ -21,7 +21,11 @@ import {
   DialogOverlay,
   DialogTrigger,
 } from "./dialog.tsx";
-import { useLinkComponent } from "./link-context.ts";
+import {
+  useLinkComponent,
+  type LumoLinkComponent,
+  type LumoLinkRenderProps,
+} from "./link-context.ts";
 
 /**
  * A command palette — a filtered list of actions, keyboard-first. BASE UI ENGINE.
@@ -418,6 +422,18 @@ export interface CommandItemProps {
 }
 
 /**
+ * The app's link component as `Autocomplete.Item`'s `render` element. Its own
+ * component so the tag comes from a PROP (as `Link linkComponent` does): the React
+ * Compiler treats a value a hook returns as created during render when it is used as a tag.
+ */
+function CommandAnchor({
+  anchor: Anchor,
+  ...props
+}: { anchor: LumoLinkComponent } & LumoLinkRenderProps) {
+  return <Anchor {...props} />;
+}
+
+/**
  * Three React Aria workarounds retired here (`deriveTextValue`, the
  * `<Text slot="label">` partition, `composeRenderProps`): Base UI filters the
  * `items` array before any JSX exists and emits no `aria-labelledby`. The check
@@ -446,7 +462,9 @@ export function CommandItem({
       {...(onAction === undefined ? {} : { onClick: () => onAction() })}
       {...(isDisabled === undefined ? {} : { disabled: isDisabled })}
       // No `target`/`rel`: a new tab needs an announced warning and a row has no slot for one.
-      {...(href === undefined ? {} : { render: Anchor === "a" ? <a href={href} /> : <Anchor href={href} /> })}
+      {...(href === undefined
+        ? {}
+        : { render: Anchor === "a" ? <a href={href} /> : <CommandAnchor anchor={Anchor} href={href} /> })}
     >
       {children}
       {isSelected === true ? (

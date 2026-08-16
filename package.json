@@ -1,6 +1,6 @@
 {
   "name": "lumo-ui",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.3.0",
@@ -12,7 +12,7 @@
     "build": "pnpm -r --if-present run build",
     "start": "node scripts/serve-static.mjs",
     "preview": "pnpm run build && pnpm run start",
-    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
+    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:consumer-profile && pnpm run gate:consumer-lint && pnpm run gate:dist && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
     "gate:props": "node --experimental-strip-types packages/gate/src/inert-props-cli.ts packages/ui/src packages/blocks/src",
     "lint": "eslint .",
@@ -31,7 +31,15 @@
     "evidence:types": "tsc -p evidence/tsconfig.json",
     "catalog": "node scripts/build-catalog.mjs",
     "gate:catalog": "node scripts/build-catalog.mjs --check",
-    "gate:versions": "node scripts/check-versions.mjs"
+    "gate:versions": "node scripts/check-versions.mjs",
+    "gate:consumer-profile": "tsc -p tsconfig.consumer-profile.json",
+    "gate:consumer-lint": "eslint -c eslint.consumer.config.mjs --max-warnings 0 \"packages/ui/src/**/*.{ts,tsx}\" \"packages/blocks/src/**/*.{ts,tsx}\"",
+    "build:gate": "tsc -p packages/gate/tsconfig.dist.json",
+    "gate:dist": "node scripts/check-gate-dist.mjs"
+  },
+  "dependencies": {
+    "dom-accessibility-api": "0.7.1",
+    "linkedom": "0.18.13"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -52,6 +60,7 @@
     "scripts/build-catalog.mjs",
     "packages/*/package.json",
     "packages/*/src/**",
+    "packages/gate/dist/**",
     "registry.json",
     "catalog.json",
     "api-reference.json",

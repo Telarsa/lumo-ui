@@ -111,8 +111,10 @@ type UnsupportedDateFieldProps =
   | "isRequired"
   | "slot";
 
-interface SupportedDateFieldProps<T extends DateValue>
-  extends Omit<DateFieldPropsBase<T>, UnsupportedDateFieldProps> {}
+type SupportedDateFieldProps<T extends DateValue> = Omit<
+  DateFieldPropsBase<T>,
+  UnsupportedDateFieldProps
+>;
 
 export interface DateFieldProps<T extends DateValue> extends SupportedDateFieldProps<T> {
   /** Announced and displayed name. Required: an unnamed field is a defect. */

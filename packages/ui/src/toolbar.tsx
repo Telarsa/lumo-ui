@@ -52,11 +52,24 @@ export const toolbarSeparatorVariants = cva(
 );
 
 /**
- * The toolbar's claim counter for the pre-hydration tab stop: `Toolbar` resets `next` in
- * its render body and the first `ToolbarItem` to render takes the stop. A stable ref
+ * The toolbar's claim counter for the pre-hydration tab stop: `Toolbar` calls `reset`
+ * in its render body and the first `ToolbarItem` to render `take`s the stop. One
+ * mutable instance per toolbar, written during render by design (one synchronous
+ * pass, server render included), through these two operations only; a stable
  * object, so publishing it does not re-render every item.
  */
-const ToolbarClaimContext = React.createContext<{ next: number } | null>(null);
+class ToolbarClaim {
+  private next = 0;
+  reset(): void {
+    this.next = 0;
+  }
+  /** `true` for the first call after a `reset`. */
+  take(): boolean {
+    return this.next++ === 0;
+  }
+}
+
+const ToolbarClaimContext = React.createContext<ToolbarClaim | null>(null);
 
 /** The toolbar's own props, minus children, class and `aria-label` (a REQUIRED `label` instead). */
 interface ToolbarPropsBase
@@ -80,9 +93,10 @@ export function Toolbar({
   children,
   ...rest
 }: ToolbarProps) {
-  // Reset the claim before the children render (a parent's body renders before its children's).
-  const claim = React.useRef({ next: 0 });
-  claim.current.next = 0;
+  // Reset the claim before the children render (a parent's body renders before its
+  // children's). One instance for the life of the toolbar (state for identity, never set).
+  const [claim] = React.useState(() => new ToolbarClaim());
+  claim.reset();
   return (
     <BaseToolbar.Root
       data-lumo=""
@@ -97,7 +111,7 @@ export function Toolbar({
       {...rest}
     >
       {/* Renders no element, so the composite's children stay where `CompositeRoot` expects them. */}
-      <ToolbarClaimContext.Provider value={claim.current}>
+      <ToolbarClaimContext.Provider value={claim}>
         {children as React.ReactNode}
       </ToolbarClaimContext.Provider>
     </BaseToolbar.Root>
@@ -119,7 +133,7 @@ export function ToolbarItem({ children, className }: ToolbarItemProps) {
   // Claim the served stop once per MOUNT (`useState` initialiser), so a later toolbar
   // render cannot move it. A `null` counter — no `Toolbar` above — claims.
   const claim = React.useContext(ToolbarClaimContext);
-  const [holdsStop] = React.useState(() => claim === null || claim.next++ === 0);
+  const [holdsStop] = React.useState(() => claim === null || claim.take());
   const tabStop = useCompositeTabStop(holdsStop);
   const child = children as React.ReactNode;
   if (!React.isValidElement(child)) return <>{child}</>;

@@ -17,6 +17,18 @@ import { attr, findChildProp } from "@lumo-ui/base-ui-ssr";
 import { IconButton } from "./button.tsx";
 
 /**
+ * `source` without the props an element only CARRIES (read off it by a parent, or
+ * lifted onto the popup). Removed by name rather than discard-destructured: a
+ * consumer's `no-unused-vars` (typescript-eslint `recommended`) has no rest-sibling
+ * or `_`-prefix allowance, and a copy must pass it on day one.
+ */
+function omit<T extends object, K extends keyof T>(source: T, keys: readonly K[]): Omit<T, K> {
+  const copy: Partial<T> = { ...source };
+  for (const key of keys) delete copy[key];
+  return copy as Omit<T, K>;
+}
+
+/**
  * Modal dialog on the Base UI engine.
  *
  *     <DialogTrigger>
@@ -168,18 +180,14 @@ export function DialogClose({ children }: DialogCloseProps) {
   return <BaseDialog.Close render={children} />;
 }
 
-export function DialogOverlay({
-  className,
-  children,
-  // Read off this element's props by `DialogTrigger`.
-  isDismissable: _isDismissable,
-  ...rest
-}: DialogOverlayProps) {
+export function DialogOverlay(props: DialogOverlayProps) {
+  const { className, children, ...rest } = props;
   return (
     <BaseDialog.Portal>
       <BaseDialog.Backdrop
         className={cn(dialogOverlayVariants(), className)}
-        {...rest}
+        // `isDismissable` is read off this element's props by `DialogTrigger`; it never reaches the DOM.
+        {...omit(rest, ["isDismissable"])}
       />
       {children as React.ReactNode}
     </BaseDialog.Portal>
@@ -286,11 +294,10 @@ export function DialogModal({
  * is REQUIRED: an ✕ is not a name. The ✕ is an `IconButton` handed to `Dialog.Close`,
  * which merges `onClick` onto it (Base UI has no slots).
  */
-interface DialogSupportedProps
-  extends Omit<
-    DialogPropsBase,
-    "slot" | "aria-label" | "aria-labelledby" | "aria-describedby" | "aria-details"
-  > {}
+type DialogSupportedProps = Omit<
+  DialogPropsBase,
+  "slot" | "aria-label" | "aria-labelledby" | "aria-describedby" | "aria-details"
+>;
 
 export interface DialogProps extends DialogSupportedProps {
   /**
@@ -307,18 +314,12 @@ export interface DialogProps extends DialogSupportedProps {
   className?: string | undefined;
 }
 
-export function Dialog({
-  // `label` is lifted by DialogModal / Drawer; it must not reach this div.
-  label: _label,
-  closeLabel,
-  className,
-  children,
-  // `role` is lifted by DialogModal.
-  role: _role,
-  ...rest
-}: DialogProps) {
+export function Dialog(props: DialogProps) {
+  const { closeLabel, className, children, ...rest } = props;
+  // `label` is lifted by DialogModal / Drawer and `role` by DialogModal; neither may reach this div.
+  const dom = omit(rest, ["label", "role"]);
   return (
-    <div data-lumo="" className={cn(dialogVariants(), className)} {...rest}>
+    <div data-lumo="" className={cn(dialogVariants(), className)} {...dom}>
       {/* `end-3` is `inset-inline-end`, so the ✕ sits top-trailing in both scripts; `top-3` stays physical. */}
       <BaseDialog.Close
         render={

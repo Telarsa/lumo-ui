@@ -93,3 +93,24 @@ describe("parseNumber — the half Intl does not provide", () => {
     expect(parseNumber("سلام", "fa-IR")).toBeNaN();
   });
 });
+
+describe("documentDirection — a host's other languages", () => {
+  // LumoHtml accepts any BCP-47 tag so a site can serve a `de` page beside the
+  // Lumo locales; direction for those comes from the primary subtag.
+  it("derives Lumo locales exactly as direction() does", async () => {
+    const { documentDirection } = await import("./html.tsx");
+    expect(documentDirection("fa-IR")).toBe("rtl");
+    expect(documentDirection("en-US")).toBe("ltr");
+  });
+  it("knows the right-to-left primary subtags and defaults everything else to ltr", async () => {
+    const { documentDirection } = await import("./html.tsx");
+    for (const tag of ["ar", "ar-EG", "he-IL", "ur", "ps-AF", "ckb"]) expect(documentDirection(tag), tag).toBe("rtl");
+    for (const tag of ["de", "de-CH", "fr", "ja-JP", "tr"]) expect(documentDirection(tag), tag).toBe("ltr");
+  });
+  it("isLocale narrows only the two Lumo locales", async () => {
+    const { isLocale } = await import("./types.ts");
+    expect(isLocale("fa-IR")).toBe(true);
+    expect(isLocale("fa")).toBe(false);
+    expect(isLocale("de")).toBe(false);
+  });
+});

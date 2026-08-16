@@ -12,9 +12,10 @@ import { tmpdir } from "node:os";
 import { join, posix } from "node:path";
 import { execFileSync } from "node:child_process";
 import ts from "typescript";
+import { rewriteBlockImports } from "./lib/consumer-copy.mjs";
 
 /** @typedef {{ path: string, target: string, type?: string }} RegistryFile */
-/** @typedef {{ name: string, files?: RegistryFile[], dependencies?: string[], registryDependencies?: string[] }} RegistryItem */
+/** @typedef {{ name: string, type?: string, files?: RegistryFile[], dependencies?: string[], registryDependencies?: string[] }} RegistryItem */
 
 const ROOT = new URL("..", import.meta.url).pathname;
 
@@ -139,9 +140,16 @@ try {
   // A consumer project: the copied components, the packaged invariants resolved by path, nothing else.
   await mkdir(join(dir, "components/ui"), { recursive: true });
 
+  // The SAME transformation `lumo add` applies: a block's `@lumo-ui/ui` imports
+  // become relative imports of the ui copies — a consumer cannot install
+  // `@lumo-ui/ui` (a workspace package). Found by the first consumer trials.
   for (const item of registry.items) {
     for (const file of item.files ?? []) {
-      await cp(join(ROOT, file.path), join(dir, file.target ?? `components/ui/${item.name}.tsx`));
+      const dst = join(dir, file.target ?? `components/ui/${item.name}.tsx`);
+      if (item.type === "registry:block") {
+        await mkdir(join(dst, ".."), { recursive: true });
+        await writeFile(dst, await rewriteBlockImports(await readFile(join(ROOT, file.path), "utf8")));
+      } else await cp(join(ROOT, file.path), dst);
     }
   }
 
@@ -157,8 +165,12 @@ try {
    * distribution defect a single profile would hide.
    */
   const PROFILES = [
-    { name: "bundler (Vite / Next)", module: "preserve", moduleResolution: "bundler" },
-    { name: "Node ESM (NodeNext)", module: "NodeNext", moduleResolution: "NodeNext" },
+    { name: "bundler (Vite / Next)", module: "preserve", moduleResolution: "bundler", strictExtras: true, lib: ["ES2023", "DOM", "DOM.Iterable"] },
+    { name: "Node ESM (NodeNext)", module: "NodeNext", moduleResolution: "NodeNext", strictExtras: true, lib: ["ES2023", "DOM", "DOM.Iterable"] },
+    // create-next-app's tsconfig: plain `strict`, no exactOptionalPropertyTypes /
+    // noUncheckedIndexedAccess, lib esnext. The consumer trials of 16 Aug 2026
+    // failed here (an Intl.Locale augmentation, three copies leaning on our flags).
+    { name: "Next.js default (strict, lib esnext)", module: "esnext", moduleResolution: "bundler", strictExtras: false, lib: ["dom", "dom.iterable", "esnext"] },
   ];
   for (const profile of PROFILES) {
   await writeFile(
@@ -167,7 +179,7 @@ try {
       {
         compilerOptions: {
           target: "ES2023",
-          lib: ["ES2023", "DOM", "DOM.Iterable"],
+          lib: profile.lib,
           module: profile.module,
           moduleResolution: profile.moduleResolution,
           jsx: "react-jsx",
@@ -175,13 +187,12 @@ try {
           noEmit: true,
           skipLibCheck: true,
           allowImportingTsExtensions: true,
-          exactOptionalPropertyTypes: true,
-          noUncheckedIndexedAccess: true,
-          // The workspace packages a consumer installs rather than copies;
-          // everything else must resolve from node_modules on its own.
+          ...(profile.strictExtras ? { exactOptionalPropertyTypes: true, noUncheckedIndexedAccess: true } : {}),
+          // The CONTRACT packages a consumer installs (git pins) rather than
+          // copies; `@lumo-ui/ui` is deliberately absent — a consumer cannot
+          // install it, so blocks must compile against the ui copies.
           paths: {
             "@lumo-ui/core": [join(ROOT, "packages/core/src/index.ts")],
-            "@lumo-ui/ui": [join(ROOT, "packages/ui/src/index.ts")],
             "@lumo-ui/base-ui-ssr": [join(ROOT, "packages/base-ui-ssr/src/index.ts")],
           },
         },
