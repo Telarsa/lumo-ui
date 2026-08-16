@@ -130,7 +130,7 @@ export async function DocsSidebar({
                         {/* Decoration; the sr-only word is the announcement. */}
                         <span
                           aria-hidden="true"
-                          className={cn("size-1.5 shrink-0 rounded-full bg-accent", !hasNative(d.id) && "ms-auto")}
+                          className="ms-auto size-1.5 shrink-0 rounded-full bg-accent"
                         />
                         <span className="sr-only">{c.isNew}</span>
                       </>
