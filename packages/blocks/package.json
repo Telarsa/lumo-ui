@@ -1,6 +1,6 @@
 {
   "name": "@lumo-ui/blocks",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Whole screen sections composed from shipped Lumo components. Every user-facing string is a required prop.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",

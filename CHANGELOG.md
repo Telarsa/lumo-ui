@@ -20,6 +20,24 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
+## 0.2.1 — unreleased
+
+### Added
+- `@lumo-ui/native` `TextField` (label REQUIRED and set as the input's own
+  accessible name — native platforms have no `<label for>`; description as
+  hint; error as a live region; text aligned to the reading start) and
+  `Select` (Lumo's own: a `combobox` trigger named by the REQUIRED label showing
+  the REQUIRED placeholder or the chosen option, a modal sheet of `option`s
+  with `aria-selected`, REQUIRED `closeLabel`); `scrim` token generated.
+- Docs `/docs/native/`: fields in the live preview, and a "on a device — and
+  how you see it" section with the real iOS 18.5 simulator screenshot beside
+  the react-native-web preview, each labelled for what it proves.
+
+### Recorded
+- Release-build probe row attempted: prebuild + CocoaPods succeed; xcodebuild
+  needs the iOS platform installed in Xcode 26.6 (~8 GB) — not started unasked;
+  one command afterwards (`packages/native/README.md`).
+
 ## 0.2.0 — 16 August 2026
 
 Any language (decision §28). `Locale` is any BCP-47 tag; `fa-IR` and `en-US`

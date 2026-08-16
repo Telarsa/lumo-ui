@@ -1,6 +1,6 @@
 {
   "name": "@lumo-ui/native",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Lumo UI for React Native / Expo — the same contract as the web components (required announced strings, locale-derived direction, formatted numbers) on native primitives. First component: Button.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
@@ -12,7 +12,7 @@
     "test": "vitest run"
   },
   "peerDependencies": {
-    "@lumo-ui/core": "0.2.0",
+    "@lumo-ui/core": "0.2.1",
     "react": ">=19",
     "react-native": ">=0.76"
   },

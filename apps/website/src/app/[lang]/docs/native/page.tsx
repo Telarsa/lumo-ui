@@ -15,10 +15,10 @@ import { DocSection, DocsShell, P, Snippet, Term } from "../docs-shell";
  */
 export const generateStaticParams = localeParams;
 
-const SECTIONS = ["status", "preview", "contract", "usage", "next"] as const;
+const SECTIONS = ["status", "preview", "device", "contract", "usage", "next"] as const;
 type SectionId = (typeof SECTIONS)[number];
 
-const USAGE = `import { LumoNativeProvider, Button, IconButton, Switch } from "@lumo-ui/native";
+const USAGE = `import { LumoNativeProvider, Button, IconButton, Switch, TextField, Select } from "@lumo-ui/native";
 import { formatNumber } from "@lumo-ui/core";
 
 export function App() {
@@ -28,21 +28,25 @@ export function App() {
       <Button variant="outline">{\`\${formatNumber(3, "fa-IR")} مورد\`}</Button>
       <IconButton label="بستن"><CloseIcon /></IconButton>
       <Switch isSelected={notify} onChange={setNotify}>اعلان‌ها</Switch>
+      <TextField label="رایانامه" inputMode="email" value={email} onChange={setEmail} />
+      <Select label="خدمت" placeholder="یک خدمت را انتخاب کنید" closeLabel="بستن" options={services} value={service} onChange={setService} />
     </LumoNativeProvider>
   );
 }`;
 
-const COPY: Record<Locale, { title: string; intro: string; heading: Record<SectionId, string>; body: Record<string, LumoNode>; frame: string }> = {
+const COPY: Record<Locale, { title: string; intro: string; heading: Record<SectionId, string>; body: Record<string, LumoNode>; frame: string; deviceFrame: string; deviceAlt: string }> = {
   "fa-IR": {
     title: "موبایل — React Native",
     intro: "همان قرارداد لومو روی React Native / Expo. آنچه امروز هست: پرووایدر، دکمه و کلید؛ پروب ICU یک بار روی شبیه‌ساز iOS اجرا شده است.",
-    frame: "پیش‌نمایش دکمهٔ موبایل در مرورگر",
-    heading: { status: "وضعیت", preview: "پیش‌نمایش", contract: "قرارداد", usage: "استفاده", next: "بعدی" },
+    frame: "پیش‌نمایش کامپوننت‌های موبایل در مرورگر",
+    deviceFrame: "عکس شبیه‌ساز iOS",
+    deviceAlt: "عکس شبیه‌ساز iOS ۱۸٫۵: گزارش پروب ICU، دکمه‌های لومو در چهار گونه، و سه کلید با برچسب فارسی؛ چیدمان راست‌چین",
+    heading: { status: "وضعیت", preview: "پیش‌نمایش در مرورگر", device: "روی دستگاه — و چطور می‌بینیدش", contract: "قرارداد", usage: "استفاده", next: "بعدی" },
     body: {
       status: (
         <>
-          <Term>@lumo-ui/native</Term> یک بسته است با دو کامپوننت (<Term>Button</Term> /{" "}
-          <Term>IconButton</Term> و <Term>Switch</Term>) و پرووایدرش. توکن‌هایش از همان <Term>tokens.css</Term> وب تولید
+          <Term>@lumo-ui/native</Term> یک بسته است با چهار کامپوننت (<Term>Button</Term> /{" "}
+          <Term>IconButton</Term>، <Term>Switch</Term>، <Term>TextField</Term>، <Term>Select</Term>) و پرووایدرش. توکن‌هایش از همان <Term>tokens.css</Term> وب تولید
           می‌شوند (رنگ‌ها از oklch به hex، اندازه‌ها از rem به dp) و یک دروازه جلوی انحرافشان را
           می‌گیرد. اولین بایتش با همان چهارده قاعدهٔ وب نمره می‌گیرد — از راه{" "}
           <Term>react-native-web</Term>. پروب ICU یک بار روی شبیه‌ساز iOS ۱۸٫۵ (Hermes، Expo Go) اجرا
@@ -67,6 +71,17 @@ const COPY: Record<Locale, { title: string; intro: string; heading: Record<Secti
           صدا نمی‌زند و به‌جایش فاصله‌گذاری آغاز/پایان و جهت نوشتار متن را درست می‌کند.
         </>
       ),
+      device: (
+        <>
+          دو راه برای دیدن کامپوننت‌های موبایل روی همین سایت هست و هر دو صادقانه نام‌گذاری شده‌اند.
+          یک: پیش‌نمایش زندهٔ بالا — همان سورس React Native که روی گوشی اجرا می‌شود، در مرورگر شما از راه{" "}
+          <Term>react-native-web</Term> رندر می‌شود؛ می‌توانید فشارش دهید، تایپ کنید، انتخاب کنید. دو: تصویر
+          زیر — عکس واقعی از شبیه‌ساز iOS ۱۸٫۵ (Hermes، Expo Go) در تاریخ ۲۵ مرداد ۱۴۰۵، با{" "}
+          <Term>I18nManager.forceRTL</Term> در آغاز اپ: ردیف‌ها از راست شروع می‌شوند، کلید کنار پایان خواندنی
+          است، دستگیرهٔ روشن سمت چپ. رندر مرورگر «آنچه می‌سازد» را نشان می‌دهد؛ عکس دستگاه «آنچه واقعاً روی
+          Hermes رخ داد» را — و همین تفاوت است که پروب ICU را لازم می‌کند.
+        </>
+      ),
       usage: <>نصب مثل بقیهٔ بسته‌های قرارداد: وابستگی گیت سنجاق‌شده به همان تگ، مسیر <Term>packages/native</Term>.</>,
       next: (
         <>
@@ -80,13 +95,15 @@ const COPY: Record<Locale, { title: string; intro: string; heading: Record<Secti
   "en-US": {
     title: "Mobile — React Native",
     intro: "Lumo's contract on React Native / Expo. What exists today: the provider, Button and Switch; the ICU probe has run once on the iOS simulator.",
-    frame: "Mobile button preview in the browser",
-    heading: { status: "Status", preview: "Preview", contract: "Contract", usage: "Usage", next: "Next" },
+    frame: "Mobile components preview in the browser",
+    deviceFrame: "iOS simulator screenshot",
+    deviceAlt: "iOS 18.5 simulator screenshot: the ICU probe report, Lumo buttons in four variants, and three switches with Persian labels; right-to-left layout",
+    heading: { status: "Status", preview: "Preview in the browser", device: "On a device — and how you see it", contract: "Contract", usage: "Usage", next: "Next" },
     body: {
       status: (
         <>
-          <Term>@lumo-ui/native</Term> is a package with two components (<Term>Button</Term> /{" "}
-          <Term>IconButton</Term> and <Term>Switch</Term>) and its provider. Its tokens are generated from the web&rsquo;s{" "}
+          <Term>@lumo-ui/native</Term> is a package with four components (<Term>Button</Term> /{" "}
+          <Term>IconButton</Term>, <Term>Switch</Term>, <Term>TextField</Term>, <Term>Select</Term>) and its provider. Its tokens are generated from the web&rsquo;s{" "}
           <Term>tokens.css</Term> (colours oklch → hex, sizes rem → dp) and a gate stops them
           drifting. Its first byte is graded by the same fourteen rules as the web — through{" "}
           <Term>react-native-web</Term>. The ICU probe has run once on the iOS 18.5 simulator (Hermes,
@@ -112,6 +129,18 @@ const COPY: Record<Locale, { title: string; intro: string; heading: Record<Secti
           Layout mirroring on React Native is the app&rsquo;s decision at startup
           (<Term>I18nManager</Term>), not a library&rsquo;s at render time; Lumo does not call it
           and gets start/end spacing and text writing direction right instead.
+        </>
+      ),
+      device: (
+        <>
+          There are two ways to see the mobile components on this site, and both are labelled for
+          what they are. One: the live preview above — the same React Native source a phone runs,
+          rendered in your browser through <Term>react-native-web</Term>; press, type, choose. Two:
+          the image below — a real screenshot from the iOS 18.5 simulator (Hermes, Expo Go) on
+          16 August 2026, with <Term>I18nManager.forceRTL</Term> at app start: rows begin at the
+          right, the switch sits at the reading end, the ON thumb on the left. The browser rendering
+          shows what the component builds; the device screenshot shows what actually happened on
+          Hermes — and that difference is why the ICU probe exists.
         </>
       ),
       usage: <>Installed like the other contract packages: a git dependency pinned to the same tag, path <Term>packages/native</Term>.</>,
@@ -140,6 +169,13 @@ export default async function NativePage({ params }: { params: Promise<{ lang: s
         <P>{t.body.preview}</P>
         <Frame device="phone" label={t.frame}>
           <NativeButtonPreview locale={lang} />
+        </Frame>
+      </DocSection>
+      <DocSection id="device" title={t.heading.device}>
+        <P>{t.body.device}</P>
+        <Frame device="phone" label={t.deviceFrame}>
+          {/* A static evidence image on an unoptimised static export — a plain <img> on purpose. */}
+          <img src="/native/ios-18-5-simulator-fa-2026-08-16.png" alt={t.deviceAlt} style={{ display: "block", width: "100%", height: "auto" }} />
         </Frame>
       </DocSection>
       <DocSection id="contract" title={t.heading.contract}>

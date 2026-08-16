@@ -58,6 +58,7 @@ export interface LumoSchemeColours {
   critical: string;
   caution: string;
   focus: string;
+  scrim: string;
 }
 
 export function lightColours(brand: LumoBrand = ACHROMATIC): LumoSchemeColours {
@@ -81,6 +82,7 @@ export function lightColours(brand: LumoBrand = ACHROMATIC): LumoSchemeColours {
     critical: "#bf0000",
     caution: "#8f5b00",
     focus: oklch(0.32, brand.chroma, brand.hue),
+    scrim: "#00000080",
   };
 }
 
@@ -105,6 +107,7 @@ export function darkColours(brand: LumoBrand = ACHROMATIC): LumoSchemeColours {
     critical: "#ff6467",
     caution: "#eba941",
     focus: oklch(0.922, brand.chroma, brand.hue),
+    scrim: "#000000b8",
   };
 }
 

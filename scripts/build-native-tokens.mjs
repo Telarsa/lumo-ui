@@ -71,10 +71,13 @@ function colour(/** @type {string} */ resolved) {
     return JSON.stringify(oklchToHex(L, Number(m[2]), Number(m[3])));
   }
   if (/^#[0-9a-f]{6}$/i.test(resolved)) return JSON.stringify(resolved.toLowerCase());
+  // oklch with alpha (the scrim): hex plus an alpha byte, which React Native accepts (#rrggbbaa).
+  const a = /^oklch\(\s*([\d.]+)\s+([\d.]+)\s+([\d.]+)\s*\/\s*([\d.]+)\s*\)$/.exec(resolved);
+  if (a) return JSON.stringify(oklchToHex(Number(a[1]), Number(a[2]), Number(a[3])) + Math.round(Number(a[4]) * 255).toString(16).padStart(2, "0"));
   throw new Error(`cannot express colour: ${resolved}`);
 }
 
-const COLOURS = ["bg", "bg-subtle", "surface", "surface-hover", "surface-sunken", "fg", "fg-muted", "fg-subtle", "fg-on-accent", "border", "border-strong", "border-control", "accent", "accent-hover", "accent-fg", "positive", "critical", "caution", "focus"];
+const COLOURS = ["bg", "bg-subtle", "surface", "surface-hover", "surface-sunken", "fg", "fg-muted", "fg-subtle", "fg-on-accent", "border", "border-strong", "border-control", "accent", "accent-hover", "accent-fg", "positive", "critical", "caution", "focus", "scrim"];
 const camel = (/** @type {string} */ s) => s.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
 
 function scheme(/** @type {Map<string, string>} */ sys) {
