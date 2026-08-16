@@ -26,9 +26,8 @@ describe("native Switch — first byte", () => {
     expect(html).toContain('aria-label="حالت تاریک"');
     expect(html).toContain('aria-disabled="true"');
     expect(html).toContain("اعلان‌ها");
-    // ON under fa-IR: the thumb rests at the reading start (right: 1px) and is carried −15 px to the end (left).
-    expect(html).toMatch(/right:\s*1px/);
-    expect(html).toMatch(/translateX\(-14px\)/);
+    // ON: the track is a row that justifies the thumb to the reading END — the layout engine mirrors it with the page.
+    expect(html).toMatch(/justify-content:\s*flex-end/);
     expect(gradeHtml("fa-IR/native/switch.html", page(html, "fa-IR"))).toEqual([]);
   });
   it("uncontrolled: defaultSelected renders as checked; en-US grades clean too", () => {
