@@ -20,8 +20,13 @@ export const frameVariants = cva("overflow-hidden border border-border bg-surfac
     device: {
       /** A browser window: a bar with dots and an address line. */
       browser: "rounded-lg shadow-raised",
-      /** A handset: a thick bezel and a speaker slot. */
-      phone: "mx-auto w-[min(22rem,100%)] rounded-[2rem] border-8 border-fg/85 shadow-raised",
+      /**
+       * A handset: a thick bezel and a speaker slot — and a phone's PROPORTIONS.
+       * `min-h` keeps a short exhibit (three buttons) from collapsing the bezel
+       * into a landscape sliver; 22 × 44 rem is a 1:2 portrait, near a 6-inch
+       * screen at 16 px/rem. Content taller than that grows the frame.
+       */
+      phone: "mx-auto flex w-[min(22rem,100%)] min-h-[44rem] flex-col rounded-[2rem] border-8 border-fg/85 shadow-raised",
       /** No chrome at all — just the bordered surface. */
       plain: "rounded-lg",
     },
