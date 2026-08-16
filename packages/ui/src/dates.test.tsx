@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, waitFor } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   Button as AriaButton,
   DateInput as AriaDateInput,
@@ -14,6 +14,7 @@ import {
 } from "react-aria-components";
 import {
   CalendarDate,
+  GregorianCalendar,
   PersianCalendar,
   Time,
 } from "@internationalized/date";
@@ -27,6 +28,7 @@ import {
   type RangeCalendarProps,
 } from "./range-calendar.tsx";
 import { DateField } from "./date-field.tsx";
+import { LumoProvider } from "./provider.tsx";
 import { TimeField } from "./time-field.tsx";
 import { DatePicker } from "./date-picker.tsx";
 import { DateRangePicker } from "./date-range-picker.tsx";
@@ -1475,5 +1477,40 @@ describe("the date family delivers its own styling classes", () => {
     const segment = container.querySelector('[role="spinbutton"]');
     expect(segment).toBeTruthy();
     expect(segment?.getAttribute("class")).toBeTruthy();
+  });
+});
+
+describe("the date field displays the READER'S calendar and emits the CALLER'S", () => {
+  afterEach(cleanup);
+
+  it("a Gregorian value under fa-IR is shown as Jalali (year segment «۱۴۰۵»), not «۲۰۲۶»", () => {
+    const gregorian = new CalendarDate(new GregorianCalendar(), 2026, 8, 1);
+    render(
+      <LumoProvider locale="fa-IR">
+        <DateField label="تاریخ" value={gregorian} onChange={() => {}} />
+      </LumoProvider>,
+    );
+    const year = document.querySelector('[data-type="year"]');
+    expect(year?.getAttribute("aria-valuenow")).toBe("1405");
+    expect(year?.getAttribute("aria-valuetext")).toContain("۱۴۰۵");
+    expect(year?.getAttribute("aria-valuetext")).not.toContain("۲۰۲۶");
+  });
+
+  it("editing emits a value in the caller's calendar — Gregorian in, Gregorian out", () => {
+    const onChange = vi.fn();
+    const gregorian = new CalendarDate(new GregorianCalendar(), 2026, 8, 1);
+    render(
+      <LumoProvider locale="fa-IR">
+        <DateField label="تاریخ" defaultValue={gregorian} onChange={onChange} />
+      </LumoProvider>,
+    );
+    const day = document.querySelector<HTMLElement>('[data-type="day"]')!;
+    day.focus();
+    fireEvent.keyDown(day, { key: "ArrowUp" });
+    expect(onChange).toHaveBeenCalled();
+    const emitted = onChange.mock.calls.at(-1)?.[0] as CalendarDate;
+    expect(emitted.calendar.identifier).toBe("gregory");
+    // 1405/05/10 + 1 day = 1405/05/11 = 2026-08-02 Gregorian
+    expect(emitted.toString()).toBe("2026-08-02");
   });
 });

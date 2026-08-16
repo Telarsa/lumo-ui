@@ -9,6 +9,8 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 
 ## Policy
 
+- **All packages move together.** Every package in the workspace carries the same version as the root (`gate:versions` in `verify` refuses a straggler); consumers pin one tag and read one section here per upgrade.
+- **Licence: proprietary** — see `LICENSE`. Every package's `license` field says `SEE LICENSE IN LICENSE`.
 - **Semver from 0.1.0.** While the major is 0, a MINOR may break: every break is
   listed under *Breaking* with a migration note, and `lumo upgrade` carries
   copied components forward (three-way merge; conflicts leave markers).
@@ -61,8 +63,8 @@ is relative to the untagged tree consumers may have copied before this date.
   `caution` 0.545→0.515 (light), so status text on its own 10 % tint clears
   4.5:1 — measured in `tokens.test.ts`. Docs syntax highlighting uses GitHub's
   high-contrast pair.
-- **Package `license` field is `UNLICENSED`** (private, unpublished; the actual
-  licence is an owner decision) — was `MIT` with no LICENSE file.
+- **Licence is proprietary** (`LICENSE` at the root; every package's field says
+  `SEE LICENSE IN LICENSE`) — was `MIT` with no LICENSE file.
 
 ### Added
 
@@ -102,6 +104,11 @@ is relative to the untagged tree consumers may have copied before this date.
   hydration. Calendar outside-month days at 2.33:1. ListBox PageUp/PageDown
   were a no-op near the ends. `popupName` could lift a body field's label onto
   an alertdialog. FileUpload/Attachment forced Persian file names LTR.
+  **The date family now agrees on calendar:** `DateField`, `DatePicker` and
+  `DateRangePicker` display and edit in the reader's calendar (Jalali under
+  `fa-IR`, like `Calendar`) and emit in the caller's — a Gregorian value in, a
+  Gregorian value out; gate rule 8 fails a Persian date field whose year segment
+  announces a Gregorian year (decision §24, closed).
 
 ### Verification at this tag
 
@@ -114,8 +121,5 @@ Rubric (`docs/rubric.md`), last blind pass: 7.5.
 
 ### Known and recorded
 
-The date family keeps a value's calendar in `DateField`/`DatePicker`/
-`DateRangePicker` while `Calendar` displays the reader's (decision §24) —
-scheduled. The install path (git dependency vs private registry) is an owner
-decision; the `lumo` CLI works from any reachable checkout. No screen-reader
-run exists.
+The install path (git dependency vs private registry) is an owner decision; the
+`lumo` CLI works from any reachable checkout. No screen-reader run exists.

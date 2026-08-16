@@ -2,9 +2,11 @@
   "name": "@lumo-ui/config",
   "version": "0.1.0",
   "description": "Shared lint policy. Zero plugin dependencies so a consumer installs one file and gets the whole contract.",
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "type": "module",
-  "exports": { "./eslint": "./eslint/lumo.mjs" },
+  "exports": {
+    "./eslint": "./eslint/lumo.mjs"
+  },
   "scripts": {
     "test": "vitest run"
   },

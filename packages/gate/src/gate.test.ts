@@ -1158,3 +1158,14 @@ describe("no-latin-digits — attributes a reader sees or hears", () => {
     expect(fired('<input aria-label="مبلغ" value="۱٬۲۳۴" placeholder="۱۸" />')).toEqual([]);
   });
 });
+
+describe("native-calendar — a numeric Gregorian year in a Persian date field", () => {
+  const fa = (body: string) => `<!doctype html><html lang="fa-IR" dir="rtl"><body>${body}</body></html>`;
+  const fired = (body: string) => gradeHtml("fa-IR/index.html", fa(body)).map((v) => v.rule);
+  const seg = (year: number, first = true) =>
+    `<div role="group" aria-label="تاریخ"><div role="spinbutton" data-type="year" aria-label="سال" aria-valuemin="1" aria-valuemax="9999" aria-valuenow="${year}" aria-valuetext="${year}" tabindex="${first ? 0 : -1}"></div></div>`;
+  it("fires on 2026, not on 1405", () => {
+    expect(fired(seg(2026))).toContain("native-calendar");
+    expect(fired(seg(1405))).not.toContain("native-calendar");
+  });
+});

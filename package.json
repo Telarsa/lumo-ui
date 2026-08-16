@@ -1,5 +1,6 @@
 {
   "name": "lumo-ui",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.3.0",
@@ -11,7 +12,7 @@
     "build": "pnpm -r --if-present run build",
     "start": "node scripts/serve-static.mjs",
     "preview": "pnpm run build && pnpm run start",
-    "verify": "pnpm run gate:types && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
+    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
     "gate:props": "node --experimental-strip-types packages/gate/src/inert-props-cli.ts packages/ui/src packages/blocks/src",
     "lint": "eslint .",
@@ -29,7 +30,8 @@
     "evidence": "playwright test -c evidence/playwright.config.ts",
     "evidence:types": "tsc -p evidence/tsconfig.json",
     "catalog": "node scripts/build-catalog.mjs",
-    "gate:catalog": "node scripts/build-catalog.mjs --check"
+    "gate:catalog": "node scripts/build-catalog.mjs --check",
+    "gate:versions": "node scripts/check-versions.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -43,5 +45,6 @@
   },
   "bin": {
     "lumo": "scripts/lumo-cli.mjs"
-  }
+  },
+  "license": "SEE LICENSE IN LICENSE"
 }

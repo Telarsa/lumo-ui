@@ -150,9 +150,15 @@ export function useDateFieldState<T extends DateValue = DateValue>(
     [formatLocale],
   );
 
-  // A value carries its own calendar and it WINS; converting would lose data.
+  // DISPLAY and EDIT in the reader's calendar (Jalali under fa-IR) — the same
+  // calendar `Calendar`, `Gantt` and `EventCalendar` show — and EMIT in the
+  // caller's: a Gregorian value in, a Gregorian value out (`toCalendar` both
+  // ways loses nothing). Until 16 Aug 2026 the value's calendar won here, so a
+  // fa-IR field could announce «۲۰۲۶» beside its own grid's «۱۴۰۵ مرداد»
+  // (decision §24).
   const initial = value !== undefined ? value : defaultValue;
-  const calendar = initial != null ? initial.calendar : localeCalendar;
+  const calendar = localeCalendar;
+  const emitCalendar = initial != null ? initial.calendar : localeCalendar;
 
   // Segment ORDER is the locale's business (`fa-IR`: year/month/day; `en-US`:
   // month/day/year) — `formatToParts` is asked; only `type` is read.
@@ -210,9 +216,9 @@ export function useDateFieldState<T extends DateValue = DateValue>(
       const key = nextValue?.toString() ?? null;
       if (key === lastEmitted.current) return;
       lastEmitted.current = key;
-      onChange?.(nextValue as T | null);
+      onChange?.((nextValue == null ? null : toCalendar(nextValue, emitCalendar)) as T | null);
     },
-    [calendar, isAllowed, onChange],
+    [calendar, emitCalendar, isAllowed, onChange],
   );
 
   // A reference date for asking the calendar about the CURRENT month, with the

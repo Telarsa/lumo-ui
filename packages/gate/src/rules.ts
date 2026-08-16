@@ -629,12 +629,30 @@ export const nativeCalendar: Rule = {
     "for a day Iran calls «۱ مرداد ۱۴۰۳».",
   run: (doc) => {
     if (doc.calendar === "gregory") return []; // nothing to distinguish — see the header
+    const numeric: Violation[] = [];
+    // A DATE FIELD's year segment announcing a Gregorian year: month names cannot
+    // see a numeric date, but a Persian (or islamic) year is centuries below 1800.
+    // Lumo's segments carry `data-type="year"` and `aria-valuenow`.
+    if (doc.calendar === "persian" || doc.calendar.startsWith("islamic")) {
+      for (const seg of Array.from(doc.document.querySelectorAll('[role="spinbutton"][data-type="year"][aria-valuenow]'))) {
+        if (seg.closest?.('[aria-hidden="true"],[hidden],[data-lumo-latn]')) continue;
+        const year = Number(seg.getAttribute("aria-valuenow"));
+        if (Number.isFinite(year) && year >= 1800) {
+          numeric.push({
+            rule: "native-calendar",
+            path: doc.path,
+            detail: `a year segment announces ${String(year)} — a Gregorian year in a ${doc.calendar} field. The reader counts years in their own calendar; convert for display and round-trip on change.`,
+            snippet: seg.outerHTML.slice(0, 120),
+          });
+        }
+      }
+    }
     const native = monthNames(doc.locale, doc.calendar);
     const foreign = monthNames(doc.locale, "gregory").filter((name) => !native.includes(name));
-    if (foreign.length === 0) return [];
+    if (foreign.length === 0) return numeric;
     const patterns = foreign.map((name) => [name, datePattern(name)] as const);
 
-    const v: Violation[] = [];
+    const v: Violation[] = [...numeric];
     for (const node of visibleTextNodes(doc.document)) {
       // A deliberately dual-calendar subtree.
       if (node.parentElement?.closest?.("[data-lumo-gregory]")) continue;

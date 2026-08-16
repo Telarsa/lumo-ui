@@ -36,5 +36,6 @@
     "@testing-library/react": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "shiki": "catalog:"
-  }
+  },
+  "license": "SEE LICENSE IN LICENSE"
 }
