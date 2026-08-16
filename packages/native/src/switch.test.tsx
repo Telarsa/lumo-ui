@@ -47,4 +47,4 @@ describe("native Switch — first byte", () => {
     expect(off).toMatch(/justify-content:\s*flex-start/);
     expect(on).toContain('dir="rtl"');
   });
-});});
+});
