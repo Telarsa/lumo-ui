@@ -20,7 +20,7 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
-## 0.2.1 — unreleased
+## 0.2.1 — 16 August 2026
 
 ### Added
 - `@lumo-ui/native` `TextField` (label REQUIRED and set as the input's own
