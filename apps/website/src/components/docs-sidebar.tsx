@@ -4,7 +4,6 @@ import { cn, formatNumber } from "@lumo-ui/core";
 import { site, segmentFor} from "@/lib/locale";
 import { allCatalog, TIERS } from "@/lib/catalog";
 import { DOCS_PAGES } from "@/lib/docs-pages";
-import { hasNative } from "@/lib/native-examples";
 import { newExampleSlugs } from "@/lib/examples-loader";
 import { SidebarScroll } from "./sidebar-scroll";
 
@@ -24,9 +23,9 @@ import { SidebarScroll } from "./sidebar-scroll";
  * announced but never drawn). See CONTRIBUTING's "Adding a locale".
  */
 const COPY = {
-  "fa-IR": { nav: "ناوبری مستندات", docs: "مستندات", isNew: "جدید", hasMobile: "نسخهٔ موبایل دارد" },
-  "en-US": { nav: "Documentation navigation", docs: "Docs", isNew: "New", hasMobile: "Has a mobile version" },
-} as const satisfies Record<Locale, { nav: string; docs: string; isNew: string; hasMobile: string }>;
+  "fa-IR": { nav: "ناوبری مستندات", docs: "مستندات", isNew: "جدید" },
+  "en-US": { nav: "Documentation navigation", docs: "Docs", isNew: "New" },
+} as const satisfies Record<Locale, { nav: string; docs: string; isNew: string}>;
 
 /**
  * The sidebar's longer names for the tiers. A full Record over the same union,
@@ -126,15 +125,6 @@ export async function DocsSidebar({
                     )}
                   >
                     {d.title[lang]}
-                    {hasNative(d.id) ? (
-                      <>
-                        {/* A small phone glyph: the component has a Mobile (React Native) side. Decoration; the sr-only words announce it. */}
-                        <svg aria-hidden="true" viewBox="0 0 24 24" className="ms-auto size-3 shrink-0 text-fg-muted" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="7" y="2" width="10" height="20" rx="2" /><path d="M11 18h2" />
-                        </svg>
-                        <span className="sr-only">{c.hasMobile}</span>
-                      </>
-                    ) : null}
                     {isNew.has(d.id) ? (
                       <>
                         {/* Decoration; the sr-only word is the announcement. */}

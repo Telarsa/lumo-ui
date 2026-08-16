@@ -36,9 +36,12 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
   (`gate:versions` reads `pubspec.yaml`). Consumed as a git dependency pinned to
   a tag (`path: packages/mobile`). Reference app:
   `example-projects/lumo-app-flutter` (with the 2,000-row bench).
-- `@lumo-ui/native` (React Native) is a **frozen experiment**: kept, not
-  extended, not advertised. Lynx (`example-projects/lumo-app-lynx`) is the
-  tripwire. Record: `docs/history/rn-vs-flutter-2026-08-16.md`.
+- **Removed** (owner instruction, 17 Aug 2026): `@lumo-ui/native` (React
+  Native: package, docs-site Mobile tab and `/docs/native/`, react-native-web
+  preview, `gate:native-tokens`, the `react-native`/`@rn-primitives` catalog
+  pins) and the Lynx token generator; the Lynx twin project is gone too. Their
+  findings live in `docs/history/rn-vs-flutter-2026-08-16.md`; the code is in
+  git history before this commit.
 
 ### Fixed
 - The docs site's mobile previews follow the SITE's theme, not the OS
@@ -48,14 +51,14 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
   landscape sliver around a short exhibit.
 
 ### Added
-- **`@lumo-ui/native` `Dialog` on the `@rn-primitives` engine** (decision §29;
+- ~~`@lumo-ui/native` `Dialog` on the `@rn-primitives` engine~~ — REMOVED in the same release (see Decided). Was: (decision §29;
   Radix on the web): `label` and `closeLabel` required, description wired, ✕ at
   the inline end, `DialogClose` for footer controls, controlled/uncontrolled;
   the provider mounts the engine's `PortalHost` on device. `Button`/`IconButton`
   forward engine props (trigger/close slots). New runtime dependencies of the
   native package: `@rn-primitives/dialog`, `@rn-primitives/portal`. Any-language
   test on native (`de`, `ar-EG`).
-- **Web | Mobile on component pages.** Every component with a React Native
+- ~~Web | Mobile on component pages~~ — REMOVED in the same release. Was: every component with a React Native
   implementation (`button`, `switch`, `text-field`, `select`) has a Mobile side
   at `/components/<slug>/mobile/` — the platform is a route, like the locale, so
   the switch in the page header is two links and both pages are served bytes

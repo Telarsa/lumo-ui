@@ -54,14 +54,6 @@ export const DOCS_PAGES: readonly DocsPage[] = [
     },
   },
   {
-    slug: "native",
-    label: { "fa-IR": "موبایل (React Native)", "en-US": "Mobile (React Native)" },
-    intro: {
-      "fa-IR": "شروع نسخهٔ موبایل: همان قرارداد روی React Native / Expo — اولین کامپوننت، دکمه.",
-      "en-US": "The mobile start: the same contract on React Native / Expo — the first component, Button.",
-    },
-  },
-  {
     slug: "typography",
     label: { "fa-IR": "حروف‌نگاری", "en-US": "Typography" },
     intro: {

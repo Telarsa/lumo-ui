@@ -1430,11 +1430,15 @@ Decision:
   prop vocabulary, the docs site (a Flutter tab where the Mobile tab was), the
   proof discipline (semantics-tree tests are the mobile counterpart of the
   served-HTML gate; no screen-reader claims without runs). Not shared: code.
-- **`@lumo-ui/native` (React Native):** frozen as an experiment; not deleted,
-  not advertised, not versioned as a product; the docs' Mobile tab points to
-  Flutter now that `lumo_ui_mobile` lives in this repo.
-- **Lynx:** `lumo-app-lynx` stays as the tripwire; re-evaluate when Lynx
-  ships accessibility roles/states and the list bug is gone.
+- **`@lumo-ui/native` (React Native) and the Lynx twin: REMOVED** on the
+  owner's instruction the same day ("remove old projects and folders and
+  files") — package, docs Mobile tab, previews, gates, catalog pins, token
+  generators. History keeps the code; `docs/history/rn-vs-flutter-2026-08-16.md`
+  keeps the findings. Lynx is re-evaluated only if it ships accessibility
+  roles/states and the `<list>` bug is gone — from scratch, not from a kept twin.
+- **Docs site:** the Mobile tab returns as a Flutter-web embed of the same
+  Dart components (the way forui / shadcn_flutter show theirs), labelled as a
+  canvas preview; the semantics-tree tests remain the proof.
 
 Why two libraries is acceptable: Lumo's value is the contract and the proof,
 not the code sharing; the Dart library was built in a day; the cost of the wrong

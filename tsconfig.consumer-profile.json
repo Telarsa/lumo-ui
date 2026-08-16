@@ -15,7 +15,6 @@
     "packages/core/src/index.ts",
     "packages/base-ui-ssr/src/index.ts",
     "packages/ui/src/index.ts",
-    "packages/blocks/src/index.ts",
-    "packages/native/src/index.ts"
+    "packages/blocks/src/index.ts"
   ]
 }

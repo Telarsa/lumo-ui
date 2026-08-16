@@ -32,7 +32,7 @@ packages/ui       111 registry components
 packages/blocks   30 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
-packages/native   the unstarted React Native feasibility probe
+packages/mobile   Lumo UI Mobile — the mobile component library (Flutter/Dart)
 apps/website      the showcase, and the first thing the gate runs against
 ```
 

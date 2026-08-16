@@ -37,9 +37,6 @@ for (const name of ["core", "theme", "base-ui-ssr", "."]) {
     }
   }
 }
-// native's peer on core moves in lockstep with the release, like base-ui-ssr's.
-const native = JSON.parse(readFileSync(join(ROOT, "packages/native/package.json"), "utf8"));
-if (native.peerDependencies?.["@lumo-ui/core"] !== root.version) problems.push(`packages/native peerDependencies.@lumo-ui/core: "${native.peerDependencies?.["@lumo-ui/core"]}" (root is ${root.version})`);
 // base-ui-ssr's peer on core moves in lockstep with the release.
 const ssr = JSON.parse(readFileSync(join(ROOT, "packages/base-ui-ssr/package.json"), "utf8"));
 if (ssr.peerDependencies?.["@lumo-ui/core"] !== root.version) problems.push(`packages/base-ui-ssr peerDependencies.@lumo-ui/core: "${ssr.peerDependencies?.["@lumo-ui/core"]}" (root is ${root.version})`);
