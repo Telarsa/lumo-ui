@@ -252,7 +252,7 @@ function Showcase({ lang, catalog }: { lang: Locale; catalog: readonly CatalogEn
 }
 
 /**
- * The home page proves the pitch instead of stating it. Shaped after `ui.shadcn.com`
+ * The home page proves the pitch instead of stating it. Shaped like the component-library sites people already know
  * (eyebrow, headline, two calls to action), but followed by evidence of what the components
  * ARE rather than how they look. The numbers and the date render through `@lumo-ui/core`'s
  * formatters, so on `/fa/` they are Persian digits and a Jalali date in the served HTML;

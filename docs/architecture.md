@@ -1,7 +1,7 @@
 # Lumo UI — how the pieces fit
 
 Lumo is a Persian-first component library for React 19. Components are copied
-into a product through a shadcn-compatible registry; the locale, type, token and
+into a product through Lumo's registry (`registry.json`, read by the `lumo` CLI); the locale, type, token and
 verification contracts stay packaged so consumers cannot silently fork the
 rules that make Persian output correct.
 

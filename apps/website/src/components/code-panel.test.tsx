@@ -71,7 +71,7 @@ describe("the highlighted listing round-trips to its source", () => {
   }, 30_000);
 
   it("keeps a shell command intact, including the blank line inside one", async () => {
-    const command = "pnpm dlx shadcn@latest add @lumo/button\n\npnpm add clsx tailwind-merge";
+    const command = "pnpm exec lumo add button --to .\n\npnpm add clsx tailwind-merge";
     const html = await highlight(command, "bash");
     expect(panelPre(html).textContent).toBe(command);
   });

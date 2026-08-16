@@ -1,27 +1,35 @@
 # Working with Lumo UI from another project — for people and AI sessions
 
 You are in a React (19) app that wants Persian-first, RTL-honest components.
-Lumo is private: components are COPIED into your project (shadcn-style, you own
-the file), and three contract packages are installed (`@lumo-ui/core`,
+Lumo is private: components are COPIED into your project (you own the file), and three contract packages are installed (`@lumo-ui/core`,
 `@lumo-ui/theme`, `@lumo-ui/base-ui-ssr`) — you never edit those. This page is
 the whole workflow; the `lumo` CLI does the mechanical parts.
 
-## 0. Where Lumo is
+## 0. Where Lumo is — the install recipe (path A, proved end to end)
 
-Lumo lives in a git repository. Your project reaches it one of two ways:
+Lumo is private and lives in the Telarsa GitHub organisation. Your project
+installs it as **git dependencies pinned to a tag** — no registry host, no token
+beyond repository access:
 
-- **as a git dependency** — `package.json`:
-  ```json
-  "@lumo-ui/core": "github:Telarsa/lumo-ui#v0.1.0&path:packages/core",
-  "@lumo-ui/theme": "github:Telarsa/lumo-ui#v0.1.0&path:packages/theme",
-  "@lumo-ui/base-ui-ssr": "github:Telarsa/lumo-ui#v0.1.0&path:packages/base-ui-ssr"
-  ```
-  (pnpm resolves monorepo sub-paths in git URLs; the tag pins the version) — the
-  checkout under `node_modules/.pnpm/…` (or a sibling clone) is what `lumo` reads;
-- **as a sibling checkout** — `git clone …/lumo-ui ../lumo-ui` and run `node ../lumo-ui/scripts/lumo-cli.mjs …`.
-
-The hosting question (private registry vs git) is an owner decision recorded in
-`docs/goals.md` #5; everything below works identically either way.
+```jsonc
+// package.json
+"dependencies": {
+  "@lumo-ui/core":        "github:Telarsa/lumo-ui#v0.1.1&path:packages/core",
+  "@lumo-ui/theme":       "github:Telarsa/lumo-ui#v0.1.1&path:packages/theme",
+  "@lumo-ui/base-ui-ssr": "github:Telarsa/lumo-ui#v0.1.1&path:packages/base-ui-ssr"
+},
+"devDependencies": {
+  "lumo-ui": "github:Telarsa/lumo-ui#v0.1.1"   // the `lumo` command, the registry, the catalog, package sources
+}
+```
+- pnpm resolves the `&path:` monorepo sub-path; over SSH use
+  `git+ssh://git@github.com/Telarsa/lumo-ui.git#v0.1.1&path:packages/core`.
+- The contract packages ship TypeScript source: Vite consumes it as is; **Next
+  needs** `transpilePackages: ["@lumo-ui/core", "@lumo-ui/theme", "@lumo-ui/base-ui-ssr"]`.
+- All four specifiers carry the **same tag** — Lumo versions move together
+  (`lumo doctor` checks).
+- Everything below assumes `pnpm exec lumo …` (npm: `npx lumo`, yarn: `yarn lumo`,
+  bun: `bunx lumo`), or `node ../lumo-ui/scripts/lumo-cli.mjs …` from a sibling clone.
 
 ## 1. Find the right component
 
@@ -86,7 +94,7 @@ lumo diff --to .          # which copied files changed upstream, and whether you
 lumo upgrade --to .       # untouched copies are replaced; edited ones are 3-way merged
                           # (yours · original · new) — conflicts get <<<<<<< markers, never silent
 ```
-Then bump the git tag on the three contract packages to the same version, run
+Then bump the git tag on all four specifiers to the same version, run
 `pnpm install`, your tests, and `lumo gate` on the export. Breaking changes are
 listed per version in `CHANGELOG.md` with migration notes.
 

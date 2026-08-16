@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Gate 3 — CSS Modules are banned in Lumo. A component styled in `.module.css`
- * has no class strings, so `shadcn add --diff` and `shadcn migrate rtl` — the
+ * has no class strings, so `lumo diff`/`lumo upgrade` and the styling gates — the
  * two mechanical RTL enforcers — have nothing to walk. Runs on an empty
  * repository and passes: the gate exists before the code it guards.
  */
@@ -42,8 +42,8 @@ if (offenders.length > 0) {
   );
   for (const file of offenders) console.error(`    ${relative(ROOT, file)}`);
   console.error(
-    "\n  Style with Tailwind utilities inside cva() so that `shadcn migrate rtl`\n" +
-      "  and `shadcn add --diff` can both see them. See DECISIONS.md.\n",
+    "\n  Style with Tailwind utilities inside cva() so that the styling floors and\n" +
+      "  `lumo diff`/`lumo upgrade` can both see them. See docs/decisions/log.md.\n",
   );
   process.exit(1);
 }

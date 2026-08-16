@@ -41,10 +41,8 @@ const IGNORES = [
   "**/out/**",
   "**/.next/**",
   "apps/website/next-env.d.ts",
-  // Vendored upstream emit and measurement scratch. `experiments/` exists to
-  // hold code that is deliberately WRONG — the baseline React Aria renders and
-  // the raw shadcn emits are evidence, and linting evidence into compliance
-  // would destroy what it is evidence of. `vendor-from-shadcn.mjs` writes here.
+  // Measurement scratch, when it exists: deliberately-wrong baselines are
+  // evidence, and linting evidence into compliance would destroy it.
   "experiments/**",
   // Poison fixtures — the HTML gate's, and this policy's own. They contain the
   // defects they exist to catch; a clean fixture is a broken fixture. They are

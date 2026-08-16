@@ -6,11 +6,16 @@ export type PM = "pnpm" | "npm" | "yarn" | "bun";
 /** pnpm first — Lumo is pnpm-first, and the first tab is the default tab. */
 export const PMS: readonly PM[] = ["pnpm", "npm", "yarn", "bun"];
 
+/**
+ * `lumo` is the CLI the root `lumo-ui` dev dependency provides (path A: git
+ * dependencies, no registry host). It copies the item and its closure from the
+ * installed checkout and records lumo.lock.json.
+ */
 export const CLI_COMMAND: Record<PM, (name: string) => string> = {
-  pnpm: (name) => `pnpm dlx shadcn@latest add @lumo/${name}`,
-  npm: (name) => `npm exec shadcn@latest add @lumo/${name}`,
-  yarn: (name) => `yarn dlx shadcn@latest add @lumo/${name}`,
-  bun: (name) => `bunx --bun shadcn@latest add @lumo/${name}`,
+  pnpm: (name) => `pnpm exec lumo add ${name} --to .`,
+  npm: (name) => `npx lumo add ${name} --to .`,
+  yarn: (name) => `yarn lumo add ${name} --to .`,
+  bun: (name) => `bunx lumo add ${name} --to .`,
 };
 
 export function depsCommand(dependencies: readonly string[]): string {

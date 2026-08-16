@@ -45,9 +45,13 @@ describe("current public documentation", () => {
     expect(installation).toContain("Base UI&rsquo;s direction context defaults");
     expect(installation).not.toContain("React Aria resolves its locale");
 
+    // The CLI page documents Lumo's own command; no third-party style names or
+    // registries survive there (16 Aug 2026: the vendoring section was removed).
     const cli = read("apps", "website", "src", "app", "[lang]", "docs", "cli", "page.tsx");
-    expect(cli).toContain("<Term>base-vega</Term>");
+    expect(cli).toContain("<Term>lumo</Term>");
     expect(cli).not.toContain("<Term>aria-vega</Term>");
+    expect(cli).not.toContain("<Term>base-vega</Term>");
+    expect(cli).not.toMatch(/shadcn/i);
   });
 
   it("stamps chart evidence with the installed TanStack Charts version", () => {

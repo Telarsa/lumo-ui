@@ -4,7 +4,7 @@
  * hand-maintained manifest drifts silently, so it is derived: each file
  * declares what it needs through its imports — `registryDependencies` from
  * sibling imports, `dependencies` from external packages, `type` from
- * `"use client"`. Emits shadcn's registry-item schema.
+ * `"use client"`. Emits Lumo's registry (`registry.json`): the item shape the `lumo` CLI reads — name, type, files, npm and registry dependencies, description.
  */
 
 import { readdir, readFile, writeFile } from "node:fs/promises";
@@ -384,9 +384,8 @@ for (const { dir, type, target } of SOURCES) {
 }
 
 const registry = {
-  $schema: "https://ui.shadcn.com/schema/registry.json",
   name: "lumo",
-  homepage: "https://lumo-ui.com",
+  homepage: "https://github.com/Telarsa/lumo-ui",
   items,
 };
 

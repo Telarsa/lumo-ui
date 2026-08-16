@@ -151,9 +151,9 @@ const COPY = {
           key: "nocssmodules",
           body: (
             <>
-              بدون CSS Modules. استایل داخل <Term>cva()</Term> و با کلاس‌های Tailwind است تا{" "}
-              <Term>shadcn migrate rtl</Term> و <Term>shadcn add --diff</Term> هر دو بتوانند
-              آن را ببینند. این تصمیم با یک بررسی در CI اجرا می‌شود، نه با یادآوری.
+              بدون CSS Modules. استایل داخل <Term>cva()</Term> و با کلاس‌های Tailwind است تا
+              کف‌های استایل و <Term>lumo diff</Term>/<Term>lumo upgrade</Term> هر دو بتوانند آن را
+              ببینند. این تصمیم با یک بررسی در CI اجرا می‌شود، نه با یادآوری.
             </>
           ),
         },
@@ -284,8 +284,8 @@ const COPY = {
           key: "nocssmodules",
           body: (
             <>
-              No CSS Modules. Styling lives in Tailwind utilities inside <Term>cva()</Term>, so{" "}
-              <Term>shadcn migrate rtl</Term> and <Term>shadcn add --diff</Term> can both see
+              No CSS Modules. Styling lives in Tailwind utilities inside <Term>cva()</Term>, so
+              the styling floors and <Term>lumo diff</Term>/<Term>lumo upgrade</Term> can both see
               it. Enforced by a check in CI, not by memory.
             </>
           ),

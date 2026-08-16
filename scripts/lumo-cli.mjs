@@ -270,8 +270,13 @@ async function doctor() {
   if (!existsSync(pkgPath)) return console.log(`  no package.json in ${to}`);
   const pkg = await readJson(pkgPath);
   const deps = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) };
-  for (const name of ["@lumo-ui/core", "@lumo-ui/theme", "@lumo-ui/base-ui-ssr"]) {
-    console.log(`  ${name.padEnd(22)} ${deps[name] ?? "MISSING — add it as a git dependency pinned to v" + version}`);
+  for (const name of ["@lumo-ui/core", "@lumo-ui/theme", "@lumo-ui/base-ui-ssr", "lumo-ui"]) {
+    const spec = deps[name];
+    const tag = spec === undefined ? undefined : /#v?([0-9][^&\s]*)/.exec(spec)?.[1];
+    const verdict = spec === undefined
+      ? "MISSING — add it as a git dependency pinned to v" + version
+      : tag !== undefined && tag !== version ? `${spec}  ← pinned to ${tag}, this checkout is ${version}` : spec;
+    console.log(`  ${name.padEnd(22)} ${verdict}`);
   }
   const lock = await loadLock(to);
   console.log(`  copied components recorded: ${Object.keys(lock.items).length} (lumo.lock.json says lumo-ui ${lock.lumo ?? "—"}; this checkout is ${version})`);

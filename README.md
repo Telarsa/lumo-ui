@@ -97,8 +97,8 @@ unrepresentable rather than discouraged.
 One `ml-2` in a shared component breaks Persian in every project that copied it.
 
 **6. No CSS Modules.**
-Styling lives in Tailwind utilities inside `cva()`, so `shadcn migrate rtl` and
-`shadcn add --diff` can both see it. Enforced by a `find` in CI.
+Styling lives in Tailwind utilities inside `cva()`, so the styling floors and
+`lumo diff`/`lumo upgrade` can both see it. Enforced by a `find` in CI.
 
 **7. Every rule has a poison fixture.**
 A rule that has never been seen to fail is not a rule. This caught a real one:

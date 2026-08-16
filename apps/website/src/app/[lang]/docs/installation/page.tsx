@@ -86,8 +86,13 @@ const COPY = {
           لومو خصوصی است و درون سازمان تلارسا مصرف می‌شود؛ روی npm منتشر نشده و رجیستری عمومی
           ندارد (<Term>DECISIONS.md §0.2</Term>). توزیع دو مسیر دارد: کامپوننت‌ها و بلوک‌ها
           به‌صورت کپی در پروژهٔ مصرف‌کننده می‌نشینند تا قابل ویرایش باشند؛ بسته‌های{" "}
-          <Term>@lumo-ui/core</Term> و <Term>@lumo-ui/theme</Term> — یعنی قراردادها — به‌صورت
-          وابستگی گیتِ سنجاق‌شده به یک تگ سفر می‌کنند، چون ویرایش آن‌ها باگ است، نه شخصی‌سازی.
+          <Term>@lumo-ui/core</Term>، <Term>@lumo-ui/theme</Term> و <Term>@lumo-ui/base-ui-ssr</Term>{" "}
+          — یعنی قراردادها — به‌صورت وابستگی گیتِ سنجاق‌شده به یک تگ نصب می‌شوند، چون ویرایش
+          آن‌ها باگ است، نه شخصی‌سازی. شکل دقیق:{" "}
+          <Term>&quot;@lumo-ui/core&quot;: &quot;github:Telarsa/lumo-ui#v0.1.0&amp;path:packages/core&quot;</Term>{" "}
+          (و همین برای theme و base-ui-ssr)، به‌علاوهٔ خودِ مخزن به‌عنوان وابستگی توسعه —{" "}
+          <Term>&quot;lumo-ui&quot;: &quot;github:Telarsa/lumo-ui#v0.1.0&quot;</Term> — که فرمان{" "}
+          <Term>lumo</Term> و رجیستری را می‌آورد. راهنمای کامل: <Term>docs/agent-consumer.md</Term>.
         </>
       ),
       workspaceLoop: (
@@ -127,8 +132,9 @@ const COPY = {
       ),
       addCommand: (
         <>
-          کامپوننت‌ها از راه رجیستریِ shadcn-سازگار نصب می‌شوند؛ هر آیتم، فایل یا فایل‌هایش را
-          در پروژهٔ شما کپی می‌کند:
+          کامپوننت‌ها با فرمان <Term>lumo add</Term> نصب می‌شوند؛ هر آیتم با وابستگی‌های
+          رجیستری‌اش کپی می‌شود و در <Term>lumo.lock.json</Term> ثبت می‌شود تا{" "}
+          <Term>lumo upgrade</Term> بعداً ویرایش‌های شما را نگه دارد:
         </>
       ),
       addTabs: (
@@ -156,9 +162,13 @@ const COPY = {
           Lumo is private and consumed inside the Telarsa organisation; it is not published to
           npm and serves no public registry (<Term>DECISIONS.md §0.2</Term>). Distribution has
           two paths: components and blocks land as copies in the consuming project so they can
-          be edited, while the packages — <Term>@lumo-ui/core</Term> and{" "}
-          <Term>@lumo-ui/theme</Term>, the contracts — travel as git dependencies pinned to a
-          tag, because an edit to them is a bug, not a customisation.
+          be edited, while the packages — <Term>@lumo-ui/core</Term>, <Term>@lumo-ui/theme</Term>{" "}
+          and <Term>@lumo-ui/base-ui-ssr</Term>, the contracts — are installed as git dependencies
+          pinned to a tag, because an edit to them is a bug, not a customisation. The exact form:{" "}
+          <Term>&quot;@lumo-ui/core&quot;: &quot;github:Telarsa/lumo-ui#v0.1.0&amp;path:packages/core&quot;</Term>{" "}
+          (likewise theme and base-ui-ssr), plus the repository itself as a dev dependency —{" "}
+          <Term>&quot;lumo-ui&quot;: &quot;github:Telarsa/lumo-ui#v0.1.0&quot;</Term> — which brings the{" "}
+          <Term>lumo</Term> command and the registry. Full guide: <Term>docs/agent-consumer.md</Term>.
         </>
       ),
       workspaceLoop: (
@@ -198,8 +208,9 @@ const COPY = {
       ),
       addCommand: (
         <>
-          Components install through the shadcn-compatible registry; each item copies its file
-          or files into your project:
+          Components install with <Term>lumo add</Term>; each item is copied with its registry
+          closure and recorded in <Term>lumo.lock.json</Term>, so <Term>lumo upgrade</Term> can
+          later keep your edits:
         </>
       ),
       addTabs: (

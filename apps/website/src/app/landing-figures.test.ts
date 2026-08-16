@@ -64,7 +64,7 @@ describe("the landing page's figures", () => {
     const inRegistry = registry.items.filter((i) => i.type === "registry:block").length;
     /*
      * `allBlocks()` is what the landing figure, the blocks index and the search
-     * index all read; `registry.json` is what `shadcn add` reads. They are two
+     * index all read; `registry.json` is what `lumo add` reads. They are two
      * derivations of one inventory, and the site claiming a different number
      * than the tool installs is the same defect one layer up.
      */

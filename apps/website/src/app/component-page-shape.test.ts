@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
  * reader actually depends on, and both were wrong:
  *
  *   1. **Installation was second-to-LAST**, between the accessibility evidence
- *      and the two-direction render. Both ui.shadcn.com and reui.io put it
+ *      and the two-direction render. Established component sites put it
  *      directly under the preview, and they are right for a reason this library
  *      has more of than either: these components are COPIED, not imported, so
  *      the page's job is to get the file into somebody's project. Everything

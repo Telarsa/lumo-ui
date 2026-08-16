@@ -1230,3 +1230,9 @@ Also this tranche: a behavioural mutation operator for every module that owns be
 
 **Closed the same day (16 Aug, in v0.1.0):** the date family disagreed on calendar. `Calendar`, `Gantt`, `EventCalendar` display a Gregorian `CalendarDate` in the reader's calendar (Jalali under `fa-IR`); `DateField`/`DatePicker`/`DateRangePicker` keep the VALUE's calendar ("it wins; converting would lose data" — `date-field-state.ts`), so a `fa-IR` field can announce «۲۰۲۶» while its own popup grid captions «۱۴۰۵ مرداد». The right shape is display-and-edit in the reader's calendar with a round-trip back to the caller's calendar on change (`toCalendar` both ways loses nothing). Done: `date-field-state.ts` displays/edits in the locale calendar and emits `toCalendar(value, caller's calendar)`; rule 8 flags a `data-type="year"` segment announcing ≥ 1800 under a Persian/Islamic calendar. Also decided: **all packages move together** (`gate:versions`), and the **licence is proprietary** (`LICENSE`).
 
+---
+
+## 25. Distribution: path A — git dependencies pinned to a tag
+
+**Decided 16 August 2026 (owner).** Consumers install `@lumo-ui/core`, `@lumo-ui/theme` and `@lumo-ui/base-ui-ssr` as `github:Telarsa/lumo-ui#<tag>&path:packages/<name>` and the repository root as a dev dependency (`lumo-ui`), which delivers the `lumo` CLI, the registry and the catalog. No registry host, no token beyond repository access, private by construction; the CLI reads any reachable checkout, so a later move to a package registry (npm under `@lumo-ui`, never GitHub Packages, which would force the `@telarsa` scope and a rename of every import) is a URL change for consumers, not a rewrite. What it cost: contract packages must carry real dependency specifiers (proved by `v0.1.0` failing to install), and Next consumers add `transpilePackages`. Recorded in CHANGELOG 0.1.1 and `docs/agent-consumer.md` §0.
+

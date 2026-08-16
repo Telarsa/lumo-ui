@@ -20,6 +20,37 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
+## 0.1.1 — 16 August 2026
+
+The install path, decided and proved: **path A — git dependencies pinned to a
+tag**, no registry host. `v0.1.0` could not be installed that way (its contract
+packages used workspace-only `catalog:`/`workspace:` specifiers), so this patch
+exists; nothing else in the API changed.
+
+### Fixed
+- `@lumo-ui/core` declares exact dependency versions (equal to the workspace
+  catalog — `gate:versions` refuses drift); `@lumo-ui/base-ui-ssr` depends on
+  core as a **peer at the release version** (lockstep, checked). Proved:
+  `pnpm add "@lumo-ui/core@github:Telarsa/lumo-ui#<tag>&path:packages/core"` and
+  the same for theme and base-ui-ssr, plus `lumo-ui` as a dev dependency for the
+  `lumo` command; `lumo add dialog --to .`; a page importing all of it compiles.
+- The docs site's install commands are `lumo add <name> --to .` (they printed a
+  third-party CLI command against a parked domain); `components.json` no longer names
+  that host; `registry.json` `homepage` is the repository.
+- `lumo doctor` checks all four git pins against the checkout's version.
+- Root `package.json` `files` limits what the dev dependency delivers (CLI,
+  registry, catalog, package sources, consumer docs).
+- **The last third-party-CLI ties are gone:** `registry.json` no longer names
+  another project's JSON schema, `components.json` and the old vendoring script
+  are removed, and the docs describe Lumo's own registry and CLI. Lumo's
+  components are its own; where the docs compare with other libraries they do
+  so as a competitor (`docs/rubric.md`).
+
+### Migration
+Consumers on `v0.1.0` copies: bump the four specifiers to `v0.1.1`, `pnpm
+install`, `lumo upgrade --to .` (no component changed; the lockfile records the
+version).
+
 ## 0.1.0 — 16 August 2026
 
 The first tagged version: 111 components, 30 blocks, contract packages,

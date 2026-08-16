@@ -1,6 +1,6 @@
 {
   "name": "@lumo-ui/base-ui-ssr",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "The accessibility Base UI resolves in a layout effect, resolved during render instead \u2014 plus the i18n it ships none of. Public props only; no patch, no fork.",
   "keywords": [
     "base-ui",
@@ -24,7 +24,7 @@
   "peerDependencies": {
     "react": ">=19",
     "@base-ui/react": ">=1.7.0 <1.8.0",
-    "@lumo-ui/core": "0.1.0"
+    "@lumo-ui/core": "0.1.1"
   },
   "devDependencies": {
     "@base-ui/react": "catalog:",

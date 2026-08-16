@@ -1,7 +1,6 @@
 {
-  "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "lumo",
-  "homepage": "https://lumo-ui.com",
+  "homepage": "https://github.com/Telarsa/lumo-ui",
   "items": [
     {
       "name": "alert-dialog",

@@ -194,7 +194,7 @@ function sections(lang: Locale, loaded: LoadedComponentExamples | undefined) {
   const list: Array<{ id: string; label: string }> = [
     { id: "preview", label: c.rail.preview },
     /*
-     * Installation is SECOND, directly under the preview (as shadcn/reui do):
+     * Installation is SECOND, directly under the preview (where a reader looks for it):
      * these components are COPIED, and everything below is what you read after.
      */
     { id: "installation", label: c.rail.installation },

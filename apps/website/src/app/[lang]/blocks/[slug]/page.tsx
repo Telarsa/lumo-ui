@@ -193,7 +193,7 @@ export default async function BlockPage({
 
   const t = site[lang];
   const c = COPY[lang];
-  const install = `npx shadcn@latest add @lumo/${slug}`;
+  const install = `pnpm exec lumo add ${slug} --to .`;
   const installHtml = await highlight(install, "bash");
   const sourceHtml = await highlight(block.source, "tsx");
 

@@ -26,26 +26,16 @@ packages/ui/src/index.ts                   the export
 registry.json                              generated — run scripts/build-registry.mjs
 ```
 
-## Taking a component from shadcn
+## Writing a component
 
-**Do not hand-type something upstream already has.** See docs/history/roadmap-2026-08.md for which of
-the remaining components exist in shadcn's `aria-vega` style — most of them do.
-
-```bash
-node scripts/vendor-from-shadcn.mjs chart        # defaults to base-vega
-LUMO_STYLE=aria-vega node scripts/vendor-from-shadcn.mjs chart   # the old engine
-```
-
-**The style is `base-vega`** — Base UI underneath, the engine Lumo runs on since
-10 Aug 2026. Measured that day: **48 of Lumo's 77 components have a base-vega
-counterpart** (the shadcn base-vega inventory, recorded in `docs/history/base-ui-migration/`). Check there
-before writing anything; the 29 that are missing are the only ones that need
-authoring, and six of those are the date family.
-
-Commit the raw emit as **one commit**, then apply Lumo changes as a **second**.
-That keeps the diff reviewable and lets `shadcn add <name> --diff` show what
-upstream changed later. A single squashed commit makes every future upgrade a
-manual merge.
+Lumo's components are its own. Before writing one, check `catalog.json` /
+`lumo search` for an existing family that already covers the need, and read the
+closest sibling's source — the shape (props docblocks, required announced
+strings, `formatNumber`, the `<name>.variants.ts` cva file, `data-lumo`
+markers, first-byte naming) is the contract every new module must meet, and
+the gates below enforce it. Commit the new component with its five files (see
+above), its examples page, a popup-tier case if it opens anything, and a
+behavioural mutation operator; regenerate registry, API reference and catalog.
 
 ## The rules that will fail your build
 
@@ -64,7 +54,7 @@ more than what it found.
 Two limits, stated so you do not trust the rule further than it goes. Lint sees
 class strings in a `className` attribute or in a `cva`/`cn`/`clsx`/`tv`/
 `twMerge` argument, and nowhere else — a class assembled through a variable is
-invisible to it, and to `shadcn migrate rtl`. And `inset-x-*` and `space-x-*` are
+invisible to it, and to the styling floors. And `inset-x-*` and `space-x-*` are
 NOT flagged, because on the pinned tailwindcss they compile to `inset-inline` and
 `margin-inline-start`/`-end`: they are already logical, and there is nothing to
 migrate them to.
