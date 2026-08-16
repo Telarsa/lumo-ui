@@ -7,8 +7,10 @@
  * chosen option's text is the trigger's value. Direction and the writing
  * direction of every text come from the provider.
  */
-import { useState } from "react";
-import { Modal, Pressable, ScrollView, StyleSheet, Text, View, type PressableStateCallbackType, type StyleProp, type ViewStyle } from "react-native";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, Text, View, type PressableStateCallbackType, type StyleProp, type ViewStyle } from "react-native";
+import { Chevron } from "./chevron.tsx";
+import { DURATION, EASE, useReducedMotion } from "./motion.ts";
 import { useLumoNative } from "./provider.tsx";
 import { control, focus, radius } from "./tokens.ts";
 
@@ -52,6 +54,7 @@ const styles = StyleSheet.create({
   label: { fontWeight: "500" },
   trigger: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8, borderWidth: 1, borderRadius: radius.md, paddingStart: 12, paddingEnd: 12 },
   scrim: { flex: 1, justifyContent: "flex-end" },
+
   sheet: { borderTopStartRadius: radius.lg, borderTopEndRadius: radius.lg, paddingBottom: 24, maxHeight: "70%" },
   sheetHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingStart: 16, paddingEnd: 16, paddingTop: 12, paddingBottom: 8 },
   option: { minHeight: control.lg, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingStart: 16, paddingEnd: 16 },
@@ -95,15 +98,23 @@ export function Select({
         testID={testID}
       >
         <Text style={{ fontSize, color: selected === undefined ? colours.fgSubtle : colours.fg, ...text }}>{selected?.label ?? placeholder}</Text>
-        <Text aria-hidden style={{ color: colours.fgMuted }}>⌄</Text>
+        <Chevron color={colours.fgMuted} />
       </Pressable>
       {description === undefined ? null : <Text style={{ fontSize: 12, color: colours.fgMuted, ...text }}>{description}</Text>}
       {errorMessage === undefined ? null : (
         <Text accessibilityLiveRegion="polite" style={{ fontSize: 12, color: colours.critical, ...text }}>{errorMessage}</Text>
       )}
-      <Modal visible={open} transparent animationType="slide" onRequestClose={() => setOpen(false)} accessibilityViewIsModal>
-        <Pressable style={[styles.scrim, { backgroundColor: colours.scrim }]} onPress={() => setOpen(false)} accessibilityLabel={closeLabel} role="button">
-          <Pressable onPress={() => undefined} style={[styles.sheet, { backgroundColor: colours.surface }]}>
+      {/*
+       * Our own motion, not the Modal's: `animationType="slide"` slides the WHOLE
+       * transparent modal — scrim included — up from the bottom, which reads as a
+       * dark curtain. Here the scrim FADES while only the sheet slides.
+       */}
+      <Modal visible={open} transparent animationType="none" onRequestClose={() => setOpen(false)} accessibilityViewIsModal>
+        <SheetMotion open={open}>
+          {(scrimOpacity, sheetTranslate) => (
+            <Animated.View style={[styles.scrim, { backgroundColor: colours.scrim, opacity: scrimOpacity }]}>
+              <Pressable style={StyleSheet.absoluteFill} onPress={() => setOpen(false)} accessibilityLabel={closeLabel} role="button" />
+              <Animated.View style={[styles.sheet, { backgroundColor: colours.surface, transform: [{ translateY: sheetTranslate }] }]}>
             <View style={styles.sheetHeader}>
               <Text style={{ fontSize: 16, fontWeight: "600", color: colours.fg, ...text }}>{label}</Text>
               <Pressable role="button" accessibilityLabel={closeLabel} onPress={() => setOpen(false)} hitSlop={8}>
@@ -129,9 +140,29 @@ export function Select({
                 );
               })}
             </ScrollView>
-          </Pressable>
-        </Pressable>
+              </Animated.View>
+            </Animated.View>
+          )}
+        </SheetMotion>
       </Modal>
     </View>
   );
+}
+
+/** Scrim opacity 0→1 and sheet translate 320→0 on open, timed; instant under reduced motion. */
+function SheetMotion({ open, children }: { open: boolean; children: (scrimOpacity: Animated.Value, sheetTranslate: Animated.Value) => ReactNode }) {
+  const scrim = useRef(new Animated.Value(0)).current;
+  const sheet = useRef(new Animated.Value(320)).current;
+  const reduced = useReducedMotion();
+  useEffect(() => {
+    if (!open) { scrim.setValue(0); sheet.setValue(320); return; }
+    if (reduced) { scrim.setValue(1); sheet.setValue(0); return; }
+    const anim = Animated.parallel([
+      Animated.timing(scrim, { toValue: 1, duration: DURATION.base, easing: Easing.linear, useNativeDriver: true }),
+      Animated.timing(sheet, { toValue: 0, duration: DURATION.slow, easing: EASE.out, useNativeDriver: true }),
+    ]);
+    anim.start();
+    return () => anim.stop();
+  }, [open, reduced, scrim, sheet]);
+  return <>{children(scrim, sheet)}</>;
 }

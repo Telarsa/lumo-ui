@@ -29,7 +29,7 @@ describe("native — any language", () => {
     );
     expect(html).toContain("3 Einträge speichern");
     expect(html).toContain('dir="ltr"');
-    expect(html).toMatch(/left:\s*15px/); // the ON thumb at the reading end
+    expect(html).toMatch(/justify-content:\s*flex-end/); // the ON thumb at the reading end
     expect(html).toMatch(/text-align:\s*left/);
     expect(html).not.toMatch(/[۰-۹٠-٩]/);
     expect(gradeHtml("de/native/index.html", page(html, "de", "ltr", "Formular"))).toEqual([]);
@@ -45,7 +45,7 @@ describe("native — any language", () => {
     );
     expect(html).toContain("حفظ ٣ عناصر");
     expect(html).toContain('dir="rtl"');
-    expect(html).toMatch(/right:\s*15px/);
+    expect(html).toMatch(/justify-content:\s*flex-end/);
     expect(html).toMatch(/text-align:\s*right/);
     expect(html).not.toMatch(/\b3\b/);
     expect(gradeHtml("ar-EG/native/index.html", page(html, "ar-EG", "rtl", "نموذج"))).toEqual([]);

@@ -23,7 +23,8 @@
  */
 import * as DialogPrimitive from "@rn-primitives/dialog";
 import { useId, type ReactNode } from "react";
-import { Platform, StyleSheet, Text, View } from "react-native";
+import { Animated, Platform, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { useMountProgress } from "./motion.ts";
 import type { LumoNode } from "@lumo-ui/core";
 import { IconButton } from "./button.tsx";
 import { useLumoNative } from "./provider.tsx";
@@ -75,14 +76,15 @@ export function Dialog({ label, closeLabel, description, trigger, isOpen, defaul
         {/* Flat style objects wherever the WEB engine slots a part into Radix (it merges `style` by object spread; an array becomes `{0:…}`). */}
         <DialogPrimitive.Overlay style={StyleSheet.flatten([styles.overlay, { backgroundColor: colours.scrim }])}>
           <DialogPrimitive.Content
+            asChild
             aria-label={label}
             // The idrefs are for the NATIVE engine (its Content wires none). On
             // the web Radix assigns its own ids to Title/Description and wires
             // them on ITS dialog element — ours here would dangle (the gate's
             // `resolved-idrefs` caught exactly that on the first render).
             {...(Platform.OS === "web" ? {} : { "aria-labelledby": titleId, ...(description === undefined ? {} : { "aria-describedby": descriptionId }) })}
-            style={StyleSheet.flatten([styles.card, { maxWidth: WIDTH[size], backgroundColor: colours.surface, borderColor: colours.border }])}
           >
+            <EnterMotion style={StyleSheet.flatten([styles.card, { maxWidth: WIDTH[size], backgroundColor: colours.surface, borderColor: colours.border }])}>
             <View style={styles.header}>
               <DialogPrimitive.Title nativeID={titleId} style={StyleSheet.flatten([styles.title, { color: colours.fg, ...text }])}>
                 {label}
@@ -100,10 +102,21 @@ export function Dialog({ label, closeLabel, description, trigger, isOpen, defaul
               </DialogPrimitive.Description>
             )}
             {children as ReactNode}
+            </EnterMotion>
           </DialogPrimitive.Content>
         </DialogPrimitive.Overlay>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  );
+}
+
+/** The card enters with a fade and a scale from 96 % — the web dialog's motion — on mount; instant under reduced motion. */
+function EnterMotion({ style, children }: { style: StyleProp<ViewStyle>; children: ReactNode }) {
+  const t = useMountProgress();
+  return (
+    <Animated.View style={[style, { opacity: t, transform: [{ scale: t.interpolate({ inputRange: [0, 1], outputRange: [0.96, 1] }) }] }]}>
+      {children}
+    </Animated.View>
   );
 }
 

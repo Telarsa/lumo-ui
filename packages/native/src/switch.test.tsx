@@ -26,8 +26,9 @@ describe("native Switch — first byte", () => {
     expect(html).toContain('aria-label="حالت تاریک"');
     expect(html).toContain('aria-disabled="true"');
     expect(html).toContain("اعلان‌ها");
-    // ON: start offset 15 (md); react-native-web writes the logical property, which the page's dir resolves.
-    expect(html).toMatch(/right:\s*15px/); // fa-IR: ON at the reading end = right
+    // ON under fa-IR: the thumb rests at the reading start (right: 1px) and is carried −15 px to the end (left).
+    expect(html).toMatch(/right:\s*1px/);
+    expect(html).toMatch(/translateX\(-14px\)/);
     expect(gradeHtml("fa-IR/native/switch.html", page(html, "fa-IR"))).toEqual([]);
   });
   it("uncontrolled: defaultSelected renders as checked; en-US grades clean too", () => {
@@ -39,15 +40,11 @@ describe("native Switch — first byte", () => {
     expect(html).toContain('aria-checked="true"');
     expect(gradeHtml("en-US/native/switch.html", page(html, "en-US"))).toEqual([]);
   });
-  it("the thumb's logical `start` resolves by direction: ON is on the RIGHT under fa-IR and on the LEFT under en-US", () => {
-    // react-native-web resolves start/end from the writing-direction context the
-    // provider roots on web (a `dir` on its root View); on a device the platform
-    // does it from the app's I18nManager decision. Same source of truth: the locale.
-    const fa = renderToStaticMarkup(<LumoNativeProvider locale="fa-IR"><Switch isSelected>اعلان‌ها</Switch></LumoNativeProvider>);
-    const en = renderToStaticMarkup(<LumoNativeProvider locale="en-US"><Switch isSelected>Notifications</Switch></LumoNativeProvider>);
-    expect(fa).toMatch(/right:\s*15px/);
-    expect(fa).not.toMatch(/left:\s*15px/);
-    expect(en).toMatch(/left:\s*15px/);
-    expect(fa).toContain('dir="rtl"');
+  it("the thumb's side is a flex alignment (start = off, end = on), which the layout engine mirrors like every row", () => {
+    const on = renderToStaticMarkup(<LumoNativeProvider locale="fa-IR"><Switch isSelected>اعلان‌ها</Switch></LumoNativeProvider>);
+    const off = renderToStaticMarkup(<LumoNativeProvider locale="fa-IR"><Switch>اعلان‌ها</Switch></LumoNativeProvider>);
+    expect(on).toMatch(/justify-content:\s*flex-end/);
+    expect(off).toMatch(/justify-content:\s*flex-start/);
+    expect(on).toContain('dir="rtl"');
   });
-});
+});});

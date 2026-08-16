@@ -7,6 +7,16 @@
  * mirrors under `I18nManager.isRTL` — the app-level switch the provider
  * deliberately does not flip (see provider.tsx).
  *
+ * The thumb's side is decided by the LAYOUT ENGINE itself: the track is a row
+ * and the thumb sits at `flex-start` (off) or `flex-end` (on) — Yoga mirrors
+ * those exactly as it mirrors the app's rows, so the switch can never disagree
+ * with the layout around it. Two earlier attempts did disagree on device: a
+ * logical `start` on an absolute child, and a physical side chosen from
+ * `I18nManager.isRTL` — which Expo Go reported false while the layout was
+ * already mirrored. The travel is a LayoutAnimation on the change (instant
+ * under reduced motion; react-native-web has no LayoutAnimation, so the
+ * browser preview snaps).
+ *
  * Contract, as on the web: named by its visible label (`children`) or, without
  * one, by a REQUIRED `accessibilityLabel` — the type does not allow neither;
  * `role="switch"` with `accessibilityState.checked`; sizes `md`/`lg` on the
@@ -14,7 +24,11 @@
  * row at the 44 dp touch floor); disabled at 50 % opacity.
  */
 import { useState, type ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, type PressableStateCallbackType, type StyleProp, type ViewStyle } from "react-native";
+import { LayoutAnimation, Platform, Pressable, StyleSheet, Text, UIManager, View, type PressableStateCallbackType, type StyleProp, type ViewStyle } from "react-native";
+import { DURATION, useReducedMotion } from "./motion.ts";
+
+// Android needs the layout-animation flag once (no-op elsewhere).
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) UIManager.setLayoutAnimationEnabledExperimental(true);
 import type { LumoNode } from "@lumo-ui/core";
 import { useLumoNative } from "./provider.tsx";
 import { focus } from "./tokens.ts";
@@ -58,9 +72,8 @@ const GEOMETRY = {
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 12 },
   texts: { flex: 1, gap: 2 },
-  track: { justifyContent: "center", borderRadius: 999, borderWidth: 1 },
-  // `start`, not `left`: the platform mirrors it under I18nManager.isRTL.
-  thumb: { position: "absolute", borderRadius: 999 },
+  track: { flexDirection: "row", alignItems: "center", padding: 1, borderRadius: 999, borderWidth: 1 },
+  thumb: { borderRadius: 999 },
 });
 
 export function Switch(props: SwitchProps) {
@@ -69,8 +82,10 @@ export function Switch(props: SwitchProps) {
   const [inner, setInner] = useState(defaultSelected);
   const selected = isSelected ?? inner;
   const g = GEOMETRY[size];
+  const reduced = useReducedMotion();
   const toggle = () => {
     if (isDisabled) return;
+    if (!reduced && Platform.OS !== "web") LayoutAnimation.configureNext(LayoutAnimation.create(DURATION.base, LayoutAnimation.Types.easeInEaseOut, LayoutAnimation.Properties.opacity));
     if (isSelected === undefined) setInner(!selected);
     onChange?.(!selected);
   };
@@ -101,10 +116,10 @@ export function Switch(props: SwitchProps) {
       <View
         style={[
           styles.track,
-          { width: g.trackW, height: g.trackH, backgroundColor: selected ? colours.accent : colours.surfaceSunken, borderColor: selected ? colours.accent : colours.borderControl },
+          { width: g.trackW, height: g.trackH, justifyContent: selected ? "flex-end" : "flex-start", backgroundColor: selected ? colours.accent : colours.surfaceSunken, borderColor: selected ? colours.accent : colours.borderControl },
         ]}
       >
-        <View style={[styles.thumb, { width: g.thumb, height: g.thumb, start: selected ? g.on : 1, backgroundColor: selected ? colours.accentFg : colours.fg }]} />
+        <View style={[styles.thumb, { width: g.thumb, height: g.thumb, backgroundColor: selected ? colours.accentFg : colours.fg }]} />
       </View>
     </Pressable>
   );

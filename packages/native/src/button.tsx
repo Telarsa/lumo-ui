@@ -11,7 +11,9 @@
  * focus ring (keyboard / switch access), disabled = 50 % opacity.
  */
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, type GestureResponderEvent, type PressableProps, type PressableStateCallbackType, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { useState } from "react";
+import { Animated, Pressable, StyleSheet, Text, type GestureResponderEvent, type PressableProps, type PressableStateCallbackType, type StyleProp, type TextStyle, type ViewStyle } from "react-native";
+import { usePressScale } from "./motion.ts";
 import type { LumoNode } from "@lumo-ui/core";
 import { useLumoNative } from "./provider.tsx";
 import { control, focus, radius } from "./tokens.ts";
@@ -107,37 +109,51 @@ export function Button({ variant = "solid", size = "md", isDisabled = false, onP
   const { colours, direction, fontFamily } = useLumoNative();
   const styleFor = useButtonStyle(variant, size, isDisabled, style);
   const textStyle: TextStyle = { ...styles.text, fontSize: SIZE[size].fontSize, writingDirection: direction, fontFamily };
+  // Press feedback: the fill changes (below) AND the button dips to 97 % — the
+  // motion a finger expects; the web's `active:translate-y-px` in another form.
+  const [pressed, setPressed] = useState(false);
+  const scale = usePressScale(pressed);
   return (
-    <Pressable
-      {...engine}
-      role="button"
-      accessibilityState={{ disabled: isDisabled }}
-      disabled={isDisabled}
-      onPress={isDisabled ? undefined : onPress}
-      style={styleFor}
-      testID={testID}
-      {...(accessibilityHint === undefined ? {} : { accessibilityHint })}
-    >
-      {(state) => <Text style={[textStyle, { color: paint(variant, state, colours).color }]}>{children as ReactNode}</Text>}
-    </Pressable>
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <Pressable
+        {...engine}
+        role="button"
+        accessibilityState={{ disabled: isDisabled }}
+        disabled={isDisabled}
+        onPress={isDisabled ? undefined : onPress}
+        onPressIn={(e) => { setPressed(true); engine.onPressIn?.(e); }}
+        onPressOut={(e) => { setPressed(false); engine.onPressOut?.(e); }}
+        style={styleFor}
+        testID={testID}
+        {...(accessibilityHint === undefined ? {} : { accessibilityHint })}
+      >
+        {(state) => <Text style={[textStyle, { color: paint(variant, state, colours).color }]}>{children as ReactNode}</Text>}
+      </Pressable>
+    </Animated.View>
   );
 }
 
 export function IconButton({ label, variant = "ghost", size = "md", isDisabled = false, onPress, accessibilityHint, style, testID, children, ...engine }: IconButtonProps) {
   const styleFor = useButtonStyle(variant, size, isDisabled, [{ width: SIZE[size].height, paddingStart: 0, paddingEnd: 0 }, style]);
+  const [pressed, setPressed] = useState(false);
+  const scale = usePressScale(pressed, 0.94);
   return (
-    <Pressable
-      {...engine}
-      role="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: isDisabled }}
-      disabled={isDisabled}
-      onPress={isDisabled ? undefined : onPress}
-      style={styleFor}
-      testID={testID}
-      {...(accessibilityHint === undefined ? {} : { accessibilityHint })}
-    >
-      {children}
-    </Pressable>
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <Pressable
+        {...engine}
+        role="button"
+        accessibilityLabel={label}
+        accessibilityState={{ disabled: isDisabled }}
+        disabled={isDisabled}
+        onPress={isDisabled ? undefined : onPress}
+        onPressIn={(e) => { setPressed(true); engine.onPressIn?.(e); }}
+        onPressOut={(e) => { setPressed(false); engine.onPressOut?.(e); }}
+        style={styleFor}
+        testID={testID}
+        {...(accessibilityHint === undefined ? {} : { accessibilityHint })}
+      >
+        {children}
+      </Pressable>
+    </Animated.View>
   );
 }
