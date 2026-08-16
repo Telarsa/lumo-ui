@@ -16187,6 +16187,448 @@
           }
         ]
       }
+    ],
+    "native/button.tsx": [
+      {
+        "name": "ButtonProps",
+        "props": [
+          {
+            "name": "children",
+            "type": "LumoNode",
+            "required": true,
+            "description": "The visible label — also the accessible name."
+          },
+          {
+            "name": "accessibilityHint",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Announced context after the name (VoiceOver: \"…, button, <hint>\"). Write it in the app's language."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Disables the control: it cannot be interacted with and is announced as disabled."
+          },
+          {
+            "name": "onPress",
+            "type": "((event: GestureResponderEvent) => void) | undefined",
+            "required": false,
+            "description": "Fired when the button is pressed (tap, or keyboard/switch activation). Not fired while disabled."
+          },
+          {
+            "name": "size",
+            "type": "ButtonSize | undefined",
+            "required": false,
+            "description": "The size step on the shared control scale. `lg` meets the 44 dp touch-target floor."
+          },
+          {
+            "name": "style",
+            "type": "StyleProp<Readonly<Omit<Readonly<Omit<Readonly<{ display?: \"none\" | \"flex\" | \"contents\" | undefined; width?: DimensionValue | undefined; height?: DimensionValue | undefined; bottom?: DimensionValue | undefined; end?: DimensionValue | undefined; left?: DimensionValue | undefined; right?: DimensionValue | undefined; start?: DimensionValue | undefined; top?: DimensionValue | undefined; inset?: DimensionValue | undefined; insetBlock?: DimensionValue | undefined; insetBlockEnd?: DimensionValue | undefined; insetBlockStart?: DimensionValue | undefined; insetInline?: DimensionValue | undefined; insetInlineEnd?: DimensionValue | undefined; insetInlineStart?: DimensionValue | undefined; minWidth?: DimensionValue | undefined; maxWidth?: DimensionValue | undefined; minHeight?: DimensionValue | undefined; maxHeight?: DimensionValue | undefined; margin?: DimensionValue | undefined; marginBlock?: DimensionValue | undefined; marginBlockEnd?: DimensionValue | undefined; marginBlockStart?: DimensionValue | undefined; marginBottom?: DimensionValue | undefined; marginEnd?: DimensionValue | undefined; marginHorizontal?: DimensionValue | undefined; marginInline?: DimensionValue | undefined; marginInlineEnd?: DimensionValue | undefined; marginInlineStart?: DimensionValue | undefined; marginLeft?: DimensionValue | undefined; marginRight?: DimensionValue | undefined; marginStart?: DimensionValue | undefined; marginTop?: DimensionValue | undefined; marginVertical?: DimensionValue | undefined; padding?: DimensionValue | undefined; paddingBlock?: DimensionValue | undefined; paddingBlockEnd?: DimensionValue | undefined; paddingBlockStart?: DimensionValue | undefined; paddingBottom?: DimensionValue | undefined; paddingEnd?: DimensionValue | undefined; paddingHorizontal?: DimensionValue | undefined; paddingInline?: DimensionValue | undefined; paddingInlineEnd?: DimensionValue | undefined; paddingInlineStart?: DimensionValue | undefined; paddingLeft?: DimensionValue | undefined; paddingRight?: DimensionValue | undefined; paddingStart?: DimensionValue | undefined; paddingTop?: DimensionValue | undefined; paddingVertical?: DimensionValue | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; position?: \"absolute\" | \"relative\" | \"static\" | undefined; flexDirection?: \"row\" | \"row-reverse\" | \"column\" | \"column-reverse\" | undefined; flexWrap?: \"wrap\" | \"nowrap\" | \"wrap-reverse\" | undefined; justifyContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; alignItems?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignSelf?: \"auto\" | \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; overflow?: \"visible\" | \"hidden\" | \"scroll\" | undefined; flex?: number | undefined; flexGrow?: number | undefined; flexShrink?: number | undefined; flexBasis?: number | string | undefined; aspectRatio?: number | string | undefined; boxSizing?: \"border-box\" | \"content-box\" | undefined; zIndex?: number | undefined; direction?: \"inherit\" | \"ltr\" | \"rtl\" | undefined; rowGap?: number | string | undefined; columnGap?: number | string | undefined; gap?: number | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"shadowColor\" | \"shadowOffset\" | \"shadowOpacity\" | \"shadowRadius\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<Omit<Readonly<{ shadowColor?: ____ColorValue_Internal | undefined; shadowOffset?: Readonly<{ width?: number | undefined; height?: number | undefined; }> | undefined; shadowOpacity?: number | undefined; shadowRadius?: number | undefined; }>, never> & Omit<Readonly<{}>, never>>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ transform?: ReadonlyArray<Readonly<MaximumOneOf<MergeUnion<{ readonly perspective: number | AnimatedNode; } | { readonly rotate: string | AnimatedNode; } | { readonly rotateX: string | AnimatedNode; } | { readonly rotateY: string | AnimatedNode; } | { readonly rotateZ: string | AnimatedNode; } | { readonly scale: number | AnimatedNode; } | { readonly scaleX: number | AnimatedNode; } | { readonly scaleY: number | AnimatedNode; } | { readonly translateX: number | string | AnimatedNode; } | { readonly translateY: number | string | AnimatedNode; } | { readonly translate: [number | string | AnimatedNode, number | string | AnimatedNode] | AnimatedNode; } | { readonly skewX: string | AnimatedNode; } | { readonly skewY: string | AnimatedNode; } | { readonly matrix: ReadonlyArray<number | AnimatedNode> | AnimatedNode; }>>>> | string | undefined; transformOrigin?: [string | number, string | number, string | number] | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"pointerEvents\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ backfaceVisibility?: \"visible\" | \"hidden\" | undefined; backgroundColor?: ____ColorValue_Internal | undefined; borderColor?: ____ColorValue_Internal | undefined; borderCurve?: \"circular\" | \"continuous\" | undefined; borderBottomColor?: ____ColorValue_Internal | undefined; borderEndColor?: ____ColorValue_Internal | undefined; borderLeftColor?: ____ColorValue_Internal | undefined; borderRightColor?: ____ColorValue_Internal | undefined; borderStartColor?: ____ColorValue_Internal | undefined; borderTopColor?: ____ColorValue_Internal | undefined; borderBlockColor?: ____ColorValue_Internal | undefined; borderBlockEndColor?: ____ColorValue_Internal | undefined; borderBlockStartColor?: ____ColorValue_Internal | undefined; borderRadius?: number | string | undefined; borderBottomEndRadius?: number | string | undefined; borderBottomLeftRadius?: number | string | undefined; borderBottomRightRadius?: number | string | undefined; borderBottomStartRadius?: number | string | undefined; borderEndEndRadius?: number | string | undefined; borderEndStartRadius?: number | string | undefined; borderStartEndRadius?: number | string | undefined; borderStartStartRadius?: number | string | undefined; borderTopEndRadius?: number | string | undefined; borderTopLeftRadius?: number | string | undefined; borderTopRightRadius?: number | string | undefined; borderTopStartRadius?: number | string | undefined; borderStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; opacity?: number | undefined; outlineColor?: ____ColorValue_Internal | undefined; outlineOffset?: number | undefined; outlineStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; outlineWidth?: number | undefined; elevation?: number | undefined; pointerEvents?: \"auto\" | \"none\" | \"box-none\" | \"box-only\" | undefined; cursor?: CursorValue | undefined; boxShadow?: ReadonlyArray<BoxShadowValue> | string | undefined; filter?: ReadonlyArray<FilterFunction> | string | undefined; mixBlendMode?: ____BlendMode_Internal | undefined; backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundSize?: ReadonlyArray<BackgroundSizeValue> | string | undefined; experimental_backgroundPosition?: ReadonlyArray<BackgroundPositionValue> | string | undefined; experimental_backgroundRepeat?: ReadonlyArray<BackgroundRepeatValue> | string | undefined; isolation?: \"auto\" | \"isolate\" | undefined; }>, never>>, never> & Omit<Readonly<{}>, never>>>",
+            "required": false,
+            "description": "React Native style (or array of styles) merged onto the component's root element."
+          },
+          {
+            "name": "testID",
+            "type": "string | undefined",
+            "required": false,
+            "description": "React Native test identifier, forwarded to the root element for end-to-end tests."
+          },
+          {
+            "name": "variant",
+            "type": "ButtonVariant | undefined",
+            "required": false,
+            "description": "The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment."
+          }
+        ]
+      },
+      {
+        "name": "IconButtonProps",
+        "props": [
+          {
+            "name": "children",
+            "type": "ReactNode",
+            "required": true,
+            "description": "The icon."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "The accessible name. REQUIRED — an icon has none."
+          },
+          {
+            "name": "accessibilityHint",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Announced context after the name (VoiceOver: \"…, button, <hint>\"). Write it in the app's language."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Disables the control: it cannot be interacted with and is announced as disabled."
+          },
+          {
+            "name": "onPress",
+            "type": "((event: GestureResponderEvent) => void) | undefined",
+            "required": false,
+            "description": "Fired when the button is pressed (tap, or keyboard/switch activation). Not fired while disabled."
+          },
+          {
+            "name": "size",
+            "type": "ButtonSize | undefined",
+            "required": false,
+            "description": "The size step on the shared control scale. `lg` meets the 44 dp touch-target floor."
+          },
+          {
+            "name": "style",
+            "type": "StyleProp<Readonly<Omit<Readonly<Omit<Readonly<{ display?: \"none\" | \"flex\" | \"contents\" | undefined; width?: DimensionValue | undefined; height?: DimensionValue | undefined; bottom?: DimensionValue | undefined; end?: DimensionValue | undefined; left?: DimensionValue | undefined; right?: DimensionValue | undefined; start?: DimensionValue | undefined; top?: DimensionValue | undefined; inset?: DimensionValue | undefined; insetBlock?: DimensionValue | undefined; insetBlockEnd?: DimensionValue | undefined; insetBlockStart?: DimensionValue | undefined; insetInline?: DimensionValue | undefined; insetInlineEnd?: DimensionValue | undefined; insetInlineStart?: DimensionValue | undefined; minWidth?: DimensionValue | undefined; maxWidth?: DimensionValue | undefined; minHeight?: DimensionValue | undefined; maxHeight?: DimensionValue | undefined; margin?: DimensionValue | undefined; marginBlock?: DimensionValue | undefined; marginBlockEnd?: DimensionValue | undefined; marginBlockStart?: DimensionValue | undefined; marginBottom?: DimensionValue | undefined; marginEnd?: DimensionValue | undefined; marginHorizontal?: DimensionValue | undefined; marginInline?: DimensionValue | undefined; marginInlineEnd?: DimensionValue | undefined; marginInlineStart?: DimensionValue | undefined; marginLeft?: DimensionValue | undefined; marginRight?: DimensionValue | undefined; marginStart?: DimensionValue | undefined; marginTop?: DimensionValue | undefined; marginVertical?: DimensionValue | undefined; padding?: DimensionValue | undefined; paddingBlock?: DimensionValue | undefined; paddingBlockEnd?: DimensionValue | undefined; paddingBlockStart?: DimensionValue | undefined; paddingBottom?: DimensionValue | undefined; paddingEnd?: DimensionValue | undefined; paddingHorizontal?: DimensionValue | undefined; paddingInline?: DimensionValue | undefined; paddingInlineEnd?: DimensionValue | undefined; paddingInlineStart?: DimensionValue | undefined; paddingLeft?: DimensionValue | undefined; paddingRight?: DimensionValue | undefined; paddingStart?: DimensionValue | undefined; paddingTop?: DimensionValue | undefined; paddingVertical?: DimensionValue | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; position?: \"absolute\" | \"relative\" | \"static\" | undefined; flexDirection?: \"row\" | \"row-reverse\" | \"column\" | \"column-reverse\" | undefined; flexWrap?: \"wrap\" | \"nowrap\" | \"wrap-reverse\" | undefined; justifyContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; alignItems?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignSelf?: \"auto\" | \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; overflow?: \"visible\" | \"hidden\" | \"scroll\" | undefined; flex?: number | undefined; flexGrow?: number | undefined; flexShrink?: number | undefined; flexBasis?: number | string | undefined; aspectRatio?: number | string | undefined; boxSizing?: \"border-box\" | \"content-box\" | undefined; zIndex?: number | undefined; direction?: \"inherit\" | \"ltr\" | \"rtl\" | undefined; rowGap?: number | string | undefined; columnGap?: number | string | undefined; gap?: number | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"shadowColor\" | \"shadowOffset\" | \"shadowOpacity\" | \"shadowRadius\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<Omit<Readonly<{ shadowColor?: ____ColorValue_Internal | undefined; shadowOffset?: Readonly<{ width?: number | undefined; height?: number | undefined; }> | undefined; shadowOpacity?: number | undefined; shadowRadius?: number | undefined; }>, never> & Omit<Readonly<{}>, never>>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ transform?: ReadonlyArray<Readonly<MaximumOneOf<MergeUnion<{ readonly perspective: number | AnimatedNode; } | { readonly rotate: string | AnimatedNode; } | { readonly rotateX: string | AnimatedNode; } | { readonly rotateY: string | AnimatedNode; } | { readonly rotateZ: string | AnimatedNode; } | { readonly scale: number | AnimatedNode; } | { readonly scaleX: number | AnimatedNode; } | { readonly scaleY: number | AnimatedNode; } | { readonly translateX: number | string | AnimatedNode; } | { readonly translateY: number | string | AnimatedNode; } | { readonly translate: [number | string | AnimatedNode, number | string | AnimatedNode] | AnimatedNode; } | { readonly skewX: string | AnimatedNode; } | { readonly skewY: string | AnimatedNode; } | { readonly matrix: ReadonlyArray<number | AnimatedNode> | AnimatedNode; }>>>> | string | undefined; transformOrigin?: [string | number, string | number, string | number] | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"pointerEvents\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ backfaceVisibility?: \"visible\" | \"hidden\" | undefined; backgroundColor?: ____ColorValue_Internal | undefined; borderColor?: ____ColorValue_Internal | undefined; borderCurve?: \"circular\" | \"continuous\" | undefined; borderBottomColor?: ____ColorValue_Internal | undefined; borderEndColor?: ____ColorValue_Internal | undefined; borderLeftColor?: ____ColorValue_Internal | undefined; borderRightColor?: ____ColorValue_Internal | undefined; borderStartColor?: ____ColorValue_Internal | undefined; borderTopColor?: ____ColorValue_Internal | undefined; borderBlockColor?: ____ColorValue_Internal | undefined; borderBlockEndColor?: ____ColorValue_Internal | undefined; borderBlockStartColor?: ____ColorValue_Internal | undefined; borderRadius?: number | string | undefined; borderBottomEndRadius?: number | string | undefined; borderBottomLeftRadius?: number | string | undefined; borderBottomRightRadius?: number | string | undefined; borderBottomStartRadius?: number | string | undefined; borderEndEndRadius?: number | string | undefined; borderEndStartRadius?: number | string | undefined; borderStartEndRadius?: number | string | undefined; borderStartStartRadius?: number | string | undefined; borderTopEndRadius?: number | string | undefined; borderTopLeftRadius?: number | string | undefined; borderTopRightRadius?: number | string | undefined; borderTopStartRadius?: number | string | undefined; borderStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; opacity?: number | undefined; outlineColor?: ____ColorValue_Internal | undefined; outlineOffset?: number | undefined; outlineStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; outlineWidth?: number | undefined; elevation?: number | undefined; pointerEvents?: \"auto\" | \"none\" | \"box-none\" | \"box-only\" | undefined; cursor?: CursorValue | undefined; boxShadow?: ReadonlyArray<BoxShadowValue> | string | undefined; filter?: ReadonlyArray<FilterFunction> | string | undefined; mixBlendMode?: ____BlendMode_Internal | undefined; backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundSize?: ReadonlyArray<BackgroundSizeValue> | string | undefined; experimental_backgroundPosition?: ReadonlyArray<BackgroundPositionValue> | string | undefined; experimental_backgroundRepeat?: ReadonlyArray<BackgroundRepeatValue> | string | undefined; isolation?: \"auto\" | \"isolate\" | undefined; }>, never>>, never> & Omit<Readonly<{}>, never>>>",
+            "required": false,
+            "description": "React Native style (or array of styles) merged onto the component's root element."
+          },
+          {
+            "name": "testID",
+            "type": "string | undefined",
+            "required": false,
+            "description": "React Native test identifier, forwarded to the root element for end-to-end tests."
+          },
+          {
+            "name": "variant",
+            "type": "ButtonVariant | undefined",
+            "required": false,
+            "description": "The emphasis: filled primary, quiet secondary, bare ghost, or the critical treatment."
+          }
+        ]
+      }
+    ],
+    "native/provider.tsx": [
+      {
+        "name": "LumoNativeProviderProps",
+        "props": [
+          {
+            "name": "children",
+            "type": "LumoNode",
+            "required": true,
+            "description": "The content this component renders."
+          },
+          {
+            "name": "locale",
+            "type": "Locale",
+            "required": true,
+            "description": "The app's locale. Direction is derived; there is no `dir`."
+          },
+          {
+            "name": "brand",
+            "type": "LumoBrand | undefined",
+            "required": false,
+            "description": "Brand hue/chroma (web: `--lumo-ref-*-brand` / `-neutral`). Default achromatic."
+          },
+          {
+            "name": "colorScheme",
+            "type": "\"light\" | \"dark\" | undefined",
+            "required": false,
+            "description": "Pin a scheme; default follows the OS (`useColorScheme`)."
+          },
+          {
+            "name": "fonts",
+            "type": "LumoNativeFonts | undefined",
+            "required": false,
+            "description": "The faces to use for Persian and Latin text (loaded by the app); undefined = the platform face."
+          }
+        ]
+      }
+    ],
+    "native/select.tsx": [
+      {
+        "name": "SelectProps",
+        "props": [
+          {
+            "name": "closeLabel",
+            "type": "string",
+            "required": true,
+            "description": "Announced name of the close action in the sheet. REQUIRED."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "The visible label — also the trigger's accessible name. REQUIRED."
+          },
+          {
+            "name": "options",
+            "type": "readonly SelectOption[]",
+            "required": true,
+            "description": "The choices, in order; a disabled option is shown but cannot be chosen."
+          },
+          {
+            "name": "placeholder",
+            "type": "string",
+            "required": true,
+            "description": "Shown (and announced as the value) while nothing is chosen. REQUIRED — no English default."
+          },
+          {
+            "name": "defaultValue",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Initial selection when uncontrolled."
+          },
+          {
+            "name": "description",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Help text under the trigger; also read as its hint."
+          },
+          {
+            "name": "errorMessage",
+            "type": "string | undefined",
+            "required": false,
+            "description": "The validation message; rendered under the trigger and announced."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Disables the control: it cannot be interacted with and is announced as disabled."
+          },
+          {
+            "name": "onChange",
+            "type": "((id: string) => void) | undefined",
+            "required": false,
+            "description": "Fired with the chosen option's `id`."
+          },
+          {
+            "name": "size",
+            "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+            "required": false,
+            "description": "The size step on the shared control scale (29 / 36 / 44 dp)."
+          },
+          {
+            "name": "style",
+            "type": "StyleProp<Readonly<Omit<Readonly<Omit<Readonly<{ display?: \"none\" | \"flex\" | \"contents\" | undefined; width?: DimensionValue | undefined; height?: DimensionValue | undefined; bottom?: DimensionValue | undefined; end?: DimensionValue | undefined; left?: DimensionValue | undefined; right?: DimensionValue | undefined; start?: DimensionValue | undefined; top?: DimensionValue | undefined; inset?: DimensionValue | undefined; insetBlock?: DimensionValue | undefined; insetBlockEnd?: DimensionValue | undefined; insetBlockStart?: DimensionValue | undefined; insetInline?: DimensionValue | undefined; insetInlineEnd?: DimensionValue | undefined; insetInlineStart?: DimensionValue | undefined; minWidth?: DimensionValue | undefined; maxWidth?: DimensionValue | undefined; minHeight?: DimensionValue | undefined; maxHeight?: DimensionValue | undefined; margin?: DimensionValue | undefined; marginBlock?: DimensionValue | undefined; marginBlockEnd?: DimensionValue | undefined; marginBlockStart?: DimensionValue | undefined; marginBottom?: DimensionValue | undefined; marginEnd?: DimensionValue | undefined; marginHorizontal?: DimensionValue | undefined; marginInline?: DimensionValue | undefined; marginInlineEnd?: DimensionValue | undefined; marginInlineStart?: DimensionValue | undefined; marginLeft?: DimensionValue | undefined; marginRight?: DimensionValue | undefined; marginStart?: DimensionValue | undefined; marginTop?: DimensionValue | undefined; marginVertical?: DimensionValue | undefined; padding?: DimensionValue | undefined; paddingBlock?: DimensionValue | undefined; paddingBlockEnd?: DimensionValue | undefined; paddingBlockStart?: DimensionValue | undefined; paddingBottom?: DimensionValue | undefined; paddingEnd?: DimensionValue | undefined; paddingHorizontal?: DimensionValue | undefined; paddingInline?: DimensionValue | undefined; paddingInlineEnd?: DimensionValue | undefined; paddingInlineStart?: DimensionValue | undefined; paddingLeft?: DimensionValue | undefined; paddingRight?: DimensionValue | undefined; paddingStart?: DimensionValue | undefined; paddingTop?: DimensionValue | undefined; paddingVertical?: DimensionValue | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; position?: \"absolute\" | \"relative\" | \"static\" | undefined; flexDirection?: \"row\" | \"row-reverse\" | \"column\" | \"column-reverse\" | undefined; flexWrap?: \"wrap\" | \"nowrap\" | \"wrap-reverse\" | undefined; justifyContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; alignItems?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignSelf?: \"auto\" | \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; overflow?: \"visible\" | \"hidden\" | \"scroll\" | undefined; flex?: number | undefined; flexGrow?: number | undefined; flexShrink?: number | undefined; flexBasis?: number | string | undefined; aspectRatio?: number | string | undefined; boxSizing?: \"border-box\" | \"content-box\" | undefined; zIndex?: number | undefined; direction?: \"inherit\" | \"ltr\" | \"rtl\" | undefined; rowGap?: number | string | undefined; columnGap?: number | string | undefined; gap?: number | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"shadowColor\" | \"shadowOffset\" | \"shadowOpacity\" | \"shadowRadius\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<Omit<Readonly<{ shadowColor?: ____ColorValue_Internal | undefined; shadowOffset?: Readonly<{ width?: number | undefined; height?: number | undefined; }> | undefined; shadowOpacity?: number | undefined; shadowRadius?: number | undefined; }>, never> & Omit<Readonly<{}>, never>>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ transform?: ReadonlyArray<Readonly<MaximumOneOf<MergeUnion<{ readonly perspective: number | AnimatedNode; } | { readonly rotate: string | AnimatedNode; } | { readonly rotateX: string | AnimatedNode; } | { readonly rotateY: string | AnimatedNode; } | { readonly rotateZ: string | AnimatedNode; } | { readonly scale: number | AnimatedNode; } | { readonly scaleX: number | AnimatedNode; } | { readonly scaleY: number | AnimatedNode; } | { readonly translateX: number | string | AnimatedNode; } | { readonly translateY: number | string | AnimatedNode; } | { readonly translate: [number | string | AnimatedNode, number | string | AnimatedNode] | AnimatedNode; } | { readonly skewX: string | AnimatedNode; } | { readonly skewY: string | AnimatedNode; } | { readonly matrix: ReadonlyArray<number | AnimatedNode> | AnimatedNode; }>>>> | string | undefined; transformOrigin?: [string | number, string | number, string | number] | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"pointerEvents\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ backfaceVisibility?: \"visible\" | \"hidden\" | undefined; backgroundColor?: ____ColorValue_Internal | undefined; borderColor?: ____ColorValue_Internal | undefined; borderCurve?: \"circular\" | \"continuous\" | undefined; borderBottomColor?: ____ColorValue_Internal | undefined; borderEndColor?: ____ColorValue_Internal | undefined; borderLeftColor?: ____ColorValue_Internal | undefined; borderRightColor?: ____ColorValue_Internal | undefined; borderStartColor?: ____ColorValue_Internal | undefined; borderTopColor?: ____ColorValue_Internal | undefined; borderBlockColor?: ____ColorValue_Internal | undefined; borderBlockEndColor?: ____ColorValue_Internal | undefined; borderBlockStartColor?: ____ColorValue_Internal | undefined; borderRadius?: number | string | undefined; borderBottomEndRadius?: number | string | undefined; borderBottomLeftRadius?: number | string | undefined; borderBottomRightRadius?: number | string | undefined; borderBottomStartRadius?: number | string | undefined; borderEndEndRadius?: number | string | undefined; borderEndStartRadius?: number | string | undefined; borderStartEndRadius?: number | string | undefined; borderStartStartRadius?: number | string | undefined; borderTopEndRadius?: number | string | undefined; borderTopLeftRadius?: number | string | undefined; borderTopRightRadius?: number | string | undefined; borderTopStartRadius?: number | string | undefined; borderStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; opacity?: number | undefined; outlineColor?: ____ColorValue_Internal | undefined; outlineOffset?: number | undefined; outlineStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; outlineWidth?: number | undefined; elevation?: number | undefined; pointerEvents?: \"auto\" | \"none\" | \"box-none\" | \"box-only\" | undefined; cursor?: CursorValue | undefined; boxShadow?: ReadonlyArray<BoxShadowValue> | string | undefined; filter?: ReadonlyArray<FilterFunction> | string | undefined; mixBlendMode?: ____BlendMode_Internal | undefined; backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundSize?: ReadonlyArray<BackgroundSizeValue> | string | undefined; experimental_backgroundPosition?: ReadonlyArray<BackgroundPositionValue> | string | undefined; experimental_backgroundRepeat?: ReadonlyArray<BackgroundRepeatValue> | string | undefined; isolation?: \"auto\" | \"isolate\" | undefined; }>, never>>, never> & Omit<Readonly<{}>, never>>>",
+            "required": false,
+            "description": "React Native style (or array of styles) merged onto the component's root element."
+          },
+          {
+            "name": "testID",
+            "type": "string | undefined",
+            "required": false,
+            "description": "React Native test identifier, forwarded to the root element for end-to-end tests."
+          },
+          {
+            "name": "value",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Controlled selection: the chosen option's `id`."
+          }
+        ]
+      }
+    ],
+    "native/switch.tsx": [
+      {
+        "name": "SwitchProps",
+        "props": [
+          {
+            "name": "accessibilityLabel",
+            "type": "string | undefined",
+            "required": false,
+            "description": "An explicit accessible name, when the visible label should not be the announced one. The accessible name — REQUIRED when there is no visible label."
+          },
+          {
+            "name": "children",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The content this component renders."
+          },
+          {
+            "name": "defaultSelected",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Initial state when uncontrolled."
+          },
+          {
+            "name": "description",
+            "type": "LumoNode",
+            "required": false,
+            "description": "Help text under the label."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Disables the control: it cannot be interacted with and is announced as disabled."
+          },
+          {
+            "name": "isSelected",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Controlled state."
+          },
+          {
+            "name": "onChange",
+            "type": "((isSelected: boolean) => void) | undefined",
+            "required": false,
+            "description": "Fired with the next state when the switch is toggled."
+          },
+          {
+            "name": "size",
+            "type": "\"md\" | \"lg\" | undefined",
+            "required": false,
+            "description": "`md` is the compact scale; `lg` keeps the row at the 44 dp touch floor."
+          },
+          {
+            "name": "style",
+            "type": "StyleProp<Readonly<Omit<Readonly<Omit<Readonly<{ display?: \"none\" | \"flex\" | \"contents\" | undefined; width?: DimensionValue | undefined; height?: DimensionValue | undefined; bottom?: DimensionValue | undefined; end?: DimensionValue | undefined; left?: DimensionValue | undefined; right?: DimensionValue | undefined; start?: DimensionValue | undefined; top?: DimensionValue | undefined; inset?: DimensionValue | undefined; insetBlock?: DimensionValue | undefined; insetBlockEnd?: DimensionValue | undefined; insetBlockStart?: DimensionValue | undefined; insetInline?: DimensionValue | undefined; insetInlineEnd?: DimensionValue | undefined; insetInlineStart?: DimensionValue | undefined; minWidth?: DimensionValue | undefined; maxWidth?: DimensionValue | undefined; minHeight?: DimensionValue | undefined; maxHeight?: DimensionValue | undefined; margin?: DimensionValue | undefined; marginBlock?: DimensionValue | undefined; marginBlockEnd?: DimensionValue | undefined; marginBlockStart?: DimensionValue | undefined; marginBottom?: DimensionValue | undefined; marginEnd?: DimensionValue | undefined; marginHorizontal?: DimensionValue | undefined; marginInline?: DimensionValue | undefined; marginInlineEnd?: DimensionValue | undefined; marginInlineStart?: DimensionValue | undefined; marginLeft?: DimensionValue | undefined; marginRight?: DimensionValue | undefined; marginStart?: DimensionValue | undefined; marginTop?: DimensionValue | undefined; marginVertical?: DimensionValue | undefined; padding?: DimensionValue | undefined; paddingBlock?: DimensionValue | undefined; paddingBlockEnd?: DimensionValue | undefined; paddingBlockStart?: DimensionValue | undefined; paddingBottom?: DimensionValue | undefined; paddingEnd?: DimensionValue | undefined; paddingHorizontal?: DimensionValue | undefined; paddingInline?: DimensionValue | undefined; paddingInlineEnd?: DimensionValue | undefined; paddingInlineStart?: DimensionValue | undefined; paddingLeft?: DimensionValue | undefined; paddingRight?: DimensionValue | undefined; paddingStart?: DimensionValue | undefined; paddingTop?: DimensionValue | undefined; paddingVertical?: DimensionValue | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; position?: \"absolute\" | \"relative\" | \"static\" | undefined; flexDirection?: \"row\" | \"row-reverse\" | \"column\" | \"column-reverse\" | undefined; flexWrap?: \"wrap\" | \"nowrap\" | \"wrap-reverse\" | undefined; justifyContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; alignItems?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignSelf?: \"auto\" | \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; overflow?: \"visible\" | \"hidden\" | \"scroll\" | undefined; flex?: number | undefined; flexGrow?: number | undefined; flexShrink?: number | undefined; flexBasis?: number | string | undefined; aspectRatio?: number | string | undefined; boxSizing?: \"border-box\" | \"content-box\" | undefined; zIndex?: number | undefined; direction?: \"inherit\" | \"ltr\" | \"rtl\" | undefined; rowGap?: number | string | undefined; columnGap?: number | string | undefined; gap?: number | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"shadowColor\" | \"shadowOffset\" | \"shadowOpacity\" | \"shadowRadius\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<Omit<Readonly<{ shadowColor?: ____ColorValue_Internal | undefined; shadowOffset?: Readonly<{ width?: number | undefined; height?: number | undefined; }> | undefined; shadowOpacity?: number | undefined; shadowRadius?: number | undefined; }>, never> & Omit<Readonly<{}>, never>>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ transform?: ReadonlyArray<Readonly<MaximumOneOf<MergeUnion<{ readonly perspective: number | AnimatedNode; } | { readonly rotate: string | AnimatedNode; } | { readonly rotateX: string | AnimatedNode; } | { readonly rotateY: string | AnimatedNode; } | { readonly rotateZ: string | AnimatedNode; } | { readonly scale: number | AnimatedNode; } | { readonly scaleX: number | AnimatedNode; } | { readonly scaleY: number | AnimatedNode; } | { readonly translateX: number | string | AnimatedNode; } | { readonly translateY: number | string | AnimatedNode; } | { readonly translate: [number | string | AnimatedNode, number | string | AnimatedNode] | AnimatedNode; } | { readonly skewX: string | AnimatedNode; } | { readonly skewY: string | AnimatedNode; } | { readonly matrix: ReadonlyArray<number | AnimatedNode> | AnimatedNode; }>>>> | string | undefined; transformOrigin?: [string | number, string | number, string | number] | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"pointerEvents\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ backfaceVisibility?: \"visible\" | \"hidden\" | undefined; backgroundColor?: ____ColorValue_Internal | undefined; borderColor?: ____ColorValue_Internal | undefined; borderCurve?: \"circular\" | \"continuous\" | undefined; borderBottomColor?: ____ColorValue_Internal | undefined; borderEndColor?: ____ColorValue_Internal | undefined; borderLeftColor?: ____ColorValue_Internal | undefined; borderRightColor?: ____ColorValue_Internal | undefined; borderStartColor?: ____ColorValue_Internal | undefined; borderTopColor?: ____ColorValue_Internal | undefined; borderBlockColor?: ____ColorValue_Internal | undefined; borderBlockEndColor?: ____ColorValue_Internal | undefined; borderBlockStartColor?: ____ColorValue_Internal | undefined; borderRadius?: number | string | undefined; borderBottomEndRadius?: number | string | undefined; borderBottomLeftRadius?: number | string | undefined; borderBottomRightRadius?: number | string | undefined; borderBottomStartRadius?: number | string | undefined; borderEndEndRadius?: number | string | undefined; borderEndStartRadius?: number | string | undefined; borderStartEndRadius?: number | string | undefined; borderStartStartRadius?: number | string | undefined; borderTopEndRadius?: number | string | undefined; borderTopLeftRadius?: number | string | undefined; borderTopRightRadius?: number | string | undefined; borderTopStartRadius?: number | string | undefined; borderStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; opacity?: number | undefined; outlineColor?: ____ColorValue_Internal | undefined; outlineOffset?: number | undefined; outlineStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; outlineWidth?: number | undefined; elevation?: number | undefined; pointerEvents?: \"auto\" | \"none\" | \"box-none\" | \"box-only\" | undefined; cursor?: CursorValue | undefined; boxShadow?: ReadonlyArray<BoxShadowValue> | string | undefined; filter?: ReadonlyArray<FilterFunction> | string | undefined; mixBlendMode?: ____BlendMode_Internal | undefined; backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundSize?: ReadonlyArray<BackgroundSizeValue> | string | undefined; experimental_backgroundPosition?: ReadonlyArray<BackgroundPositionValue> | string | undefined; experimental_backgroundRepeat?: ReadonlyArray<BackgroundRepeatValue> | string | undefined; isolation?: \"auto\" | \"isolate\" | undefined; }>, never>>, never> & Omit<Readonly<{}>, never>>>",
+            "required": false,
+            "description": "React Native style (or array of styles) merged onto the component's root element."
+          },
+          {
+            "name": "testID",
+            "type": "string | undefined",
+            "required": false,
+            "description": "React Native test identifier, forwarded to the root element for end-to-end tests."
+          }
+        ]
+      }
+    ],
+    "native/text-field.tsx": [
+      {
+        "name": "TextFieldProps",
+        "props": [
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "The visible label — also the input's accessible name. REQUIRED."
+          },
+          {
+            "name": "autoComplete",
+            "type": "\"name\" | \"url\" | \"tel\" | \"email\" | \"password\" | \"2fa-app-otp\" | \"additional-name\" | \"address-line1\" | \"address-line2\" | \"birthdate-day\" | \"birthdate-full\" | \"birthdate-month\" | \"birthdate-year\" | \"cc-csc\" | \"cc-exp\" | \"cc-exp-day\" | \"cc-exp-month\" | \"cc-exp-year\" | \"cc-number\" | \"cc-name\" | \"cc-given-name\" | \"cc-middle-name\" | \"cc-family-name\" | \"cc-type\" | \"country\" | \"current-password\" | \"email-otp\" | \"flight-confirmation-code\" | \"flight-number\" | \"family-name\" | \"gender\" | \"gift-card-number\" | \"gift-card-pin\" | \"given-name\" | \"honorific-prefix\" | \"honorific-suffix\" | \"loyalty-account-number\" | \"name-family\" | \"name-given\" | \"name-middle\" | \"name-middle-initial\" | \"name-prefix\" | \"name-suffix\" | \"new-password\" | \"nickname\" | \"one-time-code\" | \"organization\" | \"organization-title\" | \"password-new\" | \"postal-address\" | \"postal-address-country\" | \"postal-address-dependent-locality\" | \"postal-address-extended\" | \"postal-address-extended-postal-code\" | \"postal-address-locality\" | \"postal-address-region\" | \"postal-address-unit\" | \"postal-code\" | \"promo-code\" | \"street-address\" | \"sms-otp\" | \"tel-country-code\" | \"tel-national\" | \"tel-device\" | \"upi-vpa\" | \"wifi-password\" | \"username\" | \"username-new\" | \"off\" | undefined",
+            "required": false,
+            "description": "Autofill hint, passed through to `TextInput`."
+          },
+          {
+            "name": "children",
+            "type": "LumoNode",
+            "required": false,
+            "description": "Rendered after the input in the same row (a unit, a clear button)."
+          },
+          {
+            "name": "defaultValue",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Initial value when uncontrolled."
+          },
+          {
+            "name": "description",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Help text under the field; also read as the input's hint."
+          },
+          {
+            "name": "errorMessage",
+            "type": "string | undefined",
+            "required": false,
+            "description": "The validation message; rendered under the field and announced."
+          },
+          {
+            "name": "inputMode",
+            "type": "InputModeOptions | undefined",
+            "required": false,
+            "description": "Keyboard and content hint, passed through to `TextInput`."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Disables the control: it cannot be interacted with and is announced as disabled."
+          },
+          {
+            "name": "isInvalid",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Marks the field invalid (critical border; the error joins the hint) without an error message."
+          },
+          {
+            "name": "isReadOnly",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "The value can be read and selected but not edited."
+          },
+          {
+            "name": "isRequired",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Shows the required marker after the label. Validation itself is the form's."
+          },
+          {
+            "name": "keyboardType",
+            "type": "KeyboardTypeOptions | undefined",
+            "required": false,
+            "description": "The platform keyboard to show, passed through to `TextInput`."
+          },
+          {
+            "name": "maxLength",
+            "type": "number | undefined",
+            "required": false,
+            "description": "Maximum number of characters."
+          },
+          {
+            "name": "onChange",
+            "type": "((value: string) => void) | undefined",
+            "required": false,
+            "description": "Fired with the new text on every edit."
+          },
+          {
+            "name": "onSubmitEditing",
+            "type": "((e: TextInputSubmitEditingEvent) => unknown) | undefined",
+            "required": false,
+            "description": "Fired when the return key is pressed."
+          },
+          {
+            "name": "placeholder",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Text shown in the empty control before the reader enters or picks a value."
+          },
+          {
+            "name": "returnKeyType",
+            "type": "ReturnKeyTypeOptions | undefined",
+            "required": false,
+            "description": "The return key's label, passed through to `TextInput`."
+          },
+          {
+            "name": "secureTextEntry",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Masks the text (passwords)."
+          },
+          {
+            "name": "size",
+            "type": "\"sm\" | \"md\" | \"lg\" | undefined",
+            "required": false,
+            "description": "The size step on the shared control scale (29 / 36 / 44 dp)."
+          },
+          {
+            "name": "style",
+            "type": "StyleProp<Readonly<Omit<Readonly<Omit<Readonly<{ display?: \"none\" | \"flex\" | \"contents\" | undefined; width?: DimensionValue | undefined; height?: DimensionValue | undefined; bottom?: DimensionValue | undefined; end?: DimensionValue | undefined; left?: DimensionValue | undefined; right?: DimensionValue | undefined; start?: DimensionValue | undefined; top?: DimensionValue | undefined; inset?: DimensionValue | undefined; insetBlock?: DimensionValue | undefined; insetBlockEnd?: DimensionValue | undefined; insetBlockStart?: DimensionValue | undefined; insetInline?: DimensionValue | undefined; insetInlineEnd?: DimensionValue | undefined; insetInlineStart?: DimensionValue | undefined; minWidth?: DimensionValue | undefined; maxWidth?: DimensionValue | undefined; minHeight?: DimensionValue | undefined; maxHeight?: DimensionValue | undefined; margin?: DimensionValue | undefined; marginBlock?: DimensionValue | undefined; marginBlockEnd?: DimensionValue | undefined; marginBlockStart?: DimensionValue | undefined; marginBottom?: DimensionValue | undefined; marginEnd?: DimensionValue | undefined; marginHorizontal?: DimensionValue | undefined; marginInline?: DimensionValue | undefined; marginInlineEnd?: DimensionValue | undefined; marginInlineStart?: DimensionValue | undefined; marginLeft?: DimensionValue | undefined; marginRight?: DimensionValue | undefined; marginStart?: DimensionValue | undefined; marginTop?: DimensionValue | undefined; marginVertical?: DimensionValue | undefined; padding?: DimensionValue | undefined; paddingBlock?: DimensionValue | undefined; paddingBlockEnd?: DimensionValue | undefined; paddingBlockStart?: DimensionValue | undefined; paddingBottom?: DimensionValue | undefined; paddingEnd?: DimensionValue | undefined; paddingHorizontal?: DimensionValue | undefined; paddingInline?: DimensionValue | undefined; paddingInlineEnd?: DimensionValue | undefined; paddingInlineStart?: DimensionValue | undefined; paddingLeft?: DimensionValue | undefined; paddingRight?: DimensionValue | undefined; paddingStart?: DimensionValue | undefined; paddingTop?: DimensionValue | undefined; paddingVertical?: DimensionValue | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; position?: \"absolute\" | \"relative\" | \"static\" | undefined; flexDirection?: \"row\" | \"row-reverse\" | \"column\" | \"column-reverse\" | undefined; flexWrap?: \"wrap\" | \"nowrap\" | \"wrap-reverse\" | undefined; justifyContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; alignItems?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignSelf?: \"auto\" | \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"baseline\" | undefined; alignContent?: \"flex-start\" | \"flex-end\" | \"center\" | \"stretch\" | \"space-between\" | \"space-around\" | \"space-evenly\" | undefined; overflow?: \"visible\" | \"hidden\" | \"scroll\" | undefined; flex?: number | undefined; flexGrow?: number | undefined; flexShrink?: number | undefined; flexBasis?: number | string | undefined; aspectRatio?: number | string | undefined; boxSizing?: \"border-box\" | \"content-box\" | undefined; zIndex?: number | undefined; direction?: \"inherit\" | \"ltr\" | \"rtl\" | undefined; rowGap?: number | string | undefined; columnGap?: number | string | undefined; gap?: number | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"shadowColor\" | \"shadowOffset\" | \"shadowOpacity\" | \"shadowRadius\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<Omit<Readonly<{ shadowColor?: ____ColorValue_Internal | undefined; shadowOffset?: Readonly<{ width?: number | undefined; height?: number | undefined; }> | undefined; shadowOpacity?: number | undefined; shadowRadius?: number | undefined; }>, never> & Omit<Readonly<{}>, never>>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"transform\" | \"pointerEvents\" | \"transformOrigin\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ transform?: ReadonlyArray<Readonly<MaximumOneOf<MergeUnion<{ readonly perspective: number | AnimatedNode; } | { readonly rotate: string | AnimatedNode; } | { readonly rotateX: string | AnimatedNode; } | { readonly rotateY: string | AnimatedNode; } | { readonly rotateZ: string | AnimatedNode; } | { readonly scale: number | AnimatedNode; } | { readonly scaleX: number | AnimatedNode; } | { readonly scaleY: number | AnimatedNode; } | { readonly translateX: number | string | AnimatedNode; } | { readonly translateY: number | string | AnimatedNode; } | { readonly translate: [number | string | AnimatedNode, number | string | AnimatedNode] | AnimatedNode; } | { readonly skewX: string | AnimatedNode; } | { readonly skewY: string | AnimatedNode; } | { readonly matrix: ReadonlyArray<number | AnimatedNode> | AnimatedNode; }>>>> | string | undefined; transformOrigin?: [string | number, string | number, string | number] | string | undefined; }>, \"cursor\" | \"filter\" | \"isolation\" | \"opacity\" | \"pointerEvents\" | \"backfaceVisibility\" | \"backgroundColor\" | \"borderColor\" | \"borderCurve\" | \"borderBottomColor\" | \"borderEndColor\" | \"borderLeftColor\" | \"borderRightColor\" | \"borderStartColor\" | \"borderTopColor\" | \"borderBlockColor\" | \"borderBlockEndColor\" | \"borderBlockStartColor\" | \"borderRadius\" | \"borderBottomEndRadius\" | \"borderBottomLeftRadius\" | \"borderBottomRightRadius\" | \"borderBottomStartRadius\" | \"borderEndEndRadius\" | \"borderEndStartRadius\" | \"borderStartEndRadius\" | \"borderStartStartRadius\" | \"borderTopEndRadius\" | \"borderTopLeftRadius\" | \"borderTopRightRadius\" | \"borderTopStartRadius\" | \"borderStyle\" | \"borderWidth\" | \"borderBottomWidth\" | \"borderEndWidth\" | \"borderLeftWidth\" | \"borderRightWidth\" | \"borderStartWidth\" | \"borderTopWidth\" | \"outlineColor\" | \"outlineOffset\" | \"outlineStyle\" | \"outlineWidth\" | \"elevation\" | \"boxShadow\" | \"mixBlendMode\" | \"backgroundImage\" | \"experimental_backgroundImage\" | \"experimental_backgroundSize\" | \"experimental_backgroundPosition\" | \"experimental_backgroundRepeat\"> & Omit<Readonly<{ backfaceVisibility?: \"visible\" | \"hidden\" | undefined; backgroundColor?: ____ColorValue_Internal | undefined; borderColor?: ____ColorValue_Internal | undefined; borderCurve?: \"circular\" | \"continuous\" | undefined; borderBottomColor?: ____ColorValue_Internal | undefined; borderEndColor?: ____ColorValue_Internal | undefined; borderLeftColor?: ____ColorValue_Internal | undefined; borderRightColor?: ____ColorValue_Internal | undefined; borderStartColor?: ____ColorValue_Internal | undefined; borderTopColor?: ____ColorValue_Internal | undefined; borderBlockColor?: ____ColorValue_Internal | undefined; borderBlockEndColor?: ____ColorValue_Internal | undefined; borderBlockStartColor?: ____ColorValue_Internal | undefined; borderRadius?: number | string | undefined; borderBottomEndRadius?: number | string | undefined; borderBottomLeftRadius?: number | string | undefined; borderBottomRightRadius?: number | string | undefined; borderBottomStartRadius?: number | string | undefined; borderEndEndRadius?: number | string | undefined; borderEndStartRadius?: number | string | undefined; borderStartEndRadius?: number | string | undefined; borderStartStartRadius?: number | string | undefined; borderTopEndRadius?: number | string | undefined; borderTopLeftRadius?: number | string | undefined; borderTopRightRadius?: number | string | undefined; borderTopStartRadius?: number | string | undefined; borderStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; borderWidth?: number | undefined; borderBottomWidth?: number | undefined; borderEndWidth?: number | undefined; borderLeftWidth?: number | undefined; borderRightWidth?: number | undefined; borderStartWidth?: number | undefined; borderTopWidth?: number | undefined; opacity?: number | undefined; outlineColor?: ____ColorValue_Internal | undefined; outlineOffset?: number | undefined; outlineStyle?: \"solid\" | \"dotted\" | \"dashed\" | undefined; outlineWidth?: number | undefined; elevation?: number | undefined; pointerEvents?: \"auto\" | \"none\" | \"box-none\" | \"box-only\" | undefined; cursor?: CursorValue | undefined; boxShadow?: ReadonlyArray<BoxShadowValue> | string | undefined; filter?: ReadonlyArray<FilterFunction> | string | undefined; mixBlendMode?: ____BlendMode_Internal | undefined; backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundImage?: ReadonlyArray<BackgroundImageValue> | string | undefined; experimental_backgroundSize?: ReadonlyArray<BackgroundSizeValue> | string | undefined; experimental_backgroundPosition?: ReadonlyArray<BackgroundPositionValue> | string | undefined; experimental_backgroundRepeat?: ReadonlyArray<BackgroundRepeatValue> | string | undefined; isolation?: \"auto\" | \"isolate\" | undefined; }>, never>>, never> & Omit<Readonly<{}>, never>>>",
+            "required": false,
+            "description": "React Native style (or array of styles) merged onto the component's root element."
+          },
+          {
+            "name": "testID",
+            "type": "string | undefined",
+            "required": false,
+            "description": "React Native test identifier, forwarded to the root element for end-to-end tests."
+          },
+          {
+            "name": "value",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Controlled value."
+          }
+        ]
+      }
     ]
   }
 }

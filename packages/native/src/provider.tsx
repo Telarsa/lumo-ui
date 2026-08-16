@@ -29,6 +29,7 @@ export interface LumoNativeProviderProps {
   locale: Locale;
   /** Brand hue/chroma (web: `--lumo-ref-*-brand` / `-neutral`). Default achromatic. */
   brand?: LumoBrand | undefined;
+  /** The faces to use for Persian and Latin text (loaded by the app); undefined = the platform face. */
   fonts?: LumoNativeFonts | undefined;
   /** Pin a scheme; default follows the OS (`useColorScheme`). */
   colorScheme?: "light" | "dark" | undefined;

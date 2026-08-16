@@ -20,6 +20,21 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
+## 0.2.2 — unreleased
+
+### Added
+- **Web | Mobile on component pages.** Every component with a React Native
+  implementation (`button`, `switch`, `text-field`, `select`) has a Mobile side
+  at `/components/<slug>/mobile/` — the platform is a route, like the locale, so
+  the switch in the page header is two links and both pages are served bytes
+  the gate grades. The Mobile page: the RN examples in a phone frame (rendered
+  through react-native-web, labelled), install (git pin on `@lumo-ui/native`),
+  the examples with source, contract notes, **generated props** (the API
+  reference now covers `packages/native` as `native/<module>`), device
+  evidence. The sidebar marks such components with a phone glyph.
+- Native props documented (docblocks; `testID` / `style` joined the house
+  vocabulary); the documentation ratchet applies to `packages/native`.
+
 ## 0.2.1 — 16 August 2026
 
 ### Added

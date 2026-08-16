@@ -15,10 +15,16 @@ import { join, resolve } from "node:path";
 import ts from "typescript";
 
 const ROOT = new URL("..", import.meta.url).pathname;
-const UI_ROOT = join(ROOT, "packages", "ui");
 const CORE_SRC = join(ROOT, "packages", "core", "src");
-const UI_SRC = join(UI_ROOT, "src");
-const INDEX = join(UI_SRC, "index.ts");
+/*
+ * The packages whose exported `*Props` are documented: the web components
+ * (module keys as before, `button.tsx`) and the React Native components
+ * (`native/button.tsx`), so the docs site's mobile pages read generated props too.
+ */
+const PACKAGES = [
+  { root: join(ROOT, "packages", "ui"), prefix: "" },
+  { root: join(ROOT, "packages", "native"), prefix: "native/" },
+];
 const outputFlag = process.argv.indexOf("--api");
 const OUTPUT =
   outputFlag === -1 ? join(ROOT, "api-reference.json") : process.argv[outputFlag + 1];
@@ -28,11 +34,18 @@ if (OUTPUT === undefined) {
 }
 const checkOnly = process.argv.includes("--check");
 
-const configFile = ts.readConfigFile(join(UI_ROOT, "tsconfig.json"), ts.sys.readFile);
+/** @type {Record<string, Array<{name: string, props: Array<{name: string, type: string, required: boolean, description: string}>}>>} */
+const modules = {};
+let undocumentedLumoProps = 0;
+
+/** Collect every exported `*Props` of one package's index into `modules`. @param {string} PKG_ROOT @param {string} PREFIX */
+function collectPackage(PKG_ROOT, PREFIX) {
+const PKG_SRC = join(PKG_ROOT, "src");
+const configFile = ts.readConfigFile(join(PKG_ROOT, "tsconfig.json"), ts.sys.readFile);
 if (configFile.error !== undefined) {
   throw new Error(ts.flattenDiagnosticMessageText(configFile.error.messageText, "\n"));
 }
-const config = ts.parseJsonConfigFileContent(configFile.config, ts.sys, UI_ROOT);
+const config = ts.parseJsonConfigFileContent(configFile.config, ts.sys, PKG_ROOT);
 const program = ts.createProgram(config.fileNames, config.options);
 const diagnostics = ts.getPreEmitDiagnostics(program);
 if (diagnostics.length > 0) {
@@ -45,6 +58,7 @@ if (diagnostics.length > 0) {
   );
 }
 const checker = program.getTypeChecker();
+const INDEX = join(PKG_SRC, "index.ts");
 const indexFile = program.getSourceFile(INDEX);
 if (indexFile === undefined) throw new Error(`api-reference: cannot read ${INDEX}`);
 
@@ -75,7 +89,7 @@ for (const statement of indexFile.statements) {
 function isLumoAuthored(symbol) {
   return (symbol.getDeclarations() ?? []).some((declaration) => {
     const file = resolve(declaration.getSourceFile().fileName);
-    return file.startsWith(UI_SRC) || file.startsWith(CORE_SRC);
+    return file.startsWith(PKG_SRC) || file.startsWith(CORE_SRC);
   });
 }
 
@@ -90,7 +104,6 @@ function isOnlyUndefined(type) {
  * prop points at the platform's docs; a Lumo-authored prop with no docblock is
  * documentation DEBT, counted and ratcheted against `api-docs.floor.json`.
  */
-let undocumentedLumoProps = 0;
 /*
  * House-vocabulary names whose meaning is a LIBRARY RULE, so one sentence is
  * accurate at every declaration site (`children`, `value`, `size`, `variant`
@@ -101,6 +114,9 @@ const HOUSE_VOCABULARY = new Map([
   ["isDisabled", "Disables the control: it cannot be interacted with and is announced as disabled."],
   ["locale", "The BCP-47 locale this component renders in. Drives direction, calendar system, and digit shaping."],
   ["ref", "A ref to the component's root element."],
+  // React Native house vocabulary (packages/native).
+  ["testID", "React Native test identifier, forwarded to the root element for end-to-end tests."],
+  ["style", "React Native style (or array of styles) merged onto the component's root element."],
   ["aria-controls", "Standard ARIA attribute, forwarded to the element that carries the role."],
   ["aria-haspopup", "Standard ARIA attribute, forwarded to the element that carries the role."],
   ["aria-expanded", "Standard ARIA attribute, forwarded to the element that carries the role."],
@@ -136,15 +152,14 @@ function descriptionOf(symbol, typeText) {
       return "The content this component renders.";
     }
     undocumentedLumoProps += 1;
+    if (process.env.LUMO_API_LIST_UNDOCUMENTED) console.error(`    undocumented: ${symbol.name}`);
     return "Lumo prop — docblock pending.";
   }
   return "Inherited from the DOM surface of the element this component renders.";
 }
 
-/** @type {Record<string, Array<{name: string, props: Array<{name: string, type: string, required: boolean}>}>>} */
-const modules = {};
 for (const [moduleName, propsNames] of [...propsByModule].sort(([a], [b]) => a.localeCompare(b))) {
-  const sourcePath = join(UI_SRC, moduleName);
+  const sourcePath = join(PKG_SRC, moduleName);
   const sourceFile = program.getSourceFile(sourcePath);
   const moduleSymbol = sourceFile === undefined ? undefined : checker.getSymbolAtLocation(sourceFile);
   if (sourceFile === undefined || moduleSymbol === undefined) {
@@ -185,8 +200,12 @@ for (const [moduleName, propsNames] of [...propsByModule].sort(([a], [b]) => a.l
       .sort((a, b) => Number(b.required) - Number(a.required) || a.name.localeCompare(b.name));
     if (props.length > 0) groups.push({ name: propsName, props });
   }
-  if (groups.length > 0) modules[moduleName] = groups;
+  if (groups.length > 0) modules[PREFIX + moduleName] = groups;
 }
+
+}
+
+for (const pkg of PACKAGES) collectPackage(pkg.root, pkg.prefix);
 
 const generated = `${JSON.stringify({ version: 1, modules }, null, 2)}\n`;
 
