@@ -16,6 +16,11 @@ const config: NextConfig = {
   trailingSlash: true,
   reactStrictMode: true,
   images: { unoptimized: true },
+  // The React Native components (@lumo-ui/native) are PREVIEWED on the docs site
+  // through react-native-web. `import … from "react-native"` in that package is
+  // the real thing on a device; here it resolves to the web renderer. The site
+  // labels the preview as a browser rendering, not a device run.
+  turbopack: { resolveAlias: { "react-native": "react-native-web" } },
 };
 
 export default config;

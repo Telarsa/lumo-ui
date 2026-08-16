@@ -54,7 +54,7 @@ Tier 3 total ≈ **+0.35**.
 ## What we deliberately do not chase
 
 - **Adoption (I5) and bus factor (H1)** — recorded, unweighted, out of scope for now.
-- **React Native** — G3's "10" needs an RN/Expo story; that is a separate decision, never Flutter.
+- **React Native** — started 16 Aug 2026 by owner decision (`@lumo-ui/native`: provider + Button, decision §27); the device ICU probe is still the gate for any claim; never Flutter.
 - **Component count for its own sake** — C is 12% of the score; a component without proof lowers B and D more than it raises C.
 - **Claims without runs** — no NVDA/JAWS/TalkBack claims until we actually run them; VoiceOver via Guidepup is the honest first step on this machine.
 

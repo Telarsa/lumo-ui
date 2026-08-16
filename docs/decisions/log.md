@@ -1299,3 +1299,26 @@ what this entry records.
 The example-hotel session's verdict was 5/10 for "how well can it be used" at
 0.1.1 (components 8–9, tooling and docs pulled it down); every finding it
 listed is either fixed above or recorded here.
+
+## 27. React Native: started with a Button, gate still open (16 Aug 2026)
+
+The owner asked whether the mobile alternative had been tested — it had not;
+`packages/native` held only the ICU probe and a README arguing gate-first and
+"not a button" — and asked to start with a Button and show it on the website.
+Decision: start it, keep the gate honest, and make the start real rather than a
+sketch. `@lumo-ui/native` (0.1.2, lockstep) now exists with a provider and
+`Button`/`IconButton` on `Pressable`+`Text`; its tokens are GENERATED from
+`tokens.css` (oklch → hex, rem → dp; `gate:native-tokens`), so native and web
+read one semantic palette; its first byte is graded by the 14 rules through
+react-native-web (0 violations); consumer lint/profile gates cover it; the docs
+site shows it in a phone frame at `/docs/native/` and states on the page that a
+browser rendering is not a device run. Measured on the way: react-native-web
+renders a `role="button"` Pressable as a real `<button>` with `aria-disabled` and
+`aria-label`, so the README's RNW concern does not apply to this component
+(it still applies to the idea of building the library on RNW).
+
+Not decided, deliberately: the toolchain (plain `StyleSheet` for now, no
+NativeWind), and whether `@lumo-ui/core` runs unchanged on a device — that is
+the probe's answer, and Xcode 26.6 with simulators being on the development
+machine makes the blocking simulator run feasible when the owner wants the
+long build. The next component should be direction-sensitive.

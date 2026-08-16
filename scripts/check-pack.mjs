@@ -18,6 +18,8 @@ const REQUIRED = [
   "package/packages/gate/dist/index.js",
   "package/packages/gate/dist/rules.js",
   "package/packages/ui/src/index.ts",
+  "package/packages/native/src/index.ts",
+  "package/packages/native/package.json",
   "package/packages/core/package.json",
   "package/registry.json",
   "package/catalog.json",
