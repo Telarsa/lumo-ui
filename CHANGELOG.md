@@ -81,6 +81,13 @@ now held by a gate. Decision §26 has the full record.
   default is announced-only (`showLabel` opts in) — the docblock now says so.
 
 ### Added
+- **`@lumo-ui/native` — the React Native / Expo start (decision §27):**
+  `LumoNativeProvider` (direction from the locale, brand hue/chroma, fonts,
+  colour scheme) and `Button` / `IconButton` on `Pressable` + `Text` with the
+  web button's contract; `src/tokens.ts` generated from `tokens.css`
+  (`gate:native-tokens`); first-byte tests through react-native-web graded by the
+  14 rules; the docs site previews it at `/docs/native/` in a phone frame,
+  labelled as a browser rendering. The device ICU probe is still open.
 - **Gates in `verify`:** `gate:consumer-profile` (tsc under a Next default
   tsconfig over core/base-ui-ssr/ui/blocks), `gate:consumer-lint`
   (`eslint.consumer.config.mjs`, `--max-warnings 0`), `gate:dist` (the gate's

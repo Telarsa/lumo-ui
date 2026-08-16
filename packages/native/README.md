@@ -1,12 +1,47 @@
-# `packages/native` — a spike, and its gate
+# `packages/native` — `@lumo-ui/native`, and its gate
 
-**Status: NOT STARTED. The gate below has not been run under Hermes, and nothing
-should be built here until it has.**
+**Status (16 Aug 2026): STARTED by owner decision, gate still open.** The owner
+asked for a first component — a Button — visible on the docs site, before the
+Hermes ICU probe below has run on a device. So this package now holds:
 
-This directory contains exactly one file — `src/icu-probe.ts` — and this
-document. That is deliberate: the spike's shape depends on an answer nobody in
-this repository has yet, and writing components before getting it is how a spike
-becomes a rewrite.
+- `src/tokens.ts` — GENERATED from `packages/theme/src/tokens.css` by
+  `scripts/build-native-tokens.mjs` (`gate:native-tokens` fails on drift): the
+  same `--lumo-sys-*` semantic tokens as hex for light and dark, radii and
+  control heights in dp, brand hue/chroma as the one runtime knob.
+- `src/provider.tsx` — `LumoNativeProvider({ locale, brand, fonts, colorScheme })`:
+  direction derived from the locale, never passed; it does not call
+  `I18nManager.forceRTL` (an app-level, next-launch switch — the app's decision).
+- `src/button.tsx` — `Button` / `IconButton` on `Pressable` + `Text`, the web
+  button's contract: four variants, three sizes on the shared control scale,
+  `isDisabled` announced through `accessibilityState`, children typed `LumoNode`
+  (a raw number does not compile), `IconButton.label` REQUIRED.
+- Tests: rendered through **react-native-web** to static markup and graded by
+  the same 14 served-HTML rules as the web (0 violations under fa-IR); a
+  `.type-test.tsx` pins the contract. `gate:consumer-lint` and
+  `gate:consumer-profile` cover this package too.
+- The docs site previews it (`/docs/native/`) through react-native-web inside a
+  phone `Frame`, and says on the page that a browser rendering is not a device
+  run. Measured there: RNW renders our `role="button"` Pressable as a real
+  `<button type="button">` with `aria-disabled`, `aria-label` and
+  `direction: rtl` on the text — so for THIS component the concern below that
+  RNW yields roleless markup did not materialise; it remains the reason the
+  library is not BUILT on RNW.
+
+**What is still open, and blocking for any claim about devices:** the probe.
+Xcode 26.6 with iOS simulators is present on the development machine, so the
+first blocking row of the table below is now feasible; an Expo iOS build is a
+long, multi-gigabyte step and has not been started. Until it runs, nothing here
+claims that `@lumo-ui/core` runs unchanged on a device. The next component
+should be direction-sensitive (`Switch` / `SegmentedControl`), for the reason
+step 4 below gives.
+
+Provisional toolchain decision: plain `StyleSheet` over generated tokens, no
+NativeWind (nothing in a button needed class strings, and NativeWind's install
+is large). Revisit at the second component.
+
+---
+
+The original gate-first argument, kept verbatim because it still holds:
 
 ## The gate, and why it comes first
 

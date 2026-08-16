@@ -20,6 +20,6 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   reactHooks.configs.flat.recommended,
   {
-    files: ["packages/ui/src/**/*.{ts,tsx}", "packages/blocks/src/**/*.{ts,tsx}"],
+    files: ["packages/ui/src/**/*.{ts,tsx}", "packages/blocks/src/**/*.{ts,tsx}", "packages/native/src/**/*.{ts,tsx}"],
   },
 );
