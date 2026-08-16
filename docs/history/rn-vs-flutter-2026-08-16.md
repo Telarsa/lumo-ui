@@ -95,3 +95,81 @@ more interesting runner-up than Flutter for *this* library: it is React + CSS,
 its runtime's Intl is complete, and its headless kit has the right shape; what
 it lacks is maturity, proof surfaces and an ecosystem. `lumo-app-lynx` stays as
 the tripwire decision §12 asked for.
+
+## Full review after the owner's challenge (later, 16 Aug 2026)
+
+The owner pushed back: Lynx supports Tailwind, its runtime is mature (the
+ecosystem is young), it looks better under RTL and is faster; are the other
+Lynx scores right; is accessibility right; could a *better* library be built on
+Lynx than on Expo; and how many prebuilt headless components exist per stack.
+Re-scored with what was verified today, and honest about what was not measured.
+
+### Corrections to the Lynx column
+- **Runtime maturity: 5 → 8.** The engine has run in TikTok-scale production
+  for years; what is young is the open-source *ecosystem* (lynx-ui 3.x since
+  2026, `@lynx-js/react` 0.x). Ecosystem stays 4.
+- **Styling / shared with web: 7 → 8.** Tailwind is officially supported
+  (rspeedy styling guide) — Lumo's Tailwind class strings could style Lynx
+  components with a Lynx preset, within Lynx's CSS subset (no `oklch()`, no
+  child combinators, no cascade layers). React + TypeScript + `@lumo-ui/core`
+  (PrimJS passed the whole Intl probe, `Intl.Locale` included) carry over; Base
+  UI and the served-HTML gate do not.
+- **RTL: 8 → 9.** CSS `direction` per subtree, inheritable; logical
+  properties; the sheet's `enableRTL`. Same tier as Flutter, above RN's
+  app-level mirroring.
+- **Performance: added a row.** Lynx's dual-thread design (main-thread script
+  for gestures/animation, instant first frame) is architecturally ahead of
+  Hermes+JS-thread React Native and comparable to Flutter's; RN closes part of
+  the gap with the New Architecture and Reanimated worklets. **Not measured
+  here** — the twin app is one screen; no numbers were taken on any stack.
+  Scored on architecture: RN 7, Flutter 9, Lynx 9.
+- **AI proving: 5 → 6.** A ReactLynx Testing Library exists (Testing-Library
+  API); still no served bytes and no semantics-tree tester.
+- **Accessibility: 5 → 4, and this is the material finding.** Lynx documents
+  `accessibility-element`, `accessibility-label`, `accessibility-trait` with
+  traits **image | button | text only**, `accessibility-elements` (order),
+  `accessibilityAnnounce`, `requestAccessibilityFocus`. There is no way to
+  express a SWITCH with a checked state, a dialog role, an expanded/disabled
+  state, or a value — the things Lumo's contract exists to announce. The
+  `accessibility-value`/`-status` attributes the twin uses are undocumented and
+  likely ignored. Until Lynx grows roles and states, a Persian-first accessible
+  library cannot honestly ship on it. RN (`role`, `aria-*`, `accessibilityState`,
+  UIKit/Compose controls) and Flutter (`Semantics` with flags/values/actions)
+  both can — with the caveat that **no screen reader was run on any stack
+  today**; those two scores stay 7 as static-semantics-verified, runtime-unverified.
+
+### Revised table (RN · Flutter · Lynx)
+| Axis | RN + Lumo | Flutter + lumo_ui | Lynx + lumo |
+|---|---|---|---|
+| AI writing components | 8 | 8 | 7 |
+| AI proving them | 9 | 6 | 6 |
+| AI running them | 6 | 5 | 8 |
+| Shared with the web (code, tokens, docs, gate) | 9 | 3 | 8 (Tailwind + core + React; not Base UI, not the gate) |
+| Maintainability | 7 | 6 | 6 |
+| RTL | 6 | 9 | 9 |
+| i18n / digits / calendar | 6 | 9 | 9 |
+| Accessibility (static verified; runtime unverified everywhere) | 7 | 7 | 4 (roles/states missing) |
+| Ecosystem for our needs | 7 | 6 | 4 |
+| Look parity | 8 | 7 | 8 |
+| Performance (architecture, unmeasured) | 7 | 9 | 9 |
+| Runtime maturity / risk | 8 | 9 | 8 |
+| **Overall** | **7.4** | **7.0** | **7.2** |
+
+### Could a better library be built on Lynx than on Expo?
+On RTL, i18n, performance and CSS/Tailwind sharing — plausibly yes, and the
+twin was written faster than the RN one. On what Lumo is *for* — announced,
+correct UI in Persian — **not today**: the accessibility model has no roles or
+states beyond button/image/text. That is disqualifying for the contract, not a
+style preference. Second-order costs: 17 headless primitives vs the RN/Flutter
+worlds, no Expo-class module ecosystem (camera, auth, OTA), few people and
+fewer AI training examples, ByteDance-driven cadence. So: RN stays; Lynx is
+the runner-up to re-check when its accessibility surface grows (the tripwire
+of decision §12, now concrete: "roles and states"). Keep `lumo-app-lynx`.
+
+### Prebuilt headless components, per stack (16 Aug 2026)
+| Stack | Headless (unstyled, accessible primitives) | Styled kits built on them | Notes |
+|---|---|---|---|
+| React Native | **@rn-primitives: 17** (accordion, alert-dialog, aspect-ratio, avatar, checkbox, collapsible, context-menu, dialog, dropdown-menu, hover-card, label, menubar, navigation-menu, popover, progress, radio-group, select, separator, slider, switch, table, tabs, toast, toggle, toggle-group, toolbar, tooltip — 28 packages incl. internals; 17 verified on npm at 1.5.x plus the rest) | React Native Reusables (~40, NativeWind), gluestack-ui v2 (~40), Tamagui (~40, some unstyled) | no calendar, combobox, number field |
+| Flutter | Not a headless culture: the `widgets` layer *is* the primitives (RawMaterialButton, GestureDetector, FocusableActionDetector, Semantics…) | Material 3 (~60 widgets), Cupertino (~30), shadcn_flutter (~70), forui (~50) | everything ships styled; theming by tokens works, as `lumo_ui` showed |
+| Lynx | **@lynx-js/lynx-ui: 20** (button, checkbox, dialog, draggable, feed-list, form, input, input-otp, lazy-component, list, popover, presence, radio-group, scroll-view, sheet, slider, sortable, swipe-action, swiper, switch) | none public yet | official, Apache-2.0; overlays need their `*View` wrappers |
+| Web (reference) | Base UI ~30 · Radix ~30 · React Aria Components ~45 | shadcn/ui, Lumo | |
