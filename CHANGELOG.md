@@ -20,6 +20,15 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
+## 0.2.0 — unreleased
+
+### Fixed
+- `direction()` no longer throws on a runtime without `Intl.Locale` (Hermes on
+  iOS 18.5 / Expo Go — the first device run of the probe): it asks the platform
+  inside a guard and falls back to the locale table; `@lumo-ui/native` runs no
+  platform code at import time. Probe results recorded verbatim in
+  `packages/native/README.md`: digits and the Persian calendar PASS on device.
+
 ## 0.1.2 — 16 August 2026
 
 The first two consumer trials (path A, v0.1.1): `example-hotel` — Next 16 with

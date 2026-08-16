@@ -114,3 +114,18 @@ describe("documentDirection — a host's other languages", () => {
     expect(isLocale("de")).toBe(false);
   });
 });
+
+describe("direction — a runtime without Intl.Locale (Hermes, 16 Aug 2026)", () => {
+  it("falls back to the table instead of throwing when Intl.Locale is absent", async () => {
+    const saved = Object.getOwnPropertyDescriptor(Intl, "Locale");
+    // Simulating Hermes: the constructor is missing entirely.
+    Object.defineProperty(Intl, "Locale", { value: undefined, configurable: true, writable: true });
+    try {
+      const { direction } = await import("./types.ts");
+      expect(direction("fa-IR")).toBe("rtl");
+      expect(direction("en-US")).toBe("ltr");
+    } finally {
+      if (saved) Object.defineProperty(Intl, "Locale", saved);
+    }
+  });
+});

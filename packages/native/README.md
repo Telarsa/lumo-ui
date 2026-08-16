@@ -27,13 +27,46 @@ Hermes ICU probe below has run on a device. So this package now holds:
   RNW yields roleless markup did not materialise; it remains the reason the
   library is not BUILT on RNW.
 
-**What is still open, and blocking for any claim about devices:** the probe.
-Xcode 26.6 with iOS simulators is present on the development machine, so the
-first blocking row of the table below is now feasible; an Expo iOS build is a
-long, multi-gigabyte step and has not been started. Until it runs, nothing here
-claims that `@lumo-ui/core` runs unchanged on a device. The next component
-should be direction-sensitive (`Switch` / `SegmentedControl`), for the reason
-step 4 below gives.
+### The first device run — iOS simulator, debug (Expo Go), 16 Aug 2026
+
+`example-projects/lumo-native-probe` (Expo SDK 57.0.13, React Native 0.86.2,
+Hermes; iPhone 16 simulator, iOS 18.5) — the app imports `@lumo-ui/core` and
+`@lumo-ui/native` from this repository as git dependencies and runs the probe
+on the device. Metro's log line, verbatim:
+
+```
+LUMO_ICU_PROBE {"platform":"ios","version":"18.5","hermes":true,"pass":false,"checks":[
+  {"id":"intl-present","pass":true,"actual":"true","expected":"true"},
+  {"id":"direction","pass":false,"actual":"(threw: TypeError: undefined cannot be used as a constructor.)","expected":"rtl"},
+  {"id":"digits","pass":true,"actual":"۱۲۳۴","expected":"۱۲۳۴"},
+  {"id":"calendar","pass":true,"actual":"مرداد","expected":"مرداد"},
+  {"id":"calendar-not-gregorian","pass":true,"actual":"۱۴۰۵ (→ 1405)","expected":"۱۴۰۵ (→ 1405), and never 2026"}]}
+```
+
+Reading it against the outcome table below: **digits and calendar PASS** — the
+two outcomes that would have changed the plan's shape did not happen;
+`formatNumber` and `formatDate` are the same code on web and device.
+**Direction FAILS in the cheapest way:** this Hermes has no `Intl.Locale` at all
+(not just no `getTextInfo`). And it failed harder than the table predicted:
+`@lumo-ui/core`'s `direction()` called `new Intl.Locale()` unguarded and the
+native provider evaluated it at module scope, so the first launch died with
+`[runtime not ready]: TypeError: undefined cannot be used as a constructor`
+before its first frame. Fixed the way the table said: `direction()` asks the
+platform inside a guard and falls back to the hand-kept map; nothing in
+`@lumo-ui/native` runs platform code at import time; the probe now names the
+outcome (`no Intl.Locale`) instead of a raw TypeError. With that, the buttons
+rendered on the simulator (screenshot in the session's evidence): four variants,
+three sizes, the named icon button, disabled; text RTL; row order LTR because
+the app never called `I18nManager.forceRTL` — the app-level switch, as
+`provider.tsx` documents.
+
+Still open: the **release-build** row (minification, `resConfigs`, language
+splits) and an **Android emulator** run — Android Studio is not on the
+development machine. Until those run, the claim is limited to "iOS 18.5 debug
+Hermes: digits and calendar hold; direction needs the table."
+
+The next component should be direction-sensitive (`Switch` /
+`SegmentedControl`), for the reason step 4 below gives.
 
 Provisional toolchain decision: plain `StyleSheet` over generated tokens, no
 NativeWind (nothing in a button needed class strings, and NativeWind's install
