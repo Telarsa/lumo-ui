@@ -35,6 +35,15 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - Native props documented (docblocks; `testID` / `style` joined the house
   vocabulary); the documentation ratchet applies to `packages/native`.
 
+### Changed
+- **`.lumo/` is a local cache, not a committed artefact.** `lumo add` writes a
+  `.lumo/.gitignore` of `*`; only `lumo.lock.json` is committed. `lumo
+  diff`/`upgrade` recognise an untouched copy by its recorded hash (no base
+  needed) and, for an EDITED copy whose cached original is missing, fetch the
+  base from the recorded tag (a shallow blob-less clone under `.lumo/cache/`)
+  — never a guess. *Migrate:* `git rm -r --cached .lumo` in your project; the
+  next `lumo add`/`upgrade` writes the ignore file.
+
 ## 0.2.1 — 16 August 2026
 
 ### Added

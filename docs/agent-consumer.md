@@ -45,7 +45,7 @@ beyond repository access:
 | `<html>` | `<LumoHtml lang="fa-IR">` in the layout that knows the locale (in a `[locale]` app that is the locale layout; if your `<html>` sits above it, read the locale there — next-intl's `getLocale()` works). A host that also serves a language Lumo has no strings for (`de`) may pass it — `lang` accepts any BCP-47 tag, direction comes from the primary subtag — but must not render Lumo components under that document. |
 | Provider | `<LumoProvider locale=…>` is a client component; wrap once (a small `"use client"` boundary around `children` in the locale layout is the usual shape). Its `children` is `LumoNode`; Next's `ReactNode` at the layout seam needs `as LumoNode`… or wrap it in an element. |
 | Next config | `transpilePackages: ["@lumo-ui/core", "@lumo-ui/theme", "@lumo-ui/base-ui-ssr"]`. |
-| Where copies go | `lumo add … --dir src/components` (remembered in `lumo.lock.json`); ui items land in `<dir>/ui/`, blocks in `<dir>/blocks/`, with imports rewritten to your copies. `add` refuses to overwrite a file it did not write (`--force` to insist). Commit `lumo.lock.json` and `.lumo/originals/` (`*.orig`, so your lint and tsc globs skip them). |
+| Where copies go | `lumo add … --dir src/components` (remembered in `lumo.lock.json`); ui items land in `<dir>/ui/`, blocks in `<dir>/blocks/`, with imports rewritten to your copies — the same `components/ui` shape your own components used, so a project ends with ONE `ui/` folder: Lumo's copies, plus whatever Lumo does not cover, named for what it is (`layout.tsx`, not a second `ui/`). `add` refuses to overwrite a file it did not write (`--force` to insist). Commit `lumo.lock.json`; `.lumo/` is a self-ignored local cache. |
 | Lint | Copies pass typescript-eslint `recommended` + react-hooks 7 `recommended` (React Compiler rules included) with warnings as errors — that is `eslint-config-next`; a gate proves it. |
 | Server components | `Card`, `Badge`, `Separator`, `Alert`, `Link` and every `*.variants.ts` render from a server component; anything on a Base UI part (`Button`, fields, popups) is a client component — put it in one client island. |
 | Grading | `lumo gate <dir>` grades a directory of served HTML — a static export, or files you `curl` from `next start` (a dynamic app has no export). |
@@ -96,11 +96,15 @@ lumo add date-range-picker --dir src/components   # copies the item AND its regi
 pnpm add <the exact `name@version` line it printed>
 ```
 `--to` is the project root (default `.`), `--dir` where copies live (default
-`components`, remembered in the lock — pass it once). `add` records
-`lumo.lock.json` (what, which version, file hashes) and keeps a pristine copy
-under `.lumo/originals/*.orig` — that is what makes upgrades safe. It never
-overwrites a file it did not write (`REFUSED …`; `--force` to insist). Blocks
-(`lumo add booking-summary`) come with their ui closure and import your copies.
+`components` → `components/ui/`, `components/blocks/`; in a `src/` project use
+`--dir src/components`; remembered in the lock — pass it once). `add` records
+`lumo.lock.json` (what, which version, file hashes) — **commit that file**. It
+also keeps a local cache under `.lumo/` (originals for 3-way upgrades) that
+carries its own `.gitignore`: nothing under it is committed, and an edited
+copy's base is fetched from the recorded tag when the cache is missing (fresh
+clone, CI). It never overwrites a file it did not write (`REFUSED …`; `--force`
+to insist). Blocks (`lumo add booking-summary`) come with their ui closure and
+import your copies.
 
 ## 3. Use it — the five rules that are not optional
 
