@@ -49,6 +49,14 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - Native props documented (docblocks; `testID` / `style` joined the house
   vocabulary); the documentation ratchet applies to `packages/native`.
 
+### Recorded
+- The React Native vs Flutter two-project experiment
+  (`docs/history/rn-vs-flutter-2026-08-16.md`): the same app on
+  `example-projects/lumo-app-expo` and `example-projects/lumo-app-flutter` (a
+  Flutter `lumo_ui` package under Lumo's contract, tokens generated from
+  `tokens.css` by `scripts/build-flutter-tokens.mjs`), both run on the iOS 26.5
+  simulator; ratings and the recommendation to keep React Native / Expo.
+
 ### Changed
 - **`.lumo/` is a local cache, not a committed artefact.** `lumo add` writes a
   `.lumo/.gitignore` of `*`; only `lumo.lock.json` is committed. `lumo

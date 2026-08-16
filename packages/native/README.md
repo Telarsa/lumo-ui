@@ -52,7 +52,7 @@ Hermes ICU probe below has run on a device. So this package now holds:
 
 ### The first device run — iOS simulator, debug (Expo Go), 16 Aug 2026
 
-`example-projects/lumo-native-probe` (Expo SDK 57.0.13, React Native 0.86.2,
+`example-projects/lumo-app-expo` — then named `lumo-native-probe`; the probe now runs inside the reference app (Expo SDK 57.0.13, React Native 0.86.2,
 Hermes; iPhone 16 simulator, iOS 18.5) — the app imports `@lumo-ui/core` and
 `@lumo-ui/native` from this repository as git dependencies and runs the probe
 on the device. Metro's log line, verbatim:
