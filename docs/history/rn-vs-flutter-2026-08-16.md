@@ -173,3 +173,67 @@ of decision §12, now concrete: "roles and states"). Keep `lumo-app-lynx`.
 | Flutter | Not a headless culture: the `widgets` layer *is* the primitives (RawMaterialButton, GestureDetector, FocusableActionDetector, Semantics…) | Material 3 (~60 widgets), Cupertino (~30), shadcn_flutter (~70), forui (~50) | everything ships styled; theming by tokens works, as `lumo_ui` showed |
 | Lynx | **@lynx-js/lynx-ui: 20** (button, checkbox, dialog, draggable, feed-list, form, input, input-otp, lazy-component, list, popover, presence, radio-group, scroll-view, sheet, slider, sortable, swipe-action, swiper, switch) | none public yet | official, Apache-2.0; overlays need their `*View` wrappers |
 | Web (reference) | Base UI ~30 · Radix ~30 · React Aria Components ~45 | shadcn/ui, Lumo | |
+
+## Lynx vs Flutter, tested deeper (late 16 Aug 2026)
+
+The owner's priorities: RTL, performance, localisation; RN judged old. Both
+twins gained an identical **Bench** screen (2,000 lazy rows: locale digits,
+mixed-direction text, a Lumo Switch each; toggle-all; 6,000 px auto-scroll)
+with an unattended mode, run on the same iPhone 17 simulator (iOS 26.5),
+in-app timers plus a framework-independent screen recording (unique frames/s).
+`lumo-app-expo` was no longer on disk when this started (not removed by the
+assistant), so RN was not re-measured.
+
+### Measured
+| | Flutter (DEBUG/JIT — the simulator refuses profile/release) | Lynx (production bundle, LynxExplorer 4.0.1) |
+|---|---|---|
+| First render of the bench | 298–396 ms after mount | 667 ms loadBundle→paint (hydrate 153 ms); first background effect 232 ms |
+| Toggle-all (2,000 rows) | 14–40 ms setState→frame; build 1.2–1.8 ms (only ~15 visible rows rebuild) | 216–273 ms per pipeline; ≈170 ms is the background diff of 2,000 items; layout→paint 2 ms |
+| Scroll 750 px/s × 8 s | 479 frames; build avg 1.6 / p95 5.6 ms; raster avg 1.1 / p95 1.6 ms; 0 janky | 60 unique frames/s throughout (recording); no per-frame API |
+| Recording, unique frames/s in the scroll window | 60 | 60–61 |
+| Correctness | rows correct after toggles | **rows entering the viewport after toggle-all show their INITIAL state** — `<list>` drops updates for not-yet-created items (reproduced 3×) |
+
+Reading: on scrolling both are smooth on this machine; Flutter's lazy
+`ListView.builder` makes whole-list state changes ~10× cheaper than
+ReactLynx's `<list>`, whose 2,000 children live in the JS virtual tree and are
+diffed on every change (Lynx's answer would be per-item state or Element
+Templates; the bench uses the straightforward pattern). And the stale-row bug
+is the kind of thing a young ecosystem ships. Flutter's numbers are debug-mode
+and would only improve in release.
+
+### Localisation, measured
+| | Flutter (`intl` + `flutter_localizations`) | Lynx (PrimJS Intl on device) |
+|---|---|---|
+| Digits, grouping, percent | ۱٬۲۳۴٬۵۶۷٫۸۹ · ۱۳٪ | ۱٬۲۳۴ · ۱۲٫۵٪ |
+| Currency IRR | "‎Rial۱۲۵٬۰۰۰" (no Persian symbol) | ۱۲۵٬۰۰۰ ریال |
+| Full date | **Gregorian**: "یکشنبه ۱۶ اوت ۲۰۲۶" — no Jalali anywhere in intl/Material (correction of the earlier claim; needs a community package such as shamsi_date / persian_datetime_picker) | **Jalali**: "یکشنبه ۲۵ مرداد ۱۴۰۵" via `-u-ca-persian` |
+| Plural rules | fa via `Intl.plural` ✓ | `Intl.PluralRules` fa one/other, ar two ✓ |
+| List / relative time | — (packages) | "الف، ب، و پ" · "دیروز" ✓ |
+| Material strings | fa: تأیید / لغو / انتخاب تاریخ; week starts Saturday ✓ | none (no Material layer) |
+
+### RTL, seen
+Both mirrored the bench rows (chip at the reading start, switch at the end,
+mixed "Item 91 · ردیف ۹۱" runs in the right order). Flutter through
+`Directionality`; Lynx through inherited CSS `direction`. Bidi text INPUT was
+not exercised (no typing automation on the simulator).
+
+### Revised for the two finalists
+| Axis | Flutter | Lynx |
+|---|---|---|
+| Performance, measured | 9 | 8 (scroll 9, whole-list updates 6) |
+| RTL | 9 | 9 |
+| Localisation runtime | 7 (no Jalali dates without a package) | 9 |
+| Localised components shipped | 8 (Material fa strings, pickers Gregorian) | 3 |
+| Accessibility contract | 7 (static-verified) | 4 (no roles/states) |
+| Correctness under load | 9 | 6 (stale rows) |
+| Maturity / tooling | 9 | 6 |
+| Shared with web Lumo | 3 | 8 |
+| **Overall for Lumo mobile** | **7.9** | **6.9** |
+
+Decision material: Flutter is the better vehicle for a Lumo mobile library
+today on the owner's own priorities once accessibility and correctness are
+weighed with RTL/perf/l10n; the Jalali gap is a package (or a Lumo Dart
+utility over ICU data), not a framework limit. Lynx's runtime i18n is the best
+of the three and its RTL is as good; its component/list layer and a11y model
+are not ready to carry the contract. Keep both twins; the bench stays as the
+regression harness for whichever is chosen.
