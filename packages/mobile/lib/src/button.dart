@@ -82,18 +82,20 @@ class LumoIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final side = _height[size]!;
-    return Semantics(
-      label: label,
-      button: true,
-      enabled: !isDisabled,
-      // The Tooltip shows the name on long-press; its own semantics are excluded so the name is announced ONCE.
-      child: Tooltip(
-        message: label,
-        excludeFromSemantics: true,
-        child: SizedBox(
-          width: side,
-          height: side,
-          child: LumoButton(variant: variant, size: size, isDisabled: isDisabled, onPressed: onPressed, child: ExcludeSemantics(child: child)),
+    // ONE node: the name (Semantics label) merged with the button's own role,
+    // state and tap action — not a labelled parent above an unnamed button.
+    return MergeSemantics(
+      child: Semantics(
+        label: label,
+        // The Tooltip shows the name on long-press; its own semantics are excluded so the name is announced ONCE.
+        child: Tooltip(
+          message: label,
+          excludeFromSemantics: true,
+          child: SizedBox(
+            width: side,
+            height: side,
+            child: LumoButton(variant: variant, size: size, isDisabled: isDisabled, onPressed: onPressed, child: ExcludeSemantics(child: child)),
+          ),
         ),
       ),
     );

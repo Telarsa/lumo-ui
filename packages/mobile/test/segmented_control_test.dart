@@ -1,0 +1,95 @@
+// Semantics-tree tests for LumoSegmentedControl: the group named by `label`,
+// each segment a button with its selected state, the pill at the reading START
+// for the first segment (right under fa-IR, left under en-US) and travelling
+// toward the reading END on selection, controlled and uncontrolled.
+import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';
+
+Widget app(String locale, Widget child) => MaterialApp(
+      theme: lumoThemeData(brightness: Brightness.light),
+      home: LumoScope(locale: locale, brightness: Brightness.light, child: Scaffold(body: Center(child: child))),
+    );
+
+const faSegments = [LumoSegment(id: 'list', label: 'فهرست'), LumoSegment(id: 'grid', label: 'شبکه'), LumoSegment(id: 'map', label: 'نقشه')];
+const enSegments = [LumoSegment(id: 'list', label: 'List'), LumoSegment(id: 'grid', label: 'Grid'), LumoSegment(id: 'map', label: 'Map')];
+
+/// The pill: the one FractionallySizedBox inside the AnimatedAlign.
+Finder pill() => find.descendant(of: find.byType(AnimatedAlign), matching: find.byType(FractionallySizedBox));
+
+void main() {
+  testWidgets('SegmentedControl: the group is named by label (announced, not drawn); each segment a button with its selected state', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', SizedBox(width: 320, child: LumoSegmentedControl(label: 'نمای نتایج', segments: faSegments, defaultValue: 'grid', onChanged: (_) {}))));
+    expect(find.bySemanticsLabel('نمای نتایج'), findsOneWidget);
+    expect(find.text('نمای نتایج'), findsNothing);
+    expect(tester.getSemantics(find.bySemanticsLabel('شبکه')), matchesSemantics(label: 'شبکه', isButton: true, hasSelectedState: true, isSelected: true, hasEnabledState: true, isEnabled: true, hasTapAction: true, isFocusable: true, hasFocusAction: true));
+    expect(tester.getSemantics(find.bySemanticsLabel('فهرست')), matchesSemantics(label: 'فهرست', isButton: true, hasSelectedState: true, isSelected: false, hasEnabledState: true, isEnabled: true, hasTapAction: true, isFocusable: true, hasFocusAction: true));
+    // Each name appears ONCE in the tree.
+    expect(find.bySemanticsLabel('شبکه'), findsOneWidget);
+    expect(find.text('شبکه'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('SegmentedControl: the pill sits at the reading START for the first segment and travels toward the reading END — right→left under fa-IR, left→right under en-US', (tester) async {
+    for (final locale in ['fa-IR', 'en-US']) {
+      final rtl = locale == 'fa-IR';
+      final segments = rtl ? faSegments : enSegments;
+      String? reported;
+      await tester.pumpWidget(app(locale, SizedBox(width: 320, child: LumoSegmentedControl(key: ValueKey(locale), label: rtl ? 'نمای نتایج' : 'Results view', segments: segments, onChanged: (v) => reported = v))));
+      await tester.pumpAndSettle();
+      final track = tester.getRect(find.byType(AnimatedAlign));
+      final atStart = tester.getCenter(pill()).dx;
+      expect(rtl ? atStart > track.center.dx : atStart < track.center.dx, isTrue, reason: '$locale: the first segment (selected by default) sits at the reading start');
+      // The first segment's TEXT is under the pill — the pill and the segments share the axis.
+      expect((tester.getCenter(find.text(segments.first.label)).dx - atStart).abs() < 2, isTrue, reason: '$locale: the pill covers the first segment');
+
+      await tester.tap(find.text(segments.last.label));
+      await tester.pumpAndSettle();
+      expect(reported, 'map');
+      final atEnd = tester.getCenter(pill()).dx;
+      expect(rtl ? atEnd < atStart : atEnd > atStart, isTrue, reason: '$locale: selecting the last segment moves the pill toward the reading end');
+      expect(rtl ? atEnd < track.center.dx : atEnd > track.center.dx, isTrue);
+      expect(tester.getSemantics(find.bySemanticsLabel(segments.last.label)).getSemanticsData().flagsCollection.isSelected, isTrue);
+      expect(Directionality.of(tester.element(find.byType(LumoSegmentedControl))), rtl ? TextDirection.rtl : TextDirection.ltr);
+    }
+  });
+
+  testWidgets('SegmentedControl: controlled stays where the parent says; disabled (group and one segment) has no tap', (tester) async {
+    final semantics = tester.ensureSemantics();
+    String? reported;
+    await tester.pumpWidget(app('fa-IR', SizedBox(width: 320, child: LumoSegmentedControl(label: 'نمای نتایج', segments: faSegments, value: 'list', onChanged: (v) => reported = v))));
+    await tester.tap(find.text('نقشه'));
+    await tester.pumpAndSettle();
+    expect(reported, 'map');
+    expect(tester.getSemantics(find.bySemanticsLabel('فهرست')).getSemanticsData().flagsCollection.isSelected, isTrue, reason: 'controlled: the parent did not move it');
+
+    await tester.pumpWidget(app('fa-IR', const SizedBox(width: 320, child: LumoSegmentedControl(label: 'نمای نتایج', segments: [LumoSegment(id: 'a', label: 'الف'), LumoSegment(id: 'b', label: 'ب', isDisabled: true)]))));
+    final b = tester.getSemantics(find.bySemanticsLabel('ب')).getSemanticsData();
+    expect(b.flagsCollection.isEnabled, isFalse);
+    expect(b.hasAction(SemanticsAction.tap), isFalse);
+    await tester.pumpWidget(app('fa-IR', const SizedBox(width: 320, child: LumoSegmentedControl(label: 'نمای نتایج', isDisabled: true, segments: [LumoSegment(id: 'a', label: 'الف'), LumoSegment(id: 'b', label: 'ب')]))));
+    expect(tester.getSemantics(find.bySemanticsLabel('الف')).getSemanticsData().hasAction(SemanticsAction.tap), isFalse);
+    semantics.dispose();
+  });
+
+  testWidgets('SegmentedControl: an icon-only segment is still named by its label; sm size', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', const SizedBox(width: 240, child: LumoSegmentedControl(
+      label: 'چیدمان',
+      size: LumoSegmentedControlSize.sm,
+      segments: [LumoSegment(id: 'list', label: 'فهرست', icon: Icon(Icons.view_list), iconOnly: true), LumoSegment(id: 'grid', label: 'شبکه', icon: Icon(Icons.grid_view), iconOnly: true)],
+    ))));
+    expect(find.bySemanticsLabel('فهرست'), findsOneWidget);
+    expect(find.text('فهرست'), findsNothing);
+    expect(tester.getSemantics(find.bySemanticsLabel('شبکه')).getSemanticsData().flagsCollection.isButton, isTrue);
+    semantics.dispose();
+  });
+
+  testWidgets('SegmentedControl: fewer than two segments is a build error; an icon-only segment needs an icon', (tester) async {
+    await tester.pumpWidget(app('fa-IR', const LumoSegmentedControl(label: 'x', segments: [LumoSegment(id: 'a', label: 'a')])));
+    expect(tester.takeException(), isAssertionError);
+    expect(() => LumoSegment(id: 'a', label: 'a', iconOnly: true), throwsAssertionError);
+  });
+}

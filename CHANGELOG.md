@@ -20,6 +20,43 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
+## 0.2.3 — unreleased
+
+### Added
+- **Lumo UI Mobile widgets** (packages/mobile), 25 new families, each with a
+  semantics-tree test (93 tests, `flutter analyze` clean): Checkbox(+Group),
+  RadioGroup/Radio, SegmentedControl, Chip/TagGroup, Badge, Tabs, Card,
+  Avatar, EmptyState, Skeleton, Progress/Spinner, Steps, Rating, Separator,
+  Sheet, Menu, Popover, Toast, Tooltip, OtpField, SearchField, TextArea,
+  Slider/RangeSlider, NumberField, DateField — and the **Jalali calendar**
+  (`JalaliDate`, `calendarOf`, `formatLumoDate`: pure Dart, the jalaali-js
+  arithmetic, month names in Persian or Latin, digits through `formatNumber`;
+  the web's `-u-ca-` rule copied). `LumoTextField` gains `onSubmitted`,
+  `prefix`/`suffix`, `autofocus`, `maxLines`/`minLines`, `showLabel`, and
+  `isNumeric` (an LTR digits island — a data-type fact, not a direction flag).
+  Findings recorded in the widgets' docblocks: Material's `showModalBottomSheet`
+  names its route «Dialog»/«Dismiss» from `MaterialLocalizations` on Android —
+  English no parameter reaches — so `showLumoSheet` is its own `RawDialogRoute`
+  (`LumoSelect` still uses Material's; next); `showMenu` places by free space
+  (physical), so `LumoMenu` sits on `showLumoPopover`; nested Material
+  `Tooltip`s lose the gesture arena, so `LumoTooltip` owns its long-press.
+- **Reference app = the Khroos mobile prototype on Flutter.**
+  `example-projects/lumo-app-flutter` now runs the Claude Design prototype
+  (Khroos v1: auth flow, customer and provider modes, ~60 screens, 13 sheets,
+  fa + en with the prototype's 4,964-row table, Jalali dates, tweaks panel)
+  ported to Flutter on Lumo UI Mobile — the Khroos DS's 23 components are
+  Lumo widgets wearing the Khroos palette through `LumoScope(light:, dark:)`.
+  See its README for what the port proved and what it found.
+- `LumoScope(light:, dark:)` — a consumer's palette on the mobile widgets: the
+  `--lumo-sys-*` tier is the override surface on the web (custom properties);
+  on mobile it is a `LumoSchemeColours` per scheme (`copyWith` on the
+  generated defaults). Brand hue/chroma remain the light-touch knob.
+
+### Fixed
+- `LumoIconButton` announced its name on a node ABOVE the button (name and tap
+  action on two nodes); it is one merged node now. `LumoTooltip` merges its
+  description from above for the same reason.
+
 ## 0.2.2 — 2026-08-17
 
 ### Decided

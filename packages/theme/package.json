@@ -1,6 +1,6 @@
 {
   "name": "@lumo-ui/theme",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Lumo's token contract: three tiers of CSS custom properties, a Tailwind v4 bridge, and the Persian typography rules.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",

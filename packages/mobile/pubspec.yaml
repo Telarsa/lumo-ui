@@ -1,7 +1,7 @@
 name: lumo_ui_mobile
 description: Lumo UI Mobile — the mobile UI component library of Lumo UI, in Flutter. The Lumo contract (required announced strings, direction from the locale, formatted digits, one token source) on Material's widget layer, the way the web Lumo sits on Base UI. Decision §30 (17 Aug 2026).
 # Lockstep with the monorepo root — `pnpm run gate:versions` checks it.
-version: 0.2.2
+version: 0.2.3
 publish_to: none
 repository: https://github.com/Telarsa/lumo-ui
 

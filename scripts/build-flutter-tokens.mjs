@@ -153,6 +153,24 @@ class LumoSchemeColours {
 ${COLOURS.map((n) => `    required this.${camel(n)},`).join("\n")}
   });
 ${COLOURS.map((n) => `  final Color ${camel(n)};`).join("\n")}
+
+  /// A consumer's palette: on the web the \`--lumo-sys-*\` tier is what a
+  /// consumer overrides (custom properties); here it is this method on the
+  /// generated defaults, handed to \`LumoScope(light:, dark:)\`.
+  LumoSchemeColours copyWith({
+${COLOURS.map((n) => `    Color? ${camel(n)},`).join("\n")}
+  }) =>
+      LumoSchemeColours(
+${COLOURS.map((n) => `        ${camel(n)}: ${camel(n)} ?? this.${camel(n)},`).join("\n")}
+      );
+
+  @override
+  bool operator ==(Object other) =>
+      other is LumoSchemeColours &&
+${COLOURS.map((n) => `      other.${camel(n)} == ${camel(n)}`).join(" &&\n")};
+
+  @override
+  int get hashCode => Object.hashAll([${COLOURS.map((n) => camel(n)).join(", ")}]);
 }
 
 LumoSchemeColours lightColours([LumoBrand brand = LumoBrand.achromatic]) => LumoSchemeColours(

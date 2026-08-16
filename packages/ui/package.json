@@ -1,6 +1,6 @@
 {
   "name": "@lumo-ui/ui",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Lumo components. Copy-in via the registry; this package is the canonical source and the site's dependency.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
