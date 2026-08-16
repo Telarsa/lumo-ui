@@ -13,7 +13,8 @@
  * app mirrors correctly.
  */
 import { createContext, useContext, type ReactNode } from "react";
-import { Platform, View, useColorScheme } from "react-native";
+import { Platform, StyleSheet, View, useColorScheme } from "react-native";
+import { PortalHost } from "@rn-primitives/portal";
 import { direction, type Direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { ACHROMATIC, darkColours, lightColours, type LumoBrand, type LumoSchemeColours } from "./tokens.ts";
 
@@ -66,11 +67,23 @@ export function LumoNativeProvider({ locale, brand = ACHROMATIC, fonts, colorSch
   // a View establishes — RNW's `I18nManager.forceRTL` is a no-op there. So the
   // provider roots its tree in one such View on web only; on a device it adds
   // no element and leaves layout mirroring to the app's `I18nManager` decision.
+  // On device the engine's overlays (Dialog, later Popover/Menu) portal into a
+  // host that must sit ABOVE the app's tree: mounted here once, in a layer that
+  // fills the provider's area and lets touches through when empty
+  // (`pointerEvents="box-none"`), so an app gets overlays without ceremony.
+  // Put the provider at the app ROOT — outside any ScrollView — or the layer
+  // covers only that scroll region (found on the simulator, 16 Aug 2026). On
+  // web the engine portals to the document.
   const tree =
     Platform.OS === "web" ? (
       <View {...({ dir: value.direction, lang: locale } as object)}>{children as ReactNode}</View>
     ) : (
-      (children as ReactNode)
+      <View style={{ flex: 1 }}>
+        {children as ReactNode}
+        <View pointerEvents="box-none" style={StyleSheet.absoluteFill}>
+          <PortalHost />
+        </View>
+      </View>
     );
   return <LumoNativeContext.Provider value={value}>{tree}</LumoNativeContext.Provider>;
 }

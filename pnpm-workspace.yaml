@@ -260,6 +260,13 @@ catalog:
   #                     site says so; see packages/native/README.md.
   react-native: 0.87.0
   react-native-web: 0.21.2
+  # @rn-primitives — the native ENGINE for the components a hand-built Pressable
+  # cannot honestly carry (dialogs, popovers, menus): Radix-shaped unstyled
+  # primitives with native implementations, Radix itself on web. Owner decision
+  # 16 Aug 2026 ("rn-primitives ok"), evaluated on Dialog first (decision §29).
+  # `portal` is a peer of every overlay primitive and mounts once at the app root.
+  '@rn-primitives/dialog': 1.5.2
+  '@rn-primitives/portal': 1.5.3
   dom-accessibility-api: 0.7.1
 
   # Must track .nvmrc (24), NOT npm latest. Types ahead of the runtime describe

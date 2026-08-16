@@ -1356,3 +1356,42 @@ strings by default. So:
 
 Deprecated, kept one minor: `LOCALES`, `FORMAT_LOCALE`, `isLocale`,
 `documentDirection`. This is 0.2.0 — a MINOR that may break, per policy.
+
+## 29. The native engine: @rn-primitives, evaluated on Dialog (16 Aug 2026)
+
+The owner: "rn-primitives ok" — after the question of what carries the
+components a hand-built Pressable cannot honestly carry (dialogs, popovers,
+menus: focus movement, modal semantics, escape gestures, the back button).
+`@rn-primitives/*` is the closest thing React Native has to what Base UI is on
+the web: unstyled, Radix-shaped primitives with native implementations, and
+Radix itself on the web. Evaluated on Dialog first because a button needs no
+engine and an overlay is where an engine earns its keep.
+
+What was measured:
+- **Contract on top holds.** `label` and `closeLabel` REQUIRED; ✕ at the inline
+  end (top-left in Persian, verified in the browser through react-native-web and
+  the same code path on device); every text takes the locale's writing
+  direction; the provider mounts the engine's `PortalHost` on device so an app
+  adds nothing. Web (Radix): named by the title, described, focus moved inside,
+  Escape closes, no console errors. Native: `role="dialog"`, `aria-modal`,
+  accessibility focus, escape gesture, Android back — the engine's own.
+- **Costs, all recorded in code:** the packages ship Metro-style platform files
+  behind extensionless imports and RAW JSX in `.mjs` — a bundler outside Metro
+  needs a resolve rule and a JSX transform (Turbopack: `resolveExtensions` +
+  `transpilePackages`; vitest: a 20-line plugin). Radix's `asChild` merges
+  `style` by object spread, so parts it slots must receive FLAT style objects
+  (`StyleSheet.flatten`), not arrays. The web engine assigns its own ids to
+  Title/Description; Lumo's idrefs are for the native engine only — the gate's
+  `resolved-idrefs` caught the dangling pair on the first render, which is the
+  gate doing its job on a new platform. Lumo's `Button`/`IconButton` now
+  forward engine props (`aria-expanded`, the composed press) to the Pressable so
+  they can be slotted as triggers and close controls.
+- Two runtime dependencies for the native package (`@rn-primitives/dialog`,
+  `@rn-primitives/portal`, pinned in the catalog); no NativeWind, no Tamagui.
+
+Decision: `@rn-primitives` is the native engine for overlays and composite
+widgets (Popover, Menu, Tabs, Checkbox next); Button, Switch, TextField stay on
+plain primitives. Same rule as the web: the engine underneath, Lumo's contract
+on top, the gate over the served bytes on both platforms. RTL and any language
+carry the same weight on mobile as on the web — the any-language native test
+(German ltr / Egyptian Arabic rtl through the same provider) is the pin.
