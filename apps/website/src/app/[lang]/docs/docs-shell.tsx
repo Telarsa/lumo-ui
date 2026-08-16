@@ -1,5 +1,5 @@
 import { segmentFor } from "@/lib/locale";
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
 import { SiteShell } from "@/components/site-shell";
 import { DocsSidebar } from "@/components/docs-sidebar";
 import { DOCS_PAGES } from "@/lib/docs-pages";

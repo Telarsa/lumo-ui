@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
 import { exampleSlugs, loadExamplesFor } from "./examples-loader.ts";
 
 /**

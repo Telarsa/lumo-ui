@@ -591,6 +591,7 @@
       ],
       "dependencies": [
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority",
         "lucide-react",
@@ -603,7 +604,8 @@
       "files": [
         "packages/ui/src/calendar.tsx",
         "packages/ui/src/calendar.variants.ts",
-        "packages/ui/src/calendar-datelib.ts"
+        "packages/ui/src/calendar-datelib.ts",
+        "packages/ui/src/locale.ts"
       ],
       "types": [
         "CalendarBaseProps",
@@ -814,6 +816,7 @@
         "/en/components/chart/"
       ],
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "@tanstack/charts",
         "class-variance-authority"
@@ -821,7 +824,8 @@
       "registryDependencies": [],
       "files": [
         "packages/ui/src/chart.tsx",
-        "packages/ui/src/chart.variants.ts"
+        "packages/ui/src/chart.variants.ts",
+        "packages/ui/src/locale.ts"
       ],
       "types": [
         "ChartContainerProps",
@@ -1357,6 +1361,7 @@
       ],
       "dependencies": [
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core"
       ],
       "registryDependencies": [
@@ -1365,6 +1370,7 @@
       ],
       "files": [
         "packages/ui/src/date-input.tsx",
+        "packages/ui/src/locale.ts",
         "packages/ui/src/date-field-state.ts"
       ],
       "types": [
@@ -2485,7 +2491,8 @@
         "form"
       ],
       "files": [
-        "packages/ui/src/input-otp.tsx"
+        "packages/ui/src/input-otp.tsx",
+        "packages/ui/src/digits.ts"
       ],
       "types": [
         "InputOtpProps"
@@ -3476,6 +3483,7 @@
         "/en/components/phone-input/"
       ],
       "dependencies": [
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "class-variance-authority"
       ],
@@ -3484,7 +3492,9 @@
         "select"
       ],
       "files": [
-        "packages/ui/src/phone-input.tsx"
+        "packages/ui/src/phone-input.tsx",
+        "packages/ui/src/digits.ts",
+        "packages/ui/src/locale.ts"
       ],
       "types": [
         "PhoneInputProps"
@@ -3648,7 +3658,8 @@
       ],
       "registryDependencies": [],
       "files": [
-        "packages/ui/src/progress.tsx"
+        "packages/ui/src/progress.tsx",
+        "packages/ui/src/locale.ts"
       ],
       "types": [
         "MeterProps",
@@ -3905,6 +3916,7 @@
       ],
       "dependencies": [
         "@internationalized/date",
+        "@lumo-ui/base-ui-ssr",
         "@lumo-ui/core",
         "react-day-picker"
       ],
@@ -3914,7 +3926,8 @@
       ],
       "files": [
         "packages/ui/src/range-calendar.tsx",
-        "packages/ui/src/calendar-datelib.ts"
+        "packages/ui/src/calendar-datelib.ts",
+        "packages/ui/src/locale.ts"
       ],
       "types": [
         "RangeCalendarBaseProps",
@@ -4665,7 +4678,8 @@
         "form"
       ],
       "files": [
-        "packages/ui/src/slider.tsx"
+        "packages/ui/src/slider.tsx",
+        "packages/ui/src/locale.ts"
       ],
       "types": [
         "SliderProps",

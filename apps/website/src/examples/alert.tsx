@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { formatNumber } from "@lumo-ui/core";
 import { CheckCircleIcon, InfoIcon, TriangleAlertIcon, XCircleIcon } from "lucide-react";
 import { Alert } from "@lumo-ui/ui";

@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { MultiSelectIsland } from "@/components/demo-islands";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "کتابخانه‌ها", "en-US": "Libraries" }, placeholder: { "fa-IR": "کتابخانه‌ای انتخاب کنید", "en-US": "Choose libraries" }, suggestions: { "fa-IR": "پیشنهادهای کتابخانه", "en-US": "Library suggestions" }, dismissSuggestions: { "fa-IR": "بستن پیشنهادها", "en-US": "Dismiss suggestions" }, remove: { "fa-IR": "حذف", "en-US": "Remove" }, react: { "fa-IR": "ری‌اکت", "en-US": "React" }, vue: { "fa-IR": "ویو", "en-US": "Vue" }, svelte: { "fa-IR": "اسولت", "en-US": "Svelte" } } as const;

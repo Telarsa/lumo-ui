@@ -1,4 +1,4 @@
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
 import { Bell, FileText, User } from "lucide-react";
 import {
   Badge,

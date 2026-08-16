@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
 import { direction } from "@lumo-ui/core";
 import { oppositeDirectionLocale, segmentFor } from "@/lib/locale";
 

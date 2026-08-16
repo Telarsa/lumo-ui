@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { RangeSlider } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "بازهٔ قیمت", "en-US": "Price range" }, start: { "fa-IR": "کمینهٔ قیمت", "en-US": "Minimum price" }, end: { "fa-IR": "بیشینهٔ قیمت", "en-US": "Maximum price" } } as const;

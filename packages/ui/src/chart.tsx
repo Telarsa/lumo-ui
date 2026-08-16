@@ -14,6 +14,7 @@ import { scalePoint } from "@tanstack/charts/scales/point";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
 
 import { cn, formatNumber, type Locale } from "@lumo-ui/core";
+import { useLumoStringsFor } from "./locale.ts";
 // Directive-free module: a SERVER-rendered chart panel can call the variants,
 // the direction arithmetic and the axis builders.
 import {
@@ -26,7 +27,6 @@ import {
   CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
-  CHART_ROLE_DESCRIPTION,
   CHART_VALUE_AXIS_TRAILING_EDGE,
   TANSTACK_ROLE_DESCRIPTION,
   chartCategoryAxis,
@@ -60,7 +60,6 @@ export {
   CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
-  CHART_ROLE_DESCRIPTION,
   CHART_VALUE_AXIS_TRAILING_EDGE,
   TANSTACK_ROLE_DESCRIPTION,
   chartCategoryAxis,
@@ -140,7 +139,7 @@ export interface ChartContainerProps
   children?: import("@lumo-ui/core").LumoNode;
   /** Per-series labels and colors, keyed by the data's series keys. */
   config: ChartConfig;
-  /** The numbering system every tick, tooltip and legend figure is formatted in. */
+  /** The numbering system every tick, tooltip and legend figure is formatted in — and whose `LumoStrings["chart"]` names the SVG (`aria-roledescription`). */
   locale: Locale;
   /**
    * The chart's announced name, e.g. «فروش ماهانه به تفکیک دسته». REQUIRED: the plot
@@ -209,7 +208,8 @@ export function ChartContainer({
    * `plotted` is a shallow COPY of the caller's definition (they may memoise it); host
    * options live at the top level in every `defineChart` overload, so one key overwritten is safe.
    */
-  const renderSvg = React.useMemo(() => chartRenderSvg(locale), [locale]);
+  const strings = useLumoStringsFor(locale);
+  const renderSvg = React.useMemo(() => chartRenderSvg(strings.chart), [strings]);
 
   const plotted = React.useMemo(
     () =>

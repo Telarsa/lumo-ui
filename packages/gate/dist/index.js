@@ -28,20 +28,81 @@ const KNOWN = {
 export function knownLocales() {
     return Object.keys(KNOWN);
 }
-/** How a locale is graded. Throws rather than defaulting to another locale's digits. */
-export function gradingFor(locale) {
-    const grading = KNOWN[locale];
-    if (!grading) {
-        throw new Error(`No grading rules for locale ${JSON.stringify(locale)}. Add it to KNOWN in ` +
-            `packages/gate/src/index.ts with its direction AND its numbering system — ` +
-            `a locale graded against another locale's digits reports green on defects.`);
+/*
+ * ANY LANGUAGE (decision §28, 16 Aug 2026). The explicit table above is the
+ * tested tier and always wins; every other BCP-47 tag is graded by a profile
+ * DERIVED from the platform's CLDR data — the same source `formatNumber` and
+ * `formatDate` draw on, so the gate expects exactly what the components emit:
+ *   direction  — CLDR characterOrder by primary subtag (`RTL_PRIMARY`);
+ *   digits     — `Intl.NumberFormat(tag).resolvedOptions().numberingSystem`,
+ *                the ten digits taken from formatting 0 (never a typed range);
+ *   calendar   — `Intl.DateTimeFormat(tag).resolvedOptions().calendar`
+ *                (`fa-*` forced to `persian`, as `formatLocale` does);
+ *   script     — `Intl.Locale(tag).maximize().script` → Unicode Script value(s).
+ * Derived, and said so: a locale whose script this table cannot name is an
+ * ERROR, not Latin by default — the failure mode `KNOWN` was written to avoid.
+ */
+const RTL_PRIMARY = new Set(["ar", "arc", "az-arab", "ckb", "dv", "fa", "he", "iw", "khw", "ks", "ku", "nqo", "pa-arab", "ps", "rhg", "sd", "syr", "ug", "ur", "uz-arab", "yi"]);
+const DIGIT_NAMES = { latn: "Latin", arab: "Arabic-Indic", arabext: "Persian", deva: "Devanagari", beng: "Bengali", thai: "Thai", mymr: "Myanmar", tibt: "Tibetan", khmr: "Khmer", laoo: "Lao", guru: "Gurmukhi", gujr: "Gujarati", orya: "Odia", taml: "Tamil", telu: "Telugu", knda: "Kannada", mlym: "Malayalam", hanidec: "Han decimal", fullwide: "Full-width", adlm: "Adlam", nkoo: "N'Ko" };
+/** ISO 15924 script code (from `Intl.Locale.maximize`) → Unicode Script property values that WRITE it. */
+const SCRIPT_BY_CODE = {
+    Latn: ["Latin", "Latin"], Arab: ["Arabic", "Arabic"], Cyrl: ["Cyrillic", "Cyrillic"], Hebr: ["Hebrew", "Hebrew"],
+    Grek: ["Greek", "Greek"], Deva: ["Devanagari", "Devanagari"], Beng: ["Bengali", "Bengali"], Thai: ["Thai", "Thai"],
+    Hans: ["Han", "Han"], Hant: ["Han", "Han"], Jpan: ["Japanese", "Han", "Hiragana", "Katakana"], Kore: ["Korean", "Hangul", "Han"],
+    Armn: ["Armenian", "Armenian"], Geor: ["Georgian", "Georgian"], Ethi: ["Ethiopic", "Ethiopic"], Khmr: ["Khmer", "Khmer"],
+    Sinh: ["Sinhala", "Sinhala"], Taml: ["Tamil", "Tamil"], Telu: ["Telugu", "Telugu"], Knda: ["Kannada", "Kannada"],
+    Mlym: ["Malayalam", "Malayalam"], Gujr: ["Gujarati", "Gujarati"], Guru: ["Gurmukhi", "Gurmukhi"], Orya: ["Oriya", "Oriya"],
+    Mymr: ["Myanmar", "Myanmar"], Laoo: ["Lao", "Lao"], Tibt: ["Tibetan", "Tibetan"], Mong: ["Mongolian", "Mongolian"],
+    Syrc: ["Syriac", "Syriac"], Thaa: ["Thaana", "Thaana"], Nkoo: ["N'Ko", "Nko"], Tfng: ["Tifinagh", "Tifinagh"], Cans: ["Canadian Aboriginal", "Canadian_Aboriginal"],
+};
+const derived = new Map();
+function deriveGrading(locale) {
+    const cached = derived.get(locale);
+    if (cached)
+        return cached;
+    let canonical;
+    try {
+        canonical = Intl.getCanonicalLocales(locale)[0] ?? locale;
     }
+    catch {
+        throw new Error(`${JSON.stringify(locale)} is not a BCP-47 language tag; the gate cannot grade it.`);
+    }
+    const primary = canonical.toLowerCase().split("-")[0] ?? "";
+    const nf = new Intl.NumberFormat(canonical, { useGrouping: false });
+    const numberingSystem = nf.resolvedOptions().numberingSystem;
+    const zero = nf.format(0);
+    const digits = digitSystem(DIGIT_NAMES[numberingSystem] ?? numberingSystem, numberingSystem, zero);
+    const calendar = primary === "fa" ? "persian" : new Intl.DateTimeFormat(canonical).resolvedOptions().calendar;
+    const scriptCode = new Intl.Locale(canonical).maximize().script ?? "";
+    const scriptDef = SCRIPT_BY_CODE[scriptCode];
+    if (!scriptDef) {
+        throw new Error(`No script known for locale ${JSON.stringify(locale)} (ISO 15924 ${JSON.stringify(scriptCode)}). ` +
+            `Add it to SCRIPT_BY_CODE in packages/gate/src/index.ts — a locale graded against another script's text reports green on defects.`);
+    }
+    const [scriptName, ...properties] = scriptDef;
+    const grading = {
+        direction: RTL_PRIMARY.has(primary) ? "rtl" : "ltr",
+        digits,
+        calendar,
+        script: scriptSystem(scriptName, properties[0] ?? "Latin", ...properties.slice(1)),
+    };
+    derived.set(locale, grading);
     return grading;
+}
+/**
+ * How a locale is graded: the explicit table for the locales it names, a
+ * CLDR-derived profile for any other tag. Throws for a tag that is not a
+ * language, or whose script the gate cannot name — never another locale's digits.
+ */
+export function gradingFor(locale) {
+    return KNOWN[locale] ?? deriveGrading(locale);
 }
 /** Derives the expected locale from a route path. Strict: an unrecognised route is an ERROR, not a skip. */
 export function localeForPath(path, 
 /** Root documents (`404.html`, entry stub) are NOT skipped: graded as this locale. */
-rootLocale = "fa-IR") {
+rootLocale = "fa-IR", 
+/** The document's `<html lang>`, when the caller has parsed it — refines a non-built-in segment. */
+htmlLang) {
     const clean = path.replace(/^\.?\//, "");
     // Both emitted forms: `trailingSlash: true` turns 404.html into 404/index.html.
     const ROOT_DOCS = new Set([
@@ -56,19 +117,36 @@ rootLocale = "fa-IR") {
     }
     // The locale may be any segment, not only the first (/view/<locale>/<slug>/).
     const segments = clean.split("/");
-    const match = segments
+    const known = segments
         .map((seg) => Object.keys(KNOWN).find((l) => l === seg || l.split("-")[0] === seg))
         .find(Boolean);
-    if (!match) {
-        throw new Error(`Cannot derive a locale from route ${JSON.stringify(path)}. Every page must carry ` +
-            `a locale segment (${Object.keys(KNOWN).join(", ")}) so the gate can grade it. ` +
-            `An ungraded page is an unprotected page.`);
+    if (known)
+        return { locale: known, direction: gradingFor(known).direction };
+    // Any other language: a segment shaped like a BCP-47 tag (`de`, `de-CH`,
+    // `zh-Hant-TW`, `sr-Latn`). The document's own `<html lang>` refines it when
+    // it agrees on the language (`/de/…` serving `lang="de-AT"` grades as de-AT).
+    const TAG = /^[a-z]{2,3}(?:-[A-Z][a-z]{3})?(?:-(?:[A-Z]{2}|\d{3}))?$/;
+    const candidate = segments.find((seg) => TAG.test(seg) && isLanguageTag(seg));
+    if (candidate) {
+        const lang = htmlLang !== undefined && isLanguageTag(htmlLang) && htmlLang.toLowerCase().split("-")[0] === candidate.toLowerCase().split("-")[0] ? htmlLang : candidate;
+        return { locale: lang, direction: gradingFor(lang).direction };
     }
-    return { locale: match, direction: gradingFor(match).direction };
+    throw new Error(`Cannot derive a locale from route ${JSON.stringify(path)}. Every page must carry ` +
+        `a locale segment (a BCP-47 tag such as ${Object.keys(KNOWN).join(", ")}, de, ar-EG) so the gate can grade it. ` +
+        `An ungraded page is an unprotected page.`);
+}
+function isLanguageTag(tag) {
+    try {
+        return Intl.getCanonicalLocales(tag).length === 1;
+    }
+    catch {
+        return false;
+    }
 }
 export function gradeHtml(path, html, rules = RULES) {
-    const { locale, direction } = localeForPath(path);
     const { document } = parseHTML(html);
+    const htmlLang = document.documentElement?.getAttribute("lang") ?? undefined;
+    const { locale, direction } = localeForPath(path, undefined, htmlLang);
     const doc = {
         path,
         document: document,
@@ -95,12 +173,12 @@ const EMPTY_COVERAGE = {
  * which grades a computed name and has no text-node denominator.
  */
 export function addCoverage(into, path, html) {
-    const { locale } = localeForPath(path);
+    const { document } = parseHTML(html);
+    const { locale } = localeForPath(path, undefined, document.documentElement?.getAttribute("lang") ?? undefined);
     // `.numberingSystem`, NOT the DigitSystem object — comparing the object to
     // "latn" is never true, and every English page then counts as Persian.
     if (gradingFor(locale).digits.numberingSystem === "latn")
         return into;
-    const { document } = parseHTML(html);
     const walker = document.createTreeWalker(document.body ?? document, 
     // NodeFilter.SHOW_TEXT
     4);
@@ -135,11 +213,11 @@ export function addCoverage(into, path, html) {
 }
 /** Counts visible, non-exempt digits in the route's numbering system — the same corpus the digit rules inspect. */
 export function countNativeDigits(path, html) {
-    const { locale } = localeForPath(path);
+    const { document } = parseHTML(html);
+    const { locale } = localeForPath(path, undefined, document.documentElement?.getAttribute("lang") ?? undefined);
     const digits = gradingFor(locale).digits;
     if (digits.numberingSystem === "latn")
         return 0;
-    const { document } = parseHTML(html);
     const walker = document.createTreeWalker(document.body ?? document, 4);
     let count = 0;
     for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {

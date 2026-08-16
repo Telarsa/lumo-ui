@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Languages } from "lucide-react";
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { cn, LOCALES } from "@lumo-ui/core";
 import { IconButton, Menu, MenuItem, MenuPopover, MenuTrigger } from "@lumo-ui/ui";
 import { LOCALE_NAMES, site, segmentFor} from "@/lib/locale";

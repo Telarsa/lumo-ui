@@ -1,32 +1,20 @@
 import { cva } from "class-variance-authority";
-import { direction, type Direction, type Locale } from "@lumo-ui/core";
+import { direction, type Direction, type Locale, type LumoStrings } from "@lumo-ui/core";
 
 /**
- * Tree's class definitions, chevron arithmetic and two announced verbs, in a
- * module with NO `"use client"` so a server-rendered static outline can call
- * them. Shape: `role="treegrid"`, row named from `textValue`, depth as `--tree-item-level`.
+ * Tree's class definitions and chevron arithmetic, in a module with NO
+ * `"use client"` so a server-rendered static outline can call them. Shape:
+ * `role="treegrid"`, row named from `textValue`, depth as `--tree-item-level`.
  */
 
 /**
  * The two verbs the expand/collapse button announces. Not required props: this
- * is vocabulary the WIDGET authors about itself, and it must be in the served bytes.
+ * is vocabulary the WIDGET authors about itself, and it must be in the served
+ * bytes. Since 0.2.0 they are `LumoStrings["tree"]` — authored in `@lumo-ui/core`
+ * for the built-in locales and brought by the app for any other language — and
+ * the tree reads them through `useLumoStrings()`. No table lives here.
  */
-export interface TreeStrings {
-  /** `aria-label` on the marker button of a COLLAPSED row. */
-  expand: string;
-  /** `aria-label` on the marker button of an EXPANDED row. */
-  collapse: string;
-}
-
-export const TREE_STRINGS = {
-  "fa-IR": { expand: "باز کردن", collapse: "بستن" },
-  "en-US": { expand: "Expand", collapse: "Collapse" },
-} as const satisfies Record<Locale, TreeStrings>;
-
-/** The tree's own two verbs for a locale. */
-export function treeStringsFor(locale: Locale): TreeStrings {
-  return TREE_STRINGS[locale];
-}
+export type TreeStrings = LumoStrings["tree"];
 
 export const treeVariants = cva(
   "flex w-full flex-col overflow-auto rounded-md border border-border bg-surface p-1 " +

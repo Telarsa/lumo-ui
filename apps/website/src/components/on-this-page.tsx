@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 
 /**
  * The rail's own copy, keyed by locale rather than a ternary, so a third locale

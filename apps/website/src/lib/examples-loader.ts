@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { LOCALES, type Locale, type LumoNode } from "@lumo-ui/core";
+import { LOCALES, type BuiltinLocale as Locale, type LumoNode } from "@lumo-ui/core";
 import type {
   ComponentExamples,
   ExamplePart,

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatDate, formatNumber, type Locale } from "@lumo-ui/core";
+import { formatDate, formatNumber, type BuiltinLocale as Locale } from "@lumo-ui/core";
 import {
   Button,
   Card,

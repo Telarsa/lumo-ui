@@ -2,7 +2,7 @@
 
 import { Slider as BaseSlider } from "@base-ui/react/slider";
 import { DirectionProvider } from "@base-ui/react/direction-provider";
-import { cn, direction, FORMAT_LOCALE, formatNumber, type Locale } from "@lumo-ui/core";
+import { cn, direction, formatLocale, formatNumber, type Locale } from "@lumo-ui/core";
 import { attr } from "@lumo-ui/base-ui-ssr";
 
 import {
@@ -67,7 +67,7 @@ export function RangeSlider({
     <DirectionProvider direction={direction(locale)}>
       <BaseSlider.Root
         data-lumo=""
-        locale={FORMAT_LOCALE[locale]}
+        locale={formatLocale(locale)}
         className={cn(sliderVariants(), className)}
         {...attr("value", value)}
         {...attr("defaultValue", value === undefined ? defaultValue : undefined)}

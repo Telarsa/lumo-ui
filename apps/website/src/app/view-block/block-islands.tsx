@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { formatDate, formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
+import { formatDate, formatNumber, type BuiltinLocale as Locale, type LumoNode } from "@lumo-ui/core";
 import { Badge, optional } from "@lumo-ui/ui";
 import {
   CheckoutSummary,

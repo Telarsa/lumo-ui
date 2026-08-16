@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { Button, IconButton, Spinner } from "@lumo-ui/ui";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import type { ComponentExamples, LocalizedText } from "./_system/types";

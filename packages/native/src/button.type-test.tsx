@@ -15,8 +15,18 @@ void <IconButton><Text>✕</Text></IconButton>;
 void <Button dir="rtl">ذخیره</Button>;
 // @ts-expect-error there is no dir on the provider either
 void <LumoNativeProvider locale="fa-IR" dir="rtl">x</LumoNativeProvider>;
-// @ts-expect-error locale is a closed union
+// Any BCP-47 tag is a locale since 0.2.0 (decision §28); the built-ins still autocomplete.
 void <LumoNativeProvider locale="fa">x</LumoNativeProvider>;
+void <LumoNativeProvider locale="de-AT">x</LumoNativeProvider>;
 
 void <Button variant="outline" size="lg" isDisabled>ذخیره</Button>;
 void <IconButton label="بستن"><Text>✕</Text></IconButton>;
+
+// --- Switch: named by a visible label or an explicit name — never neither ---
+import { Switch } from "./switch.tsx";
+void <Switch>اعلان‌ها</Switch>;
+void <Switch accessibilityLabel="حالت تاریک" />;
+// @ts-expect-error a switch with no visible label and no accessibilityLabel has no name
+void <Switch />;
+// @ts-expect-error a bare number is not a LumoNode label
+void <Switch>{3}</Switch>;

@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 
 /**
  * The ⌘K search index: the plain-data shape, the builder, and the normaliser that makes

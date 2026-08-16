@@ -5,6 +5,7 @@ import { cva } from "class-variance-authority";
 // No `cn` here: `className` belongs to the FIELD, which `form.tsx` merges; the row and
 // boxes are internal geometry, and a caller composes the exported cvas directly.
 import { formatNumber, type Locale, type LumoNode } from "@lumo-ui/core";
+import { asciiDigit, learnDigits } from "./digits.ts";
 import { Description, Field, FieldError, FieldInput, Label } from "./form.tsx";
 
 /**
@@ -18,7 +19,9 @@ import { Description, Field, FieldError, FieldInput, Label } from "./form.tsx";
  * decoration. The row is `dir="ltr"` in BOTH locales on purpose — a code is a number and
  * numbers are an LTR run in every script — the one place a physical direction is written
  * deliberately. Boxes show the reader's digits; `onChange`/`onComplete` hand back ASCII,
- * transliterated through a map built by asking `Intl` (never hardcoded U+06F0–06F9).
+ * transliterated through a map built by asking `Intl` (never hardcoded U+06F0–06F9) —
+ * `digits.ts`, which knows the built-in numbering systems at load and learns the
+ * current `locale`'s on first use, so any language's digits type back as ASCII.
  */
 
 export const inputOtpRowVariants = cva(
@@ -48,24 +51,16 @@ export const inputOtpControlVariants = cva(
 );
 
 /**
- * ASCII digits for every numbering system Lumo renders, built from `Intl`. All locales,
- * because a Persian page is routinely filled from an ASCII keyboard, manager or paste.
+ * Everything that is a digit, transliterated; everything else dropped (a pasted
+ * «کد شما: ۱۲۳۴۵۶» still works). Digits are learned from `Intl`, never tabled
+ * (`digits.ts`): the built-in numbering systems always, plus every locale a
+ * component has rendered under — pass `locale` to learn it here and now.
  */
-const DIGITS: Map<string, string> = (() => {
-  const map = new Map<string, string>();
-  for (const locale of ["fa-IR", "en-US"] as const satisfies readonly Locale[]) {
-    for (let d = 0; d <= 9; d += 1) {
-      map.set(formatNumber(d, locale, { useGrouping: false }), String(d));
-    }
-  }
-  return map;
-})();
-
-/** Everything that is a digit, transliterated; everything else dropped (a pasted «کد شما: ۱۲۳۴۵۶» still works). */
-export function otpDigits(input: string, length: number): string {
+export function otpDigits(input: string, length: number, locale?: Locale): string {
+  if (locale !== undefined) learnDigits(locale);
   let out = "";
   for (const character of input) {
-    const ascii = DIGITS.get(character);
+    const ascii = asciiDigit(character);
     if (ascii !== undefined) out += ascii;
     if (out.length === length) break;
   }
@@ -117,11 +112,12 @@ export function InputOtp({
 }: InputOtpProps) {
   const controlRef = React.useRef<HTMLInputElement>(null);
   const [uncontrolled, setUncontrolled] = React.useState(() =>
-    otpDigits(defaultValue ?? "", length),
+    otpDigits(defaultValue ?? "", length, locale),
   );
   const [isFocused, setIsFocused] = React.useState(false);
 
-  const code = value === undefined ? uncontrolled : otpDigits(value, length);
+  // `locale` on every read: the reader's own digits are learned on first use and typed back as ASCII.
+  const code = value === undefined ? uncontrolled : otpDigits(value, length, locale);
   const invalid = errorMessage != null;
 
   // The caret sits in the first EMPTY box (last box once full), derived from the value rather
@@ -129,7 +125,7 @@ export function InputOtp({
   const activeIndex = Math.min(code.length, length - 1);
 
   const commit = (next: string) => {
-    const digits = otpDigits(next, length);
+    const digits = otpDigits(next, length, locale);
     if (value === undefined) setUncontrolled(digits);
     onChange?.(digits);
     if (code.length < length && digits.length === length) onComplete?.(digits);

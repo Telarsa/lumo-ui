@@ -5,6 +5,7 @@ import { DayPicker } from "react-day-picker";
 import type { CalendarDate } from "@internationalized/date";
 import { cn, direction, type Locale, type LumoNode } from "@lumo-ui/core";
 import { fromPickerDate, lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
+import { useLumoStringsFor } from "./locale.ts";
 import {
   calendarChevron,
   CalendarDropdown,
@@ -96,7 +97,9 @@ export function RangeCalendar({
 }: RangeCalendarProps) {
   const descriptionId = useId();
   const errorId = useId();
-  const config = lumoCalendar(locale);
+  // The announced chrome for THIS `locale`: built-in, or the app's own for a language Lumo does not carry.
+  const strings = useLumoStringsFor(locale);
+  const config = lumoCalendar(locale, strings.calendar);
   const dir = direction(locale);
   // The bounds as SELECTION matchers, shared with `calendar.tsx`: a bound that
   // only bounds navigation lets a reader anchor a range on an out-of-range day.

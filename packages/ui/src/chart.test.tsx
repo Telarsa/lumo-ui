@@ -69,7 +69,6 @@ import {
   CHART_MOTION_STAGGER_STEPS,
   CHART_PIE_SWEEP,
   CHART_PIE_SWEEP_HALF,
-  CHART_ROLE_DESCRIPTION,
   CHART_VALUE_AXIS_TRAILING_EDGE,
   TANSTACK_ROLE_DESCRIPTION,
   chartCategoryAxis,
@@ -81,7 +80,7 @@ import {
   chartValueAxis,
   type ChartConfig,
 } from "./chart.variants.ts";
-import { formatNumber, type Locale } from "@lumo-ui/core";
+import { en, fa, formatNumber, type Locale } from "@lumo-ui/core";
 
 const DATA = [
   { month: "فروردین", sales: 1200 },
@@ -322,7 +321,7 @@ describe("chart — the focusable plot is named, and described in Persian", () =
 
   it("replaces aria-roledescription=\"chart\" with «نمودار»", () => {
     const html = chart();
-    expect(html).toContain(`aria-roledescription="${CHART_ROLE_DESCRIPTION["fa-IR"]}"`);
+    expect(html).toContain(`aria-roledescription="${fa.chart.roleDescription}"`);
     expect(html).not.toContain(TANSTACK_ROLE_DESCRIPTION);
   });
 
@@ -344,7 +343,7 @@ describe("chart — the focusable plot is named, and described in Persian", () =
     // be the only one exercised and a regression would show up in exactly one
     // locale.
     expect(chart("en-US")).toContain(
-      `aria-roledescription="${CHART_ROLE_DESCRIPTION["en-US"]}"`,
+      `aria-roledescription="${en.chart.roleDescription}"`,
     );
   });
 });

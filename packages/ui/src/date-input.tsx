@@ -9,8 +9,9 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type Ref,
 } from "react";
-import { direction, stringsFor, type Locale } from "@lumo-ui/core";
+import { direction, type Locale } from "@lumo-ui/core";
 import { cn } from "@lumo-ui/core";
+import { useLumoStringsFor } from "./locale.ts";
 import {
   dateInputVariants,
   dateLiteralVariants,
@@ -87,7 +88,8 @@ export function DateInput({
   ref,
   ...props
 }: DateInputProps) {
-  const strings = stringsFor(locale);
+  // Segment names and the "empty" value text for THIS `locale`: built-in, or the app's own strings.
+  const strings = useLumoStringsFor(locale);
   const dir = direction(locale);
 
   const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);

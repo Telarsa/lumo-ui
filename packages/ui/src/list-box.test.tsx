@@ -134,7 +134,7 @@ describe("arrow traversal", () => {
     cleanup();
 
     const en = render(
-      <LumoLocaleContext.Provider value="en-US">
+      <LumoLocaleContext.Provider value={{ locale: "en-US", strings: undefined }}>
         <ListBox label="شهرها" orientation="horizontal">
           {cities}
         </ListBox>

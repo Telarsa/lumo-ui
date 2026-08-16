@@ -12,6 +12,7 @@ import {
 } from "react";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import {
+  createCalendar,
   endOfMonth,
   endOfWeek,
   CalendarDateTime,
@@ -33,7 +34,7 @@ import {
   type Locale,
   type LumoNode,
 } from "@lumo-ui/core";
-import { lumoCalendar, toPickerDate } from "./calendar-datelib.ts";
+import { calendarFor, toPickerDate } from "./calendar-datelib.ts";
 import { useLumoLocale } from "./locale.ts";
 import {
   eventCalendarAgendaDateVariants,
@@ -514,7 +515,7 @@ export function indexEvents(
   events: readonly EventCalendarEvent[],
   locale: Locale,
 ): ReadonlyMap<string, EventCalendarSegment[]> {
-  const calendar = lumoCalendar(locale).calendar;
+  const calendar = createCalendar(calendarFor(locale));
   const index = new Map<string, EventCalendarSegment[]>();
 
   const push = (day: CalendarDate, segment: EventCalendarSegment) => {
@@ -687,7 +688,7 @@ export function EventCalendar({
   ...props
 }: EventCalendarProps): LumoNode {
   const locale = useLumoLocale();
-  const calendar = lumoCalendar(locale).calendar;
+  const calendar = createCalendar(calendarFor(locale));
   const rtl = direction(locale) === "rtl";
 
   // Every date below is in the READER'S calendar; the conversion happens once, here.

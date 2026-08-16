@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { JsonInput } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "پیکربندی", "en-US": "Configuration" }, invalid: { "fa-IR": "ساختار جی‌سون معتبر نیست", "en-US": "JSON structure is invalid" }, help: { "fa-IR": "متن هنگام ویرایش می‌تواند موقتاً ناقص باشد.", "en-US": "The text may be temporarily incomplete while editing." } } as const;

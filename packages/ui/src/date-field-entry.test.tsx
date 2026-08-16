@@ -32,7 +32,7 @@ const text = (container: HTMLElement) =>
   [...container.querySelectorAll("[data-type]")].map((e) => e.textContent).join("");
 
 const inLocale = (locale: "fa-IR" | "en-US", el: React.ReactElement) => (
-  <LumoLocaleContext.Provider value={locale}>{el}</LumoLocaleContext.Provider>
+  <LumoLocaleContext.Provider value={{ locale, strings: undefined }}>{el}</LumoLocaleContext.Provider>
 );
 
 describe("DateField public surface", () => {

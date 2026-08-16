@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { Gauge, LifeBuoy, Package, Settings } from "lucide-react";
 import {
   Sidebar,

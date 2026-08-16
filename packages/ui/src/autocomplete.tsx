@@ -6,7 +6,7 @@ import { Autocomplete as BaseAutocomplete } from "@base-ui/react/autocomplete";
 import {
   cn,
   formatNumber,
-  FORMAT_LOCALE,
+  formatLocale,
   type Key,
   type Locale,
   type LumoNode,
@@ -133,7 +133,7 @@ export function Autocomplete<T = string>({
   children,
 }: AutocompleteProps<T>) {
   const locale = useLumoLocale();
-  const baseFilter = BaseAutocomplete.useFilter({ locale: FORMAT_LOCALE[locale] });
+  const baseFilter = BaseAutocomplete.useFilter({ locale: formatLocale(locale) });
 
   const toString = itemToString ?? (defaultItemToString as (item: T) => string);
 

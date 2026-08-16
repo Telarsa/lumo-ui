@@ -1,4 +1,4 @@
-import { formatNumber, fa as lumoFa, en as lumoEn, type Locale } from "@lumo-ui/core";
+import { formatNumber, isBuiltinLocale, fa as lumoFa, en as lumoEn, type BuiltinLocale, type Locale } from "@lumo-ui/core";
 
 /**
  * The i18n layer Base UI does not have. `@base-ui/react@1.7.0` ships no i18n
@@ -76,7 +76,7 @@ const en: BaseUiStringTemplates = {
 
 /** Every declared locale must have a complete set: `satisfies` makes a missing locale or key a compile error. */
 export const BASE_UI_STRINGS = { "fa-IR": fa, "en-US": en } satisfies Record<
-  Locale,
+  BuiltinLocale,
   BaseUiStringTemplates
 >;
 
@@ -94,8 +94,11 @@ export interface BaseUiStrings
  * Resolve the catalogue for one locale. Pure and synchronous, so a server
  * component may call it. `formatNumber` is applied HERE and nowhere else.
  */
-export function baseUiStringsFor(locale: Locale): BaseUiStrings {
-  const t = BASE_UI_STRINGS[locale];
+export function baseUiStringsFor(locale: Locale, own?: BaseUiStringTemplates): BaseUiStrings {
+  // A built-in locale resolves here; any other language must bring its own
+  // templates (LumoProvider `strings.engine`) — never another language's.
+  const t = own ?? (isBuiltinLocale(locale) ? BASE_UI_STRINGS[locale] : undefined);
+  if (t === undefined) throw new Error(`Lumo carries no engine strings for ${JSON.stringify(locale)}: pass \`strings\` (with \`engine\`) to LumoProvider.`);
   return {
     numberField: t.numberField,
     progress: t.progress,

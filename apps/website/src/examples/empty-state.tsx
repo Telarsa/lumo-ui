@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { formatNumber } from "@lumo-ui/core";
 import { FolderPlusIcon, InboxIcon, SearchXIcon } from "lucide-react";
 import { Button, Card, CardBody, CardHeader, CardTitle, EmptyState } from "@lumo-ui/ui";

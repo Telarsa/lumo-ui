@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { Cascader } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "موقعیت", "en-US": "Location" }, columns: { "fa-IR": "سطوح موقعیت", "en-US": "Location levels" }, placeholder: { "fa-IR": "یک مسیر انتخاب کنید", "en-US": "Choose a path" }, asia: { "fa-IR": "آسیا", "en-US": "Asia" }, iran: { "fa-IR": "ایران", "en-US": "Iran" }, tehran: { "fa-IR": "تهران", "en-US": "Tehran" }, japan: { "fa-IR": "ژاپن", "en-US": "Japan" }, tokyo: { "fa-IR": "توکیو", "en-US": "Tokyo" } } as const;

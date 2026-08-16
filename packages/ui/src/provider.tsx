@@ -1,10 +1,10 @@
 "use client";
 
-import { Fragment, useSyncExternalStore, type ReactNode } from "react";
+import { Fragment, useMemo, useSyncExternalStore, type ReactNode } from "react";
 import { DirectionProvider } from "@base-ui/react/direction-provider";
-import type { Locale, LumoNode } from "@lumo-ui/core";
+import type { BuiltinLocale, Locale, LumoNode } from "@lumo-ui/core";
 import { direction } from "@lumo-ui/core";
-import { LumoLocaleContext } from "./locale.ts";
+import { LumoLocaleContext, type LumoAppStrings, type LumoLocaleValue } from "./locale.ts";
 import { LumoLinkContext, type LumoLinkComponent } from "./link-context.ts";
 
 /**
@@ -20,9 +20,7 @@ import { LumoLinkContext, type LumoLinkComponent } from "./link-context.ts";
  * locale together. The React Aria `I18nProvider` bridge is gone (12 Aug 2026):
  * `list-box.tsx` and `tree.tsx` now read `useLumoLocale()`.
  */
-export interface LumoProviderProps {
-  /** The document's locale. Same value given to `LumoHtml`. No `direction` sibling: it is `direction(locale)`. */
-  locale: Locale;
+interface LumoProviderBaseProps {
   /**
    * The app's own link component (Next's `Link`, TanStack Router's `Link`, …),
    * used by every Lumo family that renders an anchor — `Link`, `Item`, `Command`
@@ -33,10 +31,33 @@ export interface LumoProviderProps {
   children: LumoNode;
 }
 
+/**
+ * `locale` is any BCP-47 tag (decision §28). A built-in locale (`fa-IR`,
+ * `en-US`) needs nothing else; ANY OTHER language must bring `strings` — the
+ * type requires it, because the alternative is announcing another language.
+ * Same value as `LumoHtml`'s `lang`. No `direction` sibling: it is `direction(locale)`.
+ */
+export type LumoProviderProps = LumoProviderBaseProps &
+  (
+    | {
+        /** A locale Lumo carries strings for: `fa-IR` or `en-US`. Same value as `LumoHtml`'s `lang`. */
+        locale: BuiltinLocale;
+        /** The app's own complete `LumoAppStrings` for a built-in locale — its own wording, in that language; omit for Lumo's. */
+        strings?: LumoAppStrings | undefined;
+      }
+    | {
+        /** Any other BCP-47 tag (`de`, `ar-EG`, `zh-Hant-TW`). Same value as `LumoHtml`'s `lang`. */
+        locale: Locale;
+        /** REQUIRED for a language Lumo does not carry: every Lumo string plus the engine's, complete. There is no fallback. */
+        strings: LumoAppStrings;
+      }
+  );
+
 /** The root provider: derives direction from `locale`, mounts Base UI's direction context, and hosts the managed overlay surfaces. */
-export function LumoProvider({ locale, linkComponent, children }: LumoProviderProps) {
+export function LumoProvider({ locale, strings, linkComponent, children }: LumoProviderProps) {
+  const value = useMemo<LumoLocaleValue>(() => ({ locale, strings }), [locale, strings]);
   return (
-    <LumoLocaleContext.Provider value={locale}>
+    <LumoLocaleContext.Provider value={value}>
       <LumoLinkContext.Provider value={linkComponent ?? null}>
         <DirectionProvider direction={direction(locale)}>{children}</DirectionProvider>
       </LumoLinkContext.Provider>

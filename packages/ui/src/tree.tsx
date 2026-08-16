@@ -33,20 +33,18 @@ import {
   type Selection as AriaSelection,
   type StyleProps,
 } from "@lumo-ui/core";
-import { useLumoLocale } from "./locale.ts";
+import { useLumoLocale, useLumoStrings } from "./locale.ts";
 import type { AsyncCollectionStatus } from "./async-collection.ts";
 // tree.variants.ts has no `"use client"`, so its classes, verbs and chevron
 // arithmetic stay callable from a server component.
 import {
   TREE_CHEVRON_GLYPH,
-  TREE_STRINGS,
   treeChevronGlyphVariants,
   treeChevronTurn,
   treeChevronTurnFor,
   treeChevronVariants,
   treeItemVariants,
   treeLeafSpacerVariants,
-  treeStringsFor,
   treeVariants,
   type TreeChevronTurn,
   type TreeStrings,
@@ -54,14 +52,12 @@ import {
 
 export {
   TREE_CHEVRON_GLYPH,
-  TREE_STRINGS,
   treeChevronGlyphVariants,
   treeChevronTurn,
   treeChevronTurnFor,
   treeChevronVariants,
   treeItemVariants,
   treeLeafSpacerVariants,
-  treeStringsFor,
   treeVariants,
 };
 
@@ -80,7 +76,9 @@ export {
  * the tab stop is `tabIndex = focusedKey === null ? 0 : -1` computed in the
  * RENDER body (served bytes carry `tabindex="0"` on the container, no effect);
  * which arrow expands comes from `direction(useLumoLocale())`, the same value
- * the chevron turn is computed from; typeahead is `Intl.Collator(locale,
+ * the chevron turn is computed from; the marker's two verbs are
+ * `useLumoStrings().tree` (built-in, or the app's own for a language Lumo does
+ * not carry); typeahead is `Intl.Collator(locale,
  * {usage:"search", sensitivity:"base"})` over `data-text-value` (folds harakat
  * and case, NOT the Arabic/Persian yeh and kaf — normalise the data instead).
  * `label` and `textValue` are required. Lost vs React Aria: sections, load-more,
@@ -358,10 +356,11 @@ export function Tree<T extends object>({
   };
   const locale = useLumoLocale();
   const turn = treeChevronTurn(direction(locale));
-  const strings = treeStringsFor(locale);
+  // The two verbs, from `LumoStrings["tree"]`: built-in, or the app's for its own language.
+  const strings = useLumoStrings().tree;
 
   // `usage: "search"` + `sensitivity: "base"` — what React Aria's `useTypeSelect`
-  // and Base UI's `getFilter` use. Plain locale tag, not `FORMAT_LOCALE`: the
+  // and Base UI's `getFilter` use. Plain locale tag, not `formatLocale(locale)`: the
   // calendar/numbering extensions say nothing about how letters compare.
   const collator = useMemo(
     () => new Intl.Collator(locale, { usage: "search", sensitivity: "base" }),

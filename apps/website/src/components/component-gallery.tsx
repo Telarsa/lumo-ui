@@ -3,7 +3,7 @@
 import { segmentFor } from "@/lib/locale";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { cn, formatNumber, type Locale } from "@lumo-ui/core";
+import { cn, formatNumber, type BuiltinLocale as Locale } from "@lumo-ui/core";
 import { SearchField } from "@lumo-ui/ui";
 import { PreviewFrameThemeSync } from "./demo-frame";
 

@@ -20,7 +20,7 @@ import { Check } from "lucide-react";
 import {
   cn,
   direction,
-  FORMAT_LOCALE,
+  formatLocale,
   type Key,
   type LumoNode,
   type Orientation,
@@ -368,7 +368,7 @@ export function ListBox<T extends object>({
   }
 
   const collator = useMemo(
-    () => new Intl.Collator(FORMAT_LOCALE[locale], { usage: "search", sensitivity: "base" }),
+    () => new Intl.Collator(formatLocale(locale), { usage: "search", sensitivity: "base" }),
     [locale],
   );
 

@@ -53,7 +53,7 @@ import { Slider } from "./slider.tsx";
 /** A server render under an explicit locale, exactly as a Lumo page produces it. */
 function ssr(locale: Locale, node: React.ReactNode): string {
   return renderToStaticMarkup(
-    <LumoLocaleContext.Provider value={locale}>{node}</LumoLocaleContext.Provider>,
+    <LumoLocaleContext.Provider value={{ locale, strings: undefined }}>{node}</LumoLocaleContext.Provider>,
   );
 }
 

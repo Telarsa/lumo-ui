@@ -1,4 +1,4 @@
-import type { Locale } from "@lumo-ui/core";
+import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { MaskInput } from "@lumo-ui/ui";
 import type { ComponentExamples } from "./_system/types";
 const c = { label: { "fa-IR": "شماره تماس", "en-US": "Phone number" }, help: { "fa-IR": "ده رقم وارد کنید.", "en-US": "Enter ten digits." }, incomplete: { "fa-IR": "شماره هنوز کامل نیست", "en-US": "The number is not complete yet" } } as const;
