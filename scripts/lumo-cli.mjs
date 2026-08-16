@@ -191,12 +191,58 @@ function originalPathOf(/** @type {string} */ to, /** @type {string} */ rel) {
   const legacy = join(to, ".lumo/originals", rel);
   return existsSync(suffixed) || !existsSync(legacy) ? suffixed : legacy;
 }
+/**
+ * `.lumo/` is a LOCAL CACHE, not a committed artefact (since 0.2.2): it holds a
+ * `.gitignore` of `*`, so nothing under it reaches the repository — the copies
+ * were duplicates of files the lock already identifies by version and hash.
+ * What IS committed is lumo.lock.json. An untouched copy is recognised by hash
+ * and needs no base; an edited copy's base is the file at the recorded tag,
+ * read from the cache when present or fetched from the Lumo repository (see
+ * `fetchOriginal`) — never guessed.
+ */
+async function ensureCacheDir(/** @type {string} */ to) {
+  await mkdir(join(to, ".lumo"), { recursive: true });
+  const ignore = join(to, ".lumo/.gitignore");
+  if (!existsSync(ignore)) await writeFile(ignore, "# lumo: a local cache (originals for 3-way upgrades, fetched again when missing). Nothing here is committed; lumo.lock.json is.\n*\n");
+}
 /** Write an original at the `.orig` path; a pre-0.1.2 unsuffixed original for the same file is removed (migration on the next upgrade/add). */
 async function writeOriginal(/** @type {string} */ to, /** @type {string} */ rel, /** @type {string} */ text) {
+  await ensureCacheDir(to);
   const suffixed = join(to, ".lumo/originals", `${rel}.orig`);
   await mkdir(dirname(suffixed), { recursive: true });
   await writeFile(suffixed, text);
   await rm(join(to, ".lumo/originals", rel), { force: true });
+}
+
+/** The Lumo repository URL, from the consumer's own git pin on `lumo-ui` (package.json), else the canonical one. */
+async function lumoRepoUrl(/** @type {string} */ to) {
+  const pkgPath = nearestUp(to, "package.json");
+  const pkg = pkgPath === undefined ? {} : await readJson(pkgPath);
+  const spec = { ...(pkg.dependencies ?? {}), ...(pkg.devDependencies ?? {}) }["lumo-ui"] ?? "";
+  const m = /^(?:github:|git\+)?((?:https?:\/\/|ssh:\/\/|git@)[^#]+|[\w.-]+\/[\w.-]+)/.exec(spec);
+  const raw = m?.[1] ?? "Telarsa/lumo-ui";
+  return /^[\w.-]+\/[\w.-]+$/.test(raw) ? `https://github.com/${raw}.git` : raw.replace(/^git\+/, "");
+}
+
+/**
+ * The bytes of `registryPath` at Lumo tag `v<version>` — the base a 3-way merge
+ * needs for a copy that was edited AND whose cached original is gone (fresh
+ * clone, CI). One shallow, blob-less, sparse clone per version under
+ * `.lumo/cache/`, then a checkout of just that path. Needs the same repository
+ * access the git dependency already needed. Throws, never guesses, on failure.
+ */
+async function fetchOriginal(/** @type {string} */ to, /** @type {string} */ version, /** @type {string} */ registryPath) {
+  await ensureCacheDir(to);
+  const repoDir = join(to, ".lumo/cache", `v${version}`);
+  const url = await lumoRepoUrl(to);
+  if (!existsSync(join(repoDir, ".git"))) {
+    await mkdir(dirname(repoDir), { recursive: true });
+    const clone = spawnSync("git", ["clone", "--quiet", "--depth", "1", "--branch", `v${version}`, "--filter=blob:none", "--no-checkout", url, repoDir], { encoding: "utf8" });
+    if (clone.status !== 0) throw new Error(`cannot fetch Lumo v${version} from ${url} to read the original of ${registryPath}:\n${clone.stderr}`);
+  }
+  const co = spawnSync("git", ["-C", repoDir, "checkout", "--quiet", `v${version}`, "--", registryPath], { encoding: "utf8" });
+  if (co.status !== 0) throw new Error(`Lumo v${version} has no ${registryPath}:\n${co.stderr}`);
+  return readFile(join(repoDir, registryPath), "utf8");
 }
 
 async function loadLock(/** @type {string} */ to) {
@@ -257,7 +303,7 @@ async function add() {
   lock.lumo = version;
   lock.dir = dir;
   await writeFile(join(to, "lumo.lock.json"), `${JSON.stringify(lock, null, 2)}\n`);
-  console.log(`\n  recorded in ${shown(join(to, "lumo.lock.json"))} (lumo-ui ${version}, dir ${dir}); originals under .lumo/originals/ (*.orig) for 3-way upgrades — commit both.`);
+  console.log(`\n  recorded in ${shown(join(to, "lumo.lock.json"))} (lumo-ui ${version}, dir ${dir}) — commit it. .lumo/ is a local cache (self-ignored); an edited copy's base is fetched from the recorded tag when the cache is missing.`);
   const line = await installLine(npm);
   if (line) console.log(`  install these yourself (exact versions this checkout was verified against):\n    ${line}`);
   console.log(`  @lumo-ui/core, @lumo-ui/theme, @lumo-ui/base-ui-ssr come from your git pins on lumo-ui v${version} — see docs/agent-consumer.md.`);
@@ -285,8 +331,25 @@ async function diffOrUpgrade(mode) {
       let next = await readFile(join(ROOT, file.path), "utf8");
       if (item.type === "registry:block") next = await rewriteBlockImports(next);
       const current = existsSync(dst) ? await readFile(dst, "utf8") : undefined;
-      const original = existsSync(originalPath) ? await readFile(originalPath, "utf8") : undefined;
       if (current === undefined) { console.log(`  ${rel}: not installed`); continue; }
+      const recorded = lock.items[name]?.files?.[rel];
+      const installedVersion = lock.items[name]?.version;
+      /*
+       * The base. By hash first: a copy whose hash is the recorded one is
+       * UNTOUCHED, and its original is itself. Else the cache. Else, for an
+       * edited copy, the file at the recorded tag — fetched; a block's original
+       * is the rewritten form `add` wrote, so the fetch is rewritten the same way.
+       */
+      let original = existsSync(originalPath) ? await readFile(originalPath, "utf8") : undefined;
+      if (original === undefined && recorded !== undefined && sha(current) === recorded) original = current;
+      // Same version as this checkout: the base IS this checkout's file.
+      if (original === undefined && installedVersion === version) original = next;
+      if (original === undefined && recorded !== undefined && installedVersion !== undefined && installedVersion !== version) {
+        let fetched = await fetchOriginal(to, installedVersion, file.path);
+        if (item.type === "registry:block") fetched = await rewriteBlockImports(fetched);
+        original = fetched;
+        await writeOriginal(to, rel, fetched);
+      }
       const upstreamChanged = original !== undefined ? original !== next : current !== next;
       const locallyEdited = original !== undefined && original !== current;
       if (locallyEdited) edited.push(rel);
