@@ -23,10 +23,8 @@
   },
   "peerDependencies": {
     "react": ">=19",
-    "@base-ui/react": ">=1.7.0 <1.8.0"
-  },
-  "dependencies": {
-    "@lumo-ui/core": "workspace:*"
+    "@base-ui/react": ">=1.7.0 <1.8.0",
+    "@lumo-ui/core": "0.1.0"
   },
   "devDependencies": {
     "@base-ui/react": "catalog:",
@@ -36,6 +34,7 @@
     "react-dom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "@vitejs/plugin-react": "catalog:"
+    "@vitejs/plugin-react": "catalog:",
+    "@lumo-ui/core": "workspace:*"
   }
 }

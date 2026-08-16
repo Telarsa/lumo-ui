@@ -45,9 +45,6 @@ catalogs:
     class-variance-authority:
       specifier: 0.7.1
       version: 0.7.1
-    clsx:
-      specifier: 2.1.1
-      version: 2.1.1
     culori:
       specifier: 4.0.2
       version: 4.0.2
@@ -93,9 +90,6 @@ catalogs:
     shiki:
       specifier: 4.4.2
       version: 4.4.2
-    tailwind-merge:
-      specifier: 3.6.0
-      version: 3.6.0
     tailwindcss:
       specifier: 4.3.3
       version: 4.3.3
@@ -212,14 +206,13 @@ importers:
         version: 4.1.10(@types/node@24.13.3)(jsdom@30.0.1)(vite@8.2.1(@types/node@24.13.3)(jiti@2.7.0))
 
   packages/base-ui-ssr:
-    dependencies:
-      '@lumo-ui/core':
-        specifier: workspace:*
-        version: link:../core
     devDependencies:
       '@base-ui/react':
         specifier: 'catalog:'
         version: 1.7.0(@date-fns/tz@1.5.0)(@types/react@19.2.18)(date-fns@4.4.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@lumo-ui/core':
+        specifier: workspace:*
+        version: link:../core
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -297,10 +290,10 @@ importers:
   packages/core:
     dependencies:
       clsx:
-        specifier: 'catalog:'
+        specifier: 2.1.1
         version: 2.1.1
       tailwind-merge:
-        specifier: 'catalog:'
+        specifier: 3.6.0
         version: 3.6.0
     devDependencies:
       '@types/react':
