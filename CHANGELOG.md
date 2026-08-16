@@ -22,6 +22,13 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 
 ## 0.2.2 — unreleased
 
+### Fixed
+- The docs site's mobile previews follow the SITE's theme, not the OS
+  (react-native-web's `useColorScheme` reads `prefers-color-scheme`; a dark OS
+  put dark-scheme buttons on a light page). `Frame device="phone"` has a phone's
+  proportions (`min-h-[44rem]` at 22 rem wide) instead of collapsing to a
+  landscape sliver around a short exhibit.
+
 ### Added
 - **Web | Mobile on component pages.** Every component with a React Native
   implementation (`button`, `switch`, `text-field`, `select`) has a Mobile side
