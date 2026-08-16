@@ -30,3 +30,15 @@ void <Switch accessibilityLabel="حالت تاریک" />;
 void <Switch />;
 // @ts-expect-error a bare number is not a LumoNode label
 void <Switch>{3}</Switch>;
+
+// --- TextField / Select: every announced string is a required prop --------------
+import { TextField } from "./text-field.tsx";
+import { Select } from "./select.tsx";
+void <TextField label="نام" />;
+// @ts-expect-error a text field needs its label
+void <TextField placeholder="نام" />;
+void <Select label="خدمت" placeholder="انتخاب کنید" closeLabel="بستن" options={[]} />;
+// @ts-expect-error the placeholder is announced as the value — required, no English default
+void <Select label="خدمت" closeLabel="بستن" options={[]} />;
+// @ts-expect-error the sheet's close action needs a name
+void <Select label="خدمت" placeholder="انتخاب کنید" options={[]} />;

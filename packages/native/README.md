@@ -25,6 +25,11 @@ Hermes ICU probe below has run on a device. So this package now holds:
   `dir`/`lang` View, which is how RNW resolves logical styles
   (`I18nManager.forceRTL` is a no-op there). Tested both ways: `right: 15px`
   under fa-IR, `left: 15px` under en-US, from the locale alone.
+- `src/text-field.tsx` and `src/select.tsx` — the form pair (0.2.1): the
+  label is REQUIRED and becomes the input's own accessible name (no
+  `<label for>` on native), description = hint, error = live region, text
+  aligned to the reading start; Select is Lumo's own combobox + modal sheet
+  (`option`s with `aria-selected`), placeholder and close label REQUIRED.
 - Tests: rendered through **react-native-web** to static markup and graded by
   the same 14 served-HTML rules as the web (0 violations under fa-IR); a
   `.type-test.tsx` pins the contract. `gate:consumer-lint` and
@@ -79,6 +84,15 @@ component sets was mirrored by the platform exactly as designed. One
 observation recorded without a claim: on that launch `I18nManager.isRTL` read
 `false` in JS while the layout was already mirrored (Expo Go; the constant is
 filled at native init). Screenshots in the session's evidence.
+
+Release-build row, attempted 16 Aug 2026: `expo run:ios --configuration
+Release --device <simulator UDID>` — `expo prebuild` and CocoaPods succeeded
+(ios/ generated, pods installed), xcodebuild refused every destination: Xcode
+26.6 on the machine has no iOS platform installed for building ("iOS 26.5 is
+not installed"; only the iOS 18.5 simulator runtime that Expo Go ran on). It is
+a ~8 GB download (Xcode → Settings → Components, or `xcodebuild -downloadPlatform
+iOS`), not started unasked on a low-disk machine. After it: the same command,
+then read `LUMO_ICU_PROBE` from the device log.
 
 Still open: the **release-build** row (minification, `resConfigs`, language
 splits) and an **Android emulator** run — Android Studio is not on the
