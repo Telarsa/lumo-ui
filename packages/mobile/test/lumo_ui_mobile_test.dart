@@ -85,4 +85,26 @@ void main() {
     await tester.pumpWidget(app('ar-EG', LumoButton(onPressed: () {}, child: Text('حفظ ${formatNumber(3, 'ar-EG')}'))));
     expect(Directionality.of(tester.element(find.byType(LumoButton))), TextDirection.rtl);
   });
+
+  testWidgets('press feedback is Lumo\'s decision, not Material\'s: no ripple by default, and it is switchable', (tester) async {
+    // The defect this pins: a Material ripple blooming under a finger held on a
+    // switch, while LumoButton (which cleared its own overlay) stayed flat —
+    // one library answering a press two ways, in the platform's idiom, not ours.
+    final byDefault = lumoThemeData(brightness: Brightness.light);
+    expect(byDefault.splashFactory, same(NoSplash.splashFactory), reason: 'the default must not travel a circle from the touch point');
+    expect(byDefault.splashColor, Colors.transparent);
+    expect(byDefault.highlightColor, isNot(Colors.transparent), reason: 'tint still answers the finger — immediately, and flat');
+
+    final none = lumoThemeData(brightness: Brightness.light, pressFeedback: LumoPressFeedback.none);
+    expect(none.splashFactory, same(NoSplash.splashFactory));
+    expect(none.highlightColor, Colors.transparent, reason: 'none means nothing paints');
+
+    final ripple = lumoThemeData(brightness: Brightness.light, pressFeedback: LumoPressFeedback.ripple);
+    expect(ripple.splashFactory, same(InkRipple.splashFactory), reason: 'an app that wants the platform gesture can still have it');
+    expect(ripple.splashColor, isNot(Colors.transparent));
+
+    // And the tint follows the scheme, so it is a token, not a grey.
+    final dark = lumoThemeData(brightness: Brightness.dark);
+    expect(dark.highlightColor, isNot(byDefault.highlightColor), reason: 'the press tint is a scheme colour, not a fixed overlay');
+  });
 }

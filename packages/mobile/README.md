@@ -19,6 +19,13 @@ web library, in Dart:
   (the web's rule: `fa` → Jalali, a stated `-u-ca-…` wins), `formatLumoDate`
   («۲۶ مرداد ۱۴۰۵» / «Aug 17, 2026» / «26 Mordad 1405»), and `LumoDateField`
   with a hand-built month grid (Saturday-first under Jalali).
+- **Press feedback is Lumo's, not Material's.** A Material `InkWell` answers a
+  finger with a ripple: a circle travelling from the touch point, plus a
+  lingering highlight. Lumo answers the way the web library does — an immediate
+  flat `surfaceHover` tint — and `lumoThemeData(pressFeedback:)` says so out
+  loud: `tint` (default), `none`, or `ripple` for an app that wants the platform
+  gesture. It is set on the THEME, so every widget agrees; before this, only
+  `LumoButton` had cleared its overlay and the switch beside it still rippled.
 - **A consumer's palette**: `LumoScope(light:, dark:)` takes a `LumoSchemeColours`
   per scheme (`lightColours().copyWith(accent: …)`) — the mobile counterpart of
   overriding `--lumo-sys-*` custom properties on the web. `brand` alone turns

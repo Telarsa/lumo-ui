@@ -26,3 +26,13 @@ graphify-out/
 .dart_tool/
 build/
 packages/mobile/pubspec.lock
+
+# JetBrains project files for the Dart apps — per-developer, never shared.
+.idea/
+*.iml
+
+# The Flutter web gallery the Mobile component pages embed is BUILT, not
+# committed: the repo needs the Flutter toolchain anyway (the mobile gates), so
+# carrying ~17 MB of build output in git buys nothing. `apps/website`'s build
+# runs scripts/ensure-mobile-gallery.mjs, which rebuilds only when inputs change.
+apps/website/public/mobile-preview/
