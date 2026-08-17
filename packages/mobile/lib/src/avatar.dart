@@ -48,9 +48,13 @@ class LumoAvatar extends StatelessWidget {
       : assert(status == null || statusLabel != null, 'An avatar with a `status` needs a `statusLabel` — the state in words.');
   /// The name of who or what this is. Announced; the initials come from it.
   final String label;
+  /// An image to show instead of the initials.
   final ImageProvider? image;
+  /// The size step, from the shared control scale.
   final LumoAvatarSize size;
+  /// The shape variant.
   final LumoAvatarShape shape;
+  /// A presence or state marker. It needs a `statusLabel`: a coloured dot is not a word.
   final LumoAvatarStatus? status;
   /// What the dot MEANS, e.g. «آنلاین». Required with `status`.
   final String? statusLabel;

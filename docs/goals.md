@@ -1,8 +1,10 @@
 # Goals — from 7.2 to a contender
 
-Scored on `docs/rubric.md` (primary weights). Today, 15 Aug 2026: **Lumo 7.2**;
+Scored on `docs/rubric.md` (primary weights). Baseline 15 Aug 2026: **Lumo 7.2**;
 provisional comparators shadcn 6.7 · Ark 7.2 · Mantine 7.7 · React Aria 8.0 ·
-Ant Design 8.0 · MUI 8.1. Reaching every target below puts Lumo at **≈ 8.6**,
+Ant Design 8.0 · MUI 8.1. **Latest sheet: 17 Aug 2026, `docs/history/rubric-2026-08-17.md`
+— 7.9, but a SELF-assessment (rubric rule 3) and so not the record; a blind pass
+replaces it.** Reaching every target below puts Lumo at **≈ 8.6**,
 above the top of the provisional sheet, on the criteria that matter for our
 products. Nothing here needs a paid service; nothing needs adoption or a
 second maintainer to count.
@@ -51,10 +53,40 @@ Tier 3 total ≈ **+0.35**.
 
 ---
 
+## Tier M — the mobile library (added 17 Aug 2026)
+
+`packages/mobile` is 145 widgets, 76 family files, 669 tests and five gates, and
+it entered the 17 Aug sheet as a rounding adjustment on three criteria. **Most of
+this tier moves the score only if rubric amendment 1 lands** (platform-neutral
+A-criteria, or a mobile column on the same anchors) — see
+`docs/history/rubric-2026-08-17.md`. It is worth doing anyway: the asymmetries
+below are real whether or not the sheet can see them.
+
+The ordering is by return per unit of effort, not by size.
+
+| # | Criteria | Now → target | Work | Proof | Δ |
+|---|---|---|---|---|---:|
+| M1 ✅ (17 Aug: `apps/mobile-gallery/test/render_floors_test.dart`, 211 tests, in `gate:flutter`; both poison-tested; found two overflows on its first run — `LumoRangeSlider`'s header at 328dp and the `separator-2` demo) | **D2, A5** (mobile) | — | **Render-and-measure floors.** Two sweeps, both cheap, both already proved: (a) an *alignment floor* — every gallery demo's content is either full-width or centred within N dp of the frame centre (this is exactly the measurement that found 21 demos pinned to the reading edge on 17 Aug); (b) a *font-inheritance sweep* — pump every family under `lumoThemeData(fontFamily: 'GuardFont')` and assert no `RichText` resolves to a null family (this is exactly what found 26 button labels silently dropping the app's font). Neither needs golden images, so neither is machine-fragile. | Two sweeps in `packages/mobile/test/`, each with a poison fixture. | — |
+| M2 ✅ (17 Aug: `apps/mobile-gallery/test/semantics_grader_test.dart` — 210 renders × 4 rules, 6 poison fixtures, in `gate:flutter`; found 18 Latin-digit announcements in the demos the docs tell consumers to copy) | **D2, A1–A5** (mobile) | — | **A semantics grader — the mobile counterpart of `gate:html`.** Today the web's strongest instrument is ONE grader applying 13 rules to 688 documents, so a new component is graded whether or not its author remembered. Mobile has per-family assertions plus five source sweeps: a family added tomorrow gets whatever its author thought of. Build `gate:mobile-semantics`: render each of the 105 demos, walk the `SemanticsNode` tree, and apply rule classes — every interactive node has a non-empty label; no Latin digits in a `fa-IR` label or value; no English literal in an announced position under `fa-IR`; a toggleable node exposes checked state; every field has a label; no duplicate identical labels inside one merged node. Poison fixture per rule, `--self-test` like `flutter-contract-gate.mjs`. | `gate:mobile-semantics`: "105 demos × N rules, 0 violations", each rule rejected by its own poison. | — |
+| M3 ✅ (17 Aug: 0 of 1049, ratchet locked at 0 — the same floor the web reached) | **E2** | 7 → 8 | **Undocumented props 467 → 0.** The web ratchet reached 0; mobile sits at 467 of 1062 (44%), which is the single largest quality asymmetry between the two libraries and is purely mechanical. Lower `UNDOCUMENTED_FLOOR` with every tranche — the tool already prints the number to commit. | `gate:mobile-api` floor at 0, matching `api-docs.floor.json`. | **+0.10** |
+| M4 ◐ (18 Aug: 47 → **57 slugs**, 105 → **119 demos**; widgets never shown 66 → **48**) | **C3, E2** | — | **Demo coverage 47 → 76 slugs.** 32 of 76 families have no gallery demo — `app_bar`, `calendar`, `chart`, `command`, `sheet`, `table`, `tree`, `virtual_list`, `kanban`, `sortable`, `navigation_bar`, `navigation_drawer` among them. They are invisible on the docs site and outside the demo pipeline's bilingual checks, so 42% of the library is neither shown nor graded that way. | `gate:mobile-demos` covers every family with a public widget; the docs sidebar's phone glyph appears on all of them. | — |
+| M5 ✅ (17 Aug: `scripts/mutate-mobile.mjs`, `pnpm run mutation:mobile`, in the CI mutation job — 13/13 killed incl. the Jalali epoch and `formatNumber`; 63 families still `PENDING`, ratcheted) | **D1** (mobile) | — | **A mutation floor for Dart.** The web kills one mutant per module across 111 modules; the mobile suite has no anti-vacuity guard at all, so a semantics test that asserts nothing still passes. Minimal harness: for each family, mutate one announced string to `null`, one `isSelected` to its opposite, drop one `MergeSemantics` — and require the family's own test to fail. | A `mutation:mobile` job listing family → operator → killed. | — |
+| M6 ✅ (17 Aug: `gate:mobile-smoke`, in `verify` and CI; poison-tested by removing one barrel export) | **D4, I1** (mobile) | — | **A clean-room consumer gate.** `gate:smoke` proves every web item compiles outside the workspace; the mobile library has no equivalent — the gallery and the reference app both sit inside or beside the repo, so a consumer taking `lumo_ui_mobile` as a pinned git dependency is untested. Scratch package, git dependency, import the barrel, instantiate one widget per family, `flutter analyze`. | `gate:mobile-smoke`. | — |
+| M9 ◐ (18 Aug: owner chose web counterparts over a mobile-only page. Three of the five needed none — `layout` → `stack`/`aspect-ratio`, `navigation_drawer` → `sidebar`; `app-bar` and `navigation-bar` now exist on both platforms. **Only `pull-to-refresh` is left, and it should probably NOT get a web component** — it is a touch gesture, so this item survives for exactly one family) | **C3** | — | **Let the docs site show a MOBILE-ONLY family.** `build-mobile-demos.mjs` requires every mobile slug to exist in `catalog.json`, which is derived from the WEB registry — so a family the web has no counterpart for cannot have a page at all. Five are blocked today: `app_bar`, `navigation_bar`, `navigation_drawer`, `pull_to_refresh`, `layout`. A phone has a bottom navigation bar and a web page does not; the Web\|Mobile toggle assumed a parity that the mobile library was always going to break. Demos for `app_bar` and `navigation_bar` are already written and parked, waiting on the site. | A component page that renders with only a Mobile side, and the two parked demos registered. | — |
+| M8 | **A5, F1** | — | **Meet the platforms' tap-target and contrast minimums.** Flutter's own guidelines now run over every demo and record what Lumo does not meet: 42 of 105 demos miss iOS's 44pt, 62 miss Android's 48dp, 37 miss WCAG AA contrast at small sizes. The control scale (29/36/44) is generated from the web's `--lumo-ref-control-*`, so this is a SHARED-token decision — either the mobile scale diverges from the web's, or both move. Owner's call. | The three ratchets in `semantics_grader_test.dart` fall to 0. | — |
+| M7 | **A5, D3** (mobile) | — | **Device and AT evidence.** Every mobile test today is `flutter test` on the host: no emulator, no device, no screen reader. Free first steps: an Android emulator `integration_test` run in CI, and **TalkBack** transcripts for a small set of families (the announcement is the product — it should be recorded at least once). Label exactly what was run; never generalise from one device. | Transcripts under `docs/evidence/`; an emulator job in CI. | — |
+
+Tier M carries almost no scored Δ **on the present sheet**, which is itself the
+finding: a 145-widget library can improve a great deal without the instrument
+noticing. Fix the instrument (amendment 1) or accept that this tier is judged on
+its own evidence.
+
+---
+
 ## What we deliberately do not chase
 
 - **Adoption (I5) and bus factor (H1)** — recorded, unweighted, out of scope for now.
-- **React Native as the product mobile stack** — tried 16 Aug 2026 (`@lumo-ui/native`, decisions §27/§29), superseded 17 Aug 2026 by decision §30: **mobile is Flutter (`lumo_ui_mobile`, Lumo UI Mobile)**, best in class per platform; the RN package is a frozen experiment. Lynx is the tripwire.
+- **React Native as the product mobile stack** — tried 16 Aug 2026 (`@lumo-ui/native`, decisions §27/§29), superseded 17 Aug 2026 by decision §30: **mobile is Flutter (`lumo_ui_mobile`, Lumo UI Mobile)**, best in class per platform. The RN package was not frozen but **deleted** (`ef48b62`), and so was the Lynx generator; the findings are kept in `docs/history/`.
 - **Component count for its own sake** — C is 12% of the score; a component without proof lowers B and D more than it raises C.
 - **Claims without runs** — no NVDA/JAWS/TalkBack claims until we actually run them; VoiceOver via Guidepup is the honest first step on this machine.
 

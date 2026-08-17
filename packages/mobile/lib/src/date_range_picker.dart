@@ -78,6 +78,7 @@ class LumoDateRangePicker extends StatefulWidget {
 
   /// Names of the month-paging chevrons. Required — they are icons.
   final String previousMonthLabel;
+  /// Announced name of the next-month control.
   final String nextMonthLabel;
 
   /// The hint on today's cell. Required.
@@ -102,20 +103,26 @@ class LumoDateRangePicker extends StatefulWidget {
   /// Shown in the end half when it is empty.
   final String? endPlaceholder;
 
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown under the field and announced. Supplying one marks it invalid.
   final String? errorMessage;
 
+  /// Whether user input is required before the form is submitted.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
+  /// The earliest date that can be chosen.
   final DateTime? minDate;
+  /// The latest date that can be chosen.
   final DateTime? maxDate;
 
   /// The day marked as today; defaults to the device clock. Injectable for determinism.
   final DateTime? today;
 
+  /// Returns whether a day cannot be chosen — a closed day, a taken slot.
   final bool Function(DateTime date)? isDateUnavailable;
 
   /// Marks days that carry something, with an announced dot.

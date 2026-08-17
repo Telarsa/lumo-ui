@@ -11,6 +11,7 @@ enum LumoSeparatorOrientation { horizontal, vertical }
 /// Width and height are physical dimensions, not directions — nothing to mirror.
 class LumoSeparator extends StatelessWidget {
   const LumoSeparator({super.key, this.orientation = LumoSeparatorOrientation.horizontal, this.label});
+  /// Which axis the control runs along.
   final LumoSeparatorOrientation orientation;
   /// A name for the boundary, if the separator carries meaning. Optional: decorative otherwise.
   final String? label;

@@ -8,10 +8,13 @@ import 'package:flutter/material.dart';
 
 import 'alert.dart' as alert_demos;
 import 'alert_dialog.dart' as alert_dialog_demos;
+import 'app_bar.dart' as app_bar_demos;
+import 'aspect_ratio.dart' as aspect_ratio_demos;
 import 'avatar.dart' as avatar_demos;
 import 'badge.dart' as badge_demos;
 import 'breadcrumbs.dart' as breadcrumbs_demos;
 import 'button.dart' as button_demos;
+import 'button_group.dart' as button_group_demos;
 import 'card.dart' as card_demos;
 import 'carousel.dart' as carousel_demos;
 import 'checkbox.dart' as checkbox_demos;
@@ -24,39 +27,58 @@ import 'drawer.dart' as drawer_demos;
 import 'empty_state.dart' as empty_state_demos;
 import 'file_upload.dart' as file_upload_demos;
 import 'icon_tile.dart' as icon_tile_demos;
+import 'input_group.dart' as input_group_demos;
 import 'input_otp.dart' as input_otp_demos;
 import 'item.dart' as item_demos;
 import 'link.dart' as link_demos;
 import 'menu.dart' as menu_demos;
 import 'message.dart' as message_demos;
 import 'multi_select.dart' as multi_select_demos;
+import 'navigation_bar.dart' as navigation_bar_demos;
 import 'number_field.dart' as number_field_demos;
 import 'phone_input.dart' as phone_input_demos;
 import 'popover.dart' as popover_demos;
 import 'progress.dart' as progress_demos;
+import 'pull_to_refresh.dart' as pull_to_refresh_demos;
 import 'radio_group.dart' as radio_group_demos;
 import 'rating.dart' as rating_demos;
 import 'search_field.dart' as search_field_demos;
 import 'segmented_control.dart' as segmented_control_demos;
 import 'select.dart' as select_demos;
 import 'separator.dart' as separator_demos;
+import 'sidebar.dart' as sidebar_demos;
 import 'skeleton.dart' as skeleton_demos;
 import 'slider.dart' as slider_demos;
+import 'stack.dart' as stack_demos;
 import 'steps.dart' as steps_demos;
 import 'switch.dart' as switch_demos;
+import 'table.dart' as table_demos;
 import 'tabs.dart' as tabs_demos;
 import 'tag.dart' as tag_demos;
+import 'tags_input.dart' as tags_input_demos;
 import 'text_area.dart' as text_area_demos;
 import 'text_field.dart' as text_field_demos;
 import 'time_field.dart' as time_field_demos;
 import 'timeline.dart' as timeline_demos;
 import 'toast.dart' as toast_demos;
 import 'toggle.dart' as toggle_demos;
+import 'toolbar.dart' as toolbar_demos;
 import 'tooltip.dart' as tooltip_demos;
 
 /// Every demo the gallery can render, keyed by the id in the `?demo=` query.
 final Map<String, WidgetBuilder> lumoDemos = <String, WidgetBuilder>{
   ...alert_demos.demos,
+  ...pull_to_refresh_demos.demos,
+  ...navigation_bar_demos.demos,
+  ...app_bar_demos.demos,
+  ...stack_demos.demos,
+  ...sidebar_demos.demos,
+  ...aspect_ratio_demos.demos,
+  ...table_demos.demos,
+  ...input_group_demos.demos,
+  ...toolbar_demos.demos,
+  ...tags_input_demos.demos,
+  ...button_group_demos.demos,
   ...alert_dialog_demos.demos,
   ...avatar_demos.demos,
   ...badge_demos.demos,
@@ -111,6 +133,17 @@ final Map<String, WidgetBuilder> lumoDemos = <String, WidgetBuilder>{
 final Map<String, Map<String, Map<String, String>>> lumoDemoMeta =
     <String, Map<String, Map<String, String>>>{
   ...alert_demos.demoMeta,
+  ...pull_to_refresh_demos.demoMeta,
+  ...navigation_bar_demos.demoMeta,
+  ...app_bar_demos.demoMeta,
+  ...stack_demos.demoMeta,
+  ...sidebar_demos.demoMeta,
+  ...aspect_ratio_demos.demoMeta,
+  ...table_demos.demoMeta,
+  ...input_group_demos.demoMeta,
+  ...toolbar_demos.demoMeta,
+  ...tags_input_demos.demoMeta,
+  ...button_group_demos.demoMeta,
   ...alert_dialog_demos.demoMeta,
   ...avatar_demos.demoMeta,
   ...badge_demos.demoMeta,

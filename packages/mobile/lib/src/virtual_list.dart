@@ -96,14 +96,19 @@ class LumoVirtualList extends StatelessWidget {
   /// on Flutter this is not an estimate.
   final double? estimatedItemExtent;
 
+  /// Padding inside the surface. Directional: start and end, never left and right.
   final EdgeInsetsGeometry? padding;
+  /// An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own.
   final ScrollController? controller;
+  /// Scroll physics, for a caller that needs something other than the platform default.
   final ScrollPhysics? physics;
+  /// Which axis the list scrolls along.
   final Axis scrollDirection;
 
   /// Keep rows alive when scrolled off. Off by default; see the docblock.
   final bool keepAlive;
 
+  /// Whether the list sizes to its content instead of filling its parent.
   final bool shrinkWrap;
 
   /// Drawn between rows. Separators are NOT counted in [itemCount] and carry no
@@ -273,6 +278,7 @@ class LumoInfiniteList extends StatefulWidget {
   /// Rows loaded SO FAR. The "loading more" row is not one of them.
   final int itemCount;
 
+  /// Builds the row at `index`.
   final Widget Function(BuildContext context, int index) itemBuilder;
 
   /// Shown and announced when nothing has loaded. REQUIRED.
@@ -291,13 +297,21 @@ class LumoInfiniteList extends StatefulWidget {
   /// How many rows before the end count as "near the end".
   final int endReachedThreshold;
 
+  /// A stable key for the row at `index` — what `findItemIndex` looks up.
   final Object Function(int index)? itemKey;
+  /// Finds where a key sits now, so the list can hold its place when rows are inserted above it.
   final int? Function(Object key)? findItemIndex;
+  /// Padding inside the surface. Directional: start and end, never left and right.
   final EdgeInsetsGeometry? padding;
+  /// An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own.
   final ScrollController? controller;
+  /// Scroll physics, for a caller that needs something other than the platform default.
   final ScrollPhysics? physics;
+  /// Which axis the list scrolls along.
   final Axis scrollDirection;
+  /// Whether rows scrolled out of view keep their state instead of being rebuilt.
   final bool keepAlive;
+  /// Builds the separator between two rows. Omit it for none.
   final Widget Function(BuildContext context, int index)? separatorBuilder;
 
   @override

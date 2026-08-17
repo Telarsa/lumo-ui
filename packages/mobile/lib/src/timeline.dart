@@ -16,7 +16,9 @@ enum LumoTimelineState { done, current, upcoming }
 /// reason). `icon` is what sits IN the dot: decorative.
 class LumoTimelineItem {
   const LumoTimelineItem({required this.title, this.description, this.meta, this.icon, this.state = LumoTimelineState.done});
+  /// The visible title.
   final String title;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// The pre-formatted time or place stamp. Never a `DateTime`, never a number.
@@ -24,6 +26,7 @@ class LumoTimelineItem {
 
   /// The dot's glyph. DECORATIVE — the title says what happened.
   final Widget? icon;
+  /// Where this item sits in the sequence: done, current, or still to come.
   final LumoTimelineState state;
 }
 
@@ -76,6 +79,7 @@ class LumoTimeline extends StatelessWidget {
 
   /// The announced name of the sequence, e.g. «تاریخچهٔ سفارش». Required.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoTimelineItem> items;
 
   /// Announced state of an event that happened, e.g. «انجام‌شده». Required.
@@ -86,6 +90,7 @@ class LumoTimeline extends StatelessWidget {
 
   /// Announced state of an event not yet reached, e.g. «در انتظار». Required.
   final String upcomingLabel;
+  /// Which axis the control runs along.
   final LumoTimelineOrientation orientation;
 
   String _wordOf(LumoTimelineState s) => switch (s) {

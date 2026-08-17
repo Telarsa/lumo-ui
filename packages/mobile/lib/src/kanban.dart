@@ -37,6 +37,7 @@ class LumoKanbanColumn {
   /// The column's announced and drawn name, e.g. «در حال انجام». REQUIRED.
   final String label;
 
+  /// The cards in this column, top to bottom.
   final List<LumoKanbanCard> cards;
 
   /// Shown in the column when it holds nothing, e.g. «کاری در «در انتظار» نیست».
@@ -112,8 +113,10 @@ class LumoKanban extends StatefulWidget {
   /// How much of the next column stays visible. See the docblock.
   final double peek;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 
+  /// An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own.
   final ScrollController? controller;
 
   /// Moves one card, returning a whole new board — the web's exported

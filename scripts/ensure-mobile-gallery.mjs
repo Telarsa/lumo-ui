@@ -29,6 +29,8 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
+import { SEARCHED, findFlutter, flutterEnv } from "./lib/flutter.mjs";
+
 const ROOT = new URL("..", import.meta.url).pathname;
 const GALLERY = join(ROOT, "apps", "mobile-gallery");
 const OUT = join(ROOT, "apps", "website", "public", "mobile-preview");
@@ -102,10 +104,9 @@ if (process.env.LUMO_SKIP_GALLERY === "1") {
   process.exit(0);
 }
 
-const candidates = ["flutter", "/opt/homebrew/share/flutter/bin/flutter", "/usr/local/share/flutter/bin/flutter"];
-const flutter = candidates.find((c) => (c === "flutter" ? spawnSync("sh", ["-c", "command -v flutter"], { stdio: "ignore" }).status === 0 : existsSync(c)));
-if (!flutter) {
-  console.error(`  mobile-gallery: ${why}, and no Flutter SDK was found (PATH, /opt/homebrew/share/flutter).`);
+const sdk = findFlutter();
+if (!sdk) {
+  console.error(`  mobile-gallery: ${why}, and no Flutter SDK was found (${SEARCHED}).`);
   console.error("  The Mobile component pages embed a Flutter web build; the site cannot be built without it.");
   console.error("  Install Flutter (https://docs.flutter.dev/get-started/install), or set LUMO_SKIP_GALLERY=1");
   console.error("  to build a site whose mobile previews are stale or missing — and say so wherever you ship it.");
@@ -115,7 +116,7 @@ if (!flutter) {
 console.log(`  mobile-gallery: rebuilding (${why})…`);
 const status = spawnSync(process.execPath, [join(ROOT, "scripts", "build-mobile-gallery.mjs")], {
   stdio: "inherit",
-  env: { ...process.env, PATH: `${process.env.PATH ?? ""}:/opt/homebrew/share/flutter/bin` },
+  env: flutterEnv(sdk.binDir),
 }).status;
 if (status !== 0) {
   console.error("  mobile-gallery: the build failed; see the output above.");

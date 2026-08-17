@@ -13,7 +13,9 @@ import 'tokens.g.dart';
 class LumoFilterOption {
   const LumoFilterOption({required this.id, required this.label, this.isPinned = false});
 
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
 
   /// Keep this option on the BAR even while it is off — a quick filter.
@@ -30,10 +32,12 @@ class LumoFilterOption {
 class LumoFilterGroup {
   const LumoFilterGroup({required this.id, required this.label, required this.options, this.isMultiple = true, this.description});
 
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
 
   /// The group's name: a header in the sheet, announced there once.
   final String label;
+  /// The options to choose from, in reading order.
   final List<LumoFilterOption> options;
 
   /// `false` makes the group exclusive — a sort order, where choosing one
@@ -102,6 +106,7 @@ class LumoFilters extends StatefulWidget {
 
   /// Names the bar as a region. REQUIRED — announced, not drawn.
   final String label;
+  /// The filter groups, in reading order.
   final List<LumoFilterGroup> groups;
 
   /// The chosen option ids per group id. Controlled, as the web's `value`.
@@ -129,6 +134,7 @@ class LumoFilters extends StatefulWidget {
   /// Extra controls for the sheet: a radius slider, a switch with helper text.
   final WidgetBuilder? extra;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

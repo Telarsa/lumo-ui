@@ -89,6 +89,12 @@
   --radius-sm: var(--lumo-sys-radius-sm);
   --radius-md: var(--lumo-sys-radius-md);
   --radius-lg: var(--lumo-sys-radius-lg);
+  /* Previously unmapped, so `rounded-xl` / `rounded-2xl` / `rounded-full` fell
+     through to Tailwind's defaults. Mapped at those same values: the web is
+     unchanged, and the steps are now the design system's to move. */
+  --radius-xl: var(--lumo-sys-radius-xl);
+  --radius-2xl: var(--lumo-sys-radius-2xl);
+  --radius-full: var(--lumo-sys-radius-full);
 
   --spacing-control-sm: var(--lumo-ref-control-sm);
   --spacing-control-md: var(--lumo-ref-control-md);

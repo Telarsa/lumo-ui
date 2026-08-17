@@ -51,9 +51,13 @@ class LumoIconTile extends StatelessWidget {
   /// A name, ONLY when the tile is the sole carrier of meaning. Null = decorative.
   final String? accessibilityLabel;
 
+  /// The semantic tone the colour carries.
   final LumoIconTileTone tone;
+  /// The visual variant.
   final LumoIconTileVariant variant;
+  /// The size step, from the shared control scale.
   final LumoIconTileSize size;
+  /// The shape variant.
   final LumoIconTileShape shape;
 
   @override
@@ -145,6 +149,7 @@ class LumoIconStack extends StatelessWidget {
   /// Says the remainder in words, e.g. `(n) => '$n نفر دیگر'`. Appended to `label`.
   final String Function(int remaining)? overflowLabel;
 
+  /// The size step, from the shared control scale.
   final LumoIconStackSize size;
 
   @override

@@ -16,10 +16,15 @@ sealed class LumoMenuEntry {
 /// calls `onSelected` (so an action that opens a dialog opens it above nothing).
 class LumoMenuItem extends LumoMenuEntry {
   const LumoMenuItem({required this.label, this.icon, this.onSelected, this.isDisabled = false, this.isDestructive = false});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// A leading icon. Decorative — it is not announced, so it never carries meaning on its own.
   final Widget? icon;
+  /// Called when the item is chosen.
   final VoidCallback? onSelected;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether this item destroys something, and should be coloured and announced as such.
   final bool isDestructive;
 }
 
@@ -30,9 +35,13 @@ class LumoMenuItem extends LumoMenuEntry {
 /// toggling three columns should not reopen the menu three times).
 class LumoMenuCheckboxItem extends LumoMenuEntry {
   const LumoMenuCheckboxItem({required this.label, required this.isSelected, this.onChanged, this.isDisabled = false});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// Whether this one is selected.
   final bool isSelected;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<bool>? onChanged;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -45,7 +54,9 @@ class LumoMenuSeparator extends LumoMenuEntry {
 /// group; here it is a header node the reader lands on before the group's items.
 class LumoMenuSection extends LumoMenuEntry {
   const LumoMenuSection({required this.label, required this.items});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoMenuEntry> items;
 }
 
@@ -62,10 +73,15 @@ class LumoMenuSection extends LumoMenuEntry {
 /// phone are a sheet's job), no link items (`href`: no router seam here).
 class LumoMenuTrigger extends StatefulWidget {
   const LumoMenuTrigger({super.key, required this.label, required this.trigger, required this.items, this.placement = LumoPlacement.bottomStart, this.onOpenChange, this.isDisabled = false});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoMenuEntry> items;
+  /// Which side the surface prefers to open on.
   final LumoPlacement placement;
+  /// Called when the surface opens or closes, with the new state.
   final ValueChanged<bool>? onOpenChange;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Built with the press that opens the menu.

@@ -10,7 +10,7 @@ Direction, digit system, calendar, and script are graded separately (`packages/g
 - `LumoNode` excludes `number`: `{count}` in JSX does not compile; write `formatNumber(count, locale)`.
 - There is no `dir` prop. `LumoProvider` derives direction from `locale`; `LumoHtml` writes `lang`/`dir`.
 
-## Rules that are build-time (`gate:html`, 14 rules over served bytes)
+## Rules that are build-time (`gate:html`, 13 rules over served bytes)
 lang/dir on the root · no Latin digits in Persian/Arabic text · no purely-Latin ARIA strings (a Persian phrase with a foreign token passes) · every control named · IDREFs resolve · composite widgets have exactly one Tab stop · native calendar in dates · unique ids · native-script text and names · named roledescription · `data-lumo-latn` islands are actually Latin (a Persian paragraph inside one fails, not hides) · per-route Persian digit floors (auto-admitted for any route with 30+ native digits).
 
 ## What the engine gets wrong and how it is compensated
@@ -72,9 +72,36 @@ const de: LumoAppStrings = { numberField: {…}, dateField: {…}, calendar: {�
   `<html lang>`.
 - **The docs site** is still two-locale by design; its copy types against
   `BuiltinLocale`.
-- **Native** — `LumoNativeProvider` takes the same open `locale`; the first
-  component needs no strings.
+- **Mobile** — `LumoScope(locale:)` takes the same open tag. The React Native
+  package that used to be named here (`LumoNativeProvider`) no longer exists:
+  decision §30 chose Flutter, and `packages/mobile` is the mobile library.
 
 What "all languages" does NOT mean: Lumo authoring strings for a third
 language. That is the app's translation, in the app's voice, and a required
 prop is how the library refuses to guess.
+
+## The same contract on mobile (`packages/mobile`, Flutter/Dart)
+
+The mobile library is a separate implementation, not a port, and it carries the
+same four rules — enforced by different instruments, because a Flutter app
+serves no HTML.
+
+| The rule | On the web | On mobile |
+|---|---|---|
+| Every announced string is required | required prop; `gate:props` | required named parameter; `gate:flutter-contract` rule `english-default` rejects a defaulted announced string, and `english-literal` rejects an English literal in an announced position |
+| Direction comes from the locale, never a flag | `direction(locale)`, no `dir` prop | `LumoScope(locale:)` drives `Directionality`; rule `physical-direction` rejects `EdgeInsets.only(left:)`, `Alignment.centerLeft`, `TextAlign.left` and their kin in favour of the directional forms |
+| Numbers are formatted, never bare | `formatNumber(n, locale)`; a bare number in JSX is a type error | `formatNumber(n, locale)` in Dart, or a pre-formatted `String` parameter |
+| Dates go through a calendar model | Jalali as a first-class model | `jalali.dart` — the jalaali-js algorithm in pure Dart — with `calendarOf(locale)` mirroring the web's `-u-ca-` rule |
+
+One rule exists only on mobile: **never use a Material route helper**
+(`showDialog`, `showModalBottomSheet`, `showMenu`, `showDatePicker`). Each names
+its own route and barrier from `MaterialLocalizations` — «Dialog», «Dismiss» —
+in English, under a Persian app. `showLumoDialog`, `showLumoSheet`,
+`showLumoPopover` take those names as required parameters instead, and
+`gate:flutter-contract` fails the build on the Material forms.
+
+The proof is different in kind. The web's claim rests on graded served bytes;
+the mobile claim rests on the **semantics tree**, asserted per family in both
+locales — name announced exactly once, role, state, value — plus directory-wide
+sweeps. That is a weaker instrument than one grader sweeping every document by
+rule, and `docs/goals.md` Tier M item M2 is the plan to close that gap.

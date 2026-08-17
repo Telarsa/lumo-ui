@@ -7,7 +7,8 @@ Start with `architecture.md`, then `codebase.md` for where things live. Everythi
 | [architecture.md](architecture.md) | Packages, dependency direction, engine choice, styling ownership, distribution boundary |
 | [codebase.md](codebase.md) | Where each kind of code lives, how a component is shaped, how to add one |
 | [i18n-and-rtl.md](i18n-and-rtl.md) | The locale contract: direction, digits, calendars, required announced strings |
-| [verification.md](verification.md) | Every gate in `pnpm run verify`, the popup tier, the mutation floor, what each proves and cannot prove |
+| [verification.md](verification.md) | All 20 gates in `pnpm run verify`, the two CI jobs beside it, and what each proves and cannot prove |
+| [../packages/mobile/README.md](../packages/mobile/README.md) | **Lumo UI Mobile** (Flutter/Dart): install, the widget families, the mobile gates. Its place in the system is in [architecture.md](architecture.md) |
 | [decisions/log.md](decisions/log.md) | The decision log (ADR-style, append-only) |
 | [thesis.md](thesis.md) | Why the library exists |
 | [history/](history/) | Retired planning and audit documents, kept for the record |

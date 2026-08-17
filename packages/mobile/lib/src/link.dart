@@ -68,6 +68,7 @@ class LumoLink extends StatefulWidget {
   /// What following the link does. Flutter has no router here — this is the seam.
   final VoidCallback onTap;
 
+  /// The visual variant.
   final LumoLinkVariant variant;
 
   /// A glyph at the inline END, after the words. Decorative — excluded from semantics.

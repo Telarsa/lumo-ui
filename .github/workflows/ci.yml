@@ -160,6 +160,8 @@ jobs:
         run: pnpm run gate:flutter-contract
       - name: Mobile API reference
         run: pnpm run gate:mobile-api
+      - name: Mobile consumer smoke test
+        run: pnpm run gate:mobile-smoke
       - name: Mobile demos
         run: pnpm run gate:mobile-demos
 
@@ -184,7 +186,8 @@ jobs:
   # assignment, while high-risk modules use component-specific behavior probes.
   mutation:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    # Two campaigns now: the web's 111 modules and the mobile library's operators.
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
@@ -196,6 +199,14 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Component mutation floor
         run: pnpm run mutation:components
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          channel: stable
+          cache: true
+      # The Dart counterpart: `packages/mobile` had 669 tests and no anti-vacuity
+      # guard, so nothing proved they assert anything.
+      - name: Mobile mutation floor
+        run: pnpm run mutation:mobile
       - name: Publish the report
         if: always()
         uses: actions/upload-artifact@v4

@@ -17,7 +17,9 @@ import 'tokens.g.dart';
 /// `int` painted into a Persian bar would show Latin digits.
 class LumoNavigationItem {
   const LumoNavigationItem({required this.id, required this.label, this.icon, this.selectedIcon, this.badge, this.isDisabled = false});
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
   /// Decoration in the leading slot; the label carries the meaning.
   final Widget? icon;
@@ -25,6 +27,7 @@ class LumoNavigationItem {
   final Widget? selectedIcon;
   /// A count, already formatted for the reader's digits. Announced WITH the name.
   final String? badge;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -74,6 +77,7 @@ class LumoNavigationBar extends StatefulWidget {
 
   /// Announced name of the navigation landmark. Required.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoNavigationItem> items;
 
   /// The current destination's id (controlled).
@@ -81,10 +85,12 @@ class LumoNavigationBar extends StatefulWidget {
 
   /// The first-frame destination's id (uncontrolled).
   final String? defaultValue;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
 
   /// Which selected-state shape the bar draws.
   final LumoNavigationBarIndicator indicator;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -212,7 +218,7 @@ class _Destination extends StatelessWidget {
                       curve: Curves.easeOut,
                       width: 22,
                       height: 3,
-                      decoration: BoxDecoration(color: isSelected ? c.accent : Colors.transparent, borderRadius: BorderRadius.circular(999)),
+                      decoration: BoxDecoration(color: isSelected ? c.accent : Colors.transparent, borderRadius: BorderRadius.circular(LumoRadius.full)),
                     ),
                     const SizedBox(height: 6),
                   ],
@@ -228,7 +234,7 @@ class _Destination extends StatelessWidget {
                         curve: Curves.easeOut,
                         height: 28,
                         padding: EdgeInsetsDirectional.symmetric(horizontal: pill ? pillPadding : 0),
-                        decoration: BoxDecoration(color: isSelected && pill ? c.accent : Colors.transparent, borderRadius: BorderRadius.circular(999)),
+                        decoration: BoxDecoration(color: isSelected && pill ? c.accent : Colors.transparent, borderRadius: BorderRadius.circular(LumoRadius.full)),
                         alignment: Alignment.center,
                         // The selected glyph rises a hair — `KTabBar`'s AnimatedSlide,
                         // a block-axis move, so there is nothing to mirror.
@@ -251,7 +257,7 @@ class _Destination extends StatelessWidget {
                             constraints: const BoxConstraints(minWidth: 16),
                             height: 16,
                             padding: const EdgeInsetsDirectional.symmetric(horizontal: 4),
-                            decoration: BoxDecoration(color: c.critical, borderRadius: BorderRadius.circular(999), border: Border.all(color: c.surface, width: 1.5)),
+                            decoration: BoxDecoration(color: c.critical, borderRadius: BorderRadius.circular(LumoRadius.full), border: Border.all(color: c.surface, width: 1.5)),
                             alignment: Alignment.center,
                             child: Text(item.badge!, style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w700, height: 1, color: c.bg)),
                           ),

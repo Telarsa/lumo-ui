@@ -11,8 +11,8 @@ import { mkdtemp, readFile, writeFile, mkdir, cp, rm, symlink } from "node:fs/pr
 import { tmpdir } from "node:os";
 import { join, posix } from "node:path";
 import { execFileSync } from "node:child_process";
-import ts from "typescript";
 import { rewriteBlockImports } from "./lib/consumer-copy.mjs";
+import { importSpecifiers } from "./lib/ts-ast.mjs";
 
 /** @typedef {{ path: string, target: string, type?: string }} RegistryFile */
 /** @typedef {{ name: string, type?: string, files?: RegistryFile[], dependencies?: string[], registryDependencies?: string[] }} RegistryItem */
@@ -54,38 +54,6 @@ const IMPLICIT_CONSUMER_PACKAGES = new Set(["react", "react-dom"]);
 const packageOf = (specifier) => {
   const parts = specifier.split("/");
   return specifier.startsWith("@") ? parts.slice(0, 2).join("/") : (parts[0] ?? specifier);
-};
-/**
- * @param {string} source
- * @param {string} fileName
- * @returns {string[]}
- */
-const importSpecifiers = (source, fileName) => {
-  const parsed = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, false);
-  /** @type {string[]} */
-  const specifiers = [];
-  /** @param {ts.Node} node */
-  const visit = (node) => {
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier !== undefined &&
-      ts.isStringLiteral(node.moduleSpecifier)
-    ) {
-      specifiers.push(node.moduleSpecifier.text);
-    } else if (
-      ts.isCallExpression(node) &&
-      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
-      node.arguments.length === 1
-    ) {
-      const argument = node.arguments[0];
-      if (argument !== undefined && ts.isStringLiteral(argument)) {
-        specifiers.push(argument.text);
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(parsed);
-  return specifiers;
 };
 
 /** @type {string[]} */

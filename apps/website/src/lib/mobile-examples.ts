@@ -79,6 +79,14 @@ const MOBILE_FILE_FOR_SLUG: Readonly<Record<string, string>> = {
   "input-otp": "otp_field.dart",
   // The web's Tag is Material's Chip.
   tag: "chip.dart",
+  // The web's app Sidebar is the phone's navigation DRAWER: the same groups,
+  // items and badges, arriving from the inline edge because a phone has no room
+  // to keep them on screen.
+  sidebar: "navigation_drawer.dart",
+  // The web splits its layout primitives across two pages; the mobile library
+  // keeps all three in one file.
+  stack: "layout.dart",
+  "aspect-ratio": "layout.dart",
 };
 
 /** The Dart file, repo-relative, that a website slug's Mobile side documents. */

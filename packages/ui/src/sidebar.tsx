@@ -185,7 +185,16 @@ export function SidebarItem(props: SidebarItemProps) {
         </span>
       )}
       <span className={sidebarItemLabelVariants()}>{children}</span>
-      {badge == null ? null : <span className={sidebarBadgeVariants()}>{badge}</span>}
+      {/* The `{" "}` is not cosmetic: two adjacent spans concatenate in the
+          accessible name with nothing between them, so a badge turned
+          «سفارش‌ها» + «۱۲» into the single token «سفارش‌ها۱۲». Found 18 Aug 2026
+          while writing the same shape for `navigation-bar.tsx`. */}
+      {badge == null ? null : (
+        <>
+          {" "}
+          <span className={sidebarBadgeVariants()}>{badge}</span>
+        </>
+      )}
     </Link>
   );
 }

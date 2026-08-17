@@ -45,11 +45,15 @@ class LumoBadge extends StatelessWidget {
         variant = LumoBadgeVariant.solid,
         _dot = true;
 
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
   /// A leading icon (decorative; the label names the badge).
   final Widget? icon;
+  /// The semantic tone the colour carries.
   final LumoBadgeTone tone;
+  /// The visual variant.
   final LumoBadgeVariant variant;
+  /// The size step, from the shared control scale.
   final LumoBadgeSize size;
   final bool _dot;
 

@@ -74,8 +74,11 @@ class LumoToggle extends StatefulWidget {
   /// Draw only the icon; the label stays for the reader.
   final bool iconOnly;
 
+  /// The visual variant.
   final LumoToggleVariant variant;
+  /// The size step, from the shared control scale.
   final LumoToggleSize size;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -166,10 +169,15 @@ class _LumoToggleState extends State<LumoToggle> {
 /// reports), `label` REQUIRED (the announced name — an icon is not a name).
 class LumoToggleItem {
   const LumoToggleItem({required this.id, required this.label, this.icon, this.iconOnly = false, this.isDisabled = false}) : assert(!iconOnly || icon != null, 'An icon-only toggle needs an icon.');
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// A leading icon. Decorative — it is not announced, so it never carries meaning on its own.
   final Widget? icon;
+  /// Whether only the icon is painted. The label is still announced.
   final bool iconOnly;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -208,6 +216,7 @@ class LumoToggleGroup extends StatefulWidget {
 
   /// Announced name of the group, e.g. «چیدمان». Required.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoToggleItem> items;
 
   /// The pressed key in single mode (controlled).
@@ -225,12 +234,15 @@ class LumoToggleGroup extends StatefulWidget {
   /// Called with the whole next selection.
   final ValueChanged<Set<String>>? onChanged;
 
+  /// Whether one item may be selected, or many.
   final LumoToggleSelectionMode selectionMode;
 
   /// Refuse to empty the group — the web prop of the same name.
   final bool disallowEmptySelection;
 
+  /// The size step, from the shared control scale.
   final LumoToggleSize size;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

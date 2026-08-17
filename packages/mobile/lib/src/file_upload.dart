@@ -41,6 +41,7 @@ class LumoAttachment {
   /// The size, ALREADY formatted, e.g. «۱٫۲ مگابایت».
   final String? sizeLabel;
 
+  /// Where this file is in the upload lifecycle.
   final LumoAttachmentStatus status;
 
   /// What `status` MEANS. REQUIRED unless `status` is `done`.
@@ -71,6 +72,7 @@ class LumoAttachmentTile extends StatelessWidget {
       : assert(onRemove == null || removeLabel != null,
             'A removable attachment needs a `removeLabel` — name the file in the phrase, e.g. «حذف گزارش.pdf».');
 
+  /// The attachment this tile shows.
   final LumoAttachment file;
 
   /// Drop this file.
@@ -79,6 +81,7 @@ class LumoAttachmentTile extends StatelessWidget {
   /// Announced name of the ✕. REQUIRED when `onRemove` is set.
   final String? removeLabel;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -309,6 +312,7 @@ class LumoFileUpload extends StatelessWidget {
   /// A PRE-FORMATTED count line, e.g. «حداکثر ۵ پرونده».
   final String? maxFilesLabel;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

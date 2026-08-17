@@ -48,7 +48,26 @@ export interface CatalogEntry {
   source: string;
 }
 
+/**
+ * A family the MOBILE library has and the web library does not — an app bar's
+ * phone-only cousins. It has a page, a sidebar row and a Mobile side; its Web
+ * side says the web has no such component and points across.
+ *
+ * Kept in a separate list rather than as a nullable `render`/`source` on
+ * `CatalogEntry`: the landing gallery, the `/view/` preview route and the
+ * registry resolver all take a catalog entry and immediately render or read its
+ * source, and making those fields optional would push a "this cannot happen"
+ * branch into four files to describe one that has neither.
+ */
+export interface MobileOnlyEntry {
+  id: string;
+  title: Record<Locale, string>;
+  intro: Record<Locale, string>;
+  tier: Tier;
+}
+
 let cached: Promise<CatalogEntry[]> | undefined;
+let cachedMobileOnly: Promise<MobileOnlyEntry[]> | undefined;
 
 async function build(): Promise<CatalogEntry[]> {
   const entries: CatalogEntry[] = [];
@@ -56,6 +75,10 @@ async function build(): Promise<CatalogEntry[]> {
   for (const slug of exampleSlugs()) {
     const loaded = await loadExamplesFor(slug);
     if (!loaded) continue;
+    // A mobile-only family is registered the same way as any other — one
+    // examples file — but it has no web component, so the requirements below
+    // (at least one example, a module in packages/ui/src) do not apply to it.
+    if (!loaded.platforms.includes("web")) continue;
     if (!loaded.title || !loaded.intro || !loaded.tier) {
       // Loud, with the fix in the message: a component that exists everywhere except the site.
       throw new Error(
@@ -103,6 +126,39 @@ async function build(): Promise<CatalogEntry[]> {
 export function allCatalog(): Promise<CatalogEntry[]> {
   cached ??= build();
   return cached;
+}
+
+async function buildMobileOnly(): Promise<MobileOnlyEntry[]> {
+  const entries: MobileOnlyEntry[] = [];
+  for (const slug of exampleSlugs()) {
+    const loaded = await loadExamplesFor(slug);
+    if (!loaded || loaded.platforms.includes("web")) continue;
+    if (!loaded.title || !loaded.intro || !loaded.tier) {
+      throw new Error(
+        `[catalog] examples/${slug}.tsx declares platforms: ["mobile"] but still needs ` +
+          `title, intro and tier (both locales) — they are the page header and the sidebar row.`,
+      );
+    }
+    entries.push({ id: slug, title: loaded.title, intro: loaded.intro, tier: loaded.tier });
+  }
+  entries.sort((a, b) => a.id.localeCompare(b.id));
+  return entries;
+}
+
+export function allMobileOnly(): Promise<MobileOnlyEntry[]> {
+  cachedMobileOnly ??= buildMobileOnly();
+  return cachedMobileOnly;
+}
+
+/**
+ * Page identity for ANY family, whichever platforms it has — what the header,
+ * the `<title>` and the sidebar need. The Web and Mobile pages both read this,
+ * so a family that exists on one platform still has one name.
+ */
+export async function pageIdentity(
+  id: string,
+): Promise<{ id: string; title: Record<Locale, string>; intro: Record<Locale, string>; tier: Tier } | undefined> {
+  return (await allCatalog()).find((e) => e.id === id) ?? (await allMobileOnly()).find((e) => e.id === id);
 }
 
 export async function catalogById(id: string): Promise<CatalogEntry | undefined> {

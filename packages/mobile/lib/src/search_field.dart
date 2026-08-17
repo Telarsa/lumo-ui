@@ -58,6 +58,7 @@ class LumoSearchField extends StatefulWidget {
 
   /// Hide the label row; the name stays on the field.
   final bool showLabel;
+  /// Placeholder text shown while the field is empty. Never a substitute for the label.
   final String? placeholder;
 
   /// Controlled text; the field follows it on every build.
@@ -68,6 +69,7 @@ class LumoSearchField extends StatefulWidget {
 
   /// The app's own controller, when it wants one; exclusive with `value`.
   final TextEditingController? controller;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
 
   /// Fires with the text when the keyboard's search key is pressed.
@@ -75,7 +77,9 @@ class LumoSearchField extends StatefulWidget {
 
   /// Fires after the ✕ emptied the field (`onChanged('')` fires too).
   final VoidCallback? onClear;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// An error message for the field. Announced as the control's hint and marks it invalid.
   final String? errorMessage;
 
   /// Marks the field wrong WITHOUT a sentence (the web's `isInvalid`). Null
@@ -85,7 +89,9 @@ class LumoSearchField extends StatefulWidget {
   /// The web's `isRequired`. Draws the « *» marker and sets the reader's
   /// `required` state.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether the control takes focus when it first appears.
   final bool autoFocus;
 
   @override

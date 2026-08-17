@@ -277,7 +277,7 @@ class _LumoCarouselState extends State<LumoCarousel> {
                                 height: 6,
                                 decoration: BoxDecoration(
                                   color: i == _index ? c.accent : c.borderStrong,
-                                  borderRadius: BorderRadius.circular(999),
+                                  borderRadius: BorderRadius.circular(LumoRadius.full),
                                 ),
                               ),
                             ),

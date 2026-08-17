@@ -3,7 +3,7 @@
   "generatedFrom": [
     "packages/mobile/lib/src/*.dart"
   ],
-  "undocumented": 467,
+  "undocumented": 0,
   "widgets": {
     "LumoAccordion": {
       "file": "packages/mobile/lib/src/disclosure.dart",
@@ -14,7 +14,7 @@
           "type": "List<LumoDisclosureItem>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "allowsMultiple",
@@ -42,7 +42,7 @@
           "type": "ValueChanged<Set<String>>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "value",
@@ -121,7 +121,7 @@
           "type": "LumoAlertVariant",
           "required": false,
           "default": "LumoAlertVariant.subtle",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -180,28 +180,28 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onCancel",
           "type": "VoidCallback?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the reader backs out. The dialog closes either way."
         },
         {
           "name": "onConfirm",
           "type": "VoidCallback?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the reader confirms."
         },
         {
           "name": "onOpenChange",
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the surface opens or closes, with the new state."
         }
       ]
     },
@@ -271,7 +271,7 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "ratio",
@@ -329,7 +329,7 @@
           "type": "LumoAttachmentStatus",
           "required": false,
           "default": "LumoAttachmentStatus.done",
-          "description": ""
+          "description": "Where this file is in the upload lifecycle."
         },
         {
           "name": "statusLabel",
@@ -350,14 +350,14 @@
           "type": "LumoAttachment",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The attachment this tile shows."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onRemove",
@@ -393,28 +393,28 @@
           "type": "ImageProvider?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An image to show instead of the initials."
         },
         {
           "name": "shape",
           "type": "LumoAvatarShape",
           "required": false,
           "default": "LumoAvatarShape.circle",
-          "description": ""
+          "description": "The shape variant."
         },
         {
           "name": "size",
           "type": "LumoAvatarSize",
           "required": false,
           "default": "LumoAvatarSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "status",
           "type": "LumoAvatarStatus?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A presence or state marker. It needs a `statusLabel`: a coloured dot is not a word."
         },
         {
           "name": "statusLabel",
@@ -435,7 +435,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -450,21 +450,21 @@
           "type": "LumoBadgeSize",
           "required": false,
           "default": "LumoBadgeSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "tone",
           "type": "LumoBadgeTone",
           "required": false,
           "default": "LumoBadgeTone.neutral",
-          "description": ""
+          "description": "The semantic tone the colour carries."
         },
         {
           "name": "variant",
           "type": "LumoBadgeVariant",
           "required": false,
           "default": "LumoBadgeVariant.subtle",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -507,7 +507,7 @@
           "type": "LumoBarChartOrientation",
           "required": false,
           "default": "LumoBarChartOrientation.vertical",
-          "description": ""
+          "description": "Which axis the control runs along."
         },
         {
           "name": "partTone",
@@ -555,7 +555,7 @@
           "type": "List<LumoCrumb>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
@@ -599,35 +599,35 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onPressed",
           "type": "VoidCallback?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the control is pressed. Null disables it."
         },
         {
           "name": "size",
           "type": "LumoButtonSize",
           "required": false,
           "default": "LumoButtonSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "variant",
           "type": "LumoButtonVariant",
           "required": false,
           "default": "LumoButtonVariant.solid",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -640,7 +640,7 @@
           "type": "List<Widget>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The children, in reading order."
         },
         {
           "name": "label",
@@ -655,7 +655,7 @@
           "type": "LumoButtonGroupOrientation",
           "required": false,
           "default": "LumoButtonGroupOrientation.horizontal",
-          "description": ""
+          "description": "Which axis the control runs along."
         }
       ]
     },
@@ -681,7 +681,7 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         }
       ]
     },
@@ -702,7 +702,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the next-month control.",
           "announced": true
         },
         {
@@ -747,7 +747,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "markedLabel",
@@ -825,7 +825,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the close affordance. An icon is not a name.",
           "announced": true
         },
         {
@@ -833,7 +833,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -841,7 +841,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the next-month control.",
           "announced": true
         },
         {
@@ -849,14 +849,14 @@
           "type": "ValueChanged<DateTime>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "Called with local midnight of the chosen day."
         },
         {
           "name": "previousMonthLabel",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the previous-month control.",
           "announced": true
         },
         {
@@ -864,14 +864,14 @@
           "type": "DateTime",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "Which day counts as today, so a test can pin it."
         },
         {
           "name": "todayLabel",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced marker for today, e.g. «امروز».",
           "announced": true
         },
         {
@@ -879,21 +879,21 @@
           "type": "DateTime?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The latest date that can be chosen."
         },
         {
           "name": "minDate",
           "type": "DateTime?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The earliest date that can be chosen."
         },
         {
           "name": "value",
           "type": "DateTime?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own."
         }
       ]
     },
@@ -906,14 +906,14 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "label",
@@ -935,14 +935,14 @@
           "type": "EdgeInsetsGeometry",
           "required": false,
           "default": "const EdgeInsets.all(16)",
-          "description": ""
+          "description": "Padding inside the surface. Directional: start and end, never left and right."
         },
         {
           "name": "variant",
           "type": "LumoCardVariant",
           "required": false,
           "default": "LumoCardVariant.outline",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -955,7 +955,7 @@
           "type": "List<Widget>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The children, in reading order."
         }
       ]
     },
@@ -968,7 +968,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The visible title.",
           "announced": true
         },
         {
@@ -983,7 +983,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         }
       ]
@@ -1143,14 +1143,14 @@
           "type": "List<LumoChartPoint>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The points of this series, in x order."
         },
         {
           "name": "tone",
           "type": "LumoChartTone?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The semantic tone the colour carries."
         }
       ]
     },
@@ -1163,7 +1163,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "The announced name, for when it must differ from the visible text.",
           "announced": true
         },
         {
@@ -1171,14 +1171,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "The starting state for an uncontrolled checkbox."
         },
         {
           "name": "description",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -1194,14 +1194,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isIndeterminate",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the box shows the mixed state — some children checked, not all."
         },
         {
           "name": "isInvalid",
@@ -1215,7 +1215,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the input can be selected but not changed by the user."
         },
         {
           "name": "isSelected",
@@ -1229,7 +1229,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -1237,7 +1237,7 @@
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         }
       ]
     },
@@ -1250,14 +1250,14 @@
           "type": "List<Widget>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The children, in reading order."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -1265,7 +1265,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -1281,7 +1281,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isInvalid",
@@ -1301,7 +1301,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -1316,14 +1316,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isSelected",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether this one is selected."
         },
         {
           "name": "onChanged",
@@ -1352,7 +1352,7 @@
           "type": "LumoChipSize",
           "required": false,
           "default": "LumoChipSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         }
       ]
     },
@@ -1396,7 +1396,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -1427,21 +1427,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<Color>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "showLabel",
           "type": "bool",
           "required": false,
           "default": "true",
-          "description": ""
+          "description": "Whether the label is painted. It is announced either way — hiding a name is not dropping it."
         },
         {
           "name": "swatches",
@@ -1476,21 +1476,21 @@
           "type": "List<LumoColorSwatch>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The colours offered, in reading order."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<Color>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "value",
@@ -1510,7 +1510,7 @@
           "type": "Color",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The colour this swatch stands for."
         },
         {
           "name": "name",
@@ -1554,7 +1554,7 @@
           "type": "List<LumoComboboxOption>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The options to choose from, in reading order."
         },
         {
           "name": "suggestionsLabel",
@@ -1576,7 +1576,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -1592,7 +1592,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isRequired",
@@ -1620,7 +1620,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "Placeholder text shown while the field is empty. Never a substitute for the label.",
           "announced": true
         },
         {
@@ -1656,7 +1656,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -1751,7 +1751,7 @@
           "type": "List<LumoCommandItem>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
@@ -1772,14 +1772,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -1802,7 +1802,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "keywords",
@@ -1829,7 +1829,7 @@
           "type": "List<LumoMenuEntry>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
@@ -1844,7 +1844,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onOpenChange",
@@ -1864,7 +1864,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -1901,7 +1901,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the next-month control.",
           "announced": true
         },
         {
@@ -1933,7 +1933,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -1949,14 +1949,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isRequired",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether user input is required before the form is submitted."
         },
         {
           "name": "maxDate",
@@ -2010,57 +2010,6 @@
         }
       ]
     },
-    "LumoDateFieldFrame": {
-      "file": "packages/mobile/lib/src/date_value_box.dart",
-      "doc": "Label, control, description and error — the vertical stack every Lumo form control wears (`fieldVariants` on the web). The label is displayed AND announced by the control it names, so it is a plain `Text` here; the error is a live region.",
-      "props": [
-        {
-          "name": "control",
-          "type": "Widget",
-          "required": true,
-          "default": null,
-          "description": ""
-        },
-        {
-          "name": "label",
-          "type": "String",
-          "required": true,
-          "default": null,
-          "description": "",
-          "announced": true
-        },
-        {
-          "name": "description",
-          "type": "String?",
-          "required": false,
-          "default": null,
-          "description": "",
-          "announced": true
-        },
-        {
-          "name": "errorMessage",
-          "type": "String?",
-          "required": false,
-          "default": null,
-          "description": "",
-          "announced": true
-        },
-        {
-          "name": "isDisabled",
-          "type": "bool",
-          "required": false,
-          "default": "false",
-          "description": ""
-        },
-        {
-          "name": "isRequired",
-          "type": "bool",
-          "required": false,
-          "default": "false",
-          "description": ""
-        }
-      ]
-    },
     "LumoDatePicker": {
       "file": "packages/mobile/lib/src/date_picker.dart",
       "doc": "",
@@ -2086,7 +2035,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the next-month control.",
           "announced": true
         },
         {
@@ -2133,7 +2082,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -2163,14 +2112,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isRequired",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether user input is required before the form is submitted."
         },
         {
           "name": "markedLabel",
@@ -2321,7 +2270,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the next-month control.",
           "announced": true
         },
         {
@@ -2376,7 +2325,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -2406,21 +2355,21 @@
           "type": "bool Function(DateTime date)?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Returns whether a day cannot be chosen — a closed day, a taken slot."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isRequired",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether user input is required before the form is submitted."
         },
         {
           "name": "markedLabel",
@@ -2435,14 +2384,14 @@
           "type": "DateTime?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The latest date that can be chosen."
         },
         {
           "name": "minDate",
           "type": "DateTime?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The earliest date that can be chosen."
         },
         {
           "name": "onChanged",
@@ -2481,64 +2430,6 @@
         }
       ]
     },
-    "LumoDateValueBox": {
-      "file": "packages/mobile/lib/src/date_value_box.dart",
-      "doc": "The bordered box that SHOWS a date and opens the picker. Read-only by construction: a phone keyboard has no segment navigation, so the web's segment typing (`DateInput`) has no mobile counterpart and the picker IS the entry. Announced as a read-only text field named by `label` with the formatted date as its VALUE — never as a button, because that is what it is to a reader filling in a form.",
-      "props": [
-        {
-          "name": "isEmpty",
-          "type": "bool",
-          "required": true,
-          "default": null,
-          "description": "Whether `text` is the placeholder rather than a value (it is then painted in the subtle foreground)."
-        },
-        {
-          "name": "label",
-          "type": "String",
-          "required": true,
-          "default": null,
-          "description": "The announced name of this box. Required.",
-          "announced": true
-        },
-        {
-          "name": "text",
-          "type": "String",
-          "required": true,
-          "default": null,
-          "description": "What is shown and announced as the value — already through `formatLumoDate`, or the placeholder when there is nothing.",
-          "announced": true
-        },
-        {
-          "name": "hint",
-          "type": "String?",
-          "required": false,
-          "default": null,
-          "description": "Description and error, joined — `LumoDateFieldFrame.hintFor`.",
-          "announced": true
-        },
-        {
-          "name": "isDisabled",
-          "type": "bool",
-          "required": false,
-          "default": "false",
-          "description": ""
-        },
-        {
-          "name": "isInvalid",
-          "type": "bool",
-          "required": false,
-          "default": "false",
-          "description": ""
-        },
-        {
-          "name": "onTap",
-          "type": "VoidCallback?",
-          "required": false,
-          "default": null,
-          "description": ""
-        }
-      ]
-    },
     "LumoDescription": {
       "file": "packages/mobile/lib/src/description_list.dart",
       "doc": "One term/value pair — the web `DescriptionGroup` + `DescriptionTerm` + `DescriptionDetail`.\n\nThe value is a **pre-formatted String** by default, never a number: Dart cannot refuse a raw `int` at the type level the way the web's `LumoNode` does, so the type asks for the string the app already ran through `formatNumber(n, locale)` / `formatLumoDate`. Use `LumoDescription.widget` when the value is drawn (a badge, a price with a currency chip) — it takes the widget AND the announced `value`, because nothing derives words from a widget and a reader cannot hear a badge.",
@@ -2568,7 +2459,7 @@
           "type": "List<LumoDescription>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The term/description pairs, in reading order."
         },
         {
           "name": "label",
@@ -2583,14 +2474,14 @@
           "type": "LumoDescriptionListOrientation",
           "required": false,
           "default": "LumoDescriptionListOrientation.inline",
-          "description": ""
+          "description": "Which axis the control runs along."
         },
         {
           "name": "size",
           "type": "LumoDescriptionListSize",
           "required": false,
           "default": "LumoDescriptionListSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         }
       ]
     },
@@ -2603,14 +2494,14 @@
           "type": "List<Widget> Function(BuildContext)",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The actions, in reading order."
         },
         {
           "name": "closeLabel",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the close affordance. An icon is not a name.",
           "announced": true
         },
         {
@@ -2618,7 +2509,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -2633,14 +2524,14 @@
           "type": "Widget?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The dialog's content."
         },
         {
           "name": "description",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -2648,14 +2539,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onOpenChange",
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the surface opens or closes, with the new state."
         }
       ]
     },
@@ -2668,7 +2559,7 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "title",
@@ -2690,7 +2581,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isOpen",
@@ -2704,7 +2595,7 @@
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the surface opens or closes, with the new state."
         }
       ]
     },
@@ -2717,21 +2608,21 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "id",
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "title",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The visible title.",
           "announced": true
         },
         {
@@ -2739,7 +2630,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -2791,7 +2682,7 @@
           "type": "double",
           "required": false,
           "default": "120",
-          "description": ""
+          "description": "Outside diameter of the ring, in logical pixels."
         },
         {
           "name": "onSelected",
@@ -2819,7 +2710,7 @@
           "type": "double",
           "required": false,
           "default": "16",
-          "description": ""
+          "description": "Thickness of the ring, in logical pixels."
         }
       ]
     },
@@ -2840,7 +2731,7 @@
           "type": "List<Widget>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The actions, in reading order."
         },
         {
           "name": "description",
@@ -2862,7 +2753,7 @@
           "type": "LumoEmptyStateSize",
           "required": false,
           "default": "LumoEmptyStateSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         }
       ]
     },
@@ -2912,7 +2803,7 @@
           "type": "T",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own."
         }
       ]
     },
@@ -2963,7 +2854,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "maxFilesLabel",
@@ -2999,7 +2890,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "label",
@@ -3014,7 +2905,7 @@
           "type": "List<LumoFilterOption>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The options to choose from, in reading order."
         },
         {
           "name": "description",
@@ -3042,14 +2933,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -3110,7 +3001,7 @@
           "type": "List<LumoFilterGroup>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The filter groups, in reading order."
         },
         {
           "name": "label",
@@ -3139,7 +3030,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
@@ -3194,14 +3085,14 @@
           "type": "Widget Function(BuildContext context, LumoFieldState<T> field)",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "Builds the control for this field from its current state."
         },
         {
           "name": "initialValue",
           "type": "T",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The value the field starts at."
         },
         {
           "name": "label",
@@ -3236,7 +3127,7 @@
           "type": "List<Widget>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The children, in reading order."
         },
         {
           "name": "columns",
@@ -3257,7 +3148,7 @@
           "type": "LumoGap",
           "required": false,
           "default": "LumoGap.md",
-          "description": ""
+          "description": "Space between the children."
         }
       ]
     },
@@ -3270,14 +3161,14 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -3285,28 +3176,28 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onPressed",
           "type": "VoidCallback?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the control is pressed. Null disables it."
         },
         {
           "name": "size",
           "type": "LumoButtonSize",
           "required": false,
           "default": "LumoButtonSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "variant",
           "type": "LumoButtonVariant",
           "required": false,
           "default": "LumoButtonVariant.ghost",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -3349,7 +3240,7 @@
           "type": "LumoIconStackSize",
           "required": false,
           "default": "LumoIconStackSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         }
       ]
     },
@@ -3377,28 +3268,28 @@
           "type": "LumoIconTileShape",
           "required": false,
           "default": "LumoIconTileShape.rounded",
-          "description": ""
+          "description": "The shape variant."
         },
         {
           "name": "size",
           "type": "LumoIconTileSize",
           "required": false,
           "default": "LumoIconTileSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "tone",
           "type": "LumoIconTileTone",
           "required": false,
           "default": "LumoIconTileTone.neutral",
-          "description": ""
+          "description": "The semantic tone the colour carries."
         },
         {
           "name": "variant",
           "type": "LumoIconTileVariant",
           "required": false,
           "default": "LumoIconTileVariant.subtle",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -3419,7 +3310,7 @@
           "type": "Widget Function(BuildContext context, int index)",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "Builds the row at `index`."
         },
         {
           "name": "itemCount",
@@ -3449,7 +3340,7 @@
           "type": "ScrollController?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own."
         },
         {
           "name": "endReachedThreshold",
@@ -3463,7 +3354,7 @@
           "type": "int? Function(Object key)?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Finds where a key sits now, so the list can hold its place when rows are inserted above it."
         },
         {
           "name": "isLoadingMore",
@@ -3477,14 +3368,14 @@
           "type": "Object Function(int index)?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A stable key for the row at `index` — what `findItemIndex` looks up."
         },
         {
           "name": "keepAlive",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether rows scrolled out of view keep their state instead of being rebuilt."
         },
         {
           "name": "onEndReached",
@@ -3498,28 +3389,28 @@
           "type": "EdgeInsetsGeometry?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Padding inside the surface. Directional: start and end, never left and right."
         },
         {
           "name": "physics",
           "type": "ScrollPhysics?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Scroll physics, for a caller that needs something other than the platform default."
         },
         {
           "name": "scrollDirection",
           "type": "Axis",
           "required": false,
           "default": "Axis.vertical",
-          "description": ""
+          "description": "Which axis the list scrolls along."
         },
         {
           "name": "separatorBuilder",
           "type": "Widget Function(BuildContext context, int index)?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Builds the separator between two rows. Omit it for none."
         }
       ]
     },
@@ -3540,21 +3431,21 @@
           "type": "Iterable<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Autofill hints for the platform's keyboard and password manager."
         },
         {
           "name": "autofocus",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control takes focus when it first appears."
         },
         {
           "name": "controller",
           "type": "TextEditingController?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own."
         },
         {
           "name": "description",
@@ -3577,14 +3468,14 @@
           "type": "FocusNode?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional focus node, for callers that manage focus themselves."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isInvalid",
@@ -3605,21 +3496,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the input can be selected but not changed by the user."
         },
         {
           "name": "isRequired",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether user input is required before the form is submitted."
         },
         {
           "name": "keyboardType",
           "type": "TextInputType?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Which keyboard the platform should offer."
         },
         {
           "name": "leading",
@@ -3633,28 +3524,28 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the text is masked, as for a password."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "onSubmitted",
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the reader submits from the keyboard."
         },
         {
           "name": "placeholder",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "Placeholder text shown while the field is empty. Never a substitute for the label.",
           "announced": true
         },
         {
@@ -3669,14 +3560,14 @@
           "type": "LumoInputGroupSize",
           "required": false,
           "default": "LumoInputGroupSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "textInputAction",
           "type": "TextInputAction?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "What the keyboard's action key does."
         },
         {
           "name": "trailing",
@@ -3696,14 +3587,14 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -3711,21 +3602,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onPressed",
           "type": "VoidCallback?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the control is pressed. Null disables it."
         },
         {
           "name": "variant",
           "type": "LumoButtonVariant",
           "required": false,
           "default": "LumoButtonVariant.ghost",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -3761,7 +3652,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isSelected",
@@ -3789,7 +3680,7 @@
           "type": "LumoItemSize",
           "required": false,
           "default": "LumoItemSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "trailing",
@@ -3803,7 +3694,7 @@
           "type": "LumoItemVariant",
           "required": false,
           "default": "LumoItemVariant.plain",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -3816,7 +3707,7 @@
           "type": "List<Widget>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The children, in reading order."
         },
         {
           "name": "label",
@@ -3881,14 +3772,14 @@
           "type": "ScrollController?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "peek",
@@ -3944,7 +3835,7 @@
           "type": "List<LumoKanbanCard>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The cards in this column, top to bottom."
         },
         {
           "name": "id",
@@ -4081,7 +3972,7 @@
           "type": "LumoLinkVariant",
           "required": false,
           "default": "LumoLinkVariant.inline",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -4102,7 +3993,7 @@
           "type": "List<LumoListBoxItem>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
@@ -4131,7 +4022,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
@@ -4145,14 +4036,14 @@
           "type": "LumoListBoxSelectionMode",
           "required": false,
           "default": "LumoListBoxSelectionMode.single",
-          "description": ""
+          "description": "Whether one item may be selected, or many."
         },
         {
           "name": "size",
           "type": "LumoItemSize",
           "required": false,
           "default": "LumoItemSize.sm",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "value",
@@ -4172,14 +4063,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "title",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The visible title.",
           "announced": true
         },
         {
@@ -4187,7 +4078,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -4195,21 +4086,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "leading",
           "type": "Widget?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "What sits at the reading start of the row."
         },
         {
           "name": "trailing",
           "type": "Widget?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "What sits at the reading end of the row."
         }
       ]
     },
@@ -4237,7 +4128,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control takes focus when it first appears."
         },
         {
           "name": "defaultValue",
@@ -4251,7 +4142,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -4267,7 +4158,7 @@
           "type": "FocusNode?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional focus node, for callers that manage focus themselves."
         },
         {
           "name": "incompleteMessage",
@@ -4281,14 +4172,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isRequired",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether user input is required before the form is submitted."
         },
         {
           "name": "maskPlaceholder",
@@ -4316,7 +4207,7 @@
           "type": "bool",
           "required": false,
           "default": "true",
-          "description": ""
+          "description": "Whether the label is painted. It is announced either way — hiding a name is not dropping it."
         },
         {
           "name": "value",
@@ -4363,14 +4254,14 @@
           "type": "bool",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "Whether this one is selected."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -4378,14 +4269,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         }
       ]
     },
@@ -4403,7 +4294,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -4411,28 +4302,28 @@
           "type": "Widget?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A leading icon. Decorative — it is not announced, so it never carries meaning on its own."
         },
         {
           "name": "isDestructive",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether this item destroys something, and should be coloured and announced as such."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onSelected",
           "type": "VoidCallback?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the item is chosen."
         }
       ]
     },
@@ -4445,14 +4336,14 @@
           "type": "List<LumoMenuEntry>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         }
       ]
@@ -4471,14 +4362,14 @@
           "type": "List<LumoMenuEntry>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -4493,21 +4384,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onOpenChange",
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the surface opens or closes, with the new state."
         },
         {
           "name": "placement",
           "type": "LumoPlacement",
           "required": false,
           "default": "LumoPlacement.bottomStart",
-          "description": ""
+          "description": "Which side the surface prefers to open on."
         }
       ]
     },
@@ -4654,7 +4545,7 @@
           "type": "List<LumoMultiSelectOption>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The options to choose from, in reading order."
         },
         {
           "name": "removeLabel",
@@ -4676,7 +4567,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -4700,7 +4591,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isRequired",
@@ -4772,7 +4663,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -4785,7 +4676,7 @@
           "type": "List<LumoNavigationItem>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
@@ -4814,14 +4705,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "value",
@@ -4857,7 +4748,7 @@
           "type": "List<LumoNavigationSection>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The sections, in reading order."
         },
         {
           "name": "footer",
@@ -4878,7 +4769,7 @@
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "onClose",
@@ -4899,7 +4790,7 @@
           "type": "double",
           "required": false,
           "default": "300",
-          "description": ""
+          "description": "Width in logical pixels."
         }
       ]
     },
@@ -4912,14 +4803,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -4941,7 +4832,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "selectedIcon",
@@ -4961,7 +4852,7 @@
           "type": "List<LumoNavigationItem>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
@@ -5013,7 +4904,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -5021,7 +4912,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "An error message for the field. Announced as the control's hint and marks it invalid.",
           "announced": true
         },
         {
@@ -5029,35 +4920,35 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isReadOnly",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the input can be selected but not changed by the user."
         },
         {
           "name": "isRequired",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether user input is required before the form is submitted."
         },
         {
           "name": "max",
           "type": "num?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The highest value the control accepts."
         },
         {
           "name": "min",
           "type": "num?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The lowest value the control accepts."
         },
         {
           "name": "onChanged",
@@ -5071,7 +4962,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "Placeholder text shown while the field is empty. Never a substitute for the label.",
           "announced": true
         },
         {
@@ -5115,7 +5006,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control takes focus when it first appears."
         },
         {
           "name": "defaultValue",
@@ -5129,7 +5020,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -5145,7 +5036,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "length",
@@ -5266,7 +5157,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -5282,7 +5173,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
@@ -5296,7 +5187,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "Placeholder text shown while the field is empty. Never a substitute for the label.",
           "announced": true
         },
         {
@@ -5317,14 +5208,14 @@
           "type": "WidgetBuilder",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "Builds what the surface shows."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -5339,7 +5230,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "Announced name of the close affordance. An icon is not a name.",
           "announced": true
         },
         {
@@ -5347,35 +5238,35 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onOpenChange",
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the surface opens or closes, with the new state."
         },
         {
           "name": "padded",
           "type": "bool",
           "required": false,
           "default": "true",
-          "description": ""
+          "description": "Whether the surface adds its own padding. Turn it off for content that pads itself."
         },
         {
           "name": "placement",
           "type": "LumoPlacement",
           "required": false,
           "default": "LumoPlacement.bottomStart",
-          "description": ""
+          "description": "Which side the surface prefers to open on."
         },
         {
           "name": "showClose",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether a close affordance is drawn."
         }
       ]
     },
@@ -5388,7 +5279,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -5403,14 +5294,14 @@
           "type": "LumoProgressSize",
           "required": false,
           "default": "LumoProgressSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "tone",
           "type": "LumoProgressTone",
           "required": false,
           "default": "LumoProgressTone.accent",
-          "description": ""
+          "description": "The semantic tone the colour carries."
         },
         {
           "name": "value",
@@ -5496,7 +5387,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -5504,14 +5395,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own."
         },
         {
           "name": "description",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -5519,7 +5410,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -5532,14 +5423,14 @@
           "type": "List<Widget>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The children, in reading order."
         },
         {
           "name": "accessibilityLabel",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "The announced name, for when it must differ from the visible text.",
           "announced": true
         },
         {
@@ -5547,14 +5438,14 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The starting value for an uncontrolled control."
         },
         {
           "name": "description",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -5570,7 +5461,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isInvalid",
@@ -5584,14 +5475,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the input can be selected but not changed by the user."
         },
         {
           "name": "label",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -5599,14 +5490,14 @@
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "orientation",
           "type": "LumoRadioOrientation",
           "required": false,
           "default": "LumoRadioOrientation.vertical",
-          "description": ""
+          "description": "Which axis the control runs along."
         },
         {
           "name": "value",
@@ -5650,7 +5541,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the next-month control.",
           "announced": true
         },
         {
@@ -5682,7 +5573,7 @@
           "type": "DateTime?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The month the grid opens on. Null starts at the selected date, or today."
         },
         {
           "name": "isDateMarked",
@@ -5696,14 +5587,14 @@
           "type": "bool Function(DateTime date)?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Returns whether a day cannot be chosen — a closed day, a taken slot."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "markedLabel",
@@ -5718,14 +5609,14 @@
           "type": "DateTime?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The latest date that can be chosen."
         },
         {
           "name": "minDate",
           "type": "DateTime?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The earliest date that can be chosen."
         },
         {
           "name": "onChanged",
@@ -5739,7 +5630,7 @@
           "type": "ValueChanged<DateTime>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Fires with day 1 of the month the grid moved to."
         },
         {
           "name": "selectMonthLabel",
@@ -5798,7 +5689,7 @@
           "type": "LumoValueLabel",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Turns a value into the string the reader hears and sees. Must format its digits.",
           "announced": true
         },
         {
@@ -5806,14 +5697,14 @@
           "type": "RangeValues",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The current range."
         },
         {
           "name": "description",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -5821,7 +5712,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "An error message for the field. Announced as the control's hint and marks it invalid.",
           "announced": true
         },
         {
@@ -5829,49 +5720,49 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the value is painted beside the label. It is announced either way."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "max",
           "type": "double",
           "required": false,
           "default": "1",
-          "description": ""
+          "description": "The highest value the control accepts."
         },
         {
           "name": "min",
           "type": "double",
           "required": false,
           "default": "0",
-          "description": ""
+          "description": "The lowest value the control accepts."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<RangeValues>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "onChangeEnd",
           "type": "ValueChanged<RangeValues>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called once when the drag ends, rather than on every frame."
         },
         {
           "name": "step",
           "type": "double?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The increment the control moves by."
         }
       ]
     },
@@ -5907,7 +5798,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "max",
@@ -5928,7 +5819,7 @@
           "type": "LumoRatingSize",
           "required": false,
           "default": "LumoRatingSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "starLabel",
@@ -5956,21 +5847,21 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "locale",
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The BCP-47 tag everything below derives from: direction, digits, calendar."
         },
         {
           "name": "brand",
           "type": "LumoBrand",
           "required": false,
           "default": "LumoBrand.achromatic",
-          "description": ""
+          "description": "Which brand's palette the scope resolves."
         },
         {
           "name": "brightness",
@@ -6004,7 +5895,7 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "label",
@@ -6040,7 +5931,7 @@
           "type": "LumoScrollAreaOrientation",
           "required": false,
           "default": "LumoScrollAreaOrientation.vertical",
-          "description": ""
+          "description": "Which axis the control runs along."
         },
         {
           "name": "padding",
@@ -6054,7 +5945,7 @@
           "type": "ScrollPhysics?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Scroll physics, for a caller that needs something other than the platform default."
         },
         {
           "name": "showScrollbar",
@@ -6090,7 +5981,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control takes focus when it first appears."
         },
         {
           "name": "controller",
@@ -6111,7 +6002,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -6119,7 +6010,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "An error message for the field. Announced as the control's hint and marks it invalid.",
           "announced": true
         },
         {
@@ -6127,7 +6018,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isInvalid",
@@ -6148,7 +6039,7 @@
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "onClear",
@@ -6169,7 +6060,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "Placeholder text shown while the field is empty. Never a substitute for the label.",
           "announced": true
         },
         {
@@ -6197,14 +6088,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -6212,21 +6103,21 @@
           "type": "Widget?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A leading icon. Decorative — it is not announced, so it never carries meaning on its own."
         },
         {
           "name": "iconOnly",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether only the icon is painted. The label is still announced."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -6239,7 +6130,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -6247,35 +6138,35 @@
           "type": "List<LumoSegment>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The segments, in reading order."
         },
         {
           "name": "defaultValue",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The starting value for an uncontrolled control."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "size",
           "type": "LumoSegmentedControlSize",
           "required": false,
           "default": "LumoSegmentedControlSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "value",
@@ -6295,7 +6186,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the close affordance. An icon is not a name.",
           "announced": true
         },
         {
@@ -6303,7 +6194,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -6311,14 +6202,14 @@
           "type": "List<LumoSelectOption>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The options to choose from, in reading order."
         },
         {
           "name": "placeholder",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Placeholder text shown while the field is empty. Never a substitute for the label.",
           "announced": true
         },
         {
@@ -6326,7 +6217,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -6342,7 +6233,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "An error message for the field. Announced as the control's hint and marks it invalid.",
           "announced": true
         },
         {
@@ -6350,21 +6241,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "value",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own."
         }
       ]
     },
@@ -6377,14 +6268,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -6392,7 +6283,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -6413,7 +6304,7 @@
           "type": "LumoSeparatorOrientation",
           "required": false,
           "default": "LumoSeparatorOrientation.horizontal",
-          "description": ""
+          "description": "Which axis the control runs along."
         }
       ]
     },
@@ -6426,14 +6317,14 @@
           "type": "WidgetBuilder",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "Builds the sheet's content."
         },
         {
           "name": "closeLabel",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "Announced name of the close affordance. An icon is not a name.",
           "announced": true
         },
         {
@@ -6441,7 +6332,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -6456,14 +6347,14 @@
           "type": "List<Widget> Function(BuildContext)?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The actions, in reading order."
         },
         {
           "name": "description",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -6471,21 +6362,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isDismissible",
           "type": "bool",
           "required": false,
           "default": "true",
-          "description": ""
+          "description": "Whether the sheet can be dismissed by the scrim or a drag."
         },
         {
           "name": "onOpenChange",
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the surface opens or closes, with the new state."
         }
       ]
     },
@@ -6498,21 +6389,21 @@
           "type": "double?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Height in logical pixels."
         },
         {
           "name": "shape",
           "type": "LumoSkeletonShape",
           "required": false,
           "default": "LumoSkeletonShape.rect",
-          "description": ""
+          "description": "The shape variant."
         },
         {
           "name": "width",
           "type": "double?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Width in logical pixels."
         }
       ]
     },
@@ -6525,14 +6416,14 @@
           "type": "double",
           "required": false,
           "default": "8",
-          "description": ""
+          "description": "Space between the children."
         },
         {
           "name": "lines",
           "type": "int",
           "required": false,
           "default": "3",
-          "description": ""
+          "description": "How many lines of placeholder text to draw."
         }
       ]
     },
@@ -6553,7 +6444,7 @@
           "type": "double",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own."
         },
         {
           "name": "valueLabel",
@@ -6568,7 +6459,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -6576,7 +6467,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "An error message for the field. Announced as the control's hint and marks it invalid.",
           "announced": true
         },
         {
@@ -6591,28 +6482,28 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "max",
           "type": "double",
           "required": false,
           "default": "1",
-          "description": ""
+          "description": "The highest value the control accepts."
         },
         {
           "name": "min",
           "type": "double",
           "required": false,
           "default": "0",
-          "description": ""
+          "description": "The lowest value the control accepts."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<double>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "onChangeEnd",
@@ -6661,7 +6552,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -6740,7 +6631,7 @@
           "type": "List<LumoChartPoint>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The points to plot, in x order."
         },
         {
           "name": "emptyLabel",
@@ -6763,28 +6654,28 @@
           "type": "bool",
           "required": false,
           "default": "true",
-          "description": ""
+          "description": "Whether the area under the line is filled."
         },
         {
           "name": "plotHeight",
           "type": "double",
           "required": false,
           "default": "32",
-          "description": ""
+          "description": "Height of the plot, in logical pixels."
         },
         {
           "name": "summary",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A sentence describing the shape for a reader who cannot see it. A chart without one is decoration."
         },
         {
           "name": "tone",
           "type": "LumoChartTone",
           "required": false,
           "default": "LumoChartTone.accent",
-          "description": ""
+          "description": "The semantic tone the colour carries."
         }
       ]
     },
@@ -6797,7 +6688,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -6805,21 +6696,21 @@
           "type": "LumoSpinnerColor",
           "required": false,
           "default": "LumoSpinnerColor.current",
-          "description": ""
+          "description": "Which colour role the spinner takes."
         },
         {
           "name": "showLabel",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the label is painted. It is announced either way — hiding a name is not dropping it."
         },
         {
           "name": "size",
           "type": "LumoSpinnerSize",
           "required": false,
           "default": "LumoSpinnerSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         }
       ]
     },
@@ -6832,28 +6723,28 @@
           "type": "List<Widget>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The children, in reading order."
         },
         {
           "name": "align",
           "type": "LumoAlign",
           "required": false,
           "default": "LumoAlign.stretch",
-          "description": ""
+          "description": "How the children line up on the cross axis."
         },
         {
           "name": "direction",
           "type": "LumoStackDirection",
           "required": false,
           "default": "LumoStackDirection.column",
-          "description": ""
+          "description": "Which way the stack runs."
         },
         {
           "name": "gap",
           "type": "LumoGap",
           "required": false,
           "default": "LumoGap.sm",
-          "description": ""
+          "description": "Space between the children."
         },
         {
           "name": "justify",
@@ -6887,7 +6778,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The visible title.",
           "announced": true
         },
         {
@@ -6895,7 +6786,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         }
       ]
@@ -6932,7 +6823,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -6940,7 +6831,7 @@
           "type": "List<LumoStep>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The steps, in order."
         },
         {
           "name": "upcomingLabel",
@@ -6955,7 +6846,7 @@
           "type": "LumoStepsOrientation",
           "required": false,
           "default": "LumoStepsOrientation.horizontal",
-          "description": ""
+          "description": "Which axis the control runs along."
         }
       ]
     },
@@ -6968,7 +6859,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "The announced name, for when it must differ from the visible text.",
           "announced": true
         },
         {
@@ -6976,7 +6867,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -6984,21 +6875,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isSelected",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether this one is selected."
         },
         {
           "name": "label",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -7006,14 +6897,14 @@
           "type": "ValueChanged<bool>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "size",
           "type": "LumoSwitchSize",
           "required": false,
           "default": "LumoSwitchSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         }
       ]
     },
@@ -7026,14 +6917,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -7041,21 +6932,21 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A short count or marker shown on the tab."
         },
         {
           "name": "icon",
           "type": "Widget?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A leading icon. Decorative — it is not announced, so it never carries meaning on its own."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -7068,7 +6959,7 @@
           "type": "List<LumoTableColumn>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The columns, in reading order."
         },
         {
           "name": "label",
@@ -7083,7 +6974,7 @@
           "type": "List<LumoTableRowData>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The rows, top to bottom."
         },
         {
           "name": "caption",
@@ -7119,7 +7010,7 @@
           "type": "double",
           "required": false,
           "default": "40",
-          "description": ""
+          "description": "Height of the header row, in logical pixels."
         },
         {
           "name": "pinFirstColumn",
@@ -7220,7 +7111,7 @@
           "type": "List<LumoTab>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The tabs, in reading order."
         },
         {
           "name": "builder",
@@ -7255,7 +7146,7 @@
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "value",
@@ -7269,7 +7160,7 @@
           "type": "LumoTabsVariant",
           "required": false,
           "default": "LumoTabsVariant.underline",
-          "description": ""
+          "description": "The visual variant."
         },
         {
           "name": "views",
@@ -7289,14 +7180,14 @@
           "type": "List<LumoTagItem>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -7304,7 +7195,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onRemove",
@@ -7326,7 +7217,7 @@
           "type": "LumoChipSize",
           "required": false,
           "default": "LumoChipSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         }
       ]
     },
@@ -7339,21 +7230,21 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "textValue",
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The text this item is matched and announced by."
         },
         {
           "name": "icon",
           "type": "Widget?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A leading icon. Decorative — it is not announced, so it never carries meaning on its own."
         }
       ]
     },
@@ -7420,7 +7311,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isDuplicate",
@@ -7483,7 +7374,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -7491,21 +7382,21 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control takes focus when it first appears."
         },
         {
           "name": "controller",
           "type": "TextEditingController?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own."
         },
         {
           "name": "description",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -7513,7 +7404,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "An error message for the field. Announced as the control's hint and marks it invalid.",
           "announced": true
         },
         {
@@ -7521,7 +7412,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isInvalid",
@@ -7535,14 +7426,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the input can be selected but not changed by the user."
         },
         {
           "name": "isRequired",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether user input is required before the form is submitted."
         },
         {
           "name": "maxLength",
@@ -7570,14 +7461,14 @@
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "placeholder",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "Placeholder text shown while the field is empty. Never a substitute for the label.",
           "announced": true
         }
       ]
@@ -7591,7 +7482,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -7599,28 +7490,28 @@
           "type": "Iterable<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Autofill hints for the platform's keyboard and password manager."
         },
         {
           "name": "autofocus",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control takes focus when it first appears."
         },
         {
           "name": "controller",
           "type": "TextEditingController?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own."
         },
         {
           "name": "description",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -7628,7 +7519,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "An error message for the field. Announced as the control's hint and marks it invalid.",
           "announced": true
         },
         {
@@ -7636,14 +7527,14 @@
           "type": "FocusNode?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional focus node, for callers that manage focus themselves."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isInvalid",
@@ -7657,70 +7548,70 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the field holds a number, so its digits stay LTR inside RTL text."
         },
         {
           "name": "isReadOnly",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the input can be selected but not changed by the user."
         },
         {
           "name": "isRequired",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether user input is required before the form is submitted."
         },
         {
           "name": "keyboardType",
           "type": "TextInputType?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Which keyboard the platform should offer."
         },
         {
           "name": "maxLines",
           "type": "int?",
           "required": false,
           "default": "1",
-          "description": ""
+          "description": "How many lines the text may occupy before it wraps no further."
         },
         {
           "name": "minLines",
           "type": "int?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "The fewest lines the field occupies before it grows."
         },
         {
           "name": "obscureText",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the text is masked, as for a password."
         },
         {
           "name": "onChanged",
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the new value when the user changes it. Omitting it makes the control read-only."
         },
         {
           "name": "onSubmitted",
           "type": "ValueChanged<String>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called when the reader submits from the keyboard."
         },
         {
           "name": "placeholder",
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "Placeholder text shown while the field is empty. Never a substitute for the label.",
           "announced": true
         },
         {
@@ -7749,7 +7640,7 @@
           "type": "TextInputAction?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "What the keyboard's action key does."
         }
       ]
     },
@@ -7802,7 +7693,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -7818,7 +7709,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isInvalid",
@@ -7897,7 +7788,7 @@
           "type": "List<LumoTimelineItem>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
@@ -7920,7 +7811,7 @@
           "type": "LumoTimelineOrientation",
           "required": false,
           "default": "LumoTimelineOrientation.vertical",
-          "description": ""
+          "description": "Which axis the control runs along."
         }
       ]
     },
@@ -7933,7 +7824,7 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The visible title.",
           "announced": true
         },
         {
@@ -7941,7 +7832,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -7963,7 +7854,7 @@
           "type": "LumoTimelineState",
           "required": false,
           "default": "LumoTimelineState.done",
-          "description": ""
+          "description": "Where this item sits in the sequence: done, current, or still to come."
         }
       ]
     },
@@ -8005,7 +7896,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "isSelected",
@@ -8026,14 +7917,14 @@
           "type": "LumoToggleSize",
           "required": false,
           "default": "LumoToggleSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "variant",
           "type": "LumoToggleVariant",
           "required": false,
           "default": "LumoToggleVariant.ghost",
-          "description": ""
+          "description": "The visual variant."
         }
       ]
     },
@@ -8046,7 +7937,7 @@
           "type": "List<LumoToggleItem>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The items to show, in reading order."
         },
         {
           "name": "label",
@@ -8082,7 +7973,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onChanged",
@@ -8096,14 +7987,14 @@
           "type": "LumoToggleSelectionMode",
           "required": false,
           "default": "LumoToggleSelectionMode.single",
-          "description": ""
+          "description": "Whether one item may be selected, or many."
         },
         {
           "name": "size",
           "type": "LumoToggleSize",
           "required": false,
           "default": "LumoToggleSize.md",
-          "description": ""
+          "description": "The size step, from the shared control scale."
         },
         {
           "name": "value",
@@ -8130,14 +8021,14 @@
           "type": "String",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "A stable identity for this item — used for selection and equality, never shown or announced."
         },
         {
           "name": "label",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The name this control is announced by, and painted where the family shows one.",
           "announced": true
         },
         {
@@ -8145,21 +8036,21 @@
           "type": "Widget?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "A leading icon. Decorative — it is not announced, so it never carries meaning on its own."
         },
         {
           "name": "iconOnly",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether only the icon is painted. The label is still announced."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -8172,7 +8063,7 @@
           "type": "List<Widget>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The children, in reading order."
         },
         {
           "name": "label",
@@ -8187,14 +8078,14 @@
           "type": "LumoToolbarOrientation",
           "required": false,
           "default": "LumoToolbarOrientation.horizontal",
-          "description": ""
+          "description": "Which axis the control runs along."
         },
         {
           "name": "overflow",
           "type": "LumoToolbarOverflow",
           "required": false,
           "default": "LumoToolbarOverflow.scroll",
-          "description": ""
+          "description": "What happens to items that do not fit."
         },
         {
           "name": "spacing",
@@ -8227,14 +8118,14 @@
           "type": "Widget",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The widget this one wraps."
         },
         {
           "name": "message",
           "type": "String",
           "required": true,
           "default": null,
-          "description": "",
+          "description": "The tip's text.",
           "announced": true
         },
         {
@@ -8242,21 +8133,21 @@
           "type": "Duration?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "How long a press is held before the tip appears."
         },
         {
           "name": "isDisabled",
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "placement",
           "type": "LumoTooltipPlacement",
           "required": false,
           "default": "LumoTooltipPlacement.top",
-          "description": ""
+          "description": "Which side the surface prefers to open on."
         }
       ]
     },
@@ -8301,7 +8192,7 @@
           "type": "List<LumoTreeNode>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The tree's roots, in reading order."
         },
         {
           "name": "defaultExpandedIds",
@@ -8337,7 +8228,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "onActivate",
@@ -8351,14 +8242,14 @@
           "type": "ValueChanged<Set<String>>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the full set of expanded ids."
         },
         {
           "name": "onSelectionChanged",
           "type": "ValueChanged<Set<String>>?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Called with the full set of selected ids."
         },
         {
           "name": "selectedIds",
@@ -8372,7 +8263,7 @@
           "type": "LumoTreeSelectionMode",
           "required": false,
           "default": "LumoTreeSelectionMode.none",
-          "description": ""
+          "description": "Whether one item may be selected, or many."
         }
       ]
     },
@@ -8400,7 +8291,7 @@
           "type": "List<LumoTreeNode>",
           "required": false,
           "default": "const <LumoTreeNode>[]",
-          "description": ""
+          "description": "The children, in reading order."
         },
         {
           "name": "icon",
@@ -8414,7 +8305,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         }
       ]
     },
@@ -8475,7 +8366,7 @@
           "type": "List<LumoTreeNode>",
           "required": true,
           "default": null,
-          "description": ""
+          "description": "The tree's roots, in reading order."
         },
         {
           "name": "treeLabel",
@@ -8504,7 +8395,7 @@
           "type": "String?",
           "required": false,
           "default": null,
-          "description": "",
+          "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
         },
         {
@@ -8528,14 +8419,14 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the control is disabled."
         },
         {
           "name": "mode",
           "type": "LumoTreeSelectMode",
           "required": false,
           "default": "LumoTreeSelectMode.single",
-          "description": ""
+          "description": "Whether one node may be selected, or many."
         },
         {
           "name": "onChanged",
@@ -8593,7 +8484,7 @@
           "type": "ScrollController?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own."
         },
         {
           "name": "estimatedItemExtent",
@@ -8628,21 +8519,21 @@
           "type": "EdgeInsetsGeometry?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Padding inside the surface. Directional: start and end, never left and right."
         },
         {
           "name": "physics",
           "type": "ScrollPhysics?",
           "required": false,
           "default": null,
-          "description": ""
+          "description": "Scroll physics, for a caller that needs something other than the platform default."
         },
         {
           "name": "scrollDirection",
           "type": "Axis",
           "required": false,
           "default": "Axis.vertical",
-          "description": ""
+          "description": "Which axis the list scrolls along."
         },
         {
           "name": "separatorBuilder",
@@ -8656,7 +8547,7 @@
           "type": "bool",
           "required": false,
           "default": "false",
-          "description": ""
+          "description": "Whether the list sizes to its content instead of filling its parent."
         }
       ]
     }

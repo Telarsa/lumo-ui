@@ -34,8 +34,11 @@ class LumoScopeData {
 /// alone turns hue and chroma on the generated ramps.
 class LumoScope extends StatelessWidget {
   const LumoScope({super.key, required this.locale, required this.child, this.brand = LumoBrand.achromatic, this.brightness, this.light, this.dark});
+  /// The BCP-47 tag everything below derives from: direction, digits, calendar.
   final String locale;
+  /// The widget this one wraps.
   final Widget child;
+  /// Which brand's palette the scope resolves.
   final LumoBrand brand;
   /// Pin a scheme; default follows the platform.
   final Brightness? brightness;

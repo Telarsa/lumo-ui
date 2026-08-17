@@ -56,7 +56,9 @@ class _OtpBasicState extends State<_OtpBasic> {
     // BEGIN input-otp-1
     return LumoOtpField(
       label: t['smsCode'],
-      cellLabel: (index, length) => '${t['digit']} ${index + 1} ${t['of']} $length',
+      cellLabel: (index, length) =>
+          // Announced per cell — the number must be a Persian digit under fa.
+          '${t['digit']} ${formatNumber(index + 1, t.locale)} ${t['of']} ${formatNumber(length, t.locale)}',
       description: t['sixDigitHint'],
       value: _code,
       onChanged: (next) => setState(() => _code = next),
@@ -71,7 +73,8 @@ Widget otpError(BuildContext context) {
   // BEGIN input-otp-2
   return LumoOtpField(
     label: t['verificationCode'],
-    cellLabel: (index, length) => '${t['digit']} ${index + 1} ${t['of']} $length',
+    cellLabel: (index, length) =>
+        '${t['digit']} ${formatNumber(index + 1, t.locale)} ${t['of']} ${formatNumber(length, t.locale)}',
     length: 4,
     defaultValue: '12',
     errorMessage: t['wrongCode'],

@@ -9,8 +9,10 @@ class _LumoRadioGroupScope extends InheritedWidget {
   const _LumoRadioGroupScope({required this.value, required this.select, required this.isDisabled, required this.isInvalid, required this.isReadOnly, required super.child});
   final String? value;
   final ValueChanged<String>? select;
+  /// Whether the control is disabled.
   final bool isDisabled;
   final bool isInvalid;
+  /// Whether the input can be selected but not changed by the user.
   final bool isReadOnly;
 
   static _LumoRadioGroupScope of(BuildContext context) {
@@ -46,9 +48,13 @@ class LumoRadioGroup extends StatefulWidget {
     this.isDisabled = false,
     this.isReadOnly = false,
   }) : assert(label != null || accessibilityLabel != null, 'A radio group needs a visible label or an accessibilityLabel — never neither.');
+  /// The name this control is announced by, and painted where the family shows one.
   final String? label;
+  /// The announced name, for when it must differ from the visible text.
   final String? accessibilityLabel;
+  /// The children, in reading order.
   final List<Widget> children;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
   /// Supplying one marks the group invalid.
   final String? errorMessage;
@@ -56,10 +62,15 @@ class LumoRadioGroup extends StatefulWidget {
   final bool? isInvalid;
   /// Controlled selection; `null` leaves the state to the widget (`defaultValue`).
   final String? value;
+  /// The starting value for an uncontrolled control.
   final String? defaultValue;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
+  /// Which axis the control runs along.
   final LumoRadioOrientation orientation;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether the input can be selected but not changed by the user.
   final bool isReadOnly;
 
   @override
@@ -125,9 +136,13 @@ class _LumoRadioGroupState extends State<LumoRadioGroup> {
 /// `disableAnimations`.
 class LumoRadio extends StatelessWidget {
   const LumoRadio({super.key, required this.value, required this.label, this.description, this.isDisabled = false});
+  /// The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own.
   final String value;
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

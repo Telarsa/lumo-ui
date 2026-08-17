@@ -228,13 +228,21 @@ class _LumoAnchoredLayout extends SingleChildLayoutDelegate {
 /// divergence `LumoDialogTrigger` records.
 class LumoPopoverTrigger extends StatelessWidget {
   const LumoPopoverTrigger({super.key, required this.label, required this.trigger, required this.content, this.showClose = false, this.closeLabel, this.placement = LumoPlacement.bottomStart, this.padded = true, this.onOpenChange, this.isDisabled = false}) : assert(!showClose || closeLabel != null, 'A popover with an ✕ needs a closeLabel — an ✕ is not a name.');
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// Announced name of the close affordance. An icon is not a name.
   final String? closeLabel;
+  /// Whether a close affordance is drawn.
   final bool showClose;
+  /// Which side the surface prefers to open on.
   final LumoPlacement placement;
+  /// Whether the surface adds its own padding. Turn it off for content that pads itself.
   final bool padded;
+  /// Builds what the surface shows.
   final WidgetBuilder content;
+  /// Called when the surface opens or closes, with the new state.
   final ValueChanged<bool>? onOpenChange;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Built with the press that opens the popover.

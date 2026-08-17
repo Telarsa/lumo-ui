@@ -12,7 +12,7 @@
     "build": "pnpm -r --if-present run build",
     "start": "node scripts/serve-static.mjs",
     "preview": "pnpm run build && pnpm run start",
-    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:consumer-profile && pnpm run gate:consumer-lint && pnpm run gate:dist && pnpm run gate:pack && pnpm run gate:flutter-tokens && pnpm run gate:flutter && pnpm run gate:flutter-contract && pnpm run gate:mobile-demos && pnpm run gate:mobile-api && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
+    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:consumer-profile && pnpm run gate:consumer-lint && pnpm run gate:dist && pnpm run gate:pack && pnpm run gate:flutter-tokens && pnpm run gate:flutter && pnpm run gate:flutter-contract && pnpm run gate:mobile-demos && pnpm run gate:mobile-api && pnpm run gate:mobile-smoke && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
     "gate:props": "node --experimental-strip-types packages/gate/src/inert-props-cli.ts packages/ui/src packages/blocks/src",
     "lint": "eslint .",
@@ -27,6 +27,7 @@
     "gate:api": "node scripts/build-api-reference.mjs --check",
     "gate:smoke": "node scripts/smoke-consumer.mjs",
     "mutation:components": "node scripts/mutate-components.mjs --output mutation-report.json",
+    "mutation:mobile": "node scripts/mutate-mobile.mjs",
     "evidence": "playwright test -c evidence/playwright.config.ts",
     "evidence:types": "tsc -p evidence/tsconfig.json",
     "catalog": "node scripts/build-catalog.mjs",
@@ -44,7 +45,8 @@
     "gate:mobile-demos": "node scripts/build-mobile-demos.mjs --check",
     "build:mobile-gallery": "node scripts/build-mobile-gallery.mjs",
     "build:mobile-api": "node scripts/build-mobile-api.mjs",
-    "gate:mobile-api": "node scripts/build-mobile-api.mjs --check"
+    "gate:mobile-api": "node scripts/build-mobile-api.mjs --check",
+    "gate:mobile-smoke": "node scripts/smoke-mobile.mjs"
   },
   "dependencies": {
     "dom-accessibility-api": "0.7.1",

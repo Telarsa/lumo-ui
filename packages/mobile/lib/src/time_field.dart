@@ -94,6 +94,7 @@ class LumoTimeField extends StatefulWidget {
   /// Called with the time after every pick. A pick on one column completes the
   /// other with zero, so a half-made time is never reported.
   final ValueChanged<TimeOfDay>? onChanged;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown under the field and announced. Supplying one marks it invalid.
@@ -112,6 +113,7 @@ class LumoTimeField extends StatefulWidget {
 
   /// Overrides the locale's own clock. Null derives it (`lumoLocaleUses24Hour`).
   final bool? use24Hour;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Shown in the field while there is no value.

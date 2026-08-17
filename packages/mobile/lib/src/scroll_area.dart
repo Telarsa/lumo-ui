@@ -65,8 +65,10 @@ class LumoScrollArea extends StatefulWidget {
   /// Announced name of the scrollable region, e.g. «فهرست تراکنش‌ها». REQUIRED.
   final String label;
 
+  /// The widget this one wraps.
   final Widget child;
 
+  /// Which axis the control runs along.
   final LumoScrollAreaOrientation orientation;
 
   /// A controller the caller owns. Given one, the widget never disposes it;
@@ -86,6 +88,7 @@ class LumoScrollArea extends StatefulWidget {
   /// How many logical pixels the fade covers.
   final double fadeExtent;
 
+  /// Scroll physics, for a caller that needs something other than the platform default.
   final ScrollPhysics? physics;
 
   @override

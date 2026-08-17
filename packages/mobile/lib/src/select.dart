@@ -6,8 +6,11 @@ import 'tokens.g.dart';
 
 class LumoSelectOption {
   const LumoSelectOption({required this.id, required this.label, this.isDisabled = false});
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -33,17 +36,26 @@ class LumoSelectOption {
 /// no fetch here to be in either state.
 class LumoSelect extends StatelessWidget {
   const LumoSelect({super.key, required this.label, required this.placeholder, required this.closeLabel, required this.options, this.value, this.onChanged, this.description, this.errorMessage, this.emptyLabel, this.isDisabled = false});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// Placeholder text shown while the field is empty. Never a substitute for the label.
   final String placeholder;
+  /// Announced name of the close affordance. An icon is not a name.
   final String closeLabel;
+  /// The options to choose from, in reading order.
   final List<LumoSelectOption> options;
+  /// The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own.
   final String? value;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// An error message for the field. Announced as the control's hint and marks it invalid.
   final String? errorMessage;
 
   /// What the sheet says when `options` is empty. REQUIRED then (asserted).
   final String? emptyLabel;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

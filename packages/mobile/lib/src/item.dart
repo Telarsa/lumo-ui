@@ -83,8 +83,11 @@ class LumoItem extends StatefulWidget {
   /// `null` = not part of a selection (no state announced). See the docblock.
   final bool? isSelected;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// The visual variant.
   final LumoItemVariant variant;
+  /// The size step, from the shared control scale.
   final LumoItemSize size;
 
   /// A hairline at the block end — the web `ItemSeparator`, for a run of rows
@@ -216,6 +219,7 @@ class LumoItemGroup extends StatelessWidget {
 
   /// The section's name — drawn as a header and announced. Required.
   final String label;
+  /// The children, in reading order.
   final List<Widget> children;
 
   /// A hairline between rows instead of a gap.
@@ -255,11 +259,17 @@ class LumoItemGroup extends StatelessWidget {
 /// construction).
 class LumoListBoxItem {
   const LumoListBoxItem({required this.id, required this.title, this.description, this.leading, this.trailing, this.isDisabled = false});
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The visible title.
   final String title;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// What sits at the reading start of the row.
   final Widget? leading;
+  /// What sits at the reading end of the row.
   final Widget? trailing;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -306,6 +316,7 @@ class LumoListBox extends StatefulWidget {
 
   /// Announced name of the list. Required.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoListBoxItem> items;
 
   /// What is said when `items` is empty, e.g. «هیچ پرونده‌ای نیست». Required.
@@ -320,12 +331,15 @@ class LumoListBox extends StatefulWidget {
   /// Called with the whole next selection.
   final ValueChanged<Set<String>>? onChanged;
 
+  /// Whether one item may be selected, or many.
   final LumoListBoxSelectionMode selectionMode;
 
   /// Refuse to end up with nothing selected — the web prop of the same name.
   final bool disallowEmptySelection;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// The size step, from the shared control scale.
   final LumoItemSize size;
 
   @override

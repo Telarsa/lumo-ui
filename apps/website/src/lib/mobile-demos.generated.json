@@ -87,6 +87,55 @@
         }
       }
     ],
+    "app-bar": [
+      {
+        "id": "app-bar-1",
+        "title": {
+          "fa-IR": "سربرگ صفحه",
+          "en-US": "Page header"
+        },
+        "description": {
+          "fa-IR": "عنوان، بازگشت و کنش‌ها. جهت بازگشت از زبان می‌آید — پیکان در فارسی برعکس می‌شود.",
+          "en-US": "A title, a back affordance and actions. The back arrow mirrors with the language."
+        },
+        "source": {
+          "fa-IR": "LumoAppBar(\n  title: 'جزئیات سفارش',\n  backLabel: 'بازگشت',\n  onBack: () {},\n  actions: [\n    LumoIconButton(\n      label: 'هم‌رسانی',\n      onPressed: () {},\n      child: const Icon(Icons.ios_share),\n    ),\n    LumoIconButton(\n      label: 'بیشتر',\n      onPressed: () {},\n      child: const Icon(Icons.more_vert),\n    ),\n  ],\n)",
+          "en-US": "LumoAppBar(\n  title: 'Order details',\n  backLabel: 'Back',\n  onBack: () {},\n  actions: [\n    LumoIconButton(\n      label: 'Share',\n      onPressed: () {},\n      child: const Icon(Icons.ios_share),\n    ),\n    LumoIconButton(\n      label: 'More',\n      onPressed: () {},\n      child: const Icon(Icons.more_vert),\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "app-bar-2",
+        "title": {
+          "fa-IR": "با زیرعنوان",
+          "en-US": "With a subtitle"
+        },
+        "description": {
+          "fa-IR": "زیرعنوان یک سطر است و شمارش در آن با رقم محلی نوشته می‌شود.",
+          "en-US": "The subtitle is one line, and a count inside it carries local digits."
+        },
+        "source": {
+          "fa-IR": "LumoAppBar(\n  title: 'صندوق ورودی',\n  subtitle: '۱۲ خوانده‌نشده',\n  actions: [\n    LumoIconButton(\n      label: 'جست‌وجو',\n      onPressed: () {},\n      child: const Icon(Icons.search),\n    ),\n  ],\n)",
+          "en-US": "LumoAppBar(\n  title: 'Inbox',\n  subtitle: '12 unread',\n  actions: [\n    LumoIconButton(\n      label: 'Search',\n      onPressed: () {},\n      child: const Icon(Icons.search),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "aspect-ratio": [
+      {
+        "id": "aspect-ratio-1",
+        "title": {
+          "fa-IR": "نسبت ثابت",
+          "en-US": "A fixed ratio"
+        },
+        "description": {
+          "fa-IR": "عرض کش می‌آید و نسبت نمی‌شکند. اینجا هیچ چیز جهت‌دار نیست — و همان نبودن، نکته است.",
+          "en-US": "The width flexes and the ratio holds. Nothing here is directional — and that absence is the point."
+        },
+        "source": {
+          "fa-IR": "LumoAspectRatio(\n  ratio: 16 / 9,\n  child: DecoratedBox(\n    decoration: BoxDecoration(\n      color: c.surfaceSunken,\n      borderRadius: BorderRadius.circular(LumoRadius.lg),\n    ),\n    child: Center(child: Text('جلد دوره')),\n  ),\n)",
+          "en-US": "LumoAspectRatio(\n  ratio: 16 / 9,\n  child: DecoratedBox(\n    decoration: BoxDecoration(\n      color: c.surfaceSunken,\n      borderRadius: BorderRadius.circular(LumoRadius.lg),\n    ),\n    child: Center(child: Text('Course cover')),\n  ),\n)"
+        }
+      }
+    ],
     "avatar": [
       {
         "id": "avatar-1",
@@ -245,6 +294,38 @@
         }
       }
     ],
+    "button-group": [
+      {
+        "id": "button-group-1",
+        "title": {
+          "fa-IR": "دکمه‌های به‌هم‌پیوسته",
+          "en-US": "Joined buttons"
+        },
+        "description": {
+          "fa-IR": "گروه یک نام دارد تا خواننده بداند این دکمه‌ها با هم یک انتخاب‌اند.",
+          "en-US": "The group carries a name, so a reader knows these buttons are one choice."
+        },
+        "source": {
+          "fa-IR": "LumoButtonGroup(\n  label: 'گزینه‌های نما',\n  children: [\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('روز')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('هفته')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('ماه')),\n  ],\n)",
+          "en-US": "LumoButtonGroup(\n  label: 'View options',\n  children: [\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('Day')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('Week')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('Month')),\n  ],\n)"
+        }
+      },
+      {
+        "id": "button-group-2",
+        "title": {
+          "fa-IR": "ایستاده",
+          "en-US": "Vertical"
+        },
+        "description": {
+          "fa-IR": "همان گروه روی محور عمودی؛ گوشه‌ها بالا و پایین گرد می‌شوند، نه چپ و راست.",
+          "en-US": "The same group on the vertical axis; the corners round at the ends, not at left and right."
+        },
+        "source": {
+          "fa-IR": "LumoButtonGroup(\n  label: 'کنش‌های ردیف',\n  orientation: LumoButtonGroupOrientation.vertical,\n  children: [\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('ویرایش')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('تکثیر')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('حذف')),\n  ],\n)",
+          "en-US": "LumoButtonGroup(\n  label: 'Row actions',\n  orientation: LumoButtonGroupOrientation.vertical,\n  children: [\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('Edit')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('Duplicate')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('Delete')),\n  ],\n)"
+        }
+      }
+    ],
     "card": [
       {
         "id": "card-1",
@@ -304,8 +385,8 @@
           "en-US": "slideLabel builds each slide’s name from its position; the travel is along the reading axis."
         },
         "source": {
-          "fa-IR": "LumoCarousel(\n  label: 'پیشنهادهای ویژه',\n  previousLabel: 'اسلاید پیش',\n  nextLabel: 'اسلاید بعد',\n  slideLabel: (index, count) => 'اسلاید ${index + 1} از $count',\n  height: 160,\n  items: [\n    _slide('تخفیف پاییزی', const Color(0xFFFDE68A)),\n    _slide('ارسال رایگان', const Color(0xFFBFDBFE)),\n    _slide('کالای نو', const Color(0xFFBBF7D0)),\n  ],\n)",
-          "en-US": "LumoCarousel(\n  label: 'Special offers',\n  previousLabel: 'Previous slide',\n  nextLabel: 'Next slide',\n  slideLabel: (index, count) => 'Slide ${index + 1} of $count',\n  height: 160,\n  items: [\n    _slide('Autumn sale', const Color(0xFFFDE68A)),\n    _slide('Free shipping', const Color(0xFFBFDBFE)),\n    _slide('New arrivals', const Color(0xFFBBF7D0)),\n  ],\n)"
+          "fa-IR": "LumoCarousel(\n  label: 'پیشنهادهای ویژه',\n  previousLabel: 'اسلاید پیش',\n  nextLabel: 'اسلاید بعد',\n  slideLabel: (index, count) =>\n      // formatNumber, not `$index`: a bare int interpolates as a LATIN digit,\n      // and this string is ANNOUNCED — a Persian reader would hear \"اسلاید 1\".\n      'اسلاید ${formatNumber(index + 1, t.locale)} از ${formatNumber(count, t.locale)}',\n  height: 160,\n  items: [\n    _slide('تخفیف پاییزی', const Color(0xFFFDE68A)),\n    _slide('ارسال رایگان', const Color(0xFFBFDBFE)),\n    _slide('کالای نو', const Color(0xFFBBF7D0)),\n  ],\n)",
+          "en-US": "LumoCarousel(\n  label: 'Special offers',\n  previousLabel: 'Previous slide',\n  nextLabel: 'Next slide',\n  slideLabel: (index, count) =>\n      // formatNumber, not `$index`: a bare int interpolates as a LATIN digit,\n      // and this string is ANNOUNCED — a Persian reader would hear \"اسلاید 1\".\n      'Slide ${formatNumber(index + 1, t.locale)} of ${formatNumber(count, t.locale)}',\n  height: 160,\n  items: [\n    _slide('Autumn sale', const Color(0xFFFDE68A)),\n    _slide('Free shipping', const Color(0xFFBFDBFE)),\n    _slide('New arrivals', const Color(0xFFBBF7D0)),\n  ],\n)"
         }
       },
       {
@@ -319,8 +400,8 @@
           "en-US": "autoPlay advances on the interval; the previous and next controls are always there, each with its own name."
         },
         "source": {
-          "fa-IR": "LumoCarousel(\n  label: 'راهنمای نخستین استفاده',\n  previousLabel: 'گام پیش',\n  nextLabel: 'گام بعد',\n  slideLabel: (index, count) => 'گام ${index + 1} از $count',\n  autoPlay: true,\n  interval: const Duration(seconds: 4),\n  showDots: true,\n  height: 140,\n  onIndexChanged: (index) {},\n  items: [\n    _slide('نمایه‌تان را کامل کنید', const Color(0xFFE9D5FF)),\n    _slide('نخستین پروژه را بسازید', const Color(0xFFFECACA)),\n  ],\n)",
-          "en-US": "LumoCarousel(\n  label: 'Getting started',\n  previousLabel: 'Previous step',\n  nextLabel: 'Next step',\n  slideLabel: (index, count) => 'Step ${index + 1} of $count',\n  autoPlay: true,\n  interval: const Duration(seconds: 4),\n  showDots: true,\n  height: 140,\n  onIndexChanged: (index) {},\n  items: [\n    _slide('Complete your profile', const Color(0xFFE9D5FF)),\n    _slide('Make your first project', const Color(0xFFFECACA)),\n  ],\n)"
+          "fa-IR": "LumoCarousel(\n  label: 'راهنمای نخستین استفاده',\n  previousLabel: 'گام پیش',\n  nextLabel: 'گام بعد',\n  slideLabel: (index, count) =>\n      'گام ${formatNumber(index + 1, t.locale)} از ${formatNumber(count, t.locale)}',\n  autoPlay: true,\n  interval: const Duration(seconds: 4),\n  showDots: true,\n  height: 140,\n  onIndexChanged: (index) {},\n  items: [\n    _slide('نمایه‌تان را کامل کنید', const Color(0xFFE9D5FF)),\n    _slide('نخستین پروژه را بسازید', const Color(0xFFFECACA)),\n  ],\n)",
+          "en-US": "LumoCarousel(\n  label: 'Getting started',\n  previousLabel: 'Previous step',\n  nextLabel: 'Next step',\n  slideLabel: (index, count) =>\n      'Step ${formatNumber(index + 1, t.locale)} of ${formatNumber(count, t.locale)}',\n  autoPlay: true,\n  interval: const Duration(seconds: 4),\n  showDots: true,\n  height: 140,\n  onIndexChanged: (index) {},\n  items: [\n    _slide('Complete your profile', const Color(0xFFE9D5FF)),\n    _slide('Make your first project', const Color(0xFFFECACA)),\n  ],\n)"
         }
       }
     ],
@@ -659,6 +740,38 @@
         }
       }
     ],
+    "input-group": [
+      {
+        "id": "input-group-1",
+        "title": {
+          "fa-IR": "واحد چسبیده به ورودی",
+          "en-US": "A unit joined to the field"
+        },
+        "description": {
+          "fa-IR": "واحد داخل همان کادر می‌نشیند، نه کنارش. isNumeric رقم‌ها را در متن راست‌به‌چپ، چپ‌به‌راست نگه می‌دارد.",
+          "en-US": "The unit sits inside the one border, not beside it. isNumeric keeps the digits LTR inside RTL text."
+        },
+        "source": {
+          "fa-IR": "LumoInputGroup(\n  label: 'مبلغ',\n  isNumeric: true,\n  description: 'کارمزد جداگانه حساب می‌شود.',\n  trailing: Text('تومان'),\n)",
+          "en-US": "LumoInputGroup(\n  label: 'Amount',\n  isNumeric: true,\n  description: 'The fee is charged separately.',\n  trailing: Text('IRT'),\n)"
+        }
+      },
+      {
+        "id": "input-group-2",
+        "title": {
+          "fa-IR": "دکمه در انتهای ورودی",
+          "en-US": "A button at the field’s end"
+        },
+        "description": {
+          "fa-IR": "دکمه نام خودش را دارد؛ نماد نام نیست. انتها از زبان می‌آید، نه از چپ و راست.",
+          "en-US": "The button carries its own name — an icon is not one. “End” comes from the language."
+        },
+        "source": {
+          "fa-IR": "LumoInputGroup(\n  label: 'نشانی صفحه',\n  trailing: LumoInputGroupButton(\n    label: 'رونوشت نشانی',\n    onPressed: () {},\n    child: const Icon(Icons.copy_outlined),\n  ),\n)",
+          "en-US": "LumoInputGroup(\n  label: 'Page address',\n  trailing: LumoInputGroupButton(\n    label: 'Copy the address',\n    onPressed: () {},\n    child: const Icon(Icons.copy_outlined),\n  ),\n)"
+        }
+      }
+    ],
     "input-otp": [
       {
         "id": "input-otp-1",
@@ -671,8 +784,8 @@
           "en-US": "One real input behind separate cells. cellLabel builds each cell’s name from its position."
         },
         "source": {
-          "fa-IR": "LumoOtpField(\n  label: 'کد پیامک‌شده',\n  cellLabel: (index, length) => 'رقم ${index + 1} از $length',\n  description: 'کد شش‌رقمی به شمارهٔ شما پیامک شد.',\n  value: _code,\n  onChanged: (next) => setState(() => _code = next),\n  onCompleted: (code) {},\n)",
-          "en-US": "LumoOtpField(\n  label: 'The texted code',\n  cellLabel: (index, length) => 'Digit ${index + 1} of $length',\n  description: 'A six-digit code was texted to your number.',\n  value: _code,\n  onChanged: (next) => setState(() => _code = next),\n  onCompleted: (code) {},\n)"
+          "fa-IR": "LumoOtpField(\n  label: 'کد پیامک‌شده',\n  cellLabel: (index, length) =>\n      // Announced per cell — the number must be a Persian digit under fa.\n      'رقم ${formatNumber(index + 1, t.locale)} از ${formatNumber(length, t.locale)}',\n  description: 'کد شش‌رقمی به شمارهٔ شما پیامک شد.',\n  value: _code,\n  onChanged: (next) => setState(() => _code = next),\n  onCompleted: (code) {},\n)",
+          "en-US": "LumoOtpField(\n  label: 'The texted code',\n  cellLabel: (index, length) =>\n      // Announced per cell — the number must be a Persian digit under fa.\n      'Digit ${formatNumber(index + 1, t.locale)} of ${formatNumber(length, t.locale)}',\n  description: 'A six-digit code was texted to your number.',\n  value: _code,\n  onChanged: (next) => setState(() => _code = next),\n  onCompleted: (code) {},\n)"
         }
       },
       {
@@ -686,8 +799,8 @@
           "en-US": "The digits render in the locale’s own numerals; errorMessage sits under the row."
         },
         "source": {
-          "fa-IR": "LumoOtpField(\n  label: 'کد تأیید',\n  cellLabel: (index, length) => 'رقم ${index + 1} از $length',\n  length: 4,\n  defaultValue: '12',\n  errorMessage: 'کد واردشده درست نیست.',\n)",
-          "en-US": "LumoOtpField(\n  label: 'Verification code',\n  cellLabel: (index, length) => 'Digit ${index + 1} of $length',\n  length: 4,\n  defaultValue: '12',\n  errorMessage: 'That code is not right.',\n)"
+          "fa-IR": "LumoOtpField(\n  label: 'کد تأیید',\n  cellLabel: (index, length) =>\n      'رقم ${formatNumber(index + 1, t.locale)} از ${formatNumber(length, t.locale)}',\n  length: 4,\n  defaultValue: '12',\n  errorMessage: 'کد واردشده درست نیست.',\n)",
+          "en-US": "LumoOtpField(\n  label: 'Verification code',\n  cellLabel: (index, length) =>\n      'Digit ${formatNumber(index + 1, t.locale)} of ${formatNumber(length, t.locale)}',\n  length: 4,\n  defaultValue: '12',\n  errorMessage: 'That code is not right.',\n)"
         }
       }
     ],
@@ -866,6 +979,23 @@
         }
       }
     ],
+    "navigation-bar": [
+      {
+        "id": "navigation-bar-1",
+        "title": {
+          "fa-IR": "نوار ناوبری",
+          "en-US": "Navigation bar"
+        },
+        "description": {
+          "fa-IR": "مقصدهای اصلی برنامه. ترتیب از راست شروع می‌شود، و نشان روی «سفارش‌ها» عددش را با رقم محلی می‌گوید.",
+          "en-US": "The app’s top destinations. The order starts at the reading edge, and the badge on Orders carries local digits."
+        },
+        "source": {
+          "fa-IR": "LumoNavigationBar(\n  label: 'ناوبری اصلی',\n  value: _tab,\n  onChanged: (next) => setState(() => _tab = next),\n  items: [\n    LumoNavigationItem(\n      id: 'home',\n      label: 'خانه',\n      icon: const Icon(Icons.home_outlined),\n      selectedIcon: const Icon(Icons.home),\n    ),\n    LumoNavigationItem(\n      id: 'search',\n      label: 'جست‌وجو',\n      icon: const Icon(Icons.search),\n    ),\n    LumoNavigationItem(\n      id: 'orders',\n      label: 'سفارش‌ها',\n      icon: const Icon(Icons.receipt_long_outlined),\n      badge: '۳',\n    ),\n    LumoNavigationItem(\n      id: 'profile',\n      label: 'نمایه',\n      icon: const Icon(Icons.person_outline),\n    ),\n  ],\n)",
+          "en-US": "LumoNavigationBar(\n  label: 'Main navigation',\n  value: _tab,\n  onChanged: (next) => setState(() => _tab = next),\n  items: [\n    LumoNavigationItem(\n      id: 'home',\n      label: 'Home',\n      icon: const Icon(Icons.home_outlined),\n      selectedIcon: const Icon(Icons.home),\n    ),\n    LumoNavigationItem(\n      id: 'search',\n      label: 'Search',\n      icon: const Icon(Icons.search),\n    ),\n    LumoNavigationItem(\n      id: 'orders',\n      label: 'Orders',\n      icon: const Icon(Icons.receipt_long_outlined),\n      badge: '3',\n    ),\n    LumoNavigationItem(\n      id: 'profile',\n      label: 'Profile',\n      icon: const Icon(Icons.person_outline),\n    ),\n  ],\n)"
+        }
+      }
+    ],
     "number-field": [
       {
         "id": "number-field-1",
@@ -1006,6 +1136,23 @@
         "source": {
           "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoProgress(\n      label: 'فضای مصرف‌شده',\n      value: 0.88,\n      valueLabel: '۸۸ درصد',\n      showValue: true,\n      tone: LumoProgressTone.caution,\n      size: LumoProgressSize.lg,\n    ),\n    LumoProgress(\n      label: 'پیشرفت پروژه',\n      value: 0.35,\n      valueLabel: '۳۵ درصد',\n      tone: LumoProgressTone.positive,\n      size: LumoProgressSize.sm,\n    ),\n  ],\n)",
           "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoProgress(\n      label: 'Storage used',\n      value: 0.88,\n      valueLabel: '88 percent',\n      showValue: true,\n      tone: LumoProgressTone.caution,\n      size: LumoProgressSize.lg,\n    ),\n    LumoProgress(\n      label: 'Project progress',\n      value: 0.35,\n      valueLabel: '35 percent',\n      tone: LumoProgressTone.positive,\n      size: LumoProgressSize.sm,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "pull-to-refresh": [
+      {
+        "id": "pull-to-refresh-1",
+        "title": {
+          "fa-IR": "کشیدن برای تازه‌سازی",
+          "en-US": "Pull to refresh"
+        },
+        "description": {
+          "fa-IR": "هر سه حالتِ ژست گفته می‌شود: کشیدن، رهاکردن، و تازه‌سازی. یک چرخندهٔ بی‌کلام برای کسی که نمی‌بیندش هیچ خبری ندارد.",
+          "en-US": "All three states of the gesture are announced: pulling, release, refreshing. A silent spinner carries no news to a reader who cannot see it."
+        },
+        "source": {
+          "fa-IR": "SizedBox(\n  height: 260,\n  child: LumoPullToRefresh(\n    refreshLabel: 'در حال تازه‌سازی',\n    pullLabel: 'برای تازه‌سازی بکشید',\n    releaseLabel: 'رها کنید تا تازه شود',\n    onRefresh: () async {},\n    child: ListView(\n      children: [\n        LumoItem(title: 'سفارش ۱۴۰۵۰۳۲۱ — ارسال‌شده'),\n        LumoItem(title: 'سفارش ۱۴۰۵۰۳۱۹ — بسته‌بندی'),\n        LumoItem(title: 'سفارش ۱۴۰۵۰۳۱۲ — تحویل‌شده'),\n      ],\n    ),\n  ),\n)",
+          "en-US": "SizedBox(\n  height: 260,\n  child: LumoPullToRefresh(\n    refreshLabel: 'Refreshing',\n    pullLabel: 'Pull to refresh',\n    releaseLabel: 'Release to refresh',\n    onRefresh: () async {},\n    child: ListView(\n      children: [\n        LumoItem(title: 'Order 14050321 — sent'),\n        LumoItem(title: 'Order 14050319 — packing'),\n        LumoItem(title: 'Order 14050312 — delivered'),\n      ],\n    ),\n  ),\n)"
         }
       }
     ],
@@ -1196,8 +1343,25 @@
           "en-US": "label turns the rule into a named boundary; the vertical form separates two columns."
         },
         "source": {
-          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSeparator(label: 'یا با این روش‌ها'),\n    SizedBox(\n      height: 40,\n      child: Row(\n        mainAxisAlignment: MainAxisAlignment.center,\n        spacing: 12,\n        children: [\n          Text('ورود با ایمیل'),\n          const LumoSeparator(orientation: LumoSeparatorOrientation.vertical),\n          Text('ورود با پیامک'),\n        ],\n      ),\n    ),\n  ],\n)",
-          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSeparator(label: 'Or use one of these'),\n    SizedBox(\n      height: 40,\n      child: Row(\n        mainAxisAlignment: MainAxisAlignment.center,\n        spacing: 12,\n        children: [\n          Text('Sign in with email'),\n          const LumoSeparator(orientation: LumoSeparatorOrientation.vertical),\n          Text('Sign in by text'),\n        ],\n      ),\n    ),\n  ],\n)"
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSeparator(label: 'یا با این روش‌ها'),\n    SizedBox(\n      height: 40,\n      child: Row(\n        mainAxisAlignment: MainAxisAlignment.center,\n        spacing: 12,\n        children: [\n          // Flexible: two Persian labels either side of a vertical rule do not\n          // fit a 360dp phone at their natural width.\n          Flexible(child: Text('ورود با ایمیل', maxLines: 1, overflow: TextOverflow.ellipsis)),\n          const LumoSeparator(orientation: LumoSeparatorOrientation.vertical),\n          Flexible(child: Text('ورود با پیامک', maxLines: 1, overflow: TextOverflow.ellipsis)),\n        ],\n      ),\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSeparator(label: 'Or use one of these'),\n    SizedBox(\n      height: 40,\n      child: Row(\n        mainAxisAlignment: MainAxisAlignment.center,\n        spacing: 12,\n        children: [\n          // Flexible: two Persian labels either side of a vertical rule do not\n          // fit a 360dp phone at their natural width.\n          Flexible(child: Text('Sign in with email', maxLines: 1, overflow: TextOverflow.ellipsis)),\n          const LumoSeparator(orientation: LumoSeparatorOrientation.vertical),\n          Flexible(child: Text('Sign in by text', maxLines: 1, overflow: TextOverflow.ellipsis)),\n        ],\n      ),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "sidebar": [
+      {
+        "id": "sidebar-1",
+        "title": {
+          "fa-IR": "کشوی ناوبری",
+          "en-US": "Navigation drawer"
+        },
+        "description": {
+          "fa-IR": "بخش‌ها عنوان دارند و هر بخش نامش را می‌گوید، پس خواننده می‌داند کجای فهرست است. نشانِ «سفارش‌ها» رقم محلی دارد.",
+          "en-US": "Sections carry titles and each one announces its own, so a reader knows where in the list they are. The Orders badge carries local digits."
+        },
+        "source": {
+          "fa-IR": "// A drawer is a full-height panel: give it a height, or it has none to take\n// inside a scrolling page.\nreturn SizedBox(\n  height: 420,\n  child: LumoNavigationDrawer(\n    label: 'منوی اصلی',\n    closeLabel: 'بستن منو',\n    value: _current,\n    onChanged: (next) => setState(() => _current = next),\n    sections: [\n      LumoNavigationSection(\n        label: 'فضای کاری',\n        items: [\n          LumoNavigationItem(id: 'dashboard', label: 'داشبورد', icon: const Icon(Icons.dashboard_outlined)),\n          LumoNavigationItem(\n            id: 'orders',\n            label: 'سفارش‌ها',\n            icon: const Icon(Icons.receipt_long_outlined),\n            badge: '۱۲',\n          ),\n          LumoNavigationItem(id: 'customers', label: 'مشتریان', icon: const Icon(Icons.group_outlined)),\n        ],\n      ),\n      LumoNavigationSection(\n        label: 'حساب',\n        items: [\n          LumoNavigationItem(id: 'settings', label: 'تنظیمات', icon: const Icon(Icons.settings_outlined)),\n          LumoNavigationItem(id: 'signOut', label: 'خروج', icon: const Icon(Icons.logout)),\n        ],\n        ),\n      ],\n  ),\n);",
+          "en-US": "// A drawer is a full-height panel: give it a height, or it has none to take\n// inside a scrolling page.\nreturn SizedBox(\n  height: 420,\n  child: LumoNavigationDrawer(\n    label: 'Main menu',\n    closeLabel: 'Close the menu',\n    value: _current,\n    onChanged: (next) => setState(() => _current = next),\n    sections: [\n      LumoNavigationSection(\n        label: 'Workspace',\n        items: [\n          LumoNavigationItem(id: 'dashboard', label: 'Dashboard', icon: const Icon(Icons.dashboard_outlined)),\n          LumoNavigationItem(\n            id: 'orders',\n            label: 'Orders',\n            icon: const Icon(Icons.receipt_long_outlined),\n            badge: '12',\n          ),\n          LumoNavigationItem(id: 'customers', label: 'Customers', icon: const Icon(Icons.group_outlined)),\n        ],\n      ),\n      LumoNavigationSection(\n        label: 'Account',\n        items: [\n          LumoNavigationItem(id: 'settings', label: 'Settings', icon: const Icon(Icons.settings_outlined)),\n          LumoNavigationItem(id: 'signOut', label: 'Sign out', icon: const Icon(Icons.logout)),\n        ],\n        ),\n      ],\n  ),\n);"
         }
       }
     ],
@@ -1280,6 +1444,38 @@
         }
       }
     ],
+    "stack": [
+      {
+        "id": "stack-1",
+        "title": {
+          "fa-IR": "ردیف منطقی",
+          "en-US": "A logical row"
+        },
+        "description": {
+          "fa-IR": "LumoStack یک ردیف است که با زبان می‌چرخد: در فارسی از راست شروع می‌شود، بی‌آنکه چیزی «چپ» یا «راست» نامیده شود.",
+          "en-US": "LumoStack is a row that turns with the language: it starts at the right in Persian, and nothing in it is named “left” or “right”."
+        },
+        "source": {
+          "fa-IR": "LumoStack(\n  direction: LumoStackDirection.row,\n  gap: LumoGap.sm,\n  // `align` defaults to `stretch`, which on a ROW means stretch on the\n  // VERTICAL axis — unbounded inside a scroll view, and a layout assertion\n  // rather than a wrong pixel. A row wants `center`.\n  align: LumoAlign.center,\n  // `wrap` lets the line break instead of overflowing. Three controls with\n  // Persian labels do not fit a 360dp phone at their natural width, and a row\n  // that cannot break is a row that runs off the edge.\n  wrap: true,\n  children: [\n    LumoButton(onPressed: () {}, child: Text('ذخیره')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('انصراف')),\n    LumoBadge(label: 'پیش‌نویس'),\n  ],\n)",
+          "en-US": "LumoStack(\n  direction: LumoStackDirection.row,\n  gap: LumoGap.sm,\n  // `align` defaults to `stretch`, which on a ROW means stretch on the\n  // VERTICAL axis — unbounded inside a scroll view, and a layout assertion\n  // rather than a wrong pixel. A row wants `center`.\n  align: LumoAlign.center,\n  // `wrap` lets the line break instead of overflowing. Three controls with\n  // Persian labels do not fit a 360dp phone at their natural width, and a row\n  // that cannot break is a row that runs off the edge.\n  wrap: true,\n  children: [\n    LumoButton(onPressed: () {}, child: Text('Save')),\n    LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: Text('Cancel')),\n    LumoBadge(label: 'Draft'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "stack-2",
+        "title": {
+          "fa-IR": "شبکه",
+          "en-US": "Grid"
+        },
+        "description": {
+          "fa-IR": "LumoGrid ستون‌ها را می‌شمارد، نه پیکسل‌ها؛ فاصله‌ها از پله‌های LumoGap می‌آیند.",
+          "en-US": "LumoGrid counts columns, not pixels; the gaps come from the LumoGap steps."
+        },
+        "source": {
+          "fa-IR": "LumoGrid(\n  columns: 2,\n  gap: LumoGap.sm,\n  children: [\n    LumoIconTile(icon: const Icon(Icons.insert_chart_outlined), accessibilityLabel: 'گزارش‌ها'),\n    LumoIconTile(icon: const Icon(Icons.account_balance_wallet_outlined), accessibilityLabel: 'کیف پول'),\n    LumoIconTile(icon: const Icon(Icons.settings_outlined), accessibilityLabel: 'تنظیمات'),\n    LumoIconTile(icon: const Icon(Icons.support_agent_outlined), accessibilityLabel: 'پشتیبانی'),\n  ],\n)",
+          "en-US": "LumoGrid(\n  columns: 2,\n  gap: LumoGap.sm,\n  children: [\n    LumoIconTile(icon: const Icon(Icons.insert_chart_outlined), accessibilityLabel: 'Reports'),\n    LumoIconTile(icon: const Icon(Icons.account_balance_wallet_outlined), accessibilityLabel: 'Wallet'),\n    LumoIconTile(icon: const Icon(Icons.settings_outlined), accessibilityLabel: 'Settings'),\n    LumoIconTile(icon: const Icon(Icons.support_agent_outlined), accessibilityLabel: 'Support'),\n  ],\n)"
+        }
+      }
+    ],
     "steps": [
       {
         "id": "steps-1",
@@ -1341,6 +1537,23 @@
         "source": {
           "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSwitch(\n      label: 'هم‌رسانی خودکار',\n      description: 'هر تغییر بلافاصله روی همهٔ دستگاه‌ها می‌رود.',\n      size: LumoSwitchSize.lg,\n      isSelected: _sync,\n      onChanged: (next) => setState(() => _sync = next),\n    ),\n    LumoSwitch(\n      label: 'حالت آزمایشی',\n      description: 'برای این حساب در دسترس نیست.',\n      isDisabled: true,\n    ),\n  ],\n)",
           "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSwitch(\n      label: 'Automatic sync',\n      description: 'Every change reaches all your devices at once.',\n      size: LumoSwitchSize.lg,\n      isSelected: _sync,\n      onChanged: (next) => setState(() => _sync = next),\n    ),\n    LumoSwitch(\n      label: 'Beta mode',\n      description: 'Not available for this account.',\n      isDisabled: true,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "table": [
+      {
+        "id": "table-1",
+        "title": {
+          "fa-IR": "جدول داده",
+          "en-US": "A data table"
+        },
+        "description": {
+          "fa-IR": "هر سلول رشته‌ای است که از پیش قالب‌بندی شده — جدول عدد خام نمی‌گیرد. ستون مبلغ عددی است، پس رقم‌هایش چپ‌به‌راست می‌مانند.",
+          "en-US": "Every cell is a string already formatted — the table never takes a raw number. The total column is numeric, so its digits stay LTR."
+        },
+        "source": {
+          "fa-IR": "LumoTable(\n  label: 'سفارش‌های اخیر',\n  caption: 'سه سفارش آخر این هفته.',\n  columns: [\n    LumoTableColumn(id: 'order', header: 'سفارش'),\n    LumoTableColumn(id: 'status', header: 'وضعیت'),\n    LumoTableColumn(id: 'total', header: 'مبلغ', isNumeric: true, align: LumoTableAlign.end),\n  ],\n  rows: [\n    LumoTableRowData(id: '1', cells: [LumoTableCell('۱۴۰۵۰۳۲۱'), LumoTableCell('ارسال‌شده'), LumoTableCell('۲۴۰٬۰۰۰')]),\n    LumoTableRowData(id: '2', cells: [LumoTableCell('۱۴۰۵۰۳۱۹'), LumoTableCell('بسته‌بندی'), LumoTableCell('۸۵٬۵۰۰')]),\n    LumoTableRowData(id: '3', cells: [LumoTableCell('۱۴۰۵۰۳۱۲'), LumoTableCell('تحویل‌شده'), LumoTableCell('۱٬۲۰۰٬۰۰۰')]),\n  ],\n)",
+          "en-US": "LumoTable(\n  label: 'Recent orders',\n  caption: 'The last three orders this week.',\n  columns: [\n    LumoTableColumn(id: 'order', header: 'Order'),\n    LumoTableColumn(id: 'status', header: 'Status'),\n    LumoTableColumn(id: 'total', header: 'Total', isNumeric: true, align: LumoTableAlign.end),\n  ],\n  rows: [\n    LumoTableRowData(id: '1', cells: [LumoTableCell('14050321'), LumoTableCell('Sent'), LumoTableCell('240,000')]),\n    LumoTableRowData(id: '2', cells: [LumoTableCell('14050319'), LumoTableCell('Packing'), LumoTableCell('85,500')]),\n    LumoTableRowData(id: '3', cells: [LumoTableCell('14050312'), LumoTableCell('Delivered'), LumoTableCell('1,200,000')]),\n  ],\n)"
         }
       }
     ],
@@ -1420,6 +1633,23 @@
         "source": {
           "fa-IR": "LumoTagGroup(\n  label: 'شهرهای انتخاب‌شده',\n  items: _cities,\n  onRemove: (id) => setState(() => _cities.removeWhere((c) => c.id == id)),\n  removeLabel: (textValue) => 'حذف $textValue',\n)",
           "en-US": "LumoTagGroup(\n  label: 'Chosen cities',\n  items: _cities,\n  onRemove: (id) => setState(() => _cities.removeWhere((c) => c.id == id)),\n  removeLabel: (textValue) => 'Remove $textValue',\n)"
+        }
+      }
+    ],
+    "tags-input": [
+      {
+        "id": "tags-input-1",
+        "title": {
+          "fa-IR": "ورودی برچسب",
+          "en-US": "Tags input"
+        },
+        "description": {
+          "fa-IR": "هر برچسب دکمهٔ حذف خودش را دارد و نامش شامل خودِ برچسب است — «حذف فلاتر»، نه فقط «حذف».",
+          "en-US": "Every tag carries its own remove button, named with the tag itself — “Remove Flutter”, never just “Remove”."
+        },
+        "source": {
+          "fa-IR": "LumoTagsInput(\n  label: 'مهارت‌ها',\n  addLabel: 'افزودن برچسب',\n  removeLabel: (tag) => 'حذف $tag',\n  placeholder: 'بنویسید و اینتر بزنید',\n  description: 'حداکثر پنج مهارت.',\n  duplicateMessage: 'این برچسب از پیش هست.',\n  maxTags: 5,\n  values: _values,\n  onChanged: (next) => setState(() => _values = next),\n)",
+          "en-US": "LumoTagsInput(\n  label: 'Skills',\n  addLabel: 'Add tag',\n  removeLabel: (tag) => 'Remove $tag',\n  placeholder: 'Type and press enter',\n  description: 'Up to five skills.',\n  duplicateMessage: 'That tag is already there.',\n  maxTags: 5,\n  values: _values,\n  onChanged: (next) => setState(() => _values = next),\n)"
         }
       }
     ],
@@ -1642,6 +1872,23 @@
         "source": {
           "fa-IR": "LumoToggleGroup(\n  label: 'ترازبندی متن',\n  defaultValue: 'start',\n  disallowEmptySelection: true,\n  items: [\n    LumoToggleItem(\n      id: 'start',\n      label: 'تراز به سرِ خط',\n      icon: const Icon(Icons.format_align_right),\n      iconOnly: true,\n    ),\n    LumoToggleItem(\n      id: 'center',\n      label: 'تراز وسط',\n      icon: const Icon(Icons.format_align_center),\n      iconOnly: true,\n    ),\n    LumoToggleItem(\n      id: 'end',\n      label: 'تراز به پایان خط',\n      icon: const Icon(Icons.format_align_left),\n      iconOnly: true,\n    ),\n  ],\n)",
           "en-US": "LumoToggleGroup(\n  label: 'Text alignment',\n  defaultValue: 'start',\n  disallowEmptySelection: true,\n  items: [\n    LumoToggleItem(\n      id: 'start',\n      label: 'Align to the line start',\n      icon: const Icon(Icons.format_align_right),\n      iconOnly: true,\n    ),\n    LumoToggleItem(\n      id: 'center',\n      label: 'Align to the centre',\n      icon: const Icon(Icons.format_align_center),\n      iconOnly: true,\n    ),\n    LumoToggleItem(\n      id: 'end',\n      label: 'Align to the line end',\n      icon: const Icon(Icons.format_align_left),\n      iconOnly: true,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "toolbar": [
+      {
+        "id": "toolbar-1",
+        "title": {
+          "fa-IR": "نوار ابزار",
+          "en-US": "Toolbar"
+        },
+        "description": {
+          "fa-IR": "یک ردیف کنش با نامِ گروه. آنچه جا نشود می‌پیچد؛ هیچ کنشی پنهان نمی‌شود.",
+          "en-US": "One row of actions with a group name. What does not fit wraps; no action is hidden."
+        },
+        "source": {
+          "fa-IR": "LumoToolbar(\n  label: 'قالب‌بندی متن',\n  overflow: LumoToolbarOverflow.wrap,\n  children: [\n    LumoIconButton(label: 'سیاه', onPressed: () {}, child: const Icon(Icons.format_bold)),\n    LumoIconButton(label: 'کج', onPressed: () {}, child: const Icon(Icons.format_italic)),\n    LumoIconButton(label: 'زیرخط', onPressed: () {}, child: const Icon(Icons.format_underlined)),\n    const LumoToolbarSeparator(),\n    LumoIconButton(label: 'فهرست نشانه‌دار', onPressed: () {}, child: const Icon(Icons.format_list_bulleted)),\n    LumoIconButton(label: 'پیوند', onPressed: () {}, child: const Icon(Icons.link)),\n  ],\n)",
+          "en-US": "LumoToolbar(\n  label: 'Text formatting',\n  overflow: LumoToolbarOverflow.wrap,\n  children: [\n    LumoIconButton(label: 'Bold', onPressed: () {}, child: const Icon(Icons.format_bold)),\n    LumoIconButton(label: 'Italic', onPressed: () {}, child: const Icon(Icons.format_italic)),\n    LumoIconButton(label: 'Underline', onPressed: () {}, child: const Icon(Icons.format_underlined)),\n    const LumoToolbarSeparator(),\n    LumoIconButton(label: 'Bulleted list', onPressed: () {}, child: const Icon(Icons.format_list_bulleted)),\n    LumoIconButton(label: 'Link', onPressed: () {}, child: const Icon(Icons.link)),\n  ],\n)"
         }
       }
     ],

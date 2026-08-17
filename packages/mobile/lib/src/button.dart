@@ -26,10 +26,15 @@ const _font = {LumoButtonSize.sm: 14.0, LumoButtonSize.md: 14.0, LumoButtonSize.
 /// not. Reach for `lg` when a text button is narrow and stands alone.
 class LumoButton extends StatelessWidget {
   const LumoButton({super.key, required this.child, this.onPressed, this.variant = LumoButtonVariant.solid, this.size = LumoButtonSize.md, this.isDisabled = false});
+  /// The widget this one wraps.
   final Widget child;
+  /// Called when the control is pressed. Null disables it.
   final VoidCallback? onPressed;
+  /// The visual variant.
   final LumoButtonVariant variant;
+  /// The size step, from the shared control scale.
   final LumoButtonSize size;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -60,6 +65,7 @@ class LumoButton extends StatelessWidget {
       }
     }
 
+    final labelBase = Theme.of(context).textTheme.labelLarge;
     final style = ButtonStyle(
       minimumSize: WidgetStatePropertyAll(Size(0, _height[size]!)),
       maximumSize: WidgetStatePropertyAll(Size(double.infinity, _height[size]!)),
@@ -67,7 +73,20 @@ class LumoButton extends StatelessWidget {
       backgroundColor: WidgetStateProperty.resolveWith(bg),
       foregroundColor: WidgetStatePropertyAll(fg()),
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
-      textStyle: WidgetStatePropertyAll(TextStyle(fontSize: _font[size], fontWeight: FontWeight.w500)),
+      // The family comes from the app's typography, never from the platform
+      // default. `ButtonStyle.textStyle` REPLACES the theme's `labelLarge`
+      // rather than merging with it, so a bare `TextStyle(...)` here silently
+      // dropped `ThemeData.fontFamily`: an app that set `fontFamily: 'Vazirmatn'`
+      // got Vazirmatn everywhere except inside its buttons, where Persian fell
+      // through to the platform face. Measured across the gallery, 26 of the
+      // strings in 11 slugs were affected — every one of them a button label.
+      // Only the family travels; size, weight and metrics stay this widget's.
+      textStyle: WidgetStatePropertyAll(TextStyle(
+        fontSize: _font[size],
+        fontWeight: FontWeight.w500,
+        fontFamily: labelBase?.fontFamily,
+        fontFamilyFallback: labelBase?.fontFamilyFallback,
+      )),
       shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(LumoRadius.md))),
       side: WidgetStatePropertyAll(BorderSide(color: variant == LumoButtonVariant.outline ? c.borderControl : Colors.transparent)),
       elevation: const WidgetStatePropertyAll(0),
@@ -104,11 +123,17 @@ class LumoButton extends StatelessWidget {
 /// One control, one node, one size.
 class LumoIconButton extends StatelessWidget {
   const LumoIconButton({super.key, required this.label, required this.child, this.onPressed, this.variant = LumoButtonVariant.ghost, this.size = LumoButtonSize.md, this.isDisabled = false});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// The widget this one wraps.
   final Widget child;
+  /// Called when the control is pressed. Null disables it.
   final VoidCallback? onPressed;
+  /// The visual variant.
   final LumoButtonVariant variant;
+  /// The size step, from the shared control scale.
   final LumoButtonSize size;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

@@ -51,7 +51,9 @@ class LumoRating extends StatefulWidget {
   final ValueChanged<double>? onChanged;
   /// Announced name of one star from its 1-based position. Required with `onChanged`.
   final String Function(int position)? starLabel;
+  /// The size step, from the shared control scale.
   final LumoRatingSize size;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

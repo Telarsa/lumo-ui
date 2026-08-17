@@ -14,6 +14,7 @@ class LumoComboboxOption {
 
   /// The announced and displayed text, and what the built-in filter matches.
   final String label;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -75,6 +76,7 @@ class LumoCombobox extends StatefulWidget {
 
   /// Announced and displayed name. REQUIRED — an unnamed field is a defect.
   final String label;
+  /// The options to choose from, in reading order.
   final List<LumoComboboxOption> options;
 
   /// Name of the suggestion list. REQUIRED — the web's `suggestionsLabel`.
@@ -94,6 +96,7 @@ class LumoCombobox extends StatefulWidget {
   /// Called with the chosen id, with the typed text when `allowsCustomValue`
   /// accepts one, and with `null` when the field is cleared.
   final ValueChanged<String?>? onChanged;
+  /// Placeholder text shown while the field is empty. Never a substitute for the label.
   final String? placeholder;
 
   /// Accept text that matches no option: submitting commits it as the value.
@@ -102,6 +105,7 @@ class LumoCombobox extends StatefulWidget {
   /// Called with the query on every keystroke. Providing it turns the built-in
   /// filter OFF — the caller's `options` are taken as already matched.
   final ValueChanged<String>? onSearch;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown under the field and announced. Supplying one marks it invalid.
@@ -110,6 +114,7 @@ class LumoCombobox extends StatefulWidget {
   /// The web's `isRequired`: draws the « *» marker and sets the reader's
   /// `required` state.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

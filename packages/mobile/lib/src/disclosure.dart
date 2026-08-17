@@ -7,9 +7,13 @@ import 'scope.dart';
 /// announced cannot drift.
 class LumoDisclosureItem {
   const LumoDisclosureItem({required this.id, required this.title, required this.child, this.isDisabled = false});
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The visible title.
   final String title;
+  /// The widget this one wraps.
   final Widget child;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -43,6 +47,7 @@ class LumoDisclosure extends StatefulWidget {
 
   /// The section's name — visible and announced. Required.
   final String title;
+  /// The widget this one wraps.
   final Widget child;
 
   /// Open state (controlled).
@@ -50,7 +55,9 @@ class LumoDisclosure extends StatefulWidget {
 
   /// Open state at first build (uncontrolled).
   final bool defaultOpen;
+  /// Called when the surface opens or closes, with the new state.
   final ValueChanged<bool>? onOpenChange;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -99,6 +106,7 @@ class _LumoDisclosureState extends State<LumoDisclosure> {
 class LumoAccordion extends StatefulWidget {
   const LumoAccordion({super.key, required this.items, this.allowsMultiple = false, this.value, this.defaultValue, this.onChanged, this.isDisabled = false});
 
+  /// The items to show, in reading order.
   final List<LumoDisclosureItem> items;
 
   /// Whether more than one section may be open at a time.
@@ -109,6 +117,7 @@ class LumoAccordion extends StatefulWidget {
 
   /// The open section ids at first build (uncontrolled).
   final Set<String>? defaultValue;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<Set<String>>? onChanged;
 
   /// Disables every section.

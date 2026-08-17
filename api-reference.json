@@ -158,6 +158,61 @@
         ]
       }
     ],
+    "app-bar.tsx": [
+      {
+        "name": "AppBarProps",
+        "props": [
+          {
+            "name": "title",
+            "type": "LumoNode",
+            "required": true,
+            "description": "What this screen is, in the reader's language. REQUIRED; `LumoNode` still forbids a bare count."
+          },
+          {
+            "name": "actions",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The actions at the reading END. A slot: each one names itself, because an icon is not a name."
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Additional classes merged onto the component's root element."
+          },
+          {
+            "name": "divided",
+            "type": "boolean | null | undefined",
+            "required": false,
+            "description": "Whether a rule separates the bar from the content under it."
+          },
+          {
+            "name": "leading",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The affordance at the reading START: a back link, a menu button. A slot, so it carries its own name."
+          },
+          {
+            "name": "level",
+            "type": "2 | 1 | 5 | 3 | 6 | 4 | undefined",
+            "required": false,
+            "description": "Heading element for the title. Default `2` — the bar heads a view, not the document."
+          },
+          {
+            "name": "size",
+            "type": "\"sm\" | \"md\" | null | undefined",
+            "required": false,
+            "description": "The bar's height step and inline padding."
+          },
+          {
+            "name": "subtitle",
+            "type": "LumoNode",
+            "required": false,
+            "description": "One line under the title — a count, a state, a date. Never a second sentence."
+          }
+        ]
+      }
+    ],
     "aspect-ratio.tsx": [
       {
         "name": "AspectRatioProps",
@@ -8498,6 +8553,90 @@
             "type": "readonly string[]",
             "required": false,
             "description": "The selected option values, when selection is controlled."
+          }
+        ]
+      }
+    ],
+    "navigation-bar.tsx": [
+      {
+        "name": "NavigationBarItemProps",
+        "props": [
+          {
+            "name": "children",
+            "type": "LumoNode",
+            "required": true,
+            "description": "The destination's name. Shown under the glyph and read as the link's text."
+          },
+          {
+            "name": "badge",
+            "type": "LumoNode",
+            "required": false,
+            "description": "A short count parked on the glyph, already formatted — `formatNumber(n, locale)`, never a bare number."
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Additional classes merged onto the component's root element."
+          },
+          {
+            "name": "icon",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The destination's glyph. Decorative and `aria-hidden`: the label under it already says the word."
+          },
+          {
+            "name": "isCurrent",
+            "type": "false | LinkCurrent | undefined",
+            "required": false,
+            "description": "Marks this link as the resource the reader is currently on — `\"page\"` for a navigation item, `\"step\"` inside a wizard. Emits `aria-current` AND `data-current`."
+          },
+          {
+            "name": "isDisabled",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Renders a non-navigating link: no `href`, not in the tab order, styled as unavailable."
+          },
+          {
+            "name": "linkComponent",
+            "type": "LumoLinkComponent | undefined",
+            "required": false,
+            "description": "The app's own link component (Next's `Link`, a router's) rendered instead of `<a>`. `Link` is a SERVER component and cannot read `LumoProvider linkComponent`; pass it here in server-rendered trees — client families (`Item`, `Command` rows, `MenuItem href`, `NavigationMenuLink`, `SidebarItem`) inject it from the provider themselves."
+          },
+          {
+            "name": "newTab",
+            "type": "boolean | undefined",
+            "required": false,
+            "description": "Opens the target in a new browsing context (`target=\"_blank\"`)."
+          },
+          {
+            "name": "newTabLabel",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Announced warning that a new tab will open, e.g. «در برگه جدید باز می‌شود». REQUIRED by the type (WCAG 3.2.5); no default because it would be English."
+          }
+        ]
+      },
+      {
+        "name": "NavigationBarProps",
+        "props": [
+          {
+            "name": "children",
+            "type": "LumoNode",
+            "required": true,
+            "description": "The destinations, in reading order — `NavigationBarItem`s."
+          },
+          {
+            "name": "label",
+            "type": "string",
+            "required": true,
+            "description": "What this bar navigates, e.g. «ناوبری اصلی». REQUIRED: a page with a bottom bar has more than one `<nav>`."
+          },
+          {
+            "name": "className",
+            "type": "string | undefined",
+            "required": false,
+            "description": "Additional classes merged onto the component's root element."
           }
         ]
       }

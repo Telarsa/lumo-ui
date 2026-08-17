@@ -518,6 +518,7 @@ class LumoCalendar extends StatefulWidget {
 
   /// Names of the month-paging chevrons. Required — they are icons.
   final String previousMonthLabel;
+  /// Announced name of the next-month control.
   final String nextMonthLabel;
 
   /// Name of the Today action, and the hint on today's cell. Required.
@@ -564,6 +565,7 @@ class LumoCalendar extends StatefulWidget {
   /// plain heading, the web's `"label"` layout.
   final String? selectMonthLabel;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Whether the Today action is shown under the grid. `todayLabel` still names
@@ -733,6 +735,7 @@ class LumoRangeCalendar extends StatefulWidget {
 
   /// Names of the month-paging chevrons. Required — they are icons.
   final String previousMonthLabel;
+  /// Announced name of the next-month control.
   final String nextMonthLabel;
 
   /// The hint on today's cell. Required.
@@ -755,12 +758,15 @@ class LumoRangeCalendar extends StatefulWidget {
   /// first end is picked.
   final ValueChanged<LumoDateRange>? onChanged;
 
+  /// The earliest date that can be chosen.
   final DateTime? minDate;
+  /// The latest date that can be chosen.
   final DateTime? maxDate;
 
   /// The day marked as today; defaults to the device clock. Injectable for determinism.
   final DateTime? today;
 
+  /// Returns whether a day cannot be chosen — a closed day, a taken slot.
   final bool Function(DateTime date)? isDateUnavailable;
 
   /// Marks days that carry something, with a dot. REQUIRES `markedLabel`.
@@ -769,13 +775,16 @@ class LumoRangeCalendar extends StatefulWidget {
   /// Announced on every marked day. Required as soon as `isDateMarked` is given.
   final String? markedLabel;
 
+  /// The month the grid opens on. Null starts at the selected date, or today.
   final DateTime? focusedMonth;
+  /// Fires with day 1 of the month the grid moved to.
   final ValueChanged<DateTime>? onMonthChanged;
 
   /// Name of the caption button that opens the month/year list. `null` leaves
   /// the caption a plain heading.
   final String? selectMonthLabel;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

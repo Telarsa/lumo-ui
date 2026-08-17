@@ -12,6 +12,7 @@ import 'tokens.g.dart';
 /// takes for its optional name.
 class LumoNavigationSection {
   const LumoNavigationSection({required this.items, this.label});
+  /// The items to show, in reading order.
   final List<LumoNavigationItem> items;
 
   /// The group's heading, when the group has one.
@@ -49,10 +50,12 @@ class LumoNavigationDrawer extends StatelessWidget {
 
   /// Announced name of the ✕. Required.
   final String closeLabel;
+  /// The sections, in reading order.
   final List<LumoNavigationSection> sections;
 
   /// The current destination's id.
   final String? value;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
 
   /// Above the destinations — an account row, a logo.
@@ -63,6 +66,7 @@ class LumoNavigationDrawer extends StatelessWidget {
 
   /// What the ✕ does. Defaults to popping the route the drawer was shown in.
   final VoidCallback? onClose;
+  /// Width in logical pixels.
   final double width;
 
   @override
@@ -202,7 +206,7 @@ class _DrawerRow extends StatelessWidget {
                       Container(
                         constraints: const BoxConstraints(minWidth: 20),
                         padding: const EdgeInsetsDirectional.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: isSelected ? c.surface : c.surfaceSunken, borderRadius: BorderRadius.circular(999)),
+                        decoration: BoxDecoration(color: isSelected ? c.surface : c.surfaceSunken, borderRadius: BorderRadius.circular(LumoRadius.full)),
                         alignment: Alignment.center,
                         child: Text(item.badge!, style: TextStyle(fontSize: 11, height: 1.2, color: c.fgMuted)),
                       ),

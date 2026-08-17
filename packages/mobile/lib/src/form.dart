@@ -278,6 +278,7 @@ class LumoFieldState<T> {
   /// The field's name for a reader — pass it straight to the control's
   /// `label:` so the form and the control cannot disagree about it.
   final String label;
+  /// The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own.
   final T value;
 
   /// The message, or `null`. **Give this to the control's `errorMessage:`.**
@@ -328,12 +329,14 @@ class LumoFormField<T> extends StatefulWidget {
   /// The field's name for a reader, handed on through [LumoFieldState.label].
   /// REQUIRED: a field the form knows only by `name` cannot be named to anyone.
   final String label;
+  /// The value the field starts at.
   final T initialValue;
 
   /// The rules, in order. The FIRST message wins — put the "is it there at all"
   /// rule first, exactly as the web's `lumoValidators().all(…)` says to.
   final List<LumoFieldValidator<T>> validators;
 
+  /// Builds the control for this field from its current state.
   final Widget Function(BuildContext context, LumoFieldState<T> field) builder;
 
   @override

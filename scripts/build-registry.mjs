@@ -10,6 +10,7 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
 import ts from "typescript";
+import { importSpecifiers } from "./lib/ts-ast.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const registryFlag = process.argv.indexOf("--registry");
@@ -77,39 +78,6 @@ const EXTERNAL = new Set([
   "maska",
 ]);
 
-/**
- * Parse real module specifiers. Prose and examples in comments are not imports.
- * @param {string} source
- * @param {string} fileName
- * @returns {string[]}
- */
-const importSpecifiers = (source, fileName) => {
-  const parsed = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest, false);
-  /** @type {string[]} */
-  const specifiers = [];
-  /** @param {ts.Node} node */
-  const visit = (node) => {
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier !== undefined &&
-      ts.isStringLiteral(node.moduleSpecifier)
-    ) {
-      specifiers.push(node.moduleSpecifier.text);
-    } else if (
-      ts.isCallExpression(node) &&
-      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
-      node.arguments.length === 1
-    ) {
-      const argument = node.arguments[0];
-      if (argument !== undefined && ts.isStringLiteral(argument)) {
-        specifiers.push(argument.text);
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-  visit(parsed);
-  return specifiers;
-};
 
 /*
  * Item descriptions, resolved from sources that actually DESCRIBE THE ITEM: a

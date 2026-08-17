@@ -90,6 +90,7 @@ class LumoAlert extends StatelessWidget {
 
   /// The tone default is `accent`, as on the web.
   final LumoAlertTone tone;
+  /// The visual variant.
   final LumoAlertVariant variant;
 
   /// A leading glyph. DECORATIVE — the title says what the icon says.

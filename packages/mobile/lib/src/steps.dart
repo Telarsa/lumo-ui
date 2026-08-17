@@ -11,7 +11,9 @@ enum LumoStepStatus { completed, current, upcoming }
 /// One step: `title` REQUIRED, an optional second line.
 class LumoStep {
   const LumoStep({required this.title, this.description});
+  /// The visible title.
   final String title;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 }
 
@@ -39,7 +41,9 @@ class LumoStep {
 /// width and sheds nothing.
 class LumoSteps extends StatelessWidget {
   const LumoSteps({super.key, required this.label, required this.steps, required this.current, required this.completedLabel, required this.currentLabel, required this.upcomingLabel, this.orientation = LumoStepsOrientation.horizontal}) : assert(current >= 0, 'current is a 0-based index.');
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// The steps, in order.
   final List<LumoStep> steps;
   /// 0-based index of the step in progress; `steps.length` = all complete.
   final int current;
@@ -49,6 +53,7 @@ class LumoSteps extends StatelessWidget {
   final String currentLabel;
   /// Announced status of a step not yet started, e.g. «انجام‌نشده». Required.
   final String upcomingLabel;
+  /// Which axis the control runs along.
   final LumoStepsOrientation orientation;
 
   LumoStepStatus _statusOf(int index) => index < current ? LumoStepStatus.completed : (index == current ? LumoStepStatus.current : LumoStepStatus.upcoming);

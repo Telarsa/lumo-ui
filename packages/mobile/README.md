@@ -50,7 +50,7 @@ widgets. Reference app: `example-projects/lumo-app-flutter` — since 17 Aug 202
 the Khroos mobile prototype ported to Flutter on this package (a UI/UX, RTL and
 localisation test bed), plus the 2,000-row bench.
 
-## Widgets — 77 families
+## Widgets — 145 of them, in 76 family files
 Every announced string is a required parameter; direction from the locale;
 colours from the scope; a semantics-tree test per family in `test/`.
 

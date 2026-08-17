@@ -228,6 +228,13 @@ class LumoRadius {
   static const double sm = ${dp("var(--lumo-ref-radius-sm)")};
   static const double md = ${dp("var(--lumo-ref-radius-md)")};
   static const double lg = ${dp("var(--lumo-ref-radius-lg)")};
+  /// The web's \`rounded-xl\`.
+  static const double xl = ${dp("var(--lumo-ref-radius-xl)")};
+  /// The web's \`rounded-2xl\` — a Dart identifier cannot start with a digit.
+  static const double xxl = ${dp("var(--lumo-ref-radius-2xl)")};
+  /// A pill: the web's \`rounded-full\`. Not a step on the ramp — use it where
+  /// the shape is meant to stay fully round at any height.
+  static const double full = ${dp("var(--lumo-ref-radius-full)")};
 }
 /// Control heights at the default density (web: --lumo-ref-control-*).
 class LumoControl {

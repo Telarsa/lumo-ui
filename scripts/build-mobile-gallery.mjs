@@ -16,10 +16,11 @@
  * can account for is a deployed byte nobody maintains.
  */
 
-import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { cp, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
+
+import { SEARCHED, findFlutter, flutterRunner } from "./lib/flutter.mjs";
 
 const ROOT = new URL("..", import.meta.url).pathname;
 const APP = join(ROOT, "apps", "mobile-gallery");
@@ -53,21 +54,13 @@ const BASE_HREF = "/mobile-preview/";
  */
 const PRUNE_PWA = ["icons", "manifest.json", "favicon.png", ".last_build_id"];
 
-const candidates = ["flutter", "/opt/homebrew/share/flutter/bin/flutter", "/usr/local/share/flutter/bin/flutter"];
-const flutter = candidates.find((c) =>
-  c === "flutter" ? spawnSync("sh", ["-c", "command -v flutter"], { stdio: "ignore" }).status === 0 : existsSync(c),
-);
-if (!flutter) {
-  console.error("  mobile-gallery: no Flutter SDK found (PATH, /opt/homebrew/share/flutter). The gallery cannot be built on this machine.");
+const sdk = findFlutter();
+if (!sdk) {
+  console.error(`  mobile-gallery: no Flutter SDK found (${SEARCHED}). The gallery cannot be built on this machine.`);
   process.exit(1);
 }
 
-const run = (/** @type {string[]} */ args) =>
-  spawnSync(flutter, args, {
-    cwd: APP,
-    stdio: "inherit",
-    env: { ...process.env, PATH: `${process.env.PATH ?? ""}:/opt/homebrew/share/flutter/bin` },
-  }).status ?? 1;
+const run = flutterRunner(sdk, APP);
 
 if (run(["pub", "get"]) !== 0) process.exit(1);
 if (run(["build", "web", "--release", `--base-href=${BASE_HREF}`]) !== 0) {

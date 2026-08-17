@@ -9,6 +9,7 @@ import 'tokens.g.dart';
 /// link whatever it was given, because it is the page you are already on.
 class LumoCrumb {
   const LumoCrumb({required this.label, this.onTap});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
 
   /// Where this crumb goes. Flutter has no router here, so this is the seam.
@@ -60,6 +61,7 @@ class LumoBreadcrumbs extends StatefulWidget {
 
   /// Announced name of the trail, e.g. «مسیر صفحه». Required.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoCrumb> items;
 
   /// How many crumbs stay visible before the middle ones fold away.

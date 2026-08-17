@@ -67,6 +67,16 @@ const PRESENTATIONAL = Object.freeze([
  * @type {Readonly<Record<string, readonly [string, string, string] | readonly [string, string, string, true]>>}
  */
 const BEHAVIOURAL = Object.freeze({
+  "navigation-bar.tsx": [
+    "bury the count inside the icon's aria-hidden wrapper, so it is seen and never heard",
+    '{badge == null ? null : (\n        <>\n          {" "}\n          <span className={navigationBarBadgeVariants()}>{badge}</span>\n        </>\n      )}',
+    "{void badge}",
+  ],
+  "app-bar.tsx": [
+    "render the view's name as a plain div, so it is no longer a heading",
+    "const Heading: ElementType = HEADING_TAGS[level];",
+    'const Heading: ElementType = "div";',
+  ],
   "alert-dialog.tsx": ["stop confirm from calling back", "onConfirm?.();", "void onConfirm;"],
   "alert.tsx": [
     "drop the caller-authored name from the dismiss button",

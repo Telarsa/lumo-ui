@@ -90,6 +90,7 @@ class LumoDatePicker extends StatefulWidget {
 
   /// Names of the month-paging chevrons. Required — they are icons.
   final String previousMonthLabel;
+  /// Announced name of the next-month control.
   final String nextMonthLabel;
 
   /// Name of the Today action, and the hint on today's cell. Required.
@@ -114,12 +115,15 @@ class LumoDatePicker extends StatefulWidget {
   /// Shown in the field when there is no value.
   final String? placeholder;
 
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown under the field and announced. Supplying one marks it invalid.
   final String? errorMessage;
 
+  /// Whether user input is required before the form is submitted.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Earliest selectable DAY (itself selectable). Also the first month in the list.

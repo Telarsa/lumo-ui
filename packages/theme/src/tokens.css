@@ -319,6 +319,22 @@
     --lumo-ref-radius-md: calc(0.5rem   * var(--lumo-ref-radius-scale));
     --lumo-ref-radius-lg: calc(0.625rem * var(--lumo-ref-radius-scale));
 
+    /* The two rounder steps the WEB WAS ALREADY RENDERING. `rounded-xl` and
+       `rounded-2xl` are used in packages/ui, but nothing mapped them, so what
+       shipped was TAILWIND's own default (0.75rem / 1rem): a second radius ramp
+       living outside the design system, invisible to a brand and invisible to
+       Flutter, which had no name for either and hand-rolled the numbers. They
+       are declared here at exactly the values Tailwind was already producing,
+       so no web pixel moves, and both platforms now read one source. */
+    --lumo-ref-radius-xl:  calc(0.75rem * var(--lumo-ref-radius-scale));
+    --lumo-ref-radius-2xl: calc(1rem    * var(--lumo-ref-radius-scale));
+
+    /* A pill is not a step on the ramp, so the brand's radius knob must not
+       turn one into a rounded rectangle — no `radius-scale` here. Tailwind
+       writes `calc(infinity * 1px)`; 9999px is indistinguishable at any real
+       element size and is a number the Flutter generator can carry. */
+    --lumo-ref-radius-full: 9999px;
+
     /* ---- control height ------------------------------------------------
      *
      * `lg` is a FLOOR, so density cannot lower it — `max()`, not `calc()`.
@@ -508,6 +524,9 @@
     --lumo-sys-radius-sm: var(--lumo-ref-radius-sm);
     --lumo-sys-radius-md: var(--lumo-ref-radius-md);
     --lumo-sys-radius-lg: var(--lumo-ref-radius-lg);
+    --lumo-sys-radius-xl: var(--lumo-ref-radius-xl);
+    --lumo-sys-radius-2xl: var(--lumo-ref-radius-2xl);
+    --lumo-sys-radius-full: var(--lumo-ref-radius-full);
 
     /* Three tiers, and the ref block above argues which is which. Named for
        the JOB — what the element has to be separated from — rather than for a

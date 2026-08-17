@@ -135,12 +135,19 @@ class LumoDialogTrigger extends StatelessWidget {
     this.onOpenChange,
     this.isDisabled = false,
   });
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// Announced name of the close affordance. An icon is not a name.
   final String closeLabel;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// The dialog's content.
   final Widget? body;
+  /// The actions, in reading order.
   final List<Widget> Function(BuildContext) actions;
+  /// Called when the surface opens or closes, with the new state.
   final ValueChanged<bool>? onOpenChange;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Built with the press that opens the dialog.

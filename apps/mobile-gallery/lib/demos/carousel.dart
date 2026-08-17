@@ -58,7 +58,10 @@ Widget carouselBasic(BuildContext context) {
     label: t['specialOffers'],
     previousLabel: t['previousSlide'],
     nextLabel: t['nextSlide'],
-    slideLabel: (index, count) => '${t['slide']} ${index + 1} ${t['of']} $count',
+    slideLabel: (index, count) =>
+        // formatNumber, not `$index`: a bare int interpolates as a LATIN digit,
+        // and this string is ANNOUNCED — a Persian reader would hear "اسلاید 1".
+        '${t['slide']} ${formatNumber(index + 1, t.locale)} ${t['of']} ${formatNumber(count, t.locale)}',
     height: 160,
     items: [
       _slide(t['autumnSale'], const Color(0xFFFDE68A)),
@@ -76,7 +79,8 @@ Widget carouselAutoPlay(BuildContext context) {
     label: t['gettingStarted'],
     previousLabel: t['previousStep'],
     nextLabel: t['nextStep'],
-    slideLabel: (index, count) => '${t['step']} ${index + 1} ${t['of']} $count',
+    slideLabel: (index, count) =>
+        '${t['step']} ${formatNumber(index + 1, t.locale)} ${t['of']} ${formatNumber(count, t.locale)}',
     autoPlay: true,
     interval: const Duration(seconds: 4),
     showDots: true,

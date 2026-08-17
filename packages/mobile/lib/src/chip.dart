@@ -30,9 +30,11 @@ enum LumoChipSize { sm, md }
 class LumoChip extends StatelessWidget {
   const LumoChip({super.key, required this.label, this.icon, this.isSelected = false, this.onChanged, this.onRemove, this.removeLabel, this.size = LumoChipSize.md, this.isDisabled = false})
       : assert(onRemove == null || removeLabel != null, 'A removable chip needs a removeLabel — name the thing being removed, e.g. «حذف تهران».');
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
   /// A leading icon (drawn at the inline start; decorative).
   final Widget? icon;
+  /// Whether this one is selected.
   final bool isSelected;
   /// Makes the chip a toggle: called with the next selected state.
   final ValueChanged<bool>? onChanged;
@@ -40,7 +42,9 @@ class LumoChip extends StatelessWidget {
   final VoidCallback? onRemove;
   /// Announced name of the remove control. REQUIRED when `onRemove` is set.
   final String? removeLabel;
+  /// The size step, from the shared control scale.
   final LumoChipSize size;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -177,8 +181,11 @@ class LumoChip extends StatelessWidget {
 /// accident; also the argument handed to `removeLabel`).
 class LumoTagItem {
   const LumoTagItem({required this.id, required this.textValue, this.icon});
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The text this item is matched and announced by.
   final String textValue;
+  /// A leading icon. Decorative — it is not announced, so it never carries meaning on its own.
   final Widget? icon;
 }
 
@@ -191,13 +198,17 @@ class LumoTagItem {
 class LumoTagGroup extends StatelessWidget {
   const LumoTagGroup({super.key, required this.label, required this.items, this.onRemove, this.removeLabel, this.size = LumoChipSize.md, this.isDisabled = false})
       : assert((onRemove == null) == (removeLabel == null), 'onRemove and removeLabel are one decision: both or neither.');
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoTagItem> items;
   /// Called with the id of the tag to drop.
   final ValueChanged<String>? onRemove;
   /// Builds the announced name of each tag's remove control from that tag's `textValue`.
   final String Function(String textValue)? removeLabel;
+  /// The size step, from the shared control scale.
   final LumoChipSize size;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

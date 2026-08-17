@@ -76,8 +76,11 @@ class LumoDescriptionList extends StatelessWidget {
 
   /// Announced name of the block, e.g. «جزئیات صورتحساب». Required.
   final String label;
+  /// The term/description pairs, in reading order.
   final List<LumoDescription> entries;
+  /// Which axis the control runs along.
   final LumoDescriptionListOrientation orientation;
+  /// The size step, from the shared control scale.
   final LumoDescriptionListSize size;
 
   @override

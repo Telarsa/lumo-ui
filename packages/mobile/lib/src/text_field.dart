@@ -45,23 +45,37 @@ class LumoTextField extends StatelessWidget {
     this.focusNode,
     this.showLabel = true,
   });
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// An error message for the field. Announced as the control's hint and marks it invalid.
   final String? errorMessage;
 
   /// Marks the field wrong WITHOUT a sentence (the web's `isInvalid`). Null
   /// derives it from `errorMessage`, which is what a message alone already means.
   final bool? isInvalid;
+  /// Whether user input is required before the form is submitted.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether the input can be selected but not changed by the user.
   final bool isReadOnly;
+  /// Placeholder text shown while the field is empty. Never a substitute for the label.
   final String? placeholder;
+  /// An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own.
   final TextEditingController? controller;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
+  /// Called when the reader submits from the keyboard.
   final ValueChanged<String>? onSubmitted;
+  /// Which keyboard the platform should offer.
   final TextInputType? keyboardType;
+  /// Whether the text is masked, as for a password.
   final bool obscureText;
+  /// Autofill hints for the platform's keyboard and password manager.
   final Iterable<String>? autofillHints;
+  /// Whether the field holds a number, so its digits stay LTR inside RTL text.
   final bool isNumeric;
 
   /// A glyph at the inline START of the box (decorative — the label names the field).
@@ -69,10 +83,15 @@ class LumoTextField extends StatelessWidget {
 
   /// A widget at the inline END of the box (a named button, a unit…).
   final Widget? suffix;
+  /// Whether the control takes focus when it first appears.
   final bool autofocus;
+  /// How many lines the text may occupy before it wraps no further.
   final int? maxLines;
+  /// The fewest lines the field occupies before it grows.
   final int? minLines;
+  /// What the keyboard's action key does.
   final TextInputAction? textInputAction;
+  /// An optional focus node, for callers that manage focus themselves.
   final FocusNode? focusNode;
 
   /// The label is always the field's NAME; `showLabel: false` hides it visually

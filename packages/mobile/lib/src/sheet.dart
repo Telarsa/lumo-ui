@@ -70,6 +70,7 @@ class _LumoSheetPage extends StatelessWidget {
   const _LumoSheetPage({required this.label, required this.closeLabel, required this.description, required this.body, required this.actions, required this.isDismissible});
   final String label;
   final String closeLabel;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
   final WidgetBuilder body;
   final List<Widget> Function(BuildContext)? actions;
@@ -127,7 +128,7 @@ class _LumoSheetPage extends StatelessWidget {
                               margin: const EdgeInsets.only(top: 8),
                               width: 32,
                               height: 4,
-                              decoration: BoxDecoration(color: c.borderStrong, borderRadius: BorderRadius.circular(999)),
+                              decoration: BoxDecoration(color: c.borderStrong, borderRadius: BorderRadius.circular(LumoRadius.full)),
                             ),
                           ),
                         ),
@@ -208,13 +209,21 @@ class LumoSheetTrigger extends StatelessWidget {
     this.isDismissible = true,
     this.isDisabled = false,
   });
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// Announced name of the close affordance. An icon is not a name.
   final String closeLabel;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// Builds the sheet's content.
   final WidgetBuilder body;
+  /// The actions, in reading order.
   final List<Widget> Function(BuildContext)? actions;
+  /// Called when the surface opens or closes, with the new state.
   final ValueChanged<bool>? onOpenChange;
+  /// Whether the sheet can be dismissed by the scrim or a drag.
   final bool isDismissible;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Built with the press that opens the sheet.

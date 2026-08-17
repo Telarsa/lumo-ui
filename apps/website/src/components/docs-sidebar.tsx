@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { BuiltinLocale as Locale } from "@lumo-ui/core";
 import { cn, formatNumber } from "@lumo-ui/core";
 import { site, segmentFor} from "@/lib/locale";
-import { allCatalog, TIERS } from "@/lib/catalog";
+import { allCatalog, allMobileOnly, TIERS } from "@/lib/catalog";
 import { DOCS_PAGES } from "@/lib/docs-pages";
 import { newExampleSlugs } from "@/lib/examples-loader";
 import { hasMobile } from "@/lib/mobile-examples";
@@ -51,7 +51,9 @@ export async function DocsSidebar({
 }) {
   const t = site[lang];
   const c = COPY[lang];
-  const demos = await allCatalog();
+  // Mobile-only families sit in the same tiers as everything else: a reader
+  // browsing "navigation" should find the phone's bottom bar there, not nowhere.
+  const demos = [...(await allCatalog()), ...(await allMobileOnly())].sort((a, b) => a.id.localeCompare(b.id));
   const isNew = await newExampleSlugs();
 
   // The prose pages come from the ONE canonical list — see lib/docs-pages.ts.

@@ -49,8 +49,11 @@ class LumoToolbar extends StatelessWidget {
 
   /// Announced name of the group. Required.
   final String label;
+  /// The children, in reading order.
   final List<Widget> children;
+  /// Which axis the control runs along.
   final LumoToolbarOrientation orientation;
+  /// What happens to items that do not fit.
   final LumoToolbarOverflow overflow;
 
   /// The gap between controls, on the toolbar's own axis.

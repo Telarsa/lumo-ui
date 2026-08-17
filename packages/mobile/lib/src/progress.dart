@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'scope.dart';
+import 'tokens.g.dart';
 
 enum LumoProgressSize { sm, md, lg }
 /// Colour of the fill. Colour must not be the only carrier (WCAG 1.4.1): pair `critical` with text.
@@ -26,6 +27,7 @@ const _track = {LumoProgressSize.sm: 4.0, LumoProgressSize.md: 8.0, LumoProgress
 class LumoProgress extends StatefulWidget {
   const LumoProgress({super.key, required this.label, this.value = 0, this.valueLabel, this.showValue = false, this.size = LumoProgressSize.md, this.tone = LumoProgressTone.accent})
       : assert(value == null || (value >= 0 && value <= 1), 'value is a fraction 0..1, or null for indeterminate.');
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
   /// 0..1, or `null` = indeterminate.
   final double? value;
@@ -33,7 +35,9 @@ class LumoProgress extends StatefulWidget {
   final String? valueLabel;
   /// Render the label and the value above the track.
   final bool showValue;
+  /// The size step, from the shared control scale.
   final LumoProgressSize size;
+  /// The semantic tone the colour carries.
   final LumoProgressTone tone;
 
   @override
@@ -108,7 +112,7 @@ class _LumoProgressState extends State<LumoProgress> with SingleTickerProviderSt
                 ),
               ),
             ClipRRect(
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(LumoRadius.full),
               child: SizedBox(
                 height: h,
                 child: ColoredBox(
@@ -121,7 +125,7 @@ class _LumoProgressState extends State<LumoProgress> with SingleTickerProviderSt
                             duration: motion ? const Duration(milliseconds: 160) : Duration.zero,
                             widthFactor: widget.value!.clamp(0, 1),
                             heightFactor: 1,
-                            child: DecoratedBox(decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(999))),
+                            child: DecoratedBox(decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(LumoRadius.full))),
                           ),
                         ),
                 ),
@@ -157,9 +161,13 @@ const _spinner = {LumoSpinnerSize.sm: 16.0, LumoSpinnerSize.md: 20.0, LumoSpinne
 /// no direction, which is why it is the fallback and a sweep is not.
 class LumoSpinner extends StatefulWidget {
   const LumoSpinner({super.key, required this.label, this.showLabel = false, this.size = LumoSpinnerSize.md, this.color = LumoSpinnerColor.current});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// Whether the label is painted. It is announced either way — hiding a name is not dropping it.
   final bool showLabel;
+  /// The size step, from the shared control scale.
   final LumoSpinnerSize size;
+  /// Which colour role the spinner takes.
   final LumoSpinnerColor color;
 
   @override

@@ -38,8 +38,11 @@ class LumoTextArea extends StatelessWidget {
     this.autoFocus = false,
   }) : assert(minLines > 0, 'A text area needs at least one line.'),
        assert(maxLines == null || maxLines >= minLines, 'maxLines must not be smaller than minLines.');
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// An error message for the field. Announced as the control's hint and marks it invalid.
   final String? errorMessage;
 
   /// Visible lines before the box grows. The web `TextArea`'s `rows`, which
@@ -56,12 +59,19 @@ class LumoTextArea extends StatelessWidget {
   /// Marks the box wrong WITHOUT a sentence (the web's `isInvalid`). Null
   /// derives it from `errorMessage`.
   final bool? isInvalid;
+  /// Whether user input is required before the form is submitted.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether the input can be selected but not changed by the user.
   final bool isReadOnly;
+  /// Placeholder text shown while the field is empty. Never a substitute for the label.
   final String? placeholder;
+  /// An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own.
   final TextEditingController? controller;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
+  /// Whether the control takes focus when it first appears.
   final bool autoFocus;
 
   @override

@@ -28,8 +28,11 @@ enum LumoCardVariant { outline, elevated, sunken }
 class LumoCard extends StatefulWidget {
   const LumoCard({super.key, required this.child, this.variant = LumoCardVariant.outline, this.padding = const EdgeInsets.all(16), this.onTap, this.label, this.isDisabled = false})
     : assert(onTap == null || label != null, 'A tappable card needs a `label` — its announced name.');
+  /// The widget this one wraps.
   final Widget child;
+  /// The visual variant.
   final LumoCardVariant variant;
+  /// Padding inside the surface. Directional: start and end, never left and right.
   final EdgeInsetsGeometry padding;
 
   /// Makes the whole card a button.
@@ -37,6 +40,7 @@ class LumoCard extends StatefulWidget {
 
   /// Announced name of the card when it is a button. Required with `onTap`.
   final String? label;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -114,7 +118,9 @@ class _LumoCardState extends State<LumoCard> {
 /// bottom rhythm inside the card's own padding.
 class LumoCardHeader extends StatelessWidget {
   const LumoCardHeader({super.key, required this.title, this.description, this.action});
+  /// The visible title.
   final String title;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// The control that acts on the whole card, level with the title.
@@ -159,6 +165,7 @@ class LumoCardHeader extends StatelessWidget {
 /// against direction), above a hairline — `border-bs`, the block-start rule.
 class LumoCardFooter extends StatelessWidget {
   const LumoCardFooter({super.key, required this.children});
+  /// The children, in reading order.
   final List<Widget> children;
 
   @override

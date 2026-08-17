@@ -57,8 +57,13 @@ void main() {
     final changes = <RangeValues>[];
     String fa(double v) => formatNumber(v.round(), 'fa-IR');
     await tester.pumpWidget(app('fa-IR', LumoRangeSlider(label: 'بازهٔ قیمت', startLabel: 'کمینهٔ قیمت', endLabel: 'بیشینهٔ قیمت', values: const RangeValues(20, 80), min: 0, max: 100, step: 5, valueLabel: fa, onChanged: changes.add)));
-    expect(find.text('۲۰'), findsOneWidget);
-    expect(find.text('۸۰'), findsOneWidget);
+    // The painted pair is ONE `Text.rich` with three spans, not three sibling
+    // Texts: three siblings cannot ellipsise as a unit, and the row overflowed
+    // by 85px at 328dp with labels this long. Same rendered string, so the
+    // assertion is the same one — both values, in Persian digits, in reading
+    // order — read off the combined text.
+    expect(find.textContaining('۲۰'), findsOneWidget);
+    expect(find.textContaining('۸۰'), findsOneWidget);
     final start = find.bySemanticsLabel('کمینهٔ قیمت');
     final end = find.bySemanticsLabel('بیشینهٔ قیمت');
     expect(start, findsOneWidget);

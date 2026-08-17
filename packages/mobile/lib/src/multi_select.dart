@@ -22,6 +22,7 @@ class LumoMultiSelectOption {
 
   /// The announced and displayed text of the option.
   final String label;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -91,6 +92,7 @@ class LumoMultiSelect extends StatefulWidget {
 
   /// Announced and displayed name. REQUIRED — an unnamed field is a defect.
   final String label;
+  /// The options to choose from, in reading order.
   final List<LumoMultiSelectOption> options;
 
   /// The chosen option ids. Controlled, as the web's `value`.
@@ -127,6 +129,7 @@ class LumoMultiSelect extends StatefulWidget {
 
   /// What the reader is told when the query matches nothing. REQUIRED when `isSearchable`.
   final String? emptyLabel;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown under the field and announced. Supplying one marks it invalid.
@@ -138,6 +141,7 @@ class LumoMultiSelect extends StatefulWidget {
   /// The web's `isRequired`: draws the « *» marker and sets the reader's
   /// `required` state.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

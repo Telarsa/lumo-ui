@@ -166,10 +166,12 @@ class LumoPhoneInput extends StatefulWidget {
 
   /// Fires with E.164, or `''` when the field is emptied.
   final ValueChanged<String>? onChanged;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown under the field and announced. Supplying one marks it invalid.
   final String? errorMessage;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// ISO code whose dial code is selected first.
@@ -177,6 +179,7 @@ class LumoPhoneInput extends StatefulWidget {
 
   /// Overrides the shipped plan.
   final List<LumoPhoneCountry> countries;
+  /// Placeholder text shown while the field is empty. Never a substitute for the label.
   final String? placeholder;
 
   @override

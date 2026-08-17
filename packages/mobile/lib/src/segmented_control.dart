@@ -12,10 +12,15 @@ enum LumoSegmentedControlSize { sm, md }
 /// the label for the reader.
 class LumoSegment {
   const LumoSegment({required this.id, required this.label, this.icon, this.iconOnly = false, this.isDisabled = false}) : assert(!iconOnly || icon != null, 'An icon-only segment needs an icon.');
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// A leading icon. Decorative — it is not announced, so it never carries meaning on its own.
   final Widget? icon;
+  /// Whether only the icon is painted. The label is still announced.
   final bool iconOnly;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -40,13 +45,19 @@ class LumoSegment {
 /// tappable. Both come from the same missing constraint.
 class LumoSegmentedControl extends StatefulWidget {
   const LumoSegmentedControl({super.key, required this.label, required this.segments, this.value, this.defaultValue, this.onChanged, this.size = LumoSegmentedControlSize.md, this.isDisabled = false});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// The segments, in reading order.
   final List<LumoSegment> segments;
   /// Controlled selection; `null` leaves the state to the widget (`defaultValue`).
   final String? value;
+  /// The starting value for an uncontrolled control.
   final String? defaultValue;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
+  /// The size step, from the shared control scale.
   final LumoSegmentedControlSize size;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

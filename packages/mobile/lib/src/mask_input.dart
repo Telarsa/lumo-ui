@@ -170,6 +170,7 @@ class LumoMaskInput extends StatefulWidget {
   /// the mask is full.
   final ValueChanged<LumoMaskValue>? onChanged;
 
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// An error the app decided on. Wins over [incompleteMessage].
@@ -179,10 +180,15 @@ class LumoMaskInput extends StatefulWidget {
   /// Optional: a field that is allowed to stay half-typed says nothing.
   final String? incompleteMessage;
 
+  /// Whether user input is required before the form is submitted.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// An optional focus node, for callers that manage focus themselves.
   final FocusNode? focusNode;
+  /// Whether the control takes focus when it first appears.
   final bool autofocus;
+  /// Whether the label is painted. It is announced either way — hiding a name is not dropping it.
   final bool showLabel;
 
   /// A glyph at the inline start (decorative — the label names the field).

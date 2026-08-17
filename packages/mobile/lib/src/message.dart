@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'scope.dart';
+import 'tokens.g.dart';
 
 /// Which side of the CONVERSATION a message belongs to — never a side of the
 /// screen. The web's `sent`/`received`, renamed to the pair that cannot be read
@@ -103,7 +104,7 @@ class LumoMessage extends StatelessWidget {
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 320),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                decoration: BoxDecoration(color: c.surfaceSunken, borderRadius: BorderRadius.circular(999)),
+                decoration: BoxDecoration(color: c.surfaceSunken, borderRadius: BorderRadius.circular(LumoRadius.full)),
                 child: child ??
                     Text(text!, textAlign: TextAlign.center, style: TextStyle(fontSize: 12, height: 1.5, color: c.fgMuted)),
               ),
@@ -115,12 +116,14 @@ class LumoMessage extends StatelessWidget {
 
     final outgoing = side == LumoMessageSide.outgoing;
     final fg = outgoing ? c.accentFg : c.fg;
-    // `rounded-2xl` on the web — a bubble is the one surface with no `LumoRadius`
-    // step behind it (the web spells it in Tailwind too, not in a `--lumo-sys-*`
-    // token); the joined corner is the web's `rounded-*-md` on the bubble's OWN
-    // side — `ee` for sent, `es` for received.
-    const big = Radius.circular(16);
-    const tail = Radius.circular(4);
+    // `rounded-2xl` on the web, and now a token on both platforms: the web was
+    // getting 1rem from Tailwind's default because nothing mapped `--radius-2xl`,
+    // so this file carried the number by hand. The joined corner is the web's
+    // `rounded-*-md` on the bubble's OWN side — `ee` for sent, `es` for received
+    // — which is 8, not the 4 this line used to hard-code against its own
+    // comment: the grouped corner was half as round as the web's.
+    const big = Radius.circular(LumoRadius.xxl);
+    const tail = Radius.circular(LumoRadius.md);
 
     final body = LayoutBuilder(builder: (context, constraints) {
       // `max-w-[85%]` — a bubble never fills the row, so the side it hugs stays legible.
@@ -239,7 +242,7 @@ class LumoMessageGroup extends StatelessWidget {
               header: true,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: c.surfaceSunken, borderRadius: BorderRadius.circular(999)),
+                decoration: BoxDecoration(color: c.surfaceSunken, borderRadius: BorderRadius.circular(LumoRadius.full)),
                 child: Text(dateLabel, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: c.fgMuted)),
               ),
             ),

@@ -46,15 +46,23 @@ class LumoNumberField extends StatefulWidget {
   final num? defaultValue;
   /// Fires with the parsed number, or null when the field is empty/unparsable.
   final ValueChanged<num?>? onChanged;
+  /// The lowest value the control accepts.
   final num? min;
+  /// The highest value the control accepts.
   final num? max;
   /// One stepper tick. Web `step`.
   final num step;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// An error message for the field. Announced as the control's hint and marks it invalid.
   final String? errorMessage;
+  /// Placeholder text shown while the field is empty. Never a substitute for the label.
   final String? placeholder;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether the input can be selected but not changed by the user.
   final bool isReadOnly;
+  /// Whether user input is required before the form is submitted.
   final bool isRequired;
 
   @override

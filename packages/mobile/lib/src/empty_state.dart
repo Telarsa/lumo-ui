@@ -19,7 +19,9 @@ class LumoEmptyState extends StatelessWidget {
   final String? description;
   /// Decorative illustration or glyph.
   final Widget? icon;
+  /// The actions, in reading order.
   final List<Widget>? actions;
+  /// The size step, from the shared control scale.
   final LumoEmptyStateSize size;
 
   @override

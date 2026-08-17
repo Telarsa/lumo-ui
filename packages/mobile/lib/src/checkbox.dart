@@ -34,19 +34,27 @@ class LumoCheckbox extends StatefulWidget {
     this.isInvalid,
     this.isReadOnly = false,
   }) : assert(label != null || accessibilityLabel != null, 'A checkbox needs a visible label or an accessibilityLabel — never neither.');
+  /// The name this control is announced by, and painted where the family shows one.
   final String? label;
+  /// The announced name, for when it must differ from the visible text.
   final String? accessibilityLabel;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
   /// An error for this checkbox alone; supplying one marks it invalid.
   final String? errorMessage;
   /// Controlled selection; `null` leaves the state to the widget (`defaultSelected`).
   final bool? isSelected;
+  /// The starting state for an uncontrolled checkbox.
   final bool defaultSelected;
+  /// Whether the box shows the mixed state — some children checked, not all.
   final bool isIndeterminate;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<bool>? onChanged;
+  /// Whether the control is disabled.
   final bool isDisabled;
   /// Overrides the invalid state derived from `errorMessage` (or the group's).
   final bool? isInvalid;
+  /// Whether the input can be selected but not changed by the user.
   final bool isReadOnly;
 
   @override
@@ -153,13 +161,17 @@ class LumoCheckboxGroupScope extends InheritedWidget {
 /// state (from `errorMessage`, or `isInvalid`) reach every child.
 class LumoCheckboxGroup extends StatelessWidget {
   const LumoCheckboxGroup({super.key, required this.label, required this.children, this.description, this.errorMessage, this.isInvalid, this.isDisabled = false});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// The children, in reading order.
   final List<Widget> children;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
   /// Supplying one marks the group invalid.
   final String? errorMessage;
   /// Overrides the invalid state derived from `errorMessage`.
   final bool? isInvalid;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

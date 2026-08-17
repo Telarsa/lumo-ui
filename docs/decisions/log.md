@@ -1510,3 +1510,504 @@ Why not build the docs site itself in Flutter (shadcn_flutter's answer): the
 site is the WEB library's own showcase and its served bytes are the web
 library's proof. Replacing it with a canvas would delete that proof to gain a
 demo.
+
+## 32. The web had a second radius ramp nobody declared (17 Aug 2026)
+
+The owner's read was that the web looks rounder than mobile and the mobile radii
+should be thicker. Measured, the first half is true and the second is not, and
+the difference matters.
+
+The three-step ramp is **already identical**: `--lumo-sys-radius-sm/md/lg` are
+0.375/0.5/0.625rem, and `LumoRadius.sm/md/lg` are 6/8/10 dp — the same numbers,
+from the same generator. `getComputedStyle` on the live docs site returns
+`--radius-md: calc(.5rem * 1)`. Nothing to thicken.
+
+What the web actually had that mobile did not was **three more steps that were
+never declared**. `packages/ui` uses `rounded-full` 40 times, `rounded-xl` 3 and
+`rounded-2xl` once — but `theme.css` mapped only `sm`, `md` and `lg`, so those
+three fell through to **Tailwind's own defaults** (0.75rem, 1rem,
+`calc(infinity * 1px)`). A second radius ramp, shipping in production, outside
+the design system: a brand's `--lumo-ref-radius-scale` could not reach it, and
+the Flutter generator could not see it.
+
+Flutter paid for that in hand-written numbers: `BorderRadius.circular(999)`
+seventeen times across ten files, `Radius.circular(16)` in `message.dart` for
+the web's `rounded-2xl` — and `Radius.circular(4)` for a corner **its own
+comment said was `rounded-*-md`**, which is 8. The comment had been right and
+the number wrong for as long as both existed. A number cannot disagree with a
+token it never referenced, so nothing could have caught it.
+
+So: `--lumo-ref-radius-xl` (0.75rem), `--lumo-ref-radius-2xl` (1rem) and
+`--lumo-ref-radius-full` (9999px) are declared, promoted to `--lumo-sys-*`, and
+mapped in `theme.css` **at exactly the values Tailwind was already producing** —
+no web pixel moves. `full` is deliberately NOT scaled by the brand knob: a pill
+is not a step on the ramp, and a brand must not be able to turn one into a
+rounded rectangle. `LumoRadius` gains `xl`, `xxl` (Dart cannot start an
+identifier with a digit) and `full`.
+
+The guard is `house_rules_test.dart`: a bare number in a radius constructor
+fails. It found one more the sweep had missed — a chart legend swatch at 10×10
+with a 3px corner where the web is `h-2 w-2 rounded-[2px]`. That one is a real
+exception (the smallest Lumo step on an 8px chip is a circle, and a circle reads
+as a status dot), so it is now 8×8 at 2px and named in the exemption list with
+its reason, the same shape as the hand-rolled-`BoxShadow` rule above it.
+
+## 33. Two defects found by rendering the docs instead of reading them (17 Aug 2026)
+
+Both came out of the same complaint — "in a lot of components icons are not
+centred, they are shifted to the right" — and neither was what it sounded like.
+`LumoIconButton`, `LumoIconTile`, `LumoAvatar` and `LumoSpinner` all measure
+their glyph dead-centre in both directions. The cause was elsewhere, and finding
+it needed pictures: 105 demos rendered to PNG at 360×640 in both locales, then
+measured.
+
+- **The demo stage was stretching, not centring.** The gallery laid every demo
+  out with `CrossAxisAlignment.stretch` on the argument that a widget should sit
+  at the full phone width. But stretch does not centre — it makes every demo
+  full-width, and a demo with nothing to fill that width sits hard against the
+  reading start, which under fa-IR is the right-hand edge. Measured over the 105
+  demos: **21 had their content pinned to one edge with the far side empty.**
+  The web's preview stage centres (`grid place-items-center` › `flex
+  items-center`), and the fix is to do the same: 21 → 6, and those 6 are widgets
+  that genuinely fill the width and are start-aligned inside themselves.
+  Greedy widgets still fill; intrinsically-sized ones now take their natural
+  width and centre, exactly as the same component does on the Web tab.
+
+- **Button labels did not inherit the app's font.** Found by accident: Persian
+  rendered in the shots everywhere except inside buttons.
+  `ButtonStyle.textStyle` **replaces** the theme's `labelLarge` rather than
+  merging with it, so the bare `TextStyle(fontSize:, fontWeight:)` in
+  `button.dart` silently dropped `ThemeData.fontFamily`. An app setting
+  `fontFamily: 'Vazirmatn'` got Vazirmatn everywhere except its buttons, where
+  Persian fell through to the platform face. **26 strings across 11 slugs**, all
+  of them button labels, one root cause. Only the family travels now; size,
+  weight and metrics stay the widget's.
+
+The method is the point. A semantics test cannot see a font fall back, and a
+geometry test on the widget cannot see a stage that never centres it. Rendering
+the thing and measuring the picture found both in one pass.
+
+## 34. Cleanup: the copies that had already drifted (17 Aug 2026)
+
+A tidying pass, kept to duplication that was actively wrong rather than merely
+repeated.
+
+- **Flutter SDK discovery lived in three scripts** — `gate:flutter`, the gallery
+  build, and the ensure-wrapper in front of it — as the same twelve copy-pasted
+  lines. They had already drifted in a way none of them could notice: each
+  accepted `/usr/local/share/flutter/bin/flutter` as a candidate, and each then
+  hard-coded `/opt/homebrew/share/flutter/bin` as the directory to append to the
+  child's PATH. On any machine whose Flutter is not the Homebrew cask — an Intel
+  Mac, a manual install, a CI runner that unpacks the SDK elsewhere — the binary
+  was found and then invoked with a PATH that did not contain it. Now
+  `scripts/lib/flutter.mjs` DERIVES the PATH entry from where the binary was
+  actually found, which is the only arrangement in which the two cannot disagree
+  again.
+
+- **`importSpecifiers` lived twice, byte for byte**, in `build-registry.mjs` and
+  `smoke-consumer.mjs` — and those two answer questions that must agree: the
+  registry declares what a consumer will have to install, and the smoke test
+  checks that a consumer given exactly that can build. Two copies of the parser
+  behind both answers is precisely where a drift would be silent, because each
+  side would still be internally consistent with itself. One copy now, in
+  `scripts/lib/ts-ast.mjs`.
+
+- **`docs/codebase.md` had drifted from the code**: it said the gate carries 14
+  served-HTML rules where `RULES` holds 13, and it did not mention
+  `packages/mobile` or `apps/mobile-gallery` at all — a library of 145 widgets
+  and the app that renders every one of its demos, absent from the map
+  of the repo. Both fixed, with the counts taken from the artefacts rather than
+  from memory.
+
+- **`house_rules_test.dart` announced "Two defect-class guards"** while holding
+  five. The header now lists them, and says why an exemption must name a file
+  AND a reason.
+
+What is deliberately NOT done: `build-catalog.mjs` and `build-registry.mjs` both
+carry a near-identical `property()`/`resolve()` pair for reading a copy table out
+of an object literal. It is real duplication, but the two differ in what they
+close over, and merging them is a design decision about a shared meta-reader, not
+a cleanup. Left standing, and written down here so the next person finds it
+already noticed.
+
+## 35. The render floors, and the instrument that did not work (17 Aug 2026)
+
+Tier M item M1. The two defects of §33 are now permanent floors over all 105
+gallery demos, in `gate:flutter` — `apps/mobile-gallery/test/render_floors_test.dart`.
+
+They live in the **gallery**, not in `packages/mobile`, because that is the one
+place every family is already instantiated with real required arguments and real
+Persian copy. A sweep there covers a family the day its demo lands, with no
+opt-in step for anyone to forget.
+
+**The font floor** pumps every demo under a theme whose `fontFamily` is a name
+no font stack can satisfy, and fails on any string that did not inherit it. Its
+first run reported 55 failures, all of them icons: Flutter renders `Icon` as a
+`RichText` in `MaterialIcons`, which must *not* inherit the text family. The rule
+is therefore about strings a reader reads — a run whose every codepoint is in a
+private-use block is a glyph, and skipped. After that: zero.
+
+**The alignment floor took two attempts, and the first was wrong.** The obvious
+measurement is to capture the frame and compare the blank margin either side of
+the painted ink. Measured across all 105 demos it cannot work: legitimately
+start-aligned content reaches a **64dp** imbalance (`timeline-1`, a rail down the
+reading start) while the broken state peaked near **69dp**. The populations
+overlap, so no threshold separates "the stage stopped centring" from "this widget
+reads start-first", and a floor that cannot tell them apart is a floor that gets
+deleted the first time it cries wolf.
+
+What separates them exactly is structural. Under `stretch` a Column's cross size
+is the incoming maximum, so **every** demo is the frame's width. Under `centre`
+it is the widest child, so an intrinsically-sized demo is narrower — today 29 of
+105, each centred to within a pixel. The floor asserts that at least 20 demos are
+narrower and that every narrow one is centred. A revert takes that count to zero.
+It is also a synchronous rect read: no image capture, no threshold, no flake, and
+the whole sweep runs in 21 seconds.
+
+Both are poison-tested, per the house rule: reverting the stage to `stretch`
+fails the first, and deleting the two `fontFamily` lines from `button.dart` fails
+the second with the exact string it lost.
+
+**It found two more defects on its first green run**, neither of which any
+existing instrument could see:
+
+- `LumoRangeSlider`'s header **overflowed by 85px at 328dp**. The label was
+  already `Expanded` with an ellipsis, which looked handled — but a flex child is
+  laid out with what the *non-flex* children leave, and the three value Texts
+  beside it were unconstrained, so they simply pushed past the edge. Both sliders
+  now flex on both sides, and the range slider's value pair is one `Text.rich`
+  with three spans, because three sibling Texts cannot ellipsise as a unit.
+  `cramped_layout_test.dart` did not catch this: it does not cover the sliders.
+- The `separator-2` demo overflowed for the same reason — two Persian labels
+  either side of a vertical rule, at their natural width, on a 360dp phone.
+
+One test changed to match: `slider_test.dart` looked for the value with
+`find.text('۲۰')`, which no longer matches a span inside a combined text. The
+rendered string and the semantics are identical, so the finder was the
+implementation detail — it now reads the same assertion off the combined text,
+with a comment saying why.
+
+## 36. The mobile semantics grader, and what the platform already had (17 Aug 2026)
+
+Tier M item M2. `apps/mobile-gallery/test/semantics_grader_test.dart`: every demo
+rendered in both locales, its semantics tree walked, four rules applied to every
+node — `named-controls`, `persian-digits`, `engine-english`, `announced-once` —
+each with a poison fixture that must fail it. 210 renders, 0 violations, 1 earned
+exemption. It runs inside `gate:flutter`.
+
+This is the mobile counterpart of `gate:html`, and the reason it matters is the
+same: the web's strongest instrument is not its tests, it is ONE grader stating
+13 rules once and applying them to 688 documents, so a component written tomorrow
+is graded whether or not its author remembered. The mobile library had a
+semantics test per family — better than most libraries, and still not that: a
+family added tomorrow gets exactly the assertions its author thought of.
+`gate:flutter-contract` grades SOURCE, so it cannot see a string that arrives
+from Material's own defaults at runtime, which is precisely where English leaks.
+
+Two rules needed refining before they were true rather than merely strict, and
+both refinements are about how Flutter builds its tree, not about the rules:
+
+- A node **merged into its parent** is not announced separately. Grading it as
+  its own node reported every text field as an unnamed control.
+- A `TextField` emits a labelled node with an **unlabelled editable child at the
+  same rect** — one control drawn once. So a name is inherited by rect: a node is
+  unnamed only if no ancestor *at the same rect* named it. A button nested in a
+  labelled card has a different rect, and is still required to name itself.
+
+**It found 18 real defects on its first run**, all of the same shape and all in
+the demos the docs site tells consumers to copy: `'${t['slide']} ${index + 1}'`
+interpolates a bare `int`, which renders a LATIN digit. A Persian screen-reader
+user heard "اسلاید 1 از 3". The library's whole reason for existing is that a
+number goes through `formatNumber`, and its own showcase was teaching the
+opposite. Fixed in `carousel` and `input_otp`; `LumoDemoCopy` gained a `locale`
+getter so a demo can format.
+
+One exemption, earned and justified in words: a bank card number's digits are
+Latin because the card is. The web spells the same exception in markup with a
+`data-lumo-latn` island; a semantics tree has no such marker, so it is written
+in the test where it must be argued. A stale exemption fails the suite.
+
+### What the platform already had
+
+Flutter is mature, and this repo had been re-deriving parts of it.
+`flutter_test` ships `AccessibilityGuideline` implementations maintained
+upstream: `androidTapTargetGuideline` (48dp), `iOSTapTargetGuideline` (44pt),
+`labeledTapTargetGuideline`, and `textContrastGuideline` (WCAG AA maths over what
+was actually painted). This repo had hand-rolled the first two as
+`tap_target_floor_test.dart` and `token_contrast_test.dart`, and I hand-rolled
+the third as `named-controls` before checking. Where the platform states the
+rule, the platform's statement is the one to run.
+
+Running them over all 105 demos produced the most useful finding of the pass, and
+it is not comfortable:
+
+| Guideline | Demos missing it |
+|---|---:|
+| `labeledTapTargetGuideline` | **0** — a hard floor now |
+| `iOSTapTargetGuideline` (44pt) | 42 |
+| `androidTapTargetGuideline` (48dp) | 62 |
+| `textContrastGuideline` (WCAG AA) | 37 |
+
+Lumo's control scale is 29/36/44dp, generated from the web's
+`--lumo-ref-control-*` and designed for a pointer: only `lg` reaches iOS's
+minimum and nothing reaches Android's. Contrast fails as low as 3.46:1 at 12px on
+muted foregrounds. Neither is fixable inside the mobile library — the tokens are
+shared with the web, so raising them moves both platforms. That is an owner
+decision (Tier M item M8), so the three counts are RATCHETED at today's values
+and may only fall. The house floors stay: they grade the tokens and the API
+before a demo exists, where the SDK guidelines grade what a demo rendered.
+
+## 37. A mutation floor for the mobile library (17 Aug 2026)
+
+Tier M item M5. `scripts/mutate-mobile.mjs`, `pnpm run mutation:mobile`, run as
+its own CI job beside `mutation:components`.
+
+`packages/mobile` had 669 tests and no anti-vacuity guard of any kind. Nothing
+proved those tests assert anything: a semantics test that pumps a widget and
+checks nothing passes, and goes on passing. The web has had one operator per
+module for months; the mobile library had none, which meant its 669 was a number
+without a floor under it.
+
+The design is the web tool's, deliberately: a hand-authored operator per family —
+[why it matters, the exact source to find, what to put there instead] — applied
+one at a time, with the family's OWN test as the kill oracle, and the source
+restored byte-for-byte in a `finally`. A mutant killed by some other family's
+test would say nothing about this one.
+
+Two disciplines carried over, and one added:
+
+- **A family in neither `BEHAVIOURAL` nor `PENDING` throws before the campaign
+  starts**, so a family added tomorrow cannot fall silently into "untested".
+- **`PENDING` is a ratchet** — 63 families have no operator yet, and that number
+  may only fall. It is stated rather than hidden: those families' tests are not
+  proved against vacuity.
+- **Operators are validated against the real source before anything is mutated**:
+  a `find` string that does not occur exactly once is a startup error. An
+  ambiguous operator would otherwise mutate a line nobody chose, and report a
+  kill for a promise nobody broke.
+
+13 of 13 killed on the first campaign. The two that matter most are the two the
+library exists for: shifting the Jalali epoch by a year (`jy + 621` → `jy + 622`)
+and sending `formatNumber` to the root locale so Persian digits come out Latin.
+Both were caught by their own tests, which is the first actual evidence that the
+calendar and the digit rule are TESTED rather than merely implemented.
+
+## 38. Documenting the mobile API, and what the barrel is for (17 Aug 2026)
+
+Tier M items M3 and M6, and a correction that came out of doing them.
+
+**The barrel is the public API, not the directory listing.** `build-mobile-api.mjs`
+globbed `lib/src/*.dart`, so it documented whatever was there —
+including `date_value_box.dart`, which has two public classes
+(`LumoDateFieldFrame`, `LumoDateValueBox`), is internal composition for the three
+date families, and has no `export` line. The docs site was showing API a consumer
+cannot import. The generator now reads the barrel and skips the rest, with the
+reason printed per skipped file. The count moved 145 → 143 widgets, 1062 → 1049
+props, and the surface is now exactly what can be imported.
+
+**M3: undocumented props 458 → 0**, the same floor the web reached, ratchet
+locked at 0. The work was mostly vocabulary: 391 of the 458 were repeats of names
+whose meaning is uniform across the library — `isDisabled`, `description`,
+`errorMessage`, `isReadOnly`, `isRequired`, `placeholder` — and the wording for
+those is lifted from `packages/core/src/props.ts` so the two platforms say the
+same thing about the same prop. The rest were written per widget. Where the
+meaning genuinely varies (`label` is a visible name on one family and an
+announced-only name on another) the sentence says what is true of both rather
+than guessing.
+
+One tooling note worth keeping: the first pass documented the first matching
+field in each FILE, so a second class declaring the same field was skipped —
+`isDisabled` stayed undocumented in 24 widgets. Field lookup is now scoped to the
+widget's own class body.
+
+**M6: `gate:mobile-smoke`.** A throwaway Flutter package outside the workspace
+depends on `lumo_ui_mobile` by path, imports only the barrel, and names all 143
+widgets and 67 enums. It catches a pubspec missing a dependency the monorepo
+happened to supply, and documented API the barrel does not export — the other
+half of the `date_value_box` fix. Poison-tested by removing one export line: 10
+analyzer errors, exit 1.
+
+## 39. The mobile library has families the web cannot host (17 Aug 2026)
+
+Found while adding demos for Tier M item M4. `build-mobile-demos.mjs` requires
+every mobile slug to exist in `catalog.json`, and `catalog.json` is derived from
+the WEB registry. So a mobile family with no web counterpart cannot have a
+documentation page **at all** — the build fails with "names slug X, which
+catalog.json does not have".
+
+Five families are blocked by this today: `app_bar`, `navigation_bar`,
+`navigation_drawer`, `pull_to_refresh`, `layout`. That is not an accident of
+naming. A phone has an app bar and a bottom navigation bar; a web page has
+neither, and pull-to-refresh is a gesture the web does not own. The Web|Mobile
+toggle (decision §31) assumed a parity between the two libraries that the mobile
+library was always going to break the moment it did its job properly.
+
+Demos for `app_bar` and `navigation_bar` are written and parked rather than
+deleted. The fix is a website change — a component page that renders with only a
+Mobile side — and it is Tier M item M9.
+
+M4 itself moved: 47 → 52 slugs, 105 → 112 demos, and the widgets that no demo
+ever shows fell 66 → 56. Every new demo is graded by the semantics grader and the
+render floors on the day it lands, which is the point of putting the sweeps in
+the gallery.
+
+## 40. The answer to a mobile-only family is usually a slug, sometimes a component (18 Aug 2026)
+
+Decision §39 recorded that five mobile families could not have a documentation
+page, because `build-mobile-demos.mjs` requires every mobile slug to exist in
+`catalog.json` — which is derived from the WEB registry. The owner's call was to
+build the web counterparts rather than teach the site to render a Mobile-only
+page. Doing that showed the premise was half wrong.
+
+**Three of the five needed no new component at all.** They were slug-name
+mismatches, not missing components:
+
+| Mobile family | Web counterpart that already existed |
+|---|---|
+| `layout` (`LumoStack`, `LumoGrid`) | `stack` — "Stack over flex, **Grid** over grid, Container for the page measure" |
+| `layout` (`LumoAspectRatio`) | `aspect-ratio` |
+| `navigation_drawer` | `sidebar` — "groups, icon-and-badge items, and a collapsed rail" |
+
+A navigation drawer IS the app sidebar; a phone puts it behind an edge because
+it has no room to keep it on screen. Writing the mobile demos under those slugs
+unblocked three families for the cost of three demo files.
+
+**One needed a real component, and now has one.** `AppBar` exists on the web:
+`packages/ui/src/app-bar.tsx`, with tests, a type-test, a worked-examples page,
+a mutation operator (`KILLED app-bar.tsx`), and its row in the registry, API
+reference and catalog. It is the same component as `LumoAppBar` in the sense that
+matters — same slots, same required title, same rule that the actions name
+themselves — and it renders on the SERVER, which is only possible because
+`leading` and `actions` are slots rather than `onBack`/`onAction` callbacks.
+
+Two remain: `navigation-bar` (a bottom navigation bar — MUI and Mantine both ship
+one for mobile web, so a web counterpart is defensible) and `pull-to-refresh`.
+**`pull-to-refresh` should probably NOT get a web component.** It is a touch
+gesture; building a web version so that a documentation page can exist is the
+tail wagging the dog. Either it keeps no page, or M9's original shape — a page
+with only a Mobile side — is still needed for exactly one family.
+
+### What the new demos found
+
+Writing demos for widgets nobody had demoed exercised them in a context their
+tests never had, and two sharp edges came out:
+
+- **`LumoStack`'s `align` defaults to `stretch`.** On a COLUMN that means fill
+  the width, which is right. On a ROW it means stretch on the vertical axis,
+  which inside a scroll view is unbounded — a layout assertion, not a wrong
+  pixel. The default is direction-dependent in a way the docblock does not warn
+  about. The demo passes `align: center` and says why; whether the default should
+  vary by direction is an API decision, not a demo's.
+- **`LumoNavigationDrawer` needs a bounded height.** Reasonable for a full-height
+  panel, and worth showing in the demo rather than discovering in an app.
+
+Both were caught by the render floors and the semantics grader the moment the
+demos landed — which is the argument for putting those sweeps in the gallery
+rather than in the library.
+
+## 41. `NavigationBar` on the web, and the badge that was never announced (18 Aug 2026)
+
+The second half of decision §40. `packages/ui/src/navigation-bar.tsx`, with
+tests, a type-test, a worked-examples page, a mutation operator, and its rows in
+the registry, API reference and catalog. The parked mobile demo is registered, so
+`navigation-bar` now has both sides of the docs toggle.
+
+**The destinations are LINKS, not buttons with a selection callback**, and that
+is the one place this component parts from `LumoNavigationBar`. It is not a
+divergence from the mobile API so much as an honest reading of each platform: on
+a phone the tab bar swaps a view inside one app; on the web it navigates, and a
+thing that navigates is an anchor. `aria-current="page"` — not the colour, not
+the filled glyph — is what says which destination you are on, and it comes from
+`Link`, so the bar inherits `linkComponent` and with it the app's router.
+
+### Two defects, one of them pre-existing and shipped
+
+**The badge was not announced.** The obvious build puts the count inside the
+icon's `aria-hidden` wrapper, because that is where it sits visually. Do that and
+«سفارش‌ها، ۱۲» is announced as «سفارش‌ها»: an icon is decoration and a count is
+information, and burying one in the other loses it. The badge is a sibling of the
+hidden glyph, positioned with `inset-inline-end` so it lands on the correct side
+in both scripts.
+
+**Then the fixed version announced «سفارش‌ها۱۲».** Two adjacent spans concatenate
+in the accessible name with nothing between them, so the count became part of the
+same word. The separator is a literal `{" "}`, and it is not cosmetic.
+
+**`SidebarItem` had the same defect, in shipped code.** It has carried
+`<span>{children}</span>{badge && <span>{badge}</span>}` all along, and a
+`SidebarItem` with a badge has been announcing «سفارش‌ها۱۲» to every screen-reader
+user since it was written. Found only because the new component was given a test
+that asserted the accessible NAME rather than the presence of the text. Both are
+fixed; `sidebar`'s own suite still passes unchanged, which is the point — nothing
+it asserted was ever about the name.
+
+### The gate caught the third
+
+`gate:props` rejected the first version: `NavigationBarProps` wrote `aria-label`
+from `label` and still inherited `aria-label` through the consumer spread, so a
+caller could overwrite the name the component claims to own. Omitted, and the
+authored value is authoritative. That rule exists because this mistake is
+invisible in every test that passes its own props.
+
+## 42. One page, either platform — and the two sides now read alike (18 Aug 2026)
+
+Two owner requirements, answered together: **the same page should render for
+either mobile or web**, and **the two sides should look the same**.
+
+### The same page, either platform
+
+Decision §40 built web counterparts for the families that deserved them and left
+`pull-to-refresh` — a touch gesture the web does not own — with nowhere to live.
+The site now hosts a family that exists on ONE platform:
+
+- `meta.platforms` on the examples file. `["mobile"]` registers a family with no
+  web component; the file carries `meta` and an empty `examples`. It is still the
+  ONE registration point the contract has always promised — no second list.
+- The loader stops at that flag before the web-only requirements bite: no
+  examples to slice, no module in `packages/ui/src`, no barrel re-export, no
+  generated API. Each of those is a fact about a web component.
+- `catalog.ts` keeps `allCatalog()` meaning "has a web side" and adds
+  `allMobileOnly()` beside it. Making `render`/`source` nullable on
+  `CatalogEntry` would have pushed a "this cannot happen" branch into the landing
+  gallery, the `/view/` route and the registry resolver to describe a case that
+  has neither.
+- `catalog.json` gains the family as `type: "registry:mobile"` — nothing is
+  copied into a web project, but `lumo search` should not pretend the library is
+  smaller than it is, and `build-mobile-demos.mjs` reads this file to check a
+  demo's slug is a real page.
+- The Web side of such a page is the same shell — sidebar, header, Web|Mobile
+  switch — with the preview replaced by one sentence: the web library has no
+  counterpart, and that is not a gap.
+
+`pull-to-refresh` is the first, and the blocker recorded in §39 is closed.
+
+### The two sides now read alike
+
+The pages already shared a skeleton — same grid, same header, same tabs, same
+rail — and differed in WHICH sections existed:
+
+| | Web | Mobile |
+|---|---|---|
+| before | preview · installation · examples · **usage** · **composition** · api · evidence | preview · installation · demos · **contract** · api · **caveats** · evidence |
+| after | unchanged | preview · installation · demos · **usage** · contract · api · caveats · evidence |
+
+"When to use it" is a fact about the FAMILY, not about one platform, so the
+Mobile page now reads the same `meta.usage` the Web page reads and prints the
+same two sentences in the same markup at the same position. A reader who flips
+the switch should not be told a different story about when to reach for the
+thing; before this the section simply did not exist on that side.
+
+### Three slug↔file mappings, stated rather than guessed
+
+`sidebar → navigation_drawer.dart`, `stack → layout.dart`,
+`aspect-ratio → layout.dart`. The web splits its layout primitives across two
+pages and the mobile library keeps all three in one file; the app sidebar is the
+phone's navigation drawer. `mobileFileFor` refuses to guess, which is why adding
+these demos failed loudly until the mapping was written down.
+
+### What the gate caught, again
+
+`gate:html` failed the first build with four `no-latin-digits` violations — in
+MY copy. The Persian intro I wrote for the app-bar page said `min-w-0`, and its
+`0` is a Latin digit on a Persian page. Reworded. The rule exists because this is
+exactly how it happens: not a number in data, a class name in a sentence.

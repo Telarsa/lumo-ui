@@ -211,6 +211,13 @@ class LumoRadius {
   static const double sm = 6;
   static const double md = 8;
   static const double lg = 10;
+  /// The web's `rounded-xl`.
+  static const double xl = 12;
+  /// The web's `rounded-2xl` — a Dart identifier cannot start with a digit.
+  static const double xxl = 16;
+  /// A pill: the web's `rounded-full`. Not a step on the ramp — use it where
+  /// the shape is meant to stay fully round at any height.
+  static const double full = 9999;
 }
 /// Control heights at the default density (web: --lumo-ref-control-*).
 class LumoControl {

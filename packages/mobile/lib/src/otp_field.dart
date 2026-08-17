@@ -54,11 +54,14 @@ class LumoOtpField extends StatefulWidget {
 
   /// Fires once the last box is filled, with the ASCII code — separate from `onChanged` so no caller writes `>=`.
   final ValueChanged<String>? onCompleted;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown and announced when the code is rejected; sets the invalid border on every box.
   final String? errorMessage;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether the control takes focus when it first appears.
   final bool autoFocus;
 
   @override

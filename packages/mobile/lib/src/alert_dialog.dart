@@ -220,9 +220,13 @@ class LumoAlertDialogTrigger extends StatelessWidget {
 
   /// Renders the confirm button in the destructive variant.
   final bool isDestructive;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Called when the reader confirms.
   final VoidCallback? onConfirm;
+  /// Called when the reader backs out. The dialog closes either way.
   final VoidCallback? onCancel;
+  /// Called when the surface opens or closes, with the new state.
   final ValueChanged<bool>? onOpenChange;
 
   /// Built with the press that asks the question; `null` when disabled.

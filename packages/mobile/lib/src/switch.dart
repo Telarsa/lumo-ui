@@ -19,12 +19,19 @@ import 'tokens.g.dart';
 class LumoSwitch extends StatelessWidget {
   const LumoSwitch({super.key, this.label, this.accessibilityLabel, this.description, this.isSelected = false, this.onChanged, this.isDisabled = false, this.size = LumoSwitchSize.md})
       : assert(label != null || accessibilityLabel != null, 'A switch needs a visible label or an accessibilityLabel — never neither.');
+  /// The name this control is announced by, and painted where the family shows one.
   final String? label;
+  /// The announced name, for when it must differ from the visible text.
   final String? accessibilityLabel;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// Whether this one is selected.
   final bool isSelected;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<bool>? onChanged;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// The size step, from the shared control scale.
   final LumoSwitchSize size;
 
   @override
@@ -42,7 +49,7 @@ class LumoSwitch extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? c.accent : c.surfaceSunken,
           border: Border.all(color: isSelected ? c.accent : c.borderControl),
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(LumoRadius.full),
         ),
         child: AnimatedAlign(
           duration: motion ? const Duration(milliseconds: 120) : Duration.zero,

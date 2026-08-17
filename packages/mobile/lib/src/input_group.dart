@@ -77,16 +77,27 @@ class LumoInputGroup extends StatefulWidget {
 
   /// Supplying one marks the field invalid, as on the web.
   final String? errorMessage;
+  /// Placeholder text shown while the field is empty. Never a substitute for the label.
   final String? placeholder;
+  /// An optional controller: supply one to read or drive the value from outside, or omit it and the widget owns its own.
   final TextEditingController? controller;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
+  /// Called when the reader submits from the keyboard.
   final ValueChanged<String>? onSubmitted;
+  /// An optional focus node, for callers that manage focus themselves.
   final FocusNode? focusNode;
+  /// Which keyboard the platform should offer.
   final TextInputType? keyboardType;
+  /// What the keyboard's action key does.
   final TextInputAction? textInputAction;
+  /// The size step, from the shared control scale.
   final LumoInputGroupSize size;
+  /// Whether user input is required before the form is submitted.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether the input can be selected but not changed by the user.
   final bool isReadOnly;
 
   /// Overrides the invalid state derived from [errorMessage].
@@ -96,8 +107,11 @@ class LumoInputGroup extends StatefulWidget {
   /// RTL form and given a numeric keyboard. A data-type fact, not a direction
   /// flag — the same parameter `LumoTextField` carries, for the same reason.
   final bool isNumeric;
+  /// Whether the text is masked, as for a password.
   final bool obscureText;
+  /// Whether the control takes focus when it first appears.
   final bool autofocus;
+  /// Autofill hints for the platform's keyboard and password manager.
   final Iterable<String>? autofillHints;
 
   /// The label is always the field's NAME; `false` hides it visually and keeps
@@ -286,10 +300,15 @@ class _LumoInputGroupState extends State<LumoInputGroup> {
 /// because the group already draws the box.
 class LumoInputGroupButton extends StatelessWidget {
   const LumoInputGroupButton({super.key, required this.label, required this.child, this.onPressed, this.variant = LumoButtonVariant.ghost, this.isDisabled = false});
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// The widget this one wraps.
   final Widget child;
+  /// Called when the control is pressed. Null disables it.
   final VoidCallback? onPressed;
+  /// The visual variant.
   final LumoButtonVariant variant;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

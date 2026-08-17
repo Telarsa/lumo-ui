@@ -49,6 +49,24 @@
       ]
     },
     {
+      "name": "app-bar",
+      "type": "registry:ui",
+      "title": "App Bar",
+      "description": "The bar at the top of a view: the title is required, and what sits either side of it is a SLOT rather than a callback — so a server-rendered bar can hold a client button.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/app-bar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/app-bar.tsx"
+        }
+      ]
+    },
+    {
       "name": "aspect-ratio",
       "type": "registry:ui",
       "title": "Aspect Ratio",
@@ -1474,6 +1492,32 @@
           "path": "packages/ui/src/multi-select.tsx",
           "type": "registry:ui",
           "target": "components/ui/multi-select.tsx"
+        }
+      ]
+    },
+    {
+      "name": "navigation-bar",
+      "type": "registry:ui",
+      "title": "Navigation Bar",
+      "description": "The top destinations, as links.",
+      "author": "Telarsa",
+      "dependencies": [
+        "@lumo-ui/core",
+        "class-variance-authority"
+      ],
+      "registryDependencies": [
+        "link"
+      ],
+      "files": [
+        {
+          "path": "packages/ui/src/navigation-bar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/navigation-bar.tsx"
+        },
+        {
+          "path": "packages/ui/src/link-context.ts",
+          "type": "registry:ui",
+          "target": "components/ui/link-context.ts"
         }
       ]
     },

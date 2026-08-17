@@ -40,7 +40,9 @@ class LumoButtonGroup extends StatelessWidget {
 
   /// Announced name of the group. Required.
   final String label;
+  /// The children, in reading order.
   final List<Widget> children;
+  /// Which axis the control runs along.
   final LumoButtonGroupOrientation orientation;
 
   /// The clip each slot wears: rounded at the group's OUTER ends, square at every seam.
@@ -89,6 +91,7 @@ class LumoButtonGroup extends StatelessWidget {
 /// child carries its own words; there is nothing for this widget to name.
 class LumoButtonGroupText extends StatelessWidget {
   const LumoButtonGroupText({super.key, required this.child});
+  /// The widget this one wraps.
   final Widget child;
 
   @override

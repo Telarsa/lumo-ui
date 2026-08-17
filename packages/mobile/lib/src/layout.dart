@@ -67,9 +67,13 @@ class LumoStack extends StatelessWidget {
     this.mainAxisSize = MainAxisSize.min,
   });
 
+  /// The children, in reading order.
   final List<Widget> children;
+  /// Which way the stack runs.
   final LumoStackDirection direction;
+  /// Space between the children.
   final LumoGap gap;
+  /// How the children line up on the cross axis.
   final LumoAlign align;
 
   /// How the free space on the main axis is spread. Only visible when the
@@ -169,7 +173,9 @@ class LumoGrid extends StatelessWidget {
 
   /// How many cells fit on one line.
   final int columns;
+  /// The children, in reading order.
   final List<Widget> children;
+  /// Space between the children.
   final LumoGap gap;
 
   /// How the cells of one line line up against each other. `stretch` (the
@@ -207,6 +213,7 @@ class LumoAspectRatio extends StatelessWidget {
 
   /// Width divided by height: `16 / 9`, `1`, `4 / 3`.
   final double ratio;
+  /// The widget this one wraps.
   final Widget child;
 
   @override

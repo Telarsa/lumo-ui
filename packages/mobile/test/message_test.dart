@@ -32,10 +32,10 @@ void main() {
     // The tail is a DIRECTIONAL corner on the bubble's own side; resolved under
     // RTL, the incoming tail lands bottom-RIGHT and the outgoing one bottom-LEFT.
     BorderRadius radius(String text) => ((tester.widget<Container>(find.ancestor(of: find.text(text), matching: find.byType(Container)).first).decoration! as BoxDecoration).borderRadius as BorderRadiusDirectional).resolve(TextDirection.rtl);
-    expect(radius('سلام! فایل را دیدی؟').bottomRight, const Radius.circular(4));
-    expect(radius('سلام! فایل را دیدی؟').bottomLeft, const Radius.circular(16));
-    expect(radius('بله، همین الان.').bottomLeft, const Radius.circular(4));
-    expect(radius('بله، همین الان.').bottomRight, const Radius.circular(16));
+    expect(radius('سلام! فایل را دیدی؟').bottomRight, Radius.circular(LumoRadius.md));
+    expect(radius('سلام! فایل را دیدی؟').bottomLeft, Radius.circular(LumoRadius.xxl));
+    expect(radius('بله، همین الان.').bottomLeft, Radius.circular(LumoRadius.md));
+    expect(radius('بله، همین الان.').bottomRight, Radius.circular(LumoRadius.xxl));
     semantics.dispose();
   });
 

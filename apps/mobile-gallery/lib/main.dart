@@ -128,12 +128,27 @@ class DemoStage extends StatelessWidget {
                     child: DemoHeightReporter(
                       demoId: demoId,
                       extraHeight: _pad.vertical,
-                      // The demo is laid out at the full phone width: that is
-                      // how these widgets sit in a real screen, and the only
-                      // way a `LumoTabs` or a `LumoItemGroup` reads right.
+                      // CENTRED, like the web's preview stage
+                      // (`grid place-items-center` › `flex items-center` in
+                      // `example-card.tsx`). This was `stretch`, on the argument
+                      // that a widget should be laid out at the full phone width
+                      // — but stretch does not centre a demo, it makes every demo
+                      // full-width, and a demo with nothing to fill that width
+                      // then sits hard against the READING START. Under fa-IR
+                      // that is the right-hand edge, which is what the owner saw:
+                      // measured over the 105 demos, 21 had their content pinned
+                      // to one edge with the far side empty; centring leaves 6,
+                      // and those 6 are widgets that DO fill the width and are
+                      // start-aligned inside themselves, which is correct.
+                      //
+                      // Greedy widgets (a text field, a tab bar, an item group)
+                      // still fill: loose constraints do not shrink them. What
+                      // changes is the intrinsically-sized demos — a button, a
+                      // card, a menu trigger — which now take their natural width
+                      // and centre, exactly as the same demo does on the Web tab.
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [demo],
                       ),
                     ),

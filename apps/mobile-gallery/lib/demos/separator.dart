@@ -63,9 +63,11 @@ Widget separatorLabelled(BuildContext context) {
           mainAxisAlignment: MainAxisAlignment.center,
           spacing: 12,
           children: [
-            Text(t['signInEmail']),
+            // Flexible: two Persian labels either side of a vertical rule do not
+            // fit a 360dp phone at their natural width.
+            Flexible(child: Text(t['signInEmail'], maxLines: 1, overflow: TextOverflow.ellipsis)),
             const LumoSeparator(orientation: LumoSeparatorOrientation.vertical),
-            Text(t['signInSms']),
+            Flexible(child: Text(t['signInSms'], maxLines: 1, overflow: TextOverflow.ellipsis)),
           ],
         ),
       ),

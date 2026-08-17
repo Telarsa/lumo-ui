@@ -172,6 +172,13 @@ Reading it honestly:
 
 ### Lumo's row — evidence (15 Aug 2026, HEAD `9edd398`)
 
+> Superseded for the totals by `docs/history/rubric-2026-08-17.md` (17 Aug 2026:
+> **7.9**, self-assessed and awaiting a blind pass; 17 criteria moved, D3 from 1
+> to 7). That sheet also proposes two amendments to this file — platform-neutral
+> A-criteria so the mobile library is scorable at all, and a G3 anchor that does
+> not name a framework the project rejected. Amendments are applied here by
+> commit, never in a review.
+
 | Criterion | Score | Evidence |
 |---|---:|---|
 | A1 | 9 | Required announced strings across 142 component files; `gate:props` 0 inert; `named-controls` grades interactive, composite and container roles; popup tier 18 families |

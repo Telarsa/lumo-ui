@@ -66,6 +66,8 @@ export interface LoadedComponentExamples {
   intro?: Record<Locale, string> | undefined;
   tier?: "form" | "display" | "overlay" | "navigation" | "feedback" | "layout" | "data" | undefined;
   isNew: boolean;
+  /** Which platforms the family exists on — `meta.platforms`, default `["web"]`. */
+  platforms: readonly ("web" | "mobile")[];
   usage?: { when: Record<Locale, string>; whenNot: Record<Locale, string> } | undefined;
   /**
    * The component's module inside `packages/ui/src` — `meta.sourceFile` when
@@ -204,6 +206,7 @@ function normalizeModule(
       intro?: Record<Locale, string>;
       tier?: ComponentExamples["meta"]["tier"];
       usage?: ComponentExamples["meta"]["usage"];
+      platforms?: ComponentExamples["meta"]["platforms"];
     };
     return {
       meta: {
@@ -212,6 +215,7 @@ function normalizeModule(
         ...(m.intro !== undefined ? { intro: m.intro } : {}),
         ...(m.tier !== undefined ? { tier: m.tier } : {}),
         ...(m.isNew !== undefined ? { isNew: m.isNew } : {}),
+        ...(m.platforms !== undefined ? { platforms: m.platforms } : {}),
         ...(m.composition !== undefined ? { composition: m.composition } : {}),
         ...(m.parts !== undefined ? { parts: m.parts } : {}),
         ...(m.sourceFile !== undefined ? { sourceFile: m.sourceFile } : {}),
@@ -250,7 +254,11 @@ async function loadAndValidate(
       : await import(`../examples/${slug}.tsx`)
   ) as Parameters<typeof normalizeModule>[0];
   const spec = normalizeModule(mod, file);
-  if (spec.examples.length === 0) {
+  // A MOBILE-ONLY family has nothing to show on the web by definition: there is
+  // no web component to render. It still needs its meta — the page header, the
+  // sidebar row and the Mobile side all read it.
+  const mobileOnly = spec.meta.platforms !== undefined && !spec.meta.platforms.includes("web");
+  if (!mobileOnly && spec.examples.length === 0) {
     throw new Error(
       `[examples] ${file}: the examples array is empty. A file with nothing to ` +
         `show should not exist — delete it and the page falls back to its demo.`,
@@ -307,6 +315,31 @@ async function loadAndValidate(
   }
 
   const moduleName = spec.meta.sourceFile ?? `${slug}.tsx`;
+
+  /*
+   * A MOBILE-ONLY family has no module in `packages/ui/src` to look up: there is
+   * no web component, which is the whole point. Everything below this line —
+   * the barrel re-export, the parts list, the generated API — describes a web
+   * component, so it is skipped rather than made to fail.
+   */
+  if (mobileOnly) {
+    return {
+      slug,
+      title: spec.meta.title,
+      intro: spec.meta.intro,
+      tier: spec.meta.tier,
+      isNew: spec.meta.isNew === true,
+      platforms: spec.meta.platforms ?? ["web"],
+      usage: spec.meta.usage,
+      module: moduleName,
+      composition: spec.meta.composition,
+      moduleParts: [],
+      api: [],
+      parts: spec.meta.parts,
+      examples: [],
+    };
+  }
+
   /*
    * Throws, never `?? []`: a module the barrel does not re-export (or exports
    * in a form `parseExportedNames` cannot read — only `export { … } from` is
@@ -340,6 +373,7 @@ async function loadAndValidate(
     intro: spec.meta.intro,
     tier: spec.meta.tier,
     isNew: spec.meta.isNew === true,
+    platforms: spec.meta.platforms ?? ["web"],
     usage: spec.meta.usage,
     module: moduleName,
     composition: spec.meta.composition,

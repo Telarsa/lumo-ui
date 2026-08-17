@@ -109,6 +109,20 @@ export interface ExamplesMeta {
    * block. Every capitalised tag must be a real `@lumo-ui/ui` export.
    */
   composition?: string;
+  /**
+   * Which platforms this family exists on. Default `["web"]`.
+   *
+   * `["mobile"]` registers a family that Lumo Mobile has and the web library
+   * does NOT — an app bar's phone-only cousins: a bottom navigation bar was one
+   * until the web grew one, pull-to-refresh is a touch gesture the web does not
+   * own. Such a file carries `meta` and no `examples`: there is no web component
+   * to render, and the page's Web side says so and points at the Mobile side.
+   *
+   * Without this, a mobile-only family had no page AT ALL — `catalog.json` is
+   * derived from the web registry, and `build-mobile-demos.mjs` refuses a slug
+   * the catalog does not have (decision §39).
+   */
+  platforms?: readonly ("web" | "mobile")[];
   /** The API-reference rows. The section renders only when this is present. */
   parts?: readonly ExamplePart[];
   /**

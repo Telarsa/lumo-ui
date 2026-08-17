@@ -13,8 +13,11 @@ enum LumoSkeletonShape { rect, circle, text }
 /// `LumoSpinner(label:)` beside it, which announces.
 class LumoSkeleton extends StatefulWidget {
   const LumoSkeleton({super.key, this.width, this.height, this.shape = LumoSkeletonShape.rect});
+  /// Width in logical pixels.
   final double? width;
+  /// Height in logical pixels.
   final double? height;
+  /// The shape variant.
   final LumoSkeletonShape shape;
 
   @override
@@ -47,7 +50,7 @@ class _LumoSkeletonState extends State<LumoSkeleton> with SingleTickerProviderSt
     final c = LumoScope.of(context).colours;
     final (w, h, radius) = switch (widget.shape) {
       LumoSkeletonShape.text => (widget.width ?? double.infinity, widget.height ?? 16.0, BorderRadius.circular(LumoRadius.sm)),
-      LumoSkeletonShape.circle => (widget.width ?? widget.height ?? 40.0, widget.height ?? widget.width ?? 40.0, BorderRadius.circular(999)),
+      LumoSkeletonShape.circle => (widget.width ?? widget.height ?? 40.0, widget.height ?? widget.width ?? 40.0, BorderRadius.circular(LumoRadius.full)),
       LumoSkeletonShape.rect => (widget.width ?? double.infinity, widget.height ?? 40.0, BorderRadius.circular(LumoRadius.md)),
     };
     return ExcludeSemantics(
@@ -64,7 +67,9 @@ class _LumoSkeletonState extends State<LumoSkeleton> with SingleTickerProviderSt
 /// reading START (a `Column` with `CrossAxisAlignment.start` mirrors).
 class LumoSkeletonText extends StatelessWidget {
   const LumoSkeletonText({super.key, this.lines = 3, this.gap = 8});
+  /// How many lines of placeholder text to draw.
   final int lines;
+  /// Space between the children.
   final double gap;
 
   @override

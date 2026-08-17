@@ -387,13 +387,29 @@ function isAnnounced(/** @type {string} */ name, /** @type {string} */ type, /**
   return /^String\??$/.test(resolved) || /^String\s+Function\s*\(/.test(resolved);
 }
 
-// ── read every hand-written source ──────────────────────────────────────────
+// ── read every hand-written source the BARREL exports ───────────────────────
+//
+// The barrel is the definition of the public API, not the directory listing. A
+// file in `lib/src` that nothing exports cannot be imported by a consumer, so
+// documenting it puts API on the docs site that nobody can call: found on
+// 17 Aug 2026, when `date_value_box.dart` had two documented widgets
+// (`LumoDateFieldFrame`, `LumoDateValueBox`) and no `export` line — internal
+// composition for the three date families, published by accident.
+const BARREL_REL = "packages/mobile/lib/lumo_ui_mobile.dart";
+const exported = new Set(
+  [...readFileSync(join(ROOT, BARREL_REL), "utf8").matchAll(/export\s+'src\/([a-z_0-9]+)\.dart'/g)].map((m) => m[1]),
+);
 const files = readdirSync(SRC)
   .filter((f) => f.endsWith(".dart") && !f.endsWith(".g.dart"))
   .sort();
 for (const f of readdirSync(SRC).filter((f) => f.endsWith(".g.dart"))) {
   skip(`${SRC_REL}/${f}: generated, graded by gate:flutter-tokens — not parsed`);
 }
+const internal = files.filter((f) => !exported.has(f.replace(/\.dart$/, "")));
+for (const f of internal) {
+  skip(`${SRC_REL}/${f}: not exported by the barrel — internal to the library, so not public API`);
+}
+const publicFiles = files.filter((f) => exported.has(f.replace(/\.dart$/, "")));
 
 /** @type {ParsedClass[]} */
 const all = [];
@@ -401,7 +417,7 @@ const all = [];
 const enums = {};
 /** @type {Map<string, string>} */
 const typedefs = new Map();
-for (const f of files) {
+for (const f of publicFiles) {
   const parsed = parseFile(`${SRC_REL}/${f}`, readFileSync(join(SRC, f), "utf8"));
   all.push(...parsed.classes);
   Object.assign(enums, parsed.enums);
@@ -494,7 +510,7 @@ if (skipped.length > 0) {
  * fails and names the widget. Lower this constant whenever you write docs — it
  * is a floor to walk down, not a budget to spend.
  */
-const UNDOCUMENTED_FLOOR = 467;
+const UNDOCUMENTED_FLOOR = 0;
 /*
  * The floor moved 321 → 467 on 17 Aug 2026, when ~33 families landed at once
  * (navigation, calendar/pickers, table/list/kanban, form/inputs/layout, charts,

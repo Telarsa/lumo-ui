@@ -47,24 +47,31 @@ class LumoSlider extends StatelessWidget {
 
   /// Announced (and, unless `hideValue`, displayed) name. REQUIRED.
   final String label;
+  /// The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own.
   final double value;
 
   /// The value as the reader/eye gets it, e.g. `(v) => formatNumber(v.round(), locale)`. REQUIRED.
   final LumoValueLabel valueLabel;
+  /// The lowest value the control accepts.
   final double min;
+  /// The highest value the control accepts.
   final double max;
 
   /// The amount one tick moves; null = continuous. Web `step`, Material `divisions`.
   final double? step;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<double>? onChanged;
 
   /// Fires when the drag ends (web `onChangeEnd`).
   final ValueChanged<double>? onChangeEnd;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// An error message for the field. Announced as the control's hint and marks it invalid.
   final String? errorMessage;
 
   /// Hide the label/value row and keep only the track. The name stays on the node.
   final bool hideValue;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -78,14 +85,29 @@ class LumoSlider extends StatelessWidget {
           if (!hideValue)
             _Header(
               children: [
-                Expanded(
+                // BOTH sides flex. `Expanded` on the label alone was not enough:
+                // a flex child is laid out with what the NON-flex children leave,
+                // so an unconstrained value simply pushed past the edge — the
+                // range slider overflowed by 85px at 328dp with Persian money
+                // labels, and nothing caught it because the label looked handled.
+                Flexible(
                   child: Text(
                     label,
                     style: TextStyle(fontSize: 14, color: c.fg),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text(valueLabel(value), style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    valueLabel(value),
+                    style: TextStyle(fontSize: 14, color: c.fgMuted),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                  ),
+                ),
               ],
             ),
           // `MergeSemantics`: the name and Material's slider node (value, actions) become ONE node.
@@ -157,16 +179,27 @@ class LumoRangeSlider extends StatelessWidget {
 
   /// Announced name of the end thumb. REQUIRED.
   final String endLabel;
+  /// The current range.
   final RangeValues values;
+  /// Turns a value into the string the reader hears and sees. Must format its digits.
   final LumoValueLabel valueLabel;
+  /// The lowest value the control accepts.
   final double min;
+  /// The highest value the control accepts.
   final double max;
+  /// The increment the control moves by.
   final double? step;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<RangeValues>? onChanged;
+  /// Called once when the drag ends, rather than on every frame.
   final ValueChanged<RangeValues>? onChangeEnd;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
+  /// An error message for the field. Announced as the control's hint and marks it invalid.
   final String? errorMessage;
+  /// Whether the value is painted beside the label. It is announced either way.
   final bool hideValue;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -202,17 +235,34 @@ class LumoRangeSlider extends StatelessWidget {
           if (!hideValue)
             _Header(
               children: [
-                Expanded(
+                // See the single slider above: both sides flex, or the value
+                // pushes past the edge.
+                Flexible(
                   child: Text(
                     label,
                     style: TextStyle(fontSize: 14, color: c.fg),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                // Start value first in reading order; the dash is punctuation, not language.
-                Text(valueLabel(start), style: TextStyle(fontSize: 14, color: c.fgMuted)),
-                Text(' – ', style: TextStyle(fontSize: 14, color: c.fgSubtle)),
-                Text(valueLabel(end), style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                const SizedBox(width: 8),
+                // ONE text, three spans: the pair ellipsises as a unit, which
+                // three sibling Texts cannot do. Start value first in reading
+                // order; the dash is punctuation, not language.
+                Flexible(
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: valueLabel(start), style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                        TextSpan(text: ' – ', style: TextStyle(fontSize: 14, color: c.fgSubtle)),
+                        TextSpan(text: valueLabel(end), style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                  ),
+                ),
               ],
             ),
           Stack(

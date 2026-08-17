@@ -15,9 +15,15 @@ packages/blocks        @lumo-ui/blocks        30 product compositions
 packages/base-ui-ssr   @lumo-ui/base-ui-ssr   first-byte Base UI compensations
 packages/gate          @lumo-ui/gate          source and built-HTML graders
 packages/config        @lumo-ui/config        executable ESLint policy
-packages/mobile        lumo_ui_mobile         Lumo UI Mobile (Flutter/Dart; decision §30)
+packages/mobile        lumo_ui_mobile         Lumo UI Mobile — 145 widgets (Flutter/Dart; decision §30)
 apps/website                                   static showcase and documentation
+apps/mobile-gallery                            one Flutter web app serving every mobile demo
 ```
+
+Two libraries, one contract. The web library is React on Base UI; the mobile
+library is Flutter on Material's widget layer. They are not a shared codebase and
+deliberately so (decision §30, best in class per platform) — what they share is
+the contract, the tokens, and the standard of proof.
 
 ## Dependency direction
 
@@ -86,12 +92,52 @@ The complete local contract is `pnpm run verify`: types, inert/root props,
 lint, styling policy, package tests, registry/API freshness, clean-room consumer
 compiles and the built-HTML gate.
 
+## The mobile library
+
+`packages/mobile` (`lumo_ui_mobile`) is Flutter/Dart: 145 widgets across 76
+family files, with a test file per family and 669 tests. It is not a port of the
+React source and shares no runtime code with it. What crosses the boundary is:
+
+- **Tokens, generated.** `scripts/build-flutter-tokens.mjs` reads
+  `packages/theme/src/tokens.css` and emits `packages/mobile/lib/src/tokens.g.dart`
+  — the same `--lumo-sys-*` semantics resolved for Flutter: oklch → sRGB for both
+  schemes, rem → logical pixels for radii and control heights, and the three
+  elevation tiers with their separate dark ramps. `gate:flutter-tokens` fails if
+  the committed file does not match a fresh generation, so the two platforms
+  cannot disagree about what `md` means.
+- **The contract, graded.** The same rules the web library lives by — every
+  announced string is a required parameter, direction comes from the locale and
+  never from a `dir` flag, no bare numbers — hold in Dart.
+  `gate:flutter-contract` enforces four of them statically over `lib/src`, with
+  poison fixtures that must fail, including a rule against Material's route
+  helpers (`showDialog`, `showModalBottomSheet`) because each names its own
+  barrier in English from `MaterialLocalizations`.
+- **The proof, in kind.** The web library's claim rests on graded served HTML;
+  a Flutter app serves no HTML, so the mobile counterpart is the semantics tree.
+  Names, roles, states and values are asserted per family in both `fa-IR` and
+  `en-US`, plus five cross-cutting sweeps over the whole directory (elevation
+  tokens, reduce-motion, silent validation errors, const-constructor asserts,
+  radius tokens) and three permanent floors (tap-target size, cramped layout,
+  token contrast).
+
+The mobile side of the docs site is `apps/mobile-gallery`: one Flutter web build
+serving every demo, addressed as
+`/mobile-preview/index.html?demo=&lang=&theme=` and framed per component page.
+It is built, never committed — `scripts/ensure-mobile-gallery.mjs` hashes its
+inputs (including `packages/mobile/lib`) and rebuilds only on a miss.
+
 ## Current state
 
 The generated catalogue contains 111 registry components and 30 blocks, 141
-items in total. The deepest product surfaces include Jalali date entry and
-calendars, DataGrid/Table, Gantt, EventCalendar, upload lifecycle, virtual and
-async collections, filters, questionnaires and four advanced chart families.
-The remaining adoption constraints are explicit: no public distribution, no
-completed native package, and no claimed cross-browser assistive-technology
-matrix.
+items in total; the mobile library adds 145 widgets. The deepest product
+surfaces include Jalali date entry and calendars, DataGrid/Table, Gantt,
+EventCalendar, upload lifecycle, virtual and async collections, filters,
+questionnaires and four advanced chart families.
+
+The remaining adoption constraints are explicit: **no public distribution**
+(neither npm nor pub.dev; both libraries install from pinned git), **no
+assistive-technology evidence on either platform** — the browser `evidence` job
+covers Chromium, WebKit and Firefox accessibility trees, which is not a screen
+reader, and the mobile side has no TalkBack or VoiceOver run at all — and **no
+mobile equivalent of the served-HTML grader**: the mobile semantics claims rest
+on per-family tests rather than on one grader sweeping every family by rule.

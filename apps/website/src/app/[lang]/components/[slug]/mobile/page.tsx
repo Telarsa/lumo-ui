@@ -13,7 +13,8 @@ import { MobilePreview } from "@/components/mobile-preview";
 import { GeneratedText } from "@/components/generated-text";
 import { highlight } from "@/lib/highlight";
 import { assertLocale, segmentFor, site } from "@/lib/locale";
-import { catalogById } from "@/lib/catalog";
+import { pageIdentity } from "@/lib/catalog";
+import { loadExamplesFor } from "@/lib/examples-loader";
 import {
   galleryUrl,
   loadMobileDemos,
@@ -52,7 +53,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ lang: string; slug: string }> }) {
   const { lang: raw, slug } = await params;
   const lang = assertLocale(raw);
-  const demo = await catalogById(slug);
+  const demo = await pageIdentity(slug);
   if (demo === undefined) return { title: site[lang].title };
   const c = COPY[lang];
   return {
@@ -73,11 +74,14 @@ interface PageCopy {
   rail: {
     preview: string;
     installation: string;
+    usage: string;
     contract: string;
     api: string;
     caveats: string;
     evidence: string;
   };
+  usageWhen: string;
+  usageWhenNot: string;
   /** Names the narrow-viewport component list. REQUIRED: below 1024px this `<summary>` is the only navigation to the other components. */
   browseComponents: string;
   previewOrCode: string;
@@ -127,11 +131,14 @@ const COPY = {
     rail: {
       preview: "پیش‌نمایش",
       installation: "نصب",
+      usage: "کِی به کارش بگیریم",
       contract: "قرارداد",
       api: "مرجع API",
       caveats: "آنچه این صفحه ثابت نمی‌کند",
       evidence: "شواهد",
     },
+    usageWhen: "به کارش بگیرید وقتی",
+    usageWhenNot: "سراغش نروید وقتی",
     browseComponents: "همهٔ کامپوننت‌ها",
     previewOrCode: "پیش‌نمایش یا کد",
     frameLabel: "پیش‌نمایش زندهٔ موبایل",
@@ -191,11 +198,14 @@ const COPY = {
     rail: {
       preview: "Preview",
       installation: "Installation",
+      usage: "When to use it",
       contract: "Contract",
       api: "API reference",
       caveats: "What this page does not prove",
       evidence: "Evidence",
     },
+    usageWhen: "Use it when",
+    usageWhenNot: "Do not reach for it when",
     browseComponents: "All components",
     previewOrCode: "Preview or code",
     frameLabel: "Live mobile preview",
@@ -298,7 +308,7 @@ export default async function MobileComponentPage({
 }) {
   const { lang: raw, slug } = await params;
   const lang = assertLocale(raw);
-  const demo = await catalogById(slug);
+  const demo = await pageIdentity(slug);
   const mobile = loadMobileDemos(slug);
   if (demo === undefined || mobile === undefined) notFound();
 
@@ -365,10 +375,20 @@ export default async function MobileComponentPage({
    */
   const testHref = `${MOBILE_REPO_BROWSE}/${mobile.hasOwnTest ? "blob" : "tree"}/v${MOBILE_VERSION}/${mobile.testPath}`;
 
+  /*
+   * "When to use it" is a fact about the FAMILY, not about one platform, so the
+   * Mobile page reads the same `meta.usage` the Web page reads and prints the
+   * same two sentences. A reader who flips the Web|Mobile switch should not be
+   * told a different story about when to reach for the thing — before this the
+   * section simply did not exist on this side.
+   */
+  const usage = (await loadExamplesFor(slug))?.usage;
+
   const railItems = [
     { id: "preview", label: c.rail.preview },
     { id: "installation", label: c.rail.installation },
     ...mobile.demos.map((d) => ({ id: `demo-${d.id}`, label: d.title[lang] })),
+    ...(usage === undefined ? [] : [{ id: "usage", label: c.rail.usage }]),
     { id: "contract", label: c.rail.contract },
     { id: "api", label: c.rail.api },
     { id: "caveats", label: c.rail.caveats },
@@ -475,6 +495,22 @@ export default async function MobileComponentPage({
               ) : undefined}
             </ExampleCard>
           ))}
+
+          {usage === undefined ? null : (
+            <section id="usage" className="mt-10 scroll-mt-24">
+              <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">{c.rail.usage}</h2>
+              <dl className="mt-3 grid max-w-2xl gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <dt className="text-sm font-medium text-fg">{c.usageWhen}</dt>
+                  <dd className="mt-1 text-sm text-fg-muted">{usage.when[lang]}</dd>
+                </div>
+                <div className="rounded-lg border border-border bg-surface p-4">
+                  <dt className="text-sm font-medium text-fg">{c.usageWhenNot}</dt>
+                  <dd className="mt-1 text-sm text-fg-muted">{usage.whenNot[lang]}</dd>
+                </div>
+              </dl>
+            </section>
+          )}
 
           <section id="contract" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">

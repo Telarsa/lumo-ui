@@ -166,7 +166,9 @@ class LumoChartSeries {
 
   /// The series' name, announced as the group node above its points. REQUIRED.
   final String label;
+  /// The points of this series, in x order.
   final List<LumoChartPoint> points;
+  /// The semantic tone the colour carries.
   final LumoChartTone? tone;
 }
 
@@ -348,6 +350,7 @@ class LumoBarChart extends StatelessWidget {
   /// One sentence about what the chart shows, announced as the chart node's
   /// value right after its name («بیشترین بازدید در روز پنجشنبه»).
   final String? summary;
+  /// Which axis the control runs along.
   final LumoBarChartOrientation orientation;
 
   /// The tone every bar takes, unless a point names its own.
@@ -510,7 +513,7 @@ class LumoBarChart extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(LumoRadius.full),
                     child: SizedBox(
                       height: 8,
                       child: ColoredBox(
@@ -525,7 +528,7 @@ class LumoBarChart extends StatelessWidget {
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 color: p.partValue == null ? lumoChartToneColour(p.tone ?? tone, c) : lumoChartToneColour(p.tone ?? tone, c).withValues(alpha: 0.28),
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(LumoRadius.full),
                               ),
                               // The stacked part, from the same reading start.
                               child: p.partValue == null || p.value <= 0
@@ -535,7 +538,7 @@ class LumoBarChart extends StatelessWidget {
                                       child: FractionallySizedBox(
                                         widthFactor: (p.partValue! / p.value).clamp(0, 1),
                                         heightFactor: 1,
-                                        child: DecoratedBox(decoration: BoxDecoration(color: lumoChartToneColour(partTone ?? p.tone ?? tone, c), borderRadius: BorderRadius.circular(999))),
+                                        child: DecoratedBox(decoration: BoxDecoration(color: lumoChartToneColour(partTone ?? p.tone ?? tone, c), borderRadius: BorderRadius.circular(LumoRadius.full))),
                                       ),
                                     ),
                             ),
@@ -747,13 +750,18 @@ class LumoSparkline extends StatelessWidget {
 
   /// The trend's announced name. REQUIRED.
   final String label;
+  /// The points to plot, in x order.
   final List<LumoChartPoint> data;
 
   /// What a reader is told when there is nothing to plot. REQUIRED.
   final String emptyLabel;
+  /// A sentence describing the shape for a reader who cannot see it. A chart without one is decoration.
   final String? summary;
+  /// The semantic tone the colour carries.
   final LumoChartTone tone;
+  /// Height of the plot, in logical pixels.
   final double plotHeight;
+  /// Whether the area under the line is filled.
   final bool isArea;
 
   @override
@@ -915,7 +923,9 @@ class LumoDonutChart extends StatelessWidget {
   /// Called with the tapped slice, or `null` when the selected one is tapped
   /// again. Omitting it makes the legend static rather than a set of buttons.
   final ValueChanged<int?>? onSelected;
+  /// Outside diameter of the ring, in logical pixels.
   final double diameter;
+  /// Thickness of the ring, in logical pixels.
   final double thickness;
 
   double get _total {
@@ -1030,7 +1040,13 @@ class LumoDonutChart extends StatelessWidget {
             children: [
               // The swatch repeats what the row already says in words: colour
               // is never the only carrier (WCAG 1.4.1).
-              Container(width: 10, height: 10, decoration: BoxDecoration(color: colour, borderRadius: BorderRadius.circular(3))),
+              // `h-2 w-2 rounded-[2px]` on the web: a legend swatch is below the
+              // radius ramp on purpose — the smallest Lumo step (6) on an 8px
+              // chip is a circle, and a circle reads as a status dot, not a
+              // series key. The web states the exception with an arbitrary
+              // value; this states it with a number and this comment. It had
+              // drifted to 10×10 with a 3px corner, which is neither.
+              Container(width: 8, height: 8, decoration: BoxDecoration(color: colour, borderRadius: BorderRadius.circular(2))),
               const SizedBox(width: 8),
               Expanded(child: Text(p.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.fg))),
               Padding(

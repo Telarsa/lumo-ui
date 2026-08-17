@@ -25,6 +25,12 @@ class LumoDemoCopy {
   final Map<String, Map<String, String>> _table;
   final String _locale;
 
+  /// The locale this copy is being read in. A demo that ANNOUNCES a number —
+  /// "slide 2 of 5", "digit 1 of 6" — has to run it through `formatNumber`, and
+  /// that needs the tag. Interpolating a bare `int` puts a Latin digit into a
+  /// Persian announcement, which the semantics grader now rejects.
+  String get locale => _locale;
+
   String operator [](String key) {
     final entry = _table[key];
     if (entry == null) {

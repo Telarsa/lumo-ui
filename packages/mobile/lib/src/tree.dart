@@ -21,10 +21,12 @@ class LumoTreeNode {
   /// The row's visible text AND its announced name, in one string, so seen and
   /// announced cannot drift (the `LumoDisclosureItem.title` rule). REQUIRED.
   final String label;
+  /// The children, in reading order.
   final List<LumoTreeNode> children;
 
   /// Decoration beside the name. Excluded from semantics — an icon is not a name.
   final Widget? icon;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -212,6 +214,7 @@ class LumoTree extends StatefulWidget {
 
   /// The tree's announced name. REQUIRED — a list names nothing by itself.
   final String label;
+  /// The tree's roots, in reading order.
   final List<LumoTreeNode> nodes;
 
   /// What each row announces, built from its place in the tree. REQUIRED.
@@ -234,7 +237,9 @@ class LumoTree extends StatefulWidget {
 
   /// The open branch ids at first build (uncontrolled).
   final Set<String>? defaultExpandedIds;
+  /// Called with the full set of expanded ids.
   final ValueChanged<Set<String>>? onExpandedChanged;
+  /// Whether one item may be selected, or many.
   final LumoTreeSelectionMode selectionMode;
 
   /// The selected row ids (controlled).
@@ -242,12 +247,14 @@ class LumoTree extends StatefulWidget {
 
   /// The selected row ids at first build (uncontrolled).
   final Set<String>? defaultSelectedIds;
+  /// Called with the full set of selected ids.
   final ValueChanged<Set<String>>? onSelectionChanged;
 
   /// A row was activated — the web's `onAction`. Only reached when the tree
   /// does not select and the row is a leaf, so an activation is never also a
   /// selection or an expansion.
   final ValueChanged<String>? onActivate;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -585,6 +592,7 @@ class LumoTreeSelect extends StatefulWidget {
   /// standing on, this names the outline they have just been handed, and one
   /// string doing both jobs puts the same name on two different things.
   final String treeLabel;
+  /// The tree's roots, in reading order.
   final List<LumoTreeNode> nodes;
 
   /// What each row of the tree announces. REQUIRED — see `LumoTree`.
@@ -607,10 +615,12 @@ class LumoTreeSelect extends StatefulWidget {
 
   /// Called with the full id list after every change.
   final ValueChanged<List<String>>? onChanged;
+  /// Whether one node may be selected, or many.
   final LumoTreeSelectMode mode;
 
   /// Shown in the trigger while nothing is chosen.
   final String? placeholder;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown under the field and announced. Supplying one marks it invalid.
@@ -621,6 +631,7 @@ class LumoTreeSelect extends StatefulWidget {
 
   /// The branches open when the sheet is first shown.
   final Set<String>? defaultExpandedIds;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

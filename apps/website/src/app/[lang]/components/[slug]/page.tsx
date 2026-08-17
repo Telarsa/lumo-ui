@@ -17,7 +17,7 @@ import { highlight } from "@/lib/highlight";
 import { PreviewToolbar } from "@/components/preview-toolbar";
 import { EvidencePanel } from "@/components/evidence-panel";
 import { assertLocale, oppositeDirectionLocale, site, segmentFor} from "@/lib/locale";
-import { allCatalog, catalogById } from "@/lib/catalog";
+import { allCatalog, allMobileOnly, catalogById, type MobileOnlyEntry } from "@/lib/catalog";
 import { loadExamplesFor, type LoadedComponentExamples } from "@/lib/examples-loader";
 import { ExampleCard } from "@/components/example-card";
 import { CompositionTree, PartsTable, PropsTable } from "@/components/composition-tree";
@@ -26,8 +26,15 @@ import { hasMobile } from "@/lib/mobile-examples";
 
 export async function generateStaticParams() {
   // The CATALOG: every component with an examples file, and nothing else. See lib/catalog.ts.
+  // Mobile-only families are here too: the page exists either way, and its Web
+  // side says the web library has no such component rather than 404ing a family
+  // the sidebar lists and the Mobile switch links to.
   const entries = await allCatalog();
-  return LOCALES.flatMap((lang) => entries.map((d) => ({ lang: segmentFor(lang), slug: d.id })));
+  const mobileOnly = await allMobileOnly();
+  return LOCALES.flatMap((lang) => [
+    ...entries.map((d) => ({ lang: segmentFor(lang), slug: d.id })),
+    ...mobileOnly.map((d) => ({ lang: segmentFor(lang), slug: d.id })),
+  ]);
 }
 
 /** One `<title>` per page (WCAG 2.4.2): the component's own name, then the site's. */
@@ -72,6 +79,10 @@ interface PageCopy {
   compositionIntro: string;
   usageWhen: string;
   usageWhenNot: string;
+  /** The Web side of a family only the mobile library has. */
+  mobileOnlyTitle: string;
+  mobileOnlyBody: string;
+  mobileOnlyLink: string;
   copyComposition: string;
   compositionCopied: string;
   exportedParts: string;
@@ -118,6 +129,10 @@ const COPY = {
       "درخت اجزا، آمادهٔ کپی — هر تگ آن هنگام ساخت با خروجی‌های واقعی کتابخانه تطبیق داده شده است.",
     usageWhen: "به کارش بگیرید وقتی",
     usageWhenNot: "سراغش نروید وقتی",
+    mobileOnlyTitle: "این خانواده فقط در نسخهٔ موبایل هست.",
+    mobileOnlyBody:
+      "کتابخانهٔ وب همتایی برایش ندارد، و این یک کمبود نیست: بعضی چیزها فقط روی گوشی معنا دارند. صفحه همان صفحه است؛ سمت وبش خالی است و می‌گوید چرا.",
+    mobileOnlyLink: "رفتن به نسخهٔ موبایل",
     copyComposition: "کپی درخت اجزا",
     compositionCopied: "درخت اجزا کپی شد",
     exportedParts: "اجزای صادرشده",
@@ -163,6 +178,10 @@ const COPY = {
       "The parts tree, ready to copy — every tag in it is checked against the library's real exports at build time.",
     usageWhen: "Use it when",
     usageWhenNot: "Do not use it when",
+    mobileOnlyTitle: "This family exists only in the mobile library.",
+    mobileOnlyBody:
+      "The web library has no counterpart, and that is not a gap: some things only mean something on a phone. The page is the same page; its Web side is empty and says why.",
+    mobileOnlyLink: "Go to the mobile version",
     copyComposition: "Copy the composition tree",
     compositionCopied: "Composition tree copied",
     exportedParts: "Exported parts",
@@ -346,6 +365,59 @@ function resolveRegistryItem(
   return byContent ?? uiItems.find((i) => i.name === slug);
 }
 
+/**
+ * The WEB side of a family that only Lumo Mobile has.
+ *
+ * It is the same page — same shell, same sidebar, same header, same Web|Mobile
+ * switch — with the preview replaced by one sentence saying the web library has
+ * no such component and a link across. A phone has a pull-to-refresh gesture and
+ * a web page does not; the docs should say that plainly instead of 404ing a slug
+ * the sidebar lists (decisions §39, §40).
+ */
+async function MobileOnlyWebSide({ lang, entry }: { lang: Locale; entry: MobileOnlyEntry }) {
+  const c = COPY[lang];
+  return (
+    <SiteShell lang={lang} path={`components/${entry.id}/`} wide>
+      <div className="grid gap-10 lg:grid-cols-[16rem_minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_14rem]">
+        <aside className="hidden lg:block">
+          <div data-docs-sidebar-scroll="" className="sticky top-24 max-h-[calc(100dvh-8rem)] overflow-y-auto pe-2">
+            <DocsSidebar lang={lang} active={entry.id} />
+          </div>
+        </aside>
+
+        <main className="min-w-0">
+          <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-semibold tracking-tight text-fg">{entry.title[lang]}</h1>
+              <p className="mt-2 max-w-2xl text-sm text-fg-muted">{entry.intro[lang]}</p>
+            </div>
+            <div className="ms-auto flex shrink-0 items-center gap-2">
+              <PlatformSwitch lang={lang} slug={entry.id} platform="web" />
+            </div>
+          </header>
+
+          <section id="preview" className="mt-8 scroll-mt-24">
+            <div className="grid min-h-44 place-items-center rounded-lg border border-border bg-bg p-6 text-center sm:p-8">
+              <div className="max-w-md">
+                <p className="text-sm text-fg">{c.mobileOnlyTitle}</p>
+                <p className="mt-2 text-sm text-fg-muted">{c.mobileOnlyBody}</p>
+                <Link
+                  href={`/${segmentFor(lang)}/components/${entry.id}/mobile/`}
+                  className="mt-4 inline-flex text-sm font-medium text-accent underline underline-offset-4"
+                >
+                  {c.mobileOnlyLink}
+                </Link>
+              </div>
+            </div>
+          </section>
+        </main>
+
+        <OnThisPage lang={lang} items={[{ id: "preview", label: c.rail.preview }]} />
+      </div>
+    </SiteShell>
+  );
+}
+
 export default async function ComponentPage({
   params,
 }: {
@@ -354,7 +426,13 @@ export default async function ComponentPage({
   const { lang: raw, slug } = await params;
   const lang = assertLocale(raw);
   const demo = await catalogById(slug);
-  if (!demo) notFound();
+  if (!demo) {
+    // Not a 404 if the family exists on the other platform: same page, one side
+    // empty, and the side that is empty says why.
+    const mobileOnly = (await allMobileOnly()).find((e) => e.id === slug);
+    if (mobileOnly) return <MobileOnlyWebSide lang={lang} entry={mobileOnly} />;
+    notFound();
+  }
 
   const t = site[lang];
   const c = COPY[lang];

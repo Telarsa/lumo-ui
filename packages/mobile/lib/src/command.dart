@@ -15,7 +15,9 @@ import 'tokens.g.dart';
 class LumoCommandItem {
   const LumoCommandItem({required this.id, required this.label, this.description, this.icon, this.keywords = const [], this.isDisabled = false});
 
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
 
   /// A second line — where the row leads, what it will do.
@@ -28,6 +30,7 @@ class LumoCommandItem {
   /// for a Persian command, an old name a reader still types.
   final List<String> keywords;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -38,6 +41,7 @@ class LumoCommandGroup {
 
   /// The group's visible title, announced once as a header. REQUIRED.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoCommandItem> items;
 }
 

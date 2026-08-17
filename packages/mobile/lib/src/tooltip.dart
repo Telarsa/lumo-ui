@@ -47,10 +47,15 @@ class LumoTooltip extends StatefulWidget {
     this.delay,
     this.isDisabled = false,
   });
+  /// The tip's text.
   final String message;
+  /// The widget this one wraps.
   final Widget child;
+  /// Which side the surface prefers to open on.
   final LumoTooltipPlacement placement;
+  /// How long a press is held before the tip appears.
   final Duration? delay;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

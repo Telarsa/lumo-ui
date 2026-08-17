@@ -5,24 +5,38 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';
 
-/// **Two defect-class guards over the SOURCE of `lib/src/`.**
+/// **Defect-class guards over the SOURCE of `lib/src/`.** Five of them:
 ///
-/// Both defects here are invisible at runtime on the machine that introduces them:
-/// a scheme-blind shadow looks fine in light mode, and an animation that ignores
-/// «reduce motion» looks fine to a developer who has never turned it on. Neither
-/// shows up in a screenshot diff, and neither is something a per-family test gets
-/// written for, because the family that has the bug is the one nobody suspected.
+///  1. elevation comes from the token, never a hand-rolled `BoxShadow`
+///  2. an animating family consults «reduce motion»
+///  3. a validation error is never silent
+///  4. no `assert` on a collection's length in a `const` constructor
+///  5. a corner radius comes from `LumoRadius`, never a bare number
 ///
-/// So these are swept over the whole directory rather than asserted family by
+/// What they have in common is that every one of these defects is INVISIBLE at
+/// runtime on the machine that introduces it. A scheme-blind shadow looks fine
+/// in light mode. An animation that ignores «reduce motion» looks fine to a
+/// developer who has never turned it on. A radius typed as `4` looks like a
+/// radius. None of them shows up in a screenshot diff, and none is something a
+/// per-family test gets written for, because the family that has the bug is the
+/// one nobody suspected.
+///
+/// So they are swept over the whole directory rather than asserted family by
 /// family — which also means a family added TOMORROW is covered without anyone
-/// remembering to opt it in. That is the whole point: the ten motion fixes in this
-/// pass were found by a grep, and two MORE non-compliant families
+/// remembering to opt it in. That is the whole point: the ten motion fixes in
+/// one pass were found by a grep, and two MORE non-compliant families
 /// (`navigation_bar`, `navigation_drawer`) landed from another workstream while
-/// the fixes were being written. A guard catches the next one; ten fixes do not.
+/// those fixes were being written. A guard catches the next one; ten fixes do
+/// not. Rule 5 proved it again the day it was added, catching a chart swatch the
+/// hand-audit had walked straight past.
 ///
-/// Both are deliberately CHEAP static checks. They cannot prove an animation is
+/// They are deliberately CHEAP static checks. They cannot prove an animation is
 /// correct, only that the family consulted the platform at all — which is exactly
 /// the line between "someone thought about it" and "nobody did".
+///
+/// A rule that needs an escape hatch carries a `const exemptions` map naming the
+/// file AND the reason, so an exception is a sentence somebody wrote, not a
+/// silently-skipped path.
 File _f(String name) => File('lib/src/$name');
 
 Iterable<File> _libSources() => Directory('lib/src')
@@ -266,5 +280,46 @@ void main() {
     }
     expect(offenders, isEmpty,
         reason: 'move the assert into build() — see segmented_control.dart. Offenders:\n${offenders.join('\n')}');
+  });
+
+  test('a corner radius comes from LumoRadius, never from a bare number', () {
+    // WHY: the web renders SIX radius steps — the three `--lumo-sys-radius-*`
+    // tokens plus `rounded-xl`, `rounded-2xl` and `rounded-full`, which for a
+    // long time nothing mapped, so Tailwind's own defaults were what shipped.
+    // Flutter had names for only the first three, so ten files spelled the rest
+    // by hand: `BorderRadius.circular(999)` seventeen times, and `message.dart`
+    // carried `Radius.circular(16)` for the web's `rounded-2xl` and
+    // `Radius.circular(4)` for a corner its OWN COMMENT said was
+    // `rounded-*-md` — 8. The comment was right and the number was wrong for
+    // however long it had been there, and nothing could have caught it: a
+    // number cannot disagree with a token it never referenced.
+    //
+    // Now all six are tokens on both platforms, so a bare number in a radius
+    // position is either a step that does not exist in the design system or a
+    // step that does and was retyped. Either way it drifts silently.
+    //
+    // Deliberately narrow: only radius CONSTRUCTORS are read, not every number.
+    ///
+    /// Files allowed a bare number, and WHY. The web has exactly one such
+    /// exception too, spelled `rounded-[2px]` — so the list is a real category,
+    /// not a place to park work.
+    const exemptions = <String, String>{
+      'chart.dart':
+          'the legend swatch is 8px square and takes a 2px corner, BELOW the '
+          'ramp on purpose: the smallest Lumo step on a chip that size is a '
+          'circle, and a circle reads as a status dot. The web writes '
+          '`rounded-[2px]` for the same reason.',
+    };
+
+    final offenders = <String>[];
+    final radiusLiteral = RegExp(r'(?:BorderRadius|Radius)\.circular\(\s*([\d.]+)\s*\)');
+    for (final f in _libSources()) {
+      if (exemptions.containsKey(_name(f))) continue;
+      for (final m in radiusLiteral.allMatches(f.readAsStringSync())) {
+        offenders.add('${_name(f)}: ${m.group(0)} — use a LumoRadius step');
+      }
+    }
+    expect(offenders, isEmpty,
+        reason: 'radii come from LumoRadius (sm/md/lg/xl/xxl/full). Offenders:\n${offenders.join('\n')}');
   });
 }

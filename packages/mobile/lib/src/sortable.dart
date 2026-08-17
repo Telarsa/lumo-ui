@@ -102,6 +102,7 @@ class LumoSortable extends StatefulWidget {
   /// [reorder] applies exactly this convention to a list.
   final void Function(int from, int to) onReorder;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Moves one entry, returning a NEW list — the web's exported `moveItem`,

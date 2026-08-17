@@ -11,10 +11,15 @@ enum LumoTabsVariant { underline, pill }
 /// tab's value.
 class LumoTab {
   const LumoTab({required this.id, required this.label, this.icon, this.badge, this.isDisabled = false});
+  /// A stable identity for this item — used for selection and equality, never shown or announced.
   final String id;
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// A leading icon. Decorative — it is not announced, so it never carries meaning on its own.
   final Widget? icon;
+  /// A short count or marker shown on the tab.
   final String? badge;
+  /// Whether the control is disabled.
   final bool isDisabled;
 }
 
@@ -41,16 +46,19 @@ class LumoTabs extends StatefulWidget {
       : assert(views == null || builder == null, 'Give the panels as `views` or as `builder`, not both.');
   /// Announced name of the tab list. Required.
   final String label;
+  /// The tabs, in reading order.
   final List<LumoTab> tabs;
   /// The selected tab's id (controlled).
   final String? value;
   /// The selected tab's id (uncontrolled).
   final String? defaultValue;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<String>? onChanged;
   /// The panel per tab id.
   final Map<String, WidgetBuilder>? views;
   /// The panel for the selected id, when the panels are not a fixed map.
   final Widget Function(BuildContext context, String selectedId)? builder;
+  /// The visual variant.
   final LumoTabsVariant variant;
   /// Scroll the tab list along the inline axis instead of squeezing the tabs.
   final bool isScrollable;
@@ -150,7 +158,7 @@ class _TabButton extends StatelessWidget {
         if (tab.badge != null)
           Container(
             padding: const EdgeInsetsDirectional.symmetric(horizontal: 6, vertical: 1),
-            decoration: BoxDecoration(color: pill && isSelected ? c.accentHover : c.surfaceSunken, borderRadius: BorderRadius.circular(999)),
+            decoration: BoxDecoration(color: pill && isSelected ? c.accentHover : c.surfaceSunken, borderRadius: BorderRadius.circular(LumoRadius.full)),
             child: Text(tab.badge!, style: TextStyle(fontSize: 11, color: fg)),
           ),
       ],
@@ -175,7 +183,7 @@ class _TabButton extends StatelessWidget {
                     constraints: const BoxConstraints(minHeight: LumoControl.sm),
                     margin: const EdgeInsets.all(4),
                     padding: const EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(color: isSelected ? c.accent : Colors.transparent, borderRadius: BorderRadius.circular(999)),
+                    decoration: BoxDecoration(color: isSelected ? c.accent : Colors.transparent, borderRadius: BorderRadius.circular(LumoRadius.full)),
                     alignment: Alignment.center,
                     child: content,
                   )

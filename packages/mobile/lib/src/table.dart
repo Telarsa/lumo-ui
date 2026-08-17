@@ -132,7 +132,9 @@ class LumoTable extends StatelessWidget {
   /// Announced name of the table, e.g. «تراکنش‌های اخیر». REQUIRED.
   final String label;
 
+  /// The columns, in reading order.
   final List<LumoTableColumn> columns;
+  /// The rows, top to bottom.
   final List<LumoTableRowData> rows;
 
   /// Drawn under the table and read as its own node — the web's `<caption>`.
@@ -154,6 +156,7 @@ class LumoTable extends StatelessWidget {
   /// it, and a phone table with reflowing row heights cannot be scanned.
   final double rowHeight;
 
+  /// Height of the header row, in logical pixels.
   final double headerHeight;
 
   /// The horizontal scroller's controller, when the caller wants to drive it.

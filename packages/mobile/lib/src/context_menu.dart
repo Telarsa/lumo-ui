@@ -39,6 +39,7 @@ class LumoContextMenu extends StatefulWidget {
 
   /// Announced name of the menu. Required.
   final String label;
+  /// The items to show, in reading order.
   final List<LumoMenuEntry> items;
 
   /// The surface a long press opens the menu on.
@@ -46,6 +47,7 @@ class LumoContextMenu extends StatefulWidget {
 
   /// Fires true when the menu opens and false when it closes, any way.
   final ValueChanged<bool>? onOpenChange;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override

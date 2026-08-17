@@ -52,6 +52,7 @@ class LumoDateField extends StatelessWidget {
   final String closeLabel;
   /// Names of the month-paging chevrons. Required — they are icons.
   final String previousMonthLabel;
+  /// Announced name of the next-month control.
   final String nextMonthLabel;
   /// Name of the Today action (selects today, when in range). Required.
   final String todayLabel;
@@ -61,10 +62,13 @@ class LumoDateField extends StatelessWidget {
   final ValueChanged<DateTime>? onChanged;
   /// Shown in the field when there is no value.
   final String? placeholder;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
   /// Shown under the field and announced. Supplying one marks it invalid.
   final String? errorMessage;
+  /// Whether user input is required before the form is submitted.
   final bool isRequired;
+  /// Whether the control is disabled.
   final bool isDisabled;
   /// Earliest selectable DAY (itself selectable). Days before it are disabled.
   final DateTime? minDate;
@@ -158,15 +162,25 @@ class LumoCalendarSheet extends StatelessWidget {
     this.maxDate,
   });
 
+  /// The name this control is announced by, and painted where the family shows one.
   final String label;
+  /// Announced name of the close affordance. An icon is not a name.
   final String closeLabel;
+  /// Announced name of the previous-month control.
   final String previousMonthLabel;
+  /// Announced name of the next-month control.
   final String nextMonthLabel;
+  /// Announced marker for today, e.g. «امروز».
   final String todayLabel;
+  /// Which day counts as today, so a test can pin it.
   final DateTime today;
+  /// Called with local midnight of the chosen day.
   final ValueChanged<DateTime> onSelected;
+  /// The current value. Supply it with `onChanged` for a controlled widget; omit both and the widget owns its own.
   final DateTime? value;
+  /// The earliest date that can be chosen.
   final DateTime? minDate;
+  /// The latest date that can be chosen.
   final DateTime? maxDate;
 
   @override

@@ -18,6 +18,7 @@ import 'tokens.g.dart';
 class LumoColorSwatch {
   const LumoColorSwatch({required this.color, this.name});
 
+  /// The colour this swatch stands for.
   final Color color;
 
   /// The colour's own name («آبی نفتی», «قرمز خروسی»). Falls back to the hex.
@@ -88,11 +89,14 @@ class LumoColorPicker extends StatelessWidget {
 
   /// Names the group. REQUIRED — the swatches name the COLOURS, not the question.
   final String label;
+  /// The colours offered, in reading order.
   final List<LumoColorSwatch> swatches;
 
   /// The chosen colour, controlled.
   final Color? value;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<Color>? onChanged;
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   @override
@@ -247,12 +251,16 @@ class LumoColorInput extends StatefulWidget {
 
   /// The colour, uncontrolled.
   final Color? defaultValue;
+  /// Called with the new value when the user changes it. Omitting it makes the control read-only.
   final ValueChanged<Color>? onChanged;
+  /// A description for the field, shown under the control and announced as its hint.
   final String? description;
 
   /// Shown under the trigger and carried in its `hint`; marks it invalid.
   final String? errorMessage;
+  /// Whether the control is disabled.
   final bool isDisabled;
+  /// Whether the label is painted. It is announced either way — hiding a name is not dropping it.
   final bool showLabel;
 
   @override

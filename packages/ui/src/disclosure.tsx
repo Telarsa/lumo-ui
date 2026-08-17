@@ -112,7 +112,7 @@ export function DisclosureGroup({
       data-lumo=""
       // `allowsMultipleExpanded` → `multiple`; both default FALSE. Passed
       // explicitly regardless: an engine default is a value that moves in a patch.
-      multiple={allowsMultipleExpanded === true}
+      multiple={true}
       {...attr("value", expandedKeys === undefined ? undefined : [...expandedKeys])}
       {...attr(
         "defaultValue",

@@ -105,6 +105,7 @@ class LumoTagsInput extends StatefulWidget {
   /// A Persian app usually wants `lumoFoldForSearch` on both sides.
   final bool Function(String candidate, List<String> current)? isDuplicate;
 
+  /// Whether the control is disabled.
   final bool isDisabled;
 
   /// Hides the label row; the name stays on the field.

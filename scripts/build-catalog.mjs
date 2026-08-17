@@ -118,7 +118,13 @@ for (const file of pageFiles) {
   const tierNode = property(meta, "tier")?.initializer;
   const compositionNode = property(meta, "composition")?.initializer;
   const sourceFileNode = property(meta, "sourceFile")?.initializer;
+  const platformsNode = property(meta, "platforms")?.initializer;
+  const platforms =
+    platformsNode !== undefined && ts.isArrayLiteralExpression(platformsNode)
+      ? platformsNode.elements.map((/** @type {ts.Expression} */ e) => string(e))
+      : ["web"];
   pages[slug] = {
+    platforms,
     title: localized(property(meta, "title")?.initializer),
     intro: localized(property(meta, "intro")?.initializer),
     tier: tierNode === undefined ? undefined : string(tierNode),
@@ -189,6 +195,32 @@ const items = registry.items.map((item) => {
     requiredAnnouncedStrings: requiredStrings,
   };
 });
+
+/*
+ * Families the MOBILE library has and the web library does not. They have no
+ * registry item — nothing is copied into a web project — but they have a page, a
+ * sidebar row and a Mobile side, and `lumo search` should find them rather than
+ * pretend the library is smaller than it is. `build-mobile-demos.mjs` also reads
+ * this file to check that a demo's slug is a real page (decision §39).
+ */
+for (const [slug, page] of Object.entries(pages)) {
+  const platforms = /** @type {string[]} */ (/** @type {Record<string, unknown>} */ (page).platforms ?? ["web"]);
+  if (platforms.includes("web")) continue;
+  items.push({
+    name: slug,
+    type: "registry:mobile",
+    description: undefined,
+    title: /** @type {Record<string, unknown>} */ (page).title,
+    usage: /** @type {Record<string, unknown>} */ (page).usage,
+    dependencies: [],
+    registryDependencies: [],
+    files: [],
+    types: [],
+    requiredProps: [],
+    requiredAnnouncedStrings: [],
+  });
+}
+items.sort((a, b) => a.name.localeCompare(b.name));
 
 const catalog = { version: 1, generatedFrom: ["apps/website/src/examples/*.tsx meta", "registry.json", "api-reference.json"], items };
 const next = `${JSON.stringify(catalog, null, 2)}\n`;
