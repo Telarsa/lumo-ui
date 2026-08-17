@@ -20,7 +20,7 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
-## 0.2.3 — unreleased
+## 0.2.3 — 2026-08-17
 
 ### Added
 - **Lumo UI Mobile widgets** (packages/mobile), 25 new families, each with a
