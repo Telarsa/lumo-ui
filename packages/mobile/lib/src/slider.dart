@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show SemanticsValidationResult;
 import 'scope.dart';
 import 'tokens.g.dart';
 
@@ -18,24 +19,50 @@ typedef LumoValueLabel = String Function(double value);
 /// Semantics: ONE node (`MergeSemantics`) named by `label`, `isSlider`, value /
 /// increasedValue / decreasedValue through `valueLabel`, increase/decrease
 /// actions; the header row is excluded so the name is announced once.
+///
+/// The web `Slider` has NO `isInvalid` and gives an invalid slider no visual
+/// state at all (`slider.tsx`: the engine forwards `aria-describedby` to its
+/// range input but not `aria-invalid`) — that is carried here, with the one
+/// thing Flutter can do that the DOM could not: the node itself takes
+/// `SemanticsValidationResult.invalid`, so the state is a state and not only a
+/// sentence. `description` and `errorMessage` are painted under the track and
+/// EXCLUDED there, because both are already this node's hint.
 class LumoSlider extends StatelessWidget {
-  const LumoSlider({super.key, required this.label, required this.value, required this.valueLabel, this.min = 0, this.max = 1, this.step, this.onChanged, this.onChangeEnd, this.description, this.errorMessage, this.hideValue = false, this.isDisabled = false})
-      : assert(min < max, 'min must be below max.'),
-        assert(step == null || step > 0, 'step must be positive.');
+  const LumoSlider({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.valueLabel,
+    this.min = 0,
+    this.max = 1,
+    this.step,
+    this.onChanged,
+    this.onChangeEnd,
+    this.description,
+    this.errorMessage,
+    this.hideValue = false,
+    this.isDisabled = false,
+  }) : assert(min < max, 'min must be below max.'),
+       assert(step == null || step > 0, 'step must be positive.');
+
   /// Announced (and, unless `hideValue`, displayed) name. REQUIRED.
   final String label;
   final double value;
+
   /// The value as the reader/eye gets it, e.g. `(v) => formatNumber(v.round(), locale)`. REQUIRED.
   final LumoValueLabel valueLabel;
   final double min;
   final double max;
+
   /// The amount one tick moves; null = continuous. Web `step`, Material `divisions`.
   final double? step;
   final ValueChanged<double>? onChanged;
+
   /// Fires when the drag ends (web `onChangeEnd`).
   final ValueChanged<double>? onChangeEnd;
   final String? description;
   final String? errorMessage;
+
   /// Hide the label/value row and keep only the track. The name stays on the node.
   final bool hideValue;
   final bool isDisabled;
@@ -48,7 +75,19 @@ class LumoSlider extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (!hideValue) _Header(children: [Expanded(child: Text(label, style: TextStyle(fontSize: 14, color: c.fg), overflow: TextOverflow.ellipsis)), Text(valueLabel(value), style: TextStyle(fontSize: 14, color: c.fgMuted))]),
+          if (!hideValue)
+            _Header(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(fontSize: 14, color: c.fg),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(valueLabel(value), style: TextStyle(fontSize: 14, color: c.fgMuted)),
+              ],
+            ),
           // `MergeSemantics`: the name and Material's slider node (value, actions) become ONE node.
           MergeSemantics(
             child: Semantics(
@@ -57,6 +96,7 @@ class LumoSlider extends StatelessWidget {
               // Material's node carries role and value only while interactive; disabled, this keeps them.
               slider: true,
               enabled: !isDisabled,
+              validationResult: errorMessage == null ? SemanticsValidationResult.none : SemanticsValidationResult.invalid,
               value: isDisabled ? valueLabel(value) : null,
               child: SliderTheme(
                 data: _sliderTheme(c, isDisabled),
@@ -90,13 +130,31 @@ class LumoSlider extends StatelessWidget {
 /// value through `valueLabel`, and increase/decrease actions of one `step`
 /// (or a twentieth of the range, Material's own unit, when continuous).
 class LumoRangeSlider extends StatelessWidget {
-  const LumoRangeSlider({super.key, required this.label, required this.startLabel, required this.endLabel, required this.values, required this.valueLabel, this.min = 0, this.max = 1, this.step, this.onChanged, this.onChangeEnd, this.description, this.errorMessage, this.hideValue = false, this.isDisabled = false})
-      : assert(min < max, 'min must be below max.'),
-        assert(step == null || step > 0, 'step must be positive.');
+  const LumoRangeSlider({
+    super.key,
+    required this.label,
+    required this.startLabel,
+    required this.endLabel,
+    required this.values,
+    required this.valueLabel,
+    this.min = 0,
+    this.max = 1,
+    this.step,
+    this.onChanged,
+    this.onChangeEnd,
+    this.description,
+    this.errorMessage,
+    this.hideValue = false,
+    this.isDisabled = false,
+  }) : assert(min < max, 'min must be below max.'),
+       assert(step == null || step > 0, 'step must be positive.');
+
   /// Displayed name of the whole control. REQUIRED.
   final String label;
+
   /// Announced name of the start thumb, e.g. «کمینهٔ بودجه». REQUIRED.
   final String startLabel;
+
   /// Announced name of the end thumb. REQUIRED.
   final String endLabel;
   final RangeValues values;
@@ -126,6 +184,7 @@ class LumoRangeSlider extends StatelessWidget {
         label: name,
         hint: hint,
         enabled: !isDisabled,
+        validationResult: errorMessage == null ? SemanticsValidationResult.none : SemanticsValidationResult.invalid,
         value: valueLabel(own),
         increasedValue: valueLabel(up),
         decreasedValue: valueLabel(down),
@@ -134,19 +193,28 @@ class LumoRangeSlider extends StatelessWidget {
         child: const SizedBox.expand(),
       );
     }
+
     return Opacity(
       opacity: isDisabled ? 0.5 : 1,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           if (!hideValue)
-            _Header(children: [
-              Expanded(child: Text(label, style: TextStyle(fontSize: 14, color: c.fg), overflow: TextOverflow.ellipsis)),
-              // Start value first in reading order; the dash is punctuation, not language.
-              Text(valueLabel(start), style: TextStyle(fontSize: 14, color: c.fgMuted)),
-              Text(' – ', style: TextStyle(fontSize: 14, color: c.fgSubtle)),
-              Text(valueLabel(end), style: TextStyle(fontSize: 14, color: c.fgMuted)),
-            ]),
+            _Header(
+              children: [
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(fontSize: 14, color: c.fg),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                // Start value first in reading order; the dash is punctuation, not language.
+                Text(valueLabel(start), style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                Text(' – ', style: TextStyle(fontSize: 14, color: c.fgSubtle)),
+                Text(valueLabel(end), style: TextStyle(fontSize: 14, color: c.fgMuted)),
+              ],
+            ),
           Stack(
             children: [
               ExcludeSemantics(
@@ -165,10 +233,12 @@ class LumoRangeSlider extends StatelessWidget {
               // The named thumbs — over the halves. Nothing here hit-tests itself, so touch
               // falls through to the slider (no `IgnorePointer`: it would also block the actions).
               Positioned.fill(
-                child: Row(children: [
-                  Expanded(child: thumbSemantics(startLabel, start, end, true)),
-                  Expanded(child: thumbSemantics(endLabel, end, start, false)),
-                ]),
+                child: Row(
+                  children: [
+                    Expanded(child: thumbSemantics(startLabel, start, end, true)),
+                    Expanded(child: thumbSemantics(endLabel, end, start, false)),
+                  ],
+                ),
               ),
             ],
           ),
@@ -190,25 +260,32 @@ int? _divisions(double? step, double min, double max) => step == null ? null : m
 /// ring, as the web's `sliderThumbVariants`; the value indicator is off — the
 /// value is in the header row, formatted by the app.
 SliderThemeData _sliderTheme(LumoSchemeColours c, bool disabled) => SliderThemeData(
-      trackHeight: 6,
-      activeTrackColor: c.accent,
-      inactiveTrackColor: c.surfaceSunken,
-      disabledActiveTrackColor: c.accent,
-      disabledInactiveTrackColor: c.surfaceSunken,
-      thumbShape: _LumoThumb(fill: disabled ? c.surfaceSunken : c.surface, ring: disabled ? c.borderControl : c.accent),
-      rangeThumbShape: _LumoRangeThumb(fill: disabled ? c.surfaceSunken : c.surface, ring: disabled ? c.borderControl : c.accent),
-      overlayColor: c.focus.withValues(alpha: 0.24),
-      overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
-      showValueIndicator: ShowValueIndicator.never,
-      tickMarkShape: SliderTickMarkShape.noTickMark,
-      rangeTickMarkShape: const RoundRangeSliderTickMarkShape(tickMarkRadius: 0),
-      trackShape: const RoundedRectSliderTrackShape(),
-      rangeTrackShape: const RoundedRectRangeSliderTrackShape(),
-    );
+  trackHeight: 6,
+  activeTrackColor: c.accent,
+  inactiveTrackColor: c.surfaceSunken,
+  disabledActiveTrackColor: c.accent,
+  disabledInactiveTrackColor: c.surfaceSunken,
+  thumbShape: _LumoThumb(fill: disabled ? c.surfaceSunken : c.surface, ring: disabled ? c.borderControl : c.accent),
+  rangeThumbShape: _LumoRangeThumb(fill: disabled ? c.surfaceSunken : c.surface, ring: disabled ? c.borderControl : c.accent),
+  overlayColor: c.focus.withValues(alpha: 0.24),
+  overlayShape: const RoundSliderOverlayShape(overlayRadius: 20),
+  showValueIndicator: ShowValueIndicator.never,
+  tickMarkShape: SliderTickMarkShape.noTickMark,
+  rangeTickMarkShape: const RoundRangeSliderTickMarkShape(tickMarkRadius: 0),
+  trackShape: const RoundedRectSliderTrackShape(),
+  rangeTrackShape: const RoundedRectRangeSliderTrackShape(),
+);
 
 void _paintThumb(Canvas canvas, Offset center, Color fill, Color ring) {
   canvas.drawCircle(center, 10, Paint()..color = fill);
-  canvas.drawCircle(center, 9, Paint()..color = ring..style = PaintingStyle.stroke..strokeWidth = 2);
+  canvas.drawCircle(
+    center,
+    9,
+    Paint()
+      ..color = ring
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2,
+  );
 }
 
 class _LumoThumb extends SliderComponentShape {
@@ -218,8 +295,20 @@ class _LumoThumb extends SliderComponentShape {
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) => const Size(20, 20);
   @override
-  void paint(PaintingContext context, Offset center, {required Animation<double> activationAnimation, required Animation<double> enableAnimation, required bool isDiscrete, required TextPainter labelPainter, required RenderBox parentBox, required SliderThemeData sliderTheme, required TextDirection textDirection, required double value, required double textScaleFactor, required Size sizeWithOverflow}) =>
-      _paintThumb(context.canvas, center, fill, ring);
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    required bool isDiscrete,
+    required TextPainter labelPainter,
+    required RenderBox parentBox,
+    required SliderThemeData sliderTheme,
+    required TextDirection textDirection,
+    required double value,
+    required double textScaleFactor,
+    required Size sizeWithOverflow,
+  }) => _paintThumb(context.canvas, center, fill, ring);
 }
 
 class _LumoRangeThumb extends RangeSliderThumbShape {
@@ -229,8 +318,19 @@ class _LumoRangeThumb extends RangeSliderThumbShape {
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) => const Size(20, 20);
   @override
-  void paint(PaintingContext context, Offset center, {required Animation<double> activationAnimation, required Animation<double> enableAnimation, bool isDiscrete = false, bool isEnabled = false, bool? isOnTop, TextDirection? textDirection, required SliderThemeData sliderTheme, Thumb? thumb, bool? isPressed}) =>
-      _paintThumb(context.canvas, center, fill, ring);
+  void paint(
+    PaintingContext context,
+    Offset center, {
+    required Animation<double> activationAnimation,
+    required Animation<double> enableAnimation,
+    bool isDiscrete = false,
+    bool isEnabled = false,
+    bool? isOnTop,
+    TextDirection? textDirection,
+    required SliderThemeData sliderTheme,
+    Thumb? thumb,
+    bool? isPressed,
+  }) => _paintThumb(context.canvas, center, fill, ring);
 }
 
 /// The label/value row above the track — decoration for the reader (the name
@@ -239,7 +339,12 @@ class _Header extends StatelessWidget {
   const _Header({required this.children});
   final List<Widget> children;
   @override
-  Widget build(BuildContext context) => ExcludeSemantics(child: Padding(padding: const EdgeInsets.only(bottom: 4), child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: children)));
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: children),
+    ),
+  );
 }
 
 class _Notes extends StatelessWidget {
@@ -252,8 +357,23 @@ class _Notes extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (description != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted))),
-        if (errorMessage != null) Padding(padding: const EdgeInsets.only(top: 6), child: Semantics(liveRegion: true, child: Text(errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)))),
+        // Both are the slider node's HINT already: painted here, excluded there,
+        // so each is heard exactly once (measured: each was heard TWICE).
+        if (description != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: ExcludeSemantics(
+              child: Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted)),
+            ),
+          ),
+        if (errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: // ExcludeSemantics, and deliberately NOT `Semantics(liveRegion: true, …)`: the message is already announced as part of the field's semantic `hint` just above, so a second node carrying the same words would say it twice. A `liveRegion` wrapped round an EXCLUDED subtree — which is what stood here — announces nothing at all: it reads as an accessibility feature and is a no-op. See test/house_rules_test.dart.
+            ExcludeSemantics(
+              child: Text(errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)),
+            ),
+          ),
       ],
     );
   }

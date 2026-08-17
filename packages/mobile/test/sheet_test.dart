@@ -112,4 +112,67 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('غیرفعال'), findsNothing);
   });
+
+  /// One frame after the press: the animated sheet is still off the bottom
+  /// edge, the reduce-motion sheet has already arrived.
+  Future<Offset> slideAfterOneFrame(WidgetTester tester, {required bool disableAnimations}) async {
+    await tester.pumpWidget(MediaQuery(
+      data: MediaQueryData(disableAnimations: disableAnimations),
+      child: app('fa-IR', LumoSheetTrigger(
+        label: 'فیلترها',
+        closeLabel: 'بستن',
+        trigger: (open) => LumoButton(onPressed: open, child: const Text('باز کردن')),
+        body: (ctx) => const Text('محتوای برگه'),
+      )),
+    ));
+    await tester.tap(find.text('باز کردن'));
+    await tester.pump();
+    return tester.widget<SlideTransition>(find.ancestor(of: find.text('محتوای برگه'), matching: find.byType(SlideTransition)).first).position.value;
+  }
+
+  testWidgets('Sheet: with motion it is still travelling one frame in — the control the assertion below needs', (tester) async {
+    expect((await slideAfterOneFrame(tester, disableAnimations: false)).dy, greaterThan(0), reason: 'still below the bottom edge');
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Sheet: «reduce motion» collapses the slide to Duration.zero — the sheet is at rest on the FIRST frame', (tester) async {
+    expect(await slideAfterOneFrame(tester, disableAnimations: true), Offset.zero, reason: 'MediaQuery.disableAnimationsOf must collapse the duration to zero');
+    expect(find.text('فیلترها'), findsOneWidget);
+    expect(find.text('محتوای برگه'), findsOneWidget);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Sheet at 320dp: two real Persian verbs stack instead of overflowing, and the ✕ target stays inside the sheet', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(app('fa-IR', LumoSheetTrigger(
+      label: 'تنظیمات پیشرفتهٔ حساب کاربری',
+      closeLabel: 'بستن',
+      trigger: (open) => LumoButton(onPressed: open, child: const Text('باز کردن')),
+      body: (ctx) => const Text('محتوا'),
+      actions: (ctx) => [
+        LumoButton(variant: LumoButtonVariant.outline, onPressed: () {}, child: const Text('انصراف و بازگشت')),
+        LumoButton(onPressed: () {}, child: const Text('ذخیرهٔ تغییرات')),
+      ],
+    )));
+    await tester.tap(find.text('باز کردن'));
+    await tester.pumpAndSettle();
+    // A `Row` here overflowed by 184px.
+    expect(tester.takeException(), isNull, reason: 'a RenderFlex overflow at 320dp is a real bug, not a debug banner');
+    final cancel = tester.getRect(find.text('انصراف و بازگشت'));
+    final save = tester.getRect(find.text('ذخیرهٔ تغییرات'));
+    expect(cancel.top, isNot(save.top), reason: 'they no longer fit on one line, so they are on two');
+
+    // The long title wraps rather than being cut, and the ✕ target keeps its
+    // 44 square inside the sheet beside it.
+    final target = tester.getRect(closeButton('بستن'));
+    expect(target.width, greaterThanOrEqualTo(44));
+    expect(target.height, greaterThanOrEqualTo(44));
+    final sheet = tester.getRect(find.ancestor(of: find.text('محتوا'), matching: find.byType(Material)).first);
+    expect(sheet.contains(target.topLeft) && sheet.contains(target.bottomRight), isTrue, reason: 'the enlarged target must not overhang the sheet');
+    await tester.tapAt(Offset(target.center.dx, target.bottom - 3));
+    await tester.pumpAndSettle();
+    expect(find.text('محتوا'), findsNothing, reason: 'a tap at the target edge, clear of the glyph, must close the sheet');
+  });
 }

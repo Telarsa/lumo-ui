@@ -118,4 +118,48 @@ void main() {
       }
     }
   });
+  testWidgets('SegmentedControl: a segment FILLS the track — it was 175x20 top-aligned inside a 32-tall control, so the labels rode high and two thirds of the pill was dead', (tester) async {
+    await tester.pumpWidget(app('fa-IR', const SizedBox(width: 360, child: LumoSegmentedControl(label: 'نمای نتایج', segments: faSegments))));
+    final track = tester.getRect(pill());
+    for (final s in faSegments) {
+      final seg = tester.getRect(find.ancestor(of: find.text(s.label), matching: find.byType(InkWell)).first);
+      expect(seg.height, 32.0, reason: '${s.label}: as tall as the md track');
+      expect(seg.top, track.top, reason: '${s.label}: flush with the pill, not floating above it');
+      expect(seg.bottom, track.bottom, reason: '${s.label}: no dead track under the label');
+    }
+  });
+
+  testWidgets('SegmentedControl: under disableAnimations the pill ARRIVES at the new segment in ONE frame', (tester) async {
+    Widget build(String value, bool reduce) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: reduce),
+            child: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(
+              width: 360,
+              child: LumoSegmentedControl(label: 'نمای نتایج', segments: faSegments, value: value),
+            )))),
+          ),
+        );
+
+    // The end state, measured.
+    await tester.pumpWidget(build('map', true));
+    await tester.pumpAndSettle();
+    final end = tester.getRect(pill());
+
+    // Sanity: WITH motion, one frame after the change the pill is still travelling.
+    await tester.pumpWidget(build('list', false));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build('map', false));
+    await tester.pump();
+    expect(tester.getRect(pill()).left, isNot(end.left));
+    await tester.pumpAndSettle();
+
+    // Under «Reduce motion»: the pill is at the new segment on the next frame.
+    await tester.pumpWidget(build('list', true));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build('map', true));
+    await tester.pump();
+    expect(tester.getRect(pill()), end);
+  });
+
 }

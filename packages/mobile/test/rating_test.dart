@@ -63,9 +63,34 @@ void main() {
     expect(tester.widgetList<Align>(find.byType(Align)).map((a) => a.widthFactor), [1, 1, 0, 0, 0], reason: 'controlled: the parent did not move the value');
     await tester.pumpWidget(app('en-US', LumoRating(label: 'Your rating', valueLabel: '2 of 5', value: 2, isDisabled: true, starLabel: (n) => '$n stars', onChanged: (_) {})));
     await tester.pump();
-    expect(tester.getSize(find.bySemanticsLabel('4 stars')), const Size(24, 24), reason: 'a star is star-sized, not stretched');
+    // The TARGET is the 44 px touch cell; the star it PAINTS is still the web's
+    // `size-5` glyph inside `p-0.5` — 20 of icon, 24 of box.
+    expect(tester.getSize(find.bySemanticsLabel('4 stars')), const Size(44, 44), reason: 'a star is a touch target');
+    expect(tester.getSize(find.byIcon(Icons.star_rounded).first), const Size(20, 20), reason: 'the glyph did not grow with the target');
     expect(tester.getSemantics(find.bySemanticsLabel('4 stars')), matchesSemantics(label: '4 stars', isInMutuallyExclusiveGroup: true, hasCheckedState: true, isChecked: false, hasEnabledState: true, isEnabled: false));
     expect(() => LumoRating(label: 'x', valueLabel: 'y', onChanged: (_) {}), throwsAssertionError);
+    semantics.dispose();
+  });
+
+  testWidgets('Rating: cramped — the touch cell gives up its padding first, then the row scales; never a RenderFlex overflow', (tester) async {
+    final semantics = tester.ensureSemantics();
+    Widget narrow(double width, Widget child) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: width, child: child)))),
+        );
+    // Room for five 44s: the cell is the full touch floor.
+    await tester.pumpWidget(narrow(320, LumoRating(label: 'امتیاز', valueLabel: '۴ از ۵', defaultValue: 4, starLabel: (n) => '${formatNumber(n, 'fa-IR')} ستاره', onChanged: (_) {})));
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.bySemanticsLabel('۴ ستاره')), const Size(44, 44));
+    // Ten `lg` stars in 240 dp used to be «A RenderFlex overflowed by 40 pixels on the right».
+    await tester.pumpWidget(narrow(240, LumoRating(label: 'امتیاز', valueLabel: '۴ از ۱۰', defaultValue: 4, max: 10, size: LumoRatingSize.lg, starLabel: (n) => '${formatNumber(n, 'fa-IR')} ستاره', onChanged: (_) {})));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull, reason: 'the row scales rather than overflowing');
+    expect(tester.getSize(find.byType(LumoRating)).width, lessThanOrEqualTo(240));
+    // Read-only is measured the same way and stays a single announced picture.
+    await tester.pumpWidget(narrow(240, const LumoRating(label: 'امتیاز', valueLabel: '۴٫۵ از ۱۰', value: 4.5, max: 10, size: LumoRatingSize.lg)));
+    expect(tester.takeException(), isNull);
+    expect(find.bySemanticsLabel('امتیاز'), findsOneWidget);
     semantics.dispose();
   });
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart' show SemanticsRole;
+import 'package:flutter/semantics.dart' show SemanticsRole, SemanticsValidationResult;
 import 'package:intl/intl.dart' show NumberFormat;
 
 import 'combobox.dart' show lumoFoldForSearch;
@@ -121,6 +121,16 @@ bool lumoPhoneIsValid(String e164, {List<LumoPhoneCountry> countries = kLumoPhon
 /// `keyboardType` is `phone`, never a numeric one that would reject the digits
 /// a Persian keyboard produces; the parser, not the platform, decides what a
 /// digit is.
+///
+/// State: `errorMessage` is the ONLY validity input, exactly as on the web
+/// (`phone-input.tsx` has no `isInvalid` and derives `aria-invalid` from the
+/// message alone), and it reaches the reader as `SemanticsValidationResult
+/// .invalid` on the number field — the state, not only the sentence. The web
+/// has no `isRequired` here either, so neither does this.
+///
+/// The country selector is 132 logical px wide where the web's is `w-36`
+/// (144): a stated mobile deviation. At 320 dp the row must still leave the
+/// number field room for a dial prefix and ten digits, and 144 does not.
 class LumoPhoneInput extends StatefulWidget {
   const LumoPhoneInput({
     super.key,
@@ -232,7 +242,10 @@ class _LumoPhoneInputState extends State<LumoPhoneInput> {
     final draftHolds = _draft != null && lumoPhoneE164(_draft!, dial, locale: _locale) == _e164;
     final text = draftHolds ? _draft! : _renderDigits(lumoPhoneNational(_e164, dial, locale: _locale), _locale);
     if (_controller.text != text) {
-      _controller.value = TextEditingValue(text: text, selection: TextSelection.collapsed(offset: text.length));
+      _controller.value = TextEditingValue(
+        text: text,
+        selection: TextSelection.collapsed(offset: text.length),
+      );
     }
   }
 
@@ -258,19 +271,19 @@ class _LumoPhoneInputState extends State<LumoPhoneInput> {
   }
 
   Future<void> _openCountries() => showLumoSheet<void>(
-        context,
-        label: widget.countryLabel,
-        closeLabel: widget.closeLabel,
-        body: (ctx) => _CountrySheet(
-          countries: widget.countries,
-          selected: _code,
-          searchLabel: widget.searchLabel,
-          onPick: (code) {
-            Navigator.of(ctx).pop();
-            _pickCountry(code);
-          },
-        ),
-      );
+    context,
+    label: widget.countryLabel,
+    closeLabel: widget.closeLabel,
+    body: (ctx) => _CountrySheet(
+      countries: widget.countries,
+      selected: _code,
+      searchLabel: widget.searchLabel,
+      onPick: (code) {
+        Navigator.of(ctx).pop();
+        _pickCountry(code);
+      },
+    ),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -286,7 +299,12 @@ class _LumoPhoneInputState extends State<LumoPhoneInput> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Excluded: the name lives on the number field's node, announced ONCE.
-          ExcludeSemantics(child: Text(widget.label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg))),
+          ExcludeSemantics(
+            child: Text(
+              widget.label,
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg),
+            ),
+          ),
           const SizedBox(height: 6),
           // The ROW mirrors: the country selector takes the reading start.
           Row(
@@ -306,11 +324,22 @@ class _LumoPhoneInputState extends State<LumoPhoneInput> {
                     child: Container(
                       height: LumoControl.md,
                       padding: const EdgeInsetsDirectional.only(start: 10, end: 6),
-                      decoration: BoxDecoration(color: c.surface, border: Border.all(color: c.borderControl), borderRadius: BorderRadius.circular(LumoRadius.md)),
+                      decoration: BoxDecoration(
+                        color: c.surface,
+                        border: Border.all(color: c.borderControl),
+                        borderRadius: BorderRadius.circular(LumoRadius.md),
+                      ),
                       child: ExcludeSemantics(
                         child: Row(
                           children: [
-                            Expanded(child: Text(country.nameFor(scope.locale), maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 13, color: c.fg))),
+                            Expanded(
+                              child: Text(
+                                country.nameFor(scope.locale),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(fontSize: 13, color: c.fg),
+                              ),
+                            ),
                             Icon(Icons.expand_more, size: 16, color: c.fgMuted),
                           ],
                         ),
@@ -327,13 +356,16 @@ class _LumoPhoneInputState extends State<LumoPhoneInput> {
                   child: Row(
                     spacing: 6,
                     children: [
-                      ExcludeSemantics(child: Text(dial, style: TextStyle(fontSize: 13, color: c.fgMuted))),
+                      ExcludeSemantics(
+                        child: Text(dial, style: TextStyle(fontSize: 13, color: c.fgMuted)),
+                      ),
                       Expanded(
                         child: MergeSemantics(
                           child: Semantics(
                             label: widget.label,
                             textField: true,
                             enabled: !widget.isDisabled,
+                            validationResult: invalid ? SemanticsValidationResult.invalid : SemanticsValidationResult.none,
                             hint: [if (widget.description != null) widget.description!, if (widget.errorMessage != null) widget.errorMessage!].join('. '),
                             child: TextField(
                               controller: _controller,
@@ -348,7 +380,10 @@ class _LumoPhoneInputState extends State<LumoPhoneInput> {
                                 hintText: widget.placeholder,
                                 hintStyle: TextStyle(color: c.fgSubtle),
                                 contentPadding: const EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 8),
-                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(LumoRadius.md), borderSide: BorderSide(color: invalid ? c.critical : c.borderControl)),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(LumoRadius.md),
+                                  borderSide: BorderSide(color: invalid ? c.critical : c.borderControl),
+                                ),
                               ),
                             ),
                           ),
@@ -361,11 +396,19 @@ class _LumoPhoneInputState extends State<LumoPhoneInput> {
             ],
           ),
           if (widget.description != null)
-            Padding(padding: const EdgeInsets.only(top: 6), child: ExcludeSemantics(child: Text(widget.description!, style: TextStyle(fontSize: 12, color: c.fgMuted)))),
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: ExcludeSemantics(
+                child: Text(widget.description!, style: TextStyle(fontSize: 12, color: c.fgMuted)),
+              ),
+            ),
           if (invalid)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Semantics(liveRegion: true, child: ExcludeSemantics(child: Text(widget.errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)))),
+              child: // ExcludeSemantics, and deliberately NOT `Semantics(liveRegion: true, …)`: the message is already announced as part of the field's semantic `hint` just above, so a second node carrying the same words would say it twice. A `liveRegion` wrapped round an EXCLUDED subtree — which is what stood here — announces nothing at all: it reads as an accessibility feature and is a no-op. See test/house_rules_test.dart.
+              ExcludeSemantics(
+                child: Text(widget.errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)),
+              ),
             ),
         ],
       ),
@@ -433,10 +476,22 @@ class _CountrySheetState extends State<_CountrySheet> {
                         child: ExcludeSemantics(
                           child: Row(
                             children: [
-                              Expanded(child: Text(k.nameFor(scope.locale), style: TextStyle(fontSize: 15, fontWeight: k.code == widget.selected ? FontWeight.w600 : FontWeight.w400, color: c.fg))),
+                              Expanded(
+                                child: Text(
+                                  k.nameFor(scope.locale),
+                                  style: TextStyle(fontSize: 15, fontWeight: k.code == widget.selected ? FontWeight.w600 : FontWeight.w400, color: c.fg),
+                                ),
+                              ),
                               // The dial code reads left-to-right in every script.
-                              Directionality(textDirection: TextDirection.ltr, child: Text('+${_renderDigits(k.dial, scope.locale)}', style: TextStyle(fontSize: 13, color: c.fgMuted))),
-                              if (k.code == widget.selected) Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: Icon(Icons.check, size: 16, color: c.accent)),
+                              Directionality(
+                                textDirection: TextDirection.ltr,
+                                child: Text('+${_renderDigits(k.dial, scope.locale)}', style: TextStyle(fontSize: 13, color: c.fgMuted)),
+                              ),
+                              if (k.code == widget.selected)
+                                Padding(
+                                  padding: const EdgeInsetsDirectional.only(start: 8),
+                                  child: Icon(Icons.check, size: 16, color: c.accent),
+                                ),
                             ],
                           ),
                         ),
@@ -468,12 +523,12 @@ String _renderDigits(String digits, String locale) {
 /// always, plus `locale`'s on first use. The same rule `LumoNumberField` parses by.
 final _digitMaps = <String, Map<String, String>>{};
 Map<String, String> _digitMap(String locale) => _digitMaps.putIfAbsent(locale, () {
-      final map = <String, String>{};
-      for (final tag in {'en', 'fa', 'ar', formatLocale(locale)}) {
-        final f = NumberFormat.decimalPattern(tag)..turnOffGrouping();
-        for (var d = 0; d < 10; d++) {
-          map[f.format(d)] = '$d';
-        }
-      }
-      return map;
-    });
+  final map = <String, String>{};
+  for (final tag in {'en', 'fa', 'ar', formatLocale(locale)}) {
+    final f = NumberFormat.decimalPattern(tag)..turnOffGrouping();
+    for (var d = 0; d < 10; d++) {
+      map[f.format(d)] = '$d';
+    }
+  }
+  return map;
+});

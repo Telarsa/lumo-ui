@@ -101,7 +101,15 @@ class LumoAttachmentTile extends StatelessWidget {
         opacity: isDisabled ? 0.5 : 1,
         child: Container(
           // `ps-3 pe-1`: room for the name at the reading edge, tight against the ✕. Both swap under RTL.
-          padding: const EdgeInsetsDirectional.only(start: 12, end: 4, top: 8, bottom: 8),
+          //
+          // The VERTICAL padding is not here but on the two content children:
+          // the ✕ needs 44 logical px of hit area (it draws 28, as `size-7` on
+          // the web) and it takes them out of this padding rather than adding
+          // to the row — measured, the tile is the same 46 px tall with the ✕
+          // and the same 38 without it as when the ✕ was a 28-px box inside
+          // 8 px of padding. Same for the inline end: the ✕'s own transparent
+          // inset replaces the `pe-1`, so the name keeps its width to the mm.
+          padding: EdgeInsetsDirectional.only(start: 12, end: onRemove == null ? 4 : 0),
           decoration: BoxDecoration(
             color: c.surface,
             border: Border.all(color: failed ? c.critical.withValues(alpha: 0.4) : c.border),
@@ -110,18 +118,24 @@ class LumoAttachmentTile extends StatelessWidget {
           child: LayoutBuilder(builder: (context, constraints) {
             final fit = _fit(context, constraints.maxWidth);
             return Row(
-            spacing: 12,
             children: [
-              if (fit.showIcon)
+              if (fit.showIcon) ...[
                 ExcludeSemantics(
-                  child: Icon(
-                    failed ? Icons.error_outline : Icons.attach_file,
-                    size: 16,
-                    color: failed ? c.critical : c.fgMuted,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: Icon(
+                      failed ? Icons.error_outline : Icons.attach_file,
+                      size: 16,
+                      color: failed ? c.critical : c.fgMuted,
+                    ),
                   ),
                 ),
+                const SizedBox(width: 12),
+              ],
               Expanded(
-                child: ExcludeSemantics(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: ExcludeSemantics(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -169,6 +183,7 @@ class LumoAttachmentTile extends StatelessWidget {
                     ],
                   ),
                 ),
+                ),
               ),
               if (onRemove != null)
                 Semantics(
@@ -182,10 +197,23 @@ class LumoAttachmentTile extends StatelessWidget {
                     child: InkWell(
                       onTap: isDisabled ? null : onRemove,
                       borderRadius: BorderRadius.circular(LumoRadius.sm),
+                      // `LumoControl.lg` of HIT AREA around the web's own ✕:
+                      // the web draws `IconButton size="sm"` — `LumoControl.sm`
+                      // square with a 16-px glyph — and that is what is painted
+                      // here (it was a 28-px box with a 14-px glyph, off the
+                      // reference on both numbers). The 44 is the touch target,
+                      // and its extra px come out of the row's own padding (see
+                      // the Container above), so the tile does not grow.
                       child: SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: ExcludeSemantics(child: Icon(Icons.close, size: 14, color: c.fgMuted)),
+                        width: LumoControl.lg,
+                        height: LumoControl.lg,
+                        child: Center(
+                          child: SizedBox(
+                            width: LumoControl.sm,
+                            height: LumoControl.sm,
+                            child: ExcludeSemantics(child: Icon(Icons.close, size: 16, color: c.fgMuted)),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -212,7 +240,9 @@ class LumoAttachmentTile extends StatelessWidget {
           maxLines: 1,
         )..layout())
         .width;
-    // The row's own fixed furniture: `ps-3 pe-1` and the ✕ with its gap.
+    // The row's own fixed furniture: `ps-3` plus either the `pe-1` (no ✕) or
+    // the ✕'s 44-px tap box, which absorbs that padding and the gap — 56 either
+    // way, exactly what the 28-px ✕ + gap + `pe-1` came to before.
     final free = maxWidth - 16 - (onRemove == null ? 0 : 40);
     final name = measure(file.name, 14);
     final size = hasSize ? measure(file.sizeLabel!, 12) + 12 : 0.0;
@@ -348,6 +378,13 @@ class LumoFileUpload extends StatelessWidget {
 
 /// The picker trigger. Its own widget rather than `LumoButton` so the group's
 /// `explicitChildNodes` sees one named button node and nothing nested.
+///
+/// It DRAWS the web's small pill (`LumoControl.sm`, the `size="sm"` button of
+/// the web `FileUpload`) but it HITS `LumoControl.lg`: a stated mobile
+/// deviation, not an accident — this is the only control of the upload slot and
+/// a 29-px-tall target is under every touch guideline. The pill's own geometry
+/// is untouched; the extra height is transparent, so the panel is 15 px taller
+/// and nothing inside it moved.
 class _BrowseButton extends StatelessWidget {
   const _BrowseButton({required this.label, required this.isDisabled, required this.onPressed});
   final String label;
@@ -365,17 +402,22 @@ class _BrowseButton extends StatelessWidget {
       child: InkWell(
         onTap: isDisabled ? null : onPressed,
         borderRadius: BorderRadius.circular(LumoRadius.md),
-        child: Container(
-          height: LumoControl.sm,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: c.surface,
-            border: Border.all(color: c.borderControl),
-            borderRadius: BorderRadius.circular(LumoRadius.md),
-          ),
-          child: ExcludeSemantics(
-            child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg)),
+        child: SizedBox(
+          height: LumoControl.lg,
+          child: Center(
+            child: Container(
+              height: LumoControl.sm,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: c.surface,
+                border: Border.all(color: c.borderControl),
+                borderRadius: BorderRadius.circular(LumoRadius.md),
+              ),
+              child: ExcludeSemantics(
+                child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg)),
+              ),
+            ),
           ),
         ),
       ),

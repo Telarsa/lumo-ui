@@ -157,7 +157,11 @@ class _LumoMenuBody extends StatelessWidget {
           isDisabled: e.isDisabled,
           isChecked: e.isSelected,
           // The tick is a real slot drawn whether or not it is ticked, so labels keep one column.
-          leading: SizedBox(width: 16, height: 16, child: e.isSelected ? Icon(Icons.check, size: 14, color: c.fg) : null),
+          // `c.accent`, not `c.fg`: the web's `menuCheckboxIndicatorVariants`
+          // is `grid size-4 place-items-center text-accent` — the indicator is
+          // the ACCENT role, and reading it as foreground made the tick and
+          // the label the same colour in both schemes.
+          leading: SizedBox(width: 16, height: 16, child: e.isSelected ? Icon(Icons.check, size: 14, color: c.accent) : null),
           colour: c.fg,
           onTap: () => e.onChanged?.call(!e.isSelected),
         );
@@ -199,7 +203,6 @@ class _LumoMenuRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = LumoScope.of(context).colours;
     return MergeSemantics(
       child: Semantics(
         button: isChecked == null,
@@ -207,14 +210,21 @@ class _LumoMenuRow extends StatelessWidget {
         enabled: !isDisabled,
         child: Opacity(
           opacity: isDisabled ? 0.5 : 1,
+          // No `hoverColor`/`highlightColor`/`splashColor` here: press feedback
+          // is the THEME's one decision (`lumoThemeData(pressFeedback:)`, which
+          // sets all three on `ThemeData`). Naming them per widget made
+          // `LumoPressFeedback.none` a lie for menu rows alone.
           child: InkWell(
             onTap: isDisabled ? null : onTap,
-            hoverColor: c.surfaceHover,
-            highlightColor: c.surfaceHover,
-            splashColor: Colors.transparent,
             borderRadius: BorderRadius.circular(LumoRadius.sm),
             child: Container(
-              constraints: const BoxConstraints(minHeight: LumoControl.md),
+              // `LumoControl.lg`, not `.md`. The web's `menuItemVariants` sets
+              // no min-height at all (`px-2 py-1.5 text-sm` ≈ 32px); a mouse
+              // hits 32px, a thumb in a list of eight rows does not. The house
+              // already says 44 for a tappable list row — `item.dart` and
+              // `phone_input.dart`'s picker both use `LumoControl.lg`. The
+              // PADDING stays the web's `px-2 py-1.5`.
+              constraints: const BoxConstraints(minHeight: LumoControl.lg),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Row(
                 children: [

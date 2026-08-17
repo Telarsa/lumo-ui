@@ -47,7 +47,7 @@ void main() {
     await tester.pump();
     expect(changes.last, lessThan(50), reason: 'under en-US the minimum sits at the left');
     await tester.pumpWidget(app('en-US', LumoSlider(label: 'Budget', value: 40, min: 0, max: 100, valueLabel: (v) => formatNumber(v.round(), 'en-US'), isDisabled: true, errorMessage: 'خارج از محدوده', onChanged: changes.add)));
-    expect(tester.getSemantics(find.byType(Slider)), matchesSemantics(label: 'Budget', hint: 'خارج از محدوده', value: '40', isSlider: true, hasEnabledState: true, isEnabled: false, isFocusable: true, hasFocusAction: true));
+    expect(tester.getSemantics(find.byType(Slider)), matchesSemantics(label: 'Budget', hint: 'خارج از محدوده', value: '40', isSlider: true, hasEnabledState: true, isEnabled: false, isFocusable: true, hasFocusAction: true, validationResult: SemanticsValidationResult.invalid));
     expect(find.text('خارج از محدوده'), findsOneWidget);
     semantics.dispose();
   });
@@ -86,6 +86,24 @@ void main() {
     await tester.pumpWidget(app('en-US', LumoRangeSlider(label: 'Price', startLabel: 'Minimum price', endLabel: 'Maximum price', values: const RangeValues(20, 80), min: 0, max: 100, valueLabel: (v) => formatNumber(v.round(), 'en-US'), onChanged: (_) {})));
     expect(tester.getCenter(find.bySemanticsLabel('Minimum price')).dx < tester.getCenter(find.bySemanticsLabel('Maximum price')).dx, isTrue);
     expect(tester.getSemantics(find.bySemanticsLabel('Minimum price')), matchesSemantics(label: 'Minimum price', value: '20', increasedValue: '25', decreasedValue: '15', isSlider: true, hasEnabledState: true, isEnabled: true, hasIncreaseAction: true, hasDecreaseAction: true));
+    semantics.dispose();
+  });
+
+  testWidgets('Slider: description and error are painted once and announced ONCE, and the error is a real invalid STATE', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', LumoSlider(
+      label: 'بودجه', value: 0.4, valueLabel: (v) => '۴۰', description: 'بر حسب درصد', errorMessage: 'بیش از سقف است')));
+    expect(find.text('بر حسب درصد'), findsOneWidget);
+    expect(find.text('بیش از سقف است'), findsOneWidget);
+    // Each used to reach the reader TWICE: as the slider's hint and again as a
+    // painted node of its own.
+    expect(find.bySemanticsLabel('بر حسب درصد'), findsNothing);
+    expect(find.bySemanticsLabel('بیش از سقف است'), findsNothing);
+    final data = tester.getSemantics(find.byType(Slider)).getSemanticsData();
+    expect(data.hint, 'بر حسب درصد. بیش از سقف است');
+    // The web slider gives an invalid slider no visual state at all; Flutter can
+    // at least tell the reader.
+    expect(data.validationResult, SemanticsValidationResult.invalid);
     semantics.dispose();
   });
 }

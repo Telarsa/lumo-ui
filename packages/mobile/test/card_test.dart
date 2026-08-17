@@ -72,4 +72,35 @@ void main() {
     // A tappable card without a label is refused at construction.
     expect(() => LumoCard(onTap: () {}, child: const SizedBox()), throwsAssertionError);
   });
+
+  testWidgets('Card: the press cross-fade collapses to zero under «reduce motion», and the press fill still lands', (tester) async {
+    Widget scoped({required bool disableAnimations}) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: disableAnimations),
+            child: LumoScope(
+              locale: 'fa-IR',
+              brightness: Brightness.light,
+              child: Scaffold(body: LumoCard(label: 'باز کردن', onTap: () {}, child: const Text('بدنه'))),
+            ),
+          ),
+        );
+
+    // Motion on: the house's 80ms.
+    await tester.pumpWidget(scoped(disableAnimations: false));
+    expect(tester.widget<AnimatedContainer>(find.byType(AnimatedContainer)).duration, const Duration(milliseconds: 80));
+
+    // Motion off: no duration at all — the fill swaps on the same frame.
+    await tester.pumpWidget(scoped(disableAnimations: true));
+    expect(tester.widget<AnimatedContainer>(find.byType(AnimatedContainer)).duration, Duration.zero);
+
+    // The STATE is still there, only the tween is gone: pressing takes the
+    // hover fill immediately rather than after 80ms.
+    final c = LumoScope.of(tester.element(find.text('بدنه'))).colours;
+    final gesture = await tester.startGesture(tester.getCenter(find.text('بدنه')));
+    await tester.pump();
+    expect(tester.widget<AnimatedContainer>(find.byType(AnimatedContainer)).decoration, isA<BoxDecoration>().having((d) => d.color, 'pressed fill', c.surfaceHover));
+    await gesture.up();
+    await tester.pump();
+  });
 }

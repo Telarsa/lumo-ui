@@ -5,8 +5,17 @@ import 'tokens.g.dart';
 /// A switch, direction-sensitive: named by its visible `label` or by an
 /// explicit `accessibilityLabel` — the constructor asserts one is present
 /// (Dart has no union types; the assertion is the compile-adjacent guard).
-/// Track/thumb geometry from the web (30×16 / 42×22); ON at the reading END,
-/// which `Directionality` mirrors — the thumb travels along the inline axis.
+/// ON at the reading END, which `Directionality` mirrors — the thumb travels
+/// along the inline axis, and stands still under `disableAnimations`.
+///
+/// Track geometry is the web's BORDER box — `switchTrackVariants`' `h-4.5 w-8`
+/// (32×18) and `h-6 w-11` (44×24), thumb `size-3.5`/`size-5` (14/20). The first
+/// pass drew 30×16 / 42×22, which is the web's PADDING box: a `BoxDecoration`
+/// border in Flutter paints INSIDE the box and does not inset the child, so
+/// subtracting it a second time shipped a switch 2 logical px short on both
+/// axes in both sizes. The 2px thumb inset is the web's 1px border + 1px inset,
+/// which puts the ON thumb at `trackW − 2 − thumb`, the web's `start-3.75` /
+/// `start-5.25` measured from the border box.
 class LumoSwitch extends StatelessWidget {
   const LumoSwitch({super.key, this.label, this.accessibilityLabel, this.description, this.isSelected = false, this.onChanged, this.isDisabled = false, this.size = LumoSwitchSize.md})
       : assert(label != null || accessibilityLabel != null, 'A switch needs a visible label or an accessibilityLabel — never neither.');
@@ -22,7 +31,10 @@ class LumoSwitch extends StatelessWidget {
   Widget build(BuildContext context) {
     final scope = LumoScope.of(context);
     final c = scope.colours;
-    final g = size == LumoSwitchSize.lg ? const (trackW: 42.0, trackH: 22.0, thumb: 20.0) : const (trackW: 30.0, trackH: 16.0, thumb: 14.0);
+    final g = size == LumoSwitchSize.lg ? const (trackW: 44.0, trackH: 24.0, thumb: 20.0) : const (trackW: 32.0, trackH: 18.0, thumb: 14.0);
+    // «Reduce motion» is the platform's answer, not a parameter of ours — the
+    // same spelling as `disclosure.dart`: the thumb JUMPS to its end state.
+    final motion = !MediaQuery.disableAnimationsOf(context);
     final track = SizedBox(
       width: g.trackW,
       height: g.trackH,
@@ -33,12 +45,17 @@ class LumoSwitch extends StatelessWidget {
           borderRadius: BorderRadius.circular(999),
         ),
         child: AnimatedAlign(
-          duration: const Duration(milliseconds: 120),
+          duration: motion ? const Duration(milliseconds: 120) : Duration.zero,
           // Logical: start when off, end when on — mirrored by Directionality.
           alignment: isSelected ? AlignmentDirectional.centerEnd : AlignmentDirectional.centerStart,
           child: Padding(
-            padding: const EdgeInsets.all(1),
-            child: Container(width: g.thumb, height: g.thumb, decoration: BoxDecoration(shape: BoxShape.circle, color: isSelected ? c.accentFg : c.fg)),
+            // The web's 1px border + 1px inset, measured from the border box.
+            padding: const EdgeInsets.all(2),
+            // At rest the thumb is a RAISED SURFACE (`bg-surface`), not text:
+            // `c.fg` is the foreground role and drew a near-black thumb on the
+            // light theme, inverting to near-white on dark — a token used for
+            // the wrong role, invisible in one scheme and wrong in the other.
+            child: Container(width: g.thumb, height: g.thumb, decoration: BoxDecoration(shape: BoxShape.circle, color: isSelected ? c.accentFg : c.surface)),
           ),
         ),
       ),
@@ -54,7 +71,12 @@ class LumoSwitch extends StatelessWidget {
           onTap: isDisabled ? null : () => onChanged?.call(!isSelected),
           borderRadius: BorderRadius.circular(LumoRadius.md),
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: size == LumoSwitchSize.lg ? LumoControl.lg : LumoControl.md),
+            // A NAMELESS switch (only `accessibilityLabel`) has no label column
+            // to widen the row, so in an unbounded parent it was the bare track:
+            // measured 32×36 inside a `Row`. `minWidth` is the 44 px floor for
+            // that case and is inert for a labelled switch, which already fills
+            // its column.
+            constraints: BoxConstraints(minWidth: LumoControl.lg, minHeight: size == LumoSwitchSize.lg ? LumoControl.lg : LumoControl.md),
             child: Row(
               children: [
                 if (label != null || description != null)

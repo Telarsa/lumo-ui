@@ -81,4 +81,66 @@ void main() {
     expect((tester.widget<AnimatedContainer>(find.descendant(of: tabOf('Profile'), matching: find.byType(AnimatedContainer))).decoration as BoxDecoration).color, c.accent);
     semantics.dispose();
   });
+  testWidgets('Tabs: under disableAnimations the panel SWAPS in ONE frame — no cross-fade with both panels alive', (tester) async {
+    Widget build(String value, bool reduce) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: reduce),
+            child: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(
+              width: 360,
+              child: LumoTabs(label: 'بخش‌های حساب', tabs: tabs, value: value, views: {for (final t in tabs) t.id: (_) => Text('محتوای ${t.label}')}),
+            )))),
+          ),
+        );
+
+    // Sanity: WITH motion, one frame after the change the outgoing panel is still on screen.
+    await tester.pumpWidget(build('profile', false));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build('security', false));
+    await tester.pump();
+    expect(find.text('محتوای پروفایل'), findsOneWidget);
+    await tester.pumpAndSettle();
+
+    // Under «Reduce motion»: the new panel is alone on the next frame.
+    await tester.pumpWidget(build('profile', true));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build('security', true));
+    await tester.pump();
+    expect(find.text('محتوای پروفایل'), findsNothing);
+    expect(find.text('محتوای امنیت'), findsOneWidget);
+    // The underline is under the selected tab already, at full colour.
+    final indicator = tester.widget<AnimatedContainer>(indicatorOf('امنیت'));
+    expect(indicator.duration, Duration.zero);
+  });
+
+  testWidgets('Tabs: three long Persian labels with badges at 320 dp neither overflow the row nor lose their names', (tester) async {
+    const long = [
+      LumoTab(id: 'a', label: 'حساب کاربری من', badge: '۱۲'),
+      LumoTab(id: 'b', label: 'تنظیمات پیشرفته', badge: '۳'),
+      LumoTab(id: 'c', label: 'اعلان‌های سیستم'),
+    ];
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(MaterialApp(
+      theme: lumoThemeData(brightness: Brightness.light),
+      home: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(
+        width: 320,
+        child: LumoTabs(label: 'بخش‌ها', tabs: long, views: {for (final t in long) t.id: (_) => Text('محتوای ${t.label}')}),
+      )))),
+    ));
+    await tester.pumpAndSettle();
+    // A `RenderFlex overflowed` would have thrown by now; assert the row is exactly the width it was given.
+    expect(tester.takeException(), isNull);
+    var used = 0.0;
+    for (final t in long) {
+      final tab = tester.getRect(find.ancestor(of: find.text(t.label), matching: find.byType(InkWell)).first);
+      used += tab.width;
+      // The NAME survives the squeeze even where the drawn words ellipsize.
+      // (The SELECTED tab's name is also on its `tabPanel` — the web's
+      // `aria-labelledby` — so this is "at least once", not "exactly once".)
+      expect(find.bySemanticsLabel(t.label), findsAtLeastNWidgets(1));
+    }
+    expect(used, moreOrLessEquals(320, epsilon: 0.5));
+    semantics.dispose();
+  });
+
 }

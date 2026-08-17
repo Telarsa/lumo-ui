@@ -61,4 +61,66 @@ void main() {
     expect(tester.getSize(find.byType(CircularProgressIndicator)), const Size(20, 20));
     semantics.dispose();
   });
+
+  testWidgets('Progress under «reduce motion»: BOTH animations stop — the determinate fill jumps, the indeterminate pulse parks opaque', (tester) async {
+    Widget scoped(Widget child, {required bool disableAnimations}) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: disableAnimations),
+            child: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: 300, child: child)))),
+          ),
+        );
+
+    // Determinate: the 160ms growth (the web's `transition-[inline-size]`).
+    await tester.pumpWidget(scoped(const LumoProgress(label: 'بارگذاری', value: 0.4), disableAnimations: false));
+    expect(tester.widget<AnimatedFractionallySizedBox>(find.byType(AnimatedFractionallySizedBox)).duration, const Duration(milliseconds: 160));
+
+    await tester.pumpWidget(scoped(const LumoProgress(label: 'بارگذاری', value: 0.4), disableAnimations: true));
+    expect(tester.widget<AnimatedFractionallySizedBox>(find.byType(AnimatedFractionallySizedBox)).duration, Duration.zero);
+    await tester.pumpAndSettle();
+    final track = tester.getRect(find.byType(ClipRRect));
+    // A new value is THERE on the next frame — no sweep across the screen.
+    await tester.pumpWidget(scoped(const LumoProgress(label: 'بارگذاری', value: 0.9), disableAnimations: true));
+    await tester.pump();
+    expect(tester.getRect(find.byType(AnimatedFractionallySizedBox)).width, closeTo(track.width * 0.9, 1));
+
+    // Indeterminate: the pulse is stopped and parked FULLY OPAQUE — a dimmed
+    // bar frozen mid-pulse would read as disabled.
+    await tester.pumpWidget(scoped(const LumoProgress(label: 'بارگذاری', value: null), disableAnimations: true));
+    await tester.pump();
+    final o0 = tester.widget<FadeTransition>(find.byType(FadeTransition)).opacity.value;
+    expect(o0, 1.0);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.widget<FadeTransition>(find.byType(FadeTransition)).opacity.value, o0, reason: 'nothing moves under «reduce motion»');
+  });
+
+  testWidgets('Spinner under «reduce motion»: the ring stops TURNING and pulses in place — the web `motion-reduce:animate-pulse`, not a frozen ring', (tester) async {
+    final semantics = tester.ensureSemantics();
+    Widget scoped({required bool disableAnimations}) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: disableAnimations),
+            child: const LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: LumoSpinner(label: 'در حال بارگذاری…')))),
+          ),
+        );
+
+    // Motion on: an indeterminate (turning) ring, no opacity wrapper.
+    await tester.pumpWidget(scoped(disableAnimations: false));
+    expect(tester.widget<CircularProgressIndicator>(find.byType(CircularProgressIndicator)).value, isNull);
+    expect(find.descendant(of: find.byType(LumoSpinner), matching: find.byType(FadeTransition)), findsNothing);
+
+    // Motion off: the SAME 3/4 arc the spin draws, parked, pulsing instead.
+    await tester.pumpWidget(scoped(disableAnimations: true));
+    await tester.pump();
+    expect(tester.widget<CircularProgressIndicator>(find.byType(CircularProgressIndicator)).value, 0.75);
+    final fade = find.descendant(of: find.byType(LumoSpinner), matching: find.byType(FadeTransition));
+    expect(fade, findsOneWidget);
+    final o0 = tester.widget<FadeTransition>(fade).opacity.value;
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(tester.widget<FadeTransition>(fade).opacity.value == o0, isFalse, reason: 'a static ring reads as a hang; it pulses');
+    // Drawing and announcement are unchanged by the swap.
+    expect(tester.getSize(find.byType(CircularProgressIndicator)), const Size(20, 20));
+    expect(tester.getSemantics(find.byType(LumoSpinner)), matchesSemantics(label: 'در حال بارگذاری…', isLiveRegion: true));
+    semantics.dispose();
+  });
 }

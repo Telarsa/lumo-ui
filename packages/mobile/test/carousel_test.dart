@@ -2,6 +2,7 @@
 // on the right and «next» moves the deck leftward; under en-US it is the other
 // way round — the same widget, no direction flag. Asserted with real positions.
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show SemanticsAction;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';
 
@@ -165,5 +166,37 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('یک'), findsOneWidget);
     expect(find.text('دو'), findsNothing);
+  });
+
+  testWidgets('Carousel: the chevrons and the dots are buttons a READER can press — a tap action on the node, 44 px of target, the circle where it was', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', LumoCarousel(label: 'پیشنهادها', items: faItems, previousLabel: 'قبلی', nextLabel: 'بعدی', slideLabel: faSlide)));
+    await tester.pumpAndSettle();
+    // The defect: `Semantics(button: true)` over a `GestureDetector(
+    // excludeFromSemantics: true)` with no `onTap` on the NODE — the whole
+    // carousel carried no SemanticsAction.tap at all.
+    for (final name in ['بعدی', faSlide(1, 3)]) {
+      final node = tester.getSemantics(find.bySemanticsLabel(name));
+      expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue, reason: '$name must be pressable by a reader');
+      final size = tester.getSize(find.bySemanticsLabel(name));
+      expect(size.width, greaterThanOrEqualTo(44), reason: '$name is a tap target');
+      expect(size.height, greaterThanOrEqualTo(44), reason: '$name is a tap target');
+    }
+    // The chevron circle still paints at `LumoControl.sm`, hard against the band's start.
+    expect(tester.getSize(find.ancestor(of: find.byIcon(Icons.chevron_right), matching: find.byType(Container)).first), const Size(29, 29));
+    // And the dot really moves the deck: the third slide is the one on screen.
+    await tester.tap(find.bySemanticsLabel(faSlide(2, 3)));
+    await tester.pumpAndSettle();
+    expect(tester.getCenter(find.text('سه')).dx, closeTo(tester.getCenter(find.byType(LumoCarousel)).dx, 1));
+    semantics.dispose();
+  });
+
+  testWidgets('Carousel: the dot that widens when its slide arrives collapses to Duration.zero under disableAnimations', (tester) async {
+    await tester.pumpWidget(app('fa-IR', LumoCarousel(label: 'پیشنهادها', items: faItems, previousLabel: 'قبلی', nextLabel: 'بعدی', slideLabel: faSlide)));
+    await tester.pumpAndSettle();
+    expect(tester.widgetList<AnimatedContainer>(find.byType(AnimatedContainer)).map((a) => a.duration).toSet(), {const Duration(milliseconds: 150)});
+    await tester.pumpWidget(app('fa-IR', LumoCarousel(label: 'پیشنهادها', items: faItems, previousLabel: 'قبلی', nextLabel: 'بعدی', slideLabel: faSlide), disableAnimations: true));
+    await tester.pumpAndSettle();
+    expect(tester.widgetList<AnimatedContainer>(find.byType(AnimatedContainer)).map((a) => a.duration).toSet(), {Duration.zero}, reason: 'reduce motion is the platform saying no');
   });
 }

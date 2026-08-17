@@ -12,6 +12,8 @@ Widget app(String locale, Widget child) => MaterialApp(
       home: LumoScope(locale: locale, brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: 360, child: child)))),
     );
 
+void _noop() {}
+
 void main() {
   testWidgets('Link: announced as a LINK, not a button; the name is heard ONCE; onTap is the seam', (tester) async {
     final semantics = tester.ensureSemantics();
@@ -85,4 +87,15 @@ void main() {
     expect(tester.getRect(find.byType(LumoLink)).height >= 36, isTrue);
     expect(Directionality.of(tester.element(find.byType(LumoLink))), TextDirection.ltr);
   });
+  testWidgets('Link: a STANDALONE link is a touch target (44), an INLINE one stays a line box — padding a word to 44 would hole the paragraph it sits in', (tester) async {
+    await tester.pumpWidget(app('fa-IR', const Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+      LumoLink(label: 'راهنما', onTap: _noop, variant: LumoLinkVariant.standalone),
+      LumoLink(label: 'راهنما', onTap: _noop),
+    ])));
+    final standalone = tester.getSize(find.byType(LumoLink).first);
+    final inline = tester.getSize(find.byType(LumoLink).last);
+    expect(standalone.height, greaterThanOrEqualTo(LumoControl.lg), reason: 'it measured 36 — the text-button scale, with no fill to aim at');
+    expect(inline.height, lessThan(LumoControl.md), reason: 'an inline link is ONE line box, by design (WCAG 2.5.8 exempts a target in a sentence)');
+  });
+
 }

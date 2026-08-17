@@ -57,4 +57,18 @@ void main() {
     expect(find.text('Delete this row'), findsNothing);
     semantics.dispose();
   });
+
+  testWidgets('Tooltip: the inverted surface carries the overlay shadow — it has no border to separate it from the page', (tester) async {
+    final c = lightColours(LumoBrand.achromatic);
+    await tester.pumpWidget(app('fa-IR', LumoTooltip(message: 'حذف این ردیف', child: LumoIconButton(label: 'حذف', onPressed: () {}, child: const Icon(Icons.delete)))));
+    await tester.longPress(find.byType(LumoIconButton));
+    await tester.pump(const Duration(milliseconds: 200));
+    expect(find.text('حذف این ردیف'), findsOneWidget);
+    // `shadow-overlay` on the web tooltip; `c.scrim` is the house's shadow role.
+    final decoration = tester.widget<Container>(tipBox(c.fg)).decoration! as BoxDecoration;
+    expect(decoration.boxShadow, LumoShadow.overlay(Brightness.light), reason: 'from the elevation token, which holds a separate DARK ramp — not hand-picked and identical in both schemes');
+    expect(LumoShadow.overlay(Brightness.light).first.color, isNot(LumoShadow.overlay(Brightness.dark).first.color));
+    Tooltip.dismissAllToolTips();
+    await tester.pumpAndSettle();
+  });
 }

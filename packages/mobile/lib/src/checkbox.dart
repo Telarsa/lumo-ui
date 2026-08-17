@@ -11,6 +11,14 @@ import 'tokens.g.dart';
 /// `isIndeterminate` is the one field a switch does not have and is announced
 /// as the MIXED state. `errorMessage` is for a STANDALONE checkbox — a rule
 /// about the answer belongs on the group.
+///
+/// **The hit area is at least [LumoControl.lg] (44) square.** The web's
+/// `checkboxVariants` is `w-fit` and unheighted; measured in a 360 dp column a
+/// box labelled «ای» was 56.5×36 around a drawn 20×20 indicator, which a
+/// pointer hits and a thumb misses. The floor is a MINIMUM, so a long label
+/// still sizes to its words and nothing drawn moves — the box stays at the
+/// inline start with the label beside it and only transparent row grows. Same
+/// rule, same numbers, as `radio_group.dart`.
 class LumoCheckbox extends StatefulWidget {
   const LumoCheckbox({
     super.key,
@@ -92,7 +100,8 @@ class _LumoCheckboxState extends State<LumoCheckbox> {
         onTap: disabled || widget.isReadOnly ? null : _toggle,
         borderRadius: BorderRadius.circular(LumoRadius.md),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: LumoControl.md),
+          // The 44 px touch floor on BOTH axes — see the docblock.
+          constraints: const BoxConstraints(minWidth: LumoControl.lg, minHeight: LumoControl.lg),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -173,7 +182,8 @@ class LumoCheckboxGroup extends StatelessWidget {
           LumoCheckboxGroupScope(
             isDisabled: isDisabled,
             isInvalid: invalid,
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, spacing: 4, children: children),
+            // The web's group list is `flex flex-col gap-2` — 8, not 4.
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, spacing: 8, children: children),
           ),
           if (description != null) Padding(padding: const EdgeInsets.only(top: 6), child: ExcludeSemantics(child: Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted)))),
           if (errorMessage != null) Padding(padding: const EdgeInsets.only(top: 6), child: Semantics(liveRegion: true, child: Text(errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)))),

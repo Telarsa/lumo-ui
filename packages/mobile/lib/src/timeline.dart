@@ -99,8 +99,10 @@ class LumoTimeline extends StatelessWidget {
     final c = LumoScope.of(context).colours;
     final vertical = orientation == LumoTimelineOrientation.vertical;
 
-    // `size-7` with a `border-2 border-bg` ring, as the web marker: the ring
-    // keeps the rail from touching the dot whatever the surface.
+    // `size-7`, the web marker's box, with the web's `border-2`. The RING takes
+    // the state's colour rather than the web's `border-bg`: the rail is drawn
+    // BELOW the dot here, never under it, so there is nothing to hold off — and
+    // an accent ring is what `steps.dart` paints round the same disc.
     Widget dot(LumoTimelineItem item) {
       final (Color fill, Color ring, Color glyph) = switch (item.state) {
         LumoTimelineState.done => (c.accent, c.accent, c.accentFg),

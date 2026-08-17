@@ -50,7 +50,9 @@ const _font = {LumoToggleSize.sm: 14.0, LumoToggleSize.md: 14.0, LumoToggleSize.
 ///
 /// Controlled (`isSelected`) and uncontrolled (`defaultSelected`), as on the
 /// web. No press feedback of its own: a toggle's press CHANGES ITS STATE, so
-/// the tap answers itself — that is the web's rule too.
+/// the tap answers itself — that is the web's rule too. The fill cross-fade
+/// collapses to nothing under `disableAnimations`, so under «Reduce motion»
+/// the state change is instant, not merely faster.
 class LumoToggle extends StatefulWidget {
   const LumoToggle({super.key, required this.label, this.isSelected, this.defaultSelected = false, this.onChanged, this.icon, this.iconOnly = false, this.variant = LumoToggleVariant.ghost, this.size = LumoToggleSize.md, this.isDisabled = false}) : assert(!iconOnly || icon != null, 'An icon-only toggle needs an icon.');
 
@@ -97,6 +99,9 @@ class _LumoToggleState extends State<LumoToggle> {
     final enabled = !widget.isDisabled;
     final on = _selected;
     final height = _height[widget.size]!;
+    // «Reduce motion» is the platform's answer, not a parameter of ours — the
+    // same spelling as `disclosure.dart`: the ON fill arrives on the same frame.
+    final motion = !MediaQuery.disableAnimationsOf(context);
     // The ON fill is the accent TINT, a different hue from every neutral,
     // because `surfaceSunken` and `surfaceHover` are the same token on the
     // light theme. NOT the solid accent — that one belongs to a group member.
@@ -117,7 +122,7 @@ class _LumoToggleState extends State<LumoToggle> {
           excludeFromSemantics: true,
           onTap: enabled ? _press : null,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
+            duration: motion ? const Duration(milliseconds: 120) : Duration.zero,
             height: height,
             width: widget.iconOnly ? height : null,
             alignment: Alignment.center,
@@ -192,6 +197,8 @@ class LumoToggleItem {
 /// A cramped strip **sheds decoration before it truncates words** — the house
 /// `_fit` pattern: padding first (down to 4), then the icons, and only a bare
 /// label that still will not fit ellipsizes.
+///
+/// The member fill cross-fade collapses to nothing under `disableAnimations`.
 class LumoToggleGroup extends StatefulWidget {
   const LumoToggleGroup({super.key, required this.label, required this.items, this.value, this.defaultValue, this.values, this.defaultValues, this.onChanged, this.selectionMode = LumoToggleSelectionMode.single, this.disallowEmptySelection = false, this.size = LumoToggleSize.md, this.isDisabled = false})
     : assert(value == null || values == null, 'Give the selection as `value` or as `values`, not both.'),
@@ -357,6 +364,7 @@ class _GroupItem extends StatelessWidget {
     final c = LumoScope.of(context).colours;
     // A member's ON state is the SOLID accent — see the group's docblock.
     final fg = isSelected ? c.accentFg : c.fg;
+    final motion = !MediaQuery.disableAnimationsOf(context);
     return Semantics(
       button: true,
       toggled: isSelected,
@@ -374,7 +382,7 @@ class _GroupItem extends StatelessWidget {
           // narrower, and the label would ellipsize for a frame — which is the
           // exact defect `_fit` exists to prevent.
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 120),
+            duration: motion ? const Duration(milliseconds: 120) : Duration.zero,
             height: _height[size]!,
             alignment: Alignment.center,
             color: isSelected ? c.accent : Colors.transparent,

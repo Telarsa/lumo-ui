@@ -48,6 +48,19 @@ enum LumoAlertVariant { subtle, outline }
 /// actions are a `Wrap`, so a narrow screen grows the alert instead of eating
 /// its words.
 ///
+/// **The ✕'s hit area.** The web draws AND hits the dismiss at
+/// `h-control-sm w-control-sm` — 29 logical px (`LumoControl.sm`), fine for a
+/// pointer and half a finger on a phone. The DRAWN box stays 29, matching the
+/// web exactly, so nothing about the resting or pressed look moves; the 44×44
+/// minimum is a transparent tap surface CENTRED on it that OVERHANGS into the
+/// alert's own 16px padding. That is why the ✕ is a `PositionedDirectional`
+/// child of a `Stack` over the frame rather than a cell in the content row:
+/// growing the target inflates neither the alert's height nor the text
+/// column's width (the row keeps a same-width empty slot where the ✕ used to
+/// sit, so wrapping is unchanged). The 44 box carries the name, the button
+/// role and the tap, so explore-by-touch gets the whole target; the drawn
+/// button inside is `ExcludeSemantics`'d and keeps the theme's press feedback.
+///
 /// Web props not carried: `live` as a three-value `"off" | "polite" |
 /// "assertive"` (Flutter's semantics has ONE live flag — a polite/assertive
 /// parameter would reach nothing, so it is a `bool`), and `className`.
@@ -118,10 +131,19 @@ class LumoAlert extends StatelessWidget {
     // of a `Row`, which is the right-hand edge under fa-IR and the left-hand
     // one under en-US, with no side named anywhere.
     final lead = neutral ? c.borderStrong : toneColour;
+    // The drawn ✕ is 29 (`LumoControl.sm` = the web's `h-control-sm`); the tap
+    // surface is 44, so it overhangs by half the difference on every side.
+    const drawn = LumoControl.sm;
+    const target = 44.0;
+    const overhang = (target - drawn) / 2;
+    // What the ✕ used to occupy in the content row: its start gap plus its
+    // drawn box. Held as an empty slot so the text column does not move.
+    const slot = 12 + drawn;
     return Semantics(
       container: true,
       explicitChildNodes: true,
-      child: Container(
+      child: Stack(children: [
+      Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: fill,
@@ -172,16 +194,10 @@ class LumoAlert extends StatelessWidget {
                           ],
                         ),
                       ),
-                      if (onDismiss != null)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(start: 12),
-                          child: LumoIconButton(
-                            label: dismissLabel!,
-                            size: LumoButtonSize.sm,
-                            onPressed: onDismiss,
-                            child: Icon(Icons.close, size: 16, color: c.fgMuted),
-                          ),
-                        ),
+                      // The ✕ itself is the Stack child below, so its 44×44
+                      // target can overhang the padding; this holds the width
+                      // it used to take so the text column does not move.
+                      if (onDismiss != null) const SizedBox(width: slot),
                     ],
                   ),
                 ),
@@ -190,6 +206,39 @@ class LumoAlert extends StatelessWidget {
           ),
         ),
       ),
+      if (onDismiss != null)
+        PositionedDirectional(
+          // 1 for the border plus 16 of padding is where the drawn box began;
+          // back off by the overhang so it still lands exactly there.
+          top: 1 + 16 - overhang,
+          end: 1 + 16 - overhang,
+          child: Semantics(
+            label: dismissLabel!,
+            button: true,
+            onTap: onDismiss,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              excludeFromSemantics: true,
+              onTap: onDismiss,
+              child: SizedBox(
+                width: target,
+                height: target,
+                child: Center(
+                  // Silent: the name is on the 44 node above, announced ONCE.
+                  child: ExcludeSemantics(
+                    child: LumoIconButton(
+                      label: dismissLabel!,
+                      size: LumoButtonSize.sm,
+                      onPressed: onDismiss,
+                      child: Icon(Icons.close, size: 16, color: c.fgMuted),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ]),
     );
   }
 }

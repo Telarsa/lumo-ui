@@ -29,6 +29,20 @@ class LumoToastHandle {
 /// after `duration` (`Duration.zero` = stays until closed — the web's
 /// `timeout: 0`); the ✕ at the inline END.
 ///
+/// **The default `duration` deviates from the web on purpose.** `toast.tsx`
+/// defaults `timeout: addOptions?.timeout ?? 0` — never auto-dismiss, citing
+/// WCAG 2.2.1 — because a browser toast sits beside a pointer and a keyboard.
+/// Here it is four seconds, the platform's own convention for a transient
+/// notification on a phone, where nothing else acknowledges the action. The
+/// trade is the CALLER's to make: a toast carrying an `actionLabel` a reader
+/// must reach should be passed `Duration.zero` and closed through its
+/// `LumoToastHandle`, which is what the criterion asks for. The default is a
+/// default, not the contract.
+///
+/// The ✕ carries `LumoIconButton`'s own 44×44 hit ring (measured). The ACTION,
+/// a short `LumoButton`, is 29 logical px tall and is NOT rescued here — a
+/// per-widget ring is exactly the duplication `button.dart` centralised.
+///
 /// One `OverlayEntry` per root `Overlay` (no `LumoToastHost` to mount: the
 /// `MaterialApp`'s navigator overlay is the host, found from `context`), holding
 /// every live toast in a column at the bottom-END of the safe area (the
@@ -129,17 +143,23 @@ class _LumoToastTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = LumoScope.of(context).colours;
+    final scope = LumoScope.of(context);
+    final c = scope.colours;
     final stripe = switch (toast.tone) {
       LumoToastTone.neutral => c.borderStrong,
       LumoToastTone.positive => c.positive,
       LumoToastTone.critical => c.critical,
       LumoToastTone.caution => c.caution,
     };
-    return Material(
+    // `LumoShadow.overlay`, not a hand-picked `elevation: 4` over `c.scrim`:
+    // `scrim` is the MODAL BACKDROP's role, and one shadow spelled once was the
+    // same in BOTH schemes — on a dark page a black shadow at the light
+    // scheme's alpha is close to painting nothing. The web says
+    // `shadow-overlay` on the toast.
+    return DecoratedBox(
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(LumoRadius.md), boxShadow: LumoShadow.overlay(scope.brightness)),
+      child: Material(
       color: c.surface,
-      elevation: 4,
-      shadowColor: c.scrim,
       surfaceTintColor: Colors.transparent,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
@@ -167,7 +187,8 @@ class _LumoToastTile extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(vertical: 6),
                           child: Text(
                             toast.message,
-                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg),
+                            // `font-semibold` — the web toast title's weight.
+                            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: c.fg),
                           ),
                         ),
                       ),
@@ -197,6 +218,7 @@ class _LumoToastTile extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

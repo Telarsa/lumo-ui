@@ -18,6 +18,11 @@ const _track = {LumoProgressSize.sm: 4.0, LumoProgressSize.md: 8.0, LumoProgress
 /// No `SemanticsRole.progressBar`: Flutter 3.35 declares the role but its
 /// debug validator is unimplemented and throws; the label + value node is what
 /// TalkBack/VoiceOver read either way.
+///
+/// BOTH animations obey `MediaQuery.disableAnimationsOf`: the indeterminate
+/// pulse is stopped and parked opaque, and the determinate fill's 160ms growth
+/// (the web's `transition-[inline-size]`) collapses to `Duration.zero`, so the
+/// bar jumps to the new value instead of sweeping across the screen.
 class LumoProgress extends StatefulWidget {
   const LumoProgress({super.key, required this.label, this.value = 0, this.valueLabel, this.showValue = false, this.size = LumoProgressSize.md, this.tone = LumoProgressTone.accent})
       : assert(value == null || (value >= 0 && value <= 1), 'value is a fraction 0..1, or null for indeterminate.');
@@ -75,6 +80,9 @@ class _LumoProgressState extends State<LumoProgress> with SingleTickerProviderSt
       LumoProgressTone.critical => c.critical,
     };
     final h = _track[widget.size]!;
+    // «Reduce motion» is the platform's answer, not a parameter of ours — the
+    // same spelling `disclosure.dart` and `card.dart` use.
+    final motion = !MediaQuery.disableAnimationsOf(context);
     return Semantics(
       container: true,
       label: widget.label,
@@ -110,7 +118,7 @@ class _LumoProgressState extends State<LumoProgress> with SingleTickerProviderSt
                       : Align(
                           alignment: AlignmentDirectional.centerStart,
                           child: AnimatedFractionallySizedBox(
-                            duration: const Duration(milliseconds: 160),
+                            duration: motion ? const Duration(milliseconds: 160) : Duration.zero,
                             widthFactor: widget.value!.clamp(0, 1),
                             heightFactor: 1,
                             child: DecoratedBox(decoration: BoxDecoration(color: fill, borderRadius: BorderRadius.circular(999))),
@@ -137,7 +145,17 @@ const _spinner = {LumoSpinnerSize.sm: 16.0, LumoSpinnerSize.md: 20.0, LumoSpinne
 /// region on appearance (the web's `role="status"`); shown beside the ring
 /// with `showLabel`. On Material's `CircularProgressIndicator`, sized to the
 /// spinner scale, its own semantics excluded so the name is heard ONCE.
-class LumoSpinner extends StatelessWidget {
+///
+/// **Reduce motion.** Under `MediaQuery.disableAnimationsOf` the ROTATION
+/// stops and the ring pulses in place instead — the web's
+/// `motion-reduce:animate-pulse`, and its reason, verbatim: "a static ring
+/// reads as a bug". This is the one place the library does not simply go
+/// still (`skeleton.dart` does, because a frozen placeholder block still says
+/// "pending" — a frozen spinner says "hung"). The parked ring is the same 3/4
+/// arc the spin draws (`value: 0.75` = the web's `border-bs-transparent` gap),
+/// so the drawing is unchanged; only the movement is. Opacity has no axis and
+/// no direction, which is why it is the fallback and a sweep is not.
+class LumoSpinner extends StatefulWidget {
   const LumoSpinner({super.key, required this.label, this.showLabel = false, this.size = LumoSpinnerSize.md, this.color = LumoSpinnerColor.current});
   final String label;
   final bool showLabel;
@@ -145,24 +163,57 @@ class LumoSpinner extends StatelessWidget {
   final LumoSpinnerColor color;
 
   @override
+  State<LumoSpinner> createState() => _LumoSpinnerState();
+}
+
+class _LumoSpinnerState extends State<LumoSpinner> with SingleTickerProviderStateMixin {
+  late final _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000));
+  late final _opacity = Tween<double>(begin: 1, end: 0.45).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut));
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduced = MediaQuery.disableAnimationsOf(context);
+    if (reduced && !_pulse.isAnimating) _pulse.repeat(reverse: true);
+    if (!reduced && _pulse.isAnimating) {
+      _pulse.stop();
+      _pulse.value = 0;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
-    final ring = switch (color) {
+    final ring = switch (widget.color) {
       LumoSpinnerColor.current => DefaultTextStyle.of(context).style.color ?? IconTheme.of(context).color ?? c.fg,
       LumoSpinnerColor.accent => c.accent,
       LumoSpinnerColor.muted => c.fgMuted,
     };
-    final side = _spinner[size]!;
+    final side = _spinner[widget.size]!;
+    final reduced = MediaQuery.disableAnimationsOf(context);
     return Semantics(
       container: true,
       liveRegion: true,
-      label: label,
+      label: widget.label,
       child: ExcludeSemantics(
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(width: side, height: side, child: CircularProgressIndicator(strokeWidth: 2, color: ring)),
-            if (showLabel) Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: Text(label, style: TextStyle(fontSize: 14, color: c.fgMuted))),
+            SizedBox(
+              width: side,
+              height: side,
+              child: reduced
+                  // The same 3/4 arc, parked, pulsing rather than turning.
+                  ? FadeTransition(opacity: _opacity, child: CircularProgressIndicator(value: 0.75, strokeWidth: 2, color: ring))
+                  : CircularProgressIndicator(strokeWidth: 2, color: ring),
+            ),
+            if (widget.showLabel) Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: Text(widget.label, style: TextStyle(fontSize: 14, color: c.fgMuted))),
           ],
         ),
       ),

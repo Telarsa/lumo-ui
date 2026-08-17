@@ -48,4 +48,28 @@ void main() {
     expect(tester.getRect(find.text('Plan')).left, closeTo(tester.getRect(find.text('Confirm')).left, 0.5), reason: 'titles start-aligned = left under en-US');
     semantics.dispose();
   });
+
+  testWidgets('Steps: a cramped horizontal stepper sheds the description before it truncates a title, and never overflows the row', (tester) async {
+    final semantics = tester.ensureSemantics();
+    Widget narrow(double width, Widget child) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: width, child: child)))),
+        );
+    const long = 'گزارش عملکرد سه‌ماههٔ چهارم شرکت';
+    const cramped = [LumoStep(title: long, description: long), LumoStep(title: long), LumoStep(title: long)];
+    // Before this pass: «A RenderFlex overflowed by 152 pixels on the right» at
+    // 320 dp — the LAST step was the one item that was not `Flexible`.
+    for (final width in [320.0, 240.0]) {
+      await tester.pumpWidget(narrow(width, const LumoSteps(label: 'مراحل', steps: cramped, current: 1, completedLabel: 'تکمیل‌شده', currentLabel: 'مرحلهٔ فعلی', upcomingLabel: 'انجام‌نشده')));
+      expect(tester.takeException(), isNull, reason: 'no RenderFlex overflow at $width dp');
+    }
+    // The description left the PICTURE and stayed in the READING.
+    expect(find.text(long), findsNWidgets(3), reason: 'three titles, no fourth line');
+    expect(tester.getSemantics(find.text(long).first).getSemanticsData().label, contains(long));
+    expect(find.bySemanticsLabel(RegExp(long)), findsWidgets);
+    // With room, the description is drawn again.
+    await tester.pumpWidget(narrow(360, const LumoSteps(label: 'مراحل', steps: steps, current: 1, completedLabel: 'تکمیل‌شده', currentLabel: 'مرحلهٔ فعلی', upcomingLabel: 'انجام‌نشده')));
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
 }

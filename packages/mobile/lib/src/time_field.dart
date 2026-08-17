@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart' show SemanticsRole;
+import 'package:flutter/semantics.dart' show SemanticsRole, SemanticsValidationResult;
 import 'package:intl/date_symbol_data_custom.dart' as intl_custom;
 import 'package:intl/date_symbol_data_local.dart' as intl_local;
 import 'package:intl/date_symbols.dart';
@@ -41,6 +41,17 @@ import 'tokens.g.dart';
 /// The formatted time is an LTR island: a clock time reads left-to-right in
 /// every script (the same data-type rule as `LumoTextField(isNumeric:)`),
 /// while the box itself stays at the reading start.
+///
+/// `isInvalid` and `isRequired` are the web `TimeField`'s own props. The web
+/// `TimeField` is the ONE component of the family that emits `aria-required`
+/// (`time-field.tsx`, because its segment group has no native control to carry
+/// `required`); here both land on the field's node as real state —
+/// `SemanticsFlag.isRequired` and `SemanticsValidationResult.invalid` — so a
+/// reader is told the field is wrong, not only read the sentence saying so.
+///
+/// The picker's cells keep their 40-px DRAWING and take 44 of HIT AREA: the
+/// 4-px gap between rows moved inside the tap surface, so the column's extent
+/// per row is the same 44 its scroll arithmetic already assumed.
 class LumoTimeField extends StatefulWidget {
   const LumoTimeField({
     super.key,
@@ -53,12 +64,14 @@ class LumoTimeField extends StatefulWidget {
     this.onChanged,
     this.description,
     this.errorMessage,
+    this.isInvalid,
+    this.isRequired = false,
     this.minuteStep = 15,
     this.use24Hour,
     this.isDisabled = false,
     this.placeholder,
-  })  : assert(minuteStep > 0 && minuteStep <= 60, 'minuteStep is how far apart the offered minutes are: 1..60.'),
-        assert(60 % minuteStep == 0, 'minuteStep must divide the hour, or the last step would be short.');
+  }) : assert(minuteStep > 0 && minuteStep <= 60, 'minuteStep is how far apart the offered minutes are: 1..60.'),
+       assert(60 % minuteStep == 0, 'minuteStep must divide the hour, or the last step would be short.');
 
   /// Announced and displayed name. REQUIRED — an unnamed field is a defect.
   final String label;
@@ -85,6 +98,14 @@ class LumoTimeField extends StatefulWidget {
 
   /// Shown under the field and announced. Supplying one marks it invalid.
   final String? errorMessage;
+
+  /// Marks the field wrong WITHOUT a sentence (the web's `isInvalid`). Null
+  /// derives it from `errorMessage`.
+  final bool? isInvalid;
+
+  /// The web's `isRequired`: draws the « *» marker and sets the reader's
+  /// `required` state.
+  final bool isRequired;
 
   /// How far apart the offered minutes are. Must divide the hour.
   final int minuteStep;
@@ -124,25 +145,18 @@ class _LumoTimeFieldState extends State<LumoTimeField> {
   }
 
   Future<void> _open(bool use24) => showLumoSheet<void>(
-        context,
-        label: widget.label,
-        closeLabel: widget.closeLabel,
-        body: (ctx) => _TimeSheet(
-          selected: _shown,
-          hourLabel: widget.hourLabel,
-          minuteLabel: widget.minuteLabel,
-          minuteStep: widget.minuteStep,
-          use24Hour: use24,
-          onPick: _pick,
-        ),
-      );
+    context,
+    label: widget.label,
+    closeLabel: widget.closeLabel,
+    body: (ctx) => _TimeSheet(selected: _shown, hourLabel: widget.hourLabel, minuteLabel: widget.minuteLabel, minuteStep: widget.minuteStep, use24Hour: use24, onPick: _pick),
+  );
 
   @override
   Widget build(BuildContext context) {
     final scope = LumoScope.of(context);
     final c = scope.colours;
     final use24 = widget.use24Hour ?? lumoLocaleUses24Hour(scope.locale);
-    final invalid = widget.errorMessage != null;
+    final invalid = widget.isInvalid ?? (widget.errorMessage != null);
     return ValueListenableBuilder<TimeOfDay?>(
       valueListenable: _shown,
       builder: (context, value, _) {
@@ -154,7 +168,21 @@ class _LumoTimeFieldState extends State<LumoTimeField> {
             mainAxisSize: MainAxisSize.min,
             children: [
               // Excluded: the name lives on the field node, so it is announced ONCE.
-              ExcludeSemantics(child: Text(widget.label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg))),
+              ExcludeSemantics(
+                child: Text.rich(
+                  TextSpan(
+                    text: widget.label,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg),
+                    children: [
+                      if (widget.isRequired)
+                        TextSpan(
+                          text: ' *',
+                          style: TextStyle(color: c.critical),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: 6),
               Row(
                 children: [
@@ -167,6 +195,8 @@ class _LumoTimeFieldState extends State<LumoTimeField> {
                       textField: true,
                       readOnly: true,
                       enabled: !widget.isDisabled,
+                      isRequired: widget.isRequired ? true : null,
+                      validationResult: invalid ? SemanticsValidationResult.invalid : SemanticsValidationResult.none,
                       hint: [if (widget.description != null) widget.description!, if (widget.errorMessage != null) widget.errorMessage!].join('. '),
                       child: InkWell(
                         onTap: widget.isDisabled ? null : () => _open(use24),
@@ -175,24 +205,49 @@ class _LumoTimeFieldState extends State<LumoTimeField> {
                           height: LumoControl.md,
                           alignment: AlignmentDirectional.centerStart,
                           padding: const EdgeInsetsDirectional.symmetric(horizontal: 12),
-                          decoration: BoxDecoration(color: c.surface, border: Border.all(color: invalid ? c.critical : c.borderControl), borderRadius: BorderRadius.circular(LumoRadius.md)),
+                          decoration: BoxDecoration(
+                            color: c.surface,
+                            border: Border.all(color: invalid ? c.critical : c.borderControl),
+                            borderRadius: BorderRadius.circular(LumoRadius.md),
+                          ),
                           // The LTR island: the clock time keeps its order in every script.
-                          child: ExcludeSemantics(child: Text(text, textDirection: TextDirection.ltr, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, color: value == null ? c.fgSubtle : c.fg))),
+                          child: ExcludeSemantics(
+                            child: Text(
+                              text,
+                              textDirection: TextDirection.ltr,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(fontSize: 14, color: value == null ? c.fgSubtle : c.fg),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   // The picker button, at the inline END by the Row's own mirroring.
-                  LumoIconButton(label: widget.openLabel, variant: LumoButtonVariant.outline, isDisabled: widget.isDisabled, onPressed: () => _open(use24), child: Icon(Icons.schedule, size: 18, color: c.fg)),
+                  LumoIconButton(
+                    label: widget.openLabel,
+                    variant: LumoButtonVariant.outline,
+                    isDisabled: widget.isDisabled,
+                    onPressed: () => _open(use24),
+                    child: Icon(Icons.schedule, size: 18, color: c.fg),
+                  ),
                 ],
               ),
               if (widget.description != null)
-                Padding(padding: const EdgeInsets.only(top: 6), child: ExcludeSemantics(child: Text(widget.description!, style: TextStyle(fontSize: 12, color: c.fgMuted)))),
-              if (invalid)
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
-                  child: Semantics(liveRegion: true, child: ExcludeSemantics(child: Text(widget.errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)))),
+                  child: ExcludeSemantics(
+                    child: Text(widget.description!, style: TextStyle(fontSize: 12, color: c.fgMuted)),
+                  ),
+                ),
+              if (widget.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: // ExcludeSemantics, and deliberately NOT `Semantics(liveRegion: true, …)`: the message is already announced as part of the field's semantic `hint` just above, so a second node carrying the same words would say it twice. A `liveRegion` wrapped round an EXCLUDED subtree — which is what stood here — announces nothing at all: it reads as an accessibility feature and is a no-op. See test/house_rules_test.dart.
+                  ExcludeSemantics(
+                    child: Text(widget.errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)),
+                  ),
                 ),
             ],
           ),
@@ -307,8 +362,7 @@ class _Column extends StatefulWidget {
 }
 
 class _ColumnState extends State<_Column> {
-  static const _cell = 44.0; // 40 high + 4 of gap
-  late final ScrollController _controller = ScrollController(initialScrollOffset: (widget.initialIndex <= 1 ? 0 : widget.initialIndex - 1) * _cell);
+  late final ScrollController _controller = ScrollController(initialScrollOffset: (widget.initialIndex <= 1 ? 0 : widget.initialIndex - 1) * _cellExtent);
 
   @override
   void dispose() {
@@ -327,7 +381,13 @@ class _ColumnState extends State<_Column> {
           height: 24,
           child: header == null
               ? null
-              : Semantics(header: true, child: Text(header, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.fgMuted))),
+              : Semantics(
+                  header: true,
+                  child: Text(
+                    header,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.fgMuted),
+                  ),
+                ),
         ),
         Expanded(
           child: Semantics(
@@ -342,6 +402,13 @@ class _ColumnState extends State<_Column> {
   }
 }
 
+/// What one row of a column occupies: `_cellDrawn` of pill plus 4 of gap. The
+/// gap is INSIDE the tap surface, so the button node is a 44-px touch target
+/// while the pill is still the 40 it always drew — and the column's scroll
+/// arithmetic, which was already written against 44, does not move.
+const double _cellExtent = 44;
+const double _cellDrawn = 40;
+
 /// One value: a button named by its number in the reader's digits, announced
 /// with its selected state; the drawn text is an LTR island (a padded «۰۹»).
 class _Cell extends StatelessWidget {
@@ -354,25 +421,31 @@ class _Cell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Semantics(
-        label: name,
-        button: true,
-        selected: isSelected,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(LumoRadius.md),
-          child: Container(
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: isSelected ? c.accent : c.surface,
-              border: Border.all(color: isSelected ? c.accent : c.border),
-              borderRadius: BorderRadius.circular(LumoRadius.md),
-            ),
-            child: ExcludeSemantics(
-              child: Text(text, textDirection: TextDirection.ltr, style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500, color: isSelected ? c.accentFg : c.fg)),
+    return Semantics(
+      label: name,
+      button: true,
+      selected: isSelected,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(LumoRadius.md),
+        child: SizedBox(
+          height: _cellExtent,
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: _cellExtent - _cellDrawn),
+            child: Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSelected ? c.accent : c.surface,
+                border: Border.all(color: isSelected ? c.accent : c.border),
+                borderRadius: BorderRadius.circular(LumoRadius.md),
+              ),
+              child: ExcludeSemantics(
+                child: Text(
+                  text,
+                  textDirection: TextDirection.ltr,
+                  style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500, color: isSelected ? c.accentFg : c.fg),
+                ),
+              ),
             ),
           ),
         ),

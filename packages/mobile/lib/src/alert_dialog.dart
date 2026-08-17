@@ -53,25 +53,27 @@ Future<bool> showLumoAlertDialog(
   bool isDestructive = false,
 }) async {
   final scope = LumoScope.of(context);
+  // «Reduce motion» is the platform's answer, not a parameter of ours: the
+  // transition collapses to zero and the dialog simply IS there on the next
+  // frame. The house spelling — see `disclosure.dart`, `carousel.dart`.
+  final motion = !MediaQuery.disableAnimationsOf(context);
   final result = await showGeneralDialog<bool>(
     context: context,
     barrierColor: scope.colours.scrim,
     // A decision is not dismissible: no barrier tap, therefore no barrier
     // string to announce (and none of Material's English one).
     barrierDismissible: false,
-    transitionDuration: const Duration(milliseconds: 150),
+    transitionDuration: motion ? const Duration(milliseconds: 150) : Duration.zero,
     transitionBuilder: (ctx, animation, secondary, child) => FadeTransition(
       opacity: animation,
       // Scale is centre-out: nothing to mirror.
-      child: ScaleTransition(scale: Tween(begin: 0.95, end: 1.0).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)), child: child),
+      child: ScaleTransition(
+        scale: Tween(begin: 0.95, end: 1.0).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
+        child: child,
+      ),
     ),
-    pageBuilder: (ctx, animation, secondary) => scope.wrap(_LumoAlertDialogPage(
-      label: label,
-      description: description,
-      confirmLabel: confirmLabel,
-      cancelLabel: cancelLabel,
-      isDestructive: isDestructive,
-    )),
+    pageBuilder: (ctx, animation, secondary) =>
+        scope.wrap(_LumoAlertDialogPage(label: label, description: description, confirmLabel: confirmLabel, cancelLabel: cancelLabel, isDestructive: isDestructive)),
   );
   // Popped by the system back gesture = no decision = the safe answer.
   return result ?? false;
@@ -103,57 +105,77 @@ class _LumoAlertDialogPageState extends State<_LumoAlertDialogPage> {
 
   @override
   Widget build(BuildContext context) {
-    final c = LumoScope.of(context).colours;
+    final scope = LumoScope.of(context);
+    final c = scope.colours;
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: Material(
-            color: c.surface,
-            clipBehavior: Clip.antiAlias,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(LumoRadius.lg), side: BorderSide(color: c.border)),
-            child: Semantics(
-              container: true,
-              explicitChildNodes: true,
-              role: SemanticsRole.alertDialog,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // One node names the route AND is the header — the label exists once in the tree.
-                    Semantics(
-                      namesRoute: true,
-                      header: true,
-                      child: Text(widget.label, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.4, color: c.fg)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12),
-                      child: Text(widget.description, style: TextStyle(fontSize: 14, height: 1.6, color: c.fgMuted)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 20),
-                      // Cancel first in source order (focus and traversal), confirm at the reading end.
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        spacing: 8,
-                        children: [
-                          LumoButton(
-                            variant: LumoButtonVariant.outline,
-                            onPressed: () => Navigator.of(context).pop(false),
-                            child: Text(widget.cancelLabel),
-                          ),
-                          LumoButton(
-                            variant: widget.isDestructive ? LumoButtonVariant.critical : LumoButtonVariant.solid,
-                            onPressed: () => Navigator.of(context).pop(true),
-                            child: Text(widget.confirmLabel),
-                          ),
-                        ],
+          // `shadow-modal`: the alert dialog's own separation from the page.
+          // tokens.css argues the scrim cannot carry it on the dark scheme, so
+          // the border and this shadow do — and the token holds a separate dark
+          // ramp, where a light-scheme alpha would paint almost nothing.
+          child: DecoratedBox(
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(LumoRadius.lg), boxShadow: LumoShadow.modal(scope.brightness)),
+            child: Material(
+              color: c.surface,
+              clipBehavior: Clip.antiAlias,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(LumoRadius.lg),
+                side: BorderSide(color: c.border),
+              ),
+              child: Semantics(
+                container: true,
+                explicitChildNodes: true,
+                role: SemanticsRole.alertDialog,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // One node names the route AND is the header — the label exists once in the tree.
+                      Semantics(
+                        namesRoute: true,
+                        header: true,
+                        child: Text(
+                          widget.label,
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.4, color: c.fg),
+                        ),
                       ),
-                    ),
-                  ],
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(widget.description, style: TextStyle(fontSize: 14, height: 1.6, color: c.fgMuted)),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 20),
+                        // Cancel first in source order (focus and traversal), confirm at the reading end.
+                        // An `OverflowBar`, not a `Row`: two real Persian verbs
+                        // overflow a 320dp screen by 246px (measured). This is
+                        // the web footer's own rule —
+                        // `flex-col-reverse gap-2 sm:flex-row sm:justify-end`:
+                        // a row while the verbs fit, a REVERSED column when they
+                        // do not, so the confirming verb stays nearest the thumb.
+                        // `VerticalDirection.up` is `flex-col-reverse`.
+                        child: OverflowBar(
+                          alignment: MainAxisAlignment.end,
+                          overflowAlignment: OverflowBarAlignment.end,
+                          overflowDirection: VerticalDirection.up,
+                          spacing: 8,
+                          overflowSpacing: 8,
+                          children: [
+                            LumoButton(variant: LumoButtonVariant.outline, onPressed: () => Navigator.of(context).pop(false), child: Text(widget.cancelLabel)),
+                            LumoButton(
+                              variant: widget.isDestructive ? LumoButtonVariant.critical : LumoButtonVariant.solid,
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: Text(widget.confirmLabel),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -208,24 +230,19 @@ class LumoAlertDialogTrigger extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return trigger(isDisabled
-        ? null
-        : () async {
-            onOpenChange?.call(true);
-            final confirmed = await showLumoAlertDialog(
-              context,
-              label: label,
-              description: description,
-              confirmLabel: confirmLabel,
-              cancelLabel: cancelLabel,
-              isDestructive: isDestructive,
-            );
-            onOpenChange?.call(false);
-            if (confirmed) {
-              onConfirm?.call();
-            } else {
-              onCancel?.call();
-            }
-          });
+    return trigger(
+      isDisabled
+          ? null
+          : () async {
+              onOpenChange?.call(true);
+              final confirmed = await showLumoAlertDialog(context, label: label, description: description, confirmLabel: confirmLabel, cancelLabel: cancelLabel, isDestructive: isDestructive);
+              onOpenChange?.call(false);
+              if (confirmed) {
+                onConfirm?.call();
+              } else {
+                onCancel?.call();
+              }
+            },
+    );
   }
 }

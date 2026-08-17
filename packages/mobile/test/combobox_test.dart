@@ -1,6 +1,7 @@
 // Combobox: the SEMANTICS TREE — the field's name and role, the named option
 // list, the active option's selected state — under fa-IR and en-US.
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';
 
@@ -16,7 +17,10 @@ const cities = [
   LumoComboboxOption(id: 'shz', label: 'شیراز', isDisabled: true),
 ];
 
-Finder clearButton(String label) => find.byWidgetPredicate((w) => w is LumoIconButton && w.label == label);
+// The ✕ is a named button node, not a `LumoIconButton`: it owns its own
+// gesture so that the TARGET can be `LumoControl.lg` while the pill still
+// draws at the web's `size="sm"`.
+Finder clearButton(String label) => find.bySemanticsLabel(label);
 
 void main() {
   testWidgets('Combobox fa-IR: ONE text-field node named by the label, the list is a NAMED list of buttons, typing filters (Arabic ك folds), choosing reports the id and closes', (tester) async {
@@ -184,6 +188,45 @@ void main() {
     await tester.tap(find.byType(TextField), warnIfMissed: false);
     await tester.pumpAndSettle();
     expect(find.bySemanticsLabel('پیشنهادها'), findsNothing);
+    semantics.dispose();
+  });
+
+  testWidgets('Combobox: the ✕ and every option row are 44-tall TARGETS; the pill keeps the web drawing', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', const LumoCombobox(
+      label: 'شهر',
+      options: cities,
+      suggestionsLabel: 'پیشنهادها',
+      emptyLabel: 'شهری پیدا نشد',
+      clearLabel: 'پاک کردن شهر',
+      value: 'thr',
+      isRequired: true,
+    )));
+    await tester.tap(find.byType(TextField));
+    await tester.pumpAndSettle();
+    final clear = tester.getSemantics(clearButton('پاک کردن شهر')).rect;
+    expect(clear.width, LumoControl.lg);
+    expect(clear.height, LumoControl.lg);
+    expect(tester.widget<Icon>(find.byIcon(Icons.close)).size, 16, reason: 'the drawn glyph is the web IconButton\'s 16, unchanged');
+    // Every option row is a finger-sized target, not the web's ~32 px mouse row.
+    for (final label in ['تهران', 'کرج', 'اصفهان']) {
+      expect(tester.getSemantics(find.bySemanticsLabel(label)).rect.height, greaterThanOrEqualTo(LumoControl.lg), reason: '$label is a tap target');
+    }
+    // Required is a state and a marker; invalid is a state.
+    expect(find.text('شهر *'), findsOneWidget);
+    expect(tester.getSemantics(find.byType(TextField)), containsSemantics(label: 'شهر', hasRequiredState: true, isRequired: true));
+    semantics.dispose();
+  });
+
+  testWidgets('Combobox: errorMessage is the INVALID state on the node, and an optional field carries no required state', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', const LumoCombobox(label: 'شهر', options: cities, suggestionsLabel: 'پ', emptyLabel: 'خ', clearLabel: 'پاک')));
+    var data = tester.getSemantics(find.byType(TextField)).getSemanticsData();
+    expect(data.validationResult, SemanticsValidationResult.none);
+    expect(data.flagsCollection.hasRequiredState, isFalse);
+    await tester.pumpWidget(app('fa-IR', const LumoCombobox(label: 'شهر', options: cities, suggestionsLabel: 'پ', emptyLabel: 'خ', clearLabel: 'پاک', errorMessage: 'شهر را انتخاب کنید')));
+    data = tester.getSemantics(find.byType(TextField)).getSemanticsData();
+    expect(data.validationResult, SemanticsValidationResult.invalid);
     semantics.dispose();
   });
 }

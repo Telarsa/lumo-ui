@@ -4,7 +4,9 @@
 // schemes, logical pixels for radii and control heights (rem × 16 at density 0.9,
 // radius scale 1). Brand hue/chroma are the one runtime knob, as everywhere.
 import 'dart:math' as math;
-import 'dart:ui' show Color;
+import 'dart:ui' show Brightness, Color, Offset;
+// BoxShadow is painting's, not dart:ui's — the elevation tiers below need it.
+import 'package:flutter/painting.dart' show BoxShadow;
 
 /// The web theme's ref-tier knobs. Default achromatic, as on the web.
 class LumoBrand {
@@ -220,4 +222,50 @@ class LumoControl {
 class LumoFocus {
   static const double width = 2;
   static const double offset = 2;
+}
+/// Elevation (web: --lumo-sys-shadow-raised / -overlay / -modal).
+///
+/// The tier is NOT "how big" — it is what the shadow has to separate the
+/// surface from. Before this existed every mobile widget hand-picked a
+/// shadow, and the hand-picked ones were the same in both schemes, which on
+/// dark is close to painting nothing.
+class LumoShadow {
+  /// raised — the web's `--lumo-ref-shadow-raised`. The DARK ramp is not the light one
+  /// re-tinted: a black shadow on a dark page is arithmetically almost a no-op,
+  /// so the alphas are separately chosen (tokens.css says why at length).
+  static List<BoxShadow> raised(Brightness brightness) => brightness == Brightness.dark
+      ? const [
+        BoxShadow(color: Color(0x4D000000), offset: Offset(0, 1), blurRadius: 2, spreadRadius: 0),
+        BoxShadow(color: Color(0x66000000), offset: Offset(0, 1), blurRadius: 3, spreadRadius: 0),
+        ]
+      : const [
+        BoxShadow(color: Color(0x0F000000), offset: Offset(0, 1), blurRadius: 2, spreadRadius: 0),
+        BoxShadow(color: Color(0x1A000000), offset: Offset(0, 1), blurRadius: 3, spreadRadius: 0),
+        ];
+
+  /// overlay — the web's `--lumo-ref-shadow-overlay`. The DARK ramp is not the light one
+  /// re-tinted: a black shadow on a dark page is arithmetically almost a no-op,
+  /// so the alphas are separately chosen (tokens.css says why at length).
+  static List<BoxShadow> overlay(Brightness brightness) => brightness == Brightness.dark
+      ? const [
+        BoxShadow(color: Color(0x66000000), offset: Offset(0, 4), blurRadius: 8, spreadRadius: -2),
+        BoxShadow(color: Color(0x85000000), offset: Offset(0, 12), blurRadius: 24, spreadRadius: -6),
+        ]
+      : const [
+        BoxShadow(color: Color(0x1A000000), offset: Offset(0, 4), blurRadius: 8, spreadRadius: -2),
+        BoxShadow(color: Color(0x24000000), offset: Offset(0, 12), blurRadius: 24, spreadRadius: -6),
+        ];
+
+  /// modal — the web's `--lumo-ref-shadow-modal`. The DARK ramp is not the light one
+  /// re-tinted: a black shadow on a dark page is arithmetically almost a no-op,
+  /// so the alphas are separately chosen (tokens.css says why at length).
+  static List<BoxShadow> modal(Brightness brightness) => brightness == Brightness.dark
+      ? const [
+        BoxShadow(color: Color(0x70000000), offset: Offset(0, 8), blurRadius: 16, spreadRadius: -4),
+        BoxShadow(color: Color(0xA3000000), offset: Offset(0, 32), blurRadius: 64, spreadRadius: -16),
+        ]
+      : const [
+        BoxShadow(color: Color(0x1F000000), offset: Offset(0, 8), blurRadius: 16, spreadRadius: -4),
+        BoxShadow(color: Color(0x47000000), offset: Offset(0, 32), blurRadius: 64, spreadRadius: -16),
+        ];
 }

@@ -111,6 +111,73 @@ void main() {
     await tester.pump();
     expect(find.byType(LumoIconButton), findsNothing);
   });
+
+  testWidgets('Toast at 320dp: a long message wraps, nothing overflows, and the ✕ keeps a 44 target inside the tile', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    late LumoToastHandle handle;
+    await tester.pumpWidget(app('fa-IR', Builder(builder: (context) => LumoButton(
+      onPressed: () => handle = showLumoToast(
+        context,
+        message: 'تغییرات شما با موفقیت ذخیره شد و با سرور همگام‌سازی گردید',
+        closeLabel: 'بستن',
+        actionLabel: 'واگرد کردن',
+        onAction: () {},
+        duration: Duration.zero,
+      ),
+      child: const Text('ذخیره'),
+    ))));
+    await tester.tap(find.text('ذخیره'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull, reason: 'a RenderFlex overflow at 320dp is a real bug');
+
+    final tile = tester.getRect(surfaceOf(find.text('تغییرات شما با موفقیت ذخیره شد و با سرور همگام‌سازی گردید')));
+    expect(tile.width, lessThanOrEqualTo(320));
+    final target = tester.getRect(closeButton('بستن'));
+    expect(target.width, greaterThanOrEqualTo(44));
+    expect(target.height, greaterThanOrEqualTo(44));
+    expect(tile.contains(target.topLeft) && tile.contains(target.bottomRight), isTrue, reason: 'the enlarged target must not overhang the tile');
+    await tester.tapAt(Offset(target.center.dx, target.bottom - 3));
+    await tester.pumpAndSettle();
+    expect(find.text('تغییرات شما با موفقیت ذخیره شد و با سرور همگام‌سازی گردید'), findsNothing, reason: 'a tap at the target edge, clear of the glyph, must close the toast');
+    expect(handle.isClosed, isTrue);
+  });
+
+  testWidgets('Toast: the message wears the web toast title\'s weight (font-semibold), not a lighter one', (tester) async {
+    late LumoToastHandle handle;
+    await tester.pumpWidget(app('fa-IR', Builder(builder: (context) => LumoButton(
+      onPressed: () => handle = showLumoToast(context, message: 'ذخیره شد', closeLabel: 'بستن', duration: Duration.zero),
+      child: const Text('ذخیره'),
+    ))));
+    await tester.tap(find.text('ذخیره'));
+    await tester.pumpAndSettle();
+    expect(tester.widget<Text>(find.text('ذخیره شد')).style?.fontWeight, FontWeight.w600);
+    expect(tester.widget<Text>(find.text('ذخیره شد')).style?.fontSize, 14, reason: 'text-sm');
+    handle.close();
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Toast: the tile takes LumoShadow.overlay — the elevation token, whose DARK ramp is not the light one (a hand-picked `c.scrim` painted almost nothing on a dark page)', (tester) async {
+    expect(LumoShadow.overlay(Brightness.light).first.color, isNot(LumoShadow.overlay(Brightness.dark).first.color), reason: 'the token holds a separate dark ramp — the assertion below is worth making');
+
+    for (final b in Brightness.values) {
+      late LumoToastHandle handle;
+      await tester.pumpWidget(MaterialApp(
+        theme: lumoThemeData(brightness: b),
+        home: LumoScope(locale: 'fa-IR', brightness: b, child: Scaffold(body: Center(child: Builder(builder: (context) => LumoButton(
+          onPressed: () => handle = showLumoToast(context, message: 'ذخیره شد', closeLabel: 'بستن', duration: Duration.zero),
+          child: const Text('ذخیره'),
+        ))))),
+      ));
+      await tester.tap(find.text('ذخیره'));
+      await tester.pumpAndSettle();
+      final box = tester.widget<DecoratedBox>(find.ancestor(of: find.text('ذخیره شد'), matching: find.byType(DecoratedBox)).first);
+      expect((box.decoration as BoxDecoration).boxShadow, LumoShadow.overlay(b), reason: 'the toast tile must take the elevation token for its own scheme');
+      handle.close();
+      await tester.pumpAndSettle();
+    }
+  });
 }
 
 int _n = 0;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show SemanticsValidationResult;
 import 'scope.dart';
 import 'sheet.dart';
 import 'tokens.g.dart';
@@ -15,8 +16,23 @@ class LumoSelectOption {
 /// option; a bottom sheet of options; REQUIRED `closeLabel`). Material's own
 /// `DropdownMenu` was not used: its menu is a desktop-shaped popup and its
 /// announced strings default to English.
+///
+/// The trigger is `LumoControl.md` — the shared control scale every field in
+/// this library stands on (`text_field`, `combobox`, `date_field`,
+/// `multi_select`, `phone_input`), and the web's own default
+/// (`size: "md"` → `h-control-md`). It is full-bleed, so the target is short
+/// only in the block axis; raising it here alone would put one field out of
+/// line with the row above it, which is a worse defect than the one it fixes.
+///
+/// **The empty list is a state, not a blank sheet.** The web carries
+/// `asyncState` with `emptyText` / loading / error rows; mobile carries the
+/// one case a static `options` list can actually be in, and `emptyLabel` is
+/// REQUIRED (asserted) as soon as `options` is empty — an empty sheet that
+/// says nothing is a dead end a reader cannot tell from a broken screen.
+/// Loading and error are not ported: `options` is a plain `List`, so there is
+/// no fetch here to be in either state.
 class LumoSelect extends StatelessWidget {
-  const LumoSelect({super.key, required this.label, required this.placeholder, required this.closeLabel, required this.options, this.value, this.onChanged, this.description, this.errorMessage, this.isDisabled = false});
+  const LumoSelect({super.key, required this.label, required this.placeholder, required this.closeLabel, required this.options, this.value, this.onChanged, this.description, this.errorMessage, this.emptyLabel, this.isDisabled = false});
   final String label;
   final String placeholder;
   final String closeLabel;
@@ -25,10 +41,16 @@ class LumoSelect extends StatelessWidget {
   final ValueChanged<String>? onChanged;
   final String? description;
   final String? errorMessage;
+
+  /// What the sheet says when `options` is empty. REQUIRED then (asserted).
+  final String? emptyLabel;
   final bool isDisabled;
 
   @override
   Widget build(BuildContext context) {
+    // Not in the constructor: `List.length` is not a constant expression, and
+    // `const LumoSelect(...)` is a shape consumers already write.
+    assert(options.isNotEmpty || emptyLabel != null, 'A select with no options needs an emptyLabel — a blank sheet is not an answer.');
     final c = LumoScope.of(context).colours;
     final selected = options.where((o) => o.id == value).firstOrNull;
     final invalid = errorMessage != null;
@@ -37,7 +59,11 @@ class LumoSelect extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg)),
+          // Excluded: the name lives on the trigger node, so it is announced
+          // ONCE. Undrawn, this node merged into the trigger's own and the
+          // reader heard «شهر، شهر، تهران» — the sibling `multi_select.dart`
+          // says the same sentence over the same widget.
+          ExcludeSemantics(child: Text(label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg))),
           const SizedBox(height: 6),
           Semantics(
             label: label,
@@ -45,6 +71,10 @@ class LumoSelect extends StatelessWidget {
             hint: description,
             button: true,
             enabled: !isDisabled,
+            // The INVALID state, which the trigger did not carry at all: the
+            // web marks it `data-invalid` and the reader is told, not shown a
+            // red line it cannot see. `multi_select.dart` already does this.
+            validationResult: invalid ? SemanticsValidationResult.invalid : SemanticsValidationResult.none,
             child: InkWell(
               onTap: isDisabled ? null : () => _open(context),
               borderRadius: BorderRadius.circular(LumoRadius.md),
@@ -54,14 +84,23 @@ class LumoSelect extends StatelessWidget {
                 decoration: BoxDecoration(color: c.surface, border: Border.all(color: invalid ? c.critical : c.borderControl), borderRadius: BorderRadius.circular(LumoRadius.md)),
                 child: Row(
                   children: [
-                    Expanded(child: Text(selected?.label ?? placeholder, style: TextStyle(fontSize: 14, color: selected == null ? c.fgSubtle : c.fg))),
+                    // The chosen option is the node's VALUE; the drawn copy is
+                    // excluded, or it merges into the LABEL and the reader
+                    // hears the choice twice — once as part of the name, once
+                    // as the value.
+                    Expanded(child: ExcludeSemantics(child: Text(selected?.label ?? placeholder, style: TextStyle(fontSize: 14, color: selected == null ? c.fgSubtle : c.fg)))),
                     ExcludeSemantics(child: Icon(Icons.expand_more, size: 18, color: c.fgMuted)),
                   ],
                 ),
               ),
             ),
           ),
-          if (description != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted))),
+          // The description is the trigger's `hint`; the drawn copy is excluded so it is heard once.
+          if (description != null) Padding(padding: const EdgeInsets.only(top: 6), child: ExcludeSemantics(child: Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted)))),
+          // The error stays a LIVE REGION and keeps its text: a live region is
+          // for the moment it APPEARS, which a hint on the field never covers.
+          // It is deliberately NOT also folded into the hint — that would say
+          // it twice.
           if (invalid) Padding(padding: const EdgeInsets.only(top: 6), child: Semantics(liveRegion: true, child: Text(errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)))),
         ],
       ),
@@ -83,12 +122,29 @@ class LumoSelect extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (options.isEmpty)
+            // `role="status" aria-live="polite"` on the web's empty row: the
+            // reader is told the list is empty rather than left in silence.
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Semantics(
+                liveRegion: true,
+                child: Text(emptyLabel!, style: TextStyle(fontSize: 14, color: c.fgMuted)),
+              ),
+            ),
           for (final o in options)
             Semantics(
               selected: o.id == value,
               button: true,
               enabled: !o.isDisabled,
               label: o.label,
+              // The TAP lives on this node. `ExcludeSemantics` below drops the
+              // drawn copy of the name — and it dropped the `ListTile`'s tap
+              // ACTION with it, so the row announced itself a button that a
+              // reader or a switch could not activate. The house spelling is
+              // `item.dart`'s: the action on the named node, the detector
+              // beneath it silent.
+              onTap: o.isDisabled ? null : () => Navigator.of(ctx).pop(o.id),
               child: ExcludeSemantics(
                 child: ListTile(
                   enabled: !o.isDisabled,

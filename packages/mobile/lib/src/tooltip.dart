@@ -17,6 +17,17 @@ enum LumoTooltipPlacement { top, bottom }
 /// tooltip is NOT excluded from semantics (`LumoIconButton` excludes its own,
 /// where the message would only repeat the name).
 ///
+/// **Motion is the one thing this file cannot honour.** Material's `Tooltip`
+/// fades the tip in and out over durations it holds privately (`waitDuration`,
+/// `showDuration` and `exitDuration` are the only `Duration`s it accepts, and
+/// all three are DELAYS, not the fade), and it never reads
+/// `MediaQuery.disableAnimationsOf` itself — so under «reduce motion» the tip
+/// still fades over ~150ms. No parameter of ours reaches it; the alternative is
+/// re-implementing an overlay tooltip, which would lose Material's dismissal
+/// and positioning. Recorded here rather than papered over. Everything else in
+/// this library collapses its duration to zero (`disclosure.dart`,
+/// `carousel.dart`, `dialog.dart`, `sheet.dart`, `popover.dart`).
+///
 /// The long-press is Lumo's own recognizer (Material's `triggerMode` is
 /// `manual`): `LumoIconButton` already carries a `Tooltip` that shows its label
 /// on long-press, and nested tooltips both race for the same gesture — the
@@ -71,7 +82,8 @@ class _LumoTooltipState extends State<LumoTooltip> {
   @override
   Widget build(BuildContext context) {
     if (widget.isDisabled) return widget.child;
-    final c = LumoScope.of(context).colours;
+    final scope = LumoScope.of(context);
+    final c = scope.colours;
     return RawGestureDetector(
       // The gesture is pointer-only; the reader gets the message through the semantic `tooltip`.
       excludeFromSemantics: true,
@@ -107,6 +119,11 @@ class _LumoTooltipState extends State<LumoTooltip> {
           decoration: BoxDecoration(
             color: c.fg,
             borderRadius: BorderRadius.circular(LumoRadius.md),
+            // `shadow-overlay` — the web tooltip carries it, and an inverted
+            // surface has no border to separate it from the page otherwise.
+            // From the token, not hand-picked: it holds a separate DARK ramp,
+            // where a shadow at the light scheme's alpha paints almost nothing.
+            boxShadow: LumoShadow.overlay(scope.brightness),
           ),
           textStyle: TextStyle(fontSize: 12, height: 1.6, color: c.bg),
           // The tip is an OverlayPortal child of this widget: it inherits this

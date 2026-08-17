@@ -94,4 +94,23 @@ void main() {
     expect(tester.getCenter(find.text('Requested')).dx > tester.getCenter(find.text('Closed')).dx, isTrue, reason: 'the first event is at the reading start = right under fa-IR');
     semantics.dispose();
   });
+
+  testWidgets('Timeline: neither orientation overflows a cramped row — long titles at 320 and 240 dp', (tester) async {
+    Widget narrow(double width, Widget child) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: width, child: child)))),
+        );
+    const long = 'گزارش عملکرد سه‌ماههٔ چهارم شرکت';
+    const cramped = [
+      LumoTimelineItem(title: long, description: long, meta: '۱۹ مرداد ۱۴۰۵'),
+      LumoTimelineItem(title: long, state: LumoTimelineState.current),
+      LumoTimelineItem(title: long, state: LumoTimelineState.upcoming),
+    ];
+    for (final orientation in LumoTimelineOrientation.values) {
+      for (final width in [320.0, 240.0]) {
+        await tester.pumpWidget(narrow(width, LumoTimeline(label: 'تاریخچه', items: cramped, doneLabel: 'انجام‌شده', currentLabel: 'در جریان', upcomingLabel: 'در انتظار', orientation: orientation)));
+        expect(tester.takeException(), isNull, reason: '$orientation at $width dp');
+      }
+    }
+  });
 }

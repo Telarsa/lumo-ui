@@ -126,4 +126,65 @@ void main() {
     await tester.tapAt(const Offset(5, 5));
     await tester.pumpAndSettle();
   });
+
+  testWidgets('Menu: every row is at least 44 logical px tall — a thumb in a list of eight, not a mouse', (tester) async {
+    await tester.pumpWidget(app('fa-IR', LumoMenuTrigger(
+      label: 'گزینه‌های ردیف',
+      trigger: (open) => LumoIconButton(label: 'بیشتر', onPressed: open, child: const Icon(Icons.more_horiz)),
+      items: const [
+        LumoMenuItem(label: 'ویرایش', icon: Icon(Icons.edit)),
+        LumoMenuCheckboxItem(label: 'نمایش ستون', isSelected: true),
+        LumoMenuSeparator(),
+        LumoMenuSection(label: 'خطرناک', items: [LumoMenuItem(label: 'حذف', isDestructive: true)]),
+      ],
+    )));
+    await tester.tap(find.byType(LumoIconButton));
+    await tester.pumpAndSettle();
+    // The web's `menuItemVariants` sets no min-height (`px-2 py-1.5` ≈ 32px);
+    // the mobile floor is `LumoControl.lg`, as `item.dart` already says.
+    for (final label in ['ویرایش', 'نمایش ستون', 'حذف']) {
+      final row = tester.getSize(find.ancestor(of: find.text(label), matching: find.byType(InkWell)).first);
+      expect(row.height, greaterThanOrEqualTo(44), reason: '«$label» is a thumb target in a list of them');
+    }
+  });
+
+  testWidgets('Menu: the checked tick is the ACCENT role, not the label colour — the web menuCheckboxIndicatorVariants is text-accent', (tester) async {
+    final c = lightColours(LumoBrand.achromatic);
+    await tester.pumpWidget(app('fa-IR', LumoMenuTrigger(
+      label: 'ستون‌ها',
+      trigger: (open) => LumoIconButton(label: 'بیشتر', onPressed: open, child: const Icon(Icons.more_horiz)),
+      items: const [
+        LumoMenuCheckboxItem(label: 'نمایش ستون', isSelected: true),
+        LumoMenuCheckboxItem(label: 'ستون پنهان', isSelected: false),
+      ],
+    )));
+    await tester.tap(find.byType(LumoIconButton));
+    await tester.pumpAndSettle();
+    final tick = tester.widget<Icon>(find.byIcon(Icons.check));
+    expect(tick.color, c.accent, reason: 'reading the indicator as foreground made tick and label the same colour in both schemes');
+    expect(find.byIcon(Icons.check), findsOneWidget, reason: 'the unticked row keeps the empty gutter, no glyph');
+  });
+
+  testWidgets('Menu: press feedback is the THEME\'s one decision — pressFeedback: none leaves the row with no highlight of its own', (tester) async {
+    await tester.pumpWidget(MaterialApp(
+      theme: lumoThemeData(brightness: Brightness.light, pressFeedback: LumoPressFeedback.none),
+      home: LumoScope(
+        locale: 'fa-IR',
+        brightness: Brightness.light,
+        child: Scaffold(body: Center(child: LumoMenuTrigger(
+          label: 'گزینه‌ها',
+          trigger: (open) => LumoIconButton(label: 'بیشتر', onPressed: open, child: const Icon(Icons.more_horiz)),
+          items: const [LumoMenuItem(label: 'ویرایش')],
+        ))),
+      ),
+    ));
+    await tester.tap(find.byType(LumoIconButton));
+    await tester.pumpAndSettle();
+    // Naming `hoverColor`/`highlightColor` on the row made
+    // `LumoPressFeedback.none` a lie for menu rows alone (contract rule 8).
+    final ink = tester.widget<InkWell>(find.ancestor(of: find.text('ویرایش'), matching: find.byType(InkWell)).first);
+    expect(ink.highlightColor, isNull, reason: 'the row must not name its own press colour');
+    expect(ink.hoverColor, isNull);
+    expect(ink.splashColor, isNull);
+  });
 }

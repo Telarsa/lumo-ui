@@ -95,4 +95,66 @@ void main() {
     expect(() => LumoTagGroup(label: 'x', items: const [], onRemove: (_) {}), throwsAssertionError);
     expect(() => LumoTagGroup(label: 'x', items: const [], removeLabel: (t) => t), throwsAssertionError);
   });
+
+  testWidgets('Chip: the ✕ and a selectable chip clear the 44 px touch floor, and the chip still PAINTS the web box (28 md / 24 sm, a 20 px ✕)', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var removed = 0;
+    var toggled = <bool>[];
+    await tester.pumpWidget(app('fa-IR', Column(mainAxisSize: MainAxisSize.min, children: [
+      LumoChip(label: 'شیراز', onRemove: () => removed++, removeLabel: 'حذف شیراز'),
+      LumoChip(label: 'اهواز', size: LumoChipSize.sm, onRemove: () {}, removeLabel: 'حذف اهواز'),
+      LumoChip(label: 'ارزان‌ترین', isSelected: false, onChanged: toggled.add),
+      const LumoChip(label: 'ساکت'),
+    ])));
+    // Measured before this pass: the ✕ node was 20x20 and a selectable chip 28 tall.
+    for (final name in ['حذف شیراز', 'حذف اهواز', 'ارزان‌ترین']) {
+      final size = tester.getSize(find.bySemanticsLabel(name));
+      expect(size.width, greaterThanOrEqualTo(44), reason: '$name is a tap target');
+      expect(size.height, greaterThanOrEqualTo(44), reason: '$name is a tap target');
+    }
+    // The PAINT did not move: md body 28, sm body 24, the ✕ glyph the web's `size-5`.
+    expect(tester.getSize(find.descendant(of: find.byType(LumoChip).at(0), matching: find.byType(Container)).first).height, 28);
+    expect(tester.getSize(find.descendant(of: find.byType(LumoChip).at(1), matching: find.byType(Container)).first).height, 24);
+    expect(tester.getSize(find.byIcon(Icons.close).first), const Size(20, 20));
+    // A chip with nothing to tap is not a target and keeps its own box.
+    expect(tester.getSize(find.byType(LumoChip).at(3)).height, 28, reason: 'a static chip is not banded');
+    semantics.dispose();
+  });
+
+  testWidgets('Chip: selectable AND removable — the ✕ owns the inline end, the rest of the chip still toggles', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var removed = 0;
+    final toggled = <bool>[];
+    await tester.pumpWidget(app('fa-IR', LumoChip(
+      label: 'تهران و کرج و قم',
+      isSelected: false,
+      onChanged: toggled.add,
+      onRemove: () => removed++,
+      removeLabel: 'حذف تهران',
+    )));
+    await tester.tap(find.bySemanticsLabel('حذف تهران'));
+    expect(removed, 1);
+    expect(toggled, isEmpty, reason: 'the ✕ band does not toggle the chip');
+    // The inline START of the chip — the right under fa-IR — still toggles.
+    final chip = tester.getRect(find.byType(LumoChip));
+    await tester.tapAt(Offset(chip.right - 6, chip.center.dy));
+    expect(toggled, [true]);
+    expect(removed, 1);
+    semantics.dispose();
+  });
+
+  testWidgets('Chip: the ✕ shows WHERE the focus is — the house focus ring, inside a glyph box that does not change size', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', LumoChip(label: 'شیراز', onRemove: () {}, removeLabel: 'حذف شیراز')));
+    Container glyph() => tester.widget<Container>(find.ancestor(of: find.byIcon(Icons.close), matching: find.byType(Container)).first);
+    expect(glyph().decoration, isNull, reason: 'unfocused: no ring');
+    // The band owns the focus node — the chip's one tab stop.
+    final band = tester.widgetList<Focus>(find.descendant(of: find.byType(LumoChip), matching: find.byType(Focus))).where((f) => f.focusNode != null).single;
+    band.focusNode!.requestFocus();
+    await tester.pump();
+    expect((glyph().decoration! as BoxDecoration).border, isNotNull, reason: 'focused: the ring paints inside the 20 px box');
+    // The ring paints INSIDE the box, so the painted ✕ box is still the web's `size-5`.
+    expect(tester.getSize(find.ancestor(of: find.byIcon(Icons.close), matching: find.byType(Container)).first), const Size(20, 20), reason: 'the ring did not grow the glyph box');
+    semantics.dispose();
+  });
 }

@@ -105,6 +105,82 @@ void main() {
     expect(stripe.right, closeTo(alert.right - 1, 0.5), reason: 'the leading edge is the right-hand one under fa-IR');
   });
 
+  testWidgets('Alert: the ✕ has a 44x44 HIT AREA around a 29x29 drawing, taps in the overhang count, and growing it does not resize the alert', (tester) async {
+    final semantics = tester.ensureSemantics();
+    var dismissed = 0;
+    // The same alert twice, once with the ✕ and once without: the ✕'s target
+    // overhangs into the alert's own padding, so neither size may differ.
+    await tester.pumpWidget(app('fa-IR', const LumoAlert(title: 'الف')));
+    final bare = tester.getSize(find.byType(LumoAlert));
+    await tester.pumpWidget(app('fa-IR', LumoAlert(title: 'الف', dismissLabel: 'بستن', onDismiss: () => dismissed++)));
+    expect(tester.getSize(find.byType(LumoAlert)), bare, reason: 'a 44px target must not inflate the alert');
+
+    // The DRAWN box — the button that actually paints — is still the web's
+    // `h-control-sm w-control-sm`. (No `actions` here, so this is the ✕'s.)
+    final drawn = tester.getRect(find.byType(LumoButton));
+    expect(drawn.size, const Size(LumoControl.sm, LumoControl.sm));
+    // …and it is still exactly where the 16px content padding put it.
+    final alert = tester.getRect(find.byType(LumoAlert));
+    expect(drawn.top - alert.top, closeTo(17, 0.01), reason: '1px border + 16px padding');
+    expect(drawn.left - alert.left, closeTo(17, 0.01), reason: 'inline end = LEFT under fa-IR');
+
+    // The HIT AREA — and the node explore-by-touch lands on — is 44x44, centred.
+    final target = tester.getRect(find.bySemanticsLabel('بستن'));
+    expect(target.size, const Size(44, 44));
+    expect(target.center, within(distance: 0.01, from: drawn.center));
+    expect(tester.getSemantics(find.bySemanticsLabel('بستن')), containsSemantics(label: 'بستن', isButton: true, hasTapAction: true));
+    // Announced exactly once: the drawn button beneath is silent.
+    expect(find.bySemanticsLabel('بستن'), findsOneWidget);
+
+    // A tap in the transparent overhang — outside the drawing — dismisses.
+    expect(drawn.contains(target.topLeft + const Offset(3, 3)), isFalse);
+    await tester.tapAt(target.topLeft + const Offset(3, 3));
+    expect(dismissed, 1, reason: 'the overhang is live, and fires exactly once');
+    // …and so does a tap on the drawing itself, still exactly once.
+    await tester.tapAt(drawn.center);
+    expect(dismissed, 2);
+    semantics.dispose();
+  });
+
+  testWidgets('Alert en-US: the ✕ target mirrors to the right-hand padding and stays inside the frame', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('en-US', LumoAlert(title: 'A', dismissLabel: 'Dismiss', onDismiss: () {})));
+    final alert = tester.getRect(find.byType(LumoAlert));
+    final drawn = tester.getRect(find.byType(LumoButton));
+    expect(drawn.size, const Size(LumoControl.sm, LumoControl.sm));
+    expect(alert.right - drawn.right, closeTo(17, 0.01), reason: 'inline end = RIGHT under en-US');
+    final target = tester.getRect(find.bySemanticsLabel('Dismiss'));
+    expect(target.size, const Size(44, 44));
+    // The overhang lands in the alert's own whitespace, never outside it.
+    expect(alert.contains(target.topLeft), isTrue);
+    expect(alert.contains(target.bottomRight - const Offset(0.1, 0.1)), isTrue);
+    semantics.dispose();
+  });
+
+  testWidgets('Alert at 320 dp: long Persian title, description and a ✕ — no overflow, nothing truncated', (tester) async {
+    const long = 'گزارش عملکرد سه‌ماههٔ چهارم شرکت';
+    await tester.pumpWidget(MaterialApp(
+      theme: lumoThemeData(brightness: Brightness.light),
+      home: LumoScope(
+        locale: 'fa-IR',
+        brightness: Brightness.light,
+        child: Scaffold(body: Center(child: SizedBox(width: 320, child: LumoAlert(
+          title: long,
+          description: long,
+          icon: const Icon(Icons.error_outline),
+          dismissLabel: 'بستن',
+          onDismiss: () {},
+          actions: [LumoButton(size: LumoButtonSize.sm, onPressed: () {}, child: const Text('تلاش دوباره'))],
+        )))),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull, reason: 'a RenderFlex overflow at 320 dp is a real bug');
+    // The words are all there: the alert GREW instead of eating them.
+    expect(find.text(long), findsNWidgets(2));
+    expect(tester.getSize(find.byType(LumoAlert)).height, greaterThan(80));
+  });
+
   testWidgets('Alert: a dismissible alert without a name is refused at construction, and so is a name without a control', (tester) async {
     // Built through a function so the expressions cannot be const-folded — a
     // const constructor's assert fires at COMPILE time, which is not a test.

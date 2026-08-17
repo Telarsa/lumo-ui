@@ -20,6 +20,59 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - **Required announced strings never grow a default.** Adding a required
   string prop is a *Breaking* entry, on purpose.
 
+## Unreleased
+
+### Added
+- **33 more widget families — 77 in all, 668 tests.** Navigation (`LumoNavigationBar`,
+  `LumoAppBar`, `LumoNavigationDrawer`, `LumoToolbar`, `LumoButtonGroup`,
+  `LumoInputGroup`, `LumoContextMenu`), dates (`LumoCalendar`, `LumoRangeCalendar`,
+  `LumoDatePicker`, `LumoDateRangePicker` — Jalali or Gregorian by locale), data
+  and lists (`LumoTable`, `LumoVirtualList`/`LumoInfiniteList`, `LumoPullToRefresh`,
+  `LumoSortable`, `LumoScrollArea`, `LumoKanban`), forms and layout (`LumoForm`,
+  `LumoTagsInput`, `LumoMaskInput`, `LumoColorInput`, `LumoFilters`, `LumoStack`/
+  `LumoGrid`/`LumoAspectRatio`, `LumoCommand`), charts and tree (`LumoBarChart`,
+  `LumoLineChart`, `LumoSparkline`, `LumoDonutChart`, `LumoTree`, `LumoTreeSelect`).
+  Chosen by what the Khroos app had to hand-roll, which is the honest signal for
+  what was missing. A chart announces every data point as its own node rather than
+  hiding numbers in a canvas; `LumoSortable`/`LumoKanban` require named move
+  actions, because a drag is not available to a screen-reader user.
+- **`LumoShadow` — the elevation tokens the generator was dropping.**
+  `tokens.css` has defined `raised`/`overlay`/`modal` with SEPARATE dark ramps all
+  along (raised is 6%/10% on light, 30%/40% on dark, and the CSS explains why: a
+  black shadow on a dark page is arithmetically close to a no-op).
+  `build-flutter-tokens.mjs` emitted none of it, so all 77 widgets hand-picked a
+  shadow and used the same alpha in both schemes — an elevated card was nearly
+  invisible on dark.
+- **Four defect-class guards** (`packages/mobile/test/house_rules_test.dart`), swept
+  over `lib/src/` so a family added tomorrow is covered without opting in: no
+  hand-rolled `BoxShadow`; every animating file consults
+  `MediaQuery.disableAnimationsOf`; a validation error is never silent; no
+  const-constructor assert on a collection length (a compile error at every const
+  site, not a runtime check). Plus permanent tap-target, cramped-layout (320 dp)
+  and token-contrast floors.
+
+### Fixed
+- **Ten families ignored «reduce motion».** Only 4 of 14 animating files consulted
+  the platform. The Khroos app had hand-rolled `kDur()` to compensate, which is how
+  we knew it was real rather than theoretical.
+- **Nine components announced their validation errors as silence.**
+  `Semantics(liveRegion: true, child: ExcludeSemantics(child: Text(error)))` — the
+  exclusion strips the words, so the live region fired with nothing in it. It read
+  as correct, which is why it spread. Eight of the nine already fold the error into
+  the field's `hint`, so the fix there was to drop the FALSE `liveRegion`, not the
+  exclusion; only `combobox`'s "no matches" was a genuine live region and it now
+  carries its words.
+- **`LumoIconButton` was reachable by finger and not by switch.** A 44 px hit area
+  had been retrofitted with a `GestureDetector`, which cannot take focus, while the
+  real button underneath was semantically excluded. It has a `Focus` above the
+  detector now, the `chip.dart` `_TapBand` shape.
+- `date_field`'s chevrons never mirrored — the docblock said they did, but
+  `Icons.chevron_left` does not; under `fa-IR` the «previous» button pointed the
+  wrong way. `LumoDateField`'s private month grid is gone: `LumoCalendar` is the
+  only grid in the package.
+- Overflow at 320 dp in `steps`, `badge` and `rating`; `LumoBadge` now sheds its
+  icon before it truncates words.
+
 ## 0.2.3 — 2026-08-17
 
 ### Added

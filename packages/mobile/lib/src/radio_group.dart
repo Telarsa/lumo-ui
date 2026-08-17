@@ -82,7 +82,8 @@ class _LumoRadioGroupState extends State<LumoRadioGroup> {
     final list = widget.orientation == LumoRadioOrientation.horizontal
         // Wrap lays out along the inline axis and mirrors under Directionality — `gap`, never a margin on the option.
         ? Wrap(spacing: 24, runSpacing: 8, children: widget.children)
-        : Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, spacing: 4, children: widget.children);
+        // The web's `radioListVariants` vertical arm is `flex-col gap-2` — 8, not 4.
+        : Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, spacing: 8, children: widget.children);
     return Semantics(
       container: true,
       // The name reaches the GROUP; the options stay their own nodes.
@@ -113,6 +114,15 @@ class _LumoRadioGroupState extends State<LumoRadioGroup> {
 /// scales from the centre, direction-neutrally. Announced as a member of an
 /// exclusive group with its checked state. No `errorMessage` here — validation
 /// belongs to the group.
+///
+/// **The hit area is at least [LumoControl.lg] (44) square.** The web's
+/// `radioVariants` is `w-fit` and unheighted, which under a pointer is right and
+/// under a thumb is not: measured in a 360 dp column an option labelled «ای» was
+/// 56.5×36 and the drawn circle inside it is 20×20. The floor is applied as a
+/// MINIMUM on the row, so a long option still sizes to its words and nothing
+/// drawn moves — the circle is still at the inline start and the label still
+/// beside it; only transparent row grows. The dot's scale stands still under
+/// `disableAnimations`.
 class LumoRadio extends StatelessWidget {
   const LumoRadio({super.key, required this.value, required this.label, this.description, this.isDisabled = false});
   final String value;
@@ -124,6 +134,9 @@ class LumoRadio extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
     final group = _LumoRadioGroupScope.of(context);
+    // «Reduce motion» is the platform's answer, not a parameter of ours — the
+    // same spelling as `disclosure.dart`: the dot appears at full size at once.
+    final motion = !MediaQuery.disableAnimationsOf(context);
     final selected = group.value == value;
     final disabled = isDisabled || group.isDisabled;
     final inert = disabled || group.isReadOnly;
@@ -139,7 +152,7 @@ class LumoRadio extends StatelessWidget {
         child: Center(
           child: AnimatedScale(
             scale: selected ? 1 : 0,
-            duration: const Duration(milliseconds: 120),
+            duration: motion ? const Duration(milliseconds: 120) : Duration.zero,
             child: Container(width: 8, height: 8, decoration: BoxDecoration(shape: BoxShape.circle, color: c.accentFg)),
           ),
         ),
@@ -155,7 +168,8 @@ class LumoRadio extends StatelessWidget {
         onTap: inert ? null : () => group.select?.call(value),
         borderRadius: BorderRadius.circular(LumoRadius.md),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: LumoControl.md),
+          // The 44 px touch floor on BOTH axes — see the docblock.
+          constraints: const BoxConstraints(minWidth: LumoControl.lg, minHeight: LumoControl.lg),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

@@ -145,4 +145,35 @@ void main() {
     expect(tester.getSemantics(find.byType(LumoAttachmentTile)).getSemanticsData().label, 'گزارش.pdf\n۸۰۰ کیلوبایت');
     semantics.dispose();
   });
+
+  testWidgets('AttachmentTile: the ✕ is a 44 x 44 TARGET and the tile did not grow to pay for it', (tester) async {
+    final semantics = tester.ensureSemantics();
+    const file = LumoAttachment(name: 'گزارش.pdf', sizeLabel: '۸۰۰ کیلوبایت');
+    // Without the ✕ the tile is its content plus its own padding…
+    await tester.pumpWidget(app('fa-IR', const LumoAttachmentTile(file: file)));
+    final bare = tester.getSize(find.byType(LumoAttachmentTile));
+    // …and with it, the row is exactly the target's height — the vertical
+    // padding moved onto the content instead of stacking under a 28-px box.
+    await tester.pumpWidget(app('fa-IR', LumoAttachmentTile(file: file, removeLabel: 'حذف گزارش.pdf', onRemove: () {})));
+    final withRemove = tester.getSize(find.byType(LumoAttachmentTile));
+    final remove = tester.getSemantics(find.bySemanticsLabel('حذف گزارش.pdf')).rect;
+    expect(remove.width, LumoControl.lg);
+    expect(remove.height, LumoControl.lg);
+    expect(withRemove.height, LumoControl.lg + 2, reason: 'the 44 target plus the tile\'s 1-px border top and bottom — it was 46 before too');
+    expect(withRemove.width, bare.width);
+    // The DRAWING is the web `IconButton size="sm"`: a 16-px glyph.
+    expect(tester.widget<Icon>(find.byIcon(Icons.close)).size, 16);
+    semantics.dispose();
+  });
+
+  testWidgets('FileUpload: the browse button HITS 44 while it still DRAWS the web\'s small pill', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', LumoFileUpload(label: 'مدارک', browseLabel: 'انتخاب پرونده', onBrowse: () {})));
+    final target = tester.getSemantics(find.bySemanticsLabel('انتخاب پرونده')).rect;
+    expect(target.height, LumoControl.lg, reason: 'it was LumoControl.sm — 29 — which no finger can be expected to find');
+    // The painted pill is untouched: still the web `Button size="sm"`.
+    final pill = tester.getSize(find.ancestor(of: find.text('انتخاب پرونده'), matching: find.byType(Container)).first);
+    expect(pill.height, LumoControl.sm);
+    semantics.dispose();
+  });
 }

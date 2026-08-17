@@ -24,6 +24,13 @@ typedef LumoOtpCellLabel = String Function(int index, int length);
 /// is the entered digits (in the reader's numerals); each box is a read-only
 /// node named by the REQUIRED `cellLabel` so a reader walking the row hears
 /// «رقم ۱ از ۶، ۳» rather than a bare digit.
+///
+/// **The touch band.** A box is `h-control-md w-control-md` — 36 square, the
+/// web's scale — and the field that receives the tap was exactly as tall,
+/// measured at 36 against a 44 px floor. The row now lays out `LumoControl.lg`
+/// (44) tall with the boxes painted, unchanged, in the middle of it; the one
+/// real field is stretched over the whole band, so the 4 px above and below each
+/// box are live.
 class LumoOtpField extends StatefulWidget {
   const LumoOtpField({super.key, required this.label, required this.cellLabel, this.length = 6, this.value, this.defaultValue, this.onChanged, this.onCompleted, this.description, this.errorMessage, this.isDisabled = false, this.autoFocus = false}) : assert(length > 0, 'An OTP row needs at least one cell.');
 
@@ -176,8 +183,12 @@ class _LumoOtpFieldState extends State<LumoOtpField> {
           // `TextDirection.ltr` on purpose and only here — see the class docblock.
           Directionality(
             textDirection: TextDirection.ltr,
-            child: Stack(
-              children: [
+            // The touch band: the boxes paint at 36, the field hit-tests at 44.
+            child: SizedBox(
+              height: LumoControl.lg,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
                 Row(mainAxisSize: MainAxisSize.min, spacing: 6, children: [for (var i = 0; i < widget.length; i++) cell(i)]),
                 // The one real field, transparent and stretched over the row so it receives the tap.
                 // `MergeSemantics`: the name and the editable's own node (value, actions) become ONE
@@ -211,6 +222,7 @@ class _LumoOtpFieldState extends State<LumoOtpField> {
                   ),
                 ),
               ],
+              ),
             ),
           ),
           if (widget.description != null)

@@ -20,6 +20,16 @@ import 'tokens.g.dart';
 /// empty or unparsable field (the web's `NaN`). Semantics: ONE text-field node
 /// named by `label` (`MergeSemantics`) whose value is the formatted number, and
 /// two buttons named by the stepper labels — disabled at the bound.
+///
+/// **The steppers' hit area.** The web paints the column `end-1 inset-y-1 w-6`,
+/// so each stepper is 24x14 — measured on mobile too, the smallest pair of
+/// buttons in the library. The chevrons still PAINT exactly there; the tappable
+/// cell is widened to `LumoControl.lg` (44) and given the control's FULL
+/// height, so each stepper is 44x18 instead of 24x14. It cannot be 44 TALL: two
+/// steppers stacked inside one 36 px control is the web's geometry, and 88 px of
+/// stacked target would be a different component. The extra 44−28 px of width
+/// eats into the input's `pe-8` gutter, which is empty — the number is at the
+/// reading START.
 class LumoNumberField extends StatefulWidget {
   const LumoNumberField({super.key, required this.label, required this.incrementLabel, required this.decrementLabel, this.value, this.defaultValue, this.onChanged, this.min, this.max, this.step = 1, this.description, this.errorMessage, this.placeholder, this.isDisabled = false, this.isReadOnly = false, this.isRequired = false})
       : assert(step > 0, 'step must be positive.'),
@@ -173,15 +183,18 @@ class _LumoNumberFieldState extends State<LumoNumberField> {
                   ),
                 ),
               ),
-              // The stepper column: pinned to the inline end, inside the control's height.
+              // The stepper column: pinned to the inline end, over the control's
+              // full height and `LumoControl.lg` wide, so each half clears the
+              // touch floor on the inline axis. Each stepper draws its chevron
+              // where the web puts it — see `_Stepper`.
               PositionedDirectional(
-                end: 4,
-                top: 4,
-                width: 24,
-                height: LumoControl.md - 8,
+                end: 0,
+                top: 0,
+                width: LumoControl.lg,
+                height: LumoControl.md,
                 child: Column(children: [
-                  Expanded(child: _Stepper(label: widget.incrementLabel, icon: Icons.keyboard_arrow_up, isEnabled: canUp, onTap: () => _stepBy(widget.step))),
-                  Expanded(child: _Stepper(label: widget.decrementLabel, icon: Icons.keyboard_arrow_down, isEnabled: canDown, onTap: () => _stepBy(-widget.step))),
+                  Expanded(child: _Stepper(label: widget.incrementLabel, icon: Icons.keyboard_arrow_up, isEnabled: canUp, onTap: () => _stepBy(widget.step), alignment: AlignmentDirectional.bottomEnd)),
+                  Expanded(child: _Stepper(label: widget.decrementLabel, icon: Icons.keyboard_arrow_down, isEnabled: canDown, onTap: () => _stepBy(-widget.step), alignment: AlignmentDirectional.topEnd)),
                 ]),
               ),
             ],
@@ -196,12 +209,17 @@ class _LumoNumberFieldState extends State<LumoNumberField> {
 /// One stepper button: named, a button, disabled at the bound; the chevron is
 /// decoration. Its own widget rather than `LumoIconButton` because two of them
 /// stack inside one control height.
+///
+/// The whole cell is the target; the 24x14 box the web paints is pinned inside
+/// it by `alignment` (bottom-end for increment, top-end for decrement) plus the
+/// 4 px inset, so growing the target moved no pixel of the chevron.
 class _Stepper extends StatelessWidget {
-  const _Stepper({required this.label, required this.icon, required this.isEnabled, required this.onTap});
+  const _Stepper({required this.label, required this.icon, required this.isEnabled, required this.onTap, required this.alignment});
   final String label;
   final IconData icon;
   final bool isEnabled;
   final VoidCallback onTap;
+  final AlignmentDirectional alignment;
   @override
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
@@ -217,7 +235,17 @@ class _Stepper extends StatelessWidget {
           child: InkWell(
             onTap: isEnabled ? onTap : null,
             borderRadius: BorderRadius.circular(LumoRadius.sm),
-            child: Center(child: ExcludeSemantics(child: Icon(icon, size: 14, color: isEnabled ? c.fgMuted : c.fgSubtle))),
+            child: Align(
+              alignment: alignment,
+              child: Padding(
+                padding: const EdgeInsetsDirectional.only(end: 4),
+                child: SizedBox(
+                  width: 24,
+                  height: (LumoControl.md - 8) / 2,
+                  child: Center(child: ExcludeSemantics(child: Icon(icon, size: 14, color: isEnabled ? c.fgMuted : c.fgSubtle))),
+                ),
+              ),
+            ),
           ),
         ),
       ),

@@ -2,11 +2,25 @@ import 'package:flutter/material.dart';
 import 'scope.dart';
 import 'tokens.g.dart';
 
+/// The web's four steps, to the pixel: `size-6`/`size-8`/`size-10`/`size-14`.
 enum LumoAvatarSize { sm, md, lg, xl }
+
+/// `circle` is the web's look — `avatarVariants` is `rounded-full` at every
+/// size and has no shape axis at all. `rounded` is the MOBILE ADDITION: a phone
+/// list row showing organisations (a bank, a shop) rather than people wants a
+/// squircle, because a circular logo reads as a person; the web's avatar slots
+/// are all people. `LumoRadius.md`, the same corner a small tile takes.
 enum LumoAvatarShape { circle, rounded }
+
 /// What the presence dot means, in the product's terms; `statusLabel` says it
 /// in words (WCAG 1.4.1 — colour alone says nothing). Colours: online → positive,
 /// busy → critical, offline → muted foreground.
+///
+/// These are PRESENCE names where the web's `avatarStatusVariants` uses the
+/// status ramp's colour names (`positive`/`critical`/`neutral`/`caution`) — a
+/// dot on a person means a state, not a severity, and «آنلاین» is what the
+/// `statusLabel` has to say anyway. The web's fourth tone, `caution`, has NO
+/// counterpart here: the amber "away" step is a gap, not a decision.
 enum LumoAvatarStatus { online, offline, busy }
 
 const _side = {LumoAvatarSize.sm: 24.0, LumoAvatarSize.md: 32.0, LumoAvatarSize.lg: 40.0, LumoAvatarSize.xl: 56.0};

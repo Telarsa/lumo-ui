@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'scope.dart';
@@ -28,7 +29,19 @@ import 'tokens.g.dart';
 /// **Auto-play** is off by default and, when on, stops for good on the first
 /// interaction (a drag, a chevron, a dot) and never starts at all under
 /// `MediaQuery.disableAnimationsOf` — a slide that moves on its own is WCAG
-/// 2.2.2, and "reduce motion" is the platform saying no.
+/// 2.2.2, and "reduce motion" is the platform saying no. The dot that widens
+/// when its slide arrives is animated too, and collapses to `Duration.zero`
+/// under the same flag: it was the one animation here that ignored it.
+///
+/// **The chevrons and the dots are real buttons.** Both wore
+/// `Semantics(button: true)` over a `GestureDetector(excludeFromSemantics:
+/// true)` and neither passed `onTap` to the node — so the semantics tree
+/// carried a button with NO `SemanticsAction.tap`: a reader could find the
+/// «بعدی» chevron and could not press it, and a semantics walk looking for tap
+/// targets found the carousel empty. `onTap` now sits on the node, as
+/// `breadcrumbs.dart` already did it. Their hit areas are `LumoControl.lg` (44)
+/// bands around glyphs that paint 29 (the chevron circle) and 6x6 (a dot); the
+/// dot cell narrows below 44 only when the slides are too many to fit the row.
 class LumoCarousel extends StatefulWidget {
   const LumoCarousel({
     super.key,
@@ -194,6 +207,9 @@ class _LumoCarouselState extends State<LumoCarousel> {
                     // `matchTextDirection` glyph: it points the reading way with no branch.
                     icon: Icons.chevron_left,
                     isEnabled: canPrevious,
+                    // The band grows INWARD from the circle, so `start: 4` still
+                    // puts the painted circle exactly where it was.
+                    alignment: AlignmentDirectional.centerStart,
                     onTap: () {
                       _stopAuto();
                       _goTo(_index - 1);
@@ -210,6 +226,7 @@ class _LumoCarouselState extends State<LumoCarousel> {
                     label: widget.nextLabel,
                     icon: Icons.chevron_right,
                     isEnabled: canNext,
+                    alignment: AlignmentDirectional.centerEnd,
                     onTap: () {
                       _stopAuto();
                       _goTo(_index + 1);
@@ -222,41 +239,54 @@ class _LumoCarouselState extends State<LumoCarousel> {
           if (widget.showDots && count > 1)
             Padding(
               padding: const EdgeInsets.only(top: 8),
-              // A `Row`, so the first dot sits at the reading start — level with the first slide.
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                spacing: 4,
-                children: [
-                  for (var i = 0; i < count; i++)
-                    Semantics(
-                      container: true,
-                      button: true,
-                      selected: i == _index,
-                      label: widget.slideLabel(i, count),
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        excludeFromSemantics: true,
+              child: LayoutBuilder(builder: (context, constraints) {
+                // The dot's touch cell: 44 where the row has room, never below
+                // the 20 px the widest dot paints. Twelve slides on a 320 dp
+                // phone would otherwise overflow the row.
+                final cell = constraints.maxWidth.isFinite ? math.max(20.0, math.min(LumoControl.lg, constraints.maxWidth / count)) : LumoControl.lg;
+                // A `Row`, so the first dot sits at the reading start — level with the first slide.
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    for (var i = 0; i < count; i++)
+                      Semantics(
+                        container: true,
+                        button: true,
+                        selected: i == _index,
+                        label: widget.slideLabel(i, count),
                         onTap: () {
                           _stopAuto();
                           _goTo(i);
                         },
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 2),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 150),
-                            width: i == _index ? 16 : 6,
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: i == _index ? c.accent : c.borderStrong,
-                              borderRadius: BorderRadius.circular(999),
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          excludeFromSemantics: true,
+                          onTap: () {
+                            _stopAuto();
+                            _goTo(i);
+                          },
+                          child: SizedBox(
+                            width: cell,
+                            height: LumoControl.lg,
+                            child: Center(
+                              child: AnimatedContainer(
+                                // "Reduce motion" is the platform saying no — here too.
+                                duration: MediaQuery.disableAnimationsOf(context) ? Duration.zero : const Duration(milliseconds: 150),
+                                width: i == _index ? 16 : 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  color: i == _index ? c.accent : c.borderStrong,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                ],
-              ),
+                  ],
+                );
+              }),
             ),
         ],
       ),
@@ -267,11 +297,15 @@ class _LumoCarouselState extends State<LumoCarousel> {
 /// One overlay chevron: an icon button on the surface, disabled at the bound
 /// (the web's `canScrollPrev`/`canScrollNext`).
 class _Chevron extends StatelessWidget {
-  const _Chevron({required this.label, required this.icon, required this.isEnabled, required this.onTap});
+  const _Chevron({required this.label, required this.icon, required this.isEnabled, required this.onTap, required this.alignment});
   final String label;
   final IconData icon;
   final bool isEnabled;
   final VoidCallback onTap;
+
+  /// Which edge of the 44 px touch band the painted circle sits against, so the
+  /// band grows into the deck rather than moving the glyph.
+  final AlignmentDirectional alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -281,6 +315,8 @@ class _Chevron extends StatelessWidget {
       button: true,
       enabled: isEnabled,
       label: label,
+      // On the NODE, not just the detector: a button a reader cannot activate is not a button.
+      onTap: isEnabled ? onTap : null,
       child: Opacity(
         opacity: isEnabled ? 1 : 0.4,
         child: Tooltip(
@@ -290,15 +326,22 @@ class _Chevron extends StatelessWidget {
             behavior: HitTestBehavior.opaque,
             excludeFromSemantics: true,
             onTap: isEnabled ? onTap : null,
-            child: Container(
-              width: LumoControl.sm,
-              height: LumoControl.sm,
-              decoration: BoxDecoration(
-                color: c.surface,
-                shape: BoxShape.circle,
-                border: Border.all(color: c.borderControl),
+            child: SizedBox(
+              width: LumoControl.lg,
+              height: LumoControl.lg,
+              child: Align(
+                alignment: alignment,
+                child: Container(
+                  width: LumoControl.sm,
+                  height: LumoControl.sm,
+                  decoration: BoxDecoration(
+                    color: c.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: c.borderControl),
+                  ),
+                  child: Icon(icon, size: 18, color: c.fg),
+                ),
               ),
-              child: Icon(icon, size: 18, color: c.fg),
             ),
           ),
         ),

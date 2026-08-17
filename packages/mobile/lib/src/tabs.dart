@@ -32,6 +32,10 @@ class LumoTab {
 /// Semantics: the list is a `tabBar` group named by `label`; every tab is a
 /// `tab` with `selected`, `enabled`, its name announced ONCE (the visible text
 /// is excluded); the panel is a `tabPanel`.
+///
+/// Motion: the panel cross-fade, the pill fill and the underline all collapse
+/// to `Duration.zero` under `MediaQuery.disableAnimationsOf` — a tab switch
+/// under «Reduce motion» is one frame, not a quick one.
 class LumoTabs extends StatefulWidget {
   const LumoTabs({super.key, required this.label, required this.tabs, this.value, this.defaultValue, this.onChanged, this.views, this.builder, this.variant = LumoTabsVariant.underline, this.isScrollable = false, this.isDisabled = false})
       : assert(views == null || builder == null, 'Give the panels as `views` or as `builder`, not both.');
@@ -73,6 +77,9 @@ class _LumoTabsState extends State<LumoTabs> {
     // Not a constructor assert: `List.length` is not constant-evaluable, and the widget must stay `const`-constructible.
     assert(widget.tabs.isNotEmpty, 'LumoTabs needs at least one tab.');
     final c = LumoScope.of(context).colours;
+    // «Reduce motion» is the platform's answer, not a parameter of ours — the
+    // same spelling as `disclosure.dart`.
+    final motion = !MediaQuery.disableAnimationsOf(context);
     final selectedTab = widget.tabs.where((t) => t.id == _current).firstOrNull ?? widget.tabs.first;
     final tabRow = Semantics(
       container: true,
@@ -109,7 +116,7 @@ class _LumoTabsState extends State<LumoTabs> {
             label: selectedTab.label,
             explicitChildNodes: true,
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 120),
+              duration: motion ? const Duration(milliseconds: 120) : Duration.zero,
               child: KeyedSubtree(key: ValueKey(_current), child: panel),
             ),
           ),
@@ -130,6 +137,7 @@ class _TabButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
     final pill = variant == LumoTabsVariant.pill;
+    final motion = !MediaQuery.disableAnimationsOf(context);
     final fg = pill && isSelected ? c.accentFg : (isSelected ? c.fg : c.fgMuted);
     final content = Row(
       mainAxisSize: MainAxisSize.min,
@@ -163,7 +171,7 @@ class _TabButton extends StatelessWidget {
           child: ExcludeSemantics(
             child: pill
                 ? AnimatedContainer(
-                    duration: const Duration(milliseconds: 120),
+                    duration: motion ? const Duration(milliseconds: 120) : Duration.zero,
                     constraints: const BoxConstraints(minHeight: LumoControl.sm),
                     margin: const EdgeInsets.all(4),
                     padding: const EdgeInsetsDirectional.symmetric(horizontal: 12, vertical: 4),
@@ -176,7 +184,7 @@ class _TabButton extends StatelessWidget {
                     children: [
                       Container(constraints: const BoxConstraints(minHeight: LumoControl.md), padding: const EdgeInsetsDirectional.symmetric(horizontal: 16, vertical: 8), alignment: Alignment.center, child: content),
                       // The indicator: under THIS tab, so it is wherever the tab is — the Row put the tab at the reading position.
-                      AnimatedContainer(duration: const Duration(milliseconds: 120), height: 2, color: isSelected ? c.accent : Colors.transparent),
+                      AnimatedContainer(duration: motion ? const Duration(milliseconds: 120) : Duration.zero, height: 2, color: isSelected ? c.accent : Colors.transparent),
                     ],
                   ),
           ),

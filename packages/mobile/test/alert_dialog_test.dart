@@ -128,4 +128,57 @@ void main() {
     expect(find.text('Never asked'), findsNothing);
     semantics.dispose();
   });
+
+  /// One frame after the press: the animated route is mid-fade, the
+  /// reduce-motion route is already there. `disableAnimations` is the only difference.
+  Future<double> fadeAfterOneFrame(WidgetTester tester, {required bool disableAnimations}) async {
+    await tester.pumpWidget(MediaQuery(
+      data: MediaQueryData(disableAnimations: disableAnimations),
+      child: app('fa-IR', LumoAlertDialogTrigger(
+        label: 'حذف آگهی؟',
+        description: 'این آگهی برای همیشه حذف می‌شود.',
+        confirmLabel: 'حذف',
+        cancelLabel: 'انصراف',
+        trigger: (ask) => LumoButton(onPressed: ask, child: const Text('حذف آگهی')),
+      )),
+    ));
+    await tester.tap(find.text('حذف آگهی'));
+    await tester.pump();
+    return tester.widget<FadeTransition>(find.ancestor(of: find.text('حذف آگهی؟'), matching: find.byType(FadeTransition)).first).opacity.value;
+  }
+
+  testWidgets('AlertDialog: with motion the card is still fading one frame in — the control the assertion below needs', (tester) async {
+    expect(await fadeAfterOneFrame(tester, disableAnimations: false), lessThan(1.0));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('AlertDialog: «reduce motion» collapses the transition to Duration.zero — the question is fully there on the FIRST frame', (tester) async {
+    expect(await fadeAfterOneFrame(tester, disableAnimations: true), 1.0, reason: 'MediaQuery.disableAnimationsOf must collapse the duration to zero');
+    expect(find.text('حذف آگهی؟'), findsOneWidget);
+    expect(find.text('حذف'), findsOneWidget);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('AlertDialog at 320dp: two real Persian verbs stack (confirm above cancel, the web footer\'s flex-col-reverse) instead of overflowing', (tester) async {
+    tester.view.physicalSize = const Size(320, 640);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(app('fa-IR', LumoAlertDialogTrigger(
+      label: 'حذف پروژه؟',
+      description: 'این کار برگشت‌پذیر نیست.',
+      confirmLabel: 'حذف برای همیشه',
+      cancelLabel: 'انصراف و بازگشت',
+      trigger: (ask) => LumoButton(onPressed: ask, child: const Text('حذف')),
+    )));
+    await tester.tap(find.text('حذف'));
+    await tester.pumpAndSettle();
+    // A `Row` here overflowed by 246px.
+    expect(tester.takeException(), isNull, reason: 'a RenderFlex overflow at 320dp is a real bug, not a debug banner');
+    final confirm = tester.getRect(find.text('حذف برای همیشه'));
+    final cancel = tester.getRect(find.text('انصراف و بازگشت'));
+    expect(cancel.top, isNot(confirm.top), reason: 'they no longer fit on one line, so they are on two');
+    expect(confirm.top, lessThan(cancel.top), reason: 'flex-col-reverse: the confirming verb stays nearest the thumb, cancel below it');
+    final card = tester.getRect(find.byType(Material).first);
+    expect(card.contains(confirm.center) && card.contains(cancel.center), isTrue);
+  });
 }

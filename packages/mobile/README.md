@@ -50,7 +50,7 @@ widgets. Reference app: `example-projects/lumo-app-flutter` — since 17 Aug 202
 the Khroos mobile prototype ported to Flutter on this package (a UI/UX, RTL and
 localisation test bed), plus the 2,000-row bench.
 
-## Widgets (0.2.3) — 44 families
+## Widgets — 77 families
 Every announced string is a required parameter; direction from the locale;
 colours from the scope; a semantics-tree test per family in `test/`.
 
@@ -65,7 +65,17 @@ colours from the scope; a semantics-tree test per family in `test/`.
 | Pickers | `LumoMultiSelect`, `LumoCombobox`, `LumoPhoneInput`, `LumoTimeField` |
 | Lists & nav | `LumoItem`/`LumoItemGroup`/`LumoListBox`, `LumoBreadcrumbs`, `LumoLink`, `LumoDescriptionList`, `LumoToggle`/`LumoToggleGroup` |
 | Media | `LumoMessage`/`LumoMessageGroup`, `LumoCarousel`, `LumoFileUpload`/`LumoAttachmentTile`, `LumoIconTile`/`LumoIconStack` |
-| Utilities | `formatNumber`, `JalaliDate`, `calendarOf`, `formatLumoDate`, `lumoFoldForSearch`, `LumoScope`, `lumoThemeData` |
+| Navigation | `LumoNavigationBar`, `LumoAppBar`, `LumoNavigationDrawer`, `LumoToolbar`, `LumoButtonGroup`, `LumoInputGroup`, `LumoContextMenu` |
+| Dates | `LumoCalendar`, `LumoRangeCalendar`, `LumoDatePicker`, `LumoDateRangePicker` (Jalali or Gregorian by locale) |
+| Data & lists | `LumoTable`, `LumoVirtualList`/`LumoInfiniteList`, `LumoPullToRefresh`, `LumoSortable`, `LumoScrollArea`, `LumoKanban` |
+| Forms & layout | `LumoForm`/`LumoFormField`/`LumoFormState`, `LumoTagsInput`, `LumoMaskInput`, `LumoColorInput`/`LumoColorPicker`, `LumoFilters`, `LumoStack`/`LumoGrid`/`LumoAspectRatio`, `LumoCommand` |
+| Charts & tree | `LumoBarChart`, `LumoLineChart`, `LumoSparkline`, `LumoDonutChart`, `LumoTree`, `LumoTreeSelect` |
+| Utilities | `formatNumber`, `JalaliDate`, `calendarOf`, `formatLumoDate`, `lumoFoldForSearch`, `LumoScope`, `lumoThemeData`, `LumoShadow` |
+
+A chart is not a picture of numbers: every data point is its own semantics node
+announcing «label: value», so the series can be walked without being seen. A
+drag is not an interface: `LumoSortable` and `LumoKanban` require named
+move actions, because a screen-reader user cannot drag.
 
 ## The gate
 
@@ -81,6 +91,16 @@ has a grader of its own — `pnpm run gate:flutter-contract`
 | `english-literal` | a user-facing string welded shut in Latin letters, which no locale reaches |
 | `physical-direction` | `left`/`right` where the inline axis was meant — the silent RTL defect |
 | `material-english-route` | `showModalBottomSheet`/`showMenu`/`showDialog`/`showDatePicker`/`showTimePicker`, each of which names its own route and barrier «Dialog»/«Dismiss» from `MaterialLocalizations` |
+
+`packages/mobile/test/house_rules_test.dart` adds four more, swept over the whole
+of `lib/src/` rather than family by family — so a family added tomorrow is
+covered without anyone remembering to opt it in: **no hand-rolled `BoxShadow`**
+(elevation is `LumoShadow`, which has a separate dark ramp), **every animating
+file consults `MediaQuery.disableAnimationsOf`**, **a validation error is never
+silent**, and **no const-constructor assert on a collection length** (it is a
+compile error at every const call site, not a runtime check). The motion guard
+caught two families that landed WHILE the first ten were being fixed, which is
+the argument for a guard over a fix.
 
 Every rule ships a poison fixture in `gate_fixtures/`, and `--self-test` fails
 if a rule stops rejecting its own poison or starts flagging the clean file — a

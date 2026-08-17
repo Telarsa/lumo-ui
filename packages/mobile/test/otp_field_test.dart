@@ -67,4 +67,21 @@ void main() {
     expect(find.bySemanticsLabel('Digit 1 of 6'), findsOneWidget);
     semantics.dispose();
   });
+
+  testWidgets('OTP: the field hit-tests 44 tall while a box still PAINTS the control scale (36)', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', LumoOtpField(label: 'کد پیامک‌شده', cellLabel: cellLabel('fa-IR'))));
+    // Measured before this pass: the one real field was 36 tall — the control
+    // scale, under the 44 px floor.
+    // The one real field, stretched over the band, is what receives the tap.
+    expect(tester.getSize(find.byType(TextField)).height, greaterThanOrEqualTo(44));
+    // The boxes are untouched: `h-control-md w-control-md`, the web's scale.
+    expect(tester.getSize(cell(0)), const Size(36, 36));
+    // The band is live: a tap 2 px above the top box focuses the field.
+    final box = tester.getRect(cell(0));
+    await tester.tapAt(Offset(box.center.dx, box.top - 2));
+    await tester.pump();
+    expect(tester.widget<TextField>(find.byType(TextField)).focusNode!.hasFocus, isTrue);
+    semantics.dispose();
+  });
 }

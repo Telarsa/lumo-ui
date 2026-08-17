@@ -28,7 +28,16 @@ class LumoSegment {
 /// the INLINE axis (`AlignmentDirectional`: the first segment sits at the
 /// reading start — right in Persian). Each segment is a button announced with
 /// its selected state; the rounding lives on the TRACK, never on first/last
-/// children, which would round the wrong corners under RTL.
+/// children, which would round the wrong corners under RTL. The pill's travel
+/// collapses to nothing under `disableAnimations` — it is at the new segment on
+/// the same frame.
+///
+/// **A segment FILLS the track's height.** The segment row is `Positioned.fill`
+/// with `CrossAxisAlignment.stretch` for a measured reason: as a plain `Stack`
+/// child the row was sized by its content and aligned `topStart`, so at `md`
+/// each segment measured 175×20 inside a 32-tall control — the labels rode 6 px
+/// high with 12 px of dead track under them, and two thirds of the pill was not
+/// tappable. Both come from the same missing constraint.
 class LumoSegmentedControl extends StatefulWidget {
   const LumoSegmentedControl({super.key, required this.label, required this.segments, this.value, this.defaultValue, this.onChanged, this.size = LumoSegmentedControlSize.md, this.isDisabled = false});
   final String label;
@@ -63,6 +72,9 @@ class _LumoSegmentedControlState extends State<LumoSegmentedControl> {
     final height = sm ? 28.0 : 32.0;
     final n = widget.segments.length;
     final index = widget.segments.indexWhere((s) => s.id == _value).clamp(0, n - 1);
+    // «Reduce motion» is the platform's answer, not a parameter of ours — the
+    // same spelling as `disclosure.dart`: the pill does not travel, it arrives.
+    final motion = !MediaQuery.disableAnimationsOf(context);
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -89,7 +101,7 @@ class _LumoSegmentedControlState extends State<LumoSegmentedControl> {
                 Positioned.fill(
                   child: ExcludeSemantics(
                     child: AnimatedAlign(
-                      duration: const Duration(milliseconds: 150),
+                      duration: motion ? const Duration(milliseconds: 150) : Duration.zero,
                       curve: Curves.easeOut,
                       alignment: AlignmentDirectional(n == 1 ? 0 : -1 + 2 * index / (n - 1), 0),
                       child: FractionallySizedBox(
@@ -100,7 +112,12 @@ class _LumoSegmentedControlState extends State<LumoSegmentedControl> {
                     ),
                   ),
                 ),
-                Row(
+                // `Positioned.fill` + `stretch`: a segment is as tall as the
+                // track, so its label is centred and its whole pill is the
+                // touch target — see the docblock.
+                Positioned.fill(
+                  child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (final s in widget.segments)
                       Expanded(
@@ -115,6 +132,7 @@ class _LumoSegmentedControlState extends State<LumoSegmentedControl> {
                         ),
                       ),
                   ],
+                  ),
                 ),
               ],
               );

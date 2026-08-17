@@ -10,10 +10,21 @@ import 'tokens.g.dart';
 enum LumoLinkVariant {
   /// In a run of text: the web's `accent` — coloured AND underlined, because
   /// colour alone does not distinguish a link (WCAG 1.4.1).
+  ///
+  /// **This one is NOT grown to the 44 px touch floor, on purpose.** Measured
+  /// in a 360 dp column an inline link is 360×21 — one line box. Padding it to
+  /// 44 would either open a 23 px hole in the paragraph it sits in or overlap
+  /// the lines above and below and steal their taps; a link inside a sentence
+  /// is a WORD, and its size is the type's. WCAG 2.5.8 exempts exactly this
+  /// case ("the target is in a sentence or block of text"). When a link needs
+  /// to be a target, it is not inline — that is what [standalone] is for.
   inline,
 
   /// On its own line, as a control: the accent colour, no resting underline,
-  /// and a real touch target.
+  /// and a real touch target — [LumoControl.lg], the 44 px floor. It was
+  /// [LumoControl.md] (36) and measured 36 tall, which is the text-button
+  /// scale; but a standalone link has no fill to aim at and often only two or
+  /// three words to hit, so it takes the floor the docblock already promised.
   standalone,
 }
 
@@ -137,7 +148,7 @@ class _LumoLinkState extends State<LumoLink> {
               ? content
               : ConstrainedBox(
                   // A link that stands alone is a touch target, not a word.
-                  constraints: const BoxConstraints(minHeight: LumoControl.md),
+                  constraints: const BoxConstraints(minHeight: LumoControl.lg),
                   child: Align(alignment: AlignmentDirectional.centerStart, widthFactor: 1, child: content),
                 ),
         ),

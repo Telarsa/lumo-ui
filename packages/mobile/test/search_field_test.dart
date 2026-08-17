@@ -63,8 +63,38 @@ void main() {
     // The value is shown; the ✕ named exactly once.
     expect(find.text('lumo'), findsOneWidget);
     await tester.pumpWidget(app('en-US', const LumoSearchField(label: 'Search', clearLabel: 'Clear search', value: 'lumo', isDisabled: true, errorMessage: 'خطا')));
-    expect(tester.getSemantics(find.byType(TextField)), matchesSemantics(label: 'Search', hint: 'خطا', isTextField: true, hasEnabledState: true, isEnabled: false, isReadOnly: true));
+    expect(tester.getSemantics(find.byType(TextField)), matchesSemantics(label: 'Search', hint: 'خطا', isTextField: true, hasEnabledState: true, isEnabled: false, isReadOnly: true, validationResult: SemanticsValidationResult.invalid));
+    // Painted once, announced once: the message is the field's hint, and no
+    // longer `errorText`'s own second node.
+    expect(find.bySemanticsLabel('خطا'), findsNothing);
     expect(find.text('خطا'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('Search: the ✕ is a 44 x 44 TARGET around a `size="sm"` pill; the label row is not a second node; required and invalid are states', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', const LumoSearchField(label: 'جستجو', clearLabel: 'پاک کردن جستجو', value: 'لومو', isRequired: true)));
+    // The touch target: `LumoControl.lg` square, which 29 x 29 was not.
+    final clear = tester.getSemantics(find.bySemanticsLabel('پاک کردن جستجو')).rect;
+    expect(clear.width, LumoControl.lg);
+    expect(clear.height, LumoControl.lg);
+    // The DRAWING did not grow with it: the ✕ glyph is still the web's 16.
+    expect(tester.widget<Icon>(find.byIcon(Icons.close)).size, 16);
+    // The name is painted (with the required marker) and heard exactly once.
+    expect(find.text('جستجو *'), findsOneWidget);
+    expect(find.bySemanticsLabel('جستجو'), findsOneWidget);
+    expect(tester.getSemantics(find.byType(TextField)), containsSemantics(label: 'جستجو', hasRequiredState: true, isRequired: true));
+    semantics.dispose();
+  });
+
+  testWidgets('Search: isInvalid marks the box wrong with no message; an optional field carries no required state', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('en-US', const LumoSearchField(label: 'Search', clearLabel: 'Clear', isInvalid: true)));
+    final data = tester.getSemantics(find.byType(TextField)).getSemanticsData();
+    expect(data.validationResult, SemanticsValidationResult.invalid);
+    expect(data.flagsCollection.hasRequiredState, isFalse);
+    final c = LumoScope.of(tester.element(find.byType(TextField))).colours;
+    expect((tester.widget<TextField>(find.byType(TextField)).decoration!.enabledBorder! as OutlineInputBorder).borderSide.color, c.critical);
     semantics.dispose();
   });
 }

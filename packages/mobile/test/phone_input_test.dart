@@ -1,6 +1,7 @@
 // PhoneInput: the number is an LTR island in every script, the digits are the
 // reader's on screen and ASCII on the wire, and the country selector is named.
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';
 
@@ -170,6 +171,18 @@ void main() {
     await tester.tap(find.bySemanticsLabel('کشور'), warnIfMissed: false);
     await tester.pumpAndSettle();
     expect(find.byWidgetPredicate((w) => w is LumoIconButton && w.label == 'بستن'), findsNothing);
+    semantics.dispose();
+  });
+
+  testWidgets('PhoneInput: errorMessage is the INVALID state on the number field, the web\'s aria-invalid', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', const LumoPhoneInput(label: 'شمارهٔ همراه', countryLabel: 'کشور', closeLabel: 'بستن', searchLabel: 'جستجو')));
+    expect(tester.getSemantics(find.byType(TextField)).getSemanticsData().validationResult, SemanticsValidationResult.none);
+    await tester.pumpWidget(app('fa-IR', const LumoPhoneInput(label: 'شمارهٔ همراه', countryLabel: 'کشور', closeLabel: 'بستن', searchLabel: 'جستجو', errorMessage: 'شماره کامل نیست')));
+    expect(tester.getSemantics(find.byType(TextField)).getSemanticsData().validationResult, SemanticsValidationResult.invalid);
+    // Painted once, announced once.
+    expect(find.text('شماره کامل نیست'), findsOneWidget);
+    expect(find.bySemanticsLabel('شماره کامل نیست'), findsNothing);
     semantics.dispose();
   });
 }

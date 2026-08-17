@@ -20,13 +20,20 @@ import 'tokens.g.dart';
 /// The body scrolls inside the sheet (`Flexible` + `SingleChildScrollView`),
 /// the sheet caps at 90% of the screen; a swipe down on the handle/header
 /// dismisses when `isDismissible`.
-Future<T?> showLumoSheet<T>(BuildContext context, {required String label, required String closeLabel, String? description, required WidgetBuilder body, List<Widget> Function(BuildContext)? actions, bool isDismissible = true}) =>
-    showLumoSheetRoute<T>(
-      context,
-      closeLabel: closeLabel,
-      isDismissible: isDismissible,
-      builder: (ctx) => _LumoSheetPage(label: label, closeLabel: closeLabel, description: description, body: body, actions: actions, isDismissible: isDismissible),
-    );
+Future<T?> showLumoSheet<T>(
+  BuildContext context, {
+  required String label,
+  required String closeLabel,
+  String? description,
+  required WidgetBuilder body,
+  List<Widget> Function(BuildContext)? actions,
+  bool isDismissible = true,
+}) => showLumoSheetRoute<T>(
+  context,
+  closeLabel: closeLabel,
+  isDismissible: isDismissible,
+  builder: (ctx) => _LumoSheetPage(label: label, closeLabel: closeLabel, description: description, body: body, actions: actions, isDismissible: isDismissible),
+);
 
 /// The bottom-sheet ROUTE without Lumo's sheet chrome — for a body that brings
 /// its own header, like `LumoCalendarSheet`. Everything `showLumoSheet` gets
@@ -38,13 +45,17 @@ Future<T?> showLumoSheet<T>(BuildContext context, {required String label, requir
 Future<T?> showLumoSheetRoute<T>(BuildContext context, {required String closeLabel, required WidgetBuilder builder, bool isDismissible = true}) {
   final scope = LumoScope.of(context);
   final c = scope.colours;
+  // «Reduce motion» is the platform's answer, not a parameter of ours: the
+  // slide collapses to zero and the sheet simply IS at the bottom edge on the
+  // next frame. The house spelling — see `disclosure.dart`, `carousel.dart`.
+  final motion = !MediaQuery.disableAnimationsOf(context);
   return showGeneralDialog<T>(
     context: context,
     barrierColor: c.scrim,
     barrierDismissible: isDismissible,
     // The scrim's own announced name — a dismissible barrier must have one; the ✕ carries the same.
     barrierLabel: closeLabel,
-    transitionDuration: const Duration(milliseconds: 250),
+    transitionDuration: motion ? const Duration(milliseconds: 250) : Duration.zero,
     transitionBuilder: (ctx, animation, secondary, child) => SlideTransition(
       // Block-axis travel only: (0, 1) → (0, 0) is direction-invariant.
       position: Tween(begin: const Offset(0, 1), end: Offset.zero).animate(CurvedAnimation(parent: animation, curve: Curves.easeOut)),
@@ -66,98 +77,114 @@ class _LumoSheetPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = LumoScope.of(context).colours;
+    final scope = LumoScope.of(context);
+    final c = scope.colours;
     final maxHeight = MediaQuery.sizeOf(context).height * 0.9;
     return Align(
       alignment: Alignment.bottomCenter,
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: maxHeight, maxWidth: 640),
-        child: Material(
-          color: c.surface,
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
+        // `shadow-modal`: what separates the sheet from the page it covers.
+        // tokens.css argues the scrim alone cannot do it on the dark scheme
+        // (twenty-two points of alpha buy fifteen thousandths of contrast), so
+        // the sheet's own border and this shadow are what carry the separation.
+        child: DecoratedBox(
+          decoration: BoxDecoration(
             borderRadius: const BorderRadius.vertical(top: Radius.circular(LumoRadius.lg)),
-            side: BorderSide(color: c.border),
+            boxShadow: LumoShadow.modal(scope.brightness),
           ),
-          child: SafeArea(
-            top: false,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  // The gesture is pointer-only: its semantics (scroll actions) would otherwise
-                  // absorb the title and the ✕ into one merged node.
-                  excludeFromSemantics: true,
-                  // A quick swipe down on the handle/header dismisses — the sheet's own gesture, when dismissal is allowed.
-                  onVerticalDragEnd: isDismissible
-                      ? (d) {
-                          if ((d.primaryVelocity ?? 0) > 300) Navigator.of(context).pop();
-                        }
-                      : null,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Decoration: excluded so nothing unnamed is announced.
-                      ExcludeSemantics(
-                        child: Center(
-                          child: Container(
-                            margin: const EdgeInsets.only(top: 8),
-                            width: 32,
-                            height: 4,
-                            decoration: BoxDecoration(color: c.borderStrong, borderRadius: BorderRadius.circular(999)),
+          child: Material(
+            color: c.surface,
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(LumoRadius.lg)),
+              side: BorderSide(color: c.border),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    // The gesture is pointer-only: its semantics (scroll actions) would otherwise
+                    // absorb the title and the ✕ into one merged node.
+                    excludeFromSemantics: true,
+                    // A quick swipe down on the handle/header dismisses — the sheet's own gesture, when dismissal is allowed.
+                    onVerticalDragEnd: isDismissible
+                        ? (d) {
+                            if ((d.primaryVelocity ?? 0) > 300) Navigator.of(context).pop();
+                          }
+                        : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Decoration: excluded so nothing unnamed is announced.
+                        ExcludeSemantics(
+                          child: Center(
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              width: 32,
+                              height: 4,
+                              decoration: BoxDecoration(color: c.borderStrong, borderRadius: BorderRadius.circular(999)),
+                            ),
                           ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(start: 20, end: 12, top: 8),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // One node names the route AND is the header — the label exists once in the tree.
-                            Expanded(
-                              child: Semantics(
-                                namesRoute: true,
-                                header: true,
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 6),
-                                  child: Text(
-                                    label,
-                                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.4, color: c.fg),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(start: 20, end: 12, top: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // One node names the route AND is the header — the label exists once in the tree.
+                              Expanded(
+                                child: Semantics(
+                                  namesRoute: true,
+                                  header: true,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 6),
+                                    child: Text(
+                                      label,
+                                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.4, color: c.fg),
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            LumoIconButton(
-                              label: closeLabel,
-                              size: LumoButtonSize.sm,
-                              onPressed: () => Navigator.of(context).pop(),
-                              child: Icon(Icons.close, size: 16, color: c.fgMuted),
-                            ),
-                          ],
+                              const SizedBox(width: 12),
+                              LumoIconButton(
+                                label: closeLabel,
+                                size: LumoButtonSize.sm,
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Icon(Icons.close, size: 16, color: c.fgMuted),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                if (description != null)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(start: 20, end: 20, top: 4),
-                    child: Text(description!, style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                  if (description != null)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 20, end: 20, top: 4),
+                      child: Text(description!, style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                    ),
+                  Flexible(
+                    child: SingleChildScrollView(padding: const EdgeInsetsDirectional.only(start: 20, end: 20, top: 12, bottom: 12), child: body(context)),
                   ),
-                Flexible(
-                  child: SingleChildScrollView(padding: const EdgeInsetsDirectional.only(start: 20, end: 20, top: 12, bottom: 12), child: body(context)),
-                ),
-                if (actions != null)
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(start: 20, end: 20, top: 4, bottom: 16),
-                    child: Row(mainAxisAlignment: MainAxisAlignment.end, spacing: 8, children: actions!(context)),
-                  )
-                else
-                  const SizedBox(height: 8),
-              ],
+                  if (actions != null)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(start: 20, end: 20, top: 4, bottom: 16),
+                      // An `OverflowBar`, not a `Row`: two real Persian verbs
+                      // overflow a 320dp screen by 184px (measured). Flutter's
+                      // own `AlertDialog` uses the same widget, and it says what
+                      // the web footer says — a row while the verbs fit, a
+                      // column when they do not.
+                      child: OverflowBar(alignment: MainAxisAlignment.end, overflowAlignment: OverflowBarAlignment.end, spacing: 8, overflowSpacing: 8, children: actions!(context)),
+                    )
+                  else
+                    const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
         ),
@@ -169,7 +196,18 @@ class _LumoSheetPage extends StatelessWidget {
 /// The declarative shape: a trigger whose press opens the sheet. `onOpenChange`
 /// fires true on open and false when it closes (any way).
 class LumoSheetTrigger extends StatelessWidget {
-  const LumoSheetTrigger({super.key, required this.label, required this.closeLabel, required this.trigger, required this.body, this.description, this.actions, this.onOpenChange, this.isDismissible = true, this.isDisabled = false});
+  const LumoSheetTrigger({
+    super.key,
+    required this.label,
+    required this.closeLabel,
+    required this.trigger,
+    required this.body,
+    this.description,
+    this.actions,
+    this.onOpenChange,
+    this.isDismissible = true,
+    this.isDisabled = false,
+  });
   final String label;
   final String closeLabel;
   final String? description;

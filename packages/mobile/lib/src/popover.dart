@@ -26,6 +26,11 @@ enum LumoPlacement { bottomStart, bottom, bottomEnd, topStart, top, topEnd }
 Future<T?> showLumoPopover<T>(BuildContext context, {required RenderBox anchor, required String label, required WidgetBuilder content, bool showClose = false, String? closeLabel, LumoPlacement placement = LumoPlacement.bottomStart, bool padded = true}) {
   assert(!showClose || closeLabel != null, 'A popover with an ✕ needs a closeLabel — an ✕ is not a name.');
   final scope = LumoScope.of(context);
+  // «Reduce motion» is the platform's answer, not a parameter of ours. A route
+  // reads its duration from a getter, above any MediaQuery of its own, so the
+  // flag is read HERE — from the trigger's context — and carried onto the
+  // route. The house spelling — see `disclosure.dart`, `carousel.dart`.
+  final motion = !MediaQuery.disableAnimationsOf(context);
   final navigator = Navigator.of(context);
   final overlay = navigator.overlay!.context.findRenderObject()!;
   final anchorRect = MatrixUtils.transformRect(anchor.getTransformTo(overlay), Offset.zero & anchor.size);
@@ -35,6 +40,7 @@ Future<T?> showLumoPopover<T>(BuildContext context, {required RenderBox anchor, 
       anchorRect: anchorRect,
       placement: placement,
       closeLabel: closeLabel,
+      motion: motion,
       // The route is built ABOVE the caller's LumoScope: re-provided in buildPage.
       builder: (ctx) => _LumoPopoverSurface(label: label, closeLabel: showClose ? closeLabel : null, padded: padded, child: content(ctx)),
     ),
@@ -50,16 +56,22 @@ class _LumoPopoverSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = LumoScope.of(context).colours;
+    final scope = LumoScope.of(context);
+    final c = scope.colours;
     return Semantics(
       label: label,
       namesRoute: true,
       container: true,
       explicitChildNodes: true,
-      child: Material(
+      // `LumoShadow.overlay`, not a hand-picked `elevation: 4` over `c.scrim`.
+      // `scrim` is the MODAL BACKDROP's role, and one shadow spelled once was
+      // the same in BOTH schemes — on a dark page a black shadow at the light
+      // scheme's alpha is close to painting nothing. The token carries a
+      // separate dark ramp; the web says `shadow-overlay` on this surface.
+      child: DecoratedBox(
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(LumoRadius.md), boxShadow: LumoShadow.overlay(scope.brightness)),
+        child: Material(
         color: c.surface,
-        elevation: 4,
-        shadowColor: c.scrim,
         surfaceTintColor: Colors.transparent,
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
@@ -97,6 +109,7 @@ class _LumoPopoverSurface extends StatelessWidget {
             ),
           ),
         ),
+        ),
       ),
     );
   }
@@ -108,12 +121,15 @@ class _LumoPopoverSurface extends StatelessWidget {
 /// it (`closeLabel`); an unnamed dismiss node is never announced (Material's
 /// own popup-menu route leaves its barrier nameless too).
 class _LumoPopoverRoute<T> extends PopupRoute<T> {
-  _LumoPopoverRoute({required this.scope, required this.anchorRect, required this.placement, required this.builder, required this.closeLabel});
+  _LumoPopoverRoute({required this.scope, required this.anchorRect, required this.placement, required this.builder, required this.closeLabel, required this.motion});
   final LumoScopeData scope;
   final Rect anchorRect;
   final LumoPlacement placement;
   final WidgetBuilder builder;
   final String? closeLabel;
+
+  /// False under `MediaQuery.disableAnimationsOf` at the context that opened it.
+  final bool motion;
 
   @override
   Color? get barrierColor => Colors.transparent;
@@ -124,7 +140,7 @@ class _LumoPopoverRoute<T> extends PopupRoute<T> {
   @override
   bool get semanticsDismissible => closeLabel != null;
   @override
-  Duration get transitionDuration => const Duration(milliseconds: 150);
+  Duration get transitionDuration => motion ? const Duration(milliseconds: 150) : Duration.zero;
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {

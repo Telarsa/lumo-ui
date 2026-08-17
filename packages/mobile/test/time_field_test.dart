@@ -1,6 +1,7 @@
 // TimeField: the hour cycle is the LOCALE's, the digits are the reader's, the
 // picker is Lumo's own sheet — never Material's English-stringed showTimePicker.
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';
 
@@ -185,6 +186,33 @@ void main() {
     for (final step in [7, 0]) {
       expect(() => LumoTimeField(label: 'a', openLabel: 'b', closeLabel: 'c', hourLabel: 'd', minuteLabel: 'e', minuteStep: step), throwsAssertionError);
     }
+    semantics.dispose();
+  });
+
+  testWidgets('TimeField: every picker cell is a 44-tall TARGET around the 40-px pill it always drew', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', const LumoTimeField(
+      label: 'ساعت جلسه', openLabel: 'انتخاب ساعت', closeLabel: 'بستن', hourLabel: 'ساعت', minuteLabel: 'دقیقه', value: TimeOfDay(hour: 9, minute: 30))));
+    await tester.tap(find.bySemanticsLabel('انتخاب ساعت'));
+    await tester.pumpAndSettle();
+    // The pill still draws 40; the button node around it is 44.
+    final pill = tester.getSize(find.ancestor(of: find.text('۰۹'), matching: find.byType(Container)).first);
+    expect(pill.height, 40);
+    expect(tester.getSize(find.ancestor(of: find.text('۰۹'), matching: find.byType(InkWell)).first).height, LumoControl.lg);
+    semantics.dispose();
+  });
+
+  testWidgets('TimeField: required and invalid are STATES on the field, not only words', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', const LumoTimeField(label: 'ساعت', openLabel: 'ب', closeLabel: 'ب', hourLabel: 'س', minuteLabel: 'د', isRequired: true, isInvalid: true)));
+    // The web `TimeField` is the one component of the family that emits
+    // aria-required; here it is a real semantics flag.
+    final field = find.byWidgetPredicate((w) => w is Semantics && w.properties.label == 'ساعت').first;
+    final data = tester.getSemantics(field).getSemanticsData();
+    expect(data.label, 'ساعت');
+    expect(data.flagsCollection.isRequired, isTrue);
+    expect(data.validationResult, SemanticsValidationResult.invalid);
+    expect(find.text('ساعت *'), findsOneWidget);
     semantics.dispose();
   });
 }

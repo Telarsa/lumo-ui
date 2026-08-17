@@ -1,12 +1,13 @@
 // MultiSelect: what a screen reader gets is the SEMANTICS TREE — names, roles,
 // state, direction — under fa-IR and en-US, plus the geometry that mirrors.
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';
 
-Widget app(String locale, Widget child) => MaterialApp(
+Widget app(String locale, Widget child, {double width = 360}) => MaterialApp(
       theme: lumoThemeData(brightness: Brightness.light),
-      home: LumoScope(locale: locale, brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: 360, child: child)))),
+      home: LumoScope(locale: locale, brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: width, child: child)))),
     );
 
 const options = [
@@ -197,6 +198,76 @@ void main() {
       () => LumoMultiSelect(label: 'x', options: options, values: const [], closeLabel: 'a', confirmLabel: 'b', clearAllLabel: 'c', countLabel: (n) => n, removeLabel: (l) => l, maxChips: 0),
       throwsAssertionError,
     );
+    semantics.dispose();
+  });
+
+  testWidgets('MultiSelect: the sheet footer SHEDS its row at 320 dp instead of overflowing', (tester) async {
+    // Measured before the fix: `A RenderFlex overflowed by 36 pixels on the
+    // right` with these labels at this width.
+    await tester.pumpWidget(app('fa-IR', LumoMultiSelect(
+      label: 'دسته‌بندی‌های محصول',
+      closeLabel: 'بستن',
+      confirmLabel: 'تأیید و بستن پنجره',
+      clearAllLabel: 'پاک کردن همهٔ انتخاب‌ها',
+      countLabel: (c) => '$c مورد انتخاب شده است',
+      removeLabel: (l) => 'حذف $l',
+      options: const [LumoMultiSelectOption(id: 'a', label: 'الف')],
+      values: const ['a'],
+    ), width: 320));
+    await tester.tap(find.text('۱ مورد انتخاب شده است'));
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull, reason: 'no RenderFlex overflow');
+    // Nothing was truncated to buy the fit: both button labels are whole.
+    expect(find.text('پاک کردن همهٔ انتخاب‌ها'), findsOneWidget);
+    expect(find.text('تأیید و بستن پنجره'), findsOneWidget);
+    // And the count moved to a line of its own, above the actions.
+    // `.last` is the FOOTER copy: the trigger paints the same sentence.
+    expect(tester.getCenter(find.text('۱ مورد انتخاب شده است').last).dy, lessThan(tester.getCenter(find.text('تأیید و بستن پنجره')).dy));
+  });
+
+  testWidgets('MultiSelect: short labels still share one row; required and invalid are STATES', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('en-US', LumoMultiSelect(
+      label: 'Tags',
+      closeLabel: 'Close',
+      confirmLabel: 'Done',
+      clearAllLabel: 'Clear',
+      countLabel: (c) => '$c selected',
+      removeLabel: (l) => 'Remove $l',
+      options: const [LumoMultiSelectOption(id: 'a', label: 'Alpha')],
+      values: const ['a'],
+      isRequired: true,
+      errorMessage: 'Pick at least two',
+    ), width: 360));
+    expect(find.text('Tags *'), findsOneWidget);
+    final trigger = find.bySemanticsLabel('Tags');
+    final data = tester.getSemantics(trigger).getSemanticsData();
+    expect(data.flagsCollection.isRequired, isTrue);
+    expect(data.validationResult, SemanticsValidationResult.invalid);
+    await tester.tap(trigger);
+    await tester.pumpAndSettle();
+    // One row: the count on the left of the actions, not above them.
+    expect(tester.getCenter(find.text('1 selected').last).dy, closeTo(tester.getCenter(find.text('Done')).dy, 1));
+    semantics.dispose();
+  });
+
+  testWidgets('MultiSelect: the value chip\'s remove ✕ inherits whatever LumoChip gives it', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', LumoMultiSelect(
+      label: 'برچسب‌ها',
+      closeLabel: 'بستن',
+      confirmLabel: 'تأیید',
+      clearAllLabel: 'پاک',
+      countLabel: (c) => '$c مورد',
+      removeLabel: (l) => 'حذف $l',
+      options: const [LumoMultiSelectOption(id: 'a', label: 'الف')],
+      values: const ['a'],
+    )));
+    // The chip is `chip.dart`'s widget: this asserts the WIRING (a named remove
+    // button per chosen value), not the chip's own geometry, which that family
+    // owns and is where the ✕'s target is decided.
+    expect(find.bySemanticsLabel('حذف الف'), findsOneWidget);
+    expect(tester.getSemantics(find.bySemanticsLabel('حذف الف')), containsSemantics(isButton: true, hasEnabledState: true, isEnabled: true));
     semantics.dispose();
   });
 }

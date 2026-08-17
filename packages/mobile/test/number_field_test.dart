@@ -92,4 +92,26 @@ void main() {
     expect(tester.getSemantics(up), matchesSemantics(label: 'Increase quantity', isButton: true, hasEnabledState: true, isEnabled: false));
     semantics.dispose();
   });
+
+  testWidgets('NumberField: the steppers hit test at 44 wide over the control\'s full height, and the chevrons paint where the web puts them', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', LumoNumberField(label: 'تعداد', incrementLabel: 'افزایش تعداد', decrementLabel: 'کاهش تعداد', defaultValue: 3)));
+    // Measured before this pass: 24x14 each, the smallest pair of buttons in the
+    // library. 44 tall is impossible — two stack inside one 36 px control.
+    for (final name in ['افزایش تعداد', 'کاهش تعداد']) {
+      final size = tester.getSize(find.bySemanticsLabel(name));
+      expect(size.width, greaterThanOrEqualTo(44), reason: '$name grew on the inline axis');
+      expect(size.height, greaterThanOrEqualTo(18), reason: '$name owns half the control height');
+    }
+    // The paint did not move: the chevron column is still `end-1 w-6`, so its
+    // centre sits 16 from the field's inline END — the LEFT under fa-IR.
+    final field = tester.getRect(find.byType(TextField));
+    expect(tester.getCenter(find.byIcon(Icons.keyboard_arrow_up)).dx, closeTo(field.left + 16, 0.5));
+    expect(tester.getCenter(find.byIcon(Icons.keyboard_arrow_up)).dy, lessThan(tester.getCenter(find.byIcon(Icons.keyboard_arrow_down)).dy), reason: 'up is more, in both scripts');
+    // Under en-US the same column mirrors to the right edge.
+    await tester.pumpWidget(app('en-US', const LumoNumberField(label: 'Quantity', incrementLabel: 'Increase quantity', decrementLabel: 'Decrease quantity', defaultValue: 3)));
+    final en = tester.getRect(find.byType(TextField));
+    expect(tester.getCenter(find.byIcon(Icons.keyboard_arrow_up)).dx, closeTo(en.right - 16, 0.5));
+    semantics.dispose();
+  });
 }

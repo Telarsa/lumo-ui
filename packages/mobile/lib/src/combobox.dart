@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart' show SemanticsRole;
+import 'package:flutter/semantics.dart' show SemanticsRole, SemanticsValidationResult;
 
-import 'button.dart';
 import 'scope.dart';
 import 'tokens.g.dart';
 
@@ -44,6 +43,14 @@ class LumoComboboxOption {
 /// it. The list is a named `SemanticsRole.list` and the option matching `value`
 /// is announced `selected`, which is what a reader needs from either shape.
 ///
+/// The ✕ and the option rows are `LumoControl.lg` of HIT AREA around drawings
+/// that keep the web's scale (`IconButton size="sm"`; `px-2 py-1.5` on a row).
+/// A stated mobile deviation: the web's 29-px ✕ and ~32-px row are mouse sizes.
+/// `isRequired` is the web's own prop (`ComboBoxProps.isRequired`) and reaches
+/// the reader as `SemanticsFlag.isRequired`; `errorMessage` also puts
+/// `SemanticsValidationResult.invalid` on the field, the state the web spells
+/// `aria-invalid`. There is no `isInvalid`: the web `ComboBox` has none either.
+///
 /// `onSearch` hands the query to the caller AND turns the built-in filter off:
 /// a caller that fetches its own matches owns `options` outright, and filtering
 /// an already-filtered list a second time only hides rows.
@@ -62,6 +69,7 @@ class LumoCombobox extends StatefulWidget {
     this.onSearch,
     this.description,
     this.errorMessage,
+    this.isRequired = false,
     this.isDisabled = false,
   });
 
@@ -98,6 +106,10 @@ class LumoCombobox extends StatefulWidget {
 
   /// Shown under the field and announced. Supplying one marks it invalid.
   final String? errorMessage;
+
+  /// The web's `isRequired`: draws the « *» marker and sets the reader's
+  /// `required` state.
+  final bool isRequired;
   final bool isDisabled;
 
   @override
@@ -207,64 +219,132 @@ class _LumoComboboxState extends State<LumoCombobox> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Excluded: the name lives on the field node, so it is announced ONCE.
-          ExcludeSemantics(child: Text(widget.label, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg))),
+          ExcludeSemantics(
+            child: Text.rich(
+              TextSpan(
+                text: widget.label,
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: c.fg),
+                children: [
+                  if (widget.isRequired)
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(color: c.critical),
+                    ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 6),
-          Stack(
-            alignment: AlignmentDirectional.centerStart,
-            children: [
-              // `MergeSemantics`: name + editable = ONE text-field node.
-              MergeSemantics(
-                child: Semantics(
-                  label: widget.label,
-                  textField: true,
-                  enabled: !widget.isDisabled,
-                  hint: [if (widget.description != null) widget.description!, if (widget.errorMessage != null) widget.errorMessage!].join('. '),
-                  child: TextField(
-                    controller: _controller,
-                    focusNode: _focus,
+          // The input ROW is `LumoControl.lg` tall even though the box draws
+          // `LumoControl.md`: that is where the ✕'s touch target comes from.
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: LumoControl.lg),
+            child: Stack(
+              alignment: AlignmentDirectional.centerStart,
+              children: [
+                // `MergeSemantics`: name + editable = ONE text-field node.
+                MergeSemantics(
+                  child: Semantics(
+                    label: widget.label,
+                    textField: true,
                     enabled: !widget.isDisabled,
-                    onChanged: (v) {
-                      _typed = true;
-                      widget.onSearch?.call(v);
-                      setState(() {});
-                    },
-                    onSubmitted: _submit,
-                    textInputAction: TextInputAction.search,
-                    style: TextStyle(fontSize: 14, color: c.fg),
-                    decoration: InputDecoration(
-                      hintText: widget.placeholder,
-                      hintStyle: TextStyle(color: c.fgSubtle),
-                      // Room for the ✕ and the chevron at the end — logical, so both mirror.
-                      contentPadding: const EdgeInsetsDirectional.only(start: 12, end: 60, top: 8, bottom: 8),
-                      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(LumoRadius.md), borderSide: BorderSide(color: invalid ? c.critical : c.borderControl)),
+                    isRequired: widget.isRequired ? true : null,
+                    validationResult: invalid ? SemanticsValidationResult.invalid : SemanticsValidationResult.none,
+                    hint: [if (widget.description != null) widget.description!, if (widget.errorMessage != null) widget.errorMessage!].join('. '),
+                    child: TextField(
+                      controller: _controller,
+                      focusNode: _focus,
+                      enabled: !widget.isDisabled,
+                      onChanged: (v) {
+                        _typed = true;
+                        widget.onSearch?.call(v);
+                        setState(() {});
+                      },
+                      onSubmitted: _submit,
+                      textInputAction: TextInputAction.search,
+                      style: TextStyle(fontSize: 14, color: c.fg),
+                      decoration: InputDecoration(
+                        hintText: widget.placeholder,
+                        hintStyle: TextStyle(color: c.fgSubtle),
+                        // Room for the ✕ and the chevron at the end — logical, so both mirror.
+                        contentPadding: const EdgeInsetsDirectional.only(start: 12, end: 60, top: 8, bottom: 8),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(LumoRadius.md),
+                          borderSide: BorderSide(color: invalid ? c.critical : c.borderControl),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              PositionedDirectional(
-                end: 4,
-                top: 0,
-                height: LumoControl.md,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_controller.text.isNotEmpty)
-                      LumoIconButton(label: widget.clearLabel, size: LumoButtonSize.sm, isDisabled: widget.isDisabled, onPressed: _clear, child: Icon(Icons.close, size: 16, color: c.fgMuted)),
-                    // Decoration: the field itself opens the list, so the chevron is not a control.
-                    ExcludeSemantics(child: IgnorePointer(child: Padding(padding: const EdgeInsetsDirectional.only(start: 2, end: 6), child: Icon(Icons.expand_more, size: 18, color: c.fgMuted)))),
-                  ],
+                PositionedDirectional(
+                  end: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // The ✕ owns its gesture rather than being a `LumoIconButton`,
+                      // because a button sized `sm` IS its own 29-px hit area — the
+                      // target has to be the outer box, and the pill draws inside it.
+                      if (_controller.text.isNotEmpty)
+                        Semantics(
+                          container: true,
+                          button: true,
+                          enabled: !widget.isDisabled,
+                          label: widget.clearLabel,
+                          child: Tooltip(
+                            message: widget.clearLabel,
+                            excludeFromSemantics: true,
+                            child: InkWell(
+                              onTap: widget.isDisabled ? null : _clear,
+                              borderRadius: BorderRadius.circular(LumoRadius.md),
+                              child: SizedBox(
+                                width: LumoControl.lg,
+                                height: LumoControl.lg,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: LumoControl.sm,
+                                    height: LumoControl.sm,
+                                    child: ExcludeSemantics(child: Icon(Icons.close, size: 16, color: c.fgMuted)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Decoration: the field itself opens the list, so the chevron is not a control.
+                      // No inline-start padding: the ✕'s own transparent margin is the gap.
+                      ExcludeSemantics(
+                        child: IgnorePointer(
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 6),
+                            child: Icon(Icons.expand_more, size: 18, color: c.fgMuted),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           if (open)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: DecoratedBox(
-                decoration: BoxDecoration(color: c.surface, border: Border.all(color: c.border), borderRadius: BorderRadius.circular(LumoRadius.md)),
+                decoration: BoxDecoration(
+                  color: c.surface,
+                  border: Border.all(color: c.border),
+                  borderRadius: BorderRadius.circular(LumoRadius.md),
+                ),
                 child: visible.isEmpty
                     ? Padding(
                         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+                        // A REAL live region, and the one kind that earns it: «no
+                        // matches» is not on the field's hint, and it appears while
+                        // the user is typing — so the node must carry the words
+                        // itself. (Contrast the errorMessage below, which the hint
+                        // already announces.)
                         child: Semantics(liveRegion: true, child: Text(widget.emptyLabel, style: TextStyle(fontSize: 13, color: c.fgMuted))),
                       )
                     : Semantics(
@@ -284,11 +364,19 @@ class _LumoComboboxState extends State<LumoCombobox> {
               ),
             ),
           if (widget.description != null)
-            Padding(padding: const EdgeInsets.only(top: 6), child: ExcludeSemantics(child: Text(widget.description!, style: TextStyle(fontSize: 12, color: c.fgMuted)))),
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: ExcludeSemantics(
+                child: Text(widget.description!, style: TextStyle(fontSize: 12, color: c.fgMuted)),
+              ),
+            ),
           if (invalid)
             Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Semantics(liveRegion: true, child: ExcludeSemantics(child: Text(widget.errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)))),
+              child: // ExcludeSemantics, and deliberately NOT `Semantics(liveRegion: true, …)`: the message is already announced as part of the field's semantic `hint` just above, so a second node carrying the same words would say it twice. A `liveRegion` wrapped round an EXCLUDED subtree — which is what stood here — announces nothing at all: it reads as an accessibility feature and is a no-op. See test/house_rules_test.dart.
+              ExcludeSemantics(
+                child: Text(widget.errorMessage!, style: TextStyle(fontSize: 12, color: c.critical)),
+              ),
             ),
         ],
       ),
@@ -318,11 +406,24 @@ class _Option extends StatelessWidget {
           onTap: option.isDisabled ? null : onTap,
           borderRadius: BorderRadius.circular(LumoRadius.sm),
           child: Container(
+            // The web row is `px-2 py-1.5` and lands at ~32 px, a mouse size.
+            // The padding is kept; the row is floored at `LumoControl.lg` so a
+            // finger has a target. Stated deviation, not drift.
+            constraints: const BoxConstraints(minHeight: LumoControl.lg),
             padding: const EdgeInsetsDirectional.symmetric(horizontal: 8, vertical: 10),
             decoration: BoxDecoration(color: isSelected ? c.surfaceSunken : Colors.transparent, borderRadius: BorderRadius.circular(LumoRadius.sm)),
             child: Row(
               children: [
-                Expanded(child: ExcludeSemantics(child: Text(option.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400, color: c.fg)))),
+                Expanded(
+                  child: ExcludeSemantics(
+                    child: Text(
+                      option.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400, color: c.fg),
+                    ),
+                  ),
+                ),
                 if (isSelected) ExcludeSemantics(child: Icon(Icons.check, size: 16, color: c.accent)),
               ],
             ),

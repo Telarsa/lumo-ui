@@ -124,4 +124,32 @@ void main() {
     expect(() => LumoBreadcrumbs(label: 'x', maxVisible: 2, items: const [LumoCrumb(label: 'a')]), throwsAssertionError);
     expect(() => LumoBreadcrumbs(label: 'x', maxVisible: 1, overflowLabel: 'y', items: const [LumoCrumb(label: 'a')]), throwsAssertionError);
   });
+
+  testWidgets('Breadcrumbs: every tappable part of the trail clears the 44 px touch floor; the words still paint at text-sm', (tester) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(app('fa-IR', LumoBreadcrumbs(
+      label: 'مسیر صفحه',
+      maxVisible: 2,
+      overflowLabel: 'خرده‌های میانی',
+      currentLabel: 'صفحهٔ فعلی',
+      items: [
+        LumoCrumb(label: 'خانه', onTap: () {}),
+        LumoCrumb(label: 'استان‌ها', onTap: () {}),
+        LumoCrumb(label: 'شهرها', onTap: () {}),
+        const LumoCrumb(label: 'تهران'),
+      ],
+    )));
+    // Measured before this pass: a link crumb was 57x20 and the «…» 14.3x14 —
+    // the smallest control in the library.
+    for (final name in ['خانه', 'خرده‌های میانی']) {
+      final size = tester.getSize(find.bySemanticsLabel(name));
+      expect(size.width, greaterThanOrEqualTo(44), reason: '$name is a tap target');
+      expect(size.height, greaterThanOrEqualTo(44), reason: '$name is a tap target');
+    }
+    // The band is transparent space: the word itself is untouched.
+    expect(tester.getSize(find.text('خانه')).height, lessThan(24));
+    // A crumb you cannot follow is not a target and is not banded.
+    expect(tester.getSize(find.text('تهران')).height, lessThan(24));
+    semantics.dispose();
+  });
 }

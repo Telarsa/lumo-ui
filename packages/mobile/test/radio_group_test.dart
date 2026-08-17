@@ -107,4 +107,55 @@ void main() {
   test('RadioGroup: neither label nor accessibilityLabel is a construction error', () {
     expect(() => LumoRadioGroup(children: const []), throwsAssertionError);
   });
+  testWidgets('RadioGroup: every option meets the 44 touch floor on BOTH axes — the drawn circle is still 20 and still at the inline start', (tester) async {
+    await tester.pumpWidget(app('fa-IR', const SizedBox(width: 360, child: LumoRadioGroup(
+      label: 'روش پرداخت',
+      defaultValue: 'a',
+      children: [LumoRadio(value: 'a', label: 'ای'), LumoRadio(value: 'b', label: 'کارت به کارت اینترنتی')],
+    ))));
+    for (final label in ['ای', 'کارت به کارت اینترنتی']) {
+      final row = tester.getRect(find.ancestor(of: find.text(label), matching: find.byType(InkWell)).first);
+      expect(row.width, greaterThanOrEqualTo(LumoControl.lg), reason: '$label width — it measured 56.5 for a short label');
+      expect(row.height, greaterThanOrEqualTo(LumoControl.lg), reason: '$label height — it measured 36');
+    }
+    // No visual drift: the indicator is untouched and still starts the row.
+    expect(tester.getSize(circle().first), const Size(20, 20));
+    final firstRow = tester.getRect(find.ancestor(of: find.text('ای'), matching: find.byType(InkWell)).first);
+    expect(tester.getRect(circle().first).right, firstRow.right, reason: 'fa-IR: the circle is at the RIGHT edge of its row');
+  });
+
+  testWidgets('RadioGroup: under disableAnimations the dot ARRIVES at full size in ONE frame', (tester) async {
+    Widget build(String value, bool reduce) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: reduce),
+            child: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: 360, child: LumoRadioGroup(
+              label: 'روش پرداخت',
+              value: value,
+              children: const [LumoRadio(value: 'a', label: 'کارت'), LumoRadio(value: 'b', label: 'نقدی')],
+            ))))),
+          ),
+        );
+    Finder dotOf(String label) => find.descendant(
+          of: find.ancestor(of: find.text(label), matching: find.byType(LumoRadio)),
+          matching: find.descendant(of: find.byType(AnimatedScale), matching: find.byType(Container)),
+        );
+
+    // Sanity: WITH motion, one frame after the change the dot is still growing.
+    await tester.pumpWidget(build('a', false));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build('b', false));
+    await tester.pump();
+    expect(tester.getRect(dotOf('نقدی')).width, lessThan(8.0));
+    await tester.pumpAndSettle();
+
+    // Under «Reduce motion»: full size on the next frame, with no animation pumped through.
+    await tester.pumpWidget(build('a', true));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build('b', true));
+    await tester.pump();
+    expect(tester.getRect(dotOf('نقدی')).width, 8.0);
+    expect(tester.getRect(dotOf('کارت')).width, 0.0);
+  });
+
 }

@@ -184,4 +184,44 @@ void main() {
       }
     }
   });
+  testWidgets('Toggle: under disableAnimations the ON fill ARRIVES in ONE frame — standalone and as a group member', (tester) async {
+    Widget build({required bool on, required bool reduce}) => MaterialApp(
+          theme: lumoThemeData(brightness: Brightness.light),
+          home: MediaQuery(
+            data: MediaQueryData(disableAnimations: reduce),
+            child: LumoScope(locale: 'fa-IR', brightness: Brightness.light, child: Scaffold(body: Center(child: SizedBox(width: 360, child: Column(mainAxisSize: MainAxisSize.min, children: [
+              LumoToggle(label: 'بی‌صدا', isSelected: on),
+              LumoToggleGroup(label: 'چیدمان', value: on ? 'grid' : 'list', items: const [
+                LumoToggleItem(id: 'list', label: 'فهرست'),
+                LumoToggleItem(id: 'grid', label: 'شبکه'),
+              ]),
+            ]))))),
+          ),
+        );
+    Color fillOf(Finder of) {
+      final container = tester.widget<Container>(find.descendant(of: find.descendant(of: of, matching: find.byType(AnimatedContainer)), matching: find.byType(Container)).first);
+      return container.color ?? (container.decoration! as BoxDecoration).color!;
+    }
+    Finder memberOf(String label) => find.ancestor(of: find.text(label), matching: find.byType(GestureDetector)).first;
+    final c = lightColours(LumoBrand.achromatic);
+    final toggleOn = c.accent.withValues(alpha: 0.1);
+
+    // Sanity: WITH motion, one frame after the change neither fill has arrived.
+    await tester.pumpWidget(build(on: false, reduce: false));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build(on: true, reduce: false));
+    await tester.pump();
+    expect(fillOf(find.byType(LumoToggle)), isNot(toggleOn));
+    expect(fillOf(memberOf('شبکه')), isNot(c.accent));
+    await tester.pumpAndSettle();
+
+    // Under «Reduce motion»: both fills are final on the next frame.
+    await tester.pumpWidget(build(on: false, reduce: true));
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(build(on: true, reduce: true));
+    await tester.pump();
+    expect(fillOf(find.byType(LumoToggle)), toggleOn);
+    expect(fillOf(memberOf('شبکه')), c.accent);
+  });
+
 }

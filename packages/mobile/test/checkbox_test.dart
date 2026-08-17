@@ -106,4 +106,19 @@ void main() {
   test('Checkbox: neither label nor accessibilityLabel is a construction error', () {
     expect(() => LumoCheckbox(), throwsAssertionError);
   });
+  testWidgets('Checkbox: the row meets the 44 touch floor on BOTH axes — the drawn box is still 20 and still at the inline start', (tester) async {
+    await tester.pumpWidget(app('fa-IR', const SizedBox(width: 360, child: LumoCheckboxGroup(
+      label: 'روش تماس',
+      children: [LumoCheckbox(label: 'ای'), LumoCheckbox(label: 'تماس تلفنی در ساعات اداری')],
+    ))));
+    for (final label in ['ای', 'تماس تلفنی در ساعات اداری']) {
+      final row = tester.getRect(find.ancestor(of: find.text(label), matching: find.byType(InkWell)).first);
+      expect(row.width, greaterThanOrEqualTo(LumoControl.lg), reason: '$label width — it measured 56.5 for a short label');
+      expect(row.height, greaterThanOrEqualTo(LumoControl.lg), reason: '$label height — it measured 36');
+    }
+    expect(tester.getSize(box().first), const Size(20, 20));
+    final firstRow = tester.getRect(find.ancestor(of: find.text('ای'), matching: find.byType(InkWell)).first);
+    expect(tester.getRect(box().first).right, firstRow.right, reason: 'fa-IR: the box is at the RIGHT edge of its row');
+  });
+
 }

@@ -107,4 +107,76 @@ void main() {
     await tester.pumpAndSettle();
     expect(() => LumoPopoverTrigger(label: 'x', showClose: true, trigger: (open) => const SizedBox(), content: (ctx) => const SizedBox()), throwsAssertionError);
   });
+
+  /// One frame after the press: the animated surface is still fading, the
+  /// reduce-motion one has arrived.
+  Future<double> fadeAfterOneFrame(WidgetTester tester, {required bool disableAnimations}) async {
+    await tester.pumpWidget(MediaQuery(
+      data: MediaQueryData(disableAnimations: disableAnimations),
+      child: app('fa-IR', LumoPopoverTrigger(
+        label: 'گزینه‌های اشتراک‌گذاری',
+        showClose: true,
+        closeLabel: 'بستن',
+        trigger: (open) => LumoButton(onPressed: open, child: const Text('اشتراک‌گذاری')),
+        content: (ctx) => const Text('پیوند را کپی کنید'),
+      )),
+    ));
+    await tester.tap(find.text('اشتراک‌گذاری'));
+    await tester.pump();
+    return tester.widget<FadeTransition>(find.ancestor(of: find.text('پیوند را کپی کنید'), matching: find.byType(FadeTransition)).first).opacity.value;
+  }
+
+  testWidgets('Popover: with motion the surface is still fading one frame in — the control the assertion below needs', (tester) async {
+    expect(await fadeAfterOneFrame(tester, disableAnimations: false), lessThan(1.0));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Popover: «reduce motion» collapses the transition to Duration.zero — the surface is fully there on the FIRST frame', (tester) async {
+    // The route reads its duration from a getter above any MediaQuery of its
+    // own: the flag has to be read at the TRIGGER and carried onto the route.
+    expect(await fadeAfterOneFrame(tester, disableAnimations: true), 1.0, reason: 'MediaQuery.disableAnimationsOf must collapse the duration to zero');
+    expect(find.text('پیوند را کپی کنید'), findsOneWidget);
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('Popover: the ✕ presents a 44×44 target inside the surface — a tap at its edge, clear of the glyph, closes', (tester) async {
+    await tester.pumpWidget(app('fa-IR', LumoPopoverTrigger(
+      label: 'گزینه‌های اشتراک‌گذاری',
+      showClose: true,
+      closeLabel: 'بستن',
+      trigger: (open) => LumoButton(onPressed: open, child: const Text('اشتراک‌گذاری')),
+      content: (ctx) => const Text('پیوند را کپی کنید'),
+    )));
+    await tester.tap(find.text('اشتراک‌گذاری'));
+    await tester.pumpAndSettle();
+    final target = tester.getRect(closeButton('بستن'));
+    expect(target.width, greaterThanOrEqualTo(44));
+    expect(target.height, greaterThanOrEqualTo(44));
+    final surface = tester.getRect(surfaceOf(find.text('پیوند را کپی کنید')));
+    expect(surface.contains(target.topLeft) && surface.contains(target.bottomRight), isTrue, reason: 'the enlarged target must not overhang the surface');
+    await tester.tapAt(Offset(target.center.dx, target.bottom - 3));
+    await tester.pumpAndSettle();
+    expect(find.text('پیوند را کپی کنید'), findsNothing, reason: 'a tap at the target edge must close the popover');
+  });
+
+  testWidgets('Popover: the surface takes LumoShadow.overlay — the elevation token, whose DARK ramp is not the light one (a hand-picked `c.scrim` painted almost nothing on a dark page)', (tester) async {
+    expect(LumoShadow.overlay(Brightness.light).first.color, isNot(LumoShadow.overlay(Brightness.dark).first.color), reason: 'the token holds a separate dark ramp — the assertion below is worth making');
+
+    for (final b in Brightness.values) {
+      await tester.pumpWidget(MaterialApp(
+        theme: lumoThemeData(brightness: b),
+        home: LumoScope(locale: 'fa-IR', brightness: b, child: Scaffold(body: Center(child: LumoPopoverTrigger(
+          label: 'گزینه‌ها',
+          trigger: (open) => LumoButton(onPressed: open, child: const Text('باز کردن')),
+          content: (ctx) => const Text('محتوا'),
+        )))),
+      ));
+      await tester.tap(find.text('باز کردن'));
+      await tester.pumpAndSettle();
+      final box = tester.widget<DecoratedBox>(find.ancestor(of: find.text('محتوا'), matching: find.byType(DecoratedBox)).first);
+      expect((box.decoration as BoxDecoration).boxShadow, LumoShadow.overlay(b), reason: 'the popover surface must take the elevation token for its own scheme');
+      await tester.tapAt(const Offset(5, 5));
+      await tester.pumpAndSettle();
+    }
+  });
 }

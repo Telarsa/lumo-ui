@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show SemanticsRole;
 import 'scope.dart';
+import 'tokens.g.dart';
 
 /// One crumb of a trail: `label` REQUIRED (a crumb IS its text — the web's
 /// `children`), `onTap` optional. A crumb with `onTap` is a LINK; a crumb
@@ -43,6 +44,15 @@ class LumoCrumb {
 /// keeps that file server-only); here it is a real button that expands the
 /// trail in place, since a phone has no room to show the trail another way and
 /// a menu route for three words is worse than the words.
+///
+/// **The touch band.** The web's trail is a 20 px-high row of text, and mobile
+/// measured the same: a link crumb was a 57x20 target and the «…» button
+/// 14.3x14 — the smallest control in the library. Every TAPPABLE part of the
+/// trail therefore lays out `LumoControl.lg` (44) on the block axis, and the
+/// «…» 44 on both. The text still paints at `text-sm` in the same place; the
+/// band is transparent space around it, so the trail is 44 tall wherever it has
+/// a link. A deliberate deviation from the web, for the reason mobile always
+/// deviates: a finger is not a mouse pointer.
 class LumoBreadcrumbs extends StatefulWidget {
   const LumoBreadcrumbs({super.key, required this.label, required this.items, this.maxVisible, this.overflowLabel, this.currentLabel})
       : assert(maxVisible == null || overflowLabel != null, 'A collapsing trail needs an overflowLabel — name what the «…» stands for, e.g. «خرده‌های میانی».'),
@@ -114,7 +124,8 @@ class _LumoBreadcrumbsState extends State<LumoBreadcrumbs> {
       explicitChildNodes: true,
       label: widget.label,
       role: SemanticsRole.list,
-      child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, runSpacing: 4, children: children),
+      // `gap-1` on the web's `<ol>`, which mobile was missing entirely.
+      child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, spacing: 4, runSpacing: 4, children: children),
     );
   }
 }
@@ -161,7 +172,9 @@ class _Crumb extends StatelessWidget {
               // The tap is on the node above; the detector's own would form a second, nameless one.
               excludeFromSemantics: true,
               onTap: crumb.onTap,
-              child: text,
+              // The touch band: 44 tall, the word painted at its own height in
+              // the middle of it. `widthFactor: 1` keeps the band the word's width.
+              child: SizedBox(height: LumoControl.lg, child: Center(widthFactor: 1, child: text)),
             )
           : text,
     );
@@ -187,8 +200,13 @@ class _Overflow extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         excludeFromSemantics: true,
         onTap: onTap,
-        // `…` is symmetric: nothing to mirror.
-        child: ExcludeSemantics(child: Text('…', style: TextStyle(fontSize: 14, height: 1, color: colour))),
+        // 44x44 of hit area around a glyph that paints 14 wide. `…` is
+        // symmetric: nothing to mirror.
+        child: SizedBox(
+          width: LumoControl.lg,
+          height: LumoControl.lg,
+          child: Center(child: ExcludeSemantics(child: Text('…', style: TextStyle(fontSize: 14, height: 1, color: colour)))),
+        ),
       ),
     );
   }
