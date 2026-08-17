@@ -52,6 +52,21 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      # The Flutter SDK, pinned to the version packages/mobile declares.
+      #
+      # It is here for two reasons. The Mobile component pages embed a Flutter
+      # web build (apps/mobile-gallery), which apps/website's build produces
+      # rather than reading from git — nothing about that build belongs in a
+      # repository. And, more importantly, the mobile gates below never ran in
+      # CI at all before this: the Dart library was graded on a laptop and taken
+      # on trust here, which is precisely the arrangement the rest of this file
+      # exists to refuse.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.35.2
+          channel: stable
+          cache: true
+
       # Runtime truth, checked on the RUNNER rather than on a laptop.
       #
       # If the runner's Node ships small-ICU, `Intl` has no Persian calendar and
@@ -127,8 +142,30 @@ jobs:
       - name: Consumer smoke test
         run: pnpm run gate:smoke
 
+      # The mobile library, graded on the runner rather than on a laptop.
+      #
+      # `gate:flutter` is analyze + the semantics-tree tests, which are the
+      # mobile counterpart of the served-HTML gate below: a Flutter canvas has
+      # no DOM to grade, so what a screen reader would receive is asserted in
+      # those tests or nowhere. `gate:flutter-contract` is the mobile
+      # counterpart of gate:props — every announced string required, no Latin
+      # literal a locale cannot reach, no physical left/right, no Material
+      # route naming itself in English — and it self-tests against its own
+      # poison fixtures first.
+      - name: Flutter tokens
+        run: pnpm run gate:flutter-tokens
+      - name: Flutter analyze and semantics tests
+        run: pnpm run gate:flutter
+      - name: Mobile contract
+        run: pnpm run gate:flutter-contract
+      - name: Mobile API reference
+        run: pnpm run gate:mobile-api
+      - name: Mobile demos
+        run: pnpm run gate:mobile-demos
+
       # The real one: build the site and grade the bytes it serves. Everything
-      # above this line is a proxy; this is the artifact a user receives.
+      # above this line is a proxy; this is the artifact a user receives. The
+      # build also produces the Flutter web gallery the Mobile pages embed.
       - name: Build and gate
         run: pnpm run gate:html
 

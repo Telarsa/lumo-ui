@@ -1,0 +1,92 @@
+{
+  "//": "FIXTURE, not a generated file. Two slugs' worth of contract-§2 data so the Mobile side of the docs site can be built and graded before scripts/build-mobile-demos.mjs lands. Read ONLY when LUMO_MOBILE_DOCS_FIXTURE=1 and the real src/lib/mobile-demos.generated.json is absent — see lib/mobile-examples.ts.",
+  "version": 2,
+  "generatedFrom": [
+    "apps/mobile-gallery/lib/demos/*.dart"
+  ],
+  "slugs": {
+    "button": [
+      {
+        "id": "button-1",
+        "title": {
+          "fa-IR": "چهار گونه",
+          "en-US": "The four variants"
+        },
+        "description": {
+          "fa-IR": "پرکاربردترین حالت: کنش اصلی، کنش دوم، بی‌قاب، و کنش خطرناک.",
+          "en-US": "The everyday case: the primary action, the secondary, the frameless one, and the destructive one."
+        },
+        "source": {
+          "fa-IR": "LumoButton(\n  onPressed: () {},\n  child: const Text('ذخیره'),\n)",
+          "en-US": "LumoButton(\n  onPressed: () {},\n  child: const Text('ذخیره'),\n)"
+        }
+      },
+      {
+        "id": "button-2",
+        "title": {
+          "fa-IR": "سه اندازه",
+          "en-US": "The three sizes"
+        },
+        "description": {
+          "fa-IR": "هر سه اندازه روی همان مقیاس کنترل مشترک وب می‌نشینند.",
+          "en-US": "All three sit on the same shared control scale as the web."
+        },
+        "source": {
+          "fa-IR": "LumoButton(\n  size: LumoButtonSize.lg,\n  onPressed: () {},\n  child: const Text('ادامه'),\n)",
+          "en-US": "LumoButton(\n  size: LumoButtonSize.lg,\n  onPressed: () {},\n  child: const Text('ادامه'),\n)"
+        }
+      },
+      {
+        "id": "button-3",
+        "title": {
+          "fa-IR": "دکمهٔ آیکونی با نام",
+          "en-US": "The icon button, named"
+        },
+        "description": {
+          "fa-IR": "دکمه‌ای که فقط آیکون دارد، نامش را اجباری می‌گیرد — وگرنه چیزی برای اعلام‌کردن ندارد.",
+          "en-US": "A button that is only an icon takes its name as a required parameter — otherwise it has nothing to announce."
+        },
+        "source": {
+          "fa-IR": "LumoIconButton(\n  label: 'بستن',\n  icon: Icons.close,\n  onPressed: () {},\n)",
+          "en-US": "LumoIconButton(\n  label: 'بستن',\n  icon: Icons.close,\n  onPressed: () {},\n)"
+        }
+      }
+    ],
+    "checkbox": [
+      {
+        "id": "checkbox-1",
+        "title": {
+          "fa-IR": "برچسب و شرح",
+          "en-US": "Label and description"
+        },
+        "description": {
+          "fa-IR": "برچسب دیده و شنیده می‌شود؛ شرح زیر آن به کادر بسته می‌شود.",
+          "en-US": "The label is both seen and announced; the description under it is tied to the box."
+        },
+        "source": {
+          "fa-IR": "LumoCheckbox(\n  label: 'خبرنامه را بفرست',\n  description: 'هفته‌ای یک‌بار.',\n  onChanged: (value) {},\n)",
+          "en-US": "LumoCheckbox(\n  label: 'خبرنامه را بفرست',\n  description: 'هفته‌ای یک‌بار.',\n  onChanged: (value) {},\n)"
+        }
+      },
+      {
+        "id": "checkbox-2",
+        "title": {
+          "fa-IR": "حالت میانی",
+          "en-US": "The indeterminate state"
+        },
+        "description": {
+          "fa-IR": "کادر سرگروه وقتی بعضی از زیرمجموعه‌ها انتخاب شده‌اند.",
+          "en-US": "The parent box when only some of its children are selected."
+        },
+        "source": {
+          "fa-IR": "LumoCheckbox(\n  label: 'همه',\n  isIndeterminate: true,\n  onChanged: (value) {},\n)",
+          "en-US": "LumoCheckbox(\n  label: 'همه',\n  isIndeterminate: true,\n  onChanged: (value) {},\n)"
+        }
+      }
+    ]
+  },
+  "locales": [
+    "fa-IR",
+    "en-US"
+  ]
+}
