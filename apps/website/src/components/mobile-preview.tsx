@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 /**
  * ONE Flutter demo, running for real, inside the page's phone frame.
@@ -16,9 +16,14 @@ import { useEffect, useRef, useState } from "react";
  *     iframe is not headless: with no accessible name a screen reader announces
  *     it as "frame", so `title` is REQUIRED here as an announced string is
  *     everywhere else in this repo.
- *  2. The height is a sensible FIXED value that renders without JavaScript; the
- *     `lumo-demo-height` message the gallery posts after first paint is an
- *     ENHANCEMENT, clamped, and never assumed to arrive.
+ *  2. The frame FILLS its phone bezel and never resizes itself. It used to grow
+ *     to the height the gallery posts (`lumo-demo-height`), which was wrong for
+ *     the thing being drawn: a phone is a fixed shape. A one-control demo made
+ *     the bezel a letterbox, and then opening that control's dropdown grew the
+ *     frame and shifted the page under the reader. The gallery still posts the
+ *     message — it is useful to anyone embedding a demo WITHOUT a phone frame —
+ *     and this component ignores it. Content taller than the bezel scrolls
+ *     inside it, exactly as it would on a handset.
  *  3. The theme follows the page. The gallery takes it in the query string, so a
  *     flip is a NAVIGATION of the frame — done with `location.replace` rather
  *     than by writing `src`, which would push a history entry and turn the
@@ -28,8 +33,6 @@ import { useEffect, useRef, useState } from "react";
  */
 
 export interface MobilePreviewProps {
-  /** The gallery's demo id, `<slug>-<n>` — also what the height message names. */
-  demoId: string;
   /** The gallery URL in the light scheme. The SSR `src`, so no-JS readers get a frame. */
   lightSrc: string;
   /** The same demo in the dark scheme. */
@@ -37,12 +40,6 @@ export interface MobilePreviewProps {
   /** The frame's accessible name, in the PAGE's language. Required. */
   title: string;
 }
-
-/** Below this a phone demo is a sliver; above it the frame outgrows the viewport. */
-const MIN_HEIGHT = 220;
-const MAX_HEIGHT = 900;
-/** What a reader gets with JavaScript off, or when the message never arrives. */
-const DEFAULT_HEIGHT = 480;
 
 type Resolved = "light" | "dark";
 
@@ -52,9 +49,8 @@ function effectiveTheme(): Resolved {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export function MobilePreview({ demoId, lightSrc, darkSrc, title }: MobilePreviewProps) {
+export function MobilePreview({ lightSrc, darkSrc, title }: MobilePreviewProps) {
   const ref = useRef<HTMLIFrameElement>(null);
-  const [height, setHeight] = useState(DEFAULT_HEIGHT);
 
   useEffect(() => {
     // The URL the frame is currently showing; starts as the server's light one.
@@ -83,22 +79,6 @@ export function MobilePreview({ demoId, lightSrc, darkSrc, title }: MobilePrevie
     };
   }, [lightSrc, darkSrc]);
 
-  useEffect(() => {
-    const onMessage = (event: MessageEvent) => {
-      // Only this frame's own messages: the page hosts one per demo.
-      if (event.source !== ref.current?.contentWindow) return;
-      const data: unknown = event.data;
-      if (typeof data !== "object" || data === null) return;
-      const message = data as { type?: unknown; demo?: unknown; height?: unknown };
-      if (message.type !== "lumo-demo-height" || message.demo !== demoId) return;
-      if (typeof message.height !== "number" || !Number.isFinite(message.height)) return;
-      setHeight(Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, Math.round(message.height))));
-    };
-    window.addEventListener("message", onMessage);
-    return () => {
-      window.removeEventListener("message", onMessage);
-    };
-  }, [demoId]);
 
   return (
     <iframe
@@ -106,8 +86,9 @@ export function MobilePreview({ demoId, lightSrc, darkSrc, title }: MobilePrevie
       src={lightSrc}
       title={title}
       loading="lazy"
-      style={{ height: `${String(height)}px` }}
-      className="block w-full border-0 bg-transparent"
+      // `flex-1` inside the phone bezel's flex column: the iframe takes the
+      // bezel's height instead of dictating one.
+      className="block w-full flex-1 border-0 bg-transparent"
     />
   );
 }

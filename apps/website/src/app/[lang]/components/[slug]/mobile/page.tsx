@@ -262,9 +262,13 @@ function PhoneDemo({ lang, demo, frameLabel }: { lang: Locale; demo: MobileDemo;
   // the surrounding document, not from inside the canvas.
   const name = `${demo.title[lang]} — ${frameLabel}`;
   return (
-    <Frame device="phone" label={name} className="min-h-0">
+    // No `min-h-0`: that cancelled the phone variant's own `min-h-[44rem]`, and
+    // with it the reason that class exists. A demo is one control, so the bezel
+    // collapsed to a letterbox around a single field — and then GREW when the
+    // control opened a dropdown, so the page shifted under the reader's finger.
+    // A phone is a fixed shape; content that outgrows it scrolls inside it.
+    <Frame device="phone" label={name}>
       <MobilePreview
-        demoId={demo.id}
         lightSrc={galleryUrl(demo.id, lang, "light")}
         darkSrc={galleryUrl(demo.id, lang, "dark")}
         title={name}
