@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Lumo UI Mobile — the demo gallery the docs site frames.">
+  <!-- This page is only ever an iframe on the docs site. It is not a web app:
+       no manifest, no icons, no apple-touch-icon, no service worker. The
+       corresponding files are pruned by scripts/build-mobile-gallery.mjs. -->
+  <meta name="robots" content="noindex">
+
+  <title>Lumo UI Mobile — demo gallery</title>
+  <style>
+    /* Transparent all the way down: the DOCS PAGE draws the phone frame and
+       supplies the background, and it does it in the reader's own theme. A
+       white body here would print a white rectangle inside a dark phone. */
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: transparent;
+      overflow: hidden;
+    }
+    /* Flutter paints into a canvas; nothing here should ever offer to select,
+       drag or long-press-menu it the way a document would. */
+    body {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    flutter-view, flt-glass-pane {
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

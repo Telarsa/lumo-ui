@@ -13,7 +13,12 @@ export interface ExampleCardProps {
   /** The section anchor, e.g. "example-sizes" — also what the rail links to. */
   id: string;
   title: string;
-  description?: string | undefined;
+  /**
+   * A node, not a string: GENERATED copy (the Mobile side's demo descriptions)
+   * arrives as plain text and has its Latin identifiers islanded on the way in —
+   * see `generated-text.tsx`. Hand-authored copy still passes a plain string.
+   */
+  description?: LumoNode | undefined;
   /** The rendered example. OPTIONAL: the page's FIRST example is already the
    *  top preview, so its card carries only the source (no duplicated ids). */
   children?: LumoNode | undefined;

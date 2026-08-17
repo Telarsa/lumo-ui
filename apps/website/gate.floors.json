@@ -29,6 +29,7 @@
   "fa/components/num/index.html": 52,
   "fa/components/pagination/index.html": 35,
   "fa/components/phone-input/index.html": 67,
+  "fa/components/phone-input/mobile/index.html": 26,
   "fa/components/power-search/index.html": 25,
   "fa/components/progress/index.html": 19,
   "fa/components/questionnaire/index.html": 18,
@@ -43,6 +44,7 @@
   "fa/components/table/index.html": 57,
   "fa/components/tabs/index.html": 16,
   "fa/components/tag/index.html": 16,
+  "fa/components/time-field/mobile/index.html": 16,
   "fa/components/timeline/index.html": 43,
   "fa/components/treemap-chart/index.html": 16,
   "fa/components/virtual-list/index.html": 72,
@@ -63,5 +65,6 @@
   "view-block/fa/listing-grid/index.html": 19,
   "view-block/fa/stat-grid/index.html": 8,
   "view-block/fa/table-view/index.html": 36,
-  "//retained": "The landing and isolated view routes predate the 30-digit policy and remain deliberately protected even when they are below the threshold."
+  "//retained": "The landing and isolated view routes predate the 30-digit policy and remain deliberately protected even when they are below the threshold.",
+  "//mobile": "The two /mobile/ routes are the Mobile (Flutter) side arriving on 17 Aug 2026, reviewed under the same policy as every other entry: phone-input measured 48 native digits (its header intro spells out real Iranian numbers) and time-field 30 (the demo titles and descriptions name the ۱۲/۲۴-hour formats), both above the 30-digit threshold, so both declare a floor at about 55% of the measurement. No existing floor was lowered and no rule was disabled; these two entries ARM the rule on routes that had none."
 }

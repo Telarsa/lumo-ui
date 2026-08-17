@@ -1,0 +1,5064 @@
+{
+  "version": 1,
+  "generatedFrom": [
+    "packages/mobile/lib/src/*.dart"
+  ],
+  "undocumented": 321,
+  "widgets": {
+    "LumoAccordion": {
+      "file": "packages/mobile/lib/src/disclosure.dart",
+      "doc": "Several disclosures as one control — the web `DisclosureGroup`. `value` / `defaultValue` are the OPEN IDS (controlled / uncontrolled), `onChanged` reports the whole set; with `allowsMultiple` false (the default, as on the web) opening one closes the other.\n\nProp names: the web wrapper renames these to `expandedKeys` / `defaultExpandedKeys` / `onExpandedChange` over Base UI's own `value` / `defaultValue` / `onValueChange`; the mobile names are the engine's, which is what the rest of this package uses (`LumoTabs`, `LumoSegmentedControl`). `allowsMultipleExpanded` is `allowsMultiple` for the same reason.\n\nThe frame is the web's: a hairline above the first section and below every one of them (`border-y` + `divide-y`).",
+      "props": [
+        {
+          "name": "items",
+          "type": "List<LumoDisclosureItem>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "allowsMultiple",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Whether more than one section may be open at a time."
+        },
+        {
+          "name": "defaultValue",
+          "type": "Set<String>?",
+          "required": false,
+          "default": null,
+          "description": "The open section ids at first build (uncontrolled)."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Disables every section."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<Set<String>>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "Set<String>?",
+          "required": false,
+          "default": null,
+          "description": "The open section ids (controlled)."
+        }
+      ]
+    },
+    "LumoAlert": {
+      "file": "packages/mobile/lib/src/alert.dart",
+      "doc": "An inline status message — the web `Alert`, and NOT a toast: it sits in the layout where the thing it talks about is, stays until the app removes it, and does not float above the page (that is `showLumoToast`). `title` is REQUIRED here (optional on the web, where an alert may be body-only): an unnamed message on a phone is a coloured rectangle. `description` is the body, `actions` the controls under it.\n\n**The live-region rule.** `isLive` is FALSE by default, and that default is the contract, not an oversight: an alert that is already in the tree at the first frame would be announced at load, out of context, ahead of the screen the reader asked for — the same argument the web file makes for defaulting `live=\"off\"`. Set `isLive: true` ONLY when the alert APPEARS in response to something that just happened (a submit that failed, a code that was accepted) — i.e. when the widget is inserted, or its text replaced, by a state change the reader caused. Flutter's `liveRegion` is a per-NODE flag announcing that node's own label, so it is set on the title node and on the description node — one announcement each, in reading order — not on a wrapper (a wrapper has no label of its own to announce). `SemanticsRole.alert`/`.status` are NOT used: the framework's role check forbids a node from carrying the role and `liveRegion` at once, and the flag is the half TalkBack and VoiceOver act on today (`toast.dart` made the same call).\n\nSemantics: the title is a HEADER (a divergence, stated: the web renders it as a `<p>` so a transient message stays out of the document outline — mobile has no such outline, and `header` is how the heading rotor finds the message's summary line), the description its own node after it, the icon and the tint decoration (`ExcludeSemantics`), the ✕ a named button at the inline END. Nothing here truncates: the title and the description wrap, and the actions are a `Wrap`, so a narrow screen grows the alert instead of eating its words.\n\nWeb props not carried: `live` as a three-value `\"off\" | \"polite\" | \"assertive\"` (Flutter's semantics has ONE live flag — a polite/assertive parameter would reach nothing, so it is a `bool`), and `className`. `actions` is the addition the web deliberately does not have (there, an action is CONTENT inside `children`; Dart has no `children` slot of arbitrary markup here, so the slot is explicit).",
+      "props": [
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The summary line. REQUIRED, and announced as the alert's heading.",
+          "announced": true
+        },
+        {
+          "name": "actions",
+          "type": "List<Widget>?",
+          "required": false,
+          "default": null,
+          "description": "Controls under the body, usually `LumoButton`s — slots, not labels plus handlers."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The body of the message.",
+          "announced": true
+        },
+        {
+          "name": "dismissLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Announced name of the ✕, e.g. «بستن». REQUIRED whenever `onDismiss` is set.",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "A leading glyph. DECORATIVE — the title says what the icon says."
+        },
+        {
+          "name": "isLive",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Announce this message on arrival. See the docblock: true only for an alert that APPEARS in response to an action."
+        },
+        {
+          "name": "onDismiss",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": "Called when the reader dismisses the alert. Removing it is the caller's."
+        },
+        {
+          "name": "tone",
+          "type": "LumoAlertTone",
+          "required": false,
+          "default": "LumoAlertTone.accent",
+          "description": "The tone default is `accent`, as on the web."
+        },
+        {
+          "name": "variant",
+          "type": "LumoAlertVariant",
+          "required": false,
+          "default": "LumoAlertVariant.subtle",
+          "description": ""
+        }
+      ]
+    },
+    "LumoAlertDialogTrigger": {
+      "file": "packages/mobile/lib/src/alert_dialog.dart",
+      "doc": "The declarative shape, as `LumoDialogTrigger` is for `showLumoDialog`: a trigger whose press asks the question. `onConfirm` runs only on the confirming verb, `onCancel` on the declining one (and on a system back — there is no third answer); `onOpenChange` fires true on open and false when the dialog closes, whichever way.",
+      "props": [
+        {
+          "name": "cancelLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The declining verb. Required.",
+          "announced": true
+        },
+        {
+          "name": "confirmLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The confirming verb — «حذف», not «بله». Required.",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The consequence, in the reader's language. Required.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the dialog — the question. Required.",
+          "announced": true
+        },
+        {
+          "name": "trigger",
+          "type": "Widget Function(VoidCallback? ask)",
+          "required": true,
+          "default": null,
+          "description": "Built with the press that asks the question; `null` when disabled."
+        },
+        {
+          "name": "isDestructive",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Renders the confirm button in the destructive variant."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onCancel",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "onConfirm",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "onOpenChange",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoAttachment": {
+      "file": "packages/mobile/lib/src/file_upload.dart",
+      "doc": "One file in a list — the web `Attachment` / `FileUploadItem` as DATA, not a widget tree, because a Flutter consumer holds a `List` in state and rebuilds from it.\n\n`sizeLabel` is PRE-FORMATTED: the web's `formatFileSize(bytes, locale)` needs `Intl.NumberFormat`'s `style: \"unit\"`, which Dart's `intl` does not carry — so the app formats («۱٫۲ مگابایت») and this library never renders a raw number. `statusLabel` is REQUIRED for every state except `done`: the state must be in WORDS, since a spinner and a red border say nothing to a reader (WCAG 1.4.1). `progress` is the fraction 0..1 (null while uploading = indeterminate) and `progressLabel` is that fraction as the app formatted it («۴۵٪»).",
+      "props": [
+        {
+          "name": "name",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The file's own name, exactly as the picker reported it."
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Why it failed, in words. Shown and announced when `status` is `failed`.",
+          "announced": true
+        },
+        {
+          "name": "progress",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Fraction complete, 0..1. `null` while `uploading` = indeterminate."
+        },
+        {
+          "name": "progressLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "`progress` as the app formatted it, e.g. «۴۵٪». Announced with the name.",
+          "announced": true
+        },
+        {
+          "name": "sizeLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The size, ALREADY formatted, e.g. «۱٫۲ مگابایت».",
+          "announced": true
+        },
+        {
+          "name": "status",
+          "type": "LumoAttachmentStatus",
+          "required": false,
+          "default": "LumoAttachmentStatus.done",
+          "description": ""
+        },
+        {
+          "name": "statusLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "What `status` MEANS. REQUIRED unless `status` is `done`.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoAttachmentTile": {
+      "file": "packages/mobile/lib/src/file_upload.dart",
+      "doc": "One file's row — the web `FileUploadItem` / `Attachment` (`row` variant). Usable on its own: an attachment on a sent message is not inside a picker.\n\nSemantics: the row is ONE named node — name, size, state, value, error, in that order — with every visible copy excluded, plus the ✕ as its own node underneath (`explicitChildNodes`). The progress bar is DECORATION here (`ExcludeSemantics`): the row's own name already carries the state and the value, and a second announcing node per row makes a five-file list unlistenable. `onRemove` and `removeLabel` are ONE decision (asserted) — an ✕ has no name of its own.",
+      "props": [
+        {
+          "name": "file",
+          "type": "LumoAttachment",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onRemove",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": "Drop this file."
+        },
+        {
+          "name": "removeLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Announced name of the ✕. REQUIRED when `onRemove` is set.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoAvatar": {
+      "file": "packages/mobile/lib/src/avatar.dart",
+      "doc": "A person or organisation, as a picture or as initials — the web `Avatar`. `label` is REQUIRED: the name, announced (`Semantics(image: true)`), and the source of the initials shown when there is no `image` (or behind it while it loads). A `status` needs a `statusLabel` (asserted): the dot sits at the inline-END bottom corner (`PositionedDirectional`, so bottom-LEFT in Persian) and its meaning is announced after the name — person, then state, as one node.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The name of who or what this is. Announced; the initials come from it.",
+          "announced": true
+        },
+        {
+          "name": "image",
+          "type": "ImageProvider?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "shape",
+          "type": "LumoAvatarShape",
+          "required": false,
+          "default": "LumoAvatarShape.circle",
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoAvatarSize",
+          "required": false,
+          "default": "LumoAvatarSize.md",
+          "description": ""
+        },
+        {
+          "name": "status",
+          "type": "LumoAvatarStatus?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "statusLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "What the dot MEANS, e.g. «آنلاین». Required with `status`.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoBadge": {
+      "file": "packages/mobile/lib/src/badge.dart",
+      "doc": "A status marker — the web `Badge`: `label` REQUIRED and a String (the web's `children` is `LumoNode`, so a bare count is a type error there; here the String is the type-level guard — a count is passed already formatted with `formatNumber`). `tone` × `variant`, two sizes; a plain text node for the reader (no live region: one would re-announce every badge at load, and no button — a badge is not pressable). `LumoBadge.dot` is the count form: a round `solid` pill for «۳» unread, still a formatted String.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "A leading icon (decorative; the label names the badge)."
+        },
+        {
+          "name": "size",
+          "type": "LumoBadgeSize",
+          "required": false,
+          "default": "LumoBadgeSize.md",
+          "description": ""
+        },
+        {
+          "name": "tone",
+          "type": "LumoBadgeTone",
+          "required": false,
+          "default": "LumoBadgeTone.neutral",
+          "description": ""
+        },
+        {
+          "name": "variant",
+          "type": "LumoBadgeVariant",
+          "required": false,
+          "default": "LumoBadgeVariant.subtle",
+          "description": ""
+        }
+      ]
+    },
+    "LumoBreadcrumbs": {
+      "file": "packages/mobile/lib/src/breadcrumbs.dart",
+      "doc": "A breadcrumb trail — the web `Breadcrumbs`/`Breadcrumb`/`BreadcrumbEllipsis` as one widget. `label` is REQUIRED for the same reason it is on the web: React Aria defaulted the trail's name to the English \"Breadcrumbs\", and an unnamed trail is anonymous, which is worse because no gate can see it.\n\n**The separator flips.** The web leans on `›` (U+203A) carrying the Unicode `Bidi_Mirrored` property; Flutter's counterpart is an IconData with `matchTextDirection`, which `Icons.chevron_right` has — so the chevron points at the reading END and becomes a left chevron under fa-IR with no `dir` flag and no `if (rtl)`. The Khroos app hand-rolled the trail with a hard-coded `chevron-left`, which is the same glyph pointing the WRONG way the moment the app is read in English.\n\n**The last crumb is the current page**: announced as text, never as a link (no `link` flag, no tap action, even when the caller gave it an `onTap`), and drawn in `fg` at `w500` — the web's `data-current` treatment. Flutter's semantics have no counterpart to `aria-current`, so the word itself is the only honest way to say it: pass `currentLabel` («صفحهٔ فعلی») and it is appended to the last crumb's announced name. Optional, not required, because unlike a nameless control an unannounced current crumb still reads correctly — it is simply the last thing in the trail.\n\n**Collapsing**: with `maxVisible` set and more crumbs than that, the middle ones fold behind a named button — `overflowLabel` is REQUIRED with `maxVisible` (the constructor asserts it), because a «…» has no name of its own. The web's `BreadcrumbEllipsis` is deliberately INERT punctuation (it keeps that file server-only); here it is a real button that expands the trail in place, since a phone has no room to show the trail another way and a menu route for three words is worse than the words.",
+      "props": [
+        {
+          "name": "items",
+          "type": "List<LumoCrumb>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the trail, e.g. «مسیر صفحه». Required.",
+          "announced": true
+        },
+        {
+          "name": "currentLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Appended to the last crumb's announced name, e.g. «صفحهٔ فعلی».",
+          "announced": true
+        },
+        {
+          "name": "maxVisible",
+          "type": "int?",
+          "required": false,
+          "default": null,
+          "description": "How many crumbs stay visible before the middle ones fold away."
+        },
+        {
+          "name": "overflowLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Announced name of the button the folded crumbs hide behind. REQUIRED with `maxVisible`.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoButton": {
+      "file": "packages/mobile/lib/src/button.dart",
+      "doc": "The primary action — the web button's contract on Material's button: four variants, three sizes on the shared control scale, disabled announced, pressed takes the \"hover\" fill, focus ring for keyboard/switch access. The child is a Widget (Flutter has no `LumoNode`; a raw number in a `Text` is the app's — Dart cannot forbid it by type, `formatNumber` is the rule).",
+      "props": [
+        {
+          "name": "child",
+          "type": "Widget",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onPressed",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoButtonSize",
+          "required": false,
+          "default": "LumoButtonSize.md",
+          "description": ""
+        },
+        {
+          "name": "variant",
+          "type": "LumoButtonVariant",
+          "required": false,
+          "default": "LumoButtonVariant.solid",
+          "description": ""
+        }
+      ]
+    },
+    "LumoCalendarSheet": {
+      "file": "packages/mobile/lib/src/date_field.dart",
+      "doc": "The picker's body: month caption (a header), previous/next chevrons named by the required labels with previous at the inline START, a 7-column grid whose first column is Saturday under a Jalali locale and the language's first weekday under Gregorian, day cells as buttons named by the FULL date (`LumoDateStyle.long`, so a reader hears the weekday), today marked (and hinted with `todayLabel`), the selected day marked, out-of-range days disabled, and a Today action. Public so an app can host it in its own route; `LumoDateField` shows it in a bottom sheet.",
+      "props": [
+        {
+          "name": "closeLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "nextMonthLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "onSelected",
+          "type": "ValueChanged<DateTime>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "previousMonthLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "today",
+          "type": "DateTime",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "todayLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "maxDate",
+          "type": "DateTime?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "minDate",
+          "type": "DateTime?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "DateTime?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoCard": {
+      "file": "packages/mobile/lib/src/card.dart",
+      "doc": "A surface with a header, a body and a footer — the web `Card` with its parts. Static unless `onTap` is given; then the whole card is ONE button named by `label` (REQUIRED with `onTap` — the constructor asserts it: a tappable surface with no name announces as \"button\" and nothing else). The content stays reachable as child nodes under that name, so the reader hears the name once, \"button\", then the content. `padding` defaults to 16 all round; `LumoCardHeader`/`LumoCardFooter` only add block-axis rhythm inside it. Elevation is a shadow cast straight down (block axis) — nothing to mirror.",
+      "props": [
+        {
+          "name": "child",
+          "type": "Widget",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Announced name of the card when it is a button. Required with `onTap`.",
+          "announced": true
+        },
+        {
+          "name": "onTap",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": "Makes the whole card a button."
+        },
+        {
+          "name": "padding",
+          "type": "EdgeInsetsGeometry",
+          "required": false,
+          "default": "const EdgeInsets.all(16)",
+          "description": ""
+        },
+        {
+          "name": "variant",
+          "type": "LumoCardVariant",
+          "required": false,
+          "default": "LumoCardVariant.outline",
+          "description": ""
+        }
+      ]
+    },
+    "LumoCardFooter": {
+      "file": "packages/mobile/lib/src/card.dart",
+      "doc": "Actions, usually buttons, at the inline END (`MainAxisAlignment.end` resolves against direction), above a hairline — `border-bs`, the block-start rule.",
+      "props": [
+        {
+          "name": "children",
+          "type": "List<Widget>",
+          "required": true,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoCardHeader": {
+      "file": "packages/mobile/lib/src/card.dart",
+      "doc": "Title (REQUIRED, a header for the reader), description, and an `action` opposite the title at the inline END — a `Row`, so it lands on the left in Persian with no positional value. `pbe-0` on the web: the header adds only bottom rhythm inside the card's own padding.",
+      "props": [
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "action",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "The control that acts on the whole card, level with the title."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        }
+      ]
+    },
+    "LumoCarousel": {
+      "file": "packages/mobile/lib/src/carousel.dart",
+      "doc": "A slide carousel — the web `Carousel` family (`CarouselContent`, `CarouselItem`, `CarouselPrevious`, `CarouselNext`) as ONE widget on Flutter's `PageView`. No engine is rented: embla exists on the web because the DOM has no pager; Flutter ships one.\n\n**The inline axis.** A horizontal `PageView` reads `Directionality` through `getAxisDirectionFromAxisReverseAndDirectionality`, so under RTL its axis is `AxisDirection.left`: page 0 is drawn at the RIGHT, page 1 to its LEFT, and «next» moves the deck leftward — the same fix the web makes by deriving embla's `direction` from the locale. That is why there is no `reverse:` here and no direction flag: passing `reverse` would UNDO the mirroring, which is exactly the bug this library exists to prevent. `carousel_test.dart` pins it with real positions under fa-IR and en-US.\n\n**Required names.** `label` names the region; `previousLabel`/`nextLabel` name the chevrons (a chevron is not a name); `slideLabel(index, count)` names every slide AND its dot — a function, because Persian word order is not English with the words swapped, and because the caller owns the digits: `(i, n) => 'اسلاید ${formatNumber(i + 1, locale)} از ${formatNumber(n, locale)}'`. `index` is ZERO-based.\n\n**Auto-play** is off by default and, when on, stops for good on the first interaction (a drag, a chevron, a dot) and never starts at all under `MediaQuery.disableAnimationsOf` — a slide that moves on its own is WCAG 2.2.2, and \"reduce motion\" is the platform saying no.",
+      "props": [
+        {
+          "name": "items",
+          "type": "List<Widget>",
+          "required": true,
+          "default": null,
+          "description": "The slides, in reading order: the FIRST is at the reading start."
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the whole carousel, e.g. «پیشنهادهای ویژه». REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "nextLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the «next» chevron. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "previousLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the «previous» chevron. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "slideLabel",
+          "type": "String Function(int index, int count)",
+          "required": true,
+          "default": null,
+          "description": "Names slide `index` of `count` — and its dot. REQUIRED; `index` is 0-based.",
+          "announced": true
+        },
+        {
+          "name": "autoPlay",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Advance on a timer. Off by default; ignored when animations are disabled."
+        },
+        {
+          "name": "height",
+          "type": "double",
+          "required": false,
+          "default": "200",
+          "description": "The deck's block-axis extent. Flutter's pager needs a bounded one; the web gets it from the slides' own content."
+        },
+        {
+          "name": "interval",
+          "type": "Duration",
+          "required": false,
+          "default": "const Duration(seconds: 5)",
+          "description": "Time on each slide while auto-playing."
+        },
+        {
+          "name": "onIndexChanged",
+          "type": "ValueChanged<int>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the 0-based index whenever the visible slide changes."
+        },
+        {
+          "name": "showDots",
+          "type": "bool",
+          "required": false,
+          "default": "true",
+          "description": "Show the dot row under the deck."
+        }
+      ]
+    },
+    "LumoCheckbox": {
+      "file": "packages/mobile/lib/src/checkbox.dart",
+      "doc": "A checkbox — the web `Checkbox` on Flutter's semantics: named by its visible `label` or an explicit `accessibilityLabel` (a select-all cell legitimately has none), the constructor asserts one is present. The box sits at the inline START (right in Persian, by `Directionality`), the row is centre-aligned as on the web (Persian line boxes are taller). Controlled (`isSelected`) and uncontrolled (`defaultSelected`) like the web; `isIndeterminate` is the one field a switch does not have and is announced as the MIXED state. `errorMessage` is for a STANDALONE checkbox — a rule about the answer belongs on the group.",
+      "props": [
+        {
+          "name": "accessibilityLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "defaultSelected",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "An error for this checkbox alone; supplying one marks it invalid.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isIndeterminate",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isInvalid",
+          "type": "bool?",
+          "required": false,
+          "default": null,
+          "description": "Overrides the invalid state derived from `errorMessage` (or the group's)."
+        },
+        {
+          "name": "isReadOnly",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isSelected",
+          "type": "bool?",
+          "required": false,
+          "default": null,
+          "description": "Controlled selection; `null` leaves the state to the widget (`defaultSelected`)."
+        },
+        {
+          "name": "label",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoCheckboxGroup": {
+      "file": "packages/mobile/lib/src/checkbox.dart",
+      "doc": "A group of checkboxes with one shared `label` (REQUIRED — the checkboxes name the options, not the question), one description and one error. Each child keeps its own `isSelected`/`onChanged`: the web's `value: string[]` exists for form submission, which Flutter has no counterpart of, so the group does not re-declare state it could not deliver. `isDisabled` and the invalid state (from `errorMessage`, or `isInvalid`) reach every child.",
+      "props": [
+        {
+          "name": "children",
+          "type": "List<Widget>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Supplying one marks the group invalid.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isInvalid",
+          "type": "bool?",
+          "required": false,
+          "default": null,
+          "description": "Overrides the invalid state derived from `errorMessage`."
+        }
+      ]
+    },
+    "LumoChip": {
+      "file": "packages/mobile/lib/src/chip.dart",
+      "doc": "A chip — a filter, a keyword, a selected value — the web `Tag`: `label` REQUIRED (a chip IS its text; the web's `children`), optionally selectable (`isSelected` + `onChanged` — a toggle button announced with its selected state; the web keeps selection for `ListBox`, mobile filter chips are the idiom) and optionally removable: `onRemove` + `removeLabel` are ONE decision — the constructor asserts `removeLabel` whenever `onRemove` is set (the web makes it a discriminated union), because an ✕ has no name of its own and a convention has already failed on this project. The ✕ sits at the inline END (left in Persian) — `EdgeInsetsDirectional`, so the trimmed cap follows it.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "A leading icon (drawn at the inline start; decorative)."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isSelected",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": "Makes the chip a toggle: called with the next selected state."
+        },
+        {
+          "name": "onRemove",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": "Called when the remove control is activated."
+        },
+        {
+          "name": "removeLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Announced name of the remove control. REQUIRED when `onRemove` is set.",
+          "announced": true
+        },
+        {
+          "name": "size",
+          "type": "LumoChipSize",
+          "required": false,
+          "default": "LumoChipSize.md",
+          "description": ""
+        }
+      ]
+    },
+    "LumoCombobox": {
+      "file": "packages/mobile/lib/src/combobox.dart",
+      "doc": "A text field that filters a list — the web `ComboBox` (Base UI's Combobox), with `autocomplete.tsx`'s Persian folding as the built-in filter. ONE widget for both web components: `Autocomplete` is the same control minus the trigger button, and a phone has no room for two shapes of the same field.\n\n**The list is INLINE, under the field — not `showLumoPopover`.** A popover is a `PopupRoute`: pushing it takes focus off the `TextField`, which ends the typing that is the whole point of a combobox, and on a phone the keyboard already covers the space an anchored surface would take. So the suggestions render in the field's own subtree while it has focus, the keyboard pushes both, and nothing is announced as a route. Consequence, stated because it is a real divergence from the web: the list takes layout space and moves what sits below it.\n\nAnnounced strings, all REQUIRED: `label` (the field's name), `suggestionsLabel` (the list's name — the web's, and Base UI names nothing), `emptyLabel` (what a reader is told when nothing matches) and `clearLabel` (an ✕ is not a name).\n\nSemantics: the field is a **`textField`**, not `SemanticsRole.comboBox` — checked against Flutter 3.35.2, where `comboBox` is one of the roles whose debug validator is still `_unimplemented` and THROWS («Missing checks for role SemanticsRole.comboBox») the moment a node carries it. The list is a named `SemanticsRole.list` and the option matching `value` is announced `selected`, which is what a reader needs from either shape.\n\n`onSearch` hands the query to the caller AND turns the built-in filter off: a caller that fetches its own matches owns `options` outright, and filtering an already-filtered list a second time only hides rows.",
+      "props": [
+        {
+          "name": "clearLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the ✕ that empties the field. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "emptyLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "What the list shows when nothing matches. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced and displayed name. REQUIRED — an unnamed field is a defect.",
+          "announced": true
+        },
+        {
+          "name": "options",
+          "type": "List<LumoComboboxOption>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "suggestionsLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the suggestion list. REQUIRED — the web's `suggestionsLabel`.",
+          "announced": true
+        },
+        {
+          "name": "allowsCustomValue",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Accept text that matches no option: submitting commits it as the value."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown under the field and announced. Supplying one marks it invalid.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String?>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the chosen id, with the typed text when `allowsCustomValue` accepts one, and with `null` when the field is cleared."
+        },
+        {
+          "name": "onSearch",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the query on every keystroke. Providing it turns the built-in filter OFF — the caller's `options` are taken as already matched."
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The selected option id, or a raw string when `allowsCustomValue`. Controlled when non-null; leaving it null lets the widget keep its own choice, the way `LumoSearchField` and `LumoCheckbox` do."
+        }
+      ]
+    },
+    "LumoComboboxOption": {
+      "file": "packages/mobile/lib/src/combobox.dart",
+      "doc": "One suggestion of a `LumoCombobox`: `id` is what the field reports, `label` the announced and displayed text (the web's `ComboBoxItem` `id` + children).",
+      "props": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The stable key handed back through `onChanged`."
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The announced and displayed text, and what the built-in filter matches.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoCrumb": {
+      "file": "packages/mobile/lib/src/breadcrumbs.dart",
+      "doc": "One crumb of a trail: `label` REQUIRED (a crumb IS its text — the web's `children`), `onTap` optional. A crumb with `onTap` is a LINK; a crumb without one is a step you cannot go back to, and the LAST crumb is never a link whatever it was given, because it is the page you are already on.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "onTap",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": "Where this crumb goes. Flutter has no router here, so this is the seam."
+        }
+      ]
+    },
+    "LumoDateField": {
+      "file": "packages/mobile/lib/src/date_field.dart",
+      "doc": "A date field with a calendar behind a button — the mobile counterpart of the web's `DatePicker` (`DateInput` + `Calendar`): a read-only field showing the value through `formatLumoDate` (Jalali under `fa-*` and any `-u-ca-persian` tag, Gregorian otherwise — `calendarOf`), and a calendar button at the inline END that opens the picker as a bottom sheet route. The grid is Lumo's own: Material's `showDatePicker` is Gregorian-only and its strings default to English. Announced strings, all REQUIRED: `label`, `openLabel` (the calendar button is an icon), `closeLabel` (the sheet's ✕ and scrim), `previousMonthLabel` / `nextMonthLabel` (icon chevrons, previous at the inline START), `todayLabel` (the Today action; also the hint on today's cell). The web's `openCalendarLabel` is `openLabel` here; the web has no `previousMonthLabel`/`nextMonthLabel` because react-day-picker composes them from `LumoStrings` — Flutter has no such table, so they are props again. `value` is a Gregorian `DateTime` (Flutter's date type; the web's `CalendarDate` has no Dart twin) of which only the local calendar day is read; `onChanged` receives local midnight of the chosen day. Segment typing (`DateInput`) is not carried: a mobile keyboard's date entry is the picker.",
+      "props": [
+        {
+          "name": "closeLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the sheet's close button and its scrim. Required.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced and displayed name. Required: an unnamed field is a defect.",
+          "announced": true
+        },
+        {
+          "name": "nextMonthLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "openLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the button that opens the calendar. Required — it is an icon.",
+          "announced": true
+        },
+        {
+          "name": "previousMonthLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Names of the month-paging chevrons. Required — they are icons.",
+          "announced": true
+        },
+        {
+          "name": "todayLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the Today action (selects today, when in range). Required.",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown under the field and announced. Supplying one marks it invalid.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isRequired",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "maxDate",
+          "type": "DateTime?",
+          "required": false,
+          "default": null,
+          "description": "Latest selectable DAY (itself selectable). Days after it are disabled."
+        },
+        {
+          "name": "minDate",
+          "type": "DateTime?",
+          "required": false,
+          "default": null,
+          "description": "Earliest selectable DAY (itself selectable). Days before it are disabled."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<DateTime>?",
+          "required": false,
+          "default": null,
+          "description": "Called with local midnight of the chosen day."
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown in the field when there is no value.",
+          "announced": true
+        },
+        {
+          "name": "style",
+          "type": "LumoDateStyle",
+          "required": false,
+          "default": "LumoDateStyle.medium",
+          "description": "How the value is written in the field."
+        },
+        {
+          "name": "today",
+          "type": "DateTime?",
+          "required": false,
+          "default": null,
+          "description": "The day marked as today; defaults to the device clock. Injectable so a screen (or a test) is deterministic — the web REQUIRES it for SSR."
+        },
+        {
+          "name": "value",
+          "type": "DateTime?",
+          "required": false,
+          "default": null,
+          "description": "The selected day; only its local year/month/day are read."
+        }
+      ]
+    },
+    "LumoDescription": {
+      "file": "packages/mobile/lib/src/description_list.dart",
+      "doc": "One term/value pair — the web `DescriptionGroup` + `DescriptionTerm` + `DescriptionDetail`.\n\nThe value is a **pre-formatted String** by default, never a number: Dart cannot refuse a raw `int` at the type level the way the web's `LumoNode` does, so the type asks for the string the app already ran through `formatNumber(n, locale)` / `formatLumoDate`. Use `LumoDescription.widget` when the value is drawn (a badge, a price with a currency chip) — it takes the widget AND the announced `value`, because nothing derives words from a widget and a reader cannot hear a badge.",
+      "props": [
+        {
+          "name": "term",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The name of the fact, e.g. «جمع پرداخت». Required."
+        },
+        {
+          "name": "value",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The fact, as words. Required — announced in both forms."
+        }
+      ]
+    },
+    "LumoDescriptionList": {
+      "file": "packages/mobile/lib/src/description_list.dart",
+      "doc": "A spec sheet: name/value pairs — the web `DescriptionList`. `label` is REQUIRED and names the block; the web's bare `<dl>` has no name because a page heading above it does the job, and on a phone a card full of rows has no such heading to lean on.\n\nSemantics: each pair is ONE node (`MergeSemantics`) reading the term then the value, so a reader hears «جمع پرداخت، ۱٬۲۰۰٬۰۰۰ تومان» and not two unrelated fragments. No punctuation is invented between them — the join belongs to the platform's node separator, not to a colon this library would have to pick per language.\n\nThe Khroos app hand-rolled these rows across the provider profile and the business screens as `Row(mainAxisAlignment: spaceBetween)` with two `Text`s, which reads as two separate nodes and loses the pairing entirely.",
+      "props": [
+        {
+          "name": "entries",
+          "type": "List<LumoDescription>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the block, e.g. «جزئیات صورتحساب». Required.",
+          "announced": true
+        },
+        {
+          "name": "orientation",
+          "type": "LumoDescriptionListOrientation",
+          "required": false,
+          "default": "LumoDescriptionListOrientation.inline",
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoDescriptionListSize",
+          "required": false,
+          "default": "LumoDescriptionListSize.md",
+          "description": ""
+        }
+      ]
+    },
+    "LumoDialogTrigger": {
+      "file": "packages/mobile/lib/src/dialog.dart",
+      "doc": "The declarative shape: a trigger whose press opens the dialog. `onOpenChange` fires true on open and false when it closes (any way).",
+      "props": [
+        {
+          "name": "actions",
+          "type": "List<Widget> Function(BuildContext)",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "closeLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "trigger",
+          "type": "Widget Function(VoidCallback? open)",
+          "required": true,
+          "default": null,
+          "description": "Built with the press that opens the dialog."
+        },
+        {
+          "name": "body",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onOpenChange",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoDisclosure": {
+      "file": "packages/mobile/lib/src/disclosure.dart",
+      "doc": "A collapsible section — the web `Disclosure` + `DisclosureTrigger` + `DisclosurePanel` as ONE widget (Flutter has no compound-children idiom that buys anything here; the parts carried no props of their own that a caller sets). Controlled with `isOpen` + `onOpenChange`, uncontrolled with `defaultOpen`, exactly as the web has both.\n\nThe chevron rotates HALF A TURN on the block axis — a rotation, not a flip, so there is nothing to mirror; it sits at the inline END (`ms-auto` on the web, a `Row` here). The panel animates open with `AnimatedSize`, and the duration collapses to zero under `MediaQuery.disableAnimationsOf` (the platform's «reduce motion» — the web's `motion-reduce:transition-none`).\n\nA closed panel is NOT BUILT: it is out of the widget tree and out of the semantics tree, which is Base UI's default too (`keepMounted` is opt-in there; on mobile there is no find-in-page and no first-byte HTML to put it in, so the flag has no mobile counterpart and is not declared).\n\nSemantics: the trigger is ONE node — a `button`, `hasExpandedState` + `isExpanded` (Flutter's `expanded:`, the counterpart of `aria-expanded`), `enabled`, named by `title`. The visible title is inside `ExcludeSemantics` so the string is announced exactly ONCE; the chevron is decoration. The panel is a plain group, NOT a `SemanticsRole.region`: Flutter's region role requires a label of its own, and the only honest label is the title — which would put the same string in the tree twice, where the web can point `aria-labelledby` at the existing trigger node and pay nothing.",
+      "props": [
+        {
+          "name": "child",
+          "type": "Widget",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The section's name — visible and announced. Required.",
+          "announced": true
+        },
+        {
+          "name": "defaultOpen",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Open state at first build (uncontrolled)."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isOpen",
+          "type": "bool?",
+          "required": false,
+          "default": null,
+          "description": "Open state (controlled)."
+        },
+        {
+          "name": "onOpenChange",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoDisclosureItem": {
+      "file": "packages/mobile/lib/src/disclosure.dart",
+      "doc": "One section of a `LumoAccordion`: `id` is the collection key the open set is written in (a key, never a rendered string), `title` is REQUIRED — the trigger's visible text AND its announced name, in one string, so seen and announced cannot drift.",
+      "props": [
+        {
+          "name": "child",
+          "type": "Widget",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoEmptyState": {
+      "file": "packages/mobile/lib/src/empty_state.dart",
+      "doc": "The \"there is nothing here yet\" panel — the web `EmptyState`: icon (in the 40px chip, decorative and excluded — the title already says what the picture says), `title` REQUIRED and a HEADER for the reader, `description`, and `actions` (widgets, usually `LumoButton`s — slots, not labels plus handlers). Centred: `TextAlign.center` is direction-neutral.",
+      "props": [
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "What is empty, in the reader's language. Required.",
+          "announced": true
+        },
+        {
+          "name": "actions",
+          "type": "List<Widget>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Why it is empty and what to do about it.",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "Decorative illustration or glyph."
+        },
+        {
+          "name": "size",
+          "type": "LumoEmptyStateSize",
+          "required": false,
+          "default": "LumoEmptyStateSize.md",
+          "description": ""
+        }
+      ]
+    },
+    "LumoFileUpload": {
+      "file": "packages/mobile/lib/src/file_upload.dart",
+      "doc": "A file picker and the list of what was chosen — the web `FileUpload` plus `FileUploadList`.\n\n**There is no drop zone, and no plugin.** A phone has nothing to drag from, so the web's four drag handlers, its clipboard path and its hidden `<input type=\"file\">` have no counterpart: what is left is a NAMED GROUP (`label`), one NAMED BUTTON (`browseLabel`) and the list. And this library takes no picker dependency — `image_picker`, `file_picker` and the platform channels are the APP's choice, not a component library's, so `onBrowse` is REQUIRED and the app opens whatever picker it owns, then hands the results back as `files`. The dashed frame is kept because it is what an upload slot looks like, not because anything can be dropped on it.\n\n`onRemove` takes the INDEX (a Flutter consumer holds a `List` and calls `removeAt`); `removeLabel` builds each ✕'s name from that file's own name, as on the web — a function, because Persian word order is not English with the words swapped. The two are one decision (asserted).",
+      "props": [
+        {
+          "name": "browseLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Visible and announced text of the button that opens the app's picker. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the upload group AND its visible title, e.g. «تصویر کارت ملی». REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "onBrowse",
+          "type": "VoidCallback",
+          "required": true,
+          "default": null,
+          "description": "Open the picker. REQUIRED — the app owns it; this library ships no plugin."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The hint under the title — accepted formats, a size limit.",
+          "announced": true
+        },
+        {
+          "name": "files",
+          "type": "List<LumoAttachment>",
+          "required": false,
+          "default": "const <LumoAttachment>[]",
+          "description": "What has been chosen so far."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "maxFilesLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "A PRE-FORMATTED count line, e.g. «حداکثر ۵ پرونده».",
+          "announced": true
+        },
+        {
+          "name": "onRemove",
+          "type": "void Function(int index)?",
+          "required": false,
+          "default": null,
+          "description": "Drop the file at this index."
+        },
+        {
+          "name": "removeLabel",
+          "type": "String Function(String name)?",
+          "required": false,
+          "default": null,
+          "description": "Builds each ✕'s announced name from that file's name. REQUIRED with `onRemove`.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoIconButton": {
+      "file": "packages/mobile/lib/src/button.dart",
+      "doc": "A button whose only content is an icon: `label` is REQUIRED — an icon is not a name. Announced through Semantics and shown as a tooltip.",
+      "props": [
+        {
+          "name": "child",
+          "type": "Widget",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onPressed",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoButtonSize",
+          "required": false,
+          "default": "LumoButtonSize.md",
+          "description": ""
+        },
+        {
+          "name": "variant",
+          "type": "LumoButtonVariant",
+          "required": false,
+          "default": "LumoButtonVariant.ghost",
+          "description": ""
+        }
+      ]
+    },
+    "LumoIconStack": {
+      "file": "packages/mobile/lib/src/icon_tile.dart",
+      "doc": "Overlapping avatars or icons with a «+۲» for the rest — the web `IconStack`.\n\nONE fact, ONE name: the whole stack is a single named image node and the members carry no names of their own, because \"سارا، رضا، مینا، و ۲ نفر دیگر\" read out one chip at a time is noise, not information. `label` is REQUIRED for that reason (the web requires it too); `overflowLabel(remaining)` is optional and, when given, is appended to that one name — it is not a second node.\n\nThe overlap is `-ms-2` on the web: a LOGICAL inline offset, so the deck leans the reader's way. Here it is `PositionedDirectional`, which mirrors the same way — under fa-IR the FIRST member is on the right and each next one tucks under it to the left. The «+N» goes through `formatNumber` with the scope's locale («+۲», never «+2»); the web takes the locale as a prop, the mobile scope already has it.",
+      "props": [
+        {
+          "name": "items",
+          "type": "List<Widget>",
+          "required": true,
+          "default": null,
+          "description": "The members, in reading order. Each is clipped to the step's circle."
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "What the stack MEANS, e.g. «۵ عضو». REQUIRED — the members are silent beneath it.",
+          "announced": true
+        },
+        {
+          "name": "max",
+          "type": "int",
+          "required": false,
+          "default": "4",
+          "description": "How many to show before the rest collapse into a count."
+        },
+        {
+          "name": "overflowLabel",
+          "type": "String Function(int remaining)?",
+          "required": false,
+          "default": null,
+          "description": "Says the remainder in words, e.g. `(n) => '$n نفر دیگر'`. Appended to `label`.",
+          "announced": true
+        },
+        {
+          "name": "size",
+          "type": "LumoIconStackSize",
+          "required": false,
+          "default": "LumoIconStackSize.md",
+          "description": ""
+        }
+      ]
+    },
+    "LumoIconTile": {
+      "file": "packages/mobile/lib/src/icon_tile.dart",
+      "doc": "An icon in a tinted square — the thing at the top of a feature card, or beside a list row. The web `IconTile`.\n\n**DECORATIVE BY DEFAULT.** `accessibilityLabel` is null unless the tile is the SOLE carrier of its meaning, and when it is null the tile is removed from the semantics tree entirely (`ExcludeSemantics` — the web's `aria-hidden=\"true\"`, not a nameless node). A tile sitting beside its own label — the icon next to «احراز هویت» in a settings row, next to a card's heading — IS decorative: naming it makes a reader hear the same fact twice, and «icon» is not a fact at all. Name it only when there is no text.\n\nThe icon is a Widget, sized by the tile to HALF its edge (the web's `[&>svg]:size-1/2`) through `IconTheme`, and coloured by the tone pair; a widget that is not an `Icon` should read `IconTheme.of(context)` itself.",
+      "props": [
+        {
+          "name": "icon",
+          "type": "Widget",
+          "required": true,
+          "default": null,
+          "description": "The glyph. Sized and coloured by the tile."
+        },
+        {
+          "name": "accessibilityLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "A name, ONLY when the tile is the sole carrier of meaning. Null = decorative.",
+          "announced": true
+        },
+        {
+          "name": "shape",
+          "type": "LumoIconTileShape",
+          "required": false,
+          "default": "LumoIconTileShape.rounded",
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoIconTileSize",
+          "required": false,
+          "default": "LumoIconTileSize.md",
+          "description": ""
+        },
+        {
+          "name": "tone",
+          "type": "LumoIconTileTone",
+          "required": false,
+          "default": "LumoIconTileTone.neutral",
+          "description": ""
+        },
+        {
+          "name": "variant",
+          "type": "LumoIconTileVariant",
+          "required": false,
+          "default": "LumoIconTileVariant.subtle",
+          "description": ""
+        }
+      ]
+    },
+    "LumoItem": {
+      "file": "packages/mobile/lib/src/item.dart",
+      "doc": "The generic list row: leading media, title and description, trailing control — the web `Item` with `ItemMedia`/`ItemContent`/`ItemTitle`/ `ItemDescription`/`ItemActions` folded into ONE widget, because on a phone a row is not composed per call site a hundred times, it is configured.\n\n`title` is REQUIRED: it is the row's visible first line AND, when the row is tappable, its announced name. The leading slot sits at the inline START and the trailing slot at the inline END — a `Row`, which mirrors itself, so nothing here is positioned by a physical offset. With `onTap` and no `trailing`, the row draws the \"go\" chevron itself: `Icons.chevron_right` carries `matchTextDirection`, so the glyph points at the reading END (left under fa-IR) with no direction flag. The Khroos app hand-rolled this as `KRow` and hard-coded `chevron-left`, which points the wrong way the moment the app is read in English.\n\nSemantics: the row is ONE node named by `title` — a `button` when `onTap` is given, plain text otherwise. `explicitChildNodes` keeps a nested NAMED control (a `LumoIconButton` in `trailing`, a `LumoSwitch`) reachable as its own node UNDER the row, exactly as `LumoCard` does; the visible title is excluded so the name is heard ONCE, while the description stays a child node and is read after it. `leading` is decoration and is excluded — an icon is not a name.\n\n`isSelected` is `bool?` on purpose, mirroring `list-box.tsx`, which omits `aria-selected` entirely when nothing is selectable: `null` (the default) means \"this row is not part of a selection\" and announces no state; `true` and `false` both announce one. `LumoListBox` passes it; a standalone row leaves it alone.",
+      "props": [
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The row's first line: shown, and announced as the row's name. Required.",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The second line — the web `ItemDescription`. Announced after the name.",
+          "announced": true
+        },
+        {
+          "name": "hasDivider",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "A hairline at the block end — the web `ItemSeparator`, for a run of rows inside one card. Refused on `outlined`, which already has a frame."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isSelected",
+          "type": "bool?",
+          "required": false,
+          "default": null,
+          "description": "`null` = not part of a selection (no state announced). See the docblock."
+        },
+        {
+          "name": "leading",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "Decoration at the inline start (an icon, an avatar). Excluded from semantics."
+        },
+        {
+          "name": "onTap",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": "Makes the whole row ONE button named by `title`."
+        },
+        {
+          "name": "size",
+          "type": "LumoItemSize",
+          "required": false,
+          "default": "LumoItemSize.md",
+          "description": ""
+        },
+        {
+          "name": "trailing",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "The inline-end slot: a control (keeps its own node) or a glyph. With `onTap` and no `trailing`, the row draws a direction-matching chevron."
+        },
+        {
+          "name": "variant",
+          "type": "LumoItemVariant",
+          "required": false,
+          "default": "LumoItemVariant.plain",
+          "description": ""
+        }
+      ]
+    },
+    "LumoItemGroup": {
+      "file": "packages/mobile/lib/src/item.dart",
+      "doc": "A titled run of rows — the web `ItemGroup` plus a name. The web's group is deliberately role-less and nameless (\"a page that wants list semantics owns a `<ul>`\"); on a phone there is no surrounding page markup to own it, so `label` is REQUIRED and is DRAWN as a section header (the Settings-screen idiom the Khroos app hand-rolled as `_Lbl`). It is announced ONCE, as a header the reader lands on before the rows — not also as a container name.\n\n`hasDividers` puts a hairline between the rows (never after the last) and closes the gap, which is how a run of rows inside one card reads; without it the group keeps the web's `gap-2`.",
+      "props": [
+        {
+          "name": "children",
+          "type": "List<Widget>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The section's name — drawn as a header and announced. Required.",
+          "announced": true
+        },
+        {
+          "name": "hasDividers",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "A hairline between rows instead of a gap."
+        }
+      ]
+    },
+    "LumoLink": {
+      "file": "packages/mobile/lib/src/link.dart",
+      "doc": "A navigational link — the web `Link`. Semantics: `link: true`, which is the role a reader needs to know that activating this moves them somewhere; it is NOT a button and must not be announced as one.\n\nFlutter has no router in this package (the web `Link` takes an `href` and can be handed the app's own link component), so **`onTap` is the seam**: the app navigates, the widget names and announces.\n\n**An external link SAYS it is external.** The web makes `newTab` + `newTabLabel` a typed pair — `target`/`rel` are removed from the prop type entirely — and renders the label as `sr-only` text APPENDED after the visible words, so it lands in the accessible name in reading order (WCAG 3.2.5). Here the same: `isExternal` requires `externalLabel` (the constructor asserts it) and the announced name is «label externalLabel», concatenated in reading order. There is no default, because a default would be English. No glyph is invented either: the web's warning is the WORDS, and an ↗ that nobody named would be the defect this library exists to prevent — pass `icon` yourself if the design wants one.\n\n`underline-offset-4` on the web is here a 3px underline offset for the same reason: Arabic-script tails (ی ج ح ع ژ) sit exactly where a default underline cuts through them.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The link's visible text and its announced name. Required.",
+          "announced": true
+        },
+        {
+          "name": "onTap",
+          "type": "VoidCallback",
+          "required": true,
+          "default": null,
+          "description": "What following the link does. Flutter has no router here — this is the seam."
+        },
+        {
+          "name": "externalLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The announced warning appended to the name. REQUIRED when `isExternal`.",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "A glyph at the inline END, after the words. Decorative — excluded from semantics."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "A link that cannot be followed: still announced as a link (the web renders `<span role=\"link\" aria-disabled>`, because a nameless generic is worse), but not enabled and with no tap action."
+        },
+        {
+          "name": "isExternal",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Whether following this link leaves the app."
+        },
+        {
+          "name": "variant",
+          "type": "LumoLinkVariant",
+          "required": false,
+          "default": "LumoLinkVariant.inline",
+          "description": ""
+        }
+      ]
+    },
+    "LumoListBox": {
+      "file": "packages/mobile/lib/src/item.dart",
+      "doc": "A standalone selectable list — the web `ListBox`: no popover, no trigger (that is `LumoSelect`). `label` is REQUIRED — an unnamed list announces as \"list\" and nothing else — and `emptyLabel` is REQUIRED too, because an empty list that says nothing is indistinguishable from a broken one and the web's empty text is a caller string as well (`asyncState.emptyText`; React Aria's `renderEmptyState` is gone from the web type).\n\nControlled (`value`) and uncontrolled (`defaultValue`) like the web's `selectedKeys`/`defaultSelectedKeys`; both are a `Set<String>` in single mode too, which is the web's shape — single mode simply never holds more than one key. `onChanged` is handed the whole next selection (the web's `onSelectionChange`).\n\nSemantics: a `list` named by `label`; every row a button carrying its `selected` state, so colour is never the sole carrier (WCAG 1.4.1) and the check glyph at the inline END is decoration on top of it. Rows are `LumoItem`s at `sm`: the web's option has its own denser metrics because it is a pointer target inside a scroll pane, whereas on a phone the row IS the touch target and must stay one.\n\nNot carried from the web: keyboard navigation and typeahead (a roving tab stop, `shouldFocusWrap`, `orientation`, Home/End/PageUp/PageDown, the Persian-folding typeahead) — Flutter's focus traversal owns arrow keys and there is no on-screen keyboard behind a list of rows; `onAction` (a row either selects or navigates, and a navigating row is a `LumoItem`); `asyncState` (loading/error/load-more belongs to the screen).",
+      "props": [
+        {
+          "name": "emptyLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "What is said when `items` is empty, e.g. «هیچ پرونده‌ای نیست». Required.",
+          "announced": true
+        },
+        {
+          "name": "items",
+          "type": "List<LumoListBoxItem>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the list. Required.",
+          "announced": true
+        },
+        {
+          "name": "defaultValue",
+          "type": "Set<String>?",
+          "required": false,
+          "default": null,
+          "description": "The selected keys (uncontrolled)."
+        },
+        {
+          "name": "disallowEmptySelection",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Refuse to end up with nothing selected — the web prop of the same name."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<Set<String>>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the whole next selection."
+        },
+        {
+          "name": "selectionMode",
+          "type": "LumoListBoxSelectionMode",
+          "required": false,
+          "default": "LumoListBoxSelectionMode.single",
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoItemSize",
+          "required": false,
+          "default": "LumoItemSize.sm",
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "Set<String>?",
+          "required": false,
+          "default": null,
+          "description": "The selected keys (controlled); `null` leaves the state to the widget."
+        }
+      ]
+    },
+    "LumoListBoxItem": {
+      "file": "packages/mobile/lib/src/item.dart",
+      "doc": "One option of a `LumoListBox`: `id` is the key the list reports, `title` REQUIRED (the option's visible text and its announced name — the web reads an option's name out of its own contents, which cannot be empty here by construction).",
+      "props": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "leading",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "trailing",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoMenuCheckboxItem": {
+      "file": "packages/mobile/lib/src/menu.dart",
+      "doc": "A toggle inside a menu — the web's `menuitemcheckbox`: one control, checked state announced, NOT a checkbox nested in an item (two controls). CONTROLLED (`isSelected` + `onChanged`): a menu of toggles is a view of state that lives elsewhere. Ticking keeps the menu open (the web's `closeOnClick` default: toggling three columns should not reopen the menu three times).",
+      "props": [
+        {
+          "name": "isSelected",
+          "type": "bool",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoMenuEntry": {
+      "file": "packages/mobile/lib/src/menu.dart",
+      "doc": "One entry of a menu: an item, a checkbox item, a separator or a titled section. A sealed hierarchy — the menu's builder switches exhaustively.",
+      "props": []
+    },
+    "LumoMenuItem": {
+      "file": "packages/mobile/lib/src/menu.dart",
+      "doc": "One action. `label` REQUIRED — the visible text IS the announced name (a bare icon is not one); `icon` is decoration in the leading slot; `isDestructive` colours the label `critical` (a colour is a hint, the word carries the meaning — put it in the label). Selecting closes the menu, then calls `onSelected` (so an action that opens a dialog opens it above nothing).",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "isDestructive",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onSelected",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoMenuSection": {
+      "file": "packages/mobile/lib/src/menu.dart",
+      "doc": "A titled group. `label` REQUIRED — the web's `Menu.GroupLabel` names the group; here it is a header node the reader lands on before the group's items.",
+      "props": [
+        {
+          "name": "items",
+          "type": "List<LumoMenuEntry>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        }
+      ]
+    },
+    "LumoMenuSeparator": {
+      "file": "packages/mobile/lib/src/menu.dart",
+      "doc": "A rule between items. Decoration: excluded from semantics.",
+      "props": []
+    },
+    "LumoMenuTrigger": {
+      "file": "packages/mobile/lib/src/menu.dart",
+      "doc": "A menu of actions on Lumo's popover surface (`showLumoPopover`), anchored to the trigger at `bottomStart` — the web `MenuPopover`'s default — which mirrors under RTL. `label` REQUIRED: the menu's announced name (names the route; the web names the popup by its trigger). Items are buttons, a checkbox item carries the checked state, a section starts with a header, separators are silent. The list is re-read on every rebuild of this widget, so a checkbox item toggled by the caller's `setState` updates while open.\n\nNo `isOpen`/`defaultOpen` (routes are pushed, not rendered — as `LumoDialogTrigger`), no submenus (`SubmenuTrigger`: nested popovers on a phone are a sheet's job), no link items (`href`: no router seam here).",
+      "props": [
+        {
+          "name": "items",
+          "type": "List<LumoMenuEntry>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "trigger",
+          "type": "Widget Function(VoidCallback? open)",
+          "required": true,
+          "default": null,
+          "description": "Built with the press that opens the menu."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onOpenChange",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "placement",
+          "type": "LumoPlacement",
+          "required": false,
+          "default": "LumoPlacement.bottomStart",
+          "description": ""
+        }
+      ]
+    },
+    "LumoMessage": {
+      "file": "packages/mobile/lib/src/message.dart",
+      "doc": "One message in a transcript — the web `Message` + `Bubble` composed into a single widget, because the parts only ever appear together and every compositional seam on the web (`MessageBody`, `MessageHeader`, `MessageTime`) is a chance to put the bubble on the wrong side.\n\n* `text` is the usual case; `child` is the escape hatch for rich content (a photo, a quoted card). One of the two is REQUIRED (asserted). * `senderLabel` is REQUIRED for an incoming message: a reader hearing a transcript needs to know who is speaking, and «he said»/«she said» is not derivable from a bubble's colour. An outgoing message is the reader's own, so it needs no name. * `timeLabel` is a PRE-FORMATTED string — the app ran `formatLumoDate` / `formatNumber` and chose Jalali or Gregorian; this widget never sees a `DateTime` (the web's `MessageTime` takes a string for the same reason). * `status` needs a `statusLabel` (asserted): «در حال ارسال»، «ارسال شد»، «خوانده شد». * `avatar` is DECORATIVE here — `senderLabel` already names the speaker, so the avatar's own name would be announced twice; it is excluded. * `isSystem` is the centred notice («این گفت‌وگو رمزنگاری شده است») — it ignores `side` and takes no sender.\n\nGeometry: the row is a `Row` whose children are REVERSED for an outgoing message (the web's `flex-row-reverse` — flow order, not physical order), the body column aligns to `CrossAxisAlignment.start`/`.end` (which resolve against `Directionality`), and the tail is a `BorderRadiusDirectional` corner at the bubble's own block-end side. Every one of those mirrors with the locale; nothing here knows the words \"left\" or \"right\".\n\nSemantics: the whole message is ONE node (`MergeSemantics`) whose name is sender, then text, then time, then status — so a screen reader walking the transcript gets a conversation, not four fragments per line. That also means `child` must be CONTENT, not controls: a button inside would be absorbed into the message's node.",
+      "props": [
+        {
+          "name": "side",
+          "type": "LumoMessageSide",
+          "required": true,
+          "default": null,
+          "description": "Whose message this is. REQUIRED, for the reason the web's `variant` is."
+        },
+        {
+          "name": "avatar",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "The sender's picture. Decorative — `senderLabel` is the name."
+        },
+        {
+          "name": "child",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "Rich content instead of `text`. Content only — see the class docblock."
+        },
+        {
+          "name": "isSystem",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "A centred notice rather than a bubble; `side` and `senderLabel` do not apply."
+        },
+        {
+          "name": "senderLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Who said it. REQUIRED for an incoming message.",
+          "announced": true
+        },
+        {
+          "name": "status",
+          "type": "LumoMessageStatus?",
+          "required": false,
+          "default": null,
+          "description": "Delivery state of the message."
+        },
+        {
+          "name": "statusLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "What `status` MEANS, in words. REQUIRED when `status` is set.",
+          "announced": true
+        },
+        {
+          "name": "text",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The message text. Required unless `child` is given.",
+          "announced": true
+        },
+        {
+          "name": "timeLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The timestamp AS THE APP FORMATTED IT, e.g. «۱۴:۰۵». Never a `DateTime`.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoMessageGroup": {
+      "file": "packages/mobile/lib/src/message.dart",
+      "doc": "A day's worth of messages under a separator — the web `MessageGroup` (the `gap-4` column) plus the date chip mobile transcripts always have and the web leaves to the app. `dateLabel` is REQUIRED and PRE-FORMATTED: only the app knows whether «۲۶ مرداد» or «Today» is right, and `formatLumoDate` already picks the calendar from the locale.\n\nThe separator is a header node, so a reader can jump between days; the group itself adds no node of its own — an unnamed container would be one more thing to walk past, and every child is already its own message node.",
+      "props": [
+        {
+          "name": "children",
+          "type": "List<Widget>",
+          "required": true,
+          "default": null,
+          "description": "The messages of that day."
+        },
+        {
+          "name": "dateLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The day, as the app formatted it. Announced as a heading.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoMultiSelect": {
+      "file": "packages/mobile/lib/src/multi_select.dart",
+      "doc": "Several choices from a list — the web `MultiSelect`, in the shape a phone can actually hold. The web anchors a filtered popup under an input full of chips; a phone has no room beside a control and its keyboard covers the bottom half of the screen, so the options live in a **`showLumoSheet` route** (never Material's `showModalBottomSheet`, whose route names itself «Dialog»/«Dismiss» in English) and the chips stay under the trigger where the keyboard cannot hide them. The same decision the Khroos app reached by hand (`DropSelect`).\n\nAnnounced strings, all REQUIRED: `label` (the field's name), `closeLabel` (the sheet's ✕ and its scrim), `confirmLabel` (the footer's primary — it closes the sheet; selection is applied as it happens, so confirming is a dismissal, not a commit), `clearAllLabel`, `countLabel` (a FUNCTION of the already-formatted count, because «۳ مورد انتخاب شده» is not English with the words swapped) and `removeLabel` (a function of the chip's own text — the same shape as `LumoTagGroup.removeLabel`). `searchLabel` and `emptyLabel` are REQUIRED when `isSearchable` — the constructor asserts it.\n\nSelection is CONTROLLED (`values` + `onChanged`, the web's `value` + `onValueChange`); the widget mirrors it optimistically so the sheet and the chips answer a tap even before the caller's `setState` lands, and `didUpdateWidget` hands authority straight back to `values`.\n\nNumbers: the footer count goes through `formatNumber`, and the overflow chip past `maxChips` is «+۳» — digits only, no word in any language.",
+      "props": [
+        {
+          "name": "clearAllLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the footer's clear-everything button. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "closeLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the sheet's ✕ and of its scrim. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "confirmLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the footer's primary button, which closes the sheet. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "countLabel",
+          "type": "String Function(String count)",
+          "required": true,
+          "default": null,
+          "description": "Builds the footer sentence from the ALREADY FORMATTED count («۳»). REQUIRED — a bare number announces nothing.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced and displayed name. REQUIRED — an unnamed field is a defect.",
+          "announced": true
+        },
+        {
+          "name": "options",
+          "type": "List<LumoMultiSelectOption>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "removeLabel",
+          "type": "String Function(String optionLabel)",
+          "required": true,
+          "default": null,
+          "description": "Builds each chip's remove-button name from that chip's own text. REQUIRED — an ✕ is not a name.",
+          "announced": true
+        },
+        {
+          "name": "values",
+          "type": "List<String>",
+          "required": true,
+          "default": null,
+          "description": "The chosen option ids. Controlled, as the web's `value`."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "emptyLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "What the reader is told when the query matches nothing. REQUIRED when `isSearchable`.",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown under the field and announced. Supplying one marks it invalid.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isSearchable",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Adds a search box above the options. `searchLabel` and `emptyLabel` become required."
+        },
+        {
+          "name": "maxChips",
+          "type": "int?",
+          "required": false,
+          "default": null,
+          "description": "How many chips are drawn before the rest collapse into a «+۳» chip."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<List<String>>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the full id list after every change (the web's `onValueChange`)."
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown in the trigger while nothing is chosen.",
+          "announced": true
+        },
+        {
+          "name": "searchLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Name of the search box (used as its placeholder too). REQUIRED when `isSearchable`.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoMultiSelectOption": {
+      "file": "packages/mobile/lib/src/multi_select.dart",
+      "doc": "One option of a `LumoMultiSelect`: `id` is what the field reports, `label` the announced and displayed text (the web's `{ value, label, disabled }`).",
+      "props": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The stable key handed back through `onChanged` — the web's `value`."
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The announced and displayed text of the option.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoNumberField": {
+      "file": "packages/mobile/lib/src/number_field.dart",
+      "doc": "A number field — the counterpart of the web `NumberField`: a text field whose display is `formatNumber(value, locale)` (Persian digits and separators under `fa-*`) and whose input is parsed back to a `num` from ANY digits the reader types (Persian, Arabic-Indic, the locale's own — learned from `intl`, never tabled), plus a stepper pair stacked on the BLOCK axis at the inline END (up is more in both scripts; a horizontal `[-][+]` would encode a left-to-right number line), exactly as on the web. `label`, `incrementLabel`, `decrementLabel` REQUIRED — Base UI's three English leaks are three required parameters here. The digits are an LTR island: the field's own `textDirection` is `ltr` so a sign and a decimal keep their place, while `textAlign` keeps the number at the reading START. Never `TextInputType.number` alone: the keyboard is numeric, but the parser, not the platform, decides what a digit is. `onChanged` hands back `null` for an empty or unparsable field (the web's `NaN`). Semantics: ONE text-field node named by `label` (`MergeSemantics`) whose value is the formatted number, and two buttons named by the stepper labels — disabled at the bound.",
+      "props": [
+        {
+          "name": "decrementLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the decrement button. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "incrementLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the increment button. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced and displayed name. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "defaultValue",
+          "type": "num?",
+          "required": false,
+          "default": null,
+          "description": "Uncontrolled initial value."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isReadOnly",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isRequired",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "max",
+          "type": "num?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "min",
+          "type": "num?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<num?>?",
+          "required": false,
+          "default": null,
+          "description": "Fires with the parsed number, or null when the field is empty/unparsable."
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "step",
+          "type": "num",
+          "required": false,
+          "default": "1",
+          "description": "One stepper tick. Web `step`."
+        },
+        {
+          "name": "value",
+          "type": "num?",
+          "required": false,
+          "default": null,
+          "description": "Controlled value. Null leaves the field uncontrolled; `double.nan` is a controlled EMPTY field (the web's NaN)."
+        }
+      ]
+    },
+    "LumoOtpField": {
+      "file": "packages/mobile/lib/src/otp_field.dart",
+      "doc": "A one-time code, entered into a row of boxes — the counterpart of the web `InputOtp`. ONE hidden `TextField` holds the value (one focus stop, one name, one paste, the platform's SMS autofill through `AutofillHints.oneTimeCode`); the boxes are painted decoration showing each digit through `formatNumber` (Persian digits under `fa-*`), the caret box wearing the focus ring. The row is wrapped in `Directionality(textDirection: TextDirection.ltr)` in BOTH locales ON PURPOSE: a code is a number and a number is a left-to-right run in every script — the one place a physical direction is written deliberately, as on the web. `onChanged`/`onCompleted` hand back ASCII whatever digits were typed (Persian, Arabic-Indic, the locale's own — learned from `intl`, never tabled). Semantics: the field is one text field named by `label` whose value is the entered digits (in the reader's numerals); each box is a read-only node named by the REQUIRED `cellLabel` so a reader walking the row hears «رقم ۱ از ۶، ۳» rather than a bare digit.",
+      "props": [
+        {
+          "name": "cellLabel",
+          "type": "LumoOtpCellLabel",
+          "required": true,
+          "default": null,
+          "description": "Names each cell for a reader walking the row. REQUIRED — a box is not a name.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced and displayed name. REQUIRED — one field, one name.",
+          "announced": true
+        },
+        {
+          "name": "autoFocus",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "defaultValue",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Uncontrolled initial value, ASCII."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown and announced when the code is rejected; sets the invalid border on every box.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "length",
+          "type": "int",
+          "required": false,
+          "default": "6",
+          "description": "How many boxes. Six is the Iranian SMS default."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": "Fires with the ASCII code on every change, complete or not."
+        },
+        {
+          "name": "onCompleted",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": "Fires once the last box is filled, with the ASCII code — separate from `onChanged` so no caller writes `>=`."
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Controlled value, ASCII. Non-digits are dropped, characters past `length` ignored."
+        }
+      ]
+    },
+    "LumoPhoneCountry": {
+      "file": "packages/mobile/lib/src/phone_input.dart",
+      "doc": "One entry of a phone plan — the web's `PhoneCountry`. `dial` carries NO plus. `names` is per locale tag because a country name is an announced string and Lumo never defaults one to English: an unnamed language falls back to the ISO `code`, never to another language — the web's rule, where the names live in `LumoStrings[\"phoneInput\"].countries`, which Flutter has no counterpart of, so they are data here.",
+      "props": [
+        {
+          "name": "code",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "ISO 3166-1 alpha-2, uppercase."
+        },
+        {
+          "name": "dial",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Dial code WITHOUT the plus, e.g. `98`."
+        },
+        {
+          "name": "names",
+          "type": "Map<String, String>",
+          "required": false,
+          "default": "const {}",
+          "description": "The country's name per locale tag (`fa`, `fa-IR`, `en`, …)."
+        },
+        {
+          "name": "nationalLength",
+          "type": "int?",
+          "required": false,
+          "default": null,
+          "description": "National number length, excluding the trunk prefix. The only validation claimed."
+        }
+      ]
+    },
+    "LumoPhoneInput": {
+      "file": "packages/mobile/lib/src/phone_input.dart",
+      "doc": "A phone number, entered the way Iranians actually type one: «۰۹۱۲…» with a trunk zero, in either numeral system, handed to the caller as E.164 (`+989121234567`) with the zero stripped — Persian digits on screen, ASCII on the wire. The web `PhoneInput`.\n\n**The number is ALWAYS an LTR island.** A phone number reads left-to-right in every script, so the dial prefix and the digits sit in their own `Directionality(ltr)` — the `<bdi dir=\"ltr\">` of the web component, and the same data-type rule as `LumoTextField(isNumeric:)`. It is not a direction flag: the ROW still mirrors, so the country selector takes the reading start (right under `fa-IR`, left under `en-US`).\n\nAnnounced strings, all REQUIRED: `label` (the field's name), `countryLabel` (names the country selector — a second control inside one field), `closeLabel` (the country sheet's ✕ and scrim) and `searchLabel` (names the sheet's search box). Country NAMES come from the `countries` data per locale and fall back to the ISO code, never to English.\n\n`keyboardType` is `phone`, never a numeric one that would reject the digits a Persian keyboard produces; the parser, not the platform, decides what a digit is.",
+      "props": [
+        {
+          "name": "closeLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Names the country sheet's ✕ and its scrim. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "countryLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Names the country selector. REQUIRED — it is a second control in one field.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced and displayed name. REQUIRED — an unnamed field is a defect.",
+          "announced": true
+        },
+        {
+          "name": "searchLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Names the country sheet's search box. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "countries",
+          "type": "List<LumoPhoneCountry>",
+          "required": false,
+          "default": "kLumoPhoneCountries",
+          "description": "Overrides the shipped plan."
+        },
+        {
+          "name": "defaultCountry",
+          "type": "String",
+          "required": false,
+          "default": "'IR'",
+          "description": "ISO code whose dial code is selected first."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown under the field and announced. Supplying one marks it invalid.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": "Fires with E.164, or `''` when the field is emptied."
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Controlled value, always E.164 (`+989121234567`). Null leaves the number to the widget."
+        }
+      ]
+    },
+    "LumoPopoverTrigger": {
+      "file": "packages/mobile/lib/src/popover.dart",
+      "doc": "The declarative shape: a trigger whose press opens the popover, anchored to the trigger itself. `label` REQUIRED (the popover's announced name); `closeLabel` REQUIRED when `showClose` (asserted). `onOpenChange` fires true on open and false when it closes (any way). No `isOpen`/`defaultOpen`: Flutter's overlays are routes you push, not state you render — the same divergence `LumoDialogTrigger` records.",
+      "props": [
+        {
+          "name": "content",
+          "type": "WidgetBuilder",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "trigger",
+          "type": "Widget Function(VoidCallback? open)",
+          "required": true,
+          "default": null,
+          "description": "Built with the press that opens the popover."
+        },
+        {
+          "name": "closeLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onOpenChange",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "padded",
+          "type": "bool",
+          "required": false,
+          "default": "true",
+          "description": ""
+        },
+        {
+          "name": "placement",
+          "type": "LumoPlacement",
+          "required": false,
+          "default": "LumoPlacement.bottomStart",
+          "description": ""
+        },
+        {
+          "name": "showClose",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoProgress": {
+      "file": "packages/mobile/lib/src/progress.dart",
+      "doc": "An operation in flight — the web `ProgressBar`. `label` REQUIRED (what is progressing, in the reader's language); `value` is the FRACTION 0..1, or `null` for indeterminate (a full-width pulse — a sliding bar would run backwards under RTL); `valueLabel` is the pre-formatted value the app built with `formatNumber` («۴۵٪») — the SAME string is shown (with `showValue`) and announced as the semantics value, so seen and announced cannot drift. The fill grows from the inline START (`AlignmentDirectional.centerStart`).\n\nNo `SemanticsRole.progressBar`: Flutter 3.35 declares the role but its debug validator is unimplemented and throws; the label + value node is what TalkBack/VoiceOver read either way.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "showValue",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Render the label and the value above the track."
+        },
+        {
+          "name": "size",
+          "type": "LumoProgressSize",
+          "required": false,
+          "default": "LumoProgressSize.md",
+          "description": ""
+        },
+        {
+          "name": "tone",
+          "type": "LumoProgressTone",
+          "required": false,
+          "default": "LumoProgressTone.accent",
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "double?",
+          "required": false,
+          "default": "0",
+          "description": "0..1, or `null` = indeterminate."
+        },
+        {
+          "name": "valueLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The value as the app formatted it, e.g. «۴۵٪». Announced; shown with `showValue`.",
+          "announced": true
+        }
+      ]
+    },
+    "LumoRadio": {
+      "file": "packages/mobile/lib/src/radio_group.dart",
+      "doc": "One option: `value` REQUIRED (what the group reports), `label` REQUIRED (each radio names ITSELF — inheriting the group's name would announce five options all called «روش پرداخت»). The circle sits at the inline START; the dot scales from the centre, direction-neutrally. Announced as a member of an exclusive group with its checked state. No `errorMessage` here — validation belongs to the group.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "value",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoRadioGroup": {
+      "file": "packages/mobile/lib/src/radio_group.dart",
+      "doc": "A group of mutually exclusive options — the web `RadioGroup`: named by the visible `label` or an explicit `accessibilityLabel` (the constructor asserts one is present; the radios name the OPTIONS, not the question). Controlled (`value`) and uncontrolled (`defaultValue`) like the web; `onChanged` hands over the chosen option's `value`. `orientation` is purely visual, as on the web (a widening WAI-ARIA permits). Validation belongs to the group by construction: `errorMessage` marks every option invalid.",
+      "props": [
+        {
+          "name": "children",
+          "type": "List<Widget>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "accessibilityLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "defaultValue",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Supplying one marks the group invalid.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isInvalid",
+          "type": "bool?",
+          "required": false,
+          "default": null,
+          "description": "Overrides the invalid state derived from `errorMessage`."
+        },
+        {
+          "name": "isReadOnly",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "orientation",
+          "type": "LumoRadioOrientation",
+          "required": false,
+          "default": "LumoRadioOrientation.vertical",
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Controlled selection; `null` leaves the state to the widget (`defaultValue`)."
+        }
+      ]
+    },
+    "LumoRangeSlider": {
+      "file": "packages/mobile/lib/src/slider.dart",
+      "doc": "Two values from a range — Material's `RangeSlider` under the same contract. The web has no range slider yet (`formatRange` is not in core), so this is Lumo Mobile's own; its two thumbs are named by the REQUIRED `startLabel` / `endLabel` — Material's `RangeSlider` builds two UNNAMED slider nodes with no way in, so its semantics are excluded and two named `Semantics` nodes are laid over the halves (start half at the reading start: a `Row` under `Directionality`, exactly where Material puts its own), each with `isSlider`, value through `valueLabel`, and increase/decrease actions of one `step` (or a twentieth of the range, Material's own unit, when continuous).",
+      "props": [
+        {
+          "name": "endLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the end thumb. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Displayed name of the whole control. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "startLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the start thumb, e.g. «کمینهٔ بودجه». REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "valueLabel",
+          "type": "LumoValueLabel",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "values",
+          "type": "RangeValues",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "hideValue",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "max",
+          "type": "double",
+          "required": false,
+          "default": "1",
+          "description": ""
+        },
+        {
+          "name": "min",
+          "type": "double",
+          "required": false,
+          "default": "0",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<RangeValues>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "onChangeEnd",
+          "type": "ValueChanged<RangeValues>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "step",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoRating": {
+      "file": "packages/mobile/lib/src/rating.dart",
+      "doc": "A star rating, read-only or interactive — the web `Rating`. The value is a number and the stars are glyphs, so the announced strings cannot come from the content: `label` REQUIRED (the rating's name, e.g. «امتیاز شما»), `valueLabel` REQUIRED (the pre-formatted score the app built with `formatNumber`, e.g. «۴٫۷ از ۵» — announced ONCE as the value), and, when `onChanged` is set, `starLabel` REQUIRED (asserted): the name of one star from its position, e.g. `(n) => '${formatNumber(n, locale)} ستاره'`.\n\nRead-only: one `image` node — name + value; fractional values clip the fill (4.5 fills four and a half) from the reading START. Interactive: a `radioGroup` named by `label` carrying the value, one radio per star (checked = the chosen one, as on the web). The stars are a `Row`: the first star sits at the RIGHT under fa-IR and the fill runs in reading direction with no mirroring code. Controlled (`value`) or uncontrolled (`defaultValue`).",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the rating. Required.",
+          "announced": true
+        },
+        {
+          "name": "valueLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The whole score as the app formatted it, e.g. «۴٫۷ از ۵». Announced once. Required.",
+          "announced": true
+        },
+        {
+          "name": "defaultValue",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "The initially chosen score (uncontrolled, interactive)."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "max",
+          "type": "int",
+          "required": false,
+          "default": "5",
+          "description": "How many stars."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<double>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the chosen score; makes the rating interactive."
+        },
+        {
+          "name": "size",
+          "type": "LumoRatingSize",
+          "required": false,
+          "default": "LumoRatingSize.md",
+          "description": ""
+        },
+        {
+          "name": "starLabel",
+          "type": "String Function(int position)?",
+          "required": false,
+          "default": null,
+          "description": "Announced name of one star from its 1-based position. Required with `onChanged`.",
+          "announced": true
+        },
+        {
+          "name": "value",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "The score (controlled). Fractional values clip the fill when read-only."
+        }
+      ]
+    },
+    "LumoScope": {
+      "file": "packages/mobile/lib/src/scope.dart",
+      "doc": "The root of a Lumo tree — the counterpart of `LumoNativeProvider` / `LumoProvider`: `locale` is any BCP-47 tag; direction is DERIVED (there is no `dir` parameter anywhere in Lumo); the scheme follows `brightness`.\n\nA consumer's palette: `light` / `dark` replace the scheme's colours (the mobile counterpart of overriding `--lumo-sys-*` custom properties on the web — build them with `lightColours(brand).copyWith(accent: …)`); `brand` alone turns hue and chroma on the generated ramps.",
+      "props": [
+        {
+          "name": "child",
+          "type": "Widget",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "locale",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "brand",
+          "type": "LumoBrand",
+          "required": false,
+          "default": "LumoBrand.achromatic",
+          "description": ""
+        },
+        {
+          "name": "brightness",
+          "type": "Brightness?",
+          "required": false,
+          "default": null,
+          "description": "Pin a scheme; default follows the platform."
+        },
+        {
+          "name": "dark",
+          "type": "LumoSchemeColours?",
+          "required": false,
+          "default": null,
+          "description": "The dark scheme's colours, if not the generated defaults for `brand`."
+        },
+        {
+          "name": "light",
+          "type": "LumoSchemeColours?",
+          "required": false,
+          "default": null,
+          "description": "The light scheme's colours, if not the generated defaults for `brand`."
+        }
+      ]
+    },
+    "LumoSearchField": {
+      "file": "packages/mobile/lib/src/search_field.dart",
+      "doc": "A search field — the counterpart of the web `SearchField`: a text field with a search glyph at the inline START and a clear ✕ at the inline END, shown only while there is text. `label` REQUIRED (the field's name; `showLabel: false` keeps it for the reader and drops the visible row — the name never leaves), `clearLabel` REQUIRED (an ✕ is not a name). The keyboard's action key is `TextInputAction.search` and fires `onSubmitted`. As on the web the glyph and the ✕ are laid OVER the field (`PositionedDirectional`) so the border and focus ring stay on the element that takes focus; the field's padding reserves the two overlays logically. Semantics: ONE text-field node named by `label` (`MergeSemantics`), and the ✕ a separate button named by `clearLabel` — the glyph is decoration and excluded.",
+      "props": [
+        {
+          "name": "clearLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The clear button's accessible name. REQUIRED — a default would be English.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced (and, unless `showLabel` is false, displayed) name. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "autoFocus",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "controller",
+          "type": "TextEditingController?",
+          "required": false,
+          "default": null,
+          "description": "The app's own controller, when it wants one; exclusive with `value`."
+        },
+        {
+          "name": "defaultValue",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Uncontrolled initial text."
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "onClear",
+          "type": "VoidCallback?",
+          "required": false,
+          "default": null,
+          "description": "Fires after the ✕ emptied the field (`onChanged('')` fires too)."
+        },
+        {
+          "name": "onSubmitted",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": "Fires with the text when the keyboard's search key is pressed."
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "showLabel",
+          "type": "bool",
+          "required": false,
+          "default": "true",
+          "description": "Hide the label row; the name stays on the field."
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Controlled text; the field follows it on every build."
+        }
+      ]
+    },
+    "LumoSegment": {
+      "file": "packages/mobile/lib/src/segmented_control.dart",
+      "doc": "One option of a segmented control: `id` REQUIRED (what the control reports), `label` REQUIRED (the announced name — an icon is not a name; the web's `aria-label` for an icon segment). `iconOnly` draws just the icon and keeps the label for the reader.",
+      "props": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "iconOnly",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoSegmentedControl": {
+      "file": "packages/mobile/lib/src/segmented_control.dart",
+      "doc": "Two to four mutually exclusive options, shown all at once — the web `SegmentedControl`: `label` REQUIRED (nothing else names the group; it is announced, not drawn). Controlled (`value`) and uncontrolled (`defaultValue`) like the web's `selectedKeys`/`defaultSelectedKeys` — a radio group holds exactly one key, so Dart takes the String. The selected segment is a `surface` pill on a `surfaceSunken` track that slides along the INLINE axis (`AlignmentDirectional`: the first segment sits at the reading start — right in Persian). Each segment is a button announced with its selected state; the rounding lives on the TRACK, never on first/last children, which would round the wrong corners under RTL.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "segments",
+          "type": "List<LumoSegment>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "defaultValue",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoSegmentedControlSize",
+          "required": false,
+          "default": "LumoSegmentedControlSize.md",
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Controlled selection; `null` leaves the state to the widget (`defaultValue`)."
+        }
+      ]
+    },
+    "LumoSelect": {
+      "file": "packages/mobile/lib/src/select.dart",
+      "doc": "A single choice from a short list — Lumo's own, as on React Native (a trigger named by the REQUIRED `label`, showing the REQUIRED `placeholder` or the chosen option; a bottom sheet of options; REQUIRED `closeLabel`). Material's own `DropdownMenu` was not used: its menu is a desktop-shaped popup and its announced strings default to English.",
+      "props": [
+        {
+          "name": "closeLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "options",
+          "type": "List<LumoSelectOption>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "placeholder",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoSelectOption": {
+      "file": "packages/mobile/lib/src/select.dart",
+      "doc": "",
+      "props": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoSeparator": {
+      "file": "packages/mobile/lib/src/separator.dart",
+      "doc": "A divider between two groups of content — the web `Separator`. Decorative (excluded from semantics) unless `label` is given, in which case it is announced as a named group boundary. `border`, not `borderControl`: a decorative rule has no 3:1 requirement. Horizontal fills the width; vertical fills the height its parent gives it (`IntrinsicHeight`/`stretch` a `Row`). Width and height are physical dimensions, not directions — nothing to mirror.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "A name for the boundary, if the separator carries meaning. Optional: decorative otherwise.",
+          "announced": true
+        },
+        {
+          "name": "orientation",
+          "type": "LumoSeparatorOrientation",
+          "required": false,
+          "default": "LumoSeparatorOrientation.horizontal",
+          "description": ""
+        }
+      ]
+    },
+    "LumoSheetTrigger": {
+      "file": "packages/mobile/lib/src/sheet.dart",
+      "doc": "The declarative shape: a trigger whose press opens the sheet. `onOpenChange` fires true on open and false when it closes (any way).",
+      "props": [
+        {
+          "name": "body",
+          "type": "WidgetBuilder",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "closeLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "trigger",
+          "type": "Widget Function(VoidCallback? open)",
+          "required": true,
+          "default": null,
+          "description": "Built with the press that opens the sheet."
+        },
+        {
+          "name": "actions",
+          "type": "List<Widget> Function(BuildContext)?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isDismissible",
+          "type": "bool",
+          "required": false,
+          "default": "true",
+          "description": ""
+        },
+        {
+          "name": "onOpenChange",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoSkeleton": {
+      "file": "packages/mobile/lib/src/skeleton.dart",
+      "doc": "A placeholder block for content that has not arrived — the web `Skeleton`. A PULSE, not a shimmer: a gradient sweep is physical in its axis and its sign and runs against the reading direction in RTL; opacity has no direction. Static under `disableAnimations` (the block still says \"pending\"). Always excluded from semantics: loading is a STATE — put a `LumoSpinner(label:)` beside it, which announces.",
+      "props": [
+        {
+          "name": "height",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "shape",
+          "type": "LumoSkeletonShape",
+          "required": false,
+          "default": "LumoSkeletonShape.rect",
+          "description": ""
+        },
+        {
+          "name": "width",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoSkeletonText": {
+      "file": "packages/mobile/lib/src/skeleton.dart",
+      "doc": "A stack of `lines` text-line skeletons; the last one is two-thirds wide so the block reads as a paragraph, not a wall. The short line sits at the reading START (a `Column` with `CrossAxisAlignment.start` mirrors).",
+      "props": [
+        {
+          "name": "gap",
+          "type": "double",
+          "required": false,
+          "default": "8",
+          "description": ""
+        },
+        {
+          "name": "lines",
+          "type": "int",
+          "required": false,
+          "default": "3",
+          "description": ""
+        }
+      ]
+    },
+    "LumoSlider": {
+      "file": "packages/mobile/lib/src/slider.dart",
+      "doc": "A single value chosen from a range — the counterpart of the web `Slider`, on Material's `Slider` wearing the tokens. `label` REQUIRED (an unnamed slider announces bare \"slider\"), `valueLabel` REQUIRED (a raw double is never rendered or announced — the app formats it, once, for both). `step` (web) is translated onto Material's `divisions`. The track fills from the reading START: Material lays the slider out under `Directionality`, so under `fa-*` the minimum sits at the RIGHT and the fill grows leftwards — no flag. Semantics: ONE node (`MergeSemantics`) named by `label`, `isSlider`, value / increasedValue / decreasedValue through `valueLabel`, increase/decrease actions; the header row is excluded so the name is announced once.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced (and, unless `hideValue`, displayed) name. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "value",
+          "type": "double",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "valueLabel",
+          "type": "LumoValueLabel",
+          "required": true,
+          "default": null,
+          "description": "The value as the reader/eye gets it, e.g. `(v) => formatNumber(v.round(), locale)`. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "hideValue",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Hide the label/value row and keep only the track. The name stays on the node."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "max",
+          "type": "double",
+          "required": false,
+          "default": "1",
+          "description": ""
+        },
+        {
+          "name": "min",
+          "type": "double",
+          "required": false,
+          "default": "0",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<double>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "onChangeEnd",
+          "type": "ValueChanged<double>?",
+          "required": false,
+          "default": null,
+          "description": "Fires when the drag ends (web `onChangeEnd`)."
+        },
+        {
+          "name": "step",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "The amount one tick moves; null = continuous. Web `step`, Material `divisions`."
+        }
+      ]
+    },
+    "LumoSpinner": {
+      "file": "packages/mobile/lib/src/progress.dart",
+      "doc": "A busy indicator that says so out loud — the web `Spinner`. `label` REQUIRED (what is being waited for, e.g. «در حال بارگذاری…»), announced as a LIVE region on appearance (the web's `role=\"status\"`); shown beside the ring with `showLabel`. On Material's `CircularProgressIndicator`, sized to the spinner scale, its own semantics excluded so the name is heard ONCE.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "color",
+          "type": "LumoSpinnerColor",
+          "required": false,
+          "default": "LumoSpinnerColor.current",
+          "description": ""
+        },
+        {
+          "name": "showLabel",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoSpinnerSize",
+          "required": false,
+          "default": "LumoSpinnerSize.md",
+          "description": ""
+        }
+      ]
+    },
+    "LumoStep": {
+      "file": "packages/mobile/lib/src/steps.dart",
+      "doc": "One step: `title` REQUIRED, an optional second line.",
+      "props": [
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        }
+      ]
+    },
+    "LumoSteps": {
+      "file": "packages/mobile/lib/src/steps.dart",
+      "doc": "A stepper — the web `Steps`: `label` REQUIRED (the sequence's announced name), `steps` in order, `current` the 0-BASED INDEX of the step in progress (`steps.length` once the sequence is complete — Dart indexes from 0 where the web's `current` was 1-based), and the three state words REQUIRED — `completedLabel`, `currentLabel`, `upcomingLabel` — announced after each title so colour is never the sole carrier (WCAG 1.4.1). Every disc number goes through `formatNumber(n, locale)` from the scope. A horizontal stepper is a `Row`: nodes and connectors follow the direction, so it reads right→left in Persian with no mirroring code.\n\nSemantics: a `list` named by `label`; each step a `listItem` whose node is title, state word, description — merged, so each is heard ONCE; the disc is decorative (the list already says \"item 2 of 4\").",
+      "props": [
+        {
+          "name": "completedLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced status of a finished step, e.g. «تکمیل‌شده». Required.",
+          "announced": true
+        },
+        {
+          "name": "current",
+          "type": "int",
+          "required": true,
+          "default": null,
+          "description": "0-based index of the step in progress; `steps.length` = all complete."
+        },
+        {
+          "name": "currentLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced status of the step in progress, e.g. «مرحلهٔ فعلی». Required.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "steps",
+          "type": "List<LumoStep>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "upcomingLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced status of a step not yet started, e.g. «انجام‌نشده». Required.",
+          "announced": true
+        },
+        {
+          "name": "orientation",
+          "type": "LumoStepsOrientation",
+          "required": false,
+          "default": "LumoStepsOrientation.horizontal",
+          "description": ""
+        }
+      ]
+    },
+    "LumoSwitch": {
+      "file": "packages/mobile/lib/src/switch.dart",
+      "doc": "A switch, direction-sensitive: named by its visible `label` or by an explicit `accessibilityLabel` — the constructor asserts one is present (Dart has no union types; the assertion is the compile-adjacent guard). Track/thumb geometry from the web (30×16 / 42×22); ON at the reading END, which `Directionality` mirrors — the thumb travels along the inline axis.",
+      "props": [
+        {
+          "name": "accessibilityLabel",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isSelected",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoSwitchSize",
+          "required": false,
+          "default": "LumoSwitchSize.md",
+          "description": ""
+        }
+      ]
+    },
+    "LumoTab": {
+      "file": "packages/mobile/lib/src/tabs.dart",
+      "doc": "One tab: `id` is the key its panel is matched to; `label` is REQUIRED — the tab's visible text and its announced name (an icon is not a name). `badge` is a pre-formatted String (the app ran `formatNumber`), announced as the tab's value.",
+      "props": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "badge",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoTabs": {
+      "file": "packages/mobile/lib/src/tabs.dart",
+      "doc": "Tabs — the web `Tabs`/`TabList`/`Tab`/`TabPanel` as one self-contained widget: `label` REQUIRED (an unnamed tab list announces as bare \"tab list\"), the tabs in reading order (a `Row`, so the FIRST tab sits at the RIGHT under fa-IR), the active indicator under the selected tab, moving along the inline axis because each tab paints its own — nothing here is positioned by a physical offset. Controlled (`value` + `onChanged`) or uncontrolled (`defaultValue`, else the first tab — the web derives the same default). Panels come from `views` (by id) or `builder` (the selected id); only the selected panel is built, in an `AnimatedSwitcher` — no `DefaultTabController`, no `TabBarView`, no swipe (a swipe is physical).\n\nSemantics: the list is a `tabBar` group named by `label`; every tab is a `tab` with `selected`, `enabled`, its name announced ONCE (the visible text is excluded); the panel is a `tabPanel`.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the tab list. Required.",
+          "announced": true
+        },
+        {
+          "name": "tabs",
+          "type": "List<LumoTab>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "builder",
+          "type": "Widget Function(BuildContext context, String selectedId)?",
+          "required": false,
+          "default": null,
+          "description": "The panel for the selected id, when the panels are not a fixed map."
+        },
+        {
+          "name": "defaultValue",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The selected tab's id (uncontrolled)."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Whether the whole tab set is disabled."
+        },
+        {
+          "name": "isScrollable",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Scroll the tab list along the inline axis instead of squeezing the tabs."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The selected tab's id (controlled)."
+        },
+        {
+          "name": "variant",
+          "type": "LumoTabsVariant",
+          "required": false,
+          "default": "LumoTabsVariant.underline",
+          "description": ""
+        },
+        {
+          "name": "views",
+          "type": "Map<String, WidgetBuilder>?",
+          "required": false,
+          "default": null,
+          "description": "The panel per tab id."
+        }
+      ]
+    },
+    "LumoTagGroup": {
+      "file": "packages/mobile/lib/src/chip.dart",
+      "doc": "A group of tags — the web `TagGroup`: `label` REQUIRED (names the collection). Removable when told how — `onRemove` and `removeLabel` are one decision (asserted, as the web's union), `removeLabel` a FUNCTION of the tag's own text because Persian word order is not English with the words swapped: `(tag) => 'حذف $tag'`. Static: a plain named list; the reader gets the label once and each tag as text.",
+      "props": [
+        {
+          "name": "items",
+          "type": "List<LumoTagItem>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onRemove",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the id of the tag to drop."
+        },
+        {
+          "name": "removeLabel",
+          "type": "String Function(String textValue)?",
+          "required": false,
+          "default": null,
+          "description": "Builds the announced name of each tag's remove control from that tag's `textValue`.",
+          "announced": true
+        },
+        {
+          "name": "size",
+          "type": "LumoChipSize",
+          "required": false,
+          "default": "LumoChipSize.md",
+          "description": ""
+        }
+      ]
+    },
+    "LumoTagItem": {
+      "file": "packages/mobile/lib/src/chip.dart",
+      "doc": "One tag of a `LumoTagGroup`: `id` handed back to `onRemove`, `textValue` REQUIRED (the plain text — nothing derives it, so it cannot be empty by accident; also the argument handed to `removeLabel`).",
+      "props": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "textValue",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoTextArea": {
+      "file": "packages/mobile/lib/src/text_area.dart",
+      "doc": "The multi-line box — the counterpart of the web `TextArea`, in `LumoTextField`'s visual language (same decoration theme, same label / description / error rows): `label` REQUIRED (visible, and the field's name), a MINIMUM of `minLines` that grows to `maxLines` (null = unbounded), and an optional `maxLength` whose counter is rendered through `formatNumber` — Material's own counter prints raw «12/200», so `buildCounter` is owned here (Persian digits under `fa-*`). Text aligns to the reading start by `Directionality`. Semantics: ONE text-field node named by `label` (`MergeSemantics`) carrying `currentValueLength`/`maxValueLength`; the painted counter is decoration and excluded.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "autoFocus",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "controller",
+          "type": "TextEditingController?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isReadOnly",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isRequired",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "maxLength",
+          "type": "int?",
+          "required": false,
+          "default": null,
+          "description": "Enforced limit; when set, a counter «۱۲/۲۰۰» in the reader's digits sits under the box."
+        },
+        {
+          "name": "maxLines",
+          "type": "int?",
+          "required": false,
+          "default": null,
+          "description": "The box stops growing here and scrolls; null grows without bound."
+        },
+        {
+          "name": "minLines",
+          "type": "int",
+          "required": false,
+          "default": "3",
+          "description": "Visible lines before the box grows. Web `rows`; three by default."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        }
+      ]
+    },
+    "LumoTextField": {
+      "file": "packages/mobile/lib/src/text_field.dart",
+      "doc": "A labelled text field: `label` REQUIRED (visible, and the field's name), `description` under it, `errorMessage` announced, text aligned to the reading start by `Directionality`. On Material's `TextField`.\n\n`isNumeric`: the value is digits (a phone number, a code, an amount) — it is laid out left-to-right inside an RTL form and gets a numeric keyboard. A data-type fact, not a direction flag (there is no `dir` anywhere in Lumo).",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "autofillHints",
+          "type": "Iterable<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "autofocus",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "controller",
+          "type": "TextEditingController?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "focusNode",
+          "type": "FocusNode?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isNumeric",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isReadOnly",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isRequired",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "keyboardType",
+          "type": "TextInputType?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "maxLines",
+          "type": "int?",
+          "required": false,
+          "default": "1",
+          "description": ""
+        },
+        {
+          "name": "minLines",
+          "type": "int?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "obscureText",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "onSubmitted",
+          "type": "ValueChanged<String>?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "prefix",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "A glyph at the inline START of the box (decorative — the label names the field)."
+        },
+        {
+          "name": "showLabel",
+          "type": "bool",
+          "required": false,
+          "default": "true",
+          "description": "The label is always the field's NAME; `showLabel: false` hides it visually (a search box with a placeholder) — the name is still announced."
+        },
+        {
+          "name": "suffix",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "A widget at the inline END of the box (a named button, a unit…)."
+        },
+        {
+          "name": "textInputAction",
+          "type": "TextInputAction?",
+          "required": false,
+          "default": null,
+          "description": ""
+        }
+      ]
+    },
+    "LumoTimeField": {
+      "file": "packages/mobile/lib/src/time_field.dart",
+      "doc": "A time behind a button — the mobile counterpart of the web `TimeField`.\n\nThe web types a time segment by segment (`DateInput` over `useTimeFieldState`); a phone keyboard has no segment navigation, so the field here is READ-ONLY and the value is picked from columns, the shape the Khroos app reached by hand (`_TimePicker`). Everything else is the web's: the hour cycle is the LOCALE's decision, the digits are the reader's.\n\n**Not Material's `showTimePicker`.** Its every string comes from `MaterialLocalizations` — English on any app that has not added the Persian delegate, and unreachable by a parameter either way — and its dial is Material's design, not Lumo's. The picker is a `showLumoSheet` route.\n\nAnnounced strings, all REQUIRED: `label` (the field's name), `openLabel` (the picker button is an icon), `closeLabel` (the sheet's ✕ and scrim), `hourLabel` and `minuteLabel` (the columns' headers). The 12-hour day period is NOT a parameter: its two words are read out of `intl`'s `DateSymbols.AMPMS` for the locale — derived, like the web reads them from `Intl.formatToParts`, so «ق.ظ.»/«ب.ظ.» are never English by default.\n\n`use24Hour` defaults to what the LOCALE does — `lumoLocaleUses24Hour`, which asks `intl` for the locale's own `jm` pattern (`fa` → `H:mm`, so Persian is 24-hour; `en-US` → `h:mm a`). It is never defaulted to the English convention, and a caller may still override it: an hour cycle is a user-visible convention, exactly as on the web.\n\nThe formatted time is an LTR island: a clock time reads left-to-right in every script (the same data-type rule as `LumoTextField(isNumeric:)`), while the box itself stays at the reading start.",
+      "props": [
+        {
+          "name": "closeLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the sheet's ✕ and of its scrim. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "hourLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Header of the hour column. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced and displayed name. REQUIRED — an unnamed field is a defect.",
+          "announced": true
+        },
+        {
+          "name": "minuteLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Header of the minute column. REQUIRED.",
+          "announced": true
+        },
+        {
+          "name": "openLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Name of the button that opens the picker. REQUIRED — it is an icon.",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "errorMessage",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown under the field and announced. Supplying one marks it invalid.",
+          "announced": true
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "minuteStep",
+          "type": "int",
+          "required": false,
+          "default": "15",
+          "description": "How far apart the offered minutes are. Must divide the hour."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<TimeOfDay>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the time after every pick. A pick on one column completes the other with zero, so a half-made time is never reported."
+        },
+        {
+          "name": "placeholder",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "Shown in the field while there is no value.",
+          "announced": true
+        },
+        {
+          "name": "use24Hour",
+          "type": "bool?",
+          "required": false,
+          "default": null,
+          "description": "Overrides the locale's own clock. Null derives it (`lumoLocaleUses24Hour`)."
+        },
+        {
+          "name": "value",
+          "type": "TimeOfDay?",
+          "required": false,
+          "default": null,
+          "description": "The chosen time. Controlled; `null` is an empty field."
+        }
+      ]
+    },
+    "LumoTimeline": {
+      "file": "packages/mobile/lib/src/timeline.dart",
+      "doc": "A sequence of EVENTS down a rail — the web `Timeline`: an order's history, an audit trail, a job's stages.\n\n**Timeline is not Steps.** `LumoSteps` is where you are in a sequence you have to FINISH — a wizard's progress, numbered discs, one `current` index, and every step before it complete by definition. A timeline is a RECORD of what happened: each item carries its own `state`, the order is the information (the web renders an `<ol>` for exactly that reason), items are not numbered, and there may be no current item at all. Same distinction as the web's two registry entries — «Where you are in a sequence you have to finish» against «A sequence of events down a rail». Pick Steps for a form, Timeline for a history.\n\n`label` is REQUIRED (the list's announced name; the web `<ol>` takes its name from the surrounding page, mobile has no such page), and so are the three STATE WORDS — `doneLabel`, `currentLabel`, `upcomingLabel` — announced after each title, so colour is never the sole carrier (WCAG 1.4.1). This is the rule `steps.dart` states and the same implementation: a semantics-only node after the title, never a label that would REPLACE it.\n\nDirection: the rail, the dots and the text all sit on the INLINE axis — vertically the dot column is at the reading start (right under fa-IR), horizontally the first event is at the reading start, because a `Row` mirrors itself. Nothing is placed by a physical offset.\n\nSemantics: a `list` named by `label`; each item a `listItem` whose node is title, state word, description, meta — MERGED, so each string is heard exactly once; the dot, its icon and the connectors are decoration.\n\nWeb props not carried: the per-item `tone` (`neutral | accent | positive | critical`) — on mobile the dot and the rail take their colour from `state`, which is the axis that has a required WORD behind it; a second, wordless colour axis would be exactly the \"colour is the only carrier\" defect the state labels exist to prevent. `marker` is `icon`, `TimelineTime`'s `dateTime` (the machine-readable ISO stamp) has no mobile counterpart — there is no `<time>` element for a reader to parse.",
+      "props": [
+        {
+          "name": "currentLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced state of the event in progress, e.g. «در جریان». Required.",
+          "announced": true
+        },
+        {
+          "name": "doneLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced state of an event that happened, e.g. «انجام‌شده». Required.",
+          "announced": true
+        },
+        {
+          "name": "items",
+          "type": "List<LumoTimelineItem>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The announced name of the sequence, e.g. «تاریخچهٔ سفارش». Required.",
+          "announced": true
+        },
+        {
+          "name": "upcomingLabel",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced state of an event not yet reached, e.g. «در انتظار». Required.",
+          "announced": true
+        },
+        {
+          "name": "orientation",
+          "type": "LumoTimelineOrientation",
+          "required": false,
+          "default": "LumoTimelineOrientation.vertical",
+          "description": ""
+        }
+      ]
+    },
+    "LumoTimelineItem": {
+      "file": "packages/mobile/lib/src/timeline.dart",
+      "doc": "One event: `title` REQUIRED, `description` the sentence under it, `meta` the already-formatted stamp — «۱۹ مرداد ۱۴۰۵», a STRING the caller built with `formatLumoDate`/`formatNumber`, because the caller holds the locale (the web `TimelineTime` takes the same already-formatted string, and for the same reason). `icon` is what sits IN the dot: decorative.",
+      "props": [
+        {
+          "name": "title",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "description",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "The dot's glyph. DECORATIVE — the title says what happened."
+        },
+        {
+          "name": "meta",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The pre-formatted time or place stamp. Never a `DateTime`, never a number."
+        },
+        {
+          "name": "state",
+          "type": "LumoTimelineState",
+          "required": false,
+          "default": "LumoTimelineState.done",
+          "description": ""
+        }
+      ]
+    },
+    "LumoToggle": {
+      "file": "packages/mobile/lib/src/toggle.dart",
+      "doc": "ONE two-state button — the web `Toggle`/`IconToggle`. Bold on / bold off, muted / unmuted, pinned / unpinned.\n\n**This is a button, not a switch.** The state is announced as `toggled` (Flutter's counterpart of `aria-pressed`), which is what a pressed BUTTON carries; a `LumoSwitch` announces a switch's on/off, and the two are not interchangeable to a reader — a switch takes effect the moment it moves and describes a SETTING, a toggle button describes the state of the thing it acts on and belongs beside other buttons. Choosing the wrong one is silent on screen and wrong in the ear.\n\n`label` is REQUIRED — the web splits `IconToggle` out of `Toggle` for exactly this, since a nameless toggle announces \"button, pressed\", which sounds like information and is not. **The name does not change with the state** («بی‌صدا», never «بی‌صدا کردن»): `toggled` carries the state, and a voice-control user must be able to say the same name twice. `iconOnly` draws only the icon and keeps the name for the reader.\n\nControlled (`isSelected`) and uncontrolled (`defaultSelected`), as on the web. No press feedback of its own: a toggle's press CHANGES ITS STATE, so the tap answers itself — that is the web's rule too.",
+      "props": [
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "The announced name — and the visible text unless `iconOnly`. Required.",
+          "announced": true
+        },
+        {
+          "name": "defaultSelected",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Whether the toggle is on to begin with (uncontrolled)."
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": "A glyph beside the words, or the whole content with `iconOnly`."
+        },
+        {
+          "name": "iconOnly",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Draw only the icon; the label stays for the reader."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isSelected",
+          "type": "bool?",
+          "required": false,
+          "default": null,
+          "description": "Whether the toggle is on (controlled); `null` leaves the state here."
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<bool>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the NEXT on-state."
+        },
+        {
+          "name": "size",
+          "type": "LumoToggleSize",
+          "required": false,
+          "default": "LumoToggleSize.md",
+          "description": ""
+        },
+        {
+          "name": "variant",
+          "type": "LumoToggleVariant",
+          "required": false,
+          "default": "LumoToggleVariant.ghost",
+          "description": ""
+        }
+      ]
+    },
+    "LumoToggleGroup": {
+      "file": "packages/mobile/lib/src/toggle.dart",
+      "doc": "A strip of two-state buttons — the web `ToggleButtonGroup`. `label` is REQUIRED because the engine renders `role=\"group\"`, which names nothing.\n\nA member's ON state is the SOLID accent (`accent` / `accentFg`), not the standalone toggle's 10% tint — that difference is the web's, and it is what makes a strip read as a strip. Each member is still announced with `toggled`, never `selected`: Base UI emits `aria-pressed` in single AND multiple mode, which is precisely why the web's `SegmentedControl` moved off this family onto a radio group. Reach for `LumoSegmentedControl` when the options are mutually exclusive VIEWS of the same thing and for this when they are independent switches that happen to sit together.\n\nThe rounding lives on the GROUP, never on the first and last children, which would round the wrong corners under RTL; the dividers are inline-start borders, so they land between the right pair in either direction.\n\nSelection is one `Set<String>` in both modes, as on the web (`selectedKeys`); `value`/`defaultValue` are the single-mode conveniences and the constructor refuses them alongside `values`/`defaultValues` or in multiple mode. `onChanged` is handed the whole next set.\n\nA cramped strip **sheds decoration before it truncates words** — the house `_fit` pattern: padding first (down to 4), then the icons, and only a bare label that still will not fit ellipsizes.",
+      "props": [
+        {
+          "name": "items",
+          "type": "List<LumoToggleItem>",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "Announced name of the group, e.g. «چیدمان». Required.",
+          "announced": true
+        },
+        {
+          "name": "defaultValue",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The pressed key in single mode (uncontrolled)."
+        },
+        {
+          "name": "defaultValues",
+          "type": "Set<String>?",
+          "required": false,
+          "default": null,
+          "description": "The pressed keys (uncontrolled) — the web's `defaultSelectedKeys`."
+        },
+        {
+          "name": "disallowEmptySelection",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": "Refuse to empty the group — the web prop of the same name."
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "onChanged",
+          "type": "ValueChanged<Set<String>>?",
+          "required": false,
+          "default": null,
+          "description": "Called with the whole next selection."
+        },
+        {
+          "name": "selectionMode",
+          "type": "LumoToggleSelectionMode",
+          "required": false,
+          "default": "LumoToggleSelectionMode.single",
+          "description": ""
+        },
+        {
+          "name": "size",
+          "type": "LumoToggleSize",
+          "required": false,
+          "default": "LumoToggleSize.md",
+          "description": ""
+        },
+        {
+          "name": "value",
+          "type": "String?",
+          "required": false,
+          "default": null,
+          "description": "The pressed key in single mode (controlled)."
+        },
+        {
+          "name": "values",
+          "type": "Set<String>?",
+          "required": false,
+          "default": null,
+          "description": "The pressed keys (controlled) — the web's `selectedKeys`."
+        }
+      ]
+    },
+    "LumoToggleItem": {
+      "file": "packages/mobile/lib/src/toggle.dart",
+      "doc": "One member of a `LumoToggleGroup`: `id` REQUIRED (the key the group reports), `label` REQUIRED (the announced name — an icon is not a name).",
+      "props": [
+        {
+          "name": "id",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "label",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "icon",
+          "type": "Widget?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "iconOnly",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        }
+      ]
+    },
+    "LumoTooltip": {
+      "file": "packages/mobile/lib/src/tooltip.dart",
+      "doc": "A description shown on long-press (touch) or hover (pointer), on Material's `Tooltip` wearing the tokens: the INVERTED surface (`bg` text on `fg`), as the web tooltip in both schemes. `message` REQUIRED. A tooltip is a DESCRIPTION, never a name: Flutter's semantics has a dedicated `tooltip` field, read after the child's own name (the web's `aria-describedby`) — so an icon-only child still needs its own `label` (`LumoIconButton`), and this tooltip is NOT excluded from semantics (`LumoIconButton` excludes its own, where the message would only repeat the name).\n\nThe long-press is Lumo's own recognizer (Material's `triggerMode` is `manual`): `LumoIconButton` already carries a `Tooltip` that shows its label on long-press, and nested tooltips both race for the same gesture — the inner one wins a tie. This recognizer fires 100ms before Material's `kLongPressTimeout`, so the more specific description wins; the tip then stays 1.5s after the finger lifts (Material's own `showDuration`) or until the next touch anywhere. `delay` is the web's `delay` (hover `waitDuration`); `isDisabled` renders the child alone. No `closeDelay` / `shouldCloseOnPress`: Material has no knob with the same meaning, so none is spelled as if it were.",
+      "props": [
+        {
+          "name": "child",
+          "type": "Widget",
+          "required": true,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "message",
+          "type": "String",
+          "required": true,
+          "default": null,
+          "description": "",
+          "announced": true
+        },
+        {
+          "name": "delay",
+          "type": "Duration?",
+          "required": false,
+          "default": null,
+          "description": ""
+        },
+        {
+          "name": "isDisabled",
+          "type": "bool",
+          "required": false,
+          "default": "false",
+          "description": ""
+        },
+        {
+          "name": "placement",
+          "type": "LumoTooltipPlacement",
+          "required": false,
+          "default": "LumoTooltipPlacement.top",
+          "description": ""
+        }
+      ]
+    }
+  },
+  "enums": {
+    "LumoAlertTone": [
+      "neutral",
+      "accent",
+      "positive",
+      "critical",
+      "caution"
+    ],
+    "LumoAlertVariant": [
+      "subtle",
+      "outline"
+    ],
+    "LumoAttachmentStatus": [
+      "pending",
+      "uploading",
+      "done",
+      "failed"
+    ],
+    "LumoAvatarShape": [
+      "circle",
+      "rounded"
+    ],
+    "LumoAvatarSize": [
+      "sm",
+      "md",
+      "lg",
+      "xl"
+    ],
+    "LumoAvatarStatus": [
+      "online",
+      "offline",
+      "busy"
+    ],
+    "LumoBadgeSize": [
+      "sm",
+      "md"
+    ],
+    "LumoBadgeTone": [
+      "neutral",
+      "accent",
+      "positive",
+      "critical",
+      "caution"
+    ],
+    "LumoBadgeVariant": [
+      "solid",
+      "subtle",
+      "outline"
+    ],
+    "LumoButtonSize": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "LumoButtonVariant": [
+      "solid",
+      "outline",
+      "ghost",
+      "critical"
+    ],
+    "LumoCalendarSystem": [
+      "jalali",
+      "gregorian"
+    ],
+    "LumoCardVariant": [
+      "outline",
+      "elevated",
+      "sunken"
+    ],
+    "LumoChipSize": [
+      "sm",
+      "md"
+    ],
+    "LumoDateStyle": [
+      "short",
+      "medium",
+      "long"
+    ],
+    "LumoDescriptionListOrientation": [
+      "inline",
+      "stacked"
+    ],
+    "LumoDescriptionListSize": [
+      "sm",
+      "md"
+    ],
+    "LumoEmptyStateSize": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "LumoIconStackSize": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "LumoIconTileShape": [
+      "rounded",
+      "circle"
+    ],
+    "LumoIconTileSize": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "LumoIconTileTone": [
+      "neutral",
+      "accent",
+      "positive",
+      "critical",
+      "caution"
+    ],
+    "LumoIconTileVariant": [
+      "subtle",
+      "solid"
+    ],
+    "LumoItemSize": [
+      "sm",
+      "md"
+    ],
+    "LumoItemVariant": [
+      "plain",
+      "outlined",
+      "muted"
+    ],
+    "LumoLinkVariant": [
+      "inline",
+      "standalone"
+    ],
+    "LumoListBoxSelectionMode": [
+      "single",
+      "multiple"
+    ],
+    "LumoMessageSide": [
+      "incoming",
+      "outgoing"
+    ],
+    "LumoMessageStatus": [
+      "sending",
+      "sent",
+      "read"
+    ],
+    "LumoPlacement": [
+      "bottomStart",
+      "bottom",
+      "bottomEnd",
+      "topStart",
+      "top",
+      "topEnd"
+    ],
+    "LumoProgressSize": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "LumoProgressTone": [
+      "accent",
+      "positive",
+      "caution",
+      "critical"
+    ],
+    "LumoRadioOrientation": [
+      "vertical",
+      "horizontal"
+    ],
+    "LumoRatingSize": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "LumoSegmentedControlSize": [
+      "sm",
+      "md"
+    ],
+    "LumoSeparatorOrientation": [
+      "horizontal",
+      "vertical"
+    ],
+    "LumoSkeletonShape": [
+      "rect",
+      "circle",
+      "text"
+    ],
+    "LumoSpinnerColor": [
+      "current",
+      "accent",
+      "muted"
+    ],
+    "LumoSpinnerSize": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "LumoStepsOrientation": [
+      "horizontal",
+      "vertical"
+    ],
+    "LumoStepStatus": [
+      "completed",
+      "current",
+      "upcoming"
+    ],
+    "LumoSwitchSize": [
+      "md",
+      "lg"
+    ],
+    "LumoTabsVariant": [
+      "underline",
+      "pill"
+    ],
+    "LumoTimelineOrientation": [
+      "vertical",
+      "horizontal"
+    ],
+    "LumoTimelineState": [
+      "done",
+      "current",
+      "upcoming"
+    ],
+    "LumoToastTone": [
+      "neutral",
+      "positive",
+      "critical",
+      "caution"
+    ],
+    "LumoToggleSelectionMode": [
+      "single",
+      "multiple"
+    ],
+    "LumoToggleSize": [
+      "sm",
+      "md",
+      "lg"
+    ],
+    "LumoToggleVariant": [
+      "ghost",
+      "outline"
+    ],
+    "LumoTooltipPlacement": [
+      "top",
+      "bottom"
+    ]
+  }
+}

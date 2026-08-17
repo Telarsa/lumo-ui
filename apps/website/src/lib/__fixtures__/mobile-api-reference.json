@@ -1,0 +1,47 @@
+{
+  "//": "FIXTURE, not a generated file. Contract-§3 data for the same two slugs as mobile-demos.generated.json, so the props table, the announced-strings list and the enum list can all be built and graded before scripts/build-mobile-api.mjs lands. Read ONLY when LUMO_MOBILE_DOCS_FIXTURE=1 and the real mobile-api-reference.json is absent — see lib/mobile-examples.ts. Deliberately covers both branches: LumoIconButton has a required String, LumoCheckbox has none.",
+  "version": 1,
+  "generatedFrom": ["packages/mobile/lib/src/*.dart"],
+  "widgets": {
+    "LumoButton": {
+      "file": "packages/mobile/lib/src/button.dart",
+      "doc": "The primary action — the web button's contract on Material's button: four variants, three sizes on the shared control scale, disabled announced, pressed takes the \"hover\" fill, focus ring for keyboard and switch access.",
+      "props": [
+        { "name": "child", "type": "Widget", "required": true, "default": null, "description": "The button's content. A raw number in a Text is the app's problem — Dart cannot forbid it by type, formatNumber is the rule." },
+        { "name": "onPressed", "type": "VoidCallback?", "required": false, "default": null, "description": "Null makes the button inert and announces it as disabled." },
+        { "name": "variant", "type": "LumoButtonVariant", "required": false, "default": "LumoButtonVariant.solid", "description": "" },
+        { "name": "size", "type": "LumoButtonSize", "required": false, "default": "LumoButtonSize.md", "description": "" },
+        { "name": "isDisabled", "type": "bool", "required": false, "default": "false", "description": "Disabled state, announced as well as painted." }
+      ]
+    },
+    "LumoIconButton": {
+      "file": "packages/mobile/lib/src/button.dart",
+      "doc": "A button that is only an icon. Its name is a required parameter: there is no content for a screen reader to fall back to.",
+      "props": [
+        { "name": "label", "type": "String", "required": true, "default": null, "description": "The announced name. Required: an icon announces nothing on its own." },
+        { "name": "icon", "type": "IconData", "required": true, "default": null, "description": "The glyph. Decoration — the label is the name." },
+        { "name": "onPressed", "type": "VoidCallback?", "required": false, "default": null, "description": "Null makes the button inert and announces it as disabled." },
+        { "name": "variant", "type": "LumoButtonVariant", "required": false, "default": "LumoButtonVariant.ghost", "description": "" }
+      ]
+    },
+    "LumoCheckbox": {
+      "file": "packages/mobile/lib/src/checkbox.dart",
+      "doc": "A checkbox with its label, description and error message wired into one semantics node, so the box is announced with everything that qualifies it.",
+      "props": [
+        { "name": "label", "type": "String?", "required": false, "default": null, "description": "The visible label, which is also the announced name." },
+        { "name": "accessibilityLabel", "type": "String?", "required": false, "default": null, "description": "The announced name when there is no visible label." },
+        { "name": "description", "type": "String?", "required": false, "default": null, "description": "Help text under the label, announced with the box." },
+        { "name": "errorMessage", "type": "String?", "required": false, "default": null, "description": "Shown and announced when isInvalid is true." },
+        { "name": "isSelected", "type": "bool?", "required": false, "default": null, "description": "Controlled state. Leave null and pass defaultSelected for an uncontrolled box." },
+        { "name": "defaultSelected", "type": "bool", "required": false, "default": "false", "description": "The uncontrolled starting state." },
+        { "name": "isIndeterminate", "type": "bool", "required": false, "default": "false", "description": "The mixed state a parent box shows when only some children are selected." },
+        { "name": "onChanged", "type": "ValueChanged<bool>?", "required": false, "default": null, "description": "" },
+        { "name": "isDisabled", "type": "bool", "required": false, "default": "false", "description": "Disabled state, announced as well as painted." }
+      ]
+    }
+  },
+  "enums": {
+    "LumoButtonVariant": ["solid", "outline", "ghost", "critical"],
+    "LumoButtonSize": ["sm", "md", "lg"]
+  }
+}

@@ -44,7 +44,16 @@ const ROOT = new URL("..", import.meta.url).pathname;
 const LIB = join(ROOT, "packages", "mobile", "lib");
 const FIXTURES = join(ROOT, "packages", "mobile", "gate_fixtures");
 
-/** Parameter names that name or describe something a person hears or reads. */
+/**
+ * Parameter names that name or describe something a person hears or reads.
+ *
+ * KEPT IDENTICAL, by hand, to `ANNOUNCED` in `scripts/build-mobile-api.mjs`,
+ * which marks the same family `"announced": true` in the generated mobile props
+ * table — the gate FAILS a build over these names, the docs site LABELS them,
+ * and the two must not disagree about which props they are. Not imported across:
+ * this file stays a self-contained grader. Change one, change the other in the
+ * same commit.
+ */
 const ANNOUNCED = /^(.*Label|label|hint|message|description|placeholder|title|text|tooltip|semanticLabel|errorMessage|helperText)$/;
 
 /** A run of Latin letters long enough to be a word rather than a code or tag. */

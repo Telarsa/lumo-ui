@@ -12,12 +12,16 @@ let instance: Promise<Highlighter> | undefined;
 function highlighter(): Promise<Highlighter> {
   instance ??= createHighlighter({
     themes: ["github-light-high-contrast", "github-dark-high-contrast"],
-    langs: ["tsx", "bash", "json"],
+    // `dart` and `yaml`: the Mobile side of a component page shows Dart demo
+    // source and a `pubspec.yaml` dependency block. Loaded in the SAME
+    // highlighter as the web languages — a second instance would mean a second
+    // WASM engine per build for two extra grammars.
+    langs: ["tsx", "bash", "json", "dart", "yaml"],
   });
   return instance;
 }
 
-export type CodeLang = "tsx" | "bash" | "json";
+export type CodeLang = "tsx" | "bash" | "json" | "dart" | "yaml";
 
 /**
  * Highlights to an HTML string for `dangerouslySetInnerHTML`; shiki escapes every token, so it is safe.

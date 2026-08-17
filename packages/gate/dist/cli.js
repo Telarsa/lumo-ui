@@ -32,18 +32,51 @@ if (floorsPath) {
     floorCount = entries;
     console.log(`  persian-digit-floor armed for ${entries} route(s)`);
 }
-async function htmlFiles(dir) {
-    const out = [];
+/**
+ * Directories under the export that are EMBEDDED ASSETS, not documentation
+ * pages, and are therefore not graded here.
+ *
+ * This is a scope decision, never an exemption from a rule: every rule still
+ * runs, on every page. The one entry is the Flutter web application shell the
+ * component pages embed in an iframe (`apps/mobile-gallery`, built by
+ * `scripts/build-mobile-gallery.mjs`). It is a bootstrap document with no
+ * locale segment and no prose — it renders a CANVAS, which has no DOM to grade
+ * at all. Handing it to the grader does not produce a violation, it produces a
+ * crash ("cannot derive a locale from route mobile-preview/index.html"), which
+ * is the grader correctly refusing to guess.
+ *
+ * What grades the widgets inside that canvas instead: the semantics-tree tests
+ * in `packages/mobile/test/`, which are the mobile counterpart of this gate and
+ * assert the things a screen reader would receive. The component pages say so
+ * in their own words, in both locales.
+ *
+ * Named exactly, never globbed — a directory listed here is invisible to the
+ * gate, so the list must be short, explicit, and printed on every run.
+ */
+const EMBEDDED_ASSET_DIRS = new Set(["mobile-preview"]);
+async function htmlFiles(dir, relative = "") {
+    const files = [];
+    const skipped = [];
     for (const entry of await readdir(dir, { withFileTypes: true })) {
         const path = join(dir, entry.name);
-        if (entry.isDirectory())
-            out.push(...(await htmlFiles(path)));
+        if (entry.isDirectory()) {
+            if (relative === "" && EMBEDDED_ASSET_DIRS.has(entry.name)) {
+                skipped.push(entry.name);
+                continue;
+            }
+            const nested = await htmlFiles(path, relative === "" ? entry.name : `${relative}/${entry.name}`);
+            files.push(...nested.files);
+            skipped.push(...nested.skipped);
+        }
         else if (entry.name.endsWith(".html"))
-            out.push(path);
+            files.push(path);
     }
-    return out;
+    return { files, skipped };
 }
-const files = await htmlFiles(root);
+const { files, skipped: skippedAssetDirs } = await htmlFiles(root);
+for (const dir of skippedAssetDirs) {
+    console.log(`  lumo-gate: skipped ${dir}/ — an embedded application shell, not a documentation page (its canvas is graded by packages/mobile/test/)`);
+}
 // A gate that grades nothing and prints "clean" is worse than no gate. Refuse loudly.
 if (files.length === 0) {
     console.error(`  lumo-gate found no .html under ${root}.`);

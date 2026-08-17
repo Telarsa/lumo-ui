@@ -21,6 +21,8 @@ import { allCatalog, catalogById } from "@/lib/catalog";
 import { loadExamplesFor, type LoadedComponentExamples } from "@/lib/examples-loader";
 import { ExampleCard } from "@/components/example-card";
 import { CompositionTree, PartsTable, PropsTable } from "@/components/composition-tree";
+import { PlatformSwitch } from "@/components/platform-switch";
+import { hasMobile } from "@/lib/mobile-examples";
 
 export async function generateStaticParams() {
   // The CATALOG: every component with an examples file, and nothing else. See lib/catalog.ts.
@@ -520,8 +522,9 @@ export default async function ComponentPage({
               </h1>
               <p className="mt-2 max-w-2xl text-fg-muted">{demo.intro[lang]}</p>
             </div>
-            {/* The toolbar row, on the end side: copy the page, then the pager. */}
+            {/* The toolbar row, on the end side: the platform switch (when a Mobile side exists), copy the page, then the pager. */}
             <div className="ms-auto flex shrink-0 items-center gap-2">
+              {hasMobile(slug) ? <PlatformSwitch lang={lang} slug={slug} platform="web" /> : null}
               <CopyButton
                 text={CLI_COMMAND.pnpm(item.name)}
                 appendFrom="[data-lumo-code-source] pre"
