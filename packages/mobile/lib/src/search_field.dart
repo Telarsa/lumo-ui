@@ -148,7 +148,9 @@ class _LumoSearchFieldState extends State<LumoSearchField> {
                 ),
             ],
           ),
-          if (widget.description != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(widget.description!, style: TextStyle(fontSize: 12, color: c.fgMuted))),
+          // Excluded: the description is already this node's hint (text_field.dart
+          // states the rule) — visible once, announced once.
+          if (widget.description != null) Padding(padding: const EdgeInsets.only(top: 6), child: ExcludeSemantics(child: Text(widget.description!, style: TextStyle(fontSize: 12, color: c.fgMuted)))),
         ],
       ),
     );

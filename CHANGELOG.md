@@ -52,10 +52,40 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
   on mobile it is a `LumoSchemeColours` per scheme (`copyWith` on the
   generated defaults). Brand hue/chroma remain the light-touch knob.
 
+- **A second tranche of 17 widget families**, driven by what the Khroos port had
+  to hand-roll: `LumoAlert`, `showLumoAlertDialog`, `LumoDisclosure`/`LumoAccordion`,
+  `LumoTimeline`, `LumoMultiSelect`, `LumoCombobox`, `LumoPhoneInput`,
+  `LumoTimeField`, `LumoItem`/`LumoItemGroup`/`LumoListBox`, `LumoBreadcrumbs`,
+  `LumoLink`, `LumoDescriptionList`, `LumoToggle`/`LumoToggleGroup`,
+  `LumoMessage`, `LumoCarousel`, `LumoFileUpload`, `LumoIconTile`/`LumoIconStack`
+  — 44 families in all, 184 semantics-tree tests. Each mirrors its web
+  counterpart's variants, tones and sizes.
+- **`gate:flutter-contract`** — the mobile counterpart of `gate:props`, in
+  `verify`. Four rules (`english-default`, `english-literal`,
+  `physical-direction`, `material-english-route`), each with a poison fixture in
+  `packages/mobile/gate_fixtures/` and a `--self-test` that fails if a rule stops
+  rejecting its poison. It found three of the defects fixed below on its first run.
+- `showLumoSheetRoute` — the bare bottom-sheet route, for a body that brings its
+  own header (the calendar). `lumoFoldForSearch` — Persian-aware search folding.
+
 ### Fixed
 - `LumoIconButton` announced its name on a node ABOVE the button (name and tap
   action on two nodes); it is one merged node now. `LumoTooltip` merges its
   description from above for the same reason.
+- **No Lumo route is Material's any more.** `LumoSelect` and `LumoDateField`
+  used `showModalBottomSheet` and `showLumoDialog` used `showDialog`; all three
+  name their route and barrier from `MaterialLocalizations` («Dialog»,
+  «Dismiss») — English no parameter of ours reaches. The `material-english-route`
+  rule now refuses them.
+- **Strings that were announced twice**: `LumoSwitch` (its label AND description,
+  once from `Semantics` and once from the visible copy — «اعلان‌ها اعلان‌ها پیامک»),
+  `LumoTextField` and `LumoSearchField` (description), and `showLumoDialog` (the
+  route's name, from a `Semantics(label:)` above a `Text(label)`). Dialog also had
+  no test, which is how it went unnoticed; `test/dialog_test.dart` now counts the
+  nodes carrying the name and requires exactly one.
+- `LumoSegmentedControl` truncated its labels («نقشه» → «ن…») in a narrow row.
+  It now sheds padding first, then the icon, and only ellipsizes when even a bare
+  label will not fit — decoration gives way before words do.
 
 ## 0.2.2 — 2026-08-17
 

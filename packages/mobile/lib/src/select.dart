@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'scope.dart';
+import 'sheet.dart';
 import 'tokens.g.dart';
 
 class LumoSelectOption {
@@ -68,42 +69,39 @@ class LumoSelect extends StatelessWidget {
   }
 
   Future<void> _open(BuildContext context) async {
-    final scope = LumoScope.of(context);
-    final c = scope.colours;
-    final chosen = await showModalBottomSheet<String>(
-      context: context,
-      backgroundColor: c.surface,
-      barrierColor: c.scrim,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(LumoRadius.lg))),
-      // The sheet is a route above the caller's LumoScope: re-provide it (with the direction).
-      builder: (ctx) => scope.wrap(SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsetsDirectional.only(start: 16, end: 8, top: 12, bottom: 8),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: c.fg))),
-                    IconButton(tooltip: closeLabel, icon: Icon(Icons.close, color: c.fgMuted), onPressed: () => Navigator.of(ctx).pop()),
-                  ],
+    final c = LumoScope.of(context).colours;
+    // Lumo's own sheet, never Material's: `showModalBottomSheet` names its route
+    // «Dialog» and its barrier «Dismiss» from `MaterialLocalizations` on
+    // Android — English strings no parameter of ours reaches, which is the
+    // exact defect this library exists to prevent. `showLumoSheet` re-provides
+    // the scope and names the barrier from `closeLabel`.
+    final chosen = await showLumoSheet<String>(
+      context,
+      label: label,
+      closeLabel: closeLabel,
+      body: (ctx) => Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final o in options)
+            Semantics(
+              selected: o.id == value,
+              button: true,
+              enabled: !o.isDisabled,
+              label: o.label,
+              child: ExcludeSemantics(
+                child: ListTile(
+                  enabled: !o.isDisabled,
+                  minTileHeight: LumoControl.lg,
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(o.label, style: TextStyle(fontSize: 16, color: c.fg, fontWeight: o.id == value ? FontWeight.w600 : FontWeight.w400)),
+                  trailing: o.id == value ? Icon(Icons.check, color: c.accent) : null,
+                  onTap: () => Navigator.of(ctx).pop(o.id),
                 ),
               ),
-              for (final o in options)
-                Semantics(
-                  selected: o.id == value,
-                  child: ListTile(
-                    enabled: !o.isDisabled,
-                    minTileHeight: LumoControl.lg,
-                    title: Text(o.label, style: TextStyle(fontSize: 16, color: c.fg, fontWeight: o.id == value ? FontWeight.w600 : FontWeight.w400)),
-                    trailing: o.id == value ? Icon(Icons.check, color: c.accent) : null,
-                    onTap: () => Navigator.of(ctx).pop(o.id),
-                  ),
-                ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        )),
+            ),
+        ],
+      ),
     );
     if (chosen != null) onChanged?.call(chosen);
   }

@@ -76,6 +76,9 @@ class LumoTextField extends StatelessWidget {
                 hintStyle: TextStyle(color: c.fgSubtle),
                 errorText: errorMessage,
                 errorStyle: TextStyle(color: c.critical, fontSize: 12),
+                // The message is the node's hint already; Material would add a
+                // second node for the same words.
+                errorMaxLines: 3,
                 prefixIcon: prefix == null ? null : ExcludeSemantics(child: Padding(padding: const EdgeInsetsDirectional.only(start: 10, end: 6), child: prefix)),
                 prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
                 suffixIcon: suffix,
@@ -83,7 +86,11 @@ class LumoTextField extends StatelessWidget {
               ),
             ),
           ),
-          if (description != null) Padding(padding: const EdgeInsets.only(top: 6), child: Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted))),
+          // The visible copy is EXCLUDED: `description` is already the node's
+          // hint and `errorText` is already inside the field's own subtree, so
+          // without this a reader hears each of them twice. Same rule as
+          // checkbox.dart and select.dart.
+          if (description != null) Padding(padding: const EdgeInsets.only(top: 6), child: ExcludeSemantics(child: Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted)))),
         ],
       ),
     );

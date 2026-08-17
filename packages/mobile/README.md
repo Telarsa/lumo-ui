@@ -43,7 +43,7 @@ widgets. Reference app: `example-projects/lumo-app-flutter` — since 17 Aug 202
 the Khroos mobile prototype ported to Flutter on this package (a UI/UX, RTL and
 localisation test bed), plus the 2,000-row bench.
 
-## Widgets (0.2.3)
+## Widgets (0.2.3) — 44 families
 Every announced string is a required parameter; direction from the locale;
 colours from the scope; a semantics-tree test per family in `test/`.
 
@@ -54,11 +54,37 @@ colours from the scope; a semantics-tree test per family in `test/`.
 | Fields | `LumoTextField` (`isNumeric` = LTR digits), `LumoTextArea`, `LumoSearchField(clearLabel:)`, `LumoOtpField(cellLabel:)`, `LumoNumberField(incrementLabel:, decrementLabel:)`, `LumoSlider`/`LumoRangeSlider(valueLabel:)`, `LumoSelect(closeLabel:)`, `LumoDateField` (Jalali/Gregorian by locale) |
 | Overlays | `showLumoDialog`/`LumoDialogTrigger`, `showLumoSheet`/`LumoSheetTrigger` (own route — Material's bottom sheet names itself «Dialog»/«Dismiss» in English), `LumoMenuTrigger` (+ items, checkbox items, sections), `LumoPopoverTrigger`/`showLumoPopover`, `LumoTooltip`, `showLumoToast` (live region, bottom-end, max 3) |
 | Structure | `LumoTabs`, `LumoCard`/`LumoCardHeader`/`LumoCardFooter`, `LumoAvatar(statusLabel:)`, `LumoBadge`, `LumoEmptyState`, `LumoSkeleton`/`LumoSkeletonText`, `LumoProgress`, `LumoSpinner`, `LumoSteps(completedLabel:, currentLabel:, upcomingLabel:)`, `LumoSeparator` |
-| Utilities | `formatNumber`, `JalaliDate`, `calendarOf`, `formatLumoDate`, `LumoScope`, `lumoThemeData` |
+| Feedback | `LumoAlert`, `showLumoAlertDialog`/`LumoAlertDialogTrigger`, `LumoDisclosure`/`LumoAccordion`, `LumoTimeline` |
+| Pickers | `LumoMultiSelect`, `LumoCombobox`, `LumoPhoneInput`, `LumoTimeField` |
+| Lists & nav | `LumoItem`/`LumoItemGroup`/`LumoListBox`, `LumoBreadcrumbs`, `LumoLink`, `LumoDescriptionList`, `LumoToggle`/`LumoToggleGroup` |
+| Media | `LumoMessage`/`LumoMessageGroup`, `LumoCarousel`, `LumoFileUpload`/`LumoAttachmentTile`, `LumoIconTile`/`LumoIconStack` |
+| Utilities | `formatNumber`, `JalaliDate`, `calendarOf`, `formatLumoDate`, `lumoFoldForSearch`, `LumoScope`, `lumoThemeData` |
 
-Known: `LumoSelect` still opens Material's `showModalBottomSheet`, whose route
-carries English platform names on Android («Dialog», «Dismiss») — the sheet
-family avoids it with its own route; the select moves onto it next.
+## The gate
+
+`flutter analyze` grades Dart and `flutter test` grades behaviour; neither can
+see the defects this library exists to prevent, because all of them are valid
+Dart that compiles and passes a test written by the same hand. So the contract
+has a grader of its own — `pnpm run gate:flutter-contract`
+(`scripts/flutter-contract-gate.mjs`), the mobile counterpart of `gate:props`:
+
+| Rule | What it refuses |
+|---|---|
+| `english-default` | an announced string with a default value — the defect the library argues against |
+| `english-literal` | a user-facing string welded shut in Latin letters, which no locale reaches |
+| `physical-direction` | `left`/`right` where the inline axis was meant — the silent RTL defect |
+| `material-english-route` | `showModalBottomSheet`/`showMenu`/`showDialog`/`showDatePicker`/`showTimePicker`, each of which names its own route and barrier «Dialog»/«Dismiss» from `MaterialLocalizations` |
+
+Every rule ships a poison fixture in `gate_fixtures/`, and `--self-test` fails
+if a rule stops rejecting its own poison or starts flagging the clean file — a
+rule that quietly loses its teeth is worse than a missing one, because it is
+trusted. One line may opt out with
+`// lumo-gate-allow: <rule> — <reason of at least 12 characters>`: an exemption
+is a sentence someone signed, not a flag.
+
+All four rules pass across `lib/`, which is why no Lumo route is Material's any
+more (`showLumoSheetRoute` is the bare bottom-sheet route for a body that brings
+its own header, like the calendar).
 
 ## Develop
 Flutter is not on this machine's PATH: `export PATH=/opt/homebrew/share/flutter/bin:$PATH`.

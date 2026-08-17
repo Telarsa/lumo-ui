@@ -12,19 +12,31 @@ import 'tokens.g.dart';
 Future<T?> showLumoDialog<T>(BuildContext context, {required String label, required String closeLabel, String? description, required List<Widget> Function(BuildContext) actions, Widget? body}) {
   final scope = LumoScope.of(context);
   final c = scope.colours;
-  return showDialog<T>(
+  // `showGeneralDialog`, not Material's `showDialog`: the latter falls back to
+  // `MaterialLocalizations.modalBarrierDismissLabel` («Dismiss», in English) for
+  // any barrier it is not given a name for, and names its own route. Ours are
+  // named by `closeLabel`. Same route the sheet and the alert dialog use.
+  return showGeneralDialog<T>(
     context: context,
     barrierColor: c.scrim,
+    barrierDismissible: true,
     barrierLabel: closeLabel,
+    transitionDuration: const Duration(milliseconds: 180),
+    transitionBuilder: (ctx, animation, secondary, child) => FadeTransition(
+      opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+      child: child,
+    ),
     // The route is built ABOVE the caller's LumoScope: re-provide it (with the direction).
-    builder: (ctx) => scope.wrap(Dialog(
+    pageBuilder: (ctx, animation, secondary) => scope.wrap(Dialog(
         backgroundColor: c.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(LumoRadius.lg), side: BorderSide(color: c.border)),
         // Material's Dialog already scopes the route; the label names it for
         // the reader (Flutter's route announcement reads `namesRoute` labels).
+        // The name is NOT repeated here: the visible title below carries
+        // `namesRoute` itself, so the string exists ONCE in the tree — the rule
+        // sheet.dart states and this file used to break (a `label` here plus a
+        // `Text(label)` child made the reader say the title twice).
         child: Semantics(
-          label: label,
-          namesRoute: true,
           explicitChildNodes: true,
           child: Padding(
             padding: const EdgeInsets.all(20),
@@ -35,7 +47,13 @@ Future<T?> showLumoDialog<T>(BuildContext context, {required String label, requi
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: Text(label, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.4, color: c.fg))),
+                    Expanded(
+                      child: Semantics(
+                        namesRoute: true,
+                        header: true,
+                        child: Text(label, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.4, color: c.fg)),
+                      ),
+                    ),
                     const SizedBox(width: 12),
                     LumoIconButton(label: closeLabel, size: LumoButtonSize.sm, onPressed: () => Navigator.of(ctx).pop(), child: Icon(Icons.close, size: 16, color: c.fgMuted)),
                   ],

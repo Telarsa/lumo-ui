@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'scope.dart';
 import 'tokens.g.dart';
@@ -73,7 +75,14 @@ class _LumoSegmentedControlState extends State<LumoSegmentedControl> {
           decoration: BoxDecoration(color: c.surfaceSunken, border: Border.all(color: c.border), borderRadius: BorderRadius.circular(LumoRadius.md)),
           child: SizedBox(
             height: height,
-            child: Stack(
+            child: LayoutBuilder(builder: (context, constraints) {
+              // A segment sheds its padding BEFORE it truncates its label: a
+              // control in a narrow row (a filter bar beside a search field)
+              // must still read «نقشه», not «ن…». The label is measured in the
+              // inherited face, so Persian metrics count, not Latin ones.
+              final base = sm ? 12.0 : 16.0;
+              final fit = _fit(context, constraints.maxWidth, base);
+              return Stack(
               children: [
                 // The pill: one widget, aligned by fraction along the inline axis
                 // (−1 = reading start, +1 = reading end), so it slides and mirrors.
@@ -100,26 +109,63 @@ class _LumoSegmentedControlState extends State<LumoSegmentedControl> {
                           selected: s.id == _value,
                           disabled: widget.isDisabled || s.isDisabled,
                           fontSize: sm ? 12 : 14,
+                          padding: fit.padding,
+                          showIcon: fit.showIcon,
                           onTap: () => _select(s.id),
                         ),
                       ),
                   ],
                 ),
               ],
-            ),
+              );
+            }),
           ),
         ),
       ),
     );
   }
+
+  /// How a cramped control gives ground, in order: **padding first** (down to
+  /// 4), **then the icon** — a label is the segment's name and meaning, an icon
+  /// beside it is decoration, so the words are the last thing to go. Only when
+  /// even a bare label will not fit does the text ellipsize, which at that width
+  /// is the honest outcome. Returns the base padding when the width is
+  /// unbounded — there is nothing to fit into.
+  ({double padding, bool showIcon}) _fit(BuildContext context, double maxWidth, double base) {
+    if (!maxWidth.isFinite) return (padding: base, showIcon: true);
+    final n = widget.segments.length;
+    final per = maxWidth / n;
+    final style = DefaultTextStyle.of(context).style.copyWith(fontSize: widget.size == LumoSegmentedControlSize.sm ? 12 : 14, fontWeight: FontWeight.w500);
+    var labels = 0.0; // the widest label on its own
+    var withIcons = 0.0; // the widest label plus its icon and gap
+    for (final s in widget.segments) {
+      // An icon-only segment shows no label; it needs the icon and nothing else.
+      if (s.iconOnly) {
+        labels = math.max(labels, 16);
+        withIcons = math.max(withIcons, 16);
+        continue;
+      }
+      final tp = TextPainter(text: TextSpan(text: s.label, style: style), textDirection: Directionality.of(context), maxLines: 1)..layout();
+      labels = math.max(labels, tp.width);
+      withIcons = math.max(withIcons, tp.width + (s.icon == null ? 0 : 24));
+    }
+    // Half a pixel of slack: a label that fits exactly must not ellipsize.
+    final showIcon = withIcons + 8 <= per - 0.5;
+    final needed = showIcon ? withIcons : labels;
+    return (padding: ((per - needed - 0.5) / 2).clamp(4.0, base), showIcon: showIcon);
+  }
 }
 
 class _Segment extends StatelessWidget {
-  const _Segment({required this.segment, required this.selected, required this.disabled, required this.fontSize, required this.onTap});
+  const _Segment({required this.segment, required this.selected, required this.disabled, required this.fontSize, required this.padding, required this.showIcon, required this.onTap});
   final LumoSegment segment;
   final bool selected;
   final bool disabled;
   final double fontSize;
+  /// Symmetric inline padding, computed by the control so every label fits.
+  final double padding;
+  /// False when the control had to drop icons to keep the labels whole.
+  final bool showIcon;
   final VoidCallback onTap;
 
   @override
@@ -137,16 +183,17 @@ class _Segment extends StatelessWidget {
           onTap: disabled ? null : onTap,
           borderRadius: BorderRadius.circular(LumoRadius.sm),
           child: Padding(
-            padding: EdgeInsetsDirectional.symmetric(horizontal: fontSize < 14 ? 12 : 16),
+            padding: EdgeInsetsDirectional.symmetric(horizontal: padding),
             child: ExcludeSemantics(
               child: IconTheme(
                 data: IconThemeData(size: 16, color: fg),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   mainAxisSize: MainAxisSize.min,
-                  spacing: 8,
+                  spacing: segment.icon == null || !(showIcon || segment.iconOnly) ? 0 : 8,
                   children: [
-                    if (segment.icon != null) segment.icon!,
+                    // An icon-only segment always keeps its icon — it is all it has.
+                    if (segment.icon != null && (showIcon || segment.iconOnly)) segment.icon!,
                     if (!segment.iconOnly) Flexible(child: Text(segment.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w500, color: fg))),
                   ],
                 ),

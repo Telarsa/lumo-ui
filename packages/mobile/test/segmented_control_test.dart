@@ -3,7 +3,7 @@
 // for the first segment (right under fa-IR, left under en-US) and travelling
 // toward the reading END on selection, controlled and uncontrolled.
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';
 
@@ -91,5 +91,31 @@ void main() {
     await tester.pumpWidget(app('fa-IR', const LumoSegmentedControl(label: 'x', segments: [LumoSegment(id: 'a', label: 'a')])));
     expect(tester.takeException(), isAssertionError);
     expect(() => LumoSegment(id: 'a', label: 'a', iconOnly: true), throwsAssertionError);
+  });
+
+  testWidgets('a narrow control sheds its padding instead of truncating the label', (tester) async {
+    // The defect this pins: «نقشه» / «فهرست» rendering as «ن…» / «ف…» in a
+    // filter row beside a search field (Khroos results screen, 17 Aug 2026).
+    for (final width in [320.0, 240.0, 200.0]) {
+      await tester.pumpWidget(app(
+        'fa-IR',
+        SizedBox(
+          width: width,
+          child: LumoSegmentedControl(
+            label: 'نمای نتایج',
+            segments: const [
+              LumoSegment(id: 'list', label: 'فهرست', icon: Icon(Icons.list)),
+              LumoSegment(id: 'map', label: 'نقشه', icon: Icon(Icons.map)),
+            ],
+            value: 'list',
+            onChanged: (_) {},
+          ),
+        ),
+      ));
+      for (final label in ['فهرست', 'نقشه']) {
+        final paragraph = tester.renderObject<RenderParagraph>(find.text(label));
+        expect(paragraph.didExceedMaxLines, isFalse, reason: '«$label» must render whole at ${width}px, not ellipsize');
+      }
+    }
   });
 }

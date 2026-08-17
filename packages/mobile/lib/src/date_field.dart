@@ -3,6 +3,7 @@ import 'button.dart';
 import 'format.dart';
 import 'jalali.dart';
 import 'scope.dart';
+import 'sheet.dart';
 import 'tokens.g.dart';
 
 /// A date field with a calendar behind a button — the mobile counterpart of the
@@ -127,18 +128,22 @@ class LumoDateField extends StatelessWidget {
   }
 
   Future<void> _open(BuildContext context) async {
-    final scope = LumoScope.of(context);
-    final c = scope.colours;
-    final chosen = await showModalBottomSheet<DateTime>(
-      context: context,
-      backgroundColor: c.surface,
-      barrierColor: c.scrim,
-      barrierLabel: closeLabel,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(LumoRadius.lg))),
-      // The sheet is a route above the caller's LumoScope: re-provide it (with the direction).
-      builder: (ctx) => scope.wrap(SafeArea(
-        child: LumoCalendarSheet(
+    final c = LumoScope.of(context).colours;
+    // Lumo's own sheet route, never Material's — the calendar brings its own
+    // header, so it takes the bare route (`showLumoSheetRoute`) rather than
+    // `showLumoSheet`'s chrome. Material's sheet would name this route «Dialog»
+    // and its barrier «Dismiss» in English on Android.
+    final chosen = await showLumoSheetRoute<DateTime>(
+      context,
+      closeLabel: closeLabel,
+      builder: (ctx) => Align(
+        alignment: Alignment.bottomCenter,
+        child: Material(
+          color: c.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(LumoRadius.lg)),
+          clipBehavior: Clip.antiAlias,
+          child: SafeArea(
+            child: LumoCalendarSheet(
           label: label,
           closeLabel: closeLabel,
           previousMonthLabel: previousMonthLabel,
@@ -148,9 +153,11 @@ class LumoDateField extends StatelessWidget {
           minDate: minDate,
           maxDate: maxDate,
           today: today ?? DateTime.now(),
-          onSelected: (d) => Navigator.of(ctx).pop(d),
+              onSelected: (d) => Navigator.of(ctx).pop(d),
+            ),
+          ),
         ),
-      )),
+      ),
     );
     if (chosen != null) onChanged?.call(chosen);
   }

@@ -20,7 +20,22 @@ import 'tokens.g.dart';
 /// The body scrolls inside the sheet (`Flexible` + `SingleChildScrollView`),
 /// the sheet caps at 90% of the screen; a swipe down on the handle/header
 /// dismisses when `isDismissible`.
-Future<T?> showLumoSheet<T>(BuildContext context, {required String label, required String closeLabel, String? description, required WidgetBuilder body, List<Widget> Function(BuildContext)? actions, bool isDismissible = true}) {
+Future<T?> showLumoSheet<T>(BuildContext context, {required String label, required String closeLabel, String? description, required WidgetBuilder body, List<Widget> Function(BuildContext)? actions, bool isDismissible = true}) =>
+    showLumoSheetRoute<T>(
+      context,
+      closeLabel: closeLabel,
+      isDismissible: isDismissible,
+      builder: (ctx) => _LumoSheetPage(label: label, closeLabel: closeLabel, description: description, body: body, actions: actions, isDismissible: isDismissible),
+    );
+
+/// The bottom-sheet ROUTE without Lumo's sheet chrome — for a body that brings
+/// its own header, like `LumoCalendarSheet`. Everything `showLumoSheet` gets
+/// for free comes from here: a `showGeneralDialog` route rather than Material's
+/// `showModalBottomSheet` (whose route names itself «Dialog» and its barrier
+/// «Dismiss» from `MaterialLocalizations` on Android — English no parameter of
+/// ours reaches), the block-axis slide, the scrim named by `closeLabel`, and
+/// the caller's `LumoScope` re-provided inside the route.
+Future<T?> showLumoSheetRoute<T>(BuildContext context, {required String closeLabel, required WidgetBuilder builder, bool isDismissible = true}) {
   final scope = LumoScope.of(context);
   final c = scope.colours;
   return showGeneralDialog<T>(
@@ -36,7 +51,7 @@ Future<T?> showLumoSheet<T>(BuildContext context, {required String label, requir
       child: child,
     ),
     // The route is built ABOVE the caller's LumoScope: re-provide it (with the direction).
-    pageBuilder: (ctx, animation, secondary) => scope.wrap(_LumoSheetPage(label: label, closeLabel: closeLabel, description: description, body: body, actions: actions, isDismissible: isDismissible)),
+    pageBuilder: (ctx, animation, secondary) => scope.wrap(builder(ctx)),
   );
 }
 
