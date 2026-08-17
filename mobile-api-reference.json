@@ -4968,6 +4968,11 @@
       "top",
       "topEnd"
     ],
+    "LumoPressFeedback": [
+      "none",
+      "tint",
+      "ripple"
+    ],
     "LumoProgressSize": [
       "sm",
       "md",

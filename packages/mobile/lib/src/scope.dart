@@ -69,10 +69,35 @@ class _LumoInherited extends InheritedWidget {
   bool updateShouldNotify(_LumoInherited old) => old.data.locale != data.locale || old.data.colours != data.colours;
 }
 
+
+/// How a control answers a finger.
+///
+/// Material's default is a RIPPLE: a circle that grows from the touch point,
+/// plus a highlight that lingers while the finger is down. It is a strong,
+/// recognisably Material gesture, and it is not Lumo's — the web library
+/// answers a press with an immediate flat change of fill, and the two platforms
+/// should not feel like different products.
+///
+/// So Lumo picks [tint] by default and says so here rather than inheriting a
+/// decision from the widget layer underneath. A consumer who WANTS the platform
+/// gesture asks for [ripple]; one who wants nothing asks for [none].
+enum LumoPressFeedback {
+  /// No overlay at all. The control still changes state; nothing animates.
+  none,
+
+  /// Lumo's own: the surface takes the `surfaceHover` tint the instant the
+  /// finger lands, and drops it when it lifts. No travelling circle, no
+  /// lingering bloom — the same immediate answer the web library gives.
+  tint,
+
+  /// Material's ripple, for an app that wants to feel native to Android.
+  ripple,
+}
+
 /// A Material `ThemeData` from the Lumo tokens — so Material's own widgets under
 /// a `MaterialApp` (scaffold, dialogs, ink) wear the same palette. Their system,
 /// our tokens: `ColorScheme` mapped from `--lumo-sys-*`.
-ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoBrand.achromatic, String? fontFamily, LumoSchemeColours? colours}) {
+ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoBrand.achromatic, String? fontFamily, LumoSchemeColours? colours, LumoPressFeedback pressFeedback = LumoPressFeedback.tint}) {
   final c = colours ?? (brightness == Brightness.dark ? darkColours(brand) : lightColours(brand));
   final scheme = ColorScheme(
     brightness: brightness,
@@ -90,12 +115,24 @@ ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoB
     onSurfaceVariant: c.fgMuted,
     scrim: c.scrim,
   );
+  // Press feedback is set on the THEME, not per widget: every `InkWell` in the
+  // library reads these three, so one decision reaches all of them and a
+  // consumer cannot end up with a rippling switch beside a flat button (which
+  // is exactly what happened while `LumoButton` alone cleared its overlay).
+  final tint = pressFeedback == LumoPressFeedback.none ? Colors.transparent : c.surfaceHover;
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: c.bg,
     fontFamily: fontFamily,
     visualDensity: VisualDensity.standard,
+    splashFactory: pressFeedback == LumoPressFeedback.ripple ? InkRipple.splashFactory : NoSplash.splashFactory,
+    // With NoSplash the splash colour is never painted; naming it transparent
+    // keeps that true if a consumer swaps the factory back.
+    splashColor: pressFeedback == LumoPressFeedback.ripple ? tint : Colors.transparent,
+    highlightColor: tint,
+    hoverColor: tint,
+    focusColor: tint,
     dialogTheme: DialogThemeData(backgroundColor: c.surface, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(LumoRadius.lg))),
     inputDecorationTheme: InputDecorationTheme(
       isDense: true,

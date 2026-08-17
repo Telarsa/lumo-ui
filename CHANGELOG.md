@@ -68,6 +68,13 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 - `showLumoSheetRoute` — the bare bottom-sheet route, for a body that brings its
   own header (the calendar). `lumoFoldForSearch` — Persian-aware search folding.
 
+- **`lumoThemeData(pressFeedback:)`** — `tint` (default), `none`, `ripple`. A
+  Material `InkWell` answers a finger with a travelling circle and a lingering
+  highlight; Lumo answers with an immediate flat `surfaceHover` tint, the way
+  the web library does, and now states that rather than inheriting it. Set on
+  the theme, so every widget agrees: previously only `LumoButton` had cleared
+  its overlay, so a switch rippled beside a button that did not.
+
 ### Fixed
 - `LumoIconButton` announced its name on a node ABOVE the button (name and tap
   action on two nodes); it is one merged node now. `LumoTooltip` merges its
