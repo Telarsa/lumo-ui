@@ -1,6 +1,6 @@
 {
   "name": "lumo-ui",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@11.3.0",
@@ -12,7 +12,7 @@
     "build": "pnpm -r --if-present run build",
     "start": "node scripts/serve-static.mjs",
     "preview": "pnpm run build && pnpm run start",
-    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:consumer-profile && pnpm run gate:consumer-lint && pnpm run gate:dist && pnpm run gate:pack && pnpm run gate:flutter-tokens && pnpm run gate:flutter && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
+    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:consumer-profile && pnpm run gate:consumer-lint && pnpm run gate:dist && pnpm run gate:pack && pnpm run gate:flutter-tokens && pnpm run gate:flutter && pnpm run gate:flutter-contract && pnpm run gate:props && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:registry && pnpm run gate:api && pnpm run gate:catalog && pnpm run gate:smoke && pnpm run gate:html",
     "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
     "gate:props": "node --experimental-strip-types packages/gate/src/inert-props-cli.ts packages/ui/src packages/blocks/src",
     "lint": "eslint .",
@@ -38,7 +38,8 @@
     "gate:dist": "node scripts/check-gate-dist.mjs",
     "gate:pack": "node scripts/check-pack.mjs",
     "gate:flutter-tokens": "node scripts/build-flutter-tokens.mjs --check",
-    "gate:flutter": "node scripts/flutter-gate.mjs"
+    "gate:flutter": "node scripts/flutter-gate.mjs",
+    "gate:flutter-contract": "node scripts/flutter-contract-gate.mjs --self-test && node scripts/flutter-contract-gate.mjs"
   },
   "dependencies": {
     "dom-accessibility-api": "0.7.1",

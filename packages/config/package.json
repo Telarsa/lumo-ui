@@ -1,6 +1,6 @@
 {
   "name": "@lumo-ui/config",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Shared lint policy. Zero plugin dependencies so a consumer installs one file and gets the whole contract.",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",

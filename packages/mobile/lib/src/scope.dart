@@ -21,19 +21,28 @@ class LumoScopeData {
   /// Re-provide this scope in a NEW ROUTE (dialog, sheet): routes are built above
   /// the widget that opened them, so an inherited scope does not reach them —
   /// the same reason a route needs its own `Directionality`.
-  Widget wrap(Widget child) => LumoScope(locale: locale, brand: brand, brightness: brightness, child: child);
+  Widget wrap(Widget child) => LumoScope(locale: locale, brand: brand, brightness: brightness, light: brightness == Brightness.light ? colours : null, dark: brightness == Brightness.dark ? colours : null, child: child);
 }
 
 /// The root of a Lumo tree — the counterpart of `LumoNativeProvider` /
 /// `LumoProvider`: `locale` is any BCP-47 tag; direction is DERIVED (there is no
 /// `dir` parameter anywhere in Lumo); the scheme follows `brightness`.
+///
+/// A consumer's palette: `light` / `dark` replace the scheme's colours (the
+/// mobile counterpart of overriding `--lumo-sys-*` custom properties on the
+/// web — build them with `lightColours(brand).copyWith(accent: …)`); `brand`
+/// alone turns hue and chroma on the generated ramps.
 class LumoScope extends StatelessWidget {
-  const LumoScope({super.key, required this.locale, required this.child, this.brand = LumoBrand.achromatic, this.brightness});
+  const LumoScope({super.key, required this.locale, required this.child, this.brand = LumoBrand.achromatic, this.brightness, this.light, this.dark});
   final String locale;
   final Widget child;
   final LumoBrand brand;
   /// Pin a scheme; default follows the platform.
   final Brightness? brightness;
+  /// The light scheme's colours, if not the generated defaults for `brand`.
+  final LumoSchemeColours? light;
+  /// The dark scheme's colours, if not the generated defaults for `brand`.
+  final LumoSchemeColours? dark;
 
   static LumoScopeData of(BuildContext context) {
     final scope = context.dependOnInheritedWidgetOfExactType<_LumoInherited>();
@@ -44,7 +53,7 @@ class LumoScope extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final b = brightness ?? MediaQuery.maybePlatformBrightnessOf(context) ?? Brightness.light;
-    final colours = b == Brightness.dark ? darkColours(brand) : lightColours(brand);
+    final colours = b == Brightness.dark ? (dark ?? darkColours(brand)) : (light ?? lightColours(brand));
     final direction = directionOf(locale);
     return _LumoInherited(
       data: LumoScopeData(locale: locale, direction: direction, colours: colours, brand: brand, brightness: b),
@@ -63,8 +72,8 @@ class _LumoInherited extends InheritedWidget {
 /// A Material `ThemeData` from the Lumo tokens — so Material's own widgets under
 /// a `MaterialApp` (scaffold, dialogs, ink) wear the same palette. Their system,
 /// our tokens: `ColorScheme` mapped from `--lumo-sys-*`.
-ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoBrand.achromatic, String? fontFamily}) {
-  final c = brightness == Brightness.dark ? darkColours(brand) : lightColours(brand);
+ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoBrand.achromatic, String? fontFamily, LumoSchemeColours? colours}) {
+  final c = colours ?? (brightness == Brightness.dark ? darkColours(brand) : lightColours(brand));
   final scheme = ColorScheme(
     brightness: brightness,
     primary: c.accent,

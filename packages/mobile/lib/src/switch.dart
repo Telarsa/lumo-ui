@@ -59,13 +59,20 @@ class LumoSwitch extends StatelessWidget {
               children: [
                 if (label != null || description != null)
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (label != null) Text(label!, style: TextStyle(fontSize: size == LumoSwitchSize.lg ? 16 : 14, fontWeight: FontWeight.w500, color: c.fg)),
-                        if (description != null) Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted)),
-                      ],
+                    // The visible copy is EXCLUDED: the name and the hint are
+                    // already on the Semantics node above. Without this the
+                    // reader hears the label twice and the description twice
+                    // («اعلان‌ها اعلان‌ها پیامک», hint «پیامک») — the same rule
+                    // chip.dart and tabs.dart follow.
+                    child: ExcludeSemantics(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (label != null) Text(label!, style: TextStyle(fontSize: size == LumoSwitchSize.lg ? 16 : 14, fontWeight: FontWeight.w500, color: c.fg)),
+                          if (description != null) Text(description!, style: TextStyle(fontSize: 12, color: c.fgMuted)),
+                        ],
+                      ),
                     ),
                   ),
                 if (label != null || description != null) const SizedBox(width: 12),

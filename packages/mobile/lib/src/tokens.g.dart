@@ -81,6 +81,81 @@ class LumoSchemeColours {
   final Color caution;
   final Color focus;
   final Color scrim;
+
+  /// A consumer's palette: on the web the `--lumo-sys-*` tier is what a
+  /// consumer overrides (custom properties); here it is this method on the
+  /// generated defaults, handed to `LumoScope(light:, dark:)`.
+  LumoSchemeColours copyWith({
+    Color? bg,
+    Color? bgSubtle,
+    Color? surface,
+    Color? surfaceHover,
+    Color? surfaceSunken,
+    Color? fg,
+    Color? fgMuted,
+    Color? fgSubtle,
+    Color? fgOnAccent,
+    Color? border,
+    Color? borderStrong,
+    Color? borderControl,
+    Color? accent,
+    Color? accentHover,
+    Color? accentFg,
+    Color? positive,
+    Color? critical,
+    Color? caution,
+    Color? focus,
+    Color? scrim,
+  }) =>
+      LumoSchemeColours(
+        bg: bg ?? this.bg,
+        bgSubtle: bgSubtle ?? this.bgSubtle,
+        surface: surface ?? this.surface,
+        surfaceHover: surfaceHover ?? this.surfaceHover,
+        surfaceSunken: surfaceSunken ?? this.surfaceSunken,
+        fg: fg ?? this.fg,
+        fgMuted: fgMuted ?? this.fgMuted,
+        fgSubtle: fgSubtle ?? this.fgSubtle,
+        fgOnAccent: fgOnAccent ?? this.fgOnAccent,
+        border: border ?? this.border,
+        borderStrong: borderStrong ?? this.borderStrong,
+        borderControl: borderControl ?? this.borderControl,
+        accent: accent ?? this.accent,
+        accentHover: accentHover ?? this.accentHover,
+        accentFg: accentFg ?? this.accentFg,
+        positive: positive ?? this.positive,
+        critical: critical ?? this.critical,
+        caution: caution ?? this.caution,
+        focus: focus ?? this.focus,
+        scrim: scrim ?? this.scrim,
+      );
+
+  @override
+  bool operator ==(Object other) =>
+      other is LumoSchemeColours &&
+      other.bg == bg &&
+      other.bgSubtle == bgSubtle &&
+      other.surface == surface &&
+      other.surfaceHover == surfaceHover &&
+      other.surfaceSunken == surfaceSunken &&
+      other.fg == fg &&
+      other.fgMuted == fgMuted &&
+      other.fgSubtle == fgSubtle &&
+      other.fgOnAccent == fgOnAccent &&
+      other.border == border &&
+      other.borderStrong == borderStrong &&
+      other.borderControl == borderControl &&
+      other.accent == accent &&
+      other.accentHover == accentHover &&
+      other.accentFg == accentFg &&
+      other.positive == positive &&
+      other.critical == critical &&
+      other.caution == caution &&
+      other.focus == focus &&
+      other.scrim == scrim;
+
+  @override
+  int get hashCode => Object.hashAll([bg, bgSubtle, surface, surfaceHover, surfaceSunken, fg, fgMuted, fgSubtle, fgOnAccent, border, borderStrong, borderControl, accent, accentHover, accentFg, positive, critical, caution, focus, scrim]);
 }
 
 LumoSchemeColours lightColours([LumoBrand brand = LumoBrand.achromatic]) => LumoSchemeColours(
