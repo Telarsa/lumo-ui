@@ -1,0 +1,1681 @@
+{
+  "version": 2,
+  "locales": [
+    "fa-IR",
+    "en-US"
+  ],
+  "generatedFrom": [
+    "apps/mobile-gallery/lib/demos/*.dart"
+  ],
+  "slugs": {
+    "alert": [
+      {
+        "id": "alert-1",
+        "title": {
+          "fa-IR": "هشدار ساده",
+          "en-US": "Plain alert"
+        },
+        "description": {
+          "fa-IR": "یک خبر که در جریان صفحه می‌ماند و کار را قطع نمی‌کند. آهنگ و گونه صریح نوشته شده‌اند، چون همان‌ها پیش‌فرض‌اند.",
+          "en-US": "A notice that stays in the flow of the page and interrupts nothing. The tone and variant are spelled out because they are the defaults."
+        },
+        "source": {
+          "fa-IR": "LumoAlert(\n  title: 'نسخهٔ تازه در دسترس است',\n  description: 'برای دریافت تغییرات برنامه را ببندید و دوباره باز کنید.',\n  tone: LumoAlertTone.neutral,\n  variant: LumoAlertVariant.subtle,\n  icon: const Icon(Icons.system_update_alt_outlined),\n)",
+          "en-US": "LumoAlert(\n  title: 'A new version is available',\n  description: 'Close the app and open it again to pick up the changes.',\n  tone: LumoAlertTone.neutral,\n  variant: LumoAlertVariant.subtle,\n  icon: const Icon(Icons.system_update_alt_outlined),\n)"
+        }
+      },
+      {
+        "id": "alert-2",
+        "title": {
+          "fa-IR": "آهنگ و کنش",
+          "en-US": "Tone and actions"
+        },
+        "description": {
+          "fa-IR": "آهنگ رنگ را می‌گذارد، متن معنا را — رنگ به‌تنهایی حامل خبر نیست.",
+          "en-US": "The tone sets the colour, the text carries the meaning — colour alone never carries the news."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoAlert(\n      title: 'پرداخت انجام شد',\n      description: 'رسید به ایمیل شما فرستاده شد.',\n      tone: LumoAlertTone.positive,\n    ),\n    LumoAlert(\n      title: 'اعتبار حساب رو به پایان است',\n      description: 'کمتر از سه روز تا پایان اشتراک مانده.',\n      tone: LumoAlertTone.caution,\n      actions: [\n        LumoButton(\n          onPressed: () {},\n          size: LumoButtonSize.sm,\n          child: Text('تمدید'),\n        ),\n      ],\n    ),\n    LumoAlert(\n      title: 'ارسال ناموفق بود',\n      description: 'اتصال شبکه قطع شد.',\n      tone: LumoAlertTone.critical,\n      variant: LumoAlertVariant.outline,\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoAlert(\n      title: 'Payment went through',\n      description: 'The receipt has been emailed to you.',\n      tone: LumoAlertTone.positive,\n    ),\n    LumoAlert(\n      title: 'Your credit is running out',\n      description: 'Fewer than three days of the subscription remain.',\n      tone: LumoAlertTone.caution,\n      actions: [\n        LumoButton(\n          onPressed: () {},\n          size: LumoButtonSize.sm,\n          child: Text('Renew'),\n        ),\n      ],\n    ),\n    LumoAlert(\n      title: 'Sending failed',\n      description: 'The network connection dropped.',\n      tone: LumoAlertTone.critical,\n      variant: LumoAlertVariant.outline,\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "alert-3",
+        "title": {
+          "fa-IR": "بستنی و زنده",
+          "en-US": "Dismissible and live"
+        },
+        "description": {
+          "fa-IR": "onDismiss بدون dismissLabel رد می‌شود؛ isLive هشدار را به یک ناحیهٔ زنده تبدیل می‌کند.",
+          "en-US": "onDismiss without dismissLabel is refused; isLive makes the alert a live region."
+        },
+        "source": {
+          "fa-IR": "_shown\n    ? LumoAlert(\n        title: 'پیش‌نویس ذخیره شد',\n        description: 'می‌توانید بعداً از بخش پیش‌نویس‌ها ادامه دهید.',\n        tone: LumoAlertTone.neutral,\n        isLive: true,\n        onDismiss: () => setState(() => _shown = false),\n        dismissLabel: 'بستن پیام ذخیرهٔ پیش‌نویس',\n      )\n    : Text('پیام بسته شد.')",
+          "en-US": "_shown\n    ? LumoAlert(\n        title: 'Draft saved',\n        description: 'You can pick it up later from the drafts section.',\n        tone: LumoAlertTone.neutral,\n        isLive: true,\n        onDismiss: () => setState(() => _shown = false),\n        dismissLabel: 'Dismiss the draft-saved message',\n      )\n    : Text('The message was dismissed.')"
+        }
+      }
+    ],
+    "alert-dialog": [
+      {
+        "id": "alert-dialog-1",
+        "title": {
+          "fa-IR": "گفت‌وگوی هشدار",
+          "en-US": "Alert dialog"
+        },
+        "description": {
+          "fa-IR": "کار را قطع می‌کند تا تصمیمی گرفته شود و دقیقاً دو راه بیرون‌رفت می‌گذارد: ✕ ندارد و closeLabel نمی‌گیرد.",
+          "en-US": "It interrupts to force a decision and leaves exactly two ways out: no ✕, and it takes no closeLabel."
+        },
+        "source": {
+          "fa-IR": "LumoAlertDialogTrigger(\n  label: 'انتشار این نسخه؟',\n  description: 'پس از انتشار همهٔ اعضای تیم آن را می‌بینند.',\n  confirmLabel: 'منتشر کن',\n  cancelLabel: 'فعلاً نه',\n  onConfirm: () {},\n  trigger: (ask) => LumoButton(\n    onPressed: ask,\n    child: Text('انتشار'),\n  ),\n)",
+          "en-US": "LumoAlertDialogTrigger(\n  label: 'Publish this version?',\n  description: 'Once published, everyone on the team sees it.',\n  confirmLabel: 'Publish it',\n  cancelLabel: 'Not now',\n  onConfirm: () {},\n  trigger: (ask) => LumoButton(\n    onPressed: ask,\n    child: Text('Publish'),\n  ),\n)"
+        }
+      },
+      {
+        "id": "alert-dialog-2",
+        "title": {
+          "fa-IR": "ویرانگر",
+          "en-US": "Destructive"
+        },
+        "description": {
+          "fa-IR": "isDestructive فعلِ تأیید را به رنگ خطر می‌برد؛ هر دو فعل اجباری‌اند، چون همان‌ها راه‌های خروج‌اند.",
+          "en-US": "isDestructive paints the confirming verb critical; both verbs are required, because they are the ways out."
+        },
+        "source": {
+          "fa-IR": "LumoAlertDialogTrigger(\n  label: 'حذف این پروژه؟',\n  description: 'همهٔ فایل‌ها و تاریخچه پاک می‌شوند. این کار برگشت‌پذیر نیست.',\n  confirmLabel: 'حذف پروژه',\n  cancelLabel: 'انصراف',\n  isDestructive: true,\n  onConfirm: () {},\n  trigger: (ask) => LumoButton(\n    onPressed: ask,\n    variant: LumoButtonVariant.critical,\n    child: Text('حذف پروژه'),\n  ),\n)",
+          "en-US": "LumoAlertDialogTrigger(\n  label: 'Delete this project?',\n  description: 'Every file and all of the history go. This cannot be undone.',\n  confirmLabel: 'Delete the project',\n  cancelLabel: 'Cancel',\n  isDestructive: true,\n  onConfirm: () {},\n  trigger: (ask) => LumoButton(\n    onPressed: ask,\n    variant: LumoButtonVariant.critical,\n    child: Text('Delete the project'),\n  ),\n)"
+        }
+      }
+    ],
+    "avatar": [
+      {
+        "id": "avatar-1",
+        "title": {
+          "fa-IR": "آواتار",
+          "en-US": "Avatar"
+        },
+        "description": {
+          "fa-IR": "label نام کامل است و هم حروف آغازین را می‌سازد و هم آنچه خوانده می‌شود.",
+          "en-US": "label is the full name: it makes the initials and it is what gets announced."
+        },
+        "source": {
+          "fa-IR": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 12,\n  children: [\n    LumoAvatar(label: 'کامیاب نظری'),\n    LumoAvatar(label: 'سارا احمدی'),\n    LumoAvatar(label: 'آدا لاولیس'),\n  ],\n)",
+          "en-US": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 12,\n  children: [\n    LumoAvatar(label: 'Kamyab Nazari'),\n    LumoAvatar(label: 'Sara Ahmadi'),\n    LumoAvatar(label: 'Ada Lovelace'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "avatar-2",
+        "title": {
+          "fa-IR": "اندازه و شکل",
+          "en-US": "Size and shape"
+        },
+        "description": {
+          "fa-IR": "چهار اندازه و دو شکل. حروف آغازین با lumoInitials از خود نام درمی‌آید.",
+          "en-US": "Four sizes and two shapes. The initials come from the name itself, via lumoInitials."
+        },
+        "source": {
+          "fa-IR": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  crossAxisAlignment: CrossAxisAlignment.center,\n  spacing: 12,\n  children: [\n    LumoAvatar(label: 'مینا رستمی', size: LumoAvatarSize.sm),\n    LumoAvatar(label: 'مینا رستمی', size: LumoAvatarSize.md),\n    LumoAvatar(\n      label: 'مینا رستمی',\n      size: LumoAvatarSize.lg,\n      shape: LumoAvatarShape.rounded,\n    ),\n    LumoAvatar(label: 'مینا رستمی', size: LumoAvatarSize.xl),\n  ],\n)",
+          "en-US": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  crossAxisAlignment: CrossAxisAlignment.center,\n  spacing: 12,\n  children: [\n    LumoAvatar(label: 'Mina Rostami', size: LumoAvatarSize.sm),\n    LumoAvatar(label: 'Mina Rostami', size: LumoAvatarSize.md),\n    LumoAvatar(\n      label: 'Mina Rostami',\n      size: LumoAvatarSize.lg,\n      shape: LumoAvatarShape.rounded,\n    ),\n    LumoAvatar(label: 'Mina Rostami', size: LumoAvatarSize.xl),\n  ],\n)"
+        }
+      },
+      {
+        "id": "avatar-3",
+        "title": {
+          "fa-IR": "با وضعیت",
+          "en-US": "With a status"
+        },
+        "description": {
+          "fa-IR": "نقطهٔ وضعیت بدون statusLabel رد می‌شود: یک نقطهٔ سبز به‌تنهایی «برخط» نمی‌گوید.",
+          "en-US": "A status dot without statusLabel is refused: a green dot alone does not say «online»."
+        },
+        "source": {
+          "fa-IR": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 12,\n  children: [\n    LumoAvatar(\n      label: 'رضا کریمی',\n      size: LumoAvatarSize.lg,\n      status: LumoAvatarStatus.online,\n      statusLabel: 'برخط',\n    ),\n    LumoAvatar(\n      label: 'نگار موسوی',\n      size: LumoAvatarSize.lg,\n      status: LumoAvatarStatus.busy,\n      statusLabel: 'مشغول',\n    ),\n    LumoAvatar(\n      label: 'حسین فراهانی',\n      size: LumoAvatarSize.lg,\n      status: LumoAvatarStatus.offline,\n      statusLabel: 'برون‌خط',\n    ),\n  ],\n)",
+          "en-US": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 12,\n  children: [\n    LumoAvatar(\n      label: 'Reza Karimi',\n      size: LumoAvatarSize.lg,\n      status: LumoAvatarStatus.online,\n      statusLabel: 'Online',\n    ),\n    LumoAvatar(\n      label: 'Negar Mousavi',\n      size: LumoAvatarSize.lg,\n      status: LumoAvatarStatus.busy,\n      statusLabel: 'Busy',\n    ),\n    LumoAvatar(\n      label: 'Hossein Farahani',\n      size: LumoAvatarSize.lg,\n      status: LumoAvatarStatus.offline,\n      statusLabel: 'Offline',\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "badge": [
+      {
+        "id": "badge-1",
+        "title": {
+          "fa-IR": "آهنگ‌ها",
+          "en-US": "Tones"
+        },
+        "description": {
+          "fa-IR": "یک وضعیت، در یک کلمه. رنگ تنها حامل معنا نیست — متن همیشه هست.",
+          "en-US": "One status, in one word. Colour is never the only carrier — the text always is."
+        },
+        "source": {
+          "fa-IR": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  children: [\n    LumoBadge(label: 'پیش‌نویس'),\n    LumoBadge(label: 'در انتظار', tone: LumoBadgeTone.caution),\n    LumoBadge(label: 'تأییدشده', tone: LumoBadgeTone.positive),\n    LumoBadge(label: 'ردشده', tone: LumoBadgeTone.critical),\n    LumoBadge(label: 'تازه', tone: LumoBadgeTone.accent),\n  ],\n)",
+          "en-US": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  children: [\n    LumoBadge(label: 'Draft'),\n    LumoBadge(label: 'Pending', tone: LumoBadgeTone.caution),\n    LumoBadge(label: 'Approved', tone: LumoBadgeTone.positive),\n    LumoBadge(label: 'Rejected', tone: LumoBadgeTone.critical),\n    LumoBadge(label: 'New', tone: LumoBadgeTone.accent),\n  ],\n)"
+        }
+      },
+      {
+        "id": "badge-2",
+        "title": {
+          "fa-IR": "گونه، نماد و نقطه",
+          "en-US": "Variant, icon and dot"
+        },
+        "description": {
+          "fa-IR": "LumoBadge.dot نقطهٔ رنگی را کنار برچسب می‌گذارد؛ برچسب همچنان اجباری است.",
+          "en-US": "LumoBadge.dot puts a coloured dot beside the label; the label stays required."
+        },
+        "source": {
+          "fa-IR": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  crossAxisAlignment: WrapCrossAlignment.center,\n  children: [\n    LumoBadge(\n      label: 'منتشرشده',\n      tone: LumoBadgeTone.positive,\n      variant: LumoBadgeVariant.solid,\n    ),\n    LumoBadge(\n      label: 'بایگانی',\n      variant: LumoBadgeVariant.outline,\n      icon: const Icon(Icons.inventory_2_outlined),\n    ),\n    LumoBadge(label: 'برخط', size: LumoBadgeSize.sm),\n    LumoBadge.dot(label: 'در حال اجرا', tone: LumoBadgeTone.accent),\n  ],\n)",
+          "en-US": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  crossAxisAlignment: WrapCrossAlignment.center,\n  children: [\n    LumoBadge(\n      label: 'Published',\n      tone: LumoBadgeTone.positive,\n      variant: LumoBadgeVariant.solid,\n    ),\n    LumoBadge(\n      label: 'Archived',\n      variant: LumoBadgeVariant.outline,\n      icon: const Icon(Icons.inventory_2_outlined),\n    ),\n    LumoBadge(label: 'Online', size: LumoBadgeSize.sm),\n    LumoBadge.dot(label: 'Running', tone: LumoBadgeTone.accent),\n  ],\n)"
+        }
+      }
+    ],
+    "breadcrumbs": [
+      {
+        "id": "breadcrumbs-1",
+        "title": {
+          "fa-IR": "خرده‌نان",
+          "en-US": "Breadcrumbs"
+        },
+        "description": {
+          "fa-IR": "راهِ آمده. جداکننده روی محور خواندن می‌چرخد؛ آخرین مورد جای کنونی است و پیوند نیست.",
+          "en-US": "The path taken. The separator turns with the reading axis; the last crumb is here, and is not a link."
+        },
+        "source": {
+          "fa-IR": "LumoBreadcrumbs(\n  label: 'مسیر صفحه',\n  currentLabel: 'صفحهٔ کنونی',\n  items: [\n    LumoCrumb(label: 'خانه', onTap: () {}),\n    LumoCrumb(label: 'فروشگاه', onTap: () {}),\n    LumoCrumb(label: 'کفش ورزشی'),\n  ],\n)",
+          "en-US": "LumoBreadcrumbs(\n  label: 'Page path',\n  currentLabel: 'Current page',\n  items: [\n    LumoCrumb(label: 'Home', onTap: () {}),\n    LumoCrumb(label: 'Shop', onTap: () {}),\n    LumoCrumb(label: 'Trainers'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "breadcrumbs-2",
+        "title": {
+          "fa-IR": "جمع‌شده",
+          "en-US": "Collapsed"
+        },
+        "description": {
+          "fa-IR": "maxVisible میانه را پشت یک دکمه جمع می‌کند و overflowLabel نام آن دکمه است.",
+          "en-US": "maxVisible folds the middle behind one button, and overflowLabel is that button’s name."
+        },
+        "source": {
+          "fa-IR": "LumoBreadcrumbs(\n  label: 'مسیر پرونده',\n  maxVisible: 3,\n  overflowLabel: 'نمایش مسیر کامل',\n  currentLabel: 'صفحهٔ کنونی',\n  items: [\n    LumoCrumb(label: 'خانه', onTap: () {}),\n    LumoCrumb(label: 'پروژه‌ها', onTap: () {}),\n    LumoCrumb(label: 'لومو', onTap: () {}),\n    LumoCrumb(label: 'مستندات', onTap: () {}),\n    LumoCrumb(label: 'خرده‌نان'),\n  ],\n)",
+          "en-US": "LumoBreadcrumbs(\n  label: 'File path',\n  maxVisible: 3,\n  overflowLabel: 'Show the full path',\n  currentLabel: 'Current page',\n  items: [\n    LumoCrumb(label: 'Home', onTap: () {}),\n    LumoCrumb(label: 'Projects', onTap: () {}),\n    LumoCrumb(label: 'Lumo', onTap: () {}),\n    LumoCrumb(label: 'Documentation', onTap: () {}),\n    LumoCrumb(label: 'Breadcrumbs'),\n  ],\n)"
+        }
+      }
+    ],
+    "button": [
+      {
+        "id": "button-1",
+        "title": {
+          "fa-IR": "دکمهٔ ساده",
+          "en-US": "Plain button"
+        },
+        "description": {
+          "fa-IR": "کنش اصلی صفحه: یک برچسب و یک onPressed.",
+          "en-US": "The primary action: a label and an onPressed."
+        },
+        "source": {
+          "fa-IR": "LumoButton(\n  onPressed: () {},\n  child: Text('ذخیرهٔ تغییرات'),\n)",
+          "en-US": "LumoButton(\n  onPressed: () {},\n  child: Text('Save changes'),\n)"
+        }
+      },
+      {
+        "id": "button-2",
+        "title": {
+          "fa-IR": "گونه‌ها",
+          "en-US": "Variants"
+        },
+        "description": {
+          "fa-IR": "solid برای کنش اصلی، outline و ghost برای کنش‌های کناری، critical برای کنش ویرانگر.",
+          "en-US": "solid for the primary action, outline and ghost beside it, critical for the destructive one."
+        },
+        "source": {
+          "fa-IR": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  children: [\n    LumoButton(onPressed: () {}, child: Text('ثبت')),\n    LumoButton(\n      onPressed: () {},\n      variant: LumoButtonVariant.outline,\n      child: Text('پیش‌نمایش'),\n    ),\n    LumoButton(\n      onPressed: () {},\n      variant: LumoButtonVariant.ghost,\n      child: Text('انصراف'),\n    ),\n    LumoButton(\n      onPressed: () {},\n      variant: LumoButtonVariant.critical,\n      child: Text('حذف'),\n    ),\n  ],\n)",
+          "en-US": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  children: [\n    LumoButton(onPressed: () {}, child: Text('Submit')),\n    LumoButton(\n      onPressed: () {},\n      variant: LumoButtonVariant.outline,\n      child: Text('Preview'),\n    ),\n    LumoButton(\n      onPressed: () {},\n      variant: LumoButtonVariant.ghost,\n      child: Text('Cancel'),\n    ),\n    LumoButton(\n      onPressed: () {},\n      variant: LumoButtonVariant.critical,\n      child: Text('Delete'),\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "button-3",
+        "title": {
+          "fa-IR": "دکمهٔ نمادی و اندازه‌ها",
+          "en-US": "Icon button and sizes"
+        },
+        "description": {
+          "fa-IR": "LumoIconButton نامش را از label می‌گیرد؛ نماد تنها دیده می‌شود، خوانده نمی‌شود.",
+          "en-US": "LumoIconButton takes its name from label; the glyph is seen, never announced."
+        },
+        "source": {
+          "fa-IR": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  crossAxisAlignment: WrapCrossAlignment.center,\n  children: [\n    LumoIconButton(\n      label: 'ویرایش یادداشت',\n      onPressed: () {},\n      child: const Icon(Icons.edit_outlined),\n    ),\n    LumoButton(\n      onPressed: () {},\n      size: LumoButtonSize.sm,\n      child: Text('کوچک'),\n    ),\n    LumoButton(\n      onPressed: () {},\n      size: LumoButtonSize.lg,\n      child: Text('بزرگ'),\n    ),\n    LumoButton(\n      isDisabled: true,\n      child: Text('ازکارافتاده'),\n    ),\n  ],\n)",
+          "en-US": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  crossAxisAlignment: WrapCrossAlignment.center,\n  children: [\n    LumoIconButton(\n      label: 'Edit note',\n      onPressed: () {},\n      child: const Icon(Icons.edit_outlined),\n    ),\n    LumoButton(\n      onPressed: () {},\n      size: LumoButtonSize.sm,\n      child: Text('Small'),\n    ),\n    LumoButton(\n      onPressed: () {},\n      size: LumoButtonSize.lg,\n      child: Text('Large'),\n    ),\n    LumoButton(\n      isDisabled: true,\n      child: Text('Disabled'),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "card": [
+      {
+        "id": "card-1",
+        "title": {
+          "fa-IR": "کارت ساده",
+          "en-US": "Plain card"
+        },
+        "description": {
+          "fa-IR": "یک قاب دور محتوایی که با هم معنا دارد. کارت خودش هیچ نقشی اعلام نمی‌کند.",
+          "en-US": "A frame around content that belongs together. The card itself announces no role."
+        },
+        "source": {
+          "fa-IR": "LumoCard(\n  child: Column(\n    crossAxisAlignment: CrossAxisAlignment.start,\n    spacing: 8,\n    children: [\n      Text('سفارش ۱۴۰۵۰۳۲۱'),\n      Text('سه قلم • ارسال با پست پیشتاز'),\n    ],\n  ),\n)",
+          "en-US": "LumoCard(\n  child: Column(\n    crossAxisAlignment: CrossAxisAlignment.start,\n    spacing: 8,\n    children: [\n      Text('Order 14050321'),\n      Text('Three items • sent by express post'),\n    ],\n  ),\n)"
+        }
+      },
+      {
+        "id": "card-2",
+        "title": {
+          "fa-IR": "سر و پا",
+          "en-US": "Header and footer"
+        },
+        "description": {
+          "fa-IR": "LumoCardHeader عنوان و توضیح و یک کنش می‌گیرد؛ LumoCardFooter کنش‌های پایانی را می‌چیند.",
+          "en-US": "LumoCardHeader takes a title, a description and one action; LumoCardFooter lays out the closing actions."
+        },
+        "source": {
+          "fa-IR": "LumoCard(\n  variant: LumoCardVariant.elevated,\n  padding: EdgeInsets.zero,\n  child: Column(\n    crossAxisAlignment: CrossAxisAlignment.stretch,\n    children: [\n      LumoCardHeader(\n        title: 'اشتراک حرفه‌ای',\n        description: 'ماهانه، با امکان لغو در هر زمان.',\n        action: LumoBadge(label: 'فعال', tone: LumoBadgeTone.positive),\n      ),\n      Padding(\n        padding: const EdgeInsets.symmetric(horizontal: 16),\n        child: Text('تمدید بعدی: ۲۶ شهریور ۱۴۰۵'),\n      ),\n      LumoCardFooter(\n        children: [\n          LumoButton(\n            onPressed: () {},\n            variant: LumoButtonVariant.ghost,\n            child: Text('تغییر طرح'),\n          ),\n          LumoButton(onPressed: () {}, child: Text('مدیریت')),\n        ],\n      ),\n    ],\n  ),\n)",
+          "en-US": "LumoCard(\n  variant: LumoCardVariant.elevated,\n  padding: EdgeInsets.zero,\n  child: Column(\n    crossAxisAlignment: CrossAxisAlignment.stretch,\n    children: [\n      LumoCardHeader(\n        title: 'Professional plan',\n        description: 'Monthly, cancel whenever you like.',\n        action: LumoBadge(label: 'Active', tone: LumoBadgeTone.positive),\n      ),\n      Padding(\n        padding: const EdgeInsets.symmetric(horizontal: 16),\n        child: Text('Next renewal: 17 September 2026'),\n      ),\n      LumoCardFooter(\n        children: [\n          LumoButton(\n            onPressed: () {},\n            variant: LumoButtonVariant.ghost,\n            child: Text('Change plan'),\n          ),\n          LumoButton(onPressed: () {}, child: Text('Manage')),\n        ],\n      ),\n    ],\n  ),\n)"
+        }
+      },
+      {
+        "id": "card-3",
+        "title": {
+          "fa-IR": "کارت فشردنی",
+          "en-US": "Pressable card"
+        },
+        "description": {
+          "fa-IR": "onTap کارت را به یک دکمه تبدیل می‌کند و آن‌گاه label اجباری است — نامی که خوانده می‌شود.",
+          "en-US": "onTap turns the card into a button, and then label is required — the name that is announced."
+        },
+        "source": {
+          "fa-IR": "LumoCard(\n  label: 'گزارش فروش مرداد',\n  variant: LumoCardVariant.sunken,\n  onTap: () {},\n  child: Row(\n    spacing: 12,\n    children: [\n      const Icon(Icons.insert_chart_outlined),\n      Expanded(child: Text('گزارش فروش مرداد')),\n      const Icon(Icons.chevron_left),\n    ],\n  ),\n)",
+          "en-US": "LumoCard(\n  label: 'August sales report',\n  variant: LumoCardVariant.sunken,\n  onTap: () {},\n  child: Row(\n    spacing: 12,\n    children: [\n      const Icon(Icons.insert_chart_outlined),\n      Expanded(child: Text('August sales report')),\n      const Icon(Icons.chevron_left),\n    ],\n  ),\n)"
+        }
+      }
+    ],
+    "carousel": [
+      {
+        "id": "carousel-1",
+        "title": {
+          "fa-IR": "چرخ‌فلک",
+          "en-US": "Carousel"
+        },
+        "description": {
+          "fa-IR": "slideLabel نام هر اسلاید را از شماره‌اش می‌سازد؛ پیمایش روی محور خواندن است.",
+          "en-US": "slideLabel builds each slide’s name from its position; the travel is along the reading axis."
+        },
+        "source": {
+          "fa-IR": "LumoCarousel(\n  label: 'پیشنهادهای ویژه',\n  previousLabel: 'اسلاید پیش',\n  nextLabel: 'اسلاید بعد',\n  slideLabel: (index, count) => 'اسلاید ${index + 1} از $count',\n  height: 160,\n  items: [\n    _slide('تخفیف پاییزی', const Color(0xFFFDE68A)),\n    _slide('ارسال رایگان', const Color(0xFFBFDBFE)),\n    _slide('کالای نو', const Color(0xFFBBF7D0)),\n  ],\n)",
+          "en-US": "LumoCarousel(\n  label: 'Special offers',\n  previousLabel: 'Previous slide',\n  nextLabel: 'Next slide',\n  slideLabel: (index, count) => 'Slide ${index + 1} of $count',\n  height: 160,\n  items: [\n    _slide('Autumn sale', const Color(0xFFFDE68A)),\n    _slide('Free shipping', const Color(0xFFBFDBFE)),\n    _slide('New arrivals', const Color(0xFFBBF7D0)),\n  ],\n)"
+        }
+      },
+      {
+        "id": "carousel-2",
+        "title": {
+          "fa-IR": "پخش خودکار",
+          "en-US": "Auto-play"
+        },
+        "description": {
+          "fa-IR": "autoPlay با interval پیش می‌رود؛ دکمه‌های پیش و پس همیشه هستند و هرکدام نام خود را دارند.",
+          "en-US": "autoPlay advances on the interval; the previous and next controls are always there, each with its own name."
+        },
+        "source": {
+          "fa-IR": "LumoCarousel(\n  label: 'راهنمای نخستین استفاده',\n  previousLabel: 'گام پیش',\n  nextLabel: 'گام بعد',\n  slideLabel: (index, count) => 'گام ${index + 1} از $count',\n  autoPlay: true,\n  interval: const Duration(seconds: 4),\n  showDots: true,\n  height: 140,\n  onIndexChanged: (index) {},\n  items: [\n    _slide('نمایه‌تان را کامل کنید', const Color(0xFFE9D5FF)),\n    _slide('نخستین پروژه را بسازید', const Color(0xFFFECACA)),\n  ],\n)",
+          "en-US": "LumoCarousel(\n  label: 'Getting started',\n  previousLabel: 'Previous step',\n  nextLabel: 'Next step',\n  slideLabel: (index, count) => 'Step ${index + 1} of $count',\n  autoPlay: true,\n  interval: const Duration(seconds: 4),\n  showDots: true,\n  height: 140,\n  onIndexChanged: (index) {},\n  items: [\n    _slide('Complete your profile', const Color(0xFFE9D5FF)),\n    _slide('Make your first project', const Color(0xFFFECACA)),\n  ],\n)"
+        }
+      }
+    ],
+    "checkbox": [
+      {
+        "id": "checkbox-1",
+        "title": {
+          "fa-IR": "چک‌باکس ساده",
+          "en-US": "Plain checkbox"
+        },
+        "description": {
+          "fa-IR": "یک انتخاب دوحالته با برچسب دیدنی و توضیح.",
+          "en-US": "One two-state choice with a visible label and a description."
+        },
+        "source": {
+          "fa-IR": "LumoCheckbox(\n  label: 'شرایط استفاده را می‌پذیرم',\n  description: 'پیش از ثبت‌نام یک بار بخوانیدش.',\n  isSelected: _accepted,\n  onChanged: (next) => setState(() => _accepted = next),\n)",
+          "en-US": "LumoCheckbox(\n  label: 'I accept the terms of use',\n  description: 'Give it one read before signing up.',\n  isSelected: _accepted,\n  onChanged: (next) => setState(() => _accepted = next),\n)"
+        }
+      },
+      {
+        "id": "checkbox-2",
+        "title": {
+          "fa-IR": "گروه",
+          "en-US": "Group"
+        },
+        "description": {
+          "fa-IR": "LumoCheckboxGroup نام گروه را می‌گیرد و ازکارافتادگی و نادرستی را به فرزندانش می‌دهد.",
+          "en-US": "LumoCheckboxGroup names the group and passes disabled and invalid down to its children."
+        },
+        "source": {
+          "fa-IR": "LumoCheckboxGroup(\n  label: 'راه‌های آگاه‌سازی',\n  description: 'دست‌کم یکی را انتخاب کنید.',\n  children: [\n    LumoCheckbox(label: 'ایمیل', defaultSelected: true),\n    LumoCheckbox(label: 'پیامک'),\n    LumoCheckbox(label: 'اعلان درون‌برنامه‌ای', isDisabled: true),\n  ],\n)",
+          "en-US": "LumoCheckboxGroup(\n  label: 'How we notify you',\n  description: 'Pick at least one.',\n  children: [\n    LumoCheckbox(label: 'Email', defaultSelected: true),\n    LumoCheckbox(label: 'Text message'),\n    LumoCheckbox(label: 'In-app notification', isDisabled: true),\n  ],\n)"
+        }
+      },
+      {
+        "id": "checkbox-3",
+        "title": {
+          "fa-IR": "حالت میانی و خطا",
+          "en-US": "Indeterminate and error"
+        },
+        "description": {
+          "fa-IR": "حالت میانی برای «بعضی انتخاب شده‌اند»؛ errorMessage خودش جعبه را نادرست می‌کند.",
+          "en-US": "The mixed state means «some are selected»; errorMessage marks the box invalid on its own."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoCheckbox(\n      label: 'همهٔ دسترسی‌ها',\n      description: 'دو مورد از چهار مورد انتخاب شده است.',\n      isIndeterminate: true,\n    ),\n    LumoCheckbox(\n      label: 'قوانین حریم خصوصی را خوانده‌ام',\n      errorMessage: 'برای ادامه باید این را بپذیرید.',\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoCheckbox(\n      label: 'All permissions',\n      description: 'Two of the four are selected.',\n      isIndeterminate: true,\n    ),\n    LumoCheckbox(\n      label: 'I have read the privacy policy',\n      errorMessage: 'You must accept this to continue.',\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "combobox": [
+      {
+        "id": "combobox-1",
+        "title": {
+          "fa-IR": "جعبهٔ ترکیبی",
+          "en-US": "Combobox"
+        },
+        "description": {
+          "fa-IR": "تایپ می‌کنید، فهرست کوتاه می‌شود. جست‌وجو با lumoFoldForSearch انجام می‌شود تا «ي» و «ی» یکی شمرده شوند.",
+          "en-US": "You type, the list narrows. The match runs through lumoFoldForSearch so «ي» and «ی» count as one letter."
+        },
+        "source": {
+          "fa-IR": "LumoCombobox(\n  label: 'میوهٔ دلخواه',\n  placeholder: 'نامش را بنویسید',\n  suggestionsLabel: 'پیشنهادها',\n  emptyLabel: 'میوه‌ای با این نام پیدا نشد.',\n  clearLabel: 'پاک‌کردن انتخاب',\n  value: _fruit,\n  onChanged: (next) => setState(() => _fruit = next),\n  options: [\n    LumoComboboxOption(id: 'apple', label: 'سیب'),\n    LumoComboboxOption(id: 'orange', label: 'پرتقال'),\n    LumoComboboxOption(id: 'grape', label: 'انگور'),\n  ],\n)",
+          "en-US": "LumoCombobox(\n  label: 'Favourite fruit',\n  placeholder: 'Type its name',\n  suggestionsLabel: 'Suggestions',\n  emptyLabel: 'No fruit by that name was found.',\n  clearLabel: 'Clear the choice',\n  value: _fruit,\n  onChanged: (next) => setState(() => _fruit = next),\n  options: [\n    LumoComboboxOption(id: 'apple', label: 'Apple'),\n    LumoComboboxOption(id: 'orange', label: 'Orange'),\n    LumoComboboxOption(id: 'grape', label: 'Grape'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "combobox-2",
+        "title": {
+          "fa-IR": "مقدار دلخواه و خطا",
+          "en-US": "Custom value and error"
+        },
+        "description": {
+          "fa-IR": "allowsCustomValue اجازه می‌دهد چیزی خارج از فهرست ثبت شود.",
+          "en-US": "allowsCustomValue lets a value outside the list be committed."
+        },
+        "source": {
+          "fa-IR": "LumoCombobox(\n  label: 'شهر',\n  placeholder: 'نام شهر',\n  suggestionsLabel: 'شهرهای پیشنهادی',\n  emptyLabel: 'شهری با این نام در فهرست نیست؛ می‌توانید همان را ثبت کنید.',\n  clearLabel: 'پاک‌کردن شهر',\n  allowsCustomValue: true,\n  errorMessage: 'یک شهر انتخاب یا وارد کنید.',\n  options: [\n    LumoComboboxOption(id: 'thr', label: 'تهران'),\n    LumoComboboxOption(id: 'mhd', label: 'مشهد'),\n    LumoComboboxOption(id: 'tbz', label: 'تبریز'),\n  ],\n)",
+          "en-US": "LumoCombobox(\n  label: 'City',\n  placeholder: 'City name',\n  suggestionsLabel: 'Suggested cities',\n  emptyLabel: 'No city by that name is listed; you may keep what you typed.',\n  clearLabel: 'Clear the city',\n  allowsCustomValue: true,\n  errorMessage: 'Choose or type a city.',\n  options: [\n    LumoComboboxOption(id: 'thr', label: 'Tehran'),\n    LumoComboboxOption(id: 'mhd', label: 'Mashhad'),\n    LumoComboboxOption(id: 'tbz', label: 'Tabriz'),\n  ],\n)"
+        }
+      }
+    ],
+    "date-field": [
+      {
+        "id": "date-field-1",
+        "title": {
+          "fa-IR": "ورودی تاریخ",
+          "en-US": "Date field"
+        },
+        "description": {
+          "fa-IR": "تقویم از locale می‌آید: fa جلالی است و هفته‌اش از شنبه شروع می‌شود. intl فقط میلادی می‌داند، پس تقویم از آنِ خود Lumo است.",
+          "en-US": "The calendar comes from the locale: fa is Jalali and its week starts on Saturday. intl only knows Gregorian, so the calendar is Lumo’s own."
+        },
+        "source": {
+          "fa-IR": "LumoDateField(\n  label: 'تاریخ تولد',\n  openLabel: 'باز کردن تقویم',\n  closeLabel: 'بستن تقویم',\n  previousMonthLabel: 'ماه پیش',\n  nextMonthLabel: 'ماه بعد',\n  todayLabel: 'امروز',\n  placeholder: 'یک روز انتخاب کنید',\n  value: _date,\n  onChanged: (next) => setState(() => _date = next),\n)",
+          "en-US": "LumoDateField(\n  label: 'Date of birth',\n  openLabel: 'Open the calendar',\n  closeLabel: 'Close the calendar',\n  previousMonthLabel: 'Previous month',\n  nextMonthLabel: 'Next month',\n  todayLabel: 'Today',\n  placeholder: 'Choose a day',\n  value: _date,\n  onChanged: (next) => setState(() => _date = next),\n)"
+        }
+      },
+      {
+        "id": "date-field-2",
+        "title": {
+          "fa-IR": "با کران و سبک بلند",
+          "en-US": "Bounded, long style"
+        },
+        "description": {
+          "fa-IR": "minDate و maxDate روزهای بیرون بازه را ازکار می‌اندازند؛ style سبک نوشتن تاریخ را می‌گوید.",
+          "en-US": "minDate and maxDate disable the days outside the range; style states how the date is written."
+        },
+        "source": {
+          "fa-IR": "LumoDateField(\n  label: 'تاریخ سفر',\n  openLabel: 'باز کردن تقویم سفر',\n  closeLabel: 'بستن تقویم',\n  previousMonthLabel: 'ماه پیش',\n  nextMonthLabel: 'ماه بعد',\n  todayLabel: 'امروز',\n  isRequired: true,\n  style: LumoDateStyle.long,\n  minDate: DateTime(2026, 8, 17),\n  maxDate: DateTime(2026, 12, 31),\n  description: 'فقط تا پایان سال میلادی جاری.',\n  value: DateTime(2026, 9, 2),\n)",
+          "en-US": "LumoDateField(\n  label: 'Travel date',\n  openLabel: 'Open the travel calendar',\n  closeLabel: 'Close the calendar',\n  previousMonthLabel: 'Previous month',\n  nextMonthLabel: 'Next month',\n  todayLabel: 'Today',\n  isRequired: true,\n  style: LumoDateStyle.long,\n  minDate: DateTime(2026, 8, 17),\n  maxDate: DateTime(2026, 12, 31),\n  description: 'Only up to the end of this calendar year.',\n  value: DateTime(2026, 9, 2),\n)"
+        }
+      }
+    ],
+    "description-list": [
+      {
+        "id": "description-list-1",
+        "title": {
+          "fa-IR": "فهرست توصیفی",
+          "en-US": "Description list"
+        },
+        "description": {
+          "fa-IR": "جفت‌های عنوان و مقدار. در حالت inline عنوان در سرِ خواندن و مقدار در پایانش می‌نشیند و خودش می‌چرخد.",
+          "en-US": "Term and value pairs. Inline, the term sits at the reading start and the value at its end — it mirrors on its own."
+        },
+        "source": {
+          "fa-IR": "LumoDescriptionList(\n  label: 'مشخصات سفارش',\n  entries: [\n    LumoDescription(term: 'شمارهٔ سفارش', value: '۱۴۰۵۰۳۲۱'),\n    LumoDescription(term: 'تاریخ ثبت', value: '۲۶ مرداد ۱۴۰۵'),\n    LumoDescription(term: 'مبلغ', value: '۲٬۴۵۰٬۰۰۰ تومان'),\n  ],\n)",
+          "en-US": "LumoDescriptionList(\n  label: 'Order details',\n  entries: [\n    LumoDescription(term: 'Order number', value: '14050321'),\n    LumoDescription(term: 'Placed on', value: '17 August 2026'),\n    LumoDescription(term: 'Amount', value: '2,450,000 toman'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "description-list-2",
+        "title": {
+          "fa-IR": "روی‌هم و با ویجت",
+          "en-US": "Stacked, with a widget value"
+        },
+        "description": {
+          "fa-IR": "LumoDescription.widget مقدار را به یک ویجت می‌سپارد؛ value همچنان متنی است که خوانده می‌شود.",
+          "en-US": "LumoDescription.widget hands the value to a widget; value stays the text that is announced."
+        },
+        "source": {
+          "fa-IR": "LumoDescriptionList(\n  label: 'مشخصات مرسوله',\n  orientation: LumoDescriptionListOrientation.stacked,\n  size: LumoDescriptionListSize.sm,\n  entries: [\n    LumoDescription(\n      term: 'نشانی گیرنده',\n      value: 'تهران، خیابان ولیعصر، پلاک ۱۲، واحد ۴',\n    ),\n    LumoDescription.widget(\n      term: 'وضعیت',\n      value: 'تحویل‌شده',\n      child: LumoBadge(label: 'تحویل‌شده', tone: LumoBadgeTone.positive),\n    ),\n  ],\n)",
+          "en-US": "LumoDescriptionList(\n  label: 'Parcel details',\n  orientation: LumoDescriptionListOrientation.stacked,\n  size: LumoDescriptionListSize.sm,\n  entries: [\n    LumoDescription(\n      term: 'Delivery address',\n      value: 'Unit 4, No. 12, Valiasr Street, Tehran',\n    ),\n    LumoDescription.widget(\n      term: 'Status',\n      value: 'Delivered',\n      child: LumoBadge(label: 'Delivered', tone: LumoBadgeTone.positive),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "dialog": [
+      {
+        "id": "dialog-1",
+        "title": {
+          "fa-IR": "گفت‌وگو",
+          "en-US": "Dialog"
+        },
+        "description": {
+          "fa-IR": "مسیر خودش را می‌سازد، نه showDialog متریال — که مسیر و پردهٔ خود را به انگلیسی «Dialog» و «Dismiss» می‌نامد.",
+          "en-US": "It builds its own route, not Material’s showDialog — which names its route and barrier «Dialog» and «Dismiss», in English."
+        },
+        "source": {
+          "fa-IR": "LumoDialogTrigger(\n  label: 'دربارهٔ این گزارش',\n  closeLabel: 'بستن گفت‌وگو',\n  description: 'گزارش هر شب ساعت دو بامداد به‌روز می‌شود.',\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    variant: LumoButtonVariant.outline,\n    child: Text('دربارهٔ این گزارش'),\n  ),\n  actions: (context) => [\n    LumoButton(\n      onPressed: () => Navigator.of(context).pop(),\n      child: Text('فهمیدم'),\n    ),\n  ],\n)",
+          "en-US": "LumoDialogTrigger(\n  label: 'About this report',\n  closeLabel: 'Close the dialog',\n  description: 'The report refreshes every night at two in the morning.',\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    variant: LumoButtonVariant.outline,\n    child: Text('About this report'),\n  ),\n  actions: (context) => [\n    LumoButton(\n      onPressed: () => Navigator.of(context).pop(),\n      child: Text('Got it'),\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "dialog-2",
+        "title": {
+          "fa-IR": "با پیکره",
+          "en-US": "With a body"
+        },
+        "description": {
+          "fa-IR": "body هر ویجتی می‌گیرد؛ actions دکمه‌های پایین را می‌سازد و راه بستن همیشه هست.",
+          "en-US": "body takes any widget; actions builds the buttons at the foot, and a way out is always there."
+        },
+        "source": {
+          "fa-IR": "LumoDialogTrigger(\n  label: 'دعوت هم‌تیمی',\n  closeLabel: 'بستن گفت‌وگوی دعوت',\n  description: 'نشانی ایمیل او را بنویسید؛ دعوت‌نامه بی‌درنگ فرستاده می‌شود.',\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    child: Text('دعوت هم‌تیمی'),\n  ),\n  body: LumoTextField(\n    label: 'نشانی ایمیل',\n    placeholder: 'name@example.com',\n    isRequired: true,\n  ),\n  actions: (context) => [\n    LumoButton(\n      onPressed: () => Navigator.of(context).pop(),\n      variant: LumoButtonVariant.ghost,\n      child: Text('انصراف'),\n    ),\n    LumoButton(\n      onPressed: () => Navigator.of(context).pop(),\n      child: Text('فرستادن دعوت'),\n    ),\n  ],\n)",
+          "en-US": "LumoDialogTrigger(\n  label: 'Invite a teammate',\n  closeLabel: 'Close the invite dialog',\n  description: 'Type their email address; the invitation goes out at once.',\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    child: Text('Invite a teammate'),\n  ),\n  body: LumoTextField(\n    label: 'Email address',\n    placeholder: 'name@example.com',\n    isRequired: true,\n  ),\n  actions: (context) => [\n    LumoButton(\n      onPressed: () => Navigator.of(context).pop(),\n      variant: LumoButtonVariant.ghost,\n      child: Text('Cancel'),\n    ),\n    LumoButton(\n      onPressed: () => Navigator.of(context).pop(),\n      child: Text('Send the invitation'),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "disclosure": [
+      {
+        "id": "disclosure-1",
+        "title": {
+          "fa-IR": "بازشو",
+          "en-US": "Disclosure"
+        },
+        "description": {
+          "fa-IR": "یک عنوان که چیزی را باز و بسته می‌کند. وضعیت باز یا بسته اعلام می‌شود، نه فقط کشیده.",
+          "en-US": "One heading that opens and closes something. The open state is announced, not merely drawn."
+        },
+        "source": {
+          "fa-IR": "LumoDisclosure(\n  title: 'هزینهٔ ارسال چگونه حساب می‌شود؟',\n  defaultOpen: true,\n  isDisabled: false,\n  onOpenChange: (bool isOpen) {},\n  child: Padding(\n    padding: const EdgeInsetsDirectional.only(top: 4, bottom: 4),\n    child: Text('بر پایهٔ وزن بسته و فاصلهٔ مقصد، در گام پرداخت نشان داده می‌شود.'),\n  ),\n)",
+          "en-US": "LumoDisclosure(\n  title: 'How is the shipping cost worked out?',\n  defaultOpen: true,\n  isDisabled: false,\n  onOpenChange: (bool isOpen) {},\n  child: Padding(\n    padding: const EdgeInsetsDirectional.only(top: 4, bottom: 4),\n    child: Text('From the parcel’s weight and the distance, shown at the payment step.'),\n  ),\n)"
+        }
+      },
+      {
+        "id": "disclosure-2",
+        "title": {
+          "fa-IR": "آکاردئون",
+          "en-US": "Accordion"
+        },
+        "description": {
+          "fa-IR": "چند بازشو با هم. allowsMultiple می‌گوید چند تا هم‌زمان باز بمانند.",
+          "en-US": "Several disclosures together. allowsMultiple states how many may stay open at once."
+        },
+        "source": {
+          "fa-IR": "LumoAccordion(\n  allowsMultiple: true,\n  defaultValue: const {'returns'},\n  items: [\n    LumoDisclosureItem(\n      id: 'returns',\n      title: 'شرایط مرجوعی',\n      child: Text('تا هفت روز پس از تحویل، بدون پرسش.'),\n    ),\n    LumoDisclosureItem(\n      id: 'warranty',\n      title: 'گارانتی',\n      child: Text('هجده ماه گارانتی شرکتی برای همهٔ کالاهای برقی.'),\n    ),\n    LumoDisclosureItem(\n      id: 'invoice',\n      title: 'فاکتور رسمی',\n      child: Text('در حال حاضر در دسترس نیست.'),\n      isDisabled: true,\n    ),\n  ],\n)",
+          "en-US": "LumoAccordion(\n  allowsMultiple: true,\n  defaultValue: const {'returns'},\n  items: [\n    LumoDisclosureItem(\n      id: 'returns',\n      title: 'Returns',\n      child: Text('Up to seven days after delivery, no questions asked.'),\n    ),\n    LumoDisclosureItem(\n      id: 'warranty',\n      title: 'Warranty',\n      child: Text('Eighteen months of manufacturer warranty on every electrical item.'),\n    ),\n    LumoDisclosureItem(\n      id: 'invoice',\n      title: 'Formal invoice',\n      child: Text('Not available at the moment.'),\n      isDisabled: true,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "drawer": [
+      {
+        "id": "drawer-1",
+        "title": {
+          "fa-IR": "برگهٔ پایینی",
+          "en-US": "Bottom sheet"
+        },
+        "description": {
+          "fa-IR": "مسیر از آنِ Lumo است، نه showModalBottomSheet متریال — که مسیر و پرده‌اش را به انگلیسی می‌نامد.",
+          "en-US": "The route is Lumo’s, not Material’s showModalBottomSheet — which names its route and barrier in English."
+        },
+        "source": {
+          "fa-IR": "LumoSheetTrigger(\n  label: 'مرتب‌سازی نتایج',\n  closeLabel: 'بستن برگهٔ مرتب‌سازی',\n  description: 'ترتیب نمایش محصول‌ها را انتخاب کنید.',\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    variant: LumoButtonVariant.outline,\n    child: Text('مرتب‌سازی'),\n  ),\n  body: (context) => LumoRadioGroup(\n    label: 'ترتیب',\n    defaultValue: 'newest',\n    children: [\n      LumoRadio(value: 'newest', label: 'تازه‌ترین'),\n      LumoRadio(value: 'cheapest', label: 'ارزان‌ترین'),\n      LumoRadio(value: 'popular', label: 'پرفروش‌ترین'),\n    ],\n  ),\n)",
+          "en-US": "LumoSheetTrigger(\n  label: 'Sort the results',\n  closeLabel: 'Close the sort sheet',\n  description: 'Choose the order the products appear in.',\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    variant: LumoButtonVariant.outline,\n    child: Text('Sort'),\n  ),\n  body: (context) => LumoRadioGroup(\n    label: 'Order',\n    defaultValue: 'newest',\n    children: [\n      LumoRadio(value: 'newest', label: 'Newest'),\n      LumoRadio(value: 'cheapest', label: 'Cheapest'),\n      LumoRadio(value: 'popular', label: 'Best selling'),\n    ],\n  ),\n)"
+        }
+      },
+      {
+        "id": "drawer-2",
+        "title": {
+          "fa-IR": "بدون بستن با ضربه",
+          "en-US": "Not dismissible by tap"
+        },
+        "description": {
+          "fa-IR": "isDismissible: false ضربه روی پرده را بی‌اثر می‌کند؛ closeLabel همچنان راه بیرون‌رفت را نام می‌برد.",
+          "en-US": "isDismissible: false makes a tap on the barrier inert; closeLabel still names the way out."
+        },
+        "source": {
+          "fa-IR": "LumoSheetTrigger(\n  label: 'تأیید شمارهٔ همراه',\n  closeLabel: 'بستن برگهٔ تأیید',\n  isDismissible: false,\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    child: Text('تأیید شماره'),\n  ),\n  body: (context) => LumoOtpField(\n    label: 'کد پیامک‌شده',\n    cellLabel: (index, length) => 'رقم ${index + 1} از $length',\n  ),\n  actions: (context) => [\n    LumoButton(\n      onPressed: () => Navigator.of(context).pop(),\n      child: Text('تأیید'),\n    ),\n  ],\n)",
+          "en-US": "LumoSheetTrigger(\n  label: 'Verify your mobile number',\n  closeLabel: 'Close the verification sheet',\n  isDismissible: false,\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    child: Text('Verify the number'),\n  ),\n  body: (context) => LumoOtpField(\n    label: 'The texted code',\n    cellLabel: (index, length) => 'Digit ${index + 1} of $length',\n  ),\n  actions: (context) => [\n    LumoButton(\n      onPressed: () => Navigator.of(context).pop(),\n      child: Text('Confirm'),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "empty-state": [
+      {
+        "id": "empty-state-1",
+        "title": {
+          "fa-IR": "حالت خالی",
+          "en-US": "Empty state"
+        },
+        "description": {
+          "fa-IR": "جای خالی را با یک جمله پر می‌کند، نه با سکوت. نماد و اندازه صریح نوشته شده‌اند، چون همان‌ها پیش‌فرض‌اند.",
+          "en-US": "It fills the hole with a sentence rather than with silence. The icon and size are spelled out because they are the defaults."
+        },
+        "source": {
+          "fa-IR": "LumoEmptyState(\n  title: 'هنوز سفارشی ندارید',\n  description: 'وقتی نخستین سفارشتان را ثبت کنید، اینجا نشان داده می‌شود.',\n  icon: const Icon(Icons.receipt_long_outlined),\n  size: LumoEmptyStateSize.md,\n)",
+          "en-US": "LumoEmptyState(\n  title: 'No orders yet',\n  description: 'Your first order will appear here once you place it.',\n  icon: const Icon(Icons.receipt_long_outlined),\n  size: LumoEmptyStateSize.md,\n)"
+        }
+      },
+      {
+        "id": "empty-state-2",
+        "title": {
+          "fa-IR": "با کنش",
+          "en-US": "With actions"
+        },
+        "description": {
+          "fa-IR": "نماد تزیینی است و خوانده نمی‌شود؛ راه بیرون‌رفت همان دکمه است.",
+          "en-US": "The icon is decorative and never announced; the way out is the button."
+        },
+        "source": {
+          "fa-IR": "LumoEmptyState(\n  title: 'چیزی پیدا نشد',\n  description: 'هیچ محصولی با این فیلترها نیست. یکی از فیلترها را بردارید.',\n  icon: const Icon(Icons.search_off_outlined),\n  size: LumoEmptyStateSize.lg,\n  actions: [\n    LumoButton(onPressed: () {}, child: Text('پاک‌کردن فیلترها')),\n    LumoButton(\n      onPressed: () {},\n      variant: LumoButtonVariant.ghost,\n      child: Text('نمایش همهٔ محصولات'),\n    ),\n  ],\n)",
+          "en-US": "LumoEmptyState(\n  title: 'Nothing found',\n  description: 'No product matches these filters. Try removing one of them.',\n  icon: const Icon(Icons.search_off_outlined),\n  size: LumoEmptyStateSize.lg,\n  actions: [\n    LumoButton(onPressed: () {}, child: Text('Clear the filters')),\n    LumoButton(\n      onPressed: () {},\n      variant: LumoButtonVariant.ghost,\n      child: Text('Show every product'),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "file-upload": [
+      {
+        "id": "file-upload-1",
+        "title": {
+          "fa-IR": "بارگذاری پرونده",
+          "en-US": "File upload"
+        },
+        "description": {
+          "fa-IR": "browseLabel نام دکمهٔ انتخاب پرونده است و اجباری؛ کادر خط‌چین خودش کنترل نیست.",
+          "en-US": "browseLabel names the browse button and is required; the dashed frame is not itself a control."
+        },
+        "source": {
+          "fa-IR": "LumoFileUpload(\n  label: 'مدارک هویتی',\n  description: 'تصویر پشت و روی کارت ملی، هرکدام کمتر از ۵ مگابایت.',\n  browseLabel: 'انتخاب پرونده',\n  onBrowse: () {},\n  files: const <LumoAttachment>[],\n  isDisabled: false,\n)",
+          "en-US": "LumoFileUpload(\n  label: 'Identity documents',\n  description: 'Both sides of your ID card, each under five megabytes.',\n  browseLabel: 'Choose a file',\n  onBrowse: () {},\n  files: const <LumoAttachment>[],\n  isDisabled: false,\n)"
+        }
+      },
+      {
+        "id": "file-upload-2",
+        "title": {
+          "fa-IR": "با پرونده‌ها و وضعیت",
+          "en-US": "With files and states"
+        },
+        "description": {
+          "fa-IR": "هر وضعیتی جز done یک statusLabel می‌خواهد — وضعیت باید به کلمه گفته شود، نه با نوار.",
+          "en-US": "Every state but done needs a statusLabel — the state must be said in words, not drawn as a bar."
+        },
+        "source": {
+          "fa-IR": "LumoFileUpload(\n  label: 'پیوست‌های درخواست',\n  browseLabel: 'افزودن پرونده',\n  onBrowse: () {},\n  onRemove: (index) {},\n  removeLabel: (name) => 'حذف $name',\n  maxFilesLabel: 'حداکثر ۵ پرونده',\n  files: [\n    LumoAttachment(name: 'قرارداد.pdf', sizeLabel: '۱٫۲ مگابایت'),\n    LumoAttachment(\n      name: 'تصویر-کارت.jpg',\n      sizeLabel: '۸۴۰ کیلوبایت',\n      status: LumoAttachmentStatus.uploading,\n      statusLabel: 'در حال بارگذاری',\n      progress: 0.45,\n      progressLabel: '۴۵ درصد',\n    ),\n    LumoAttachment(\n      name: 'فیش-حقوقی.png',\n      status: LumoAttachmentStatus.failed,\n      statusLabel: 'ناموفق',\n      errorMessage: 'حجم پرونده بیش از ۵ مگابایت است.',\n    ),\n  ],\n)",
+          "en-US": "LumoFileUpload(\n  label: 'Request attachments',\n  browseLabel: 'Add a file',\n  onBrowse: () {},\n  onRemove: (index) {},\n  removeLabel: (name) => 'Remove $name',\n  maxFilesLabel: 'Up to 5 files',\n  files: [\n    LumoAttachment(name: 'contract.pdf', sizeLabel: '1.2 MB'),\n    LumoAttachment(\n      name: 'card-photo.jpg',\n      sizeLabel: '840 KB',\n      status: LumoAttachmentStatus.uploading,\n      statusLabel: 'Uploading',\n      progress: 0.45,\n      progressLabel: '45 percent',\n    ),\n    LumoAttachment(\n      name: 'payslip.png',\n      status: LumoAttachmentStatus.failed,\n      statusLabel: 'Failed',\n      errorMessage: 'The file is larger than five megabytes.',\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "icon-tile": [
+      {
+        "id": "icon-tile-1",
+        "title": {
+          "fa-IR": "کاشی نماد",
+          "en-US": "Icon tile"
+        },
+        "description": {
+          "fa-IR": "یک نماد در قابی رنگی. پیش‌فرض تزیینی است و خوانده نمی‌شود؛ اگر معنایی دارد accessibilityLabel بدهید.",
+          "en-US": "One glyph in a coloured frame. Decorative by default and never announced; give it accessibilityLabel when it carries meaning."
+        },
+        "source": {
+          "fa-IR": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 12,\n  children: [\n    const LumoIconTile(icon: Icon(Icons.bolt_outlined)),\n    LumoIconTile(\n      icon: const Icon(Icons.verified_outlined),\n      accessibilityLabel: 'حساب تأییدشده',\n      tone: LumoIconTileTone.positive,\n    ),\n  ],\n)",
+          "en-US": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 12,\n  children: [\n    const LumoIconTile(icon: Icon(Icons.bolt_outlined)),\n    LumoIconTile(\n      icon: const Icon(Icons.verified_outlined),\n      accessibilityLabel: 'Verified account',\n      tone: LumoIconTileTone.positive,\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "icon-tile-2",
+        "title": {
+          "fa-IR": "آهنگ، گونه و شکل",
+          "en-US": "Tone, variant and shape"
+        },
+        "description": {
+          "fa-IR": "پنج آهنگ، دو گونه و دو شکل — همه از همان توکن‌هایی که تم وب از آن‌ها ساخته می‌شود.",
+          "en-US": "Five tones, two variants and two shapes — all from the tokens the web theme is built from."
+        },
+        "source": {
+          "fa-IR": "const Wrap(\n  spacing: 12,\n  runSpacing: 12,\n  alignment: WrapAlignment.center,\n  children: [\n    LumoIconTile(\n      icon: Icon(Icons.rocket_launch_outlined),\n      tone: LumoIconTileTone.accent,\n      variant: LumoIconTileVariant.solid,\n      size: LumoIconTileSize.lg,\n    ),\n    LumoIconTile(\n      icon: Icon(Icons.warning_amber_outlined),\n      tone: LumoIconTileTone.caution,\n      shape: LumoIconTileShape.circle,\n    ),\n    LumoIconTile(\n      icon: Icon(Icons.delete_outline),\n      tone: LumoIconTileTone.critical,\n      size: LumoIconTileSize.sm,\n    ),\n  ],\n)",
+          "en-US": "const Wrap(\n  spacing: 12,\n  runSpacing: 12,\n  alignment: WrapAlignment.center,\n  children: [\n    LumoIconTile(\n      icon: Icon(Icons.rocket_launch_outlined),\n      tone: LumoIconTileTone.accent,\n      variant: LumoIconTileVariant.solid,\n      size: LumoIconTileSize.lg,\n    ),\n    LumoIconTile(\n      icon: Icon(Icons.warning_amber_outlined),\n      tone: LumoIconTileTone.caution,\n      shape: LumoIconTileShape.circle,\n    ),\n    LumoIconTile(\n      icon: Icon(Icons.delete_outline),\n      tone: LumoIconTileTone.critical,\n      size: LumoIconTileSize.sm,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "input-otp": [
+      {
+        "id": "input-otp-1",
+        "title": {
+          "fa-IR": "کد یک‌بارمصرف",
+          "en-US": "One-time code"
+        },
+        "description": {
+          "fa-IR": "یک ورودی واقعی پشت خانه‌های جدا. cellLabel نام هر خانه را از شماره‌اش می‌سازد.",
+          "en-US": "One real input behind separate cells. cellLabel builds each cell’s name from its position."
+        },
+        "source": {
+          "fa-IR": "LumoOtpField(\n  label: 'کد پیامک‌شده',\n  cellLabel: (index, length) => 'رقم ${index + 1} از $length',\n  description: 'کد شش‌رقمی به شمارهٔ شما پیامک شد.',\n  value: _code,\n  onChanged: (next) => setState(() => _code = next),\n  onCompleted: (code) {},\n)",
+          "en-US": "LumoOtpField(\n  label: 'The texted code',\n  cellLabel: (index, length) => 'Digit ${index + 1} of $length',\n  description: 'A six-digit code was texted to your number.',\n  value: _code,\n  onChanged: (next) => setState(() => _code = next),\n  onCompleted: (code) {},\n)"
+        }
+      },
+      {
+        "id": "input-otp-2",
+        "title": {
+          "fa-IR": "چهار رقمی با خطا",
+          "en-US": "Four digits, with an error"
+        },
+        "description": {
+          "fa-IR": "رقم‌ها با ارقام محلی نمایش داده می‌شوند؛ errorMessage زیر ردیف می‌نشیند.",
+          "en-US": "The digits render in the locale’s own numerals; errorMessage sits under the row."
+        },
+        "source": {
+          "fa-IR": "LumoOtpField(\n  label: 'کد تأیید',\n  cellLabel: (index, length) => 'رقم ${index + 1} از $length',\n  length: 4,\n  defaultValue: '12',\n  errorMessage: 'کد واردشده درست نیست.',\n)",
+          "en-US": "LumoOtpField(\n  label: 'Verification code',\n  cellLabel: (index, length) => 'Digit ${index + 1} of $length',\n  length: 4,\n  defaultValue: '12',\n  errorMessage: 'That code is not right.',\n)"
+        }
+      }
+    ],
+    "item": [
+      {
+        "id": "item-1",
+        "title": {
+          "fa-IR": "ردیف",
+          "en-US": "Item"
+        },
+        "description": {
+          "fa-IR": "یک ردیف فهرست. بدون onTap متن است؛ با onTap یک دکمه با نامی که از title می‌آید.",
+          "en-US": "One list row. Without onTap it is text; with onTap it is a button named by its title."
+        },
+        "source": {
+          "fa-IR": "LumoItem(\n  title: 'حریم خصوصی',\n  description: 'چه کسی می‌تواند نمایهٔ شما را ببیند.',\n  onTap: () {},\n  variant: LumoItemVariant.plain,\n  size: LumoItemSize.md,\n  hasDivider: false,\n)",
+          "en-US": "LumoItem(\n  title: 'Privacy',\n  description: 'Who is able to see your profile.',\n  onTap: () {},\n  variant: LumoItemVariant.plain,\n  size: LumoItemSize.md,\n  hasDivider: false,\n)"
+        }
+      },
+      {
+        "id": "item-2",
+        "title": {
+          "fa-IR": "با نماد و انتخاب",
+          "en-US": "With a glyph and a selection"
+        },
+        "description": {
+          "fa-IR": "leading و trailing در سرِ خواندن و پایانش می‌نشینند و با جهت می‌چرخند.",
+          "en-US": "leading and trailing sit at the reading start and end, and turn with the direction."
+        },
+        "source": {
+          "fa-IR": "LumoItem(\n  title: 'کارت بانک ملت',\n  description: 'با چهار رقم آخر ۷۷۲۱',\n  variant: LumoItemVariant.outlined,\n  leading: const Icon(Icons.credit_card),\n  trailing: LumoBadge(label: 'پیش‌فرض'),\n  isSelected: _picked,\n  onTap: () => setState(() => _picked = !_picked),\n)",
+          "en-US": "LumoItem(\n  title: 'Mellat Bank card',\n  description: 'Ending in 7721',\n  variant: LumoItemVariant.outlined,\n  leading: const Icon(Icons.credit_card),\n  trailing: LumoBadge(label: 'Default'),\n  isSelected: _picked,\n  onTap: () => setState(() => _picked = !_picked),\n)"
+        }
+      },
+      {
+        "id": "item-3",
+        "title": {
+          "fa-IR": "گروه ردیف‌ها",
+          "en-US": "Item group"
+        },
+        "description": {
+          "fa-IR": "LumoItemGroup نام فهرست را می‌گیرد؛ ردیف outlined قاب خودش را دارد، پس زیرش خط نمی‌خورد.",
+          "en-US": "LumoItemGroup names the list; an outlined row draws its own frame, so no divider goes under it."
+        },
+        "source": {
+          "fa-IR": "LumoItemGroup(\n  label: 'تنظیمات حساب',\n  hasDividers: true,\n  children: [\n    LumoItem(\n      title: 'نمایه',\n      leading: const Icon(Icons.person_outline),\n      onTap: () {},\n    ),\n    LumoItem(\n      title: 'اعلان‌ها',\n      leading: const Icon(Icons.notifications_none),\n      onTap: () {},\n    ),\n    LumoItem(\n      title: 'حذف حساب',\n      description: 'برای این حساب در دسترس نیست.',\n      leading: const Icon(Icons.delete_outline),\n      isDisabled: true,\n    ),\n  ],\n)",
+          "en-US": "LumoItemGroup(\n  label: 'Account settings',\n  hasDividers: true,\n  children: [\n    LumoItem(\n      title: 'Profile',\n      leading: const Icon(Icons.person_outline),\n      onTap: () {},\n    ),\n    LumoItem(\n      title: 'Notifications',\n      leading: const Icon(Icons.notifications_none),\n      onTap: () {},\n    ),\n    LumoItem(\n      title: 'Delete the account',\n      description: 'Not available for this account.',\n      leading: const Icon(Icons.delete_outline),\n      isDisabled: true,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "link": [
+      {
+        "id": "link-1",
+        "title": {
+          "fa-IR": "پیوند درون‌متنی",
+          "en-US": "Inline link"
+        },
+        "description": {
+          "fa-IR": "در میان متن: هم رنگ و هم زیرخط — رنگ به‌تنهایی پیوند را از متن جدا نمی‌کند.",
+          "en-US": "In a run of text: coloured AND underlined — colour alone does not distinguish a link."
+        },
+        "source": {
+          "fa-IR": "Wrap(\n  crossAxisAlignment: WrapCrossAlignment.center,\n  children: [\n    Text('با ادامه، '),\n    LumoLink(label: 'شرایط استفاده', onTap: () {}),\n    Text(' را می‌پذیرید.'),\n  ],\n)",
+          "en-US": "Wrap(\n  crossAxisAlignment: WrapCrossAlignment.center,\n  children: [\n    Text('By continuing you accept the '),\n    LumoLink(label: 'terms of use', onTap: () {}),\n    Text('.'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "link-2",
+        "title": {
+          "fa-IR": "مستقل و بیرونی",
+          "en-US": "Standalone and external"
+        },
+        "description": {
+          "fa-IR": "isExternal بدون externalLabel رد می‌شود: بازشدن در برگهٔ تازه باید گفته شود، نه فقط با یک نماد.",
+          "en-US": "isExternal without externalLabel is refused: opening in a new tab must be said, not merely drawn."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.start,\n  spacing: 8,\n  children: [\n    LumoLink(\n      label: 'راهنمای کامل بازگشت کالا',\n      variant: LumoLinkVariant.standalone,\n      icon: const Icon(Icons.menu_book_outlined),\n      onTap: () {},\n    ),\n    LumoLink(\n      label: 'وضعیت سرویس‌ها',\n      variant: LumoLinkVariant.standalone,\n      isExternal: true,\n      externalLabel: 'در برگهٔ جدید باز می‌شود',\n      onTap: () {},\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.start,\n  spacing: 8,\n  children: [\n    LumoLink(\n      label: 'The full returns guide',\n      variant: LumoLinkVariant.standalone,\n      icon: const Icon(Icons.menu_book_outlined),\n      onTap: () {},\n    ),\n    LumoLink(\n      label: 'Service status',\n      variant: LumoLinkVariant.standalone,\n      isExternal: true,\n      externalLabel: 'Opens in a new tab',\n      onTap: () {},\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "menu": [
+      {
+        "id": "menu-1",
+        "title": {
+          "fa-IR": "منو",
+          "en-US": "Menu"
+        },
+        "description": {
+          "fa-IR": "کنش‌های یک شیء، پشت یک دکمه. label نام خود منوست؛ هر مورد نام خودش را دارد.",
+          "en-US": "One object’s actions, behind one button. label names the menu; every item names itself."
+        },
+        "source": {
+          "fa-IR": "LumoMenuTrigger(\n  label: 'کنش‌های سند',\n  trigger: (open) => LumoIconButton(\n    label: 'کنش‌های سند',\n    onPressed: open,\n    child: const Icon(Icons.more_vert),\n  ),\n  items: [\n    LumoMenuItem(\n      label: 'ویرایش',\n      icon: const Icon(Icons.edit_outlined),\n      onSelected: () {},\n    ),\n    LumoMenuItem(\n      label: 'رونوشت',\n      icon: const Icon(Icons.copy_outlined),\n      onSelected: () {},\n    ),\n    const LumoMenuSeparator(),\n    LumoMenuItem(\n      label: 'حذف',\n      icon: const Icon(Icons.delete_outline),\n      isDestructive: true,\n      onSelected: () {},\n    ),\n  ],\n)",
+          "en-US": "LumoMenuTrigger(\n  label: 'Document actions',\n  trigger: (open) => LumoIconButton(\n    label: 'Document actions',\n    onPressed: open,\n    child: const Icon(Icons.more_vert),\n  ),\n  items: [\n    LumoMenuItem(\n      label: 'Edit',\n      icon: const Icon(Icons.edit_outlined),\n      onSelected: () {},\n    ),\n    LumoMenuItem(\n      label: 'Duplicate',\n      icon: const Icon(Icons.copy_outlined),\n      onSelected: () {},\n    ),\n    const LumoMenuSeparator(),\n    LumoMenuItem(\n      label: 'Delete',\n      icon: const Icon(Icons.delete_outline),\n      isDestructive: true,\n      onSelected: () {},\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "menu-2",
+        "title": {
+          "fa-IR": "بخش‌ها و مورد چک‌دار",
+          "en-US": "Sections and checkbox items"
+        },
+        "description": {
+          "fa-IR": "LumoMenuSection موردها را گروه می‌کند و LumoMenuCheckboxItem وضعیت انتخاب را اعلام می‌کند.",
+          "en-US": "LumoMenuSection groups the items and LumoMenuCheckboxItem announces its selected state."
+        },
+        "source": {
+          "fa-IR": "LumoMenuTrigger(\n  label: 'نمای فهرست',\n  placement: LumoPlacement.bottomEnd,\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    variant: LumoButtonVariant.outline,\n    child: Text('نما'),\n  ),\n  items: [\n    LumoMenuSection(\n      label: 'چیدمان',\n      items: [\n        LumoMenuCheckboxItem(\n          label: 'نمای فشرده',\n          isSelected: _compact,\n          onChanged: (next) => setState(() => _compact = next),\n        ),\n        LumoMenuCheckboxItem(label: 'نمایش تصاویر', isSelected: false),\n      ],\n    ),\n    const LumoMenuSeparator(),\n    LumoMenuItem(label: 'بازنشانی نما', onSelected: () {}),\n  ],\n)",
+          "en-US": "LumoMenuTrigger(\n  label: 'List view',\n  placement: LumoPlacement.bottomEnd,\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    variant: LumoButtonVariant.outline,\n    child: Text('View'),\n  ),\n  items: [\n    LumoMenuSection(\n      label: 'Layout',\n      items: [\n        LumoMenuCheckboxItem(\n          label: 'Compact view',\n          isSelected: _compact,\n          onChanged: (next) => setState(() => _compact = next),\n        ),\n        LumoMenuCheckboxItem(label: 'Show images', isSelected: false),\n      ],\n    ),\n    const LumoMenuSeparator(),\n    LumoMenuItem(label: 'Reset the view', onSelected: () {}),\n  ],\n)"
+        }
+      }
+    ],
+    "message": [
+      {
+        "id": "message-1",
+        "title": {
+          "fa-IR": "حباب پیام",
+          "en-US": "Message bubble"
+        },
+        "description": {
+          "fa-IR": "side می‌گوید پیام از کدام سو آمده؛ حباب به سرِ خواندن یا پایانش می‌چسبد، نه به چپ و راست.",
+          "en-US": "side states which way the message came; the bubble clings to the reading start or end, not to left or right."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 8,\n  children: [\n    LumoMessage(\n      side: LumoMessageSide.incoming,\n      senderLabel: 'پشتیبانی',\n      text: 'سلام! سفارشتان امروز ارسال می‌شود.',\n      timeLabel: '۱۰:۱۲',\n    ),\n    LumoMessage(\n      side: LumoMessageSide.outgoing,\n      text: 'ممنون. کد رهگیری را می‌فرستید؟',\n      timeLabel: '۱۰:۱۳',\n      status: LumoMessageStatus.read,\n      statusLabel: 'خوانده شد',\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 8,\n  children: [\n    LumoMessage(\n      side: LumoMessageSide.incoming,\n      senderLabel: 'Support',\n      text: 'Hello! Your order goes out today.',\n      timeLabel: '10:12',\n    ),\n    LumoMessage(\n      side: LumoMessageSide.outgoing,\n      text: 'Thanks. Could you send the tracking number?',\n      timeLabel: '10:13',\n      status: LumoMessageStatus.read,\n      statusLabel: 'Read',\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "message-2",
+        "title": {
+          "fa-IR": "گروه یک روز",
+          "en-US": "One day’s group"
+        },
+        "description": {
+          "fa-IR": "LumoMessageGroup تاریخ را عنوان می‌کند؛ statusLabel وضعیت را به کلمه می‌گوید، نه با تیک.",
+          "en-US": "LumoMessageGroup heads the day; statusLabel says the state in words, not with a tick."
+        },
+        "source": {
+          "fa-IR": "LumoMessageGroup(\n  dateLabel: 'دوشنبه ۲۶ مرداد',\n  children: [\n    LumoMessage(\n      side: LumoMessageSide.incoming,\n      isSystem: true,\n      text: 'گفت‌وگو رمزنگاری‌شده است.',\n    ),\n    LumoMessage(\n      side: LumoMessageSide.incoming,\n      senderLabel: 'مینا',\n      avatar: LumoAvatar(label: 'مینا رستمی', size: LumoAvatarSize.sm),\n      text: 'فایل را فرستادم، ببین درست است؟',\n      timeLabel: '۰۹:۴۰',\n    ),\n    LumoMessage(\n      side: LumoMessageSide.outgoing,\n      text: 'الان نگاه می‌کنم.',\n      timeLabel: '۰۹:۴۱',\n      status: LumoMessageStatus.sending,\n      statusLabel: 'در حال ارسال',\n    ),\n  ],\n)",
+          "en-US": "LumoMessageGroup(\n  dateLabel: 'Monday 17 August',\n  children: [\n    LumoMessage(\n      side: LumoMessageSide.incoming,\n      isSystem: true,\n      text: 'This conversation is encrypted.',\n    ),\n    LumoMessage(\n      side: LumoMessageSide.incoming,\n      senderLabel: 'Mina',\n      avatar: LumoAvatar(label: 'Mina Rostami', size: LumoAvatarSize.sm),\n      text: 'I sent the file — could you check it?',\n      timeLabel: '09:40',\n    ),\n    LumoMessage(\n      side: LumoMessageSide.outgoing,\n      text: 'Looking at it now.',\n      timeLabel: '09:41',\n      status: LumoMessageStatus.sending,\n      statusLabel: 'Sending',\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "multi-select": [
+      {
+        "id": "multi-select-1",
+        "title": {
+          "fa-IR": "انتخاب چندگانه",
+          "en-US": "Multi-select"
+        },
+        "description": {
+          "fa-IR": "هر نامی که خوانده می‌شود یک پارامتر اجباری است: بستن، تأیید، پاک‌کردن همه، شمارش و حذف هر مورد.",
+          "en-US": "Every announced name is a required parameter: close, confirm, clear all, the count, and each chip’s remove."
+        },
+        "source": {
+          "fa-IR": "LumoMultiSelect(\n  label: 'روزهای کاری',\n  placeholder: 'روزها را انتخاب کنید',\n  closeLabel: 'بستن فهرست روزها',\n  confirmLabel: 'تأیید',\n  clearAllLabel: 'پاک‌کردن همه',\n  countLabel: (count) => '$count روز انتخاب شده',\n  removeLabel: (day) => 'حذف $day',\n  values: _days,\n  onChanged: (next) => setState(() => _days = next),\n  options: [\n    LumoMultiSelectOption(id: 'sat', label: 'شنبه'),\n    LumoMultiSelectOption(id: 'sun', label: 'یکشنبه'),\n    LumoMultiSelectOption(id: 'mon', label: 'دوشنبه'),\n    LumoMultiSelectOption(id: 'tue', label: 'سه‌شنبه'),\n  ],\n)",
+          "en-US": "LumoMultiSelect(\n  label: 'Working days',\n  placeholder: 'Choose your days',\n  closeLabel: 'Close the day list',\n  confirmLabel: 'Confirm',\n  clearAllLabel: 'Clear all',\n  countLabel: (count) => '$count days selected',\n  removeLabel: (day) => 'Remove $day',\n  values: _days,\n  onChanged: (next) => setState(() => _days = next),\n  options: [\n    LumoMultiSelectOption(id: 'sat', label: 'Saturday'),\n    LumoMultiSelectOption(id: 'sun', label: 'Sunday'),\n    LumoMultiSelectOption(id: 'mon', label: 'Monday'),\n    LumoMultiSelectOption(id: 'tue', label: 'Tuesday'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "multi-select-2",
+        "title": {
+          "fa-IR": "جست‌وجوپذیر",
+          "en-US": "Searchable"
+        },
+        "description": {
+          "fa-IR": "isSearchable بدون searchLabel و emptyLabel رد می‌شود — جعبهٔ جست‌وجو باید نام داشته باشد و «چیزی پیدا نشد» باید گفته شود.",
+          "en-US": "isSearchable without searchLabel and emptyLabel is refused — the search box needs a name and «nothing matched» needs words."
+        },
+        "source": {
+          "fa-IR": "LumoMultiSelect(\n  label: 'مهارت‌ها',\n  placeholder: 'مهارت‌ها را انتخاب کنید',\n  closeLabel: 'بستن فهرست مهارت‌ها',\n  confirmLabel: 'تأیید',\n  clearAllLabel: 'پاک‌کردن همه',\n  countLabel: (count) => '$count مهارت انتخاب شده',\n  removeLabel: (skill) => 'حذف $skill',\n  isSearchable: true,\n  searchLabel: 'جست‌وجو در مهارت‌ها',\n  emptyLabel: 'مهارتی با این نام پیدا نشد.',\n  maxChips: 2,\n  values: _skills,\n  onChanged: (next) => setState(() => _skills = next),\n  options: [\n    LumoMultiSelectOption(id: 'flutter', label: 'فلاتر'),\n    LumoMultiSelectOption(id: 'dart', label: 'دارت'),\n    LumoMultiSelectOption(id: 'react', label: 'ری‌اکت'),\n    LumoMultiSelectOption(id: 'a11y', label: 'دسترس‌پذیری'),\n    LumoMultiSelectOption(id: 'rtl', label: 'راست‌به‌چپ'),\n  ],\n)",
+          "en-US": "LumoMultiSelect(\n  label: 'Skills',\n  placeholder: 'Choose your skills',\n  closeLabel: 'Close the skill list',\n  confirmLabel: 'Confirm',\n  clearAllLabel: 'Clear all',\n  countLabel: (count) => '$count skills selected',\n  removeLabel: (skill) => 'Remove $skill',\n  isSearchable: true,\n  searchLabel: 'Search the skills',\n  emptyLabel: 'No skill by that name was found.',\n  maxChips: 2,\n  values: _skills,\n  onChanged: (next) => setState(() => _skills = next),\n  options: [\n    LumoMultiSelectOption(id: 'flutter', label: 'Flutter'),\n    LumoMultiSelectOption(id: 'dart', label: 'Dart'),\n    LumoMultiSelectOption(id: 'react', label: 'React'),\n    LumoMultiSelectOption(id: 'a11y', label: 'Accessibility'),\n    LumoMultiSelectOption(id: 'rtl', label: 'Right to left'),\n  ],\n)"
+        }
+      }
+    ],
+    "number-field": [
+      {
+        "id": "number-field-1",
+        "title": {
+          "fa-IR": "ورودی عددی",
+          "en-US": "Number field"
+        },
+        "description": {
+          "fa-IR": "دو دکمهٔ کم و زیاد، هر دو با نام اعلام‌شدهٔ اجباری. عدد با ارقام محلی نوشته می‌شود.",
+          "en-US": "A step down and a step up, both with a required announced name. The number renders in the locale’s numerals."
+        },
+        "source": {
+          "fa-IR": "LumoNumberField(\n  label: 'تعداد',\n  incrementLabel: 'یکی بیشتر',\n  decrementLabel: 'یکی کمتر',\n  value: _count,\n  onChanged: (next) => setState(() => _count = next),\n)",
+          "en-US": "LumoNumberField(\n  label: 'Quantity',\n  incrementLabel: 'One more',\n  decrementLabel: 'One fewer',\n  value: _count,\n  onChanged: (next) => setState(() => _count = next),\n)"
+        }
+      },
+      {
+        "id": "number-field-2",
+        "title": {
+          "fa-IR": "کران‌دار و با گام",
+          "en-US": "Bounded, with a step"
+        },
+        "description": {
+          "fa-IR": "min و max دکمه‌ها را در دو سر بازه ازکار می‌اندازند؛ step اندازهٔ هر پرش است.",
+          "en-US": "min and max disable the steppers at each end; step is how far one press moves."
+        },
+        "source": {
+          "fa-IR": "LumoNumberField(\n  label: 'مدت اقامت (شب)',\n  incrementLabel: 'یک شب بیشتر',\n  decrementLabel: 'یک شب کمتر',\n  defaultValue: 2,\n  min: 1,\n  max: 14,\n  step: 1,\n  description: 'بین ۱ تا ۱۴ شب.',\n)",
+          "en-US": "LumoNumberField(\n  label: 'Length of stay (nights)',\n  incrementLabel: 'One night more',\n  decrementLabel: 'One night fewer',\n  defaultValue: 2,\n  min: 1,\n  max: 14,\n  step: 1,\n  description: 'Between one and fourteen nights.',\n)"
+        }
+      }
+    ],
+    "phone-input": [
+      {
+        "id": "phone-input-1",
+        "title": {
+          "fa-IR": "ورودی شمارهٔ تلفن",
+          "en-US": "Phone input"
+        },
+        "description": {
+          "fa-IR": "کشور و شماره یک ورودی‌اند. مقدار بیرونی همیشه E.164 است، هرچه روی صفحه نوشته شده باشد.",
+          "en-US": "The country and the number are one field. The value out is always E.164, whatever is on screen."
+        },
+        "source": {
+          "fa-IR": "LumoPhoneInput(\n  label: 'شمارهٔ همراه',\n  countryLabel: 'کشور',\n  closeLabel: 'بستن فهرست کشورها',\n  searchLabel: 'جست‌وجو در کشورها',\n  description: 'کد تأیید به همین شماره پیامک می‌شود.',\n  value: _phone,\n  onChanged: (next) => setState(() => _phone = next),\n)",
+          "en-US": "LumoPhoneInput(\n  label: 'Mobile number',\n  countryLabel: 'Country',\n  closeLabel: 'Close the country list',\n  searchLabel: 'Search the countries',\n  description: 'The verification code is texted to this number.',\n  value: _phone,\n  onChanged: (next) => setState(() => _phone = next),\n)"
+        }
+      },
+      {
+        "id": "phone-input-2",
+        "title": {
+          "fa-IR": "کشور دیگر و خطا",
+          "en-US": "Another country, and an error"
+        },
+        "description": {
+          "fa-IR": "defaultCountry کشور آغازین را می‌گوید؛ برگهٔ کشورها جست‌وجوپذیر است و searchLabel نامش را می‌دهد.",
+          "en-US": "defaultCountry states the starting country; the country sheet is searchable and searchLabel names its box."
+        },
+        "source": {
+          "fa-IR": "LumoPhoneInput(\n  label: 'شمارهٔ تماس ضروری',\n  countryLabel: 'کشور',\n  closeLabel: 'بستن فهرست کشورها',\n  searchLabel: 'جست‌وجو در کشورها',\n  defaultCountry: 'DE',\n  errorMessage: 'این شماره کامل نیست.',\n)",
+          "en-US": "LumoPhoneInput(\n  label: 'Emergency contact number',\n  countryLabel: 'Country',\n  closeLabel: 'Close the country list',\n  searchLabel: 'Search the countries',\n  defaultCountry: 'DE',\n  errorMessage: 'That number is incomplete.',\n)"
+        }
+      }
+    ],
+    "popover": [
+      {
+        "id": "popover-1",
+        "title": {
+          "fa-IR": "پاپ‌اور",
+          "en-US": "Popover"
+        },
+        "description": {
+          "fa-IR": "محتوایی که به یک نقطه لنگر می‌اندازد. جای آن روی محور خواندن سنجیده می‌شود، نه چپ و راست.",
+          "en-US": "Content anchored to a point. Its placement is measured along the reading axis, never left and right."
+        },
+        "source": {
+          "fa-IR": "LumoPopoverTrigger(\n  label: 'راهنمای کد پستی',\n  trigger: (open) => LumoIconButton(\n    label: 'راهنمای کد پستی',\n    onPressed: open,\n    child: const Icon(Icons.info_outline),\n  ),\n  content: (context) => SizedBox(\n    width: 220,\n    child: Text('کد پستی ده رقمی است و روی قبض‌های خدماتی نوشته شده.'),\n  ),\n)",
+          "en-US": "LumoPopoverTrigger(\n  label: 'About the postcode',\n  trigger: (open) => LumoIconButton(\n    label: 'About the postcode',\n    onPressed: open,\n    child: const Icon(Icons.info_outline),\n  ),\n  content: (context) => SizedBox(\n    width: 220,\n    child: Text('The postcode is ten digits and appears on your utility bills.'),\n  ),\n)"
+        }
+      },
+      {
+        "id": "popover-2",
+        "title": {
+          "fa-IR": "با دکمهٔ بستن",
+          "en-US": "With a close button"
+        },
+        "description": {
+          "fa-IR": "showClose بدون closeLabel رد می‌شود — یک ✕ نام نیست.",
+          "en-US": "showClose without closeLabel is refused — an ✕ is not a name."
+        },
+        "source": {
+          "fa-IR": "LumoPopoverTrigger(\n  label: 'فیلترهای سریع',\n  showClose: true,\n  closeLabel: 'بستن فیلترهای سریع',\n  placement: LumoPlacement.bottomEnd,\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    variant: LumoButtonVariant.outline,\n    child: Text('فیلترها'),\n  ),\n  content: (context) => SizedBox(\n    width: 240,\n    child: LumoCheckboxGroup(\n      label: 'وضعیت',\n      children: [\n        LumoCheckbox(label: 'موجود', defaultSelected: true),\n        LumoCheckbox(label: 'تخفیف‌دار'),\n      ],\n    ),\n  ),\n)",
+          "en-US": "LumoPopoverTrigger(\n  label: 'Quick filters',\n  showClose: true,\n  closeLabel: 'Close the quick filters',\n  placement: LumoPlacement.bottomEnd,\n  trigger: (open) => LumoButton(\n    onPressed: open,\n    variant: LumoButtonVariant.outline,\n    child: Text('Filters'),\n  ),\n  content: (context) => SizedBox(\n    width: 240,\n    child: LumoCheckboxGroup(\n      label: 'Status',\n      children: [\n        LumoCheckbox(label: 'In stock', defaultSelected: true),\n        LumoCheckbox(label: 'Discounted'),\n      ],\n    ),\n  ),\n)"
+        }
+      }
+    ],
+    "progress": [
+      {
+        "id": "progress-1",
+        "title": {
+          "fa-IR": "نوار پیشرفت",
+          "en-US": "Progress bar"
+        },
+        "description": {
+          "fa-IR": "value کسری میان صفر و یک است؛ valueLabel همان را به کلمه می‌گوید.",
+          "en-US": "value is a fraction between zero and one; valueLabel says it in words."
+        },
+        "source": {
+          "fa-IR": "LumoProgress(\n  label: 'بارگذاری فایل',\n  value: 0.62,\n  valueLabel: '۶۲ درصد',\n  showValue: true,\n)",
+          "en-US": "LumoProgress(\n  label: 'Uploading the file',\n  value: 0.62,\n  valueLabel: '62 percent',\n  showValue: true,\n)"
+        }
+      },
+      {
+        "id": "progress-2",
+        "title": {
+          "fa-IR": "نامعین و چرخنده",
+          "en-US": "Indeterminate and spinner"
+        },
+        "description": {
+          "fa-IR": "value برابر null یعنی «نمی‌دانیم چقدر مانده»؛ LumoSpinner همان خبر است در فضای تنگ.",
+          "en-US": "A null value means «we do not know how much is left»; LumoSpinner is the same news in a tight space."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoProgress(label: 'در حال همگام‌سازی', value: null),\n    Center(child: LumoSpinner(label: 'در حال بارگذاری', showLabel: true)),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoProgress(label: 'Syncing', value: null),\n    Center(child: LumoSpinner(label: 'Loading', showLabel: true)),\n  ],\n)"
+        }
+      },
+      {
+        "id": "progress-3",
+        "title": {
+          "fa-IR": "آهنگ و اندازه",
+          "en-US": "Tone and size"
+        },
+        "description": {
+          "fa-IR": "نوار از سرِ خواندن پر می‌شود — در فارسی از راست.",
+          "en-US": "The bar fills from the reading start — from the right, in Persian."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoProgress(\n      label: 'فضای مصرف‌شده',\n      value: 0.88,\n      valueLabel: '۸۸ درصد',\n      showValue: true,\n      tone: LumoProgressTone.caution,\n      size: LumoProgressSize.lg,\n    ),\n    LumoProgress(\n      label: 'پیشرفت پروژه',\n      value: 0.35,\n      valueLabel: '۳۵ درصد',\n      tone: LumoProgressTone.positive,\n      size: LumoProgressSize.sm,\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoProgress(\n      label: 'Storage used',\n      value: 0.88,\n      valueLabel: '88 percent',\n      showValue: true,\n      tone: LumoProgressTone.caution,\n      size: LumoProgressSize.lg,\n    ),\n    LumoProgress(\n      label: 'Project progress',\n      value: 0.35,\n      valueLabel: '35 percent',\n      tone: LumoProgressTone.positive,\n      size: LumoProgressSize.sm,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "radio-group": [
+      {
+        "id": "radio-group-1",
+        "title": {
+          "fa-IR": "گروه رادیویی",
+          "en-US": "Radio group"
+        },
+        "description": {
+          "fa-IR": "دقیقاً یکی از چند گزینه. هر گزینه می‌تواند توضیح خودش را داشته باشد.",
+          "en-US": "Exactly one of several. Each option may carry its own description."
+        },
+        "source": {
+          "fa-IR": "LumoRadioGroup(\n  label: 'روش ارسال',\n  description: 'هزینه در گام بعد محاسبه می‌شود.',\n  value: _plan,\n  onChanged: (next) => setState(() => _plan = next),\n  children: [\n    LumoRadio(\n      value: 'standard',\n      label: 'پست عادی',\n      description: 'سه تا پنج روز کاری',\n    ),\n    LumoRadio(\n      value: 'express',\n      label: 'پیشتاز',\n      description: 'یک روز کاری',\n    ),\n    LumoRadio(\n      value: 'pickup',\n      label: 'تحویل حضوری',\n      isDisabled: true,\n    ),\n  ],\n)",
+          "en-US": "LumoRadioGroup(\n  label: 'Shipping method',\n  description: 'The cost is worked out at the next step.',\n  value: _plan,\n  onChanged: (next) => setState(() => _plan = next),\n  children: [\n    LumoRadio(\n      value: 'standard',\n      label: 'Standard post',\n      description: 'Three to five working days',\n    ),\n    LumoRadio(\n      value: 'express',\n      label: 'Express',\n      description: 'One working day',\n    ),\n    LumoRadio(\n      value: 'pickup',\n      label: 'Collect in person',\n      isDisabled: true,\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "radio-group-2",
+        "title": {
+          "fa-IR": "افقی و نادرست",
+          "en-US": "Horizontal and invalid"
+        },
+        "description": {
+          "fa-IR": "چیدمان افقی برای گزینه‌های کوتاه؛ errorMessage گروه را نادرست می‌کند.",
+          "en-US": "The horizontal layout suits short options; errorMessage marks the group invalid."
+        },
+        "source": {
+          "fa-IR": "LumoRadioGroup(\n  label: 'اندازه',\n  orientation: LumoRadioOrientation.horizontal,\n  errorMessage: 'یک اندازه انتخاب کنید.',\n  children: [\n    LumoRadio(value: 'sm', label: 'کوچک'),\n    LumoRadio(value: 'md', label: 'متوسط'),\n    LumoRadio(value: 'lg', label: 'بزرگ'),\n  ],\n)",
+          "en-US": "LumoRadioGroup(\n  label: 'Size',\n  orientation: LumoRadioOrientation.horizontal,\n  errorMessage: 'Choose a size.',\n  children: [\n    LumoRadio(value: 'sm', label: 'Small'),\n    LumoRadio(value: 'md', label: 'Medium'),\n    LumoRadio(value: 'lg', label: 'Large'),\n  ],\n)"
+        }
+      }
+    ],
+    "rating": [
+      {
+        "id": "rating-1",
+        "title": {
+          "fa-IR": "امتیاز خواندنی",
+          "en-US": "Read-only rating"
+        },
+        "description": {
+          "fa-IR": "بدون onChanged یک عدد است، نه یک کنترل. valueLabel همان عدد را به کلمه می‌گوید.",
+          "en-US": "Without onChanged it is a number, not a control. valueLabel says that number in words."
+        },
+        "source": {
+          "fa-IR": "LumoRating(\n  label: 'امتیاز این محصول',\n  value: 4,\n  valueLabel: '۴ از ۵ ستاره',\n)",
+          "en-US": "LumoRating(\n  label: 'This product’s rating',\n  value: 4,\n  valueLabel: '4 out of 5 stars',\n)"
+        }
+      },
+      {
+        "id": "rating-2",
+        "title": {
+          "fa-IR": "امتیازدهی",
+          "en-US": "Interactive"
+        },
+        "description": {
+          "fa-IR": "onChanged آن را به کنترل تبدیل می‌کند و آن‌گاه starLabel نام هر ستاره را می‌سازد.",
+          "en-US": "onChanged turns it into a control, and then starLabel names each star."
+        },
+        "source": {
+          "fa-IR": "LumoRating(\n  label: 'به این سفارش امتیاز بدهید',\n  size: LumoRatingSize.lg,\n  value: _score,\n  valueLabel:\n      '${formatNumber(_score.round(), LumoScope.of(context).locale)} از ۵ ستاره',\n  starLabel: (position) =>\n      '${formatNumber(position, LumoScope.of(context).locale)} ستاره',\n  onChanged: (next) => setState(() => _score = next),\n)",
+          "en-US": "LumoRating(\n  label: 'Rate this order',\n  size: LumoRatingSize.lg,\n  value: _score,\n  valueLabel:\n      '${formatNumber(_score.round(), LumoScope.of(context).locale)} out of 5 stars',\n  starLabel: (position) =>\n      '${formatNumber(position, LumoScope.of(context).locale)} stars',\n  onChanged: (next) => setState(() => _score = next),\n)"
+        }
+      }
+    ],
+    "search-field": [
+      {
+        "id": "search-field-1",
+        "title": {
+          "fa-IR": "جست‌وجو",
+          "en-US": "Search"
+        },
+        "description": {
+          "fa-IR": "clearLabel اجباری است: دکمهٔ پاک‌کردن باید نامی داشته باشد که خوانده شود.",
+          "en-US": "clearLabel is required: the clear button must have a name that is announced."
+        },
+        "source": {
+          "fa-IR": "LumoSearchField(\n  label: 'جست‌وجو در محصولات',\n  clearLabel: 'پاک‌کردن جست‌وجو',\n  placeholder: 'نام محصول یا برند',\n  value: _query ?? 'کفش',\n  onChanged: (next) => setState(() => _query = next),\n  onClear: () => setState(() => _query = ''),\n)",
+          "en-US": "LumoSearchField(\n  label: 'Search products',\n  clearLabel: 'Clear the search',\n  placeholder: 'Product or brand name',\n  value: _query ?? 'shoes',\n  onChanged: (next) => setState(() => _query = next),\n  onClear: () => setState(() => _query = ''),\n)"
+        }
+      },
+      {
+        "id": "search-field-2",
+        "title": {
+          "fa-IR": "بدون برچسب دیدنی",
+          "en-US": "Without a visible label"
+        },
+        "description": {
+          "fa-IR": "showLabel: false برچسب را از دید برمی‌دارد، نه از درخت دسترس‌پذیری.",
+          "en-US": "showLabel: false hides the label from sight, never from the accessibility tree."
+        },
+        "source": {
+          "fa-IR": "LumoSearchField(\n  label: 'جست‌وجو در گفت‌وگوها',\n  clearLabel: 'پاک‌کردن جست‌وجو',\n  showLabel: false,\n  placeholder: 'جست‌وجو',\n  description: 'نام مخاطب یا متن پیام',\n)",
+          "en-US": "LumoSearchField(\n  label: 'Search conversations',\n  clearLabel: 'Clear the search',\n  showLabel: false,\n  placeholder: 'Search',\n  description: 'A contact’s name or message text',\n)"
+        }
+      }
+    ],
+    "segmented-control": [
+      {
+        "id": "segmented-control-1",
+        "title": {
+          "fa-IR": "کنترل بخش‌بندی‌شده",
+          "en-US": "Segmented control"
+        },
+        "description": {
+          "fa-IR": "دو تا چهار گزینهٔ ناسازگار، همه هم‌زمان دیده می‌شوند. label نام گروه است و خوانده می‌شود، نه کشیده.",
+          "en-US": "Two to four mutually exclusive options, all visible at once. label names the group: announced, not drawn."
+        },
+        "source": {
+          "fa-IR": "LumoSegmentedControl(\n  label: 'بازهٔ گزارش',\n  value: _range,\n  onChanged: (next) => setState(() => _range = next),\n  segments: [\n    LumoSegment(id: 'day', label: 'روز'),\n    LumoSegment(id: 'week', label: 'هفته'),\n    LumoSegment(id: 'month', label: 'ماه'),\n  ],\n)",
+          "en-US": "LumoSegmentedControl(\n  label: 'Report range',\n  value: _range,\n  onChanged: (next) => setState(() => _range = next),\n  segments: [\n    LumoSegment(id: 'day', label: 'Day'),\n    LumoSegment(id: 'week', label: 'Week'),\n    LumoSegment(id: 'month', label: 'Month'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "segmented-control-2",
+        "title": {
+          "fa-IR": "با نماد و اندازهٔ کوچک",
+          "en-US": "With icons, small"
+        },
+        "description": {
+          "fa-IR": "نماد کنار برچسب می‌نشیند؛ iconOnly برچسب را از دید برمی‌دارد ولی نام اعلام‌شده را نگه می‌دارد.",
+          "en-US": "The icon sits beside the label; iconOnly hides the label but keeps the announced name."
+        },
+        "source": {
+          "fa-IR": "LumoSegmentedControl(\n  label: 'نمای فهرست',\n  defaultValue: 'grid',\n  size: LumoSegmentedControlSize.sm,\n  segments: [\n    LumoSegment(id: 'list', label: 'فهرست', icon: const Icon(Icons.view_list)),\n    LumoSegment(id: 'grid', label: 'شبکه', icon: const Icon(Icons.grid_view)),\n    LumoSegment(\n      id: 'map',\n      label: 'نقشه',\n      icon: const Icon(Icons.map_outlined),\n      isDisabled: true,\n    ),\n  ],\n)",
+          "en-US": "LumoSegmentedControl(\n  label: 'List view',\n  defaultValue: 'grid',\n  size: LumoSegmentedControlSize.sm,\n  segments: [\n    LumoSegment(id: 'list', label: 'List', icon: const Icon(Icons.view_list)),\n    LumoSegment(id: 'grid', label: 'Grid', icon: const Icon(Icons.grid_view)),\n    LumoSegment(\n      id: 'map',\n      label: 'Map',\n      icon: const Icon(Icons.map_outlined),\n      isDisabled: true,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "select": [
+      {
+        "id": "select-1",
+        "title": {
+          "fa-IR": "انتخابگر",
+          "en-US": "Select"
+        },
+        "description": {
+          "fa-IR": "یک گزینه از فهرستی بسته. closeLabel نام دکمهٔ بستن برگهٔ گزینه‌هاست و اجباری است.",
+          "en-US": "One option from a closed list. closeLabel names the option sheet’s close control and is required."
+        },
+        "source": {
+          "fa-IR": "LumoSelect(\n  label: 'استان',\n  placeholder: 'یک استان انتخاب کنید',\n  closeLabel: 'بستن فهرست استان‌ها',\n  description: 'شهرها پس از انتخاب استان بارگذاری می‌شوند.',\n  value: _province,\n  onChanged: (next) => setState(() => _province = next),\n  options: [\n    LumoSelectOption(id: 'thr', label: 'تهران'),\n    LumoSelectOption(id: 'isf', label: 'اصفهان'),\n    LumoSelectOption(id: 'fas', label: 'فارس'),\n  ],\n)",
+          "en-US": "LumoSelect(\n  label: 'Province',\n  placeholder: 'Choose a province',\n  closeLabel: 'Close the province list',\n  description: 'Cities load once a province is chosen.',\n  value: _province,\n  onChanged: (next) => setState(() => _province = next),\n  options: [\n    LumoSelectOption(id: 'thr', label: 'Tehran'),\n    LumoSelectOption(id: 'isf', label: 'Isfahan'),\n    LumoSelectOption(id: 'fas', label: 'Fars'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "select-2",
+        "title": {
+          "fa-IR": "خطا و ازکارافتاده",
+          "en-US": "Error and disabled"
+        },
+        "description": {
+          "fa-IR": "گزینهٔ ازکارافتاده در فهرست می‌ماند و انتخاب نمی‌شود — پنهان‌کردنش پاسخ نیست.",
+          "en-US": "A disabled option stays in the list and cannot be picked — hiding it is not the answer."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoSelect(\n      label: 'روش پرداخت',\n      placeholder: 'انتخاب کنید',\n      closeLabel: 'بستن فهرست روش‌های پرداخت',\n      errorMessage: 'یک روش پرداخت انتخاب کنید.',\n      options: [\n        LumoSelectOption(id: 'card', label: 'کارت بانکی'),\n        LumoSelectOption(id: 'wallet', label: 'کیف پول'),\n        LumoSelectOption(id: 'cod', label: 'پرداخت در محل', isDisabled: true),\n      ],\n    ),\n    LumoSelect(\n      label: 'ارز',\n      placeholder: 'ریال',\n      closeLabel: 'بستن فهرست ارزها',\n      isDisabled: true,\n      options: [LumoSelectOption(id: 'irr', label: 'ریال')],\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoSelect(\n      label: 'Payment method',\n      placeholder: 'Choose one',\n      closeLabel: 'Close the payment method list',\n      errorMessage: 'Choose a payment method.',\n      options: [\n        LumoSelectOption(id: 'card', label: 'Bank card'),\n        LumoSelectOption(id: 'wallet', label: 'Wallet'),\n        LumoSelectOption(id: 'cod', label: 'Cash on delivery', isDisabled: true),\n      ],\n    ),\n    LumoSelect(\n      label: 'Currency',\n      placeholder: 'Rial',\n      closeLabel: 'Close the currency list',\n      isDisabled: true,\n      options: [LumoSelectOption(id: 'irr', label: 'Rial')],\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "separator": [
+      {
+        "id": "separator-1",
+        "title": {
+          "fa-IR": "جداکننده",
+          "en-US": "Separator"
+        },
+        "description": {
+          "fa-IR": "یک خط میان دو دسته. بدون label تزیینی است و در درخت دسترس‌پذیری چیزی نمی‌گوید.",
+          "en-US": "A rule between two groups. Without a label it is decorative and says nothing in the accessibility tree."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    Text('پرداخت‌شده در ۲۶ مرداد ۱۴۰۵'),\n    const LumoSeparator(),\n    Text('ارسال با پست پیشتاز'),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    Text('Paid on 17 August 2026'),\n    const LumoSeparator(),\n    Text('Sent by express post'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "separator-2",
+        "title": {
+          "fa-IR": "برچسب‌دار و عمودی",
+          "en-US": "Labelled and vertical"
+        },
+        "description": {
+          "fa-IR": "label جداکننده را به یک مرز نام‌دار تبدیل می‌کند؛ حالت عمودی برای جداکردن دو ستون است.",
+          "en-US": "label turns the rule into a named boundary; the vertical form separates two columns."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSeparator(label: 'یا با این روش‌ها'),\n    SizedBox(\n      height: 40,\n      child: Row(\n        mainAxisAlignment: MainAxisAlignment.center,\n        spacing: 12,\n        children: [\n          Text('ورود با ایمیل'),\n          const LumoSeparator(orientation: LumoSeparatorOrientation.vertical),\n          Text('ورود با پیامک'),\n        ],\n      ),\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSeparator(label: 'Or use one of these'),\n    SizedBox(\n      height: 40,\n      child: Row(\n        mainAxisAlignment: MainAxisAlignment.center,\n        spacing: 12,\n        children: [\n          Text('Sign in with email'),\n          const LumoSeparator(orientation: LumoSeparatorOrientation.vertical),\n          Text('Sign in by text'),\n        ],\n      ),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "skeleton": [
+      {
+        "id": "skeleton-1",
+        "title": {
+          "fa-IR": "اسکلت",
+          "en-US": "Skeleton"
+        },
+        "description": {
+          "fa-IR": "شکلِ چیزی که هنوز نیامده. اسکلت هیچ نامی اعلام نمی‌کند — خبرِ «در حال بارگذاری» کار LumoProgress است.",
+          "en-US": "The shape of what has not arrived. A skeleton announces no name — «loading» is LumoProgress’s job."
+        },
+        "source": {
+          "fa-IR": "const Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSkeleton(height: 20, width: 160),\n    LumoSkeleton(height: 120),\n    LumoSkeletonText(lines: 2),\n  ],\n)",
+          "en-US": "const Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSkeleton(height: 20, width: 160),\n    LumoSkeleton(height: 120),\n    LumoSkeletonText(lines: 2),\n  ],\n)"
+        }
+      },
+      {
+        "id": "skeleton-2",
+        "title": {
+          "fa-IR": "اسکلت یک کارت",
+          "en-US": "A card’s skeleton"
+        },
+        "description": {
+          "fa-IR": "LumoSkeletonText چند خط با طول‌های نابرابر می‌سازد، مثل متن واقعی.",
+          "en-US": "LumoSkeletonText makes several lines of uneven length, the way real text falls."
+        },
+        "source": {
+          "fa-IR": "const LumoCard(\n  child: Row(\n    crossAxisAlignment: CrossAxisAlignment.start,\n    spacing: 12,\n    children: [\n      LumoSkeleton(width: 40, height: 40, shape: LumoSkeletonShape.circle),\n      Expanded(child: LumoSkeletonText(lines: 3)),\n    ],\n  ),\n)",
+          "en-US": "const LumoCard(\n  child: Row(\n    crossAxisAlignment: CrossAxisAlignment.start,\n    spacing: 12,\n    children: [\n      LumoSkeleton(width: 40, height: 40, shape: LumoSkeletonShape.circle),\n      Expanded(child: LumoSkeletonText(lines: 3)),\n    ],\n  ),\n)"
+        }
+      }
+    ],
+    "slider": [
+      {
+        "id": "slider-1",
+        "title": {
+          "fa-IR": "لغزنده",
+          "en-US": "Slider"
+        },
+        "description": {
+          "fa-IR": "valueLabel اجباری است: عدد خام یک نام نیست، «چهل درصد» هست.",
+          "en-US": "valueLabel is required: a raw number is not a name, «forty percent» is."
+        },
+        "source": {
+          "fa-IR": "LumoSlider(\n  label: 'بلندی صدا',\n  value: _volume,\n  valueLabel: (v) =>\n      '${formatNumber((v * 100).round(), LumoScope.of(context).locale)} درصد',\n  onChanged: (next) => setState(() => _volume = next),\n)",
+          "en-US": "LumoSlider(\n  label: 'Volume',\n  value: _volume,\n  valueLabel: (v) =>\n      '${formatNumber((v * 100).round(), LumoScope.of(context).locale)} percent',\n  onChanged: (next) => setState(() => _volume = next),\n)"
+        }
+      },
+      {
+        "id": "slider-2",
+        "title": {
+          "fa-IR": "با گام و بازهٔ دلخواه",
+          "en-US": "Stepped, custom range"
+        },
+        "description": {
+          "fa-IR": "min، max و step بازه را می‌سازند؛ عددها از formatNumber می‌گذرند.",
+          "en-US": "min, max and step build the range; the numbers go through formatNumber."
+        },
+        "source": {
+          "fa-IR": "LumoSlider(\n  label: 'تعداد مهمان',\n  value: _people,\n  min: 1,\n  max: 10,\n  step: 1,\n  valueLabel: (v) =>\n      '${formatNumber(v.round(), LumoScope.of(context).locale)} نفر',\n  description: 'بیش از ده نفر را تلفنی هماهنگ کنید.',\n  onChanged: (next) => setState(() => _people = next),\n)",
+          "en-US": "LumoSlider(\n  label: 'Number of guests',\n  value: _people,\n  min: 1,\n  max: 10,\n  step: 1,\n  valueLabel: (v) =>\n      '${formatNumber(v.round(), LumoScope.of(context).locale)} people',\n  description: 'For more than ten, please call us.',\n  onChanged: (next) => setState(() => _people = next),\n)"
+        }
+      },
+      {
+        "id": "slider-3",
+        "title": {
+          "fa-IR": "لغزندهٔ بازه‌ای",
+          "en-US": "Range slider"
+        },
+        "description": {
+          "fa-IR": "دو دستگیره، دو نام: startLabel و endLabel هرکدام یک سرِ بازه را می‌نامند.",
+          "en-US": "Two thumbs, two names: startLabel and endLabel name each end of the range."
+        },
+        "source": {
+          "fa-IR": "LumoRangeSlider(\n  label: 'بازهٔ قیمت',\n  startLabel: 'کمترین قیمت',\n  endLabel: 'بیشترین قیمت',\n  values: _price,\n  min: 0,\n  max: 1000000,\n  step: 50000,\n  valueLabel: (v) =>\n      '${formatNumber(v.round(), LumoScope.of(context).locale)} تومان',\n  onChanged: (next) => setState(() => _price = next),\n)",
+          "en-US": "LumoRangeSlider(\n  label: 'Price range',\n  startLabel: 'Lowest price',\n  endLabel: 'Highest price',\n  values: _price,\n  min: 0,\n  max: 1000000,\n  step: 50000,\n  valueLabel: (v) =>\n      '${formatNumber(v.round(), LumoScope.of(context).locale)} toman',\n  onChanged: (next) => setState(() => _price = next),\n)"
+        }
+      }
+    ],
+    "steps": [
+      {
+        "id": "steps-1",
+        "title": {
+          "fa-IR": "گام‌ها",
+          "en-US": "Steps"
+        },
+        "description": {
+          "fa-IR": "کجای یک کار چندمرحله‌ای هستیم. current از صفر شمرده می‌شود.",
+          "en-US": "Where we are in a multi-step task. current is counted from zero."
+        },
+        "source": {
+          "fa-IR": "LumoSteps(\n  label: 'مراحل ثبت‌نام',\n  current: 1,\n  completedLabel: 'انجام‌شده',\n  currentLabel: 'گام کنونی',\n  upcomingLabel: 'پیشِ‌رو',\n  steps: [\n    LumoStep(title: 'حساب'),\n    LumoStep(title: 'نشانی'),\n    LumoStep(title: 'پرداخت'),\n  ],\n)",
+          "en-US": "LumoSteps(\n  label: 'Sign-up steps',\n  current: 1,\n  completedLabel: 'Completed',\n  currentLabel: 'Current step',\n  upcomingLabel: 'Still to come',\n  steps: [\n    LumoStep(title: 'Account'),\n    LumoStep(title: 'Address'),\n    LumoStep(title: 'Payment'),\n  ],\n)"
+        }
+      },
+      {
+        "id": "steps-2",
+        "title": {
+          "fa-IR": "عمودی با توضیح",
+          "en-US": "Vertical, with descriptions"
+        },
+        "description": {
+          "fa-IR": "سه نامِ وضعیت اجباری‌اند و همان‌ها به خواننده گفته می‌شوند؛ شمارهٔ گام تزیین است.",
+          "en-US": "The three state names are required and are what the reader hears; the step number is decoration."
+        },
+        "source": {
+          "fa-IR": "LumoSteps(\n  label: 'مراحل احراز هویت',\n  current: 2,\n  orientation: LumoStepsOrientation.vertical,\n  completedLabel: 'انجام‌شده',\n  currentLabel: 'گام کنونی',\n  upcomingLabel: 'پیشِ‌رو',\n  steps: [\n    LumoStep(title: 'شمارهٔ همراه', description: 'با کد پیامکی تأیید شد.'),\n    LumoStep(title: 'کارت ملی', description: 'تصویر پشت و رو بارگذاری شد.'),\n    LumoStep(title: 'تأیید ویدیویی', description: 'یک ویدیوی ده‌ثانیه‌ای بگیرید.'),\n    LumoStep(title: 'بررسی نهایی', description: 'تا ۲۴ ساعت آینده.'),\n  ],\n)",
+          "en-US": "LumoSteps(\n  label: 'Identity check steps',\n  current: 2,\n  orientation: LumoStepsOrientation.vertical,\n  completedLabel: 'Completed',\n  currentLabel: 'Current step',\n  upcomingLabel: 'Still to come',\n  steps: [\n    LumoStep(title: 'Mobile number', description: 'Verified by texted code.'),\n    LumoStep(title: 'ID card', description: 'Both sides have been uploaded.'),\n    LumoStep(title: 'Video check', description: 'Record a ten-second video.'),\n    LumoStep(title: 'Final review', description: 'Within the next day.'),\n  ],\n)"
+        }
+      }
+    ],
+    "switch": [
+      {
+        "id": "switch-1",
+        "title": {
+          "fa-IR": "کلید ساده",
+          "en-US": "Plain switch"
+        },
+        "description": {
+          "fa-IR": "یک تنظیم که بی‌درنگ اعمال می‌شود. برچسب دیده می‌شود و همان نامِ اعلام‌شده است.",
+          "en-US": "A setting that applies at once. The label is visible and is the announced name."
+        },
+        "source": {
+          "fa-IR": "LumoSwitch(\n  label: 'اعلان‌های پیامکی',\n  isSelected: _on,\n  onChanged: (next) => setState(() => _on = next),\n)",
+          "en-US": "LumoSwitch(\n  label: 'Text message alerts',\n  isSelected: _on,\n  onChanged: (next) => setState(() => _on = next),\n)"
+        }
+      },
+      {
+        "id": "switch-2",
+        "title": {
+          "fa-IR": "توضیح، اندازه و ازکارافتاده",
+          "en-US": "Description, size and disabled"
+        },
+        "description": {
+          "fa-IR": "description به‌عنوان hint خوانده می‌شود؛ اندازهٔ lg برای ردیف‌های اصلی تنظیمات.",
+          "en-US": "description is read as the hint; the lg size suits a settings row."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSwitch(\n      label: 'هم‌رسانی خودکار',\n      description: 'هر تغییر بلافاصله روی همهٔ دستگاه‌ها می‌رود.',\n      size: LumoSwitchSize.lg,\n      isSelected: _sync,\n      onChanged: (next) => setState(() => _sync = next),\n    ),\n    LumoSwitch(\n      label: 'حالت آزمایشی',\n      description: 'برای این حساب در دسترس نیست.',\n      isDisabled: true,\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 12,\n  children: [\n    LumoSwitch(\n      label: 'Automatic sync',\n      description: 'Every change reaches all your devices at once.',\n      size: LumoSwitchSize.lg,\n      isSelected: _sync,\n      onChanged: (next) => setState(() => _sync = next),\n    ),\n    LumoSwitch(\n      label: 'Beta mode',\n      description: 'Not available for this account.',\n      isDisabled: true,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "tabs": [
+      {
+        "id": "tabs-1",
+        "title": {
+          "fa-IR": "زبانه‌ها",
+          "en-US": "Tabs"
+        },
+        "description": {
+          "fa-IR": "label نام مجموعهٔ زبانه‌هاست و خوانده می‌شود؛ views پیکرهٔ هر زبانه را می‌سازد.",
+          "en-US": "label names the tab set and is announced; views builds each tab’s panel."
+        },
+        "source": {
+          "fa-IR": "LumoTabs(\n  label: 'بخش‌های سفارش',\n  defaultValue: 'items',\n  tabs: [\n    LumoTab(id: 'items', label: 'اقلام'),\n    LumoTab(id: 'shipping', label: 'ارسال'),\n    LumoTab(id: 'payment', label: 'پرداخت'),\n  ],\n  views: {\n    'items': (context) => Text('سه قلم در این سفارش هست.'),\n    'shipping': (context) => Text('ارسال با پست پیشتاز.'),\n    'payment': (context) => Text('پرداخت‌شده با کارت بانکی.'),\n  },\n)",
+          "en-US": "LumoTabs(\n  label: 'Order sections',\n  defaultValue: 'items',\n  tabs: [\n    LumoTab(id: 'items', label: 'Items'),\n    LumoTab(id: 'shipping', label: 'Shipping'),\n    LumoTab(id: 'payment', label: 'Payment'),\n  ],\n  views: {\n    'items': (context) => Text('Three items in this order.'),\n    'shipping': (context) => Text('Sent by express post.'),\n    'payment': (context) => Text('Paid by bank card.'),\n  },\n)"
+        }
+      },
+      {
+        "id": "tabs-2",
+        "title": {
+          "fa-IR": "گونهٔ قرصی، با نماد و نشان",
+          "en-US": "Pill variant, with icons and badges"
+        },
+        "description": {
+          "fa-IR": "isScrollable ردیف را در صفحهٔ باریک می‌لغزاند؛ نخستین زبانه در سرِ خواندن می‌نشیند — در فارسی، راست.",
+          "en-US": "isScrollable slides the row on a narrow screen; the first tab sits at the reading start — right, in Persian."
+        },
+        "source": {
+          "fa-IR": "LumoTabs(\n  label: 'صندوق پیام',\n  defaultValue: 'unread',\n  variant: LumoTabsVariant.pill,\n  isScrollable: true,\n  tabs: [\n    LumoTab(id: 'all', label: 'همه', icon: const Icon(Icons.inbox_outlined)),\n    LumoTab(id: 'unread', label: 'خوانده‌نشده', badge: '۴'),\n    LumoTab(id: 'archive', label: 'بایگانی', isDisabled: true),\n  ],\n  builder: (context, selectedId) => Text('زبانهٔ فعال: $selectedId'),\n)",
+          "en-US": "LumoTabs(\n  label: 'Inbox',\n  defaultValue: 'unread',\n  variant: LumoTabsVariant.pill,\n  isScrollable: true,\n  tabs: [\n    LumoTab(id: 'all', label: 'All', icon: const Icon(Icons.inbox_outlined)),\n    LumoTab(id: 'unread', label: 'Unread', badge: '4'),\n    LumoTab(id: 'archive', label: 'Archive', isDisabled: true),\n  ],\n  builder: (context, selectedId) => Text('Active tab: $selectedId'),\n)"
+        }
+      }
+    ],
+    "tag": [
+      {
+        "id": "tag-1",
+        "title": {
+          "fa-IR": "برچسب ساده",
+          "en-US": "Plain tag"
+        },
+        "description": {
+          "fa-IR": "یک کلیدواژه یا مقدار انتخاب‌شده. بدون onChanged یک متن است، نه یک کنترل.",
+          "en-US": "A keyword or a chosen value. Without onChanged it is text, not a control."
+        },
+        "source": {
+          "fa-IR": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  children: [\n    LumoChip(label: 'طراحی'),\n    LumoChip(label: 'دسترس‌پذیری', icon: const Icon(Icons.accessibility_new)),\n    LumoChip(label: 'راست‌به‌چپ', size: LumoChipSize.sm),\n  ],\n)",
+          "en-US": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  children: [\n    LumoChip(label: 'Design'),\n    LumoChip(label: 'Accessibility', icon: const Icon(Icons.accessibility_new)),\n    LumoChip(label: 'Right to left', size: LumoChipSize.sm),\n  ],\n)"
+        }
+      },
+      {
+        "id": "tag-2",
+        "title": {
+          "fa-IR": "انتخاب‌پذیر و حذف‌شدنی",
+          "en-US": "Selectable and removable"
+        },
+        "description": {
+          "fa-IR": "onChanged برچسب را به یک کلید تبدیل می‌کند؛ onRemove بدون removeLabel رد می‌شود — ✕ یک نام نیست.",
+          "en-US": "onChanged turns the tag into a toggle; onRemove without removeLabel is refused — an ✕ is not a name."
+        },
+        "source": {
+          "fa-IR": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  children: [\n    for (final filter in _filters)\n      LumoChip(\n        label: filter,\n        isSelected: _selected.contains(filter),\n        onChanged: (on) => setState(\n          () => on ? _selected.add(filter) : _selected.remove(filter),\n        ),\n        onRemove: () => setState(() => _filters.remove(filter)),\n        removeLabel: 'حذف $filter',\n      ),\n  ],\n)",
+          "en-US": "Wrap(\n  spacing: 8,\n  runSpacing: 8,\n  children: [\n    for (final filter in _filters)\n      LumoChip(\n        label: filter,\n        isSelected: _selected.contains(filter),\n        onChanged: (on) => setState(\n          () => on ? _selected.add(filter) : _selected.remove(filter),\n        ),\n        onRemove: () => setState(() => _filters.remove(filter)),\n        removeLabel: 'Remove $filter',\n      ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "tag-3",
+        "title": {
+          "fa-IR": "گروه برچسب",
+          "en-US": "Tag group"
+        },
+        "description": {
+          "fa-IR": "removeLabel از متن هر برچسب نام کنترل حذف را می‌سازد.",
+          "en-US": "removeLabel builds each remove control’s name from that tag’s own text."
+        },
+        "source": {
+          "fa-IR": "LumoTagGroup(\n  label: 'شهرهای انتخاب‌شده',\n  items: _cities,\n  onRemove: (id) => setState(() => _cities.removeWhere((c) => c.id == id)),\n  removeLabel: (textValue) => 'حذف $textValue',\n)",
+          "en-US": "LumoTagGroup(\n  label: 'Chosen cities',\n  items: _cities,\n  onRemove: (id) => setState(() => _cities.removeWhere((c) => c.id == id)),\n  removeLabel: (textValue) => 'Remove $textValue',\n)"
+        }
+      }
+    ],
+    "text-area": [
+      {
+        "id": "text-area-1",
+        "title": {
+          "fa-IR": "ناحیهٔ متن",
+          "en-US": "Text area"
+        },
+        "description": {
+          "fa-IR": "چند خط متن آزاد؛ minLines ارتفاع آغازین را می‌گوید.",
+          "en-US": "Several lines of free text; minLines states the starting height."
+        },
+        "source": {
+          "fa-IR": "LumoTextArea(\n  label: 'توضیح سفارش',\n  placeholder: 'اگر نکته‌ای هست بنویسید…',\n  description: 'اختیاری است.',\n  onChanged: (value) {},\n)",
+          "en-US": "LumoTextArea(\n  label: 'Order note',\n  placeholder: 'Anything we should know…',\n  description: 'Optional.',\n  onChanged: (value) {},\n)"
+        }
+      },
+      {
+        "id": "text-area-2",
+        "title": {
+          "fa-IR": "با شمارنده و خطا",
+          "en-US": "With a counter and an error"
+        },
+        "description": {
+          "fa-IR": "maxLength شمارنده را می‌آورد و رقم‌هایش با formatNumber محلی می‌شوند.",
+          "en-US": "maxLength brings the counter, and its digits go through formatNumber."
+        },
+        "source": {
+          "fa-IR": "LumoTextArea(\n  label: 'دربارهٔ من',\n  minLines: 4,\n  maxLength: 280,\n  isRequired: true,\n  errorMessage: 'این بخش نمی‌تواند خالی بماند.',\n)",
+          "en-US": "LumoTextArea(\n  label: 'About me',\n  minLines: 4,\n  maxLength: 280,\n  isRequired: true,\n  errorMessage: 'This cannot be left empty.',\n)"
+        }
+      }
+    ],
+    "text-field": [
+      {
+        "id": "text-field-1",
+        "title": {
+          "fa-IR": "ورودی متن",
+          "en-US": "Text field"
+        },
+        "description": {
+          "fa-IR": "برچسب اجباری است و بالای ورودی می‌نشیند؛ placeholder جایگزین برچسب نیست.",
+          "en-US": "The label is required and sits above the field; a placeholder is not a label."
+        },
+        "source": {
+          "fa-IR": "LumoTextField(\n  label: 'نام و نام خانوادگی',\n  placeholder: 'مثلاً کامیاب نظری',\n  description: 'همان‌طور که در کارت ملی آمده است.',\n  onChanged: (String value) {},\n  isRequired: false,\n  isDisabled: false,\n)",
+          "en-US": "LumoTextField(\n  label: 'Full name',\n  placeholder: 'e.g. Kamyab Nazari',\n  description: 'Exactly as it appears on your ID.',\n  onChanged: (String value) {},\n  isRequired: false,\n  isDisabled: false,\n)"
+        }
+      },
+      {
+        "id": "text-field-2",
+        "title": {
+          "fa-IR": "اجباری، خطا و فقط‌خواندنی",
+          "en-US": "Required, error and read-only"
+        },
+        "description": {
+          "fa-IR": "errorMessage خودش ورودی را نادرست می‌کند و به‌عنوان توضیح خوانده می‌شود.",
+          "en-US": "errorMessage marks the field invalid on its own and is announced as its description."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoTextField(\n      label: 'نشانی ایمیل',\n      isRequired: true,\n      errorMessage: 'این نشانی معتبر نیست.',\n    ),\n    LumoTextField(\n      label: 'شناسهٔ کاربری',\n      isReadOnly: true,\n      description: 'پس از ساخت حساب تغییر نمی‌کند.',\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoTextField(\n      label: 'Email address',\n      isRequired: true,\n      errorMessage: 'That address is not valid.',\n    ),\n    LumoTextField(\n      label: 'Username',\n      isReadOnly: true,\n      description: 'It cannot be changed after the account is made.',\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "text-field-3",
+        "title": {
+          "fa-IR": "عددی و با پیشوند",
+          "en-US": "Numeric and with a prefix"
+        },
+        "description": {
+          "fa-IR": "isNumeric رقم‌ها را چپ‌به‌راست نگه می‌دارد، حتی وقتی صفحه راست‌به‌چپ است.",
+          "en-US": "isNumeric keeps the digits left-to-right even on a right-to-left page."
+        },
+        "source": {
+          "fa-IR": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoTextField(\n      label: 'شمارهٔ کارت',\n      isNumeric: true,\n      placeholder: '6219 8610 0000 0000',\n    ),\n    LumoTextField(\n      label: 'رمز عبور',\n      obscureText: true,\n      prefix: const Icon(Icons.lock_outline),\n    ),\n  ],\n)",
+          "en-US": "Column(\n  crossAxisAlignment: CrossAxisAlignment.stretch,\n  spacing: 16,\n  children: [\n    LumoTextField(\n      label: 'Card number',\n      isNumeric: true,\n      placeholder: '6219 8610 0000 0000',\n    ),\n    LumoTextField(\n      label: 'Password',\n      obscureText: true,\n      prefix: const Icon(Icons.lock_outline),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "time-field": [
+      {
+        "id": "time-field-1",
+        "title": {
+          "fa-IR": "ورودی ساعت",
+          "en-US": "Time field"
+        },
+        "description": {
+          "fa-IR": "دو ستون: ساعت و دقیقه، هرکدام با نام اعلام‌شدهٔ خودش. قالب ۱۲ یا ۲۴ ساعته از locale می‌آید.",
+          "en-US": "Two columns, hour and minute, each with its own announced name. 12- or 24-hour comes from the locale."
+        },
+        "source": {
+          "fa-IR": "LumoTimeField(\n  label: 'ساعت نوبت',\n  openLabel: 'باز کردن انتخابگر ساعت',\n  closeLabel: 'بستن انتخابگر ساعت',\n  hourLabel: 'ساعت',\n  minuteLabel: 'دقیقه',\n  placeholder: 'یک ساعت انتخاب کنید',\n  value: _time,\n  onChanged: (next) => setState(() => _time = next),\n)",
+          "en-US": "LumoTimeField(\n  label: 'Appointment time',\n  openLabel: 'Open the time picker',\n  closeLabel: 'Close the time picker',\n  hourLabel: 'Hour',\n  minuteLabel: 'Minute',\n  placeholder: 'Choose a time',\n  value: _time,\n  onChanged: (next) => setState(() => _time = next),\n)"
+        }
+      },
+      {
+        "id": "time-field-2",
+        "title": {
+          "fa-IR": "گام پنج‌دقیقه‌ای",
+          "en-US": "Five-minute step"
+        },
+        "description": {
+          "fa-IR": "minuteStep فاصلهٔ دقیقه‌های پیشنهادی است؛ use24Hour قالب را صریح می‌کند.",
+          "en-US": "minuteStep is how far apart the offered minutes are; use24Hour states the format outright."
+        },
+        "source": {
+          "fa-IR": "LumoTimeField(\n  label: 'ساعت یادآوری',\n  openLabel: 'باز کردن انتخابگر ساعت',\n  closeLabel: 'بستن انتخابگر ساعت',\n  hourLabel: 'ساعت',\n  minuteLabel: 'دقیقه',\n  minuteStep: 5,\n  use24Hour: true,\n  value: const TimeOfDay(hour: 18, minute: 45),\n  description: 'یادآوری روی همهٔ دستگاه‌های شما اجرا می‌شود.',\n)",
+          "en-US": "LumoTimeField(\n  label: 'Reminder time',\n  openLabel: 'Open the time picker',\n  closeLabel: 'Close the time picker',\n  hourLabel: 'Hour',\n  minuteLabel: 'Minute',\n  minuteStep: 5,\n  use24Hour: true,\n  value: const TimeOfDay(hour: 18, minute: 45),\n  description: 'The reminder fires on every one of your devices.',\n)"
+        }
+      }
+    ],
+    "timeline": [
+      {
+        "id": "timeline-1",
+        "title": {
+          "fa-IR": "خط زمان",
+          "en-US": "Timeline"
+        },
+        "description": {
+          "fa-IR": "رویدادها به ترتیب. سه نامِ وضعیت اجباری‌اند: انجام‌شده، جاری و پیشِ‌رو — رنگِ نقطه به‌تنهایی نمی‌گوید.",
+          "en-US": "Events in order. The three state names are required: done, current, upcoming — a coloured dot does not say it."
+        },
+        "source": {
+          "fa-IR": "LumoTimeline(\n  label: 'پیگیری سفارش',\n  doneLabel: 'انجام‌شده',\n  currentLabel: 'در حال انجام',\n  upcomingLabel: 'پیشِ‌رو',\n  items: [\n    LumoTimelineItem(\n      title: 'ثبت سفارش',\n      description: 'پرداخت تأیید شد.',\n      meta: '۲۴ مرداد',\n    ),\n    LumoTimelineItem(\n      title: 'بسته‌بندی',\n      meta: '۲۵ مرداد',\n      state: LumoTimelineState.current,\n    ),\n    LumoTimelineItem(\n      title: 'تحویل به پست',\n      state: LumoTimelineState.upcoming,\n    ),\n  ],\n)",
+          "en-US": "LumoTimeline(\n  label: 'Order tracking',\n  doneLabel: 'Done',\n  currentLabel: 'In progress',\n  upcomingLabel: 'Still to come',\n  items: [\n    LumoTimelineItem(\n      title: 'Order placed',\n      description: 'The payment cleared.',\n      meta: '15 August',\n    ),\n    LumoTimelineItem(\n      title: 'Packing',\n      meta: '16 August',\n      state: LumoTimelineState.current,\n    ),\n    LumoTimelineItem(\n      title: 'Handed to the post',\n      state: LumoTimelineState.upcoming,\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "timeline-2",
+        "title": {
+          "fa-IR": "افقی",
+          "en-US": "Horizontal"
+        },
+        "description": {
+          "fa-IR": "چیدمان افقی روی محور خواندن پیش می‌رود: در فارسی از راست به چپ.",
+          "en-US": "The horizontal layout runs along the reading axis: right to left in Persian."
+        },
+        "source": {
+          "fa-IR": "LumoTimeline(\n  label: 'مراحل بررسی درخواست',\n  orientation: LumoTimelineOrientation.horizontal,\n  doneLabel: 'انجام‌شده',\n  currentLabel: 'در حال انجام',\n  upcomingLabel: 'پیشِ‌رو',\n  items: [\n    LumoTimelineItem(title: 'دریافت'),\n    LumoTimelineItem(title: 'بررسی', state: LumoTimelineState.current),\n    LumoTimelineItem(title: 'نتیجه', state: LumoTimelineState.upcoming),\n  ],\n)",
+          "en-US": "LumoTimeline(\n  label: 'How your request is reviewed',\n  orientation: LumoTimelineOrientation.horizontal,\n  doneLabel: 'Done',\n  currentLabel: 'In progress',\n  upcomingLabel: 'Still to come',\n  items: [\n    LumoTimelineItem(title: 'Received'),\n    LumoTimelineItem(title: 'Review', state: LumoTimelineState.current),\n    LumoTimelineItem(title: 'Outcome', state: LumoTimelineState.upcoming),\n  ],\n)"
+        }
+      }
+    ],
+    "toast": [
+      {
+        "id": "toast-1",
+        "title": {
+          "fa-IR": "نان تُست",
+          "en-US": "Toast"
+        },
+        "description": {
+          "fa-IR": "یک خبر گذرا در ناحیه‌ای زنده، در سرِ پایین صفحه. بیشتر از سه‌تا هم‌زمان نمی‌ماند.",
+          "en-US": "A passing notice in a live region, at the bottom of the reading axis. Never more than three at once."
+        },
+        "source": {
+          "fa-IR": "LumoButton(\n  onPressed: () => showLumoToast(\n    context,\n    message: 'تغییرات ذخیره شد.',\n    closeLabel: 'بستن پیام',\n  ),\n  child: Text('ذخیره'),\n)",
+          "en-US": "LumoButton(\n  onPressed: () => showLumoToast(\n    context,\n    message: 'Your changes were saved.',\n    closeLabel: 'Close the message',\n  ),\n  child: Text('Save'),\n)"
+        }
+      },
+      {
+        "id": "toast-2",
+        "title": {
+          "fa-IR": "با کنش و آهنگ",
+          "en-US": "With an action and a tone"
+        },
+        "description": {
+          "fa-IR": "actionLabel نام کنش است و اجباری می‌شود وقتی onAction هست؛ closeLabel همیشه اجباری است.",
+          "en-US": "actionLabel names the action and is required once onAction exists; closeLabel is always required."
+        },
+        "source": {
+          "fa-IR": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 8,\n  children: [\n    LumoButton(\n      onPressed: () => showLumoToast(\n        context,\n        message: 'پیام به بایگانی رفت.',\n        closeLabel: 'بستن پیام',\n        actionLabel: 'برگرداندن',\n        onAction: () {},\n      ),\n      variant: LumoButtonVariant.outline,\n      child: Text('بایگانی'),\n    ),\n    LumoButton(\n      onPressed: () => showLumoToast(\n        context,\n        message: 'ارسال ناموفق بود.',\n        closeLabel: 'بستن پیام',\n        tone: LumoToastTone.critical,\n        duration: const Duration(seconds: 6),\n      ),\n      variant: LumoButtonVariant.critical,\n      child: Text('ارسال'),\n    ),\n  ],\n)",
+          "en-US": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 8,\n  children: [\n    LumoButton(\n      onPressed: () => showLumoToast(\n        context,\n        message: 'The message went to the archive.',\n        closeLabel: 'Close the message',\n        actionLabel: 'Undo',\n        onAction: () {},\n      ),\n      variant: LumoButtonVariant.outline,\n      child: Text('Archive'),\n    ),\n    LumoButton(\n      onPressed: () => showLumoToast(\n        context,\n        message: 'Sending failed.',\n        closeLabel: 'Close the message',\n        tone: LumoToastTone.critical,\n        duration: const Duration(seconds: 6),\n      ),\n      variant: LumoButtonVariant.critical,\n      child: Text('Send'),\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "toggle": [
+      {
+        "id": "toggle-1",
+        "title": {
+          "fa-IR": "کلید فشاری",
+          "en-US": "Toggle"
+        },
+        "description": {
+          "fa-IR": "یک دکمه که فشرده می‌ماند. وضعیت فشرده اعلام می‌شود، نه فقط رنگ می‌شود.",
+          "en-US": "A button that stays pressed. The pressed state is announced, not merely coloured."
+        },
+        "source": {
+          "fa-IR": "LumoToggle(\n  label: 'سنجاق‌کردن گفت‌وگو',\n  icon: const Icon(Icons.push_pin_outlined),\n  variant: LumoToggleVariant.outline,\n  isSelected: _pinned,\n  onChanged: (next) => setState(() => _pinned = next),\n)",
+          "en-US": "LumoToggle(\n  label: 'Pin the conversation',\n  icon: const Icon(Icons.push_pin_outlined),\n  variant: LumoToggleVariant.outline,\n  isSelected: _pinned,\n  onChanged: (next) => setState(() => _pinned = next),\n)"
+        }
+      },
+      {
+        "id": "toggle-2",
+        "title": {
+          "fa-IR": "فقط نماد",
+          "en-US": "Icon only"
+        },
+        "description": {
+          "fa-IR": "iconOnly برچسب را از دید برمی‌دارد و نه از نامِ اعلام‌شده؛ بدون icon رد می‌شود.",
+          "en-US": "iconOnly hides the label from sight but not from the announced name; without an icon it is refused."
+        },
+        "source": {
+          "fa-IR": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 8,\n  children: [\n    LumoToggle(\n      label: 'درشت',\n      icon: const Icon(Icons.format_bold),\n      iconOnly: true,\n      defaultSelected: true,\n    ),\n    LumoToggle(\n      label: 'کج',\n      icon: const Icon(Icons.format_italic),\n      iconOnly: true,\n    ),\n    LumoToggle(\n      label: 'زیرخط‌دار',\n      icon: const Icon(Icons.format_underlined),\n      iconOnly: true,\n      isDisabled: true,\n    ),\n  ],\n)",
+          "en-US": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 8,\n  children: [\n    LumoToggle(\n      label: 'Bold',\n      icon: const Icon(Icons.format_bold),\n      iconOnly: true,\n      defaultSelected: true,\n    ),\n    LumoToggle(\n      label: 'Italic',\n      icon: const Icon(Icons.format_italic),\n      iconOnly: true,\n    ),\n    LumoToggle(\n      label: 'Underline',\n      icon: const Icon(Icons.format_underlined),\n      iconOnly: true,\n      isDisabled: true,\n    ),\n  ],\n)"
+        }
+      },
+      {
+        "id": "toggle-3",
+        "title": {
+          "fa-IR": "گروه",
+          "en-US": "Group"
+        },
+        "description": {
+          "fa-IR": "selectionMode می‌گوید یکی یا چندتا. disallowEmptySelection نمی‌گذارد هیچ‌کدام انتخاب نباشد.",
+          "en-US": "selectionMode states one or many. disallowEmptySelection refuses to leave nothing selected."
+        },
+        "source": {
+          "fa-IR": "LumoToggleGroup(\n  label: 'ترازبندی متن',\n  defaultValue: 'start',\n  disallowEmptySelection: true,\n  items: [\n    LumoToggleItem(\n      id: 'start',\n      label: 'تراز به سرِ خط',\n      icon: const Icon(Icons.format_align_right),\n      iconOnly: true,\n    ),\n    LumoToggleItem(\n      id: 'center',\n      label: 'تراز وسط',\n      icon: const Icon(Icons.format_align_center),\n      iconOnly: true,\n    ),\n    LumoToggleItem(\n      id: 'end',\n      label: 'تراز به پایان خط',\n      icon: const Icon(Icons.format_align_left),\n      iconOnly: true,\n    ),\n  ],\n)",
+          "en-US": "LumoToggleGroup(\n  label: 'Text alignment',\n  defaultValue: 'start',\n  disallowEmptySelection: true,\n  items: [\n    LumoToggleItem(\n      id: 'start',\n      label: 'Align to the line start',\n      icon: const Icon(Icons.format_align_right),\n      iconOnly: true,\n    ),\n    LumoToggleItem(\n      id: 'center',\n      label: 'Align to the centre',\n      icon: const Icon(Icons.format_align_center),\n      iconOnly: true,\n    ),\n    LumoToggleItem(\n      id: 'end',\n      label: 'Align to the line end',\n      icon: const Icon(Icons.format_align_left),\n      iconOnly: true,\n    ),\n  ],\n)"
+        }
+      }
+    ],
+    "tooltip": [
+      {
+        "id": "tooltip-1",
+        "title": {
+          "fa-IR": "راهنمای ابزار",
+          "en-US": "Tooltip"
+        },
+        "description": {
+          "fa-IR": "یک توضیح کوتاه روی نگه‌داشتن انگشت. راهنمای ابزار جای نام اعلام‌شده را نمی‌گیرد؛ دکمه همچنان label خودش را دارد.",
+          "en-US": "A short note on a long press. A tooltip never replaces the announced name; the button still carries its own label."
+        },
+        "source": {
+          "fa-IR": "LumoTooltip(\n  message: 'این گزارش هر شب ساعت دو بامداد به‌روز می‌شود.',\n  child: LumoIconButton(\n    label: 'اطلاعات گزارش',\n    onPressed: () {},\n    child: const Icon(Icons.info_outline),\n  ),\n)",
+          "en-US": "LumoTooltip(\n  message: 'This report refreshes every night at two in the morning.',\n  child: LumoIconButton(\n    label: 'Report information',\n    onPressed: () {},\n    child: const Icon(Icons.info_outline),\n  ),\n)"
+        }
+      },
+      {
+        "id": "tooltip-2",
+        "title": {
+          "fa-IR": "جایگاه و تأخیر",
+          "en-US": "Placement and delay"
+        },
+        "description": {
+          "fa-IR": "placement بالا یا پایین است — نه چپ و راست، که در راست‌به‌چپ معنایشان جابه‌جا می‌شود.",
+          "en-US": "placement is top or bottom — never left or right, whose meaning swaps under RTL."
+        },
+        "source": {
+          "fa-IR": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 12,\n  children: [\n    LumoTooltip(\n      message: 'بالا باز می‌شود',\n      child: LumoButton(\n        onPressed: () {},\n        variant: LumoButtonVariant.outline,\n        child: Text('بالا'),\n      ),\n    ),\n    LumoTooltip(\n      message: 'پایین باز می‌شود، با نیم‌ثانیه درنگ',\n      placement: LumoTooltipPlacement.bottom,\n      delay: const Duration(milliseconds: 500),\n      child: LumoButton(\n        onPressed: () {},\n        variant: LumoButtonVariant.outline,\n        child: Text('پایین'),\n      ),\n    ),\n  ],\n)",
+          "en-US": "Row(\n  mainAxisAlignment: MainAxisAlignment.center,\n  spacing: 12,\n  children: [\n    LumoTooltip(\n      message: 'Opens above',\n      child: LumoButton(\n        onPressed: () {},\n        variant: LumoButtonVariant.outline,\n        child: Text('Above'),\n      ),\n    ),\n    LumoTooltip(\n      message: 'Opens below, after half a second',\n      placement: LumoTooltipPlacement.bottom,\n      delay: const Duration(milliseconds: 500),\n      child: LumoButton(\n        onPressed: () {},\n        variant: LumoButtonVariant.outline,\n        child: Text('Below'),\n      ),\n    ),\n  ],\n)"
+        }
+      }
+    ]
+  }
+}

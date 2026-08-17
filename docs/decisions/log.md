@@ -1444,3 +1444,69 @@ Why two libraries is acceptable: Lumo's value is the contract and the proof,
 not the code sharing; the Dart library was built in a day; the cost of the wrong
 mobile framework (RTL/perf/l10n workarounds forever) is larger than the cost of
 one more implementation of a small, well-specified surface.
+
+## 31. The Mobile side of the docs site is a Flutter web build, embedded and labelled (17 Aug 2026)
+
+§30 said the Mobile tab returns "as a Flutter-web embed of the same Dart
+components (the way forui / shadcn_flutter show theirs), labelled as a canvas
+preview". This is that, built.
+
+The shape, which is the same shape the React Native version had before it was
+removed — because it was right and only its platform was wrong:
+
+- **The platform is a ROUTE, never client state**, exactly as the locale is:
+  `/components/<slug>/` is Web, `/components/<slug>/mobile/` is Mobile, and the
+  `Web | Mobile` switch is two real links. Both pages are served bytes the gate
+  grades. A switch that only re-rendered would give the reader a URL they cannot
+  send to anyone.
+- **One gallery app serves every demo.** `apps/mobile-gallery` is a Flutter web
+  build addressed as `?demo=<id>&lang=<tag>&theme=<light|dark>`; each component
+  page embeds it in an iframe inside a phone frame. One app rather than one per
+  component means the ~13 MB engine is fetched and cached ONCE for the whole
+  site instead of per page.
+- **The demo copy is localized**, like the web examples' copy, and the source
+  snippet is emitted per locale. A Persian button on the English page beside an
+  English one on the Web page would have made the two platforms look like two
+  products.
+- **The props table is generated from the Dart** (`scripts/build-mobile-api.mjs`
+  → `mobile-api-reference.json`), and marks which parameters are ANNOUNCED
+  strings — the contract's headline, visible in the table rather than only in
+  prose.
+
+What we accepted, and said on the page in both languages:
+
+- **The preview is a canvas.** Flutter web paints into WebGL/WASM; there is no
+  DOM inside it, so the served-HTML gate cannot grade a single thing the reader
+  sees in that frame. The proof for what is inside is the semantics-tree tests
+  in `packages/mobile/test/` — the mobile counterpart of the gate — and the page
+  says so rather than letting the frame imply it was graded.
+- **The gate's INPUT SCOPE excludes the gallery shell**, and only the shell:
+  `packages/gate/src/cli.ts` names `mobile-preview/` in `EMBEDDED_ASSET_DIRS`
+  and prints the skip on every run. It is a bootstrap document with no locale
+  segment and no prose; handed to the grader it produced a crash, not a
+  violation — the grader correctly refusing to guess a locale. No rule was
+  disabled and every documentation page is still graded by every rule.
+- **The built gallery is BUILT, not committed** (`apps/website/public/mobile-preview/`,
+  ~17 MB after pruning the unused skwasm renderer, the symbol maps and the
+  installable-app surface). It was committed first, on the reasoning that the
+  site should build on a machine that has never heard of Dart. The owner
+  rejected that: the repo needs Flutter anyway, so it was 17 MB of git weight
+  for nothing, re-added on every gallery change and kept forever.
+  That was right, and checking it made it more right — **CI did not install
+  Flutter, so `gate:flutter`, `gate:flutter-contract`, `gate:mobile-api` and
+  `gate:mobile-demos` never ran there at all.** The Dart library was graded on a
+  laptop and taken on trust in CI, which is the arrangement every other gate in
+  this repo exists to refuse. So: the toolchain is a CI dependency now, the
+  mobile gates run on the runner, and `apps/website`'s build runs
+  `scripts/ensure-mobile-gallery.mjs`, which hashes the gallery's inputs (its
+  Dart, its web shell, its pubspec, AND `packages/mobile/lib`) and rebuilds only
+  on a miss. Absent Flutter it fails with the command to fix it;
+  `LUMO_SKIP_GALLERY=1` is the visible escape and says what it left stale.
+- **The English page shows Persian-first components behaving in English.**
+  `lang` drives direction, digits and copy; it does not pretend the library's
+  defaults are Latin.
+
+Why not build the docs site itself in Flutter (shadcn_flutter's answer): the
+site is the WEB library's own showcase and its served bytes are the web
+library's proof. Replacing it with a canvas would delete that proof to gain a
+demo.

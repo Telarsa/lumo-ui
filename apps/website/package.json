@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node --experimental-strip-types scripts/inject-evidence.mjs",
+    "build": "node ../../scripts/ensure-mobile-gallery.mjs && next build && node --experimental-strip-types scripts/inject-evidence.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "gate": "node --experimental-strip-types ../../packages/gate/src/cli.ts out gate.floors.json",
