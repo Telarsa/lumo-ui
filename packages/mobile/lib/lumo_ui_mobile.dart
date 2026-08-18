@@ -8,6 +8,7 @@ library;
 
 export 'src/tokens.g.dart';
 export 'src/scope.dart';
+export 'src/styles.dart';
 export 'src/format.dart';
 export 'src/button.dart';
 export 'src/switch.dart';

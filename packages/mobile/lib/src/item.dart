@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show SemanticsRole;
 import 'scope.dart';
+import 'styles.dart';
 import 'tokens.g.dart';
 
 /// The frame treatment of one row — the web `itemVariants`' `variant`.
@@ -62,6 +63,7 @@ class LumoItem extends StatefulWidget {
     this.variant = LumoItemVariant.plain,
     this.size = LumoItemSize.md,
     this.hasDivider = false,
+    this.style,
   }) : assert(!hasDivider || variant != LumoItemVariant.outlined, 'An outlined row already draws its own frame; a divider under it is a second rule.');
 
   /// The row's first line: shown, and announced as the row's name. Required.
@@ -94,6 +96,11 @@ class LumoItem extends StatefulWidget {
   /// inside one card. Refused on `outlined`, which already has a frame.
   final bool hasDivider;
 
+  /// Appearance overrides for THIS row, merged over `LumoStyles.item`.
+  /// APPEARANCE ONLY — nothing here reaches the announced `title`, the button
+  /// role, the selected state, or the chevron's direction-matching glyph.
+  final LumoItemStyle? style;
+
   @override
   State<LumoItem> createState() => _LumoItemState();
 }
@@ -104,6 +111,8 @@ class _LumoItemState extends State<LumoItem> {
   @override
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
+    // Theme first, call site second — a null field leaves the library's own value.
+    final s = LumoStyles.of(context).item.merge(widget.style);
     final enabled = !widget.isDisabled;
     final tappable = widget.onTap != null && enabled;
     final selected = widget.isSelected ?? false;
@@ -138,7 +147,7 @@ class _LumoItemState extends State<LumoItem> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
-              spacing: 2,
+              spacing: s.textGap ?? 2,
               children: [
                 // The name is on the row's own node above; the drawn copy is excluded so it is heard ONCE.
                 ExcludeSemantics(
@@ -149,7 +158,7 @@ class _LumoItemState extends State<LumoItem> {
                     // `font-medium` on the web's `ItemTitle`; the selected
                     // option's `data-selected:font-medium` is the same weight,
                     // so selection is carried by the FILL and by semantics.
-                    style: TextStyle(fontSize: 14, height: 1.375, fontWeight: FontWeight.w500, color: c.fg),
+                    style: TextStyle(fontSize: 14, height: 1.375, fontWeight: FontWeight.w500, color: c.fg).merge(s.titleTextStyle),
                   ),
                 ),
                 if (widget.description != null)
@@ -157,17 +166,19 @@ class _LumoItemState extends State<LumoItem> {
                     widget.description!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 14, height: 1.5, color: c.fgMuted),
+                    style: TextStyle(fontSize: 14, height: 1.5, color: c.fgMuted).merge(s.descriptionTextStyle),
                   ),
               ],
             ),
           ),
           if (widget.trailing != null)
-            IconTheme(data: IconThemeData(size: 16, color: c.fgMuted), child: widget.trailing!)
+            IconTheme(data: IconThemeData(size: 16, color: c.fgMuted).merge(s.iconTheme), child: widget.trailing!)
           else if (widget.onTap != null)
             // `matchTextDirection` is baked into this IconData: the chevron
-            // points at the reading end without anyone naming a side.
-            ExcludeSemantics(child: Icon(Icons.chevron_right, size: 16, color: c.fgSubtle)),
+            // points at the reading end without anyone naming a side. The GLYPH
+            // is therefore not a style field — `IconData` is refused by the
+            // generator by name, for this exact reason. Its colour and size are.
+            ExcludeSemantics(child: Icon(Icons.chevron_right, size: s.chevronSize ?? 16, color: s.chevronColour ?? c.fgSubtle)),
         ],
       ),
     );
@@ -175,8 +186,8 @@ class _LumoItemState extends State<LumoItem> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Opacity(opacity: enabled ? 1 : 0.5, child: row),
-        if (widget.hasDivider) ExcludeSemantics(child: SizedBox(height: 1, child: ColoredBox(color: c.border))),
+        Opacity(opacity: enabled ? 1 : (s.disabledOpacity ?? 0.5), child: row),
+        if (widget.hasDivider) ExcludeSemantics(child: SizedBox(height: s.dividerThickness ?? 1, child: ColoredBox(color: s.dividerColour ?? c.border))),
       ],
     );
     return Semantics(
@@ -215,7 +226,7 @@ class _LumoItemState extends State<LumoItem> {
 /// closes the gap, which is how a run of rows inside one card reads; without it
 /// the group keeps the web's `gap-2`.
 class LumoItemGroup extends StatelessWidget {
-  const LumoItemGroup({super.key, required this.label, required this.children, this.hasDividers = false});
+  const LumoItemGroup({super.key, required this.label, required this.children, this.hasDividers = false, this.style});
 
   /// The section's name — drawn as a header and announced. Required.
   final String label;
@@ -225,10 +236,14 @@ class LumoItemGroup extends StatelessWidget {
   /// A hairline between rows instead of a gap.
   final bool hasDividers;
 
+  /// Appearance overrides for this group, merged over `LumoStyles.item`.
+  final LumoItemStyle? style;
+
   @override
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
-    final rule = ExcludeSemantics(child: SizedBox(height: 1, child: ColoredBox(color: c.border)));
+    final s = LumoStyles.of(context).item.merge(style);
+    final rule = ExcludeSemantics(child: SizedBox(height: s.dividerThickness ?? 1, child: ColoredBox(color: s.dividerColour ?? c.border)));
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -237,14 +252,14 @@ class LumoItemGroup extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
-            padding: const EdgeInsetsDirectional.only(bottom: 8),
+            padding: EdgeInsetsDirectional.only(bottom: s.groupLabelGap ?? 8),
             child: Semantics(
               header: true,
-              child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: c.fgSubtle)),
+              child: Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: c.fgSubtle).merge(s.groupLabelTextStyle)),
             ),
           ),
           for (var i = 0; i < children.length; i++) ...[
-            if (i > 0) hasDividers ? rule : const SizedBox(height: 8),
+            if (i > 0) hasDividers ? rule : SizedBox(height: s.groupGap ?? 8),
             children[i],
           ],
         ],
@@ -312,6 +327,7 @@ class LumoListBox extends StatefulWidget {
     this.disallowEmptySelection = false,
     this.isDisabled = false,
     this.size = LumoItemSize.sm,
+    this.style,
   });
 
   /// Announced name of the list. Required.
@@ -342,6 +358,11 @@ class LumoListBox extends StatefulWidget {
   /// The size step, from the shared control scale.
   final LumoItemSize size;
 
+  /// Appearance overrides for this list and the rows it builds, merged over
+  /// `LumoStyles.item`. It cannot reach `label`, `emptyLabel`, the list role or
+  /// the announced `selected` state of a row.
+  final LumoItemStyle? style;
+
   @override
   State<LumoListBox> createState() => _LumoListBoxState();
 }
@@ -371,6 +392,7 @@ class _LumoListBoxState extends State<LumoListBox> {
   @override
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
+    final s = LumoStyles.of(context).item.merge(widget.style);
     final selection = _selection;
     return Semantics(
       container: true,
@@ -379,20 +401,20 @@ class _LumoListBoxState extends State<LumoListBox> {
       role: SemanticsRole.list,
       enabled: widget.isDisabled ? false : null,
       child: Opacity(
-        opacity: widget.isDisabled ? 0.5 : 1,
+        opacity: widget.isDisabled ? (s.disabledOpacity ?? 0.5) : 1,
         child: Padding(
           // The web's `p-1` around the options.
-          padding: const EdgeInsets.all(4),
+          padding: s.listPadding ?? const EdgeInsets.all(4),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             mainAxisSize: MainAxisSize.min,
             // The web's `gap-0.5`.
-            spacing: 2,
+            spacing: s.listGap ?? 2,
             children: widget.items.isEmpty
                 ? [
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 12),
-                      child: Text(widget.emptyLabel, style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                      child: Text(widget.emptyLabel, style: TextStyle(fontSize: 14, color: c.fgMuted).merge(s.emptyTextStyle)),
                     ),
                   ]
                 : [
@@ -402,6 +424,7 @@ class _LumoListBoxState extends State<LumoListBox> {
                         description: item.description,
                         leading: item.leading,
                         size: widget.size,
+                        style: widget.style,
                         isDisabled: widget.isDisabled || item.isDisabled,
                         isSelected: selection.contains(item.id),
                         onTap: () => _toggle(item.id),
@@ -416,7 +439,7 @@ class _LumoListBoxState extends State<LumoListBox> {
                           children: [
                             if (item.trailing != null) item.trailing!,
                             ExcludeSemantics(
-                              child: Icon(Icons.check, size: 16, color: selection.contains(item.id) ? c.accent : Colors.transparent),
+                              child: Icon(Icons.check, size: 16, color: selection.contains(item.id) ? (s.selectedIconColour ?? c.accent) : Colors.transparent),
                             ),
                           ],
                         ),

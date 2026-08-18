@@ -43,7 +43,11 @@ Iterable<File> _libSources() => Directory('lib/src')
     .listSync()
     .whereType<File>()
     .where((f) => f.path.endsWith('.dart'))
-    .where((f) => !f.path.endsWith('tokens.g.dart'));
+    // Generated sources are graded by the generator that writes them
+    // (`gate:flutter-tokens`, `gate:mobile-styles`), never by these sweeps: a
+    // rule firing on emitted code can only be fixed by editing a file that says
+    // "do not edit", which teaches the wrong lesson.
+    .where((f) => !f.path.endsWith('.g.dart'));
 
 String _name(File f) => f.uri.pathSegments.last;
 
@@ -280,6 +284,37 @@ void main() {
     }
     expect(offenders, isEmpty,
         reason: 'move the assert into build() — see segmented_control.dart. Offenders:\n${offenders.join('\n')}');
+  });
+
+  test('every Lumo*Style class is declared in styles.dart, where the generator can grade it', () {
+    // WHY: `scripts/build-mobile-styles.mjs` is the ONE place the appearance-only
+    // rule lives. It can emit `lerp` for a colour, a length, a weight, a type, a
+    // shadow, a duration or a per-step table and for nothing else, so a `String`
+    // or a `Widget` or an `IconData` in a style object fails the build with the
+    // reason. That enforcement reaches exactly the classes the generator READS —
+    // which is `styles.dart` and nothing else.
+    //
+    // A style class declared in its own family file would compile, would be
+    // public, would be exported, and would be ungraded: the first field anyone
+    // added could be a label. So the rule is not "do not put a String in a style
+    // object" (which is a request) but "every style object is somewhere the
+    // grader can see it" (which is a check). One definition, one place.
+    final offenders = <String>[];
+    for (final file in _libSources()) {
+      if (_name(file) == 'styles.dart') continue;
+      // Deliberately crude: a class declaration whose name ends in `Style`.
+      // `LumoDateStyle` is an ENUM (a date FORMAT, not appearance) and is not
+      // matched, which is the only near miss in the library today.
+      for (final m in RegExp('class Lumo[A-Za-z]*Style').allMatches(file.readAsStringSync())) {
+        offenders.add('${_name(file)}: ${m.group(0)}');
+      }
+    }
+    expect(offenders, isEmpty,
+        reason: 'a style object must live in lib/src/styles.dart so that '
+            'scripts/build-mobile-styles.mjs reads it — that generator is what refuses a field '
+            'able to carry a name, a glyph, a direction or a role, and it only refuses what it '
+            'can see. Move the class, add its field to LumoStyles, and re-run the generator. '
+            'Offenders:\n${offenders.join('\n')}');
   });
 
   test('a corner radius comes from LumoRadius, never from a bare number', () {

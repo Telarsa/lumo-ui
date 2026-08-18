@@ -159,6 +159,10 @@ function docAbove(/** @type {string} */ src, /** @type {number} */ index) {
   for (let i = before.length - 1; i >= 0; i--) {
     const line = (before[i] ?? "").trim();
     if (line.startsWith("///")) { lines.unshift(line.replace(/^\/\/\/ ?/, "")); continue; }
+    // Annotations sit BETWEEN the docblock and the declaration and are part of
+    // neither. `@override` on a field whose style mixin declares it is ordinary
+    // Dart, and stopping here counted 55 documented props as undocumented.
+    if (line.startsWith("@")) continue;
     break;
   }
   return lines

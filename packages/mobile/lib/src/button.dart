@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'scope.dart';
+import 'styles.dart';
 import 'tokens.g.dart';
 
 enum LumoButtonVariant { solid, outline, ghost, critical }
@@ -25,7 +26,7 @@ const _font = {LumoButtonSize.sm: 14.0, LumoButtonSize.md: 14.0, LumoButtonSize.
 /// which is why `LumoIconButton` below grows its hit area and this one does
 /// not. Reach for `lg` when a text button is narrow and stands alone.
 class LumoButton extends StatelessWidget {
-  const LumoButton({super.key, required this.child, this.onPressed, this.variant = LumoButtonVariant.solid, this.size = LumoButtonSize.md, this.isDisabled = false});
+  const LumoButton({super.key, required this.child, this.onPressed, this.variant = LumoButtonVariant.solid, this.size = LumoButtonSize.md, this.isDisabled = false, this.style});
   /// The widget this one wraps.
   final Widget child;
   /// Called when the control is pressed. Null disables it.
@@ -37,11 +38,29 @@ class LumoButton extends StatelessWidget {
   /// Whether the control is disabled.
   final bool isDisabled;
 
+  /// Appearance overrides for THIS button, merged over `LumoStyles.button` from
+  /// the theme; null keeps the theme's, and a theme that set none keeps the
+  /// library's. APPEARANCE ONLY — a style object has no field that could reach
+  /// a name, a role or the direction, and that is enforced by
+  /// `scripts/build-mobile-styles.mjs`, which refuses to generate one that could.
+  final LumoButtonStyle? style;
+
   @override
   Widget build(BuildContext context) {
     final c = LumoScope.of(context).colours;
-    Color bg(Set<WidgetState> s) {
-      final active = s.contains(WidgetState.pressed) || s.contains(WidgetState.hovered);
+    // Theme first, this call site second. Every `??` below falls through to the
+    // value that was hard-coded here before, so "no overrides supplied" IS the
+    // current look — by construction, not by a defaults table someone re-typed
+    // and can mistype.
+    final s = LumoStyles.of(context).button.merge(style);
+    Color bg(Set<WidgetState> states) {
+      final active = states.contains(WidgetState.pressed) || states.contains(WidgetState.hovered);
+      // Split, not `active ? s.pressedBackground?[variant] : ...`: Dart cannot
+      // parse a null-aware index inside a conditional — `?[` collides with the
+      // `? :` operator itself.
+      final overrides = active ? s.pressedBackground : s.background;
+      final tuned = overrides?[variant];
+      if (tuned != null) return tuned;
       switch (variant) {
         case LumoButtonVariant.solid:
           return active ? c.accentHover : c.accent;
@@ -55,6 +74,8 @@ class LumoButton extends StatelessWidget {
     }
 
     Color fg() {
+      final tuned = s.foreground?[variant];
+      if (tuned != null) return tuned;
       switch (variant) {
         case LumoButtonVariant.solid:
           return c.accentFg;
@@ -66,10 +87,11 @@ class LumoButton extends StatelessWidget {
     }
 
     final labelBase = Theme.of(context).textTheme.labelLarge;
-    final style = ButtonStyle(
-      minimumSize: WidgetStatePropertyAll(Size(0, _height[size]!)),
-      maximumSize: WidgetStatePropertyAll(Size(double.infinity, _height[size]!)),
-      padding: WidgetStatePropertyAll(EdgeInsetsDirectional.symmetric(horizontal: _padding[size]!)),
+    final height = s.height?[size] ?? _height[size]!;
+    final resolved = ButtonStyle(
+      minimumSize: WidgetStatePropertyAll(Size(0, height)),
+      maximumSize: WidgetStatePropertyAll(Size(double.infinity, height)),
+      padding: WidgetStatePropertyAll(EdgeInsetsDirectional.symmetric(horizontal: s.inlinePadding?[size] ?? _padding[size]!)),
       backgroundColor: WidgetStateProperty.resolveWith(bg),
       foregroundColor: WidgetStatePropertyAll(fg()),
       overlayColor: const WidgetStatePropertyAll(Colors.transparent),
@@ -82,13 +104,13 @@ class LumoButton extends StatelessWidget {
       // strings in 11 slugs were affected — every one of them a button label.
       // Only the family travels; size, weight and metrics stay this widget's.
       textStyle: WidgetStatePropertyAll(TextStyle(
-        fontSize: _font[size],
-        fontWeight: FontWeight.w500,
+        fontSize: s.fontSize?[size] ?? _font[size],
+        fontWeight: s.fontWeight ?? FontWeight.w500,
         fontFamily: labelBase?.fontFamily,
         fontFamilyFallback: labelBase?.fontFamilyFallback,
       )),
-      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(LumoRadius.md))),
-      side: WidgetStatePropertyAll(BorderSide(color: variant == LumoButtonVariant.outline ? c.borderControl : Colors.transparent)),
+      shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: s.borderRadius ?? BorderRadius.circular(LumoRadius.md))),
+      side: WidgetStatePropertyAll(BorderSide(color: s.borderColour?[variant] ?? (variant == LumoButtonVariant.outline ? c.borderControl : Colors.transparent), width: s.borderWidth ?? 1)),
       elevation: const WidgetStatePropertyAll(0),
       // `padded`, not `shrinkWrap`. This is the platform's OWN mechanism for the
       // thing the library was failing: Flutter expands a Material control's hit
@@ -100,8 +122,8 @@ class LumoButton extends StatelessWidget {
       tapTargetSize: MaterialTapTargetSize.padded,
     );
     return Opacity(
-      opacity: isDisabled ? 0.5 : 1,
-      child: FilledButton(onPressed: isDisabled ? null : onPressed, style: style, child: child),
+      opacity: isDisabled ? (s.disabledOpacity ?? 0.5) : 1,
+      child: FilledButton(onPressed: isDisabled ? null : onPressed, style: resolved, child: child),
     );
   }
 }
@@ -130,7 +152,7 @@ class LumoButton extends StatelessWidget {
 /// anything that walks the tree, `test/tap_target_floor_test.dart` included.
 /// One control, one node, one size.
 class LumoIconButton extends StatelessWidget {
-  const LumoIconButton({super.key, required this.label, required this.child, this.onPressed, this.variant = LumoButtonVariant.ghost, this.size = LumoButtonSize.md, this.isDisabled = false});
+  const LumoIconButton({super.key, required this.label, required this.child, this.onPressed, this.variant = LumoButtonVariant.ghost, this.size = LumoButtonSize.md, this.isDisabled = false, this.style});
   /// The name this control is announced by, and painted where the family shows one.
   final String label;
   /// The widget this one wraps.
@@ -143,16 +165,27 @@ class LumoIconButton extends StatelessWidget {
   final LumoButtonSize size;
   /// Whether the control is disabled.
   final bool isDisabled;
+  /// Appearance overrides for THIS button, merged over `LumoStyles.button`
+  /// from the theme. Null fields leave the library's own value alone.
+  final LumoButtonStyle? style;
 
   @override
   Widget build(BuildContext context) {
+    // Theme first, call site second — a null field leaves the library's own value.
+    final s = LumoStyles.of(context).button.merge(style);
     final side = _height[size]!;
     // `LumoTouch.floor`, not `LumoControl.lg`. 44 is iOS's minimum and Android's
     // is 48, so a 44-square rescue passed one platform and failed the other —
     // measured, it was the single largest cause: 48 nodes at exactly 44×44
     // across the gallery. This is the HIT rectangle; the drawn button keeps its
     // size step, which is what lets it stay on the shared token scale.
-    final target = side > LumoTouch.floor ? side : LumoTouch.floor;
+    // The largest of: the drawn size, the platform floor, and any floor the
+    // consumer asked for. A style may only GROW a touch target — `minTapTarget`
+    // is a floor, not a knob, so nothing set in a theme can shrink it below what
+    // the device run measured.
+    final asked = s.minTapTarget ?? 0;
+    var target = side > LumoTouch.floor ? side : LumoTouch.floor;
+    if (asked > target) target = asked;
     // ONE node: it names, carries the role and state, and acts.
     return Semantics(
       container: true,
@@ -188,7 +221,7 @@ class LumoIconButton extends StatelessWidget {
                   child: SizedBox(
                     width: side,
                     height: side,
-                    child: LumoButton(variant: variant, size: size, isDisabled: isDisabled, onPressed: onPressed, child: child),
+                    child: LumoButton(variant: variant, size: size, isDisabled: isDisabled, onPressed: onPressed, style: style, child: child),
                   ),
                 ),
               ),

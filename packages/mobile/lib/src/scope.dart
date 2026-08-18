@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'styles.dart';
 import 'tokens.g.dart';
 
 /// Right-to-left languages by primary subtag (CLDR characterOrder) — the same
@@ -100,7 +101,7 @@ enum LumoPressFeedback {
 /// A Material `ThemeData` from the Lumo tokens — so Material's own widgets under
 /// a `MaterialApp` (scaffold, dialogs, ink) wear the same palette. Their system,
 /// our tokens: `ColorScheme` mapped from `--lumo-sys-*`.
-ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoBrand.achromatic, String? fontFamily, LumoSchemeColours? colours, LumoPressFeedback pressFeedback = LumoPressFeedback.tint}) {
+ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoBrand.achromatic, String? fontFamily, LumoSchemeColours? colours, LumoPressFeedback pressFeedback = LumoPressFeedback.tint, LumoStyles styles = const LumoStyles()}) {
   final c = colours ?? (brightness == Brightness.dark ? darkColours(brand) : lightColours(brand));
   final scheme = ColorScheme(
     brightness: brightness,
@@ -126,6 +127,15 @@ ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoB
   return ThemeData(
     useMaterial3: true,
     colorScheme: scheme,
+    // The per-widget customisation surface rides on the THEME, not on
+    // `LumoScope`, for two reasons. `Theme` sits above the `Navigator`, so a
+    // dialog or a sheet inherits the styles without the re-provision
+    // `LumoScopeData.wrap` exists for; and `ThemeData.lerp` is what calls
+    // `LumoStyles.lerp`, so the method `ThemeExtension` demands is load-bearing
+    // rather than a requirement satisfied and never used. The one trap: this
+    // belongs on `MaterialApp.theme`, above the navigator — a `Theme` inserted
+    // BELOW one does not reach a route.
+    extensions: [styles],
     scaffoldBackgroundColor: c.bg,
     fontFamily: fontFamily,
     visualDensity: VisualDensity.standard,

@@ -31,6 +31,17 @@ web library, in Dart:
   overriding `--lumo-sys-*` custom properties on the web. `brand` alone turns
   hue and chroma. `lumoThemeData(colours:)` carries the same palette to
   Material's own widgets.
+- **Per-widget appearance**: `lumoThemeData(styles: LumoStyles(...))` carries one
+  style object per family (`LumoButtonStyle`, `LumoCardStyle`, `LumoItemStyle`, …)
+  as a `ThemeExtension`, and every widget also takes `style:` for one call site;
+  the two `merge`, theme first. Every field is nullable and means "leave it
+  alone", so an app that sets none renders exactly what it rendered before.
+  A style object carries **appearance only** and cannot be otherwise:
+  `scripts/build-mobile-styles.mjs` emits `copyWith`/`merge`/`lerp`/`==` for the
+  whole registry and can only do so for types that carry no meaning, so a
+  `String`, a `Widget`, an `IconData` or a `bool` field fails the build with the
+  reason. Accessibility floors are clamped upward: `minTapTarget` and `minHeight`
+  can grow a touch target and can never shrink one below 44.
 - **Proof**: semantics-tree tests (`test/`) are the mobile counterpart of the
   served-HTML gate; `pnpm run gate:flutter` runs `flutter analyze` + `flutter test`.
   No screen-reader claims without runs.

@@ -623,6 +623,13 @@
           "description": "The size step, from the shared control scale."
         },
         {
+          "name": "style",
+          "type": "LumoButtonStyle?",
+          "required": false,
+          "default": null,
+          "description": "Appearance overrides for THIS button, merged over `LumoStyles.button` from the theme; null keeps the theme's, and a theme that set none keeps the library's. APPEARANCE ONLY — a style object has no field that could reach a name, a role or the direction, and that is enforced by `scripts/build-mobile-styles.mjs`, which refuses to generate one that could."
+        },
+        {
           "name": "variant",
           "type": "LumoButtonVariant",
           "required": false,
@@ -682,6 +689,96 @@
           "required": true,
           "default": null,
           "description": "The widget this one wraps."
+        }
+      ]
+    },
+    "LumoButtonStyle": {
+      "file": "packages/mobile/lib/src/styles.dart",
+      "doc": "Appearance of `LumoButton` and `LumoIconButton`. Every field is an override: null keeps the library's value, and a map keeps the library's value for each step or variant it does not mention.",
+      "props": [
+        {
+          "name": "background",
+          "type": "Map<LumoButtonVariant, Color>?",
+          "required": false,
+          "default": null,
+          "description": "Fill per variant, at rest. Omitted variants keep the token fill."
+        },
+        {
+          "name": "borderColour",
+          "type": "Map<LumoButtonVariant, Color>?",
+          "required": false,
+          "default": null,
+          "description": "Border colour per variant. Omitted variants keep `borderControl` on `outline` and a transparent edge everywhere else."
+        },
+        {
+          "name": "borderRadius",
+          "type": "BorderRadiusGeometry?",
+          "required": false,
+          "default": null,
+          "description": "Corner radius. Null keeps `LumoRadius.md`."
+        },
+        {
+          "name": "borderWidth",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Border width. Null keeps 1."
+        },
+        {
+          "name": "disabledOpacity",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Opacity of a disabled button. Null keeps 0.5."
+        },
+        {
+          "name": "fontSize",
+          "type": "Map<LumoButtonSize, double>?",
+          "required": false,
+          "default": null,
+          "description": "Label size per size step. Omitted steps keep 14 / 14 / 16."
+        },
+        {
+          "name": "fontWeight",
+          "type": "FontWeight?",
+          "required": false,
+          "default": null,
+          "description": "Label weight. Null keeps `FontWeight.w500`. The FAMILY is never a style object's to set: it comes from the app's typography, always."
+        },
+        {
+          "name": "foreground",
+          "type": "Map<LumoButtonVariant, Color>?",
+          "required": false,
+          "default": null,
+          "description": "Label colour per variant. Omitted variants keep the token foreground."
+        },
+        {
+          "name": "height",
+          "type": "Map<LumoButtonSize, double>?",
+          "required": false,
+          "default": null,
+          "description": "Drawn height per size step, in logical pixels. A step this map omits keeps the shared control scale (`LumoControl.sm/md/lg` — 29 / 36 / 44)."
+        },
+        {
+          "name": "inlinePadding",
+          "type": "Map<LumoButtonSize, double>?",
+          "required": false,
+          "default": null,
+          "description": "Padding on the inline axis (start and end together) per size step. Omitted steps keep 12 / 16 / 24."
+        },
+        {
+          "name": "minTapTarget",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "A FLOOR under `LumoIconButton`'s hit area, in logical pixels — it can only GROW the target. The resolution takes the largest of this, the drawn size and the 44 px platform floor, so nothing set here can shrink a touch target below what the device run measured (docs/evidence/mobile-device.md)."
+        },
+        {
+          "name": "pressedBackground",
+          "type": "Map<LumoButtonVariant, Color>?",
+          "required": false,
+          "default": null,
+          "description": "Fill per variant while the finger is down. Omitted variants keep the token's «hover» fill, which is what a press takes across this library."
         }
       ]
     },
@@ -932,10 +1029,17 @@
         },
         {
           "name": "padding",
-          "type": "EdgeInsetsGeometry",
+          "type": "EdgeInsetsGeometry?",
           "required": false,
-          "default": "const EdgeInsets.all(16)",
-          "description": "Padding inside the surface. Directional: start and end, never left and right."
+          "default": null,
+          "description": "Padding inside the surface. Directional: start and end, never left and right. Null falls to `LumoStyles.card.padding`, and with neither, to 16 on all sides — the value this parameter used to default to. It became nullable so that a theme can move card padding at all: a parameter with a non-null default cannot tell \"the caller wanted 16\" from \"the caller said nothing\"."
+        },
+        {
+          "name": "style",
+          "type": "LumoCardStyle?",
+          "required": false,
+          "default": null,
+          "description": "Appearance overrides for THIS card, merged over `LumoStyles.card`. APPEARANCE ONLY — no field of a style object can reach the announced `label`, the button role, or the direction."
         },
         {
           "name": "variant",
@@ -956,6 +1060,13 @@
           "required": true,
           "default": null,
           "description": "The children, in reading order."
+        },
+        {
+          "name": "style",
+          "type": "LumoCardStyle?",
+          "required": false,
+          "default": null,
+          "description": "Appearance overrides for this footer, merged over `LumoStyles.card`."
         }
       ]
     },
@@ -985,6 +1096,138 @@
           "default": null,
           "description": "A description for the field, shown under the control and announced as its hint.",
           "announced": true
+        },
+        {
+          "name": "style",
+          "type": "LumoCardStyle?",
+          "required": false,
+          "default": null,
+          "description": "Appearance overrides for this header, merged over `LumoStyles.card`."
+        }
+      ]
+    },
+    "LumoCardStyle": {
+      "file": "packages/mobile/lib/src/styles.dart",
+      "doc": "Appearance of `LumoCard`, `LumoCardHeader` and `LumoCardFooter`.",
+      "props": [
+        {
+          "name": "background",
+          "type": "Map<LumoCardVariant, Color>?",
+          "required": false,
+          "default": null,
+          "description": "Fill per variant. Omitted variants keep the token fill — `surfaceSunken` for `sunken`, `surface` for the rest."
+        },
+        {
+          "name": "borderColour",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "The frame's colour. Null keeps `border`. `sunken` draws no frame at any colour — the fill is what separates it."
+        },
+        {
+          "name": "borderRadius",
+          "type": "BorderRadiusGeometry?",
+          "required": false,
+          "default": null,
+          "description": "Corner radius. Null keeps `LumoRadius.lg`."
+        },
+        {
+          "name": "borderWidth",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "The frame's width, and the footer rule's. Null keeps 1."
+        },
+        {
+          "name": "descriptionTextStyle",
+          "type": "TextStyle?",
+          "required": false,
+          "default": null,
+          "description": "The header description's type, merged over 14 in `fgMuted`."
+        },
+        {
+          "name": "disabledOpacity",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Opacity of a disabled card. Null keeps 0.5."
+        },
+        {
+          "name": "footerActionGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Gap between footer actions, on both axes. Null keeps 8."
+        },
+        {
+          "name": "footerGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Block gap above and below the footer's rule. Null keeps 12."
+        },
+        {
+          "name": "footerRuleColour",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "The footer's block-start rule. Null keeps `border`."
+        },
+        {
+          "name": "headerActionGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Inline gap between the header's text and its action. Null keeps 16."
+        },
+        {
+          "name": "headerDescriptionGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Block gap between the header's title and its description. Null keeps 4."
+        },
+        {
+          "name": "headerGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Block-end gap under the header. Null keeps 12."
+        },
+        {
+          "name": "padding",
+          "type": "EdgeInsetsGeometry?",
+          "required": false,
+          "default": null,
+          "description": "Padding inside the surface, used when the call site gives none. Null keeps 16 on all sides."
+        },
+        {
+          "name": "pressDuration",
+          "type": "Duration?",
+          "required": false,
+          "default": null,
+          "description": "How long the press fill cross-fades. Null keeps 80ms. «Reduce motion» still wins: the platform collapses this to zero whatever it says."
+        },
+        {
+          "name": "pressedBackground",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "Fill while the finger is down, every variant. Null keeps `surfaceHover`."
+        },
+        {
+          "name": "shadow",
+          "type": "List<BoxShadow>?",
+          "required": false,
+          "default": null,
+          "description": "The shadow an `elevated` card casts. Null keeps `LumoShadow.raised`, which carries a separate DARK ramp; a hand-picked list here is one alpha for both schemes, and on a dark page that is close to painting nothing."
+        },
+        {
+          "name": "titleTextStyle",
+          "type": "TextStyle?",
+          "required": false,
+          "default": null,
+          "description": "The header title's type, MERGED over 16 / w600 / 1.4 — the fields it leaves null keep the default, so the app's own face still reaches the title."
         }
       ]
     },
@@ -1070,7 +1313,7 @@
     },
     "LumoChartPoint": {
       "file": "packages/mobile/lib/src/chart.dart",
-      "doc": "",
+      "doc": "One plotted figure.\n\n`label` names the point (a day, a category, a province) and `valueLabel` is the figure **already formatted by the app** — «۱٬۲۴۰», «۳۲٪», «۴ ساعت». The two together are what a reader hears; `value` is the bare number, used only to compute a bar's length or an arc's sweep, and is never rendered.",
       "props": [
         {
           "name": "label",
@@ -1128,7 +1371,7 @@
     },
     "LumoChartSeries": {
       "file": "packages/mobile/lib/src/chart.dart",
-      "doc": "",
+      "doc": "One line of a `LumoLineChart` — a named run of points with a tone.",
       "props": [
         {
           "name": "label",
@@ -1503,7 +1746,7 @@
     },
     "LumoColorSwatch": {
       "file": "packages/mobile/lib/src/color_input.dart",
-      "doc": "",
+      "doc": "One preset colour and, crucially, its NAME — the web's `ColorSwatch` (`color-picker.tsx`), where `label` is required for the same reason.\n\n`name` is optional here and not a loophole: when it is absent the swatch is announced by its HEX (`#1E90FF`), which is a fact about the colour a reader can act on. What a swatch is never announced as is «رنگ» — a grid of nine controls all called \"colour\" is a grid of nine controls a reader cannot choose between.",
       "props": [
         {
           "name": "color",
@@ -1744,7 +1987,7 @@
     },
     "LumoCommandGroup": {
       "file": "packages/mobile/lib/src/command.dart",
-      "doc": "",
+      "doc": "A titled run of rows — the web's `CommandGroup`.",
       "props": [
         {
           "name": "items",
@@ -1765,7 +2008,7 @@
     },
     "LumoCommandItem": {
       "file": "packages/mobile/lib/src/command.dart",
-      "doc": "",
+      "doc": "One row of a [LumoCommand]: `id` is what the palette reports, `label` the announced and displayed text — the web's `CommandItem`.",
       "props": [
         {
           "name": "id",
@@ -2190,7 +2433,7 @@
     },
     "LumoDatePreset": {
       "file": "packages/mobile/lib/src/date_picker.dart",
-      "doc": "",
+      "doc": "One shortcut under the calendar — «امروز», «فردا», «هفتهٔ بعد». `label` is REQUIRED and is the whole of what a reader hears: a preset with no words is an unnamed button.",
       "props": [
         {
           "name": "date",
@@ -2211,7 +2454,7 @@
     },
     "LumoDateRange": {
       "file": "packages/mobile/lib/src/calendar.dart",
-      "doc": "",
+      "doc": "A span of days, both ends inclusive — the counterpart of the web's `CalendarDateRange`, and its field names (`from`, `to`) rather than start/end, so the two libraries read the same. `to` is absent while the reader has picked only the first end, which is a real state the grid shows.\n\nThe ends are Gregorian `DateTime`s (Flutter's date type; the web's `CalendarDate` has no Dart twin) of which only the local calendar day is ever read. Everything a reader SEES of them goes through `formatLumoDate`.",
       "props": [
         {
           "name": "from",
@@ -2883,7 +3126,7 @@
     },
     "LumoFilterGroup": {
       "file": "packages/mobile/lib/src/filters.dart",
-      "doc": "",
+      "doc": "A named set of choices — «مرتب‌سازی», «فقط تأییدشده», «دسته‌بندی».",
       "props": [
         {
           "name": "id",
@@ -2926,7 +3169,7 @@
     },
     "LumoFilterOption": {
       "file": "packages/mobile/lib/src/filters.dart",
-      "doc": "",
+      "doc": "One choice inside a [LumoFilterGroup]: `id` is what the bar reports, `label` the announced and displayed text.",
       "props": [
         {
           "name": "id",
@@ -3191,6 +3434,13 @@
           "required": false,
           "default": "LumoButtonSize.md",
           "description": "The size step, from the shared control scale."
+        },
+        {
+          "name": "style",
+          "type": "LumoButtonStyle?",
+          "required": false,
+          "default": null,
+          "description": "Appearance overrides for THIS button, merged over `LumoStyles.button` from the theme. Null fields leave the library's own value alone."
         },
         {
           "name": "variant",
@@ -3683,6 +3933,13 @@
           "description": "The size step, from the shared control scale."
         },
         {
+          "name": "style",
+          "type": "LumoItemStyle?",
+          "required": false,
+          "default": null,
+          "description": "Appearance overrides for THIS row, merged over `LumoStyles.item`. APPEARANCE ONLY — nothing here reaches the announced `title`, the button role, the selected state, or the chevron's direction-matching glyph."
+        },
+        {
           "name": "trailing",
           "type": "Widget?",
           "required": false,
@@ -3723,6 +3980,201 @@
           "required": false,
           "default": "false",
           "description": "A hairline between rows instead of a gap."
+        },
+        {
+          "name": "style",
+          "type": "LumoItemStyle?",
+          "required": false,
+          "default": null,
+          "description": "Appearance overrides for this group, merged over `LumoStyles.item`."
+        }
+      ]
+    },
+    "LumoItemStyle": {
+      "file": "packages/mobile/lib/src/styles.dart",
+      "doc": "Appearance of `LumoItem`, `LumoItemGroup` and `LumoListBox`.",
+      "props": [
+        {
+          "name": "background",
+          "type": "Map<LumoItemVariant, Color>?",
+          "required": false,
+          "default": null,
+          "description": "Fill per variant. Omitted variants keep the token fill."
+        },
+        {
+          "name": "blockPadding",
+          "type": "Map<LumoItemSize, double>?",
+          "required": false,
+          "default": null,
+          "description": "Padding on the block axis, per size step. Omitted steps keep 10 / 14."
+        },
+        {
+          "name": "borderColour",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "The frame an `outlined` row draws. Null keeps `border`."
+        },
+        {
+          "name": "borderRadius",
+          "type": "BorderRadiusGeometry?",
+          "required": false,
+          "default": null,
+          "description": "Corner radius. Null keeps `LumoRadius.md`."
+        },
+        {
+          "name": "borderWidth",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "The frame's width, and the divider's default. Null keeps 1."
+        },
+        {
+          "name": "chevronColour",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "Colour of the «go» chevron. Null keeps `fgSubtle`. The GLYPH is not settable: `Icons.chevron_right` carries `matchTextDirection`, and one that does not would point the wrong way the moment the app is read in Persian."
+        },
+        {
+          "name": "chevronSize",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Size of the «go» chevron. Null keeps 16."
+        },
+        {
+          "name": "descriptionTextStyle",
+          "type": "TextStyle?",
+          "required": false,
+          "default": null,
+          "description": "The description's type, merged over 14 / 1.5 in `fgMuted`."
+        },
+        {
+          "name": "disabledOpacity",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Opacity of a disabled row or list. Null keeps 0.5."
+        },
+        {
+          "name": "dividerColour",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "The hairline under a row and between grouped rows. Null keeps `border`."
+        },
+        {
+          "name": "dividerThickness",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "The hairline's thickness. Null keeps 1."
+        },
+        {
+          "name": "emptyTextStyle",
+          "type": "TextStyle?",
+          "required": false,
+          "default": null,
+          "description": "The empty message's type, merged over 14 in `fgMuted`."
+        },
+        {
+          "name": "gap",
+          "type": "Map<LumoItemSize, double>?",
+          "required": false,
+          "default": null,
+          "description": "Inline gap between a row's slots, per size step. Omitted steps keep 10 / 14."
+        },
+        {
+          "name": "groupGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Block gap between rows in a group that draws no dividers. Null keeps 8."
+        },
+        {
+          "name": "groupLabelGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Block gap under a group's section header. Null keeps 8."
+        },
+        {
+          "name": "groupLabelTextStyle",
+          "type": "TextStyle?",
+          "required": false,
+          "default": null,
+          "description": "A group's section header type, merged over 12 / w500 in `fgSubtle`."
+        },
+        {
+          "name": "iconTheme",
+          "type": "IconThemeData?",
+          "required": false,
+          "default": null,
+          "description": "Size and colour of the leading and trailing slots' icons, merged over 16 in `fgMuted`."
+        },
+        {
+          "name": "inlinePadding",
+          "type": "Map<LumoItemSize, double>?",
+          "required": false,
+          "default": null,
+          "description": "Padding on the inline axis, per size step. Omitted steps keep 12 / 16."
+        },
+        {
+          "name": "listGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Block gap between a list box's options. Null keeps 2."
+        },
+        {
+          "name": "listPadding",
+          "type": "EdgeInsetsGeometry?",
+          "required": false,
+          "default": null,
+          "description": "Padding around a list box's options. Null keeps 4 on all sides."
+        },
+        {
+          "name": "minHeight",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "A FLOOR under a row's height — it can only GROW the row. The resolution takes the larger of this and the 44 px platform floor, so nothing set here can make a row a smaller touch target than the device run demands."
+        },
+        {
+          "name": "pressedBackground",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "Fill while the finger is down. Null keeps `surfaceHover`."
+        },
+        {
+          "name": "selectedBackground",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "Fill of a SELECTED row. Null keeps `surfaceSunken`. Selection is announced as state as well, so a colour is never the only thing carrying it."
+        },
+        {
+          "name": "selectedIconColour",
+          "type": "Color?",
+          "required": false,
+          "default": null,
+          "description": "Colour of the check on a selected option. Null keeps `accent`."
+        },
+        {
+          "name": "textGap",
+          "type": "double?",
+          "required": false,
+          "default": null,
+          "description": "Block gap between the title and the description. Null keeps 2."
+        },
+        {
+          "name": "titleTextStyle",
+          "type": "TextStyle?",
+          "required": false,
+          "default": null,
+          "description": "The title's type, merged over 14 / w500 / 1.375."
         }
       ]
     },
@@ -4046,6 +4498,13 @@
           "description": "The size step, from the shared control scale."
         },
         {
+          "name": "style",
+          "type": "LumoItemStyle?",
+          "required": false,
+          "default": null,
+          "description": "Appearance overrides for this list and the rows it builds, merged over `LumoStyles.item`. It cannot reach `label`, `emptyLabel`, the list role or the announced `selected` state of a row."
+        },
+        {
           "name": "value",
           "type": "Set<String>?",
           "required": false,
@@ -4220,7 +4679,7 @@
     },
     "LumoMaskValue": {
       "file": "packages/mobile/lib/src/mask_input.dart",
-      "doc": "",
+      "doc": "What a masked field is worth, in the three forms a caller needs — the web's `MaskValue` (`mask-input.tsx`).",
       "props": [
         {
           "name": "isComplete",

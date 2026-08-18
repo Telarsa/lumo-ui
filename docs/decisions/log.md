@@ -2146,6 +2146,67 @@ safe inside a demo card and is not safe as page prose — a bare Latin identifie
 in Persian prose needs a `data-lumo-latn` island, which a manifest string cannot
 carry. Reworded, with the example number in Persian digits.
 
+## 45. The mobile library was less customisable than the Material it wraps (18 Aug 2026)
+
+Measured: `packages/mobile` had ZERO `ThemeExtension`, and of 1049 documented
+props only 51 were appearance-shaped — every one of them a closed enum (`size`,
+`variant`, `tone`), a choice among the library's opinions rather than a value of
+the consumer's. A consumer could swap the palette (`LumoScope(light:, dark:)`),
+the font and the press feedback, and nothing else. That is a worse trade than
+Material offers, which for a design system is the wrong direction.
+
+The cause was mechanical, not philosophical. `ThemeExtension` requires
+`copyWith` and `lerp` per class; 76 family files means ~380 hand-written methods
+over ~1000 fields, each a place to silently forget one — and a forgotten field in
+`copyWith` does not throw, the override simply never arrives. So the cost of the
+first family was the cost of all 76, and nobody paid it.
+
+**The shape.** `LumoStyles extends ThemeExtension<LumoStyles>` is a registry: one
+non-nullable field per family, each defaulting to that family's empty style. A
+family style is a bag of NULLABLE appearance fields; a widget resolves
+`style.x ?? <the literal that was already there>`, so "no overrides" is the old
+look BY CONSTRUCTION rather than by a defaults table someone re-typed. The seam
+is `lumoThemeData(styles:)` — `ThemeData.extensions`, not `LumoScope` — because
+`Theme` sits above the `Navigator` (so routes inherit without
+`LumoScopeData.wrap`) and because `ThemeData.lerp` is what actually calls the
+`lerp` the base class demands. Per call site, every widget takes `style:`, and
+the two `merge`.
+
+**The mechanical half is generated.** `scripts/build-mobile-styles.mjs` reads the
+declarations in `styles.dart` and writes `styles.g.dart`; `gate:mobile-styles`
+fails when it is stale, exactly like `gate:flutter-tokens`. Three families and 55
+fields produced 539 lines. `build_runner` + `freezed` would have been a runtime
+dependency, which AGENTS.md says to ask about first.
+
+**And the generator is where the rule lives.** A style object may carry
+APPEARANCE ONLY — it must never remove an announced string, flip direction, or
+change a semantic role. That is not a review checklist item here: the generator
+can emit `lerp` only for a colour, a length, a weight, a type, an icon theme, a
+shadow, a duration or a per-step table of those, so a `String` field cannot exist
+(a name can never live in a theme), a `Widget` field cannot (a slot cannot), and
+`IconData`, `bool`, `TextDirection`, `TextAlign`, `Alignment` and `SemanticsRole`
+are refused BY NAME with the reason. `IconData` is the sharpest of them:
+`Icons.chevron_right` carries `matchTextDirection` and an arbitrary glyph does
+not, so a settable glyph would be the silent RTL defect with a config file in
+front of it.
+
+Three locks, one definition. The allow-list in the generator; a house-rules sweep
+asserting no `Lumo*Style` class is declared outside `styles.dart` (the rule only
+refuses what it can see); and `test/styles_test.dart`, which builds every worked
+family twice — once bare, once under a maximally hostile style — and asserts the
+semantics tree is identical. The first two grade the declaration; the third
+grades the outcome, which is the half a type system cannot promise.
+
+**Where appearance and accessibility touch, the knob opens one way.**
+`minTapTarget` and `minHeight` exist and are clamped UPWARD: the resolution takes
+the largest of the style's value, the drawn size and the 44 px floor. A style
+asking for 8 renders 44. The device run of 18 Aug (§43) is what that floor
+defends, and it is not a consumer's to lower.
+
+One thing this does NOT fix: 74 of 120 demos still fail WCAG AA text contrast on
+real hardware (§43), and the new surface makes it possible for a consumer to make
+that worse as well as better. The default palette is still the library's problem.
+
 ## 45. The contrast failure was not real, and the tap-target one had no name (18 Aug 2026)
 
 Two measured accessibility failures were carried into this session from the
