@@ -42,11 +42,36 @@ describe("the component page's shape", () => {
    */
   const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "");
 
+  /*
+   * The file holds TWO page shapes since a mobile-only family earned a page
+   * (decisions §39, §40): the full component page, and `MobileOnlyWebSide`,
+   * whose web side is one sentence saying the web library has no such component
+   * and a link across. A file-wide regex splices the two together and grades a
+   * page that does not exist — that is exactly what it did when this test first
+   * failed, reporting an order of ["preview", "preview"]. Each shape is graded
+   * on its own segment instead.
+   */
+  const segments = code.split(/\n(?=(?:export default )?(?:async )?function )/);
+  const segmentOf = (name: string) => {
+    const found = segments.find((segment) => new RegExp(`function ${name}\\b`).test(segment));
+    if (found === undefined) throw new Error(`no top-level ${name} in the page`);
+    return found;
+  };
+  const fullPage = segmentOf("ComponentPage");
+  const mobileOnly = segmentOf("MobileOnlyWebSide");
+  const sectionIds = (segment: string) =>
+    [...segment.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1]);
+
   it("puts installation directly after the preview", () => {
-    const order = [...code.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1]);
     // Not the whole order — only the claim. A new section between evidence and
     // directions should not fail this test.
-    expect(order.slice(0, 2)).toEqual(["preview", "installation"]);
+    expect(sectionIds(fullPage).slice(0, 2)).toEqual(["preview", "installation"]);
+  });
+
+  it("gives the mobile-only web side a preview and nothing to install", () => {
+    // There is no web component to install, so the page must not offer a copy
+    // command for one. One section, and the reader is sent to the Mobile side.
+    expect(sectionIds(mobileOnly)).toEqual(["preview"]);
   });
 
   it("keeps the rail and the body in the same order", () => {
@@ -56,8 +81,13 @@ describe("the component page's shape", () => {
      * and not the other produces a rail that scrolls to the wrong place — which
      * is worse than the original problem, because it looks like navigation.
      */
-    const railIds = [...code.matchAll(/\{ id: "([a-z]+)", label: c\.rail\./g)].map((m) => m[1]);
-    const bodyIds = [...code.matchAll(/<section id="([a-z]+)"/g)].map((m) => m[1]);
+    // From `sections()`, which is the ONE list the full page's rail is built
+    // from — file-wide, this also catches the single-entry rail inside
+    // `MobileOnlyWebSide` and compares two different pages' navigation.
+    const railIds = [...segmentOf("sections").matchAll(/\{ id: "([a-z]+)", label: c\.rail\./g)].map(
+      (m) => m[1],
+    );
+    const bodyIds = sectionIds(fullPage);
     const inBoth = railIds.filter((id) => bodyIds.includes(id));
     expect(inBoth).toEqual(bodyIds.filter((id) => railIds.includes(id)));
   });

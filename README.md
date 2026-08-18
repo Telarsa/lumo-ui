@@ -28,7 +28,7 @@ to them is a bug, not a customisation.
 ```
 packages/core     the invariants — LumoNode, direction(), formatters, strings
 packages/theme    three token tiers + the Tailwind bridge + :lang(fa) rules
-packages/ui       111 registry components
+packages/ui       113 registry components
 packages/blocks   30 whole-screen compositions
 packages/gate     lumo-gate — grades built HTML, no browser required
 packages/config   the lint policy, zero plugin dependencies
@@ -36,7 +36,7 @@ packages/mobile   Lumo UI Mobile — the mobile component library (Flutter/Dart)
 apps/website      the showcase, and the first thing the gate runs against
 ```
 
-**Current state.** 111 components, 30 blocks and 141 generated registry items.
+**Current state.** 113 components, 30 blocks and 143 generated registry items.
 The exact test and document totals are printed by `pnpm run verify`; they are not
 hand-copied here because they change whenever a regression test or example is
 added. See `docs/history/roadmap-2026-08.md` for the retired roadmap and `docs/README.md` for current documentation.

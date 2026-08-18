@@ -170,7 +170,7 @@ const COPY = {
       ],
       stateCounts: (
         <>
-          امروز ۱۱۱ کامپوننت، ۳۰ بلوکِ تمام‌صفحه و ۱۴۱ آیتم رجیستری در مخزن هست، با هر دو زبان
+          امروز ۱۱۳ کامپوننت، ۳۰ بلوکِ تمام‌صفحه و ۱۴۳ آیتم رجیستری در مخزن هست، با هر دو زبان
           کامل. قراردادِ کامل‌بودن یک دستور است: <Term>pnpm verify</Term> — تایپ‌ها، ممنوعیت
           CSS Modules، تست‌ها، ساخت و دروازهٔ HTML را پشت سر هم اجرا می‌کند و اگر سبز باشد،
           خروجی قابل عرضه است.
@@ -303,7 +303,7 @@ const COPY = {
       ],
       stateCounts: (
         <>
-          Today the tree holds 111 components, 30 whole-screen blocks and 141 registry items, with
+          Today the tree holds 113 components, 30 whole-screen blocks and 143 registry items, with
           both locales complete. The whole contract is one command: <Term>pnpm verify</Term> —
           types, the no-CSS-Modules check, the tests, the build and the HTML gate in sequence.
           If it is green, the thing is shippable.

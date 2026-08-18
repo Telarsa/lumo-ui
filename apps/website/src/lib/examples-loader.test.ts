@@ -171,8 +171,23 @@ describe("parseExportedNames", () => {
       const text = path === undefined ? "" : readFileSync(path, "utf8");
       return /sourceFile:\s*"([^"]+)"/.exec(text)?.[1] ?? `${slug}.tsx`;
     };
+    /*
+     * A MOBILE-ONLY family is exempt, and it is the one case where "no module
+     * in the barrel" is the correct state rather than a break: `pull-to-refresh`
+     * is a touch gesture, so the web library deliberately has no such component
+     * and its page says so (decisions §39, §40). Read from `meta.platforms` in
+     * the example file itself — the same declaration the page renders from, so
+     * this cannot pass while the page claims otherwise.
+     */
+    const webless = (slug: string) => {
+      const path = sourceOf(slug);
+      if (path === undefined) return false;
+      const declared = /platforms:\s*\[([^\]]*)\]/.exec(readFileSync(path, "utf8"))?.[1];
+      return declared !== undefined && !declared.includes('"web"');
+    };
     const missing = exampleSlugs().filter(
-      (slug) => sourceOf(slug) !== undefined && !parsed.byModule.has(moduleOf(slug)),
+      (slug) =>
+        sourceOf(slug) !== undefined && !webless(slug) && !parsed.byModule.has(moduleOf(slug)),
     );
     expect(missing).toEqual([]);
   });

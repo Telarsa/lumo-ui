@@ -2279,3 +2279,78 @@ drawn control (fields at 36dp, list rows, tabs), plus two that are arithmetic �
 control) and `LumoRating`/`LumoCarousel` at high counts (10 cells x 48 exceeds a
 360dp phone). Those need a mobile control scale or a different drawing, which is
 M8 and the owner's call.
+
+## §46 — Mobile widgets take a style, and the style cannot reach a name (18 Aug 2026)
+
+The mobile library is DISTRIBUTED, not copied (§25). That was argued on
+distribution and never on customisation, and the gap showed the first time
+someone asked the obvious question: a copied web component can be edited, so
+what does a consumer of the packaged one do when the padding is wrong?
+
+`LumoStyles extends ThemeExtension<LumoStyles>` — a registry of one style bag
+per family, every field nullable, null meaning "leave it alone". The seam is
+`lumoThemeData(styles:)` rather than `LumoScope`, deliberately: `Theme` sits
+above the `Navigator`, so a dialog or a sheet inherits without re-provision, and
+`ThemeData.lerp` is what actually calls `lerp`, which makes the method
+load-bearing rather than ceremony. Every widget also takes `style:`; resolution
+is `LumoStyles.of(context).button.merge(style)` — theme first, call site second.
+
+Defaults are the current look BY CONSTRUCTION: every resolution site reads
+`s.x ?? <the literal that was already there>`. Nothing was retyped into a
+defaults table, so nothing can drift out of one.
+
+`copyWith`/`merge`/`lerp`/`==`/`hashCode` are generated —
+`scripts/build-mobile-styles.mjs`, `gate:mobile-styles`, 539 lines for 3
+families and 55 fields. At 76 families that is ~10k lines nobody would write or
+re-read.
+
+**Appearance only, and enforced rather than requested.** The generator's
+allow-list is expressed as "which types can be interpolated", so a type that is
+not on it cannot be lerped, cannot be emitted, and the library does not build.
+`String` is refused BY NAME with the reason: every announced string in this
+library is a required parameter (rule 1), and a theme that could supply one
+could supply an English one, or none. A test asserts the semantics tree is
+byte-identical under a deliberately hostile style. And `minTapTarget` is a
+floor that can only GROW — no theme can shrink a target below what the device
+run measured.
+
+Button, Card and Item are wired as the proof; 73 families remain.
+
+## §47 — The reference app is the upgrade gate, and it found two real defects (18 Aug 2026)
+
+Every instrument here grades the library against its own tests and its own
+gallery. None answered the question a consumer asks: *if I take the next
+version, does my app move?*
+
+`example-projects/lumo-app-flutter` pins a released tag and overrides it to the
+local checkout, so a true before/after fits in one working tree. 61 screens at
+390×844, Flutter's `LocalFileComparator`, both fonts loaded. Full method and
+results: `docs/evidence/consumer-upgrade.md`.
+
+**60 of 61 screens differed — and the whole of every difference was one 13×13 dp
+box.** The dev-only `TweaksButton`, 0.67 dp. Nothing else in 20,870 lines of
+application code moved. The upgrade is visually neutral, and now that is
+measured rather than asserted.
+
+Two defects came out of it, neither visible from inside the library:
+
+1. **The app was shipping a 30 dp tap target.** A hard `SizedBox(30, 30)` around
+   a control whose unconstrained size is 48 — the library's floor — silently
+   overrode it. A consumer can always out-constrain a component; the library
+   cannot stop that, but its own reference app should not have been doing it.
+2. **`LumoRating` could not be measured.** It wrapped itself in a
+   `LayoutBuilder` unconditionally, and a builder cannot report intrinsic
+   dimensions — so a read-only rating threw inside a `Table` with
+   `IntrinsicColumnWidth`, an `IntrinsicWidth`, or any parent that asks. The
+   builder served only the interactive path's touch cells; the read-only path
+   ignored the constraint entirely. Split, tested both ways, restriction
+   documented on the widget.
+
+The second is the more interesting result. The library's own 120-demo gallery
+renders every family in isolation at a comfortable width, and 679 tests pass —
+none of it puts a rating in a table. **A component library cannot discover its
+own composition failures.** Only an application composes.
+
+The app's own 19-test suite missed it too, because it renders overlays at the
+default 800×600 surface and the intrinsic path only fires at phone width with
+three providers. A test that never uses a phone's width is not testing a phone.

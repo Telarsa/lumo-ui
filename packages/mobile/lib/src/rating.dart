@@ -33,6 +33,12 @@ const _star = {LumoRatingSize.sm: 16.0, LumoRatingSize.md: 20.0, LumoRatingSize.
 /// the bare stars will not fit does the row SCALE. A star has no words to
 /// truncate, so scaling is the honest last resort — before this, ten `lg` stars
 /// overflowed a 240 dp row by 40 px.
+///
+/// A read-only rating can go anywhere, including a parent that measures it: a
+/// `Table` with `IntrinsicColumnWidth`, an `IntrinsicWidth`, a `Row` sizing to
+/// content. An INTERACTIVE one cannot — it divides the incoming width into
+/// touch cells with a `LayoutBuilder`, and a builder cannot report intrinsic
+/// dimensions. Give an interactive rating a bounded width instead.
 class LumoRating extends StatefulWidget {
   const LumoRating({super.key, required this.label, required this.valueLabel, this.value, this.defaultValue, this.max = 5, this.onChanged, this.starLabel, this.size = LumoRatingSize.md, this.isDisabled = false})
       : assert(onChanged == null || starLabel != null, 'An interactive rating needs `starLabel` — the announced name of each star.'),
@@ -106,19 +112,37 @@ class _LumoRatingState extends State<LumoRating> {
       );
     }
 
-    // The `LayoutBuilder` stays INSIDE the annotated node: hung above it, the
-    // rating's own render object would belong to no semantics node of its own.
-    final stars = LayoutBuilder(builder: (context, constraints) {
-      // The touch cell: 44 where the row has room, never smaller than the star
-      // it paints. Unbounded width means there is nothing to fit into.
-      final cell = !interactive
-          ? drawn
-          : (constraints.maxWidth.isFinite ? math.max(drawn, math.min(LumoControl.lg, constraints.maxWidth / widget.max)) : LumoControl.lg);
+    Widget starsAt(double cell) {
       final row = Row(mainAxisSize: MainAxisSize.min, children: [for (var p = 1; p <= widget.max; p++) star(p, cell)]);
       // Last resort, after the cell has already given up its padding: scale.
       // `scaleDown` is a no-op whenever the row already fits.
       return FittedBox(fit: BoxFit.scaleDown, alignment: AlignmentDirectional.centerStart, child: row);
-    });
+    }
+
+    // A READ-ONLY rating measures its own width and never reads a constraint —
+    // the cell is the drawn star. So it must not be wrapped in a
+    // `LayoutBuilder`: a builder cannot report intrinsic dimensions, and the
+    // widgets that ask for them are ordinary places to put a rating — a `Table`
+    // with `IntrinsicColumnWidth`, an `IntrinsicWidth`, a `Row` sizing to
+    // content. Found by the reference app's provider-comparison table, which
+    // threw `LayoutBuilder does not support returning intrinsic dimensions` at
+    // phone width with three providers side by side.
+    //
+    // The INTERACTIVE rating genuinely needs the incoming width to divide the
+    // row into touch cells, so it keeps the builder — and inherits that
+    // restriction, which is documented on `LumoRating` itself.
+    final stars = interactive
+        // The `LayoutBuilder` stays INSIDE the annotated node: hung above it,
+        // the rating's own render object would belong to no semantics node.
+        ? LayoutBuilder(builder: (context, constraints) {
+            // The touch cell: 44 where the row has room, never smaller than the
+            // star it paints. Unbounded width means nothing to fit into.
+            final cell = constraints.maxWidth.isFinite
+                ? math.max(drawn, math.min(LumoControl.lg, constraints.maxWidth / widget.max))
+                : LumoControl.lg;
+            return starsAt(cell);
+          })
+        : starsAt(drawn);
     if (!interactive) {
       // A picture of a number: announced once as name + value, the stars decoration.
       return Semantics(image: true, label: widget.label, value: widget.valueLabel, child: ExcludeSemantics(child: stars));

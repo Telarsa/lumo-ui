@@ -53,6 +53,7 @@ const behaviorAnchors: Readonly<Record<string, string>> = {
   "alert.tsx": "aria-label={closeLabel}",
   "attachment.tsx": "{formatFileSize(size, locale)}",
   "autocomplete.tsx": "compare(item, foldPersian(query), (value: T) => foldPersian(toString(value)))",
+  "app-bar.tsx": "const Heading: ElementType = HEADING_TAGS[level];",
   "avatar.tsx": '<span className="sr-only">{statusLabel}</span>',
   "breadcrumbs.tsx": "index === lastIndex,",
   "button-group.tsx": "aria-label={label}",
@@ -103,6 +104,8 @@ const behaviorAnchors: Readonly<Record<string, string>> = {
   "message-scroller.tsx": "setPinned(distance <= BOTTOM_TOLERANCE);",
   "message.tsx": "return dateTime !== undefined ? (",
   "multi-select.tsx": "relabelEngineDismiss(boxRef.current, dismissLabel)",
+  "navigation-bar.tsx":
+    '{badge == null ? null : (\n        <>\n          {" "}\n          <span className={navigationBarBadgeVariants()}>{badge}</span>\n        </>\n      )}',
   "navigation-menu.tsx": "aria-label={label}",
   "num.tsx": "{formatNumber(value, locale, options)}",
   "number-field.tsx": "aria-label={incrementLabel}",

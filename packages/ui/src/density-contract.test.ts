@@ -43,6 +43,9 @@ describe("library-wide compact density contract", () => {
 
   it("keeps hard-coded tall geometry limited to reviewed data-layout exceptions", () => {
     expect(sources.flatMap(([file, source]) => hardcodedTallGeometry(file, source)).sort()).toEqual([
+      // A bar, not a control: 48px is the height of the screen header itself,
+      // and the controls INSIDE it still come from the control scale.
+      "app-bar.tsx:h-12",
       "event-calendar.variants.ts:h-12",
       "gantt.variants.ts:h-10",
     ]);
@@ -60,6 +63,9 @@ describe("library-wide compact density contract", () => {
       "attachment.tsx:size-5",
       "empty-state.tsx:size-5",
       "file-upload.tsx:size-8",
+      // In a tab bar the glyph IS the destination — the label under it is
+      // 12px and the icon carries the recognition at a glance.
+      "navigation-bar.tsx:size-5",
       "rating.tsx:size-5",
       "rating.tsx:size-6",
     ]);

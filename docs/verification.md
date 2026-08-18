@@ -42,7 +42,7 @@ graded locally and taken on trust in CI (decision §31).
 
 | Job | What it proves | What it cannot |
 | --- | --- | --- |
-| `mutation:components` | 111 web modules each kill one mutant via `vitest related` — a floor of one operator per module: behavioural operators for 104, and 7 presentational modules keep the class-strip floor and are listed by name in `scripts/mutate-components.mjs` | Mutation breadth beyond one operator per module |
+| `mutation:components` | 113 web modules each kill one mutant via `vitest related` — a floor of one operator per module: behavioural operators for 106, and 7 presentational modules keep the class-strip floor and are listed by name in `scripts/mutate-components.mjs` | Mutation breadth beyond one operator per module |
 | `mutation:mobile` | The Dart counterpart. One promise broken per family — a name dropped, a state flipped, the Jalali epoch shifted, `formatNumber` sent to the root locale — and that family's OWN test must fail. **13 of 13 killed today**; the other 63 families are listed as `PENDING` and that list may only shrink. A family in neither set throws before the campaign starts | The 63 families with no operator yet: their tests are not proved against vacuity |
 | `evidence` (`pnpm run evidence`) | Real engines over the built site: axe-core (WCAG 2.x A/AA) on every route in Chromium; popup families opened for real in Chromium, WebKit and Firefox with the ARIA tree pinned as committed snapshots, no Latin in spoken attributes, authored names, axe with the popup open; RTL layout checked by geometry (reading order flips fa↔en, `dir`/`direction`, no horizontal scroll). See `docs/evidence/README.md` | What a screen reader says; visual rendering; engine defects are recorded in `docs/upstream/` and annotated `fixme` rather than failed |
 
@@ -76,9 +76,11 @@ were being written.
   settings turned up. `docs/evidence/mobile-device.md` has the numbers and the
   limits — including a CORRECTION: the contrast figure first published from that
   run (74/120, "62% fail AA") was an artifact of the guideline, not a defect.
-- **Two of Flutter's own accessibility guidelines are NOT met.** Measured on a
-  device over 120 demos: **48 miss the iOS 44pt tap target and 73 miss Android's
-  48dp.** The third, text contrast, reports 93 failures of which **zero** are
+- **Two of Flutter's own accessibility guidelines are NOT met.** Over 120 demos:
+  **28 miss the iOS 44pt tap target and 39 miss Android's 48dp.** (The device run
+  of 18 Aug measured 48 and 73; it predates the `MaterialTapTargetSize.padded`
+  fix, and those are the numbers `docs/evidence/mobile-device.md` reports for
+  that run. These are the host grader's, today.) The third, text contrast, reports 93 failures of which **zero** are
   against an opaque background — the guideline cannot composite a translucent or
   absent widget background, so it is reported and not asserted; the floor is the
   judgeable subset, which is zero. Lumo's control scale is 29/36/44dp, generated from the web's
@@ -86,7 +88,11 @@ were being written.
   too, so it is an owner decision, not a test's. The counts are ratcheted and may
   only fall. `labeledTapTargetGuideline` — every tappable node has a name — IS
   met, and is a hard floor.
-- **No golden images anywhere** — deliberately. The two defects of 17 Aug 2026
+- **No golden images in THIS repo** — deliberately. (One exception lives
+  outside it: `example-projects/lumo-app-flutter` commits 61 goldens, used only
+  to A/B two library versions on ONE machine in one sitting — see
+  `docs/evidence/consumer-upgrade.md`. That is a comparison, not a gate, and it
+  is never run cross-machine for the reason below.) The two defects of 17 Aug 2026
   (a preview stage that never centred its demo; button labels silently dropping
   the app's font) are now permanent floors in `apps/mobile-gallery/test/`, but
   as *measurements*, not committed pictures: a PNG differs across machines and

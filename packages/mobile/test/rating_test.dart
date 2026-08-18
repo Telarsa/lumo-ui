@@ -93,4 +93,35 @@ void main() {
     expect(find.bySemanticsLabel('امتیاز'), findsOneWidget);
     semantics.dispose();
   });
+
+  testWidgets('Rating (read-only): survives a parent that asks for intrinsic width — a Table with IntrinsicColumnWidth', (tester) async {
+    // A read-only rating in a comparison table is an ordinary thing to build,
+    // and `IntrinsicColumnWidth` makes the Table ask every cell how wide it
+    // wants to be. Anything wrapped in a `LayoutBuilder` throws there, so the
+    // read-only path must not use one. Regression: the reference app's
+    // provider-comparison screen threw 22 of these at phone width.
+    await tester.pumpWidget(app(
+      'fa-IR',
+      Table(
+        columnWidths: const {0: IntrinsicColumnWidth()},
+        children: [
+          TableRow(children: [LumoRating(value: 4, label: 'امتیاز', valueLabel: '۴ از ۵')]),
+        ],
+      ),
+    ));
+    expect(tester.takeException(), isNull);
+    expect(find.byType(LumoRating), findsOneWidget);
+  });
+
+  testWidgets('Rating (read-only): reports a real intrinsic width, not zero', (tester) async {
+    // `IntrinsicWidth` shrink-wraps to what the child reports. If the rating
+    // reported nothing the box would collapse and the stars would be clipped,
+    // which is a silently wrong layout rather than a thrown one.
+    await tester.pumpWidget(app(
+      'fa-IR',
+      IntrinsicWidth(child: LumoRating(value: 3, label: 'امتیاز', valueLabel: '۳ از ۵')),
+    ));
+    expect(tester.takeException(), isNull);
+    expect(tester.getSize(find.byType(LumoRating)).width, greaterThan(40));
+  });
 }

@@ -119,6 +119,15 @@ function fieldsIn(/** @type {number} */ open, /** @type {string} */ className) {
  *
  * Each entry says how to interpolate, compare and hash one field.
  */
+
+/**
+ * @typedef {object} Interp
+ * @property {(a: string, b: string) => string} lerp   how to interpolate two field reads
+ * @property {(a: string, b: string) => string} eq     how to compare them
+ * @property {(f: string) => string} hash              how to fold one into a hash
+ */
+
+/** @satisfies {Record<string, Interp>} */
 const APPEARANCE = {
   Color: { lerp: (a, b) => `Color.lerp(${a}, ${b}, t)`, eq: (a, b) => `${a} == ${b}`, hash: (f) => f },
   double: { lerp: (a, b) => `lerpDouble(${a}, ${b}, t)`, eq: (a, b) => `${a} == ${b}`, hash: (f) => f },

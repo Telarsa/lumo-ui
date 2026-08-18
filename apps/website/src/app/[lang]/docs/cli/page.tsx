@@ -70,7 +70,7 @@ const COPY = {
       ),
       registryManifest: (
         <>
-          <Term>registry.json</Term> — امروز ۱۴۱ آیتم — هرگز با دست نگه‌داری نمی‌شود؛{" "}
+          <Term>registry.json</Term> — امروز ۱۴۳ آیتم — هرگز با دست نگه‌داری نمی‌شود؛{" "}
           <Term>scripts/build-registry.mjs</Term> آن را از روی کامپوننت‌هایی که واقعاً وجود
           دارند تولید می‌کند. دروازهٔ <Term>gate:registry</Term> همین تولید را دوباره اجرا
           می‌کند و با <Term>git diff --exit-code</Term> می‌سنجد: اگر مانیفست از کد قابلِ
@@ -156,7 +156,7 @@ const COPY = {
       ),
       registryManifest: (
         <>
-          <Term>registry.json</Term> — 141 items today — is never hand-kept:{" "}
+          <Term>registry.json</Term> — 143 items today — is never hand-kept:{" "}
           <Term>scripts/build-registry.mjs</Term> generates it from the components that actually
           exist. <Term>gate:registry</Term> re-runs that generation and checks it with{" "}
           <Term>git diff --exit-code</Term>: if the manifest is not reproducible from the code,
