@@ -71,13 +71,14 @@ void main() {
     semantics.dispose();
   });
 
-  testWidgets('Search: the ✕ is a 44 x 44 TARGET around a `size="sm"` pill; the label row is not a second node; required and invalid are states', (tester) async {
+  testWidgets('Search: the ✕ is a LumoTouch.floor (48) TARGET around a `size="sm"` pill; the label row is not a second node; required and invalid are states', (tester) async {
     final semantics = tester.ensureSemantics();
     await tester.pumpWidget(app('fa-IR', const LumoSearchField(label: 'جستجو', clearLabel: 'پاک کردن جستجو', value: 'لومو', isRequired: true)));
-    // The touch target: `LumoControl.lg` square, which 29 x 29 was not.
+    // The touch target: `LumoTouch.floor` square, which 29 x 29 was not — and
+    // which `LumoControl.lg` (44) also was not, on Android.
     final clear = tester.getSemantics(find.bySemanticsLabel('پاک کردن جستجو')).rect;
-    expect(clear.width, LumoControl.lg);
-    expect(clear.height, LumoControl.lg);
+    expect(clear.width, LumoTouch.floor);
+    expect(clear.height, LumoTouch.floor);
     // The DRAWING did not grow with it: the ✕ glyph is still the web's 16.
     expect(tester.widget<Icon>(find.byIcon(Icons.close)).size, 16);
     // The name is painted (with the required marker) and heard exactly once.

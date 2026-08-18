@@ -149,7 +149,7 @@ class _LumoLinkState extends State<LumoLink> {
               ? content
               : ConstrainedBox(
                   // A link that stands alone is a touch target, not a word.
-                  constraints: const BoxConstraints(minHeight: LumoControl.lg),
+                  constraints: const BoxConstraints(minHeight: LumoTouch.floor),
                   child: Align(alignment: AlignmentDirectional.centerStart, widthFactor: 1, child: content),
                 ),
         ),

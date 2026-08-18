@@ -32,22 +32,48 @@ hardware. Until this run that was unproven: every mobile test in this repo was
 | The four semantics rules | 0 violations | **0 violations** | agrees |
 | iOS 44 pt tap target | 48/120 | **48/120** | agrees exactly |
 | Android 48 dp tap target | 72/120 | **73/120** | +1 |
-| WCAG AA text contrast | 39/120 | **74/120** | **~2× worse on the device** |
+| WCAG AA text contrast | 39/120 | 74/120 | **neither number means anything — see below** |
 
 The first three agreeing is the useful part: it says the host instrument is sound
 for semantics and geometry, and the numbers reported from it can be trusted.
 
-**The contrast number cannot.** `MinimumTextContrastGuideline` samples the pixels
-that were actually painted. On the host that is a substitute font at a device
-pixel ratio of 1; on the device it is the real text stack at dpr 3, where small
-glyphs cover far less of each logical pixel. The host therefore under-reports —
-and it under-reports in the REASSURING direction, which is the worst way for a
-measurement to be wrong.
+## CORRECTION — the contrast figure was wrong, and so was the explanation
 
-So: **62% of demos fail WCAG AA contrast on a real phone, not 32%.** The
-offenders are `fgMuted` and `fgSubtle` at 12px. The host ceiling in
-`semantics_grader_test.dart` is kept as a regression tripwire, and is labelled
-there as known-optimistic so nobody cites it as the real figure.
+This file first reported "**62% of demos fail WCAG AA contrast on a real phone**"
+and blamed `fgMuted`/`fgSubtle` at 12px. Both halves were wrong, and neither had
+been computed before being written down.
+
+Computing the token pairs directly (achromatic brand, luminance from the oklch
+lightness) says every one of them PASSES:
+
+| pair | light | dark |
+|---|---:|---:|
+| `fgMuted` on `bg` | 5.75:1 | 7.70:1 |
+| `fgSubtle` on `bg` | 4.86:1 | 6.36:1 |
+
+So the failures were not the colours. Reading the guideline's own messages across
+all 120 demos, of **93 reported failures in 39 demos**:
+
+| what the text was compared against | failures | demos |
+|---|---:|---:|
+| fully TRANSPARENT — the widget paints no fill of its own | 84 | 37 |
+| a 10% tint, never composited over the surface beneath it | 9 | 3 |
+| a genuinely OPAQUE background | **0** | **0** |
+
+`MinimumTextContrastGuideline` samples the background a widget paints FOR ITSELF
+and does not composite it over what is behind. A ghost button's label is compared
+against nothing at all, which is where the 1.06:1 ratios come from. **Not one of
+the 93 is a contrast defect a reader would experience.**
+
+That also disposes of the host-versus-device gap: 39 against 74 is this artifact
+moving with the rendering, not the host being optimistic about real contrast.
+
+**What replaced it.** The contrast ratchet is gone — a ratchet on a metric that
+is entirely artifact fires on innocent changes and never on a real one. The floor
+is now `opaqueContrastMisses`: the subset the guideline can actually judge,
+asserted at ZERO. The raw count is still printed, labelled
+`39 reported / 0 judgeable`, so the artifact stays visible without being
+mistaken for a result.
 
 ## What this run does NOT prove
 

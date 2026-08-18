@@ -2145,3 +2145,76 @@ One more: the `phone-input` demo description said «... همیشه E.164 است�
 safe inside a demo card and is not safe as page prose — a bare Latin identifier
 in Persian prose needs a `data-lumo-latn` island, which a manifest string cannot
 carry. Reworded, with the example number in Persian digits.
+
+## 45. The contrast failure was not real, and the tap-target one had no name (18 Aug 2026)
+
+Two measured accessibility failures were carried into this session from the
+device run. One of them did not exist.
+
+### The contrast number was an artifact, and it was published as fact
+
+`docs/evidence/mobile-device.md` and §43 reported "**62% of demos fail WCAG AA
+contrast on a real phone**" and blamed `fgMuted`/`fgSubtle` at 12px. Neither half
+had been computed before it was written down. Both are wrong.
+
+Computing the pairs directly — achromatic brand, luminance from the oklch
+lightness — every one PASSES: `fgMuted` on `bg` is **5.75:1** light and **7.70:1**
+dark; `fgSubtle` **4.86:1** and **6.36:1**.
+
+So the failures were not the colours. Reading `MinimumTextContrastGuideline`'s own
+messages across all 120 demos, of **93 failures in 39 demos**:
+
+| what the text was compared against | failures | demos |
+|---|---:|---:|
+| fully TRANSPARENT — the widget paints no fill | 84 | 37 |
+| a 10% tint, never composited over the surface | 9 | 3 |
+| a genuinely OPAQUE background | **0** | **0** |
+
+The guideline samples the background a widget paints FOR ITSELF and does not
+composite it over what is behind, so a ghost button's label is measured against
+nothing — which is where the 1.06:1 ratios came from. **Not one of the 93 is a
+defect a reader would experience.** It also disposes of the host-versus-device
+gap: 39 against 74 was this artifact moving with the rendering, not the host being
+optimistic about legibility. The independent design pass reached the same
+conclusion and noted it had "very nearly shipped a palette change built on it".
+
+The ratchet is gone — a ratchet on a metric that is entirely artifact fires on
+innocent changes and never on a real one. The floor is now
+`opaqueContrastMisses`, the subset the guideline can actually judge, asserted at
+ZERO. The raw count is still printed as `39 reported / 0 judgeable` so the
+artifact stays visible without being mistaken for a result.
+
+### The tap-target failure was real, and the cause was a missing NAME
+
+`LumoControl.lg` = 44 is the top of the DRAWN scale, generated from the web's
+`--lumo-ref-control-lg`. Twenty-odd hand-rolled hit areas reached for it as their
+touch floor, because it was the only number in scope. 44 is Apple's minimum and
+Google's is 48 — so every one of those controls passed on iOS and failed on
+Android, permanently, and the number could not be raised because the web reads the
+same token.
+
+There was no name in the package for "the touch floor". Now there is:
+`LumoTouch.floor` (48 — above iOS's 44, equal to Android's), generated beside
+`LumoControl` and documented as deliberately NOT a step on the drawn ramp. A hit
+rectangle costs no ink.
+
+And `button.dart` had switched OFF the mechanism Flutter ships for exactly this:
+`tapTargetSize: MaterialTapTargetSize.shrinkWrap`. `ButtonStyleButton` puts its
+`Semantics` OUTSIDE `_InputPadding`, so `padded` makes the node 48 square while
+`minimumSize`/`maximumSize` still pin the drawn box to the token step. One word.
+
+| | before | after |
+|---|---:|---:|
+| iOS 44pt misses | 48/120 | **28/120** |
+| Android 48dp misses | 72/120 | **39/120** |
+
+**No drawn pixel changed**, which is what let this happen without touching the
+scale the web shares. Three tests pinned 44 as a literal and now assert
+`LumoTouch.floor`, so the number cannot drift back silently.
+
+What remains is genuinely a redraw, not padding: families whose target IS the
+drawn control (fields at 36dp, list rows, tabs), plus two that are arithmetic —
+`LumoNumberField`'s stacked steppers (two 48-tall targets need 96dp inside a 36dp
+control) and `LumoRating`/`LumoCarousel` at high counts (10 cells x 48 exceeds a
+360dp phone). Those need a mobile control scale or a different drawing, which is
+M8 and the owner's call.

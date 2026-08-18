@@ -129,6 +129,14 @@ ThemeData lumoThemeData({required Brightness brightness, LumoBrand brand = LumoB
     scaffoldBackgroundColor: c.bg,
     fontFamily: fontFamily,
     visualDensity: VisualDensity.standard,
+    // Every Material control gets the platform's 48dp hit rectangle, WITHOUT
+    // being drawn any bigger: the drawn scale (LumoControl 29/36/44) is
+    // generated from the web's `--lumo-ref-control-*` and is sized for a
+    // pointer, and it cannot move without moving the web. `padded` is Flutter's
+    // own answer to exactly that split, and leaving it at the default cost 48 of
+    // 120 demos the iOS 44pt minimum and 72 the Android 48dp one, measured on a
+    // real device (docs/evidence/mobile-device.md).
+    materialTapTargetSize: MaterialTapTargetSize.padded,
     splashFactory: pressFeedback == LumoPressFeedback.ripple ? InkRipple.splashFactory : NoSplash.splashFactory,
     // With NoSplash the splash colour is never painted; naming it transparent
     // keeps that true if a consumer swaps the factory back.

@@ -240,7 +240,7 @@ class _LumoMenuRow extends StatelessWidget {
               // already says 44 for a tappable list row — `item.dart` and
               // `phone_input.dart`'s picker both use `LumoControl.lg`. The
               // PADDING stays the web's `px-2 py-1.5`.
-              constraints: const BoxConstraints(minHeight: LumoControl.lg),
+              constraints: const BoxConstraints(minHeight: LumoTouch.floor),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               child: Row(
                 children: [

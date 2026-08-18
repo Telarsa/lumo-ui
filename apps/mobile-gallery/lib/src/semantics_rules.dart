@@ -184,37 +184,46 @@ const kExemptions = <String, String>{
           'card is, and localising them would change the number a reader is meant to read back.',
 };
 
-/// Ratchets, measured 17 Aug 2026, expressed as the SHARE of demos that miss —
-/// not a count. A count rises whenever a demo is added, even when nothing got
-/// worse, which makes it a number people raise rather than a floor people hold.
-/// A share only rises when the new demos are worse than the ones already there.
+/// Ratchets, measured over the gallery corpus, allowed to move only DOWN — and
+/// expressed as the SHARE of demos that miss, not a count. A count rises
+/// whenever a demo is added even when nothing got worse, which makes it a number
+/// people raise rather than a floor people hold.
 ///
-/// These are not targets and not excuses — they are the honest number. Lumo's
-/// control scale is 29/36/44dp, generated from the web's `--lumo-ref-control-*`,
-/// and it was designed for a pointer: only `lg` reaches iOS's 44pt minimum and
-/// nothing reaches Android's 48dp. Raising the scale is a SHARED-TOKEN decision
-/// that moves the web too, so it is the owner's call, not a test's — recorded in
-/// `docs/goals.md` Tier M item M8. Until then the share may not grow.
+/// These are not targets and not excuses. Lumo's control scale is 29/36/44dp,
+/// generated from the web's `--lumo-ref-control-*`, and it was designed for a
+/// pointer: only `lg` reaches iOS's 44pt minimum and nothing reaches Android's
+/// 48dp. See `docs/goals.md` Tier M item M8.
+/// Measured after the 18 Aug touch-floor work: iOS 28/120, Android 39/120, down
+/// from 48 and 72. What moved them was naming the touch floor separately from
+/// the drawn scale ([LumoTouch] beside [LumoControl]) and turning Flutter's own
+/// `MaterialTapTargetSize.padded` back on — no drawn pixel changed, so the
+/// shared token scale the web reads did not move.
 ///
-/// The contrast misses are WCAG AA (4.5:1) on small text: `fgMuted` and
-/// `fgSubtle` on a surface measure as low as 3.46:1 at 12px.
+/// The remainder are families whose DRAWN control is 36dp and whose target is
+/// the control itself (fields, list rows, tabs). Those need either a mobile
+/// control scale of their own or a redraw, which is M8 and the owner's call.
+const kIosTapCeiling = 0.24;
+const kAndroidTapCeiling = 0.33;
+
+/// **There is no contrast ceiling, and that is a finding rather than an
+/// omission.** `MinimumTextContrastGuideline` samples the background a widget
+/// paints FOR ITSELF and does not composite it over what is behind. Measured
+/// over 120 demos it reported 93 failures, and every single one was a widget
+/// that paints no fill (84, compared against fully transparent) or a 10% tint
+/// that was never composited (9). **Zero were against an opaque background.**
+/// A ratchet on that number would fire on innocent changes and never on a real
+/// one. `contrastMisses` below is therefore reported and NOT asserted, and the
+/// real floor is `opaqueContrastMisses`: the subset the guideline can actually
+/// evaluate, which must stay at zero.
 ///
-/// **The contrast ceiling is KNOWN-OPTIMISTIC on the host, and is a regression
-/// tripwire rather than the real figure.** `MinimumTextContrastGuideline`
-/// samples painted pixels, and the host paints a substitute font at a device
-/// pixel ratio of 1. The same rules on a real iPhone at dpr 3 (18 Aug 2026)
-/// reported **74 of 120 demos failing against 39 here** — roughly double, and
-/// in the reassuring direction. Cite `docs/evidence/mobile-device.md` for what
-/// the library actually does; cite this number only for "did it get worse".
-/// Re-measured 17 Aug 2026 over 118 demos: 48 / 72 / 38. The Android figure sat
-/// exactly on the old 0.61 boundary once six demos were added, which is the
-/// ceiling doing its job — it is set from a measurement, not rounded to a number
-/// that felt tidy.
-const kIosTapCeiling = 0.41;
-const kAndroidTapCeiling = 0.62;
-const kContrastCeiling = 0.33;
+/// This corrects a claim published on 18 Aug 2026 — "62% of demos fail WCAG AA
+/// contrast on a real phone" — which was this artifact, not the library.
 
 final iosTapMisses = <String>{};
 final androidTapMisses = <String>{};
 final contrastMisses = <String>{};
+
+/// The subset the guideline can genuinely evaluate: an OPAQUE painted
+/// background. This is the floor; it is zero today and must stay there.
+final opaqueContrastMisses = <String>{};
 

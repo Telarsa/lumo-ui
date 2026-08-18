@@ -184,7 +184,7 @@ class LumoRadio extends StatelessWidget {
         borderRadius: BorderRadius.circular(LumoRadius.md),
         child: ConstrainedBox(
           // The 44 px touch floor on BOTH axes — see the docblock.
-          constraints: const BoxConstraints(minWidth: LumoControl.lg, minHeight: LumoControl.lg),
+          constraints: const BoxConstraints(minWidth: LumoTouch.floor, minHeight: LumoTouch.floor),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [

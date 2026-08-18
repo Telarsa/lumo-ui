@@ -242,6 +242,24 @@ class LumoControl {
   static const double md = ${dp("var(--lumo-ref-control-md)")};
   static const double lg = ${dp("var(--lumo-ref-control-lg)")};
 }
+
+/// The platform TOUCH FLOOR — the smallest a hit rectangle may be.
+///
+/// Deliberately NOT a step on [LumoControl], which is the DRAWN scale generated
+/// from the web's \`--lumo-ref-control-*\` and sized for a pointer. The two were
+/// conflated: twenty-odd hand-rolled hit areas reached for \`LumoControl.lg\`
+/// (44) as their floor because it was the only number in scope, and 44 is
+/// Apple's minimum while Google's is 48 — so those controls passed on iOS and
+/// failed on Android, every time. Raising \`LumoControl.lg\` was never an option:
+/// the web reads the same token.
+///
+/// A hit rectangle costs no ink. Draw the control at its size step and floor the
+/// TARGET here.
+class LumoTouch {
+  /// Android's minimum (48dp), which is also above iOS's (44pt) — so one number
+  /// satisfies both platforms.
+  static const double floor = 48;
+}
 /// Focus ring (web: --lumo-sys-focus-width / -offset).
 class LumoFocus {
   static const double width = ${parseInt(SYS_LIGHT.get("--lumo-sys-focus-width") ?? "2")};

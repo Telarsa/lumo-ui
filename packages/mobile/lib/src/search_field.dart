@@ -174,7 +174,7 @@ class _LumoSearchFieldState extends State<LumoSearchField> {
           // The input ROW is `LumoControl.lg` tall even though the box draws
           // `LumoControl.md`: that is where the ✕'s touch target comes from.
           ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: LumoControl.lg),
+            constraints: const BoxConstraints(minHeight: LumoTouch.floor),
             child: Stack(
               alignment: AlignmentDirectional.centerStart,
               children: [
@@ -248,8 +248,10 @@ class _LumoSearchFieldState extends State<LumoSearchField> {
                         child: InkWell(
                           onTap: widget.isDisabled ? null : _clear,
                           borderRadius: BorderRadius.circular(LumoRadius.md),
+                          // The TARGET is the touch floor; the ✕ inside it is
+                          // still drawn at the `sm` step.
                           child: SizedBox(
-                            width: LumoControl.lg,
+                            width: LumoTouch.floor,
                             child: Center(
                               child: SizedBox(
                                 width: LumoControl.sm,

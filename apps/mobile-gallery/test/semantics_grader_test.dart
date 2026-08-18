@@ -74,6 +74,7 @@ void main() {
     iosTapMisses.clear();
     androidTapMisses.clear();
     contrastMisses.clear();
+    opaqueContrastMisses.clear();
     // NOT hand-rolled. `flutter_test` ships `AccessibilityGuideline`
     // implementations maintained by the Flutter team — the Android 48dp and iOS
     // 44pt tap-target rules, the WCAG AA text-contrast maths, and a check that
@@ -100,7 +101,17 @@ void main() {
         // below is the honest record of where the library actually stands.
         if (!(await iOSTapTargetGuideline.evaluate(tester)).passed) iosTapMisses.add(id);
         if (!(await androidTapTargetGuideline.evaluate(tester)).passed) androidTapMisses.add(id);
-        if (!(await textContrastGuideline.evaluate(tester)).passed) contrastMisses.add(id);
+        final contrast = await textContrastGuideline.evaluate(tester);
+        if (!contrast.passed) {
+          contrastMisses.add(id);
+          // The guideline samples the background a widget paints FOR ITSELF and
+          // never composites it over what is behind, so a widget with no fill is
+          // compared against transparency. Only a fully OPAQUE background is a
+          // judgement it can actually make — and that subset is the floor.
+          for (final m in RegExp(r'dark - Color\(alpha: ([0-9.]+)').allMatches(contrast.reason ?? '')) {
+            if ((double.tryParse(m.group(1) ?? '0') ?? 0) >= 0.999) opaqueContrastMisses.add(id);
+          }
+        }
         handle.dispose();
       });
     }
@@ -109,13 +120,16 @@ void main() {
       String pct(int n) => '${(n / ids.length * 100).toStringAsFixed(0)}%';
       debugPrint('  mobile-a11y: of ${ids.length} demos — iOS-44pt misses ${iosTapMisses.length} (${pct(iosTapMisses.length)}), '
           'android-48dp ${androidTapMisses.length} (${pct(androidTapMisses.length)}), '
-          'WCAG-AA-contrast ${contrastMisses.length} (${pct(contrastMisses.length)})');
+          'WCAG-AA-contrast ${contrastMisses.length} reported / ${opaqueContrastMisses.length} judgeable');
       expect(iosTapMisses.length / ids.length, lessThanOrEqualTo(kIosTapCeiling),
           reason: 'a larger share of demos misses the iOS tap target: ${iosTapMisses.join(", ")}');
       expect(androidTapMisses.length / ids.length, lessThanOrEqualTo(kAndroidTapCeiling),
           reason: 'a larger share of demos misses the Android tap target: ${androidTapMisses.join(", ")}');
-      expect(contrastMisses.length / ids.length, lessThanOrEqualTo(kContrastCeiling),
-          reason: 'a larger share of demos misses WCAG AA contrast: ${contrastMisses.join(", ")}');
+      // The floor is the subset the guideline can judge: an opaque background.
+      // The raw count is printed above and deliberately NOT asserted — see the
+      // note beside the ceilings in `lib/src/semantics_rules.dart`.
+      expect(opaqueContrastMisses, isEmpty,
+          reason: 'text on an OPAQUE background below WCAG AA: ${opaqueContrastMisses.join(", ")}');
     });
   });
 

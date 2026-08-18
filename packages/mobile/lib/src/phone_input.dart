@@ -474,7 +474,7 @@ class _CountrySheetState extends State<_CountrySheet> {
                       onTap: () => widget.onPick(k.code),
                       borderRadius: BorderRadius.circular(LumoRadius.sm),
                       child: Container(
-                        constraints: const BoxConstraints(minHeight: LumoControl.lg),
+                        constraints: const BoxConstraints(minHeight: LumoTouch.floor),
                         padding: const EdgeInsetsDirectional.symmetric(horizontal: 10, vertical: 8),
                         child: ExcludeSemantics(
                           child: Row(

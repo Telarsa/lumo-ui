@@ -243,7 +243,7 @@ class _LumoComboboxState extends State<LumoCombobox> {
           // The input ROW is `LumoControl.lg` tall even though the box draws
           // `LumoControl.md`: that is where the ✕'s touch target comes from.
           ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: LumoControl.lg),
+            constraints: const BoxConstraints(minHeight: LumoTouch.floor),
             child: Stack(
               alignment: AlignmentDirectional.centerStart,
               children: [
@@ -414,7 +414,7 @@ class _Option extends StatelessWidget {
             // The web row is `px-2 py-1.5` and lands at ~32 px, a mouse size.
             // The padding is kept; the row is floored at `LumoControl.lg` so a
             // finger has a target. Stated deviation, not drift.
-            constraints: const BoxConstraints(minHeight: LumoControl.lg),
+            constraints: const BoxConstraints(minHeight: LumoTouch.floor),
             padding: const EdgeInsetsDirectional.symmetric(horizontal: 8, vertical: 10),
             decoration: BoxDecoration(color: isSelected ? c.surfaceSunken : Colors.transparent, borderRadius: BorderRadius.circular(LumoRadius.sm)),
             child: Row(

@@ -90,7 +90,14 @@ class LumoButton extends StatelessWidget {
       shape: WidgetStatePropertyAll(RoundedRectangleBorder(borderRadius: BorderRadius.circular(LumoRadius.md))),
       side: WidgetStatePropertyAll(BorderSide(color: variant == LumoButtonVariant.outline ? c.borderControl : Colors.transparent)),
       elevation: const WidgetStatePropertyAll(0),
-      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      // `padded`, not `shrinkWrap`. This is the platform's OWN mechanism for the
+      // thing the library was failing: Flutter expands a Material control's hit
+      // rectangle to 48dp without changing what it DRAWS, which is exactly what
+      // is needed here because the drawn scale (29/36/44) comes from tokens the
+      // web shares and must not move. `shrinkWrap` opts out of it, and opting
+      // out is why 48 of 120 demos missed iOS's 44pt and 72 missed Android's
+      // 48dp on a real device.
+      tapTargetSize: MaterialTapTargetSize.padded,
     );
     return Opacity(
       opacity: isDisabled ? 0.5 : 1,
@@ -102,7 +109,8 @@ class LumoButton extends StatelessWidget {
 /// A button whose only content is an icon: `label` is REQUIRED — an icon is not
 /// a name. Announced through Semantics and shown as a tooltip.
 ///
-/// **The hit area is at least [LumoControl.lg] (44) square; the DRAWN button
+/// **The hit area is at least 48 square — Android's minimum, which is above
+/// iOS's 44 — while the DRAWN button
 /// keeps its size step.** An icon button is the one place the shared control
 /// scale is small on BOTH axes — measured at `sm` it was 29×29 and at `md`
 /// 36×36, so nothing rescues the miss the way a full-width text button's length
@@ -139,7 +147,12 @@ class LumoIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final side = _height[size]!;
-    final target = side > LumoControl.lg ? side : LumoControl.lg;
+    // `LumoTouch.floor`, not `LumoControl.lg`. 44 is iOS's minimum and Android's
+    // is 48, so a 44-square rescue passed one platform and failed the other —
+    // measured, it was the single largest cause: 48 nodes at exactly 44×44
+    // across the gallery. This is the HIT rectangle; the drawn button keeps its
+    // size step, which is what lets it stay on the shared token scale.
+    final target = side > LumoTouch.floor ? side : LumoTouch.floor;
     // ONE node: it names, carries the role and state, and acts.
     return Semantics(
       container: true,

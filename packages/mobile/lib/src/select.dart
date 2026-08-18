@@ -160,7 +160,7 @@ class LumoSelect extends StatelessWidget {
               child: ExcludeSemantics(
                 child: ListTile(
                   enabled: !o.isDisabled,
-                  minTileHeight: LumoControl.lg,
+                  minTileHeight: LumoTouch.floor,
                   contentPadding: EdgeInsets.zero,
                   title: Text(o.label, style: TextStyle(fontSize: 16, color: c.fg, fontWeight: o.id == value ? FontWeight.w600 : FontWeight.w400)),
                   trailing: o.id == value ? Icon(Icons.check, color: c.accent) : null,

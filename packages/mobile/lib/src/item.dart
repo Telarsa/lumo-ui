@@ -117,7 +117,7 @@ class _LumoItemState extends State<LumoItem> {
                 ? c.surface
                 : Colors.transparent;
     final row = Container(
-      constraints: const BoxConstraints(minHeight: LumoControl.lg),
+      constraints: const BoxConstraints(minHeight: LumoTouch.floor),
       padding: EdgeInsetsDirectional.symmetric(horizontal: _padX[widget.size]!, vertical: _padY[widget.size]!),
       decoration: BoxDecoration(
         color: fill,

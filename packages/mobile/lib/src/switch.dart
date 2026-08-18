@@ -83,7 +83,7 @@ class LumoSwitch extends StatelessWidget {
             // measured 32×36 inside a `Row`. `minWidth` is the 44 px floor for
             // that case and is inert for a labelled switch, which already fills
             // its column.
-            constraints: BoxConstraints(minWidth: LumoControl.lg, minHeight: size == LumoSwitchSize.lg ? LumoControl.lg : LumoControl.md),
+            constraints: BoxConstraints(minWidth: LumoTouch.floor, minHeight: size == LumoSwitchSize.lg ? LumoControl.lg : LumoControl.md),
             child: Row(
               children: [
                 if (label != null || description != null)

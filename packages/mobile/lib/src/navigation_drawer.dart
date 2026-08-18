@@ -189,7 +189,7 @@ class _DrawerRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(LumoRadius.md),
             child: ExcludeSemantics(
               child: Container(
-                constraints: const BoxConstraints(minHeight: LumoControl.lg),
+                constraints: const BoxConstraints(minHeight: LumoTouch.floor),
                 padding: const EdgeInsetsDirectional.symmetric(horizontal: 12),
                 decoration: BoxDecoration(color: isSelected ? c.accent : Colors.transparent, borderRadius: BorderRadius.circular(LumoRadius.md)),
                 child: Row(
