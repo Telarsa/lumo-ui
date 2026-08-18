@@ -24,9 +24,40 @@ import { SidebarScroll } from "./sidebar-scroll";
  * announced but never drawn). See CONTRIBUTING's "Adding a locale".
  */
 const COPY = {
-  "fa-IR": { nav: "ناوبری مستندات", docs: "مستندات", isNew: "جدید", hasMobile: "نسخهٔ موبایل دارد" },
-  "en-US": { nav: "Documentation navigation", docs: "Docs", isNew: "New", hasMobile: "Has a mobile version" },
-} as const satisfies Record<Locale, { nav: string; docs: string; isNew: string; hasMobile: string }>;
+  "fa-IR": {
+    nav: "ناوبری مستندات",
+    docs: "مستندات",
+    isNew: "جدید",
+    onBoth: "وب و موبایل",
+    onWeb: "فقط وب",
+    onMobile: "فقط موبایل",
+    // The separator is COPY, not punctuation-in-code: Persian's comma is «،»
+    // U+060C, and a hardcoded Latin "," put an English mark inside a Persian
+    // announced phrase. No gate catches it — the run holds Persian characters,
+    // so `native-script-text` passes.
+    listSep: "، ",
+  },
+  "en-US": {
+    nav: "Documentation navigation",
+    docs: "Docs",
+    isNew: "New",
+    onBoth: "web and mobile",
+    onWeb: "web only",
+    onMobile: "mobile only",
+    listSep: ", ",
+  },
+} as const satisfies Record<
+  Locale,
+  {
+    nav: string;
+    docs: string;
+    isNew: string;
+    onBoth: string;
+    onWeb: string;
+    onMobile: string;
+    listSep: string;
+  }
+>;
 
 /**
  * The sidebar's longer names for the tiers. A full Record over the same union,
@@ -53,7 +84,10 @@ export async function DocsSidebar({
   const c = COPY[lang];
   // Mobile-only families sit in the same tiers as everything else: a reader
   // browsing "navigation" should find the phone's bottom bar there, not nowhere.
-  const demos = [...(await allCatalog()), ...(await allMobileOnly())].sort((a, b) => a.id.localeCompare(b.id));
+  const web = await allCatalog();
+  const demos = [...web, ...(await allMobileOnly())].sort((a, b) => a.id.localeCompare(b.id));
+  // "Has a web side" is not a flag: it IS membership in the web catalogue.
+  const onWeb = new Set(web.map((e) => e.id));
   const isNew = await newExampleSlugs();
 
   // The prose pages come from the ONE canonical list — see lib/docs-pages.ts.
@@ -127,26 +161,77 @@ export async function DocsSidebar({
                       active === d.id && "bg-surface-sunken font-semibold text-fg",
                     )}
                   >
-                    {d.title[lang]}
-                    {hasMobile(d.id) ? (
-                      <>
-                        {/* A small phone glyph: the component has a Mobile (Flutter) side. Decoration; the sr-only words announce it. */}
-                        <svg aria-hidden="true" viewBox="0 0 24 24" className="ms-auto size-3 shrink-0 text-fg-muted" fill="none" stroke="currentColor" strokeWidth="2">
-                          <rect x="7" y="2" width="10" height="20" rx="2" /><path d="M11 18h2" />
-                        </svg>
-                        <span className="sr-only">{c.hasMobile}</span>
-                      </>
-                    ) : null}
-                    {isNew.has(d.id) ? (
-                      <>
-                        {/* Decoration; the sr-only word is the announcement. */}
-                        <span
-                          aria-hidden="true"
-                          className="ms-auto size-1.5 shrink-0 rounded-full bg-accent"
-                        />
-                        <span className="sr-only">{c.isNew}</span>
-                      </>
-                    ) : null}
+                    <span className="min-w-0 truncate">{d.title[lang]}</span>
+                    {/*
+                      ONE end-aligned group with FIXED-WIDTH slots, not two
+                      elements each carrying `ms-auto`. Two auto inline-start
+                      margins in a flex row SPLIT the free space between them, so
+                      a row with both a phone and a dot put the phone at a
+                      midpoint that moved with the title's length — ten families
+                      carry both, so ten glyphs sat at ten different offsets
+                      while the rest sat flush. Every slot is rendered whether or
+                      not it is filled, which is what makes the columns line up.
+                    */}
+                    <span aria-hidden="true" className="ms-auto flex shrink-0 items-center gap-1.5">
+                      <span className="grid size-1.5 place-items-center">
+                        {isNew.has(d.id) ? <span className="size-1.5 rounded-full bg-accent" /> : null}
+                      </span>
+                      {/*
+                        Both glyphs are drawn to a comparable ink box — 18×16
+                        against 12×20 — at one stroke weight. The first pass drew
+                        an 18×13 screen beside a 10×20 phone at the same size, so
+                        the phone rendered 5px wide against the screen's 9px and
+                        read as thin and lost beside it, which is the asymmetry
+                        this whole change is about. The screen's stand also joins
+                        its body: it was a floating dash four units clear of the
+                        rect.
+                      */}
+                      <span className="grid size-3.5 place-items-center text-fg-subtle">
+                        {onWeb.has(d.id) ? (
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="size-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.75"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect x="3" y="4" width="18" height="13" rx="2" />
+                            <path d="M12 17v3" />
+                            <path d="M8 20h8" />
+                          </svg>
+                        ) : null}
+                      </span>
+                      <span className="grid size-3.5 place-items-center text-fg-subtle">
+                        {hasMobile(d.id) ? (
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="size-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.75"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <rect x="6" y="2" width="12" height="20" rx="2.5" />
+                            <path d="M10.5 18.5h3" />
+                          </svg>
+                        ) : null}
+                      </span>
+                    </span>
+                    {/*
+                      ONE phrase, not one per glyph: three indicators each with
+                      their own sr-only words would make every row a list.
+                    */}
+                    <span className="sr-only">
+                      {onWeb.has(d.id) && hasMobile(d.id)
+                        ? c.onBoth
+                        : hasMobile(d.id)
+                          ? c.onMobile
+                          : c.onWeb}
+                      {isNew.has(d.id) ? `${c.listSep}${c.isNew}` : ""}
+                    </span>
                   </Link>
                 </li>
               ))}

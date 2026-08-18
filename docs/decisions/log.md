@@ -2011,3 +2011,137 @@ these demos failed loudly until the mapping was written down.
 MY copy. The Persian intro I wrote for the app-bar page said `min-w-0`, and its
 `0` is a Latin digit on a Persian page. Reworded. The rule exists because this is
 exactly how it happens: not a number in data, a class name in a sentence.
+
+## 43. The first device run, and what the host had been getting wrong (18 Aug 2026)
+
+Tier M item M7, in part. `apps/mobile-gallery/integration_test/device_evidence_test.dart`
+renders every gallery demo in both locales on attached hardware and applies the
+SAME rules the host sweep applies — imported from `lib/src/semantics_rules.dart`,
+extracted for this run so that one implementation grades both. Two copies of an
+accessibility rule is how a device number and a host number quietly stop being
+comparable.
+
+To get there the gallery gained an iOS target (`flutter create --platforms=ios`)
+and `integration_test`. It signs with the team the reference app already uses.
+
+**The run: iPhone, iOS 26.6, 1179×2556 at dpr 3.0. 240 of 240 renders, 0
+failures.** Nothing failed to build, sign, install or render on real hardware.
+That had never been shown: every mobile test in this repo until now was
+`flutter test` on the host.
+
+| Check | Host | Device |
+|---|---:|---:|
+| the four semantics rules | 0 violations | 0 violations |
+| iOS 44pt tap target | 48/120 | 48/120 |
+| Android 48dp tap target | 72/120 | 73/120 |
+| WCAG AA text contrast | 39/120 | **74/120** |
+
+Three of the four agreeing is the useful result: the host instrument is sound for
+semantics and geometry, so the numbers reported from it can be trusted.
+
+**The fourth is the finding.** `MinimumTextContrastGuideline` samples the pixels
+that were actually painted. The host paints a substitute font at a device pixel
+ratio of 1; the device paints the real text stack at dpr 3, where small glyphs
+cover far less of each logical pixel. The host under-reports contrast failures by
+roughly half — **62% of demos fail AA on a real phone, not 32%** — and it
+under-reports in the REASSURING direction, which is the worst way for a
+measurement to be wrong.
+
+The host ceiling stays as a regression tripwire and is now labelled in the source
+as known-optimistic, with the device figure beside it. This also moves M8 from a
+tap-target decision to a contrast one first: `fgMuted` and `fgSubtle` at 12px are
+the offenders, and both are shared tokens.
+
+### Two mistakes made getting here, both worth keeping written down
+
+- The first attempt used `pumpAndSettle`. A spinner, a skeleton shimmer and a
+  progress bar are continuous, so "settled" is a frame that never arrives; the
+  run hung and died at the 12-minute file timeout. The host grader had always
+  used a fixed `pump(400ms)` for exactly this reason and the habit did not carry
+  across. One test per demo now, with the fixed pump.
+- The report is PRINTED, not asserted, for everything except "did it render" and
+  "do the semantics rules hold". A device number that differs from the host's is
+  a finding to read, not a build to fail — and if it had been an assertion, the
+  contrast discovery would have arrived as a red test rather than as a fact.
+
+### What it does not prove
+
+It is not a screen-reader run. Nothing in it asks iOS what VoiceOver would speak;
+it reads the same semantics tree the host reads, on hardware, and a semantics
+tree is the INPUT to a screen reader rather than its output. No VoiceOver,
+TalkBack, NVDA, JAWS or Narrator claim exists for this library. It is also one
+device, one OS, one screen size, with the system accessibility settings at their
+defaults, run by hand and not in CI. `docs/evidence/mobile-device.md` states all
+of that beside the numbers.
+
+## 44. Four docs defects the owner could see, and three I introduced fixing them (18 Aug 2026)
+
+The owner reported four things from a screenshot: the sidebar's platform
+indicators look ragged, there is no WEB indicator, the Web|Mobile switch moves
+when you flip it, and the Mobile page has no direction control. All four were
+real; the interesting part is what the fixing found.
+
+**The sidebar was one CSS mistake, not a design problem.** The phone glyph and
+the "new" dot were siblings on the row's flex line and BOTH carried `ms-auto`.
+Two auto inline-start margins split the row's free space equally, so on a row
+with both, the phone landed at the midpoint between title and dot — an offset
+that moved with the title's LENGTH. Ten of 115 families carry both flags, so ten
+glyphs sat at ten different places while the rest sat flush. Now one end-aligned
+group of three fixed-width slots (new · web · mobile), each rendered whether
+filled or not, which is what makes the columns line up. Measured after: every
+glyph on one x.
+
+The WEB indicator needed no new plumbing: `allCatalog()` IS "has a web side" by
+construction and `allMobileOnly()` is its exact complement, and the sidebar
+already awaited both. The split is 57 web-only, 57 both, 1 mobile-only.
+
+**The switch was not moving; it was staying still behind different things.** Both
+headers use byte-identical containers. The web toolbar holds PlatformSwitch,
+CopyButton, Pager; the mobile toolbar holds the switch alone. The group is pinned
+to the inline end, so a child's distance from that edge is the width of
+everything AFTER it — about 11-12rem on web, zero on mobile. Putting the switch
+LAST fixes it for both, and keeps fixing it when either page gains a control,
+which forcing the two toolbars to match would not. Measured after: x=288 on both.
+
+**The direction control is a locale link, and that is the point.** The web's
+"LTR|RTL" never flipped a direction: it navigates to the same route in the
+mirrored locale, a separately prerendered document with its own genuine
+`lang`/`dir`. Direction is derived from the locale in both libraries and there is
+deliberately no `dir` prop anywhere, so a control that flipped direction while
+the language stayed put would be the one thing the contract refuses. Extracted as
+`direction-switch.tsx` and mounted on the Mobile page, which had no control at
+all. `apps/mobile-gallery/lib/main.dart` needed ZERO changes: the gallery already
+derives direction from `?lang=`.
+
+### Three defects I introduced, and what caught each
+
+- **A Latin comma in a Persian announced phrase.** The sr-only summary joined its
+  two parts with a hardcoded `", "`, so a Persian reader heard «فقط وب, جدید».
+  Persian's comma is «،» U+060C; the separator is COPY and now lives in the copy
+  table per locale. **No gate catches this** — `native-script-text` passes
+  because the run holds Persian characters. A second reader caught it.
+- **The two glyphs were not normalised.** An 18×13 screen beside a 10×20 phone at
+  one box size renders 9px of ink beside 5px: "thin and lost", which is the same
+  asymmetry the change existed to fix. Both are now comparable ink at one stroke
+  weight — and the screen's stand was a dash floating four units clear of its own
+  body.
+- **The Mobile page's opening paragraph.** It printed the WEB component's intro:
+  on `description-list` a Flutter reader met `<dl>/<dt>/<dd>` and Tailwind's
+  preflight; on `tooltip`, "appears on hover", which on a phone it does not. The
+  first fix used the widget's own Dart docblock — right platform, but a `///`
+  comment has ONE language, and `persian-digit-floor` failed the build
+  (`phone-input/mobile`: 26 Persian digits expected, 22 found). Swapping Persian
+  prose for English prose on a Persian-first page is a different defect. It now
+  uses the first demo's description, which is mobile-authored AND bilingual.
+
+**And a correction of yesterday's own reasoning.** The "when to use it" section
+was added to the Mobile page earlier the same day, arguing that when to reach for
+a family is a fact about the FAMILY rather than about one platform. Reading the
+copy disproved it: it is written in web terms and cross-references web components
+("use `HoverCard`"), so printing it on the Flutter page made that page MORE
+web-voiced, not less. Removed, with the reasoning kept beside the gap.
+
+One more: the `phone-input` demo description said «... همیشه E.164 است». That was
+safe inside a demo card and is not safe as page prose — a bare Latin identifier
+in Persian prose needs a `data-lumo-latn` island, which a manifest string cannot
+carry. Reworded, with the example number in Persian digits.

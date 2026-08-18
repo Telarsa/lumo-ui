@@ -513,7 +513,12 @@ export function loadMobileDemos(slug: string): LoadedMobileDemos | undefined {
    * covered inside the package-wide suite instead, and the page must not link
    * at a file that is not there — it says which one it is linking to.
    */
-  const own = `${MOBILE_PACKAGE_PATH}/test/${snakeOf(slug)}_test.dart`;
+  // The test path follows the SLUG→FILE map, not the slug: `sidebar` documents
+  // `navigation_drawer.dart`, so its test is `navigation_drawer_test.dart`.
+  // Deriving it from the slug pointed three pages at a file that does not exist
+  // (added 18 Aug with the mappings, found the same day).
+  const dartFile = mobileFileFor(slug).replace(/^.*\/([a-z_0-9]+)\.dart$/, "$1");
+  const own = `${MOBILE_PACKAGE_PATH}/test/${dartFile}_test.dart`;
   const hasOwnTest = existsSync(join(REPO_ROOT, own));
 
   return {

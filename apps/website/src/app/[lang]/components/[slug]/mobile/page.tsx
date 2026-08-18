@@ -9,12 +9,12 @@ import { CodePanel } from "@/components/code-panel";
 import { ExampleCard } from "@/components/example-card";
 import { PropsTable } from "@/components/composition-tree";
 import { PlatformSwitch } from "@/components/platform-switch";
+import { DirectionSwitch } from "@/components/direction-switch";
 import { MobilePreview } from "@/components/mobile-preview";
 import { GeneratedText } from "@/components/generated-text";
 import { highlight } from "@/lib/highlight";
-import { assertLocale, segmentFor, site } from "@/lib/locale";
+import { assertLocale, oppositeDirectionLocale, segmentFor, site } from "@/lib/locale";
 import { pageIdentity } from "@/lib/catalog";
-import { loadExamplesFor } from "@/lib/examples-loader";
 import {
   galleryUrl,
   loadMobileDemos,
@@ -382,13 +382,12 @@ export default async function MobileComponentPage({
    * told a different story about when to reach for the thing — before this the
    * section simply did not exist on this side.
    */
-  const usage = (await loadExamplesFor(slug))?.usage;
+
 
   const railItems = [
     { id: "preview", label: c.rail.preview },
     { id: "installation", label: c.rail.installation },
     ...mobile.demos.map((d) => ({ id: `demo-${d.id}`, label: d.title[lang] })),
-    ...(usage === undefined ? [] : [{ id: "usage", label: c.rail.usage }]),
     { id: "contract", label: c.rail.contract },
     { id: "api", label: c.rail.api },
     { id: "caveats", label: c.rail.caveats },
@@ -424,7 +423,24 @@ export default async function MobileComponentPage({
             <div className="min-w-0">
               <p className="text-sm font-medium text-fg-muted">{c.platform}</p>
               <h1 className="text-3xl font-semibold tracking-tight text-fg">{demo.title[lang]}</h1>
-              <p className="mt-2 max-w-2xl text-fg-muted">{demo.intro[lang]}</p>
+              {/*
+                The FIRST DEMO'S description, not the web component's intro.
+                `demo.intro` is authored in `src/examples/<slug>.tsx` and
+                describes the WEB thing: on `description-list` it explains
+                `<dl>/<dt>/<dd>` and Tailwind's preflight; on `tooltip` it says
+                the thing "appears on hover", which on a phone it does not.
+
+                The widget's own Dart docblock says the right thing — "shown on
+                long-press (touch) or hover (pointer)" — but a `///` comment has
+                ONE language, and swapping Persian prose for English prose on a
+                Persian-first page is a different defect: `persian-digit-floor`
+                caught exactly that on `phone-input/mobile` (26 Persian digits
+                expected, 22 found). The demo manifest's descriptions are
+                mobile-authored AND carried in both locales, so they are the
+                honest source until a per-slug mobile intro exists
+                (docs/goals.md M10).
+              */}
+              <p className="mt-2 max-w-2xl text-fg-muted">{first.description[lang]}</p>
             </div>
             {/* The toolbar row, on the end side: the platform switch. */}
             <div className="ms-auto flex shrink-0 items-center gap-2">
@@ -444,6 +460,21 @@ export default async function MobileComponentPage({
                 <Tab id="code">{t.code}</Tab>
               </TabList>
               <TabPanel id="preview" className="mt-4">
+                {/*
+                  The SAME control the Web preview carries, and for the same
+                  reason: it is a locale link, not a direction flag. The Flutter
+                  gallery derives its direction from `?lang=` exactly as the web
+                  derives it from the route, so switching the language switches
+                  the direction — and there is deliberately no `dir` anywhere in
+                  either library to switch instead. The Mobile page simply had no
+                  control at all until 18 Aug 2026.
+                */}
+                <div className="mb-2 flex justify-end">
+                  <DirectionSwitch
+                    lang={lang}
+                    href={`/${segmentFor(oppositeDirectionLocale(lang))}/components/${slug}/mobile/#preview`}
+                  />
+                </div>
                 <div className="flex flex-col items-center gap-4 rounded-lg border border-border bg-bg p-6 sm:p-10">
                   <PhoneDemo lang={lang} demo={first} frameLabel={c.frameLabel} />
                   <p className="max-w-xl text-center text-xs text-fg-muted">{c.previewNote}</p>
@@ -496,22 +527,17 @@ export default async function MobileComponentPage({
             </ExampleCard>
           ))}
 
-          {usage === undefined ? null : (
-            <section id="usage" className="mt-10 scroll-mt-24">
-              <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">{c.rail.usage}</h2>
-              <dl className="mt-3 grid max-w-2xl gap-3 sm:grid-cols-2">
-                <div className="rounded-lg border border-border bg-surface p-4">
-                  <dt className="text-sm font-medium text-fg">{c.usageWhen}</dt>
-                  <dd className="mt-1 text-sm text-fg-muted">{usage.when[lang]}</dd>
-                </div>
-                <div className="rounded-lg border border-border bg-surface p-4">
-                  <dt className="text-sm font-medium text-fg">{c.usageWhenNot}</dt>
-                  <dd className="mt-1 text-sm text-fg-muted">{usage.whenNot[lang]}</dd>
-                </div>
-              </dl>
-            </section>
-          )}
-
+          {/*
+            NO "when to use it" section here, and that is a correction of a
+            change made earlier the same day. It was added by reading
+            `meta.usage` from `src/examples/<slug>.tsx` on the theory that when
+            to reach for a family is a fact about the FAMILY rather than about
+            one platform. Reading the actual copy disproved it: it is written in
+            web terms and cross-references web components ("use `HoverCard`",
+            "use `NavigationMenu`"), so printing it here made the Flutter page
+            MORE web-voiced, not less. It comes back when the demo manifest
+            carries a mobile-authored pair (docs/goals.md M10).
+          */}
           <section id="contract" className="mt-10 scroll-mt-24">
             <h2 className="text-sm font-medium uppercase tracking-wide text-fg-muted">
               {c.rail.contract}

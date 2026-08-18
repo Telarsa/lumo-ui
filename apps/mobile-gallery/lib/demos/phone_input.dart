@@ -26,7 +26,12 @@ const demoMeta = <String, Map<String, Map<String, String>>>{
   'phone-input-1': {
     'title': {'fa-IR': 'ورودی شمارهٔ تلفن', 'en-US': 'Phone input'},
     'description': {
-      'fa-IR': 'کشور و شماره یک ورودی‌اند. مقدار بیرونی همیشه E.164 است، هرچه روی صفحه نوشته شده باشد.',
+      // «E.164» removed from the Persian: a demo description is now rendered as
+      // the Mobile page's opening PROSE, and a bare Latin identifier in Persian
+      // prose needs a `data-lumo-latn` island — which a manifest string cannot
+      // carry. `no-latin-digits` caught it. The English keeps the standard's
+      // name, where it is not a foreign run.
+      'fa-IR': 'کشور و شماره یک ورودی‌اند. مقدار بیرونی همیشه قالب استاندارد بین‌المللی دارد — مثلاً ‎+۹۸۹۱۲۳۴۵۶۷۸۹ — هرچه روی صفحه نوشته شده باشد.',
       'en-US': 'The country and the number are one field. The value out is always E.164, whatever is on screen.',
     },
   },

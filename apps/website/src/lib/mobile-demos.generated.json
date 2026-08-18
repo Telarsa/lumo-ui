@@ -1036,7 +1036,7 @@
           "en-US": "Phone input"
         },
         "description": {
-          "fa-IR": "کشور و شماره یک ورودی‌اند. مقدار بیرونی همیشه E.164 است، هرچه روی صفحه نوشته شده باشد.",
+          "fa-IR": "کشور و شماره یک ورودی‌اند. مقدار بیرونی همیشه قالب استاندارد بین‌المللی دارد — مثلاً ‎+۹۸۹۱۲۳۴۵۶۷۸۹ — هرچه روی صفحه نوشته شده باشد.",
           "en-US": "The country and the number are one field. The value out is always E.164, whatever is on screen."
         },
         "source": {

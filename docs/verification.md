@@ -70,12 +70,16 @@ were being written.
   `evidence/tests/voiceover.spec.ts` is an opt-in placeholder for a local
   VoiceOver run via Guidepup. No NVDA/JAWS/Narrator/TalkBack claim exists.
   Do not make one unless you actually ran it.
-- **No real device or emulator run for the mobile library.** Every mobile test
-  is `flutter test` on the host.
-- **Two of Flutter's own accessibility guidelines are NOT met**, and the number
-  is recorded rather than hidden. Of 105 demos: **42 miss the iOS 44pt tap
-  target, 62 miss Android's 48dp, and 37 miss WCAG AA text contrast** (as low as
-  3.46:1 at 12px). Lumo's control scale is 29/36/44dp, generated from the web's
+- **One device run, by hand, not in CI.** 18 Aug 2026, one iPhone on iOS 26.6:
+  240 renders, 0 failures, semantics rules clean, and **WCAG AA contrast twice as
+  bad as the host reports** (74/120 against 39/120) because the host paints a
+  substitute font at dpr 1. `docs/evidence/mobile-device.md` has the numbers and
+  the limits. Nothing is said here about Android, a small screen, a tablet, or a
+  device with the system accessibility settings turned up.
+- **Three of Flutter's own accessibility guidelines are NOT met**, and the
+  numbers are recorded rather than hidden. Measured ON A DEVICE over 120 demos:
+  **48 miss the iOS 44pt tap target, 73 miss Android's 48dp, and 74 — 62% — miss
+  WCAG AA text contrast** (as low as 3.46:1 at 12px). Lumo's control scale is 29/36/44dp, generated from the web's
   `--lumo-ref-control-*` and designed for a pointer; raising it moves the web
   too, so it is an owner decision, not a test's. The counts are ratcheted and may
   only fall. `labeledTapTargetGuideline` — every tappable node has a name — IS

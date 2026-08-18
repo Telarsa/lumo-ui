@@ -1,7 +1,6 @@
-import Link from "next/link";
 import type { BuiltinLocale as Locale, LumoNode } from "@lumo-ui/core";
-import { direction } from "@lumo-ui/core";
 import { oppositeDirectionLocale, segmentFor } from "@/lib/locale";
+import { DirectionSwitch } from "@/components/direction-switch";
 
 /**
  * Sits above the live preview. ONE control: direction — a real navigation to
@@ -20,31 +19,8 @@ export interface PreviewToolbarProps {
   children: LumoNode;
 }
 
-const COPY: Record<
-  Locale,
-  {
-    directionGroup: string;
-    rtl: string;
-    ltr: string;
-  }
-> = {
-  "fa-IR": {
-    directionGroup: "جهت پیش‌نمایش",
-    rtl: "راست‌به‌چپ",
-    ltr: "چپ‌به‌راست",
-  },
-  "en-US": {
-    directionGroup: "Preview direction",
-    rtl: "Right to left",
-    ltr: "Left to right",
-  },
-};
-
 export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
-  const t = COPY[lang];
   const otherLang = oppositeDirectionLocale(lang);
-  const dir = direction(lang);
-  const otherDir = direction(otherLang);
 
   return (
     <div className="flex flex-col gap-2">
@@ -52,36 +28,7 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
        * Slim chrome, end-aligned above the card — one small segmented group.
        */}
       <div className="flex flex-wrap items-center justify-end gap-2">
-        <div
-          role="group"
-          aria-label={t.directionGroup}
-          className="inline-flex w-fit items-center gap-1 rounded-md border border-border bg-surface-sunken p-1"
-        >
-          {/*
-           * "RTL"/"LTR" are technical identifiers: Latin islands, `aria-hidden`,
-           * decoration over the sr-only per-locale name.
-           */}
-          <span
-            aria-current="true"
-            className="inline-flex h-6 select-none items-center rounded-sm bg-surface px-2 text-xs font-medium text-fg shadow-sm"
-          >
-            <span aria-hidden="true" dir="ltr" lang="en" data-lumo-latn="">
-              {dir === "rtl" ? "RTL" : "LTR"}
-            </span>
-            <span className="sr-only">{dir === "rtl" ? t.rtl : t.ltr}</span>
-          </span>
-          {/* A real navigation — see the file header. */}
-          <Link
-            href={`/${segmentFor(otherLang)}/components/${slug}/#preview`}
-            hrefLang={otherLang}
-            aria-label={otherDir === "rtl" ? t.rtl : t.ltr}
-            className="inline-flex h-6 items-center rounded-sm px-2 text-xs text-fg-muted transition-colors hover:text-fg"
-          >
-            <span aria-hidden="true" dir="ltr" lang="en" data-lumo-latn="">
-              {otherDir === "rtl" ? "RTL" : "LTR"}
-            </span>
-          </Link>
-        </div>
+        <DirectionSwitch lang={lang} href={`/${segmentFor(otherLang)}/components/${slug}/#preview`} />
 
       </div>
 

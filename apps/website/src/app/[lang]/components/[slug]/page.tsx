@@ -600,9 +600,17 @@ export default async function ComponentPage({
               </h1>
               <p className="mt-2 max-w-2xl text-fg-muted">{demo.intro[lang]}</p>
             </div>
-            {/* The toolbar row, on the end side: the platform switch (when a Mobile side exists), copy the page, then the pager. */}
+            {/*
+              The toolbar row, on the end side: copy the page, the pager, and the
+              platform switch LAST.
+              Last is the point. The group is pinned to the inline end, so a
+              child's distance from that edge is the width of everything after
+              it. With the switch first it sat ~11-12rem in from the edge here
+              and flush on the Mobile page, which carries no copy button and no
+              pager — so flipping Web|Mobile appeared to move the control. Put it
+              last and it pins to the edge on both, whatever else a page carries.
+            */}
             <div className="ms-auto flex shrink-0 items-center gap-2">
-              {hasMobile(slug) ? <PlatformSwitch lang={lang} slug={slug} platform="web" /> : null}
               <CopyButton
                 text={CLI_COMMAND.pnpm(item.name)}
                 appendFrom="[data-lumo-code-source] pre"
@@ -626,6 +634,7 @@ export default async function ComponentPage({
                 prevLabel={c.pagerPrev}
                 nextLabel={c.pagerNext}
               />
+              {hasMobile(slug) ? <PlatformSwitch lang={lang} slug={slug} platform="web" /> : null}
             </div>
           </header>
 
