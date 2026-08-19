@@ -95,7 +95,7 @@ compiles and the built-HTML gate.
 ## The mobile library
 
 `packages/mobile` (`lumo_ui_mobile`) is Flutter/Dart: 145 widgets across 76
-family files, with a test file per family and 669 tests. It is not a port of the
+family files, with a test file per family and 681 tests. It is not a port of the
 React source and shares no runtime code with it. What crosses the boundary is:
 
 - **Tokens, generated.** `scripts/build-flutter-tokens.mjs` reads

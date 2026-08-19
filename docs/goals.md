@@ -55,7 +55,7 @@ Tier 3 total ≈ **+0.35**.
 
 ## Tier M — the mobile library (added 17 Aug 2026)
 
-`packages/mobile` is 145 widgets, 76 family files, 669 tests and five gates, and
+`packages/mobile` is 145 widgets, 76 family files, 681 tests and seven gates, and
 it entered the 17 Aug sheet as a rounding adjustment on three criteria. **Most of
 this tier moves the score only if rubric amendment 1 lands** (platform-neutral
 A-criteria, or a mobile column on the same anchors) — see

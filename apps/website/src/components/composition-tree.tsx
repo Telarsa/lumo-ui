@@ -130,15 +130,23 @@ export function PropsTable({
   optionalLabel,
 }: PropsTableProps) {
   return (
-    <div className="flex flex-col gap-3">
+    // `min-w-0` here as well as on each `<details>`: one flex item that refuses
+    // to shrink anywhere in the chain is enough to stop the scroller inside from
+    // ever engaging, and this wrapper is itself a flex item further up.
+    <div className="flex min-w-0 flex-col gap-3">
       {groups.map((group, index) => (
         <details
           key={group.name}
           open={index === 0}
-          className="rounded-lg border border-border bg-surface"
+          // `min-w-0`: as a flex item this defaults to `min-width: auto`, which
+          // is max-content — so the `overflow-x-auto` scroller below could never
+          // shrink, and a wide props table pushed the whole document sideways.
+          className="min-w-0 rounded-lg border border-border bg-surface"
         >
           <summary className="cursor-pointer px-3 py-2 text-sm font-medium text-fg">
-            <code dir="ltr" lang="en" data-lumo-latn="">
+            {/* `break-all`: a long part name (`LumoAlertDialogTrigger`) carries no
+                space to break at and spilled 53px at 200% text. */}
+            <code dir="ltr" lang="en" data-lumo-latn="" className="break-all">
               {group.name}
             </code>
           </summary>

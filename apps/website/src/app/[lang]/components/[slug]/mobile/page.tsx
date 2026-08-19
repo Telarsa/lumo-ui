@@ -294,7 +294,12 @@ function Code({ children }: { children: string }) {
       dir="ltr"
       lang="en"
       data-lumo-latn=""
-      className="rounded-md border border-border bg-surface-sunken px-1.5 py-0.5 text-xs text-fg"
+      // `break-all`: some of these are FILE PATHS
+      // (`packages/mobile/test/alert_dialog_test.dart`), which carry no space to
+      // break at, so at 320px they pushed the whole document 28px sideways. This
+      // only breaks a run that would otherwise overflow — where there is room it
+      // changes nothing.
+      className="rounded-md border border-border bg-surface-sunken px-1.5 py-0.5 text-xs break-all text-fg"
     >
       {children}
     </code>
@@ -443,7 +448,7 @@ export default async function MobileComponentPage({
               <p className="mt-2 max-w-2xl text-fg-muted">{first.description[lang]}</p>
             </div>
             {/* The toolbar row, on the end side: the platform switch. */}
-            <div className="ms-auto flex shrink-0 items-center gap-2">
+            <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
               <PlatformSwitch lang={lang} slug={slug} platform="mobile" />
             </div>
           </header>

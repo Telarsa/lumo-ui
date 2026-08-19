@@ -113,7 +113,14 @@ class LumoAppBar extends StatelessWidget implements PreferredSizeWidget {
             // under fa-IR), trailing at the END. Nothing here names an edge.
             child: NavigationToolbar(
               leading: leadingSlot,
-              middle: titleColumn,
+              // The bar's own height is a fixed number the `Scaffold` reads
+              // from `preferredSize` BEFORE this builds, so the bar cannot grow
+              // with the text scale — at 2x, title + subtitle overflowed it by
+              // 11 px. The title's scaling is capped instead, which is what iOS
+              // does to a navigation bar for the same reason. This caps the
+              // DRAWING only: the announced name is `title`/`subtitle` in full,
+              // and everything below the bar scales without limit.
+              middle: MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: titleColumn),
               trailing: trailingSlot,
               centerMiddle: centred,
               middleSpacing: 12,

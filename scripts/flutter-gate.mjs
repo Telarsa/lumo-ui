@@ -40,4 +40,4 @@ const runGallery = flutterRunner(sdk, GALLERY);
 if (runGallery(["pub", "get"]) !== 0) process.exit(1);
 if (runGallery(["analyze", "--no-pub"]) !== 0) { console.error("  flutter: gallery analyze failed"); process.exit(1); }
 if (runGallery(["test", "--no-pub", "--reporter", "compact"]) !== 0) { console.error("  flutter: gallery tests failed (render floors, demo contract)"); process.exit(1); }
-console.log("  flutter: apps/mobile-gallery analysed and tested (render floors over every demo)");
+console.log("  flutter: apps/mobile-gallery analysed and tested (render floors, semantics rules, and the composition/stress sweep over every demo)");

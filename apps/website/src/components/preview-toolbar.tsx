@@ -44,14 +44,22 @@ export function PreviewToolbar({ lang, slug, children }: PreviewToolbarProps) {
         data-lumo-demo-root=""
         // The preview is a STAGE: generous minimum height, demo centred.
         // `bg` comes from the token so the dark-theme subtree repaints.
-        className="grid min-h-96 place-items-center rounded-lg border border-border bg-bg p-8 sm:p-10"
+        tabIndex={0}
+        // `items-center` for the BLOCK axis only — not `place-items-center`.
+        // Centring on the inline axis distributes a too-wide demo equally to
+        // both sides, and a scroll container's start-side overflow is neither
+        // scrollable nor clipped: at 200% text the steps demo leaked 242px and
+        // the whole page scrolled sideways. Start-aligned content overflows only
+        // towards the end, where the scroller can reach it; `mx-auto` on the
+        // child keeps it centred in the ordinary case where it fits.
+        className="grid overflow-x-auto min-h-96 items-center rounded-lg border border-border bg-bg p-8 sm:p-10"
       >
         {/*
          * `min-w-0`, not just `w-full max-w-2xl`: as a GRID ITEM its `min-width`
          * resolves to the demo's min-content width, which pushed wide demos past
          * the canvas. Removing the floor lets their own `overflow` rules work.
          */}
-        <div className="w-full min-w-0 max-w-2xl">{children}</div>
+        <div className="mx-auto w-full min-w-0 max-w-2xl">{children}</div>
       </div>
     </div>
   );

@@ -391,7 +391,7 @@ async function MobileOnlyWebSide({ lang, entry }: { lang: Locale; entry: MobileO
               <h1 className="text-3xl font-semibold tracking-tight text-fg">{entry.title[lang]}</h1>
               <p className="mt-2 max-w-2xl text-sm text-fg-muted">{entry.intro[lang]}</p>
             </div>
-            <div className="ms-auto flex shrink-0 items-center gap-2">
+            <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
               <PlatformSwitch lang={lang} slug={entry.id} platform="web" />
             </div>
           </header>
@@ -610,7 +610,7 @@ export default async function ComponentPage({
               pager — so flipping Web|Mobile appeared to move the control. Put it
               last and it pins to the edge on both, whatever else a page carries.
             */}
-            <div className="ms-auto flex shrink-0 items-center gap-2">
+            <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
               <CopyButton
                 text={CLI_COMMAND.pnpm(item.name)}
                 appendFrom="[data-lumo-code-source] pre"

@@ -54,9 +54,13 @@ Widget toastBasic(BuildContext context) {
 Widget toastWithAction(BuildContext context) {
   final t = LumoDemoCopy(copy, LumoScope.of(context).locale);
   // BEGIN toast-2
-  return Row(
-    mainAxisAlignment: MainAxisAlignment.center,
+  // `Wrap`, not `Row`: two buttons side by side overflowed by 18 px at 2x text.
+  // A row of buttons is what anyone writes, so the demo shows the shape that
+  // survives a reader who needs large type — it drops to a second line.
+  return Wrap(
+    alignment: WrapAlignment.center,
     spacing: 8,
+    runSpacing: 8,
     children: [
       LumoButton(
         onPressed: () => showLumoToast(

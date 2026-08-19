@@ -53,12 +53,13 @@ export function ExampleCard({
          * The same stage anatomy as PreviewToolbar's, at example scale.
          */}
         {children !== undefined ? (
-          <div className="grid min-h-44 place-items-center rounded-lg border border-border bg-bg p-6 sm:p-8">
+          <div tabIndex={0}
+        className="grid overflow-x-auto min-h-44 items-center rounded-lg border border-border bg-bg p-6 sm:p-8">
             {/*
              * `min-w-0`: a grid item's `min-width: auto` floors it at min-content width,
              * pushing the cell past the canvas. Kept identical to `preview-toolbar.tsx`.
              */}
-            <div className="flex w-full min-w-0 max-w-2xl flex-col items-center">{children}</div>
+            <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col items-center">{children}</div>
           </div>
         ) : null}
         <ViewCode label={viewLabel} expandedLabel={hideLabel}>

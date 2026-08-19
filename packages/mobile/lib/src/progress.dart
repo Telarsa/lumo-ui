@@ -221,7 +221,18 @@ class _LumoSpinnerState extends State<LumoSpinner> with SingleTickerProviderStat
                   ? FadeTransition(opacity: _opacity, child: CircularProgressIndicator(value: 0.75, strokeWidth: 2, color: ring))
                   : CircularProgressIndicator(strokeWidth: 2, color: ring),
             ),
-            if (widget.showLabel) Padding(padding: const EdgeInsetsDirectional.only(start: 8), child: Text(widget.label, style: TextStyle(fontSize: 14, color: c.fgMuted))),
+            // `Flexible`, because the label is TEXT and text grows: a reader on
+            // 2x Dynamic Type overflowed this row by 62 px. Safe in both
+            // directions — under `MainAxisSize.min` a flex child does not
+            // assert when the incoming width is unbounded, it simply takes its
+            // natural size, so a spinner in a horizontal scroller still works.
+            if (widget.showLabel)
+              Flexible(
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.only(start: 8),
+                  child: Text(widget.label, style: TextStyle(fontSize: 14, color: c.fgMuted)),
+                ),
+              ),
           ],
         ),
       ),

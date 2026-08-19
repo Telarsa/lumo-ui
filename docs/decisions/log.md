@@ -2354,3 +2354,67 @@ own composition failures.** Only an application composes.
 The app's own 19-test suite missed it too, because it renders overlays at the
 default 800×600 surface and the intrinsic path only fires at phone width with
 three providers. A test that never uses a phone's width is not testing a phone.
+
+## §48 — Stress the library the way production does: small screens, large text, real composition (18 Aug 2026)
+
+§47 established that a component library cannot discover its own composition
+failures. This applies that lesson as INSTRUMENTS on both platforms, then fixes
+what they found.
+
+**Mobile** (`apps/mobile-gallery/test/composition_stress_test.dart`, in
+`gate:flutter`): every demo at 2× text scale, at 320 dp, and under
+`IntrinsicWidth`. 360 renders. Found and fixed:
+
+- `LumoSpinner`'s label sat in a Row with no flex — 62 px overflow at 2×.
+  `Flexible` under `MainAxisSize.min`, probed first: it does not assert when
+  the incoming width is unbounded, so nothing was traded away.
+- `LumoAppBar` has a fixed `preferredSize` the Scaffold reads before build, so
+  the bar cannot grow — title + subtitle overflowed by 11 px at 2×. The title's
+  scaling is clamped at 1.3× (what iOS does to a navigation bar); drawing only,
+  the announced strings are unaffected.
+- `toast-2`'s demo was a rigid Row of two buttons — the shape every consumer
+  writes first. Now `Wrap`, which is the shape that survives.
+
+Floors: overflow at 2× and at 320 dp asserted at ZERO; the 17 demos that cannot
+report an intrinsic width are pinned by name (`kNoIntrinsicWidth`) with the
+reason — Flutter's `LayoutBuilder` refuses intrinsics by design, and nine
+families legitimately read their constraints — and the set may only shrink.
+
+**Web** (`evidence/tests/stress.spec.ts` + `console.spec.ts`): every component
+route at a 320 px viewport and at 200% root font (the reader's browser setting,
+harsher than zoom because the viewport does not scale with it); sideways
+document scroll asserted at zero. Plus every built route swept for console
+errors, uncaught exceptions and failed requests. First run: **255 of 348
+failing**. Fixed to zero across five rounds, each root-caused:
+
+1. The page-header control cluster carried `shrink-0` with three controls —
+   17 px sideways on every component page at 320 px. Wraps now.
+2. File-path chips (`Code` on the mobile pages) have no space to break at —
+   28 px. `break-all`, inert where there is room.
+3. **`tabListVariants` had no overflow handling — a LIBRARY defect.** A tab row
+   that does not fit pushed the whole document sideways. `flex-wrap` on the
+   horizontal orientation, chosen over `overflow-x-auto` because forcing one
+   axis out of `visible` would clip the `-mb-px` underline overlap and the
+   focus ring.
+4. The props table's `overflow-x-auto` scroller had NEVER engaged: both the
+   `<details>` around it and the flex-column wrapper above floored at
+   `min-width: auto` = max-content, so the "handled" markup was dead. `min-w-0`
+   at both levels. A scroller that silently does not scroll is worse than none.
+5. The demo stages centred their content (`place-items-center`), and a scroll
+   container's START-side overflow is neither scrollable nor clipped — a
+   too-wide demo leaked up to 242 px past the viewport from inside its own
+   scroller. Stages now start-align and centre the child by `mx-auto`
+   (identical when it fits), scroll on the inline axis, and carry `tabIndex=0`
+   so the scroller is keyboard-reachable.
+
+Verified against the user-visible fact, not just the metric: the failing pages
+were scripted to actually scroll sideways (RTL scrolls to negative x, which
+`body.scrollWidth` cannot see) — 242 px of real movement confirmed before
+fixing, 0 after.
+
+**Honest remainder:** 7 routes still report 4–242 px of purely scrollable
+overflow at 200% — no element's border box extends past the viewport, forcing
+every scroller to `hidden` changes nothing, and per-section isolation
+reproduces it. Cause unfound after a real attempt; pinned by name in the spec
+(`KNOWN_SIDEWAYS_AT_200`), asserted so a fix MUST remove the entry and a new
+offender fails loudly. Recorded rather than guessed at.

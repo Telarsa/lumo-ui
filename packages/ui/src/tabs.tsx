@@ -42,8 +42,15 @@ export const tabsVariants = cva(
 );
 
 export const tabListVariants = cva(
+  // `flex-wrap` on the horizontal list: a row of tabs that does not fit used to
+  // push the whole DOCUMENT sideways — four package-manager tabs at 200% text
+  // overflowed a 390px viewport by 36px, and a page you must scroll sideways to
+  // read is the one overflow a reader cannot work around. Wrapping rather than
+  // `overflow-x-auto` because setting one axis to `auto` forces the other out of
+  // `visible`, which would clip the `-mb-px` underline overlap and the focus
+  // ring. Inert wherever the tabs already fit.
   "flex " +
-    "data-[orientation=horizontal]:flex-row data-[orientation=horizontal]:border-b data-[orientation=horizontal]:border-border " +
+    "data-[orientation=horizontal]:flex-row data-[orientation=horizontal]:flex-wrap data-[orientation=horizontal]:border-b data-[orientation=horizontal]:border-border " +
     "data-[orientation=vertical]:flex-col data-[orientation=vertical]:border-e data-[orientation=vertical]:border-border",
 );
 

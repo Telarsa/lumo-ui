@@ -215,7 +215,7 @@ export default async function BlockPage({
               <p className="mt-2 max-w-2xl text-fg-muted">{block.intro[lang]}</p>
             </div>
             {/* The toolbar row, on the end side: copy the install command, then the pager. */}
-            <div className="ms-auto flex shrink-0 items-center gap-2">
+            <div className="ms-auto flex flex-wrap items-center justify-end gap-2">
               <CopyButton
                 text={install}
                 label={c.copyInstall}
