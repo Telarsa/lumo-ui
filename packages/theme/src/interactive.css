@@ -1,0 +1,96 @@
+/*
+ * Lumo UI — the pointer affordance for CONSUMER-authored controls. OPT-IN.
+ *
+ * ── What this repairs ──────────────────────────────────────────────────────
+ *
+ * Tailwind v3's Preflight set `button { cursor: pointer }`. Tailwind v4's does
+ * not — it restores the platform default, `cursor: default`. Lumo's own
+ * components are unaffected: every interactive part sets `cursor-pointer` in
+ * its variants (button, select, disclosure, rating, menu items…), and the
+ * styling floor keeps them honest.
+ *
+ * What v4's change DOES hit is the consumer's own markup. A greenfield app
+ * follows Lumo's recipe — `@import "tailwindcss"` and then Lumo's files — and
+ * every plain `<button>` it writes silently renders an arrow. That is not a
+ * defect a consumer can be expected to find: nothing errors, nothing looks
+ * wrong in a screenshot, and it only shows up under a live pointer. It was
+ * found exactly that way, by a consumer (khroos-example, 19 Aug 2026), on
+ * ~130 controls across two apps.
+ *
+ * ── Why it is opt-in, and not simply part of tokens.css ────────────────────
+ *
+ * Because it is UNSCOPED, and an unscoped rule reaches a host. §0.2 of
+ * `docs/agent-consumer.md` is the standing lesson: an embedded consumer keeps
+ * its own reset, and layer order protects only the properties that host
+ * actually declares. A host that never wrote a cursor rule would silently get
+ * ours on every button on its site — the same class of change that made 46
+ * English pages shift height in the first consumer trial. So this ships the
+ * way `script.css` does: a greenfield app asks for it, an embedded one does
+ * not, and the default is to change nothing.
+ *
+ * ── Why `lumo.reset` ───────────────────────────────────────────────────────
+ *
+ * `lumo.reset` is declared FIRST in the layer statement in tokens.css, so it
+ * ranks lowest: anything the consumer writes — layered or not — wins over it
+ * without an `!important` and without specificity games. A default, not a
+ * decree.
+ *
+ * Import order in a consuming app:
+ *     @import "tailwindcss";
+ *     @import "@lumo-ui/theme/tokens.css";
+ *     @import "@lumo-ui/theme/theme.css";
+ *     @import "@lumo-ui/theme/script.css";        <- greenfield only
+ *     @import "@lumo-ui/theme/interactive.css";   <- greenfield only
+ */
+@layer lumo.reset {
+  /*
+   * The selector list is "things that are activated by a click", not "things
+   * that are focusable". A text input is focusable and takes a caret, not a
+   * hand; a disabled control is not activatable at all.
+   *
+   * `[role="button"]`, `[role="tab"]`, `[role="switch"]`, `[role="option"]`
+   * and `[role="menuitem"]` are here because a consumer composing a control
+   * out of a `div` still owes the reader the same affordance — and because
+   * Lumo's own guidance is that the role is what the reader is promised.
+   */
+  button,
+  summary,
+  label:has(> input[type="checkbox"]),
+  label:has(> input[type="radio"]),
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"],
+  input[type="color"],
+  input[type="file"],
+  [role="button"],
+  [role="tab"],
+  [role="switch"],
+  [role="option"],
+  [role="menuitem"],
+  [role="menuitemcheckbox"],
+  [role="menuitemradio"] {
+    cursor: pointer;
+  }
+
+  /*
+   * Not activatable means not a hand. `:disabled` covers the form elements;
+   * `aria-disabled` covers the composed controls, which stay focusable on
+   * purpose and therefore cannot use the DOM attribute.
+   */
+  button:disabled,
+  summary:disabled,
+  select:disabled,
+  input:disabled,
+  [aria-disabled="true"] {
+    cursor: default;
+  }
+
+  /*
+   * A `<summary>` with no disclosure behaviour is a heading, not a control.
+   * `details[open] > summary` still toggles, so it is deliberately not here.
+   */
+  details[data-lumo-static] > summary {
+    cursor: default;
+  }
+}

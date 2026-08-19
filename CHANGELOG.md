@@ -23,6 +23,18 @@ tag are on the docs site's changelog page and in `docs/decisions/log.md`.
 ## Unreleased
 
 ### Added
+- **`@lumo-ui/theme/interactive.css` — the pointer affordance for consumer-authored controls (opt-in, greenfield).**
+  Tailwind v4's Preflight dropped v3's `button { cursor: pointer }`, so every
+  plain `<button>` a consumer writes renders an arrow. Lumo's own components
+  were never affected (each sets `cursor-pointer` in its variants), which is
+  why the library never met this — it only shows up in consumer markup, under a
+  live pointer, with nothing erroring and nothing wrong in a screenshot. Found
+  by a consumer (khroos-example, 19 Aug 2026) on ~130 controls across two apps.
+  The file writes into the existing `lumo.reset` layer, which ranks lowest, so
+  a consumer's own rule always wins; it is opt-in and unscoped, for the same
+  reason `script.css` is — an embedded consumer must not have its host's
+  buttons restyled. Add the import after `script.css`; embedded consumers add
+  neither.
 - **33 more widget families — 77 in all, 668 tests.** Navigation (`LumoNavigationBar`,
   `LumoAppBar`, `LumoNavigationDrawer`, `LumoToolbar`, `LumoButtonGroup`,
   `LumoInputGroup`, `LumoContextMenu`), dates (`LumoCalendar`, `LumoRangeCalendar`,

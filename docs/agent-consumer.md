@@ -38,7 +38,7 @@ beyond repository access:
 | Concern | What to do |
 |---|---|
 | tsconfig | `"allowImportingTsExtensions": true` — copies and contract packages import `./x.tsx` (needs `noEmit`, which Next sets). Nothing else: the copies type-check under create-next-app's `strict` + `lib: esnext` (a gate proves it). |
-| CSS, greenfield app | `@import "tailwindcss"; @import "@lumo-ui/theme/tokens.css"; @import "@lumo-ui/theme/theme.css"; @import "@lumo-ui/theme/script.css";` — in that order. `script.css` is Lumo's page-wide Persian typography (root leading, heading leading, `tracking-*` guard, the Persian face on the root and on portals); import it when Lumo owns the page. Tailwind 4 finds the copies' classes by itself when they sit under your source root; add `@source "<dir>"` otherwise. |
+| CSS, greenfield app | `@import "tailwindcss"; @import "@lumo-ui/theme/tokens.css"; @import "@lumo-ui/theme/theme.css"; @import "@lumo-ui/theme/script.css"; @import "@lumo-ui/theme/interactive.css";` — in that order. `script.css` is Lumo's page-wide Persian typography (root leading, heading leading, `tracking-*` guard, the Persian face on the root and on portals). `interactive.css` restores `cursor: pointer` on YOUR OWN buttons and composed controls — Tailwind v4's Preflight dropped v3's rule, so a plain `<button>` you write renders an arrow; Lumo's own components already set it. Both are greenfield-only and both are unscoped by design. Tailwind 4 finds the copies' classes by itself when they sit under your source root; add `@source "<dir>"` otherwise. |
 | CSS, embedded in an existing site | see §0.2 — do **not** import `script.css`. |
 | Fonts | Set `--lumo-font-persian: var(--your-vazirmatn-variable)` on `:root` (next/font, @fontsource…). The Latin face is whatever your `--font-sans` is. |
 | Dark mode | Tokens flip on `[data-theme="dark"]` (explicit) or `prefers-color-scheme` (system); a `light` value pins light. With next-themes: `attribute={["class", "data-theme"]}`. |
@@ -71,9 +71,10 @@ every route before and after (0 differences over 92 captures):
 @layer lumo.brand { :root { --lumo-ref-hue-brand: 30; --lumo-ref-chroma-brand: 0.19; } }
 ```
 
-Do not import `script.css` here: its page-wide `:lang(fa)` rules would restyle
-the host wherever the host is silent (a `lang="fa"` locale-switch link grew by
-10 px on every English page in the trial). Lumo's components inherit the host's
+Do not import `script.css` or `interactive.css` here: their page-wide rules
+would restyle the host wherever the host is silent — a `lang="fa"`
+locale-switch link grew by 10 px on every English page in the trial, and a
+cursor rule would reach every button on the host's site the same way. Lumo's components inherit the host's
 Persian typography instead, which is what you want. Layer order protects only
 properties the site *declares*; anything unscoped Lumo emitted would still land
 — that is why the script layer is opt-in.
