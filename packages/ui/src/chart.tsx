@@ -13,12 +13,12 @@ import { scaleBand } from "@tanstack/charts/scales/band";
 import { scalePoint } from "@tanstack/charts/scales/point";
 import { scaleLinear } from "@tanstack/charts/scales/linear";
 
-import { cn, formatNumber, type Locale } from "@lumo-ui/core";
+import { cn, direction, formatNumber, type Locale } from "@lumo-ui/core";
 import { useLumoStringsFor } from "./locale.ts";
 // Directive-free module: a SERVER-rendered chart panel can call the variants,
 // the direction arithmetic and the axis builders.
 import {
-  CHART_KEYBOARD_READING_ORDER,
+  CHART_KEYBOARD_ENTRY_READING_ORDER,
   CHART_MOTION_ATTRIBUTE,
   CHART_MOTION_GUIDE_DURATION,
   CHART_MOTION_MARK_DURATION,
@@ -51,7 +51,7 @@ import {
 } from "./chart.variants.ts";
 
 export {
-  CHART_KEYBOARD_READING_ORDER,
+  CHART_KEYBOARD_ENTRY_READING_ORDER,
   CHART_MOTION_ATTRIBUTE,
   CHART_MOTION_GUIDE_DURATION,
   CHART_MOTION_MARK_DURATION,
@@ -181,6 +181,9 @@ export interface ChartContainerProps
 const INITIAL_WIDTH = 320;
 const HEIGHT = 200;
 
+/** Events this file synthesized — never swap one twice. */
+const SWAPPED = new WeakSet<KeyboardEvent>();
+
 export function ChartContainer({
   id,
   className,
@@ -227,6 +230,37 @@ export function ChartContainer({
         data-chart={chartId}
         {...{ [CHART_MOTION_ATTRIBUTE]: animate ? "on" : "off" }}
         className={cn(chartContainerVariants(), className)}
+        /*
+         * Home/End swap under RTL — at the CAPTURE phase, before the engine's
+         * own listener. The engine resolves all five keys from one physical
+         * `focus.navigation(points)` array, so under fa-IR its Home is the
+         * reading END and its End the reading start; reversing the array would
+         * fix these two and invert the arrows (worse). Swapping just these two
+         * keys here makes Home the reading start and End the reading end while
+         * the arrows stay untouched. The synthesized event is not `isTrusted`,
+         * which the engine does not check. The keyboard ENTRY point remains
+         * physical (`CHART_KEYBOARD_ENTRY_READING_ORDER`): correcting it would
+         * need a second focus move and a double announcement — a worse defect.
+         */
+        onKeyDownCapture={
+          direction(locale) === "rtl"
+            ? (event) => {
+                if (event.key !== "Home" && event.key !== "End") return;
+                // The swapped event re-enters this very handler (React captures
+                // at the root); the marker keeps it from swapping back forever.
+                if (SWAPPED.has(event.nativeEvent)) return;
+                event.preventDefault();
+                event.stopPropagation();
+                const swapped = new KeyboardEvent("keydown", {
+                  key: event.key === "Home" ? "End" : "Home",
+                  bubbles: true,
+                  cancelable: true,
+                });
+                SWAPPED.add(swapped);
+                event.target.dispatchEvent(swapped);
+              }
+            : undefined
+        }
         {...props}
       >
         <ChartStyle id={chartId} config={config} motion={animate} />

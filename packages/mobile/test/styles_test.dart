@@ -185,4 +185,69 @@ void main() {
     ));
     expect(seen, const LumoStyles());
   });
+
+  testWidgets('LumoItemStyle DELIVERS: every geometry and colour field moves the drawn row', (tester) async {
+    // The blind review of 18 Aug proved ten LumoItemStyle fields were accepted
+    // and ignored — the hostile fixture set them and the test never measured.
+    // This test measures. Each expectation below fails against the pre-fix
+    // item.dart (hard-coded literals), so none of them is vacuous.
+    const style = LumoStyles(
+      item: LumoItemStyle(
+        gap: {LumoItemSize.md: 40},
+        inlinePadding: {LumoItemSize.md: 37},
+        blockPadding: {LumoItemSize.md: 23},
+        minHeight: 91,
+        borderRadius: BorderRadius.zero,
+        background: {LumoItemVariant.outlined: Color(0xFFAA00AA)},
+        selectedBackground: Color(0xFF00AA00),
+        pressedBackground: Color(0xFF0000AA),
+        borderColour: Color(0xFFAA0000),
+        borderWidth: 7,
+      ),
+    );
+
+    // An OUTLINED row: fill, frame colour, frame width, radius, paddings, floor.
+    await tester.pumpWidget(app(
+      const Center(child: LumoItem(title: 'ردیف', variant: LumoItemVariant.outlined, leading: Icon(Icons.circle))),
+      styles: style,
+    ));
+    final box = tester.widget<Container>(
+      find.descendant(of: find.byType(LumoItem), matching: find.byType(Container)).first,
+    );
+    final deco = box.decoration! as BoxDecoration;
+    expect(deco.color, const Color(0xFFAA00AA), reason: 'background[outlined] must fill the row');
+    expect(deco.borderRadius, BorderRadius.zero, reason: 'borderRadius must reach the frame');
+    expect((deco.border! as Border).top.color, const Color(0xFFAA0000), reason: 'borderColour must reach the frame');
+    expect((deco.border! as Border).top.width, 7, reason: 'borderWidth must reach the frame');
+    expect(box.padding, const EdgeInsetsDirectional.symmetric(horizontal: 37, vertical: 23),
+        reason: 'inline/block padding must reach the row');
+    expect(tester.getSize(find.byType(LumoItem)).height, greaterThanOrEqualTo(91),
+        reason: 'minHeight above the platform floor must grow the row');
+
+    // The gap: the title column must start gap+padding after the leading icon's slot.
+    final row = tester.widget<Row>(
+      find.descendant(of: find.byType(LumoItem), matching: find.byType(Row)).first,
+    );
+    expect(row.spacing, 40, reason: 'gap must reach the Row');
+
+    // A SELECTED row takes selectedBackground.
+    await tester.pumpWidget(app(
+      Center(child: LumoItem(title: 'ردیف', isSelected: true, onTap: () {})),
+      styles: style,
+    ));
+    final selectedDeco = tester
+        .widget<Container>(find.descendant(of: find.byType(LumoItem), matching: find.byType(Container)).first)
+        .decoration! as BoxDecoration;
+    expect(selectedDeco.color, const Color(0xFF00AA00), reason: 'selectedBackground must fill a selected row');
+
+    // A PRESSED row takes pressedBackground.
+    final press = await tester.startGesture(tester.getCenter(find.byType(LumoItem)));
+    await tester.pump(const Duration(milliseconds: 80));
+    final pressedDeco = tester
+        .widget<Container>(find.descendant(of: find.byType(LumoItem), matching: find.byType(Container)).first)
+        .decoration! as BoxDecoration;
+    expect(pressedDeco.color, const Color(0xFF0000AA), reason: 'pressedBackground must fill a pressed row');
+    await press.up();
+    await tester.pump(const Duration(milliseconds: 200));
+  });
 }

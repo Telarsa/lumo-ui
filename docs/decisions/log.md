@@ -2418,3 +2418,33 @@ every scroller to `hidden` changes nothing, and per-section isolation
 reproduces it. Cause unfound after a real attempt; pinned by name in the spec
 (`KNOWN_SIDEWAYS_AT_200`), asserted so a fix MUST remove the entry and a new
 offender fails loudly. Recorded rather than guessed at.
+
+## §49 — The blind pass was right: the upgrade evidence was vacuous, and the honest rerun reverses its conclusion (19 Aug 2026)
+
+The 18 Aug blind rubric (docs/history/rubric-2026-08-18-blind.md) proved four
+defects this log had shipped as achievements. Each is now fixed, and the most
+important one reverses a recorded claim:
+
+1. **The 61-screen upgrade comparison compared blank bodies to blank bodies.**
+   One 400ms pump predates the app shell's entrance animation; every body was
+   opacity 0, so "only the dev button moved" was true of the chrome and vacuous
+   of the content. The harness now drives the entrance to completion and
+   REFUSES a capture with fewer than 3 Text widgets. The honest rerun: all 61
+   screens differ, up to ~1M px — because `MaterialTapTargetSize.padded` grows
+   every control's occupied box to the touch floor. §48's "no drawn pixel
+   changed" conflated drawn with occupied; the release note must say layouts
+   move. `docs/evidence/consumer-upgrade.md` carries the correction; the app's
+   `KSearchBar` gained a floor where a fixed 48 overflowed by the field's 3px
+   of borders.
+2. **Ten `LumoItemStyle` fields were accepted and ignored** — declared in
+   §46's registry, never read by `item.dart`. All ten now have exactly one
+   delivery site (`s.x ?? literal`), and `styles_test.dart` gained a DELIVERY
+   test that measures each one against the drawn row (it fails against the
+   pre-fix code, so it is not vacuous).
+3. **`verify` was red**: my `LumoRating` docblock edit postdated the last
+   `gate:mobile-api` run, and `docs/verification.md` still said 21 gates.
+   Regenerated; the count and the 14+7+1 split corrected.
+4. Remaining proved findings are queued with owners: the mobile mutation floor
+   and its no-baseline oracle, the chart RTL keyboard order pinned as inverted,
+   CI's six omitted gates and missing `feat/**` trigger, and a per-route
+   severity ratchet for the seven known 200% overflows.

@@ -53,14 +53,19 @@ const ROOT_FONT_PX = 32;
  * means a route started scrolling sideways, which is the defect this sweep
  * exists to catch.
  */
-const KNOWN_SIDEWAYS_AT_200 = new Set([
-  "/fa/components/chart/",
-  "/fa/components/dialog/",
-  "/fa/components/drawer/mobile/",
-  "/fa/components/segmented-control/",
-  "/fa/components/segmented-control/mobile/",
-  "/fa/components/steps/",
-  "/fa/components/table/",
+// route → the WORST overflow measured when pinned (px). A ratchet in both
+// directions: growing past the cap fails (the defect got worse), and dropping
+// to zero fails too (it is fixed — remove the entry). The 18 Aug blind review
+// asked for exactly this: a pin without a severity cap lets a 4px nuisance
+// quietly become a 400px break while staying "known".
+const KNOWN_SIDEWAYS_AT_200 = new Map<string, number>([
+  ["/fa/components/chart/", 87],
+  ["/fa/components/dialog/", 4],
+  ["/fa/components/drawer/mobile/", 10],
+  ["/fa/components/segmented-control/", 15],
+  ["/fa/components/segmented-control/mobile/", 15],
+  ["/fa/components/steps/", 242],
+  ["/fa/components/table/", 15],
 ]);
 
 
@@ -106,10 +111,12 @@ test.describe("a reader who turned the text up", () => {
       // The style lands before paint; give layout a frame to settle on it.
       await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => r(null))));
       const { over, culprit } = await horizontalOverflow(page);
-      if (KNOWN_SIDEWAYS_AT_200.has(route)) {
-        // Pinned, not excused: if it stops overflowing, this fails and the
-        // route must come off the list.
+      const cap = KNOWN_SIDEWAYS_AT_200.get(route);
+      if (cap !== undefined) {
+        // Pinned, not excused — and capped: worse than the recorded overflow
+        // is a regression, zero means fixed and the entry must go.
         expect(over, `${route} no longer overflows — remove it from KNOWN_SIDEWAYS_AT_200`).toBeGreaterThan(0);
+        expect(over, `${route} overflow grew past its recorded ${cap}px — widest: ${culprit}`).toBeLessThanOrEqual(cap);
         return;
       }
       expect(over, `${route} overflows by ${over}px at 200% text — widest: ${culprit}`).toBeLessThanOrEqual(0);

@@ -60,7 +60,7 @@ import {
 } from "./chart.tsx";
 import { focusGroupX, focusNearestX } from "@tanstack/charts/focus";
 import {
-  CHART_KEYBOARD_READING_ORDER,
+  CHART_KEYBOARD_ENTRY_READING_ORDER,
   CHART_MOTION_ATTRIBUTE,
   CHART_MOTION_GUIDE_DURATION,
   CHART_MOTION_MARK_DURATION,
@@ -1379,24 +1379,27 @@ describe("chart interaction — keyboard, which recharts has no equivalent of", 
     expect(active).toEqual(["تیر", "خرداد", "اردیبهشت", "خرداد"]);
   });
 
-  it("INVERTED: Home, End and the entry point are physical under RTL, and pin the gap", () => {
+  it("Home and End are LOGICAL under RTL (the capture-phase swap); the entry point stays physical and pinned", () => {
     /*
-     * `CHART_KEYBOARD_READING_ORDER` — see chart.variants.ts for the evidence and
-     * for why reversing `focus.navigation()` trades this defect for a worse one.
-     * This case asserts the WRONG behaviour on purpose, exactly as the value-axis
-     * case above it does: the day upstream separates arrow order from Home/End
-     * order, this goes red and says so.
+     * Home/End were the 18 Aug blind pass's finding 5: known wrong and
+     * certified wrong. The container now swaps the two keys at the capture
+     * phase under RTL (chart.tsx), so Home is the reading START (فروردین) and
+     * End the reading end — while the arrows stay engine-owned and correct.
      *
-     * Read it against the en-US line below, which is right in every position.
+     * The ENTRY point is still physical (`CHART_KEYBOARD_ENTRY_READING_ORDER`
+     * in chart.variants.ts says why fixing it in the wrapper would be worse):
+     * entering the plot under fa-IR lands on تیر, the reading-LAST month. That
+     * half stays pinned on purpose — the day the engine separates entry from
+     * the navigation array, this line goes red and says so.
      */
-    expect(CHART_KEYBOARD_READING_ORDER).toBe(false);
+    expect(CHART_KEYBOARD_ENTRY_READING_ORDER).toBe(false);
 
     const rtl = walkWithKeyboard("fa-IR", ["Home", "End"]);
-    // Entry lands on the LAST month; Home is already there so nothing is
-    // reported, and End goes to the FIRST. Both keys name the wrong end.
-    expect(rtl.active).toEqual(["تیر", "فروردین"]);
+    // Entry lands on the reading-LAST month (pinned gap); Home now goes to the
+    // reading FIRST, End back to the reading last. Both keys name the right end.
+    expect(rtl.active).toEqual(["تیر", "فروردین", "تیر"]);
 
-    // The same three keys in en-US, where every one of them is right.
+    // en-US, untouched by the swap: right in every position.
     const ltr = walkWithKeyboard("en-US", ["Home", "End"]);
     expect(ltr.active).toEqual(["فروردین", "تیر"]);
   });

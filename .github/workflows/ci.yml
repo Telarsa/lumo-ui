@@ -20,7 +20,7 @@ name: CI
 # advisory there. Long-lived branches get graded, not just protected ones.
 on:
   push:
-    branches: [main, develop, 'experiment/**']
+    branches: [main, develop, 'experiment/**', 'feat/**']
   pull_request:
     branches: [main, develop]
 
@@ -90,86 +90,14 @@ jobs:
             if (!money.includes("٫")) fail("fa-IR decimal separator is not U+066B");
           '
 
-      # Rule 0. Fires in the editor too, but this is the enforcement point.
-      - name: Types
-        run: pnpm run gate:types
-
-      # A prop that is typed, accepted and never delivered. It renders nothing,
-      # throws nothing and type-checks, so it is invisible to every step below
-      # this one — the tests it breaks are tests nobody wrote. Runs straight
-      # after Types because a file that does not compile has a better error
-      # waiting for it, and before Tests because an inert prop makes tests PASS.
-      - name: Inert props
-        run: pnpm run gate:props
-
-      # The RTL contract's mechanical half, and the only step that can see a
-      # conditional hook. Sits beside Inert props because both grade SOURCE, and
-      # BEFORE Tests for the reason that makes this class of defect expensive: a
-      # physical utility does not make a test fail, it makes tests PASS while the
-      # Persian page mirrors wrong. Wired in on 12 Aug 2026; before that the
-      # policy existed and nothing executed it.
-      - name: Lint
-        run: pnpm run gate:lint
-
-      # The mechanical form of the styling decision. Without it, "we use
-      # Tailwind" is a comment.
-      - name: No CSS Modules
-        run: pnpm run gate:no-css-modules
-
-      # Unit + self-test tiers. The gate's own poison fixtures live here: a rule
-      # that stops detecting turns this red.
-      - name: Tests
-        run: pnpm run gate:test
-
-      # The registry must be derivable and non-empty. A drifted manifest ships a
-      # component nobody can install.
-      - name: Registry
-        run: |
-          node scripts/build-registry.mjs
-          git diff --exit-code registry.json
-
-      # The prop reference is generated from the checker. Keeping this separate
-      # from Registry makes a stale API artifact name itself in CI.
-      - name: API reference
-        run: pnpm run gate:api
-      - name: Catalog
-        run: pnpm run gate:catalog
-
-      # Two minutes standing between us and publishing a registry nobody has
-      # ever installed from. Copies every item into a bare project and compiles
-      # it, so a dependency missing from a registry entry fails here rather than
-      # in a consumer's repository.
-      - name: Consumer smoke test
-        run: pnpm run gate:smoke
-
-      # The mobile library, graded on the runner rather than on a laptop.
-      #
-      # `gate:flutter` is analyze + the semantics-tree tests, which are the
-      # mobile counterpart of the served-HTML gate below: a Flutter canvas has
-      # no DOM to grade, so what a screen reader would receive is asserted in
-      # those tests or nowhere. `gate:flutter-contract` is the mobile
-      # counterpart of gate:props — every announced string required, no Latin
-      # literal a locale cannot reach, no physical left/right, no Material
-      # route naming itself in English — and it self-tests against its own
-      # poison fixtures first.
-      - name: Flutter tokens
-        run: pnpm run gate:flutter-tokens
-      - name: Flutter analyze and semantics tests
-        run: pnpm run gate:flutter
-      - name: Mobile contract
-        run: pnpm run gate:flutter-contract
-      - name: Mobile API reference
-        run: pnpm run gate:mobile-api
-      - name: Mobile consumer smoke test
-        run: pnpm run gate:mobile-smoke
-      - name: Mobile demos
-        run: pnpm run gate:mobile-demos
-
-      # The real one: build the site and grade the bytes it serves. Everything
-      # above this line is a proxy; this is the artifact a user receives. The
-      # build also produces the Flutter web gallery the Mobile pages embed.
-      - name: Build and gate
-        run: pnpm run gate:html
+      # THE CONTRACT, not a copy of it. This used to enumerate individual
+      # gate:* steps and drifted: the 18 Aug blind review found SIX of the 22
+      # verify gates missing here (versions, consumer-profile, consumer-lint,
+      # dist, pack, registry, mobile-styles among them). A list transcribed by
+      # hand into a second file always rots; running `verify` itself means a
+      # gate added to package.json is in CI the same commit.
+      - name: verify — all 22 gates, the same list a laptop runs
+        run: pnpm run verify
 
       # Keeps the built site available for inspection when the gate fails, which
       # is exactly when you want to look at the HTML.
@@ -206,7 +134,13 @@ jobs:
       # The Dart counterpart: `packages/mobile` had 669 tests and no anti-vacuity
       # guard, so nothing proved they assert anything.
       - name: Mobile mutation floor
-        run: pnpm run mutation:mobile
+        run: |
+          # The campaign's runner calls `flutter test --no-pub`; without this,
+          # a missing package config makes every test exit nonzero — which the
+          # old oracle counted as 13/13 killed (18 Aug blind review, finding 3).
+          # The script now also refuses to run without a passing clean baseline.
+          (cd packages/mobile && flutter pub get)
+          pnpm run mutation:mobile
       - name: Publish the report
         if: always()
         uses: actions/upload-artifact@v4

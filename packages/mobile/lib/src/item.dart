@@ -118,26 +118,42 @@ class _LumoItemState extends State<LumoItem> {
     final selected = widget.isSelected ?? false;
     // `data-selected:bg-surface-sunken data-selected:font-medium` — the web's
     // selected option, which is the same fill as the `muted` variant.
+    // Every geometry/colour reads `s.x ?? <the literal that was already
+    // there>` — the LumoStyles contract. The blind review of 18 Aug proved ten
+    // of these fields were DECLARED and silently ignored; each now has exactly
+    // one delivery site here.
+    final variantFill = s.background?[widget.variant];
     final fill = _pressed
-        ? c.surfaceHover
-        : selected || widget.variant == LumoItemVariant.muted
-            ? c.surfaceSunken
-            : widget.variant == LumoItemVariant.outlined
-                ? c.surface
-                : Colors.transparent;
+        ? (s.pressedBackground ?? c.surfaceHover)
+        : selected
+            ? (s.selectedBackground ?? c.surfaceSunken)
+            : widget.variant == LumoItemVariant.muted
+                ? (variantFill ?? c.surfaceSunken)
+                : widget.variant == LumoItemVariant.outlined
+                    ? (variantFill ?? c.surface)
+                    : (variantFill ?? Colors.transparent);
+    // A floor can only GROW a row: the larger of the style's ask and the
+    // platform floor, so no theme shrinks a touch target.
+    final asked = s.minHeight ?? 0;
+    final minH = asked > LumoTouch.floor ? asked : LumoTouch.floor;
     final row = Container(
-      constraints: const BoxConstraints(minHeight: LumoTouch.floor),
-      padding: EdgeInsetsDirectional.symmetric(horizontal: _padX[widget.size]!, vertical: _padY[widget.size]!),
+      constraints: BoxConstraints(minHeight: minH),
+      padding: EdgeInsetsDirectional.symmetric(
+        horizontal: s.inlinePadding?[widget.size] ?? _padX[widget.size]!,
+        vertical: s.blockPadding?[widget.size] ?? _padY[widget.size]!,
+      ),
       decoration: BoxDecoration(
         color: fill,
-        borderRadius: BorderRadius.circular(LumoRadius.md),
-        border: widget.variant == LumoItemVariant.outlined ? Border.all(color: c.border) : null,
+        borderRadius: s.borderRadius ?? BorderRadius.circular(LumoRadius.md),
+        border: widget.variant == LumoItemVariant.outlined
+            ? Border.all(color: s.borderColour ?? c.border, width: s.borderWidth ?? 1)
+            : null,
       ),
       child: Row(
         // `self-start` on the web whenever a description is present: the media
         // lines up with the title, not with the middle of two lines.
         crossAxisAlignment: widget.description == null ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-        spacing: _gap[widget.size]!,
+        spacing: s.gap?[widget.size] ?? _gap[widget.size]!,
         children: [
           if (widget.leading != null)
             ExcludeSemantics(

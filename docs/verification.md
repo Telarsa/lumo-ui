@@ -2,8 +2,8 @@
 
 **4,601 automated tests today: 3,392 on the web, 669 in the mobile library, 540 over the mobile gallery.**
 
-`pnpm run verify` runs **21 gates** in order — 14 for the web library and its
-distribution, 6 for the mobile library, and the built-HTML grader last. CI runs
+`pnpm run verify` runs **22 gates** in order — 14 for the web library and its
+distribution, 7 for the mobile library, and the built-HTML grader last. CI runs
 the same list, preceded by an Intl/ICU capability probe, plus **two separate
 jobs**: mutation (web and mobile) and browser evidence. Roughly 25 minutes locally
 (the Flutter gates and the site build dominate) — run it once at the end of a

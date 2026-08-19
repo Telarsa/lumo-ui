@@ -34,6 +34,48 @@ fallback tofu box — a pixel comparison that could not see icons at all, on a
 library whose controls are mostly icons. That is a blind instrument, and the
 numbers below are from the run after it was fixed.
 
+## CORRECTION (19 Aug 2026) — the first corpus was blank, and the conclusion below is retracted
+
+The blind rubric pass of 18 Aug proved that **all 61 goldens of the first run
+had uniform, blank main-content crops**: the harness pumped ONE 400ms frame,
+which is before the app shell's post-frame entrance animation even starts, so
+every body sat at opacity 0. Comparing 61 blank bodies to 61 blank bodies can
+only ever find differences in the chrome outside the animated shell — which is
+exactly why the whole diff localised to the dev TweaksButton. The
+"pixel-identical upgrade" conclusion below was VACUOUS for screen content and
+is retracted; the section is kept unedited underneath as the record of the
+mistake.
+
+**The fixed instrument** (8×150ms pumps + two 400ms settling pumps, plus a
+content-presence floor of ≥3 Text widgets per capture — a blank capture now
+FAILS) re-ran the same comparison and found the opposite result:
+
+| | |
+|---|---:|
+| Screens compared | 61 (all with real, unique bodies — probed) |
+| Screens identical | 0 |
+| Largest difference | ~1.0M px (`overlay-review-fa`) |
+
+**And that is the correct result.** The pending release deliberately grows
+every control's LAYOUT box to the 48dp touch floor
+(`MaterialTapTargetSize.padded`, decision §45 of 18 Aug): a 36dp-drawn button
+now OCCUPIES 48dp, so rows grow and everything below them shifts. The earlier
+claim that the tap-target fix changed "no drawn pixel" conflated the drawn box
+(unchanged) with the occupied box (grown); a real phone screen is composed of
+occupied boxes. Two real defects fell out of the honest run:
+
+- `LumoSearchField`'s input row (grown 44→48) overflowed the reference app's
+  fixed-height 48dp search box by its 3px of borders — fixed in the app by
+  flooring instead of fixing the height (`KSearchBar`).
+- The consumer-facing statement for the next release must be: **upgrading past
+  v0.2.3 visibly moves layouts** — deliberately, for touch-target compliance —
+  and consumers with fixed-height slots around Lumo controls must floor them.
+
+The goldens are re-baselined against the working checkout (the forward
+baseline), with the content floor keeping the corpus honest from now on.
+
+---
+
 ## The run of 18 Aug 2026 — v0.2.3 → working checkout
 
 | | |

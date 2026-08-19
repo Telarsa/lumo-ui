@@ -403,10 +403,16 @@ export function chartMotionStyleSheet(id: string): string {
 }
 
 /**
- * `Home`/`End` and the keyboard ENTRY POINT are physical, not logical, at 0.11.1,
- * and cannot be fixed without inverting the arrow keys: `renderer.js` resolves all
- * five keys from one `focus.navigation(points)` array. Arrows are right in both
- * directions, so the physical order is kept and the gap recorded here; the data is
- * still in reading order in `<ChartData>`. Named like `CHART_VALUE_AXIS_TRAILING_EDGE`.
+ * `Home`/`End` are LOGICAL as of 19 Aug 2026: the container swaps the two keys
+ * at the capture phase under RTL (see `ChartContainer`), which fixes them
+ * without touching the arrows — reversing the engine's one
+ * `focus.navigation(points)` array would have fixed these and inverted those.
+ *
+ * The keyboard ENTRY POINT is still physical at 0.11.1: entering the plot
+ * lands on the physically-first (reading-LAST) datum under RTL. Correcting it
+ * in the wrapper would need a second focus move after the engine's, and the
+ * reader would hear two data announced on entry — a worse defect than the one
+ * being fixed. Recorded here; the data is still in reading order in
+ * `<ChartData>`. Named like `CHART_VALUE_AXIS_TRAILING_EDGE`.
  */
-export const CHART_KEYBOARD_READING_ORDER = false as const;
+export const CHART_KEYBOARD_ENTRY_READING_ORDER = false as const;

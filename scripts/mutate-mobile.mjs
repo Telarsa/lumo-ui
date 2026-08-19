@@ -22,7 +22,7 @@
  * fall silently into "untested". `PENDING` is a ratchet: it may only shrink.
  */
 
-import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import { findFlutter, flutterRunner } from "./lib/flutter.mjs";
@@ -32,8 +32,13 @@ const packageDirectory = join(repository, "packages/mobile");
 const sourceDirectory = join(packageDirectory, "lib/src");
 
 /** Family files — the generated token file is not a family. */
+// Generated files and the style registry are INFRASTRUCTURE, not families —
+// styles has its own generator gate and delivery test, and counting it here
+// silently raised PENDING above its floor (the 18 Aug blind pass caught the
+// campaign refusing to start because of exactly that).
+const INFRASTRUCTURE = new Set(["tokens.g.dart", "styles.dart", "styles.g.dart"]);
 const families = readdirSync(sourceDirectory)
-  .filter((file) => file.endsWith(".dart") && file !== "tokens.g.dart")
+  .filter((file) => file.endsWith(".dart") && !INFRASTRUCTURE.has(file))
   .sort();
 
 /**
@@ -96,6 +101,15 @@ if (PENDING.length > PENDING_FLOOR) {
   process.exit(1);
 }
 
+/**
+ * Where a family's oracle is NOT `test/<family>_test.dart`. `format.dart` has
+ * no file of its own — its digit contract is asserted in the barrel test.
+ * @type {Readonly<Record<string, string>>}
+ */
+const ORACLE = Object.freeze({
+  "format.dart": "lumo_ui_mobile_test.dart",
+});
+
 // Validate every operator against the real source BEFORE mutating anything.
 /** @type {string[]} */
 const invalid = [];
@@ -107,6 +121,13 @@ for (const [file, [, find]] of Object.entries(BEHAVIOURAL)) {
   }
   const occurrences = readFileSync(path, "utf8").split(find).length - 1;
   if (occurrences !== 1) invalid.push(`${file}: "${find}" occurs ${String(occurrences)} time(s), expected exactly 1`);
+  // The oracle file must EXIST before anything mutates: `flutter test` exits
+  // nonzero on a missing file, and "nonzero = killed" would certify the mutant
+  // on a typo. The 18 Aug review named this class; format.dart proved it.
+  const oracle = ORACLE[file] ?? `${file.replace(/\.dart$/, "")}_test.dart`;
+  if (!existsSync(join(packageDirectory, "test", oracle))) {
+    invalid.push(`${file}: oracle test/${oracle} does not exist — a missing file would count as a kill`);
+  }
 }
 if (invalid.length > 0) {
   console.error("  mutation:mobile: operators do not match the source:");
@@ -121,6 +142,17 @@ if (!sdk) {
 }
 const run = flutterRunner(sdk, packageDirectory);
 
+// THE CLEAN BASELINE. The oracle below reads "nonzero exit = killed", so
+// without this, a pre-broken harness (missing package config, failing test,
+// no pub get in CI) would falsely certify every mutant as killed. The blind
+// pass of 18 Aug proved the hole; this closes it: the un-mutated suite must
+// pass first, with pub get allowed, or the campaign refuses to certify.
+console.log("  mutation:mobile: clean baseline (un-mutated suite must pass first)…");
+if (run(["test", "--reporter", "failures-only"]) !== 0) {
+  console.error("  mutation:mobile: the UN-MUTATED suite fails — a kill verdict would be meaningless. Fix the baseline first.");
+  process.exit(1);
+}
+
 /** @type {Array<{ family: string; operator: string; status: "killed" | "survived" | "unobserved" }>} */
 const results = [];
 const entries = Object.entries(BEHAVIOURAL);
@@ -128,7 +160,7 @@ console.log(`  mutation:mobile: ${String(entries.length)} operator(s) over ${Str
 
 for (const [file, [why, find, replace]] of entries) {
   const path = join(sourceDirectory, file);
-  const testPath = join("test", `${file.replace(/\.dart$/, "")}_test.dart`);
+  const testPath = join("test", ORACLE[file] ?? `${file.replace(/\.dart$/, "")}_test.dart`);
   const original = readFileSync(path, "utf8");
   let status = /** @type {"killed" | "survived" | "unobserved"} */ ("unobserved");
   try {

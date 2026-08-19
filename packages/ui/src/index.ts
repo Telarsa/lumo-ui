@@ -924,7 +924,7 @@ export type {
 
 // Directive-free module, direct — same rule as `pagination.variants.ts` above.
 export {
-  CHART_KEYBOARD_READING_ORDER,
+  CHART_KEYBOARD_ENTRY_READING_ORDER,
   CHART_MOTION_ATTRIBUTE,
   CHART_MOTION_GUIDE_DURATION,
   CHART_MOTION_MARK_DURATION,
