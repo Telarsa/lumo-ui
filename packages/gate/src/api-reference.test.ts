@@ -21,7 +21,10 @@ describe("generated API reference gate", () => {
     expect(rootPackage.scripts?.verify).toContain("pnpm run gate:api");
 
     const workflow = readFileSync(join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
-    expect(workflow).toContain("run: pnpm run gate:api");
+    // CI runs the CONTRACT, not a transcribed subset (19 Aug: six gates had
+    // drifted out of the hand-copied list). gate:api is in CI because verify
+    // is — the line above proves gate:api is in verify.
+    expect(workflow).toContain("run: pnpm run verify");
   });
 
   it("runs the component mutation campaign in its own CI job", () => {
