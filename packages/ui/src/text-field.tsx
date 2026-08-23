@@ -34,6 +34,14 @@ export const inputVariants = cva(
 );
 
 /**
+ * Space reserved for an overlaid icon, LOGICALLY (`ps-*`/`pe-*`), so the
+ * reservation follows the writing direction instead of pinning itself to the
+ * left. Kept as its own map rather than a cva variant because it composes with
+ * every `size` and would otherwise double the matrix.
+ */
+const iconPad = { leading: "ps-9", trailing: "pe-9" } as const;
+
+/**
  * A single-line text field. COMPOSED, and `label` is a REQUIRED string — a
  * convention shipped 33 unnamed controls; a required prop is checked in the
  * editor. Public API is React Aria's shape; inside, field-level props go to
@@ -58,6 +66,16 @@ export interface TextFieldProps
   className?: string | undefined;
   /** Classes for the `<input>` itself, when the wrapper is not what you mean. */
   inputClassName?: string | undefined;
+  /**
+   * A decorative glyph at the field's inline START. Rendered `aria-hidden` and
+   * `pointer-events-none`, overlaid the way `SearchField` overlays its own icon
+   * — the border and the shared `data-lumo` focus ring have to stay on the
+   * element that actually takes focus, so the icon cannot live inside a wrapper
+   * that draws them. It is decoration: it never replaces `label`.
+   */
+  leadingIcon?: LumoNode;
+  /** The same, at the inline END. */
+  trailingIcon?: LumoNode;
 }
 
 export function TextField({
@@ -69,6 +87,8 @@ export function TextField({
   size,
   className,
   inputClassName,
+  leadingIcon,
+  trailingIcon,
   // — translated onto <Field> —
   isDisabled,
   name,
@@ -106,8 +126,22 @@ export function TextField({
       )}
     >
       <Label>{label}</Label>
-      <FieldInput
-        className={cn(inputVariants({ size }), inputClassName)}
+      <div className="relative flex items-center">
+        {leadingIcon != null ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute start-3 flex shrink-0 items-center text-fg-subtle [&_svg]:size-4"
+          >
+            {leadingIcon}
+          </span>
+        ) : null}
+        <FieldInput
+        className={cn(
+          inputVariants({ size }),
+          leadingIcon != null && iconPad.leading,
+          trailingIcon != null && iconPad.trailing,
+          inputClassName,
+        )}
         {...optional("placeholder", placeholder)}
         {...optional("value", value)}
         {...optional("defaultValue", defaultValue)}
@@ -121,7 +155,16 @@ export function TextField({
         {...optional("autoFocus", autoFocus)}
         {...(rest as object)}
         {...optional("tabIndex", tabIndex)}
-      />
+        />
+        {trailingIcon != null ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute end-3 flex shrink-0 items-center text-fg-subtle [&_svg]:size-4"
+          >
+            {trailingIcon}
+          </span>
+        ) : null}
+      </div>
       {description != null ? <Description>{description}</Description> : null}
       <FieldError>{errorMessage}</FieldError>
     </Field>

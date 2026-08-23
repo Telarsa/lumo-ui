@@ -14522,6 +14522,12 @@
             "description": "The element's `lang` attribute, when this subtree's language differs from the page's."
           },
           {
+            "name": "leadingIcon",
+            "type": "LumoNode",
+            "required": false,
+            "description": "A decorative glyph at the field's inline START. Rendered `aria-hidden` and `pointer-events-none`, overlaid the way `SearchField` overlays its own icon — the border and the shared `data-lumo` focus ring have to stay on the element that actually takes focus, so the icon cannot live inside a wrapper that draws them. It is decoration: it never replaces `label`."
+          },
+          {
             "name": "maxLength",
             "type": "number",
             "required": false,
@@ -14622,6 +14628,12 @@
             "type": "number | undefined",
             "required": false,
             "description": "The control's position in the sequential tab order — `-1` removes it (was `excludeFromTabOrder`)."
+          },
+          {
+            "name": "trailingIcon",
+            "type": "LumoNode",
+            "required": false,
+            "description": "The same, at the inline END."
           },
           {
             "name": "translate",
