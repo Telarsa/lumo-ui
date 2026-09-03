@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Explicit `.ts` extensions in every internal import — the contract packages
+    // travel as SOURCE (git dependency), and a Node-ESM consumer
+    // (`moduleResolution: NodeNext`) rejects extensionless relative imports.
+    // Same convention as packages/core and packages/ui.
+    "allowImportingTsExtensions": true,
+    "types": ["node"]
+  },
+  "include": ["src/**/*"]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@lumo-ui/gate",
+  "version": "1.0.0",
+  "description": "Fails the build on the RTL/Persian defects that render correctly and read wrong. Parses prerendered HTML; no browser.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "lumo-gate": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "linkedom": "catalog:",
+    "dom-accessibility-api": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "private": true
+}

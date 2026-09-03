@@ -1,0 +1,146 @@
+#!/usr/bin/env node
+/**
+ * `lumo-inert-props <dir> [dir…]` — the source half of the gate. A separate
+ * binary from `cli.ts` because it grades sources, not built HTML. Runs in
+ * `verify` after `gate:types` and before `gate:test` (an inert prop makes tests
+ * pass, not fail).
+ */
+import { readdir, readFile } from "node:fs/promises";
+import { join, relative, resolve } from "node:path";
+import ts from "typescript";
+import {
+  formatPropViolations,
+  formatRootViolations,
+  gradeRootContract,
+  gradeSource,
+  type PropViolation,
+  type RootViolation,
+} from "./inert-props.ts";
+
+const roots = process.argv.slice(2);
+if (roots.length === 0) {
+  console.error("usage: lumo-inert-props <component-src-dir> [more dirs…]");
+  process.exit(2);
+}
+
+/** Component files only: a `.ts` module declares no components, so every prop in it is unreferenced by construction. */
+async function sources(dir: string): Promise<string[]> {
+  const out: string[] = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...(await sources(path)));
+    else if (entry.name.endsWith(".tsx") && !entry.name.includes(".test.")) out.push(path);
+  }
+  return out;
+}
+
+const files: string[] = [];
+for (const root of roots) files.push(...(await sources(root)));
+
+// The same refusal `cli.ts` makes: a gate that grades nothing must not print "clean".
+if (files.length === 0) {
+  console.error(`  lumo-inert-props found no component sources under ${roots.join(", ")}.`);
+  console.error("  Refusing to report success on nothing.");
+  process.exit(2);
+}
+
+// TWO RULES, ONE PASS: `gradeSource` grades the props a file DECLARES,
+// `gradeRootContract` the DOM surface it INHERITS. Reported separately, exit together.
+const violations: PropViolation[] = [];
+const roots_: RootViolation[] = [];
+
+const configPath = join(process.cwd(), "tsconfig.base.json");
+const config = ts.readConfigFile(configPath, ts.sys.readFile);
+if (config.error !== undefined) {
+  console.error(ts.flattenDiagnosticMessageText(config.error.messageText, "\n"));
+  process.exit(2);
+}
+const parsedConfig = ts.parseJsonConfigFileContent(config.config, ts.sys, process.cwd());
+const program = ts.createProgram({
+  rootNames: files.map((file) => resolve(file)),
+  options: parsedConfig.options,
+});
+const checker = program.getTypeChecker();
+
+const GRADED_CORE_OWNERS = new Set([
+  "Validation",
+  "InputBase",
+  "ValueBase",
+  "HelpTextProps",
+  "KeyboardEvents",
+  "FocusEvents",
+  "FocusWithinEvents",
+  "HoverEvents",
+  "PressEvents",
+  "FocusableProps",
+  "FocusableDOMProps",
+  "AriaValidationProps",
+  "SlotProps",
+  "ToggleFieldPropsBase",
+  "OverlayTriggerProps",
+  "DialogPropsBase",
+  "ModalOverlayPropsBase",
+  "PositionProps",
+  "CollectionStateBase",
+  "MultipleSelection",
+  "Expandable",
+  "ButtonAriaProps",
+  "ButtonPropsBase",
+  // Link attributes inherited by non-anchor components (`<Tab hrefLang>` on a `<button>`).
+  "LinkDOMProps",
+]);
+
+const resolvedInheritedProps = (source: ts.SourceFile) => {
+  const inherited: Array<{ iface: string; name: string; typeText: string; line: number }> = [];
+  const isExported = (node: ts.Node) =>
+    (ts.getCombinedModifierFlags(node as ts.Declaration) & ts.ModifierFlags.Export) !== 0;
+
+  for (const statement of source.statements) {
+    if (
+      (!ts.isInterfaceDeclaration(statement) && !ts.isTypeAliasDeclaration(statement)) ||
+      !isExported(statement) ||
+      !statement.name.text.endsWith("Props")
+    ) continue;
+
+    const publicType = checker.getTypeAtLocation(statement.name);
+    const line = source.getLineAndCharacterOfPosition(statement.getStart(source)).line + 1;
+    for (const property of checker.getPropertiesOfType(publicType)) {
+      const declarations = property.getDeclarations() ?? [];
+      const comesFromCoreContract = declarations.some((declaration) =>
+        declaration.getSourceFile().fileName.replaceAll("\\", "/").endsWith("/packages/core/src/props.ts") &&
+        declaration.parent !== undefined &&
+        (ts.isInterfaceDeclaration(declaration.parent) || ts.isTypeAliasDeclaration(declaration.parent)) &&
+        GRADED_CORE_OWNERS.has(declaration.parent.name.text),
+      );
+      if (!comesFromCoreContract) continue;
+      inherited.push({
+        iface: statement.name.text,
+        name: property.getName(),
+        typeText: checker.typeToString(
+          checker.getTypeOfSymbolAtLocation(property, statement),
+          statement,
+          ts.TypeFormatFlags.NoTruncation,
+        ),
+        line,
+      });
+    }
+  }
+  return inherited;
+};
+
+for (const file of files) {
+  const path = relative(process.cwd(), file);
+  const text = await readFile(file, "utf8");
+  const source = program.getSourceFile(resolve(file));
+  violations.push(...gradeSource(path, text, source ? resolvedInheritedProps(source) : []));
+  roots_.push(...gradeRootContract(path, text));
+}
+
+console.log(formatPropViolations(violations));
+console.log(formatRootViolations(roots_));
+const total = violations.length + roots_.length;
+console.log(
+  `  ${String(files.length)} component file(s) graded, ${String(violations.length)} inert-prop ` +
+    `violation(s), ${String(roots_.length)} root-contract violation(s)`,
+);
+process.exit(total ? 1 : 0);

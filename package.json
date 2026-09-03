@@ -1,0 +1,127 @@
+{
+  "name": "lumo-ui",
+  "version": "1.0.0",
+  "description": "The correctness layer for Persian and other right-to-left products: a typed locale contract, a lint policy, and a gate that grades the bytes a reader actually receives.",
+  "license": "MIT",
+  "author": "Telarsa (https://telarsa.com)",
+  "homepage": "https://github.com/Telarsa/lumo-ui#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Telarsa/lumo-ui.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Telarsa/lumo-ui/issues"
+  },
+  "keywords": [
+    "persian",
+    "farsi",
+    "rtl",
+    "i18n",
+    "l10n",
+    "jalali",
+    "accessibility",
+    "a11y",
+    "astro",
+    "next",
+    "flutter",
+    "lint",
+    "codemod"
+  ],
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.3.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "files": [
+    "scripts/lumo-cli.mjs",
+    "scripts/lib",
+    "scripts/grade-app.mjs",
+    "scripts/own-error-shells.mjs",
+    "packages/*/src/**",
+    "packages/config/eslint/**",
+    "packages/gate/dist/**",
+    "packages/core/dist/**",
+    "pnpm-workspace.yaml",
+    "docs/agent-consumer.md",
+    "docs/i18n-and-rtl.md",
+    "skills/**",
+    "llms.txt",
+    "LICENSE",
+    "CHANGELOG.md",
+    "README.md"
+  ],
+  "exports": {
+    "./core": "./packages/core/src/index.ts",
+    "./core/latn": {
+      "types": "./packages/core/src/latn.ts",
+      "default": "./packages/core/dist/latn.js"
+    },
+    "./dates": "./packages/dates/src/index.ts",
+    "./base-ui-ssr": "./packages/base-ui-ssr/src/index.ts",
+    "./gate": "./packages/gate/dist/index.js",
+    "./theme/*": "./packages/theme/src/*",
+    "./config/eslint": "./packages/config/eslint/lumo.mjs",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "lumo": "scripts/lumo-cli.mjs"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present run build",
+    "verify": "pnpm run gate:versions && pnpm run gate:types && pnpm run gate:consumer-profile && pnpm run gate:lint && pnpm run gate:no-css-modules && pnpm run gate:test && pnpm run gate:dist && pnpm run gate:pack && pnpm run gate:flutter-tokens && pnpm run gate:mobile-styles && pnpm run gate:flutter && pnpm run gate:mobile-smoke && pnpm run gate:html",
+    "gate:types": "tsc --noEmit && pnpm -r --if-present run typecheck",
+    "lint": "eslint .",
+    "gate:lint": "eslint .",
+    "gate:no-css-modules": "node scripts/no-css-modules.mjs",
+    "typecheck": "pnpm run gate:types",
+    "test": "pnpm -r --if-present test",
+    "gate:test": "pnpm -r --if-present run test",
+    "mutation:mobile": "node scripts/mutate-mobile.mjs",
+    "gate:versions": "node scripts/check-versions.mjs",
+    "gate:consumer-profile": "tsc -p tsconfig.consumer-profile.json",
+    "build:gate": "tsc -p packages/gate/tsconfig.dist.json && tsc -p packages/core/tsconfig.dist.json",
+    "gate:dist": "node scripts/check-gate-dist.mjs",
+    "gate:pack": "node scripts/check-pack.mjs",
+    "gate:flutter-tokens": "node scripts/build-flutter-tokens.mjs --check",
+    "gate:flutter": "node scripts/flutter-gate.mjs",
+    "build:mobile-api": "node scripts/build-mobile-api.mjs",
+    "build:mobile-styles": "node scripts/build-mobile-styles.mjs",
+    "gate:mobile-styles": "node scripts/build-mobile-styles.mjs --check",
+    "gate:mobile-smoke": "node scripts/smoke-mobile.mjs",
+    "dev": "pnpm --filter @lumo-ui/website dev",
+    "gate:html": "pnpm --filter @lumo-ui/website build && node --experimental-strip-types packages/gate/src/cli.ts apps/website/out apps/website/gate.floors.json"
+  },
+  "dependencies": {
+    "@internationalized/date": "3.12.3",
+    "clsx": "2.1.1",
+    "dom-accessibility-api": "0.7.1",
+    "linkedom": "0.18.13",
+    "tailwind-merge": "3.6.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.62.1",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
+  },
+  "peerDependencies": {
+    "@base-ui/react": ">=1.7.0 <1.8.0",
+    "react": ">=19",
+    "react-day-picker": ">=10 <11"
+  },
+  "peerDependenciesMeta": {
+    "@base-ui/react": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    },
+    "react-day-picker": {
+      "optional": true
+    }
+  }
+}

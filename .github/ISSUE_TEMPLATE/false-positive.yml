@@ -1,0 +1,46 @@
+name: The gate reported something that is correct
+description: A rule fired on output that is right. This is the most important kind of bug here.
+labels: ["false positive"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A rule that fires on correct output is worse than no rule, because the
+        first thing anyone does with a noisy gate is turn it off. Thank you for
+        reporting it.
+  - type: input
+    id: rule
+    attributes:
+      label: Which rule
+      placeholder: native-script-text
+    validations:
+      required: true
+  - type: textarea
+    id: html
+    attributes:
+      label: The smallest HTML that reproduces it
+      description: This becomes the fixture, so the smaller the better.
+      render: html
+    validations:
+      required: true
+  - type: input
+    id: locale
+    attributes:
+      label: The document's locale
+      placeholder: fa-IR
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why the output is correct
+      description: What is the reader meant to receive here, and why is it right?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Lumo version
+      placeholder: v1.0.0
+    validations:
+      required: true

@@ -1,0 +1,22 @@
+<!--
+  Lumo UI — the mark.
+
+  A square with one corner taken by a radius, and that radius is the only
+  coloured part. The whole mark is a `border-radius` — the most ordinary thing
+  CSS does, and the argument the library rests on: the platform already does
+  this, so stop shipping JavaScript to do it for you.
+
+  Lumo means light, so the rounded corner is the lit one.
+
+  The body flips with the viewer's theme. A fixed near-black square vanished
+  against a dark page and left the lit corner floating on nothing — an SVG
+  favicon can carry its own media query, so it does.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Lumo UI">
+  <style>
+    .body { fill: #101114 }
+    @media (prefers-color-scheme: dark) { .body { fill: #F2EFE8 } }
+  </style>
+  <path class="body" d="M50 12 H88 V88 H12 V50 H50 Z"/>
+  <path d="M12 50 A38 38 0 0 1 50 12 L50 50 Z" fill="#7FA828"/>
+</svg>

@@ -1,0 +1,24 @@
+{
+  "name": "@lumo-ui/theme",
+  "version": "1.0.0",
+  "description": "Lumo's token contract: three tiers of CSS custom properties, a Tailwind v4 bridge, the Persian typography rules, and the opt-in pointer affordance for consumer-authored controls.",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    "./tokens.css": "./src/tokens.css",
+    "./theme.css": "./src/theme.css",
+    "./script.css": "./src/script.css",
+    "./interactive.css": "./src/interactive.css",
+    "./brand.css": "./src/brand.css"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "vitest": "catalog:",
+    "typescript": "catalog:",
+    "@types/node": "catalog:"
+  },
+  "private": true
+}

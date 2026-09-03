@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <!--
+      POISON for `persian-zwnj`, CAPTURED not invented.
+
+      Every broken line below is a real string served today by a live
+      six-language product, on its Persian routes. That product serves 29 of
+      these across 11 documents, INTERLEAVED with 96 correct joins in the same
+      files — one document has 17 broken against 5 correct, which is what makes
+      it inconsistent authoring rather than a house style.
+
+      «می‌کند» is ONE word. «می کند» is two, and every layer below the glyphs
+      agrees: `Intl.Collator("fa-IR")` calls them unequal at every sensitivity,
+      and a substring search for either finds nothing of the other.
+    -->
+    <p>خدمات مشاوره‌ای و اجرایی جامع را ارائه می کند.</p>
+    <p>دسترسی عملیاتی را محدود می کند؟ خیر.</p>
+    <p>یک سرمایه‌پذیر را نمایندگی نمی کند.</p>
+    <p>هر دو طرف هزینه آن را می پردازند.</p>
+
+    <!-- NOT violations: the same verbs, correctly joined. -->
+    <p>خدمات جامع را ارائه می‌کند و پشتیبانی می‌دهد.</p>
+    <p>این کار را نمی‌پذیریم.</p>
+
+    <!--
+      NOT violations either, and the reason the rule is only the verbal prefix:
+      the comparative suffix has the same orthography, and «چوب تر» is wet wood,
+      not a broken join. Telling those apart needs a lexicon.
+    -->
+    <p>چوب تر بهتر می‌سوزد.</p>
+    <p>این میوه تر است.</p>
+
+    <!-- NOT a violation: a digit beside the prefix is a date, not a verb. -->
+    <p>۵ نفر حاضر بودند.</p>
+  </body>
+</html>

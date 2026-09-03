@@ -1,0 +1,9 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "This used to extend a preset in a private infrastructure repository. A public repository cannot resolve that, and Renovate fails the whole config rather than part of it, so the policy is stated HERE.",
+    "minimumReleaseAge mirrors the 1440-minute cooldown pnpm-workspace.yaml enforces at install time: an update Renovate opens before the cooldown expires would fail `pnpm install --frozen-lockfile` in CI anyway."
+  ],
+  "extends": ["config:recommended"],
+  "minimumReleaseAge": "1 day"
+}

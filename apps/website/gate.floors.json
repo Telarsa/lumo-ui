@@ -1,0 +1,11 @@
+{
+  "//": "Reviewed native-digit floors (§ verification): ~55% of the measured count on each number-dense fa route, so a regression that drops the page's own digits fails loudly while copy edits keep room to breathe.",
+  "//exempt": "Reviewed EXEMPT CEILING: the measured 19.4% plus headroom. `data-lumo-latn` is the one thing that silences this gate — a page carrying ten real violations drops to one when a single attribute wraps it — and `latn-island-purity` cannot see that, because it fails an island hiding READER-SCRIPT prose while this hides Latin defects. So the exemption gets the same treatment as the digit count: a number a person reviewed, which may fall and may only rise on purpose. A docs site is legitimately code-heavy; that is why this is a per-site baseline and not a threshold in the rule.",
+  "//min": "Reviewed MINIMUM DOCUMENT COUNT: 15 graded documents. The empty-directory refusal catches a build that produced nothing; this catches the likelier accident, a build that produced SOME of its pages — the gate would otherwise grade the survivors, find them clean, and report success while the pages that would have failed were never built. It was 16 until zero-delay redirect stubs stopped being graded, which is the deliberate drop this comment exists to record. Lower it in the same commit that removes a page.",
+  "@min-documents": 15,
+  "@exempt-ceiling": 24,
+  "fa-IR/docs/dates/index.html": 50,
+  "fa-IR/docs/gate/index.html": 15,
+  "fa-IR/docs/mobile/index.html": 6,
+  "fa-IR/index.html": 6
+}

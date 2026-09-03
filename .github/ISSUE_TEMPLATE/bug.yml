@@ -1,0 +1,31 @@
+name: Something is broken
+description: A crash, a wrong result, a command that does not do what it says.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: How to reproduce it
+      description: The command you ran and the output you got.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Lumo version, package manager, Node version
+      placeholder: v1.0.0, pnpm 11.3.0, Node 24
+    validations:
+      required: true

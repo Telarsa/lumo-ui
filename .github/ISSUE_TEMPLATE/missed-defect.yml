@@ -1,0 +1,30 @@
+name: The gate missed something
+description: A page shipped a defect Lumo should have caught.
+labels: ["missed defect"]
+body:
+  - type: textarea
+    id: html
+    attributes:
+      label: The HTML that was served
+      render: html
+    validations:
+      required: true
+  - type: input
+    id: locale
+    attributes:
+      label: The document's locale
+      placeholder: fa-IR
+    validations:
+      required: true
+  - type: textarea
+    id: reader
+    attributes:
+      label: What the reader received, and what they should have
+      description: Be concrete. "The table showed 4 where every other digit was ۴."
+    validations:
+      required: true
+  - type: textarea
+    id: existing
+    attributes:
+      label: Did an existing tool catch it?
+      description: A rule earns its place by catching what nothing else does.

@@ -1,0 +1,42 @@
+{
+  "name": "@lumo-ui/dates",
+  "version": "1.0.0",
+  "description": "The gap shadcn/ui does not fill: a Jalali (and any non-Gregorian) grid for react-day-picker, with every announced string a required prop. Extends shadcn's Calendar rather than competing with it. Decision \u00a750.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-day-picker": ">=10 <11"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-day-picker": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "@internationalized/date": "3.12.3"
+  },
+  "devDependencies": {
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "@types/react": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "jsdom": "catalog:",
+    "react": "catalog:",
+    "react-day-picker": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "private": true
+}

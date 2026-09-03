@@ -1,0 +1,18 @@
+{
+  "//": "The JavaScript build of the React-free helpers that `lumo-ui/core/latn` resolves to from a consumer's node_modules (Node will not strip types there, and a site without React cannot load the JSX index). Committed under dist/; `gate:dist` in verify rebuilds it and fails if the committed copy is stale — the same arrangement as packages/gate.",
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "noEmit": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "files": ["src/latn.ts"]
+}

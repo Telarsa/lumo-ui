@@ -1,0 +1,25 @@
+name: lumo_mobile_example
+description: "A Material app that consumes Lumo UI Mobile's correctness layer. The mobile counterpart of apps/website: not a component showcase, a consumer — and the semantics grader's corpus."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  # By PATH, not by tag. This app exists to fail when the library breaks, and a
+  # pinned copy would keep passing while `packages/mobile` rotted beside it.
+  lumo_ui_mobile:
+    path: ../../packages/mobile
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

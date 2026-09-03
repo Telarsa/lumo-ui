@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question about adopting Lumo
+    url: https://github.com/Telarsa/lumo-ui/discussions
+    about: Ask how to wire the gate, the lint policy or the helpers into an app.
+  - name: Security report
+    url: https://github.com/Telarsa/lumo-ui/security/advisories/new
+    about: Report a vulnerability privately. Please do not open a public issue.

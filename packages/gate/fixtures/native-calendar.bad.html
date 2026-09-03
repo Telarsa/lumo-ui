@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <!--
+      THE POISON, AND WHY IT IS THE HARDEST DEFECT IN THIS DIRECTORY TO SEE.
+
+      Every other fixture here is visibly wrong once you know what to look for:
+      a Latin digit, an English aria-label, a dangling idref. This one is
+      flawless by every one of those measures.
+
+        · The digits are Persian.        → no-latin-digits passes
+        · There is no Latin anywhere.    → no-latin-aria passes
+        · lang and dir are correct.      → lang-dir passes
+        · Nothing interactive, nothing unnamed, no idrefs.
+
+      And it is off by 622 years. 22 July 2024 is «۱ مرداد ۱۴۰۳» in the calendar
+      Iran actually uses. «ژوئیه» is not a Persian month — it is "July"
+      transliterated into Persian script, which is what you get from a Gregorian
+      calendar wearing a Persian locale.
+
+      THREE SPELLINGS, because a Persian page gets its Gregorian months from
+      more than one place and this fixture used to carry only the one the
+      implementation could already see.
+
+      It said "this is exactly what react-day-picker's v10 locale/fa-IR
+      produces" above the string «ژوئیه». That library says «جولای». The claim
+      was written from the rule, not captured from the tool — the discipline
+      failure this repository has paid for twice — and it hid a real hole: 4 of
+      12 Intl months and 5 of 12 date-fns months evaded the rule entirely.
+
+      Captured, not typed:
+        · `Intl.DateTimeFormat("fa-IR-u-ca-gregory",{month:"long"})`  → «ژوئیه»
+        · the same with `{dateStyle:"long"}`                          → «ژوئیهٔ»
+          (the ezafe form, U+0654 — a \p{M}, which the trailing boundary
+           refused to match)
+        · `react-day-picker@10.0.1/locale`'s faIR.localize.month(6)   → «جولای»
+    -->
+    <p>۲۲ ژوئیه ۲۰۲۴</p>
+    <p>۲۲ ژوئیهٔ ۲۰۲۴</p>
+    <p>۲۲ جولای ۲۰۲۴</p>
+    <p>تاریخ تولد: ۱۵ ژانویه ۱۹۹۰</p>
+      <!-- POISON: a Persian date field whose year segment announces a Gregorian year (numeric — no month name to catch). -->
+    <div role="group" aria-label="تاریخ"><div role="spinbutton" data-type="year" aria-label="سال" aria-valuemin="1" aria-valuemax="9999" aria-valuenow="2026" aria-valuetext="۲۰۲۶" tabindex="0">۲۰۲۶</div></div>
+    <!-- NOT a violation: a Jalali year. -->
+    <div role="group" aria-label="تاریخ"><div role="spinbutton" data-type="year" aria-label="سال" aria-valuemin="1" aria-valuemax="9999" aria-valuenow="1405" aria-valuetext="۱۴۰۵" tabindex="-1">۱۴۰۵</div></div>
+  </body>
+</html>

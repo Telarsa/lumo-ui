@@ -1,0 +1,172 @@
+#!/usr/bin/env node
+/**
+ * THE MOBILE CONSUMER SMOKE TEST — the Dart counterpart of `gate:smoke`.
+ *
+ * Everything else verifies the mobile library against itself, from inside the
+ * workspace. This builds a throwaway Flutter package OUTSIDE it, depends on
+ * `lumo_ui_mobile` by path, imports nothing but the barrel, names every public
+ * declaration the barrel reaches, and analyses it.
+ *
+ * A component can be perfect inside the workspace and uninstallable outside it.
+ * Concretely, this fails when:
+ *
+ *   - `packages/mobile/pubspec.yaml` is missing a dependency the library uses.
+ *     Inside the monorepo another package's pub cache can make that invisible;
+ *     a consumer with only the declared dependencies gets a compile error.
+ *   - the barrel exports a file whose public types name something it does not
+ *     export, which compiles in-package and not out of it.
+ *
+ * The symbol list is read from the SOURCE FILES, not from the barrel and not
+ * from a generated JSON.
+ *
+ * It used to come from `mobile-api-reference.json`, written by
+ * `build-mobile-api.mjs` — a generator that fed a docs site which no longer
+ * exists, and which retired with the widget roster in §53. The obvious
+ * replacement was to read the barrel. That is WRONG, and a poison test said so
+ * immediately: delete an export and its symbols leave the expected list too, so
+ * the gate passes and the exact defect it was built for — API a reader is told
+ * to import and cannot — becomes invisible. A gate whose expectations come from
+ * the thing it is grading can only ever agree with itself.
+ *
+ * So: `lib/src/**.dart` says what EXISTS, the barrel says what is REACHABLE,
+ * and the scratch consumer is where the two are compared.
+ *   - a public signature names a type that is itself not exported, which
+ *     compiles in-package and not out of it.
+ *
+ * Not in `verify` by default — it runs `flutter pub get` against a scratch
+ * directory. CI runs it beside the other mobile gates.
+ */
+
+import { mkdtempSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
+
+import { SEARCHED, findFlutter, flutterRunner } from "./lib/flutter.mjs";
+
+const ROOT = resolve(import.meta.dirname, "..");
+const PACKAGE = join(ROOT, "packages", "mobile");
+
+/**
+ * Every public top-level declaration in `lib/src/`: classes, enums, mixins,
+ * top-level functions and top-level constants. Underscore-prefixed names are
+ * private to their library and are skipped.
+ *
+ * `lib/src/testing/` is excluded — it is reached through a SECOND barrel
+ * (`testing.dart`), because a consumer's production code has no business
+ * importing a test-support library.
+ */
+function publicApi() {
+  const dir = join(PACKAGE, "lib", "src");
+  /** @type {string[]} */
+  const types = [];
+  /** @type {string[]} */
+  const values = [];
+  for (const name of readdirSync(dir)) {
+    if (!name.endsWith(".dart")) continue;
+    const src = readFileSync(join(dir, name), "utf8");
+    /** Collect capture group 1 of every match, which the regexes always have. */
+    const namesIn = (/** @type {RegExp} */ re) =>
+      [...src.matchAll(re)].map((m) => m[1]).filter((name) => name !== undefined);
+
+    types.push(...namesIn(/^(?:abstract\s+)?(?:final\s+)?(?:class|enum|mixin)\s+([A-Za-z]\w*)/gm));
+    // A top-level function or constant: no leading indent, so not a field of
+    // something above it. `kLumoLatnIsland` and `formatNumber` are both API a
+    // consumer is told to call.
+    values.push(...namesIn(/^(?:const|final)\s+(?:[\w<>,?\s]+\s+)?([a-z]\w*)\s*=/gm));
+    values.push(...namesIn(/^[\w<>,?]+(?:\s*\??)\s+([a-z]\w*)\s*\(/gm));
+  }
+  return {
+    types: [...new Set(types)].sort(),
+    values: [...new Set(values)].sort(),
+  };
+}
+
+const { types, values } = publicApi();
+if (types.length === 0) {
+  console.error("  smoke-mobile: found no public types in lib/src — the parse is wrong, not the library.");
+  process.exit(1);
+}
+
+const sdk = findFlutter();
+if (!sdk) {
+  console.error(`  smoke-mobile: no Flutter SDK found (${SEARCHED}).`);
+  process.exit(1);
+}
+
+const scratch = mkdtempSync(join(tmpdir(), "lumo-mobile-consumer-"));
+try {
+  mkdirSync(join(scratch, "lib"), { recursive: true });
+  writeFileSync(
+    join(scratch, "pubspec.yaml"),
+    [
+      "name: lumo_consumer_smoke",
+      "description: A throwaway consumer of lumo_ui_mobile, outside the workspace.",
+      "publish_to: none",
+      "version: 0.0.0",
+      "",
+      "environment:",
+      "  sdk: ^3.9.0",
+      "",
+      "dependencies:",
+      "  flutter:",
+      "    sdk: flutter",
+      "  lumo_ui_mobile:",
+      `    path: ${PACKAGE}`,
+      "",
+      "dev_dependencies:",
+      "  flutter_lints: ^5.0.0",
+      "",
+      "flutter:",
+      "  uses-material-design: true",
+      "",
+    ].join("\n"),
+  );
+
+  // ONLY the barrel. A consumer that has to reach into `src/` is a consumer
+  // whose imports we broke.
+  const lines = [
+    "// GENERATED by scripts/smoke-mobile.mjs — a scratch consumer, never committed.",
+    "// Naming a type is enough: it resolves only if the barrel exports it and",
+    "// every type in its signature is reachable from outside the package.",
+    "import 'package:flutter/widgets.dart';",
+    "import 'package:lumo_ui_mobile/lumo_ui_mobile.dart';",
+    "",
+    "const List<Type> publicTypes = <Type>[",
+    ...types.map((name) => `  ${name},`),
+    "];",
+    "",
+    "// Naming a function or a constant resolves it too, and catches the case a",
+    "// type list cannot: a top-level `formatNumber` that the barrel forgot.",
+    "final List<Object?> publicValues = <Object?>[",
+    ...values.map((name) => `  ${name},`),
+    "];",
+    "",
+    "// The scope is the one widget every consumer must build, so build it.",
+    "Widget smoke(Widget child) => LumoScope(",
+    "      locale: 'fa-IR',",
+    "      brightness: Brightness.light,",
+    "      child: child,",
+    "    );",
+    "",
+  ];
+  writeFileSync(join(scratch, "lib", "consumer.dart"), lines.join("\n"));
+
+  const run = flutterRunner(sdk, scratch);
+  if (run(["pub", "get"]) !== 0) {
+    console.error("  smoke-mobile: `flutter pub get` failed in a bare consumer — the package's own");
+    console.error("  pubspec does not declare everything it needs.");
+    process.exit(1);
+  }
+  if (run(["analyze", "--no-pub"]) !== 0) {
+    console.error("  smoke-mobile: a bare consumer does not compile against the barrel.");
+    console.error("  Every name above is a public declaration in packages/mobile/lib/src, so anything");
+    console.error("  unresolved is API that exists but the barrel does not export.");
+    process.exit(1);
+  }
+  console.log(
+    `  smoke-mobile: ${String(types.length)} type(s) and ${String(values.length)} value(s) resolve from the barrel ` +
+      "in a consumer outside the workspace",
+  );
+} finally {
+  rmSync(scratch, { recursive: true, force: true });
+}

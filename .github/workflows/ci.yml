@@ -1,0 +1,169 @@
+# This repository's own pipeline. It is deliberately self-contained.
+#
+# An earlier version called a shared reusable workflow out of a central
+# infrastructure repository. That coupled a dozen repositories to one file in
+# another: it had to exist on the referenced branch, and that repository had to
+# grant its siblings access to its workflows. Both are invisible from here, and
+# when either was wrong every repository failed at once, before a single job
+# started. Keep a canonical copy of this file wherever you like — copy it into
+# each repository; do not reference it across repositories.
+name: CI
+
+# No paths-ignore. It used to skip '**/*.md', which exempted exactly the
+# change class that kept shipping stale claims: documentation counts that no
+# gate ever re-derived. A doc-only push costs one 20-minute runner; a wrong
+# public number costs trust.
+#
+# 'experiment/**' is included because the Base UI migration lived on
+# experiment/base-ui for weeks with zero CI — every gate in this file was
+# advisory there. Long-lived branches get graded, not just protected ones.
+on:
+  push:
+    branches: [main, develop, 'experiment/**', 'feat/**']
+  pull_request:
+    branches: [main, develop]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # documentation-truth.test.ts asserts the version in package.json is
+          # an EXISTING tag. A shallow checkout carries no tags, so on a runner
+          # that assertion failed on every push while passing on every laptop.
+          fetch-depth: 0
+          fetch-tags: true
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+
+      # node-version-file reads .nvmrc, so CI and developers share one runtime
+      # and there is no second place to update.
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # --frozen-lockfile also re-runs the supply-chain check: pnpm verifies
+      # every lockfile entry against minimumReleaseAge, so a lockfile produced
+      # by bypassing the cooldown locally fails here rather than shipping.
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # The Flutter SDK, pinned to the version DEVELOPERS run.
+      #
+      # `packages/mobile/pubspec.yaml` states `flutter: ">=3.35.0"`, which is a
+      # floor and not a version — CI used to pin that floor and so graded on an
+      # engine twelve releases behind the laptops. Rendering is a function of
+      # the engine: one consumer app's 61-image golden corpus went entirely
+      # red from an SDK change alone, with the library rolled back 21,834 lines
+      # producing byte-identical output. A CI that runs a different engine cannot tell a
+      # real visual change from its own drift, which defeats the point of the
+      # comment below. Bump this and the two other Flutter steps together.
+      #
+      # It is here because the mobile gates below would otherwise not run in CI
+      # at all: the Dart library would be graded on a laptop and taken on trust
+      # here, which is precisely the arrangement the rest of this file exists to
+      # refuse. `gate:flutter` grades both the package and `apps/mobile-example`,
+      # the Material consumer that is the semantics grader's corpus.
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+
+      # Runtime truth, checked on the RUNNER rather than on a laptop.
+      #
+      # If the runner's Node ships small-ICU, `Intl` has no Persian calendar and
+      # no arabext numbering system - and every Jalali claim Lumo makes is a lie
+      # that no unit test would catch, because the unit tests run here too.
+      # This runs FIRST: everything downstream is meaningless if it fails.
+      - name: Intl / ICU capability
+        run: |
+          node --input-type=module -e '
+            const fail = (m) => { console.error("  FAIL " + m); process.exitCode = 1 };
+            const cal = new Intl.DateTimeFormat("fa-IR").resolvedOptions().calendar;
+            const num = new Intl.DateTimeFormat("fa-IR").resolvedOptions().numberingSystem;
+            const money = new Intl.NumberFormat("fa-IR").format(1234.5);
+            console.log(`  node       ${process.version}`);
+            console.log(`  calendar   ${cal}`);
+            console.log(`  numbering  ${num}`);
+            console.log(`  1234.5     ${money}`);
+            if (cal !== "persian") fail(`fa-IR calendar is "${cal}", expected "persian" - small-ICU build?`);
+            if (num !== "arabext") fail(`fa-IR numberingSystem is "${num}", expected "arabext"`);
+            if (!/[۰-۹]/.test(money)) fail("fa-IR NumberFormat produced no Persian digits");
+            if (!money.includes("٫")) fail("fa-IR decimal separator is not U+066B");
+          '
+
+      # THE CONTRACT, not a copy of it. This used to enumerate individual
+      # gate:* steps and drifted: the 18 Aug blind review found SIX of the 22
+      # verify gates missing here (versions, consumer-profile, consumer-lint,
+      # dist, pack, registry, mobile-styles among them). A list transcribed by
+      # hand into a second file always rots; running `verify` itself means a
+      # gate added to package.json is in CI the same commit.
+      - name: verify — all 13 gates, the same list a laptop runs
+        run: pnpm run verify
+
+      # Keeps the built site available for inspection when the gate fails, which
+      # is exactly when you want to look at the HTML.
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: failure()
+        with:
+          name: site-output
+          path: apps/website/out
+          retention-days: 3
+
+  # Kept separate from verify because it intentionally launches one related
+  # Vitest process per registry component. This is a mutation floor, not a
+  # replacement for the behavioral suite: most modules exercise rendered class
+  # assignment, while high-risk modules use component-specific behavior probes.
+  mutation:
+    runs-on: ubuntu-latest
+    # ONE campaign since §54: the mobile library's operators. The web half
+    # (`mutation:components`, 111 modules) retired with `packages/ui`, and this
+    # job kept calling it — a missing script exits nonzero, so this job had been
+    # red on every push rather than proving anything.
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          # Pinned, like every other Flutter step here. Rendering is a function
+          # of the engine; a floating channel silently re-shapes text and turns
+          # a stable corpus red for no reason anyone can act on.
+          flutter-version: 3.47.2
+          channel: stable
+          cache: true
+      # `packages/mobile` had 669 tests and no anti-vacuity guard, so nothing
+      # proved they assert anything. Since §54 the campaign covers the WHOLE
+      # package rather than a sample: five files can carry a promise, all five
+      # have an operator, and PENDING_FLOOR is 0.
+      - name: Mobile mutation floor
+        run: |
+          # The campaign's runner calls `flutter test --no-pub`; without this,
+          # a missing package config makes every test exit nonzero — which the
+          # old oracle counted as 13/13 killed (18 Aug blind review, finding 3).
+          # The script now also refuses to run without a passing clean baseline.
+          (cd packages/mobile && flutter pub get)
+          pnpm run mutation:mobile
+      - name: Publish the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: mutation-report.json
+          retention-days: 30

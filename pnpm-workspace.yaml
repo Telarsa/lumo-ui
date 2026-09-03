@@ -1,0 +1,157 @@
+# Supply chain. These live here, not in .npmrc: pnpm 11 does not read pnpm
+# settings from .npmrc, so the same keys there are silently inert.
+#
+# Refuse any package published in the last 24 hours - the window in which most
+# compromised releases are caught and unpublished. pnpm 11 applies a default
+# cooldown even when this key is absent, and quietly writes a
+# minimumReleaseAgeExclude entry to unblock the install rather than failing.
+# Stating it explicitly is what makes the policy visible.
+minimumReleaseAge: 1440
+
+# Build scripts are denied by default in pnpm 11; a package must be named to run
+# one. Nothing here needs to: sharp is a transitive Next dependency whose native
+# binary only matters for image optimisation, and this site sets
+# `images.unoptimized` because it is a static export. An empty list is a stated
+# policy - "we run no install-time native builds" - rather than an oversight.
+allowBuilds:
+
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# Every version Lumo depends on is named once, here.
+#
+# EXACT pins, not ranges, for everything that can change rendered output or an
+# accessible name. The reason is the churn model: an upstream change should
+# arrive as a deliberate, reviewed bump that turns the gates red once - never as
+# a silent resolution difference between a laptop and CI. A caret would let the
+# accessibility-tree snapshots drift without a commit to blame.
+#
+# Ranges are used only for build tooling whose output the gates already check.
+catalog:
+  # Must stay on the version RAC itself resolves, or `Calendar` types come from
+  # two copies of the package and will not assign.
+  '@internationalized/date': 3.12.3
+  # EXPERIMENT ONLY (branch experiment/base-ui). NOTE the package RENAME:
+  # `@base-ui-components/react` is dead at 1.0.0-rc.0 and must not be measured.
+  # 1.7.0 published 2026-08-04, six days before adoption — clears the cooldown.
+  #
+  # THE PIN IS LOAD-BEARING HERE IN A WAY IT IS NOT FOR THE OTHERS. Every fix in
+  # `packages/base-ui-ssr` compensates for an implementation choice — an
+  # accessible name published from a layout effect, an English literal at a known
+  # file and line — and not for a documented seam. A patch release may retire a
+  # workaround or silently defeat it, in both cases with no type error. So this
+  # version is the one that package declares in its peer range and its README's
+  # "verified against" line, and moving it is a deliberate bump that re-runs
+  # `gate:html` and `packages/base-ui-ssr`'s own suite, never a resolution
+  # difference between two machines.
+  '@base-ui/react': 1.7.0
+
+  # NOT IN THIS CATALOG, deliberately: `@lumo-ui/base-ui-ssr`. The catalog names
+  # versions of packages Lumo does not control. A workspace package enters
+  # through `workspace:*`, the same route `@lumo-ui/core` takes; if the SSR layer
+  # is ever published and consumed from the registry rather than the workspace,
+  # its version belongs here and not before.
+
+  # --- runtime ---------------------------------------------------------------
+  react: 19.2.8
+  react-dom: 19.2.8
+  '@types/react': 19.2.18
+  '@types/react-dom': 19.2.4
+
+  # --- class composition -----------------------------------------------------
+  # tailwind-merge is pinned exactly: it encodes Tailwind's own conflict groups,
+  # so a minor that mis-merges `ms-2 ms-4` silently produces wrong spacing in RTL.
+  # packages/core/src/cn.test.ts asserts that exact case.
+  clsx: 2.1.1
+  tailwind-merge: 3.6.0
+
+  # --- the calendar GRID (not the calendar SYSTEM) ---------------------------
+  # Adopted 11 Aug 2026 for the date family, and the split is the whole point:
+  # this supplies the month grid, its roving tab stop, its labels and its
+  # keyboard model; `@internationalized/date` supplies WHICH CALENDAR those days
+  # belong to. Lumo binds the two with `calendar-datelib.ts`.
+  #
+  # 10.0.1 AND NOT 9.14.0, which is the version that ships
+  # `react-day-picker/persian`. That entry point is genuinely excellent —
+  # measured on a server render, it produced «۱ مرداد ۱۴۰۳», 57 Persian digits,
+  # zero Latin, and ZERO lumo-gate violations with no configuration at all — and
+  # it is still the wrong choice here, because it is PERSIAN-ONLY. Its calendars
+  # are separate entry points bound to separate forked date libraries
+  # (`/persian` -> date-fns-jalali, `/hijri` -> a hijri converter), so a second
+  # locale is a second component and a second dependency. Lumo serves fa-IR,
+  # en-US and grades ar-SA; a design where adding a locale means adding a
+  # package is the opposite of this library's reason to exist.
+  #
+  # v10 dropped those entry points AND their date libraries — its `locale/fa-IR`
+  # is date-fns's Persian locale over a GREGORIAN grid, which renders
+  # «۲۲ ژوئیه ۲۰۲۴» and is exactly the defect `native-calendar` was written to
+  # catch. What v10 KEPT is the seam: `dateLib` overrides and the `formatters`
+  # prop group. So v10 is not a regression for us, it is an invitation — bring
+  # your own calendar — and `@internationalized/date` brings thirteen of them
+  # behind one runtime `createCalendar(id)`.
+  #
+  # Exact pin for the usual reason, plus one specific to this package: the
+  # `DateLib` surface IS our integration contract, and a minor that renames a
+  # member silently drops an override back to Gregorian. `native-calendar` is
+  # the backstop that turns that into a red build rather than a wrong year.
+  # 10.0.1 published 2026-05-15, three months old — well clear of the cooldown.
+  react-day-picker: 10.0.1
+  # --- the docs site (apps/website, §51): a shadcn-built consumer in-repo -----
+  # Exact pins, matching what the consumer app that donated the copies resolved
+  # on 31 Aug 2026. `shadcn` is a RUNTIME dependency of the site: its
+  # tailwind.css carries the token scaffolding the copies style against.
+  next: 16.3.0
+  tailwindcss: 4.3.3
+  '@tailwindcss/postcss': 4.3.3
+  lucide-react: 1.29.0
+  class-variance-authority: 0.7.1
+  tw-animate-css: 1.4.0
+  shadcn: 4.16.2
+  # --- interactive tests for @lumo-ui/dates -----------------------------------
+  # A jsdom tier, added 31 Aug 2026 because the static export could not show the
+  # bug that mattered: the selection HIGHLIGHT not following a click. Same
+  # versions the retired component library used.
+  jsdom: 30.0.1
+  '@testing-library/react': 16.3.3
+  '@testing-library/user-event': 14.6.6
+
+  # --- the gate --------------------------------------------------------------
+  # No browser in CI. linkedom parses the built HTML; dom-accessibility-api
+  # computes accessible names over it.
+  linkedom: 0.18.13
+  dom-accessibility-api: 0.7.1
+
+  # Must track .nvmrc (24), NOT npm latest. Types ahead of the runtime describe
+  # APIs that do not exist at run time, and tsc will happily accept them.
+  '@types/node': 24.13.3
+
+  # --- test / types ----------------------------------------------------------
+  # TypeScript is pinned exactly and must NOT be auto-bumped to 7.x: no released
+  # typescript-eslint accepts it yet.
+  typescript: 6.0.3
+  vitest: ^4.1.10
+  '@vitejs/plugin-react': ^6.0.5
+
+  # --- lint ------------------------------------------------------------------
+  # These two entries were unsatisfiable until 12 Aug 2026, which is itself
+  # evidence that nothing ever installed them: the newest published eslint 9 is
+  # 9.39.5 (^9.40.0 matches nothing) and the newest typescript-eslint is 8.67.0
+  # (^9.0.0 matches nothing). A catalog pin that cannot resolve is a pin nobody
+  # has run.
+  #
+  # eslint             — the runner. Held at 9.x: typescript-eslint 8 and the
+  #                      flat-config shape below are what this repo is written
+  #                      against, and 10 is a config-schema change, not a bump.
+  # typescript-eslint  — PARSER ONLY. `packages/config/eslint/lumo.mjs` is
+  #                      deliberately plugin-free, but its selectors have to see
+  #                      .tsx; espree cannot parse it. No typed-lint program is
+  #                      configured, so this costs no type-check pass.
+  #                      Peer range is >=4.8.4 <6.1.0, which the pinned
+  #                      typescript 6.0.3 satisfies.
+  eslint: ^9.39.5
+  typescript-eslint: ^8.67.0
+  # The one real plugin. `rules-of-hooks` is not expressible as a syntax
+  # selector — it needs the plugin's control-flow analysis — and its absence is
+  # exactly what let a conditional `useContext` ship in toggle-group.tsx.
+  eslint-plugin-react-hooks: ^7.1.1

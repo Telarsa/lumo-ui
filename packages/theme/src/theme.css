@@ -1,0 +1,243 @@
+/*
+ * The Tailwind v4 bridge.
+ *
+ * `@theme inline` maps Lumo's semantic tokens onto Tailwind's utility
+ * namespaces, so `bg-surface` resolves to `--lumo-sys-surface`. `inline` matters:
+ * it emits `var(--lumo-sys-*)` rather than the resolved value, so a runtime
+ * theme switch or a brand override still works.
+ *
+ * Import order in a consuming app is fixed and not interchangeable:
+ *     @import "tailwindcss";
+ *     @import "lumo-ui/theme/tokens.css";
+ *     @import "lumo-ui/theme/theme.css";
+ */
+@theme inline {
+  --color-bg: var(--lumo-sys-bg);
+  --color-bg-subtle: var(--lumo-sys-bg-subtle);
+  --color-surface: var(--lumo-sys-surface);
+  --color-surface-hover: var(--lumo-sys-surface-hover);
+  --color-surface-sunken: var(--lumo-sys-surface-sunken);
+
+  --color-fg: var(--lumo-sys-fg);
+  --color-fg-muted: var(--lumo-sys-fg-muted);
+  --color-fg-subtle: var(--lumo-sys-fg-subtle);
+  --color-fg-on-accent: var(--lumo-sys-fg-on-accent);
+
+  --color-border: var(--lumo-sys-border);
+  --color-border-control: var(--lumo-sys-border-control);
+  --color-border-strong: var(--lumo-sys-border-strong);
+
+  --color-accent: var(--lumo-sys-accent);
+  --color-accent-hover: var(--lumo-sys-accent-hover);
+  --color-accent-fg: var(--lumo-sys-accent-fg);
+  --color-accent-mark: var(--lumo-sys-accent-mark);
+
+  --color-positive: var(--lumo-sys-positive);
+  --color-critical: var(--lumo-sys-critical);
+  --color-caution: var(--lumo-sys-caution);
+
+  /*
+   * The scrim, as a colour rather than as a `bg-black/50` in two component
+   * files. It is a `--color-*` and not a bespoke utility because a scrim IS a
+   * background: `bg-scrim` is the same shape every other fill in this library
+   * has, and it means the colour sweep in `theme-vocabulary.test.tsx` — which
+   * fails any `bg-`/`text-`/`border-` naming a token the theme does not
+   * publish — grades it like every other colour instead of stepping over it.
+   *
+   * The alpha is BAKED INTO the token rather than written at the call site.
+   * `bg-black/50` put the only two untokenised colours in the library at the
+   * two call sites, and a per-site alpha is exactly how they would drift apart
+   * again; a scrim that is 50% in one overlay and 55% in another is not a
+   * system.
+   */
+  --color-scrim: var(--lumo-sys-scrim);
+
+  /*
+   * ── ELEVATION, AND WHAT `@theme inline` COSTS HERE ────────────────────────
+   *
+   * Three names, mapped from the three sys tokens, so `shadow-overlay` in a
+   * component resolves to `var(--lumo-sys-shadow-overlay)` and therefore
+   * follows the theme flip and any brand override. tokens.css argues which
+   * surface belongs to which tier.
+   *
+   * MEASURED TRADE-OFF, because it is real and silent. Compiled against the
+   * pinned tailwindcss 4.3.3, a built-in rung emits its colour inline so the
+   * `shadow-<colour>` utility can replace it:
+   *
+   *     .shadow-lg     { --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, rgb(0 0 0 / 0.1)), … }
+   *     .shadow-overlay{ --tw-shadow: var(--lumo-sys-shadow-overlay) }
+   *
+   * Tailwind cannot see into the `var()`, so it cannot thread `--tw-shadow-color`
+   * through it: `shadow-overlay shadow-accent` would silently keep the token's
+   * own black. That costs nothing today — no component in `packages/ui/src`
+   * recolours a shadow, and a design system whose elevation can be re-hued per
+   * call site is the variance this change exists to remove — but it is the
+   * reason to reach for a new sys token rather than `shadow-accent` if a tinted
+   * elevation is ever genuinely wanted.
+   *
+   * Tailwind's own `--shadow-xs … --shadow-2xl` are deliberately NOT reset to
+   * `initial`. `apps/website` still uses them and blanking
+   * the namespace would break their build rather than improving it. What kept
+   * the three tiers from decaying back into five was `system-vocabulary.test.ts`,
+   * which swept the component directory for built-in rungs — and that test went
+   * with `packages/ui` at 0.3.0. NOTHING GUARDS IT NOW. The tiers survive
+   * because the components that could decay them are no longer this repository's
+   * to write; a consumer using all five rungs in their own copies is outside
+   * what this file can see, which is the trade §51 makes deliberately.
+   */
+  --shadow-raised: var(--lumo-sys-shadow-raised);
+  --shadow-overlay: var(--lumo-sys-shadow-overlay);
+  --shadow-modal: var(--lumo-sys-shadow-modal);
+
+  --radius-sm: var(--lumo-sys-radius-sm);
+  --radius-md: var(--lumo-sys-radius-md);
+  --radius-lg: var(--lumo-sys-radius-lg);
+  /* Previously unmapped, so `rounded-xl` / `rounded-2xl` / `rounded-full` fell
+     through to Tailwind's defaults. Mapped at those same values: the web is
+     unchanged, and the steps are now the design system's to move. */
+  --radius-xl: var(--lumo-sys-radius-xl);
+  --radius-2xl: var(--lumo-sys-radius-2xl);
+  --radius-full: var(--lumo-sys-radius-full);
+
+  --spacing-control-sm: var(--lumo-ref-control-sm);
+  --spacing-control-md: var(--lumo-ref-control-md);
+  --spacing-control-lg: var(--lumo-ref-control-lg);
+}
+
+/*
+ * One focus treatment for the whole system, defined once.
+ *
+ * `:focus-visible` rather than `:focus` means it appears for keyboards and not
+ * for mice — the platform now does the modality detection that React Aria ships
+ * 421 lines to compute.
+ *
+ * ── THIS RULE BEATS EVERY UTILITY, AND THAT IS WHY THE OTHER FOUR WERE INERT ─
+ *
+ * `:where()` has zero specificity, so the obvious reading is that any
+ * `focus-visible:outline-*` a component writes will win. It does not, and the
+ * built stylesheet is the only place that shows why. `@layer` order beats
+ * specificity outright, and the layers land in this order in the export
+ * (byte offsets from `apps/website/out/_next/static/chunks/*.css`,
+ * 12 Aug 2026):
+ *
+ *     properties 1354 · theme 3782 · base 6175 · components 9844 ·
+ *     utilities 9862 · lumo.reset 94299 · … · lumo.components 102592
+ *
+ * `lumo.components` is declared AFTER `utilities`, so this rule outranks every
+ * `focus-visible:` utility in the library. Measured consequences, each of
+ * which had been reviewed as a real second focus mechanism:
+ *
+ *   `focus-visible:outline-2 outline-offset-2 outline-accent`
+ *       (disclosure, navigation-menu) — compiled to
+ *       `outline-color: var(--lumo-sys-accent)` at byte 67691, inside
+ *       `utilities`. The shorthand below resets outline-color, wins, and paints
+ *       `--lumo-sys-focus`. The hardcoded rule never applied. It was ALSO the
+ *       one that would have broken first, because `accent` and `focus` are
+ *       independent tokens and a brand that moves focus without moving accent
+ *       would have found two ring colours on one page — except it could not,
+ *       because the rule was dead.
+ *   `focus-visible:[outline-offset:calc(var(--lumo-sys-focus-offset)*-1)]`
+ *       (toggle-group) — the library's only INSET ring, and it was never inset.
+ *       Same layer, same loss. The intent was right: the group clips its items
+ *       with `overflow-hidden`, so an outset ring is cut off. The mechanism is
+ *       now the knob below, which the ONE rule reads.
+ *
+ * ── THE PER-ELEMENT KNOB, WHICH IS WHY THERE IS STILL ONLY ONE RULE ─────────
+ *
+ * A component that needs a different offset does not write a second rule. It
+ * sets the variable this one already reads, on its own element:
+ *
+ *     "[--lumo-sys-focus-offset:calc(var(--lumo-sys-focus-width)*-1)]"
+ *
+ * A custom property set on an element is substituted when THIS rule matches
+ * THAT element, so the ring stays one declaration, one colour, one width, and
+ * one place to change all three. The same move the density island makes for
+ * `--lumo-ref-control-*`. It inherits to descendants, which is harmless on the
+ * two components that use it and is the reason to prefer it over a second rule
+ * rather than over a `--lumo-cmp-*` token: a cmp token would need this rule to
+ * grow a second `var()` fallback for every component that ever wants one.
+ */
+@layer lumo.components {
+  :where([data-lumo]):focus-visible {
+    outline: var(--lumo-sys-focus-width) solid var(--lumo-sys-focus);
+    outline-offset: var(--lumo-sys-focus-offset);
+  }
+
+  /*
+   * ── THE CONTROL THAT TAKES FOCUS IS NOT ALWAYS THE ONE YOU SEE ───────────
+   *
+   * Base UI's `Slider.Thumb` renders a real `<input type="range">` clipped to
+   * nothing (`clip-path: inset(50%)`) INSIDE the visible thumb, and that input
+   * is the focus stop. So the rule above matches the input — which has no
+   * painted box — and never the div a reader is looking at.
+   *
+   * Measured before this rule existed: tabbing to a slider produced a thumb
+   * pixel-identical to its unfocused state. That is WCAG 2.4.7 failing on a
+   * control that looks perfectly fine in every screenshot, which is exactly the
+   * class of defect this library exists to catch.
+   *
+   * `:has()` fixes it where the component cannot: the visible element rings
+   * when it CONTAINS the focused input, and `:focus-visible` on that input
+   * keeps it quiet for a mouse.
+   *
+   * ── WHY THIS IS OPT-IN, AND NOT `[data-lumo]` ────────────────────────────
+   *
+   * It was written as `:where([data-lumo]):has(> input:focus-visible)` — any
+   * marked element holding a focused input — on the theory that a future
+   * primitive hiding its control behind a painted one would be covered for
+   * free. That was wrong in a way a screenshot shows instantly and no test
+   * caught: `BaseField.Root` carries `data-lumo` and the `<input>` is its
+   * DIRECT CHILD, so focusing any ordinary text field drew TWO rings — the
+   * input's own, plus a second one boxing the label, the control and the
+   * description together. Reported from the built site as "black lines all
+   * around it… this happens almost everywhere", and it did.
+   *
+   * The generality was the defect. A rule that fires on structure fires on
+   * every structure that happens to match, and "an input inside a marked
+   * element" describes the normal case, not the exceptional one. So the marker
+   * is explicit: a component states that its visible box stands in for a
+   * control it hides. Same shape as `data-lumo-widget-cell` in `table.tsx`,
+   * and for the same reason — the components that delegate KNOW they delegate,
+   * and inference cannot tell them from the ones that do not.
+   *
+   * ── WHY THE CHILD IS `:is(input, select)` AS OF 12 AUG 2026 ───────────────
+   *
+   * A second component was hiding its control behind a painted one and did not
+   * know this rule existed. `calendar.variants.ts` styles react-day-picker's
+   * caption dropdown, which is a real `<select class="opacity-0">` laid over a
+   * visible `aria-hidden` `<span>` — the same arrangement as the slider thumb,
+   * with a different element. It had solved it locally with
+   * `has-[select:focus-visible]:outline-2` and `…:outline-accent`: a fifth focus
+   * mechanism that ALSO read `--color-accent` rather than `--lumo-sys-focus`, so
+   * a brand moving focus alone would have shipped two ring colours on one page.
+   *
+   * `input` was never the point; "the element that takes focus is painted at
+   * zero alpha" was. `:is(input, select)` is the smallest widening that covers
+   * both known cases, and it cannot recreate the double-ring bug above, because
+   * what made that rule structural was its `[data-lumo]` SUBJECT — which every
+   * field root carries — and not its child. A `<textarea>` or a `<button>`
+   * behind a painted box would need the same treatment and is deliberately not
+   * added speculatively: the two members here are the two that exist.
+   *
+   * ── AND WHY THE MARKER HAS A CLASS SPELLING AS WELL AS AN ATTRIBUTE ───────
+   *
+   * `.lumo-proxy-focus` is the same marker for a component that cannot write an
+   * attribute. `calendar.tsx` does not render that caption dropdown —
+   * react-day-picker does, and its `classNames` map takes CLASS STRINGS and
+   * nothing else, so `data-lumo-proxy-focus` has no seam to arrive through short
+   * of overriding the engine's `Dropdown` component wholesale. Rather than let
+   * one component keep a private ring because of a third party's API shape, the
+   * marker gained a second spelling.
+   *
+   * It is a bare class, deliberately not a Tailwind utility: it styles nothing
+   * on its own and exists only to be selected here. `:where()` keeps both arms
+   * at zero specificity, so the two spellings are interchangeable and neither
+   * can out-rank an author's own override.
+   */
+  :where([data-lumo-proxy-focus], .lumo-proxy-focus):has(
+      > :is(input, select):focus-visible
+    ) {
+    outline: var(--lumo-sys-focus-width) solid var(--lumo-sys-focus);
+    outline-offset: var(--lumo-sys-focus-offset);
+  }
+}

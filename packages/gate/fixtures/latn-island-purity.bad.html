@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <!--
+      POISON: a Persian paragraph wrapped in the Latin hatch. Every digit and
+      script rule skips it, so the ۱۲ Latin digits and the English word inside
+      would be invisible — the exemption used as a silencer.
+    -->
+    <p data-lumo-latn dir="ltr">این پاراگراف فارسی است و نباید در جزیرهٔ لاتین باشد؛ 12 مورد و یک واژهٔ English در آن پنهان می‌شود.</p>
+    <!-- POISON: a Persian control inside an English island (the block-page caption, 15 Aug 2026). -->
+    <figcaption dir="ltr" lang="en" data-lumo-latn=""><code>lang="fa-IR" dir="rtl"</code><a href="/view-block/fa/x/">باز کردن تمام‌صفحه</a></figcaption>
+
+    <!-- NOT violations: what the hatch is for. -->
+    <pre data-lumo-latn dir="ltr" lang="en"><code>pnpm dlx shadcn@latest add @lumo/button
+&lt;Button label="ذخیره کنید"&gt;ذخیره&lt;/Button&gt;</code></pre>
+    <bdi data-lumo-latn dir="ltr">+۹۸ ۹۱۲ ۱۲۳ ۴۵۶۷</bdi>
+    <span data-lumo-latn dir="ltr">AC-4825</span>
+    <p>متن فارسی صفحه با یک واژهٔ <code data-lumo-latn dir="ltr">orientation</code> در میانش.</p>
+    <td dir="ltr" lang="en" data-lumo-latn="">English documentation that quotes Persian, e.g. «هیچ موردی پیدا نشد» or «فهرست خالی است», stays English.</td>
+  </body>
+</html>

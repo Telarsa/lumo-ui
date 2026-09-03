@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <button aria-label="Show suggestions">▼</button>
+    <input aria-label="مبلغ" aria-roledescription="Number field" />
+
+    <!--
+      THE TWO PLATFORM SPELLINGS, ADDED 12 Aug 2026.
+
+      `SPOKEN` held seven attributes, five of them `aria-*`, and the hole had a
+      shape: it graded what an ARIA audit thinks about and missed the two
+      ordinary HTML attributes that reach a reader by the same route. `alt` IS
+      the accessible name of an image — not a fallback, the name — and a native
+      `placeholder` is announced when a field has no other name. That
+      `aria-placeholder` was already graded and `placeholder` was not is the
+      tell.
+
+      Both lines are here because a widening nobody has watched fail is a
+      widening that might not be wired: the export has 12 `alt` and 40
+      `placeholder` attributes on Persian routes and not one Latin word among
+      them, so the change costs nothing today and grades nothing today unless
+      something makes it fire.
+    -->
+    <img src="/logo.svg" alt="Company logo" />
+    <input type="search" aria-label="جست‌وجو" placeholder="Search orders" />
+
+    <!--
+      NOT violations, and each pins one narrowing.
+
+      `alt` and `placeholder` are only announced on the elements the platform
+      defines them for; on a `<div>` no reader ever hears them, and a rule
+      whose findings cannot reach a user is one people learn to ignore.
+    -->
+    <div alt="Save" placeholder="Search"></div>
+    <img src="/decorative.svg" alt="" />
+  </body>
+</html>

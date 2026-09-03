@@ -1,0 +1,101 @@
+/*
+ * The docs site's stylesheet IS the §51 recipe, executed:
+ *
+ *   components — shadcn's (the copies in src/components/ui, styled by
+ *                shadcn/tailwind.css + the --background/--primary vocabulary)
+ *   correctness — Lumo's (tokens, the Tailwind bridge, Persian script rules)
+ *   the seam    — ONE block below that binds shadcn's variables to Lumo's
+ *                 sys tokens, so both vocabularies resolve to the same theme
+ *                 and flip together
+ *
+ * Import order is the fixed one from docs/agent-consumer.md §0.1.
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "lumo-ui/theme/tokens.css";
+@import "lumo-ui/theme/theme.css";
+@import "lumo-ui/theme/script.css"; /* greenfield: Lumo owns this page's Persian type */
+@import "lumo-ui/theme/interactive.css";
+
+/*
+ * The copies' `dark:` utilities follow Lumo's OWN theme states (core/theme.ts):
+ * an explicit choice writes data-theme; absent means FOLLOW THE OS. Both arms
+ * must light the variant or the copies' dark styles desync from the tokens.
+ */
+@custom-variant dark {
+  &:where([data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]) *) {
+      @slot;
+    }
+  }
+}
+
+/* ---- the brand knobs: the ONLY place this site states a colour ---------- */
+@layer lumo.brand {
+  :root {
+    --lumo-ref-hue-brand: 182;
+    --lumo-ref-chroma-brand: 0.085;
+    --lumo-ref-hue-neutral: 200;
+    --lumo-ref-chroma-neutral: 0.008;
+    /*
+     * Persian face: Vazirmatn when the reader has it, the platform's Arabic
+     * face otherwise. Deliberately no webfont dependency — a docs build must
+     * not need the network, and the gate grades bytes, not glyphs.
+     */
+    --lumo-font-persian: "Vazirmatn", "Vazir", "Noto Naskh Arabic", system-ui, sans-serif;
+  }
+}
+
+/*
+ * ---- the seam: shadcn's vocabulary := Lumo's sys tokens ------------------
+ *
+ * One binding, both themes: the sys tokens already flip on data-theme /
+ * prefers-color-scheme, so there is no `.dark` block here at all — that is
+ * the point of binding variables instead of duplicating palettes.
+ */
+:root {
+  --background: var(--lumo-sys-bg);
+  --foreground: var(--lumo-sys-fg);
+  --card: var(--lumo-sys-surface);
+  --card-foreground: var(--lumo-sys-fg);
+  --popover: var(--lumo-sys-surface);
+  --popover-foreground: var(--lumo-sys-fg);
+  --primary: var(--lumo-sys-accent);
+  --primary-foreground: var(--lumo-sys-accent-fg);
+  --secondary: var(--lumo-sys-surface-sunken);
+  --secondary-foreground: var(--lumo-sys-fg);
+  --muted: var(--lumo-sys-bg-subtle);
+  --muted-foreground: var(--lumo-sys-fg-muted);
+  --accent: var(--lumo-sys-surface-hover);
+  --accent-foreground: var(--lumo-sys-fg);
+  --destructive: var(--lumo-sys-critical);
+  --border: var(--lumo-sys-border);
+  --input: var(--lumo-sys-border-control);
+  --ring: var(--lumo-sys-focus);
+  --radius: var(--lumo-sys-radius-lg);
+  --shadow-color: var(--lumo-sys-scrim);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    background: var(--lumo-sys-bg);
+    color: var(--lumo-sys-fg);
+    min-width: 320px;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+}

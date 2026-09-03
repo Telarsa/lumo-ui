@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="fa-IR" dir="rtl">
+  <body>
+    <!--
+      POISON: the raw key, shown to a Persian reader in place of the label.
+
+      This is not an invented shape. `fa/components/select/index.html` served
+      «thr» and two block routes served «newest», because a `Select` with a
+      selected key and no `items` renders THE KEY — while the RSC payload two
+      lines below carried `[{id:"newest",label:"تازه‌ترین"}]`, the correct
+      Persian string, unused.
+
+      It was green on all nine rules that existed. The digits rule grades
+      DIGITS. The aria rule grades ATTRIBUTES. Nothing graded a WORD in visible
+      text, which is the one thing a sighted Persian reader actually sees here.
+      And because it self-heals on hydration, no jsdom test and no axe run could
+      see it either — only the served bytes.
+    -->
+    <p>مرتب‌سازی</p>
+    <span>thr</span>
+    <span>newest</span>
+
+    <!--
+      NOT violations, and they are here to pin the scope from both sides.
+
+      The first is a Persian sentence quoting a prop value. That inline Latin is
+      correct prose and the rule must never touch it — there are hundreds of
+      these across the documentation, and a rule that flagged them would be
+      switched off within a day. It is not flagged because the RUN contains
+      Persian; purity is the whole test.
+
+      The `&quot;` entities are BYTE-FOR-BYTE what the export serves, and they
+      are the reason this rule grades runs rather than nodes: linkedom splits a
+      text node at every entity, so this one sentence arrives as five nodes, two
+      of which («orientation=» and «vertical») hold no Persian at all. Asked per
+      NODE the rule reports two false positives on a correct sentence; 40 of its
+      178 first-cut findings across the export were exactly this. Write the
+      quotes literally here and the fixture stops testing that.
+
+      The second is genuinely-Latin content that says so, with the same
+      attribute the digit rules have honoured since the first commit.
+    -->
+    <p>با orientation=&quot;vertical&quot; پشته روی محور بلند می‌نشیند.</p>
+    <span data-lumo-latn dir="ltr">AC-4825</span>
+  </body>
+</html>

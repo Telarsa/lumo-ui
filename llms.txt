@@ -1,0 +1,33 @@
+# Lumo UI
+
+> Persian-first correctness layer, published by Telarsa under MIT, for products
+> built on shadcn/ui (web) and Material/Flutter (mobile). Since 0.3.0 (§50.6) it is
+> NOT a component library: it is the typed locale contract, a dependency-free
+> RTL lint policy, a served-byte grader with no ecosystem equivalent, and one
+> gap-filler package that makes shadcn's Calendar count in Jalali.
+
+## For an agent working in ANOTHER project
+- docs/agent-consumer.md — the consumer workflow: install the contract packages, wire the provider, format every number, mark genuinely-Latin runs, grade the served bytes
+- skills/lumo-ui/SKILL.md — the same as a skill
+- CHANGELOG.md — what 1.0.0 ships, described from scratch; copies taken from earlier tags are OWNED code with no upstream to merge
+
+## Commands
+- `lumo gate <html-dir> [floors]` — grade a built site's served HTML (14 rules: digits, calendars, script, names, keyboard reachability)
+- `node scripts/grade-app.mjs <built-html> <locale>` — grade a single-locale product app (stages under the declared locale; multi-locale apps keep their own segments)
+- `node scripts/own-error-shells.mjs .next --error <file> [--not-found <file>]` — replace Next's builtin `_global-error`/`_not-found` shells (bare `<html>`, English) in BOTH the graded and the served copy; run it in `build`. A shell already declaring `lang` and `dir` is left alone.
+- `lumo doctor` — check the consumer's one `lumo-ui` pin against this checkout
+
+## Packages (installed from git tags, e.g. `github:Telarsa/lumo-ui#v1.0.0`)
+- lumo-ui/core — locale contract, direction(), formatNumber, LumoNode, required strings, LumoLocaleProvider
+- lumo-ui/theme — tokens + Tailwind bridge + :lang(fa) rules
+- lumo-ui/dates — lumoCalendar(locale, strings.calendar) → the four props shadcn's Calendar already accepts, counting in the reader's calendar (shadcn naming: `disabled`, not `isDisabled`)
+- lumo-ui/base-ui-ssr — first-byte compensations for Base UI
+- lumo-ui/gate + lumo-ui/config — the grader and the lint policy
+- lumo_ui_mobile — the contract on Material's widget layer (Flutter; path dependency)
+
+## The non-negotiables (enforced, not advised)
+- every announced string is required, in the page's language — never English by default
+- no `dir` prop anywhere; direction is derived from the locale
+- no bare number in Persian text — `formatNumber(value, locale)`
+- genuinely-Latin runs are marked `data-lumo-latn dir="ltr"`, never excused with `lang="en"`
+- the served bytes are the oracle: grade them

@@ -1,0 +1,189 @@
+/*
+ * Lumo UI — Persian script typography. OPT-IN, and page-wide by design.
+ *
+ * Import this file when Lumo owns the page's typography: a greenfield app,
+ * the docs site. Every rule below is UNSCOPED (`:root:lang(fa)`, `[lang="fa"]`,
+ * `h1…h6:lang(fa)`, `[class*="tracking-"]:lang(fa)`) because it repairs what
+ * Tailwind's utilities put on Persian text anywhere on the page — see B4/B5.
+ *
+ * Do NOT import it when Lumo is EMBEDDED in a site that owns its own Persian
+ * type rules: it would restyle the host's headings, its `lang="fa"` islands
+ * (a locale-switch link, say) and set `font-synthesis: none` on the root.
+ * Found by the first consumer trial (a marketing site, 16 Aug 2026): with this
+ * block inside tokens.css, 46 of 46 English pages changed height because the
+ * "فارسی" switch link picked up `line-height: 1.75`. Lumo's own components
+ * inherit the host's Persian typography in that case, which is what an
+ * embedded consumer wants.
+ *
+ * Import order in a consuming app:
+ *     @import "tailwindcss";
+ *     @import "lumo-ui/theme/tokens.css";
+ *     @import "lumo-ui/theme/theme.css";
+ *     @import "lumo-ui/theme/script.css";   ← greenfield only
+ */
+/*
+ * ═══════════════════════════════════════════════════════════════════════════
+ * PERSIAN TYPOGRAPHY — AND THE TWO WAYS AN INHERITED RULE LOSES
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * Scoped to `:lang(fa)`, NOT `[dir="rtl"]`. The distinction is load-bearing:
+ * Persian text inside an English page is still Persian, and a `[dir=rtl]` rule
+ * misses it entirely — leaving tracking applied, which severs the joins between
+ * Arabic-script letters. A prototype got this wrong.
+ *
+ * `letter-spacing: normal` rather than `0` so a cascading negative tracking from
+ * a global heading rule is genuinely reset rather than merely zeroed.
+ *
+ * ── WHY THIS BLOCK KNOWS ABOUT TAILWIND, WHEN THE REST OF THE FILE DOES NOT ─
+ *
+ * Everything above this line is engine-agnostic: it declares custom properties
+ * and theme.css bridges them. This block is different. It is not setting a
+ * default — it is REPAIRING what a utility puts on the element, and to do that
+ * it has to name the utility's own machinery. Two Lumo-shaped defects, B4 and
+ * a fifth audit blocker; both had the same cause: a `:lang(fa)` declaration that
+ * INHERITS, versus a Tailwind utility that writes the same property directly ON
+ * the element. Inheritance is not a weak win in the cascade, it is not a win at
+ * all — any declaration that reaches the element beats a value inherited into
+ * it, whatever the layer or specificity. So the repair has to reach the element
+ * too, and the only way to do that without clobbering an author's explicit
+ * choice is to feed the utility's own fallback chain.
+ *
+ * The alternative — putting these in theme.css with the rest of the Tailwind
+ * bridge — was rejected: B5 is exactly what happens when Persian script rules
+ * live in two files. The `tracking` guard sat in the website's globals.css
+ * while this block sat here, and for months neither file listed what the other
+ * covered. Both halves are here now.
+ *
+ * ── B4 · LEADING ───────────────────────────────────────────────────────────
+ *
+ * `line-height: 1.75` below is inherited, and `.text-sm` compiles to
+ *
+ *     .text-sm { font-size: var(--text-sm);
+ *                line-height: var(--tw-leading, var(--text-sm--line-height)) }
+ *
+ * which sets line-height ON the element and therefore always wins: 1.4286, the
+ * Latin ratio, on every element carrying a size utility. Measured on the
+ * 12 Aug 2026 export: `text-sm` on 8,893 elements and `text-xs` on 6,187 across
+ * the 135 Persian pages. So Persian shipped at Latin leading nearly everywhere,
+ * and the rule that was supposed to prevent it had been in the file all along.
+ *
+ * Setting `--tw-leading` here does NOT fix it, and the reason is in the built
+ * CSS rather than in the docs: Tailwind v4 emits
+ * `@property --tw-leading { syntax:"*"; inherits:false }`. A registered
+ * property with `inherits:false` does not reach descendants, so a value set on
+ * `:root:lang(fa)` is invisible to every element below it — the same defect in
+ * a new variable.
+ *
+ * `--text-*--line-height` is the one that works. It is an ordinary unregistered
+ * custom property declared in Tailwind's `@theme`, so it inherits normally, and
+ * it is the FALLBACK arm of the utility's own `var()`. That ordering is what
+ * makes this safe: an author who writes `leading-none` sets `--tw-leading` on
+ * the element, the first arm resolves, and the Persian value steps aside. The
+ * ratios below are only the DEFAULT for Persian text, exactly as Tailwind's are
+ * the default for Latin text.
+ *
+ * The ramp: 1.75 for the reading sizes (the value this file already declared
+ * for Persian prose), tapering through the display sizes, because leading is a
+ * ratio and a ratio that suits 12px suits nothing at 60px. Latin defaults in
+ * brackets. 7xl–9xl are included although the current site build emits no such
+ * utility; a consumer's build may, and a ramp that stops where today's site
+ * stops is a ramp with a hole in it.
+ *
+ * ── B5 · TRACKING, AND WHY THE GUARD IS NOW A WHITELIST ────────────────────
+ *
+ * Negative letter-spacing on Arabic script crushes the joins between letters
+ * and can sever them outright — the defect this block exists to prevent. The
+ * previous guard named `tracking-wide` and `tracking-widest`, and it lived in
+ * the website's globals.css. `tracking-tight` (−0.025em) was not on that list,
+ * so it went straight through: 270 elements across all 135 Persian pages on the
+ * 12 Aug 2026 export.
+ *
+ * A blacklist of utility names is the wrong shape for this. It is a list that
+ * has to be extended every time Tailwind or an author introduces a name, it
+ * fails OPEN, and it fails silently in a script the reviewer probably cannot
+ * read. So the guard is inverted: every class whose name contains `tracking-`
+ * is neutralised on Persian text, including arbitrary values like
+ * `tracking-[0.02em]` and variant forms like `md:tracking-tight`, which the
+ * substring match catches for free. The escape hatch is `data-lumo-latn`, the
+ * marker this library already uses for a Latin island inside a Persian page —
+ * the one context where letter-spacing is legitimate, because the text is not
+ * Arabic script.
+ *
+ * That exemption arm is DESIGNED, not OBSERVED, and DECISIONS.md §13 is right
+ * that the distinction matters. The 12 Aug 2026 export carries 731
+ * `data-lumo-latn` elements across the Persian pages and not one of them also
+ * carries a `tracking-*` class, so the arm changes nothing about what ships
+ * today and no built page exercises it. It is kept rather than dropped because
+ * the marker is an established, tested part of the library (`kbd`,
+ * `phone-input`, `file-upload`, `frame`) rather than an attribute invented to
+ * make this selector pass, and because a copy-in library that bans a property
+ * outright with no way out is a library people patch around. If it is still
+ * unexercised when a third locale lands, delete it.
+ *
+ * NOTE on the measurement, because it nearly produced a wrong bug report: a
+ * plain grep for `tracking-tight` over the export returns 540, and 540 was the
+ * number in the audit. Half of those are inside Next's RSC flight payload,
+ * where the class name is JSON data and styles nothing. The true element count
+ * is 270 — 135 `<h1>` and 135 brand links, one of each per page. And of those,
+ * the 135 headings were ALREADY correct: the heading rule at the bottom of this
+ * block sets `letter-spacing: normal` on the element, in `lumo.script`, which
+ * the built stylesheet orders after `@layer utilities`. So the audit's "540
+ * occurrences including the `<h1>`" overstates the defect twice over. It is
+ * still a defect — 135 Persian brand links shipped with crushed joins — and the
+ * blacklist would have let the next one through as well.
+ */
+@layer lumo.script {
+  :root:lang(fa),
+  [lang="fa"],
+  [lang^="fa-"] {
+    --lumo-sys-font-sans: var(--lumo-font-persian, "Vazirmatn Variable", "Vazirmatn"), system-ui, sans-serif;
+    /* …and APPLIED here, on the root and on every Persian island, so it also
+       reaches portalled surfaces (Select popover, Dialog, Calendar) — those
+       mount under <body>, outside any locale-scoped wrapper an app might have
+       put its font on. Set `--lumo-font-persian` to your loaded face (e.g. the
+       next/font variable). A consumer trial found portals rendering in the
+       Latin face for exactly this reason (16 Aug 2026). */
+    font-family: var(--lumo-sys-font-sans);
+    letter-spacing: normal;
+    /* Still here, and still doing work: it is the leading for every element
+       that carries NO size utility, which the --text-* ramp below cannot reach
+       because that ramp is only ever read through one. */
+    line-height: 1.75;
+    /* A synthesised bold or italic destroys Arabic-script letterforms. */
+    font-synthesis: none;
+    font-variant-numeric: normal;
+
+    --text-xs--line-height: 1.75;   /* Latin 1.3333 */
+    --text-sm--line-height: 1.75;   /* Latin 1.4286 */
+    --text-base--line-height: 1.75; /* Latin 1.5    */
+    --text-lg--line-height: 1.7;    /* Latin 1.5556 */
+    --text-xl--line-height: 1.6;    /* Latin 1.4    */
+    --text-2xl--line-height: 1.5;   /* Latin 1.3333 */
+    --text-3xl--line-height: 1.4;   /* Latin 1.2    */
+    --text-4xl--line-height: 1.3;   /* Latin 1.1111 */
+    --text-5xl--line-height: 1.3;   /* Latin 1      */
+    --text-6xl--line-height: 1.3;   /* Latin 1      */
+    --text-7xl--line-height: 1.25;  /* Latin 1      */
+    --text-8xl--line-height: 1.25;  /* Latin 1      */
+    --text-9xl--line-height: 1.25;  /* Latin 1      */
+  }
+
+  /* Persian headings need less leading than Persian prose, but still more than
+     Latin headings would take. This sets `line-height` on the ELEMENT, so it
+     also overrides the --text-* ramp above for a heading that carries a size
+     utility — which is intended: a heading's leading should not depend on which
+     size utility it happens to wear. */
+  :is(h1, h2, h3, h4, h5, h6):lang(fa) {
+    line-height: 1.4;
+    letter-spacing: normal;
+  }
+
+  /* The whitelist. See B5 above for why this is a substring match and not a
+     list of names. `:where()` on the exemption keeps the selector's specificity
+     at that of `[class*="tracking-"]:lang(fa)` alone, so an author who needs to
+     beat it can, with an ordinary class — layer order, not weight, is what
+     makes this win over `@layer utilities`. */
+  [class*="tracking-"]:lang(fa):not(:where([data-lumo-latn], [data-lumo-latn] *)) {
+    letter-spacing: normal;
+  }
+}

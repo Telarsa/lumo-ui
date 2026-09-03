@@ -1,0 +1,48 @@
+node_modules/
+dist/
+# The gate's JavaScript build is COMMITTED: `lumo gate` runs it from a consumer's
+# node_modules, where Node will not strip types. `gate:dist` keeps it fresh.
+!packages/gate/dist/
+!packages/core/dist/
+.turbo/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.*
+!.env.example
+coverage/
+.astro/
+
+# Build output
+out/
+.next/
+*.tsbuildinfo
+mutation-report.json
+graphify-out/
+
+# Browser evidence output
+.evidence/
+
+# Flutter / Dart (packages/mobile)
+.dart_tool/
+build/
+packages/mobile/pubspec.lock
+
+# JetBrains project files for the Dart apps — per-developer, never shared.
+.idea/
+*.iml
+
+
+# Flutter build output — machine-specific, and Generated.xcconfig /
+# flutter_export_environment.sh embed the SDK's absolute path on whichever
+# machine ran the build. A `git add -A` sweeps them in silently.
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/Flutter.podspec
+**/ios/.symlinks/
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/android/local.properties
+
+# Next regenerates this on every build; carrying it only creates diff noise.
+next-env.d.ts
