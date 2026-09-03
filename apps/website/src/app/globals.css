@@ -233,7 +233,7 @@
     --stretch-wordmark: 125%;
 
     --measure: 66ch;
-    --content-max: 78rem;
+    --content-max: 80rem; /* the company standard: 1280px, shared by every Telarsa site */
     --content-narrow: 46rem;
     --gutter: clamp(1.25rem, 4vw, 2.5rem);
     --header-h: 3.75rem;
