@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 100" role="img" aria-label="Lumo UI">
+  <path fill="#f2efe8" d="M50 12 H88 V88 H12 V50 H50 Z"/>
+  <path d="M12 50 A38 38 0 0 1 50 12 L50 50 Z" fill="#7fa828"/>
+  <text x="112" y="68" font-family="Archivo, 'Archivo Expanded', system-ui, sans-serif" font-weight="600" font-size="52" font-stretch="125%" letter-spacing="1" fill="#f2efe8">Lumo UI</text>
+</svg>

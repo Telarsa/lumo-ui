@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Lumo UI">
+  <style>.body{fill:#101114}@media (prefers-color-scheme:dark){.body{fill:#f2efe8}}</style>
+  <path class="body" d="M50 12 H88 V88 H12 V50 H50 Z"/>
+  <path d="M12 50 A38 38 0 0 1 50 12 L50 50 Z" fill="#7fa828"/>
+</svg>

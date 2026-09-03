@@ -14,7 +14,7 @@ export const CHROME = {
     nav: { docs: "مستندات", rules: "قوانین", github: "گیت‌هاب" },
     switchLabel: "English",
     switchAria: "تغییر زبان به انگلیسی",
-    theme: { label: "تغییر پوسته", light: "روشن", dark: "تاریک", system: "سیستم" },
+    theme: { label: "تغییر پوسته", light: "روشن", dark: "تاریک" },
     footer: {
       built: "ساختهٔ",
       licence: "متن‌باز، با پروانهٔ MIT",
@@ -40,7 +40,7 @@ export const CHROME = {
     nav: { docs: "Docs", rules: "Rules", github: "GitHub" },
     switchLabel: "فارسی",
     switchAria: "Switch to Persian",
-    theme: { label: "Toggle theme", light: "Light", dark: "Dark", system: "System" },
+    theme: { label: "Theme", light: "Light", dark: "Dark" },
     footer: {
       built: "Built by",
       licence: "Open source under the MIT licence",

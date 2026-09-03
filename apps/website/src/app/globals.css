@@ -81,6 +81,9 @@
     --lit-wash: color-mix(in oklab, #7fa828 14%, transparent);
     --invert-bg: #101114;
     --invert-fg: #f2efe8;
+    /* The lit corner on a primary control: lime on ink. On a lime control it
+       is ink, the mark's own inversion, or it would vanish into the button. */
+    --button-corner: #7fa828;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -106,6 +109,7 @@
       --lit-wash: color-mix(in oklab, #7fa828 16%, transparent);
       --invert-bg: #1b1c21;
       --invert-fg: #f2efe8;
+      --button-corner: #101114;
     }
   }
   [data-theme="dark"] {
@@ -130,6 +134,7 @@
     --lit-wash: color-mix(in oklab, #7fa828 16%, transparent);
     --invert-bg: #1b1c21;
     --invert-fg: #f2efe8;
+    --button-corner: #101114;
   }
 }
 
@@ -344,8 +349,10 @@
     --lumo-sys-border: rgb(242 239 232 / 0.16);
     --lumo-sys-border-strong: rgb(242 239 232 / 0.3);
     --lumo-sys-accent: #7fa828;
+    --lumo-sys-accent-hover: #91bb35;
     --lumo-sys-accent-fg: #101114;
     --lit-text: #9cc43f;
+    --button-corner: #101114;
   }
   .band--rule-top {
     border-block-start: 1px solid var(--lumo-sys-border);
@@ -469,6 +476,10 @@
     --_fg: var(--lumo-sys-accent-fg);
     --_border: transparent;
     position: relative;
+    /* Clipped, so the corner's rounding is what SHAPES the lit square below:
+       the button's own radius cuts it into the quarter-disc, and a hover that
+       grows the square can never open a gap between disc and edge. */
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -489,25 +500,26 @@
       color var(--dur) var(--ease-out),
       border-color var(--dur) var(--ease-out);
   }
-  /* The lit corner itself, on the primary action: a quarter-disc of lime in
-     the rounded corner, exactly the mark's construction. */
+  /* The lit corner itself, on the primary action: a square of lime in the
+     rounded corner, cut into the mark's quarter-disc by the button's radius. */
   .button::before {
     content: "";
     position: absolute;
     inset-block-start: -1px;
     inset-inline-start: -1px;
-    inline-size: var(--lit-sm);
-    block-size: var(--lit-sm);
-    background: var(--lumo-sys-accent-mark);
-    border-start-start-radius: var(--lit-sm);
-    transition: scale var(--dur) var(--ease-out);
+    inline-size: calc(var(--lit-sm) + 1px);
+    block-size: calc(var(--lit-sm) + 1px);
+    background: var(--button-corner);
+    transition:
+      scale var(--dur) var(--ease-out),
+      background-color var(--dur) var(--ease-out);
     transform-origin: 0 0;
   }
   .button:hover {
     --_bg: var(--lumo-sys-accent-hover);
   }
   .button:hover::before {
-    scale: 1.35;
+    scale: 1.3;
   }
   .button--outline {
     --_bg: transparent;
