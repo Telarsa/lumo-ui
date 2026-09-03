@@ -5,7 +5,7 @@
 Please do not open a public issue for a security problem.
 
 Use GitHub's [private vulnerability reporting](https://github.com/Telarsa/lumo-ui/security/advisories/new)
-on this repository, or write to security@telarsa.com.
+on this repository, or write to hello@telarsa.com with "security" in the subject.
 
 Tell us what you found, how to reproduce it, and what an attacker could do with
 it. We will confirm receipt, tell you what we think, and credit you when a fix
