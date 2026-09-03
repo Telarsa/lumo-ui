@@ -15,14 +15,14 @@ import type { SiteLocale } from "@/lib/locales";
  */
 export function LocaleSwitch({ locale, label, aria }: { locale: SiteLocale; label: string; aria: string }) {
   const pathname = usePathname();
-  const target: SiteLocale = locale === "fa-IR" ? "en-US" : "fa-IR";
+  const target: SiteLocale = locale === "fa" ? "en" : "fa";
   const segments = pathname.split("/");
   segments[1] = target;
   const href = segments.join("/") || `/${target}/`;
 
   return (
     <Link href={href} hrefLang={target} aria-label={aria} className="control control--text">
-      {target === "en-US" ? (
+      {target === "en" ? (
         <span lang="en" dir="ltr" data-lumo-latn>
           {label}
         </span>

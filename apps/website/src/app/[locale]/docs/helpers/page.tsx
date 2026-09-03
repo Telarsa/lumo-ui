@@ -18,7 +18,7 @@ isLatinRun("۹۰ Mt/year") // false: a Persian digit is a letter of the reader's
 
 const NUMBERS = `import { formatNumber, formatDate } from "lumo-ui/core";
 
-formatNumber(1405, locale)                        // «۱۴۰۵» on fa-IR, "1,405" on en-US
+formatNumber(1405, locale)                        // «۱۴۰۵» on fa, "1,405" on en
 formatDate(date, locale, { month: "long", year: "numeric" })  // «شهریور ۱۴۰۵»`;
 
 const DOCTOR = `node node_modules/lumo-ui/scripts/lumo-cli.mjs doctor --to .`;
@@ -26,7 +26,7 @@ const FIX = `node node_modules/lumo-ui/scripts/lumo-cli.mjs fix --zwnj --digits 
 # dry run; add --write to change files`;
 
 const T = {
-  "fa-IR": {
+  "fa": {
     title: "کمک‌کننده‌ها",
     lead: "سه چیز که هر مصرف‌کننده لازم دارد: علامت‌گذاری لاتینِ عمدی، نوشتن اعداد به ارقام خواننده، و دو دستوری که سیم‌کشی را می‌خوانند و متن را اصلاح می‌کنند.",
     islandsTitle: "جزیره‌های لاتین",
@@ -47,7 +47,7 @@ const T = {
     fixTitle: "lumo fix",
     fix: "دو اصلاح مکانیکی که یک کاتالوگ لازم دارد: نیم‌فاصله در ترکیب‌های فارسی (BROKEN به FIXED) و ارقام لاتین در متن فارسی به ارقام فارسی. تا --write ندهید چیزی نمی‌نویسد. اولین اجرا روی یک کاتالوگ واقعی ۸٬۸۰۷ نیم‌فاصله و ۱٬۲۶۲ خطِ رقم را اصلاح کرد.",
   },
-  "en-US": {
+  "en": {
     title: "Helpers",
     lead: "Three things every consumer needs: marking deliberate Latin, writing numbers in the reader's digits, and the two commands that read the wiring and correct the copy.",
     islandsTitle: "Latin islands",

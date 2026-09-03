@@ -46,7 +46,7 @@ node node_modules/lumo-ui/scripts/grade-app.mjs .next/server/app fa gate.floors.
 lumo gate ./out gate.floors.json`;
 
 const T = {
-  "fa-IR": {
+  "fa": {
     title: "شروع",
     lead: "یک اپ Next با shadcn دارید. یک بسته نصب کنید، CSS را به ترتیب ثابت وارد کنید، و بایت‌های خروجی را نمره بدهید. همین.",
     s1: "نصب: یک بسته، یک تگ",
@@ -66,7 +66,7 @@ const T = {
     s4note: "خروجی build را به دروازه بدهید. صفحهٔ «دروازه» قوانین و پروندهٔ کف‌ها را می‌گوید.",
     doctor: "چیزهایی که تا نشکنند دیده نمی‌شوند — transpilePackages، پروندهٔ کف‌ها، سیاست lint — را lumo doctor یک‌جا می‌خواند. صفحهٔ «کمک‌کننده‌ها».",
   },
-  "en-US": {
+  "en": {
     title: "Getting started",
     lead: "You have a Next app on shadcn. Install one package, import the CSS in the fixed order, grade the built output. That is the whole recipe.",
     s1: "Install: one package, one tag",

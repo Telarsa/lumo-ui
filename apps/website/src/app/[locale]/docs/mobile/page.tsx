@@ -16,7 +16,7 @@ const PUBSPEC = `dependencies:
       ref: v1.0.0`;
 
 const T = {
-  "fa-IR": {
+  "fa": {
     title: "موبایل: همان لایه، روی Material",
     lead: "همان معماری وب، در Flutter: ویجت‌ها را Material مدیریت می‌کند؛ Lumo لایهٔ درستی است. قرارداد locale و رشته‌های الزامی اعلان، توکن‌هایی که از lumo-ui/theme تولید می‌شوند تا وب و موبایل دربارهٔ معنای md یا accent هم‌نظر بمانند، و نمره‌دهِ Semantics: همتای موبایلیِ دروازه.",
     pillars: [
@@ -31,7 +31,7 @@ const T = {
     gallery: "مجموعهٔ ویجت‌ها بازنشسته شد: ۷۳ فایل و ۲۱٬۳۲۶ خط که چیزی را دوباره می‌ساختند که Material از پیش دارد. کامپوننت‌ها متعلق به اپ‌اند، همان‌طور که در وب کپی‌های shadcn در همان مخزنی زندگی می‌کنند که آن‌ها را رندر می‌کند. دو اپ مصرف‌کننده کپی‌های خودشان را برداشتند و ظاهر هیچ‌کدام تکان نخورد؛ برای یکی از آن‌ها این با ۶۱ تصویر مرجع سنجیده شد.",
     statsLabels: ["فایل منبع", "خط", "تست", "گیت موبایل"],
   },
-  "en-US": {
+  "en": {
     title: "Mobile: the same layer, on Material",
     lead: "The web architecture, in Flutter: Material manages the widgets; Lumo is the correctness layer. The locale contract with required announced strings, tokens generated from lumo-ui/theme so web and mobile agree what md or accent mean, and the semantics grader: the gate's mobile counterpart.",
     pillars: [

@@ -5,7 +5,7 @@ import type { SiteLocale } from "./locales";
  * fails at the type level, which is the contract the site is here to sell.
  */
 export const CHROME = {
-  "fa-IR": {
+  "fa": {
     siteName: "Lumo UI",
     tagline: "لایهٔ درستیِ محصولات فارسی",
     description:
@@ -31,7 +31,7 @@ export const CHROME = {
       onThisSite: "در این سایت",
     },
   },
-  "en-US": {
+  "en": {
     siteName: "Lumo UI",
     tagline: "The correctness layer for Persian products",
     description:

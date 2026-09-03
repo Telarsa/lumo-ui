@@ -15,7 +15,7 @@ import type { SiteLocale } from "@/lib/locales";
  * text, because a demo of a bad label must not BE a bad label.
  */
 const T = {
-  "fa-IR": {
+  "fa": {
     served: "همان‌طور که سرو شد",
     graded: "پس از Lumo",
     report: "گزارش دروازه",
@@ -29,7 +29,7 @@ const T = {
     total: (n: string) => `${n} تخلف`,
     clean: "بدون تخلف",
   },
-  "en-US": {
+  "en": {
     served: "As served",
     graded: "After Lumo",
     report: "Gate report",
@@ -64,8 +64,8 @@ export function GateFigure({ locale }: { locale: SiteLocale }) {
     return () => window.clearTimeout(id);
   }, []);
 
-  const fa = new Intl.NumberFormat("fa-IR", { useGrouping: false });
-  const n = (v: number) => (locale === "fa-IR" ? fa.format(v) : String(v));
+  const fa = new Intl.NumberFormat("fa", { useGrouping: false });
+  const n = (v: number) => (locale === "fa" ? fa.format(v) : String(v));
 
   return (
     <figure className="gate-figure" data-state={after ? "after" : "before"}>
@@ -78,7 +78,7 @@ export function GateFigure({ locale }: { locale: SiteLocale }) {
         </button>
       </div>
 
-      <div className="gate-figure__page" lang="fa-IR" dir="rtl">
+      <div className="gate-figure__page" lang="fa" dir="rtl">
         <div className="gate-figure__bar">
           <span className="gate-figure__dot" aria-hidden="true" />
           <samp>{t.route}</samp>
@@ -117,7 +117,7 @@ export function GateFigure({ locale }: { locale: SiteLocale }) {
           ))}
         </ul>
         <p className="gate-figure__total" data-clean={after ? "" : undefined}>
-          {after ? (locale === "fa-IR" ? t.clean : <span data-lumo-latn dir="ltr">{t.clean}</span>) : t.total(n(7))}
+          {after ? (locale === "fa" ? t.clean : <span data-lumo-latn dir="ltr">{t.clean}</span>) : t.total(n(7))}
         </p>
       </figcaption>
     </figure>

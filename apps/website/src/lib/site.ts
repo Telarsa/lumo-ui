@@ -1,5 +1,5 @@
 import pkg from "../../../../package.json";
-import type { SiteLocale } from "./locales";
+import { DEFAULT_LOCALE, type SiteLocale } from "./locales";
 
 /**
  * The site's identity, in one place.
@@ -19,23 +19,23 @@ export const TELARSA_URL = "https://telarsa.com";
 export const VERSION: string = pkg.version;
 export const INSTALL_SPEC = `github:Telarsa/lumo-ui#v${VERSION}`;
 
-export const OG_LOCALE: Record<SiteLocale, string> = { "fa-IR": "fa_IR", "en-US": "en_US" };
+export const OG_LOCALE: Record<SiteLocale, string> = { en: "en_US", fa: "fa_IR" };
 
-/** `/fa-IR/docs/gate/` for a path — every internal link is built here, trailing slash included. */
+/** `/fa/docs/gate/` for a path — every internal link is built here, trailing slash included. */
 export function localePath(locale: SiteLocale, path = "/"): string {
   const clean = path === "/" ? "" : path.replace(/\/$/, "");
   return `/${locale}${clean}/`;
 }
 
-/** `alternates` for a page — only when the site knows where it lives. */
+/** `alternates` for a page — only when the site knows where it lives. x-default is English, the site's first language. */
 export function alternatesFor(locale: SiteLocale, path = "/") {
   if (!SITE_URL) return undefined;
   return {
     canonical: `${SITE_URL}${localePath(locale, path)}`,
     languages: {
-      "fa-IR": `${SITE_URL}${localePath("fa-IR", path)}`,
-      "en-US": `${SITE_URL}${localePath("en-US", path)}`,
-      "x-default": `${SITE_URL}${localePath("fa-IR", path)}`,
+      en: `${SITE_URL}${localePath("en", path)}`,
+      fa: `${SITE_URL}${localePath("fa", path)}`,
+      "x-default": `${SITE_URL}${localePath(DEFAULT_LOCALE, path)}`,
     },
   };
 }

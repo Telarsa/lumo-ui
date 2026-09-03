@@ -20,7 +20,7 @@ const nextConfig: NextConfig = {
   ...(process.env.NODE_ENV === "development"
     ? {
         redirects: async () => [
-          { source: "/", destination: "/fa-IR/", permanent: false },
+          { source: "/", destination: "/en/", permanent: false },
         ],
       }
     : {}),

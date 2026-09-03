@@ -1,13 +1,18 @@
 {
   "//": "Reviewed native-digit floors, re-measured on 3 Sep 2026 after the site was rebuilt: about 55% of the measured count on each number-dense Persian route (home 61, dates 104, gate 45, mobile 31, helpers 24, docs index 24), so a regression that drops the page's own digits fails loudly while copy edits keep room to breathe.",
   "//exempt": "Reviewed EXEMPT CEILING: measured 25.4% plus headroom. `data-lumo-latn` is the one thing that silences this gate — a page carrying ten real violations drops to one when a single attribute wraps it — and `latn-island-purity` cannot see that, because it fails an island hiding READER-SCRIPT prose while this hides Latin defects. So the exemption gets the same treatment as the digit count: a number a person reviewed, which may fall and may only rise on purpose. A docs site is legitimately code-heavy — every rule id, every listing, every file name is a marked island — which is why this is a per-site baseline and not a threshold in the rule. It rose from 24 when the site gained a Helpers page and per-step listings on the home page.",
-  "//min": "Reviewed MINIMUM DOCUMENT COUNT: 19 graded documents — nine routes in two languages plus the owned not-found shell; the root redirect stub is skipped by design. The empty-directory refusal catches a build that produced nothing; this catches the likelier accident, a build that produced SOME of its pages — the gate would otherwise grade the survivors, find them clean, and report success while the pages that would have failed were never built. Lower it in the same commit that removes a page.",
-  "@min-documents": 19,
+  "//min": "Reviewed MINIMUM DOCUMENT COUNT: 18 graded documents — nine routes in two languages; the owned not-found shells are staged under the root locale and the redirect stubs are skipped by design. The empty-directory refusal catches a build that produced nothing; this catches the likelier accident, a build that produced SOME of its pages — the gate would otherwise grade the survivors, find them clean, and report success while the pages that would have failed were never built. Lower it in the same commit that removes a page.",
+  "//locales": "The site's own locales, stated: English first, because it is the default the root redirects to and the language the not-found shells are served in. Without this the gate assumed fa-IR for every document with no locale segment and read the English 404 shell as a Persian page full of English.",
+  "@locales": [
+    "en",
+    "fa"
+  ],
+  "@min-documents": 18,
   "@exempt-ceiling": 28,
-  "fa-IR/index.html": 33,
-  "fa-IR/docs/index.html": 13,
-  "fa-IR/docs/helpers/index.html": 13,
-  "fa-IR/docs/dates/index.html": 57,
-  "fa-IR/docs/gate/index.html": 25,
-  "fa-IR/docs/mobile/index.html": 17
+  "fa/index.html": 33,
+  "fa/docs/index.html": 13,
+  "fa/docs/helpers/index.html": 13,
+  "fa/docs/dates/index.html": 57,
+  "fa/docs/gate/index.html": 25,
+  "fa/docs/mobile/index.html": 17
 }

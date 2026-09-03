@@ -90,7 +90,7 @@
     "gate:mobile-styles": "node scripts/build-mobile-styles.mjs --check",
     "gate:mobile-smoke": "node scripts/smoke-mobile.mjs",
     "dev": "pnpm --filter @lumo-ui/website dev",
-    "gate:html": "pnpm --filter @lumo-ui/website build && node --experimental-strip-types packages/gate/src/cli.ts apps/website/out apps/website/gate.floors.json"
+    "gate:html": "pnpm --filter @lumo-ui/website build && node scripts/grade-app.mjs apps/website/out en apps/website/gate.floors.json"
   },
   "dependencies": {
     "@internationalized/date": "3.12.3",

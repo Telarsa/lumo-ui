@@ -18,7 +18,7 @@ export function SiteFooter({ locale }: { locale: SiteLocale }) {
             {" · "}
             {c.footer.built}{" "}
             <a href={TELARSA_URL} target="_blank" rel="noreferrer noopener" className="link-quiet">
-              {locale === "fa-IR" ? c.footer.company : <span data-lumo-latn>Telarsa</span>}
+              {locale === "fa" ? c.footer.company : <span data-lumo-latn>Telarsa</span>}
             </a>
           </p>
         </div>

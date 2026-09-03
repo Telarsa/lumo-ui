@@ -8,8 +8,8 @@ import { alternatesFor, localePath } from "@/lib/site";
 export const generateStaticParams = localeParams;
 
 const T = {
-  "fa-IR": { title: "مستندات", lead: "شش صفحه، به ترتیب خواندن. یک بعدازظهر کافی است." },
-  "en-US": { title: "Docs", lead: "Six pages, in reading order. One afternoon is enough." },
+  "fa": { title: "مستندات", lead: "شش صفحه، به ترتیب خواندن. یک بعدازظهر کافی است." },
+  "en": { title: "Docs", lead: "Six pages, in reading order. One afternoon is enough." },
 } as const;
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {

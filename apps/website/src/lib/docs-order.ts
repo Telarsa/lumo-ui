@@ -9,7 +9,7 @@ export const DOCS_ORDER = ["getting-started", "contract", "helpers", "dates", "g
 export type DocSlug = (typeof DOCS_ORDER)[number];
 
 export const DOCS: Record<SiteLocale, Record<DocSlug, { label: string; lead: string }>> = {
-  "fa-IR": {
+  "fa": {
     "getting-started": { label: "شروع", lead: "یک بسته، یک ترتیب ثابت برای CSS، و نمره‌دادن به خروجی build." },
     contract: { label: "قرارداد مشترک", lead: "چه چیزی مشترک است، چه کسی حملش می‌کند، و واگرایی را چه می‌گیرد." },
     helpers: { label: "کمک‌کننده‌ها", lead: "جزیره‌های لاتین، اعداد، و دو دستور lumo doctor و lumo fix." },
@@ -17,7 +17,7 @@ export const DOCS: Record<SiteLocale, Record<DocSlug, { label: string; lead: str
     gate: { label: "دروازه", lead: "پانزده قانون روی HTML سرو‌شده، و پروندهٔ کف‌ها." },
     mobile: { label: "موبایل", lead: "همان لایه روی Material در Flutter، با نمره‌دهِ Semantics خودش." },
   },
-  "en-US": {
+  "en": {
     "getting-started": { label: "Getting started", lead: "One package, one fixed CSS order, and a grade over the build output." },
     contract: { label: "The contract", lead: "What is shared, what carries it, and what catches divergence." },
     helpers: { label: "Helpers", lead: "Latin islands, numbers, and the two commands: lumo doctor and lumo fix." },

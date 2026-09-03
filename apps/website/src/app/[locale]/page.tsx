@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 const T = {
-  "fa-IR": {
+  "fa": {
     eyebrow: "متن‌باز · MIT · ساختهٔ تلارسا",
     title: "راست‌به‌چپ نیمهٔ آسان است.",
     accent: "Lumo نیمهٔ دیگر را نمره می‌دهد.",
@@ -106,7 +106,7 @@ const T = {
     docs: "مستندات را بخوانید",
     telarsa: "ساختهٔ تلارسا",
   },
-  "en-US": {
+  "en": {
     eyebrow: "Open source · MIT · by Telarsa",
     title: "Right-to-left is the easy half.",
     accent: "Lumo grades the other half.",
@@ -236,7 +236,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
           <div className="hero__grid">
             <div>
               <p className="eyebrow">
-                {locale === "fa-IR" ? (
+                {locale === "fa" ? (
                   <span>
                     متن‌باز · <span data-lumo-latn>MIT</span> · ساختهٔ تلارسا
                   </span>

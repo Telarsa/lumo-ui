@@ -20,7 +20,7 @@ const { dateLib, formatters, labels, weekStartsOn } =
           labels={labels} weekStartsOn={weekStartsOn} />`;
 
 const T = {
-  "fa-IR": {
+  "fa": {
     title: "تاریخ جلالی، روی Calendar خودِ shadcn",
     lead: "Calendar شادسی‌ان همان react-day-picker است، و locale فارسیِ نسخهٔ ۱۰ فقط پوسته‌ای فارسی روی شبکهٔ میلادی است: برای روزی که ایران «۱ مرداد ۱۴۰۳» می‌نامد، تاریخی میلادی با واژه‌های فارسی نشان می‌دهد. lumoCalendar چهار propی برمی‌گرداند که DayPicker از قبل می‌پذیرد؛ چیزی wrap نمی‌شود و جایی مهاجرت نمی‌کنید.",
     demoTitle: "زنده، همین صفحه",
@@ -34,7 +34,7 @@ const T = {
     fixedTitle: "چیزی که این صفحه یک بار غلط داشت",
     fixed: "روز انتخاب‌شده اصلاً رنگی نداشت، و «امروز» متن تیره روی مربع تیره بود. کپی قبلی حالتِ انتخاب را روی سلول جدول می‌گذاشت و از bg-accent استفاده می‌کرد که در دو واژگان دو معنی دارد. حالا حالت روی خودِ دکمه است، با primary برای انتخاب و muted برای امروز. در مرورگر headless اندازه‌گیری شد، نه حدس زده.",
   },
-  "en-US": {
+  "en": {
     title: "Jalali dates, on shadcn's own Calendar",
     lead: "shadcn's Calendar is react-day-picker, and v10's Persian locale is a Persian skin over a Gregorian grid: “22 July 2024” for the day Iran calls 1 Mordad 1403. lumoCalendar returns the four props DayPicker already accepts; nothing is wrapped and nothing migrates.",
     demoTitle: "Live, on this page",

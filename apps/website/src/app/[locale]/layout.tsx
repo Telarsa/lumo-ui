@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, JetBrains_Mono, Vazirmatn } from "next/font/google";
 import { notFound } from "next/navigation";
-import { LumoHtml, LumoLocaleProvider, themeScript } from "lumo-ui/core";
+import { LumoHtml, themeScript } from "lumo-ui/core";
+import { SiteLocaleProvider } from "@/components/site/locale-provider";
 import { SiteFooter } from "@/components/site/footer";
 import { SiteHeader } from "@/components/site/header";
 import { CHROME } from "@/lib/chrome";
@@ -103,14 +104,14 @@ export default async function LocaleLayout({ children, params }: { children: Rea
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       </head>
       <body>
-        <LumoLocaleProvider locale={locale}>
+        <SiteLocaleProvider locale={locale}>
           <a className="skip-link" href="#main">
             {c.skip}
           </a>
           <SiteHeader locale={locale} />
           <main id="main">{children}</main>
           <SiteFooter locale={locale} />
-        </LumoLocaleProvider>
+        </SiteLocaleProvider>
       </body>
     </LumoHtml>
   );

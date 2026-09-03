@@ -2,7 +2,7 @@
   "name": "Lumo UI",
   "short_name": "Lumo",
   "description": "The correctness layer for Persian products: a typed locale contract, a lint policy, and a gate that grades the bytes a reader actually receives.",
-  "start_url": "/fa-IR/",
+  "start_url": "/en/",
   "display": "browser",
   "background_color": "#f2efe8",
   "theme_color": "#f2efe8",

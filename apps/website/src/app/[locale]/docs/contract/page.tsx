@@ -8,7 +8,7 @@ export const generateStaticParams = localeParams;
 const SLUG = "contract";
 
 const T = {
-  "fa-IR": {
+  "fa": {
     title: "قرارداد مشترک",
     lead: "الزام: کد کامپوننت را بالادست مدیریت کند — shadcn و Base UI در وب، Material در موبایل — ولی همهٔ محصولات روی یک هسته بمانند و واگرا نشوند. سازوکار، صریح؛ چون قراردادِ بدون ابزار می‌لغزد.",
     cols: ["چیز مشترک", "حامل", "واگرایی را چه می‌گیرد"],
@@ -26,7 +26,7 @@ const T = {
     version: "هر مصرف‌کننده یک وابستگی lumo-ui را به یک تگ پین می‌کند و همهٔ زیرمسیرها از همان می‌آیند. اصلاح به‌شکل تگ جدید می‌رسد؛ هیچ کانال لغزش خاموشی وجود ندارد، چون هیچ‌جا بازهٔ npm نیست. تگ فقط وقتی زده می‌شود که verify سبز باشد.",
     dogfood: "همین سایت اجرای همین قرارداد است: کامپوننت‌هایش کپی‌های shadcn‌اند، درستی‌اش core و theme و dates است، و خروجی‌اش در هر build نمره می‌گیرد.",
   },
-  "en-US": {
+  "en": {
     title: "The shared contract",
     lead: "The requirement: component code is managed upstream — shadcn and Base UI on the web, Material on mobile — while every product stays on the same core and does not diverge. The mechanism, made explicit, because an unenforced convention drifts.",
     cols: ["Shared thing", "Carried by", "Divergence caught by"],

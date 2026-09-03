@@ -25,7 +25,7 @@ const RUN = `lumo gate ./out gate.floors.json                       # static exp
 node scripts/grade-app.mjs .next/server/app fa gate.floors.json  # one locale`;
 
 const T = {
-  "fa-IR": {
+  "fa": {
     title: "دروازه",
     lead: "دروازه همان HTMLی را می‌خواند که خزنده، خوانندهٔ بدون جاوااسکریپت و اولین paint دریافت می‌کنند؛ بدون مرورگر. پانزده قانون، و axe با ۱۰۵ قانونش هیچ‌کدام را نمره نمی‌دهد: نه ارقام، نه تقویم، نه خط، نه سیستم شماره.",
     rulesTitle: "قوانین",
@@ -54,7 +54,7 @@ const T = {
     artifactTitle: "پوسته‌های خطای داخلی Next",
     artifact: "Next مسیر _global-error را به پوستهٔ داخلی خودش سیم‌کشی می‌کند و هر layout کاربر را از آن درخت حذف می‌کند؛ نوشتن app/global-error.tsx هیچ اثری ندارد: انگلیسی، بدون lang، بدون dir. _not-found فرق دارد و زیر layout ریشه رندر می‌شود. هر دو فایل ایستا هستند و به پوسته‌های سرو‌شدهٔ ۵۰۰ و ۴۰۴ کپی می‌شوند، همان‌ها که pages-manifest سرور را به آن‌ها می‌فرستد؛ own-error-shells همان بایت‌ها را بازنویسی می‌کند، در build و در بستهٔ standalone.",
   },
-  "en-US": {
+  "en": {
     title: "The gate",
     lead: "The gate reads the same HTML a crawler, a JS-off reader and the first paint receive; no browser. Fifteen rules, and axe with its 105 grades none of them: not digits, not calendars, not script, not numbering systems.",
     rulesTitle: "The rules",
