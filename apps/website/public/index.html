@@ -4,13 +4,15 @@
     <meta charset="utf-8" />
     <meta http-equiv="refresh" content="0; url=/fa-IR/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>Lumo UI</title>
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <style>
+      :root { color-scheme: light dark; }
       body { margin: 0; min-height: 100dvh; display: grid; place-items: center;
              font-family: "Vazirmatn", "Noto Naskh Arabic", system-ui, sans-serif;
-             background: #101211; color: #e8eae9; }
-      a { color: #7fd2c8; }
+             background: light-dark(#f2efe8, #101114); color: light-dark(#101114, #f2efe8); }
+      a { color: light-dark(#5c7a1c, #9cc43f); }
     </style>
   </head>
   <body>

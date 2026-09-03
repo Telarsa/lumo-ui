@@ -1,16 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MoonIcon, SunIcon } from "lucide-react";
-import { getTheme, setTheme, resolvedTheme, type Theme } from "lumo-ui/core";
-import { Button } from "@/components/ui/button";
+import { MoonIcon, MonitorIcon, SunIcon } from "lucide-react";
+import { getTheme, setTheme, type Theme } from "lumo-ui/core";
 
 /**
- * The theme policy is core's (`themeScript` in the layout ran before paint);
- * this button only walks light → dark → system. Dogfood, not a dependency:
- * next-themes would work too — §51 does not claim this seam.
+ * The theme policy is core's: `themeScript` in the layout applied the stored
+ * choice before first paint. This control walks light → dark → system and
+ * says which one it is on, in the reader's language, through its label.
  */
-export function ThemeToggle({ label }: { label: string }) {
+export function ThemeToggle({
+  labels,
+}: {
+  labels: { label: string; light: string; dark: string; system: string };
+}) {
   const [theme, set] = useState<Theme | null>(null);
   useEffect(() => set(getTheme()), []);
 
@@ -20,13 +23,19 @@ export function ThemeToggle({ label }: { label: string }) {
     set(next);
   }
 
+  const current = theme ?? "system";
+  const Icon = current === "light" ? SunIcon : current === "dark" ? MoonIcon : MonitorIcon;
+
   return (
-    <Button variant="ghost" size="icon-sm" aria-label={label} onClick={cycle} suppressHydrationWarning>
-      {theme === null || resolvedTheme() === "light" ? (
-        <SunIcon className="size-4" />
-      ) : (
-        <MoonIcon className="size-4" />
-      )}
-    </Button>
+    <button
+      type="button"
+      className="control"
+      aria-label={`${labels.label}: ${labels[current]}`}
+      title={labels[current]}
+      onClick={cycle}
+      suppressHydrationWarning
+    >
+      <Icon className="size-4" aria-hidden="true" />
+    </button>
   );
 }

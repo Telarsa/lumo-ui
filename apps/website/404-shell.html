@@ -3,20 +3,27 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
     <title>یافت نشد — Lumo UI</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <style>
+      :root { color-scheme: light dark; }
       body { margin: 0; min-height: 100dvh; display: grid; place-items: center;
              font-family: "Vazirmatn", "Noto Naskh Arabic", system-ui, sans-serif;
-             background: #101211; color: #e8eae9; text-align: center; }
-      a { color: #7fd2c8; }
-      .n { font-size: 5rem; font-weight: 900; opacity: .25; letter-spacing: .05em; }
+             background: light-dark(#f2efe8, #101114); color: light-dark(#101114, #f2efe8); text-align: center; }
+      main { display: grid; gap: .75rem; justify-items: center; padding: 2rem; }
+      .mark { width: 3.5rem; height: 3.5rem; }
+      .n { font-size: 4rem; font-weight: 500; letter-spacing: .02em; line-height: 1; margin: .5rem 0 0; color: light-dark(#6e6b63, #8d887d); }
+      h1 { font-size: 1.4rem; font-weight: 500; margin: 0; }
+      a { color: light-dark(#5c7a1c, #9cc43f); }
     </style>
   </head>
   <body>
     <main>
+      <svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><path fill="currentColor" d="M50 12 H88 V88 H12 V50 H50 Z"/><path d="M12 50 A38 38 0 0 1 50 12 L50 50 Z" fill="#7fa828"/></svg>
       <p class="n">۴۰۴</p>
       <h1>این صفحه پیدا نشد</h1>
-      <p><a href="/fa-IR/">بازگشت به خانهٔ Lumo UI</a></p>
+      <p><a href="/fa-IR/">بازگشت به خانهٔ <span data-lumo-latn dir="ltr">Lumo UI</span></a></p>
     </main>
   </body>
 </html>

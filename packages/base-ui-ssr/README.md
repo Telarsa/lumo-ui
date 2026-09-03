@@ -373,6 +373,6 @@ SSR-naming issue on the tracker, and no third-party package doing either job. If
 one exists now, prefer it — this package is a workaround with an expiry date, and
 the best outcome for every part of it is deletion.
 
-MIT. Built by [Telarsa](https://telarsa.com) for [Lumo UI](https://lumo-ui.com),
+MIT. Built by [Telarsa](https://telarsa.com) for [Lumo UI](https://github.com/Telarsa/lumo-ui),
 a Persian-first, RTL-first component library, where an unannounced control is not
 a rounding error.
