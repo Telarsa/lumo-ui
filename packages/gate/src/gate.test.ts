@@ -1398,11 +1398,13 @@ describe("persian-digit-floor is actually armed where it matters", () => {
     const script = root.scripts["gate:html"] ?? "";
     expect(script, "gate:html does not exist").not.toBe("");
     // Not a path equality check: the point is that SOME floors argument reaches
-    // the CLI, because `cli.ts` builds the rule from `argv[3]` and from nothing
-    // else. A renamed floors file should not fail this test; a missing argument
-    // must.
-    expect(script, "gate:html runs the CLI with no floors argument, so the rule is not constructed").toMatch(
-      /cli\.ts\s+\S+\s+\S*floors\S*\.json/,
+    // the grader — `cli.ts` builds the rule from `argv[3]`, `grade-app.mjs`
+    // from its third argument after the root locale — and from nothing else. A
+    // renamed floors file should not fail this test; a missing argument must.
+    // The site grades through grade-app since 3 Sep 2026, the same command
+    // every consumer's CI runs, because the CLI cannot state a root locale.
+    expect(script, "gate:html runs the grader with no floors argument, so the rule is not constructed").toMatch(
+      /(?:cli\.ts\s+\S+|grade-app\.mjs\s+\S+\s+\S+)\s+\S*floors\S*\.json/,
     );
   });
 
