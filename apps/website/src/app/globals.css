@@ -319,11 +319,18 @@
 
 @layer components {
   /* ------------------------------------------------------------- layout */
-  .container {
+  /*
+   * NOT `.container`. Tailwind ships a `container` UTILITY, and it is emitted
+   * as soon as the class name appears anywhere in the markup — utilities
+   * outrank components, so its own breakpoint ramp won: above 1536px the page
+   * laid out at 96rem instead of the 80rem this token says. Measured in the
+   * built stylesheet, where both rules sit side by side.
+   */
+  .shell {
     inline-size: min(100% - var(--gutter) * 2, var(--content-max));
     margin-inline: auto;
   }
-  .container--narrow {
+  .shell--narrow {
     inline-size: min(100% - var(--gutter) * 2, var(--content-narrow));
   }
   .band {

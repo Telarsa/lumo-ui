@@ -12,7 +12,7 @@ export function SiteHeader({ locale }: { locale: SiteLocale }) {
   const c = CHROME[locale];
   return (
     <header className="site-header">
-      <div className="container site-header__row">
+      <div className="shell site-header__row">
         <Link href={localePath(locale)} className="site-header__brand">
           <Logo />
         </Link>

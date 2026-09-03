@@ -9,7 +9,7 @@ export function SiteFooter({ locale }: { locale: SiteLocale }) {
   const c = CHROME[locale];
   return (
     <footer className="site-footer">
-      <div className="container site-footer__grid">
+      <div className="shell site-footer__grid">
         <div className="site-footer__brand">
           <Logo />
           <p className="site-footer__tagline">{c.tagline}</p>

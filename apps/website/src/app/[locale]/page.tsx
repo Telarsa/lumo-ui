@@ -232,7 +232,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
   return (
     <>
       <section className="hero">
-        <div className="container">
+        <div className="shell">
           <div className="hero__grid">
             <div>
               <p className="eyebrow">
@@ -271,7 +271,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </section>
 
       <section className="band band--invert">
-        <div className="container">
+        <div className="shell">
           <div className="section-head">
             <p className="eyebrow">
               <span className="eyebrow__num">{t.proofIndex}</span>
@@ -298,7 +298,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </section>
 
       <section className="band band--rule-bottom">
-        <div className="container">
+        <div className="shell">
           <div className="section-head">
             <p className="eyebrow">
               <span className="eyebrow__num">{t.rulesIndex}</span>
@@ -332,7 +332,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </section>
 
       <section className="band band--sunken">
-        <div className="container">
+        <div className="shell">
           <div className="section-head">
             <p className="eyebrow">
               <span className="eyebrow__num">{t.installIndex}</span>
@@ -354,7 +354,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </section>
 
       <section className="band">
-        <div className="container">
+        <div className="shell">
           <div className="section-head">
             <p className="eyebrow">
               <span className="eyebrow__num">{t.piecesIndex}</span>
@@ -383,7 +383,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
       </section>
 
       <section className="band band--invert">
-        <div className="container close">
+        <div className="shell close">
           <div>
             <h2 className="h2">{t.closeTitle}</h2>
             <p className="lead section-head__lead">{t.closeLead}</p>

@@ -6,7 +6,7 @@ export default async function DocsLayout({ children, params }: { children: React
   const { locale } = await params;
   if (!isSiteLocale(locale)) notFound();
   return (
-    <div className="container docs">
+    <div className="shell docs">
       <DocsSidebar locale={locale} />
       <div className="docs__main">{children}</div>
     </div>
