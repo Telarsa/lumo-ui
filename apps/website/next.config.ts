@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
     ? {
         redirects: async () => [
           { source: "/", destination: "/en/", permanent: false },
+          // The routes were /en-US and /fa-IR until 3 Sep 2026; a bookmark or
+          // the browser's own history still offers them. The export carries
+          // the same redirects as stubs (scripts/own-the-404.mjs).
+          { source: "/en-US/:path*", destination: "/en/:path*", permanent: true },
+          { source: "/fa-IR/:path*", destination: "/fa/:path*", permanent: true },
         ],
       }
     : {}),

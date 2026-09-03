@@ -29,3 +29,40 @@ for (const rel of ["404.html", "404/index.html", "_not-found/index.html"]) {
   copyFileSync(SHELL, dest);
 }
 console.log("  own-the-404: 3 shell(s) replaced with the site's own");
+
+/*
+ * The old locale tags, kept alive.
+ *
+ * The routes were /en-US and /fa-IR until 3 Sep 2026. A static export cannot
+ * answer a redirect, so every page under the new tag gets a twin under the
+ * old one: a zero-delay meta refresh to the same path, which the gate skips
+ * by design (a redirect's body is never read as a page). Bookmarks and old
+ * links land where they always did.
+ */
+import { readdirSync, statSync, writeFileSync } from "node:fs";
+
+const OLD = { en: "en-US", fa: "fa-IR" };
+function pages(dir, base = "") {
+  const out = [];
+  for (const entry of readdirSync(dir)) {
+    const full = join(dir, entry);
+    if (statSync(full).isDirectory()) out.push(...pages(full, `${base}${entry}/`));
+    else if (entry === "index.html") out.push(base);
+  }
+  return out;
+}
+let stubs = 0;
+for (const [tag, old] of Object.entries(OLD)) {
+  const from = join(ROOT, "out", tag);
+  for (const rel of pages(from)) {
+    const target = `/${tag}/${rel}`;
+    const dest = join(ROOT, "out", old, rel, "index.html");
+    mkdirSync(dirname(dest), { recursive: true });
+    writeFileSync(
+      dest,
+      `<!doctype html><html lang="${tag}"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=${target}"><link rel="canonical" href="${target}"><title>Lumo UI</title></head><body><a href="${target}">${target}</a></body></html>\n`,
+    );
+    stubs += 1;
+  }
+}
+console.log(`  own-the-404: ${stubs} redirect stub(s) under the old locale tags`);
