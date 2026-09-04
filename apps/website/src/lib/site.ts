@@ -4,14 +4,16 @@ import { DEFAULT_LOCALE, type SiteLocale } from "./locales";
 /**
  * The site's identity, in one place.
  *
- * `SITE_URL` is deliberately NOT hard-coded. The address the package READMEs
- * once named, lumo-ui.com, turned out to be parked at a registrar and is not
- * Telarsa's, so every absolute URL here — canonical, hreflang, the Open Graph
- * card, the sitemap — is derived from `NEXT_PUBLIC_SITE_URL` at build time and
- * simply omitted when the site has no public home yet. A wrong canonical is
- * worse than none: it tells every crawler the real page is somewhere else.
+ * `lumo-ui.com` is Telarsa's own domain, parked on Hostinger's nameservers
+ * until the site is published — which is what an owned, unpublished domain
+ * looks like, not what an unavailable one looks like. An earlier version of
+ * this file said the opposite; it was reading a parking page and guessing.
+ *
+ * `NEXT_PUBLIC_SITE_URL` still overrides, so a preview deploy or a move to
+ * another address needs no code change.
  */
-export const SITE_URL: string | undefined = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || undefined;
+export const SITE_URL: string =
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://lumo-ui.com";
 export const GITHUB_URL = "https://github.com/Telarsa/lumo-ui";
 export const TELARSA_URL = "https://telarsa.com";
 
@@ -27,9 +29,8 @@ export function localePath(locale: SiteLocale, path = "/"): string {
   return `/${locale}${clean}/`;
 }
 
-/** `alternates` for a page — only when the site knows where it lives. x-default is English, the site's first language. */
+/** `alternates` for a page. x-default is English, the site's first language. */
 export function alternatesFor(locale: SiteLocale, path = "/") {
-  if (!SITE_URL) return undefined;
   return {
     canonical: `${SITE_URL}${localePath(locale, path)}`,
     languages: {
