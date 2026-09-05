@@ -128,6 +128,8 @@ mobile equivalent of grading served bytes.
 | `config` | the lint policy, no plugin dependencies |
 | `base-ui-ssr` | first-byte compensations for Base UI |
 | `mobile` | `lumo_ui_mobile`, the Flutter side |
+| `apps/website` | lumo-ui.com — a consumer of the package, graded by its own gate |
+| `apps/mobile-example` | the Flutter example the mobile grader runs against |
 
 ## Contributing
 
