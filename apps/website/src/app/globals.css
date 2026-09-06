@@ -1402,3 +1402,81 @@ html:lang(fa) :is(h1, h2, h3, h4, p, a, span, li, dt, dd, button, th, td) {
     display: none !important;
   }
 }
+
+/* The shadcn primitives under the site's own classes (handbook 08 §5). These rules sit outside
+   every layer so the site's measurements outrank the generated utilities, which Tailwind puts
+   in its utilities layer; each is paired with the slot the CLI stamps, so a hand-written element
+   of the same class is left alone. */
+.gate-figure__tabs[data-slot="toggle-group"] {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--lumo-sys-border);
+  background: var(--lumo-sys-surface-sunken);
+  justify-self: start;
+  border-radius: 0;
+  border-start-start-radius: var(--lit-sm);
+  inline-size: auto;
+  block-size: auto;
+  box-shadow: none;
+}
+.gate-figure__tab[data-slot="toggle-group-item"] {
+  margin: 0;
+  padding: 0.35rem 0.75rem;
+  block-size: auto;
+  min-inline-size: 0;
+  inline-size: auto;
+  font-size: var(--step--2);
+  font-weight: 500;
+  line-height: inherit;
+  white-space: normal;
+  color: var(--lumo-sys-fg-muted);
+  background: transparent;
+  border: 0;
+  border-radius: 2px;
+  box-shadow: none;
+  outline: none;
+  cursor: pointer;
+  transition: none;
+}
+.gate-figure__tab[data-slot="toggle-group-item"]:hover {
+  color: var(--lumo-sys-fg-muted);
+  background: transparent;
+}
+.gate-figure__tab[data-slot="toggle-group-item"][aria-pressed="true"],
+.gate-figure__tab[data-slot="toggle-group-item"][aria-pressed="true"]:hover {
+  background: var(--lumo-sys-surface);
+  color: var(--lumo-sys-fg);
+  box-shadow: 0 0 0 1px var(--lumo-sys-border);
+}
+.gate-figure__tab[data-slot="toggle-group-item"]:first-child[aria-pressed="true"] {
+  border-start-start-radius: calc(var(--lit-sm) - 2px);
+}
+.control[data-slot="button"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4em;
+  min-inline-size: 2.25rem;
+  inline-size: auto;
+  block-size: 2.25rem;
+  padding-inline: 0.6rem;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  color: var(--lumo-sys-fg-muted);
+  font-size: var(--step--1);
+  font-weight: inherit;
+  line-height: inherit;
+  white-space: normal;
+  text-decoration: none;
+  transition:
+    background-color var(--dur) var(--ease-out),
+    color var(--dur) var(--ease-out);
+}
+.control[data-slot="button"]:hover {
+  background: var(--lumo-sys-surface-hover);
+  color: var(--lumo-sys-fg);
+}

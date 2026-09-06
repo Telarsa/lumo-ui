@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { SiteLocale } from "@/lib/locales";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 /**
  * The hero figure: a Persian page as it was SERVED, beside what the gate says
@@ -69,14 +70,21 @@ export function GateFigure({ locale }: { locale: SiteLocale }) {
 
   return (
     <figure className="gate-figure" data-state={after ? "after" : "before"}>
-      <div className="gate-figure__tabs" role="group" aria-label={t.report}>
-        <button type="button" className="gate-figure__tab" aria-pressed={!after} onClick={() => setAfter(false)}>
+      <ToggleGroup
+        className="gate-figure__tabs"
+        aria-label={t.report}
+        value={[after ? "after" : "before"]}
+        onValueChange={(next: unknown[]) => {
+          if (next.length > 0) setAfter(next[0] === "after");
+        }}
+      >
+        <ToggleGroupItem value="before" className="gate-figure__tab">
           {t.served}
-        </button>
-        <button type="button" className="gate-figure__tab" aria-pressed={after} onClick={() => setAfter(true)}>
+        </ToggleGroupItem>
+        <ToggleGroupItem value="after" className="gate-figure__tab">
           {t.graded}
-        </button>
-      </div>
+        </ToggleGroupItem>
+      </ToggleGroup>
 
       <div className="gate-figure__page" lang="fa" dir="rtl">
         <div className="gate-figure__bar">

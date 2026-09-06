@@ -3,6 +3,7 @@
 import { useLayoutEffect, useSyncExternalStore } from "react";
 import { MoonIcon, SunIcon } from "lucide-react";
 import { getTheme, resolvedTheme, setTheme, type ResolvedTheme } from "lumo-ui/core";
+import { Button } from "@/components/ui/button";
 
 const CHANGE = "lumo:themechange";
 
@@ -55,8 +56,16 @@ export function ThemeToggle({ labels }: { labels: { label: string; light: string
   const Icon = theme === "dark" ? MoonIcon : SunIcon;
 
   return (
-    <button type="button" className="control" aria-label={`${labels.label}: ${next}`} title={next} onClick={toggle} suppressHydrationWarning>
+    <Button
+      variant="ghost"
+      size="icon"
+      className="control"
+      aria-label={`${labels.label}: ${next}`}
+      title={next}
+      onClick={toggle}
+      suppressHydrationWarning
+    >
       <Icon className="size-4" aria-hidden="true" />
-    </button>
+    </Button>
   );
 }
