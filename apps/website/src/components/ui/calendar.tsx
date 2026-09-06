@@ -20,7 +20,7 @@ import { buttonVariants } from "@/components/ui/button";
  * ── WHY THE SELECTED DAY IS STYLED ON THE BUTTON, NOT THE CELL ─────────────
  *
  * The previous copy put the selected look on the <td> as `[&>button]:bg-primary`
- * and the today look as `[&:not([data-selected])>button]:bg-accent`. Measured
+ * and the today look as `[&:not([data-selected])>button]:bg-muted`. Measured
  * in a headless browser on the export: the selected button's computed
  * background was `rgba(0, 0, 0, 0)` — no fill at all, in both themes — and
  * the today button painted `--color-accent` under `--accent-foreground`, which

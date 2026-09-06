@@ -161,6 +161,7 @@
   --secondary: var(--lumo-sys-surface-sunken);
   --secondary-foreground: var(--lumo-sys-fg);
   --muted: var(--lumo-sys-surface-hover);
+  --border: var(--lumo-sys-border);
   --muted-foreground: var(--lumo-sys-fg-muted);
   --accent: var(--lumo-sys-surface-hover);
   --accent-foreground: var(--lumo-sys-fg);
@@ -197,6 +198,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-input: var(--input);
   --color-ring: var(--ring);
