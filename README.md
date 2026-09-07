@@ -138,6 +138,12 @@ mobile equivalent of grading served bytes.
 
 ## The website
 
+Cloudflare Workers Builds: project `lumo-ui-website`, root `/`, branch `main`.
+Build command: `pnpm run gate:html`.
+Deploy command: `npx wrangler deploy --config apps/website/wrangler.jsonc`.
+Run local commands below from the monorepo root; see
+[dashboard settings](docs/deployment.md#cloudflare-dashboard-setup).
+
 `apps/website` is lumo-ui.com: a static export of these docs in English and
 Persian, which is also the corpus `gate:html` grades — the site that documents
 the gate is the site the gate is proved on.
