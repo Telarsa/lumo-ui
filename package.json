@@ -94,7 +94,9 @@
     "prepare": "husky",
     "check": "pnpm verify",
     "preview:website": "pnpm --filter @lumo-ui/website preview",
-    "deploy:website": "pnpm --filter @lumo-ui/website deploy"
+    "deploy:website": "pnpm --filter @lumo-ui/website run deploy",
+    "build:website": "pnpm --filter @lumo-ui/website run build",
+    "check:website": "pnpm run lint && pnpm --filter @lumo-ui/website run typecheck && pnpm run gate:html"
   },
   "dependencies": {
     "@internationalized/date": "3.12.3",

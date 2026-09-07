@@ -8,11 +8,11 @@ Run from the monorepo root after `pnpm install --frozen-lockfile`; do not change
 the Cloudflare root directory to `apps/website`, which consumes the root package.
 
 ```sh
-pnpm --filter @lumo-ui/website build  # build only → apps/website/out/
-pnpm run gate:html                   # build and grade the website export
+pnpm build:website                  # build only → apps/website/out/
+pnpm check:website                  # lint, website types, build and HTML gate
 pnpm verify                          # complete repository verification
 pnpm preview:website                 # serve the built export locally
-pnpm deploy:website                  # build and publish with your Cloudflare account
+pnpm deploy:website                  # upload checked output; main only, no rebuild
 ```
 
 ## Cloudflare dashboard setup
@@ -22,8 +22,8 @@ pnpm deploy:website                  # build and publish with your Cloudflare ac
 | Project / Worker name | `lumo-ui-website` (matches Wrangler) |
 | Production branch | `main` |
 | Path / root directory | `/` (repository root) |
-| Build command | `pnpm run gate:html` |
-| Deploy command | `npx wrangler deploy --config apps/website/wrangler.jsonc` |
+| Build command | `pnpm check:website` |
+| Deploy command | `pnpm deploy:website` |
 | Builds for non-production branches | Disabled |
 | Protect with Cloudflare Access | Off (public website) |
 
@@ -31,8 +31,8 @@ Wrangler reads `apps/website/wrangler.jsonc` and uploads `apps/website/out/`. Th
 configured there; it is not a separate Pages build-output setting.
 
 The dashboard deploy command uses the explicit app config and uploads the output
-already built by `gate:html`. The local `pnpm deploy:website` command builds again
-before publication. Neither command publishes the library or creates a release tag.
+already built by `check:website`. The same `pnpm deploy:website` command runs
+locally and in Cloudflare; it requires `main` and does not rebuild. Neither command publishes the library or creates a release tag.
 
 ## Local preview and publication
 
@@ -42,7 +42,7 @@ Wrangler config explicitly names the assets and matches Next's trailing slashes;
 metadata routes are force-static, and build outputs are excluded from lint.
 No dependency is added to invoke Wrangler.
 
-`pnpm deploy:website` builds and deploys from a
+`pnpm deploy:website` uploads checked output from a
 signed-in Cloudflare CLI. Verify the exact export first. No GitHub Actions run is
 required; the owner waived CI while usage is exhausted. DNS stays owner-managed:
 bind `lumo-ui.com` and `www.lumo-ui.com` individually as Worker Custom Domains.
@@ -62,3 +62,24 @@ files and `apps/website/wrangler.jsonc`. This documentation update does not
 publish a Worker or verify dashboard settings. After owner deployment, acceptance
 is working English/Persian pages, assets, redirects and 404 on both bound
 hostnames; record the commit and deployment ID.
+
+## Uniform website command contract — 7 September 2026
+
+Run from the repository root. Cloudflare Build is `pnpm check:website` and Deploy
+is `pnpm deploy:website`, with root `/`, production branch `main` and
+non-production builds disabled. Both dashboard and local publication use these
+same commands; do not use bare Wrangler to bypass the branch check.
+
+| Command | Meaning |
+| --- | --- |
+| `pnpm build:website` | Build the static website without publishing |
+| `pnpm check:website` | Run the website checks, including a build and output validation |
+| `pnpm preview:website` | Serve the existing build locally without rebuilding |
+| `pnpm deploy:website` | Require `main` and upload the existing output without rebuilding |
+
+Run check and deploy in the same checkout and build environment. Upload does not
+prove that an arbitrary old output directory was checked: always complete the
+check first. Project-specific checks remain in place; this is a shared command
+contract, not a replacement for the full repository verification pipeline.
+This supersedes previous build-and-upload convenience behavior. No source folders,
+frameworks, UI, domain bindings or platform deployments change with these commands.

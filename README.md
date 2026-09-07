@@ -139,8 +139,8 @@ mobile equivalent of grading served bytes.
 ## The website
 
 Cloudflare Workers Builds: project `lumo-ui-website`, root `/`, branch `main`.
-Build command: `pnpm run gate:html`.
-Deploy command: `npx wrangler deploy --config apps/website/wrangler.jsonc`.
+Build command: `pnpm check:website`.
+Deploy command: `pnpm deploy:website`.
 Run local commands below from the monorepo root; see
 [dashboard settings](docs/deployment.md#cloudflare-dashboard-setup).
 
@@ -150,9 +150,10 @@ the gate is the site the gate is proved on.
 
 ```bash
 pnpm dev                     # apps/website on :3000
-pnpm run gate:html            # build and grade the exported pages
+pnpm build:website           # build only
+pnpm check:website           # lint, types, build and grade the exported pages
 pnpm preview:website         # serve out/ with local Cloudflare routing
-pnpm deploy:website          # build and deploy with your Cloudflare account
+pnpm deploy:website          # upload checked output; main only, no rebuild
 ```
 
 The library and website stay in this monorepo and deploy independently. The

@@ -9,7 +9,7 @@
     "build": "next build && node scripts/own-the-404.mjs",
     "typecheck": "tsc --noEmit",
     "preview": "npx wrangler dev --local --ip 127.0.0.1 --port 3000",
-    "deploy": "pnpm build && npx wrangler deploy"
+    "deploy": "node ../../scripts/production-branch-check.mjs && npx wrangler deploy"
   },
   "dependencies": {
     "@base-ui/react": "catalog:",
