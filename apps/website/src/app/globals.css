@@ -163,8 +163,6 @@
   --muted: var(--lumo-sys-surface-hover);
   --border: var(--lumo-sys-border);
   --muted-foreground: var(--lumo-sys-fg-muted);
-  --accent: var(--lumo-sys-surface-hover);
-  --accent-foreground: var(--lumo-sys-fg);
   --destructive: var(--lumo-sys-critical);
   --border: var(--lumo-sys-border);
   --input: var(--lumo-sys-border-control);
@@ -238,7 +236,7 @@
     --content-max: 80rem; /* the company standard: 1280px, shared by every Telarsa site */
     --content-narrow: 46rem;
     --gutter: clamp(1.25rem, 4vw, 2.5rem);
-    --header-h: 3.75rem;
+    --header-h: 4rem;
     --section-y: clamp(3rem, 5vw, 5.5rem);
 
     /* The lit corner, at the scale a component wears it. The mark's corner is
@@ -556,8 +554,8 @@
     align-items: center;
     justify-content: center;
     gap: 0.4em;
-    min-inline-size: 2.25rem;
-    block-size: 2.25rem;
+    min-inline-size: 2.75rem;
+    block-size: 2.75rem;
     padding-inline: 0.6rem;
     border-radius: 3px;
     color: var(--lumo-sys-fg-muted);
@@ -694,6 +692,7 @@
     font-size: var(--step--1);
     color: var(--lumo-sys-fg-muted);
   }
+  .site-footer__family { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; margin-block-start: 2rem; padding-block-start: 1.25rem; border-block-start: 1px solid var(--lumo-sys-border); }
   .site-footer__grid {
     display: grid;
     gap: 2rem;
@@ -1459,9 +1458,9 @@ html:lang(fa) :is(h1, h2, h3, h4, p, a, span, li, dt, dd, button, th, td) {
   align-items: center;
   justify-content: center;
   gap: 0.4em;
-  min-inline-size: 2.25rem;
+  min-inline-size: 2.75rem;
   inline-size: auto;
-  block-size: 2.25rem;
+  block-size: 2.75rem;
   padding-inline: 0.6rem;
   border: 0;
   border-radius: 3px;

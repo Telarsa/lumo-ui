@@ -27,7 +27,7 @@
  * build — `gradeHtml` normalises React's `<div hidden id="S:n">` segment
  * containers itself, so streamed content is graded, not skipped).
  */
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, dirname, relative, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
@@ -152,7 +152,14 @@ const stage = mkdtempSync(join(tmpdir(), "lumo-grade-"));
 let staged = 0;
 /** @type {string[]} */
 const redirected = [];
-for (const rel of htmlFiles(source)) {
+// Preserve explicit locale routes first, including their per-route digit floors.
+// A root redirect and en/index.html used to overwrite the same staged file.
+const documents = [...htmlFiles(source)].sort((a, b) => {
+  const rank = (/** @type {string} */ rel) => carriesLocaleSegment(rel) ? 0
+    : !rel.includes("/") && isLanguageTag(rel.replace(/\.html$/, "")) ? 1 : 2;
+  return rank(a) - rank(b) || a.localeCompare(b);
+});
+for (const rel of documents) {
   // EVERY unsegmented document goes under the declared locale — the root stubs
   // (index.html, 404, _not-found, _global-error) included. The gate's own
   // default grades bare root docs as fa-IR, which is wrong the moment the
@@ -170,11 +177,18 @@ for (const rel of htmlFiles(source)) {
     redirected.push(rel);
     continue;
   }
-  const dest = carriesLocaleSegment(rel)
+  let dest = carriesLocaleSegment(rel)
     ? join(stage, rel)
     : !rel.includes("/") && isLanguageTag(base)
       ? join(stage, base, "index.html")
       : join(stage, locale, rel);
+  if (existsSync(dest)) {
+    const canonical = dest;
+    let suffix = staged;
+    do { dest = join(dirname(canonical), `__lumo_extra_${suffix++}.html`); }
+    while (existsSync(dest));
+    console.log(`  grade-app: retained ${rel} as ${relative(stage, dest)} to avoid overwriting ${relative(stage, canonical)}`);
+  }
   mkdirSync(dirname(dest), { recursive: true });
   cpSync(join(source, rel), dest);
   staged += 1;

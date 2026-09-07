@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CHROME } from "@/lib/chrome";
 import { DOCS, DOCS_ORDER } from "@/lib/docs-order";
 import type { SiteLocale } from "@/lib/locales";
-import { GITHUB_URL, INSTALL_SPEC, TELARSA_URL, VERSION, localePath } from "@/lib/site";
+import { GITHUB_URL, INSTALL_SPEC, companyPath, VERSION, localePath } from "@/lib/site";
 import { Logo } from "./mark";
 
 export function SiteFooter({ locale }: { locale: SiteLocale }) {
@@ -15,11 +15,7 @@ export function SiteFooter({ locale }: { locale: SiteLocale }) {
           <p className="site-footer__tagline">{c.tagline}</p>
           <p className="site-footer__licence">
             {c.footer.licence}
-            {" · "}
-            {c.footer.built}{" "}
-            <a href={TELARSA_URL} target="_blank" rel="noreferrer noopener" className="link-quiet">
-              {locale === "fa" ? c.footer.company : <span data-lumo-latn>Telarsa</span>}
-            </a>
+
           </p>
         </div>
         <div className="site-footer__col">
@@ -53,6 +49,10 @@ export function SiteFooter({ locale }: { locale: SiteLocale }) {
             </li>
           </ul>
         </div>
+      </div>
+      <div className="shell site-footer__family">
+        <a href={companyPath(locale)} className="link-quiet">{c.productOf}</a>
+        <a href={companyPath(locale, "/products")} className="link-quiet">{c.allProducts}</a>
       </div>
     </footer>
   );

@@ -7,6 +7,8 @@ import type { SiteLocale } from "./locales";
 export const CHROME = {
   "fa": {
     siteName: "Lumo UI",
+    productOf: "محصولی از تلارسا",
+    allProducts: "محصولات تلارسا",
     tagline: "لایهٔ درستیِ محصولات فارسی",
     description:
       "قرارداد زبانی تایپ‌شده، سیاست lint و دروازه‌ای که بایت‌هایی را نمره می‌دهد که خوانندهٔ فارسی واقعاً دریافت می‌کند — ارقام، تقویم، جهت و نامی که صفحه‌خوان اعلام می‌کند.",
@@ -33,6 +35,8 @@ export const CHROME = {
   },
   "en": {
     siteName: "Lumo UI",
+    productOf: "A Telarsa product",
+    allProducts: "Telarsa products",
     tagline: "The correctness layer for Persian products",
     description:
       "A typed locale contract, a lint policy, and a gate that grades the bytes a Persian reader actually receives: the digits, the calendar, the direction, and the name a screen reader announces.",

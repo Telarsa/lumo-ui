@@ -37,6 +37,7 @@ export function SiteHeader({ locale }: { locale: SiteLocale }) {
           reaches the docs at all. A scrolling strip rather than a menu: six
           links, no state, nothing to get stuck open. */}
       <nav className="site-header__rail" aria-label={c.docs.eyebrow}>
+        <Link href={localePath(locale, "/docs")} className="nav-link">{c.docs.index}</Link>
         {DOCS_ORDER.map((slug) => (
           <Link key={slug} href={localePath(locale, `/docs/${slug}`)} className="nav-link">
             {DOCS[locale][slug].label}

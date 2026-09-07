@@ -1,16 +1,8 @@
 import pkg from "../../../../package.json";
 import { DEFAULT_LOCALE, type SiteLocale } from "./locales";
 
-/**
- * The site's identity, in one place.
- *
- * `lumo-ui.com` is Telarsa's own domain, parked on Hostinger's nameservers
- * until the site is published — which is what an owned, unpublished domain
- * looks like, not what an unavailable one looks like. An earlier version of
- * this file said the opposite; it was reading a parking page and guessing.
- *
- * `NEXT_PUBLIC_SITE_URL` still overrides, so a preview deploy or a move to
- * another address needs no code change.
+/** Owned product domain; public availability is verified separately from configuration.
+ * NEXT_PUBLIC_SITE_URL can override the canonical origin for a separate deployment.
  */
 export const SITE_URL: string =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://lumo-ui.com";
@@ -40,3 +32,6 @@ export function alternatesFor(locale: SiteLocale, path = "/") {
     },
   };
 }
+
+/** Keep company navigation in the reader’s language. */
+export const companyPath = (locale: SiteLocale, path = "/") => `${TELARSA_URL}${localePath(locale, path)}`;

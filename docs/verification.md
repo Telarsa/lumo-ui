@@ -91,3 +91,17 @@ the repo does not lint-own, wired by the contract packages, graded to zero.
   the app's own install and build first. A consumer wires `lumo gate` into its
   own pipeline, and until Next's error shells could be owned that pipeline would
   have been red forever, which is why `own-error-shells` exists.
+
+## Website browser probes
+
+`node scripts/probe-website.mjs 'http://127.0.0.1:4301/{locale}/' en,fa /tmp/lumo-review`
+records rest/hover screenshots and width metrics from an already running production
+preview. It checks every listed locale in light/dark at desktop, tablet and narrow
+phone widths. The URL template deliberately preserves the host's trailing-slash
+policy. It fails on HTTP errors, horizontal overflow, wrong document language,
+browser exceptions or header-link dimensions changing on hover. Review the images
+and exercise task-specific navigation separately; these probes do not claim a
+complete accessibility audit or validate public capability claims.
+
+The 7 September website-family checkpoint and the English-homepage staging
+regression are recorded in [the dated handoff](handoff-website-family-2026-09-07.md).

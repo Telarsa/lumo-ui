@@ -191,6 +191,27 @@ try {
     process.exit(1);
   }
 
+  // Field regression: Khatamo's root redirect overwrote its real EN homepage.
+  // Exercise the installed tarball, first clean and then with a poisoned page.
+  const collision = join(consumer, "collision");
+  mkdirSync(join(collision, "en"), { recursive: true });
+  writeFileSync(join(collision, "index.html"), '<!doctype html><html lang="en" dir="ltr"><head><meta http-equiv="refresh" content="0;url=/en/"></head><body></body></html>');
+  const homepage = join(collision, "en", "index.html");
+  writeFileSync(homepage, '<!doctype html><html lang="en" dir="ltr"><body><h1>Our product</h1></body></html>');
+  const collisionArgs = [join(consumer, "node_modules/lumo-ui/scripts/grade-app.mjs"), collision, "en"];
+  const cleanCollision = execFileSync(process.execPath, collisionArgs, { encoding: "utf8" });
+  if (!/1 document\(s\) graded, 0 violation/.test(cleanCollision)) {
+    throw new Error(`Root redirect hid the English homepage: ${cleanCollision}`);
+  }
+  writeFileSync(homepage, '<!doctype html><html lang="fa" dir="rtl"><body><h1>محصول</h1></body></html>');
+  let rejected = false;
+  try { execFileSync(process.execPath, collisionArgs, { encoding: "utf8", stdio: "pipe" }); }
+  catch (error) {
+    const detail = error && typeof error === "object" && "stdout" in error ? String(error.stdout) : "";
+    rejected = /en\/index\.html/.test(detail) && /lang-dir/.test(detail);
+  }
+  if (!rejected) throw new Error("A root redirect concealed the poisoned English homepage.");
+
   /*
    * `own-error-shells` is checked by RESULT, not by exit code.
    *
