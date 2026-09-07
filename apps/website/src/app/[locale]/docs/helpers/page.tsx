@@ -26,6 +26,42 @@ const FIX = `node node_modules/lumo-ui/scripts/lumo-cli.mjs fix --zwnj --digits 
 # dry run; add --write to change files`;
 
 const T = {
+  de: {
+  "title": "Hilfsfunktionen",
+  "lead": "Für jeden Verbraucher: bewusst lateinische Inhalte markieren, Zahlen im Zahlensystem des Lesers formatieren und die Einrichtung mit zwei Befehlen prüfen und korrigieren.",
+  "islandsTitle": "Lateinische Inseln",
+  "islands": "Nur data-lumo-latn erklärt eine Ausnahme; lang=\"en\" oder dir=\"ltr\" reichen nicht. Beispiele sind Wortmarken, Hashes und „[[SHA-256]]“. code, kbd, samp und var tragen diese Bedeutung bereits.",
+  "islandsWhy": "Die Markierung ist absichtlich ausdrücklich. Eine frühere automatische Erkennung verdeckte auch einen tatsächlich unübersetzten englischen Satz – genau den Fehler, den native-script-text finden soll.",
+  "isLatin": "isLatinRun prüft, ob ein Text einen nichtlateinischen Buchstaben enthält, nicht bloß ein Zeichen aus dem arabischen Unicode-Block. Persische Ziffern liegen ebenfalls dort; sonst würde „۹۰ Mt/year“ fälschlich als vollständig nativ gelten.",
+  "numbersTitle": "Zahlen",
+  "numbers": "Jede sichtbare Zahl verwendet formatNumber. Das Zahlensystem kommt aus der Spracheinstellung und wird nicht unbemerkt von ICU übernommen. So stimmen die Ergebnisse über Laufzeitumgebungen hinweg überein.",
+  "doctorTitle": "lumo doctor",
+  "doctor": "Prüft Einstellungen, deren Fehlen oft erst bei einem Fehler auffällt:",
+  "checks": [
+    [
+      "transpilePackages",
+      "Ohne diese Einstellung stoppt Turbopack bei der ersten .ts-Datei."
+    ],
+    [
+      "allowImportingTsExtensions",
+      "Die Vertragspakete importieren Dateien mit .ts-Endung."
+    ],
+    [
+      "gate.floors.json",
+      "Prüft die Datei und ihre Einstellungen @locales und @min-documents."
+    ],
+    [
+      "Lint-Regeln",
+      "Prüft, ob lumo-ui/config tatsächlich in ESLint eingebunden ist."
+    ],
+    [
+      "Versionsbindung",
+      "Ein Tag für alle Unterpfade; Abweichungen werden gemeldet."
+    ]
+  ],
+  "fixTitle": "lumo fix",
+  "fix": "Zwei mechanische Korrekturen: Verbindungszeichen in persischen Komposita und persische statt lateinischer Ziffern in persischem Text. Ohne --write wird nichts geschrieben. Der erste Durchlauf über einen realen Katalog korrigierte 8.807 Verbindungszeichen und 1.262 Zeilen mit Ziffern."
+},
   "fa": {
     title: "کمک‌کننده‌ها",
     lead: "سه چیز که هر مصرف‌کننده لازم دارد: علامت‌گذاری لاتینِ عمدی، نوشتن اعداد به ارقام خواننده، و دو دستوری که سیم‌کشی را می‌خوانند و متن را اصلاح می‌کنند.",

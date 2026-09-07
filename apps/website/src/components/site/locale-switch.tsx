@@ -1,36 +1,26 @@
 "use client";
 
+import { Menu } from "@base-ui/react/menu";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { SiteLocale } from "@/lib/locales";
+import { LOCALES, type SiteLocale } from "@/lib/locales";
 
-/**
- * One button, because there are exactly two languages: it shows the one you
- * are not reading, in that language's own name, and keeps you on the page you
- * were reading rather than sending you home.
- *
- * The visible label is the other language's own name; the ANNOUNCED name
- * speaks this page's language. `lang="en"` is not a hatch — the Latin label on
- * the Persian page carries the island marker the gate reads.
- */
-export function LocaleSwitch({ locale, label, aria }: { locale: SiteLocale; label: string; aria: string }) {
+const names = { en: "English", de: "Deutsch", fa: "فارسی" };
+const codes = { en: "EN", de: "DE", fa: "فا" };
+export function LocaleSwitch({ locale, aria }: { locale: SiteLocale; aria: string }) {
   const pathname = usePathname();
-  const target: SiteLocale = locale === "fa" ? "en" : "fa";
-  const segments = pathname.split("/");
-  segments[1] = target;
-  const href = segments.join("/") || `/${target}/`;
-
-  return (
-    <Link href={href} hrefLang={target} aria-label={aria} className="control control--text">
-      {target === "en" ? (
-        <span lang="en" dir="ltr" data-lumo-latn>
-          {label}
-        </span>
-      ) : (
-        <span lang="fa" dir="rtl">
-          {label}
-        </span>
-      )}
-    </Link>
-  );
+  return <Menu.Root modal={false}>
+    <Menu.Trigger className="language-menu-trigger" aria-label={`${aria}: ${codes[locale]}`} title={aria}>
+      <span lang={locale} dir={locale === "fa" ? "rtl" : "ltr"} data-lumo-latn>{codes[locale]}</span>
+    </Menu.Trigger>
+    <Menu.Portal><Menu.Positioner className="language-menu-positioner" sideOffset={8} align="end"><Menu.Popup className="language-menu-panel">
+      {LOCALES.map(target => {
+        const segments = pathname.split("/"); segments[1] = target;
+        return <Menu.Item key={target} className="language-menu-item" render={<Link href={segments.join("/")} hrefLang={target} />} aria-current={target === locale ? "true" : undefined}>
+          <span className="language-menu-code" lang={target} dir={target === "fa" ? "rtl" : "ltr"} data-lumo-latn>{codes[target]}</span>
+          <span lang={target} dir={target === "fa" ? "rtl" : "ltr"} {...(target !== "fa" ? { "data-lumo-latn": "" } : {})}>{names[target]}</span>
+        </Menu.Item>;
+      })}
+    </Menu.Popup></Menu.Positioner></Menu.Portal>
+  </Menu.Root>;
 }

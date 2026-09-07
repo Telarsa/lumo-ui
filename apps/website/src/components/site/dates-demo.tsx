@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { formatDate, stringsFor } from "lumo-ui/core";
-import { BUILTIN, type SiteLocale } from "@/lib/locales";
+import { formatDate } from "lumo-ui/core";
+import type { SiteLocale } from "@/lib/locales";
+import { siteStrings } from "@/lib/site-strings";
 import { fromPickerDate, lumoCalendar, toPickerDate } from "lumo-ui/dates";
 import { Calendar } from "@/components/ui/calendar";
 
@@ -30,7 +31,7 @@ export function DatesDemo({
   locale: SiteLocale;
   labels: { selected: string; fields: string };
 }) {
-  const strings = stringsFor(BUILTIN[locale]);
+  const strings = siteStrings(locale);
   const config = useMemo(() => lumoCalendar(locale, strings.calendar), [locale, strings]);
 
   const [selected, setSelected] = useState(() => fromPickerDate(new Date(2026, 7, 31, 12), locale));

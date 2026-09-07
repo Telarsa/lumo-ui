@@ -46,6 +46,41 @@ node node_modules/lumo-ui/scripts/grade-app.mjs .next/server/app fa gate.floors.
 lumo gate ./out gate.floors.json`;
 
 const T = {
+  de: {
+  "title": "Erste Schritte",
+  "lead": "Sie haben eine Next-Anwendung mit shadcn. Installieren Sie ein Paket, importieren Sie CSS in der festgelegten Reihenfolge und prüfen Sie die gebaute Ausgabe.",
+  "s1": "Installieren: ein Paket, ein Tag",
+  "s1note": "Das Paket liefert TypeScript-Quelltext, den Next transpiliert. Ohne diese Einstellung stoppt Turbopack an der ersten .ts-Datei. Verwenden Sie pnpm: Der Workspace nutzt catalog:, das npm nicht versteht.",
+  "s2": "Styles in fester Reihenfolge",
+  "s2note": "Die Reihenfolge ist verbindlich. Binden Sie shadcn-Variablen in einem gemeinsamen Block an die sys-Tokens. Der öffentliche Quelltext dieser Website zeigt das Vorgehen.",
+  "s2warn": "accent hat zwei Bedeutungen: Bei shadcn ist es eine Hervorhebung beim Überfahren, bei Lumo die Markenfarbe. Da Lumos Theme später importiert wird, gehört bg-accent zu Lumo. Verwenden Sie muted für die dezente Hervorhebung.",
+  "s3": "Einrichtung",
+  "wiring": [
+    [
+      "tsconfig",
+      "allowImportingTsExtensions: true – die Vertragspakete importieren Dateien mit .ts-Endung."
+    ],
+    [
+      "<html>",
+      "LumoHtml aus core gehört in das Layout, das die Sprache kennt. dir wird aus lang abgeleitet, nie von Hand gesetzt."
+    ],
+    [
+      "Provider",
+      "LumoLocaleProvider aus core. Eine nicht integrierte Sprache benötigt vollständige eigene Texte; der Compiler lehnt Lücken ab."
+    ],
+    [
+      "Zahlen",
+      "Jede sichtbare Zahl verwendet formatNumber. Eine Vorlage wie „Schritt ${n}“ ist ein typischer Fehler."
+    ],
+    [
+      "Bewusst lateinisch",
+      "Bestellcodes, E-Mail-Adressen und Marken werden mit data-lumo-latn markiert. Das ist die ausdrücklich deklarierte Ausnahme des Gates."
+    ]
+  ],
+  "s4": "Prüfen",
+  "s4note": "Übergeben Sie die Build-Ausgabe an das Gate. Die Gate-Seite erklärt die Regeln und die Datei mit Mindestwerten.",
+  "doctor": "lumo doctor prüft transpilePackages, die Datei mit Mindestwerten und die Lint-Regeln in einem Durchlauf. Mehr dazu unter Hilfsfunktionen."
+},
   "fa": {
     title: "شروع",
     lead: "یک اپ Next با shadcn دارید. یک بسته نصب کنید، CSS را به ترتیب ثابت وارد کنید، و بایت‌های خروجی را نمره بدهید. همین.",

@@ -1,7 +1,8 @@
 "use client";
 
-import { LumoLocaleProvider, stringsFor, type LumoNode } from "lumo-ui/core";
-import { BUILTIN, type SiteLocale } from "@/lib/locales";
+import { LumoLocaleProvider, type LumoNode } from "lumo-ui/core";
+import type { SiteLocale } from "@/lib/locales";
+import { siteStrings } from "@/lib/site-strings";
 
 /**
  * The provider, resolved on the client. A short tag such as `fa` is not one
@@ -12,7 +13,7 @@ import { BUILTIN, type SiteLocale } from "@/lib/locales";
  */
 export function SiteLocaleProvider({ locale, children }: { locale: SiteLocale; children: LumoNode }) {
   return (
-    <LumoLocaleProvider locale={locale} strings={stringsFor(BUILTIN[locale])}>
+    <LumoLocaleProvider locale={locale} strings={siteStrings(locale)}>
       {children}
     </LumoLocaleProvider>
   );

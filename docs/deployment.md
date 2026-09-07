@@ -49,7 +49,7 @@ bind `lumo-ui.com` and `www.lumo-ui.com` individually as Worker Custom Domains.
 Do not replace nameservers or use a www CNAME to a Worker apex. Roll back to a
 previous verified Worker version and keep its commit/deployment ID in the handoff.
 
-The static host sends `/` to `/en/`; explicit en/fa
+The static host sends `/` to `/en/`; explicit en/de/fa
 URLs select locale. The optional Caddy container can negotiate Accept-Language;
 that behavior is host-specific and is not promised by the static deployment.
 Check all locales, styles/scripts/fonts, canonical slash redirects and custom 404.
@@ -60,7 +60,7 @@ A deployed Worker and a bound customer domain are separate acceptance steps.
 Commands and paths were checked against the root and website `package.json`
 files and `apps/website/wrangler.jsonc`. This documentation update does not
 publish a Worker or verify dashboard settings. After owner deployment, acceptance
-is working English/Persian pages, assets, redirects and 404 on both bound
+is working English/German/Persian pages, assets, redirects and 404 on both bound
 hostnames; record the commit and deployment ID.
 
 ## Uniform website command contract — 7 September 2026
@@ -83,3 +83,16 @@ check first. Project-specific checks remain in place; this is a shared command
 contract, not a replacement for the full repository verification pipeline.
 This supersedes previous build-and-upload convenience behavior. No source folders,
 frameworks, UI, domain bindings or platform deployments change with these commands.
+
+## Three-language website — 7 September 2026
+
+All home and documentation routes exist in English, German and Persian.
+The header menu keeps the current route and shows EN, DE and فا with autonyms.
+German calendar/control strings belong to the website consumer in
+`src/lib/site-strings.ts`; German is not a newly released built-in library locale.
+German social previews use translated text cards; existing English/Persian
+artwork is not relabelled as German. Unknown URLs offer all three home links.
+
+Check the exported routes and sitemap, then test the menu at 320, 390, 768 and
+1440 pixels in both themes. `scripts/probe-website.mjs` captures rest/hover
+geometry against a built preview. No package release accompanies these pages.

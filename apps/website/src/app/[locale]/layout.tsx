@@ -60,13 +60,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       title: `${c.siteName} — ${c.tagline}`,
       description: c.description,
       locale: OG_LOCALE[locale],
-      images: [{ url: `/og/lumo-${locale}.png`, width: 1200, height: 630, alt: `${c.siteName} — ${c.tagline}` }],
+      images: locale === "de" ? [] : [{ url: `/og/lumo-${locale}.png`, width: 1200, height: 630, alt: `${c.siteName} — ${c.tagline}` }],
     },
     twitter: {
-      card: "summary_large_image",
+      card: locale === "de" ? "summary" : "summary_large_image",
       title: `${c.siteName} — ${c.tagline}`,
       description: c.description,
-      images: [`/og/lumo-${locale}.png`],
+      images: locale === "de" ? [] : [`/og/lumo-${locale}.png`],
     },
     robots: { index: true, follow: true },
   };

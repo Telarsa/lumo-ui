@@ -6,7 +6,9 @@ import { promisify } from 'node:util'
 
 const execFileAsync = promisify(execFile)
 
-/** Only the protected release branch is allowed to create production state. */
+/** Only the protected release branch is allowed to create production state.
+ * @param {string} branch
+ */
 export function productionBranchProblems(branch) {
   if (branch === 'main') return []
   if (!branch)

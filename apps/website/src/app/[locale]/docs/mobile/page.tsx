@@ -16,6 +16,35 @@ const PUBSPEC = `dependencies:
       ref: v1.0.0`;
 
 const T = {
+  de: {
+  "title": "Mobil: dieselbe Grundlage auf Material",
+  "lead": "Die Webarchitektur in Flutter: Material verwaltet Widgets, Lumo die Sprachregeln. Pflichttexte für Ansagen, aus lumo-ui/theme erzeugte Tokens und die Prüfung des Semantics-Baums verbinden beide Plattformen.",
+  "pillars": [
+    [
+      "Die Token-Brücke",
+      "tokens.g.dart wird aus theme erzeugt; gate:flutter-tokens hält beide Plattformen zusammen."
+    ],
+    [
+      "Der Vertrag",
+      "Schreibrichtung aus der Sprache, formatNumber und erforderliche Ansagen: die gemeinsamen Regeln in Dart."
+    ],
+    [
+      "Die Semantikprüfung",
+      "SemanticsNode-Bäume werden mit gezielten Fehlerfällen geprüft: benannte interaktive Elemente, persische Ziffern, sichtbarer Schaltzustand und etwa ein unübersetzter Muskelname."
+    ]
+  ],
+  "installTitle": "Installation",
+  "rulesTitle": "Sieben Regeln",
+  "rules": "Jedes interaktive Element hat einen Namen in der Schrift des Lesers. Ziffern sind persisch, Schaltzustände werden angesagt, Inhalte nicht doppelt angekündigt, Kalender stimmen und Bildbeschriftungen sind aussagekräftig. Drei englische Muskelnamen in einer Fitness-App waren der Anlass für die Schriftregel.",
+  "galleryTitle": "Die Widgets gehören zur Anwendung",
+  "gallery": "Die frühere Sammlung wurde entfernt: 73 Dateien und 21.326 Zeilen bildeten bereits vorhandene Material-Funktionen nach. Komponenten gehören in die Anwendung, genau wie shadcn-Kopien im Web. Zwei Anwendungen übernahmen ihre Kopien ohne sichtbare Änderung; bei einer wurde das anhand von 61 Referenzbildern gemessen.",
+  "statsLabels": [
+    "Quelldateien",
+    "Zeilen",
+    "Tests",
+    "mobile Prüfungen"
+  ]
+},
   "fa": {
     title: "موبایل: همان لایه، روی Material",
     lead: "همان معماری وب، در Flutter: ویجت‌ها را Material مدیریت می‌کند؛ Lumo لایهٔ درستی است. قرارداد locale و رشته‌های الزامی اعلان، توکن‌هایی که از lumo-ui/theme تولید می‌شوند تا وب و موبایل دربارهٔ معنای md یا accent هم‌نظر بمانند، و نمره‌دهِ Semantics: همتای موبایلیِ دروازه.",

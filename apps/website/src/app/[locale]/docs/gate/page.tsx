@@ -25,6 +25,35 @@ const RUN = `lumo gate ./out gate.floors.json                       # static exp
 node scripts/grade-app.mjs .next/server/app fa gate.floors.json  # one locale`;
 
 const T = {
+  de: {
+  "title": "Das Gate",
+  "lead": "Das Gate liest das HTML, das Crawler, Leser ohne JavaScript und die erste Darstellung erhalten. Es benötigt keinen Browser. Seine fünfzehn Regeln ergänzen axe: Ziffern, Kalender, Schriftsysteme und Zahlensysteme werden dort nicht geprüft.",
+  "rulesTitle": "Die Regeln",
+  "ruleDesc": [
+    "lang und dir des Dokuments widersprechen der Sprache der Route",
+    "Eine lateinische Ziffer im sichtbaren Text oder einer Ansage",
+    "Mindestmenge nativer Ziffern: Eine Seite ohne Zahlen hat leicht keine lateinischen Ziffern",
+    "Eine ausschließlich lateinische Ansage",
+    "Ein interaktives Steuerelement ohne Namen",
+    "Ein nicht aufgelöster Verweis über labelledby, describedby oder controls",
+    "Ein Widget mit wechselndem tabindex ohne erreichbaren Tab-Stopp im ausgelieferten HTML",
+    "Dasselbe Widget mit mehr als einem Tab-Stopp",
+    "Ein Datum in der Sprache des Lesers, aber im falschen Kalender",
+    "Eine doppelte ID, deren Verweise auf das erste Vorkommen zeigen",
+    "Sichtbarer Text ohne Zeichen aus dem Schriftsystem des Lesers",
+    "Ein berechneter zugänglicher Name im falschen Schriftsystem",
+    "Eine aria-roledescription ohne Namen",
+    "Eine data-lumo-latn-Insel, die überwiegend die Sprache des Lesers enthält",
+    "Ein persisches Kompositum mit Leerzeichen statt des benötigten Verbindungszeichens"
+  ],
+  "streaming": "Von React gestreamte Segmente – versteckte div-Elemente mit id=S:n – sind früh eintreffender Seiteninhalt. Das Gate behandelt sie als Inhalt, nicht als verborgen.",
+  "floorsTitle": "Die Datei mit Mindestwerten",
+  "floors": "Sie liegt bei der Anwendung und enthält überprüfte Werte. @locales nennt die Sprachen, @min-documents erkennt unvollständige Exporte und @exempt-ceiling begrenzt bewusst lateinische Inhalte. Eine Mindestmenge nativer Ziffern auf zahlenreichen Routen verhindert, dass verschwundene Zahlen als Erfolg gemeldet werden.",
+  "runTitle": "Ausführen",
+  "stubs": "3xx-Antworten werden nicht bewertet: Ihr HTML wird nicht als Seite angezeigt. Eine Weiterleitung als Inhaltsseite zu prüfen, führte früher zu einer falschen Meldung.",
+  "artifactTitle": "Die eingebauten Fehlerseiten von Next",
+  "artifact": "Next verknüpft /_global-error fest mit seiner eigenen Fehlerseite und entfernt Benutzerlayouts. app/global-error.tsx ändert daran nichts: Englisch, ohne lang und dir. /_not-found wird dagegen unter dem Root-Layout gerendert. own-error-shells korrigiert die ausgelieferten statischen Fehlerseiten im Build und im Standalone-Paket."
+},
   "fa": {
     title: "دروازه",
     lead: "دروازه همان HTMLی را می‌خواند که خزنده، خوانندهٔ بدون جاوااسکریپت و اولین paint دریافت می‌کنند؛ بدون مرورگر. پانزده قانون، و axe با ۱۰۵ قانونش هیچ‌کدام را نمره نمی‌دهد: نه ارقام، نه تقویم، نه خط، نه سیستم شماره.",

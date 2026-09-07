@@ -29,7 +29,7 @@ export function SiteHeader({ locale }: { locale: SiteLocale }) {
           </a>
         </nav>
         <div className="site-header__tools">
-          <LocaleSwitch locale={locale} label={c.switchLabel} aria={c.switchAria} />
+          <LocaleSwitch locale={locale} aria={c.switchAria} />
           <ThemeToggle labels={c.theme} />
         </div>
       </div>

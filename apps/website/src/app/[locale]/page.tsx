@@ -1,3 +1,4 @@
+import websiteFloors from "../../../gate.floors.json";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRightIcon, ArrowUpRightIcon } from "lucide-react";
@@ -16,8 +17,187 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 }
 
 const T = {
+  de: {
+  "eyebrow": "Open Source · MIT",
+  "title": "Rechts nach links ist die leichte Hälfte.",
+  "accent": "Lumo prüft die andere.",
+  "lead": "Ein typisierter Sprachvertrag, Lint-Regeln und ein Gate für die Bytes, die persische Leser tatsächlich erhalten: Ziffern, Kalender, Schreibrichtung und zugängliche Namen – bevor JavaScript läuft.",
+  "start": "Erste Schritte",
+  "source": "Quelltext auf GitHub",
+  "strip": [
+    "Ein Sprachvertrag",
+    "Fünfzehn Regeln für ausgeliefertes HTML",
+    "Jalali-Daten im Calendar von shadcn",
+    "Dieselbe Grundlage in Flutter"
+  ],
+  "proofIndex": "01",
+  "proofLabel": "Gemessen",
+  "proofTitle": "An den ausgelieferten Bytes.",
+  "proofLead": "Die Zahlen zeigen Gate-Befunde in realen Build-Ausgaben vor und nach der Lumo-Einbindung. Geprüft wird das HTML für Crawler und die erste Darstellung, unabhängig von JavaScript im Browser.",
+  "stats": [
+    {
+      "before": 306,
+      "after": 6,
+      "label": "Eine persische Anwendung auf Base UI"
+    },
+    {
+      "before": 434,
+      "after": 4,
+      "label": "Eine dreisprachige Buchungsanwendung mit Jalali-Daten"
+    },
+    {
+      "before": 17797,
+      "after": 1,
+      "label": "Ein Katalog mit 592 Seiten; übrig blieb der Name eines Algorithmus in einem Attribut"
+    }
+  ],
+  "rulesIndex": "02",
+  "rulesLabel": "Was das Gate liest",
+  "rulesTitle": "Fünfzehn Regeln aus tatsächlich ausgelieferten Fehlern.",
+  "rulesLead": "axe prüft diese Fälle nicht. Jede Regel entstand aus einem Produktfehler, den andere Werkzeuge nicht erkannten.",
+  "groups": [
+    {
+      "title": "Schrift und Ziffern",
+      "rules": [
+        [
+          "no-latin-digits",
+          "Eine lateinische Ziffer im sichtbaren Text oder einer Ansage – einmal in allen 77 Kalenderzellen."
+        ],
+        [
+          "persian-digit-floor",
+          "Mindestmenge nativer Ziffern: Eine Seite ohne Zahlen hat leicht keine lateinischen Ziffern."
+        ],
+        [
+          "native-script-text",
+          "Sichtbarer Text ohne Zeichen der Leserschrift, etwa der rohe Schlüssel „thr“ in einer Auswahl."
+        ],
+        [
+          "native-script-name",
+          "Ein berechneter zugänglicher Name im falschen Schriftsystem."
+        ],
+        [
+          "no-latin-aria",
+          "Eine rein lateinische Ansage: Für das Prop wurde keine Übersetzung angegeben."
+        ],
+        [
+          "persian-zwnj",
+          "Ein persisches Kompositum mit Leerzeichen statt Verbindungszeichen – zwei verschiedene Suchtexte."
+        ]
+      ]
+    },
+    {
+      "title": "Richtung und Kalender",
+      "rules": [
+        [
+          "lang-dir",
+          "lang und dir des Dokuments widersprechen der Sprache der Route. Screenreader wählen danach ihre Stimme."
+        ],
+        [
+          "native-calendar",
+          "Die Sprache stimmt, der Kalender nicht: ⟦«۲۲ ژوئیه ۲۰۲۴»⟧ statt «۱ مرداد ۱۴۰۳»."
+        ]
+      ]
+    },
+    {
+      "title": "Nur scheinbar verbundene Elemente",
+      "rules": [
+        [
+          "named-controls",
+          "Ein interaktives Element ohne Namen; in einem Prototyp waren es 33."
+        ],
+        [
+          "resolved-idrefs",
+          "Ein nicht aufgelöstes labelledby oder describedby: Name und Hinweis erreichen niemanden."
+        ],
+        [
+          "unique-ids",
+          "Eine doppelte ID lässt alle Verweise auf das erste Vorkommen zeigen."
+        ],
+        [
+          "named-roledescription",
+          "Eine aria-roledescription ohne Namen; zehn Folien heißen nur „Folie“."
+        ],
+        [
+          "composite-tab-stop",
+          "Ein Widget mit wechselndem tabindex ohne Tab-Stopp im ausgelieferten HTML."
+        ],
+        [
+          "composite-single-tab-stop",
+          "Dasselbe Widget mit mehreren Tab-Stopps: 2, 3, 3, 4 und 5 in fünf Werkzeugleisten."
+        ]
+      ]
+    },
+    {
+      "title": "Auch Ausnahmen werden geprüft",
+      "rules": [
+        [
+          "latn-island-purity",
+          "Eine data-lumo-latn-Insel besteht überwiegend aus der Sprache des Lesers. Wenn nur 25 % einer Seite geprüft werden, müssen die übrigen 75 % begründete Ausnahmen sein."
+        ]
+      ]
+    }
+  ],
+  "installIndex": "03",
+  "installLabel": "Installation",
+  "installTitle": "Ein Paket. Eine Reihenfolge. Eine Prüfung.",
+  "steps": [
+    [
+      "Installieren",
+      "Das Paket liefert TypeScript-Quelltext, den Next transpiliert. pnpm ist erforderlich, weil der Workspace catalog: verwendet."
+    ],
+    [
+      "Styles in fester Reihenfolge",
+      "Binden Sie shadcn-Variablen gemeinsam an die sys-Tokens. Diese Website zeigt das Vorgehen."
+    ],
+    [
+      "Prüfen",
+      "Übergeben Sie die Build-Ausgabe an das Gate. Die Datei mit geprüften Mindestwerten liegt bei der Anwendung."
+    ]
+  ],
+  "piecesIndex": "04",
+  "piecesLabel": "Die Bestandteile",
+  "piecesTitle": "Sieben Teile, keine Komponentenbibliothek.",
+  "piecesLead": "Diese Funktionen kann eine Komponentenbibliothek nicht von außen korrigieren. Die Komponenten bleiben in Ihrer Anwendung: shadcn im Web, Material in Flutter.",
+  "pieces": [
+    [
+      "core",
+      "Der Sprachvertrag: Richtung, formatNumber, erforderliche Ansagen, LumoHtml und Hilfsfunktionen für lateinische Inseln."
+    ],
+    [
+      "theme",
+      "Drei Token-Ebenen, die Tailwind-Brücke und persische Typografieregeln."
+    ],
+    [
+      "dates",
+      "Vier Props für den Calendar von shadcn, die im Kalender des Lesers zählen."
+    ],
+    [
+      "gate",
+      "HTML-Prüfung und Kommandozeile: fünfzehn Regeln, ohne Browser."
+    ],
+    [
+      "config",
+      "Lint-Regeln für Rechts-nach-links ohne Plugin-Abhängigkeiten."
+    ],
+    [
+      "base-ui-ssr",
+      "Korrekturen für die erste HTML-Ausgabe von Base UI."
+    ],
+    [
+      "mobile",
+      "Derselbe Vertrag auf Material mit eigener Semantikprüfung."
+    ]
+  ],
+  "closeTitle": "Diese Seite liefert selbst den Nachweis.",
+  "closeLead": "Die Komponenten dieser Website sind shadcn-Kopien. Ihre Sprachregeln kommen aus core, theme und dates. Ihr statischer Export wird bei jedem Build mit demselben Gate geprüft.",
+  "closeDocs": "Dokumente",
+  "closeViolations": "Befunde",
+  "closeRules": "Regeln",
+  "docs": "Dokumentation lesen",
+  "telarsa": "Entwickelt von Telarsa"
+},
   "fa": {
-    eyebrow: "متن‌باز · MIT · ساختهٔ تلارسا",
+    eyebrow: "متن‌باز · MIT",
     title: "راست‌به‌چپ نیمهٔ آسان است.",
     accent: "Lumo نیمهٔ دیگر را نمره می‌دهد.",
     lead:
@@ -107,7 +287,7 @@ const T = {
     telarsa: "ساختهٔ تلارسا",
   },
   "en": {
-    eyebrow: "Open source · MIT · by Telarsa",
+    eyebrow: "Open source · MIT",
     title: "Right-to-left is the easy half.",
     accent: "Lumo grades the other half.",
     lead:
@@ -238,7 +418,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
               <p className="eyebrow">
                 {locale === "fa" ? (
                   <span>
-                    متن‌باز · <span data-lumo-latn>MIT</span> · ساختهٔ تلارسا
+                    متن‌باز · <span data-lumo-latn>MIT</span>
                   </span>
                 ) : (
                   t.eyebrow
@@ -402,7 +582,7 @@ export default async function Home({ params }: { params: Promise<{ locale: strin
             <div>
               <dt>{c.docs.onThisSite}</dt>
               <dd>
-                {n(18)} {t.closeDocs} · {n(0)} {t.closeViolations} · {n(15)} {t.closeRules}
+                {n(websiteFloors["@min-documents"])} {t.closeDocs} · {n(0)} {t.closeViolations} · {n(15)} {t.closeRules}
               </dd>
             </div>
           </dl>

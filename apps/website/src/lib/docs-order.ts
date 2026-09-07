@@ -9,6 +9,32 @@ export const DOCS_ORDER = ["getting-started", "contract", "helpers", "dates", "g
 export type DocSlug = (typeof DOCS_ORDER)[number];
 
 export const DOCS: Record<SiteLocale, Record<DocSlug, { label: string; lead: string }>> = {
+  de: {
+  "getting-started": {
+    "label": "Erste Schritte",
+    "lead": "Ein Paket, eine feste CSS-Reihenfolge und die Prüfung der Build-Ausgabe."
+  },
+  "contract": {
+    "label": "Der Vertrag",
+    "lead": "Was gemeinsam ist, wer es bereitstellt und wie Abweichungen erkannt werden."
+  },
+  "helpers": {
+    "label": "Hilfsfunktionen",
+    "lead": "Lateinische Inseln, Zahlen und die Befehle lumo doctor und lumo fix."
+  },
+  "dates": {
+    "label": "Jalali-Daten",
+    "lead": "Vier Props für den Calendar von shadcn, die im Kalender des Lesers zählen."
+  },
+  "gate": {
+    "label": "Das Gate",
+    "lead": "Fünfzehn Regeln für ausgeliefertes HTML und die Datei mit Mindestwerten."
+  },
+  "mobile": {
+    "label": "Mobil",
+    "lead": "Dieselbe Grundlage auf Material in Flutter, mit eigener Semantikprüfung."
+  }
+},
   "fa": {
     "getting-started": { label: "شروع", lead: "یک بسته، یک ترتیب ثابت برای CSS، و نمره‌دادن به خروجی build." },
     contract: { label: "قرارداد مشترک", lead: "چه چیزی مشترک است، چه کسی حملش می‌کند، و واگرایی را چه می‌گیرد." },

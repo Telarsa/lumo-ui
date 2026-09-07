@@ -16,6 +16,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
  * text, because a demo of a bad label must not BE a bad label.
  */
 const T = {
+  de: { served: "Ausgeliefert", graded: "Nach Lumo", report: "Gate-Bericht", route: "/fa/orders/4825", order: "سفارش", delivery: "تحویل", status: "وضعیت", submit: "ثبت سفارش", announced: "Angesagter Name", statusOk: "در جریان", total: (n: string) => `${n} Befund(e)`, clean: "0 Befunde" },
   "fa": {
     served: "همان‌طور که سرو شد",
     graded: "پس از Lumo",

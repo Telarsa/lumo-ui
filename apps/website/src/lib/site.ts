@@ -13,7 +13,7 @@ export const TELARSA_URL = "https://telarsa.com";
 export const VERSION: string = pkg.version;
 export const INSTALL_SPEC = `github:Telarsa/lumo-ui#v${VERSION}`;
 
-export const OG_LOCALE: Record<SiteLocale, string> = { en: "en_US", fa: "fa_IR" };
+export const OG_LOCALE: Record<SiteLocale, string> = { en: "en_US", de: "de_DE", fa: "fa_IR" };
 
 /** `/fa/docs/gate/` for a path — every internal link is built here, trailing slash included. */
 export function localePath(locale: SiteLocale, path = "/"): string {
@@ -27,6 +27,7 @@ export function alternatesFor(locale: SiteLocale, path = "/") {
     canonical: `${SITE_URL}${localePath(locale, path)}`,
     languages: {
       en: `${SITE_URL}${localePath("en", path)}`,
+      de: `${SITE_URL}${localePath("de", path)}`,
       fa: `${SITE_URL}${localePath("fa", path)}`,
       "x-default": `${SITE_URL}${localePath(DEFAULT_LOCALE, path)}`,
     },

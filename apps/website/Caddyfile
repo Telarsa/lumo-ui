@@ -1,4 +1,4 @@
-# The website's production server: Caddy over the exported directory. No Node
+# Optional container server: Caddy over the exported directory. No Node
 # at runtime, roughly 12 MB of image and 10 MB of memory (Telarsa/infrastructure,
 # docs/sites.md). Security headers are NOT set here — the edge Caddy sets HSTS,
 # nosniff and the referrer policy for every site in one place, and a per-site
@@ -24,6 +24,8 @@
 	handle / {
 		@fa header_regexp Accept-Language ^\s*fa
 		redir @fa /fa/ 302
+		@de header_regexp Accept-Language ^\s*de
+		redir @de /de/ 302
 		redir /en/ 302
 	}
 

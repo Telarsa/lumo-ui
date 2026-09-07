@@ -5,6 +5,41 @@ import type { SiteLocale } from "./locales";
  * fails at the type level, which is the contract the site is here to sell.
  */
 export const CHROME = {
+  de: {
+  "siteName": "Lumo UI",
+  "productOf": "Ein Produkt von Telarsa",
+  "allProducts": "Produkte von Telarsa",
+  "tagline": "Die Grundlage für korrekte persische Oberflächen",
+  "description": "Ein typisierter Sprachvertrag, Lint-Regeln und eine Prüfung der ausgelieferten Ziffern, Kalender, Schreibrichtung und zugänglichen Namen.",
+  "skip": "Zum Inhalt springen",
+  "nav": {
+    "docs": "Dokumentation",
+    "rules": "Regeln",
+    "github": "GitHub"
+  },
+  "switchLabel": "DE",
+  "switchAria": "Sprache wechseln",
+  "theme": {
+    "label": "Design",
+    "light": "Hell",
+    "dark": "Dunkel"
+  },
+  "footer": {
+    "built": "Entwickelt von",
+    "licence": "Open Source unter der MIT-Lizenz",
+    "docs": "Dokumentation",
+    "source": "Quelltext",
+    "company": "Telarsa",
+    "version": "Version"
+  },
+  "docs": {
+    "eyebrow": "Dokumentation",
+    "index": "Übersicht",
+    "prev": "Zurück",
+    "next": "Weiter",
+    "onThisSite": "Auf dieser Website"
+  }
+},
   "fa": {
     siteName: "Lumo UI",
     productOf: "محصولی از تلارسا",
@@ -15,7 +50,7 @@ export const CHROME = {
     skip: "پرش به محتوا",
     nav: { docs: "مستندات", rules: "قوانین", github: "گیت‌هاب" },
     switchLabel: "English",
-    switchAria: "تغییر زبان به انگلیسی",
+    switchAria: "تغییر زبان",
     theme: { label: "تغییر پوسته", light: "روشن", dark: "تاریک" },
     footer: {
       built: "ساختهٔ",
@@ -43,7 +78,7 @@ export const CHROME = {
     skip: "Skip to content",
     nav: { docs: "Docs", rules: "Rules", github: "GitHub" },
     switchLabel: "فارسی",
-    switchAria: "Switch to Persian",
+    switchAria: "Change language",
     theme: { label: "Theme", light: "Light", dark: "Dark" },
     footer: {
       built: "Built by",

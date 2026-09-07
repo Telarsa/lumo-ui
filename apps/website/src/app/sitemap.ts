@@ -5,7 +5,7 @@ import { SITE_URL, localePath } from "@/lib/site";
 
 export const dynamic = "force-static";
 
-/** Every page, in both languages, each pointing at its alternates. */
+/** Every page, in all three languages, each pointing at its alternates. */
 export default function sitemap(): MetadataRoute.Sitemap {
   const paths = ["/", "/docs", ...DOCS_ORDER.map((slug) => `/docs/${slug}`)];
   return paths.flatMap((path) =>

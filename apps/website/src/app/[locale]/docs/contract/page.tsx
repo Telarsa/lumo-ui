@@ -8,6 +8,52 @@ export const generateStaticParams = localeParams;
 const SLUG = "contract";
 
 const T = {
+  de: {
+  "title": "Der gemeinsame Vertrag",
+  "lead": "Komponentencode wird von shadcn und Base UI im Web sowie Material auf Mobilgeräten gepflegt. Alle Produkte verwenden dieselbe gemeinsame Grundlage. Hier steht, was zusammengehört und wie Abweichungen erkannt werden.",
+  "cols": [
+    "Gemeinsamer Bestandteil",
+    "Bereitgestellt durch",
+    "Prüfung auf Abweichungen"
+  ],
+  "rows": [
+    [
+      "Sprachvertrag",
+      "lumo-ui/core aus einem Git-Tag; keine Kopien",
+      "lumo doctor prüft Versionsunterschiede, der Compiler Pflichttexte"
+    ],
+    [
+      "Design-Tokens",
+      "lumo-ui/theme aus demselben Tag; shadcn-Variablen werden gemeinsam an sys-Tokens gebunden",
+      "gate:flutter-tokens verbindet Web und Mobil; Markenänderungen erfolgen an einer Stelle"
+    ],
+    [
+      "Komponentencode",
+      "shadcn-Kopien im Web, Material auf Mobilgeräten; upstream gepflegt",
+      "Englische Texte der Registry werden in der Kopie übersetzt; das Gate erkennt Rückschritte"
+    ],
+    [
+      "Lint-Regeln",
+      "lumo-ui/config; eine Datei ohne zusätzliche Abhängigkeiten",
+      "gate:lint in der CI jedes Repositorys"
+    ],
+    [
+      "Prüfgrundlage",
+      "Das Gate über die ausgelieferten Bytes",
+      "Das Gate selbst; Mindestzahlen nativer Ziffern auf zahlenreichen Seiten"
+    ],
+    [
+      "Anleitung",
+      "agent-consumer.md: Installation und Prüfliste",
+      "doctor benennt fehlende Teile"
+    ]
+  ],
+  "divergeTitle": "Was unterschiedlich sein darf",
+  "diverge": "Die Kopien. Ein Produkt darf seine shadcn-Kopien frei bearbeiten. Der Vertrag umfasst die oben genannten gemeinsamen Eigenschaften; Werkzeuge, die mehr versprachen, wurden entfernt.",
+  "versionTitle": "Versionsdisziplin",
+  "version": "Jeder Verbraucher bindet eine lumo-ui-Abhängigkeit an einen Tag. Alle Unterpfade kommen daraus. Korrekturen erscheinen als neuer Tag; npm-Versionsbereiche erlauben kein unbemerktes Auseinanderlaufen. Ein Tag wird erst nach erfolgreichem verify gesetzt.",
+  "dogfood": "Diese Website setzt den Vertrag selbst um: shadcn-Kopien für die Komponenten, core, theme und dates für die Sprachregeln und eine Prüfung der Ausgabe bei jedem Build."
+},
   "fa": {
     title: "قرارداد مشترک",
     lead: "الزام: کد کامپوننت را بالادست مدیریت کند — shadcn و Base UI در وب، Material در موبایل — ولی همهٔ محصولات روی یک هسته بمانند و واگرا نشوند. سازوکار، صریح؛ چون قراردادِ بدون ابزار می‌لغزد.",

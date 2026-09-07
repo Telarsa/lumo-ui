@@ -20,6 +20,23 @@ const { dateLib, formatters, labels, weekStartsOn } =
           labels={labels} weekStartsOn={weekStartsOn} />`;
 
 const T = {
+  de: {
+  "title": "Jalali-Daten mit dem Calendar von shadcn",
+  "lead": "Der Calendar von shadcn verwendet react-day-picker. Dessen persische Spracheinstellung in Version 10 beschriftet ein gregorianisches Raster auf Persisch: „22. Juli 2024“ statt „1. Mordad 1403“. lumoCalendar liefert vier bereits unterstützte Props; ein Wrapper oder eine Migration ist nicht erforderlich.",
+  "demoTitle": "Direkt auf dieser Seite",
+  "demoNote": "Der Kalender ist die shadcn-Kopie. Das Kalenderverhalten wird als Props übergeben. Ansagen für Navigation und Zellen sind vollständig angegeben: integrierte Sprachen verwenden stringsFor, Deutsch verwendet einen eigenen vollständigen Textsatz.",
+  "labels": {
+    "selected": "Ausgewählter Tag",
+    "fields": "Felder von CalendarDate"
+  },
+  "usageTitle": "Verwendung",
+  "boundaryTitle": "Die Datengrenze",
+  "boundary": "An einer API-Grenze steht nie ein unverarbeitetes Date: Es beschreibt einen Zeitpunkt und kennt keinen Mordad. Nur toPickerDate und fromPickerDate wandeln einen CalendarDate mit Kalenderinformation in das Date des Rasters um. Dabei wird die lokale Mittagszeit verwendet, damit keine Zeitzone den Tag verschiebt.",
+  "provedTitle": "Nachgewiesen",
+  "proved": "Der Vergleich über vierzig Jahre: Jeder Tag von 1990 bis 2030 wurde mit Intl verglichen, ohne Abweichung. Die Schaltregel wurde für Esfand zwischen 1390 und 1420 von beiden Seiten geprüft.",
+  "fixedTitle": "Was diese Seite früher falsch machte",
+  "fixed": "Der ausgewählte Tag hatte keine Füllung; „heute“ erschien als dunkler Text auf dunklem Grund. Die vorige Kopie setzte den Auswahlzustand auf die Tabellenzelle und verwendete bg-accent mit seiner mehrdeutigen Bedeutung. Heute liegt der Zustand auf dem Button: primary für die Auswahl, muted für den heutigen Tag. Das wurde im Browser gemessen."
+},
   "fa": {
     title: "تاریخ جلالی، روی Calendar خودِ shadcn",
     lead: "Calendar شادسی‌ان همان react-day-picker است، و locale فارسیِ نسخهٔ ۱۰ فقط پوسته‌ای فارسی روی شبکهٔ میلادی است: برای روزی که ایران «۱ مرداد ۱۴۰۳» می‌نامد، تاریخی میلادی با واژه‌های فارسی نشان می‌دهد. lumoCalendar چهار propی برمی‌گرداند که DayPicker از قبل می‌پذیرد؛ چیزی wrap نمی‌شود و جایی مهاجرت نمی‌کنید.",
