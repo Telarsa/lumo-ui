@@ -144,31 +144,22 @@ the gate is the site the gate is proved on.
 
 ```bash
 pnpm dev                     # apps/website on :3000
-pnpm run gate:html           # build it, then grade the bytes it serves
-docker build -f apps/website/Dockerfile -t lumo-ui-site .
-docker run --rm -p 3000:3000 lumo-ui-site
+pnpm run gate:html            # build and grade the exported pages
+pnpm preview:website         # serve out/ with local Cloudflare routing
+pnpm deploy:website          # build and deploy with your Cloudflare account
 ```
 
-**The Docker context is the repository root**, which is why the Dockerfile is
-not beside the pages it builds: `apps/website` depends on this package as
-`file:../..`, so a build that could only see that directory would have nothing
-to resolve the library it documents against. The image is Caddy plus the export
-and nothing else — no Node at runtime — and its `Caddyfile` answers the bare
-origin from `Accept-Language` rather than handing every reader English.
+The library and website stay in this monorepo and deploy independently. The
+website uses Cloudflare Workers Static Assets; a package tag does not publish
+it. `apps/website/wrangler.jsonc` names `out/`, so Wrangler does not migrate the
+Next app to OpenNext. No runtime service or added package dependency is needed.
+The root redirects to English; Persian lives at `/fa/`.
 
-Deploying is a tag. `.github/workflows/release.yml` calls the shared
-`release-image.yml` in Telarsa/infrastructure, which pushes
-`ghcr.io/telarsa/lumo-ui-site` by digest and opens a pull request pinning that
-digest in the stack; merging it deploys and reverting it rolls back. The same
-tag is the one consumers install from, so cutting `v1.0.1` ships the library and
-the docs for it together.
-
-**Not yet reachable.** Measured on 7 September 2026: `lumo-ui.com` and
-`www.lumo-ui.com` resolve to Cloudflare and serve Hostinger's parked-domain
-page, and no host behind them exists — `komodo.telarsa.com` and its siblings do
-not resolve, so there is nothing for a stack to deploy onto. The pipeline above
-is written and untested end to end; what is missing is the platform bootstrap in
-Telarsa/infrastructure's `DEPLOY.md`, which only the owner can start.
+The optional Docker/Caddy image is still built from the repository root and
+negotiates the root locale from `Accept-Language`. It is not the chosen host.
+See [deployment instructions](docs/deployment.md) for local verification and
+separate apex/www Custom Domain bindings. The website passed local verification
+on 7 September 2026; public publication and owner DNS binding remain outstanding.
 
 ## Contributing
 

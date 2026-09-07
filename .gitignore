@@ -45,3 +45,6 @@ packages/mobile/pubspec.lock
 
 # Next regenerates this on every build; carrying it only creates diff noise.
 next-env.d.ts
+
+# Wrangler local state and temporary deploy output.
+.wrangler/

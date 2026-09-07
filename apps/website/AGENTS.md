@@ -1,9 +1,13 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# Lumo website
 
-# This is NOT the Next.js you know
+Follow the root AGENTS.md. Build from the monorepo root; this app consumes
+`lumo-ui` through `file:../..`. Its static export deploys independently to
+Cloudflare Workers Static Assets using this directory's wrangler.jsonc.
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+Run the root verify gate and inspect English/Persian built output before
+publishing. Preserve the UI, both themes, and the unbound shadcn accent rule.
+No package version or tag is needed for a website deployment. Owner DNS binds
+apex and www separately as Worker Custom Domains. See docs/deployment.md.
 
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+Next's generated agent-rules block is not maintained source; revert that block
+if a dev server writes it. Do not commit it with unrelated work.

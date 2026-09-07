@@ -91,7 +91,10 @@
     "gate:mobile-smoke": "node scripts/smoke-mobile.mjs",
     "dev": "pnpm --filter @lumo-ui/website dev",
     "gate:html": "pnpm --filter @lumo-ui/website build && node scripts/grade-app.mjs apps/website/out en apps/website/gate.floors.json",
-    "prepare": "husky"
+    "prepare": "husky",
+    "check": "pnpm verify",
+    "preview:website": "pnpm --filter @lumo-ui/website preview",
+    "deploy:website": "pnpm --filter @lumo-ui/website deploy"
   },
   "dependencies": {
     "@internationalized/date": "3.12.3",
