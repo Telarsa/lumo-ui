@@ -1,0 +1,42 @@
+# The website's production server: Caddy over the exported directory. No Node
+# at runtime, roughly 12 MB of image and 10 MB of memory (Telarsa/infrastructure,
+# docs/sites.md). Security headers are NOT set here — the edge Caddy sets HSTS,
+# nosniff and the referrer policy for every site in one place, and a per-site
+# copy is one more thing to keep in step.
+{
+	admin off
+	auto_https off
+}
+
+:3000 {
+	root * /srv
+	encode zstd gzip
+	log {
+		output stdout
+		format console
+	}
+
+	# The bare origin has no locale, and a project whose whole argument is that
+	# Persian readers are served badly by default should not hand them English
+	# by default. The FIRST tag of Accept-Language decides; English is the
+	# fallback. `out/index.html` (a meta refresh to /en/) still covers a host
+	# that ignores this, so the two never disagree about the fallback.
+	handle / {
+		@fa header_regexp Accept-Language ^\s*fa
+		redir @fa /fa/ 302
+		redir /en/ 302
+	}
+
+	# The export's own not-found page, which `scripts/own-the-404.mjs` replaced
+	# with the site's Persian-capable shell — Next's builtin one carries no
+	# `lang` and no `dir`, which is the defect this project exists to catch.
+	handle_errors {
+		@notfound expression {http.error.status_code} == 404
+		handle @notfound {
+			rewrite * /404.html
+			file_server
+		}
+	}
+
+	file_server
+}

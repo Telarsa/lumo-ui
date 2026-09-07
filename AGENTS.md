@@ -49,6 +49,21 @@ NVDA, JAWS, VoiceOver, TalkBack, or CI results you did not actually run. There
 is no browser-evidence job in this repo any more; accessibility-tree and
 served-byte facts are the only ones the gates produce.
 
+## Deploying
+
+`apps/website` is the only deployable in this repository, and it ships as a
+container image: `apps/website/Dockerfile`, built **from the repository root**
+because the site depends on this package as `file:../..`. A `v*` tag runs
+`.github/workflows/release.yml`, which pushes `ghcr.io/telarsa/lumo-ui-site` by
+digest and opens the pull request that pins it in Telarsa/infrastructure. That
+is the same tag consumers install from, so one tag now ships the library and the
+docs for it together — which is why cutting one is on the list above rather than
+a routine step.
+
+Nothing has been deployed yet. lumo-ui.com is registered and parked, and no host
+behind it exists (measured 7 September 2026); the README's "The website" section
+says what the owner has to supply.
+
 ## Layout
 `packages/core` the locale contract (types, direction, formatNumber, strings,
 the locale context) · `packages/theme` tokens + the Tailwind bridge + Persian

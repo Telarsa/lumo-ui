@@ -1,0 +1,22 @@
+# What the website's image build does not need. `packages/*/dist` is NOT here:
+# the gate's and core's compiled JavaScript is committed on purpose (see
+# .gitignore) and the package's exports point at it.
+.git
+.github
+node_modules
+**/node_modules
+.next
+**/.next
+out
+**/out
+*.tsbuildinfo
+**/*.tsbuildinfo
+.evidence
+coverage
+mutation-report.json
+.DS_Store
+# Flutter. `packages/mobile` and `apps/mobile-example` carry no package.json,
+# so pnpm never sees them, and the website does not import Dart.
+packages/mobile
+apps/mobile-example
+**/.dart_tool

@@ -45,6 +45,11 @@ pnpm only: the workspace uses `catalog:`, which npm cannot parse. In a Next.js
 app add `transpilePackages: ["lumo-ui"]` — Lumo ships TypeScript source, and
 your bundler compiles it in place.
 
+There is no `npm install lumo-ui`, and there will not be one under that name:
+on the registry it belongs to an unrelated package by someone unconnected to
+this project. A git tag is the install. Publishing would mean taking a scope
+first, which is a naming decision for the owner rather than a release step.
+
 ## Grade a build
 
 ```bash
@@ -130,6 +135,40 @@ mobile equivalent of grading served bytes.
 | `mobile` | `lumo_ui_mobile`, the Flutter side |
 | `apps/website` | lumo-ui.com — a consumer of the package, graded by its own gate |
 | `apps/mobile-example` | the Flutter example the mobile grader runs against |
+
+## The website
+
+`apps/website` is lumo-ui.com: a static export of these docs in English and
+Persian, which is also the corpus `gate:html` grades — the site that documents
+the gate is the site the gate is proved on.
+
+```bash
+pnpm dev                     # apps/website on :3000
+pnpm run gate:html           # build it, then grade the bytes it serves
+docker build -f apps/website/Dockerfile -t lumo-ui-site .
+docker run --rm -p 3000:3000 lumo-ui-site
+```
+
+**The Docker context is the repository root**, which is why the Dockerfile is
+not beside the pages it builds: `apps/website` depends on this package as
+`file:../..`, so a build that could only see that directory would have nothing
+to resolve the library it documents against. The image is Caddy plus the export
+and nothing else — no Node at runtime — and its `Caddyfile` answers the bare
+origin from `Accept-Language` rather than handing every reader English.
+
+Deploying is a tag. `.github/workflows/release.yml` calls the shared
+`release-image.yml` in Telarsa/infrastructure, which pushes
+`ghcr.io/telarsa/lumo-ui-site` by digest and opens a pull request pinning that
+digest in the stack; merging it deploys and reverting it rolls back. The same
+tag is the one consumers install from, so cutting `v1.0.1` ships the library and
+the docs for it together.
+
+**Not yet reachable.** Measured on 7 September 2026: `lumo-ui.com` and
+`www.lumo-ui.com` resolve to Cloudflare and serve Hostinger's parked-domain
+page, and no host behind them exists — `komodo.telarsa.com` and its siblings do
+not resolve, so there is nothing for a stack to deploy onto. The pipeline above
+is written and untested end to end; what is missing is the platform bootstrap in
+Telarsa/infrastructure's `DEPLOY.md`, which only the owner can start.
 
 ## Contributing
 
