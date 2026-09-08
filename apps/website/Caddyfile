@@ -1,8 +1,4 @@
-# Optional container server: Caddy over the exported directory. No Node
-# at runtime, roughly 12 MB of image and 10 MB of memory (Telarsa/infrastructure,
-# docs/sites.md). Security headers are NOT set here — the edge Caddy sets HSTS,
-# nosniff and the referrer policy for every site in one place, and a per-site
-# copy is one more thing to keep in step.
+# Static export runtime. No Node process or writable application data.
 {
 	admin off
 	auto_https off
@@ -11,6 +7,15 @@
 :3000 {
 	root * /srv
 	encode zstd gzip
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+	@internal path /_headers /_redirects
+	respond @internal 404
+	@immutable path /_next/static/*
+	header @immutable Cache-Control "public, max-age=31536000, immutable"
 	log {
 		output stdout
 		format console
@@ -22,6 +27,8 @@
 	# fallback. `out/index.html` (a meta refresh to /en/) still covers a host
 	# that ignores this, so the two never disagree about the fallback.
 	handle / {
+		header Vary Accept-Language
+		header Cache-Control no-store
 		@fa header_regexp Accept-Language ^\s*fa
 		redir @fa /fa/ 302
 		@de header_regexp Accept-Language ^\s*de

@@ -20,3 +20,8 @@ mutation-report.json
 packages/mobile
 apps/mobile-example
 **/.dart_tool
+
+.env
+.env.*
+**/.env
+**/.env.*

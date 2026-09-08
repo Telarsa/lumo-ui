@@ -40,7 +40,8 @@ COPY apps/website/Caddyfile /etc/caddy/Caddyfile
 COPY --from=build /app/apps/website/out /srv
 # Non-root, on an unprivileged port. Caddy keeps its state under /data and
 # /config, so those belong to the user it runs as.
-RUN addgroup -S -g 1001 site \
+RUN setcap -r /usr/bin/caddy \
+  && addgroup -S -g 1001 site \
   && adduser -S -u 1001 -G site -H -s /sbin/nologin site \
   && mkdir -p /data /config \
   && chown -R site:site /data /config

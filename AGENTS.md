@@ -79,3 +79,10 @@ Details: `docs/verification.md` (what each gate proves), `docs/i18n-and-rtl.md`
 (the locale contract), `docs/agent-consumer.md` (the consumer workflow),
 `docs/decisions/log.md` (why anything is the way it is; §50–§51 is the current
 architecture, and the entries before it explain what the code still does).
+
+## VPS preparation — 8 September 2026
+
+The owner selected Docker on the existing VPS. `DEPLOY-VPS.md` documents
+`image:website`, `run:website` and `stop:website`. Keep the Cloudflare commands
+until cutover is verified. Container packaging must preserve routes, locales,
+404s and security headers; no UI change is part of this hosting preparation.

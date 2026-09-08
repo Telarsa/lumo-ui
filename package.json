@@ -96,7 +96,10 @@
     "preview:website": "pnpm --filter @lumo-ui/website preview",
     "deploy:website": "pnpm --filter @lumo-ui/website run deploy",
     "build:website": "pnpm --filter @lumo-ui/website run build",
-    "check:website": "pnpm run lint && pnpm --filter @lumo-ui/website run typecheck && pnpm run gate:html"
+    "check:website": "pnpm run lint && pnpm --filter @lumo-ui/website run typecheck && pnpm run gate:html",
+    "image:website": "docker build -f apps/website/Dockerfile -t lumo-ui-website:local .",
+    "run:website": "docker compose -f compose.website.yaml up -d --wait",
+    "stop:website": "docker compose -f compose.website.yaml down"
   },
   "dependencies": {
     "@internationalized/date": "3.12.3",

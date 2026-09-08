@@ -1,0 +1,15 @@
+# Local rehearsal. The shared VPS edge attaches through infrastructure's overlay.
+name: ${COMPOSE_PROJECT_NAME:-lumo-ui-website}
+services:
+  website:
+    image: ${WEBSITE_IMAGE:-lumo-ui-website:local}
+    ports:
+      - "127.0.0.1:${WEBSITE_PORT:-3000}:3000"
+    restart: unless-stopped
+    mem_limit: 128m
+    cpus: 0.25
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
