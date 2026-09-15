@@ -1,0 +1,32 @@
+/* Telarsa typography: Inter for Latin, licensed IRANSansX Pro for Persian.
+ * Unicode text and locale formatters determine digits; no FaNum substitution. */
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/InterVariable-Italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IRANSansX";
+  src: url("/fonts/IRANSansXVF.woff2") format("woff2");
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+200C-200F, U+FB50-FDFF, U+FE70-FEFF;
+}
+:root {
+  --font-sans: "Inter", "IRANSansX", sans-serif;
+  --font-fa: "Inter", "IRANSansX", sans-serif;
+  --lumo-font-persian: "Inter", "IRANSansX", sans-serif;
+  --lumo-sys-font-sans: "Inter", "IRANSansX", sans-serif;
+}
+body { font-family: "Inter", "IRANSansX", sans-serif; }
+button, input, select, textarea { font-family: inherit; }

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Archivo, JetBrains_Mono, Vazirmatn } from "next/font/google";
+
 import { notFound } from "next/navigation";
 import { LumoHtml, themeScript } from "lumo-ui/core";
 import { SiteLocaleProvider } from "@/components/site/locale-provider";
@@ -9,19 +9,6 @@ import { CHROME } from "@/lib/chrome";
 import { isSiteLocale, localeParams } from "@/lib/locales";
 import { GITHUB_URL, OG_LOCALE, SITE_URL, TELARSA_URL, VERSION, alternatesFor, localePath } from "@/lib/site";
 import "../globals.css";
-
-/*
- * The company's type system, self-hosted by next/font at build time.
- *
- * Archivo carries the width axis the display register is set on — wide at
- * headline size, normal for body. JetBrains Mono carries every identifier.
- * Vazirmatn carries Persian, and Lumo's own script.css reads it through the
- * `--lumo-font-persian` knob the stylesheet sets, so `:lang(fa)` never falls
- * to a platform face.
- */
-const sans = Archivo({ subsets: ["latin", "latin-ext"], variable: "--font-archivo", display: "swap", weight: "variable", axes: ["wdth"] });
-const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains-mono", display: "swap", weight: "variable" });
-const farsi = Vazirmatn({ subsets: ["arabic", "latin"], variable: "--font-vazirmatn", display: "swap" });
 
 /* <html> lives HERE, keyed by the locale param — a param is static, a request
  * header is not. */
@@ -98,7 +85,7 @@ export default async function LocaleLayout({ children, params }: { children: Rea
   };
 
   return (
-    <LumoHtml lang={locale} className={`${sans.variable} ${mono.variable} ${farsi.variable}`} suppressHydrationWarning>
+    <LumoHtml lang={locale} suppressHydrationWarning>
       <head>
         {/* Before first paint, so a dark reader never sees a light flash. */}
         <script dangerouslySetInnerHTML={{ __html: themeScript() }} />

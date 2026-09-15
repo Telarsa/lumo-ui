@@ -136,7 +136,7 @@
   :root:lang(fa),
   [lang="fa"],
   [lang^="fa-"] {
-    --lumo-sys-font-sans: var(--lumo-font-persian, "Vazirmatn Variable", "Vazirmatn"), system-ui, sans-serif;
+    --lumo-sys-font-sans: var(--lumo-font-persian, "Inter", "IRANSansX"), system-ui, sans-serif;
     /* …and APPLIED here, on the root and on every Persian island, so it also
        reaches portalled surfaces (Select popover, Dialog, Calendar) — those
        mount under <body>, outside any locale-scoped wrapper an app might have

@@ -22,4 +22,49 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
+  assets:
+    - assets/fonts/Inter-LICENSE.txt
+    - assets/fonts/IRANSansX-LICENSE-NOTE.txt
   uses-material-design: true
+  # Inter (OFL) and owner-licensed IRANSansX Pro; Unicode numerals.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Inter-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Inter-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Inter-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Inter-Black.ttf
+          weight: 900
+    - family: IRANSansX
+      fonts:
+        - asset: assets/fonts/IRANSansX-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/IRANSansX-UltraLight.ttf
+          weight: 200
+        - asset: assets/fonts/IRANSansX-Light.ttf
+          weight: 300
+        - asset: assets/fonts/IRANSansX-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/IRANSansX-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/IRANSansX-DemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/IRANSansX-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/IRANSansX-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/IRANSansX-Black.ttf
+          weight: 900

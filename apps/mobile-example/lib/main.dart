@@ -1,3 +1,4 @@
+import 'telarsa_fonts.dart';
 // The mobile counterpart of `apps/website`.
 //
 // `apps/website` is a shadcn app that consumes `@lumo-ui/*` and is graded by
@@ -47,8 +48,8 @@ class _ExampleAppState extends State<ExampleApp> {
       ],
       // Lumo's tokens, bound into Material's own `ColorScheme`. Every Material
       // widget below is already the right colour without being wrapped.
-      theme: lumoThemeData(brightness: Brightness.light),
-      darkTheme: lumoThemeData(brightness: Brightness.dark),
+      theme: telarsaThemeData(brightness: Brightness.light),
+      darkTheme: telarsaThemeData(brightness: Brightness.dark),
       home: LumoScope(
         locale: _locale,
         child: BookingScreen(
