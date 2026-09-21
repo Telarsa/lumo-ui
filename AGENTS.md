@@ -86,3 +86,10 @@ The owner selected Docker on the existing VPS. `DEPLOY-VPS.md` documents
 `image:website`, `run:website` and `stop:website`. Keep the Cloudflare commands
 until cutover is verified. Container packaging must preserve routes, locales,
 404s and security headers; no UI change is part of this hosting preparation.
+
+## GitHub Free preparation — 21 September 2026
+
+The optional GitHub Actions Cloudflare publication workflow is retired by owner
+decision. Existing Cloudflare deployments and authenticated local deployment
+commands remain unchanged. Follow Telarsa handbook 08 §7 for develop-first
+verification and promotion; private branches lose server enforcement on Free.
