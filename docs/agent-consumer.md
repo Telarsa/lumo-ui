@@ -68,11 +68,15 @@ import lumo from "lumo-ui/config/eslint";
   repository nor a secret. The token goes in the password position;
   `x-access-token` is a literal GitHub accepts as the user.
 - **`lumo doctor` checks the rest** — the pin, and the wiring: every importing
-  Next app transpiles `lumo-ui` and allows `.ts` imports, every gate script has
-  a floors file declaring `@min-documents` and `@locales`, and the lint policy
-  is extended. It exits non-zero on anything that would fail CI. Run it before
-  the first push; every one of its checks is a CI failure that happened on a
-  consumer's first day.
+  Next app transpiles `lumo-ui` and allows `.ts` imports; every gate script
+  that runs Lumo's grader has a floors file declaring `@min-documents` and
+  `@locales` (a gate in which no grader call is found is reported as advice
+  instead); and Lumo's lint selectors are in effect, not only imported. For
+  that last check it asks the app's own ESLint for the effective config, which
+  EXECUTES the app's `eslint.config.*`, so run the doctor only on repositories
+  you trust. It exits non-zero on anything that would fail CI. Run it before
+  the first push; every one of its checks comes from a CI failure or a gap
+  observed on a real consumer.
 - A fix reaches you as a **new tag**, never a patch: `pnpm patch` cannot target
   a git dependency. Bump the specifiers together.
 

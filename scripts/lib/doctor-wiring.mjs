@@ -32,11 +32,19 @@
  *     of that app's pages. The doctor now follows what the gate runs and, when
  *     it finds no grader call, says so as advice, worded as what it measured.
  *     A route list handed to a local grader is no longer taken for its floors.
+ *   - a lint config that imports Lumo's policy and then redefines
+ *     `no-restricted-syntax` passed, because the check was a text match on the
+ *     import. It now reads the effective config through the app's own ESLint,
+ *     which EXECUTES that config: run the doctor on repositories you trust.
  *
  * `hard` findings exit non-zero. `soft` ones are advice that is usually right.
  */
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
 import { dirname, join, relative } from "node:path";
+
+import { lumoRules } from "../../packages/config/eslint/lumo.mjs";
 
 /** @typedef {{ level: "hard" | "soft", where: string, what: string, fix: string }} Finding */
 
@@ -226,6 +234,93 @@ function checkFloors(appDir, here, floorsName, out) {
   if (!Array.isArray(floors["@locales"])) out.push({ level: "hard", where: `${here}/${floorsName}`, what: "declares no `@locales`", fix: 'list the app\'s locales, e.g. `"@locales": ["en", "fa"]` — otherwise a route like `/pro` is graded as the locale `pro` (Old Provençal)' });
 }
 
+/** @param {any} rules @returns {string[]} */
+const selectorsOf = (rules) => /** @type {Array<{ selector: string }>} */ (rules["no-restricted-syntax"].slice(1)).map((s) => s.selector);
+
+/** This checkout's selectors: the fallback when the app's own copy cannot be loaded. */
+const LUMO_SELECTORS = selectorsOf(lumoRules);
+
+/**
+ * Lumo's selectors as the lumo-ui the app's eslint config IMPORTS defines them,
+ * resolved from beside that config the way its own `import` resolves. That is
+ * the set its effective config should carry. `lumo doctor --to <app>` can run
+ * from a checkout at another version than the app's pin (the doctor reports
+ * that skew separately), and measuring the app against this checkout's
+ * selectors would then call every selector missing from a correctly wired app.
+ * This checkout's copy is used only when the app's cannot be loaded.
+ * @param {string} configPath @returns {string[]}
+ */
+function lumoSelectorsFor(configPath) {
+  try {
+    // Synchronous `require` of an ES module (Node 22.12+; this package needs 24).
+    const selectors = selectorsOf(createRequire(configPath)("lumo-ui/config/eslint").lumoRules);
+    if (selectors.length > 0 && selectors.every((s) => typeof s === "string")) return selectors;
+  } catch { /* not resolvable or not loadable from the app */ }
+  return LUMO_SELECTORS;
+}
+
+/**
+ * One of the app's own source files to ask ESLint about. Tests, fixtures and
+ * type-tests are skipped: Lumo's policy switches itself off for them on
+ * purpose, so they would report a gap that is not there.
+ * @param {string} dir @returns {string | undefined}
+ */
+function sampleSource(dir) {
+  /** @type {Record<string, string>} */
+  const byExt = {};
+  for (const p of walkPackage(dir)) {
+    if (/\.(test|spec|type-test)\.|\/fixtures\/|\.d\.ts$|(^|\/)[^/]*\.config\.[cm]?[jt]s$/.test(p)) continue;
+    const ext = /\.(tsx|ts|jsx|js|mjs)$/.exec(p)?.[1];
+    if (ext !== undefined && byExt[ext] === undefined) byExt[ext] = p;
+  }
+  return byExt.tsx ?? byExt.ts ?? byExt.jsx ?? byExt.js ?? byExt.mjs;
+}
+
+/**
+ * The `no-restricted-syntax` selectors ESLint would actually apply to one of
+ * this app's files, asked of the app's OWN ESLint (`--print-config`).
+ *
+ * A text match on the import cannot answer this. ESLint REPLACES a rule's
+ * options when a later config block names the same rule; it does not merge
+ * them. A config that spreads Lumo's policy and then declares its own
+ * `no-restricted-syntax` keeps the import and none of Lumo's selectors, and
+ * that exact shape passed this check while every Lumo selector was off.
+ *
+ * Returns undefined when the answer cannot be established: no ESLint installed
+ * for this app, no source file to ask about, the file is ignored, or ESLint
+ * failed. The caller then reports nothing either way rather than guessing.
+ * @param {string} appDir @param {string} configPath
+ * @returns {{ file: string, selectors: string[] } | undefined}
+ */
+function effectiveSelectors(appDir, configPath) {
+  const file = sampleSource(appDir);
+  if (file === undefined) return undefined;
+  let bin;
+  try {
+    const manifest = createRequire(join(appDir, "package.json")).resolve("eslint/package.json");
+    const binField = JSON.parse(readFileSync(manifest, "utf8")).bin;
+    bin = join(dirname(manifest), typeof binField === "string" ? binField : binField?.eslint ?? "bin/eslint.js");
+  } catch { return undefined; }
+  let config;
+  try {
+    // Real paths: ESLint measures the file against its cwd, which a child
+    // process reports resolved. Through a symlinked prefix (macOS `/var` is
+    // `/private/var`) the file would sit "outside" it and print as ignored.
+    const cfg = realpathSync(configPath);
+    const stdout = execFileSync(process.execPath, [bin, "--config", cfg, "--print-config", realpathSync(file)], {
+      cwd: dirname(cfg), encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], timeout: 60_000, maxBuffer: 64 * 1024 * 1024,
+    });
+    config = JSON.parse(stdout);
+  } catch { return undefined; }
+  if (config === null || typeof config !== "object") return undefined;
+  const rule = config.rules?.["no-restricted-syntax"];
+  const entries = Array.isArray(rule) ? rule : [rule];
+  const level = entries[0];
+  if (rule === undefined || level === 0 || level === "off") return { file, selectors: [] };
+  const selectors = entries.slice(1).map((e) => (typeof e === "string" ? e : e?.selector)).filter((s) => typeof s === "string");
+  return { file, selectors };
+}
+
 /** @param {string} root @returns {Finding[]} */
 export function checkWiring(root) {
   /** @type {Finding[]} */
@@ -317,9 +412,19 @@ export function checkWiring(root) {
     // F. the lint policy is the FIRST line; the gate is the last
     const eslint = ["eslint.config.mjs", "eslint.config.js", "eslint.config.ts"].map((n) => join(app.dir, n)).find(existsSync)
       ?? ["eslint.config.mjs", "eslint.config.js", "eslint.config.ts"].map((n) => join(root, n)).find(existsSync);
-    if (eslint && !seenEslint.has(eslint) && !/lumo-ui\/config\/eslint/.test(readFileSync(eslint, "utf8"))) {
+    if (eslint && !seenEslint.has(eslint)) {
       seenEslint.add(eslint);
-      out.push({ level: "soft", where: rel(eslint), what: "does not extend Lumo's lint policy", fix: 'import from "lumo-ui/config/eslint" — the gate is the last line; lint at authoring time is the first, and first-contact counts of 645 and 17,797 are what its absence costs' });
+      if (!/lumo-ui\/config\/eslint/.test(readFileSync(eslint, "utf8"))) {
+        out.push({ level: "soft", where: rel(eslint), what: "does not extend Lumo's lint policy", fix: 'import from "lumo-ui/config/eslint" — the gate is the last line; lint at authoring time is the first, and first-contact counts of 645 and 17,797 are what its absence costs' });
+      } else {
+        // The import is there; whether its selectors survive is a separate question.
+        const effective = effectiveSelectors(app.dir, eslint);
+        const expected = effective === undefined ? [] : lumoSelectorsFor(eslint);
+        const missing = effective === undefined ? [] : expected.filter((s) => !effective.selectors.includes(s));
+        if (effective !== undefined && missing.length > 0) {
+          out.push({ level: "soft", where: rel(eslint), what: `extends Lumo's lint policy, but ${missing.length} of its ${expected.length} selectors are not in effect for ${rel(effective.file)} — usually a later block that declares its own \`no-restricted-syntax\`, which ESLint applies INSTEAD of Lumo's, not beside them`, fix: 'merge them: `"no-restricted-syntax": [level, ...lumoRules["no-restricted-syntax"].slice(1), ...yours]`, with `lumoRules` imported from "lumo-ui/config/eslint"' });
+        }
+      }
     }
   }
   return out;

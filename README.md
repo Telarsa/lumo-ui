@@ -112,9 +112,12 @@ node node_modules/lumo-ui/scripts/lumo-cli.mjs doctor --to .
 node node_modules/lumo-ui/scripts/lumo-cli.mjs fix --zwnj --digits --locale fa content/
 ```
 
-`doctor` checks the things that are invisible until they break: the credential
-on every CI job that installs, `transpilePackages`, the floors file and its
-settings, the lint policy. `fix` is a dry run until you pass `--write`.
+`doctor` checks the things that are invisible until they break:
+`transpilePackages`, the TypeScript extension flag, whether a call to Lumo's
+grader is found in each `gate` script and, where it is, the floors file and its
+settings, and whether Lumo's lint selectors are in effect. For the last it asks
+the app's own ESLint for the effective config, so it runs that config: use it
+on repositories you trust. `fix` is a dry run until you pass `--write`.
 
 ## Flutter
 
