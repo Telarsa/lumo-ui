@@ -33,8 +33,9 @@ rented from the ecosystem.
   base style keeps Base UI underneath).
 - **`lumo_ui_mobile`** — the same contract on Material's widget layer, with the
   semantics grader (`package:lumo_ui_mobile/testing.dart`, run by `gate:flutter`) as its counterpart
-  of the HTML gate. Two Flutter consumers depend on it by path; it is a kept
-  package, not a retired one.
+  of the HTML gate. Flutter consumers depend on it as a git dependency pinned
+  to a release tag (`path: packages/mobile`); it is a kept package, not a
+  retired one.
 
 ## What it is not
 

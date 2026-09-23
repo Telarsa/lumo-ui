@@ -23,7 +23,7 @@
 - lumo-ui/dates — lumoCalendar(locale, strings.calendar) → the four props shadcn's Calendar already accepts, counting in the reader's calendar (shadcn naming: `disabled`, not `isDisabled`)
 - lumo-ui/base-ui-ssr — first-byte compensations for Base UI
 - lumo-ui/gate + lumo-ui/config — the grader and the lint policy
-- lumo_ui_mobile — the contract on Material's widget layer (Flutter; path dependency)
+- lumo_ui_mobile — the contract on Material's widget layer (Flutter; git dependency pinned to a tag, `path: packages/mobile`)
 
 ## The non-negotiables (enforced, not advised)
 - every announced string is required, in the page's language — never English by default
