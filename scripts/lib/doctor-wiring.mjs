@@ -21,6 +21,13 @@
  * (The first of those, the credential, is retired: see the note in
  * `checkWiring`. Lumo is public from 1.0.0.)
  *
+ * Corrected on 23 Sep 2026, each after it was observed to mislead on a real
+ * consumer:
+ *
+ *   - a static export (`output: "export"`) was told to run `own-error-shells`,
+ *     which rewrites a SERVER build's `.next/server` shells. An export has none;
+ *     its 404 documents sit in `out/`, where the gate grades them.
+ *
  * `hard` findings exit non-zero. `soft` ones are advice that is usually right.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -137,9 +144,13 @@ export function checkWiring(root) {
       if (imports && !/transpilePackages\s*:\s*\[[^\]]*["']lumo-ui["']/.test(src)) {
         out.push({ level: "hard", where: `${here}/${nextCfg.split("/").pop()}`, what: '`transpilePackages` does not include "lumo-ui"', fix: 'add `transpilePackages: ["lumo-ui"]` — the package NAME; a subpath matches nothing and Turbopack reports "Unknown module type"' });
       }
-      // E. the served error shells
+      // E. the served error shells — a SERVER build's. A static export has no
+      // `.next/server` tree for own-error-shells to rewrite and no server to
+      // answer `/_global-error`; its 404 documents are in `out/`, which the
+      // gate grades like any other page.
       const build = app.pkg?.scripts?.build ?? "";
-      if (!/own-error-shells/.test(build)) {
+      const staticExport = /\boutput\s*:\s*["']export["']/.test(src);
+      if (!staticExport && !/own-error-shells/.test(build)) {
         out.push({ level: "soft", where: `${here}/package.json › scripts.build`, what: "does not own Next's builtin error shells", fix: "append `&& node node_modules/lumo-ui/scripts/own-error-shells.mjs .next --error error-shell.html` — `/_global-error` is SERVED with no lang/dir and cannot be fixed from source" });
       }
     }

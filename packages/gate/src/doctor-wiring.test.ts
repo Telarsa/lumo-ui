@@ -91,6 +91,15 @@ describe("checkWiring", () => {
     expect(checkWiring(consumer({ transpile: true, tsExt: true, floors: "beside", token: "both", shells: true, gate: "node scripts/grade-served.mjs" }))).toEqual([]);
   });
 
+  it("a static export is not told to own a server build's error shells", () => {
+    // Observed on two consumers with `output: "export"`: the doctor advised
+    // `own-error-shells .next`, which rewrites `.next/server`. An export has no
+    // server and its 404 documents are in `out/`, graded by the gate itself.
+    const root = consumer({ transpile: true, tsExt: true, floors: "ok", token: "both", shells: false });
+    writeFileSync(join(root, "next.config.ts"), 'export default { output: "export", transpilePackages: ["lumo-ui"] }');
+    expect(checkWiring(root)).toEqual([]);
+  });
+
   it("a workspace root with a solution tsconfig is not blamed for a child's import", () => {
     // A consumer's monorepo: root package.json declares lumo-ui, root tsconfig is
     // `{ "files": [], "references": [...] }`, and the only import is in
