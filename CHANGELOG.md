@@ -4,6 +4,32 @@ Lumo is distributed as a git dependency pinned to a tag, so a consumer reads one
 entry per upgrade. Versions are lockstep: every package in the repository, the
 Flutter package included, carries the version this file leads with.
 
+## Unreleased
+
+On `develop`, in no tag. A consumer pinned to `v1.0.0` gets none of this until
+the owner approves and cuts a release.
+
+- **`grade-app` keeps every graded homepage** (`109c82d`, 7 Sep 2026). Staging a
+  static export no longer lets the root redirect `index.html` overwrite the
+  English homepage, a false green; colliding inputs get distinct staged paths
+  and are reported. Consumers that carry a local wrapper for this collision can
+  delete it once they pin a release containing the fix.
+- **Persian font stack** (`9b490b0`, 15 Sep 2026). `theme/script.css` falls back
+  to `"Inter", "IRANSansX"` instead of Vazirmatn when an app sets no
+  `--lumo-font-persian`.
+- **`resolved-idrefs` has no exemption.** The `react-aria-` id-prefix skip is
+  gone, its own expiry condition met: a dangling reference with that prefix now
+  fails like any other.
+- **`lumo doctor` stops giving signals seen to mislead on consumers.** It
+  follows what a `gate` script runs; when it finds no call to Lumo's grader it
+  says so as advice, not as a failing "no floors file". A route list handed to
+  a local grader is no longer read as the floors file. A static export is no
+  longer told to run `own-error-shells`. The lint check asks the app's own
+  ESLint for the effective config, measured against the selectors of the
+  `lumo-ui` the app installed, so a later `no-restricted-syntax` that replaces
+  Lumo's selectors is reported. That check executes the app's
+  `eslint.config.*`.
+
 ## 1.0.0
 
 The first public release. Everything below is what a consumer gets, described
