@@ -18,6 +18,9 @@
  *     nothing until a repository commits a number
  *   - no `@locales`, so `/pro` is graded as Old Provençal
  *
+ * (The first of those, the credential, is retired: see the note in
+ * `checkWiring`. Lumo is public from 1.0.0.)
+ *
  * `hard` findings exit non-zero. `soft` ones are advice that is usually right.
  */
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
@@ -195,7 +198,7 @@ export function checkWiring(root) {
  * @param {Finding[]} findings */
 export function reportWiring(findings) {
   if (findings.length === 0) {
-    console.log("  wiring: every installing job carries the credential, every Next app transpiles lumo-ui, every gate has its floors.");
+    console.log("  wiring: no findings in the checks run here (transpile, TypeScript extensions, gate and floors, error shells, lint policy).");
     return 0;
   }
   const hard = findings.filter((f) => f.level === "hard");

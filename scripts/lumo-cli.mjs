@@ -133,11 +133,10 @@ function usage(message) {
   Component distribution (search/add/diff/upgrade) retired in 0.3.0 — see CHANGELOG.md.
   Read docs/agent-consumer.md for the whole consumer workflow.
 
-  lumo doctor [--to <root>]   the pin, AND the wiring every CI failure of first
-                              contact was in: a job installing without the
-                              credential, a Next config without the transpile,
-                              a gate without @min-documents / @locales. Exits
-                              non-zero on anything that would fail CI.
+  lumo doctor [--to <root>]   the pin, AND the wiring: a Next config without the
+                              transpile, a tsconfig without .ts extensions, a
+                              gate without @min-documents / @locales. Exits
+                              non-zero only on what would fail CI.
   lumo fix --zwnj --digits [--locale fa|ar] [--write] <path...>
                               the two mechanical corrections a Persian
                               catalogue needs. DRY RUN unless --write.`);
