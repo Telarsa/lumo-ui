@@ -27,6 +27,11 @@
  *   - a static export (`output: "export"`) was told to run `own-error-shells`,
  *     which rewrites a SERVER build's `.next/server` shells. An export has none;
  *     its 404 documents sit in `out/`, where the gate grades them.
+ *   - a `gate` script that never runs Lumo was told it lacked a floors file
+ *     (and failed the doctor), when the likelier truth is that Lumo grades none
+ *     of that app's pages. The doctor now follows what the gate runs and, when
+ *     it finds no grader call, says so as advice, worded as what it measured.
+ *     A route list handed to a local grader is no longer taken for its floors.
  *
  * `hard` findings exit non-zero. `soft` ones are advice that is usually right.
  */
@@ -111,6 +116,116 @@ function importsLumoSource(dir) {
 /** A `gate` script that only hands off to a workspace child is not itself a gate. */
 const DELEGATES = /^(pnpm|npm|yarn)\s+(--filter|-r|-F|run\s+-r)\b|^turbo\b/;
 
+/**
+ * What runs Lumo's GRADER: `grade-app`, the CLI (whose other commands a gate
+ * has no reason to call), the `lumo gate` bin, or the gate module itself.
+ * `own-error-shells` is Lumo's too and is deliberately not in this list: a
+ * build that owns its error shells and a gate that grades nothing with Lumo is
+ * exactly the shape this has to tell apart.
+ */
+const GRADER = /grade-app|lumo-cli|\blumo\s+gate\b|lumo-ui\/gate\b|packages\/gate\/dist/;
+
+/**
+ * Whether parsed JSON is shaped like a floors file: an object of `//`
+ * comments, `@` settings and per-path numbers, which is what `readFloors` in
+ * `packages/gate/src/cli.ts` reads. A route list (an array) or a tsconfig
+ * (object values) is not a floors file with problems; it is not a floors file.
+ * @param {unknown} value
+ */
+function floorsShaped(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    && Object.entries(value).every(([k, v]) => k.startsWith("//") || k.startsWith("@") || typeof v === "number");
+}
+
+/**
+ * The floors file one grader command names: its first `.json` argument that is
+ * missing, unparsable or floors-shaped. A missing or broken one is returned so
+ * the caller reports it; a JSON input of another kind is skipped.
+ * @param {string} dir @param {string} segment @returns {string | undefined}
+ */
+function floorsIn(dir, segment) {
+  for (const m of segment.matchAll(/(?:^|\s)["']?([^\s"']+\.json)\b/g)) {
+    const name = m[1] ?? "";
+    let raw;
+    try { raw = readFileSync(join(dir, name), "utf8"); } catch { return name; /* named and missing */ }
+    try { if (!floorsShaped(JSON.parse(raw))) continue; } catch { return name; /* named and unparsable */ }
+    return name;
+  }
+  return undefined;
+}
+
+/**
+ * Follow a `gate` script to what it actually runs: the command, the package's
+ * own scripts it calls by name (`pnpm run grade`), and the local script files it
+ * executes (`node scripts/grade-served.mjs`), up to four levels deep. A
+ * consumer's gate can be entirely its own assertions with no Lumo in it, and
+ * then a floors file would arm nothing.
+ *
+ * The floors file comes only from a `&&` / `||` / `;` / `|` segment that runs
+ * the grader, and only from a `.json` argument shaped like one (`floorsIn`).
+ * `tsc -p tsconfig.json && lumo gate out gate.floors.json` names two JSON files
+ * and one floors file. A local grader handed a route list, as in
+ * `node ../../scripts/grade-served.mjs apps/console 3110 fa-IR gate.routes.json`
+ * (observed on a consumer, 23 Sep 2026), reads its floors from beside
+ * package.json itself, and the caller falls back to that file.
+ *
+ * What this cannot see: a test runner or config that imports `lumo-ui/gate`
+ * without naming it on a command line, a script it cannot resolve to a local
+ * file, and anything more than four levels down. In the other direction, a
+ * script that names the grader only in a comment counts as running it. So
+ * `invokes: false` means no grader call was FOUND in what was followed, not
+ * that nothing grades the app, and the caller words it that way.
+ * @param {string} dir @param {string} command @param {Record<string, unknown>} scripts
+ * @returns {{ invokes: boolean, floorsArg: string | undefined }}
+ */
+function traceGate(dir, command, scripts) {
+  /** @type {Set<string>} */
+  const seen = new Set();
+  let invokes = false;
+  /** @type {string | undefined} */
+  let floorsArg;
+  /** @param {string} cmd @param {number} depth */
+  const visit = (cmd, depth) => {
+    if (depth > 4 || seen.has(cmd)) return;
+    seen.add(cmd);
+    for (const segment of cmd.split(/&&|\|\||[;|]/)) {
+      let grades = GRADER.test(segment);
+      for (const m of segment.matchAll(/\b(?:pnpm|npm|yarn)\s+(?:run\s+)?([\w:.-]+)/g)) {
+        const next = scripts[m[1] ?? ""];
+        if (typeof next === "string") visit(next, depth + 1);
+      }
+      for (const token of segment.split(/\s+/)) {
+        const file = token.replace(/^["']|["']$/g, "");
+        if (!/\.(?:[cm]?[jt]s|sh)$/.test(file) || file.includes("node_modules")) continue;
+        let text;
+        try { text = readFileSync(join(dir, file), "utf8"); } catch { continue; /* not a local script */ }
+        // `node scripts/grade.mjs gate.served.floors.json` hands the script its floors.
+        if (GRADER.test(text)) grades = true;
+      }
+      if (grades) {
+        invokes = true;
+        floorsArg ??= floorsIn(dir, segment);
+      }
+    }
+  };
+  visit(command, 0);
+  return { invokes, floorsArg };
+}
+
+/**
+ * A floors file's two settings, each a hard finding when absent.
+ * @param {string} appDir @param {string} here @param {string} floorsName @param {Finding[]} out
+ */
+function checkFloors(appDir, here, floorsName, out) {
+  const floors = readJsonSafe(join(appDir, floorsName));
+  if (!floors) {
+    out.push({ level: "hard", where: `${here}/${floorsName}`, what: "is missing or unparsable", fix: "create it with `@min-documents` and `@locales`" });
+    return;
+  }
+  if (typeof floors["@min-documents"] !== "number") out.push({ level: "hard", where: `${here}/${floorsName}`, what: "declares no `@min-documents`", fix: "set it to the number of documents the build emits today — the guard against a build that emitted SOME of its pages does nothing until a repository commits a number" });
+  if (!Array.isArray(floors["@locales"])) out.push({ level: "hard", where: `${here}/${floorsName}`, what: "declares no `@locales`", fix: 'list the app\'s locales, e.g. `"@locales": ["en", "fa"]` — otherwise a route like `/pro` is graded as the locale `pro` (Old Provençal)' });
+}
+
 /** @param {string} root @returns {Finding[]} */
 export function checkWiring(root) {
   /** @type {Finding[]} */
@@ -176,22 +291,27 @@ export function checkWiring(root) {
         out.push({ level: "hard", where: `${here}/tsconfig.json`, what: "`allowImportingTsExtensions` is not enabled", fix: 'set `"allowImportingTsExtensions": true` — lumo-ui ships TypeScript sources that import with explicit .ts extensions' });
       }
     }
-    // D. the gate's floors file
+    // D. the gate's floors file — for a gate that runs Lumo at all
     const gate = app.pkg?.scripts?.gate;
-    if (typeof gate === "string" && !DELEGATES.test(gate.trim())) {
+    const traced = typeof gate === "string" && !DELEGATES.test(gate.trim()) ? traceGate(app.dir, gate, app.pkg?.scripts ?? {}) : undefined;
+    const besideFloors = existsSync(join(app.dir, "gate.floors.json")) ? "gate.floors.json" : undefined;
+    if (traced !== undefined && !traced.invokes) {
+      // Its own assertions, as far as the trace can see. Demanding a floors
+      // file here was a hard failure about a file nothing would read, and it
+      // hid the real gap. The wording is what was measured: the trace has
+      // limits (see `traceGate`), so this is advice, not a verdict.
+      out.push({ level: "soft", where: `${here}/package.json › scripts.gate`, what: "no call to Lumo's grader was found in what this gate runs (followed: the command, the package scripts it names and the local script files it executes), so as far as this check can see, Lumo grades none of this app's pages", fix: "pipe the pages this gate already builds or fetches through `lumo gate <dir> gate.floors.json` (or `grade-app.mjs <dir> <locale> gate.floors.json`), with `@min-documents` and `@locales` declared. If Lumo runs by a route this check cannot follow, this is noise" });
+      // A floors file beside package.json says something reads it, perhaps by
+      // a route the trace missed, so it is still held to its settings.
+      if (besideFloors !== undefined) checkFloors(app.dir, here, besideFloors, out);
+    } else if (traced !== undefined) {
       // Named on the command line, or — as a served-byte grader in a consumer
       // app does — read by the script itself from beside package.json.
-      const floorsName = /(\S+\.json)\b/.exec(gate)?.[1] ?? (existsSync(join(app.dir, "gate.floors.json")) ? "gate.floors.json" : undefined);
+      const floorsName = traced.floorsArg ?? besideFloors;
       if (!floorsName) {
         out.push({ level: "hard", where: `${here}/package.json › scripts.gate`, what: "runs the gate with no floors file", fix: "pass `gate.floors.json` as the last argument, declaring `@min-documents` and `@locales`" });
       } else {
-        const floors = readJsonSafe(join(app.dir, floorsName));
-        if (!floors) {
-          out.push({ level: "hard", where: `${here}/${floorsName}`, what: "named by the gate script but missing or unparsable", fix: "create it with `@min-documents` and `@locales`" });
-        } else {
-          if (typeof floors["@min-documents"] !== "number") out.push({ level: "hard", where: `${here}/${floorsName}`, what: "declares no `@min-documents`", fix: "set it to the number of documents the build emits today — the guard against a build that emitted SOME of its pages does nothing until a repository commits a number" });
-          if (!Array.isArray(floors["@locales"])) out.push({ level: "hard", where: `${here}/${floorsName}`, what: "declares no `@locales`", fix: 'list the app\'s locales, e.g. `"@locales": ["en", "fa"]` — otherwise a route like `/pro` is graded as the locale `pro` (Old Provençal)' });
-        }
+        checkFloors(app.dir, here, floorsName, out);
       }
     }
     // F. the lint policy is the FIRST line; the gate is the last
