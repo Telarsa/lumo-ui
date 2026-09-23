@@ -101,8 +101,6 @@ function importsLumoSource(dir) {
 /** A `gate` script that only hands off to a workspace child is not itself a gate. */
 const DELEGATES = /^(pnpm|npm|yarn)\s+(--filter|-r|-F|run\s+-r)\b|^turbo\b/;
 
-/** Split a GitHub Actions workflow into its jobs, crudely but reliably enough for the two keys we grep. */
-
 /** @param {string} root @returns {Finding[]} */
 export function checkWiring(root) {
   /** @type {Finding[]} */
