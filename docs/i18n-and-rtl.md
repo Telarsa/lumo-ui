@@ -14,7 +14,7 @@ Direction, digit system, calendar, and script are graded separately (`packages/g
 - There is no `dir` prop. `direction(locale)` derives it and `LumoHtml` writes
   `lang`/`dir`; `LumoLocaleProvider` carries the locale and the strings.
 
-## Rules that are build-time (`gate:html`, 14 rules over served bytes)
+## Rules that are build-time (`gate:html`, 15 rules over served bytes)
 lang/dir on the root · the imperfective prefix joined with a zero-width non-joiner, not a space · no Latin digits in Persian/Arabic text · no purely-Latin ARIA strings (a Persian phrase with a foreign token passes) · every control named · IDREFs resolve · composite widgets have exactly one Tab stop · native calendar in dates · unique ids · native-script text and names · named roledescription · `data-lumo-latn` islands are actually Latin (a Persian paragraph inside one fails, not hides) · per-route Persian digit floors (auto-admitted for any route with 30+ native digits).
 
 ## What the engine gets wrong and how it is compensated
