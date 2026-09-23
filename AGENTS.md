@@ -52,12 +52,15 @@ served-byte facts are the only ones the gates produce.
 
 ## Deploying
 
-`apps/website` deploys independently to Cloudflare Workers Static Assets. Build
-from the repository root because it consumes the package through `file:../..`.
-Run `pnpm preview:website` locally and `pnpm deploy:website` for an authenticated
-manual deployment. No version bump or git tag is needed for website-only changes.
-`docs/deployment.md` covers config, locale routing and owner domain bindings.
-The optional Dockerfile remains a container packaging option.
+`apps/website` deploys independently of the package. Build from the repository
+root because it consumes the package through `file:../..`. The current hosting
+direction is Docker on the existing VPS (owner decision, 8 September 2026; see
+the section below and `DEPLOY-VPS.md`). Cloudflare Workers Static Assets, chosen
+on 7 September 2026, is kept until a verified cutover: `pnpm preview:website`
+locally and `pnpm deploy:website` for an authenticated manual deployment. No
+version bump or git tag is needed for website-only changes.
+`docs/deployment.md` covers the Cloudflare config, locale routing and owner
+domain bindings.
 
 Exactly main and develop, identical at handoff; work on develop, no extra branches.
 The owner waived remote CI after usage ran out on 7 September 2026. Verify locally

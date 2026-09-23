@@ -1,14 +1,17 @@
 # Lumo website
 
 Follow the root AGENTS.md. Build from the monorepo root; this app consumes
-`lumo-ui` through `file:../..`. Its static export deploys independently to
-Cloudflare Workers Static Assets using this directory's wrangler.jsonc.
+`lumo-ui` through `file:../..`. Its static export deploys independently. The
+current hosting direction is Docker on the existing VPS (owner decision, 8
+September 2026; root `DEPLOY-VPS.md`); the Cloudflare Workers Static Assets path
+through this directory's wrangler.jsonc is kept until a verified cutover.
 
 Run the root verify gate and inspect English/German/Persian built output before
 publishing. The owner authorised shared website UI improvements on 7 September 2026.
 Measure both themes and all three locales before and after; keep shadcn accent unbound.
-No package version or tag is needed for a website deployment. Owner DNS binds
-apex and www separately as Worker Custom Domains. See docs/deployment.md.
+No package version or tag is needed for a website deployment. On the Cloudflare
+path, owner DNS binds apex and www separately as Worker Custom Domains. See
+docs/deployment.md.
 
 Next's generated agent-rules block is not maintained source; revert that block
 if a dev server writes it. Do not commit it with unrelated work.

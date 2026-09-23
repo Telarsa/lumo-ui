@@ -28,3 +28,16 @@ What is in this directory, and which file answers what.
 - [`evidence/mobile-device.md`](evidence/mobile-device.md) is the one run on
   real hardware, with what it proves and what it does not. It is dated, and the
   tap-target floors in `packages/mobile` cite it.
+
+**Deploying the website (`apps/website`)**
+
+- [`../DEPLOY-VPS.md`](../DEPLOY-VPS.md) is the current hosting direction
+  (owner decision, 8 September 2026): the container image and the commands that
+  build, run and stop it.
+- [`deployment.md`](deployment.md) opens with the dated hosting decisions, then
+  documents the earlier Cloudflare Workers path, which is kept until a verified
+  cutover.
+- [`handoff-2026-09-07.md`](handoff-2026-09-07.md) and
+  [`handoff-website-family-2026-09-07.md`](handoff-website-family-2026-09-07.md)
+  are historical 7 September 2026 checkpoints, superseded and kept as the
+  record.
