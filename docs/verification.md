@@ -104,4 +104,5 @@ and exercise task-specific navigation separately; these probes do not claim a
 complete accessibility audit or validate public capability claims.
 
 The 7 September website-family checkpoint and the English-homepage staging
-regression are recorded in [the dated handoff](handoff-website-family-2026-09-07.md).
+regression are recorded in [the dated handoff](handoff-website-family-2026-09-07.md),
+now marked historical; its deployment steps are superseded.

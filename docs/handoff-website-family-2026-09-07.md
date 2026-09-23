@@ -1,5 +1,16 @@
 # Lumo website family — 7 September 2026
 
+> **Status: historical, superseded.** Kept as the record of the 7 September
+> 2026 website-family checkpoint and of the grader staging fix (commit
+> `109c82d`). Superseded parts: the Worker deployment command below (the command
+> contract is now in [deployment.md](deployment.md), and on 8 September 2026 the
+> owner selected Docker on the existing VPS, see [DEPLOY-VPS.md](../DEPLOY-VPS.md))
+> and the 19-document corpus (the current floor is `@min-documents` in
+> `apps/website/gate.floors.json`). Still open: `109c82d` is not in any release
+> tag, so consumers pinned to `v1.0.0` keep their local workaround until an
+> owner-approved release. The `/tmp` evidence paths cited below no longer exist
+> (checked 23 September 2026).
+
 The website keeps its paper/ink/lime identity with a four-rem main header,
 44px locale/theme controls, a mobile docs-index link and footer-only Telarsa
 product attribution. Company links retain English/Persian. Shadcn accent is

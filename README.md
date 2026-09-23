@@ -140,35 +140,38 @@ mobile equivalent of grading served bytes.
 
 ## The website
 
-Cloudflare Workers Builds: project `lumo-ui-website`, root `/`, branch `main`.
-Build command: `pnpm check:website`.
-Deploy command: `pnpm deploy:website`.
-Run local commands below from the monorepo root; see
-[dashboard settings](docs/deployment.md#cloudflare-dashboard-setup).
+`apps/website` is lumo-ui.com: a static export of these docs in English, German
+and Persian, which is also the corpus `gate:html` grades — the site that
+documents the gate is the site the gate is proved on. The root redirects to
+English; German lives at `/de/` and Persian at `/fa/`.
 
-`apps/website` is lumo-ui.com: a static export of these docs in English and
-Persian, which is also the corpus `gate:html` grades — the site that documents
-the gate is the site the gate is proved on.
+The library and website stay in this monorepo and deploy independently; a
+package tag does not publish the website. Hosting, as the owner decided it
+(recorded in [AGENTS.md](AGENTS.md)):
+
+- **Current direction, 8 September 2026:** Docker on the existing VPS. The
+  image is the static export served by Caddy, built from the repository root;
+  it negotiates the root locale from `Accept-Language`. See
+  [DEPLOY-VPS.md](DEPLOY-VPS.md).
+- **Earlier host, kept until a verified cutover:** Cloudflare Workers Static
+  Assets (selected 7 September 2026). `apps/website/wrangler.jsonc` names
+  `out/`. The GitHub Actions workflow that could publish it was retired on 21
+  September 2026; the local commands below remain. See the
+  [deployment instructions](docs/deployment.md).
 
 ```bash
 pnpm dev                     # apps/website on :3000
 pnpm build:website           # build only
 pnpm check:website           # lint, types, build and grade the exported pages
-pnpm preview:website         # serve out/ with local Cloudflare routing
-pnpm deploy:website          # upload checked output; main only, no rebuild
+pnpm image:website           # container image for the VPS (DEPLOY-VPS.md)
+pnpm run:website             # run that image locally; stop:website stops it
+pnpm preview:website         # Cloudflare path: serve out/ with local routing
+pnpm deploy:website          # Cloudflare path: upload checked output; main only
 ```
 
-The library and website stay in this monorepo and deploy independently. The
-website uses Cloudflare Workers Static Assets; a package tag does not publish
-it. `apps/website/wrangler.jsonc` names `out/`, so Wrangler does not migrate the
-Next app to OpenNext. No runtime service or added package dependency is needed.
-The root redirects to English; Persian lives at `/fa/`.
-
-The optional Docker/Caddy image is still built from the repository root and
-negotiates the root locale from `Accept-Language`. It is not the chosen host.
-See [deployment instructions](docs/deployment.md) for local verification and
-separate apex/www Custom Domain bindings. The website passed local verification
-on 7 September 2026; public publication and owner DNS binding remain outstanding.
+The website passed local verification on 7 September 2026. Public publication
+and owner DNS binding were recorded as outstanding then; this README does not
+verify either.
 
 ## Contributing
 

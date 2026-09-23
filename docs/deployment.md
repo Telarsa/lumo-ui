@@ -1,6 +1,26 @@
 # Independent static website deployment
 
-The owner selected Cloudflare Workers Static Assets on 7 September 2026.
+> **Status, read first.** The owner's hosting decisions for this website, in
+> order (sources: root `AGENTS.md`; Telarsa handbook 10 and 18):
+>
+> - 7 September 2026, decision: Cloudflare Workers Static Assets. This page
+>   documents that path.
+> - 8 September 2026, decision, **current direction**: Docker on the existing
+>   VPS. Its commands are in [DEPLOY-VPS.md](../DEPLOY-VPS.md). This supersedes
+>   Cloudflare as the chosen host; the Cloudflare commands below are kept until
+>   a verified cutover.
+> - 21 September 2026, decision: the GitHub Actions workflow that could publish
+>   to Cloudflare was retired (commit `fe3cb72`), and the owner requested
+>   Cloudflare's retirement. Authenticated local Cloudflare commands remain.
+>
+> Publication status is not verified here. The infrastructure repository's
+> inventory recorded this site as unpublished, with container hosting planned
+> and `DEPLOY-VPS.md` as its runtime guide (measured 8 September 2026). Current
+> public availability was not checked. Everything below this box is the
+> Cloudflare path, kept as written on 7 September 2026.
+
+The owner selected Cloudflare Workers Static Assets on 7 September 2026
+(superseded as the chosen host on 8 September 2026; see the box above).
 The website stays under apps/website in this monorepo.
 Its rollout is independent of product services and package/git-tag releases.
 
