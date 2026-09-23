@@ -313,13 +313,15 @@ describe("self-test — every rule rejects its poison", () => {
    * render dangles it by design. Measured on the 442-document export of this
    * branch, ALL 301 dangling describedby references carried a `react-aria-` id
    * and none came from Base UI or Lumo — so the exclusion narrowed from the
-   * attribute to that id prefix.
+   * attribute to that id prefix, and on 23 Sep 2026, with no React Aria left in
+   * the export or in any consumer lockfile, the prefix exemption went too.
    *
-   * Both directions need a test or the narrowing is reversible by accident:
-   * without the first, someone restores the wholesale exclusion and the gate
-   * silently stops grading the attribute `form-state.tsx` routes every
-   * validation error through; without the second, someone deletes the exemption
-   * early and 301 documents go red for a defect that is not there.
+   * Both directions need a test: without the first, someone restores the
+   * wholesale exclusion and the gate silently stops grading the attribute
+   * `form-state.tsx` routes every validation error through; without the last,
+   * someone restores the prefix exemption and a dangling id passes because of
+   * what it is called rather than because it resolves. The middle one keeps the
+   * rule honest the other way: a reference that DOES resolve is never reported.
    */
   it("grades a dangling aria-describedby — a message announced by nobody", () => {
     const html =
@@ -332,13 +334,25 @@ describe("self-test — every rule rejects its poison", () => {
     expect(v[0]?.detail).toMatch(/aria-describedby points at missing id "gone"/);
   });
 
-  it("exempts React Aria's hydration-deferred ids, until the last one is gone", () => {
+  it("accepts a describedby that resolves, whatever its id looks like", () => {
+    const html =
+      '<!doctype html><html lang="fa-IR" dir="rtl"><body>' +
+      '<label id="l">ایمیل</label>' +
+      '<input aria-labelledby="l" aria-describedby="react-aria-_R_1abc_" />' +
+      '<p id="react-aria-_R_1abc_">نشانی ایمیل معتبر نیست</p>' +
+      "</body></html>";
+    expect(gradeHtml("fa-IR/index.html", html, [resolvedIdrefs])).toEqual([]);
+  });
+
+  it("grades a dangling react-aria- id like any other: the hydration exemption expired", () => {
     const html =
       '<!doctype html><html lang="fa-IR" dir="rtl"><body>' +
       '<label id="l">ایمیل</label>' +
       '<input aria-labelledby="l" aria-describedby="react-aria-_R_1abc_" />' +
       "</body></html>";
-    expect(gradeHtml("fa-IR/index.html", html, [resolvedIdrefs])).toEqual([]);
+    const v = gradeHtml("fa-IR/index.html", html, [resolvedIdrefs]);
+    expect(v).toHaveLength(1);
+    expect(v[0]?.detail).toMatch(/aria-describedby points at missing id "react-aria-_R_1abc_"/);
   });
 
   /*
