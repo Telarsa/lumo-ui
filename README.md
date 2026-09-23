@@ -7,7 +7,6 @@ Lumo grades the bytes a Persian reader actually receives — the digits, the
 calendar, the direction, and the name a screen reader announces — before any
 JavaScript runs.
 
-[![CI](https://github.com/Telarsa/lumo-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/Telarsa/lumo-ui/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 Made by [Telarsa](https://telarsa.com)
@@ -174,7 +173,9 @@ on 7 September 2026; public publication and owner DNS binding remain outstanding
 ## Contributing
 
 `pnpm run verify` is the whole contract: thirteen gates, and if it is green the
-change is shippable. See [CONTRIBUTING.md](CONTRIBUTING.md).
+change is shippable. Run it locally: the owner waived remote CI on 7 September
+2026, so no remote run is the current signal. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Licence
 
