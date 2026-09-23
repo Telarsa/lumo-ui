@@ -459,13 +459,17 @@ export const namedControls: Rule = {
 
 /**
  * Rule 6 — ARIA references must resolve. `aria-describedby` is graded too —
- * `form-state.tsx` made it LOAD-BEARING for validation errors — with one
- * exemption by ID PREFIX rather than by attribute: React Aria's server render
- * points at ids that exist only after hydration (measured: 301 dangles, all
- * `react-aria-`). When the export has zero `react-aria-` ids, delete the constant.
+ * `form-state.tsx` made it LOAD-BEARING for validation errors.
+ *
+ * There is no exemption. The rule used to skip ids starting `react-aria-`,
+ * because React Aria's server render pointed at ids that exist only after
+ * hydration (measured: 301 dangles, all `react-aria-`), and its own comment set
+ * the expiry: delete it when the export has zero such ids. Removed 23 Sep 2026
+ * with that condition met: zero `react-aria-` ids in this site's export and in
+ * the built HTML of three consumers checked that day, and no React Aria package
+ * in this repository's lockfile or theirs. A dangling `react-aria-` reference
+ * is now graded like any other, which `gate.test.ts` pins.
  */
-const HYDRATION_DEFERRED_ID = /^react-aria-/;
-
 export const resolvedIdrefs: Rule = {
   id: "resolved-idrefs",
   because:
@@ -480,7 +484,6 @@ export const resolvedIdrefs: Rule = {
       for (const el of Array.from(doc.document.querySelectorAll(`[${attr}]`))) {
         for (const ref of (el.getAttribute(attr) ?? "").split(/\s+/).filter(Boolean)) {
           if (ids.has(ref)) continue;
-          if (HYDRATION_DEFERRED_ID.test(ref)) continue; // see the header
           v.push({ rule: "resolved-idrefs", path: doc.path, detail: `${attr} points at missing id ${JSON.stringify(ref)}`, snippet: el.outerHTML.slice(0, 120) });
         }
       }
