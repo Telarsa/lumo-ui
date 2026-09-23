@@ -16,14 +16,14 @@ what went and why.
 | `gate:consumer-profile` | `core`, `base-ui-ssr` and `dates` compile under a CONSUMER's compiler settings (plain `strict`, Next's lib) | a real install — that is `gate:pack` |
 | `gate:lint` | the RTL policy (physical utilities banned, bare numbers in JSX) over every package, with its poison fixtures | class strings built at runtime; the HTML gate is the backstop |
 | `gate:no-css-modules` | the styling decision is real, not a comment | — |
-| `gate:test` | every package's suite — including the gate's own 206, which are its poison fixtures, and `lumo-ui/dates`' 40-year Jalali sweep against `Intl` | what only served bytes can show |
+| `gate:test` | every package's suite — including the gate's own, with a poison fixture per rule, and `lumo-ui/dates`' 40-year Jalali sweep against `Intl` | what only served bytes can show |
 | `gate:dist` | the committed JS build of the gate (what `lumo gate` actually runs from a consumer's node_modules) matches its source | — |
 | `gate:pack` | the packed `lumo-ui` tarball carries every file the CLI needs, AND `lumo gate` and `grade-app` both actually RUN from it, installed under `node_modules` — found necessary twice: 0.1.2 shipped without `scripts/lib`, and `grade-app` spawned a `.ts` file Node refuses to type-strip under `node_modules`, so every file was present and the command still died for every consumer | that a consumer's own build produces gradeable HTML |
 | `gate:flutter-tokens` | `tokens.g.dart` matches a fresh generation from `packages/theme` — web and mobile cannot disagree about what `md` or `accent` mean | that the rem→dp mapping is the right one |
 | `gate:mobile-styles` | the generated style layer is fresh | — |
 | `gate:flutter` | the mobile library's suite AND `apps/mobile-example` — a Material app graded by the semantics grader in both locales, with a per-rule poison fixture and an announced-node floor so no rule can pass on an empty tree | a real device or screen reader |
 | `gate:mobile-smoke` | a clean-room consumer outside the workspace names every public declaration in `lib/src/` and compiles — so an export the barrel forgot fails here rather than in someone's app | that the API is well-shaped, only that it is reachable |
-| `gate:html` | the docs site — a shadcn-built, Lumo-wired static export (§51's recipe executing itself) — grades clean over all sixteen served documents, digit floors armed on the number-dense fa routes, the exemption held under its committed ceiling, and the export's 404 shells are the site's own Persian ones | what only a real product's bytes can show — that stays `grade-app`'s job |
+| `gate:html` | the docs site — a shadcn-built, Lumo-wired static export (§51's recipe executing itself) — grades clean over every served document (no fewer than `@min-documents` in `apps/website/gate.floors.json`), digit floors armed on the number-dense fa routes, the exemption held under its committed ceiling, and the export's 404 shells are the site's own (`404-shell.html`, `lang="en" dir="ltr"`), not Next's | what only a real product's bytes can show — that stays `grade-app`'s job |
 
 Separate jobs, not in the chain: `build:gate` (regenerates dist) and
 `mutation:mobile`, which breaks one promise per file in `packages/mobile` and
@@ -38,8 +38,8 @@ mutating prose and reporting it as an unwatched test.
 
 ## Grading a product — the part that is not a gate
 
-The HTML grader's in-repo proof is its fixture suite (206 tests, a poison per
-rule, fixture↔rule bijection asserted both ways). Its **corpus** is whatever
+The HTML grader's in-repo proof is its fixture suite (a poison per rule,
+fixture↔rule bijection asserted both ways). Its **corpus** is whatever
 product you point it at:
 
 ```

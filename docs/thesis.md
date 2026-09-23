@@ -15,7 +15,7 @@ rented from the ecosystem.
 
 ## What it is, concretely
 
-- **`lumo-ui/gate`** — fourteen rules over served HTML: Latin digits, wrong
+- **`lumo-ui/gate`** — fifteen rules over served HTML: Latin digits, wrong
   calendars, foreign-script accessible names, unnamed controls, keyboard-dead
   composites. No browser needed; React-streamed segments are graded as content.
   axe-core's 105 rules cover none of this. Run it with `lumo gate <dir>` or,

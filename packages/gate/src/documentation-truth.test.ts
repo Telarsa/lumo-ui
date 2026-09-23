@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { RULES, persianDigitFloor } from "./rules.ts";
 
 const SRC = import.meta.dirname;
 
@@ -157,20 +158,62 @@ describe("public documentation describes what exists", () => {
     expect(offenders, "a doc still advertises a retired CLI command").toEqual([]);
   });
 
+  const WORDS: Record<string, number> = {
+    twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+  };
+  /** A count as the docs write it: a numeral, or a number word in any case. */
+  const count = (s: string | undefined) => (s === undefined ? undefined : /^\d+$/.test(s) ? Number(s) : WORDS[s.toLowerCase()]);
+
+  /**
+   * Every place a public document states a count, with the pattern that finds
+   * it. A pattern that stops matching fails the test too: a rewritten sentence
+   * must bring its claim here, or the claim is back to being typed by hand.
+   */
+  function claims(sites: ReadonlyArray<readonly [string, RegExp]>) {
+    return sites.map(([file, re]) => ({ file, claimed: re.exec(read(file))?.[1] }));
+  }
+
   it("states the gate count the scripts actually define", () => {
     /*
      * `docs/verification.md` publishes the number of gates in `verify`. It has
      * drifted before — the counts in this repo's own docs were stale on five
-     * separate figures the day §50 was written.
+     * separate figures the day §50 was written. Widened 23 Sep 2026 to every
+     * file that repeats the number.
      */
     const pkg = JSON.parse(read("package.json")) as { scripts: Record<string, string> };
     const actual = pkg.scripts.verify!.split("&&").filter((s) => s.includes("gate:")).length;
-    const doc = read("docs/verification.md");
-    const claimed = /The chain is (\w+) gates/.exec(doc)?.[1];
-    const WORDS: Record<string, number> = {
-      twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17,
-    };
-    expect(claimed, "verification.md no longer states a gate count").toBeDefined();
-    expect(WORDS[claimed!], `verification.md says "${claimed}"`).toBe(actual);
+    const found = claims([
+      ["docs/verification.md", /The chain is (\w+) gates/],
+      ["README.md", /the whole contract: (\w+) gates/],
+      ["AGENTS.md", /the full pipeline, (\w+) gates/],
+      ["CONTRIBUTING.md", /is the contract\. (\w+) gates/],
+      [".github/workflows/ci.yml", /verify — all (\w+) gates/],
+    ]);
+    for (const { file, claimed } of found) {
+      expect(claimed, `${file} no longer states the gate count where this test looks`).toBeDefined();
+      expect(count(claimed), `${file} says "${claimed}" gates; verify runs ${actual}`).toBe(actual);
+    }
+  });
+
+  it("states the rule count the gate actually defines", () => {
+    /*
+     * README said fifteen, the thesis, llms.txt and the locale contract said
+     * fourteen, and nothing compared either with the code (found 23 Sep 2026).
+     * The count is RULES plus `persian-digit-floor`, which is built per site
+     * from its floors file and so is not in the array: the same set the
+     * self-test in `gate.test.ts` holds to one poison fixture each.
+     */
+    const actual = new Set([...RULES.map((r) => r.id), persianDigitFloor({}).id]).size;
+    const found = claims([
+      ["README.md", /\*\*A gate\*\* \| (\w+) rules/],
+      ["README.md", /^(\w+), each earned by a defect that shipped/m],
+      ["docs/thesis.md", /`lumo-ui\/gate`\*\* — (\w+) rules over served HTML/],
+      ["llms.txt", /\((\w+) rules: digits/],
+      ["docs/i18n-and-rtl.md", /`gate:html`, (\w+) rules over served bytes/],
+    ]);
+    for (const { file, claimed } of found) {
+      expect(claimed, `${file} no longer states the rule count where this test looks`).toBeDefined();
+      expect(count(claimed), `${file} says "${claimed}" rules; the gate defines ${actual}`).toBe(actual);
+    }
   });
 });
