@@ -40,9 +40,10 @@ and Material/Flutter (mobile). Not a component library since 0.3.0 (decisions
 ## Ask before
 Filing an issue in someone else's tracker · cutting or pushing a tag ·
 force-pushing or touching protected branches · adding a paid service · adding a
-runtime dependency · shrinking `packages/mobile` (Flutter consumers resolve it
-by local path, so anything removed from it breaks their build the same day; see
-§50.8).
+runtime dependency · shrinking `packages/mobile` (Flutter consumers take it as a
+git dependency pinned to a release tag, `path: packages/mobile`, so anything
+removed from it breaks their build at their next bump; they resolved it by local
+path when §50.8 was written).
 
 ## Do not claim
 NVDA, JAWS, VoiceOver, TalkBack, or CI results you did not actually run. There
