@@ -15,7 +15,7 @@
 - `lumo gate <html-dir> [floors]` — grade a built site's served HTML (14 rules: digits, calendars, script, names, keyboard reachability)
 - `node scripts/grade-app.mjs <built-html> <locale>` — grade a single-locale product app (stages under the declared locale; multi-locale apps keep their own segments)
 - `node scripts/own-error-shells.mjs .next --error <file> [--not-found <file>]` — replace Next's builtin `_global-error`/`_not-found` shells (bare `<html>`, English) in BOTH the graded and the served copy; run it in `build`. A shell already declaring `lang` and `dir` is left alone.
-- `lumo doctor` — check the consumer's one `lumo-ui` pin against this checkout
+- `lumo doctor` — check the consumer's one `lumo-ui` pin against this checkout, and its wiring (transpile, gate floors, whether a gate runs Lumo, Lumo's lint selectors in effect)
 
 ## Packages (installed from git tags, e.g. `github:Telarsa/lumo-ui#v1.0.0`)
 - lumo-ui/core — locale contract, direction(), formatNumber, LumoNode, required strings, LumoLocaleProvider

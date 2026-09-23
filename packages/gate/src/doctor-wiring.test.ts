@@ -5,13 +5,15 @@
  * Lumo as a private git dependency, and every one was visible in the working
  * tree before the push. The fixtures are those trees, reduced.
  */
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const MOD = fileURLToPath(new URL("../../../scripts/lib/doctor-wiring.mjs", import.meta.url));
+const REPO = fileURLToPath(new URL("../../../", import.meta.url));
 const { checkWiring } = (await import(MOD)) as { checkWiring: (root: string) => Array<{ level: string; where: string; what: string }> };
 
 const TOKEN_STEP = `      - run: git config --global url."https://x-access-token:\${{ secrets.LUMO_UI_TOKEN }}@github.com/Telarsa/lumo-ui".insteadOf "https://github.com/Telarsa/lumo-ui"\n`;
@@ -184,4 +186,71 @@ describe("checkWiring", () => {
     writeFileSync(join(root, "apps", "site", "src", "a.tsx"), 'import { direction } from "lumo-ui/core";');
     expect(checkWiring(root)).toEqual([]);
   });
+});
+
+/*
+ * The lint policy, read the way ESLint reads it.
+ *
+ * Observed on three configs in one consumer: each spread Lumo's policy and then
+ * declared its own `no-restricted-syntax` for the same files. ESLint applies
+ * the later options INSTEAD of Lumo's, so all five of Lumo's selectors were
+ * off, while the import the doctor looked for was right there and it passed.
+ * These fixtures give the consumer a real ESLint and a real `lumo-ui` (linked
+ * to this checkout), because the whole point is what ESLint computes.
+ *
+ * Without an ESLint to ask, the doctor stays silent on this question rather
+ * than guessing; every fixture above has none, which is that case.
+ */
+describe("the lint policy is checked in effect, not by its import", () => {
+  const ESLINT_DIR = realpathSync(dirname(createRequire(join(REPO, "package.json")).resolve("eslint/package.json")));
+  const OWN_BAN = '{ selector: "JSXAttribute[name.name=\'dangerouslySetInnerHTML\']", message: "No raw HTML." }';
+
+  function linted(config: string) {
+    const root = consumer({ transpile: true, tsExt: true, floors: "ok", token: "none", shells: true });
+    mkdirSync(join(root, "node_modules"));
+    symlinkSync(ESLINT_DIR, join(root, "node_modules", "eslint"), "dir");
+    symlinkSync(realpathSync(REPO), join(root, "node_modules", "lumo-ui"), "dir");
+    writeFileSync(join(root, "eslint.config.mjs"), config);
+    return root;
+  }
+
+  it("reports a config whose own no-restricted-syntax replaces Lumo's selectors", () => {
+    const root = linted(
+      'import lumo from "lumo-ui/config/eslint";\n' +
+      `export default [...lumo, { files: ["**/*.{ts,tsx}"], rules: { "no-restricted-syntax": ["error", ${OWN_BAN}] } }];\n`,
+    );
+    expect(checkWiring(root)).toEqual([
+      expect.objectContaining({ level: "soft", where: "eslint.config.mjs", what: expect.stringMatching(/5 of its 5 selectors are not in effect for src\/layout\.tsx/) }),
+    ]);
+  }, 30_000);
+
+  it("accepts the same config once Lumo's selectors are merged into its own", () => {
+    const root = linted(
+      'import lumo, { lumoRules } from "lumo-ui/config/eslint";\n' +
+      `export default [...lumo, { files: ["**/*.{ts,tsx}"], rules: { "no-restricted-syntax": ["error", ...lumoRules["no-restricted-syntax"].slice(1), ${OWN_BAN}] } }];\n`,
+    );
+    expect(checkWiring(root)).toEqual([]);
+  }, 30_000);
+
+  it("measures the app against the selectors of the lumo-ui it installed, not this checkout's", () => {
+    // `lumo doctor --to <app>` can run from a checkout at another version than
+    // the app's pin. Measured against this checkout, a correctly wired app on
+    // an older or newer policy would have every selector reported missing.
+    const root = consumer({ transpile: true, tsExt: true, floors: "ok", token: "none", shells: true });
+    const pinned = join(root, "node_modules", "lumo-ui");
+    mkdirSync(pinned, { recursive: true });
+    symlinkSync(ESLINT_DIR, join(root, "node_modules", "eslint"), "dir");
+    writeFileSync(join(pinned, "package.json"), JSON.stringify({ name: "lumo-ui", type: "module", exports: { "./config/eslint": "./lumo.mjs" } }));
+    writeFileSync(join(pinned, "lumo.mjs"),
+      'export const lumoRules = { "no-restricted-syntax": ["error", { selector: "JSXOpeningElement[name.name=\'html\']", message: "Use LumoHtml." }] };\n' +
+      'export default [{ files: ["**/*.{ts,tsx,js,jsx,mjs}"], rules: lumoRules }];\n');
+    writeFileSync(join(root, "eslint.config.mjs"), 'import lumo from "lumo-ui/config/eslint";\nexport default [...lumo];\n');
+    expect(checkWiring(root)).toEqual([]);
+    writeFileSync(join(root, "eslint.config.mjs"),
+      'import lumo from "lumo-ui/config/eslint";\n' +
+      `export default [...lumo, { files: ["**/*.{ts,tsx}"], rules: { "no-restricted-syntax": ["error", ${OWN_BAN}] } }];\n`);
+    expect(checkWiring(root)).toEqual([
+      expect.objectContaining({ level: "soft", what: expect.stringMatching(/1 of its 1 selectors are not in effect/) }),
+    ]);
+  }, 30_000);
 });
