@@ -85,7 +85,6 @@
     "gate:pack": "node scripts/check-pack.mjs",
     "gate:flutter-tokens": "node scripts/build-flutter-tokens.mjs --check",
     "gate:flutter": "node scripts/flutter-gate.mjs",
-    "build:mobile-api": "node scripts/build-mobile-api.mjs",
     "build:mobile-styles": "node scripts/build-mobile-styles.mjs",
     "gate:mobile-styles": "node scripts/build-mobile-styles.mjs --check",
     "gate:mobile-smoke": "node scripts/smoke-mobile.mjs",
