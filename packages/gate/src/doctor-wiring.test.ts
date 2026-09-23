@@ -5,7 +5,7 @@
  * Lumo as a private git dependency, and every one was visible in the working
  * tree before the push. The fixtures are those trees, reduced.
  */
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -87,8 +87,78 @@ describe("checkWiring", () => {
   });
 
   it("a floors file the script reads from beside package.json counts", () => {
-    // A consumer's served-byte grader passes gate.floors.json from inside the script.
-    expect(checkWiring(consumer({ transpile: true, tsExt: true, floors: "beside", token: "both", shells: true, gate: "node scripts/grade-served.mjs" }))).toEqual([]);
+    // A consumer's served-byte grader passes gate.floors.json from inside the
+    // script. The script itself was missing from this fixture until 23 Sep
+    // 2026, when the doctor started reading what a gate runs: the consumer this
+    // came from spawns `lumo-cli.mjs gate` with path segments, as here.
+    const root = consumer({ transpile: true, tsExt: true, floors: "beside", token: "both", shells: true, gate: "pnpm run build && node scripts/grade-served.mjs" });
+    mkdirSync(join(root, "scripts"));
+    writeFileSync(join(root, "scripts", "grade-served.mjs"), 'spawn(process.execPath, [join("node_modules", "lumo-ui", "scripts", "lumo-cli.mjs"), "gate", stage, floors]);');
+    expect(checkWiring(root)).toEqual([]);
+  });
+
+  it("a gate that never runs Lumo is reported as ungraded, not as missing a floors file", () => {
+    // Observed on a consumer's console app: `pnpm build && node
+    // scripts/grade-served.mjs`, a script of its own assertions with no Lumo in
+    // it. The doctor failed it for "no floors file", a file nothing would read,
+    // and so never said the true thing: Lumo grades none of its pages. The build
+    // owning its error shells must not count as grading, which is why this
+    // fixture keeps `own-error-shells` (Lumo's, but not the grader) in `build`.
+    const root = consumer({ transpile: true, tsExt: true, floors: "missing", token: "both", shells: true, gate: "pnpm build && node scripts/grade-served.mjs" });
+    mkdirSync(join(root, "scripts"));
+    writeFileSync(join(root, "scripts", "grade-served.mjs"), 'import assert from "node:assert/strict"; assert.match(html, /dir="rtl"/);');
+    const f = checkWiring(root);
+    expect(f.filter((x) => x.level === "hard")).toEqual([]);
+    expect(f).toEqual([expect.objectContaining({ level: "soft", what: expect.stringMatching(/no call to Lumo's grader was found in what this gate runs/) })]);
+  });
+
+  it("still holds a floors file beside package.json to its settings when no grader call is found", () => {
+    // The trace cannot follow every route to Lumo (a test runner importing
+    // `lumo-ui/gate`, say). A floors file on disk says something reads it, so
+    // an untraced gate does not switch its check off.
+    const root = consumer({ transpile: true, tsExt: true, floors: "noMin", token: "both", shells: true, gate: "node scripts/grade-served.mjs" });
+    mkdirSync(join(root, "scripts"));
+    writeFileSync(join(root, "scripts", "grade-served.mjs"), 'import assert from "node:assert/strict"; assert.match(html, /dir="rtl"/);');
+    expect(checkWiring(root)).toEqual([
+      expect.objectContaining({ level: "soft", what: expect.stringMatching(/no call to Lumo's grader was found/) }),
+      expect.objectContaining({ level: "hard", what: expect.stringMatching(/@min-documents/) }),
+    ]);
+  });
+
+  it("does not take a route list handed to a local grader for its floors file", () => {
+    // Observed on a consumer's console app, 23 Sep 2026: its gate hands a
+    // route list to a script that runs `grade-app` and reads gate.floors.json
+    // from beside package.json itself. The doctor read the route list as the
+    // floors file and failed it twice for settings a route list never has.
+    const root = consumer({ transpile: true, tsExt: true, floors: "beside", token: "both", shells: true, gate: "node scripts/grade-served.mjs apps/console 3110 fa-IR gate.routes.json" });
+    mkdirSync(join(root, "scripts"));
+    writeFileSync(join(root, "scripts", "grade-served.mjs"), 'spawnSync(process.execPath, [join(root, "node_modules/lumo-ui/scripts/grade-app.mjs"), stage, "fa-IR", join(app, "gate.floors.json")]);');
+    writeFileSync(join(root, "gate.routes.json"), JSON.stringify(["/", "/issues", "/this-route-does-not-exist"]));
+    expect(checkWiring(root)).toEqual([]);
+  });
+
+  it("takes the floors file from the command segment that grades, not from an earlier one", () => {
+    // One line, two JSON arguments: the tsconfig belongs to `tsc`, the floors
+    // file to the gate. The first `.json` on the line used to win.
+    const root = consumer({ transpile: true, tsExt: true, floors: "ok", token: "both", shells: true, gate: "tsc -p tsconfig.json && lumo gate out gate.floors.json" });
+    expect(checkWiring(root)).toEqual([]);
+  });
+
+  it("follows a gate into the package's own scripts, and reads the floors from the grader's command", () => {
+    // `tsc -p tsconfig.json` in the build step must not be taken for the floors file.
+    const base = { transpile: true, tsExt: true, token: "both" as const, shells: true, gate: "pnpm run build && pnpm run grade" };
+    const graded = consumer({ ...base, floors: "ok" });
+    const pkgPath = join(graded, "package.json");
+    const withScripts = (floorsName: string) => {
+      const pkg = JSON.parse(readFileSync(pkgPath, "utf8")) as { scripts: Record<string, string> };
+      pkg.scripts.build = "tsc -p tsconfig.json && next build && node node_modules/lumo-ui/scripts/own-error-shells.mjs .next --error error-shell.html";
+      pkg.scripts.grade = `lumo gate out ${floorsName}`;
+      writeFileSync(pkgPath, JSON.stringify(pkg));
+    };
+    withScripts("gate.floors.json");
+    expect(checkWiring(graded)).toEqual([]);
+    withScripts("gate.served.floors.json");
+    expect(checkWiring(graded).map((x) => x.what)).toEqual([expect.stringMatching(/missing or unparsable/)]);
   });
 
   it("a static export is not told to own a server build's error shells", () => {

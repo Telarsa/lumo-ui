@@ -135,8 +135,9 @@ function usage(message) {
 
   lumo doctor [--to <root>]   the pin, AND the wiring: a Next config without the
                               transpile, a tsconfig without .ts extensions, a
-                              gate without @min-documents / @locales. Exits
-                              non-zero only on what would fail CI.
+                              gate without @min-documents / @locales, and a
+                              gate in which no call to Lumo's grader is found.
+                              Exits non-zero only on what would fail CI.
   lumo fix --zwnj --digits [--locale fa|ar] [--write] <path...>
                               the two mechanical corrections a Persian
                               catalogue needs. DRY RUN unless --write.`);
