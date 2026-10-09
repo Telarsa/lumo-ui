@@ -57,6 +57,11 @@ function adapt(path, text) {
     .replace("Diese Website setzt den Vertrag selbst um:", "Die ursprüngliche öffentliche Dokumentationswebsite setzt den Vertrag selbst um:")
     .replace("همین سایت اجرای همین قرارداد است:", "سایت مستندات مرجع عمومی، اجرای همین قرارداد است:")
     .replace("This site is the contract executing itself:", "The original public documentation website demonstrates this contract:");
+  // Each docs page carries this website's Open Graph/Twitter card with its
+  // language alternates (9 Oct 2026); title and description are unchanged.
+  if (/docs\/(?:[^/]+\/)?page\.tsx$/.test(path)) text = text
+    .replace(/^(import \{.*)\balternatesFor\b(.*\} from "@\/lib\/site";)$/m, "$1pageMetadata$2")
+    .replace(/return \{ title: (.*?), description: (.*?), alternates: alternatesFor\(locale, (.*?)\) \};/, "return pageMetadata(locale, $3, $1, $2);");
   return text;
 }
 

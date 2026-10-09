@@ -23,7 +23,7 @@
       "source": "apps/website/src/app/[locale]/docs/page.tsx",
       "destination": "src/app/[locale]/docs/page.tsx",
       "sourceSha256": "38050960c8eba6b365e669377f9dac91f490dc8bf0e18f5f6cb6c2fc0afa5bba",
-      "adaptedSha256": "38050960c8eba6b365e669377f9dac91f490dc8bf0e18f5f6cb6c2fc0afa5bba"
+      "adaptedSha256": "8f2cb5ce37b72ec48df4fe2dd5cf611d1d7fd18b91628d135b7e932d6cebb023"
     },
     {
       "source": "apps/website/src/app/[locale]/docs/layout.tsx",
@@ -35,37 +35,37 @@
       "source": "apps/website/src/app/[locale]/docs/getting-started/page.tsx",
       "destination": "src/app/[locale]/docs/getting-started/page.tsx",
       "sourceSha256": "a2112ec18e2fa9e94c40b85ec7ac4c1b14d14a1dbd4ed0d113c3c5a9fd0b47c1",
-      "adaptedSha256": "d7702586deaa8300e05038b1de7315ac9d109855fb3865d1b767a0fa4701df4b"
+      "adaptedSha256": "3d5547dd536598164aed6eb6a226d1ef5b535a0e83f48ab0ed9213262cbf8dee"
     },
     {
       "source": "apps/website/src/app/[locale]/docs/contract/page.tsx",
       "destination": "src/app/[locale]/docs/contract/page.tsx",
       "sourceSha256": "df48e08400eb1719ab3feeed57011ea41a3a70e2725425478c1fe02ed30c0e44",
-      "adaptedSha256": "607c3cb6680646f7bb698e946385ad645441c508ff2e5bee804576dbef5d9d93"
+      "adaptedSha256": "669d78bb46999323a1828058f617a5ac03e09d36ca59eb2c27903b09c00020d0"
     },
     {
       "source": "apps/website/src/app/[locale]/docs/helpers/page.tsx",
       "destination": "src/app/[locale]/docs/helpers/page.tsx",
       "sourceSha256": "7cfaef7382987a9189d34fbb5e244edea8262ca9f892048e741bf5c3f5ddb7cb",
-      "adaptedSha256": "7cfaef7382987a9189d34fbb5e244edea8262ca9f892048e741bf5c3f5ddb7cb"
+      "adaptedSha256": "8334f9027a4dd24d8517028233e2ae653c4af34510426545329e84f915c05fbe"
     },
     {
       "source": "apps/website/src/app/[locale]/docs/dates/page.tsx",
       "destination": "src/app/[locale]/docs/dates/page.tsx",
       "sourceSha256": "ff77b153033a45cb2b7b9e852eb6a396e543a6b14f0662b768b9ba3457b19252",
-      "adaptedSha256": "87e143bdaba01b976e00f0a3a6f823cf55e661d619a1ab854d5192a19e71bb1b"
+      "adaptedSha256": "5ce9a48917baba16f15b06007bbf84a474288db30a3ecd6688dfd4f26bdb6585"
     },
     {
       "source": "apps/website/src/app/[locale]/docs/gate/page.tsx",
       "destination": "src/app/[locale]/docs/gate/page.tsx",
       "sourceSha256": "963b957b18844fbf79276cec1de524a11f8ceca57e871d001b3778fcdf78d726",
-      "adaptedSha256": "963b957b18844fbf79276cec1de524a11f8ceca57e871d001b3778fcdf78d726"
+      "adaptedSha256": "a72d2f098593f70304bfd8e8137f5d2f24793afe8f3ef7c0ac02fa1834ceb8a7"
     },
     {
       "source": "apps/website/src/app/[locale]/docs/mobile/page.tsx",
       "destination": "src/app/[locale]/docs/mobile/page.tsx",
       "sourceSha256": "56271e1c9f0106a89627f9bbee1f6c1cd90d2041c29a4446b66b5de57dd50b4e",
-      "adaptedSha256": "5a58a4bf93e612833e3ab6384fc989f8d092d7b6808c4cf5bc9ceff46ba6e0ae"
+      "adaptedSha256": "65bd3f44ba9d7aeed808cd02f5d4bdc626bdebac6ccd83cbe3eeace456e4cec4"
     },
     {
       "source": "apps/website/src/components/site/docs.tsx",

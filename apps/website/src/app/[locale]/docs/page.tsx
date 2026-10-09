@@ -3,7 +3,7 @@ import Link from "next/link";
 import { CHROME } from "@/lib/chrome";
 import { DOCS, DOCS_ORDER, docIndex } from "@/lib/docs-order";
 import { localeParams, type SiteLocale } from "@/lib/locales";
-import { alternatesFor, localePath } from "@/lib/site";
+import { pageMetadata, localePath } from "@/lib/site";
 
 export const generateStaticParams = localeParams;
 
@@ -18,7 +18,7 @@ const T = {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = (await params) as { locale: SiteLocale };
-  return { title: T[locale].title, description: T[locale].lead, alternates: alternatesFor(locale, "/docs") };
+  return pageMetadata(locale, "/docs", T[locale].title, T[locale].lead);
 }
 
 export default async function DocsIndex({ params }: { params: Promise<{ locale: string }> }) {

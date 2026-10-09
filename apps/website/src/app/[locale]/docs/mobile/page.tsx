@@ -3,7 +3,7 @@ import { formatNumber } from "lumo-ui/core";
 import { Card, Code, DocsHeader, DocsNav, Prose, Section } from "@/components/site/docs";
 import { DOCS } from "@/lib/docs-order";
 import { localeParams, type SiteLocale } from "@/lib/locales";
-import { alternatesFor } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
 
 export const generateStaticParams = localeParams;
 const SLUG = "mobile";
@@ -79,7 +79,7 @@ const T = {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = (await params) as { locale: SiteLocale };
-  return { title: T[locale].title, description: DOCS[locale][SLUG].lead, alternates: alternatesFor(locale, `/docs/${SLUG}`) };
+  return pageMetadata(locale, `/docs/${SLUG}`, T[locale].title, DOCS[locale][SLUG].lead);
 }
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {

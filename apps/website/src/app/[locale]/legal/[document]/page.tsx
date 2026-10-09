@@ -4,6 +4,7 @@ import { formatDate, formatNumber, Prose } from "lumo-ui/core";
 import { isLocale, locales, marketingOrigin } from "@/content/site";
 import { legalCopy } from "@/content/legal";
 import company from "@/content/company-profile.json";
+import { socialFor } from "@/lib/site";
 import "./legal.css";
 
 const documents = ["imprint", "privacy"] as const;
@@ -13,8 +14,9 @@ export const generateStaticParams = () => locales.flatMap((locale) => documents.
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; document: string }> }): Promise<Metadata> {
   const { locale, document } = await params;
   if (!isLocale(locale) || !documents.some((item) => item === document)) return {};
-  const title = document === "imprint" ? legalCopy[locale].imprint.title : legalCopy[locale].privacy.title;
-  return { title: `${title} — Lumo UI`, ...(marketingOrigin ? { alternates: { canonical: `${marketingOrigin}/${locale}/legal/${document}/`, languages: Object.fromEntries([...locales.map((item) => [item, `${marketingOrigin}/${item}/legal/${document}/`]), ["x-default", `${marketingOrigin}/en/legal/${document}/`]]) } } : {}) };
+  const text = document === "imprint" ? legalCopy[locale].imprint : legalCopy[locale].privacy;
+  const title = `${text.title} — Lumo UI`;
+  return { title, description: text.lead, ...socialFor(locale, `/legal/${document}`, title, text.lead), ...(marketingOrigin ? { alternates: { canonical: `${marketingOrigin}/${locale}/legal/${document}/`, languages: Object.fromEntries([...locales.map((item) => [item, `${marketingOrigin}/${item}/legal/${document}/`]), ["x-default", `${marketingOrigin}/en/legal/${document}/`]]) } } : {}) };
 }
 
 export default async function LegalPage({ params }: { params: Promise<{ locale: string; document: string }> }) {

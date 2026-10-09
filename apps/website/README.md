@@ -72,6 +72,18 @@ bans them; the legal pages use the prefixed `legal.css`). `docs/site-assets.json
 records the provenance and checksums of the stylesheet and fonts;
 `scripts/check-site-assets.mjs` verifies them on every build.
 
+Icons and social cards are static files in `public/`: `icon.svg` (the mark,
+adapting to dark mode), `favicon.ico`, `apple-touch-icon.png`, `icons/`,
+`site.webmanifest` and the 1200x630 Open Graph/Twitter cards `og/lumo-{en,de,fa}.png`.
+`node scripts/render-brand-images.mjs` renders the rasters from the mark, the
+light colours of `src/app/globals.css` and the hero copy with the workspace's
+Playwright Chromium; rerun and review it when any of those change. The layout
+and `pageMetadata` (`src/lib/site.ts`) wire them into every page's head with
+absolute URLs on `NEXT_PUBLIC_SITE_URL`, else `https://lumo-ui.com`; the same
+origin feeds `src/app/robots.ts` and `src/app/sitemap.ts` (every route in every
+language with hreflang alternates). Indexing stays `noindex` until
+`NEXT_PUBLIC_SITE_URL` is set.
+
 ## Documentation snapshot
 
 The documentation pages, renderer and data were adapted from the previous

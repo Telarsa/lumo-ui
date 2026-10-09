@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Callout, Code, DocsHeader, DocsNav, Id, Prose, Section, Table } from "@/components/site/docs";
 import { DOCS } from "@/lib/docs-order";
 import { localeParams, type SiteLocale } from "@/lib/locales";
-import { INSTALL_SPEC, alternatesFor } from "@/lib/site";
+import { INSTALL_SPEC, pageMetadata } from "@/lib/site";
 
 export const generateStaticParams = localeParams;
 const SLUG = "getting-started";
@@ -125,7 +125,7 @@ const T = {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = (await params) as { locale: SiteLocale };
-  return { title: T[locale].title, description: DOCS[locale][SLUG].lead, alternates: alternatesFor(locale, `/docs/${SLUG}`) };
+  return pageMetadata(locale, `/docs/${SLUG}`, T[locale].title, DOCS[locale][SLUG].lead);
 }
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {

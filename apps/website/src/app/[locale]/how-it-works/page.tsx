@@ -5,13 +5,13 @@ import { formatNumber } from "lumo-ui/core";
 import { pages } from "@/content/pages";
 import { copy } from "@/content/copy";
 import { docs, installSpec, isLocale } from "@/content/site";
-import { alternatesFor } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
 import { Arrow } from "@/components/brand";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  return { title: `${copy[locale].nav.how} — Lumo UI`, description: pages[locale].how.lead, alternates: alternatesFor(locale, "/how-it-works") };
+  return pageMetadata(locale, "/how-it-works", `${copy[locale].nav.how} — Lumo UI`, pages[locale].how.lead);
 }
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {

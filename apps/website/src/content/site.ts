@@ -4,6 +4,10 @@ export const isLocale = (value: string): value is Locale => locales.some((locale
 export const localeParams = () => locales.map((locale) => ({ locale }));
 
 export const marketingOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "");
+/** Absolute origin for social images, robots.txt and the sitemap: the configured
+ * origin, else the owned product domain. Indexing and canonical links still
+ * follow marketingOrigin alone (unset: noindex, no canonical). */
+export const siteUrl = marketingOrigin || "https://lumo-ui.com";
 export const github = "https://github.com/Telarsa/lumo-ui";
 export const company = "https://telarsa.com";
 export const version = "1.0.0";

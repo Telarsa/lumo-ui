@@ -4,13 +4,13 @@ import { notFound } from "next/navigation";
 import { pages } from "@/content/pages";
 import { copy } from "@/content/copy";
 import { docs, isLocale } from "@/content/site";
-import { alternatesFor } from "@/lib/site";
+import { pageMetadata } from "@/lib/site";
 import { Arrow } from "@/components/brand";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
-  return { title: `${copy[locale].nav.rules} — Lumo UI`, description: pages[locale].checks.lead, alternates: alternatesFor(locale, "/checks") };
+  return pageMetadata(locale, "/checks", `${copy[locale].nav.rules} — Lumo UI`, pages[locale].checks.lead);
 }
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
