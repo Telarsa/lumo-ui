@@ -20,9 +20,9 @@ export const CHROME = {
   "switchLabel": "DE",
   "switchAria": "Sprache wechseln",
   "theme": {
-    "label": "Design",
-    "light": "Hell",
-    "dark": "Dunkel"
+    "system": "Design: folgt dem System. Zu hell wechseln.",
+    "light": "Design: hell. Zu dunkel wechseln.",
+    "dark": "Design: dunkel. Wieder dem System folgen."
   },
   "footer": {
     "built": "Entwickelt von",
@@ -51,7 +51,11 @@ export const CHROME = {
     nav: { docs: "مستندات", rules: "قوانین", github: "گیت‌هاب" },
     switchLabel: "English",
     switchAria: "تغییر زبان",
-    theme: { label: "تغییر پوسته", light: "روشن", dark: "تاریک" },
+    theme: {
+      system: "پوسته: مطابق سیستم. تغییر به روشن.",
+      light: "پوسته: روشن. تغییر به تاریک.",
+      dark: "پوسته: تاریک. بازگشت به پیروی از سیستم.",
+    },
     footer: {
       built: "ساختهٔ",
       licence: "متن‌باز، با پروانهٔ MIT",
@@ -79,7 +83,11 @@ export const CHROME = {
     nav: { docs: "Docs", rules: "Rules", github: "GitHub" },
     switchLabel: "فارسی",
     switchAria: "Change language",
-    theme: { label: "Theme", light: "Light", dark: "Dark" },
+    theme: {
+      system: "Theme: follows system. Switch to light.",
+      light: "Theme: light. Switch to dark.",
+      dark: "Theme: dark. Switch to follow system.",
+    },
     footer: {
       built: "Built by",
       licence: "Open source under the MIT licence",
