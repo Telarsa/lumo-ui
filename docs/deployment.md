@@ -50,8 +50,15 @@ pnpm deploy:website                  # upload checked output; main only, no rebu
 | Builds for non-production branches | Disabled |
 | Protect with Cloudflare Access | Off (public website) |
 
-Wrangler reads `apps/website/wrangler.jsonc` and uploads `apps/website/out/`. The asset directory is
+Wrangler reads the root `wrangler.jsonc` and uploads `apps/website/out/`. The asset directory is
 configured there; it is not a separate Pages build-output setting.
+
+That file sits at the repository root (since 9 October 2026), so Cloudflare's default
+deploy command, a bare `npx wrangler deploy`, also works. Its `build.command` runs
+`pnpm -w run cloudflare:build`, which builds the site unless `SITE_PREBUILT=1`; the
+`deploy:website` and preview scripts set it and keep uploading the checked output
+without rebuilding. A bare `wrangler deploy` skips the production-branch guard, so keep
+the Workers Builds production branch on `main` and non-production builds disabled.
 
 The dashboard deploy command uses the explicit app config and uploads the output
 already built by `check:website`. The same `pnpm deploy:website` command runs
@@ -81,7 +88,7 @@ A deployed Worker and a bound customer domain are separate acceptance steps.
 ## Command verification — 7 September 2026
 
 Commands and paths were checked against the root and website `package.json`
-files and `apps/website/wrangler.jsonc`. This documentation update does not
+files and the root `wrangler.jsonc`. This documentation update does not
 publish a Worker or verify dashboard settings. After owner deployment, acceptance
 is working English/German/Persian pages, assets, redirects and 404 on both bound
 hostnames; record the commit and deployment ID.

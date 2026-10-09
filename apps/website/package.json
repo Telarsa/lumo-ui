@@ -17,8 +17,8 @@
     "docs:refresh": "node scripts/sync-public-docs.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test:gate && pnpm build && pnpm gate",
     "preview": "python3 -m http.server 3113 --bind 127.0.0.1 --directory out",
-    "preview:wrangler": "npx wrangler dev --local --ip 127.0.0.1 --port 3113",
-    "deploy": "node ../../scripts/production-branch-check.mjs && npx wrangler deploy"
+    "preview:wrangler": "SITE_PREBUILT=1 npx wrangler dev --config ../../wrangler.jsonc --local --ip 127.0.0.1 --port 3113",
+    "deploy": "node ../../scripts/production-branch-check.mjs && SITE_PREBUILT=1 npx wrangler deploy --config ../../wrangler.jsonc"
   },
   "dependencies": {
     "lumo-ui": "workspace:*",

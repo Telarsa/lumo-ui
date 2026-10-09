@@ -1,0 +1,19 @@
+// The one Cloudflare configuration for this site, at the repository root, so
+// a bare `npx wrangler deploy` here (Cloudflare's default deploy command) works.
+// Wrangler runs `build.command` before every deploy, preview or dry run. It builds
+// the site, unless SITE_PREBUILT=1 says the output is already there: the
+// deploy:website and preview scripts set it, because `pnpm check:website` built
+// first. Bare `wrangler deploy` skips the production-branch guard in
+// deploy:website, so Workers Builds must keep its production branch on main.
+{
+  "name": "lumo-ui-website",
+  "compatibility_date": "2026-09-07",
+  "build": { "command": "pnpm -w run cloudflare:build" },
+  // The Next static export, with its own out/404.html (scripts/own-static-shells.mjs).
+  // public/_headers and public/_redirects are copied into out/ by Next.
+  "assets": {
+    "directory": "./apps/website/out",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}

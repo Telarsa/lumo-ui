@@ -161,7 +161,7 @@ package tag does not publish the website. Hosting, as the owner decided it
   it negotiates the root locale from `Accept-Language`. See
   [DEPLOY-VPS.md](DEPLOY-VPS.md).
 - **Earlier host, kept until a verified cutover:** Cloudflare Workers Static
-  Assets (selected 7 September 2026). `apps/website/wrangler.jsonc` names
+  Assets (selected 7 September 2026). The root `wrangler.jsonc` names
   `out/`. The GitHub Actions workflow that could publish it was retired on 21
   September 2026; the local commands below remain. See the
   [deployment instructions](docs/deployment.md).
