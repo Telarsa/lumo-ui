@@ -8,8 +8,8 @@ import { fromPickerDate, lumoCalendar, toPickerDate } from "lumo-ui/dates";
 import { Calendar } from "@/components/ui/calendar";
 
 /**
- * The whole pitch in one component: the Calendar below is shadcn's copy,
- * untouched. The four props from `lumoCalendar()` are what make it count in the
+ * The Calendar preserves the public example's DayPicker behaviour with a
+ * site-owned semantic CSS skin. The four props from `lumoCalendar()` count in the
  * reader's own calendar — Jalali on the Persian page you may be reading now.
  *
  * Two things this demo got wrong on first write, both worth keeping because a
@@ -44,6 +44,7 @@ export function DatesDemo({
           mode="single"
           required
           selected={selectedDate}
+          defaultMonth={selectedDate}
           onSelect={(day) => day && setSelected(fromPickerDate(day, locale))}
           dateLib={config.dateLib}
           formatters={config.formatters}

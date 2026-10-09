@@ -1,0 +1,49 @@
+{
+  "ownership": "site-local",
+  "adoptionDate": "2026-10-05",
+  "origin": {
+    "package": "@telarsa/web-foundation",
+    "version": "0.1.0",
+    "archiveSha256": "a3266a21d9ba6f5bcd945d219bf9156f127375f13e48ecb80f5e7d52c898aed1",
+    "note": "Historical byte source only. These adopted styles and font assets are now owned by this website; no shared package is installed or required.",
+    "stylesheetSha256": "20688086566314f97c9a499513a5fe49cfc725c3f1850ce1bf901ed59c7f8893",
+    "adaptation": "Only local --lumo-web-* token names, lumoWeb layer names and ownership comments replace the former package names; declarations, values and rules are preserved."
+  },
+  "files": [
+    {
+      "path": "src/styles/tokens.css",
+      "role": "stylesheet",
+      "sha256": "25850f5163b0c3da11c91e836477f33e770bd7e6db63258f4909e6cbf54c5485"
+    },
+    {
+      "path": "src/assets/fonts/InterVariable.woff2",
+      "role": "font",
+      "notice": "src/assets/fonts/Inter-LICENSE.txt",
+      "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3"
+    },
+    {
+      "path": "src/assets/fonts/private/IRANSansXVF.woff2",
+      "role": "font",
+      "notice": "src/assets/fonts/private/IRANSansX-LICENSE-NOTE.txt",
+      "sha256": "57068e2993577060cf33fec837c65078fd91dcdf743de5c6aa5ea2e05af79e52",
+      "private": true
+    },
+    {
+      "path": "src/assets/fonts/Inter-LICENSE.txt",
+      "role": "notice",
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "path": "src/assets/fonts/private/IRANSansX-LICENSE-NOTE.txt",
+      "role": "notice",
+      "sha256": "002a11139900a3bfa5ad620d16d6a8d1caca571ba78f9501fc9d1685995fcbb9",
+      "private": true
+    }
+  ],
+  "privateAssets": {
+    "directory": "src/assets/fonts/private",
+    "sourceEnv": "LUMO_PRIVATE_FONTS_DIR",
+    "requireEnv": "LUMO_REQUIRE_PRIVATE_FONTS",
+    "note": "Since 9 October 2026 the site lives in the public MIT monorepo. Entries marked private are proprietary (IRANSansX, licensed to the owner for application use) and are NEVER committed: the directory is git-ignored and filled by scripts/prepare-private-fonts.mjs. Only their checksums are public. Without them the build serves a documented system-font fallback for Persian."
+  }
+}

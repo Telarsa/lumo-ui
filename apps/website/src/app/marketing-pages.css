@@ -1,0 +1,23 @@
+.marketing-page { padding-block: var(--lumo-web-space-8); }
+.marketing-page .page-intro { max-inline-size: 52rem; margin-block-end: var(--lumo-web-space-8); }
+.marketing-page .page-intro h1 { font-size: var(--lumo-web-step-4); line-height: 1.15; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); margin-block: 1.2rem; }
+.marketing-page .page-intro > p:last-child { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step-1); max-inline-size: 64ch; }
+.marketing-page .integration { display: grid; grid-template-columns: minmax(0,.95fr) minmax(0,1.1fr); gap: clamp(2rem,5vw,5rem); padding-block: var(--lumo-web-space-7); border-block-start: 1px solid var(--lumo-web-line); align-items: start; }
+.marketing-page .integration h2, .marketing-page .check-explainer h2, .marketing-page .next-step h2 { font-size: var(--lumo-web-step-2); line-height: 1.3; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); margin-block: .75rem; }
+.marketing-page .integration p, .marketing-page .check-explainer p, .marketing-page .next-step p { color: var(--lumo-web-text-muted); }
+.marketing-page .integration .text-link { margin-block-start: 1.25rem; }
+.marketing-page .code-panel { min-inline-size: 0; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); background: var(--lumo-web-surface); }
+.marketing-page .code-panel pre { padding: 1.4rem; line-height: 1.8; }
+.marketing-page .code-panel code { font-family: ui-monospace,SFMono-Regular,Consolas,monospace; }
+.marketing-page .next-step { margin-block-start: var(--lumo-web-space-6); padding: var(--lumo-web-panel-padding); background: var(--lumo-wash); border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius-lg); }
+.marketing-page .next-step .text-link { margin-block-start: 1.2rem; }
+.marketing-page .check-explainer { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--lumo-web-space-7); margin-block: var(--lumo-web-space-7); }
+.marketing-page .checks-link { margin-block: var(--lumo-web-space-6); }
+.marketing-page .rule-card h2 { font-size: var(--lumo-web-step-2); line-height: 1.3; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); }
+.marketing-page:lang(fa) .page-intro h1 { line-height: 1.55; }
+.marketing-page:lang(fa) h2 { line-height: 1.7; }
+@media (width < 52rem) {
+  .marketing-page { padding-block: var(--lumo-web-space-6); }
+  .marketing-page .integration, .marketing-page .check-explainer { grid-template-columns: minmax(0,1fr); gap: 1.5rem; }
+  .marketing-page .page-intro { margin-block-end: var(--lumo-web-space-6); }
+}

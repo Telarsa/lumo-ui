@@ -1,0 +1,2 @@
+.desktop-nav a[aria-current], .mobile-nav a[aria-current] { color: var(--lumo-lit-text); }
+.desktop-nav a, .mobile-nav a { padding-block: .45rem; }

@@ -48,3 +48,12 @@ next-env.d.ts
 
 # Wrangler local state and temporary deploy output.
 .wrangler/
+
+# Proprietary font: IRANSansX is licensed to the owner and never belongs in this
+# public repository. The website reads it from a git-ignored folder filled by
+# apps/website/scripts/prepare-private-fonts.mjs (see apps/website/README.md).
+# NOTE: new copies are ignored here, but files git already tracks stay tracked:
+# apps/mobile-example/assets/fonts/ still holds IRANSansX
+# files committed before 9 Oct 2026, pending an owner decision.
+**/IRANSansX*
+apps/website/src/assets/fonts/private/

@@ -3,35 +3,36 @@
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
+  "description": "lumo-ui.com: the Lumo UI website and its on-site technical documentation, a static export that consumes the workspace package and is graded by its own gate.",
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build && node scripts/own-the-404.mjs",
-    "typecheck": "tsc --noEmit",
-    "preview": "npx wrangler dev --local --ip 127.0.0.1 --port 3000",
+    "fonts": "node scripts/prepare-private-fonts.mjs",
+    "dev": "node scripts/prepare-private-fonts.mjs && node scripts/check-site-assets.mjs && node scripts/check-public-contract.mjs && next dev --hostname 127.0.0.1 --port 3113",
+    "build": "node scripts/prepare-private-fonts.mjs && node scripts/check-site-assets.mjs && node scripts/check-public-contract.mjs && node scripts/check-public-docs.mjs && next build && node scripts/own-static-shells.mjs",
+    "lint": "node scripts/prepare-private-fonts.mjs && eslint .",
+    "typecheck": "node scripts/prepare-private-fonts.mjs && tsc --noEmit",
+    "gate": "node scripts/grade-static.mjs && node scripts/check-static-links.mjs",
+    "test": "node --test scripts/grade-static.test.mjs scripts/check-site-assets.test.mjs scripts/prepare-private-fonts.test.mjs",
+    "test:gate": "node --test scripts/grade-static.test.mjs scripts/check-site-assets.test.mjs scripts/prepare-private-fonts.test.mjs",
+    "docs:refresh": "node scripts/sync-public-docs.mjs",
+    "check": "pnpm lint && pnpm typecheck && pnpm test:gate && pnpm build && pnpm gate",
+    "preview": "python3 -m http.server 3113 --bind 127.0.0.1 --directory out",
+    "preview:wrangler": "npx wrangler dev --local --ip 127.0.0.1 --port 3113",
     "deploy": "node ../../scripts/production-branch-check.mjs && npx wrangler deploy"
   },
   "dependencies": {
-    "@base-ui/react": "catalog:",
-    "@internationalized/date": "catalog:",
-    "class-variance-authority": "catalog:",
-    "clsx": "catalog:",
-    "cn": "^0.2.5",
-    "lucide-react": "catalog:",
-    "lumo-ui": "file:../..",
+    "lumo-ui": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",
-    "react-day-picker": "catalog:",
     "react-dom": "catalog:",
-    "shadcn": "catalog:",
-    "tailwind-merge": "catalog:",
-    "tw-animate-css": "catalog:"
+    "react-day-picker": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "tailwindcss": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-next": "catalog:",
     "typescript": "catalog:"
   }
 }

@@ -52,7 +52,7 @@ const T = {
   "diverge": "Die Kopien. Ein Produkt darf seine shadcn-Kopien frei bearbeiten. Der Vertrag umfasst die oben genannten gemeinsamen Eigenschaften; Werkzeuge, die mehr versprachen, wurden entfernt.",
   "versionTitle": "Versionsdisziplin",
   "version": "Jeder Verbraucher bindet eine lumo-ui-Abhängigkeit an einen Tag. Alle Unterpfade kommen daraus. Korrekturen erscheinen als neuer Tag; npm-Versionsbereiche erlauben kein unbemerktes Auseinanderlaufen. Ein Tag wird erst nach erfolgreichem verify gesetzt.",
-  "dogfood": "Diese Website setzt den Vertrag selbst um: shadcn-Kopien für die Komponenten, core, theme und dates für die Sprachregeln und eine Prüfung der Ausgabe bei jedem Build."
+  "dogfood": "Die ursprüngliche öffentliche Dokumentationswebsite setzt den Vertrag selbst um: shadcn-Kopien für die Komponenten, core, theme und dates für die Sprachregeln und eine Prüfung der Ausgabe bei jedem Build."
 },
   "fa": {
     title: "قرارداد مشترک",
@@ -70,7 +70,7 @@ const T = {
     diverge: "کپی‌ها. هر محصول کپی‌های shadcn خودش را آزادانه ویرایش می‌کند؛ مدل copy-in یعنی همین. قرارداد فقط ثابت‌های بالا را ادعا می‌کند، و ماشینی که بیشتر ادعا می‌کرد حذف شده است.",
     versionTitle: "انضباط نسخه",
     version: "هر مصرف‌کننده یک وابستگی lumo-ui را به یک تگ پین می‌کند و همهٔ زیرمسیرها از همان می‌آیند. اصلاح به‌شکل تگ جدید می‌رسد؛ هیچ کانال لغزش خاموشی وجود ندارد، چون هیچ‌جا بازهٔ npm نیست. تگ فقط وقتی زده می‌شود که verify سبز باشد.",
-    dogfood: "همین سایت اجرای همین قرارداد است: کامپوننت‌هایش کپی‌های shadcn‌اند، درستی‌اش core و theme و dates است، و خروجی‌اش در هر build نمره می‌گیرد.",
+    dogfood: "سایت مستندات مرجع عمومی، اجرای همین قرارداد است: کامپوننت‌هایش کپی‌های shadcn‌اند، درستی‌اش core و theme و dates است، و خروجی‌اش در هر build نمره می‌گیرد.",
   },
   "en": {
     title: "The shared contract",
@@ -88,7 +88,7 @@ const T = {
     diverge: "The copies. A product edits its shadcn copies freely; that is the copy-in model working. The contract claims only the invariants above, and the machinery that claimed more was deleted.",
     versionTitle: "Version discipline",
     version: "Every consumer pins one lumo-ui dependency to a tag and every subpath comes from it. A fix arrives as a new tag; there is no silent drift channel because there is no npm range anywhere. A tag is cut only when verify is green.",
-    dogfood: "This site is the contract executing itself: its components are shadcn copies, its correctness is core, theme and dates, and its output is graded on every build.",
+    dogfood: "The original public documentation website demonstrates this contract: its components are shadcn copies, its correctness is core, theme and dates, and its output is graded on every build.",
   },
 } as const;
 

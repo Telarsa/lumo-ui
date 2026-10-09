@@ -1,5 +1,4 @@
 {
-  "//": "A CONSUMER's compiler, on purpose: the site is built the way §51 tells every product to build — shadcn copies + Lumo contract packages — so it must typecheck under a consumer profile (plain strict, Next lib), not this repo's stricter base. gate:consumer-profile proves the packages under the same settings.",
   "compilerOptions": {
     "target": "ES2022",
     "lib": [
@@ -7,10 +6,9 @@
       "dom.iterable",
       "esnext"
     ],
-    "allowJs": true,
-    "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    "skipLibCheck": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",
@@ -28,7 +26,8 @@
       "@/*": [
         "./src/*"
       ]
-    }
+    },
+    "allowJs": true
   },
   "include": [
     "next-env.d.ts",

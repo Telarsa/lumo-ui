@@ -1,0 +1,144 @@
+/**
+ * Lumo UI website typography, spacing, controls and motion.
+ * Owned and maintained here; the initial values preserve the adopted website appearance.
+ */
+@layer lumoWeb.foundation, lumoWeb.theme, lumoWeb.site;
+
+@layer lumoWeb.foundation {
+  :root {
+    color-scheme: light dark;
+    --lumo-web-bg: light-dark(#faf9f6, #191918);
+    --lumo-web-bg-sunken: light-dark(#f1efea, #151514);
+    --lumo-web-surface: light-dark(#fdfcf9, #222220);
+    --lumo-web-surface-raised: light-dark(#ffffff, #2b2b28);
+    --lumo-web-text: light-dark(#21211f, #f5f3ed);
+    --lumo-web-text-muted: light-dark(#62625b, #b2b1a8);
+    --lumo-web-text-subtle: light-dark(#72726a, #a3a299);
+    --lumo-web-line: light-dark(rgb(33 33 31 / 0.1), rgb(250 249 246 / 0.12));
+    --lumo-web-line-strong: light-dark(rgb(33 33 31 / 0.22), rgb(250 249 246 / 0.24));
+    /* Neutral action defaults; product themes replace the complete family. */
+    --lumo-web-accent: light-dark(#33332f, #deded5);
+    --lumo-web-accent-hover: light-dark(#21211f, #f5f3ed);
+    --lumo-web-accent-active: light-dark(#111110, #ffffff);
+    --lumo-web-accent-quiet: light-dark(#ebe8e1, #35352f);
+    --lumo-web-accent-contrast: light-dark(#ffffff, #21211f);
+    --lumo-web-focus-color: var(--lumo-web-accent);
+    --lumo-web-focus-width: 2px;
+    --lumo-web-focus-offset: 3px;
+    --lumo-web-focus-inset-offset: calc(-1 * var(--lumo-web-focus-width));
+    --lumo-web-invert-bg: light-dark(#21211f, #30302c);
+    --lumo-web-invert-bg-soft: light-dark(#2d2d29, #383832);
+    --lumo-web-invert-text: #faf9f6;
+    --lumo-web-invert-text-muted: #c0beb5;
+    --lumo-web-invert-line: rgb(250 249 246 / 0.15);
+    --lumo-web-ok: light-dark(#28694b, #7bc69f);
+    --lumo-web-ok-quiet: light-dark(#e9f2ec, #21332a);
+    --lumo-web-warn: light-dark(#886020, #ddbb76);
+    --lumo-web-warn-quiet: light-dark(#f6efdf, #352f22);
+    --lumo-web-danger: light-dark(#ad3026, #ff9d90);
+    --lumo-web-danger-quiet: light-dark(#fbe9e6, #402722);
+    --lumo-web-info: light-dark(#345d7b, #9dc5df);
+    --lumo-web-info-quiet: light-dark(#eaf1f6, #22323e);
+    --lumo-web-font-sans: "Inter", "IRANSansX", sans-serif;
+    --lumo-web-font-fa: "Inter", "IRANSansX", sans-serif;
+    --lumo-web-font-size-small: 0.75rem;
+    --lumo-web-font-size-ui: 0.875rem;
+    --lumo-web-line-height-ui: 1.5;
+    --lumo-web-step--2: clamp(0.7rem, 0.68rem + 0.1vw, 0.75rem);
+    --lumo-web-step--1: clamp(0.8rem, 0.78rem + 0.12vw, 0.875rem);
+    --lumo-web-step-0: clamp(0.95rem, 0.93rem + 0.12vw, 1rem);
+    --lumo-web-step-1: clamp(1.08rem, 1.02rem + 0.3vw, 1.25rem);
+    --lumo-web-step-2: clamp(1.3rem, 1.16rem + 0.66vw, 1.7rem);
+    --lumo-web-step-3: clamp(1.7rem, 1.34rem + 1.3vw, 2.5rem);
+    --lumo-web-step-4: clamp(2.1rem, 1.55rem + 2.25vw, 3.5rem);
+    --lumo-web-step-5: clamp(2.6rem, 1.6rem + 4.2vw, 4.8rem);
+    --lumo-web-step-6: clamp(3rem, 1.5rem + 7vw, 6.5rem);
+    --lumo-web-tracking-tight: -0.035em;
+    --lumo-web-tracking-tighter: -0.055em;
+    --lumo-web-tracking-label: 0.14em;
+    --lumo-web-measure: 68ch;
+    --lumo-web-title-measure: 18ch;
+    --lumo-web-content-max: 80rem;
+    --lumo-web-content-narrow: 46rem;
+    --lumo-web-gutter: clamp(1.25rem, 4vw, 2.5rem);
+    --lumo-web-section-space: clamp(2rem, 4vw, 3.5rem);
+    --lumo-web-radius-sm: 4px;
+    --lumo-web-radius: 8px;
+    --lumo-web-radius-lg: 12px;
+    --lumo-web-radius-xl: 16px;
+    --lumo-web-shadow-sm: none;
+    --lumo-web-shadow: none;
+    --lumo-web-shadow-lg: none;
+    --lumo-web-shadow-overlay: 0 12px 36px rgb(0 0 0 / 0.12);
+    --lumo-web-elevation-panel-color: light-dark(rgb(33 33 31 / 0.025), rgb(0 0 0 / 0.08));
+    --lumo-web-elevation-floating-color: light-dark(rgb(33 33 31 / 0.18), rgb(0 0 0 / 0.5));
+    --lumo-web-elevation-panel: 0 2px 8px var(--lumo-web-elevation-panel-color);
+    --lumo-web-elevation-floating: 0 12px 40px -16px var(--lumo-web-elevation-floating-color);
+    --lumo-web-control-height: 2.25rem;
+    --lumo-web-control-padding: 0.75rem;
+    --lumo-web-panel-padding: 1rem;
+    --lumo-web-row-padding-block: 0.625rem;
+    --lumo-web-row-gap: 0.625rem;
+    --lumo-web-field-bg: var(--lumo-web-surface-raised);
+    --lumo-web-control-border: light-dark(#8a8a80, #7d7d73);
+    --lumo-web-control-border-hover: var(--lumo-web-text-muted);
+    --lumo-web-field-border: var(--lumo-web-control-border);
+    --lumo-web-field-border-hover: var(--lumo-web-control-border-hover);
+    --lumo-web-field-readonly-bg: var(--lumo-web-bg-sunken);
+    --lumo-web-field-error-border: var(--lumo-web-danger);
+    --lumo-web-field-error-bg: var(--lumo-web-danger-quiet);
+    --lumo-web-hover: light-dark(#f4f2ed, #2d2d29);
+    --lumo-web-pressed: light-dark(#ebe8e1, #35352f);
+    --lumo-web-selection: var(--lumo-web-accent-quiet);
+    --lumo-web-selection-text: var(--lumo-web-accent);
+    --lumo-web-selection-border: var(--lumo-web-accent);
+    --lumo-web-disabled: light-dark(#f0efeb, #292927);
+    --lumo-web-disabled-text: light-dark(#74746b, #999990);
+    --lumo-web-space-1: 0.25rem;
+    --lumo-web-space-2: 0.5rem;
+    --lumo-web-space-3: 0.75rem;
+    --lumo-web-space-4: 1rem;
+    --lumo-web-space-5: 1.5rem;
+    --lumo-web-space-6: 2rem;
+    --lumo-web-space-7: 3rem;
+    --lumo-web-space-8: 4rem;
+    --lumo-web-space-9: 6rem;
+    --lumo-web-space-10: 8rem;
+    --lumo-web-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --lumo-web-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --lumo-web-duration-fast: 130ms;
+    --lumo-web-duration: 220ms;
+    --lumo-web-duration-slow: 420ms;
+    --lumo-web-motion-enter-duration: 600ms;
+    --lumo-web-motion-stagger: 65ms;
+    --lumo-web-motion-enter-distance: 0px;
+    --lumo-web-arrow-shift: 3px;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"] { color-scheme: dark; }
+  :root[dir="rtl"] { --lumo-web-arrow-shift: -3px; }
+  :root:lang(fa) {
+    --lumo-web-tracking-tight: 0;
+    --lumo-web-tracking-tighter: 0;
+    --lumo-web-tracking-label: 0;
+    --lumo-web-measure: 62ch;
+    --lumo-web-title-measure: 22ch;
+    --lumo-web-step-6: clamp(2.4rem, 1.3rem + 4.2vw, 4.5rem);
+    --lumo-web-step-5: clamp(2.15rem, 1.35rem + 3vw, 3.7rem);
+    --lumo-web-step-4: clamp(1.8rem, 1.3rem + 1.9vw, 2.9rem);
+    --lumo-web-step-3: clamp(1.5rem, 1.28rem + 1.1vw, 2.2rem);
+  }
+  @media (pointer: coarse) {
+    :root { --lumo-web-control-height: 2.75rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --lumo-web-duration-fast: 0ms;
+      --lumo-web-duration: 0ms;
+      --lumo-web-duration-slow: 0ms;
+      --lumo-web-motion-enter-duration: 0ms;
+      --lumo-web-motion-stagger: 0ms;
+      --lumo-web-arrow-shift: 0px;
+    }
+  }
+}

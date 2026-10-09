@@ -9,7 +9,7 @@ import { localePath } from "@/lib/site";
 
 /** The reading order as a rail. Client only for `aria-current`, which a static export cannot know at build. */
 export function DocsSidebar({ locale }: { locale: SiteLocale }) {
-  const pathname = usePathname();
+  const pathname = usePathname().replace(/\/$/, "") + "/";
   const c = CHROME[locale].docs;
   return (
     <nav className="docs__side" aria-label={c.eyebrow}>

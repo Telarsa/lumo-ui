@@ -1,1517 +1,236 @@
-@import "./telarsa-fonts.css";
-/*
- * The docs site's stylesheet IS the consumer recipe, executed:
- *
- *   components  — shadcn's (the copies in src/components/ui, styled by
- *                 shadcn/tailwind.css + the --background/--primary vocabulary)
- *   correctness — Lumo's (tokens, the Tailwind bridge, Persian script rules)
- *   the seam    — ONE block that binds shadcn's variables to Lumo's sys tokens,
- *                 so both vocabularies resolve to the same theme and flip together
- *
- * Import order is the fixed one from docs/agent-consumer.md §0.1.
- */
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "lumo-ui/theme/tokens.css";
-@import "lumo-ui/theme/theme.css";
-@import "lumo-ui/theme/script.css"; /* greenfield: Lumo owns this page's Persian type */
-@import "lumo-ui/theme/interactive.css";
+@import "../styles/tokens.css";
 
-/*
- * The copies' `dark:` utilities follow Lumo's OWN theme states (core/theme.ts):
- * an explicit choice writes data-theme; absent means FOLLOW THE OS. Both arms
- * must light the variant or the copies' dark styles desync from the tokens.
- */
-@custom-variant dark {
-  &:where([data-theme="dark"] *) {
-    @slot;
-  }
-  @media (prefers-color-scheme: dark) {
-    &:where(:root:not([data-theme="light"]) *) {
-      @slot;
-    }
-  }
-}
-
-/* ---- the brand knobs ------------------------------------------------------
- *
- * Lumo's own identity, from packages/theme/src/brand.css: paper, ink, and the
- * lime of the mark's lit corner. The ref knobs set the HUE of every ramp step;
- * the overrides block below sets the few sys values the ramp cannot reach —
- * the ramp's page is near-white by design (L 0.985), and this brand's page is
- * paper (L 0.955). Every other token is the ramp's, so contrast stays measured.
- */
-@layer lumo.brand {
-  :root {
-    --lumo-ref-hue-brand: 118;
-    --lumo-ref-chroma-brand: 0.12;
-    --lumo-ref-hue-neutral: 80;
-    --lumo-ref-chroma-neutral: 0.01;
-    /* Rounded, but barely: the radius is felt rather than seen. */
-    --lumo-ref-radius-scale: 0.7;
-    /* Inter and IRANSansX Pro follow the shared Telarsa typography decision (2026-09-15). */
-    --lumo-font-persian: "Inter", "IRANSansX", sans-serif;
-  }
-}
-
-@layer lumo.overrides {
-  :root,
-  [data-theme="light"] {
-    --lumo-sys-bg: #f2efe8;
-    --lumo-sys-bg-subtle: #ebe7dd;
-    --lumo-sys-surface: #f9f7f2;
-    --lumo-sys-surface-hover: #e6e2d6;
-    --lumo-sys-surface-sunken: #e9e5da;
-    --lumo-sys-fg: #101114;
-    --lumo-sys-fg-muted: #55534d;
-    --lumo-sys-fg-subtle: #6e6b63;
-    --lumo-sys-border: #dad5c8;
-    --lumo-sys-border-strong: #bdb7a9;
-    --lumo-sys-border-control: #8b877b;
-    /* A primary control is the mark's body: ink, with paper on it. */
-    --lumo-sys-accent: #101114;
-    --lumo-sys-accent-hover: #26282e;
-    --lumo-sys-accent-fg: #f2efe8;
-    --lumo-sys-fg-on-accent: #f2efe8;
-    /* The lit corner, as drawn: 2.79:1 on paper is fine for a mark, not for text. */
-    --lumo-sys-accent-mark: #7fa828;
-    --lumo-sys-focus: #5c7a1c;
-    /* The lime, darkened until it reads as text: 4.72:1 on paper. */
-    --lit-text: #5c7a1c;
-    --lit-wash: color-mix(in oklab, #7fa828 14%, transparent);
-    --invert-bg: #101114;
-    --invert-fg: #f2efe8;
-    /* The lit corner on a primary control: lime on ink. On a lime control it
-       is ink, the mark's own inversion, or it would vanish into the button. */
-    --button-corner: #7fa828;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --lumo-sys-bg: #101114;
-      --lumo-sys-bg-subtle: #16171b;
-      --lumo-sys-surface: #17181c;
-      --lumo-sys-surface-hover: #23252b;
-      --lumo-sys-surface-sunken: #0b0c0e;
-      --lumo-sys-fg: #f2efe8;
-      --lumo-sys-fg-muted: #b3aea3;
-      --lumo-sys-fg-subtle: #8d887d;
-      --lumo-sys-border: #2a2c33;
-      --lumo-sys-border-strong: #3b3e46;
-      --lumo-sys-border-control: #6b6e77;
-      /* On ink the primary control is the lit corner itself: 6.79:1 with ink on it. */
-      --lumo-sys-accent: #7fa828;
-      --lumo-sys-accent-hover: #91bb35;
-      --lumo-sys-accent-fg: #101114;
-      --lumo-sys-fg-on-accent: #101114;
-      --lumo-sys-accent-mark: #7fa828;
-      --lumo-sys-focus: #7fa828;
-      --lit-text: #9cc43f;
-      --lit-wash: color-mix(in oklab, #7fa828 16%, transparent);
-      --invert-bg: #1b1c21;
-      --invert-fg: #f2efe8;
-      --button-corner: #101114;
-    }
-  }
-  [data-theme="dark"] {
-    --lumo-sys-bg: #101114;
-    --lumo-sys-bg-subtle: #16171b;
-    --lumo-sys-surface: #17181c;
-    --lumo-sys-surface-hover: #23252b;
-    --lumo-sys-surface-sunken: #0b0c0e;
-    --lumo-sys-fg: #f2efe8;
-    --lumo-sys-fg-muted: #b3aea3;
-    --lumo-sys-fg-subtle: #8d887d;
-    --lumo-sys-border: #2a2c33;
-    --lumo-sys-border-strong: #3b3e46;
-    --lumo-sys-border-control: #6b6e77;
-    --lumo-sys-accent: #7fa828;
-    --lumo-sys-accent-hover: #91bb35;
-    --lumo-sys-accent-fg: #101114;
-    --lumo-sys-fg-on-accent: #101114;
-    --lumo-sys-accent-mark: #7fa828;
-    --lumo-sys-focus: #7fa828;
-    --lit-text: #9cc43f;
-    --lit-wash: color-mix(in oklab, #7fa828 16%, transparent);
-    --invert-bg: #1b1c21;
-    --invert-fg: #f2efe8;
-    --button-corner: #101114;
-  }
-}
-
-/*
- * ---- the seam: shadcn's vocabulary := Lumo's sys tokens ------------------
- *
- * One binding, both themes: the sys tokens already flip on data-theme /
- * prefers-color-scheme, so there is no `.dark` block here at all.
- *
- * One name is shared by the two vocabularies and means two things: shadcn's
- * `accent` is a hover WASH, Lumo's `accent` is the brand. Lumo's `@theme` is
- * imported later, so `bg-accent` is Lumo's. A copied component that wants the
- * wash uses `muted` — see src/components/ui/calendar.tsx for the bug this made.
- */
+/* Site-owned identity over this website's local typography and layout tokens.
+ * No Lumo application tokens or public gate rules depend on this theme. */
 :root {
-  --background: var(--lumo-sys-bg);
-  --foreground: var(--lumo-sys-fg);
-  --card: var(--lumo-sys-surface);
-  --card-foreground: var(--lumo-sys-fg);
-  --popover: var(--lumo-sys-surface);
-  --popover-foreground: var(--lumo-sys-fg);
-  --primary: var(--lumo-sys-accent);
-  --primary-foreground: var(--lumo-sys-accent-fg);
-  --secondary: var(--lumo-sys-surface-sunken);
-  --secondary-foreground: var(--lumo-sys-fg);
-  --muted: var(--lumo-sys-surface-hover);
-  --border: var(--lumo-sys-border);
-  --muted-foreground: var(--lumo-sys-fg-muted);
-  --destructive: var(--lumo-sys-critical);
-  --border: var(--lumo-sys-border);
-  --input: var(--lumo-sys-border-control);
-  --ring: var(--lumo-sys-focus);
-  --radius: var(--lumo-sys-radius-lg);
-  --shadow-color: var(--lumo-sys-scrim);
+  /* IRANSansX is private (never committed). Without it --font-persian is unset
+   * and Persian falls back to the platform's own Arabic-script UI faces. */
+  --lumo-web-font-persian-fallback: "Vazirmatn", "Noto Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", sans-serif;
+  --lumo-web-font-sans: var(--font-inter), var(--font-persian, var(--lumo-web-font-persian-fallback)), sans-serif;
+  --lumo-web-font-fa: var(--font-persian, var(--lumo-web-font-persian-fallback)), var(--font-inter), sans-serif;
+  --lumo-web-bg: light-dark(#f8f7f3, #101114);
+  --lumo-web-bg-sunken: light-dark(#eeece4, #15161a);
+  --lumo-web-surface: light-dark(#f2f0e9, #18191e);
+  --lumo-web-surface-raised: light-dark(#fdfcf8, #202127);
+  --lumo-web-text: light-dark(#101114, #f2efe8);
+  --lumo-web-text-muted: light-dark(#646257, #b3aea3);
+  --lumo-web-line: light-dark(#dedbd1, #2e3037);
+  --lumo-web-line-strong: light-dark(#b9b6aa, #4e515b);
+  --lumo-web-accent: light-dark(#101114, #9cc43f);
+  --lumo-web-accent-hover: light-dark(#292c20, #afcf66);
+  --lumo-web-accent-active: light-dark(#343b22, #b9d775);
+  --lumo-web-accent-contrast: light-dark(#f8f7f3, #101114);
+  --lumo-web-accent-quiet: light-dark(#e5ebd6, #262e19);
+  --lumo-web-focus-color: light-dark(#5c7a1c, #9cc43f);
+  --lumo-mark: #7fa828;
+  --lumo-lit-text: light-dark(#55701c, #9cc43f);
+  --lumo-wash: light-dark(#e5ebd6, #252d18);
 }
 
-/*
- * ---- the seam, second half: shadcn's variables become Tailwind colours ------
- *
- * MEASURED, because it is silent. Without this block `bg-primary`, `bg-muted`
- * and `text-primary-foreground` are never generated: shadcn/tailwind.css binds
- * nothing to Tailwind's colour namespace, it expects the app's own stylesheet
- * to. The previous site never had it, which is why its primary buttons and the
- * calendar's selected day rendered with no fill at all — the class was in the
- * HTML and no rule existed for it. `accent` is deliberately absent: Lumo's
- * bridge already owns `--color-accent`, and the two meanings must not race.
- */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-block-start: 7rem; }
+body { margin: 0; background: var(--lumo-web-bg); color: var(--lumo-web-text); font-family: var(--lumo-web-font-sans); font-size: var(--lumo-web-step-0); line-height: 1.65; -webkit-font-smoothing: antialiased; }
+body:lang(fa) { font-family: var(--lumo-web-font-fa); line-height: 1.95; }
+button, summary, a { -webkit-tap-highlight-color: transparent; }
+button, input, select, textarea { font: inherit; }
+a { color: inherit; text-decoration: none; }
+button, summary { cursor: pointer; }
+p, h1, h2, h3, figure { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+svg { display: block; }
+:focus-visible { outline: var(--lumo-web-focus-width) solid var(--lumo-web-focus-color); outline-offset: var(--lumo-web-focus-offset); }
+::selection { color: var(--lumo-web-text); background: var(--lumo-wash); }
+[data-lumo-latn], code { font-family: var(--font-inter), sans-serif; }
+.container { inline-size: min(calc(100% - var(--lumo-web-gutter) * 2), var(--lumo-web-content-max)); margin-inline: auto; }
+.section { padding-block: calc(var(--lumo-web-section-space) * 1.4); }
+.surface-section { background: var(--lumo-web-surface); border-block: 1px solid var(--lumo-web-line); }
+.skip-link { position: fixed; z-index: 100; inset-block-start: 1rem; inset-inline-start: 1rem; transform: translateY(-160%); padding: .75rem 1rem; background: var(--lumo-web-text); color: var(--lumo-web-bg); border-radius: var(--lumo-web-radius); }
+.skip-link:focus { transform: none; }
+.eyebrow { display: flex; align-items: center; gap: .7rem; font-size: var(--lumo-web-step--1); font-weight: 550; color: var(--lumo-web-text-muted); letter-spacing: var(--lumo-web-tracking-label); text-transform: uppercase; }
+.eyebrow::before { content: ""; display: inline-block; flex: 0 0 1.6rem; block-size: 2px; background: var(--lumo-mark); }
+.section-heading { max-inline-size: 48rem; margin-block-end: var(--lumo-web-space-7); }
+.section-heading h2, .questions h2 { font-size: var(--lumo-web-step-4); line-height: 1.15; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); }
+.section-heading h2 { margin-block: 1rem 1.1rem; }
+.section-heading > p:last-child, .section-heading > div > p:last-child { max-inline-size: 62ch; color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step-1); }
+.button, .control { display: inline-flex; align-items: center; justify-content: center; min-block-size: var(--lumo-web-control-height); border: 1px solid var(--lumo-web-line-strong); border-radius: var(--lumo-web-radius); font-size: var(--lumo-web-font-size-ui); font-weight: 550; line-height: var(--lumo-web-line-height-ui); gap: .65rem; padding-inline: var(--lumo-web-control-padding); }
+.control { background: transparent; color: var(--lumo-web-text); }
+.control:hover { background: var(--lumo-web-surface); }
+.button.primary { border-color: transparent; background: var(--lumo-web-accent); color: var(--lumo-web-accent-contrast); }
+.button.primary:hover { background: var(--lumo-web-accent-hover); }
+.button.primary:active { background: var(--lumo-web-accent-active); }
+.button .arrow, .text-link .arrow { transition: transform var(--lumo-web-duration) var(--lumo-web-ease-out); flex-shrink: 0; }
+.button:hover .arrow, .text-link:hover .arrow { transform: translateX(var(--lumo-web-arrow-shift)); }
+:root[dir="rtl"] .arrow { rotate: 180deg; }
+.text-link { display: inline-flex; align-items: center; gap: .65rem; font-weight: 550; border-block-end: 1px solid var(--lumo-web-line-strong); padding-block: .3rem; }
+.text-link:hover { border-color: var(--lumo-lit-text); color: var(--lumo-lit-text); }
+
+.site-header { position: sticky; inset-block-start: 0; z-index: 20; background: var(--lumo-web-bg); border-block-end: 1px solid var(--lumo-web-line); }
+.header-row { min-block-size: 4.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
+.brand { display: inline-flex; align-items: center; gap: .55rem; font-weight: 600; font-size: 1.25rem; letter-spacing: -.03em; white-space: nowrap; line-height: 1; }
+.brand svg { inline-size: 2rem; block-size: 2rem; }
+:root[dir="rtl"] .brand svg { transform: scaleX(-1); }
+.desktop-nav { display: flex; align-items: center; gap: 1.5rem; font-size: var(--lumo-web-font-size-ui); }
+.desktop-nav a, .mobile-nav a { color: var(--lumo-web-text-muted); }
+.desktop-nav a:hover, .mobile-nav a:hover { color: var(--lumo-lit-text); }
+.header-controls { display: flex; align-items: center; gap: .5rem; }
+.theme-control { inline-size: var(--lumo-web-control-height); padding: 0; flex-shrink: 0; }
+.language-menu { position: relative; }
+.language-menu summary { list-style: none; }
+.language-menu summary::-webkit-details-marker { display: none; }
+.language-options { position: absolute; inset-block-start: calc(100% + .75rem); inset-inline-end: 0; padding: .375rem; min-inline-size: 9rem; background: var(--lumo-web-surface-raised); border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); box-shadow: var(--lumo-web-elevation-floating); }
+.language-options a { display: block; padding: .55rem .7rem; border-radius: var(--lumo-web-radius-sm); font-size: var(--lumo-web-font-size-ui); }
+.language-options a:hover, .language-options a[aria-current] { background: var(--lumo-wash); }
+.sun { display: none; }
+:root[data-theme="dark"] .sun { display: block; }
+:root[data-theme="dark"] .moon { display: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sun { display: block; } :root:not([data-theme="light"]) .moon { display: none; } }
+.mobile-nav { display: none; }
+
+.hero { display: grid; grid-template-columns: minmax(0,1.05fr) minmax(0,1fr); gap: clamp(2rem, 5vw, 5rem); padding-block: clamp(3rem, 6vw, 6rem); align-items: center; }
+.hero h1 { font-size: var(--lumo-web-step-4); line-height: 1.07; letter-spacing: var(--lumo-web-tracking-tight); font-weight: 550; margin-block: 1.4rem 1.6rem; }
+.hero h1 span { display: block; color: var(--lumo-lit-text); }
+.lead { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step-1); max-inline-size: 51ch; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1.35rem; margin-block-start: var(--lumo-web-space-6); }
+.actions .button { min-block-size: 2.75rem; padding-inline: 1.15rem; }
+.hero-meta { display: flex; gap: 1.2rem; flex-wrap: wrap; margin-block-start: var(--lumo-web-space-6); color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step--1); }
+.hero-meta > span + span { border-inline-start: 1px solid var(--lumo-web-line-strong); padding-inline-start: 1.2rem; }
+:lang(fa) .hero h1 { line-height: 1.5; font-weight: 550; }
+:lang(fa) .section-heading h2, :lang(fa) .questions h2 { line-height: 1.6; }
+
+.gate-visual { position: relative; min-inline-size: 0; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius-xl); background: var(--lumo-web-surface); padding: clamp(1rem, 2.5vw, 1.6rem); overflow: hidden; }
+.figure-top { display: flex; align-items: center; gap: .6rem; font-size: var(--lumo-web-step--1); color: var(--lumo-web-text-muted); }
+.lit-corner { inline-size: .45rem; block-size: .75rem; background: var(--lumo-mark); border-start-start-radius: .45rem; }
+.vector-stage { position: relative; margin-block-start: .75rem; }
+.vector-stage svg { inline-size: 100%; block-size: auto; }
+.figure-grid { stroke: var(--lumo-web-line); stroke-width: .6; opacity: .65; }
+.plane-face { fill: var(--lumo-web-surface-raised); stroke: var(--lumo-web-line-strong); stroke-width: .9; }
+.plane-side { fill: var(--lumo-web-bg-sunken); stroke: var(--lumo-web-line-strong); stroke-width: .8; }
+.plane-line { stroke: var(--lumo-web-text-muted); stroke-width: 1.8; stroke-linecap: round; }
+.plane-rule { stroke: var(--lumo-mark); stroke-width: 1.5; }
+.plane-mid .plane-face { fill: var(--lumo-wash); }
+.plane-top { animation: plane-drift 9s ease-in-out infinite; }
+.plane-mid { animation: plane-drift 9s ease-in-out -3s infinite; }
+.plane-base { animation: plane-drift 9s ease-in-out -6s infinite; }
+.check-path { stroke-width: 1.6; stroke-dasharray: 140 930; animation: gate-trace 12s linear infinite; opacity: .7; }
+.plane-highlight { stroke: var(--lumo-lit-text); stroke-width: 1.8; stroke-linecap: round; opacity: .8; }
+.check-line { stroke: var(--lumo-lit-text); stroke-width: 2; stroke-linecap: round; }
+.pass-node { fill: var(--lumo-mark); }
+.plane-label { position: absolute; font-size: var(--lumo-web-step--2); color: var(--lumo-web-text-muted); background: var(--lumo-web-surface); padding-inline: .4rem; line-height: 1.5; border-inline-start: 2px solid var(--lumo-web-line-strong); }
+.label-top { inset-inline-start: 4%; inset-block-start: 16%; }
+.label-mid { inset-inline-end: 0; inset-block-start: 40%; border-color: var(--lumo-mark); }
+.label-base { inset-inline-start: 4%; inset-block-start: 63%; }
+.figure-result { display: flex; justify-content: center; align-items: center; gap: .65rem; margin-block: .25rem .8rem; font-size: var(--lumo-web-step--1); }
+.check-icon { color: var(--lumo-lit-text); }
+.figure-tags { display: flex; justify-content: center; flex-wrap: wrap; gap: .4rem 1rem; font-size: var(--lumo-web-step--2); color: var(--lumo-web-text-muted); }
+.figure-tags li { display: flex; gap: .4rem; align-items: center; }
+.figure-tags li::before { content: ""; inline-size: 3px; block-size: 3px; background: var(--lumo-mark); }
+.gate-visual figcaption { margin-block-start: 1.2rem; padding-block-start: 1rem; border-block-start: 1px solid var(--lumo-web-line); text-align: center; color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step--1); }
+@keyframes plane-drift { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes gate-trace { to { stroke-dashoffset: -1070; } }
+
+.feature-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--lumo-web-space-4); }
+.feature-card { padding: clamp(1.4rem, 2.5vw, 2rem); border: 1px solid var(--lumo-web-line); background: var(--lumo-web-bg); border-radius: var(--lumo-web-radius-lg); }
+.feature-icon { color: var(--lumo-lit-text); margin-block-end: 1.5rem; }
+.card-detail { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step--1); margin-block-end: .55rem; }
+.feature-card h3, .workflow h3, .rule-card h3, .platform-card h3 { font-size: var(--lumo-web-step-2); line-height: 1.25; letter-spacing: var(--lumo-web-tracking-tight); font-weight: 550; }
+.feature-card h3 { margin-block-end: .85rem; }
+.feature-card > p:last-child, .rule-card > p, .platform-card > p, .workflow p { color: var(--lumo-web-text-muted); }
+.workflow { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--lumo-web-space-6); }
+.workflow li { display: flex; align-items: flex-start; gap: 1rem; padding-block-start: 1.5rem; border-block-start: 1px solid var(--lumo-web-line-strong); }
+.step-number { display: flex; flex: 0 0 2rem; block-size: 2rem; align-items: center; justify-content: center; background: var(--lumo-wash); color: var(--lumo-lit-text); font-size: var(--lumo-web-step--1); font-weight: 550; border-radius: var(--lumo-web-radius-sm); }
+.workflow h3 { font-size: var(--lumo-web-step-1); margin-block-end: .65rem; }
+.install-block { display: flex; align-items: center; gap: 1.5rem; padding: 1.25rem 1.5rem; margin-block-start: var(--lumo-web-space-7); background: var(--lumo-web-surface); border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius-lg); min-inline-size: 0; }
+.install-block > p { font-size: var(--lumo-web-step--1); color: var(--lumo-web-text-muted); }
+pre { margin: 0; max-inline-size: 100%; overflow-x: auto; min-inline-size: 0; }
+.install-block pre { flex: 1; }
+code { font-size: .8rem; }
+.install-block .text-link { flex-shrink: 0; font-size: var(--lumo-web-step--1); }
+.checks-heading { max-inline-size: none; display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; }
+.checks-heading > div:first-child { max-inline-size: 45rem; }
+.rules-count { display: flex; flex-direction: column; flex-shrink: 0; align-items: flex-start; padding-inline-start: 2rem; border-inline-start: 1px solid var(--lumo-web-line-strong); max-inline-size: 12rem; }
+.rules-count strong { font-size: var(--lumo-web-step-5); font-weight: 450; letter-spacing: var(--lumo-web-tracking-tight); line-height: 1; color: var(--lumo-lit-text); }
+.rules-count span { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step--1); margin-block-start: .8rem; }
+.rules-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--lumo-web-space-4); }
+.rule-card { padding: 1.6rem; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius-lg); background: var(--lumo-web-bg); min-inline-size: 0; }
+.rule-card p { margin-block: .8rem 1.2rem; max-inline-size: 57ch; }
+.rule-card ul { display: flex; flex-wrap: wrap; gap: .4rem; }
+.rule-card code { display: block; padding: .2rem .5rem; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius-sm); font-size: var(--lumo-web-step--2); background: var(--lumo-web-surface); overflow-wrap: anywhere; }
+.section-link { margin-block-start: 1.75rem; }
+.platform-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--lumo-web-space-5); }
+.platform-card { position: relative; padding: clamp(1.4rem, 3vw, 2.4rem); border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius-lg); }
+.platform-symbol { display: inline-flex; color: var(--lumo-lit-text); margin-block-end: 1.25rem; }
+.platform-card p { margin-block: .8rem 1.5rem; max-inline-size: 57ch; }
+.questions { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: var(--lumo-web-space-8); border-block-start: 1px solid var(--lumo-web-line); }
+.question-list details { border-block-end: 1px solid var(--lumo-web-line); }
+.question-list details:first-child { border-block-start: 1px solid var(--lumo-web-line); }
+.question-list summary { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; padding-block: 1.2rem; font-size: var(--lumo-web-step-1); font-weight: 500; list-style: none; }
+.question-list summary::-webkit-details-marker { display: none; }
+.question-list summary:hover { color: var(--lumo-lit-text); }
+.question-plus { inline-size: 14px; block-size: 14px; flex-shrink: 0; position: relative; }
+.question-plus::before, .question-plus::after { content: ""; position: absolute; inset-block-start: 6px; inset-inline-start: 0; inline-size: 14px; block-size: 1px; background: currentColor; }
+.question-plus::after { rotate: 90deg; transition: rotate var(--lumo-web-duration) var(--lumo-web-ease-out); }
+details[open] .question-plus::after { rotate: 0deg; }
+.question-list details > p { padding-block-end: 1.5rem; padding-inline-end: 2rem; color: var(--lumo-web-text-muted); }
+.closing { background: var(--lumo-wash); margin-block-start: var(--lumo-web-space-6); border-block: 1px solid var(--lumo-web-line); }
+.closing-row { display: flex; align-items: center; justify-content: space-between; gap: var(--lumo-web-space-7); }
+.closing h2 { font-size: var(--lumo-web-step-3); line-height: 1.25; letter-spacing: var(--lumo-web-tracking-tight); font-weight: 550; max-inline-size: 30ch; }
+.closing p { color: var(--lumo-web-text-muted); margin-block-start: 1rem; max-inline-size: 62ch; }
+.closing .button { flex-shrink: 0; min-block-size: 2.75rem; }
+.site-footer { padding-block: var(--lumo-web-space-7) var(--lumo-web-space-5); }
+.footer-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; padding-block-end: 2rem; }
+.footer-top p { color: var(--lumo-web-text-muted); margin-block-start: 1rem; font-size: var(--lumo-web-step--1); }
+.footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem; font-size: var(--lumo-web-step--1); padding-block-start: .5rem; }
+.footer-links a:hover, .footer-bottom a:hover { color: var(--lumo-lit-text); }
+.footer-bottom { padding-block-start: 1.25rem; border-block-start: 1px solid var(--lumo-web-line); color: var(--lumo-web-text-muted); display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: var(--lumo-web-step--2); }
+.footer-bottom > div { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+.error-shell { min-block-size: 80vh; }
+.error-shell h1 { font-size: var(--lumo-web-step-4); font-weight: 550; line-height: 1.2; margin-block: 4rem 1.25rem; }
+.error-shell > p { color: var(--lumo-web-text-muted); }
+:lang(fa) h3 { line-height: 1.65; }
+
+@media (width < 72rem) {
+  .desktop-nav { display: none; }
+  .mobile-nav { display: flex; gap: 1.5rem; padding-block: .65rem; font-size: var(--lumo-web-step--1); border-block-start: 1px solid var(--lumo-web-line); overflow-x: auto; }
+  .mobile-nav a { white-space: nowrap; }
+  .hero { gap: 2rem; }
+  .workflow { gap: 1.4rem; }
+  .install-block { flex-wrap: wrap; }
+  .install-block > p { flex-basis: 100%; }
 }
-
-/* ---- the site's own vocabulary: type, measure, motion, the lit corner ----- */
-@theme inline {
-  --font-sans: "Inter", "IRANSansX", sans-serif;
-  --font-mono: "Inter", "IRANSansX", sans-serif;
-  --color-lit: var(--lit-text);
-  --color-lit-wash: var(--lit-wash);
-  --color-invert: var(--invert-bg);
-  --color-invert-fg: var(--invert-fg);
+@media (width < 52rem) {
+  .hero { grid-template-columns: minmax(0,1fr); padding-block: 2.75rem; gap: 2.75rem; }
+  .hero h1 { max-inline-size: 18ch; }
+  .hero-copy { max-inline-size: 40rem; }
+  .gate-visual { inline-size: min(100%, 36rem); margin-inline: auto; }
+  .feature-grid, .workflow { grid-template-columns: minmax(0,1fr); }
+  .feature-card { display: grid; grid-template-columns: 2.5rem minmax(0,1fr); column-gap: 1rem; }
+  .feature-card .feature-icon { grid-row: 1 / 4; margin: 0; }
+  .feature-card p, .feature-card h3 { grid-column: 2; }
+  .questions { grid-template-columns: minmax(0,1fr); gap: 1.5rem; }
+  .closing-row { flex-direction: column; align-items: flex-start; gap: 1.5rem; }
+  .footer-top { flex-direction: column; gap: 1.2rem; }
 }
-
-@layer base {
-  :root {
-    /* Two registers, after the productive/expressive split the company's site
-       uses: small steps carry body and labels, large ones the headlines. */
-    --step--2: clamp(0.7rem, 0.68rem + 0.1vw, 0.75rem);
-    --step--1: clamp(0.8rem, 0.78rem + 0.12vw, 0.875rem);
-    --step-0: clamp(0.95rem, 0.93rem + 0.12vw, 1rem);
-    --step-1: clamp(1.08rem, 1.02rem + 0.3vw, 1.25rem);
-    --step-2: clamp(1.3rem, 1.16rem + 0.66vw, 1.7rem);
-    --step-3: clamp(1.6rem, 1.34rem + 1.3vw, 2.4rem);
-    --step-4: clamp(2rem, 1.55rem + 2.25vw, 3.4rem);
-    --step-5: clamp(2.45rem, 1.6rem + 4.2vw, 4.6rem);
-    --tracking-tight: -0.018em;
-    --tracking-tighter: -0.03em;
-    --tracking-label: 0.08em;
-    /* Inter and IRANSansX Pro follow the shared Telarsa typography decision (2026-09-15). */
-    --stretch-display: 100%;
-    --stretch-wordmark: 100%;
-
-    --measure: 66ch;
-    --content-max: 80rem; /* the company standard: 1280px, shared by every Telarsa site */
-    --content-narrow: 46rem;
-    --gutter: clamp(1.25rem, 4vw, 2.5rem);
-    --header-h: 4rem;
-    --section-y: clamp(3rem, 5vw, 5.5rem);
-
-    /* The lit corner, at the scale a component wears it. The mark's corner is
-       a quarter of its side; on a card that is far too much, so the radius is
-       fixed rather than proportional and the eye still reads the family. */
-    --lit: 18px;
-    --lit-sm: 10px;
-
-    --dur: 220ms;
-    --dur-slow: 480ms;
-    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  /* Persian: no letter-spacing (it severs the joins), no width axis, and the
-     display sizes come down a step because the script has more vertical mass. */
-  :root:lang(fa) {
-    --tracking-tight: 0;
-    --tracking-tighter: 0;
-    --tracking-label: 0;
-    --stretch-display: 100%;
-    --measure: 60ch;
-    --step-5: clamp(2.1rem, 1.4rem + 3.2vw, 3.7rem);
-    --step-4: clamp(1.75rem, 1.35rem + 1.9vw, 2.8rem);
-    --step-3: clamp(1.5rem, 1.28rem + 1.1vw, 2.15rem);
-  }
-
-  html {
-    scroll-behavior: smooth;
-    scrollbar-gutter: stable;
-    text-rendering: optimizeLegibility;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-  }
-  body {
-    background: var(--lumo-sys-bg);
-    color: var(--lumo-sys-fg);
-    font-family: var(--font-sans);
-    font-size: var(--step-0);
-    line-height: 1.55;
-    min-width: 320px;
-    overflow-x: clip;
-    display: flex;
-    flex-direction: column;
-    min-height: 100dvh;
-  }
-  main {
-    flex: 1;
-  }
-  h1,
-  h2,
-  h3 {
-    text-wrap: balance;
-    font-weight: 500;
-    letter-spacing: var(--tracking-tight);
-  }
-  p {
-    text-wrap: pretty;
-  }
-  html:lang(fa) :is(h1, h2, h3) {
-    line-height: 1.35;
-  }
-  html:lang(fa) :is(p, li, dd, td) {
-    line-height: 1.85;
-  }
-  code {
-    font-family: var(--font-mono);
-    font-size: 0.88em;
-  }
-  ::selection {
-    background: var(--lit-wash);
-  }
-  :focus-visible {
-    outline: 2px solid var(--lumo-sys-focus);
-    outline-offset: 2px;
-  }
+@media (width < 38rem) {
+  .header-row { min-block-size: 4.25rem; gap: .5rem; }
+  .header-start { display: none; }
+  .mobile-nav { gap: 1.2rem; }
+  .brand { font-size: 1.1rem; gap: .4rem; }
+  .brand svg { inline-size: 1.75rem; block-size: 1.75rem; }
+  .hero h1 { margin-block: 1.2rem; }
+  .rules-grid, .platform-grid { grid-template-columns: minmax(0,1fr); }
+  .checks-heading { flex-direction: column; align-items: flex-start; }
+  .rules-count { flex-direction: row; align-items: center; gap: 1rem; padding-inline-start: 0; border: 0; max-inline-size: none; }
+  .rules-count strong { font-size: var(--lumo-web-step-4); }
+  .rules-count span { margin: 0; }
+  .install-block { padding: 1rem; display: block; }
+  .install-block pre { margin-block: 1rem; padding-block: .4rem; }
+  .footer-bottom { align-items: flex-start; flex-direction: column; }
 }
-
-@layer components {
-  /* ------------------------------------------------------------- layout */
-  /*
-   * NOT `.container`. Tailwind ships a `container` UTILITY, and it is emitted
-   * as soon as the class name appears anywhere in the markup — utilities
-   * outrank components, so its own breakpoint ramp won: above 1536px the page
-   * laid out at 96rem instead of the 80rem this token says. Measured in the
-   * built stylesheet, where both rules sit side by side.
-   */
-  .shell {
-    inline-size: min(100% - var(--gutter) * 2, var(--content-max));
-    margin-inline: auto;
-  }
-  .shell--narrow {
-    inline-size: min(100% - var(--gutter) * 2, var(--content-narrow));
-  }
-  .band {
-    padding-block: var(--section-y);
-  }
-  .band--sunken {
-    background: var(--lumo-sys-surface-sunken);
-  }
-  /*
-   * The inverted band re-points the tokens at ink, so everything nested reads
-   * the same names it always does and comes out correct. It is theme-relative:
-   * near-black on paper, LIFTED on the dark page — the same #101114 on a
-   * #101114 page is a band nobody can see.
-   */
-  .band--invert {
-    background: var(--invert-bg);
-    color: var(--invert-fg);
-    --lumo-sys-bg: var(--invert-bg);
-    --lumo-sys-surface: color-mix(in oklab, var(--invert-bg) 88%, white);
-    --lumo-sys-fg: var(--invert-fg);
-    --lumo-sys-fg-muted: #b3aea3;
-    --lumo-sys-fg-subtle: #8d887d;
-    --lumo-sys-border: rgb(242 239 232 / 0.16);
-    --lumo-sys-border-strong: rgb(242 239 232 / 0.3);
-    --lumo-sys-accent: #7fa828;
-    --lumo-sys-accent-hover: #91bb35;
-    --lumo-sys-accent-fg: #101114;
-    --lit-text: #9cc43f;
-    --button-corner: #101114;
-  }
-  .band--rule-top {
-    border-block-start: 1px solid var(--lumo-sys-border);
-  }
-  .band--rule-bottom {
-    border-block-end: 1px solid var(--lumo-sys-border);
-  }
-
-  /* ---------------------------------------------------------- the corner */
-  /*
-   * The mark's lit corner, at component scale: one rounded corner on the
-   * reading side, everything else square. `border-start-start-radius` follows
-   * the writing direction, so the corner mirrors on the Persian page exactly
-   * as the mark does.
-   */
-  .lit {
-    border-radius: 0;
-    border-start-start-radius: var(--lit);
-  }
-  .lit-sm {
-    border-radius: 0;
-    border-start-start-radius: var(--lit-sm);
-  }
-
-  /* ---------------------------------------------------------- typography */
-  .display {
-    font-size: var(--step-5);
-    line-height: 1.04;
-    letter-spacing: var(--tracking-tighter);
-    font-weight: 500;
-    font-stretch: var(--stretch-display);
-  }
-  .display__accent {
-    display: block;
-    color: var(--lit-text);
-  }
-  .h2 {
-    font-size: var(--step-3);
-    line-height: 1.12;
-    font-weight: 500;
-    letter-spacing: var(--tracking-tight);
-    font-stretch: var(--stretch-display);
-  }
-  .lead {
-    font-size: var(--step-1);
-    line-height: 1.5;
-    color: var(--lumo-sys-fg-muted);
-    max-inline-size: 52ch;
-  }
-  .eyebrow {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    font-size: var(--step--1);
-    font-weight: 500;
-    color: var(--lumo-sys-fg);
-    margin-block-end: var(--space-5, 1.5rem);
-  }
-  /* A small lit square, the mark reduced to its gesture. */
-  .eyebrow::before {
-    content: "";
-    inline-size: 0.7em;
-    block-size: 0.7em;
-    background: var(--lumo-sys-fg);
-    border-start-start-radius: 0.45em;
-    flex: none;
-    position: relative;
-  }
-  .eyebrow__num {
-    font-family: var(--font-mono);
-    color: var(--lit-text);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: var(--tracking-label);
-  }
-  html:lang(fa) .eyebrow__num {
-    font-family: inherit;
-  }
-  .prose > * + * {
-    margin-block-start: 1em;
-  }
-  .prose p,
-  .prose li {
-    max-inline-size: var(--measure);
-    color: var(--lumo-sys-fg-muted);
-  }
-  .prose strong,
-  .prose b {
-    color: var(--lumo-sys-fg);
-    font-weight: 600;
-  }
-  .prose ul {
-    padding-inline-start: 1.2em;
-    list-style: none;
-  }
-  .prose li {
-    position: relative;
-  }
-  .prose li::before {
-    content: "";
-    position: absolute;
-    inset-inline-start: -1.2em;
-    inset-block-start: 0.62em;
-    inline-size: 0.5em;
-    block-size: 0.5em;
-    background: var(--lumo-sys-accent-mark);
-    border-start-start-radius: 0.5em;
-  }
-  .prose code,
-  .table code,
-  .callout code {
-    padding: 0.08em 0.35em;
-    border: 1px solid var(--lumo-sys-border);
-    border-radius: 3px;
-    background: color-mix(in oklab, var(--lumo-sys-fg) 4%, transparent);
-    white-space: nowrap;
-  }
-
-  /* ------------------------------------------------------------ controls */
-  .button {
-    --_bg: var(--lumo-sys-accent);
-    --_fg: var(--lumo-sys-accent-fg);
-    --_border: transparent;
-    position: relative;
-    /* Clipped, so the corner's rounding is what SHAPES the lit square below:
-       the button's own radius cuts it into the quarter-disc, and a hover that
-       grows the square can never open a gap between disc and edge. */
-    overflow: hidden;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    padding: 0.8em 1.4em;
-    border: 1px solid var(--_border);
-    border-radius: 3px;
-    border-start-start-radius: var(--lit-sm);
-    background: var(--_bg);
-    color: var(--_fg);
-    font-size: var(--step--1);
-    font-weight: 500;
-    line-height: 1.2;
-    text-decoration: none;
-    white-space: nowrap;
-    transition:
-      background-color var(--dur) var(--ease-out),
-      color var(--dur) var(--ease-out),
-      border-color var(--dur) var(--ease-out);
-  }
-  /* The lit corner itself, on the primary action: a square of lime in the
-     rounded corner, cut into the mark's quarter-disc by the button's radius. */
-  .button::before {
-    content: "";
-    position: absolute;
-    inset-block-start: -1px;
-    inset-inline-start: -1px;
-    inline-size: calc(var(--lit-sm) + 1px);
-    block-size: calc(var(--lit-sm) + 1px);
-    background: var(--button-corner);
-    transition:
-      scale var(--dur) var(--ease-out),
-      background-color var(--dur) var(--ease-out);
-    transform-origin: 0 0;
-  }
-  .button:hover {
-    --_bg: var(--lumo-sys-accent-hover);
-  }
-  .button:hover::before {
-    scale: 1.3;
-  }
-  .button--outline {
-    --_bg: transparent;
-    --_fg: var(--lumo-sys-fg);
-    --_border: var(--lumo-sys-border-strong);
-  }
-  .button--outline::before {
-    display: none;
-  }
-  .button--outline:hover {
-    --_bg: var(--lumo-sys-fg);
-    --_fg: var(--lumo-sys-bg);
-    --_border: var(--lumo-sys-fg);
-  }
-  .button--lg {
-    font-size: var(--step-0);
-    padding: 0.9em 1.6em;
-  }
-  .button svg {
-    inline-size: 1em;
-    block-size: 1em;
-  }
-  .control {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.4em;
-    min-inline-size: 2.75rem;
-    block-size: 2.75rem;
-    padding-inline: 0.6rem;
-    border-radius: 3px;
-    color: var(--lumo-sys-fg-muted);
-    font-size: var(--step--1);
-    text-decoration: none;
-    transition:
-      background-color var(--dur) var(--ease-out),
-      color var(--dur) var(--ease-out);
-  }
-  .control:hover {
-    background: var(--lumo-sys-surface-hover);
-    color: var(--lumo-sys-fg);
-  }
-  .nav-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3em;
-    padding: 0.45rem 0.7rem;
-    border-radius: 3px;
-    color: var(--lumo-sys-fg-muted);
-    font-size: var(--step--1);
-    font-weight: 500;
-    text-decoration: none;
-    white-space: nowrap;
-    transition:
-      background-color var(--dur) var(--ease-out),
-      color var(--dur) var(--ease-out);
-  }
-  .nav-link:hover,
-  .nav-link[aria-current="page"] {
-    color: var(--lumo-sys-fg);
-    background: var(--lumo-sys-surface-hover);
-  }
-  .link-quiet {
-    color: inherit;
-    text-decoration: none;
-    border-block-end: 1px solid var(--lumo-sys-border-strong);
-    transition:
-      color var(--dur) var(--ease-out),
-      border-color var(--dur) var(--ease-out);
-  }
-  .link-quiet:hover {
-    color: var(--lit-text);
-    border-color: var(--lit-text);
-  }
-
-  /* --------------------------------------------------------------- header */
-  .site-header {
-    position: sticky;
-    inset-block-start: 0;
-    z-index: 40;
-    background: color-mix(in oklab, var(--lumo-sys-bg) 86%, transparent);
-    backdrop-filter: blur(12px);
-    border-block-end: 1px solid var(--lumo-sys-border);
-  }
-  .site-header__row {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    block-size: var(--header-h);
-  }
-  .site-header__brand {
-    color: inherit;
-    text-decoration: none;
-  }
-  .site-header__nav {
-    display: none;
-    align-items: center;
-    gap: 0.15rem;
-    margin-inline-start: auto;
-  }
-  .site-header__tools {
-    display: flex;
-    align-items: center;
-    gap: 0.15rem;
-    margin-inline-start: auto;
-  }
-  .site-header__rail {
-    display: flex;
-    gap: 0.15rem;
-    overflow-x: auto;
-    padding: 0.4rem var(--gutter);
-    border-block-start: 1px solid var(--lumo-sys-border);
-    scrollbar-width: none;
-  }
-  @media (width >= 72rem) {
-    .site-header__nav {
-      display: flex;
-    }
-    .site-header__tools {
-      margin-inline-start: 0.5rem;
-    }
-    .site-header__rail {
-      display: none;
-    }
-  }
-  [data-logo] {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    color: var(--lumo-sys-fg);
-  }
-  [data-logo] svg,
-  [data-mark] {
-    inline-size: 1.5rem;
-    block-size: 1.5rem;
-    flex: none;
-  }
-  [data-logo-word] {
-    font-weight: 600;
-    font-stretch: var(--stretch-wordmark);
-    letter-spacing: 0.02em;
-    line-height: 1;
-  }
-  .skip-link {
-    position: absolute;
-    inset-block-start: 0.5rem;
-    inset-inline-start: 0.5rem;
-    z-index: 100;
-    padding: 0.5rem 1rem;
-    background: var(--lumo-sys-surface);
-    border: 1px solid var(--lumo-sys-border-strong);
-    font-size: var(--step--1);
-    transform: translateY(-200%);
-  }
-  .skip-link:focus {
-    transform: none;
-  }
-
-  /* --------------------------------------------------------------- footer */
-  .site-footer {
-    border-block-start: 1px solid var(--lumo-sys-border);
-    padding-block: 3rem 3.5rem;
-    font-size: var(--step--1);
-    color: var(--lumo-sys-fg-muted);
-  }
-  .site-footer__family { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; margin-block-start: 2rem; padding-block-start: 1.25rem; border-block-start: 1px solid var(--lumo-sys-border); }
-  .site-footer__grid {
-    display: grid;
-    gap: 2rem;
-  }
-  @media (width >= 48rem) {
-    .site-footer__grid {
-      grid-template-columns: 1.4fr 1fr 1fr;
-      gap: 3rem;
-    }
-  }
-  .site-footer__tagline {
-    margin-block-start: 0.9rem;
-    color: var(--lumo-sys-fg);
-  }
-  .site-footer__licence {
-    margin-block-start: 0.4rem;
-  }
-  .site-footer__head {
-    font-weight: 600;
-    color: var(--lumo-sys-fg);
-    margin-block-end: 0.7rem;
-  }
-  .site-footer__col ul {
-    display: grid;
-    gap: 0.45rem;
-  }
-
-  /* ------------------------------------------------------------- surfaces */
-  .card {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 1.4rem;
-    border: 1px solid var(--lumo-sys-border);
-    background: var(--lumo-sys-surface);
-    transition: border-color var(--dur) var(--ease-out);
-  }
-  .card:hover {
-    border-color: var(--lumo-sys-border-strong);
-  }
-  .card__title {
-    font-weight: 600;
-  }
-  .card__title--mono {
-    font-family: var(--font-mono);
-    font-size: var(--step--1);
-    color: var(--lit-text);
-  }
-  .card__body {
-    font-size: var(--step--1);
-    color: var(--lumo-sys-fg-muted);
-    line-height: 1.6;
-  }
-  .callout {
-    padding: 1.1rem 1.3rem;
-    border: 1px solid var(--lumo-sys-border);
-    border-inline-start: 3px solid var(--lumo-sys-accent-mark);
-    background: var(--lumo-sys-surface);
-    color: var(--lumo-sys-fg-muted);
-    font-size: var(--step--1);
-    line-height: 1.65;
-    max-inline-size: var(--measure);
-  }
-  .code {
-    border: 1px solid var(--lumo-sys-border);
-    background: var(--lumo-sys-surface-sunken);
-    overflow: hidden;
-    border-start-start-radius: var(--lit-sm);
-  }
-  .code__caption {
-    padding: 0.45rem 0.9rem;
-    border-block-end: 1px solid var(--lumo-sys-border);
-    font-size: var(--step--2);
-    font-weight: 500;
-    color: var(--lumo-sys-fg-subtle);
-  }
-  .code pre {
-    overflow-x: auto;
-    padding: 0.9rem 1rem;
-    font-size: 0.8rem;
-    line-height: 1.65;
-    font-family: var(--font-mono);
-    tab-size: 2;
-  }
-  .table-wrap {
-    overflow-x: auto;
-    border: 1px solid var(--lumo-sys-border);
-    border-start-start-radius: var(--lit-sm);
-  }
-  .table {
-    inline-size: 100%;
-    border-collapse: collapse;
-    font-size: var(--step--1);
-  }
-  .table th {
-    text-align: start;
-    padding: 0.7rem 1rem;
-    background: var(--lumo-sys-surface-sunken);
-    border-block-end: 1px solid var(--lumo-sys-border);
-    font-weight: 600;
-  }
-  .table td {
-    padding: 0.75rem 1rem;
-    vertical-align: top;
-    border-block-end: 1px solid var(--lumo-sys-border);
-    color: var(--lumo-sys-fg-muted);
-    line-height: 1.6;
-  }
-  .table tr:last-child td {
-    border-block-end: 0;
-  }
-  .table td:first-child {
-    color: var(--lumo-sys-fg);
-    font-weight: 500;
-    white-space: nowrap;
-  }
-  .table td[data-mono] {
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    color: var(--lit-text);
-  }
-
-  /* --------------------------------------------------------------- docs */
-  .docs {
-    display: grid;
-    gap: 2.5rem;
-    padding-block: 2.5rem 5rem;
-  }
-  @media (width >= 64rem) {
-    .docs {
-      grid-template-columns: 14rem minmax(0, 1fr);
-      gap: 4rem;
-      padding-block-start: 3.5rem;
-    }
-  }
-  .docs__side {
-    display: none;
-  }
-  @media (width >= 64rem) {
-    .docs__side {
-      display: block;
-      position: sticky;
-      inset-block-start: calc(var(--header-h) + 2.5rem);
-      align-self: start;
-    }
-  }
-  .docs__side-head {
-    font-size: var(--step--2);
-    font-weight: 600;
-    letter-spacing: var(--tracking-label);
-    text-transform: uppercase;
-    color: var(--lumo-sys-fg-subtle);
-    margin-block-end: 0.8rem;
-  }
-  html:lang(fa) .docs__side-head {
-    text-transform: none;
-  }
-  .docs__side ol {
-    display: grid;
-    gap: 0.1rem;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .docs__link {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    padding: 0.45rem 0.6rem;
-    border-radius: 3px;
-    color: var(--lumo-sys-fg-muted);
-    font-size: var(--step--1);
-    text-decoration: none;
-    border-inline-start: 2px solid transparent;
-  }
-  .docs__link:hover {
-    color: var(--lumo-sys-fg);
-    background: var(--lumo-sys-surface-hover);
-  }
-  .docs__link[aria-current="page"] {
-    color: var(--lumo-sys-fg);
-    border-inline-start-color: var(--lumo-sys-accent-mark);
-    font-weight: 500;
-  }
-  .docs__num {
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    color: var(--lumo-sys-fg-subtle);
-    font-variant-numeric: tabular-nums;
-  }
-  html:lang(fa) .docs__num {
-    font-family: inherit;
-  }
-  .docs__main {
-    min-inline-size: 0;
-    max-inline-size: 48rem;
-  }
-  .doc-header {
-    padding-block-end: 2rem;
-    border-block-end: 1px solid var(--lumo-sys-border);
-    margin-block-end: 2.5rem;
-  }
-  .doc-title {
-    font-size: var(--step-4);
-    line-height: 1.08;
-    font-weight: 500;
-    letter-spacing: var(--tracking-tighter);
-    font-stretch: var(--stretch-display);
-  }
-  .doc-lead {
-    margin-block-start: 1.1rem;
-    font-size: var(--step-1);
-    line-height: 1.5;
-    color: var(--lumo-sys-fg-muted);
-    max-inline-size: var(--measure);
-  }
-  .doc-section {
-    display: grid;
-    gap: 1rem;
-  }
-  .doc-section + .doc-section {
-    margin-block-start: 3rem;
-  }
-  .doc-h2 {
-    font-size: var(--step-2);
-    line-height: 1.2;
-    font-weight: 500;
-  }
-  .doc-nav {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
-    margin-block-start: 4rem;
-    padding-block-start: 2rem;
-    border-block-start: 1px solid var(--lumo-sys-border);
-  }
-  .doc-nav__link {
-    display: grid;
-    gap: 0.25rem;
-    padding: 1rem 1.2rem;
-    border: 1px solid var(--lumo-sys-border);
-    background: var(--lumo-sys-surface);
-    color: inherit;
-    text-decoration: none;
-    transition: border-color var(--dur) var(--ease-out);
-  }
-  .doc-nav__link:hover {
-    border-color: var(--lumo-sys-border-strong);
-  }
-  .doc-nav__link--next {
-    text-align: end;
-    border-start-start-radius: 0;
-    border-start-end-radius: var(--lit);
-  }
-  .doc-nav__dir {
-    font-size: var(--step--2);
-    color: var(--lumo-sys-fg-subtle);
-  }
-  .doc-nav__label {
-    font-weight: 500;
-  }
-  .doc-index {
-    display: grid;
-    gap: 1px;
-    background: var(--lumo-sys-border);
-    border: 1px solid var(--lumo-sys-border);
-    border-start-start-radius: var(--lit);
-    overflow: hidden;
-  }
-  .doc-index__item {
-    display: grid;
-    grid-template-columns: 3rem 1fr;
-    gap: 1rem;
-    padding: 1.2rem 1.4rem;
-    background: var(--lumo-sys-surface);
-    color: inherit;
-    text-decoration: none;
-    transition: background-color var(--dur) var(--ease-out);
-  }
-  .doc-index__item:hover {
-    background: var(--lumo-sys-surface-hover);
-  }
-  .doc-index__label {
-    font-weight: 600;
-  }
-  .doc-index__lead {
-    font-size: var(--step--1);
-    color: var(--lumo-sys-fg-muted);
-    margin-block-start: 0.2rem;
-  }
-
-  /* --------------------------------------------------------------- home */
-  .hero {
-    padding-block: clamp(2.5rem, 6vw, 5.5rem) clamp(2rem, 4vw, 3.5rem);
-  }
-  .hero__grid {
-    display: grid;
-    gap: 2.5rem;
-    align-items: center;
-  }
-  @media (width >= 62rem) {
-    .hero__grid {
-      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
-      gap: 4rem;
-    }
-  }
-  .hero__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-block-start: 2rem;
-  }
-  .hero__lead {
-    margin-block-start: 1.4rem;
-  }
-  .strip {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 1rem 2rem;
-    list-style: none;
-    margin: clamp(2rem, 4vw, 3rem) 0 0;
-    padding: 1.25rem 0 0;
-    border-block-start: 1px solid var(--lumo-sys-border);
-    font-size: var(--step--1);
-    color: var(--lumo-sys-fg-muted);
-  }
-  .section-head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    overflow-wrap: anywhere;
-    gap: 1rem;
-    margin-block-end: clamp(1.75rem, 3vw, 2.75rem);
-  }
-  @media (width >= 60rem) {
-    .section-head {
-      grid-template-columns: 14rem minmax(0, 1fr);
-      gap: 2rem;
-      align-items: start;
-    }
-  }
-  .section-head__lead {
-    margin-block-start: 1rem;
-  }
-  .stats {
-    display: grid;
-    gap: 2rem;
-    margin-block-start: clamp(2rem, 4vw, 3rem);
-  }
-  @media (width >= 48rem) {
-    .stats {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-  .stat {
-    padding-block-start: 1rem;
-    border-block-start: 1px solid var(--lumo-sys-border);
-  }
-  .stat__value {
-    display: flex;
-    align-items: baseline;
-    gap: 0.6rem;
-    font-size: var(--step-4);
-    line-height: 1;
-    letter-spacing: var(--tracking-tighter);
-    font-variant-numeric: tabular-nums;
-    font-stretch: var(--stretch-display);
-  }
-  .stat__before {
-    color: var(--lumo-sys-fg-subtle);
-    font-size: var(--step-2);
-    text-decoration: line-through;
-    text-decoration-color: var(--lumo-sys-critical);
-    text-decoration-thickness: 2px;
-  }
-  .stat__after {
-    color: var(--lit-text);
-  }
-  .stat__label {
-    margin-block-start: 0.6rem;
-    font-size: var(--step--1);
-    color: var(--lumo-sys-fg-muted);
-  }
-  .rules {
-    display: grid;
-    gap: 1px;
-    background: var(--lumo-sys-border);
-    border: 1px solid var(--lumo-sys-border);
-    border-start-start-radius: var(--lit);
-    overflow: hidden;
-  }
-  @media (width >= 48rem) {
-    .rules {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  .rules__group {
-    padding: 1.4rem;
-    background: var(--lumo-sys-bg);
-  }
-  .rules__group h3 {
-    font-size: var(--step-0);
-    font-weight: 600;
-    margin-block-end: 0.8rem;
-  }
-  .rules__group ul {
-    display: grid;
-    gap: 0.55rem;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .rules__group li {
-    display: grid;
-    gap: 0.15rem;
-    font-size: var(--step--1);
-    color: var(--lumo-sys-fg-muted);
-    line-height: 1.5;
-  }
-  .rule-id {
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    color: var(--lit-text);
-  }
-  .steps {
-    display: grid;
-    gap: 1.5rem;
-  }
-  @media (width >= 60rem) {
-    .steps {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-  .step {
-    display: grid;
-    gap: 0.8rem;
-    align-content: start;
-  }
-  .step__n {
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    color: var(--lit-text);
-    letter-spacing: var(--tracking-label);
-  }
-  html:lang(fa) .step__n {
-    font-family: inherit;
-  }
-  .step h3 {
-    font-size: var(--step-1);
-    font-weight: 600;
-  }
-  .step p {
-    font-size: var(--step--1);
-    color: var(--lumo-sys-fg-muted);
-  }
-  .close {
-    display: grid;
-    gap: 2rem;
-    align-items: center;
-  }
-  @media (width >= 60rem) {
-    .close {
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-    }
-  }
-  .close__meta {
-    display: grid;
-    gap: 0.5rem;
-    font-size: var(--step--1);
-    color: var(--lumo-sys-fg-muted);
-  }
-  .close__meta dt {
-    color: var(--lumo-sys-fg-subtle);
-  }
-  .close__meta dd {
-    font-size: var(--step-2);
-    color: var(--lumo-sys-fg);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ---------------------------------------------------------- the figure */
-  .gate-figure {
-    display: grid;
-    gap: 0.75rem;
-    margin: 0;
-    font-size: var(--step--1);
-  }
-  .gate-figure__tabs {
-    display: inline-flex;
-    gap: 2px;
-    padding: 2px;
-    border: 1px solid var(--lumo-sys-border);
-    background: var(--lumo-sys-surface-sunken);
-    justify-self: start;
-    border-start-start-radius: var(--lit-sm);
-  }
-  .gate-figure__tab {
-    padding: 0.35rem 0.75rem;
-    font-size: var(--step--2);
-    font-weight: 500;
-    color: var(--lumo-sys-fg-muted);
-    background: transparent;
-    border: 0;
-    border-radius: 2px;
-    cursor: pointer;
-  }
-  .gate-figure__tab[aria-pressed="true"] {
-    background: var(--lumo-sys-surface);
-    color: var(--lumo-sys-fg);
-    box-shadow: 0 0 0 1px var(--lumo-sys-border);
-  }
-  .gate-figure__tab:first-child[aria-pressed="true"] {
-    border-start-start-radius: calc(var(--lit-sm) - 2px);
-  }
-  .gate-figure__page {
-    border: 1px solid var(--lumo-sys-border);
-    background: var(--lumo-sys-surface);
-    border-start-start-radius: var(--lit);
-    overflow: hidden;
-  }
-  .gate-figure__bar {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.9rem;
-    border-block-end: 1px solid var(--lumo-sys-border);
-    background: var(--lumo-sys-surface-sunken);
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    color: var(--lumo-sys-fg-subtle);
-  }
-  .gate-figure__bar samp {
-    direction: ltr;
-    unicode-bidi: isolate;
-  }
-  .gate-figure__dot {
-    inline-size: 0.5rem;
-    block-size: 0.5rem;
-    background: var(--lumo-sys-accent-mark);
-    border-start-start-radius: 0.5rem;
-  }
-  .gate-figure__body {
-    display: grid;
-    gap: 0.6rem;
-    padding: 1.1rem 1.2rem 1.3rem;
-    line-height: 1.8;
-  }
-  .gate-figure__h {
-    font-size: var(--step-1);
-    font-weight: 600;
-  }
-  .gate-figure__k {
-    color: var(--lumo-sys-fg-subtle);
-  }
-  .gate-figure__body b {
-    font-weight: 600;
-    color: var(--lumo-sys-fg);
-  }
-  .gate-figure__body samp {
-    font-family: var(--font-mono);
-    font-size: 0.9em;
-    direction: ltr;
-    unicode-bidi: isolate;
-  }
-  .gate-figure__body samp[data-defect] {
-    color: var(--lumo-sys-critical);
-    text-decoration: underline wavy var(--lumo-sys-critical);
-    text-underline-offset: 0.2em;
-    text-decoration-thickness: 1px;
-  }
-  .gate-figure__select {
-    display: inline-block;
-    padding: 0.05em 0.6em;
-    border: 1px solid var(--lumo-sys-border-control);
-    border-radius: 3px;
-    background: var(--lumo-sys-bg);
-  }
-  .gate-figure__cta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.75rem;
-    margin-block-start: 0.3rem;
-  }
-  .gate-figure__btn {
-    padding: 0.35em 0.9em;
-    background: var(--lumo-sys-accent);
-    color: var(--lumo-sys-accent-fg);
-    border-radius: 3px;
-    border-start-start-radius: var(--lit-sm);
-    font-weight: 500;
-  }
-  .gate-figure__name {
-    font-size: var(--step--2);
-    color: var(--lumo-sys-fg-subtle);
-  }
-  .gate-figure__name > span:first-child::after {
-    content: ":";
-  }
-  .gate-figure__report {
-    border: 1px solid var(--lumo-sys-border);
-    background: var(--lumo-sys-surface-sunken);
-    padding: 0.9rem 1.1rem;
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-  }
-  html:lang(fa) .gate-figure__report {
-    font-family: inherit;
-  }
-  .gate-figure__report-head {
-    color: var(--lumo-sys-fg-subtle);
-    margin-block-end: 0.5rem;
-  }
-  .gate-figure__report ul {
-    display: grid;
-    gap: 0.3rem;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-  .gate-figure__report li {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    color: var(--lumo-sys-critical);
-    transition: color var(--dur-slow) var(--ease-out);
-  }
-  .gate-figure__report li[data-clean] {
-    color: var(--lumo-sys-fg-subtle);
-  }
-  .gate-figure__rule {
-    font-family: var(--font-mono);
-  }
-  .gate-figure__count {
-    font-variant-numeric: tabular-nums;
-  }
-  .gate-figure__total {
-    margin-block-start: 0.6rem;
-    padding-block-start: 0.6rem;
-    border-block-start: 1px solid var(--lumo-sys-border);
-    color: var(--lumo-sys-critical);
-    font-weight: 600;
-    transition: color var(--dur-slow) var(--ease-out);
-  }
-  .gate-figure__total[data-clean] {
-    color: var(--lit-text);
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .gate-figure__body b {
-      animation: lit-in var(--dur-slow) var(--ease-out) both;
-    }
-  }
-  @keyframes lit-in {
-    from {
-      background: var(--lit-wash);
-    }
-    to {
-      background: transparent;
-    }
-  }
-
-  /* ---------------------------------------------------------- dates demo */
-  .dates-demo {
-    display: grid;
-    gap: 1.5rem;
-  }
-  @media (width >= 40rem) {
-    .dates-demo {
-      grid-template-columns: auto 1fr;
-      align-items: center;
-    }
-  }
-  .dates-demo__calendar {
-    border: 1px solid var(--lumo-sys-border);
-    background: var(--lumo-sys-surface);
-    justify-self: start;
-  }
-  .dates-demo__readout {
-    display: grid;
-    gap: 1rem;
-    font-size: var(--step--1);
-  }
-  .dates-demo__readout dt {
-    color: var(--lumo-sys-fg-subtle);
-  }
-  .dates-demo__date {
-    font-size: var(--step-2);
-    font-weight: 500;
-    line-height: 1.3;
-    margin-block-start: 0.2rem;
-  }
-  .dates-demo__readout code {
-    font-size: 0.78rem;
-    color: var(--lumo-sys-fg-muted);
-  }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .plane, .check-path { animation: none; }
+  .check-path { stroke-dasharray: none; opacity: .35; }
+  .button:hover .arrow, .text-link:hover .arrow { transform: none; }
 }
-
-/* Unlayered, so it beats the copies' own tracking. Persian: letter-spacing
-   breaks the joins between Arabic-script glyphs, and there is no upper case. */
-html:lang(fa) :is(h1, h2, h3, h4, p, a, span, li, dt, dd, button, th, td) {
-  letter-spacing: normal;
-  text-transform: none;
-}
-
-@media print {
-  .site-header,
-  .site-footer,
-  .skip-link {
-    display: none !important;
-  }
-}
-
-/* The shadcn primitives under the site's own classes (handbook 08 §5). These rules sit outside
-   every layer so the site's measurements outrank the generated utilities, which Tailwind puts
-   in its utilities layer; each is paired with the slot the CLI stamps, so a hand-written element
-   of the same class is left alone. */
-.gate-figure__tabs[data-slot="toggle-group"] {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--lumo-sys-border);
-  background: var(--lumo-sys-surface-sunken);
-  justify-self: start;
-  border-radius: 0;
-  border-start-start-radius: var(--lit-sm);
-  inline-size: auto;
-  block-size: auto;
-  box-shadow: none;
-}
-.gate-figure__tab[data-slot="toggle-group-item"] {
-  margin: 0;
-  padding: 0.35rem 0.75rem;
-  block-size: auto;
-  min-inline-size: 0;
-  inline-size: auto;
-  font-size: var(--step--2);
-  font-weight: 500;
-  line-height: inherit;
-  white-space: normal;
-  color: var(--lumo-sys-fg-muted);
-  background: transparent;
-  border: 0;
-  border-radius: 2px;
-  box-shadow: none;
-  outline: none;
-  cursor: pointer;
-  transition: none;
-}
-.gate-figure__tab[data-slot="toggle-group-item"]:hover {
-  color: var(--lumo-sys-fg-muted);
-  background: transparent;
-}
-.gate-figure__tab[data-slot="toggle-group-item"][aria-pressed="true"],
-.gate-figure__tab[data-slot="toggle-group-item"][aria-pressed="true"]:hover {
-  background: var(--lumo-sys-surface);
-  color: var(--lumo-sys-fg);
-  box-shadow: 0 0 0 1px var(--lumo-sys-border);
-}
-.gate-figure__tab[data-slot="toggle-group-item"]:first-child[aria-pressed="true"] {
-  border-start-start-radius: calc(var(--lit-sm) - 2px);
-}
-.control[data-slot="button"] {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4em;
-  min-inline-size: 2.75rem;
-  inline-size: auto;
-  block-size: 2.75rem;
-  padding-inline: 0.6rem;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  box-shadow: none;
-  outline: none;
-  color: var(--lumo-sys-fg-muted);
-  font-size: var(--step--1);
-  font-weight: inherit;
-  line-height: inherit;
-  white-space: normal;
-  text-decoration: none;
-  transition:
-    background-color var(--dur) var(--ease-out),
-    color var(--dur) var(--ease-out);
-}
-.control[data-slot="button"]:hover {
-  background: var(--lumo-sys-surface-hover);
-  color: var(--lumo-sys-fg);
-}
-
-/* Shared Telarsa language-control geometry, using this site's existing tokens. */
-.language-menu-trigger { display: grid; place-items: center; inline-size: 2.75rem; block-size: 2.75rem; padding: 0; flex: none; border: 1px solid var(--lumo-sys-border-strong); border-radius: 4px; background: transparent; color: var(--lumo-sys-fg-muted); font-family: "Inter", "IRANSansX", sans-serif, monospace; font-size: .8125rem; cursor: pointer; transition: background-color 160ms, color 160ms, border-color 160ms; }
-.language-menu-trigger:hover, .language-menu-trigger[data-popup-open] { background: var(--lumo-sys-surface-hover); color: var(--lumo-sys-fg); border-color: var(--lumo-sys-border-strong); }
-.language-menu-positioner { z-index: 60; }
-.language-menu-panel { min-inline-size: 11rem; padding: .25rem; border: 1px solid var(--lumo-sys-border-strong); border-radius: 10px; background: var(--lumo-sys-surface); box-shadow: 0 12px 32px rgb(0 0 0 / .14); }
-.language-menu-item { display: flex; align-items: baseline; gap: .75rem; padding: .5rem .75rem; border-radius: 4px; color: var(--lumo-sys-fg-muted); font-size: .875rem; text-decoration: none; cursor: pointer; outline: none; white-space: nowrap; }
-.language-menu-item:hover, .language-menu-item[data-highlighted] { background: var(--lumo-sys-surface-sunken); color: var(--lumo-sys-fg); }
-.language-menu-code { inline-size: 2ch; flex: none; font-family: "Inter", "IRANSansX", sans-serif, monospace; font-size: .8125rem; }
-.language-menu-item[aria-current] { color: var(--lumo-sys-fg); }
-.language-menu-item[aria-current] .language-menu-code { color: var(--lit-text); }
-.language-menu-trigger :lang(fa), .language-menu-item :lang(fa) { font-family: "Inter", "IRANSansX", sans-serif, sans-serif; letter-spacing: normal; }
-
-/* Website-family navigation: a compact, bounded top sheet on phones/tablets. */
-.mobile-menu-backdrop {position:fixed;inset:0;z-index:60;background:#0005;backdrop-filter:blur(5px);}
-.mobile-menu-sheet {position:fixed;inset-block-start:0;inset-inline:0;z-index:61;max-block-size:90dvh;overflow-y:auto;overscroll-behavior:contain;background:var(--lumo-sys-bg);padding:1rem var(--gutter) 1.75rem;border-block-end:1px solid var(--lumo-sys-border-strong);border-end-start-radius:10px;border-end-end-radius:10px;box-shadow:0 12px 40px #0002;}
-.mobile-menu-top {display:flex;justify-content:space-between;align-items:center;min-block-size:2.75rem;margin-block-end:1rem;font-weight:650;}
-.mobile-menu-link {display:flex;align-items:center;justify-content:space-between;inline-size:100%;padding:1rem .25rem;border-block-end:1px solid var(--lumo-sys-border);font-size:1.2rem;color:var(--lumo-sys-fg);text-align:start;text-decoration:none;}
-.mobile-menu-link:hover,.mobile-menu-sublink:hover {background:var(--lumo-sys-surface-hover);}
-.mobile-menu-docs {overflow:hidden;}
-.mobile-menu-sublink {display:block;padding:.75rem;color:var(--lumo-sys-fg-muted);text-decoration:none;}
-.mobile-menu-trigger {padding:0;}
-@media(width >= 72rem){.mobile-menu-trigger{display:none;}}
-@media(pointer:fine){.language-menu-trigger,.site-header .control,.mobile-menu-sheet .control {inline-size:2.25rem;min-inline-size:2.25rem;block-size:2.25rem;}}
-.language-menu-trigger:hover {background:var(--lumo-sys-surface-hover);color:var(--lumo-sys-fg);}
-
-@media(width >= 64rem){.site-footer__grid{grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr));}}
-.site-footer__head{font-size:var(--step--2);font-weight:500;}
-.site-footer__col .link-quiet{border-color:transparent;}
-.site-footer__col .link-quiet:hover{border-color:var(--lit-text);}
-
-@media (pointer: coarse) { .language-menu-item { min-block-size: 2.75rem; } }

@@ -24,7 +24,7 @@ const T = {
   "title": "Jalali-Daten mit dem Calendar von shadcn",
   "lead": "Der Calendar von shadcn verwendet react-day-picker. Dessen persische Spracheinstellung in Version 10 beschriftet ein gregorianisches Raster auf Persisch: „22. Juli 2024“ statt „1. Mordad 1403“. lumoCalendar liefert vier bereits unterstützte Props; ein Wrapper oder eine Migration ist nicht erforderlich.",
   "demoTitle": "Direkt auf dieser Seite",
-  "demoNote": "Der Kalender ist die shadcn-Kopie. Das Kalenderverhalten wird als Props übergeben. Ansagen für Navigation und Zellen sind vollständig angegeben: integrierte Sprachen verwenden stringsFor, Deutsch verwendet einen eigenen vollständigen Textsatz.",
+  "demoNote": "Dieses Beispiel behält das Kalenderverhalten von DayPicker mit der Gestaltung dieser Website. Lumo liefert die Kalender-Props und die erforderlichen Ansagen für Navigation und Zellen. Integrierte Sprachen verwenden stringsFor; Deutsch verwendet einen eigenen vollständigen Textsatz.",
   "labels": {
     "selected": "Ausgewählter Tag",
     "fields": "Felder von CalendarDate"
@@ -41,7 +41,7 @@ const T = {
     title: "تاریخ جلالی، روی Calendar خودِ shadcn",
     lead: "Calendar شادسی‌ان همان react-day-picker است، و locale فارسیِ نسخهٔ ۱۰ فقط پوسته‌ای فارسی روی شبکهٔ میلادی است: برای روزی که ایران «۱ مرداد ۱۴۰۳» می‌نامد، تاریخی میلادی با واژه‌های فارسی نشان می‌دهد. lumoCalendar چهار propی برمی‌گرداند که DayPicker از قبل می‌پذیرد؛ چیزی wrap نمی‌شود و جایی مهاجرت نمی‌کنید.",
     demoTitle: "زنده، همین صفحه",
-    demoNote: "تقویم بالا کپیِ shadcn است؛ جلالی‌بودنش از بیرون می‌آید، به‌شکل prop. رشته‌های اعلانی — نام ماه‌بر، سلول‌ها — الزامی‌اند و از stringsFor می‌آیند؛ زبانِ بدون رشته، خطای کامپایل است.",
+    demoNote: "نمونهٔ بالا رفتار همان انتخابگر تاریخ را با ظاهر اختصاصی این سایت حفظ می‌کند؛ تنظیمات تقویم و نام‌های الزامی راهبری و سلول‌ها از لومو می‌آیند. زبان‌های داخلی از رشته‌های آماده و آلمانی از مجموعهٔ کامل اختصاصی استفاده می‌کند.",
     labels: { selected: "روز انتخاب‌شده", fields: "فیلدهای CalendarDate" },
     usageTitle: "استفاده",
     boundaryTitle: "مرز مقدار",
@@ -55,7 +55,7 @@ const T = {
     title: "Jalali dates, on shadcn's own Calendar",
     lead: "shadcn's Calendar is react-day-picker, and v10's Persian locale is a Persian skin over a Gregorian grid: “22 July 2024” for the day Iran calls 1 Mordad 1403. lumoCalendar returns the four props DayPicker already accepts; nothing is wrapped and nothing migrates.",
     demoTitle: "Live, on this page",
-    demoNote: "The calendar above is the shadcn copy; the Jalali behaviour arrives from outside, as props. The announced strings — the nav, the cells — are required and come from stringsFor; a language without them is a compile error.",
+    demoNote: "This example preserves DayPicker’s calendar behaviour with this website’s visual styling. Lumo supplies the calendar props and required navigation and cell names. Built-in languages use stringsFor; German supplies a complete custom set.",
     labels: { selected: "Selected day", fields: "CalendarDate fields" },
     usageTitle: "Usage",
     boundaryTitle: "The value boundary",

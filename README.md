@@ -135,15 +135,22 @@ mobile equivalent of grading served bytes.
 | `config` | the lint policy, no plugin dependencies |
 | `base-ui-ssr` | first-byte compensations for Base UI |
 | `mobile` | `lumo_ui_mobile`, the Flutter side |
-| `apps/website` | lumo-ui.com — a consumer of the package, graded by its own gate |
+| `apps/website` | lumo-ui.com — the website and docs, a consumer of the package, graded by its own gate |
 | `apps/mobile-example` | the Flutter example the mobile grader runs against |
 
 ## The website
 
-`apps/website` is lumo-ui.com: a static export of these docs in English, German
-and Persian, which is also the corpus `gate:html` grades — the site that
-documents the gate is the site the gate is proved on. The root redirects to
-English; German lives at `/de/` and Persian at `/fa/`.
+`apps/website` is lumo-ui.com: the product pages and the full documentation in
+English, German and Persian, as a static export that is also the corpus
+`gate:html` grades — the site that documents the gate is the site the gate is
+proved on. The root redirects to English; German lives at `/de/` and Persian at
+`/fa/`. It replaced the earlier docs app on 9 October 2026; see
+[apps/website/README.md](apps/website/README.md).
+
+Its Persian typeface, IRANSansX, is proprietary and is not in this repository.
+A clone builds with the system Persian fonts; the owner's private build sets
+`LUMO_PRIVATE_FONTS_DIR` to a directory with the licensed files, which are
+copied into a git-ignored folder and verified before the build.
 
 The library and website stay in this monorepo and deploy independently; a
 package tag does not publish the website. Hosting, as the owner decided it
@@ -160,12 +167,12 @@ package tag does not publish the website. Hosting, as the owner decided it
   [deployment instructions](docs/deployment.md).
 
 ```bash
-pnpm dev                     # apps/website on :3000
+pnpm dev                     # apps/website on :3113
 pnpm build:website           # build only
 pnpm check:website           # lint, types, build and grade the exported pages
 pnpm image:website           # container image for the VPS (DEPLOY-VPS.md)
 pnpm run:website             # run that image locally; stop:website stops it
-pnpm preview:website         # Cloudflare path: serve out/ with local routing
+pnpm preview:website         # serve the built out/ locally on :3113
 pnpm deploy:website          # Cloudflare path: upload checked output; main only
 ```
 

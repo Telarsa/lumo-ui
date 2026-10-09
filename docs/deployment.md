@@ -21,7 +21,10 @@
 
 The owner selected Cloudflare Workers Static Assets on 7 September 2026
 (superseded as the chosen host on 8 September 2026; see the box above).
-The website stays under apps/website in this monorepo.
+The website stays under apps/website in this monorepo (since 9 October 2026 the
+site formerly built as the standalone `lumo-ui-website`; same `wrangler.jsonc`,
+same `out/`). A Cloudflare build from a clean checkout has no private Persian
+font and serves the system fallback; see `apps/website/README.md`.
 Its rollout is independent of product services and package/git-tag releases.
 
 Run from the monorepo root after `pnpm install --frozen-lockfile`; do not change
@@ -31,7 +34,7 @@ the Cloudflare root directory to `apps/website`, which consumes the root package
 pnpm build:website                  # build only → apps/website/out/
 pnpm check:website                  # lint, website types, build and HTML gate
 pnpm verify                          # complete repository verification
-pnpm preview:website                 # serve the built export locally
+pnpm preview:website                 # serve the built export locally (:3113)
 pnpm deploy:website                  # upload checked output; main only, no rebuild
 ```
 

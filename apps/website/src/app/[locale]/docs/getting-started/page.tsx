@@ -52,7 +52,7 @@ const T = {
   "s1": "Installieren: ein Paket, ein Tag",
   "s1note": "Das Paket liefert TypeScript-Quelltext, den Next transpiliert. Ohne diese Einstellung stoppt Turbopack an der ersten .ts-Datei. Verwenden Sie pnpm: Der Workspace nutzt catalog:, das npm nicht versteht.",
   "s2": "Styles in fester Reihenfolge",
-  "s2note": "Die Reihenfolge ist verbindlich. Binden Sie shadcn-Variablen in einem gemeinsamen Block an die sys-Tokens. Der öffentliche Quelltext dieser Website zeigt das Vorgehen.",
+  "s2note": "Die Reihenfolge ist verbindlich. Binden Sie shadcn-Variablen in einem gemeinsamen Block an die sys-Tokens. Der öffentliche Quelltext der ursprünglichen Lumo-Dokumentationswebsite zeigt das Vorgehen.",
   "s2warn": "accent hat zwei Bedeutungen: Bei shadcn ist es eine Hervorhebung beim Überfahren, bei Lumo die Markenfarbe. Da Lumos Theme später importiert wird, gehört bg-accent zu Lumo. Verwenden Sie muted für die dezente Hervorhebung.",
   "s3": "Einrichtung",
   "wiring": [
@@ -87,7 +87,7 @@ const T = {
     s1: "نصب: یک بسته، یک تگ",
     s1note: "بسته سورس TypeScript حمل می‌کند و Next خودش ترنسپایل می‌کند؛ Turbopack بدون این خط روی اولین فایل .ts می‌ایستد. فقط pnpm: workspace از catalog استفاده می‌کند و npm نمی‌تواند آن را بخواند.",
     s2: "استایل، به ترتیبِ ثابت",
-    s2note: "ترتیب قابل جابه‌جایی نیست. متغیرهای shadcn را در یک بلاک به توکن‌های sys ببندید؛ همین سایت همین کار را می‌کند و کد منبعش عمومی است.",
+    s2note: "ترتیب قابل جابه‌جایی نیست. متغیرهای shadcn را در یک بلاک به توکن‌های sys ببندید؛ سایت مرجع عمومی لومو همین کار را می‌کند و کد منبع آن در مخزن عمومی موجود است.",
     s2warn: "یک نام در هر دو واژگان هست و دو معنی دارد: accent در shadcn یک wash برای hover است و در Lumo رنگ برند. چون theme خودِ Lumo دیرتر وارد می‌شود، bg-accent مال Lumo است. کپی‌ای که wash می‌خواهد از muted استفاده می‌کند.",
     s3: "سیم‌کشی",
     wiring: [
@@ -107,7 +107,7 @@ const T = {
     s1: "Install: one package, one tag",
     s1note: "The package ships TypeScript source and Next transpiles it; without this line Turbopack stops at the first .ts file. pnpm only: the workspace uses catalog:, which npm cannot parse.",
     s2: "Styles, in the fixed order",
-    s2note: "The order is not interchangeable. Bind shadcn's variables to the sys tokens in one block; this very site does exactly that, and its source is public.",
+    s2note: "The order is not interchangeable. Bind shadcn's variables to the sys tokens in one block; the original public Lumo documentation website demonstrates this in its public source.",
     s2warn: "One name exists in both vocabularies and means two things: shadcn's accent is a hover wash, Lumo's accent is the brand. Lumo's theme is imported later, so bg-accent is Lumo's. A copy that wants the wash uses muted.",
     s3: "Wiring",
     wiring: [

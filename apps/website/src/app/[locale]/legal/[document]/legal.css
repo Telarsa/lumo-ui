@@ -1,0 +1,23 @@
+/* Legal pages (imprint, privacy). Plain global CSS with a `legal-` prefix:
+ * this repository bans CSS Modules (scripts/no-css-modules.mjs), so the
+ * standalone site's legal.module.css became this file on 9 Oct 2026. */
+.legal-document { max-inline-size: 58rem; padding-block: clamp(3rem, 6vw, 6rem); }
+.legal-heading { padding-block-end: var(--lumo-web-space-7); border-block-end: 1px solid var(--lumo-web-line); }
+.legal-heading h1 { font-size: var(--lumo-web-step-4); letter-spacing: var(--lumo-web-tracking-tight); font-weight: 550; line-height: 1.2; margin-block: 1.25rem; }
+.legal-lead { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step-1); max-inline-size: 65ch; }
+.legal-date { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step--1); margin-block-start: 1.5rem; }
+.legal-sections { display: grid; gap: var(--lumo-web-space-7); padding-block: var(--lumo-web-space-7); }
+.legal-document h2 { font-weight: 550; font-size: var(--lumo-web-step-2); line-height: 1.4; letter-spacing: var(--lumo-web-tracking-tight); margin-block-end: .8rem; }
+.legal-sections p, .legal-notes { color: var(--lumo-web-text-muted); max-inline-size: 72ch; }
+.legal-sections code { display: inline-block; margin-block-start: .8rem; padding: .25rem .6rem; background: var(--lumo-web-surface); border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius-sm); }
+.legal-operator { padding-block: var(--lumo-web-space-7); }
+.legal-operator dl { margin: 0; }
+.legal-operator dl > div { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1rem; padding-block: 1rem; border-block-end: 1px solid var(--lumo-web-line); }
+.legal-operator dt { color: var(--lumo-web-text-muted); }
+.legal-operator dd { margin: 0; text-align: start; overflow-wrap: anywhere; }
+.legal-operator dd:lang(fa) { font-family: var(--lumo-web-font-fa); }
+.legal-operator a { border-block-end: 1px solid var(--lumo-web-line-strong); }
+.legal-operator a:hover { color: var(--lumo-lit-text); }
+.legal-notes { display: grid; gap: 1.25rem; }
+[lang="fa"] .legal-heading h1 { line-height: 1.55; }
+@media (width < 38rem) { .legal-operator dl > div { grid-template-columns: 1fr; gap: .35rem; } }

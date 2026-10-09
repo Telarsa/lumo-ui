@@ -1,0 +1,102 @@
+/* The licensed documentation corpus uses this website's own styles and tokens.
+ * Every rule is scoped to this reading shell; product UI contracts stay public. */
+.docs { display: grid; grid-template-columns: 14rem minmax(0, 1fr); gap: clamp(2rem, 5vw, 5rem); padding-block: var(--lumo-web-space-8); align-items: start; }
+.docs .docs__side { position: sticky; inset-block-start: 7rem; font-size: var(--lumo-web-step--1); }
+.docs .docs__side-head { font-size: var(--lumo-web-step--2); color: var(--lumo-web-text-muted); letter-spacing: var(--lumo-web-tracking-label); text-transform: uppercase; margin-block-end: 1rem; }
+.docs .docs__side ol { display: grid; gap: .3rem; }
+.docs .docs__link { display: flex; gap: .65rem; align-items: baseline; padding: .6rem .7rem; border-inline-start: 2px solid transparent; border-radius: var(--lumo-web-radius-sm); color: var(--lumo-web-text-muted); }
+.docs .docs__link:hover { color: var(--lumo-web-text); background: var(--lumo-web-surface); }
+.docs .docs__link[aria-current] { color: var(--lumo-lit-text); background: var(--lumo-wash); border-inline-start-color: var(--lumo-mark); }
+.docs .docs__num { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step--2); font-variant-numeric: tabular-nums; flex: 0 0 1.2rem; }
+.docs .docs__main { inline-size: 100%; max-inline-size: 50rem; min-inline-size: 0; }
+.docs .doc-header { padding-block-end: var(--lumo-web-space-7); border-block-end: 1px solid var(--lumo-web-line); }
+.docs .doc-title { font-size: var(--lumo-web-step-4); line-height: 1.15; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); margin-block: 1.15rem; }
+.docs .doc-lead { font-size: var(--lumo-web-step-1); color: var(--lumo-web-text-muted); max-inline-size: 64ch; }
+.docs .doc-section { margin-block-start: var(--lumo-web-space-7); }
+.docs .doc-h2 { font-size: var(--lumo-web-step-2); line-height: 1.3; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); margin-block-end: 1.25rem; }
+.docs .prose { color: var(--lumo-web-text-muted); }
+.docs .prose > * + * { margin-block-start: 1rem; }
+.docs .prose a, .docs .callout a { color: var(--lumo-web-text); text-decoration: underline; text-underline-offset: .2em; }
+.docs .prose strong { color: var(--lumo-web-text); font-weight: 550; }
+.docs .prose ul, .docs .prose ol { list-style: revert; padding-inline-start: 1.4rem; }
+.docs .prose li + li { margin-block-start: .5rem; }
+.docs :not(pre) > code { overflow-wrap: anywhere; font-size: .8em; padding: .1rem .25rem; background: var(--lumo-web-surface); border-radius: var(--lumo-web-radius-sm); }
+.docs .code { border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); overflow: hidden; margin-block: 1.4rem; background: var(--lumo-web-surface); }
+.docs .code__caption { padding: .65rem 1rem; font-size: var(--lumo-web-step--2); color: var(--lumo-web-text-muted); border-block-end: 1px solid var(--lumo-web-line); }
+.docs .code pre { padding: 1rem 1.15rem; line-height: 1.75; text-align: start; white-space: pre; scrollbar-width: thin; }
+.docs .code code { font-size: .8rem; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.docs .table-wrap { max-inline-size: 100%; overflow-x: auto; margin-block: 1.4rem; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); scrollbar-width: thin; }
+.docs .table { border-collapse: collapse; inline-size: 100%; font-size: var(--lumo-web-step--1); text-align: start; }
+.docs .table th, .docs .table td { padding: .85rem 1rem; vertical-align: top; border-block-end: 1px solid var(--lumo-web-line); text-align: start; }
+.docs .table th { color: var(--lumo-web-text); font-weight: 550; background: var(--lumo-web-surface); }
+.docs .table td { color: var(--lumo-web-text-muted); }
+.docs .table tr:last-child td { border-block-end: 0; }
+.docs .table td[data-mono] { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.docs .table td:first-child:has(code) { min-inline-size: 10rem; }
+.docs .card { padding: 1.3rem; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); margin-block: 1rem; background: var(--lumo-web-surface-raised); }
+.docs .card__title { font-size: var(--lumo-web-step-1); font-weight: 550; margin-block-end: .6rem; }
+.docs .card__title--mono { font-size: var(--lumo-web-step--1); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
+.docs .card__body { color: var(--lumo-web-text-muted); }
+.docs .card__body > * + * { margin-block-start: .8rem; }
+.docs .callout { margin-block: 1.5rem; padding: 1.15rem 1.3rem; border-inline-start: 2px solid var(--lumo-mark); background: var(--lumo-wash); border-radius: var(--lumo-web-radius-sm); color: var(--lumo-web-text); }
+.docs .doc-index { display: grid; margin-block-start: 1rem; }
+.docs .doc-index__item { display: flex; align-items: baseline; gap: 1rem; padding-block: 1.45rem; border-block-end: 1px solid var(--lumo-web-line); }
+.docs .doc-index__item:hover .doc-index__label { color: var(--lumo-lit-text); }
+.docs .doc-index__item > span:last-child { display: grid; gap: .5rem; }
+.docs .doc-index__label { font-size: var(--lumo-web-step-1); font-weight: 550; }
+.docs .doc-index__lead { font-size: var(--lumo-web-step--1); color: var(--lumo-web-text-muted); }
+.docs .doc-nav { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 1rem; margin-block-start: var(--lumo-web-space-8); padding-block-start: var(--lumo-web-space-5); border-block-start: 1px solid var(--lumo-web-line); }
+.docs .doc-nav__link { display: grid; gap: .4rem; padding: 1rem; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); }
+.docs .doc-nav__link:hover { border-color: var(--lumo-mark); background: var(--lumo-web-surface); }
+.docs .doc-nav__link--next { text-align: end; }
+.docs .doc-nav__dir { font-size: var(--lumo-web-step--2); color: var(--lumo-web-text-muted); }
+.docs .doc-nav__label { font-weight: 550; }
+.docs .docs-card-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
+.docs .stats { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 1rem; margin-block: 1.5rem; }
+.docs .stat { display: flex; flex-direction: column; gap: .5rem; border-inline-start: 1px solid var(--lumo-web-line); padding-inline-start: 1rem; }
+.docs .stat__value { margin: 0; font-size: var(--lumo-web-step-3); line-height: 1.1; color: var(--lumo-lit-text); }
+.docs .stat__label { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step--2); }
+.docs .dates-demo { display: grid; grid-template-columns: minmax(18rem, .95fr) minmax(0,1fr); gap: 1.5rem; align-items: center; margin-block: 1.5rem; }
+.docs .dates-demo__calendar { border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); background: var(--lumo-web-surface-raised); }
+.docs .dates-demo__readout { margin: 0; display: grid; gap: 1.5rem; min-inline-size: 0; }
+.docs .dates-demo__readout dt { color: var(--lumo-web-text-muted); font-size: var(--lumo-web-step--1); margin-block-end: .5rem; }
+.docs .dates-demo__readout dd { margin: 0; }
+.docs .dates-demo__readout code { display: block; padding: .6rem; }
+.docs .dates-demo__date { font-weight: 550; }
+.docs .calendar { padding: 1rem; }
+.docs .calendar-months { position: relative; display: flex; gap: 1rem; }
+.docs .calendar-month { inline-size: 100%; min-inline-size: 0; }
+.docs .calendar-caption { display: flex; justify-content: center; align-items: center; min-block-size: 2.25rem; padding-inline: 2.5rem; margin-block-end: .75rem; }
+.docs .calendar-caption-label { font-size: var(--lumo-web-step--1); font-weight: 550; }
+.docs .calendar-nav { position: absolute; inset-inline: 0; inset-block-start: 0; display: flex; justify-content: space-between; pointer-events: none; }
+.docs .calendar-nav-button { pointer-events: auto; display: flex; align-items: center; justify-content: center; inline-size: 2.25rem; block-size: 2.25rem; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius-sm); background: transparent; color: var(--lumo-web-text-muted); padding: 0; }
+.docs .calendar-nav-button:hover { background: var(--lumo-web-surface); color: var(--lumo-web-text); }
+.docs .calendar-grid { inline-size: 100%; border-collapse: collapse; table-layout: fixed; }
+.docs .calendar-weekday { font-size: var(--lumo-web-step--2); font-weight: 400; color: var(--lumo-web-text-muted); text-align: center; block-size: 2.2rem; }
+.docs .calendar-day { text-align: center; padding: .15rem 0; }
+.docs .calendar-day-button { border: 0; background: transparent; color: var(--lumo-web-text); border-radius: var(--lumo-web-radius-sm); display: flex; align-items: center; justify-content: center; inline-size: 100%; aspect-ratio: 1; min-block-size: 2rem; padding: 0; font-size: var(--lumo-web-step--1); }
+.docs .calendar-day-button:hover, .docs .calendar-day-button[data-today] { background: var(--lumo-web-surface); }
+.docs .calendar-day-button[data-selected] { background: var(--lumo-web-accent); color: var(--lumo-web-accent-contrast); }
+.docs .calendar-day-button[data-outside]:not([data-selected]) { color: var(--lumo-web-text-muted); opacity: .6; }
+.docs .calendar-disabled { opacity: .5; }
+.docs .calendar-hidden { visibility: hidden; }
+:root[dir="rtl"] .docs .calendar-chevron { transform: scaleX(-1); }
+.docs:lang(fa) .doc-title { line-height: 1.6; }
+.docs:lang(fa) .doc-h2 { line-height: 1.7; }
+@media (width < 62rem) {
+  .docs { grid-template-columns: minmax(0,1fr); gap: 2rem; padding-block: var(--lumo-web-space-6); }
+  .docs .docs__side { position: static; min-inline-size: 0; }
+  .docs .docs__side-head { margin-block-end: .6rem; }
+  .docs .docs__side ol { display: flex; gap: .35rem; overflow-x: auto; padding-block-end: .4rem; }
+  .docs .docs__link { white-space: nowrap; border-inline-start: 0; border-block-end: 2px solid transparent; padding: .6rem .75rem; }
+  .docs .docs__link[aria-current] { border-block-end-color: var(--lumo-mark); }
+  .docs .docs__main { max-inline-size: none; }
+}
+@media (width < 42rem) {
+  .docs .dates-demo { grid-template-columns: minmax(0,1fr); }
+  .docs .dates-demo__calendar { max-inline-size: 24rem; }
+  .docs .stats { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1.5rem; }
+  .docs .docs-card-grid { grid-template-columns: minmax(0,1fr); }
+  .docs .doc-nav { gap: .6rem; }
+  .docs .doc-nav__link { padding: .8rem; font-size: var(--lumo-web-step--1); }
+}

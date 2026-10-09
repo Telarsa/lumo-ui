@@ -102,7 +102,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         </dl>
       </Section>
       <Section>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="docs-card-grid">
           {t.pillars.map(([name, desc]) => (
             <Card key={name} title={name}>
               {desc}

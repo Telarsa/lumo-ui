@@ -1,4 +1,8 @@
 // Explicit static assets: no framework autodetection or OpenNext migration.
+// Carried over from the previous apps/website on 9 Oct 2026, unchanged in
+// effect: the new site is also a static export into ./out, with its own
+// out/404.html (scripts/own-static-shells.mjs). public/_headers and
+// public/_redirects are Cloudflare's files and are copied into out/ by Next.
 {
   "name": "lumo-ui-website",
   "compatibility_date": "2026-09-07",

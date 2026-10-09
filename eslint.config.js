@@ -38,9 +38,8 @@ import lumo from "./packages/config/eslint/lumo.mjs";
 const IGNORES = [
   "apps/website/next-env.d.ts",
   "apps/website/out/**",
-  // shadcn-managed copies (§51): upstream code the repo deliberately does not
-  // lint-own — the gate grades their served OUTPUT instead.
-  "apps/website/src/components/ui/**",
+  // Local browser captures and build logs, git-ignored evidence.
+  "apps/website/docs/verification/**",
   "**/node_modules/**",
   "**/dist/**",
   "**/out/**",

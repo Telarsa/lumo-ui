@@ -1,0 +1,107 @@
+{
+  "sourceRepository": "https://github.com/Telarsa/lumo-ui",
+  "sourceCommit": "5d17b066e881bfbc6dd100814e72f54f4b9829d2",
+  "sourcePackageVersion": "1.0.0",
+  "licence": "MIT",
+  "snapshotDate": "2026-10-05",
+  "locales": [
+    "en",
+    "de",
+    "fa"
+  ],
+  "routes": [
+    "/docs/",
+    "/docs/getting-started/",
+    "/docs/contract/",
+    "/docs/helpers/",
+    "/docs/dates/",
+    "/docs/gate/",
+    "/docs/mobile/"
+  ],
+  "files": [
+    {
+      "source": "apps/website/src/app/[locale]/docs/page.tsx",
+      "destination": "src/app/[locale]/docs/page.tsx",
+      "sourceSha256": "38050960c8eba6b365e669377f9dac91f490dc8bf0e18f5f6cb6c2fc0afa5bba",
+      "adaptedSha256": "38050960c8eba6b365e669377f9dac91f490dc8bf0e18f5f6cb6c2fc0afa5bba"
+    },
+    {
+      "source": "apps/website/src/app/[locale]/docs/layout.tsx",
+      "destination": "src/app/[locale]/docs/layout.tsx",
+      "sourceSha256": "30bb1826df4483c6f1f6225a77fa04e63de9f86abf277511a84b1d35e0f1f7ab",
+      "adaptedSha256": "47b560db8d7c026bd5e1ce12e641ca44b6b880a0b0712248bd2dbb3aa93f12e3"
+    },
+    {
+      "source": "apps/website/src/app/[locale]/docs/getting-started/page.tsx",
+      "destination": "src/app/[locale]/docs/getting-started/page.tsx",
+      "sourceSha256": "a2112ec18e2fa9e94c40b85ec7ac4c1b14d14a1dbd4ed0d113c3c5a9fd0b47c1",
+      "adaptedSha256": "d7702586deaa8300e05038b1de7315ac9d109855fb3865d1b767a0fa4701df4b"
+    },
+    {
+      "source": "apps/website/src/app/[locale]/docs/contract/page.tsx",
+      "destination": "src/app/[locale]/docs/contract/page.tsx",
+      "sourceSha256": "df48e08400eb1719ab3feeed57011ea41a3a70e2725425478c1fe02ed30c0e44",
+      "adaptedSha256": "607c3cb6680646f7bb698e946385ad645441c508ff2e5bee804576dbef5d9d93"
+    },
+    {
+      "source": "apps/website/src/app/[locale]/docs/helpers/page.tsx",
+      "destination": "src/app/[locale]/docs/helpers/page.tsx",
+      "sourceSha256": "7cfaef7382987a9189d34fbb5e244edea8262ca9f892048e741bf5c3f5ddb7cb",
+      "adaptedSha256": "7cfaef7382987a9189d34fbb5e244edea8262ca9f892048e741bf5c3f5ddb7cb"
+    },
+    {
+      "source": "apps/website/src/app/[locale]/docs/dates/page.tsx",
+      "destination": "src/app/[locale]/docs/dates/page.tsx",
+      "sourceSha256": "ff77b153033a45cb2b7b9e852eb6a396e543a6b14f0662b768b9ba3457b19252",
+      "adaptedSha256": "87e143bdaba01b976e00f0a3a6f823cf55e661d619a1ab854d5192a19e71bb1b"
+    },
+    {
+      "source": "apps/website/src/app/[locale]/docs/gate/page.tsx",
+      "destination": "src/app/[locale]/docs/gate/page.tsx",
+      "sourceSha256": "963b957b18844fbf79276cec1de524a11f8ceca57e871d001b3778fcdf78d726",
+      "adaptedSha256": "963b957b18844fbf79276cec1de524a11f8ceca57e871d001b3778fcdf78d726"
+    },
+    {
+      "source": "apps/website/src/app/[locale]/docs/mobile/page.tsx",
+      "destination": "src/app/[locale]/docs/mobile/page.tsx",
+      "sourceSha256": "56271e1c9f0106a89627f9bbee1f6c1cd90d2041c29a4446b66b5de57dd50b4e",
+      "adaptedSha256": "5a58a4bf93e612833e3ab6384fc989f8d092d7b6808c4cf5bc9ceff46ba6e0ae"
+    },
+    {
+      "source": "apps/website/src/components/site/docs.tsx",
+      "destination": "src/components/site/docs.tsx",
+      "sourceSha256": "40820eee2eed0b423aacf9bc38ecea0df19c0885057d960bef8489401b1d395c",
+      "adaptedSha256": "40820eee2eed0b423aacf9bc38ecea0df19c0885057d960bef8489401b1d395c"
+    },
+    {
+      "source": "apps/website/src/components/site/docs-sidebar.tsx",
+      "destination": "src/components/site/docs-sidebar.tsx",
+      "sourceSha256": "e2624106ff4711035a447460053e4713ff69345cbf717202b6a36e4dc42208a8",
+      "adaptedSha256": "bd5b733256ca574a941417ae633acb17775136323034f7855bf1160594cb75ab"
+    },
+    {
+      "source": "apps/website/src/components/site/dates-demo.tsx",
+      "destination": "src/components/site/dates-demo.tsx",
+      "sourceSha256": "e2a2a49a820156bff5661b1c8f93252625fac01ea69271f626830657ea41dfe7",
+      "adaptedSha256": "1d7c177ddb22f2658d3c9dda17eff94f13f4ebaa0528f5ebbf41a1c71b099aea"
+    },
+    {
+      "source": "apps/website/src/lib/docs-order.ts",
+      "destination": "src/lib/docs-order.ts",
+      "sourceSha256": "ac3d66a5a12774c89dddfe6747d2298c272516fd2a0eef087ffd3b1ae258d929",
+      "adaptedSha256": "ac3d66a5a12774c89dddfe6747d2298c272516fd2a0eef087ffd3b1ae258d929"
+    },
+    {
+      "source": "apps/website/src/lib/site-strings.ts",
+      "destination": "src/lib/site-strings.ts",
+      "sourceSha256": "b4e8381c0d3f34452929ce864c8b896621cf6ba355d26c69fff8defc284ed57d",
+      "adaptedSha256": "b4e8381c0d3f34452929ce864c8b896621cf6ba355d26c69fff8defc284ed57d"
+    },
+    {
+      "source": "apps/website/src/lib/chrome.ts",
+      "destination": "src/lib/chrome.ts",
+      "sourceSha256": "d993d02486f5f3097dc266b69a1df50896faac255503f8c3afa6bc58351fc1aa",
+      "adaptedSha256": "d993d02486f5f3097dc266b69a1df50896faac255503f8c3afa6bc58351fc1aa"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.env*
+!.env.example
+next-env.d.ts
+docs/verification/
+.DS_Store
+
+# PRIVATE FONT — never committed to this public repository. IRANSansX is
+# licensed to the owner for application use only. `scripts/prepare-private-fonts.mjs`
+# populates this directory from LUMO_PRIVATE_FONTS_DIR (or keeps a local copy)
+# and writes the generated `persian-font.ts` beside it. See README.md.
+src/assets/fonts/private/

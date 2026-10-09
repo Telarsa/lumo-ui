@@ -11,7 +11,9 @@ and Material/Flutter (mobile). Not a component library since 0.3.0 (decisions
 - Focused checks while working:
   `pnpm --filter @lumo-ui/<pkg> exec vitest run src/<file>.test.ts`,
   `pnpm --filter @lumo-ui/<pkg> exec tsc --noEmit`.
-- `pnpm dev` — the docs site (`apps/website`), which is also `gate:html`'s corpus.
+- `pnpm dev` — the website (`apps/website`, lumo-ui.com, on :3113), which is
+  also `gate:html`'s corpus. Its proprietary Persian font is never committed;
+  see `apps/website/README.md` (`LUMO_PRIVATE_FONTS_DIR`).
 - Grade a product's served bytes:
   `node scripts/grade-app.mjs <app>/.next/server/app <locale>` for a
   single-locale app, or `lumo gate <static-export> [floors.json]`.
@@ -53,7 +55,11 @@ served-byte facts are the only ones the gates produce.
 ## Deploying
 
 `apps/website` deploys independently of the package. Build from the repository
-root because it consumes the package through `file:../..`. The current hosting
+root because it consumes the package through `workspace:*`. IRANSansX, the
+proprietary Persian font, must never be committed anywhere in this repository:
+private builds supply it through `LUMO_PRIVATE_FONTS_DIR` into the git-ignored
+`apps/website/src/assets/fonts/private/`; without it the site builds with a
+system Persian fallback. The current hosting
 direction is Docker on the existing VPS (owner decision, 8 September 2026; see
 the section below and `DEPLOY-VPS.md`). Cloudflare Workers Static Assets, chosen
 on 7 September 2026, is kept until a verified cutover: `pnpm preview:website`
@@ -74,8 +80,10 @@ type rules · `packages/dates` the Jalali grid for shadcn's Calendar ·
 `packages/config` the RTL lint policy · `packages/base-ui-ssr` first-byte
 compensations for Base UI · `packages/mobile` **Lumo UI Mobile** (Flutter; the
 same contract on Material's widget layer, tokens generated from
-`packages/theme`, its own semantics grader) · `apps/website` the docs site,
-built as a CONSUMER (shadcn copies this repo does not lint-own) ·
+`packages/theme`, its own semantics grader) · `apps/website` lumo-ui.com, the
+marketing pages and docs, built as a CONSUMER of the workspace package (the
+standalone site that replaced the old docs app on 9 Oct 2026; its own
+`AGENTS.md`) ·
 `apps/mobile-example` the Material app the semantics grader reads ·
 `scripts/` generators and the product grader.
 

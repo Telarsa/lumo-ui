@@ -1,27 +1,33 @@
-# Lumo website
+# Lumo UI website — agent guide (`apps/website`)
 
-Follow the root AGENTS.md. Build from the monorepo root; this app consumes
-`lumo-ui` through `file:../..`. Its static export deploys independently. The
-current hosting direction is Docker on the existing VPS (owner decision, 8
-September 2026; root `DEPLOY-VPS.md`); the Cloudflare Workers Static Assets path
-through this directory's wrangler.jsonc is kept until a verified cutover.
+lumo-ui.com, inside the public MIT Lumo UI repository since 9 October 2026. It
+consumes the workspace `lumo-ui` package as a product would; the repository
+root `AGENTS.md` rules apply here too. Read `README.md` first.
 
-Run the root verify gate and inspect English/German/Persian built output before
-publishing. The owner authorised shared website UI improvements on 7 September 2026.
-Measure both themes and all three locales before and after; keep shadcn accent unbound.
-No package version or tag is needed for a website deployment. On the Cloudflare
-path, owner DNS binds apex and www separately as Worker Custom Domains. See
-docs/deployment.md.
+THE FONT RULE. IRANSansX is proprietary and must never be committed, in this
+app or anywhere in the repository. It lives only in the git-ignored
+`src/assets/fonts/private/`, filled by `scripts/prepare-private-fonts.mjs` from
+`LUMO_PRIVATE_FONTS_DIR`. Before any commit, confirm `git diff --cached --name-only`
+lists nothing under that directory and no `IRANSansX*` file. Inter (OFL) is
+committed with its licence. A build without the private font must keep working
+with the system Persian fallback.
 
-Next's generated agent-rules block is not maintained source; revert that block
-if a dev server writes it. Do not commit it with unrelated work.
+The site owns its styling: tokens in `src/styles/tokens.css`, identity/layout
+rules in `src/app/*.css`, Inter and its notice in `src/assets/fonts/`. Do not
+add a shared styling package, shadcn copies or CSS Modules (the repository's
+`gate:no-css-modules` bans them).
 
-<!-- BEGIN:nextjs-agent-rules -->
+Marketing copy is typed in `src/content/copy.ts` and `src/content/pages.ts`;
+legal copy in `src/content/legal.ts`. Each is complete in English, German and
+Persian. Documentation retains the full authored three-language corpus with its
+own typed page dictionaries; refresh it only through `pnpm docs:refresh` and
+review the documented adaptations. Company facts are a local snapshot of the
+Telarsa company profile. Keep Lumo's lime mark and palette independent of
+Telarsa's red theme. Never claim a screen-reader pass or deployment that was
+not run.
 
-# This is NOT the Next.js you know
+Run `pnpm check` here (or the root `gate:html`) before handoff. Inspect all
+three languages, both themes, mobile and desktop. Prefer logical CSS
+properties; mark Latin code/name tokens deliberately (`data-lumo-latn`).
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
-
-This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
-
-<!-- END:nextjs-agent-rules -->
+No tag, domain cutover or deployment without owner instruction.

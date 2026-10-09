@@ -31,6 +31,10 @@ What is in this directory, and which file answers what.
 
 **Deploying the website (`apps/website`)**
 
+- [`../apps/website/README.md`](../apps/website/README.md) is the site's own
+  guide: commands, the private Persian font (`LUMO_PRIVATE_FONTS_DIR`), the
+  documentation snapshot and both deploy configurations.
+
 - [`../DEPLOY-VPS.md`](../DEPLOY-VPS.md) is the current hosting direction
   (owner decision, 8 September 2026): the container image and the commands that
   build, run and stop it.

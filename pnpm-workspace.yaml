@@ -11,9 +11,16 @@ minimumReleaseAge: 1440
 # Build scripts are denied by default in pnpm 11; a package must be named to run
 # one. Nothing here needs to: sharp is a transitive Next dependency whose native
 # binary only matters for image optimisation, and this site sets
-# `images.unoptimized` because it is a static export. An empty list is a stated
-# policy - "we run no install-time native builds" - rather than an oversight.
+# `images.unoptimized` because it is a static export. The policy is "we run no
+# install-time native builds", stated per package rather than left implicit.
+#
+# unrs-resolver (9 Oct 2026, arrived with the website's eslint-config-next):
+# DENIED by name. Its postinstall only fetches a platform binding as a fallback;
+# pnpm already installs the matching `@unrs/resolver-binding-*` optional
+# dependency, so lint resolves without running the script. Naming it `false`
+# records the decision; leaving it unnamed fails `pnpm install` on pnpm 11.
 allowBuilds:
+  unrs-resolver: false
 
 packages:
   - 'packages/*'
@@ -97,17 +104,15 @@ catalog:
   # the backstop that turns that into a red build rather than a wrong year.
   # 10.0.1 published 2026-05-15, three months old — well clear of the cooldown.
   react-day-picker: 10.0.1
-  # --- the docs site (apps/website, §51): a shadcn-built consumer in-repo -----
-  # Exact pins, matching what the consumer app that donated the copies resolved
-  # on 31 Aug 2026. `shadcn` is a RUNTIME dependency of the site: its
-  # tailwind.css carries the token scaffolding the copies style against.
+  # --- the website (apps/website): lumo-ui.com, a consumer in-repo ----------
+  # Replaced 9 Oct 2026 by the site built as a standalone consumer of v1.0.0 and
+  # moved back into this repository. It owns semantic CSS rather than shadcn
+  # copies, so shadcn, tailwindcss, @tailwindcss/postcss, lucide-react,
+  # class-variance-authority and tw-animate-css left the catalog with the old
+  # app. These are the exact versions the standalone site resolved.
+  # eslint-config-next moves with next: it is the same release train.
   next: 16.3.0
-  tailwindcss: 4.3.3
-  '@tailwindcss/postcss': 4.3.3
-  lucide-react: 1.29.0
-  class-variance-authority: 0.7.1
-  tw-animate-css: 1.4.0
-  shadcn: 4.16.2
+  eslint-config-next: 16.3.0
   # --- interactive tests for @lumo-ui/dates -----------------------------------
   # A jsdom tier, added 31 Aug 2026 because the static export could not show the
   # bug that mattered: the selection HIGHLIGHT not following a click. Same

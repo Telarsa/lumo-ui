@@ -10,6 +10,7 @@
   `docs/verification.md` lists what each one proves.
 - Package-scoped guidance lives in `packages/core/CLAUDE.md` and
   `packages/gate/CLAUDE.md`.
-- The docs site (`apps/website`) is a CONSUMER, not a showcase of ours: its
-  `src/components/ui/**` are shadcn copies this repo does not lint-own (§51).
-  Change them the way a consumer would — and let `gate:html` grade the result.
+- The website (`apps/website`) is a CONSUMER, not a showcase of ours: it owns
+  its semantic CSS and consumes the workspace package; change it the way a
+  consumer would and let `gate:html` grade the result. Never commit IRANSansX
+  (its git-ignored `src/assets/fonts/private/` only); see its `AGENTS.md`.

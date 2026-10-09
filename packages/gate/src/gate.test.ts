@@ -1417,8 +1417,12 @@ describe("persian-digit-floor is actually armed where it matters", () => {
     // renamed floors file should not fail this test; a missing argument must.
     // The site grades through grade-app since 3 Sep 2026, the same command
     // every consumer's CI runs, because the CLI cannot state a root locale.
+    // Since 9 Oct 2026 the site grades through its own `grade-static.mjs`,
+    // which stages the export (so the root redirect cannot overwrite the real
+    // English home) and then calls grade-app with the root locale and the
+    // floors file it was given. Its arguments are `<out> <floors.json>`.
     expect(script, "gate:html runs the grader with no floors argument, so the rule is not constructed").toMatch(
-      /(?:cli\.ts\s+\S+|grade-app\.mjs\s+\S+\s+\S+)\s+\S*floors\S*\.json/,
+      /(?:cli\.ts\s+\S+|grade-app\.mjs\s+\S+\s+\S+|grade-static\.mjs\s+\S+)\s+\S*floors\S*\.json/,
     );
   });
 

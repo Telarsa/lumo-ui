@@ -9,6 +9,14 @@ Flutter package included, carries the version this file leads with.
 On `develop`, in no tag. A consumer pinned to `v1.0.0` gets none of this until
 the owner approves and cuts a release.
 
+- **The website is replaced** (9 Oct 2026). `apps/website` is now the site built
+  as the standalone `Telarsa/lumo-ui-website` (marketing pages plus the full
+  EN/DE/FA docs), consuming the workspace package. Its source is MIT; the
+  proprietary IRANSansX font is never committed and reaches private builds
+  through `LUMO_PRIVATE_FONTS_DIR`, with a system Persian fallback otherwise.
+  `gate:html` grades it through the site's own staging wrapper and also checks
+  its links. No package API changes.
+
 - **`grade-app` keeps every graded homepage** (`109c82d`, 7 Sep 2026). Staging a
   static export no longer lets the root redirect `index.html` overwrite the
   English homepage, a false green; colliding inputs get distinct staged paths
