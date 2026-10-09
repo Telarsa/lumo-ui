@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lumo_ui_mobile/lumo_ui_mobile.dart' as lumo;
 
-/// Inter owns Latin glyphs; IRANSansX supplies Persian without replacing digits.
+/// Inter owns Latin glyphs; IRANSansX supplies Persian without replacing digits when a
+/// private build registers it (it is never in this public repository); otherwise Persian
+/// falls back to the platform font.
 ThemeData telarsaThemeData({
   required Brightness brightness,
   lumo.LumoSchemeColours? colours,
