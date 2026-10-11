@@ -333,3 +333,77 @@ simulation passes; actual production font/layout smoke remains pending
 publication. No proprietary font is added
 to source control. Inter retains its OFL notice. No runtime dependency, shared
 style package, CSS Module or public component-package change was added.
+
+## Production HTTPS origin guard — 11 October 2026
+
+The parent's actual live follow-up found that `http://lumo-ui.com/en/`
+returned **200 with an HTTP effective URL** after following redirects. The
+first develop push/fast-forward main publication had completed, but the
+static-only hosting configuration did not force a first HTTP request onto
+HTTPS. HSTS and HTML canonical links did not repair that request path.
+
+The independent review's previous **9.37/10** is retained as the completed
+local-review checkpoint above. Its security score and ten-dimension acceptance
+are now **pending** until the new affected full verification and actual public
+HTTP/www-to-HTTPS proof pass. Other page, copy, font, visual and measured
+performance sources are unchanged; those observations remain separate evidence.
+
+The root Wrangler configuration now runs the small site-owned
+`apps/website/worker.mjs` before static assets, with an explicit `ASSETS`
+binding. Exact production HTTP and `www.lumo-ui.com` requests receive a
+method-preserving **308** to `https://lumo-ui.com`, retaining encoded paths and
+queries. The guard does not redirect workers.dev/local/other preview origins.
+Other requests retain the original Request passed to ASSETS; returned bodies,
+status/status text, slash redirects, 404s, cache/ETag and other asset metadata
+are preserved. The Worker attaches the existing fixed response protections
+because Worker responses cannot rely on `_headers` alone.
+
+`response-security.mjs` is a pure shared response-policy authority for the
+Worker and existing CSP/host audit. It has no Node-only runtime import; the
+early exact-hash HTML meta policies remain unchanged. The build now checks
+the configured entry/binding/order/static routing before compiling. Seven
+meaningful Worker regressions enter the existing website `test`/`test:gate`
+scripts and therefore the existing root `gate:test` verification phase; no
+extra root gate or runtime dependency is needed.
+
+The focused Worker/configuration tests and existing CSP tests exited **0**:
+**12/12**, with no skips. Evidence:
+`/private/tmp/lumo-canonical-worker-unit-2026-10-11.log`.
+Scoped ESLint exited **0**:
+`/private/tmp/lumo-canonical-worker-lint-2026-10-11.log`.
+The direct configuration guard also exited **0**. The affected full root
+verification passed as recorded below. Fresh automatic publication and public
+HTTPS/asset/404 evidence remain pending; no deployment/settings command was run
+by this implementer.
+
+### Full HTTPS-guard verification — 11 October 2026
+
+The complete root `pnpm run verify` pipeline exited **0** with
+`NODE_OPTIONS=--max-old-space-size=2048`. The successful retry log is
+`/private/tmp/lumo-final-https-root-verify-escalated-2026-10-11.log`.
+Process session 88856 completed and the exclusive heavy lane was released.
+All thirteen phases passed: versions, types, consumer profile, lint, no CSS
+Modules, recursive tests, fresh distribution, installed-package smoke,
+Flutter tokens, mobile styles, Flutter analysis/tests, mobile smoke and the
+website HTML/export gate. The website suite passed **34/34**, including all
+seven new Worker groups, with no failures or skips. Flutter analysis reported
+no issues and its 55 tests passed. The final export contains 41 CSP-verified
+documents; 40 content documents were graded with **0 violations**, all seven
+Persian floors armed, and **1,581** local links passed.
+
+The initial sandboxed attempt was an actual **exit 1**, preserved unchanged in
+`/private/tmp/lumo-final-https-root-verify-2026-10-11.log`. Its Flutter phase
+could not write the installed SDK's normal engine cache files under
+`/opt/homebrew/share/flutter/bin/cache`. The entire thirteen-phase pipeline
+was rerun with authorized access to that existing SDK cache; no project source
+or gate was weakened to bypass the sandbox failure.
+
+The source repair remains confined to the website-owned Worker, pure shared
+response policy, configuration guard/tests, existing CSP import, website
+scripts and durable website guidance, plus the authorized root Wrangler
+configuration. Frontend source, public assets/fonts and HTML scanner/hash/meta
+policy functions are unchanged from the first published checkpoint. This gate
+proves the affected source and export; it does not establish that production
+has received the Worker. The independent security score and ten-dimension mean
+remain pending actual automatic publication and public redirect/asset/404
+acceptance.

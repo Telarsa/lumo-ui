@@ -50,6 +50,14 @@ No tag, domain cutover or deployment without owner instruction.
 - The owner authorized the public canonical origin `https://lumo-ui.com`.
   The website is delivered via Cloudflare, verified from the live response;
   old preview/unpublished wording does not describe its current status.
+- Production HTTP and `www.lumo-ui.com` must redirect with method-preserving
+  308 to the HTTPS apex while retaining encoded paths and queries. Keep the
+  root Wrangler entry, `ASSETS` binding and `run_worker_first: true`; a static
+  canonical URL or HSTS header alone does not redirect a first HTTP request.
+  The Worker leaves preview/local origins unredirected and preserves static
+  asset routing, bodies, status/404 behaviour and cache metadata. Its shared
+  response-policy module must remain free of Node-only build imports. Keep
+  the build configuration guard and meaningful Worker regression tests.
 - `scripts/csp.mjs` runs after the owned static shells and hashes each page’s
   exact inline scripts. Every build verifies the policy and both hosts’
   response-header configuration. Do not hand-edit generated policies or

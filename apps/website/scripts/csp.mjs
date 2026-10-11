@@ -8,15 +8,8 @@ import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { resolve, relative, join } from "node:path";
 import { fileURLToPath } from "node:url";
-
-export const headers = {
-  "Content-Security-Policy": "frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'",
-  "X-Frame-Options": "DENY",
-  "X-Content-Type-Options": "nosniff",
-  "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), midi=()",
-  "Cross-Origin-Opener-Policy": "same-origin",
-};
+import { HEADERS as headers, TLS_HEADERS } from "../response-security.mjs";
+export { headers };
 
 const tags = /<!--[\s\S]*?-->|<(script|style)\b((?:[^>"']|"[^"]*"|'[^']*')*)>([\s\S]*?)<\/\1\s*>|<([a-z][^\s/>]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/gi;
 
@@ -111,7 +104,7 @@ export function inspect(html) {
 export function hostFaults(cloudflare, caddy) {
   const faults = [];
   const universal = cloudflare.split(/^\/\*\s*$/m)[1]?.split(/^\S/m)[0] || "";
-  const expected = { ...headers, "Strict-Transport-Security": "max-age=31536000; includeSubDomains" };
+  const expected = { ...headers, ...TLS_HEADERS };
   for (const [name, value] of Object.entries(expected)) {
     const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     if (universal.match(new RegExp(`^\\s+${escaped}:\\s*(.*)$`, "mi"))?.[1].trim() !== value) faults.push(`Cloudflare missing or changed ${name}.`);

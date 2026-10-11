@@ -8,10 +8,13 @@
 {
   "name": "lumo-ui-website",
   "compatibility_date": "2026-09-07",
+  "main": "apps/website/worker.mjs",
   "build": { "command": "pnpm -w run cloudflare:build" },
   // The Next static export, with its own out/404.html (scripts/own-static-shells.mjs).
   // public/_headers and public/_redirects are copied into out/ by Next.
   "assets": {
+    "binding": "ASSETS",
+    "run_worker_first": true,
     "directory": "./apps/website/out",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "404-page"
