@@ -407,3 +407,88 @@ proves the affected source and export; it does not establish that production
 has received the Worker. The independent security score and ten-dimension mean
 remain pending actual automatic publication and public redirect/asset/404
 acceptance.
+
+### Automatic publication and actual public proof — 11 October 2026
+
+The coordinator published the HTTPS repair through the existing automatic
+pipeline. Working commit: `d03f4eaa99da9ec4172d2ca63282b22e1324a894`.
+Empty publication commit: `44f26de12831e41027ede99366411f82664eac7a`.
+Actual develop/main pushes exited **0**, without force, with both remote tips
+equal. The coordinator observed the corresponding Cloudflare build succeed.
+No manual deployment or hosting-settings change was used. Private proprietary
+fonts remain excluded from Git. These are the current source/publication
+facts; earlier “publication pending” checkpoints above are superseded.
+
+The formal public verification exited **0**. Evidence:
+`/private/tmp/marketing-live-2026-10-11/final-verification.json`, recorded at
+18:10:35 UTC. Across the three public domains it checks nine locale homes and
+27 share-card assets. Lumo's own evidence comprises three HTTPS locale pages
+with matching current text/canonical URLs/strict document CSP and required
+response-header values; five direct **308** cases including encoded Persian
+queries and `Sec-Fetch-Mode:navigate`; three followed requests ending at the
+HTTPS apex with their checked suffixes retained; all three byte-identical,
+correctly typed/protected PNG share cards; and an actual protected missing-page
+**404**. The original plaintext HTTP-200 finding is repaired, not waived.
+
+The first public browser batch actually exited **1** after twelve Telarsa
+views and Lumo EN/light/1440. Four background route requests emitted
+`net::ERR_ABORTED`; that failed 13-state report and screenshots remain under
+`/private/tmp/marketing-live-2026-10-11/first-browser-run-aborted-background-requests/`,
+with log `/private/tmp/marketing-production-38-final-2026-10-11.log`.
+There was no accompanying HTTP error, runtime/CSP event, broken image, axe
+violation or overflow finding. Those facts alone did not dismiss the aborts.
+
+A separate typed/native HEAD diagnostic then actually exited **0**, log
+`/private/tmp/marketing-public-head-diagnostic-2026-10-11.log`, and closed its
+browser. Its evidence is
+`/private/tmp/marketing-live-2026-10-11/head-response-diagnostic.json`.
+The four exact ordinary canonical probe paths returned successful HEAD 200
+responses and the four independently awaited native HEAD promises fulfilled
+with zero-length bodies. The harness qualifies only successful same-URL,
+same-origin, non-navigation HEAD/fetch events for the exact canonical probe
+paths, without queries, with status 200 and HTML content type. Every other
+abort, navigation/GET failure or unsuccessful response still fails the run.
+No product source change was made for this measurement correction.
+
+The qualified complete **38-view public run actually exited 0**, session
+13242, and closed its browser at 18:18:19 UTC. Current report:
+`/private/tmp/marketing-live-2026-10-11/production-smoke.json`, started at
+18:17:10 UTC; log:
+`/private/tmp/marketing-production-38-final-qualified-head-2026-10-11.log`.
+It contains twelve Telarsa, **fourteen Lumo** and twelve Tessalor views. All
+fourteen Lumo homes pass status/theme, overflow, images, HTTP responses,
+runtime errors, legitimate CSP events and axe violations; no retained axe
+incompletes or unresolved request failures remain. The 56 successful qualified
+HEAD events are retained explicitly in `completedHeadProbeEvents`, alongside
+all raw request-failure events, rather than silently dropped. Actual footer
+viewport screenshots were captured before returning to the top in every state.
+
+The fourteen Lumo states cover EN/DE/FA and both themes at 1440/390, plus
+Persian at **360 in both themes**. All six actual Persian states carry the
+`lumo-persian-system-font` marker and computed system-font fallback stack.
+Only the public Inter WOFF2 was requested; there was no IRANSans request or
+font-request failure. Public Persian wrapping, images and overflow pass at
+390/360. This resolves the actual production fallback/layout verification;
+it is distinct from the earlier 26-view simulation and the local private-font
+performance samples. No new live LCP/field performance claim is made.
+
+The independent Khatamo reviewer subsequently accepted final security
+**9.6/10** and the ten-dimension arithmetic mean **9.37/10**, against the
+baseline **7.95/10**. The reviewer made no Lumo implementation edits. Its
+current acceptance is recorded in
+`/private/tmp/marketing-review-2026-10-11/lumo/independent-public-acceptance.json`
+and `lumo/after/independent-score.json`. It independently parsed all fourteen
+actual Lumo cases and formal response proof, and inspected all **28 actual
+home/footer viewport captures**, including six Persian system-font views.
+All retained public incomplete arrays are empty; no new finding remains.
+The acceptance artifact records exact source/capture hashes and explicitly
+retains and qualifies all 56 successful HEAD observations.
+
+This acceptance does not claim a font-request-blocking injection test or
+live-edge performance measurement. The local licensed Persian cold-load
+samples, fallback simulation and actual public system-font smoke remain
+distinct evidence. The present implementer has not awarded its own score.
+Remaining factual owner inputs are only the authorized representative and
+operator-log/email processing arrangements; canonical URL, MIT Git/tag, legal
+revision dates, font licence/local source, public fallback mode, publication
+and the measured public smoke are resolved.
