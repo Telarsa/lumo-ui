@@ -24,6 +24,7 @@
 .docs .code { border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); overflow: hidden; margin-block: 1.4rem; background: var(--lumo-web-surface); }
 .docs .code__caption { padding: .65rem 1rem; font-size: var(--lumo-web-step--2); color: var(--lumo-web-text-muted); border-block-end: 1px solid var(--lumo-web-line); }
 .docs .code pre { padding: 1rem 1.15rem; line-height: 1.75; text-align: start; white-space: pre; scrollbar-width: thin; }
+.docs .code pre:focus-visible { outline-offset: calc(-1 * var(--lumo-web-focus-width)); }
 .docs .code code { font-size: .8rem; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
 .docs .table-wrap { max-inline-size: 100%; overflow-x: auto; margin-block: 1.4rem; border: 1px solid var(--lumo-web-line); border-radius: var(--lumo-web-radius); scrollbar-width: thin; }
 .docs .table { border-collapse: collapse; inline-size: 100%; font-size: var(--lumo-web-step--1); text-align: start; }

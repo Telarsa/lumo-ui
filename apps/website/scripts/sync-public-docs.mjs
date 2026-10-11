@@ -25,8 +25,18 @@ const files = [
 ];
 
 function adapt(path, text) {
+  // Horizontal listings and tables must be reachable for keyboard scrolling.
+  // This changes renderer furniture only; authored examples remain intact.
+  if (path.endsWith("site/docs.tsx")) text = text
+    .replace('<pre data-lumo-latn dir="ltr">', '<pre data-lumo-latn dir="ltr" tabIndex={0}>')
+    .replace('<div className="table-wrap">', '<div className="table-wrap" tabIndex={0}>');
+  if (path.endsWith("docs/gate/page.tsx")) text = text
+    .replace('<div className="table-wrap">', '<div className="table-wrap" tabIndex={0}>');
   if (path.endsWith("docs/layout.tsx")) text = 'import "../../docs.css";\n' + text.replace('className="shell docs"', 'className="container docs"');
-  if (path.endsWith("docs-sidebar.tsx")) text = text.replace("const pathname = usePathname();", 'const pathname = usePathname().replace(/\\/$/, "") + "/";');
+  if (path.endsWith("docs-sidebar.tsx")) text = text
+    .replace("const pathname = usePathname();", 'const pathname = usePathname().replace(/\\/$/, "") + "/";')
+    .replace('import { CHROME } from "@/lib/chrome";', 'import { revealFocusedNavigationLink } from "@/lib/navigation-focus";\nimport { CHROME } from "@/lib/chrome";')
+    .replaceAll('<Link href=', '<Link onFocus={(event) => revealFocusedNavigationLink(event.currentTarget, event.currentTarget.closest("ol"))} href=');
   if (path.endsWith("docs/mobile/page.tsx")) text = text.replace('className="grid gap-4 sm:grid-cols-3"', 'className="docs-card-grid"');
   if (path.endsWith("dates-demo.tsx")) text = text
     .replace(

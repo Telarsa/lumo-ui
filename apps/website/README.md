@@ -27,7 +27,14 @@ From this directory the same scripts run as `pnpm dev`, `pnpm check` and so on.
 script tests (asset integrity, private-font preparation, gate staging), the
 build (font preparation, asset/contract/docs-snapshot checks, `next build`,
 owned root and error documents) and the gate (Lumo's grader over every exported
-document via `scripts/grade-static.mjs`, then a local link/anchor check). The
+document via `scripts/grade-static.mjs`, then a local link/anchor check and CSP
+validation). The build adds a per-page
+CSP after writing the owned root/error documents: scripts are limited to this
+origin and each document’s exact SHA-256 hashes. React style attributes are
+allowed; style elements remain restricted. Cloudflare and Caddy carry the
+matching frame, permissions and other response protections, checked by the
+same script. `csp.test.mjs` includes deliberately changed payloads, handlers,
+encoded JavaScript links, external assets and missing headers. The
 root `gate:html` runs the same build and gate.
 
 Each of `/en/`, `/de/` and `/fa/` has the home page, `how-it-works/`,
@@ -72,6 +79,20 @@ bans them; the legal pages use the prefixed `legal.css`). `docs/site-assets.json
 records the provenance and checksums of the stylesheet and fonts;
 `scripts/check-site-assets.mjs` verifies them on every build.
 
+Inter’s preloaded Latin face is the verified 112,532-byte subset of this
+website’s original 352,240-byte Inter 4.001 face. The original remains as a
+non-preloaded complementary fallback; both retain blocking display and the
+OFL notice. `docs/site-assets.json` records the source, derived hashes and
+Unicode ranges. The guard reads their actual WOFF2 Unicode cmaps using built-in
+Brotli and checks exact, disjoint coverage plus the rendered fallback stack.
+The diagram’s decorative check is a vector so it does not fetch the full face.
+
+The header uses byte-identical delivered horizontal SVG lockups, and the
+footer uses documented vertical layout derivatives with the same mark paths,
+fixed colours and Archivo wordmark attributes. See `public/brand/README.md`;
+logos never mirror in Persian. The delivered live-text wordmark’s original
+system fallback remains until the owner supplies outlined masters.
+
 Icons and social cards are static files in `public/`: `icon.svg` (the mark,
 adapting to dark mode), `favicon.ico`, `apple-touch-icon.png`, `icons/`,
 `site.webmanifest` and the 1200x630 Open Graph/Twitter cards `og/lumo-{en,de,fa}.png`.
@@ -81,17 +102,22 @@ Playwright Chromium; rerun and review it when any of those change. The layout
 and `pageMetadata` (`src/lib/site.ts`) wire them into every page's head with
 absolute URLs on `NEXT_PUBLIC_SITE_URL`, else `https://lumo-ui.com`; the same
 origin feeds `src/app/robots.ts` and `src/app/sitemap.ts` (every route in every
-language with hreflang alternates). Indexing stays `noindex` until
-`NEXT_PUBLIC_SITE_URL` is set.
+language with hreflang alternates). Canonical links and indexing use the
+owner-authorized `https://lumo-ui.com` origin by default; `NEXT_PUBLIC_SITE_URL`
+can override it for a separate host.
 
 ## Documentation snapshot
 
 The documentation pages, renderer and data were adapted from the previous
-`apps/website` at commit `5d17b06`. `docs/public-docs-snapshot.json` records the
+`apps/website` at commit `c040e7490419`. `docs/public-docs-snapshot.json` records the
 source commit and checksums, and `check-public-docs.mjs` verifies them on every
 build. `pnpm docs:refresh [ref] [repo]` regenerates the snapshot from git history
 (default: the recorded commit in this repository) and reapplies the documented
-adaptations. Displayed facts (version, rule count) are checked against the
+adaptations. The shared code listings and table wrappers add `tabIndex={0}`
+for keyboard scrolling. The sidebar uses the site-owned focus helper to reveal
+the complete focused navigation link within its horizontal rail, including
+RTL; this is also recorded in the adapter. The authored corpus stays intact. Displayed facts
+(version, rule count) are checked against the
 workspace package by `check-public-contract.mjs`.
 
 Legal pages use typed copy in `src/content/legal.ts`; company facts are a local
@@ -100,13 +126,13 @@ compliance.
 
 ## Deployment
 
-`NEXT_PUBLIC_SITE_URL` stays unset (pages are `noindex`, no canonical origin)
-until a deployment is agreed; see `.env.example`. Two configurations exist:
+The public origin is `https://lumo-ui.com`; see `.env.example`. Two host
+configurations exist:
 
 - **Cloudflare Workers Static Assets**: `wrangler.jsonc` uploads `out/`, with
   `public/_headers` and `public/_redirects`. `pnpm deploy:website` from the root,
-  authenticated, after building. Listed as unpublished in the infrastructure
-  deployment registry.
+  authenticated, after building. Live responses confirm Cloudflare delivery;
+  the older unpublished infrastructure entry is historical.
 - **Docker on the VPS**: `Dockerfile` (context: the repository root) builds the
   site and serves `out/` with Caddy (`Caddyfile`) on port 3000. See the root
   `DEPLOY-VPS.md`. Pass `--build-arg LUMO_REQUIRE_PRIVATE_FONTS=1` and populate
@@ -117,3 +143,6 @@ until a deployment is agreed; see `.env.example`. Two configurations exist:
 `docs/handoff-2026-10-05-private-marketing.md` and
 `docs/site-ownership-2026-10-05.md` are the standalone repository's dated
 records, kept as history.
+
+`docs/handoff-2026-10-11-marketing-review.md` records the current marketing,
+logo, keyboard, CSP and verification changes with remaining owner facts.

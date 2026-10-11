@@ -1,5 +1,10 @@
 # Lumo UI private website — handoff, 5 October 2026
 
+> **Marketing review, 11 October 2026.** Current changes, validation, ownership
+> and remaining owner facts are recorded in
+> [handoff-2026-10-11-marketing-review.md](handoff-2026-10-11-marketing-review.md).
+> The original record below is retained as history.
+
 > **Moved, 9 October 2026.** This site no longer lives in a separate private
 > repository. It moved into the public MIT monorepo `Telarsa/lumo-ui` as
 > `apps/website`, replacing the previous docs site; the standalone
@@ -150,3 +155,14 @@ these local browser checks. `NEXT_PUBLIC_SITE_URL` stays unset before an agreed
 canonical deployment, so pages are `noindex` without an invented origin.
 Documentation remains on site; source links remain public. No domain, package
 publication or website deployment is part of repository finalization.
+
+## 11 October 2026 — public marketing review
+
+The owner authorized the public canonical origin and publication through the
+existing Git/CI path. Source changes and owner-only facts are recorded in
+[handoff-2026-10-11-marketing-review.md](handoff-2026-10-11-marketing-review.md).
+The baseline website check exited **0**. The final website check and required
+root verification each exited **0**, with 41 protected HTML documents, 40
+graded, zero violations and 1,581 valid local links. Independent browser and
+rating evidence is recorded in the current handoff after review. The original
+sections above remain historical.

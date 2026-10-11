@@ -51,7 +51,7 @@ export function Code({ children, caption }: { children: string; caption?: string
           {caption}
         </figcaption>
       ) : null}
-      <pre data-lumo-latn dir="ltr">
+      <pre data-lumo-latn dir="ltr" tabIndex={0}>
         <code>{children}</code>
       </pre>
     </figure>
@@ -60,7 +60,7 @@ export function Code({ children, caption }: { children: string; caption?: string
 
 export function Table({ head, rows, firstMono }: { head?: string[]; rows: ReactNode[][]; firstMono?: boolean }) {
   return (
-    <div className="table-wrap">
+    <div className="table-wrap" tabIndex={0}>
       <table className="table">
         {head ? (
           <thead>

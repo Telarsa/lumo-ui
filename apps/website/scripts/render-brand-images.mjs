@@ -28,6 +28,7 @@ const markPaths = `<path fill="${colour.text}" d="M50 12H88V88H12V50H50Z"/><path
 const mark = (size) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}">${markPaths}</svg>`;
 // Inlined: a page set from a string cannot load file: URLs.
 const inter = `data:font/woff2;base64,${readFileSync(join(app, "src/assets/fonts/InterVariable.woff2")).toString("base64")}`;
+const lockup = `data:image/svg+xml;base64,${readFileSync(join(pub, "brand/lumo-lockup-on-paper.svg")).toString("base64")}`;
 const persianFallback = `"Vazirmatn", "Noto Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", sans-serif`;
 
 function iconHtml(size, background) {
@@ -43,14 +44,14 @@ function ogHtml(locale) {
 html, body { margin: 0; inline-size: 1200px; block-size: 630px; background: ${colour.bg}; color: ${colour.text}; font-family: ${family}; }
 body { box-sizing: border-box; padding: 64px 80px; display: flex; flex-direction: column; }
 .brand { display: flex; align-items: center; gap: 16px; font-family: "Inter", sans-serif; font-weight: 600; font-size: 34px; letter-spacing: -0.03em; direction: ltr; align-self: flex-start; }
-.brand svg { inline-size: 48px; block-size: 48px; }
+.brand img { inline-size: 240px; block-size: auto; }
 .eyebrow { margin-block: auto 0; display: flex; align-items: center; gap: 16px; color: ${colour.muted}; font-size: 26px; font-weight: 500; }
 .eyebrow::before { content: ""; inline-size: 40px; block-size: 3px; background: ${colour.mark}; }
-h1 { margin: 22px 0 0; font-size: ${rtl ? 66 : 70}px; line-height: ${rtl ? 1.3 : 1.08}; letter-spacing: ${rtl ? 0 : "-0.035em"}; font-weight: ${rtl ? 700 : 600}; max-inline-size: 1040px; }
+h1 { margin: 22px 0 0; font-size: ${rtl ? 52 : 70}px; line-height: ${rtl ? 1.3 : 1.08}; letter-spacing: ${rtl ? 0 : "-0.035em"}; font-weight: ${rtl ? 700 : 600}; max-inline-size: 1040px; }
 h1 span { display: block; color: ${colour.lit}; }
 footer { margin-block-start: auto; padding-block-start: 26px; border-block-start: 2px solid ${colour.line}; display: flex; justify-content: space-between; color: ${colour.muted}; font-size: 24px; }
 footer code { font-family: "Inter", sans-serif; direction: ltr; }
-</style></head><body><div class="brand">${mark(48)}<span>Lumo UI</span></div><p class="eyebrow">${t.hero.eyebrow}</p><h1>${t.hero.title}<span>${t.hero.accent}</span></h1><footer><span>${t.footer.by}</span><code>github.com/Telarsa/lumo-ui</code></footer></body></html>`;
+</style></head><body><div class="brand"><img src="${lockup}" alt="Lumo UI" width="240" height="57" /></div><p class="eyebrow">${t.hero.eyebrow}</p><h1>${t.hero.title}<span>${t.hero.accent}</span></h1><footer><span>${t.footer.by}</span><code>github.com/Telarsa/lumo-ui</code></footer></body></html>`;
 }
 
 /** An ICO container holding PNG images (supported by every current browser). */

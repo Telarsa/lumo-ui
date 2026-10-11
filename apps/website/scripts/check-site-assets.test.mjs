@@ -34,10 +34,32 @@ async function fixture(run, { withPrivate = false } = {}) {
 }
 
 test("a public clone without the private font validates and selects the system fallback", () =>
-  fixture(async (root) => assert.deepEqual(await checkSiteAssets(root), { verified: 3, persian: "fallback" })));
+  fixture(async (root) => assert.deepEqual(await checkSiteAssets(root), { verified: 4, persian: "fallback" })));
 
 test("with the private font present, its bytes and notice are verified too", { skip: !hasPrivateFont && "private font not present in this checkout" }, () =>
-  fixture(async (root) => assert.deepEqual(await checkSiteAssets(root), { verified: 5, persian: "private" }), { withPrivate: true }));
+  fixture(async (root) => assert.deepEqual(await checkSiteAssets(root), { verified: 6, persian: "private" }), { withPrivate: true }));
+
+test("the subset cannot silently lose its full source fallback", () =>
+  fixture(async (root) => {
+    await rm(join(root, "src/assets/fonts/InterVariable-Full.woff2"));
+    await assert.rejects(checkSiteAssets(root), /ENOENT/);
+  }));
+
+test("declared font coverage must match the real Unicode cmap", () =>
+  fixture(async (root) => {
+    const path = join(root, "docs/site-assets.json");
+    const manifest = JSON.parse(await readFile(path, "utf8"));
+    manifest.files.find((file) => file.path.endsWith("/InterVariable.woff2")).unicodeRange = "U+0000-FFFF";
+    await writeFile(path, JSON.stringify(manifest));
+    await assert.rejects(checkSiteAssets(root), /unicode-range must equal the actual cmap/);
+  }));
+
+test("the full fallback cannot rejoin the preload budget", () =>
+  fixture(async (root) => {
+    const path = join(root, "src/app/[locale]/layout.tsx");
+    await writeFile(path, (await readFile(path, "utf8")).replace("preload: false", "preload: true"));
+    await assert.rejects(checkSiteAssets(root), /must not be preloaded/);
+  }));
 
 test("a changed private font is rejected rather than silently altering the website", { skip: !hasPrivateFont && "private font not present in this checkout" }, () =>
   fixture(async (root) => {

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import type { Copy } from "@/content/copy";
 import { docs, home, page, type Locale } from "@/content/site";
+import { revealFocusedNavigationLink } from "@/lib/navigation-focus";
 import "./navigation.css";
 
 export function HomeLink({ locale, children }: { locale: Locale; children: ReactNode }) {
@@ -26,7 +27,7 @@ export function PrimaryNavigation({ locale, labels, mobile }: { locale: Locale; 
     { label: labels.rules, href: page(locale, "checks") },
     { label: labels.docs, href: docs(locale) },
   ];
-  return <nav className={mobile ? "mobile-nav container" : "desktop-nav"} aria-label={labels.label}>{links.map(({ label, href }) => <Link key={href} href={href} aria-current={pathname === href ? "page" : href === docs(locale) && pathname.startsWith(href) ? "location" : undefined}>{label}</Link>)}</nav>;
+  return <nav className={mobile ? "mobile-nav container" : "desktop-nav"} aria-label={labels.label}>{links.map(({ label, href }) => <Link key={href} href={href} onFocus={mobile ? (event) => revealFocusedNavigationLink(event.currentTarget, event.currentTarget.closest("nav")) : undefined} aria-current={pathname === href ? "page" : href === docs(locale) && pathname.startsWith(href) ? "location" : undefined}>{label}</Link>)}</nav>;
 }
 
 const names = { en: "English", de: "Deutsch", fa: "فارسی" } as const;
@@ -65,5 +66,9 @@ export function LanguageMenu({ locale, label }: { locale: Locale; label: string 
       event.currentTarget.open = false;
       summaryRef.current?.focus();
     }
-  }}><summary ref={summaryRef} className="control" aria-label={label}><span data-lumo-latn="" dir="ltr">{locale.toUpperCase()}</span><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" /></svg></summary><div className="language-options">{(["en", "de", "fa"] as const).map((item) => <a key={item} href={languagePath(item)} hrefLang={item} lang={item} aria-current={locale === item ? "page" : undefined} {...(item !== "fa" ? { "data-lumo-latn": "" } : {})}>{names[item]}</a>)}</div></details>;
+  }}><summary ref={summaryRef} className="control" aria-label={label}><span data-lumo-latn="" dir="ltr">{locale.toUpperCase()}</span><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" /></svg></summary><div className="language-options">{(["en", "de", "fa"] as const).map((item) => <a key={item} href={languagePath(item)} hrefLang={item} lang={item} aria-current={locale === item ? "page" : undefined} onClick={(event) => {
+    // Read at activation so keyboard skip links and later hash/query changes
+    // survive the language switch without losing the canonical trailing slash.
+    event.currentTarget.href = `${languagePath(item)}${window.location.search}${window.location.hash}`;
+  }} {...(item !== "fa" ? { "data-lumo-latn": "" } : {})}>{names[item]}</a>)}</div></details>;
 }

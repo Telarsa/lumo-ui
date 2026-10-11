@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { copy } from "@/content/copy";
 import { marketingOrigin, siteUrl, locales, installSpec, version, type Locale } from "@/content/site";
 
-/** Adapter for the retained public docs corpus. Canonical origins remain
- * unset until this independently deployed website has an agreed origin. */
+/** Metadata adapter for the retained public documentation corpus. */
 export const VERSION = version;
 export const INSTALL_SPEC = installSpec;
 export function localePath(locale: Locale, path = "/") {

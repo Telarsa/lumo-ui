@@ -19,7 +19,7 @@ export function GateVisual({ text }: { text: Copy["figure"] }) {
       <div className="plane-label label-mid"><span>{text.lint}</span></div>
       <div className="plane-label label-base"><span>{text.html}</span></div>
     </div>
-    <div className="figure-result"><span className="check-icon" aria-hidden="true">✓</span><strong>{text.result}</strong></div>
+    <div className="figure-result"><span className="check-icon" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" focusable="false"><path d="m3 8 3 3 7-7" /></svg></span><strong>{text.result}</strong></div>
     <ul className="figure-tags" role="list"><li>{text.digits}</li><li>{text.calendar}</li><li>{text.names}</li></ul>
     <figcaption>{text.caption}</figcaption>
   </figure>;

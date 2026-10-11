@@ -24,13 +24,13 @@ export const copy = {
     language: "Choose language",
     theme: { system: "Theme: follows system. Switch to light.", light: "Theme: light. Switch to dark.", dark: "Theme: dark. Switch to follow system." },
     hero: {
-      eyebrow: "Correctness for Persian products",
-      title: "Build the interface.",
-      accent: "Check what reaches the reader.",
-      lead: "Your components handle the interface. Lumo helps you catch the wrong digits, calendars, direction and accessible names in the output you actually ship.",
+      eyebrow: "Open-source RTL checks",
+      title: "Catch RTL defects.",
+      accent: "Before your readers do.",
+      lead: "Lumo is an open-source locale correctness layer. Check Persian digits, calendars, direction and accessible names in your source and built HTML, while keeping your own components.",
       source: "View the source", licence: "Open source · MIT", version: "Release",
     },
-    figure: { title: "From your app to your reader", contract: "Locale contract", lint: "Source checks", html: "Built HTML", result: "Reader-ready output", caption: "Checks across your source and built output. Your components stay yours.", digits: "Native digits", calendar: "Reader’s calendar", names: "Named controls" },
+    figure: { title: "From your app to your reader", contract: "Locale contract", lint: "Source checks", html: "Built HTML", result: "An actionable report", caption: "Locale contract → source checks → built HTML. Findings point back to your application.", digits: "Native digits", calendar: "Reader’s calendar", names: "Named controls" },
     features: {
       eyebrow: "Keep your stack", title: "A correctness layer. Your own interface.",
       lead: "Keep building with the components your team knows. Lumo adds language contracts and checks where a translated label alone is not enough.",
@@ -75,8 +75,8 @@ export const copy = {
     skip: "Zum Inhalt springen",
     nav: { label: "Hauptnavigation", how: "So funktioniert es", rules: "Was geprüft wird", docs: "Dokumentation", start: "Erste Schritte" },
     language: "Sprache wählen", theme: { system: "Design: folgt dem System. Zu hell wechseln.", light: "Design: hell. Zu dunkel wechseln.", dark: "Design: dunkel. Wieder dem System folgen." },
-    hero: { eyebrow: "Korrektheit für persische Produkte", title: "Die Oberfläche gestalten.", accent: "Prüfen, was Leser erhalten.", lead: "Ihre Komponenten gestalten die Oberfläche. Lumo hilft, falsche Ziffern, Kalender, Schreibrichtung und zugängliche Namen in der tatsächlich ausgelieferten Ausgabe zu erkennen.", source: "Quelltext ansehen", licence: "Open Source · MIT", version: "Version" },
-    figure: { title: "Von Ihrer Anwendung zu Ihren Lesern", contract: "Sprachvertrag", lint: "Quelltextprüfung", html: "Erstelltes HTML", result: "Ausgabe für Ihre Leser", caption: "Prüfungen im Quelltext und in der Build-Ausgabe. Ihre Komponenten bleiben Ihre.", digits: "Native Ziffern", calendar: "Passender Kalender", names: "Benannte Elemente" },
+    hero: { eyebrow: "Open-Source-Prüfungen für RTL", title: "RTL-Fehler erkennen.", accent: "Bevor Ihre Leser es tun.", lead: "Lumo ist eine Open-Source-Prüfschicht für sprachlich korrekte Oberflächen. Prüfen Sie persische Ziffern, Kalender, Schreibrichtung und zugängliche Namen im Quelltext und im erstellten HTML. Ihre Komponenten bleiben Ihre.", source: "Quelltext ansehen", licence: "Open Source · MIT", version: "Version" },
+    figure: { title: "Von Ihrer Anwendung zu Ihren Lesern", contract: "Sprachvertrag", lint: "Quelltextprüfung", html: "Erstelltes HTML", result: "Ein Bericht für konkrete Korrekturen", caption: "Sprachvertrag → Quelltextprüfung → erstelltes HTML. Befunde führen zurück zu Ihrer Anwendung.", digits: "Native Ziffern", calendar: "Passender Kalender", names: "Benannte Elemente" },
     features: { eyebrow: "Ihre Werkzeuge behalten", title: "Eine Korrektheitsschicht. Ihre eigene Oberfläche.", lead: "Bauen Sie weiter mit den Komponenten, die Ihr Team kennt. Lumo ergänzt Sprachverträge und Prüfungen, wo eine übersetzte Beschriftung allein nicht genügt.", items: [
       { title: "Die Sprache ausdrücklich festlegen", body: "Leiten Sie die Schreibrichtung aus der Sprache ab, formatieren Sie Zahlen passend und verlangen Sie die Texte, die Ihre Elemente ansagen.", detail: "Ein typisierter Vertrag" },
       { title: "Fehler im Quelltext erkennen", body: "Prüfen Sie physische Richtungs-Utilities, rohe Zahlen im JSX und eine falsch deklarierte Dokumentsprache vor der Auslieferung.", detail: "RTL-Lint-Regeln" },
@@ -107,12 +107,12 @@ export const copy = {
     skip: "پرش به محتوا",
     nav: { label: "ناوبری اصلی", how: "روش کار", rules: "چه چیزهایی بررسی می‌شود", docs: "مستندات", start: "شروع کنید" },
     language: "انتخاب زبان", theme: { system: "پوسته: مطابق سیستم. تغییر به روشن.", light: "پوسته: روشن. تغییر به تاریک.", dark: "پوسته: تاریک. بازگشت به پیروی از سیستم." },
-    hero: { eyebrow: "درستی برای محصولات فارسی", title: "رابط را بسازید.", accent: "آنچه به خواننده می‌رسد را بررسی کنید.", lead: "کامپوننت‌های شما رابط را می‌سازند. لومو کمک می‌کند رقم، تقویم، جهت و نام دسترس‌پذیر نادرست را در خروجی‌ای پیدا کنید که واقعاً منتشر می‌کنید.", source: "دیدن کد منبع", licence: "متن‌باز · [[MIT]]", version: "نسخهٔ" },
-    figure: { title: "از برنامهٔ شما تا خواننده", contract: "قرارداد زبان", lint: "بررسی سورس", html: "خروجی ساخت", result: "خروجی آمادهٔ خواننده", caption: "بررسی سورس و خروجی ساخت؛ کامپوننت‌ها همچنان متعلق به شما هستند.", digits: "ارقام بومی", calendar: "تقویم خواننده", names: "کنترل‌های نام‌دار" },
+    hero: { eyebrow: "بررسی‌های متن‌باز راست‌به‌چپ", title: "نقص‌های راست‌به‌چپ را پیدا کنید.", accent: "پیش از آنکه خواننده با آن‌ها روبه‌رو شود.", lead: "لومو ابزار متن‌باز بررسی درستی زبان است. ارقام فارسی، تقویم، جهت و نام دسترس‌پذیر کنترل‌ها را در کد منبع و خروجی ساخته‌شده بررسی کنید؛ کامپوننت‌هایتان را نگه دارید.", source: "دیدن کد منبع", licence: "متن‌باز · [[MIT]]", version: "نسخهٔ" },
+    figure: { title: "از برنامهٔ شما تا خواننده", contract: "قرارداد زبان", lint: "بررسی کد منبع", html: "خروجی ساخت", result: "گزارشی برای اصلاح مشخص", caption: "از قرارداد زبان و بررسی کد منبع تا خروجی ساخت؛ هر یافته به بخشی از برنامهٔ شما برمی‌گردد.", digits: "ارقام بومی", calendar: "تقویم خواننده", names: "کنترل‌های نام‌دار" },
     features: { eyebrow: "ابزارهایتان را نگه دارید", title: "لایهٔ درستی؛ رابطی که خودتان می‌سازید.", lead: "با کامپوننت‌هایی ادامه دهید که تیم شما می‌شناسد. لومو قرارداد زبان و بررسی‌هایی را اضافه می‌کند که ترجمهٔ یک برچسب به‌تنهایی کافی نیست.", items: [
       { title: "زبان را صریح مشخص کنید", body: "جهت را از زبان خواننده به دست آورید، اعداد را متناسب با همان زبان قالب‌بندی کنید و متن‌های اعلانی کنترل‌ها را الزامی کنید.", detail: "قرارداد تایپ‌شده" },
-      { title: "نقص را در سورس پیدا کنید", body: "کلاس‌های جهت فیزیکی، اعداد خام در فرزندان رابط و زبان نادرست سند را پیش از انتشار بررسی کنید.", detail: "سیاست بررسی راست‌به‌چپ" },
-      { title: "خروجی منتشرشده را بسنجید", body: "خروجی ساخته‌شده را برای نقص خط، تقویم و ارتباط‌های دسترس‌پذیری بخوانید. این بررسی بدون اجرای مرورگر انجام می‌شود.", detail: "دروازهٔ خروجی منتشرشده" },
+      { title: "نقص را در کد منبع پیدا کنید", body: "کلاس‌های جهت فیزیکی، نمایش اعداد بدون قالب‌بندی و زبان نادرست سند را پیش از انتشار بررسی کنید.", detail: "سیاست بررسی راست‌به‌چپ" },
+      { title: "خروجی منتشرشده را بسنجید", body: "خروجی ساخته‌شده را برای نقص‌های خط نوشتاری، تقویم و ارتباط‌های دسترس‌پذیری بررسی کنید. این بررسی بدون اجرای مرورگر انجام می‌شود.", detail: "دروازهٔ خروجی منتشرشده" },
     ] },
     workflow: { eyebrow: "روش کار", title: "نصب کنید. متصل کنید. بررسی کنید.", lead: "از قرارداد زبان شروع کنید و سپس بررسی خروجی ساخت را به مرحلهٔ انتشار اضافه کنید.", steps: [
       { title: "نسخه را ثابت کنید", body: "بستهٔ عمومی گیت‌هاب را با ابزار نصب معرفی‌شده در مستندات نصب کنید. نسخه به‌صورت آگاهانه و تکرارپذیر انتخاب می‌شود." },
@@ -120,7 +120,7 @@ export const copy = {
       { title: "ساخت را بررسی کنید", body: "خروجی استاتیک را با زبان‌های اعلام‌شده و کف‌های بازبینی‌شده به دروازه بدهید. یافته‌ها را در برنامهٔ خود اصلاح کنید." },
     ], install: "نصب بستهٔ عمومی" },
     rules: { eyebrow: "چه چیزهایی بررسی می‌شود", title: "نقص‌های کوچک؛ پیامدهای واقعی.", lead: "دروازه جزئیاتی را بررسی می‌کند که ممکن است در یک رابط ترجمه‌شده باقی بمانند. گزارش، قانون و خروجی متأثر را مشخص می‌کند.", count: "قانون روی خروجی منتشرشده", groups: [
-      { title: "خط و ارقام", body: "متن دیدنی، نام اعلانی و عدد باید به خط خواننده باشند. استثناهای عمدی لاتین هم بررسی می‌شوند.", ids: ["no-latin-digits", "native-script-name", "latn-island-purity"] },
+      { title: "خط و ارقام", body: "متن قابل‌مشاهده، نام اعلانی کنترل‌ها و اعداد باید به خط خواننده باشند. استثناهای عمدی لاتین هم بررسی می‌شوند.", ids: ["no-latin-digits", "native-script-name", "latn-island-purity"] },
       { title: "جهت و تقویم", body: "زبان و جهت سند باید هماهنگ باشند. تاریخ ترجمه‌شده هم باید در تقویم درست باشد.", ids: ["lang-dir", "native-calendar"] },
       { title: "نام‌ها و ارجاع‌ها", body: "کنترل به نام نیاز دارد؛ برچسب ارجاع‌شده باید وجود داشته باشد و شناسه‌ها باید یکتا باشند.", ids: ["named-controls", "resolved-idrefs", "unique-ids"] },
       { title: "ورود با صفحه‌کلید", body: "ویجت‌های ترکیبی به نقطهٔ ورود قابل‌استفاده در خروجی دریافتی نیاز دارند؛ حتی پیش از فعال‌شدن رابط.", ids: ["composite-tab-stop", "composite-single-tab-stop"] },
@@ -132,6 +132,6 @@ export const copy = {
       { question: "آیا می‌توان بسته را از رجیستری عمومی نصب کرد؟", answer: "لومو فعلاً از مخزن عمومی گیت‌هاب، با یک برچسب نسخهٔ ثابت و ابزار نصب معرفی‌شده در مستندات نصب می‌شود. راهنمای شروع، اتصال‌های لازم را توضیح می‌دهد." },
     ] },
     closing: { title: "درستی زبان را بخشی از ساخت کنید.", lead: "راهنمای اتصال را بخوانید، بخش‌های لازم را متصل کنید و آنچه خواننده دریافت می‌کند را بررسی کنید.", docs: "خواندن مستندات" },
-    footer: { by: "ساختهٔ تلارسا", lead: "لایهٔ درستی برای محصولات فارسی.", source: "کد منبع در گیت‌هاب", legal: "اطلاعات حقوقی", privacy: "حریم خصوصی", licence: "کتابخانهٔ عمومی · پروانهٔ [[MIT]]" },
+    footer: { by: "ساختهٔ تلارسا", lead: "لایهٔ بررسی‌های متن‌باز راست‌به‌چپ.", source: "کد منبع در گیت‌هاب", legal: "اطلاعات حقوقی", privacy: "حریم خصوصی", licence: "کتابخانهٔ عمومی · پروانهٔ [[MIT]]" },
   },
 } as const satisfies Record<import("./site").Locale, Copy>;

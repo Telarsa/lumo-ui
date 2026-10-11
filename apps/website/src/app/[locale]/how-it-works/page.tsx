@@ -25,10 +25,10 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
   ];
   return <div className="container marketing-page">
     <header className="page-intro"><p className="eyebrow">{copy[locale].nav.how}</p><h1>{t.title}</h1><p>{t.lead}</p></header>
-    <div className="install-block"><p>{copy[locale].workflow.install}</p><pre data-lumo-latn dir="ltr"><code>{`pnpm add ${installSpec}`}</code></pre></div>
+    <div className="install-block"><p>{copy[locale].workflow.install}</p><pre data-lumo-latn dir="ltr" tabIndex={0}><code>{`pnpm add ${installSpec}`}</code></pre></div>
     {steps.map((step, index) => <section className="integration" key={step.slug}>
       <div><span className="step-number">{formatNumber(index + 1, locale)}</span><h2>{step.title}</h2><p>{step.body}</p><a className="text-link" href={docs(locale, step.slug)}>{step.link}<Arrow /></a></div>
-      <div className="code-panel"><pre data-lumo-latn dir="ltr"><code>{step.code}</code></pre></div>
+      <div className="code-panel"><pre data-lumo-latn dir="ltr" tabIndex={0}><code>{step.code}</code></pre></div>
     </section>)}
     <section className="next-step"><h2>{t.next}</h2><p>{t.nextBody}</p><a className="text-link" href={docs(locale, "getting-started")}>{t.nextLink}<Arrow /></a></section>
   </div>;

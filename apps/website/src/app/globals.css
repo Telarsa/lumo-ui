@@ -6,8 +6,8 @@
   /* IRANSansX is private (never committed). Without it --font-persian is unset
    * and Persian falls back to the platform's own Arabic-script UI faces. */
   --lumo-web-font-persian-fallback: "Vazirmatn", "Noto Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", sans-serif;
-  --lumo-web-font-sans: var(--font-inter), var(--font-persian, var(--lumo-web-font-persian-fallback)), sans-serif;
-  --lumo-web-font-fa: var(--font-persian, var(--lumo-web-font-persian-fallback)), var(--font-inter), sans-serif;
+  --lumo-web-font-sans: var(--font-inter), var(--font-inter-full), var(--font-persian, var(--lumo-web-font-persian-fallback)), sans-serif;
+  --lumo-web-font-fa: var(--font-persian, var(--lumo-web-font-persian-fallback)), var(--font-inter), var(--font-inter-full), sans-serif;
   --lumo-web-bg: light-dark(#f8f7f3, #101114);
   --lumo-web-bg-sunken: light-dark(#eeece4, #15161a);
   --lumo-web-surface: light-dark(#f2f0e9, #18191e);
@@ -42,7 +42,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 svg { display: block; }
 :focus-visible { outline: var(--lumo-web-focus-width) solid var(--lumo-web-focus-color); outline-offset: var(--lumo-web-focus-offset); }
 ::selection { color: var(--lumo-web-text); background: var(--lumo-wash); }
-[data-lumo-latn], code { font-family: var(--font-inter), sans-serif; }
+[data-lumo-latn], code { font-family: var(--font-inter), var(--font-inter-full), sans-serif; }
 .container { inline-size: min(calc(100% - var(--lumo-web-gutter) * 2), var(--lumo-web-content-max)); margin-inline: auto; }
 .section { padding-block: calc(var(--lumo-web-section-space) * 1.4); }
 .surface-section { background: var(--lumo-web-surface); border-block: 1px solid var(--lumo-web-line); }
@@ -69,8 +69,15 @@ svg { display: block; }
 .site-header { position: sticky; inset-block-start: 0; z-index: 20; background: var(--lumo-web-bg); border-block-end: 1px solid var(--lumo-web-line); }
 .header-row { min-block-size: 4.75rem; display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; }
 .brand { display: inline-flex; align-items: center; gap: .55rem; font-weight: 600; font-size: 1.25rem; letter-spacing: -.03em; white-space: nowrap; line-height: 1; }
-.brand svg { inline-size: 2rem; block-size: 2rem; }
-:root[dir="rtl"] .brand svg { transform: scaleX(-1); }
+.brand img { inline-size: 9rem; block-size: auto; }
+.brand-vertical img { inline-size: 10.5rem; }
+.brand-ink { display: none; }
+:root[data-theme="dark"] .brand-paper { display: none; }
+:root[data-theme="dark"] .brand-ink { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .brand-paper { display: none; }
+  :root:not([data-theme="light"]) .brand-ink { display: block; }
+}
 .desktop-nav { display: flex; align-items: center; gap: 1.5rem; font-size: var(--lumo-web-font-size-ui); }
 .desktop-nav a, .mobile-nav a { color: var(--lumo-web-text-muted); }
 .desktop-nav a:hover, .mobile-nav a:hover { color: var(--lumo-lit-text); }
@@ -181,6 +188,7 @@ details[open] .question-plus::after { rotate: 0deg; }
 .site-footer { padding-block: var(--lumo-web-space-7) var(--lumo-web-space-5); }
 .footer-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 2rem; padding-block-end: 2rem; }
 .footer-top p { color: var(--lumo-web-text-muted); margin-block-start: 1rem; font-size: var(--lumo-web-step--1); }
+.footer-brand { display: grid; justify-items: center; text-align: center; }
 .footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem; font-size: var(--lumo-web-step--1); padding-block-start: .5rem; }
 .footer-links a:hover, .footer-bottom a:hover { color: var(--lumo-lit-text); }
 .footer-bottom { padding-block-start: 1.25rem; border-block-start: 1px solid var(--lumo-web-line); color: var(--lumo-web-text-muted); display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: var(--lumo-web-step--2); }
@@ -217,7 +225,7 @@ details[open] .question-plus::after { rotate: 0deg; }
   .header-start { display: none; }
   .mobile-nav { gap: 1.2rem; }
   .brand { font-size: 1.1rem; gap: .4rem; }
-  .brand svg { inline-size: 1.75rem; block-size: 1.75rem; }
+  .site-header .brand img { inline-size: 8rem; }
   .hero h1 { margin-block: 1.2rem; }
   .rules-grid, .platform-grid { grid-template-columns: minmax(0,1fr); }
   .checks-heading { flex-direction: column; align-items: flex-start; }

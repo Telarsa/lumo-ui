@@ -126,7 +126,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     <article>
       <DocsHeader locale={locale} slug={SLUG} title={t.title} lead={t.lead} />
       <Section title={t.rulesTitle}>
-        <div className="table-wrap">
+        <div className="table-wrap" tabIndex={0}>
           <table className="table">
             <tbody>
               {RULES.map((r, i) => (

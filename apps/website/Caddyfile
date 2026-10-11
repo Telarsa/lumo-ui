@@ -3,14 +3,22 @@
   auto_https off
 }
 
+(security_headers) {
+  header {
+    Content-Security-Policy "frame-ancestors 'none'; base-uri 'none'; object-src 'none'; form-action 'self'"
+    X-Frame-Options "DENY"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), midi=()"
+    Cross-Origin-Opener-Policy "same-origin"
+    -Server
+  }
+}
+
 :3000 {
   root * /srv
   encode zstd gzip
-  header {
-    X-Content-Type-Options nosniff
-    Referrer-Policy strict-origin-when-cross-origin
-    -Server
-  }
+  import security_headers
   # Cloudflare's own files (public/_headers, public/_redirects) are not pages.
   @internal path /_headers /_redirects
   respond @internal 404

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { revealFocusedNavigationLink } from "@/lib/navigation-focus";
 import { CHROME } from "@/lib/chrome";
 import { DOCS, DOCS_ORDER, docIndex } from "@/lib/docs-order";
 import type { SiteLocale } from "@/lib/locales";
@@ -16,7 +17,7 @@ export function DocsSidebar({ locale }: { locale: SiteLocale }) {
       <p className="docs__side-head">{c.eyebrow}</p>
       <ol>
         <li>
-          <Link href={localePath(locale, "/docs")} className="docs__link" aria-current={pathname === localePath(locale, "/docs") ? "page" : undefined}>
+          <Link onFocus={(event) => revealFocusedNavigationLink(event.currentTarget, event.currentTarget.closest("ol"))} href={localePath(locale, "/docs")} className="docs__link" aria-current={pathname === localePath(locale, "/docs") ? "page" : undefined}>
             <span className="docs__num" aria-hidden="true">
               —
             </span>
@@ -27,7 +28,7 @@ export function DocsSidebar({ locale }: { locale: SiteLocale }) {
           const href = localePath(locale, `/docs/${slug}`);
           return (
             <li key={slug}>
-              <Link href={href} className="docs__link" aria-current={pathname === href ? "page" : undefined}>
+              <Link onFocus={(event) => revealFocusedNavigationLink(event.currentTarget, event.currentTarget.closest("ol"))} href={href} className="docs__link" aria-current={pathname === href ? "page" : undefined}>
                 <span className="docs__num">{docIndex(slug, locale)}</span>
                 {DOCS[locale][slug].label}
               </Link>
