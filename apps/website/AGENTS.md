@@ -58,6 +58,11 @@ No tag, domain cutover or deployment without owner instruction.
   asset routing, bodies, status/404 behaviour and cache metadata. Its shared
   response-policy module must remain free of Node-only build imports. Keep
   the build configuration guard and meaningful Worker regression tests.
+- HSTS is sent only on originally HTTPS requests (RFC 6797 section 7.2).
+  Capture the original protocol before rewriting a redirect destination.
+  HTTP responses retain the six base protections and must remove inherited
+  ASSETS HSTS; HTTPS responses retain all seven protections. Test both
+  redirect and preview/static-response paths without changing cache/status/body.
 - `scripts/csp.mjs` runs after the owned static shells and hashes each page’s
   exact inline scripts. Every build verifies the policy and both hosts’
   response-header configuration. Do not hand-edit generated policies or

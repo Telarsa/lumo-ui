@@ -12,10 +12,14 @@ export const TLS_HEADERS = Object.freeze({
   "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
 });
 
-export function secureResponse(response) {
+export function secureResponse(response, requestProtocol) {
   const headers = new Headers(response.headers);
-  for (const [name, value] of Object.entries({ ...HEADERS, ...TLS_HEADERS })) {
+  for (const [name, value] of Object.entries(HEADERS)) {
     headers.set(name, value);
+  }
+  for (const [name, value] of Object.entries(TLS_HEADERS)) {
+    if (requestProtocol === "https:") headers.set(name, value);
+    else headers.delete(name);
   }
   return new Response(response.body, {
     status: response.status,

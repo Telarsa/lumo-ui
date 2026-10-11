@@ -492,3 +492,42 @@ Remaining factual owner inputs are only the authorized representative and
 operator-log/email processing arrangements; canonical URL, MIT Git/tag, legal
 revision dates, font licence/local source, public fallback mode, publication
 and the measured public smoke are resolved.
+
+### HSTS protocol correction — 11 October 2026
+
+An independent protocol review found that the response wrapper sent HSTS on
+insecure HTTP. RFC 6797 section 7.2 requires HSTS only over secure transport.
+The Worker now captures the request's original protocol before changing an
+HTTP/www redirect destination. The pure response wrapper retains the six base
+protections on HTTP and explicitly removes any HSTS inherited from ASSETS;
+HTTPS retains all seven protections. Static headers and document CSP remain
+unchanged. No frontend, CSS, font, content or frozen-document source changed.
+
+The seven existing Worker tests now check the original protocol on redirects,
+method/body preservation and ordinary/preview routing, plus inherited-HSTS
+removal on HTTP and full HTTPS protections across HTML, binary/range, slash
+redirect, missing-page and bodyless fixtures. The focused tests exited **0**;
+scoped ESLint exited **0** with the existing anonymous-default-export warning,
+and the whitespace check exited **0**. Full root verification, automatic
+publication and actual public HTTP-HSTS absence proof are still pending at
+this checkpoint. The prior independent 9.37 acceptance is historical until
+the reviewer accepts this new protocol repair's gate and public evidence.
+
+The complete **thirteen-phase `pnpm run verify` actually exited 0** after this
+protocol change; session 28011 is closed. Exact log:
+`/private/tmp/lumo-final-hsts-protocol-root-verify-2026-10-11.log`.
+It ran with the 2,048 MB Node heap and normal access to the existing Flutter
+cache, following the already established sandbox-cache limitation. No new
+sandbox failure occurred in this round. The website gate retains its full
+34-test pass, 41 generated CSP documents/40 graded documents with zero
+violations and 1,581 checked links; all remaining root phases also pass.
+
+The full frontend freeze proof is
+`/private/tmp/marketing-review-2026-10-11/lumo/after/hsts-protocol-frontend-freeze.json`.
+Every tracked `src`/`public` file is byte-identical to the previously published
+HEAD; hashes of all local files distinguish ignored inputs explicitly without
+copying their contents. The fresh 38-view public run at 18:43:52 UTC therefore
+qualifies the unchanged frontend, Persian fallback and layout only. Automatic
+publication and the new actual HTTP-HSTS absence/HTTPS protection proof remain
+pending; they will be recorded in the consolidated evidence and independent
+review. This gate does not itself reinstate the withheld current rating.

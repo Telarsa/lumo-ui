@@ -8,13 +8,18 @@ import { readWorkerConfig, workerConfigFaults } from "./check-worker.mjs";
 const expectedHeaders = { ...HEADERS, ...TLS_HEADERS };
 const noAssets = { ASSETS: { fetch() { assert.fail("A production origin redirect must precede static assets."); } } };
 
+function assertProtocolHeaders(response, protocol) {
+  for (const [name, value] of Object.entries(HEADERS)) assert.equal(response.headers.get(name), value);
+  for (const [name, value] of Object.entries(TLS_HEADERS)) assert.equal(response.headers.get(name), protocol === "https:" ? value : null);
+}
+
 test("HTTP and www production requests redirect permanently without changing encoded paths/queries", async () => {
   for (const origin of ["http://lumo-ui.com", "http://www.lumo-ui.com", "https://www.lumo-ui.com:8443"]) {
     for (const path of ["/", "/fa/", "/en/docs/a%2Fb/%252F/?q=a%2Bb&next=%2Ffa%2F&empty=&q=two+words"]) {
       const response = await worker.fetch(new Request(origin + path), noAssets);
       assert.equal(response.status, 308);
       assert.equal(response.headers.get("location"), "https://lumo-ui.com" + path);
-      for (const [name, value] of Object.entries(expectedHeaders)) assert.equal(response.headers.get(name), value);
+      assertProtocolHeaders(response, new URL(origin).protocol);
     }
   }
 });
@@ -26,6 +31,7 @@ test("production redirects use method-preserving 308 and do not consume request 
     const response = await worker.fetch(request, noAssets);
     assert.equal(response.status, 308);
     assert.equal(response.headers.get("location"), "https://lumo-ui.com/en/?keep=1");
+    assertProtocolHeaders(response, "http:");
     assert.equal(request.method, method);
     if (hasBody) assert.equal(await request.text(), "unsent=example");
   }
@@ -49,12 +55,13 @@ test("canonical production, workers.dev, local previews and lookalike hosts pass
     assert.equal(response.headers.get("location"), null);
     assert.equal(response.headers.get("cache-control"), "public, max-age=0, must-revalidate");
     assert.equal(response.headers.get("etag"), '"asset-tag"');
+    assertProtocolHeaders(response, new URL(origin).protocol);
     assert.equal(await response.text(), "asset");
   }
 });
 
 test("static page, binary/range, slash-redirect, 404 and bodyless responses keep their status/body/asset headers", async () => {
-  for (const fixture of [
+  for (const protocol of ["http:", "https:"]) for (const fixture of [
     { status: 200, statusText: "OK", body: "<h1>Page</h1>", headers: { "content-type": "text/html; charset=utf-8" } },
     { status: 206, statusText: "Partial Content", body: new Uint8Array([0, 31, 255]), headers: { "content-type": "font/woff2", "content-range": "bytes 0-2/10" } },
     { status: 307, statusText: "Temporary Redirect", body: null, headers: { location: "/en/" } },
@@ -65,10 +72,14 @@ test("static page, binary/range, slash-redirect, 404 and bodyless responses keep
       ...expectedHeaders, ...fixture.headers, "cache-control": "public, max-age=3600", etag: '"original-tag"', vary: "Accept-Encoding", "cf-cache-status": "HIT",
     } });
     const expectedBody = new Uint8Array(await source.clone().arrayBuffer());
-    const response = await worker.fetch(new Request("https://lumo-ui.com/en/missing/"), { ASSETS: { fetch: () => source } });
+    const response = await worker.fetch(new Request(protocol + "//preview.lumo-ui-website.example.workers.dev/en/missing/"), { ASSETS: { fetch: () => source } });
     assert.equal(response.status, fixture.status);
     assert.equal(response.statusText, fixture.statusText);
-    for (const [name, value] of source.headers) assert.equal(response.headers.get(name), value);
+    for (const [name, value] of source.headers) {
+      if (name === "strict-transport-security" && protocol === "http:") assert.equal(response.headers.get(name), null);
+      else assert.equal(response.headers.get(name), value);
+    }
+    assertProtocolHeaders(response, protocol);
     assert.deepEqual(new Uint8Array(await response.arrayBuffer()), expectedBody);
   }
 });
