@@ -1,12 +1,13 @@
 import Image from "next/image";
+import { brandName, type Locale } from "@/content/site";
 
-/** Horizontal assets are byte-identical to the delivered masters. The footer
- * rearranges the same fixed-colour mark and Archivo wordmark vertically. */
-export function Brand({ vertical = false }: { vertical?: boolean }) {
-  const name = vertical ? "lumo-lockup-vertical" : "lumo-lockup";
-  return <span className={vertical ? "brand brand-vertical" : "brand"} data-lumo-latn="" dir="ltr">
-    <Image className="brand-paper" src={`/brand/${name}-on-paper.svg`} alt="Lumo UI" width={168} height={vertical ? 88 : 40} unoptimized />
-    <Image className="brand-ink" src={`/brand/${name}-on-ink.svg`} alt="Lumo UI" width={168} height={vertical ? 88 : 40} unoptimized />
+/** Original folded-L masters with outlined wordmarks; the footer uses the
+ * same paths and fixed theme colours in a vertical arrangement. */
+export function Brand({ locale, vertical = false }: { locale: Locale; vertical?: boolean }) {
+  const name = `${vertical ? "lumo-lockup-vertical" : "lumo-lockup"}${locale === "fa" ? "-fa" : ""}`;
+  return <span className={vertical ? "brand brand-vertical" : "brand"} dir="ltr" {...(locale !== "fa" ? { "data-lumo-latn": "" } : {})}>
+    <Image className="brand-paper" src={`/brand/${name}-on-paper.svg`} alt={brandName[locale]} width={168} height={vertical ? 88 : 40} unoptimized />
+    <Image className="brand-ink" src={`/brand/${name}-on-ink.svg`} alt={brandName[locale]} width={168} height={vertical ? 88 : 40} unoptimized />
   </span>;
 }
 

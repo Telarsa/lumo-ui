@@ -5,13 +5,18 @@ and its source is licensed under the MIT License below, like the rest of the
 repository. It was built as a separate private repository from 5 October 2026
 and moved into `apps/website` here on 9 October 2026.
 
-The lit-corner Lumo logo, complete authored EN/DE/FA documentation pages,
+The complete authored EN/DE/FA documentation pages,
 documentation renderer/navigation/data and interactive calendar example are
 adapted from the previous Lumo UI website in this repository, read 5 October
 2026. The selected source commit and source/adapted checksums are recorded in
 `docs/public-docs-snapshot.json`. The Calendar presentation is a semantic-CSS
 adaptation of its owned shadcn copy; selection, locale configuration and
 keyboard focus behaviour are retained.
+
+The folded-L logo was created for the owner on 12 October 2026 and replaces
+the prior lit-corner identity. Its outlined wordmark derives from the owned
+Inter/OFL font; the Persian wordmark uses Vazirmatn/OFL with its original
+notice in assets/logo/source. Source and generator are recorded in assets/logo/provenance.json.
 
 Trademarks. "Lumo UI", "Telarsa" and their names, logos and marks are
 trademarks of Telarsa. The MIT License covers the code and text; it does not

@@ -88,7 +88,7 @@
   .docs { grid-template-columns: minmax(0,1fr); gap: 2rem; padding-block: var(--lumo-web-space-6); }
   .docs .docs__side { position: static; min-inline-size: 0; }
   .docs .docs__side-head { margin-block-end: .6rem; }
-  .docs .docs__side ol { display: flex; gap: .35rem; overflow-x: auto; padding-block-end: .4rem; }
+  .docs .docs__side ol { display: flex; gap: .35rem; overflow-x: auto; padding-block: calc(var(--lumo-web-focus-width) + var(--lumo-web-focus-offset) + 1px); padding-inline: calc(var(--lumo-web-focus-width) + var(--lumo-web-focus-offset) + 1px); scroll-padding-inline: calc(var(--lumo-web-focus-width) + var(--lumo-web-focus-offset) + 1px); }
   .docs .docs__link { white-space: nowrap; border-inline-start: 0; border-block-end: 2px solid transparent; padding: .6rem .75rem; }
   .docs .docs__link[aria-current] { border-block-end-color: var(--lumo-mark); }
   .docs .docs__main { max-inline-size: none; }

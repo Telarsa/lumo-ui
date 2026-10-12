@@ -30,6 +30,15 @@ test("a changed payload, weak policy and late policy all fail", () => {
   assert(inspect(document()).length);
 });
 
+test("owned style elements need exact hashes, not weaker element policy", () => {
+  const html = protect(document('<style>p{color:green}</style><p>Read</p>'));
+  assert.deepEqual(inspect(html), []);
+  const elementPolicy = policy(html).split(";").find((directive) => directive.trim().startsWith("style-src-elem"));
+  assert(elementPolicy.includes(hash("p{color:green}")) && !elementPolicy.includes("unsafe-inline"));
+  assert(inspect(html.replace("p{color:green}", "p{color:red}")).length);
+  assert(inspect(html.replace("style-src-elem 'self'", "style-src-elem 'self' 'unsafe-inline'")).length);
+});
+
 test("event handlers, encoded JavaScript URLs and external executable assets fail", () => {
   for (const body of [
     '<button onclick="alert(1)">Go</button>',
@@ -46,4 +55,7 @@ test("the actual two host policies hold and dropping a response header fails", (
   assert.deepEqual(hostFaults(cloudflare, caddy), []);
   assert(hostFaults(cloudflare.replace(/  X-Frame-Options: DENY\n/, ""), caddy).length);
   assert(hostFaults(cloudflare, caddy.replace("import security_headers", "")).length);
+  assert(hostFaults(cloudflare.replace("/_next/static/*", "/assets/*"), caddy).length);
+  assert(hostFaults(cloudflare.replace("31536000, immutable", "0, must-revalidate"), caddy).length);
+  assert(hostFaults(cloudflare, caddy.replace("@immutable path /_next/static/*", "@immutable path /*")).length);
 });

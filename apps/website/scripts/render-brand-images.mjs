@@ -24,11 +24,12 @@ const { copy } = await import(pathToFileURL(join(app, "src/content/copy.ts")).hr
 
 /** The light theme of src/app/globals.css. */
 const colour = { bg: "#f8f7f3", text: "#101114", muted: "#646257", line: "#dedbd1", lit: "#55701c", mark: "#7fa828" };
-const markPaths = `<path fill="${colour.text}" d="M50 12H88V88H12V50H50Z"/><path fill="${colour.mark}" d="M12 50A38 38 0 0 1 50 12L50 50Z"/>`;
-const mark = (size) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${size}" height="${size}">${markPaths}</svg>`;
+// Read the authoritative symbol; never keep a second hardcoded logo here.
+const markSource = readFileSync(join(app, "../../assets/logo/lumo-mark-on-paper.svg"), "utf8");
+const mark = (size) => markSource.replace("<svg ", `<svg width="${size}" height="${size}" `);
 // Inlined: a page set from a string cannot load file: URLs.
 const inter = `data:font/woff2;base64,${readFileSync(join(app, "src/assets/fonts/InterVariable.woff2")).toString("base64")}`;
-const lockup = `data:image/svg+xml;base64,${readFileSync(join(pub, "brand/lumo-lockup-on-paper.svg")).toString("base64")}`;
+const lockup = (locale) => `data:image/svg+xml;base64,${readFileSync(join(pub, `brand/lumo-lockup${locale === "fa" ? "-fa" : ""}-on-paper.svg`)).toString("base64")}`;
 const persianFallback = `"Vazirmatn", "Noto Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", sans-serif`;
 
 function iconHtml(size, background) {
@@ -51,7 +52,7 @@ h1 { margin: 22px 0 0; font-size: ${rtl ? 52 : 70}px; line-height: ${rtl ? 1.3 :
 h1 span { display: block; color: ${colour.lit}; }
 footer { margin-block-start: auto; padding-block-start: 26px; border-block-start: 2px solid ${colour.line}; display: flex; justify-content: space-between; color: ${colour.muted}; font-size: 24px; }
 footer code { font-family: "Inter", sans-serif; direction: ltr; }
-</style></head><body><div class="brand"><img src="${lockup}" alt="Lumo UI" width="240" height="57" /></div><p class="eyebrow">${t.hero.eyebrow}</p><h1>${t.hero.title}<span>${t.hero.accent}</span></h1><footer><span>${t.footer.by}</span><code>github.com/Telarsa/lumo-ui</code></footer></body></html>`;
+</style></head><body><div class="brand"><img src="${lockup(locale)}" alt="Lumo UI" width="240" height="57" /></div><p class="eyebrow">${t.hero.eyebrow}</p><h1>${t.hero.title}<span>${t.hero.accent}</span></h1><footer><span>${t.footer.by}</span><code>github.com/Telarsa/lumo-ui</code></footer></body></html>`;
 }
 
 /** An ICO container holding PNG images (supported by every current browser). */
@@ -90,9 +91,10 @@ try {
     writeFileSync(join(pub, path), data);
     console.log(`public/${path} (${data.length} bytes)`);
   };
-  // Small transparent marks: the SVG icon adapts to dark mode, these cannot.
+  // Legacy icons cannot adapt to dark mode. Their opaque paper tile keeps the
+  // exact on-paper symbol visible on both light and dark browser surfaces.
   const transparent = {};
-  for (const size of [16, 32, 48, 64]) transparent[size] = await shoot(iconHtml(size), size, size, true);
+  for (const size of [16, 32, 48, 64]) transparent[size] = await shoot(iconHtml(size, colour.bg), size, size, false);
   write("favicon.ico", ico([16, 32, 48].map((size) => ({ size, data: transparent[size] }))));
   for (const size of [16, 32, 64]) write(`icons/icon-${size}.png`, transparent[size]);
   // Home-screen and install icons sit on the page background, mark inset.

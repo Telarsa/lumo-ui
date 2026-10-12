@@ -1,0 +1,29 @@
+{
+  "sourceMasterHashes": {
+    "lumo-lockup-on-paper.svg": "ca412e1f7f56671e0fb981d6b3fa9b550a712cad02669abbd9dab96e71604735",
+    "lumo-lockup-vertical-on-ink.svg": "2b0d75787732d0b0285751084732414a2f623976ba8bce1c6f158bd3b96fb0d9",
+    "lumo-lockup-fa-on-ink.svg": "ba7cd2689659970ab9f79812d569e83aeaf845e95c6daa43bb1e8df5421066c6",
+    "lumo-lockup-fa-on-paper.svg": "2de477035c23ac63c266fb247d2e8bc31d94cabd846d777a0fe15bedf4399eb4",
+    "lumo-mark-on-paper.svg": "15bafc83b79686ed28daa4570660816cad4be47f8248bdec56df39a5782da726",
+    "lumo-mark.svg": "c17d1e0999630e93120f1d72dbefa444b552e75b554b51727c935dfb73600688",
+    "lumo-lockup-vertical-fa-on-ink.svg": "e18ae7d8e3792cea4f0a911f828d8e3b5dde0239e90ffbcf2c191dcc06be2cdf",
+    "lumo-lockup-vertical-fa-on-paper.svg": "a555178271be6d1be85874945e716de5eb75c56eea2aee616a9da8362fbfbf9b",
+    "lumo-mark-on-ink.svg": "fb135a60bdbfb46415c3ca5c9d0dab4aba8f373b3f16f9fc83247c042bb4b245",
+    "lumo-lockup-on-ink.svg": "febf74df4f0242abd0aca53665dedd6113b2c5200086b17896efbeaca431c981",
+    "lumo-lockup-vertical-on-paper.svg": "79ecdaebc79076bb2b86c7cef80a6eb2384fccb4bd5ee93ddb417977f3b72731"
+  },
+  "rendererSha256": "99443ca461436ac4e23aaa73f73db6ccb3c01f6f8b4bc1486d7fa897b98d7775",
+  "files": {
+    "apple-touch-icon.png": "543bdcecd32989678588bfdfe36c0d243100a4de9512da14c9bc75500c4ae9f3",
+    "icons/icon-16.png": "e59e2a2588320acbb7aa4f9d85a7c071266ddd2c40b128a9ef082d852b6a0f4a",
+    "icons/icon-32.png": "f59d0f6aa371e4116ade7750b6120cbc0ec9248bd846a4324632ce921aae2439",
+    "icons/icon-64.png": "3cb570d6f586c4ad70f12a98d05bec8e17df399c6ea514e08a76d9546d230e7e",
+    "icons/icon-192.png": "97f2b7758112fa8303d20fa086e612864f87626a7f7dcc7edc5fee007346a3e4",
+    "icons/icon-512.png": "636ee4419101026b90e997506c2483ee2517eadf231831f5496c6562c44d567b",
+    "og/lumo-en.png": "7a2be0c56731f61b5cfdc49fc0979d1c06961596c0d08499a53886dfe6993727",
+    "og/lumo-de.png": "399c362f6ddf2f4c5112e892bec2fc40fcc1e7a15d878ba9267c208eb7b2f048",
+    "og/lumo-fa.png": "418aebbd0ef1e0a2addc867798aae26d635e77cae795abec7a72dc43692e30ff",
+    "favicon.ico": "21c1cde1c89018a516950fa6e355f58cb753cb696e26d116a4addc2239562467",
+    "site.webmanifest": "132f103a6b26abf5854a57e4547565b6f706ed086cec2686a614bbdaf701796b"
+  }
+}

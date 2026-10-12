@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Lumo UI">
-  <style>
-    .body { fill: #101114 }
-    @media (prefers-color-scheme: dark) { .body { fill: #f2efe8 } }
-  </style>
-  <path class="body" d="M50 12 H88 V88 H12 V50 H50 Z"/>
-  <path d="M12 50 A38 38 0 0 1 50 12 L50 50 Z" fill="#7fa828"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112" role="img" aria-label="Lumo UI"><style>.body{fill:#101114}@media(prefers-color-scheme:dark){.body{fill:#f2efe8}}</style><g transform="translate(0 9)"><path class="body" d="M16 32Q16 28 20 26L39 15Q44 12 44 18V58L77 39Q81 36 85 39L98 47Q103 50 98 53L42 86Q38 88 34 86L20 78Q16 76 16 71Z"/><path fill="#7fa828" d="M52 20Q47 17 52 14L75 1Q79-1 83 1L99 10Q104 13 99 16L76 29Q72 32 68 29Z"/></g></svg>

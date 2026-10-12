@@ -34,13 +34,16 @@ No tag, domain cutover or deployment without owner instruction.
 
 ## Durable website rules — 11 October 2026
 
-- The delivered horizontal logo lockups in `assets/logo/` are authoritative.
-  `public/brand/lumo-lockup-on-{paper,ink}.svg` stays byte-identical to them.
-  Choose the supplied theme variant; never recolour or mirror a logo. The
-  symbol remains on the left in every locale. Footer vertical derivatives may
-  change placement only; preserve the supplied paths, fixed colours and
-  Archivo wordmark attributes. Do not substitute an unrelated font or edit
-  the masters. Outlined wordmarks require an owner-supplied asset.
+- The owner commissioned a fully new Lumo logo on 12 October 2026, following
+  Telarsa/Khatamo's geometric direction. assets/logo is the authority: original
+  folded-L symbol, detached lime plane and outlined Inter wordmark. Website
+  horizontal/vertical copies must match their masters byte for byte; retain
+  fixed ink/paper/lime variants and symbol-left placement in every language.
+  Never mirror the mark. Regenerate all favicon/home-screen/share assets from
+  the current masters with render-brand-images.mjs; no live-text wordmark or
+  hardcoded old symbol may remain. Font-source licence/provenance stays recorded. Persian lockups spell the
+  owner-confirmed «لومو یو‌آی» and use shaped outlined Vazirmatn/OFL glyphs.
+  The symbol remains left; select -fa masters for every Persian header/footer.
 - Keep the full company-profile snapshot byte-identical to
   `telarsa-project/assets/company/company-profile.json`. The confirmed address
   is Persian only, including on EN/DE pages; mark `A12` as a Latin island.
@@ -79,11 +82,21 @@ No tag, domain cutover or deployment without owner instruction.
   ring through ordinary Tab navigation, including RTL. Native partial
   visibility is insufficient; use the site-owned rail focus helper and test
   both phone widths without synthetic focus or scroll assistance.
-- The Inter primary is the verified Latin subset; retain the original full
-  face as the non-preloaded complementary fallback. Both keep blocking display,
-  their actual disjoint cmap ranges and the existing OFL notice.
+- The Inter primary is the verified 117-point subset; retain the unchanged
+  prior Latin and original full faces as non-preloaded complements. All three
+  keep blocking display, original metrics, exact disjoint cmap ranges covering
+  the full source and the existing OFL notice.
   Record font provenance and update the asset guard for any reviewed change.
   Decorative symbols should use vectors rather than trigger an entire font.
+- Only content/build-ID-addressed `/_next/static/*` assets receive one-year
+  immutable caching on Cloudflare and Caddy. Keep HTML and unversioned brand
+  assets revalidatable; the Worker preserves cache metadata and all original-
+  transport protections. Keep external stylesheets: Next's generic inline-CSS
+  experiment produced real client-navigation CSP violations in the shared
+  framework test. Do not enable it or weaken exact style-element hashes without
+  an independently verified CSP-safe navigation path. Never hand-edit generated
+  HTML or policies. Compare genuine public-fallback Lighthouse runs
+  separately from the licensed private-font build.
 - Language-link activation preserves the current query and fragment, including
   a keyboard skip link's `#main`, after the destination's canonical trailing
   slash. The chosen system/light/dark theme persists across locale switches.

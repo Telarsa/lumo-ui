@@ -4,14 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import type { Copy } from "@/content/copy";
-import { docs, home, page, type Locale } from "@/content/site";
+import { brandName, docs, home, page, type Locale } from "@/content/site";
 import { revealFocusedNavigationLink } from "@/lib/navigation-focus";
 import "./navigation.css";
 
 export function HomeLink({ locale, children }: { locale: Locale; children: ReactNode }) {
   const pathname = usePathname().replace(/\/$/, "") + "/";
   const href = `${home(locale)}#top`;
-  return <Link className="brand-link" href={href} aria-label="Lumo UI" data-lumo-latn="" onNavigate={(event) => {
+  return <Link className="brand-link" href={href} aria-label={brandName[locale]} {...(locale !== "fa" ? { "data-lumo-latn": "" } : {})} onNavigate={(event) => {
     // Next does not reliably reapply a consumed hash scroll for the same URL.
     if (pathname === home(locale)) {
       window.scrollTo({ top: 0, behavior: "instant" });
@@ -66,7 +66,7 @@ export function LanguageMenu({ locale, label }: { locale: Locale; label: string 
       event.currentTarget.open = false;
       summaryRef.current?.focus();
     }
-  }}><summary ref={summaryRef} className="control" aria-label={label}><span data-lumo-latn="" dir="ltr">{locale.toUpperCase()}</span><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" /></svg></summary><div className="language-options">{(["en", "de", "fa"] as const).map((item) => <a key={item} href={languagePath(item)} hrefLang={item} lang={item} aria-current={locale === item ? "page" : undefined} onClick={(event) => {
+  }}><summary ref={summaryRef} className="control" aria-label={`${locale.toUpperCase()} — ${label}`}><span data-lumo-latn="" dir="ltr">{locale.toUpperCase()}</span><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" /></svg></summary><div className="language-options">{(["en", "de", "fa"] as const).map((item) => <a key={item} href={languagePath(item)} hrefLang={item} lang={item} aria-current={locale === item ? "page" : undefined} onClick={(event) => {
     // Read at activation so keyboard skip links and later hash/query changes
     // survive the language switch without losing the canonical trailing slash.
     event.currentTarget.href = `${languagePath(item)}${window.location.search}${window.location.hash}`;

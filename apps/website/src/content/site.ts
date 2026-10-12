@@ -17,3 +17,6 @@ export const page = (locale: Locale, path = "") => `/${locale}/${path ? `${path.
 /** The complete licensed technical documentation is hosted in this website. */
 export const docs = (locale: Locale, path = "") => page(locale, `docs/${path}`);
 export const home = (locale: Locale) => `/${locale}/`;
+
+/** Owner-commissioned Latin and Persian logo names (12 October 2026). */
+export const brandName = { en: "Lumo UI", de: "Lumo UI", fa: "لومو یو‌آی" } as const;

@@ -11,6 +11,7 @@ const app = fileURLToPath(new URL("../", import.meta.url));
 const required = {
   "src/styles/tokens.css": "stylesheet",
   "src/assets/fonts/InterVariable.woff2": "font",
+  "src/assets/fonts/InterVariable-Latin.woff2": "font",
   "src/assets/fonts/InterVariable-Full.woff2": "font",
   "src/assets/fonts/private/IRANSansXVF.woff2": "font",
   "src/assets/fonts/Inter-LICENSE.txt": "notice",
@@ -18,6 +19,7 @@ const required = {
 };
 const fontNotices = {
   "src/assets/fonts/InterVariable.woff2": "src/assets/fonts/Inter-LICENSE.txt",
+  "src/assets/fonts/InterVariable-Latin.woff2": "src/assets/fonts/Inter-LICENSE.txt",
   "src/assets/fonts/InterVariable-Full.woff2": "src/assets/fonts/Inter-LICENSE.txt",
   "src/assets/fonts/private/IRANSansXVF.woff2": "src/assets/fonts/private/IRANSansX-LICENSE-NOTE.txt",
 };
@@ -67,20 +69,27 @@ export async function checkSiteAssets(root = app) {
   const layout = await readFile(resolve(root, "src/app/[locale]/layout.tsx"), "utf8");
   assert(css.includes('@import "../styles/tokens.css";'), "Use this website's local tokens");
   assert(layout.includes("../../assets/fonts/InterVariable.woff2"), "Load local font: InterVariable.woff2");
+  assert(layout.includes("../../assets/fonts/InterVariable-Latin.woff2"), "Retain the unchanged Latin source complement");
   assert(layout.includes("../../assets/fonts/InterVariable-Full.woff2"), "Retain the original full Inter fallback");
   const primary = assets.files.find((file) => file.path.endsWith("/InterVariable.woff2"));
+  const latin = assets.files.find((file) => file.path.endsWith("/InterVariable-Latin.woff2"));
   const full = assets.files.find((file) => file.path.endsWith("/InterVariable-Full.woff2"));
   const primaryPoints = cmap(await readFile(resolve(root, primary.path)));
+  const latinPoints = cmap(await readFile(resolve(root, latin.path)));
   const fullPoints = cmap(await readFile(resolve(root, full.path)));
-  assert([...primaryPoints].every((point) => fullPoints.has(point)), "Subset cmap must come from the retained full source");
+  assert([...primaryPoints].every((point) => latinPoints.has(point)) && [...latinPoints].every((point) => fullPoints.has(point)), "Subset cmaps must come from the retained Latin/full sources");
   assert.equal(primary.unicodeRange, unicodeRange(primaryPoints), "Primary unicode-range must equal the actual cmap");
-  assert.equal(full.unicodeRange, unicodeRange(new Set([...fullPoints].filter((point) => !primaryPoints.has(point)))), "Fallback unicode-range must retain the source cmap without overlap");
-  assert(layout.includes(`value: ${JSON.stringify(primary.unicodeRange)}`) && layout.includes(`value: ${JSON.stringify(full.unicodeRange)}`), "Font declarations must use the verified cmap ranges");
+  assert.equal(latin.unicodeRange, unicodeRange(new Set([...latinPoints].filter((point) => !primaryPoints.has(point)))), "Latin complement unicode-range must retain its source cmap without overlap");
+  assert.equal(full.unicodeRange, unicodeRange(new Set([...fullPoints].filter((point) => !latinPoints.has(point)))), "Full fallback unicode-range must retain the complete source cmap without overlap");
+  assert([primary, latin, full].every((file) => layout.includes(`value: ${JSON.stringify(file.unicodeRange)}`)), "Font declarations must use the verified cmap ranges");
   const primaryDeclaration = layout.match(/^const inter = localFont\(.*$/m)?.[0] || "";
+  const latinDeclaration = layout.match(/^const interLatin = localFont\(.*$/m)?.[0] || "";
   const fullDeclaration = layout.match(/^const interFull = localFont\(.*$/m)?.[0] || "";
-  assert(primaryDeclaration.includes('display: "block"') && fullDeclaration.includes('display: "block"'), "Both Inter faces retain blocking display");
+  assert([primaryDeclaration, latinDeclaration, fullDeclaration].every((declaration) => declaration.includes('display: "block"') && declaration.includes("adjustFontFallback: false")), "All Inter faces retain blocking display and original metrics");
+  assert(primaryDeclaration.includes("preload: true"), "Primary Inter must remain preloaded");
+  assert(latinDeclaration.includes("preload: false"), "Latin complement must not be preloaded");
   assert(fullDeclaration.includes("preload: false"), "Full fallback must not be preloaded");
-  assert(layout.includes("${interFull.variable}") && css.includes("var(--font-inter), var(--font-inter-full)"), "Full Inter remains in the rendered family stack");
+  assert(layout.includes("${interLatin.variable}") && layout.includes("${interFull.variable}") && css.includes("var(--font-inter), var(--font-inter-latin), var(--font-inter-full)"), "Both source complements remain in the rendered family stack");
   assert(layout.includes('from "@/assets/fonts/private/persian-font"'), "Load the Persian font through the generated private module");
   assert(!layout.includes("IRANSansX"), "The layout must not name the private font file; only the generated module does");
   assert(css.includes("var(--font-persian, var(--lumo-web-font-persian-fallback))"), "Persian text needs the documented system-font fallback");

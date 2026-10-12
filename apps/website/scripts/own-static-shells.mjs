@@ -9,15 +9,17 @@ const homepage = readFileSync("out/en/index.html", "utf8");
 const rootClass = homepage.match(/<html[^>]*\bclass="([^"]+)"/)?.[1];
 const head = homepage.match(/<head>([\s\S]*?)<\/head>/)?.[1] || "";
 const links = [...head.matchAll(/<link\b[^>]*>/g)].map((match) => match[0]).filter((link) => /rel="stylesheet"/.test(link) || (/rel="preload"/.test(link) && /as="font"/.test(link))).join("");
+const iconLinks = [...head.matchAll(/<link\b[^>]*>/g)].map((match) => match[0]).filter((link) => /rel="(?:icon|apple-touch-icon|manifest)"/.test(link)).join("");
+if (!["icon", "apple-touch-icon", "manifest"].every((rel) => iconLinks.includes(`rel="${rel}"`))) throw new Error("Could not preserve generated icon/apple/manifest metadata.");
 const bootScript = [...head.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].find((match) => match[1].includes('localStorage.getItem("lumo-theme")'))?.[1];
 if (!rootClass || !links.includes('rel="stylesheet"') || !bootScript) throw new Error("Could not preserve generated error-page fonts/styles/theme boot.");
-const shell = `<!doctype html><html lang="en" dir="ltr" class="${rootClass}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page unavailable · Lumo UI</title>${links}<script>${bootScript}</script></head><body><main class="container section error-shell"><a class="brand-link" href="/en/"><span class="brand" data-lumo-latn="" dir="ltr"><img class="brand-paper" src="/brand/lumo-lockup-on-paper.svg" width="168" height="40" alt="Lumo UI"><img class="brand-ink" src="/brand/lumo-lockup-on-ink.svg" width="168" height="40" alt="Lumo UI"></span></a><h1>This page is unavailable.</h1><p>Return to the Lumo UI website or read the documentation.</p><div class="actions"><a class="button primary" href="/en/">Lumo UI website</a><a class="text-link" href="/en/docs/">Documentation</a></div></main></body></html>`;
+const shell = `<!doctype html><html lang="en" dir="ltr" class="${rootClass}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page unavailable · Lumo UI</title>${links}${iconLinks}<script>${bootScript}</script></head><body><main class="container section error-shell"><a class="brand-link" href="/en/"><span class="brand" data-lumo-latn="" dir="ltr"><img class="brand-paper" src="/brand/lumo-lockup-on-paper.svg" width="168" height="40" alt="Lumo UI"><img class="brand-ink" src="/brand/lumo-lockup-on-ink.svg" width="168" height="40" alt="Lumo UI"></span></a><h1>This page is unavailable.</h1><p>Return to the Lumo UI website or read the documentation.</p><div class="actions"><a class="button primary" href="/en/">Lumo UI website</a><a class="text-link" href="/en/docs/">Documentation</a></div></main></body></html>`;
 for (const file of ["404.html", "404/index.html", "_not-found/index.html", "_global-error.html"]) {
   const path = join("out", file);
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, shell);
 }
-writeFileSync("out/index.html", '<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=/en/"><title>Lumo UI</title></head><body><a href="/en/">Continue to Lumo UI</a></body></html>');
+writeFileSync("out/index.html", `<!doctype html><html lang="en" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="0;url=/en/"><title>Lumo UI</title>${iconLinks}</head><body><a href="/en/">Continue to Lumo UI</a></body></html>`);
 
 // Prevent an error-route duplicate from retaining Next's generic ungraded shell.
 if (existsSync("out/_global-error/index.html")) writeFileSync("out/_global-error/index.html", shell);

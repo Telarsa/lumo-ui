@@ -79,19 +79,31 @@ bans them; the legal pages use the prefixed `legal.css`). `docs/site-assets.json
 records the provenance and checksums of the stylesheet and fonts;
 `scripts/check-site-assets.mjs` verifies them on every build.
 
-Inter’s preloaded Latin face is the verified 112,532-byte subset of this
-website’s original 352,240-byte Inter 4.001 face. The original remains as a
-non-preloaded complementary fallback; both retain blocking display and the
-OFL notice. `docs/site-assets.json` records the source, derived hashes and
-Unicode ranges. The guard reads their actual WOFF2 Unicode cmaps using built-in
-Brotli and checks exact, disjoint coverage plus the rendered fallback stack.
+Inter’s preloaded face is the verified 79,976-byte, 117-point subset of this
+website’s retained 112,532-byte Latin source. The Latin source and original
+352,240-byte Inter 4.001 face remain as non-preloaded complements; all three
+retain blocking display, original metrics and the OFL notice. The primary is
+a byte-identical adoption of the previously verified site-owned Khatamo subset;
+ordinary builds have no dependency on that checkout. `docs/site-assets.json`
+records source/derived hashes and Unicode ranges. The guard reads actual WOFF2
+Unicode cmaps using built-in Brotli and checks exact, disjoint coverage of the
+full source plus the rendered fallback stack.
 The diagram’s decorative check is a vector so it does not fetch the full face.
 
-The header uses byte-identical delivered horizontal SVG lockups, and the
-footer uses documented vertical layout derivatives with the same mark paths,
-fixed colours and Archivo wordmark attributes. See `public/brand/README.md`;
-logos never mirror in Persian. The delivered live-text wordmark’s original
-system fallback remains until the owner supplies outlined masters.
+Production keeps external stylesheets. Next’s generic inline-CSS experiment was
+rejected after real client-navigation CSP violations in the shared framework
+test; no style policy is weakened. The existing post-export CSP still hashes
+every exact owned style element. Only hashed `/_next/static/*` assets receive one-year immutable
+caching on Cloudflare and Caddy; unversioned pages/brand assets retain ordinary
+revalidation. Performance measurements must distinguish the genuine public
+system-font export from licensed local private-font builds.
+
+The header/footer use the original folded-L logo commissioned by the owner
+on 12 October 2026, in the geometric direction of Telarsa and Khatamo. The
+wordmark is outlined from the owned Inter/OFL source and needs no runtime
+font. Public copies match the horizontal/vertical fixed-colour masters in
+assets/logo; symbols stay left and never mirror in Persian.
+See public/brand/README.md and assets/logo/provenance.json.
 
 Icons and social cards are static files in `public/`: `icon.svg` (the mark,
 adapting to dark mode), `favicon.ico`, `apple-touch-icon.png`, `icons/`,
@@ -146,3 +158,8 @@ records, kept as history.
 
 `docs/handoff-2026-10-11-marketing-review.md` records the current marketing,
 logo, keyboard, CSP and verification changes with remaining owner facts.
+
+After reviewing regenerated logos/icons/cards, run
+`node scripts/check-brand-assets.mjs --record` to freeze docs/brand-assets.json.
+Ordinary builds verify these recorded hashes before and after export; they
+never silently refresh them. Keep all nine meaningful brand/icon regressions.

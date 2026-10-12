@@ -6,8 +6,8 @@
   /* IRANSansX is private (never committed). Without it --font-persian is unset
    * and Persian falls back to the platform's own Arabic-script UI faces. */
   --lumo-web-font-persian-fallback: "Vazirmatn", "Noto Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", sans-serif;
-  --lumo-web-font-sans: var(--font-inter), var(--font-inter-full), var(--font-persian, var(--lumo-web-font-persian-fallback)), sans-serif;
-  --lumo-web-font-fa: var(--font-persian, var(--lumo-web-font-persian-fallback)), var(--font-inter), var(--font-inter-full), sans-serif;
+  --lumo-web-font-sans: var(--font-inter), var(--font-inter-latin), var(--font-inter-full), var(--font-persian, var(--lumo-web-font-persian-fallback)), sans-serif;
+  --lumo-web-font-fa: var(--font-persian, var(--lumo-web-font-persian-fallback)), var(--font-inter), var(--font-inter-latin), var(--font-inter-full), sans-serif;
   --lumo-web-bg: light-dark(#f8f7f3, #101114);
   --lumo-web-bg-sunken: light-dark(#eeece4, #15161a);
   --lumo-web-surface: light-dark(#f2f0e9, #18191e);
@@ -42,7 +42,7 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 svg { display: block; }
 :focus-visible { outline: var(--lumo-web-focus-width) solid var(--lumo-web-focus-color); outline-offset: var(--lumo-web-focus-offset); }
 ::selection { color: var(--lumo-web-text); background: var(--lumo-wash); }
-[data-lumo-latn], code { font-family: var(--font-inter), var(--font-inter-full), sans-serif; }
+[data-lumo-latn], code { font-family: var(--font-inter), var(--font-inter-latin), var(--font-inter-full), sans-serif; }
 .container { inline-size: min(calc(100% - var(--lumo-web-gutter) * 2), var(--lumo-web-content-max)); margin-inline: auto; }
 .section { padding-block: calc(var(--lumo-web-section-space) * 1.4); }
 .surface-section { background: var(--lumo-web-surface); border-block: 1px solid var(--lumo-web-line); }
@@ -200,7 +200,7 @@ details[open] .question-plus::after { rotate: 0deg; }
 
 @media (width < 72rem) {
   .desktop-nav { display: none; }
-  .mobile-nav { display: flex; gap: 1.5rem; padding-block: .65rem; font-size: var(--lumo-web-step--1); border-block-start: 1px solid var(--lumo-web-line); overflow-x: auto; }
+  .mobile-nav { display: flex; gap: 1.5rem; padding-block: .65rem; padding-inline: calc(var(--lumo-web-focus-width) + var(--lumo-web-focus-offset) + 1px); scroll-padding-inline: calc(var(--lumo-web-focus-width) + var(--lumo-web-focus-offset) + 1px); font-size: var(--lumo-web-step--1); border-block-start: 1px solid var(--lumo-web-line); overflow-x: auto; }
   .mobile-nav a { white-space: nowrap; }
   .hero { gap: 2rem; }
   .workflow { gap: 1.4rem; }

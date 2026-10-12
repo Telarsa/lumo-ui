@@ -1,0 +1,124 @@
+{
+  "at": "2026-10-12",
+  "originalSymbol": true,
+  "symbolDesign": "Folded geometric L with open corner and detached rising lime plane; original paths, family direction from Telarsa and Khatamo, no copying their marks.",
+  "wordmark": {
+    "text": "Lumo UI",
+    "outlined": true,
+    "source": "Owned Inter Latin master OFL; no Reserved Font Name",
+    "sourceSha256": "463e0823c63c401e5fe9ceacfa3c9d44516673a5aaed80a23e8a22b3671921aa",
+    "wght": 750,
+    "opsz": 32,
+    "generator": "assets/logo/generate-logo.py"
+  },
+  "wordmarkFa": {
+    "text": "\u0644\u0648\u0645\u0648 \u06cc\u0648\u200c\u0622\u06cc",
+    "outlined": true,
+    "source": "assets/logo/source/Vazirmatn-Bold.ttf",
+    "sourceSha256": "214a28e6c3a8283e30c60cd17d31470709e2f85da6fb547dc29c56e524ea1046",
+    "licence": "SIL OFL1.1; source/OFL-Vazirmatn.txt",
+    "shaper": "HarfBuzz, direction=rtl, language=fa",
+    "shaping": [
+      {
+        "g": "uni06CC",
+        "cl": 9,
+        "dx": 0,
+        "dy": 0,
+        "ax": 1479,
+        "ay": 0
+      },
+      {
+        "g": "uni0622",
+        "cl": 8,
+        "dx": 0,
+        "dy": 0,
+        "ax": 530,
+        "ay": 0
+      },
+      {
+        "g": "space",
+        "cl": 7,
+        "dx": 0,
+        "dy": 0,
+        "ax": 0,
+        "ay": 0
+      },
+      {
+        "g": "uniFEEE",
+        "cl": 6,
+        "dx": 0,
+        "dy": 0,
+        "ax": 925,
+        "ay": 0
+      },
+      {
+        "g": "uniFBFE.long2",
+        "cl": 5,
+        "dx": 0,
+        "dy": 0,
+        "ax": 768,
+        "ay": 0
+      },
+      {
+        "g": "space",
+        "cl": 4,
+        "dx": 0,
+        "dy": 0,
+        "ax": 516,
+        "ay": 0
+      },
+      {
+        "g": "uniFEEE",
+        "cl": 3,
+        "dx": 0,
+        "dy": 0,
+        "ax": 925,
+        "ay": 0
+      },
+      {
+        "g": "uniFEE3",
+        "cl": 2,
+        "dx": 0,
+        "dy": 0,
+        "ax": 1112,
+        "ay": 0
+      },
+      {
+        "g": "uniFEEE",
+        "cl": 1,
+        "dx": 0,
+        "dy": 0,
+        "ax": 925,
+        "ay": 0
+      },
+      {
+        "g": "uniFEDF",
+        "cl": 0,
+        "dx": 0,
+        "dy": 0,
+        "ax": 617,
+        "ay": 0
+      }
+    ]
+  },
+  "gap": {
+    "ratioToSymbolHeight": 0.132,
+    "reference": "Measured Telarsa11% and Khatamo15\u201316% horizontal/vertical outline gaps"
+  },
+  "paper": "#f2efe8",
+  "ink": "#101114",
+  "lime": "#7fa828",
+  "masters": {
+    "lumo-lockup-on-paper.svg": "ca412e1f7f56671e0fb981d6b3fa9b550a712cad02669abbd9dab96e71604735",
+    "lumo-lockup-vertical-on-ink.svg": "2b0d75787732d0b0285751084732414a2f623976ba8bce1c6f158bd3b96fb0d9",
+    "lumo-lockup-fa-on-ink.svg": "ba7cd2689659970ab9f79812d569e83aeaf845e95c6daa43bb1e8df5421066c6",
+    "lumo-lockup-fa-on-paper.svg": "2de477035c23ac63c266fb247d2e8bc31d94cabd846d777a0fe15bedf4399eb4",
+    "lumo-mark-on-paper.svg": "15bafc83b79686ed28daa4570660816cad4be47f8248bdec56df39a5782da726",
+    "lumo-mark.svg": "c17d1e0999630e93120f1d72dbefa444b552e75b554b51727c935dfb73600688",
+    "lumo-lockup-vertical-fa-on-ink.svg": "e18ae7d8e3792cea4f0a911f828d8e3b5dde0239e90ffbcf2c191dcc06be2cdf",
+    "lumo-lockup-vertical-fa-on-paper.svg": "a555178271be6d1be85874945e716de5eb75c56eea2aee616a9da8362fbfbf9b",
+    "lumo-mark-on-ink.svg": "fb135a60bdbfb46415c3ca5c9d0dab4aba8f373b3f16f9fc83247c042bb4b245",
+    "lumo-lockup-on-ink.svg": "febf74df4f0242abd0aca53665dedd6113b2c5200086b17896efbeaca431c981",
+    "lumo-lockup-vertical-on-paper.svg": "79ecdaebc79076bb2b86c7cef80a6eb2384fccb4bd5ee93ddb417977f3b72731"
+  }
+}

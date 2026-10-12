@@ -19,9 +19,41 @@
       "path": "src/assets/fonts/InterVariable.woff2",
       "role": "font",
       "notice": "src/assets/fonts/Inter-LICENSE.txt",
+      "sha256": "4ce4b1db57c6eac6d5a87aa0e05c86a1f160dc0d3300f2689ad6c7abf3e59613",
+      "bytes": 79976,
+      "unicodeRange": "U+0020-007E, U+00A0, U+00AB, U+00B7, U+00BB, U+00C4, U+00D6-00D7, U+00DC, U+00DF, U+00E4, U+00F6, U+00FC, U+2013-2014, U+2019, U+201C-201E, U+2026, U+20AC, U+2192, U+FEFF",
+      "provenance": {
+        "adoptedOn": "2026-10-12",
+        "source": "Byte-identical previously verified Khatamo site-owned InterVariable-Primary.woff2; Inter4.001 (git-9221beed3), SIL OFL1.1, no Reserved Font Name. No reprocessing or build/runtime dependency on another checkout.",
+        "derivedFrom": {
+          "path": "src/assets/fonts/InterVariable-Latin.woff2",
+          "sha256": "463e0823c63c401e5fe9ceacfa3c9d44516673a5aaed80a23e8a22b3671921aa",
+          "bytes": 112532
+        },
+        "subset": {
+          "unicodes": "U+0020-007E, U+00A0, U+00AB, U+00B7, U+00BB, U+00C4, U+00D6-00D7, U+00DC, U+00DF, U+00E4, U+00F6, U+00FC, U+2013-2014, U+2019, U+201C-201E, U+2026, U+20AC, U+2192, U+FEFF",
+          "bytes": 79976,
+          "glyphs": 544,
+          "codePoints": 117,
+          "reproduce": "Offline fontTools 4.66.1 Subsetter: glyph_names=True, layout_features=[*], name_IDs=[*], name_languages=[*], exact listed Unicode points, WOFF2/Brotli 1.2.0. Preserve original name table, head bbox, hhea extrema and OS/2 xAvgCharWidth; recalcBBoxes=False and recalcTimestamp=False. No build/runtime fontTools dependency."
+        },
+        "verification": {
+          "coverage": "All 100 exported HTML pages plus printable ASCII; 3906 unique Latin runs",
+          "masterUnchanged": true,
+          "retainedGlyphNamesCmapOutlinesAdvancesInstructionsAndGvarEqual": true,
+          "globalMetricsAxesAvarInstancesNamesEqual": true,
+          "shaping": "HarfBuzz 14.5.1 OT, losslessly decoded sfnt; byte-identical glyph names, clusters, positions and advances at opsz 14/20/32 x wght 100/400/500/590/600/650/700/900 x defaults or tnum+zero (48 configurations). Browser geometry and cold loading verified separately after export."
+        },
+        "websiteCoverage": "All82 frozen before HTML documents (41 actual public mode +41 licensed local mode), body/title and alt/aria-label/title/value/placeholder strings have no Latin-master code point outside the117-point primary. CSS generated decorations are empty strings and no hyphens rule is used; unchanged Latin/full complements retain optional glyphs. Actual browser geometry and after Lighthouse measurements remain separately required."
+      }
+    },
+    {
+      "path": "src/assets/fonts/InterVariable-Latin.woff2",
+      "role": "font",
+      "notice": "src/assets/fonts/Inter-LICENSE.txt",
       "sha256": "463e0823c63c401e5fe9ceacfa3c9d44516673a5aaed80a23e8a22b3671921aa",
       "bytes": 112532,
-      "unicodeRange": "U+0000, U+0020-007E, U+00A0-00AC, U+00AE-0148, U+014A-017F, U+02C6, U+02DA, U+02DC, U+2000-200B, U+2010-2027, U+202F-2055, U+2057, U+205F, U+20AC, U+2122, U+2190-2193, U+2212, U+FEFF",
+      "unicodeRange": "U+0000, U+00A1-00AA, U+00AC, U+00AE-00B6, U+00B8-00BA, U+00BC-00C3, U+00C5-00D5, U+00D8-00DB, U+00DD-00DE, U+00E0-00E3, U+00E5-00F5, U+00F7-00FB, U+00FD-0148, U+014A-017F, U+02C6, U+02DA, U+02DC, U+2000-200B, U+2010-2012, U+2015-2018, U+201A-201B, U+201F-2025, U+2027, U+202F-2055, U+2057, U+205F, U+2122, U+2190-2191, U+2193, U+2212",
       "provenance": {
         "adoptedOn": "2026-10-11",
         "source": "Byte-identical verified Telarsa website public/fonts/InterVariable.woff2; Inter 4.001 (git-9221beed3), SIL OFL 1.1, no Reserved Font Name.",
@@ -31,7 +63,8 @@
           "bytes": 352240
         },
         "subset": "Previously derived with fontTools pyftsubset; original glyph names and OpenType features retained. No reprocessing in this change.",
-        "verification": "WOFF2 Unicode cmap read with built-in Brotli: 406 code points; every retained point belongs to the original 2852-point cmap. Primary and full-fallback ranges are exact and disjoint. All exported visible Inter text uses the subset after replacing the decorative checkmark with a vector."
+        "verification": "WOFF2 Unicode cmap read with built-in Brotli: 406 code points; every retained point belongs to the original 2852-point cmap. Primary and full-fallback ranges are exact and disjoint. All exported visible Inter text uses the subset after replacing the decorative checkmark with a vector.",
+        "currentRole": "Unchanged112532-byte prior Latin master retained as a non-preloaded complement to the117-point primary. No source glyph is removed."
       }
     },
     {
@@ -67,5 +100,11 @@
     "sourceEnv": "LUMO_PRIVATE_FONTS_DIR",
     "requireEnv": "LUMO_REQUIRE_PRIVATE_FONTS",
     "note": "Since 9 October 2026 the site lives in the public MIT monorepo. Entries marked private are proprietary (IRANSansX, licensed to the owner for application use) and are NEVER committed: the directory is git-ignored and filled by scripts/prepare-private-fonts.mjs. Only their checksums are public. Without them the build serves a documented system-font fallback for Persian."
+  },
+  "fontLoading": {
+    "primary": "src/assets/fonts/InterVariable.woff2",
+    "latinComplement": "src/assets/fonts/InterVariable-Latin.woff2",
+    "fullComplement": "src/assets/fonts/InterVariable-Full.woff2",
+    "policy": "One preloaded117-point primary; non-preloaded original Latin/full faces. All keep blocking display and exact disjoint cmap ranges covering the complete original full source."
   }
 }

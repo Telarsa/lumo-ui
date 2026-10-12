@@ -111,6 +111,9 @@ export function hostFaults(cloudflare, caddy) {
     if (name !== "Strict-Transport-Security" && !caddy.includes(`${name} "${value}"`)) faults.push(`Caddy missing or changed ${name}.`);
   }
   if (!caddy.includes("import security_headers")) faults.push("Caddy security headers are not imported.");
+  const immutable = cloudflare.match(/^\/_next\/static\/\*\s*\n((?:[ \t]+[^\n]*(?:\n|$))*)/m)?.[1] || "";
+  if (!/^\s+Cache-Control: public, max-age=31536000, immutable\s*$/m.test(immutable)) faults.push("Cloudflare hashed assets need the immutable cache policy.");
+  if (universal.includes("immutable") || !caddy.includes("@immutable path /_next/static/*") || !caddy.includes('header @immutable Cache-Control "public, max-age=31536000, immutable"')) faults.push("Immutable caching must stay scoped to hashed static assets on both hosts.");
   return faults;
 }
 
