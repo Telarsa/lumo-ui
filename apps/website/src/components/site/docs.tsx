@@ -24,10 +24,10 @@ export function DocsHeader({ locale, slug, title, lead }: { locale: SiteLocale; 
   );
 }
 
-export function Section({ title, id, children }: { title?: ReactNode; id?: string; children: ReactNode }) {
+export function Section({ title, id, permalinkLabel, children }: { title?: ReactNode; id?: string; permalinkLabel?: string; children: ReactNode }) {
   return (
     <section id={id} className="doc-section">
-      {title ? <h2 className="doc-h2">{title}</h2> : null}
+      {title ? <div className="doc-heading"><h2 className="doc-h2" id={id ? `${id}-title` : undefined}>{title}</h2>{id && permalinkLabel ? <a className="doc-permalink" href={`#${id}`} aria-labelledby={`${id}-title ${id}-permalink-label`}><span className="doc-visually-hidden" id={`${id}-permalink-label`}>{permalinkLabel}</span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true" focusable="false"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2m3 6a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2" /></svg></a> : null}</div> : null}
       {children}
     </section>
   );

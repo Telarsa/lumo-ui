@@ -132,6 +132,31 @@ RTL; this is also recorded in the adapter. The authored corpus stays intact. Dis
 (version, rule count) are checked against the
 workspace package by `check-public-contract.mjs`.
 
+The explicit adapter also maps each of the six technical pages' original
+section keys/positions to durable language-independent IDs and adds localized
+native heading permalinks. Refresh checks the original section count/order;
+translated headings never determine the IDs. Each permalink's accessible name
+includes its rendered heading and localized purpose; the separate heading keeps
+its own title as its accessible name. Source reads, adaptations and snapshot
+metadata are prepared before any destination is written, so a later adaptation
+failure cannot partially refresh the corpus. `scripts/sync-public-docs-atomicity.test.mjs`
+exercises this with a late source drift in an isolated temporary repository.
+The getting-started install places Lumo in runtime dependencies, matching apps
+that import its core, dates and theme. The helpers' numbers
+paragraph is an accuracy adaptation against the maintained `formatLocale` API:
+explicit Persian and Saudi Arabic profiles, preserved caller Unicode extensions
+and Intl/CLDR defaults for other tags. The gate commands resolve the installed
+package from a consumer project, and the calendar snippet uses the built-in
+`fa-IR` tag with guidance for custom strings. The recorded original source and
+MIT notice remain unchanged; adapted checksums record these refinements.
+
+`scripts/documentation-ux-browser.mjs` checks source invariants (`--static`),
+refresh reproducibility (`--refresh-check`) and an already-served export's
+native section/language links, install snippets and keyboard/zoom behavior.
+Provide `PLAYWRIGHT_FROM` pointing to existing installed e2e package metadata
+and `WEBSITE_URL` for the local preview; it installs nothing and starts no
+server. `DOCUMENTATION_UX_ARTIFACTS` selects the evidence directory.
+
 Legal pages use typed copy in `src/content/legal.ts`; company facts are a local
 snapshot of the Telarsa company profile. Local checks do not certify legal
 compliance.

@@ -1,3 +1,4 @@
+import { CHROME } from "@/lib/chrome";
 import type { Metadata } from "next";
 import { Callout, Code, DocsHeader, DocsNav, Id, Prose, Section, Table } from "@/components/site/docs";
 import { DOCS } from "@/lib/docs-order";
@@ -7,7 +8,7 @@ import { INSTALL_SPEC, pageMetadata } from "@/lib/site";
 export const generateStaticParams = localeParams;
 const SLUG = "getting-started";
 
-const INSTALL = `pnpm add -D ${INSTALL_SPEC}`;
+const INSTALL = `pnpm add ${INSTALL_SPEC}`;
 const NEXT = `// next.config.ts
 const nextConfig = {
   transpilePackages: ["lumo-ui"],
@@ -43,7 +44,7 @@ const GRADE = `# a Next server build, one locale
 node node_modules/lumo-ui/scripts/grade-app.mjs .next/server/app fa gate.floors.json
 
 # a static export with locale segments
-lumo gate ./out gate.floors.json`;
+pnpm exec lumo gate ./out gate.floors.json`;
 
 const T = {
   de: {
@@ -135,7 +136,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     <article>
       <DocsHeader locale={locale} slug={SLUG} title={t.title} lead={t.lead} />
 
-      <Section title={t.s1}>
+      <Section id="installation" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.s1}>
         <Code caption="pnpm">{INSTALL}</Code>
         <Code caption="next.config.ts">{NEXT}</Code>
         <Prose>
@@ -143,7 +144,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         </Prose>
       </Section>
 
-      <Section title={t.s2}>
+      <Section id="styles" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.s2}>
         <Code caption="globals.css">{CSS}</Code>
         <Prose>
           <p>{t.s2note}</p>
@@ -151,11 +152,11 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         <Callout>{t.s2warn}</Callout>
       </Section>
 
-      <Section title={t.s3}>
+      <Section id="wiring" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.s3}>
         <Table firstMono rows={t.wiring.map(([k, v]) => [<Id key={k}>{k}</Id>, v])} />
       </Section>
 
-      <Section title={t.s4}>
+      <Section id="grade" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.s4}>
         <Code caption="CI">{GRADE}</Code>
         <Prose>
           <p>{t.s4note}</p>

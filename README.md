@@ -37,7 +37,7 @@ browser, so only the served bytes can catch them.
 ## Install
 
 ```bash
-pnpm add -D github:Telarsa/lumo-ui#v1.0.0
+pnpm add github:Telarsa/lumo-ui#v1.0.0
 ```
 
 pnpm only: the workspace uses `catalog:`, which npm cannot parse. In a Next.js

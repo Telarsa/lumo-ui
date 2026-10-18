@@ -37,7 +37,8 @@ export const CHROME = {
     "index": "Übersicht",
     "prev": "Zurück",
     "next": "Weiter",
-    "onThisSite": "Auf dieser Website"
+    "onThisSite": "Auf dieser Website",
+    "sectionLink": "Link zu diesem Abschnitt"
   }
 },
   "fa": {
@@ -66,6 +67,7 @@ export const CHROME = {
       prev: "قبلی",
       next: "بعدی",
       onThisSite: "در این سایت",
+      sectionLink: "پیوند به این بخش",
     },
   },
   "en": {
@@ -94,6 +96,7 @@ export const CHROME = {
       prev: "Previous",
       next: "Next",
       onThisSite: "On this site",
+      sectionLink: "Link to this section",
     },
   },
 } as const satisfies Record<SiteLocale, unknown>;

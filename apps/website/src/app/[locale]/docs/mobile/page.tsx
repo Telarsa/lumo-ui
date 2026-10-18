@@ -1,3 +1,4 @@
+import { CHROME } from "@/lib/chrome";
 import type { Metadata } from "next";
 import { formatNumber } from "lumo-ui/core";
 import { Card, Code, DocsHeader, DocsNav, Prose, Section } from "@/components/site/docs";
@@ -89,7 +90,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
   return (
     <article>
       <DocsHeader locale={locale} slug={SLUG} title={t.title} lead={t.lead} />
-      <Section>
+      <Section id="overview" permalinkLabel={CHROME[locale].docs.sectionLink}>
         <dl className="stats" style={{ marginBlockStart: 0 }}>
           {stats.map((v, i) => (
             <div key={i} className="stat">
@@ -101,7 +102,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
           ))}
         </dl>
       </Section>
-      <Section>
+      <Section id="contract" permalinkLabel={CHROME[locale].docs.sectionLink}>
         <div className="docs-card-grid">
           {t.pillars.map(([name, desc]) => (
             <Card key={name} title={name}>
@@ -110,15 +111,15 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
           ))}
         </div>
       </Section>
-      <Section title={t.installTitle}>
+      <Section id="installation" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.installTitle}>
         <Code caption="pubspec.yaml">{PUBSPEC}</Code>
       </Section>
-      <Section title={t.rulesTitle}>
+      <Section id="rules" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.rulesTitle}>
         <Prose>
           <p>{t.rules}</p>
         </Prose>
       </Section>
-      <Section title={t.galleryTitle}>
+      <Section id="gallery" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.galleryTitle}>
         <Prose>
           <p>{t.gallery}</p>
         </Prose>

@@ -1,3 +1,4 @@
+import { CHROME } from "@/lib/chrome";
 import type { Metadata } from "next";
 import { Code, DocsHeader, DocsNav, Prose, Section } from "@/components/site/docs";
 import { DatesDemo } from "@/components/site/dates-demo";
@@ -9,14 +10,15 @@ export const generateStaticParams = localeParams;
 const SLUG = "dates";
 
 const USAGE = `import { Calendar } from "@/components/ui/calendar";   // shadcn's, untouched
-import { stringsFor } from "lumo-ui/core";
+import { direction, stringsFor } from "lumo-ui/core";
 import { lumoCalendar } from "lumo-ui/dates";
 
+const locale = "fa-IR";
 const strings = stringsFor(locale);
 const { dateLib, formatters, labels, weekStartsOn } =
   lumoCalendar(locale, strings.calendar);
 
-<Calendar dateLib={dateLib} formatters={formatters}
+<Calendar dir={direction(locale)} dateLib={dateLib} formatters={formatters}
           labels={labels} weekStartsOn={weekStartsOn} />`;
 
 const T = {
@@ -30,6 +32,7 @@ const T = {
     "fields": "Felder von CalendarDate"
   },
   "usageTitle": "Verwendung",
+  "usageNote": "Dieses Beispiel verwendet fa-IR. Für andere Tags als fa-IR und en-US muss die Anwendung einen vollständigen eigenen Textsatz an stringsFor übergeben.",
   "boundaryTitle": "Die Datengrenze",
   "boundary": "An einer API-Grenze steht nie ein unverarbeitetes Date: Es beschreibt einen Zeitpunkt und kennt keinen Mordad. Nur toPickerDate und fromPickerDate wandeln einen CalendarDate mit Kalenderinformation in das Date des Rasters um. Dabei wird die lokale Mittagszeit verwendet, damit keine Zeitzone den Tag verschiebt.",
   "provedTitle": "Nachgewiesen",
@@ -44,6 +47,7 @@ const T = {
     demoNote: "نمونهٔ بالا رفتار همان انتخابگر تاریخ را با ظاهر اختصاصی این سایت حفظ می‌کند؛ تنظیمات تقویم و نام‌های الزامی راهبری و سلول‌ها از لومو می‌آیند. زبان‌های داخلی از رشته‌های آماده و آلمانی از مجموعهٔ کامل اختصاصی استفاده می‌کند.",
     labels: { selected: "روز انتخاب‌شده", fields: "فیلدهای CalendarDate" },
     usageTitle: "استفاده",
+    usageNote: "این نمونه از fa-IR استفاده می‌کند. برای برچسبی جز fa-IR و en-US، برنامه باید مجموعهٔ کامل رشته‌های خود را به stringsFor بدهد.",
     boundaryTitle: "مرز مقدار",
     boundary: "هرگز Date خام در مرز API: یک Date «لحظه» است و نمی‌تواند «مرداد» را جواب بدهد. toPickerDate و fromPickerDate تنها جایی است که CalendarDate تقویم‌دار به Date شبکه تبدیل می‌شود؛ در ظهر محلی، تا هیچ منطقهٔ زمانی روزی را جابه‌جا نکند.",
     provedTitle: "اثبات‌شده",
@@ -58,6 +62,7 @@ const T = {
     demoNote: "This example preserves DayPicker’s calendar behaviour with this website’s visual styling. Lumo supplies the calendar props and required navigation and cell names. Built-in languages use stringsFor; German supplies a complete custom set.",
     labels: { selected: "Selected day", fields: "CalendarDate fields" },
     usageTitle: "Usage",
+    usageNote: "This example uses fa-IR. For tags other than fa-IR and en-US, pass your application’s complete string set to stringsFor.",
     boundaryTitle: "The value boundary",
     boundary: "Never a raw Date at an API boundary: a Date is an instant and cannot answer “Mordad”. toPickerDate and fromPickerDate are the only place a calendar-carrying CalendarDate becomes the grid's Date; at local noon, so no time zone can shift a day.",
     provedTitle: "Proved",
@@ -78,26 +83,27 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
   return (
     <article>
       <DocsHeader locale={locale} slug={SLUG} title={t.title} lead={t.lead} />
-      <Section title={t.demoTitle}>
+      <Section id="demo" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.demoTitle}>
         <DatesDemo locale={locale} labels={t.labels} />
         <Prose>
           <p>{t.demoNote}</p>
         </Prose>
       </Section>
-      <Section title={t.usageTitle}>
+      <Section id="usage" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.usageTitle}>
         <Code caption="calendar.tsx">{USAGE}</Code>
+        <Prose><p>{t.usageNote}</p></Prose>
       </Section>
-      <Section title={t.boundaryTitle}>
+      <Section id="boundary" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.boundaryTitle}>
         <Prose>
           <p>{t.boundary}</p>
         </Prose>
       </Section>
-      <Section title={t.provedTitle}>
+      <Section id="proof" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.provedTitle}>
         <Prose>
           <p>{t.proved}</p>
         </Prose>
       </Section>
-      <Section title={t.fixedTitle}>
+      <Section id="fixed-date" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.fixedTitle}>
         <Prose>
           <p>{t.fixed}</p>
         </Prose>

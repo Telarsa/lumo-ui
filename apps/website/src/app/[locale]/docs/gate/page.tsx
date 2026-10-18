@@ -1,3 +1,4 @@
+import { CHROME } from "@/lib/chrome";
 import type { Metadata } from "next";
 import { formatNumber } from "lumo-ui/core";
 import { Callout, Code, DocsHeader, DocsNav, Prose, Section } from "@/components/site/docs";
@@ -21,8 +22,14 @@ const FLOORS = `{
   "fa/index.html": 22            // a number-dense route keeps its digits
 }`;
 
-const RUN = `lumo gate ./out gate.floors.json                       # static export
-node scripts/grade-app.mjs .next/server/app fa gate.floors.json  # one locale`;
+const RUN = `pnpm exec lumo gate ./out gate.floors.json                       # static export
+node node_modules/lumo-ui/scripts/grade-app.mjs .next/server/app fa gate.floors.json  # one locale`;
+
+function releaseNote(value: string) {
+  return value.split(/(`[^`]+`)/g).map((part, index) =>
+    part.startsWith("`") && part.endsWith("`") ? <code key={index} data-lumo-latn dir="ltr">{part.slice(1, -1)}</code> : part,
+  );
+}
 
 const T = {
   de: {
@@ -46,6 +53,8 @@ const T = {
     "Eine data-lumo-latn-Insel, die überwiegend die Sprache des Lesers enthält",
     "Ein persisches Kompositum mit Leerzeichen statt des benötigten Verbindungszeichens"
   ],
+  "idrefNote": "In `v1.0.0` sind nicht aufgelöste Verweise mit dem Präfix `react-aria-` von `resolved-idrefs` ausgenommen. Prüfen Sie diese Verweise zusätzlich manuell.",
+  "stageNote": "`grade-app` kann in `v1.0.0` eine `index.html` im Wurzelverzeichnis und `fa/index.html` am selben Ziel ablegen; dabei wird eine Datei überschrieben. Prüfen Sie beide Dateien getrennt.",
   "streaming": "Von React gestreamte Segmente – versteckte div-Elemente mit id=S:n – sind früh eintreffender Seiteninhalt. Das Gate behandelt sie als Inhalt, nicht als verborgen.",
   "floorsTitle": "Die Datei mit Mindestwerten",
   "floors": "Sie liegt bei der Anwendung und enthält überprüfte Werte. @locales nennt die Sprachen, @min-documents erkennt unvollständige Exporte und @exempt-ceiling begrenzt bewusst lateinische Inhalte. Eine Mindestmenge nativer Ziffern auf zahlenreichen Routen verhindert, dass verschwundene Zahlen als Erfolg gemeldet werden.",
@@ -75,6 +84,8 @@ const T = {
       "جزیرهٔ data-lumo-latn که بیشترش فارسی است",
       "ترکیب فارسی که به‌جای نیم‌فاصله، فاصله دارد",
     ],
+    idrefNote: "در `v1.0.0`، ارجاع‌های حل‌نشده با پیشوند `react-aria-` از قانون `resolved-idrefs` مستثنا هستند؛ آن‌ها را دستی هم بررسی کنید.",
+    stageNote: "در `v1.0.0`، `grade-app` ممکن است `index.html` ریشه و `fa/index.html` را در یک مقصد قرار دهد و یکی را بازنویسی کند. هر دو فایل را جداگانه بررسی کنید.",
     streaming: "قطعه‌های استریم‌شدهٔ React — div hidden با id=S:n — صفحه‌اند که زود رسیده؛ دروازه آن‌ها را محتوا حساب می‌کند، نه مخفی.",
     floorsTitle: "پروندهٔ کف‌ها",
     floors: "کنار اپ می‌ماند و عددهایش را یک نفر بازبینی کرده. @locales می‌گوید سایت چه زبان‌هایی دارد تا هیچ‌چیز حدس زده نشود؛ @min-documents می‌گیرد که build نصفه، بازمانده‌ها را نمره بدهد و سبز بگذرد؛ @exempt-ceiling سقف کسرِ لاتینِ عمدی است، چون تنها دریچهٔ دروازه همان چیزی است که می‌شود پاشید؛ و کفِ ارقام برای مسیر پُرعدد می‌گیرد که صفحه ارقام خودش را از دست بدهد و «صفر رقم لاتین» گزارش کند.",
@@ -104,6 +115,8 @@ const T = {
       "a data-lumo-latn island that is mostly the reader's language",
       "a Persian compound with a space where the joiner belongs",
     ],
+    idrefNote: "In `v1.0.0`, unresolved references beginning with `react-aria-` are exempt from `resolved-idrefs`. Review those references manually.",
+    stageNote: "In `v1.0.0`, `grade-app` can stage a root `index.html` and a locale `fa/index.html` to the same destination, overwriting one. Grade those files separately to ensure both are checked.",
     streaming: "React's streamed segments — div hidden with id=S:n — are the page arriving early; the gate grades them as content, not hidden.",
     floorsTitle: "The floors file",
     floors: "It lives beside the app and its numbers were reviewed by a person. @locales says which languages the site has, so nothing is guessed; @min-documents catches a half-built export that would grade its survivors and pass; @exempt-ceiling caps the deliberately-Latin fraction, because the gate's one hatch is the one thing that can be sprayed; and a digit floor on a number-dense route catches a page losing its own digits and reporting “zero Latin digits”.",
@@ -125,7 +138,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
   return (
     <article>
       <DocsHeader locale={locale} slug={SLUG} title={t.title} lead={t.lead} />
-      <Section title={t.rulesTitle}>
+      <Section id="rules" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.rulesTitle}>
         <div className="table-wrap" tabIndex={0}>
           <table className="table">
             <tbody>
@@ -143,19 +156,21 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
         </div>
         <Prose>
           <p>{t.streaming}</p>
+          <p>{releaseNote(t.idrefNote)}</p>
         </Prose>
       </Section>
-      <Section title={t.floorsTitle}>
+      <Section id="floors" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.floorsTitle}>
         <Code caption="gate.floors.json">{FLOORS}</Code>
         <Prose>
           <p>{t.floors}</p>
         </Prose>
       </Section>
-      <Section title={t.runTitle}>
+      <Section id="run" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.runTitle}>
         <Code caption="CI">{RUN}</Code>
         <Callout>{t.stubs}</Callout>
+        <Callout>{releaseNote(t.stageNote)}</Callout>
       </Section>
-      <Section title={t.artifactTitle}>
+      <Section id="artifact" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.artifactTitle}>
         <Prose>
           <p>{t.artifact}</p>
         </Prose>

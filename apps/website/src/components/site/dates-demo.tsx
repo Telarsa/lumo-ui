@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { formatDate } from "lumo-ui/core";
+import { direction, formatDate } from "lumo-ui/core";
 import type { SiteLocale } from "@/lib/locales";
 import { siteStrings } from "@/lib/site-strings";
 import { fromPickerDate, lumoCalendar, toPickerDate } from "lumo-ui/dates";
@@ -41,6 +41,7 @@ export function DatesDemo({
     <div className="dates-demo">
       <div className="dates-demo__calendar lit">
         <Calendar
+          dir={direction(locale)}
           mode="single"
           required
           selected={selectedDate}

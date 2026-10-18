@@ -7,7 +7,7 @@ export interface Copy {
   theme: { system: string; light: string; dark: string };
   hero: { eyebrow: string; title: string; accent: string; lead: string; source: string; licence: string; version: string };
   figure: { title: string; contract: string; lint: string; html: string; result: string; caption: string; digits: string; calendar: string; names: string };
-  features: { eyebrow: string; title: string; lead: string; items: readonly { title: string; body: string; detail: string }[] };
+  features: { eyebrow: string; title: string; lead: string; items: readonly { title: string; body: string; detail: string }[]; example: { eyebrow: string; title: string; lead: string; flagged: string; fixed: string; note: string; link: string } };
   workflow: { eyebrow: string; title: string; lead: string; steps: readonly { title: string; body: string }[]; install: string };
   rules: { eyebrow: string; title: string; lead: string; count: string; groups: readonly { title: string; body: string; ids: readonly string[] }[]; all: string };
   platforms: { eyebrow: string; title: string; web: { title: string; body: string; link: string }; mobile: { title: string; body: string; link: string } };
@@ -27,7 +27,7 @@ export const copy = {
       eyebrow: "Open-source RTL checks",
       title: "Catch RTL defects.",
       accent: "Before your readers do.",
-      lead: "Lumo is an open-source locale correctness layer. Check Persian digits, calendars, direction and accessible names in your source and built HTML, while keeping your own components.",
+      lead: "Check Persian digits, calendars, direction and accessible names in source and built HTML. Keep your own components.",
       source: "View the source", licence: "Open source · MIT", version: "Release",
     },
     figure: { title: "From your app to your reader", contract: "Locale contract", lint: "Source checks", html: "Built HTML", result: "An actionable report", caption: "Locale contract → source checks → built HTML. Findings point back to your application.", digits: "Native digits", calendar: "Reader’s calendar", names: "Named controls" },
@@ -39,6 +39,7 @@ export const copy = {
         { title: "Catch defects in source", body: "Check for physical direction utilities, raw numeric children and an incorrectly declared document language before a build ships.", detail: "An RTL lint policy" },
         { title: "Grade the delivered output", body: "Read the built HTML for script, calendar and accessibility wiring defects. The check works without running a browser.", detail: "A served-byte gate" },
       ],
+      example: { eyebrow: "A real check", title: "Find the number before a reader does", lead: "The gate flags Latin digits in this Persian input value.", flagged: "Flagged HTML", fixed: "Corrected HTML", note: "The corrected value comes from", link: "Explore the gate" },
     },
     workflow: {
       eyebrow: "How it works", title: "Install. Connect. Check.", lead: "Start with the locale contract, then make the built output part of your release checks.",
@@ -75,13 +76,13 @@ export const copy = {
     skip: "Zum Inhalt springen",
     nav: { label: "Hauptnavigation", how: "So funktioniert es", rules: "Was geprüft wird", docs: "Dokumentation", start: "Erste Schritte" },
     language: "Sprache wählen", theme: { system: "Design: folgt dem System. Zu hell wechseln.", light: "Design: hell. Zu dunkel wechseln.", dark: "Design: dunkel. Wieder dem System folgen." },
-    hero: { eyebrow: "Open-Source-Prüfungen für RTL", title: "RTL-Fehler erkennen.", accent: "Bevor Ihre Leser es tun.", lead: "Lumo ist eine Open-Source-Prüfschicht für sprachlich korrekte Oberflächen. Prüfen Sie persische Ziffern, Kalender, Schreibrichtung und zugängliche Namen im Quelltext und im erstellten HTML. Ihre Komponenten bleiben Ihre.", source: "Quelltext ansehen", licence: "Open Source · MIT", version: "Version" },
+    hero: { eyebrow: "Open-Source-Prüfungen für RTL", title: "RTL-Fehler erkennen.", accent: "Bevor Ihre Leser es tun.", lead: "Prüfen Sie persische Ziffern, Kalender, Schreibrichtung und zugängliche Namen im Quelltext und im erstellten HTML. Ihre Komponenten bleiben Ihre.", source: "Quelltext ansehen", licence: "Open Source · MIT", version: "Version" },
     figure: { title: "Von Ihrer Anwendung zu Ihren Lesern", contract: "Sprachvertrag", lint: "Quelltextprüfung", html: "Erstelltes HTML", result: "Ein Bericht für konkrete Korrekturen", caption: "Sprachvertrag → Quelltextprüfung → erstelltes HTML. Befunde führen zurück zu Ihrer Anwendung.", digits: "Native Ziffern", calendar: "Passender Kalender", names: "Benannte Elemente" },
     features: { eyebrow: "Ihre Werkzeuge behalten", title: "Eine Korrektheitsschicht. Ihre eigene Oberfläche.", lead: "Bauen Sie weiter mit den Komponenten, die Ihr Team kennt. Lumo ergänzt Sprachverträge und Prüfungen, wo eine übersetzte Beschriftung allein nicht genügt.", items: [
       { title: "Die Sprache ausdrücklich festlegen", body: "Leiten Sie die Schreibrichtung aus der Sprache ab, formatieren Sie Zahlen passend und verlangen Sie die Texte, die Ihre Elemente ansagen.", detail: "Ein typisierter Vertrag" },
       { title: "Fehler im Quelltext erkennen", body: "Prüfen Sie physische Richtungs-Utilities, rohe Zahlen im JSX und eine falsch deklarierte Dokumentsprache vor der Auslieferung.", detail: "RTL-Lint-Regeln" },
       { title: "Die ausgelieferte Ausgabe prüfen", body: "Lesen Sie das erstellte HTML auf Fehler in Schrift, Kalender und zugänglichen Verknüpfungen. Die Prüfung benötigt keinen Browser.", detail: "Ein Gate für ausgeliefertes HTML" },
-    ] },
+    ], example: { eyebrow: "Eine echte Prüfung", title: "Die Zahl vor den Lesern finden", lead: "Das Gate meldet lateinische Ziffern in diesem persischen Eingabewert.", flagged: "Beanstandetes HTML", fixed: "Korrigiertes HTML", note: "Der korrigierte Wert stammt aus", link: "Das Gate kennenlernen" } },
     workflow: { eyebrow: "So funktioniert es", title: "Installieren. Verbinden. Prüfen.", lead: "Beginnen Sie mit dem Sprachvertrag und machen Sie die Build-Ausgabe zu einem Teil Ihrer Freigabeprüfungen.", steps: [
       { title: "Die Version festschreiben", body: "Installieren Sie das öffentliche GitHub-Paket mit pnpm. So bleibt die Version bewusst gewählt und reproduzierbar." },
       { title: "Die Sprache verbinden", body: "Verwenden Sie die sprachabhängige Dokumentwurzel und Zahlenformatierung. Markieren Sie tatsächlich lateinische Namen und Code." },
@@ -107,13 +108,13 @@ export const copy = {
     skip: "پرش به محتوا",
     nav: { label: "ناوبری اصلی", how: "روش کار", rules: "چه چیزهایی بررسی می‌شود", docs: "مستندات", start: "شروع کنید" },
     language: "انتخاب زبان", theme: { system: "پوسته: مطابق سیستم. تغییر به روشن.", light: "پوسته: روشن. تغییر به تاریک.", dark: "پوسته: تاریک. بازگشت به پیروی از سیستم." },
-    hero: { eyebrow: "بررسی‌های متن‌باز راست‌به‌چپ", title: "نقص‌های راست‌به‌چپ را پیدا کنید.", accent: "پیش از آنکه خواننده با آن‌ها روبه‌رو شود.", lead: "لومو ابزار متن‌باز بررسی درستی زبان است. ارقام فارسی، تقویم، جهت و نام دسترس‌پذیر کنترل‌ها را در کد منبع و خروجی ساخته‌شده بررسی کنید؛ کامپوننت‌هایتان را نگه دارید.", source: "دیدن کد منبع", licence: "متن‌باز · [[MIT]]", version: "نسخهٔ" },
+    hero: { eyebrow: "بررسی‌های متن‌باز راست‌به‌چپ", title: "نقص‌های راست‌به‌چپ را پیدا کنید.", accent: "پیش از آنکه خواننده با آن‌ها روبه‌رو شود.", lead: "ارقام فارسی، تقویم، جهت و نام دسترس‌پذیر را در کد منبع و خروجی ساخته‌شده بررسی کنید. کامپوننت‌های خودتان را نگه دارید.", source: "دیدن کد منبع", licence: "متن‌باز · [[MIT]]", version: "نسخهٔ" },
     figure: { title: "از برنامهٔ شما تا خواننده", contract: "قرارداد زبان", lint: "بررسی کد منبع", html: "خروجی ساخت", result: "گزارشی برای اصلاح مشخص", caption: "از قرارداد زبان و بررسی کد منبع تا خروجی ساخت؛ هر یافته به بخشی از برنامهٔ شما برمی‌گردد.", digits: "ارقام بومی", calendar: "تقویم خواننده", names: "کنترل‌های نام‌دار" },
     features: { eyebrow: "ابزارهایتان را نگه دارید", title: "لایهٔ درستی؛ رابطی که خودتان می‌سازید.", lead: "با کامپوننت‌هایی ادامه دهید که تیم شما می‌شناسد. لومو قرارداد زبان و بررسی‌هایی را اضافه می‌کند که ترجمهٔ یک برچسب به‌تنهایی کافی نیست.", items: [
       { title: "زبان را صریح مشخص کنید", body: "جهت را از زبان خواننده به دست آورید، اعداد را متناسب با همان زبان قالب‌بندی کنید و متن‌های اعلانی کنترل‌ها را الزامی کنید.", detail: "قرارداد تایپ‌شده" },
       { title: "نقص را در کد منبع پیدا کنید", body: "کلاس‌های جهت فیزیکی، نمایش اعداد بدون قالب‌بندی و زبان نادرست سند را پیش از انتشار بررسی کنید.", detail: "سیاست بررسی راست‌به‌چپ" },
       { title: "خروجی منتشرشده را بسنجید", body: "خروجی ساخته‌شده را برای نقص‌های خط نوشتاری، تقویم و ارتباط‌های دسترس‌پذیری بررسی کنید. این بررسی بدون اجرای مرورگر انجام می‌شود.", detail: "دروازهٔ خروجی منتشرشده" },
-    ] },
+    ], example: { eyebrow: "یک بررسی واقعی", title: "عدد را پیش از خواننده پیدا کنید", lead: "دروازه ارقام لاتین را در مقدار این ورودی فارسی گزارش می‌کند.", flagged: "خروجی مسئله‌دار", fixed: "خروجی اصلاح‌شده", note: "مقدار اصلاح‌شده با این تابع به دست می‌آید:", link: "آشنایی با دروازه" } },
     workflow: { eyebrow: "روش کار", title: "نصب کنید. متصل کنید. بررسی کنید.", lead: "از قرارداد زبان شروع کنید و سپس بررسی خروجی ساخت را به مرحلهٔ انتشار اضافه کنید.", steps: [
       { title: "نسخه را ثابت کنید", body: "بستهٔ عمومی گیت‌هاب را با ابزار نصب معرفی‌شده در مستندات نصب کنید. نسخه به‌صورت آگاهانه و تکرارپذیر انتخاب می‌شود." },
       { title: "زبان را متصل کنید", body: "ریشهٔ سند وابسته به زبان و قالب‌بندی اعداد را به کار بگیرید. نام‌ها و کدهایی را که واقعاً لاتین هستند مشخص کنید." },

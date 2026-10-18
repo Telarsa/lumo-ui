@@ -12,9 +12,17 @@
 .docs .doc-header { padding-block-end: var(--lumo-web-space-7); border-block-end: 1px solid var(--lumo-web-line); }
 .docs .doc-title { font-size: var(--lumo-web-step-4); line-height: 1.15; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); margin-block: 1.15rem; }
 .docs .doc-lead { font-size: var(--lumo-web-step-1); color: var(--lumo-web-text-muted); max-inline-size: 64ch; }
-.docs .doc-section { margin-block-start: var(--lumo-web-space-7); }
-.docs .doc-h2 { font-size: var(--lumo-web-step-2); line-height: 1.3; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); margin-block-end: 1.25rem; }
-.docs .prose { color: var(--lumo-web-text-muted); }
+/* Reuse the section's reading gap for native fragment clearance. The shared
+ * scroll padding alone is shorter than the phone header/navigation stack. */
+.docs .doc-section { margin-block-start: var(--lumo-web-space-7); scroll-margin-block-start: var(--lumo-web-space-7); }
+.docs .doc-heading { display: flex; align-items: baseline; gap: .35em; margin-block-end: 1.25rem; }
+.docs .doc-h2 { min-inline-size: 0; font-size: var(--lumo-web-step-2); line-height: 1.3; font-weight: 550; letter-spacing: var(--lumo-web-tracking-tight); }
+.docs .doc-visually-hidden { position: absolute; inline-size: 1px; block-size: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.docs .doc-permalink { display: inline-flex; flex: 0 0 1.5em; block-size: 1.5em; align-items: center; justify-content: center; color: var(--lumo-web-text-muted); border-radius: var(--lumo-web-radius-sm); }
+/* Native focus scrolling needs space for the complete existing outer ring. */
+.docs .doc-permalink { scroll-margin-block: calc(var(--lumo-web-focus-width) + var(--lumo-web-focus-offset)); }
+.docs .doc-permalink:hover { color: var(--lumo-web-text); background: var(--lumo-web-surface); }
+.docs .prose { color: var(--lumo-web-text-muted); overflow-wrap: anywhere; }
 .docs .prose > * + * { margin-block-start: 1rem; }
 .docs .prose a, .docs .callout a { color: var(--lumo-web-text); text-decoration: underline; text-underline-offset: .2em; }
 .docs .prose strong { color: var(--lumo-web-text); font-weight: 550; }
@@ -78,10 +86,9 @@
 .docs .calendar-day-button { border: 0; background: transparent; color: var(--lumo-web-text); border-radius: var(--lumo-web-radius-sm); display: flex; align-items: center; justify-content: center; inline-size: 100%; aspect-ratio: 1; min-block-size: 2rem; padding: 0; font-size: var(--lumo-web-step--1); }
 .docs .calendar-day-button:hover, .docs .calendar-day-button[data-today] { background: var(--lumo-web-surface); }
 .docs .calendar-day-button[data-selected] { background: var(--lumo-web-accent); color: var(--lumo-web-accent-contrast); }
-.docs .calendar-day-button[data-outside]:not([data-selected]) { color: var(--lumo-web-text-muted); opacity: .6; }
+.docs .calendar-day-button[data-outside]:not([data-selected]) { color: var(--lumo-web-text-muted); }
 .docs .calendar-disabled { opacity: .5; }
 .docs .calendar-hidden { visibility: hidden; }
-:root[dir="rtl"] .docs .calendar-chevron { transform: scaleX(-1); }
 .docs:lang(fa) .doc-title { line-height: 1.6; }
 .docs:lang(fa) .doc-h2 { line-height: 1.7; }
 @media (width < 62rem) {

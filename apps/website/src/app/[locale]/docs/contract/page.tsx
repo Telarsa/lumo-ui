@@ -1,3 +1,4 @@
+import { CHROME } from "@/lib/chrome";
 import type { Metadata } from "next";
 import { Callout, DocsHeader, DocsNav, Prose, Section, Table } from "@/components/site/docs";
 import { DOCS } from "@/lib/docs-order";
@@ -103,15 +104,15 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
   return (
     <article>
       <DocsHeader locale={locale} slug={SLUG} title={t.title} lead={t.lead} />
-      <Section>
+      <Section id="overview" permalinkLabel={CHROME[locale].docs.sectionLink}>
         <Table head={[...t.cols]} rows={t.rows.map((r) => [...r])} />
       </Section>
-      <Section title={t.divergeTitle}>
+      <Section id="divergence" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.divergeTitle}>
         <Prose>
           <p>{t.diverge}</p>
         </Prose>
       </Section>
-      <Section title={t.versionTitle}>
+      <Section id="versioned" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.versionTitle}>
         <Prose>
           <p>{t.version}</p>
         </Prose>

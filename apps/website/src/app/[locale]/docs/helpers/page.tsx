@@ -1,3 +1,4 @@
+import { CHROME } from "@/lib/chrome";
 import type { Metadata } from "next";
 import { Prose as Islands } from "lumo-ui/core";
 import { Callout, Code, DocsHeader, DocsNav, Id, Prose, Section, Table } from "@/components/site/docs";
@@ -25,6 +26,12 @@ const DOCTOR = `node node_modules/lumo-ui/scripts/lumo-cli.mjs doctor --to .`;
 const FIX = `node node_modules/lumo-ui/scripts/lumo-cli.mjs fix --zwnj --digits --locale fa content/
 # dry run; add --write to change files`;
 
+function lintDescription(value: string) {
+  const identifier = "lumo-ui/config/eslint";
+  const position = value.indexOf(identifier);
+  return position < 0 ? value : <>{value.slice(0, position)}<Id>{identifier}</Id>{value.slice(position + identifier.length)}</>;
+}
+
 const T = {
   de: {
   "title": "Hilfsfunktionen",
@@ -34,7 +41,7 @@ const T = {
   "islandsWhy": "Die Markierung ist absichtlich ausdrücklich. Eine frühere automatische Erkennung verdeckte auch einen tatsächlich unübersetzten englischen Satz – genau den Fehler, den native-script-text finden soll.",
   "isLatin": "isLatinRun prüft, ob ein Text einen nichtlateinischen Buchstaben enthält, nicht bloß ein Zeichen aus dem arabischen Unicode-Block. Persische Ziffern liegen ebenfalls dort; sonst würde „۹۰ Mt/year“ fälschlich als vollständig nativ gelten.",
   "numbersTitle": "Zahlen",
-  "numbers": "Jede sichtbare Zahl verwendet formatNumber. Das Zahlensystem kommt aus der Spracheinstellung und wird nicht unbemerkt von ICU übernommen. So stimmen die Ergebnisse über Laufzeitumgebungen hinweg überein.",
+  "numbers": "Jede sichtbare Zahl verwendet formatNumber. formatLocale setzt für fa-Sprachen den persischen Kalender und erweiterte arabisch-indische Ziffern ausdrücklich, für ar-SA den Umm al-Qura-Kalender. Andere Tags verwenden die Intl/CLDR-Vorgaben; vom Aufrufer gesetzte -u-Erweiterungen bleiben erhalten. Die Ergebnisse hängen von der Intl-Unterstützung der Laufzeit ab.",
   "doctorTitle": "lumo doctor",
   "doctor": "Prüft Einstellungen, deren Fehlen oft erst bei einem Fehler auffällt:",
   "checks": [
@@ -52,7 +59,7 @@ const T = {
     ],
     [
       "Lint-Regeln",
-      "Prüft, ob lumo-ui/config tatsächlich in ESLint eingebunden ist."
+      "Sucht im Text der Konfigurationsdatei nach lumo-ui/config/eslint; die tatsächlich wirksame ESLint-Konfiguration wird nicht ausgewertet."
     ],
     [
       "Versionsbindung",
@@ -70,14 +77,14 @@ const T = {
     islandsWhy: "علامت‌گذاری صریح است و خودکار نیست، عمداً: نسخه‌ای که هر دنبالهٔ لاتین را خودش می‌پیچید، جملهٔ انگلیسیِ ترجمه‌نشده را هم می‌بلعید — همان نقصی که native-script-text برای گرفتنش هست. علامتی که نویسنده باید تایپ کند نمی‌تواند این کار را بی‌صدا بکند.",
     isLatin: "isLatinRun می‌پرسد رشته حرفی غیرلاتین دارد یا نه، نه این‌که نویسه‌ای عربی دارد یا نه؛ چون ارقام فارسی در بلوک عربی زندگی می‌کنند و آزمون روی بلوک، «۹۰ Mt/year» را بومی می‌خواند.",
     numbersTitle: "اعداد",
-    numbers: "هر عددی که خواننده می‌بیند از formatNumber می‌گذرد. سیستم شماره از locale می‌آید و هرگز از ICU ارث نمی‌رسد؛ روی هر runtime یک جواب.",
+    numbers: "اعداد دیدنی با قالب‌بندی لومو نمایش داده می‌شوند. پروفایل فارسی تقویم هجری خورشیدی و ارقام فارسی را صریح تنظیم می‌کند و پروفایل عربی عربستان تقویم ام‌القری را. زبان‌های دیگر از پیش‌فرض‌های داده‌های بین‌المللیِ زمان اجرا استفاده می‌کنند؛ افزونه‌های زبانیِ تعیین‌شده توسط برنامه حفظ می‌شوند. نتیجه به پشتیبانیِ قالب‌بندی بین‌المللی در زمان اجرا وابسته است.",
     doctorTitle: "lumo doctor",
     doctor: "چیزهایی را می‌خواند که تا نشکنند دیده نمی‌شوند:",
     checks: [
       ["transpilePackages", "بدون آن Turbopack روی اولین فایل .ts می‌ایستد."],
       ["allowImportingTsExtensions", "بسته‌های قرارداد با پسوند .ts ایمپورت می‌کنند."],
       ["gate.floors.json", "وجودش، و تنظیمات @locales و @min-documents."],
-      ["سیاست lint", "این‌که lumo-ui/config واقعاً در پیکربندی ESLint باشد."],
+      ["سیاست lint", "متن پروندهٔ پیکربندی را برای lumo-ui/config/eslint جست‌وجو می‌کند؛ پیکربندی مؤثر ESLint را ارزیابی نمی‌کند."],
       ["پین", "یک تگ برای همهٔ زیرمسیرها؛ اختلاف پین گزارش می‌شود."],
     ],
     fixTitle: "lumo fix",
@@ -91,14 +98,14 @@ const T = {
     islandsWhy: "Marking is explicit rather than automatic, on purpose: the version that wrapped every Latin run itself also swallowed a genuinely untranslated English sentence — the exact defect native-script-text exists to catch. A marker an author has to type cannot do that silently.",
     isLatin: "isLatinRun asks whether a string holds any non-Latin letter, not whether it holds an Arabic character, because Persian digits live in the Arabic block and a test on the block calls “۹۰ Mt/year” native.",
     numbersTitle: "Numbers",
-    numbers: "Every number a reader sees goes through formatNumber. The numbering system comes from the locale and is never inherited from ICU; one answer on every runtime.",
+    numbers: "Every visible number uses formatNumber. formatLocale explicitly sets the Persian calendar and extended Arabic-Indic digits for fa locales, and the Umm al-Qura calendar for ar-SA. Other tags use Intl/CLDR defaults; caller-supplied -u- extensions are preserved. Results depend on the runtime’s Intl support.",
     doctorTitle: "lumo doctor",
     doctor: "It reads the things that are invisible until they break:",
     checks: [
       ["transpilePackages", "Without it Turbopack stops at the first .ts file."],
       ["allowImportingTsExtensions", "The contract packages import with .ts extensions."],
       ["gate.floors.json", "That it exists, and its @locales and @min-documents settings."],
-      ["The lint policy", "That lumo-ui/config is actually in the ESLint configuration."],
+      ["The lint policy", "Searches the configuration file text for lumo-ui/config/eslint; it does not evaluate the effective ESLint configuration."],
       ["The pin", "One tag for every subpath; skew is reported."],
     ],
     fixTitle: "lumo fix",
@@ -117,7 +124,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
   return (
     <article>
       <DocsHeader locale={locale} slug={SLUG} title={t.title} lead={t.lead} />
-      <Section title={t.islandsTitle}>
+      <Section id="latin-islands" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.islandsTitle}>
         <Prose>
           <p>
             <Islands ltr>{t.islands}</Islands>
@@ -129,20 +136,20 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
           <p>{t.isLatin}</p>
         </Prose>
       </Section>
-      <Section title={t.numbersTitle}>
+      <Section id="numbers" permalinkLabel={CHROME[locale].docs.sectionLink} title={t.numbersTitle}>
         <Prose>
           <p>{t.numbers}</p>
         </Prose>
         <Code caption="core">{NUMBERS}</Code>
       </Section>
-      <Section title={<span data-lumo-latn dir="ltr">{t.doctorTitle}</span>}>
+      <Section id="doctor" permalinkLabel={CHROME[locale].docs.sectionLink} title={<span data-lumo-latn dir="ltr">{t.doctorTitle}</span>}>
         <Code caption="CLI">{DOCTOR}</Code>
         <Prose>
           <p>{t.doctor}</p>
         </Prose>
-        <Table firstMono rows={t.checks.map(([k, v]) => [<Id key={k}>{k}</Id>, v])} />
+        <Table firstMono rows={t.checks.map(([k, v]) => [<Id key={k}>{k}</Id>, lintDescription(v)])} />
       </Section>
-      <Section title={<span data-lumo-latn dir="ltr">{t.fixTitle}</span>}>
+      <Section id="fix" permalinkLabel={CHROME[locale].docs.sectionLink} title={<span data-lumo-latn dir="ltr">{t.fixTitle}</span>}>
         <Code caption="CLI">{FIX}</Code>
         <Callout>
           {t.fix.split(/(BROKEN|FIXED)/).map((part, i) =>
