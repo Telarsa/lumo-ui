@@ -5,6 +5,7 @@ import { LumoHtml, themeScript } from "lumo-ui/core";
 import { copy } from "@/content/copy";
 import { isLocale, localeParams, marketingOrigin, siteUrl, github, company, version } from "@/content/site";
 import { socialFor } from "@/lib/site";
+import { fragmentClearanceScript } from "@/lib/fragment-clearance";
 import { Header, Footer } from "@/components/site-shell";
 // Generated and git-ignored: the private Persian font declaration, or the system
 // Persian fallback in a public build (scripts/prepare-private-fonts.mjs).
@@ -50,5 +51,5 @@ export default async function Layout({ children, params }: { children: React.Rea
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const jsonLd = { "@context": "https://schema.org", "@type": "SoftwareSourceCode", name: "Lumo UI", description: copy[locale].description, codeRepository: github, programmingLanguage: ["TypeScript", "Dart"], license: "https://opensource.org/licenses/MIT", version, ...(marketingOrigin ? { url: `${marketingOrigin}/${locale}/` } : {}), author: { "@type": "Organization", name: "Telarsa", url: company } };
-  return <LumoHtml lang={locale} suppressHydrationWarning data-scroll-behavior="smooth" className={`${inter.variable} ${interLatin.variable} ${interFull.variable} ${persian.variable}`}><head><script dangerouslySetInnerHTML={{ __html: themeScript() }} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} /></head><body id="top"><a className="skip-link" href="#main">{copy[locale].skip}</a><Header locale={locale} /><main id="main">{children}</main><Footer locale={locale} /></body></LumoHtml>;
+  return <LumoHtml lang={locale} suppressHydrationWarning data-scroll-behavior="smooth" className={`${inter.variable} ${interLatin.variable} ${interFull.variable} ${persian.variable}`}><head><script dangerouslySetInnerHTML={{ __html: themeScript() }} /><script dangerouslySetInnerHTML={{ __html: fragmentClearanceScript }} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} /></head><body id="top"><a className="skip-link" href="#main">{copy[locale].skip}</a><Header locale={locale} /><main id="main">{children}</main><Footer locale={locale} /></body></LumoHtml>;
 }

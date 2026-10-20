@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { revealFocusedNavigationLink } from "@/lib/navigation-focus";
+import { useEffect, useRef } from "react";
+import { revealCurrentNavigationLink, revealFocusedNavigationLink } from "@/lib/navigation-focus";
 import { CHROME } from "@/lib/chrome";
 import { DOCS, DOCS_ORDER, docIndex } from "@/lib/docs-order";
 import type { SiteLocale } from "@/lib/locales";
@@ -12,8 +13,14 @@ import { localePath } from "@/lib/site";
 export function DocsSidebar({ locale }: { locale: SiteLocale }) {
   const pathname = usePathname().replace(/\/$/, "") + "/";
   const c = CHROME[locale].docs;
+  const sideRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const rail = sideRef.current?.querySelector("ol");
+    const current = rail?.querySelector<HTMLElement>("a[aria-current=page]");
+    if (current && rail) revealCurrentNavigationLink(current, rail);
+  }, [pathname]);
   return (
-    <nav className="docs__side" aria-label={c.eyebrow}>
+    <nav ref={sideRef} className="docs__side" aria-label={c.eyebrow}>
       <p className="docs__side-head">{c.eyebrow}</p>
       <ol>
         <li>

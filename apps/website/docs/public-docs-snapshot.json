@@ -77,7 +77,7 @@
       "source": "apps/website/src/components/site/docs-sidebar.tsx",
       "destination": "src/components/site/docs-sidebar.tsx",
       "sourceSha256": "e2624106ff4711035a447460053e4713ff69345cbf717202b6a36e4dc42208a8",
-      "adaptedSha256": "f33134ca2dbab5964b8640269560b2bd1204d9678229f7bee44c484da4f6fb02"
+      "adaptedSha256": "8a3d02dc4fbd2b691951f325d83b9bc27838d1188985e4199837c18a1ae99d93"
     },
     {
       "source": "apps/website/src/components/site/dates-demo.tsx",

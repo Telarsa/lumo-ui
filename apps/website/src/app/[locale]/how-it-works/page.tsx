@@ -24,7 +24,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     { title: t.gate, body: t.gateBody, link: t.gateLink, slug: "gate", code: `node node_modules/lumo-ui/scripts/grade-app.mjs \\\n  out en gate.floors.json` },
   ];
   return <div className="container marketing-page">
-    <header className="page-intro"><p className="eyebrow">{copy[locale].nav.how}</p><h1>{t.title}</h1><p>{t.lead}</p></header>
+    <header className="page-intro"><h1>{t.title}</h1><p>{t.lead}</p></header>
     <div className="install-block"><p>{copy[locale].workflow.install}</p><pre data-lumo-latn dir="ltr" tabIndex={0}><code>{`pnpm add ${installSpec}`}</code></pre></div>
     {steps.map((step, index) => <section className="integration" key={step.slug}>
       <div><span className="step-number">{formatNumber(index + 1, locale)}</span><h2>{step.title}</h2><p>{step.body}</p><a className="text-link" href={docs(locale, step.slug)}>{step.link}<Arrow /></a></div>

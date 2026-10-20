@@ -17,3 +17,15 @@ export function revealFocusedNavigationLink(link: HTMLElement, rail: HTMLElement
   reveal();
   requestAnimationFrame(reveal);
 }
+
+/** Reveal the current page in a horizontal docs rail without moving focus or the page. */
+export function revealCurrentNavigationLink(link: HTMLElement, rail: HTMLElement | null) {
+  if (!rail || rail.scrollWidth <= rail.clientWidth + 1) return;
+  const viewport = rail.getBoundingClientRect();
+  const target = link.getBoundingClientRect();
+  const inset = Math.min(8, Math.max(0, (rail.clientWidth - target.width) / 2));
+  const left = viewport.left + rail.clientLeft + inset;
+  const right = viewport.left + rail.clientLeft + rail.clientWidth - inset;
+  const delta = target.left < left ? target.left - left : target.right > right ? target.right - right : 0;
+  if (Math.abs(delta) > 0.5) rail.scrollBy({ left: delta, behavior: "instant" });
+}

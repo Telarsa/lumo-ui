@@ -17,7 +17,7 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
   if (!isLocale(locale)) notFound();
   const t = pages[locale].checks;
   return <div className="container marketing-page">
-    <header className="page-intro"><p className="eyebrow">{copy[locale].nav.rules}</p><h1>{t.title}</h1><p>{t.lead}</p></header>
+    <header className="page-intro"><h1>{t.title}</h1><p>{t.lead}</p></header>
     <div className="rules-grid">{copy[locale].rules.groups.map((group) => <section className="rule-card" key={group.title}><h2>{group.title}</h2><p>{group.body}</p><ul role="list">{group.ids.map((id) => <li key={id}><code data-lumo-latn dir="ltr">{id}</code></li>)}</ul></section>)}</div>
     <a className="text-link checks-link" href={docs(locale, "gate")}>{t.reference}<Arrow /></a>
     <div className="check-explainer"><section><h2>{t.input}</h2><p>{t.inputBody}</p></section><section><h2>{t.output}</h2><p>{t.outputBody}</p></section></div>

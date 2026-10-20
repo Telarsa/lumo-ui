@@ -120,7 +120,9 @@ function adapt(path, text) {
   if (path.endsWith("docs/layout.tsx")) text = 'import "../../docs.css";\n' + text.replace('className="shell docs"', 'className="container docs"');
   if (path.endsWith("docs-sidebar.tsx")) text = text
     .replace("const pathname = usePathname();", 'const pathname = usePathname().replace(/\\/$/, "") + "/";')
-    .replace('import { CHROME } from "@/lib/chrome";', 'import { revealFocusedNavigationLink } from "@/lib/navigation-focus";\nimport { CHROME } from "@/lib/chrome";')
+    .replace('import { CHROME } from "@/lib/chrome";', 'import { useEffect, useRef } from "react";\nimport { revealCurrentNavigationLink, revealFocusedNavigationLink } from "@/lib/navigation-focus";\nimport { CHROME } from "@/lib/chrome";')
+    .replace('  const c = CHROME[locale].docs;', '  const c = CHROME[locale].docs;\n  const sideRef = useRef<HTMLElement>(null);\n  useEffect(() => {\n    const rail = sideRef.current?.querySelector("ol");\n    const current = rail?.querySelector<HTMLElement>("a[aria-current=page]");\n    if (current && rail) revealCurrentNavigationLink(current, rail);\n  }, [pathname]);')
+    .replace('<nav className="docs__side"', '<nav ref={sideRef} className="docs__side"')
     .replaceAll('<Link href=', '<Link onFocus={(event) => revealFocusedNavigationLink(event.currentTarget, event.currentTarget.closest("ol"))} href=');
   if (path.endsWith("docs/mobile/page.tsx")) text = text.replace('className="grid gap-4 sm:grid-cols-3"', 'className="docs-card-grid"');
   if (path.endsWith("dates-demo.tsx")) text = text
