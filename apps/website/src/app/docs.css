@@ -1,7 +1,7 @@
 /* The licensed documentation corpus uses this website's own styles and tokens.
  * Every rule is scoped to this reading shell; product UI contracts stay public. */
 .docs { display: grid; grid-template-columns: 15rem minmax(0, 1fr); gap: clamp(2rem, 5vw, 5rem); padding-block: var(--lumo-web-space-8); align-items: start; }
-.docs .docs__side { position: sticky; inset-block-start: 7rem; font-size: var(--lumo-web-step--1); }
+.docs .docs__side { position: sticky; inset-block-start: calc(var(--lumo-web-header-height) + 1rem); font-size: var(--lumo-web-step--1); }
 .docs .docs__side-head { font-size: var(--lumo-web-step--2); color: var(--lumo-web-text-muted); letter-spacing: var(--lumo-web-tracking-label); text-transform: uppercase; margin-block-end: 1rem; }
 .docs .docs__side ol { display: grid; gap: .3rem; }
 .docs .docs__link { display: flex; gap: .8rem; align-items: baseline; padding: .7rem .8rem; border-inline-start: 2px solid transparent; border-radius: var(--lumo-web-radius-sm); color: var(--lumo-web-text-muted); }

@@ -3,7 +3,7 @@ import { copy } from "@/content/copy";
 import { company, docs, github, page, type Locale } from "@/content/site";
 import { Brand, Arrow } from "./brand";
 import { ThemeToggle } from "./theme-toggle";
-import { HomeLink, PrimaryNavigation, LanguageMenu } from "./primary-navigation";
+import { HomeLink, PrimaryNavigation, LanguageMenu, MobileMenu } from "./primary-navigation";
 
 export function Header({ locale }: { locale: Locale }) {
   const t = copy[locale];
@@ -15,7 +15,8 @@ export function Header({ locale }: { locale: Locale }) {
       <ThemeToggle labels={t.theme} />
       <a className="button primary header-start" href={docs(locale, "getting-started")}>{t.nav.start}<Arrow /></a>
     </div>
-  </div><PrimaryNavigation locale={locale} labels={t.nav} mobile /></header>;
+    <MobileMenu label={t.menu}><PrimaryNavigation locale={locale} labels={t.nav} mobile /><div className="header-controls"><LanguageMenu locale={locale} label={t.language} /><ThemeToggle labels={t.theme} /><a className="button primary header-start" href={docs(locale, "getting-started")}>{t.nav.start}<Arrow /></a></div></MobileMenu>
+  </div></header>;
 }
 
 export function Footer({ locale }: { locale: Locale }) {

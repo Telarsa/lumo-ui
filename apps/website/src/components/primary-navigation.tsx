@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, type ReactNode } from "react";
 import type { Copy } from "@/content/copy";
 import { brandName, docs, home, page, type Locale } from "@/content/site";
-import { revealFocusedNavigationLink } from "@/lib/navigation-focus";
 import "./navigation.css";
 
 export function HomeLink({ locale, children }: { locale: Locale; children: ReactNode }) {
@@ -27,7 +26,29 @@ export function PrimaryNavigation({ locale, labels, mobile }: { locale: Locale; 
     { label: labels.rules, href: page(locale, "checks") },
     { label: labels.docs, href: docs(locale) },
   ];
-  return <nav className={mobile ? "mobile-nav container" : "desktop-nav"} aria-label={labels.label}>{links.map(({ label, href }) => <Link key={href} href={href} onFocus={mobile ? (event) => revealFocusedNavigationLink(event.currentTarget, event.currentTarget.closest("nav")) : undefined} aria-current={pathname === href ? "page" : href === docs(locale) && pathname.startsWith(href) ? "location" : undefined}>{label}</Link>)}</nav>;
+  return <nav className={mobile ? "mobile-nav" : "desktop-nav"} aria-label={labels.label}>{links.map(({ label, href }) => <Link key={href} href={href} aria-current={pathname === href ? "page" : href === docs(locale) && pathname.startsWith(href) ? "location" : undefined}>{label}</Link>)}</nav>;
+}
+
+export function MobileMenu({ label, children }: { label: string; children: ReactNode }) {
+  const pathname = usePathname();
+  const menu = useRef<HTMLDetailsElement>(null);
+  const summary = useRef<HTMLElement>(null);
+  useEffect(() => { if (menu.current) menu.current.open = false; }, [pathname]);
+  useEffect(() => {
+    const closeOutside = (event: Event) => { if (menu.current?.open && !menu.current.contains(event.target as Node)) menu.current.open = false; };
+    const close = () => { if (menu.current) menu.current.open = false; };
+    const closeOnDesktop = () => { if (window.innerWidth >= 1152) close(); };
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("focusin", closeOutside);
+    window.addEventListener("blur", close);
+    window.addEventListener("resize", closeOnDesktop);
+    return () => { document.removeEventListener("pointerdown", closeOutside); document.removeEventListener("focusin", closeOutside); window.removeEventListener("blur", close); window.removeEventListener("resize", closeOnDesktop); };
+  }, []);
+  return <details ref={menu} className="mobile-menu" onKeyDown={(event) => {
+    if (event.key === "Escape" && event.currentTarget.open) {
+      event.preventDefault(); event.stopPropagation(); event.currentTarget.open = false; summary.current?.focus();
+    }
+  }}><summary ref={summary} className="control" aria-label={label}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M4 8h16M4 16h16" /></svg></summary><div className="mobile-menu-panel">{children}</div></details>;
 }
 
 const names = { en: "English", de: "Deutsch", fa: "فارسی" } as const;

@@ -297,13 +297,15 @@ if (process.argv.includes("--refresh-check")) {
         await page.emulateMedia({ colorScheme: "dark" });
         await page.goto(`${origin}/${locale}/`);
         assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
-        const toggle = page.locator(".theme-control");
+        const toggle = page.locator(".mobile-menu .theme-control");
+        await page.locator(".mobile-menu > summary").click();
         const lightLabel = await toggle.getAttribute("aria-label");
         await toggle.click();
         assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
         assert.notEqual(await toggle.getAttribute("aria-label"), lightLabel);
         await page.reload();
         assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+        await page.locator(".mobile-menu > summary").click();
         await toggle.click();
         assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
         await page.reload();
@@ -445,8 +447,9 @@ if (process.argv.includes("--refresh-check")) {
         await page.goto(`${origin}/${locale}/docs/getting-started/?probe=one%20two#installation`, { waitUntil: "networkidle" });
         assert.equal(await page.locator("html").getAttribute("data-theme"), "dark", "native-action starting theme is prepared deterministically");
         const next = locale === "en" ? "de" : "en";
-        const target = page.locator(`.language-options a[hreflang="${next}"]`);
-        const summary = page.locator(".language-menu summary");
+        const target = page.locator(`.mobile-menu .language-options a[hreflang="${next}"]`);
+        const summary = page.locator(".mobile-menu .language-menu summary");
+        await page.locator(".mobile-menu > summary").click();
         await summary.click();
         const href = `/${next}/docs/getting-started/?probe=one%20two#installation`;
         assert.equal(await target.getAttribute("href"), href, "actual href is copyable after mount");
@@ -457,7 +460,7 @@ if (process.argv.includes("--refresh-check")) {
         await target.click({ button: "right" });
         assert.equal(await target.getAttribute("href"), `/${next}/docs/getting-started/?probe=changed#wiring`, "context menu/copy URL gets current history state");
         await page.keyboard.press("Escape");
-        if (!await page.locator(".language-menu").evaluate((node) => node.open)) await summary.click();
+        if (!await page.locator(".mobile-menu .language-menu").evaluate((node) => node.open)) await summary.click();
         const popupPromise = context.waitForEvent("page");
         await target.click({ button: "middle" });
         const popup = await popupPromise;
@@ -466,6 +469,7 @@ if (process.argv.includes("--refresh-check")) {
         assert.equal(await popup.locator("html").getAttribute("data-theme"), "dark");
         await popup.close();
         await page.reload({ waitUntil: "networkidle" });
+        await page.locator(".mobile-menu > summary").click();
         await summary.click();
         await summary.press("Tab");
         for (let i = 0; i < 3 && !await target.evaluate((node) => node === document.activeElement); i++) await page.keyboard.press("Tab");
