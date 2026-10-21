@@ -6,7 +6,7 @@
 
 @layer lumoWeb.foundation {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
     --lumo-web-bg: light-dark(#faf9f6, #191918);
     --lumo-web-bg-sunken: light-dark(#f1efea, #151514);
     --lumo-web-surface: light-dark(#fdfcf9, #222220);
@@ -142,3 +142,5 @@
     }
   }
 }
+
+:root[data-theme="dark"] { color-scheme: dark; }

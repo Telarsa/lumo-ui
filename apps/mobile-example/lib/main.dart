@@ -50,6 +50,7 @@ class _ExampleAppState extends State<ExampleApp> {
       // widget below is already the right colour without being wrapped.
       theme: telarsaThemeData(brightness: Brightness.light),
       darkTheme: telarsaThemeData(brightness: Brightness.dark),
+      themeMode: ThemeMode.light,
       home: LumoScope(
         locale: _locale,
         child: BookingScreen(

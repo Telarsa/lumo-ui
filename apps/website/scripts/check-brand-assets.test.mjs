@@ -11,7 +11,7 @@ const app = fileURLToPath(new URL("../", import.meta.url));
 const repository = resolve(app, "../..");
 const provenance = JSON.parse(await readFile(join(repository, "assets/logo/provenance.json"), "utf8"));
 const digest = (bytes) => createHash("sha256").update(bytes).digest("hex");
-const iconHead = '<link rel="icon" href="/favicon.ico"><link rel="icon" href="/icon.svg"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest">';
+const iconHead = '<link rel="icon" href="/favicon.ico"><link rel="icon" href="/icon.svg"><link rel="icon" href="/icons/icon-96.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest">';
 
 /** Only public inputs are copied; no private application fonts enter fixtures. */
 async function fixture(run) {
@@ -26,7 +26,7 @@ async function fixture(run) {
       "docs/brand-assets.json", "scripts/render-brand-images.mjs", "src/components/brand.tsx",
       "src/app/globals.css", "src/assets/fonts/InterVariable-Latin.woff2",
       "public/icon.svg", "public/favicon.ico", "public/apple-touch-icon.png", "public/site.webmanifest",
-      ...[16, 32, 64, 192, 512].map((size) => `public/icons/icon-${size}.png`),
+      ...[16, 32, 64, 96, 192, 512].map((size) => `public/icons/icon-${size}.png`),
       ...["en", "de", "fa"].map((locale) => `public/og/lumo-${locale}.png`),
       ...Object.keys(provenance.masters).filter((name) => name.startsWith("lumo-lockup-")).map((name) => `public/brand/${name}`),
     ]) await copy(join(app, path), join(root, path));
@@ -41,7 +41,7 @@ async function fixture(run) {
 }
 
 test("reviewed Latin/Persian masters, raster dimensions and associated files validate", () =>
-  fixture(async (root) => assert.deepEqual(await checkBrandAssets(root), { lockups: 8, associatedFiles: 11 })));
+  fixture(async (root) => assert.deepEqual(await checkBrandAssets(root), { lockups: 8, associatedFiles: 12 })));
 
 test("a missing home-screen icon cannot pass the manifest references", () =>
   fixture(async (root) => {
@@ -107,7 +107,7 @@ test("logo geometry rejects horizontal mirroring while allowing font-coordinate 
 
 test("all owned document heads need favicon, adaptive SVG, apple and manifest metadata", () => {
   assert.doesNotThrow(() => checkIconHead(`<!doctype html><html><head>${iconHead}</head></html>`));
-  for (const href of ["/favicon.ico", "/icon.svg", "/apple-touch-icon.png", "/site.webmanifest"]) {
+  for (const href of ["/favicon.ico", "/icon.svg", "/icons/icon-96.png", "/apple-touch-icon.png", "/site.webmanifest"]) {
     const missing = iconHead.replace(new RegExp(`<link[^>]+href="${href.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*>`), "");
     assert.throws(() => checkIconHead(`<html><head>${missing}</head></html>`), /Missing generated associated icon metadata/);
   }

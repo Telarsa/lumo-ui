@@ -105,8 +105,7 @@ font. Public copies match the horizontal/vertical fixed-colour masters in
 assets/logo; symbols stay left and never mirror in Persian.
 See public/brand/README.md and assets/logo/provenance.json.
 
-Icons and social cards are static files in `public/`: `icon.svg` (the mark,
-adapting to dark mode), `favicon.ico`, `apple-touch-icon.png`, `icons/`,
+Icons and social cards are static files in `public/`: `icon.svg` (the mark), `favicon.ico`, `apple-touch-icon.png`, `icons/`,
 `site.webmanifest` and the 1200x630 Open Graph/Twitter cards `og/lumo-{en,de,fa}.png`.
 `node scripts/render-brand-images.mjs` renders the rasters from the mark, the
 light colours of `src/app/globals.css` and the hero copy with the workspace's
@@ -188,3 +187,7 @@ After reviewing regenerated logos/icons/cards, run
 `node scripts/check-brand-assets.mjs --record` to freeze docs/brand-assets.json.
 Ordinary builds verify these recorded hashes before and after export; they
 never silently refresh them. Keep all nine meaningful brand/icon regressions.
+
+## Website theme
+
+The website starts in Light regardless of the device setting. Its theme button switches between Light and Dark and remembers an explicit choice in `lumo-theme` across reloads and language changes. Legacy System, invalid or inaccessible storage falls back to Light. The published library retains its independent theme API.

@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { notFound } from "next/navigation";
-import { LumoHtml, themeScript } from "lumo-ui/core";
+import { LumoHtml } from "lumo-ui/core";
+import { themeScript } from "@/lib/site-theme.mjs";
 import { copy } from "@/content/copy";
 import { isLocale, localeParams, marketingOrigin, siteUrl, github, company, version } from "@/content/site";
 import { socialFor } from "@/lib/site";
@@ -29,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     metadataBase: new URL(siteUrl),
     // Static files in public/ (scripts/render-brand-images.mjs renders the rasters).
     icons: {
-      icon: [{ url: "/favicon.ico", sizes: "16x16 32x32 48x48" }, { url: "/icon.svg", type: "image/svg+xml" }],
+      icon: [{ url: "/favicon.ico", sizes: "16x16 32x32 48x48" }, { url: "/icon.svg", type: "image/svg+xml" }, { url: "/icons/icon-96.png", sizes: "96x96", type: "image/png" }],
       apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
     },
     manifest: "/site.webmanifest",
@@ -44,12 +45,11 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 /** Browser chrome follows the site background of src/app/globals.css in each scheme. */
 export const viewport: Viewport = {
-  themeColor: [{ media: "(prefers-color-scheme: light)", color: "#f8f7f3" }, { media: "(prefers-color-scheme: dark)", color: "#101114" }],
 };
 
 export default async function Layout({ children, params }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!isLocale(locale)) notFound();
   const jsonLd = { "@context": "https://schema.org", "@type": "SoftwareSourceCode", name: "Lumo UI", description: copy[locale].description, codeRepository: github, programmingLanguage: ["TypeScript", "Dart"], license: "https://opensource.org/licenses/MIT", version, ...(marketingOrigin ? { url: `${marketingOrigin}/${locale}/` } : {}), author: { "@type": "Organization", name: "Telarsa", url: company } };
-  return <LumoHtml lang={locale} suppressHydrationWarning data-scroll-behavior="smooth" className={`${inter.variable} ${interLatin.variable} ${interFull.variable} ${persian.variable}`}><head><script dangerouslySetInnerHTML={{ __html: themeScript() }} /><script dangerouslySetInnerHTML={{ __html: fragmentClearanceScript }} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} /></head><body id="top"><a className="skip-link" href="#main">{copy[locale].skip}</a><Header locale={locale} /><main id="main">{children}</main><Footer locale={locale} /></body></LumoHtml>;
+  return <LumoHtml lang={locale} suppressHydrationWarning data-scroll-behavior="smooth" className={`${inter.variable} ${interLatin.variable} ${interFull.variable} ${persian.variable}`}><head><meta name="theme-color" content="#f8f7f3" /><script dangerouslySetInnerHTML={{ __html: themeScript() }} /><script dangerouslySetInnerHTML={{ __html: fragmentClearanceScript }} /><script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} /></head><body id="top"><a className="skip-link" href="#main">{copy[locale].skip}</a><Header locale={locale} /><main id="main">{children}</main><Footer locale={locale} /></body></LumoHtml>;
 }

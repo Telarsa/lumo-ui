@@ -12,7 +12,7 @@ const app = fileURLToPath(new URL("../", import.meta.url));
 const rasterSizes = {
   "apple-touch-icon.png": [180, 180],
   "icons/icon-16.png": [16, 16], "icons/icon-32.png": [32, 32],
-  "icons/icon-64.png": [64, 64], "icons/icon-192.png": [192, 192],
+  "icons/icon-64.png": [64, 64], "icons/icon-96.png": [96, 96], "icons/icon-192.png": [192, 192],
   "icons/icon-512.png": [512, 512],
   "og/lumo-en.png": [1200, 630], "og/lumo-de.png": [1200, 630], "og/lumo-fa.png": [1200, 630],
 };
@@ -83,7 +83,9 @@ async function checkMasters(root) {
   for (const name of lockups.filter((name) => name.endsWith("-on-paper.svg"))) {
     assert.deepEqual(geometries.get(name), geometries.get(name.replace("-on-paper.svg", "-on-ink.svg")), "Theme identity keeps the same geometry and orientation");
   }
-  assert((await read(root, "public/icon.svg")).equals(await readFile(join(source, "lumo-mark.svg"))), "Adaptive SVG icon must match its outlined master");
+  const master = await readFile(join(source, "lumo-mark-on-paper.svg"), "utf8");
+  const tiledIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112" role="img" aria-label="Lumo UI"><rect width="112" height="112" fill="#FAF9F6"/>${master.replace("<svg ", '<svg x="15.68" y="15.68" width="80.64" height="80.64" ')}</svg>\n`;
+  assert.equal((await read(root, "public/icon.svg")).toString(), tiledIcon, "SVG icon must derive from the on-paper master on its opaque tile");
   const component = await readFile(join(root, "src/components/brand.tsx"), "utf8");
   assert(component.includes('dir="ltr"') && component.includes("locale") && component.includes('"fa"'), "Brand keeps symbol-left orientation and chooses the Persian identity");
   const css = await readFile(join(root, "src/app/globals.css"), "utf8");
@@ -125,7 +127,7 @@ export function checkIconHead(html) {
   const head = html.match(/<head(?:\s[^>]*)?>([\s\S]*?)<\/head>/i)?.[1];
   assert(head !== undefined, "An actual document head is required for icon metadata");
   const links = scan(head).filter((element) => element.name === "link").map((element) => attributes(element.attributes));
-  for (const [rel, href] of [["icon", "/favicon.ico"], ["icon", "/icon.svg"], ["apple-touch-icon", "/apple-touch-icon.png"], ["manifest", "/site.webmanifest"]]) {
+  for (const [rel, href] of [["icon", "/favicon.ico"], ["icon", "/icon.svg"], ["icon", "/icons/icon-96.png"], ["apple-touch-icon", "/apple-touch-icon.png"], ["manifest", "/site.webmanifest"]]) {
     assert(links.some((attrs) => attrs.get("rel") === rel && attrs.get("href") === href), `Missing generated associated icon metadata: ${rel} ${href}`);
   }
 }

@@ -160,15 +160,17 @@ if (process.argv.includes("--refresh-check")) {
 } else if (process.argv.includes("--calendar-contrast")) {
   const from = process.env.PLAYWRIGHT_FROM;
   assert.ok(from, "PLAYWRIGHT_FROM must identify existing installed e2e package metadata");
-  const { chromium } = createRequire(resolve(from))("@playwright/test");
+  const { webkit } = createRequire(resolve(from))("@playwright/test");
   const origin = process.env.WEBSITE_URL || "http://127.0.0.1:3113";
   const artifacts = resolve(process.env.DOCUMENTATION_UX_ARTIFACTS || "/private/tmp/public-websites-ui-ux-2026-10-13/lumo-calendar-contrast");
   mkdirSync(artifacts, { recursive: true });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await webkit.launch({ headless: true });
   try {
     for (const locale of ["en", "de", "fa"]) for (const theme of ["light", "dark"]) {
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, colorScheme: theme, reducedMotion: "reduce" });
       const page = await context.newPage();
+      await page.goto(`${origin}/${locale}/`);
+      await page.evaluate((value) => localStorage.setItem("lumo-theme", value), theme);
       await check(`${locale}: ${theme} outside-date contrast`, () => checkCalendarOutsideContrast(page, locale, theme, origin));
       await context.close();
     }
@@ -179,12 +181,12 @@ if (process.argv.includes("--refresh-check")) {
 } else if (process.argv.includes("--calendar-direction")) {
   const from = process.env.PLAYWRIGHT_FROM;
   assert.ok(from, "PLAYWRIGHT_FROM must identify existing installed e2e package metadata");
-  const { chromium } = createRequire(resolve(from))("@playwright/test");
+  const { webkit } = createRequire(resolve(from))("@playwright/test");
   const { formatNumber } = await import("../../../packages/core/src/format.ts");
   const origin = process.env.WEBSITE_URL || "http://127.0.0.1:3113";
   const artifacts = resolve(process.env.DOCUMENTATION_UX_ARTIFACTS || "/private/tmp/public-websites-ui-ux-2026-10-13/lumo-calendar-direction");
   mkdirSync(artifacts, { recursive: true });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await webkit.launch({ headless: true });
   try {
     for (const locale of ["en", "de", "fa"]) {
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
@@ -199,11 +201,11 @@ if (process.argv.includes("--refresh-check")) {
 } else if (process.argv.includes("--diagnose-overflow") || process.argv.includes("--diagnose-current-overflow")) {
   const from = process.env.PLAYWRIGHT_FROM;
   assert.ok(from, "PLAYWRIGHT_FROM must identify existing installed e2e package metadata");
-  const { chromium } = createRequire(resolve(from))("@playwright/test");
+  const { webkit } = createRequire(resolve(from))("@playwright/test");
   const origin = process.env.WEBSITE_URL || "http://127.0.0.1:3113";
   const artifacts = resolve(process.env.DOCUMENTATION_UX_ARTIFACTS || "/private/tmp/public-websites-ui-ux-2026-10-13/lumo-overflow-diagnostic");
   mkdirSync(artifacts, { recursive: true });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await webkit.launch({ headless: true });
   const records = [];
   const cases = process.argv.includes("--diagnose-current-overflow") ? [
     ["en", "", 390], ["en", "", 360], ["en", "how-it-works/", 360],
@@ -256,18 +258,62 @@ if (process.argv.includes("--refresh-check")) {
 } else {
   const from = process.env.PLAYWRIGHT_FROM;
   assert.ok(from, "PLAYWRIGHT_FROM must identify existing installed e2e package metadata");
-  const { chromium } = createRequire(resolve(from))("@playwright/test");
+  const { webkit } = createRequire(resolve(from))("@playwright/test");
   const { gradeHtml } = await import("../../../packages/gate/src/index.ts");
   const { formatNumber } = await import("../../../packages/core/src/format.ts");
   const digitFixture = readFileSync(resolve(app, "../../packages/gate/fixtures/no-latin-digits.bad.html"), "utf8");
   const origin = process.env.WEBSITE_URL || "http://127.0.0.1:3113";
   const artifacts = resolve(process.env.DOCUMENTATION_UX_ARTIFACTS || "/private/tmp/public-websites-ui-ux-2026-10-13/lumo-browser");
   mkdirSync(artifacts, { recursive: true });
-  const browser = await chromium.launch({ headless: true });
+  const browser = await webkit.launch({ headless: true });
   try {
     for (const locale of ["en", "de", "fa"]) {
+      await check(`${locale}: saved dark prepaint keeps the unsynchronized control hidden`, async () => {
+        const pending = await browser.newContext({ viewport: { width: 390, height: 844 } });
+        try {
+          await pending.addInitScript(() => localStorage.setItem("lumo-theme", "dark"));
+          await pending.route("**/*", (route) => route.request().resourceType() === "script" ? route.abort() : route.continue());
+          const page = await pending.newPage();
+          await page.goto(`${origin}/${locale}/`, { waitUntil: "domcontentloaded" });
+          assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+          const toggle = page.locator(".theme-control");
+          assert.equal(await toggle.count(), 1);
+          assert.equal(await toggle.isVisible(), false);
+          assert.equal(await toggle.isDisabled(), true);
+          assert.equal(await toggle.getAttribute("aria-hidden"), "true");
+          assert.ok(await toggle.evaluate((node) => node.getBoundingClientRect().width > 0), "the hidden control reserves its layout space");
+        } finally { await pending.close(); }
+      });
       const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
       const page = await context.newPage();
+      // Playwright's WebKit screenshot preparation inserts an inline style.
+      // Keep screenshots separate so the navigation context's CSP evidence
+      // contains only violations from the site under test.
+      const captures = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+      const capturePage = await captures.newPage();
+      await capturePage.goto(`${origin}/${locale}/`, { waitUntil: "networkidle" });
+      await check(`${locale}: binary theme on a dark device`, async () => {
+        await context.setExtraHTTPHeaders({});
+        await page.emulateMedia({ colorScheme: "dark" });
+        await page.goto(`${origin}/${locale}/`);
+        assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
+        const toggle = page.locator(".theme-control");
+        const lightLabel = await toggle.getAttribute("aria-label");
+        await toggle.click();
+        assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+        assert.notEqual(await toggle.getAttribute("aria-label"), lightLabel);
+        await page.reload();
+        assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+        await toggle.click();
+        assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
+        await page.reload();
+        assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
+        for (const legacy of ["system", "invalid"]) {
+          await page.evaluate((value) => localStorage.setItem("lumo-theme", value), legacy);
+          await page.reload();
+          assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
+        }
+      });
       const csp = [];
       await context.exposeBinding("__documentationCspViolation", ({ page: source }, violation) => {
         const record = { locale, url: source.url(), violation };
@@ -297,6 +343,15 @@ if (process.argv.includes("--refresh-check")) {
           assert.equal(new URL(page.url()).hash, hash);
           await page.reload({ waitUntil: "networkidle" });
           assert.equal(await page.locator(hash).count(), 1);
+          await page.evaluate(() => document.fonts.ready);
+          await page.waitForFunction((target) => {
+            const section = document.querySelector(target);
+            const heading = section?.querySelector(".doc-h2");
+            const header = document.querySelector(".site-header");
+            if (!section || !heading || !header) return false;
+            const top = section.getBoundingClientRect().top;
+            return top >= 0 && top < innerHeight && heading.getBoundingClientRect().top >= header.getBoundingClientRect().bottom;
+          }, hash);
           const top = await page.locator(hash).evaluate((node) => node.getBoundingClientRect().top);
           assert.ok(top >= 0 && top < 844, `fragment target visible below header: ${top}`);
           const headerBottom = await page.locator(".site-header").evaluate((node) => node.getBoundingClientRect().bottom);
@@ -335,8 +390,11 @@ if (process.argv.includes("--refresh-check")) {
           });
           const observedTheme = await page.locator("html").getAttribute("data-theme");
           evidence.push({ locale, route, theme, observedTheme, width, metrics });
-          // Capture even when an assertion later fails, preserving served before/after facts.
-          await code.screenshot({ path: resolve(artifacts, `${locale}-${route.replaceAll("/", "-") || "home"}-${theme}-${width}.png`) });
+          // Capture the same route and theme without polluting strict CSP evidence.
+          await capturePage.evaluate((value) => localStorage.setItem("lumo-theme", value), theme);
+          await capturePage.setViewportSize({ width, height: 900 });
+          await capturePage.goto(`${origin}/${locale}/${route}`, { waitUntil: "networkidle" });
+          await capturePage.locator(route.startsWith("docs/") ? ".code pre" : ".install-block pre").first().screenshot({ path: resolve(artifacts, `${locale}-${route.replaceAll("/", "-") || "home"}-${theme}-${width}.png`) });
           assert.equal(observedTheme, theme, "served document applies requested theme");
           assert.equal((await code.textContent()).trim(), "pnpm add github:Telarsa/lumo-ui#v1.0.0");
           assert.match(metrics.family, /monospace/i);
@@ -355,18 +413,10 @@ if (process.argv.includes("--refresh-check")) {
             // the actual movement, rather than sampling at a fixed delay.
             await code.evaluate((node) => { node.scrollLeft = 0; });
             const codeElement = await code.elementHandle();
-            await code.evaluate((node) => {
-              node.dataset.keyboardScrollSettled = "false";
-              node.addEventListener("scrollend", () => { node.dataset.keyboardScrollSettled = "true"; }, { once: true });
-            });
             await page.keyboard.press("ArrowRight");
-            await page.waitForFunction((node) => node.scrollLeft > 0 && node.dataset.keyboardScrollSettled === "true", codeElement, { timeout: 1500 });
-            await code.evaluate((node) => {
-              node.dataset.keyboardScrollSettled = "false";
-              node.addEventListener("scrollend", () => { node.dataset.keyboardScrollSettled = "true"; }, { once: true });
-            });
+            await page.waitForFunction((node) => node.scrollLeft > 0, codeElement, { timeout: 1500 });
             await page.keyboard.press("ArrowLeft");
-            await page.waitForFunction((node) => node.scrollLeft === 0 && node.dataset.keyboardScrollSettled === "true", codeElement, { timeout: 1500 });
+            await page.waitForFunction((node) => node.scrollLeft === 0, codeElement, { timeout: 1500 });
           }
           assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "no page horizontal overflow");
           if (!route && theme === "light" && width === 390) {
@@ -425,11 +475,13 @@ if (process.argv.includes("--refresh-check")) {
         assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
       });
       await check(`${locale}: CSP preserved`, () => assert.deepEqual(csp, []));
+      await captures.close();
       await context.close();
-      const noScript = await browser.newContext({ javaScriptEnabled: false, viewport: { width: 360, height: 844 } });
+      const noScript = await browser.newContext({ javaScriptEnabled: false, colorScheme: "dark", viewport: { width: 360, height: 844 } });
       const staticPage = await noScript.newPage();
       for (const [slug, ids] of Object.entries(sections)) await check(`${locale}/${slug}: script-independent section links`, async () => {
         await staticPage.goto(`${origin}/${locale}/docs/${slug}/`);
+        assert.equal(await staticPage.locator("html").evaluate((el) => getComputedStyle(el).colorScheme), "light");
         assert.deepEqual(await staticPage.locator(".doc-section").evaluateAll((nodes) => nodes.map((node) => node.id)), ids);
         const link = staticPage.locator(".doc-heading > .doc-permalink").first();
         const headingNode = link.locator("..").locator(".doc-h2");

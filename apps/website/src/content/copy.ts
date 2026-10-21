@@ -4,7 +4,7 @@ export interface Copy {
   nav: { label: string; how: string; rules: string; docs: string; start: string };
   language: string;
   /** Accessible name per stored setting: the current mode, then what a press does. */
-  theme: { system: string; light: string; dark: string };
+  theme: { light: string; dark: string };
   hero: { eyebrow: string; title: string; accent: string; lead: string; source: string; licence: string; version: string };
   figure: { title: string; contract: string; lint: string; html: string; result: string; caption: string; digits: string; calendar: string; names: string };
   features: { eyebrow: string; title: string; lead: string; items: readonly { title: string; body: string; detail: string }[]; example: { eyebrow: string; title: string; lead: string; flagged: string; fixed: string; note: string; link: string } };
@@ -22,7 +22,7 @@ export const copy = {
     skip: "Skip to content",
     nav: { label: "Main navigation", how: "How it works", rules: "What it checks", docs: "Documentation", start: "Get started" },
     language: "Choose language",
-    theme: { system: "Theme: follows system. Switch to light.", light: "Theme: light. Switch to dark.", dark: "Theme: dark. Switch to follow system." },
+    theme: { light: "Theme: light. Switch to dark.", dark: "Theme: dark. Switch to light." },
     hero: {
       eyebrow: "Open-source RTL checks",
       title: "Catch RTL defects.",
@@ -75,7 +75,7 @@ export const copy = {
     description: "Ein Sprachvertrag, RTL-Lint-Regeln und ein Gate für ausgeliefertes HTML persischer Produkte auf shadcn/ui und Material/Flutter.",
     skip: "Zum Inhalt springen",
     nav: { label: "Hauptnavigation", how: "So funktioniert es", rules: "Was geprüft wird", docs: "Dokumentation", start: "Erste Schritte" },
-    language: "Sprache wählen", theme: { system: "Design: folgt dem System. Zu hell wechseln.", light: "Design: hell. Zu dunkel wechseln.", dark: "Design: dunkel. Wieder dem System folgen." },
+    language: "Sprache wählen", theme: { light: "Design: hell. Zu dunkel wechseln.", dark: "Design: dunkel. Zu hell wechseln." },
     hero: { eyebrow: "Open-Source-Prüfungen für RTL", title: "RTL-Fehler erkennen.", accent: "Bevor Ihre Leser es tun.", lead: "Prüfen Sie persische Ziffern, Kalender, Schreibrichtung und zugängliche Namen im Quelltext und im erstellten HTML. Ihre Komponenten bleiben Ihre.", source: "Quelltext ansehen", licence: "Open Source · MIT", version: "Version" },
     figure: { title: "Von Ihrer Anwendung zu Ihren Lesern", contract: "Sprachvertrag", lint: "Quelltextprüfung", html: "Erstelltes HTML", result: "Ein Bericht für konkrete Korrekturen", caption: "Sprachvertrag → Quelltextprüfung → erstelltes HTML. Befunde führen zurück zu Ihrer Anwendung.", digits: "Native Ziffern", calendar: "Passender Kalender", names: "Benannte Elemente" },
     features: { eyebrow: "Ihre Werkzeuge behalten", title: "Eine Korrektheitsschicht. Ihre eigene Oberfläche.", lead: "Bauen Sie weiter mit den Komponenten, die Ihr Team kennt. Lumo ergänzt Sprachverträge und Prüfungen, wo eine übersetzte Beschriftung allein nicht genügt.", items: [
@@ -107,7 +107,7 @@ export const copy = {
     description: "قرارداد زبانی، سیاست بررسی راست‌به‌چپ و دروازهٔ بررسی خروجی HTML برای محصولات فارسی بر پایهٔ shadcn/ui و Material/Flutter.",
     skip: "پرش به محتوا",
     nav: { label: "ناوبری اصلی", how: "روش کار", rules: "چه چیزهایی بررسی می‌شود", docs: "مستندات", start: "شروع کنید" },
-    language: "انتخاب زبان", theme: { system: "پوسته: مطابق سیستم. تغییر به روشن.", light: "پوسته: روشن. تغییر به تاریک.", dark: "پوسته: تاریک. بازگشت به پیروی از سیستم." },
+    language: "انتخاب زبان", theme: { light: "پوسته: روشن. تغییر به تاریک.", dark: "پوسته: تاریک. تغییر به روشن." },
     hero: { eyebrow: "بررسی‌های متن‌باز راست‌به‌چپ", title: "نقص‌های راست‌به‌چپ را پیدا کنید.", accent: "پیش از آنکه خواننده با آن‌ها روبه‌رو شود.", lead: "ارقام فارسی، تقویم، جهت و نام دسترس‌پذیر را در کد منبع و خروجی ساخته‌شده بررسی کنید. کامپوننت‌های خودتان را نگه دارید.", source: "دیدن کد منبع", licence: "متن‌باز · [[MIT]]", version: "نسخهٔ" },
     figure: { title: "از برنامهٔ شما تا خواننده", contract: "قرارداد زبان", lint: "بررسی کد منبع", html: "خروجی ساخت", result: "گزارشی برای اصلاح مشخص", caption: "از قرارداد زبان و بررسی کد منبع تا خروجی ساخت؛ هر یافته به بخشی از برنامهٔ شما برمی‌گردد.", digits: "ارقام بومی", calendar: "تقویم خواننده", names: "کنترل‌های نام‌دار" },
     features: { eyebrow: "ابزارهایتان را نگه دارید", title: "لایهٔ درستی؛ رابطی که خودتان می‌سازید.", lead: "با کامپوننت‌هایی ادامه دهید که تیم شما می‌شناسد. لومو قرارداد زبان و بررسی‌هایی را اضافه می‌کند که ترجمهٔ یک برچسب به‌تنهایی کافی نیست.", items: [

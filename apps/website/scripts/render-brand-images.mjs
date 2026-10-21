@@ -7,7 +7,7 @@
  *
  * A manual step, not part of the build: rerun it after the mark, the colours or
  * the hero copy change, review the PNGs and commit them. It uses the
- * workspace's Playwright Chromium and the committed Inter (OFL). Persian text
+ * workspace's Playwright WebKit and the committed Inter (OFL). Persian text
  * uses the platform's Arabic-script UI face, exactly like a public build of
  * the site; the proprietary Persian font is never loaded here.
  *
@@ -16,7 +16,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { chromium } from "@playwright/test";
+import { webkit } from "@playwright/test";
 
 const app = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const pub = join(app, "public");
@@ -25,7 +25,7 @@ const { copy } = await import(pathToFileURL(join(app, "src/content/copy.ts")).hr
 /** The light theme of src/app/globals.css. */
 const colour = { bg: "#f8f7f3", text: "#101114", muted: "#646257", line: "#dedbd1", lit: "#55701c", mark: "#7fa828" };
 // Read the authoritative symbol; never keep a second hardcoded logo here.
-const markSource = readFileSync(join(app, "../../assets/logo/lumo-mark-on-paper.svg"), "utf8");
+const markSource = readFileSync(join(pub, "icon.svg"), "utf8");
 const mark = (size) => markSource.replace("<svg ", `<svg width="${size}" height="${size}" `);
 // Inlined: a page set from a string cannot load file: URLs.
 const inter = `data:font/woff2;base64,${readFileSync(join(app, "src/assets/fonts/InterVariable.woff2")).toString("base64")}`;
@@ -77,7 +77,7 @@ function ico(pngs) {
   return Buffer.concat([header, ...pngs.map(({ data }) => data)]);
 }
 
-const browser = await chromium.launch();
+const browser = await webkit.launch();
 try {
   const page = await browser.newPage({ deviceScaleFactor: 1 });
   const shoot = async (html, width, height, omitBackground) => {
@@ -94,14 +94,12 @@ try {
   // Legacy icons cannot adapt to dark mode. Their opaque paper tile keeps the
   // exact on-paper symbol visible on both light and dark browser surfaces.
   const transparent = {};
-  for (const size of [16, 32, 48, 64]) transparent[size] = await shoot(iconHtml(size, colour.bg), size, size, false);
+  for (const size of [16, 32, 48, 64, 96, 180, 192, 512]) transparent[size] = await shoot(iconHtml(size, "#FAF9F6"), size, size, false);
   write("favicon.ico", ico([16, 32, 48].map((size) => ({ size, data: transparent[size] }))));
-  for (const size of [16, 32, 64]) write(`icons/icon-${size}.png`, transparent[size]);
+  for (const size of [16, 32, 64, 96, 192, 512]) write(`icons/icon-${size}.png`, transparent[size]);
   // Home-screen and install icons sit on the page background, mark inset.
-  const tile = (size) => `<!doctype html><html><head><style>html,body{margin:0;background:${colour.bg}}body{inline-size:${size}px;block-size:${size}px;display:grid;place-items:center}svg{display:block}</style></head><body>${mark(Math.round(size * 0.8))}</body></html>`;
-  write("apple-touch-icon.png", await shoot(tile(180), 180, 180, false));
-  for (const size of [192, 512]) write(`icons/icon-${size}.png`, await shoot(tile(size), size, size, false));
-  for (const locale of ["en", "de", "fa"]) write(`og/lumo-${locale}.png`, await shoot(ogHtml(locale), 1200, 630, false));
+  write("apple-touch-icon.png", transparent[180]);
+  if (!process.argv.includes("--icons-only")) for (const locale of ["en", "de", "fa"]) write(`og/lumo-${locale}.png`, await shoot(ogHtml(locale), 1200, 630, false));
 } finally {
   await browser.close();
 }
