@@ -84,7 +84,7 @@ async function checkMasters(root) {
     assert.deepEqual(geometries.get(name), geometries.get(name.replace("-on-paper.svg", "-on-ink.svg")), "Theme identity keeps the same geometry and orientation");
   }
   const master = await readFile(join(source, "lumo-mark-on-paper.svg"), "utf8");
-  const tiledIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112" role="img" aria-label="Lumo UI"><rect width="112" height="112" fill="#FAF9F6"/>${master.replace("<svg ", '<svg x="15.68" y="15.68" width="80.64" height="80.64" ')}</svg>\n`;
+  const tiledIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 112 112" role="img" aria-label="Lumo UI"><rect width="112" height="112" rx="17.92" fill="#FAF9F6"/>${master.replace("<svg ", '<svg x="15.68" y="15.68" width="80.64" height="80.64" ')}</svg>\n`;
   assert.equal((await read(root, "public/icon.svg")).toString(), tiledIcon, "SVG icon must derive from the on-paper master on its opaque tile");
   const component = await readFile(join(root, "src/components/brand.tsx"), "utf8");
   assert(component.includes('dir="ltr"') && component.includes("locale") && component.includes('"fa"'), "Brand keeps symbol-left orientation and chooses the Persian identity");

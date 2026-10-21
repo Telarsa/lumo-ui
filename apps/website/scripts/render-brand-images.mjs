@@ -32,8 +32,8 @@ const inter = `data:font/woff2;base64,${readFileSync(join(app, "src/assets/fonts
 const lockup = (locale) => `data:image/svg+xml;base64,${readFileSync(join(pub, `brand/lumo-lockup${locale === "fa" ? "-fa" : ""}-on-paper.svg`)).toString("base64")}`;
 const persianFallback = `"Vazirmatn", "Noto Sans Arabic", "Segoe UI", Tahoma, "Geeza Pro", sans-serif`;
 
-function iconHtml(size, background) {
-  return `<!doctype html><html><head><style>html,body{margin:0;padding:0;background:${background ?? "transparent"}}svg{display:block}</style></head><body>${mark(size)}</body></html>`;
+function iconHtml(size, background, opaque = false) {
+  return `<!doctype html><html><head><style>html,body{margin:0;padding:0;background:${background ?? "transparent"}}svg{display:block}</style></head><body>${opaque ? mark(size).replace(' rx="17.92"', "") : mark(size)}</body></html>`;
 }
 
 function ogHtml(locale) {
@@ -94,7 +94,7 @@ try {
   // Legacy icons cannot adapt to dark mode. Their opaque paper tile keeps the
   // exact on-paper symbol visible on both light and dark browser surfaces.
   const transparent = {};
-  for (const size of [16, 32, 48, 64, 96, 180, 192, 512]) transparent[size] = await shoot(iconHtml(size, "#FAF9F6"), size, size, false);
+  for (const size of [16, 32, 48, 64, 96, 180, 192, 512]) transparent[size] = await shoot(iconHtml(size, "transparent", size === 180), size, size, true);
   write("favicon.ico", ico([16, 32, 48].map((size) => ({ size, data: transparent[size] }))));
   for (const size of [16, 32, 64, 96, 192, 512]) write(`icons/icon-${size}.png`, transparent[size]);
   // Home-screen and install icons sit on the page background, mark inset.
