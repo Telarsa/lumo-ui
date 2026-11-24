@@ -53,6 +53,14 @@ export function MobileMenu({ label, children }: { label: string; children: React
 
 const names = { en: "English", de: "Deutsch", fa: "فارسی" } as const;
 
+function rememberLanguage(locale: Locale) {
+  try {
+    document.cookie = `site-language=${locale}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
+  } catch {
+    // The link still works if cookies are blocked.
+  }
+}
+
 function synchronizeLanguageHrefs(disclosure: HTMLDetailsElement | null) {
   if (!disclosure) return;
   const { pathname, search, hash } = window.location;
@@ -184,5 +192,5 @@ export function LanguageMenu({ locale, label }: { locale: Locale; label: string 
       event.currentTarget.open = false;
       summaryRef.current?.focus();
     }
-  }}><summary ref={summaryRef} className="control" aria-label={`${locale.toUpperCase()} — ${label}`}><span data-lumo-latn="" dir="ltr">{locale.toUpperCase()}</span><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" /></svg></summary><div className="language-options">{(["en", "de", "fa"] as const).map((item) => <a key={item} href={languagePath(item)} hrefLang={item} lang={item} aria-current={locale === item ? "page" : undefined} {...(item !== "fa" ? { "data-lumo-latn": "" } : {})}>{names[item]}</a>)}</div></details>;
+  }}><summary ref={summaryRef} className="control" aria-label={`${locale.toUpperCase()} — ${label}`}><span data-lumo-latn="" dir="ltr">{locale.toUpperCase()}</span><svg width="12" height="12" viewBox="0 0 16 16" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" /></svg></summary><div className="language-options">{(["en", "de", "fa"] as const).map((item) => <a key={item} href={languagePath(item)} hrefLang={item} lang={item} onClick={() => rememberLanguage(item)} onAuxClick={() => rememberLanguage(item)} aria-current={locale === item ? "page" : undefined} {...(item !== "fa" ? { "data-lumo-latn": "" } : {})}>{names[item]}</a>)}</div></details>;
 }

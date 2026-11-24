@@ -8,6 +8,22 @@ import { readWorkerConfig, workerConfigFaults } from "./check-worker.mjs";
 const expectedHeaders = { ...HEADERS, ...TLS_HEADERS };
 const noAssets = { ASSETS: { fetch() { assert.fail("A production origin redirect must precede static assets."); } } };
 
+test("the bare homepage honors a saved language without caching the redirect", async () => {
+  const response = await worker.fetch(new Request("https://lumo-ui.com/?q=one", { headers: { Cookie: "site-language=fa", "Accept-Language": "de-DE" } }), noAssets);
+  assert.equal(response.status, 302);
+  assert.equal(response.headers.get("location"), "https://lumo-ui.com/fa/?q=one");
+  assert.match(response.headers.get("cache-control"), /no-store/);
+});
+
+test("Cloudflare country supplies the first-visit fallback for an English browser", async () => {
+  for (const [country, locale] of [["IR", "fa"], ["DE", "de"], ["US", "en"]]) {
+    const request = new Request("https://lumo-ui.com/", { headers: { "Accept-Language": "en-US,en;q=0.9" } });
+    Object.defineProperty(request, "cf", { value: { country } });
+    const response = await worker.fetch(request, noAssets);
+    assert.equal(response.headers.get("location"), `https://lumo-ui.com/${locale}/`);
+  }
+});
+
 function assertProtocolHeaders(response, protocol) {
   for (const [name, value] of Object.entries(HEADERS)) assert.equal(response.headers.get(name), value);
   for (const [name, value] of Object.entries(TLS_HEADERS)) assert.equal(response.headers.get(name), protocol === "https:" ? value : null);

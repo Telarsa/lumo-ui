@@ -191,3 +191,7 @@ never silently refresh them. Keep all nine meaningful brand/icon regressions.
 ## Website theme
 
 The website starts in Light regardless of the device setting. Its theme button switches between Light and Dark and remembers an explicit choice in `lumo-theme` across reloads and language changes. Legacy System, invalid or inaccessible storage falls back to Light. The published library retains its independent theme API.
+
+## Website language
+
+The Cloudflare Worker negotiates only the bare homepage. A `site-language` cookie set by the language menu takes precedence; otherwise it uses the browser's preferred Persian or German, then the country inferred by Cloudflare (Iran, Germany, Austria or Liechtenstein), then English. A localized URL is never overridden, and the redirect is not cached. The explicit choice lasts one year and is scoped to this website; browser controls can remove it. The static-only Caddy deployment retains its separate browser-language fallback and does not infer country.

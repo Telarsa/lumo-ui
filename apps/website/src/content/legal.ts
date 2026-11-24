@@ -9,7 +9,7 @@ type LegalCopy = {
 // These dates describe the notices, independently of the company record.
 export const legalRevisionDates = {
   imprint: "2026-10-11",
-  privacy: "2026-10-11",
+  privacy: "2026-11-24",
 } as const;
 
 export const legalCopy: Record<Locale, LegalCopy> = {
@@ -25,6 +25,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       sections: [
         { title: "Reading this website", body: "The website has no analytics, advertising trackers, contact forms, user accounts or third-party embeds. Its fonts and documentation assets are served by the website itself." },
         { title: "Theme preference", body: "When you choose a theme, the website stores that preference in your browser. It is not sent to Telarsa. You can remove it by clearing this website’s local storage.", code: "lumo-theme" },
+        { title: "Language preference", body: "When you select a language, a cookie remembers it for one year and is sent to this website with your requests. You can delete it in your browser. On your first visit, the site can use your browser language and the country Cloudflare infers from your connection to choose a language. The country is not a precise location.", code: "site-language" },
         { title: "Documentation examples", body: "Interactive examples run in your browser. Selecting a date or changing an example does not submit that value to Telarsa." },
         { title: "Hosting and requests", body: "This website is delivered through Cloudflare. Serving a page requires network information, including your IP address and the requested URL. The operator has not yet confirmed the request-log settings or retention periods; contact the operator below for those details." },
         { title: "Contacting us", body: "An email link opens your own email application. If you send Telarsa a message, your address and message are used to respond and handle the conversation. The email service and retention arrangements have not yet been confirmed by the operator." },
@@ -45,6 +46,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       sections: [
         { title: "Besuch der Website", body: "Die Website enthält keine Analysedienste, Werbetracker, Kontaktformulare, Benutzerkonten oder Einbettungen von Drittanbietern. Schriftarten und Dokumentationsinhalte werden von der Website selbst bereitgestellt." },
         { title: "Darstellungseinstellung", body: "Wenn Sie eine Darstellung auswählen, speichert die Website diese Einstellung in Ihrem Browser. Sie wird nicht an Telarsa gesendet. Sie können sie durch Löschen des lokalen Speichers dieser Website entfernen.", code: "lumo-theme" },
+        { title: "Spracheinstellung", body: "Wenn Sie eine Sprache auswählen, merkt sich ein Cookie Ihre Wahl für ein Jahr und wird bei Anfragen an diese Website gesendet. Sie können ihn im Browser löschen. Beim ersten Besuch kann die Website Ihre Browsersprache und das von Cloudflare aus Ihrer Verbindung abgeleitete Land für die Sprachauswahl nutzen. Das Land ist kein genauer Standort.", code: "site-language" },
         { title: "Dokumentationsbeispiele", body: "Interaktive Beispiele laufen in Ihrem Browser. Eine Datumsauswahl oder eine Änderung im Beispiel übermittelt den Wert nicht an Telarsa." },
         { title: "Hosting und Seitenaufrufe", body: "Diese Website wird über Cloudflare ausgeliefert. Dabei werden Netzwerkdaten benötigt, darunter Ihre IP-Adresse und die aufgerufene URL. Der Betreiber hat die Einstellungen und Aufbewahrungsfristen für Zugriffsprotokolle noch nicht bestätigt. Wenden Sie sich für diese Angaben an den unten genannten Betreiber." },
         { title: "Kontaktaufnahme", body: "Ein E-Mail-Link öffnet Ihr eigenes E-Mail-Programm. Wenn Sie Telarsa schreiben, werden Ihre Adresse und Nachricht zur Beantwortung und Bearbeitung des Gesprächs verwendet. Der Betreiber hat den E-Mail-Dienst und die Aufbewahrungsfristen noch nicht bestätigt." },
@@ -65,6 +67,7 @@ export const legalCopy: Record<Locale, LegalCopy> = {
       sections: [
         { title: "بازدید از وب‌سایت", body: "این وب‌سایت ابزار تحلیل بازدید، ردیاب تبلیغاتی، فرم تماس، حساب کاربری یا محتوای جاسازی‌شده از سرویس‌های دیگر ندارد. فونت‌ها و دارایی‌های مستندات از خود وب‌سایت دریافت می‌شوند." },
         { title: "تنظیم ظاهر", body: "وقتی ظاهر وب‌سایت را انتخاب می‌کنید، این تنظیم در مرورگر شما ذخیره می‌شود و به تلارسا ارسال نمی‌شود. با پاک‌کردن حافظه محلی این وب‌سایت می‌توانید آن را حذف کنید.", code: "lumo-theme" },
+        { title: "تنظیم زبان", body: "وقتی زبانی را انتخاب می‌کنید، یک کوکی انتخاب شما را یک سال نگه می‌دارد و همراه درخواست‌ها به این وب‌سایت فرستاده می‌شود. می‌توانید آن را در مرورگر حذف کنید. در نخستین بازدید، وب‌سایت می‌تواند از زبان مرورگر و کشوری که کلودفلر از اتصال شما تشخیص می‌دهد برای انتخاب زبان استفاده کند. کشور، موقعیت دقیق شما نیست.", code: "site-language" },
         { title: "نمونه‌های مستندات", body: "نمونه‌های تعاملی در مرورگر شما اجرا می‌شوند. انتخاب تاریخ یا تغییر یک نمونه، آن مقدار را به تلارسا ارسال نمی‌کند." },
         { title: "میزبانی و درخواست‌ها", body: "این وب‌سایت از طریق [[Cloudflare]] ارائه می‌شود. نمایش صفحه به اطلاعات شبکه، از جمله نشانی آی‌پی شما و نشانی صفحهٔ درخواستی نیاز دارد. تنظیمات گزارش درخواست‌ها و مدت نگهداری آن‌ها هنوز از سوی مسئول وب‌سایت تأیید نشده‌اند؛ برای این جزئیات با مسئول وب‌سایت در ادامه تماس بگیرید." },
         { title: "تماس با ما", body: "پیوند ایمیل، برنامه ایمیل خود شما را باز می‌کند. اگر به تلارسا پیام بفرستید، نشانی و متن پیام شما برای پاسخ‌دادن و پیگیری گفتگو استفاده می‌شود. سرویس ایمیل و شیوهٔ نگهداری پیام‌ها هنوز از سوی مسئول وب‌سایت تأیید نشده‌اند." },
